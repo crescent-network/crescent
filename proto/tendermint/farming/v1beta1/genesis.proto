@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package tendermint.farming.v1beta1;
+
+option go_package            = "github.com/tendermint/farming/x/farming/types";
+option (gogoproto.equal_all) = true;
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/farming/v1beta1/farming.proto";
+import "google/protobuf/timestamp.proto";
+
+// GenesisState defines the farming module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters for the farming module
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // plan_records defines the plan records used for genesis state
+  repeated PlanRecord plan_records = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"plan_records\""];
+
+  // stakings defines the staking records used for genesis state
+  repeated Staking stakings = 3 [(gogoproto.nullable) = false];
+
+  // rewards defines the reward records used for genesis state
+  repeated Reward rewards = 4 [(gogoproto.nullable) = false];
+}
+
+// PlanRecord is used for import/export via genesis json.
+message PlanRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // plan specifies the plan interface; it can be FixedAmountPlan or RatioPlan
+  google.protobuf.Any plan = 1 [(gogoproto.nullable) = false];
+
+  // last_epoch_time specifies the last distributed epoch time of the plan
+  google.protobuf.Timestamp last_epoch_time = 2
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"last_epoch_time\""];
+
+  // farming_pool_coins specifies balance of the farming pool for the plan
+  // this param is needed for import/export validation
+  repeated cosmos.base.v1beta1.Coin farming_pool_coins = 3 [
+    (gogoproto.moretags)     = "yaml:\"farming_pool_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // reward_pool_coins specifies balance of the reward pool to be distributed in the plan
+  // this param is needed for import/export validation
+  repeated cosmos.base.v1beta1.Coin reward_pool_coins = 4 [
+    (gogoproto.moretags)     = "yaml:\"reward_pool_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // staking_reserve_coins specifies balance of the staking reserve pool staked in the plan
+  // this param is needed for import/export validation
+  repeated cosmos.base.v1beta1.Coin staking_reserve_coins = 5 [
+    (gogoproto.moretags)     = "yaml:\"staking_reserve_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
