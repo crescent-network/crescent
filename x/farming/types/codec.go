@@ -27,7 +27,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCreateRatioPlan{},
 		&MsgStake{},
 		&MsgUnstake{},
-		&MsgClaim{},
+		&MsgHarvest{},
 	)
 
 	registry.RegisterImplementations(
