@@ -15,7 +15,6 @@ func TestGetPoolInformation(t *testing.T) {
 	commonTerminationAcc := sdk.AccAddress([]byte("terminationAddr"))
 	commonStartTime := time.Now().UTC()
 	commonEndTime := commonStartTime.AddDate(1, 0, 0)
-	commonEpochDays := uint32(1)
 	commonCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
 	)
@@ -41,9 +40,7 @@ func TestGetPoolInformation(t *testing.T) {
 	for _, tc := range testCases {
 		planName := types.PlanName(tc.planId, tc.planType, tc.farmingPoolAddr)
 		rewardPoolAcc := types.GenerateRewardPoolAcc(planName)
-		stakingReserveAcc := types.GenerateStakingReserveAcc(planName)
-		basePlan := types.NewBasePlan(tc.planId, tc.planType, tc.farmingPoolAddr, commonTerminationAcc.String(), commonCoinWeights, commonStartTime, commonEndTime, commonEpochDays)
+		basePlan := types.NewBasePlan(tc.planId, tc.planType, tc.farmingPoolAddr, commonTerminationAcc.String(), commonCoinWeights, commonStartTime, commonEndTime)
 		require.Equal(t, basePlan.RewardPoolAddress, rewardPoolAcc.String())
-		require.Equal(t, basePlan.StakingReserveAddress, stakingReserveAcc.String())
 	}
 }

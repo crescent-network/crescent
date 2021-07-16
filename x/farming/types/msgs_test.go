@@ -33,42 +33,35 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgCreateFixedAmountPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, DefaultEpochDays, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"invalid farming pool address \"\": empty address string is not allowed: invalid address",
 			types.NewMsgCreateFixedAmountPlan(
 				sdk.AccAddress{}, stakingCoinWeights, startTime,
-				endTime, DefaultEpochDays, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"end time 2020-11-01 22:08:41 +0000 +0000 must be greater than start time 2021-11-01 22:08:41 +0000 +0000: invalid plan end time",
 			types.NewMsgCreateFixedAmountPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
-				startTime.AddDate(-1, 0, 0), DefaultEpochDays, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
-			),
-		},
-		{
-			"epoch days must be positive: invalid plan epoch days",
-			types.NewMsgCreateFixedAmountPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, uint32(0), sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				startTime.AddDate(-1, 0, 0), sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"staking coin weights must not be empty",
 			types.NewMsgCreateFixedAmountPlan(
 				farmingPoolAddr, sdk.NewDecCoins(), startTime,
-				endTime, DefaultEpochDays, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"epoch amount must not be empty",
 			types.NewMsgCreateFixedAmountPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, DefaultEpochDays, sdk.Coins{},
+				endTime, sdk.Coins{},
 			),
 		},
 	}
@@ -108,42 +101,35 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgCreateRatioPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, DefaultEpochDays, sdk.NewDec(1),
+				endTime, sdk.NewDec(1),
 			),
 		},
 		{
 			"invalid farming pool address \"\": empty address string is not allowed: invalid address",
 			types.NewMsgCreateRatioPlan(
 				sdk.AccAddress{}, stakingCoinWeights, startTime,
-				endTime, DefaultEpochDays, sdk.NewDec(1),
+				endTime, sdk.NewDec(1),
 			),
 		},
 		{
 			"end time 2020-11-01 22:08:41 +0000 +0000 must be greater than start time 2021-11-01 22:08:41 +0000 +0000: invalid plan end time",
 			types.NewMsgCreateRatioPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
-				startTime.AddDate(-1, 0, 0), DefaultEpochDays, sdk.NewDec(1),
-			),
-		},
-		{
-			"epoch days must be positive: invalid plan epoch days",
-			types.NewMsgCreateRatioPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, uint32(0), sdk.NewDec(1),
+				startTime.AddDate(-1, 0, 0), sdk.NewDec(1),
 			),
 		},
 		{
 			"staking coin weights must not be empty",
 			types.NewMsgCreateRatioPlan(
 				farmingPoolAddr, sdk.NewDecCoins(), startTime,
-				endTime, DefaultEpochDays, sdk.NewDec(1),
+				endTime, sdk.NewDec(1),
 			),
 		},
 		{
 			"invalid plan epoch ratio",
 			types.NewMsgCreateRatioPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, DefaultEpochDays, sdk.NewDec(-1),
+				endTime, sdk.NewDec(-1),
 			),
 		},
 	}
@@ -167,7 +153,6 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 }
 
 func TestMsgStake(t *testing.T) {
-	planId := uint64(1)
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
 	stakingCoins := sdk.NewCoins(
 		sdk.NewCoin("testFarmStakingCoinDenom", sdk.NewInt(1)),
@@ -179,7 +164,7 @@ func TestMsgStake(t *testing.T) {
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgStake(planId, farmingPoolAddr, stakingCoins),
+			types.NewMsgStake(farmingPoolAddr, stakingCoins),
 		},
 		// TODO" not implemented yet
 	}
@@ -203,7 +188,6 @@ func TestMsgStake(t *testing.T) {
 }
 
 func TestMsgUnstake(t *testing.T) {
-	planId := uint64(1)
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
 	stakingCoins := sdk.NewCoins(
 		sdk.NewCoin("testFarmStakingCoinDenom", sdk.NewInt(1)),
@@ -215,7 +199,7 @@ func TestMsgUnstake(t *testing.T) {
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgUnstake(planId, farmingPoolAddr, stakingCoins),
+			types.NewMsgUnstake(farmingPoolAddr, stakingCoins),
 		},
 		// TODO" not implemented yet
 	}
@@ -238,24 +222,24 @@ func TestMsgUnstake(t *testing.T) {
 	}
 }
 
-func TestMsgClaim(t *testing.T) {
-	planId := uint64(1)
+func TestMsgHarvest(t *testing.T) {
+	stakingCoinDenom := ""
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
 
 	testCases := []struct {
 		expectedErr string
-		msg         *types.MsgClaim
+		msg         *types.MsgHarvest
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgClaim(planId, farmingPoolAddr),
+			types.NewMsgHarvest(stakingCoinDenom, farmingPoolAddr),
 		},
 		// TODO" not implemented yet
 	}
 
 	for _, tc := range testCases {
-		require.IsType(t, &types.MsgClaim{}, tc.msg)
-		require.Equal(t, types.TypeMsgClaim, tc.msg.Type())
+		require.IsType(t, &types.MsgHarvest{}, tc.msg)
+		require.Equal(t, types.TypeMsgHarvest, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
 		require.Equal(t, sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
 

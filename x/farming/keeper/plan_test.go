@@ -23,7 +23,7 @@ func TestGetSetNewPlan(t *testing.T) {
 	)
 	startTime := time.Now().UTC()
 	endTime := startTime.AddDate(1, 0, 0)
-	basePlan := types.NewBasePlan(1, 1, farmingPoolAddr.String(), terminationAddr.String(), coinWeights, startTime, endTime, 1)
+	basePlan := types.NewBasePlan(1, 1, farmingPoolAddr.String(), terminationAddr.String(), coinWeights, startTime, endTime)
 	fixedPlan := types.NewFixedAmountPlan(basePlan, sdk.NewCoins(sdk.NewCoin("testFarmCoinDenom", sdk.NewInt(1000000))))
 	app.FarmingKeeper.SetPlan(ctx, fixedPlan)
 
@@ -36,12 +36,12 @@ func TestGetSetNewPlan(t *testing.T) {
 	require.Equal(t, fixedPlan, plans[0])
 
 	// TODO: tmp test codes for testing functionality, need to separated
-	msgStake := types.NewMsgStake(fixedPlan.Id, farmerAddr, stakingCoins)
+	msgStake := types.NewMsgStake(farmerAddr, stakingCoins)
 	app.FarmingKeeper.Stake(ctx, msgStake)
 
-	stakings := app.FarmingKeeper.GetAllStakings(ctx)
-	stakingsByPlan := app.FarmingKeeper.GetStakingsByPlanID(ctx, fixedPlan.Id)
-	require.Equal(t, stakings, stakingsByPlan)
+	// stakings := app.FarmingKeeper.GetAllStakings(ctx)
+	// stakingsByPlan := app.FarmingKeeper.GetStaking(ctx, fixedPlan.Id)
+	// require.Equal(t, stakings, stakingsByPlan)
 	plansByFarmer := app.FarmingKeeper.GetPlansByFarmerAddrIndex(ctx, farmerAddr)
 
 	require.Equal(t, plans, plansByFarmer)
