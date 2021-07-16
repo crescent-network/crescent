@@ -1,21 +1,21 @@
 <!-- order: 2 -->
 
- # State
+# State
 
 The farming module keeps track of the staking and rewards states.
 
 ## Plan Interface
 
-The plan interface exposes methods to read and write standard farming plan information. Note that all of these methods operate on a plan struct confirming to the interface and in order to write the plan to the store, the plan keeper will need to be used. 
+The plan interface exposes methods to read and write standard farming plan information. Note that all of these methods operate on a plan struct confirming to the interface and in order to write the plan to the store, the plan keeper will need to be used.
 
 ```go
 // PlanI is an interface used to store plan records within state.
 type PlanI interface {
     proto.Message
-    
+
     GetId() uint64
     SetId(uint64) error
-    
+
     GetType() int32
     SetType(int32) error
 
@@ -27,21 +27,15 @@ type PlanI interface {
 
     GetTerminationAddress() sdk.AccAddress
     SetTerminationAddress(sdk.AccAddress) error
-    
-    GetStakingReserveAddress() sdk.AccAddress
-    SetStakingReserveAddress(sdk.AccAddress) error
-        
+
     GetStakingCoinsWeight() sdk.DecCoins
     SetStakingCoinsWeight(sdk.DecCoins) error
-    
+
     GetStartTime() time.Time
     SetStartTime(time.Time) error
 
     GetEndTime() time.Time
     SetEndTime(time.Time) error
-
-    GetEpochDays() uint32
-    SetEpochDays(uint32) error
 
     String() string
 }
@@ -61,11 +55,9 @@ type BasePlan struct {
     FarmingPoolAddress       string       // bech32-encoded farming pool address
     RewardPoolAddress        string       // bech32-encoded reward pool address
     TerminationAddress       string       // bech32-encoded termination address
-    StakingReserveAddress    string       // bech32-encoded staking reserve address
     StakingCoinWeights       sdk.DecCoins // coin weights for the plan
     StartTime                time.Time    // start time of the plan
     EndTime                  time.Time    // end time of the plan
-    EpochDays                uint32       // distributing epoch measuring in days
 }
 ```
 
@@ -86,6 +78,7 @@ type RatioPlan struct {
     EpochRatio            sdk.Dec // distributing amount by ratio
 }
 ```
+
 ## Plan Types
 
 ```go
@@ -106,20 +99,20 @@ The parameters of the Plan state are:
 
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
 - Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
-- PlanByFarmerAddrIndex: `0x12 | FarmerAddrLen (1 byte) | FarmerAddr -> Id`
-    - iterable for several `PlanId` results by indexed `FarmerAddr`
-- LastEpochTime: `0x13 | Id -> time.Time`
-- GlobalFarmingPlanIdKey: `[]byte("globalFarmingPlanId") -> ProtocolBuffer(uint64)`
-    - store latest plan id
+- PlanByFarmerAddrIndex: `0x12 | FarmerAddrLen (1 byte) | FarmerAddr -> Id -> nil` (can be deprecated)
+- LastDistributedTime: `0x13 | Id -> time.Time`
+- TotalDistributedRewardCoins: `0x14 | PlanId | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom → ProtocolBuffer(sdk.Coins)`
+- GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
+  - store latest plan id
+- GlobalLastEpochTime: `[]byte("globalLastEpochTime") | Id -> time.Time`
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
-
 
 ## Staking
 
 ```go
-// Staking defines a farmer's staking information.
+// Staking stores farmer's staking position status.
 type Staking struct {
-    PlanId                   uint64
+    Id                       uint64
     Farmer                   string
     StakedCoins              sdk.Coins
     QueuedCoins              sdk.Coins
@@ -128,24 +121,31 @@ type Staking struct {
 
 The parameters of the Staking state are:
 
-- Staking: `0x21 | PlanId | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(Staking)`
+- GlobalStakingIdKey: `[]byte("globalStakingId") -> ProtocolBuffer(uint64)`
+
+  - store latest staking id
+
+- Staking: `0x21 | Id -> ProtocolBuffer(Staking)`
+- StakingByFarmerAddrIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr -> Id`
+- StakingByStakingCoinDenomIdIndex: `0x23 | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom | Id -> nil`
 
 ## Reward
 
 ```go
-// Reward defines a record of farming rewards.
+// Reward defines a record of farming rewards for query result and exported state.
 type Reward struct {
-    PlanId                   uint64
-    Farmer                   string
-    RewardCoins              sdk.Coins
+    Farmer                string
+    StakingCoinDenom      string
+    RewardCoins           sdk.Coins
 }
 ```
 
 The parameters of the Reward state are:
 
-- Reward: `0x31 | PlanId | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(Reward)`
+- Reward: `0x31 | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(sdk.Coins) RewardCoins`
+- RewardByFarmerAddrIndex: `0x32 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom -> nil`
 
-## Examples 
+## Examples
 
 An example of `FixedAmountPlan`
 
@@ -156,7 +156,6 @@ An example of `FixedAmountPlan`
     "type": 0,
     "farmingPoolAddress": "cosmos1...",
     "rewardPoolAddress": "cosmos1...",
-    "stakingReserveAddress": "cosmos1...",
     "stakingCoinWeights": [
       {
         "denom": "xxx",
@@ -173,7 +172,6 @@ An example of `FixedAmountPlan`
     ],
     "startTime": "2021-10-01T00:00:00Z",
     "endTime": "2022-04-01T00:00:00Z",
-    "epochDays": 1,
     "terminationAddress": "cosmos1..."
   },
   "epochAmount": {
@@ -192,7 +190,6 @@ An example of `RatioPlan`
     "type": 0,
     "farmingPoolAddress": "cosmos1...",
     "rewardPoolAddress": "cosmos1...",
-    "stakingReserveAddress": "cosmos1...",
     "stakingCoinWeights": [
       {
         "denom": "xxx",
@@ -209,13 +206,8 @@ An example of `RatioPlan`
     ],
     "startTime": "2021-10-01T00:00:00Z",
     "endTime": "2022-04-01T00:00:00Z",
-    "epochDays": 1,
     "terminationAddress": "cosmos1..."
   },
   "epochRatio": "0.01"
 }
 ```
-
-
-
-
