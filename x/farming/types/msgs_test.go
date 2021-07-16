@@ -2,13 +2,14 @@ package types_test
 
 import (
 	"testing"
-	time "time"
+	"time"
+
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/farming/x/farming/types"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/farming/x/farming/types"
 )
 
 const (

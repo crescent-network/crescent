@@ -4,6 +4,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/tendermint/farming/x/farming/types"
 )
 

@@ -4,14 +4,15 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	farmingapp "github.com/tendermint/farming/app"
 	"github.com/tendermint/farming/x/farming"
 	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // createTestInput returns a simapp with custom FarmingKeeper

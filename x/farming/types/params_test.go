@@ -3,8 +3,10 @@ package types_test
 import (
 	"testing"
 
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
+
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/tendermint/farming/x/farming/types"
 )
 

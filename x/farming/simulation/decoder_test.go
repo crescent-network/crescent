@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/tendermint/farming/x/farming/simulation"
 )
 

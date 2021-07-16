@@ -3,10 +3,10 @@ package types
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	proto "github.com/gogo/protobuf/proto"
 )
 
 const (
