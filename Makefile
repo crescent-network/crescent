@@ -160,18 +160,30 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-gen proto-swagger-gen update-swagger-docs
+containerProtoVer=latest
+containerProtoImage=bharvest/liquidity-proto-gen:$(containerProtoVer) 
+containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
+containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
+containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+
+proto-all: proto-format proto-gen proto-swagger-gen update-swagger-docs
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	docker run --rm -v $(CURDIR):/workspace --workdir /workspace bharvest/farming-proto-gen sh ./scripts/protocgen.sh
-	go mod tidy
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		sh ./scripts/protocgen.sh; fi
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	docker run --rm -v $(CURDIR):/workspace --workdir /workspace bharvest/farming-proto-gen sh ./scripts/protoc-swagger-gen.sh
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		sh ./scripts/protoc-swagger-gen.sh; fi
+
+proto-format:
+	@echo "Formatting Protobuf files"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
 
 proto-js-gen:
 	starport build --rebuild-proto-once
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-js-gen
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-js-gen
