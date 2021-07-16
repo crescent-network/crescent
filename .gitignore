@@ -16,3 +16,6 @@
 
 # Localnet data
 data
+
+# IDE
+.idea/
