@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tendermint.farming.v1beta1;
+package cosmos.farming.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
@@ -25,8 +25,8 @@ service Msg {
   // Unstake defines a method for unstaking coins from the farming plan
   rpc Unstake(MsgUnstake) returns (MsgUnstakeResponse);
 
-  // Claim defines a method for claiming farming rewards
-  rpc Claim(MsgClaim) returns (MsgClaimResponse);
+  // harvest defines a method for claiming farming rewards
+  rpc Harvest(MsgHarvest) returns (MsgHarvestResponse);
 }
 
 // MsgCreateFixedAmountPlan defines a SDK message for creating a new fixed
@@ -57,12 +57,8 @@ message MsgCreateFixedAmountPlan {
     (gogoproto.moretags) = "yaml:\"end_time\""
   ];
 
-  // epoch_days specifies a period of time that triggers the distribution plan;
-  // it is measured in days
-  uint32 epoch_days = 5 [ (gogoproto.moretags) = "yaml:\"epoch_days\"" ];
-
   // epoch_amount specifies the distributing amount for each epoch
-  repeated cosmos.base.v1beta1.Coin epoch_amount = 6 [
+  repeated cosmos.base.v1beta1.Coin epoch_amount = 5 [
     (gogoproto.moretags) = "yaml:\"epoch_amount\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
@@ -97,12 +93,8 @@ message MsgCreateRatioPlan {
     (gogoproto.moretags) = "yaml:\"end_time\""
   ];
 
-  // epoch_days specifies a period of time that triggers the distribution plan;
-  // it is measured in days
-  uint32 epoch_days = 5 [ (gogoproto.moretags) = "yaml:\"epoch_days\"" ];
-
   // epoch_ratio specifies the distributing amount by ratio
-  string epoch_ratio = 6 [
+  string epoch_ratio = 5 [
     (gogoproto.moretags) = "yaml:\"epoch_ratio\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
@@ -111,14 +103,11 @@ message MsgCreateRatioPlan {
 
 // MsgStake defines a SDK message for staking coins into the farming plan.
 message MsgStake {
-  // plan_id specifies the farming plan id
-  uint64 plan_id = 1 [ (gogoproto.moretags) = "yaml:\"plan_id\"" ];
-
   // farmer defines the bech32-encoded address of the farmer
-  string farmer = 2;
+  string farmer = 1;
 
   // staking_coins specifies coins to stake
-  repeated cosmos.base.v1beta1.Coin staking_coins = 3 [
+  repeated cosmos.base.v1beta1.Coin staking_coins = 2 [
     (gogoproto.moretags) = "yaml:\"staking_coins\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
@@ -128,27 +117,26 @@ message MsgStake {
 // MsgUnstake defines a SDK message for performing unstaking of coins from the
 // farming plan.
 message MsgUnstake {
-  // plan_id specifies the farming plan id
-  uint64 plan_id = 1 [ (gogoproto.moretags) = "yaml:\"plan_id\"" ];
-
   // farmer defines the bech32-encoded address of the farmer
-  string farmer = 2;
+  string farmer = 1;
 
   // unstaking_coins specifies coins to stake
-  repeated cosmos.base.v1beta1.Coin unstaking_coins = 3 [
+  repeated cosmos.base.v1beta1.Coin unstaking_coins = 2 [
     (gogoproto.moretags) = "yaml:\"unstaking_coins\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
 }
 
-// MsgClaim defines a SDK message for claiming rewards from the farming plan.
-message MsgClaim {
-  // plan_id specifies the farming plan id
-  uint64 plan_id = 1 [ (gogoproto.moretags) = "yaml:\"plan_id\"" ];
-
+// MsgHarvest defines a SDK message for claiming rewards from the farming plan.
+message MsgHarvest {
   // farmer defines the bech32-encoded address of the farmer
-  string farmer = 2;
+  string farmer = 1;
+
+  // staking_coin_denom is denom of staked coin as a source of the reward for
+  // harvesting
+  string staking_coin_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"staking_coin_denom\"" ];
 }
 
 // MsgCreateFixedAmountPlanResponse defines the
@@ -165,5 +153,5 @@ message MsgStakeResponse {}
 // MsgUnstakeResponse defines the Msg/MsgUnstakeResponse response type.
 message MsgUnstakeResponse {}
 
-// MsgClaimResponse defines the Msg/MsgClaimResponse response type.
-message MsgClaimResponse {}
+// MsgHarvestResponse defines the Msg/MsgHarvestResponse response type.
+message MsgHarvestResponse {}

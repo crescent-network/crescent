@@ -21,18 +21,16 @@ var (
 
 // NewBasePlan creates a new BasePlan object
 //nolint:interfacer
-func NewBasePlan(id uint64, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time, epochDays uint32) *BasePlan {
+func NewBasePlan(id uint64, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time) *BasePlan {
 	basePlan := &BasePlan{
-		Id:                    id,
-		Type:                  typ,
-		FarmingPoolAddress:    farmingPoolAddr,
-		RewardPoolAddress:     GenerateRewardPoolAcc(PlanName(id, typ, farmingPoolAddr)).String(),
-		TerminationAddress:    terminationAddr,
-		StakingReserveAddress: GenerateStakingReserveAcc(PlanName(id, typ, farmingPoolAddr)).String(),
-		StakingCoinWeights:    coinWeights,
-		StartTime:             startTime,
-		EndTime:               endTime,
-		EpochDays:             epochDays,
+		Id:                 id,
+		Type:               typ,
+		FarmingPoolAddress: farmingPoolAddr,
+		RewardPoolAddress:  GenerateRewardPoolAcc(PlanName(id, typ, farmingPoolAddr)).String(),
+		TerminationAddress: terminationAddr,
+		StakingCoinWeights: coinWeights,
+		StartTime:          startTime,
+		EndTime:            endTime,
 	}
 	return basePlan
 }
@@ -85,16 +83,6 @@ func (plan *BasePlan) SetTerminationAddress(addr sdk.AccAddress) error {
 	return nil
 }
 
-func (plan BasePlan) GetStakingReserveAddress() sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(plan.StakingReserveAddress)
-	return addr
-}
-
-func (plan *BasePlan) SetStakingReserveAddress(addr sdk.AccAddress) error {
-	plan.StakingReserveAddress = addr.String()
-	return nil
-}
-
 func (plan BasePlan) GetStakingCoinWeights() sdk.DecCoins {
 	return plan.StakingCoinWeights
 }
@@ -122,15 +110,6 @@ func (plan *BasePlan) SetEndTime(t time.Time) error {
 	return nil
 }
 
-func (plan BasePlan) GetEpochDays() uint32 {
-	return plan.EpochDays
-}
-
-func (plan *BasePlan) SetEpochDays(days uint32) error {
-	plan.EpochDays = days
-	return nil
-}
-
 // Validate checks for errors on the Plan fields
 func (plan BasePlan) Validate() error {
 	if plan.Type != PlanTypePrivate && plan.Type != PlanTypePublic {
@@ -145,17 +124,11 @@ func (plan BasePlan) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(plan.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", plan.TerminationAddress, err)
 	}
-	if _, err := sdk.AccAddressFromBech32(plan.StakingReserveAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid staking reserve address %q: %v", plan.StakingReserveAddress, err)
-	}
 	if err := plan.StakingCoinWeights.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
 	}
 	if !plan.EndTime.After(plan.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", plan.EndTime, plan.StartTime)
-	}
-	if plan.EpochDays == 0 {
-		return sdkerrors.Wrapf(ErrInvalidPlanEpochDays, "epoch days must be positive")
 	}
 	return nil
 }
@@ -207,6 +180,7 @@ func GenerateRewardPoolAcc(name string) sdk.AccAddress {
 	return sdk.AccAddress(address.Module(ModuleName, []byte(strings.Join([]string{RewardPoolAccKeyPrefix, name}, "/"))))
 }
 
+// TODO: deprecated
 // GenerateRewardPoolAcc returns deterministically generated staking reserve account for the given plan name
 func GenerateStakingReserveAcc(name string) sdk.AccAddress {
 	return sdk.AccAddress(address.Module(ModuleName, []byte(strings.Join([]string{StakingReserveAccKeyPrefix, name}, "/"))))
@@ -230,9 +204,6 @@ type PlanI interface {
 	GetTerminationAddress() sdk.AccAddress
 	SetTerminationAddress(sdk.AccAddress) error
 
-	GetStakingReserveAddress() sdk.AccAddress
-	SetStakingReserveAddress(sdk.AccAddress) error
-
 	GetStakingCoinWeights() sdk.DecCoins
 	SetStakingCoinWeights(sdk.DecCoins) error
 
@@ -241,9 +212,6 @@ type PlanI interface {
 
 	GetEndTime() time.Time
 	SetEndTime(time.Time) error
-
-	GetEpochDays() uint32
-	SetEpochDays(uint32) error
 
 	String() string
 }

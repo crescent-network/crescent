@@ -35,7 +35,8 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgCreateFixedAmountPlan defines a SDK message for creating a new fixed amount farming plan.
+// MsgCreateFixedAmountPlan defines a SDK message for creating a new fixed
+// amount farming plan.
 type MsgCreateFixedAmountPlan struct {
 	// farming_pool_address defines the bech32-encoded address of the farming pool
 	FarmingPoolAddress string `protobuf:"bytes,1,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty" yaml:"farming_pool_address"`
@@ -45,10 +46,8 @@ type MsgCreateFixedAmountPlan struct {
 	StartTime time.Time `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
 	// end_time specifies the end time of the plan
 	EndTime time.Time `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
-	// epoch_days specifies a period of time that triggers the distribution plan; it is measured in days
-	EpochDays uint32 `protobuf:"varint,5,opt,name=epoch_days,json=epochDays,proto3" json:"epoch_days,omitempty" yaml:"epoch_days"`
 	// epoch_amount specifies the distributing amount for each epoch
-	EpochAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=epoch_amount,json=epochAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"epoch_amount" yaml:"epoch_amount"`
+	EpochAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=epoch_amount,json=epochAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"epoch_amount" yaml:"epoch_amount"`
 }
 
 func (m *MsgCreateFixedAmountPlan) Reset()         { *m = MsgCreateFixedAmountPlan{} }
@@ -112,13 +111,6 @@ func (m *MsgCreateFixedAmountPlan) GetEndTime() time.Time {
 	return time.Time{}
 }
 
-func (m *MsgCreateFixedAmountPlan) GetEpochDays() uint32 {
-	if m != nil {
-		return m.EpochDays
-	}
-	return 0
-}
-
 func (m *MsgCreateFixedAmountPlan) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.EpochAmount
@@ -126,7 +118,8 @@ func (m *MsgCreateFixedAmountPlan) GetEpochAmount() github_com_cosmos_cosmos_sdk
 	return nil
 }
 
-// MsgCreateRatioPlan defines a SDK message for creating a new ratio farming plan.
+// MsgCreateRatioPlan defines a SDK message for creating a new ratio farming
+// plan.
 type MsgCreateRatioPlan struct {
 	// farming_pool_address defines the bech32-encoded address of the farming pool
 	FarmingPoolAddress string `protobuf:"bytes,1,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty" yaml:"farming_pool_address"`
@@ -136,10 +129,8 @@ type MsgCreateRatioPlan struct {
 	StartTime time.Time `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
 	// end_time specifies the end time of the plan
 	EndTime time.Time `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
-	// epoch_days specifies a period of time that triggers the distribution plan; it is measured in days
-	EpochDays uint32 `protobuf:"varint,5,opt,name=epoch_days,json=epochDays,proto3" json:"epoch_days,omitempty" yaml:"epoch_days"`
 	// epoch_ratio specifies the distributing amount by ratio
-	EpochRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=epoch_ratio,json=epochRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_ratio" yaml:"epoch_ratio"`
+	EpochRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=epoch_ratio,json=epochRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_ratio" yaml:"epoch_ratio"`
 }
 
 func (m *MsgCreateRatioPlan) Reset()         { *m = MsgCreateRatioPlan{} }
@@ -203,21 +194,12 @@ func (m *MsgCreateRatioPlan) GetEndTime() time.Time {
 	return time.Time{}
 }
 
-func (m *MsgCreateRatioPlan) GetEpochDays() uint32 {
-	if m != nil {
-		return m.EpochDays
-	}
-	return 0
-}
-
 // MsgStake defines a SDK message for staking coins into the farming plan.
 type MsgStake struct {
-	// plan_id specifies the farming plan id
-	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty" yaml:"plan_id"`
 	// farmer defines the bech32-encoded address of the farmer
-	Farmer string `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
+	Farmer string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
 	// staking_coins specifies coins to stake
-	StakingCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=staking_coins,json=stakingCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"staking_coins" yaml:"staking_coins"`
+	StakingCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=staking_coins,json=stakingCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"staking_coins" yaml:"staking_coins"`
 }
 
 func (m *MsgStake) Reset()         { *m = MsgStake{} }
@@ -253,13 +235,6 @@ func (m *MsgStake) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgStake proto.InternalMessageInfo
 
-func (m *MsgStake) GetPlanId() uint64 {
-	if m != nil {
-		return m.PlanId
-	}
-	return 0
-}
-
 func (m *MsgStake) GetFarmer() string {
 	if m != nil {
 		return m.Farmer
@@ -274,14 +249,13 @@ func (m *MsgStake) GetStakingCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
-// MsgUnstake defines a SDK message for performing unstaking of coins from the farming plan.
+// MsgUnstake defines a SDK message for performing unstaking of coins from the
+// farming plan.
 type MsgUnstake struct {
-	// plan_id specifies the farming plan id
-	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty" yaml:"plan_id"`
 	// farmer defines the bech32-encoded address of the farmer
-	Farmer string `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
+	Farmer string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
 	// unstaking_coins specifies coins to stake
-	UnstakingCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=unstaking_coins,json=unstakingCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"unstaking_coins" yaml:"unstaking_coins"`
+	UnstakingCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=unstaking_coins,json=unstakingCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"unstaking_coins" yaml:"unstaking_coins"`
 }
 
 func (m *MsgUnstake) Reset()         { *m = MsgUnstake{} }
@@ -317,13 +291,6 @@ func (m *MsgUnstake) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnstake proto.InternalMessageInfo
 
-func (m *MsgUnstake) GetPlanId() uint64 {
-	if m != nil {
-		return m.PlanId
-	}
-	return 0
-}
-
 func (m *MsgUnstake) GetFarmer() string {
 	if m != nil {
 		return m.Farmer
@@ -338,26 +305,27 @@ func (m *MsgUnstake) GetUnstakingCoins() github_com_cosmos_cosmos_sdk_types.Coin
 	return nil
 }
 
-// MsgClaim defines a SDK message for claiming rewards from the farming plan.
-type MsgClaim struct {
-	// plan_id specifies the farming plan id
-	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty" yaml:"plan_id"`
+// MsgHarvest defines a SDK message for claiming rewards from the farming plan.
+type MsgHarvest struct {
 	// farmer defines the bech32-encoded address of the farmer
-	Farmer string `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
+	Farmer string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
+	// staking_coin_denom is denom of staked coin as a source of the reward for
+	// harvesting
+	StakingCoinDenom string `protobuf:"bytes,2,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
 }
 
-func (m *MsgClaim) Reset()         { *m = MsgClaim{} }
-func (m *MsgClaim) String() string { return proto.CompactTextString(m) }
-func (*MsgClaim) ProtoMessage()    {}
-func (*MsgClaim) Descriptor() ([]byte, []int) {
+func (m *MsgHarvest) Reset()         { *m = MsgHarvest{} }
+func (m *MsgHarvest) String() string { return proto.CompactTextString(m) }
+func (*MsgHarvest) ProtoMessage()    {}
+func (*MsgHarvest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a33d9a3ff13f514a, []int{4}
 }
-func (m *MsgClaim) XXX_Unmarshal(b []byte) error {
+func (m *MsgHarvest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgClaim) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgHarvest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgClaim.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgHarvest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -367,33 +335,34 @@ func (m *MsgClaim) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *MsgClaim) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgClaim.Merge(m, src)
+func (m *MsgHarvest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgHarvest.Merge(m, src)
 }
-func (m *MsgClaim) XXX_Size() int {
+func (m *MsgHarvest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgClaim) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgClaim.DiscardUnknown(m)
+func (m *MsgHarvest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgHarvest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgClaim proto.InternalMessageInfo
+var xxx_messageInfo_MsgHarvest proto.InternalMessageInfo
 
-func (m *MsgClaim) GetPlanId() uint64 {
-	if m != nil {
-		return m.PlanId
-	}
-	return 0
-}
-
-func (m *MsgClaim) GetFarmer() string {
+func (m *MsgHarvest) GetFarmer() string {
 	if m != nil {
 		return m.Farmer
 	}
 	return ""
 }
 
-// MsgCreateFixedAmountPlanResponse defines the Msg/CreateFixedAmountPlanResponse response type.
+func (m *MsgHarvest) GetStakingCoinDenom() string {
+	if m != nil {
+		return m.StakingCoinDenom
+	}
+	return ""
+}
+
+// MsgCreateFixedAmountPlanResponse defines the
+// Msg/CreateFixedAmountPlanResponse response type.
 type MsgCreateFixedAmountPlanResponse struct {
 }
 
@@ -430,7 +399,8 @@ func (m *MsgCreateFixedAmountPlanResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateFixedAmountPlanResponse proto.InternalMessageInfo
 
-// MsgCreateRatioPlanResponse  defines the Msg/MsgCreateRatioPlanResponse  response type.
+// MsgCreateRatioPlanResponse  defines the Msg/MsgCreateRatioPlanResponse
+// response type.
 type MsgCreateRatioPlanResponse struct {
 }
 
@@ -541,22 +511,22 @@ func (m *MsgUnstakeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnstakeResponse proto.InternalMessageInfo
 
-// MsgClaimResponse defines the Msg/MsgClaimResponse response type.
-type MsgClaimResponse struct {
+// MsgHarvestResponse defines the Msg/MsgHarvestResponse response type.
+type MsgHarvestResponse struct {
 }
 
-func (m *MsgClaimResponse) Reset()         { *m = MsgClaimResponse{} }
-func (m *MsgClaimResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgClaimResponse) ProtoMessage()    {}
-func (*MsgClaimResponse) Descriptor() ([]byte, []int) {
+func (m *MsgHarvestResponse) Reset()         { *m = MsgHarvestResponse{} }
+func (m *MsgHarvestResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgHarvestResponse) ProtoMessage()    {}
+func (*MsgHarvestResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a33d9a3ff13f514a, []int{9}
 }
-func (m *MsgClaimResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgHarvestResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgClaimResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgHarvestResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgClaimResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgHarvestResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -566,29 +536,29 @@ func (m *MsgClaimResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *MsgClaimResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgClaimResponse.Merge(m, src)
+func (m *MsgHarvestResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgHarvestResponse.Merge(m, src)
 }
-func (m *MsgClaimResponse) XXX_Size() int {
+func (m *MsgHarvestResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgClaimResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgClaimResponse.DiscardUnknown(m)
+func (m *MsgHarvestResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgHarvestResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgClaimResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgHarvestResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgCreateFixedAmountPlan)(nil), "tendermint.farming.v1beta1.MsgCreateFixedAmountPlan")
-	proto.RegisterType((*MsgCreateRatioPlan)(nil), "tendermint.farming.v1beta1.MsgCreateRatioPlan")
-	proto.RegisterType((*MsgStake)(nil), "tendermint.farming.v1beta1.MsgStake")
-	proto.RegisterType((*MsgUnstake)(nil), "tendermint.farming.v1beta1.MsgUnstake")
-	proto.RegisterType((*MsgClaim)(nil), "tendermint.farming.v1beta1.MsgClaim")
-	proto.RegisterType((*MsgCreateFixedAmountPlanResponse)(nil), "tendermint.farming.v1beta1.MsgCreateFixedAmountPlanResponse")
-	proto.RegisterType((*MsgCreateRatioPlanResponse)(nil), "tendermint.farming.v1beta1.MsgCreateRatioPlanResponse")
-	proto.RegisterType((*MsgStakeResponse)(nil), "tendermint.farming.v1beta1.MsgStakeResponse")
-	proto.RegisterType((*MsgUnstakeResponse)(nil), "tendermint.farming.v1beta1.MsgUnstakeResponse")
-	proto.RegisterType((*MsgClaimResponse)(nil), "tendermint.farming.v1beta1.MsgClaimResponse")
+	proto.RegisterType((*MsgCreateFixedAmountPlan)(nil), "cosmos.farming.v1beta1.MsgCreateFixedAmountPlan")
+	proto.RegisterType((*MsgCreateRatioPlan)(nil), "cosmos.farming.v1beta1.MsgCreateRatioPlan")
+	proto.RegisterType((*MsgStake)(nil), "cosmos.farming.v1beta1.MsgStake")
+	proto.RegisterType((*MsgUnstake)(nil), "cosmos.farming.v1beta1.MsgUnstake")
+	proto.RegisterType((*MsgHarvest)(nil), "cosmos.farming.v1beta1.MsgHarvest")
+	proto.RegisterType((*MsgCreateFixedAmountPlanResponse)(nil), "cosmos.farming.v1beta1.MsgCreateFixedAmountPlanResponse")
+	proto.RegisterType((*MsgCreateRatioPlanResponse)(nil), "cosmos.farming.v1beta1.MsgCreateRatioPlanResponse")
+	proto.RegisterType((*MsgStakeResponse)(nil), "cosmos.farming.v1beta1.MsgStakeResponse")
+	proto.RegisterType((*MsgUnstakeResponse)(nil), "cosmos.farming.v1beta1.MsgUnstakeResponse")
+	proto.RegisterType((*MsgHarvestResponse)(nil), "cosmos.farming.v1beta1.MsgHarvestResponse")
 }
 
 func init() {
@@ -596,58 +566,56 @@ func init() {
 }
 
 var fileDescriptor_a33d9a3ff13f514a = []byte{
-	// 813 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x56, 0xcf, 0x4e, 0xdb, 0x48,
-	0x18, 0x8f, 0x49, 0x08, 0x30, 0xfc, 0xdb, 0x9d, 0x0d, 0xc8, 0x18, 0x36, 0x8e, 0xbc, 0x2b, 0x14,
-	0x89, 0xc5, 0x16, 0x2c, 0xda, 0xc3, 0x6a, 0x2f, 0x04, 0xb4, 0xec, 0xae, 0x14, 0x2d, 0x75, 0x5b,
-	0xb5, 0x6a, 0x0f, 0xd6, 0x24, 0x1e, 0x8c, 0x45, 0xec, 0x89, 0x32, 0x93, 0x96, 0x3c, 0x40, 0xa5,
-	0x4a, 0x95, 0x2a, 0x9e, 0xa1, 0xc7, 0xf6, 0x45, 0x38, 0x72, 0x6b, 0xc5, 0x21, 0x54, 0xe1, 0x0d,
-	0x78, 0x80, 0xaa, 0xf2, 0xcc, 0xd8, 0x49, 0x21, 0x28, 0x49, 0xc5, 0xa9, 0xea, 0xc9, 0x9e, 0x99,
-	0xdf, 0xf7, 0x9b, 0xdf, 0xf7, 0x7d, 0xbf, 0x19, 0x1b, 0xfc, 0xc2, 0x70, 0xe8, 0xe2, 0x46, 0xe0,
-	0x87, 0xcc, 0x3a, 0x40, 0xd1, 0xd3, 0xb3, 0x9e, 0x6d, 0x54, 0x30, 0x43, 0x1b, 0x16, 0x3b, 0x36,
-	0xeb, 0x0d, 0xc2, 0x08, 0xd4, 0xba, 0x20, 0x53, 0x82, 0x4c, 0x09, 0xd2, 0x72, 0x1e, 0xf1, 0x08,
-	0x87, 0x59, 0xd1, 0x9b, 0x88, 0xd0, 0x96, 0xaa, 0x84, 0x06, 0x84, 0x3a, 0x62, 0x41, 0x0c, 0xe4,
-	0x52, 0x5e, 0x8c, 0xac, 0x0a, 0xa2, 0x38, 0xd9, 0xaa, 0x4a, 0xfc, 0x50, 0xae, 0xeb, 0x1e, 0x21,
-	0x5e, 0x0d, 0x5b, 0x7c, 0x54, 0x69, 0x1e, 0x58, 0xcc, 0x0f, 0x30, 0x65, 0x28, 0xa8, 0x0b, 0x80,
-	0xf1, 0x29, 0x03, 0xd4, 0x32, 0xf5, 0x76, 0x1a, 0x18, 0x31, 0xfc, 0xb7, 0x7f, 0x8c, 0xdd, 0xed,
-	0x80, 0x34, 0x43, 0xb6, 0x5f, 0x43, 0x21, 0xbc, 0x07, 0x72, 0x52, 0xa1, 0x53, 0x27, 0xa4, 0xe6,
-	0x20, 0xd7, 0x6d, 0x60, 0x4a, 0x55, 0xa5, 0xa0, 0x14, 0xa7, 0x4a, 0xfa, 0x55, 0x5b, 0x5f, 0x6e,
-	0xa1, 0xa0, 0xf6, 0xa7, 0xd1, 0x0f, 0x65, 0xd8, 0x50, 0x4e, 0xef, 0x13, 0x52, 0xdb, 0x16, 0x93,
-	0xf0, 0x8d, 0x02, 0x72, 0x94, 0xa1, 0xa3, 0x08, 0x1d, 0xe9, 0x74, 0x9e, 0x63, 0xdf, 0x3b, 0x64,
-	0x54, 0x1d, 0x2b, 0xa4, 0x8b, 0xd3, 0x9b, 0x2b, 0xa6, 0x4c, 0x2f, 0x4a, 0x28, 0x2e, 0x8b, 0xb9,
-	0x8b, 0xab, 0x3b, 0xc4, 0x0f, 0x4b, 0xf6, 0x69, 0x5b, 0x4f, 0x75, 0x77, 0xed, 0xc7, 0x63, 0xbc,
-	0xbd, 0xd0, 0xd7, 0x3c, 0x9f, 0x1d, 0x36, 0x2b, 0x66, 0x95, 0x04, 0xb2, 0x5a, 0xf2, 0xb1, 0x4e,
-	0xdd, 0x23, 0x8b, 0xb5, 0xea, 0x98, 0xc6, 0x94, 0xd4, 0x86, 0x92, 0x25, 0x1a, 0x3d, 0x12, 0x1c,
-	0xf0, 0x31, 0x00, 0x94, 0xa1, 0x06, 0x73, 0xa2, 0x6a, 0xa9, 0xe9, 0x82, 0x52, 0x9c, 0xde, 0xd4,
-	0x4c, 0x51, 0x4a, 0x33, 0x2e, 0xa5, 0xf9, 0x20, 0x2e, 0x65, 0xe9, 0x67, 0xa9, 0xeb, 0xc7, 0x44,
-	0x97, 0x8c, 0x35, 0x4e, 0x2e, 0x74, 0xc5, 0x9e, 0xe2, 0x13, 0x11, 0x1c, 0xda, 0x60, 0x12, 0x87,
-	0xae, 0xe0, 0xcd, 0x0c, 0xe4, 0x5d, 0x96, 0xbc, 0xf3, 0x82, 0x37, 0x8e, 0x14, 0xac, 0x13, 0x38,
-	0x74, 0x39, 0xe7, 0x16, 0x00, 0xb8, 0x4e, 0xaa, 0x87, 0x8e, 0x8b, 0x5a, 0x54, 0x1d, 0x2f, 0x28,
-	0xc5, 0xd9, 0xd2, 0x42, 0x57, 0x4d, 0x77, 0xcd, 0xb0, 0xa7, 0xf8, 0x60, 0x17, 0xb5, 0x28, 0x7c,
-	0xa1, 0x80, 0x19, 0xb1, 0x84, 0x78, 0xc3, 0xd5, 0x2c, 0x6f, 0xc0, 0x52, 0xdf, 0x06, 0xf0, 0xea,
-	0xef, 0x49, 0x35, 0x3f, 0xf5, 0xf2, 0x8a, 0xe0, 0xa8, 0xea, 0xc5, 0x21, 0xaa, 0x2e, 0x4a, 0x3e,
-	0xcd, 0x43, 0x85, 0xcf, 0x8c, 0xf7, 0x19, 0x00, 0x13, 0x03, 0xda, 0x88, 0xf9, 0xe4, 0xbb, 0xf5,
-	0xbe, 0x71, 0xeb, 0x61, 0x20, 0x1c, 0xe0, 0x34, 0xa2, 0x76, 0xab, 0x59, 0xde, 0xd2, 0xdd, 0x68,
-	0xc3, 0xf3, 0xb6, 0xbe, 0x3a, 0x5c, 0x05, 0xaf, 0xda, 0x3a, 0xec, 0xdd, 0x84, 0x53, 0x19, 0xb6,
-	0x90, 0xc3, 0x6d, 0x64, 0x9c, 0x2b, 0x60, 0xb2, 0x4c, 0xbd, 0xfb, 0x0c, 0x1d, 0x61, 0xb8, 0x06,
-	0x26, 0xea, 0x35, 0x14, 0x3a, 0xbe, 0xcb, 0x2d, 0x94, 0x29, 0xc1, 0xab, 0xb6, 0x3e, 0x27, 0x18,
-	0xe4, 0x82, 0x61, 0x67, 0xa3, 0xb7, 0x7f, 0x5d, 0xb8, 0x08, 0xb2, 0x91, 0x7f, 0x70, 0x43, 0x1d,
-	0x8b, 0xb4, 0xd9, 0x72, 0x04, 0x5f, 0x2a, 0x60, 0xb6, 0xb7, 0xf3, 0x54, 0x4d, 0x0f, 0x3a, 0x34,
-	0xff, 0xc8, 0x3a, 0xe6, 0x6e, 0xfa, 0x86, 0x8e, 0x76, 0x6a, 0x66, 0x7a, 0xdc, 0x42, 0x8d, 0x8e,
-	0x02, 0x40, 0x99, 0x7a, 0x0f, 0x43, 0x7a, 0x77, 0xe9, 0xbd, 0x56, 0xc0, 0x7c, 0x33, 0x1c, 0x31,
-	0xc1, 0xff, 0x64, 0x82, 0x8b, 0x62, 0xb3, 0x6b, 0xf1, 0xa3, 0xa5, 0x38, 0x97, 0x44, 0x8b, 0x24,
-	0xff, 0xe7, 0x0d, 0xdc, 0xa9, 0x21, 0x3f, 0xb8, 0x93, 0x0c, 0x0d, 0x03, 0x14, 0x6e, 0xfb, 0xd8,
-	0xd9, 0x98, 0xd6, 0x49, 0x48, 0xb1, 0xb1, 0x02, 0xb4, 0x9b, 0xf7, 0x51, 0xb2, 0x0a, 0xc1, 0x0f,
-	0xb1, 0xa7, 0x92, 0xb9, 0x1c, 0xbf, 0xc1, 0x64, 0x2b, 0xae, 0x21, 0xb9, 0xf8, 0x78, 0x6e, 0xf3,
-	0x5d, 0x06, 0xa4, 0xcb, 0xd4, 0x83, 0xaf, 0x14, 0xb0, 0xd0, 0xff, 0x93, 0xbb, 0x65, 0xde, 0xfe,
-	0x7b, 0x60, 0xde, 0xa6, 0x5d, 0xfb, 0xeb, 0x6b, 0xa2, 0x62, 0x55, 0xb0, 0x05, 0xe6, 0xaf, 0x5f,
-	0xbf, 0xe6, 0x50, 0x84, 0x09, 0x5e, 0xfb, 0x63, 0x34, 0x7c, 0xb2, 0xf5, 0x53, 0x30, 0x2e, 0xce,
-	0xe7, 0xaf, 0x03, 0x08, 0x38, 0x4a, 0xfb, 0x6d, 0x18, 0x54, 0x42, 0x8e, 0xc0, 0x44, 0x7c, 0x3e,
-	0x56, 0x07, 0x04, 0x4a, 0x9c, 0x66, 0x0e, 0x87, 0xeb, 0xd5, 0x2f, 0xec, 0x39, 0x48, 0x3f, 0x47,
-	0x0d, 0xd4, 0xff, 0x85, 0x5b, 0x4a, 0x7b, 0xa7, 0x9d, 0xbc, 0x72, 0xd6, 0xc9, 0x2b, 0x1f, 0x3b,
-	0x79, 0xe5, 0xe4, 0x32, 0x9f, 0x3a, 0xbb, 0xcc, 0xa7, 0x3e, 0x5c, 0xe6, 0x53, 0x4f, 0xd6, 0x7b,
-	0x8e, 0x54, 0x9f, 0x7f, 0xce, 0xe3, 0xe4, 0x8d, 0x9f, 0xae, 0x4a, 0x96, 0x5f, 0xf0, 0xbf, 0x7f,
-	0x0e, 0x00, 0x00, 0xff, 0xff, 0x8f, 0xf1, 0x0f, 0x59, 0xa0, 0x0a, 0x00, 0x00,
+	// 781 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x56, 0xcd, 0x4e, 0xdb, 0x4a,
+	0x18, 0xcd, 0x40, 0xf8, 0x1b, 0xb8, 0x17, 0xee, 0xdc, 0x5c, 0x14, 0x0c, 0xc4, 0x91, 0xaf, 0x54,
+	0x45, 0x54, 0xd8, 0x25, 0xdd, 0x54, 0xdd, 0x11, 0x50, 0x41, 0xad, 0x22, 0x51, 0xd3, 0xaa, 0x3f,
+	0x9b, 0x68, 0x12, 0x0f, 0xc6, 0x22, 0xf6, 0x04, 0xcf, 0x84, 0xc2, 0xba, 0xaa, 0xd4, 0x6e, 0x2a,
+	0x5e, 0xa1, 0x5d, 0x56, 0xea, 0xb2, 0xef, 0xc0, 0x92, 0x65, 0xd5, 0x45, 0xa8, 0xe0, 0x0d, 0x78,
+	0x82, 0xca, 0x33, 0x63, 0x37, 0x0d, 0x21, 0x21, 0xcb, 0x4a, 0x5d, 0xc5, 0x33, 0x3e, 0xdf, 0x99,
+	0x33, 0xe7, 0x3b, 0x33, 0x0e, 0xfc, 0x9f, 0x93, 0xc0, 0x21, 0xa1, 0xef, 0x05, 0xdc, 0xda, 0xc1,
+	0xd1, 0xaf, 0x6b, 0x1d, 0xac, 0x54, 0x09, 0xc7, 0x2b, 0x16, 0x3f, 0x34, 0x1b, 0x21, 0xe5, 0x14,
+	0xcd, 0xd6, 0x28, 0xf3, 0x29, 0x33, 0x15, 0xc0, 0x54, 0x00, 0x2d, 0xe3, 0x52, 0x97, 0x0a, 0x88,
+	0x15, 0x3d, 0x49, 0xb4, 0x36, 0x27, 0xd1, 0x15, 0xf9, 0x42, 0x95, 0xca, 0x57, 0x39, 0x39, 0xb2,
+	0xaa, 0x98, 0x91, 0x64, 0x99, 0x1a, 0xf5, 0x02, 0xf5, 0x5e, 0x77, 0x29, 0x75, 0xeb, 0xc4, 0x12,
+	0xa3, 0x6a, 0x73, 0xc7, 0xe2, 0x9e, 0x4f, 0x18, 0xc7, 0x7e, 0x43, 0x02, 0x8c, 0x93, 0x34, 0xcc,
+	0x96, 0x99, 0xbb, 0x16, 0x12, 0xcc, 0xc9, 0x03, 0xef, 0x90, 0x38, 0xab, 0x3e, 0x6d, 0x06, 0x7c,
+	0xab, 0x8e, 0x03, 0xf4, 0x18, 0x66, 0x94, 0xc2, 0x4a, 0x83, 0xd2, 0x7a, 0x05, 0x3b, 0x4e, 0x48,
+	0x18, 0xcb, 0x82, 0x3c, 0x28, 0x4c, 0x94, 0xf4, 0xcb, 0x96, 0x3e, 0x7f, 0x84, 0xfd, 0xfa, 0x7d,
+	0xa3, 0x1b, 0xca, 0xb0, 0x91, 0x9a, 0xde, 0xa2, 0xb4, 0xbe, 0x2a, 0x27, 0xd1, 0x47, 0x00, 0x33,
+	0x8c, 0xe3, 0xbd, 0x08, 0x1d, 0xe9, 0xac, 0xbc, 0x22, 0x9e, 0xbb, 0xcb, 0x59, 0x76, 0x28, 0x3f,
+	0x5c, 0x98, 0x2c, 0x2e, 0x98, 0x6a, 0x7b, 0xd1, 0x86, 0x62, 0x5b, 0xcc, 0x75, 0x52, 0x5b, 0xa3,
+	0x5e, 0x50, 0xb2, 0x4f, 0x5a, 0x7a, 0xea, 0xe7, 0xaa, 0xdd, 0x78, 0x8c, 0x4f, 0x67, 0xfa, 0x6d,
+	0xd7, 0xe3, 0xbb, 0xcd, 0xaa, 0x59, 0xa3, 0xbe, 0x72, 0x4b, 0xfd, 0x2c, 0x33, 0x67, 0xcf, 0xe2,
+	0x47, 0x0d, 0xc2, 0x62, 0x4a, 0x66, 0x23, 0xc5, 0x12, 0x8d, 0x9e, 0x49, 0x0e, 0xf4, 0x1c, 0x42,
+	0xc6, 0x71, 0xc8, 0x2b, 0x91, 0x5b, 0xd9, 0xe1, 0x3c, 0x28, 0x4c, 0x16, 0x35, 0x53, 0x5a, 0x69,
+	0xc6, 0x56, 0x9a, 0x4f, 0x62, 0x2b, 0x4b, 0x8b, 0x4a, 0xd7, 0x3f, 0x89, 0x2e, 0x55, 0x6b, 0x1c,
+	0x9f, 0xe9, 0xc0, 0x9e, 0x10, 0x13, 0x11, 0x1c, 0xd9, 0x70, 0x9c, 0x04, 0x8e, 0xe4, 0x4d, 0xf7,
+	0xe5, 0x9d, 0x57, 0xbc, 0xd3, 0x92, 0x37, 0xae, 0x94, 0xac, 0x63, 0x24, 0x70, 0x04, 0xe7, 0x1b,
+	0x00, 0xa7, 0x48, 0x83, 0xd6, 0x76, 0x2b, 0x58, 0xb4, 0x2e, 0x3b, 0x22, 0xac, 0x9c, 0xeb, 0x6a,
+	0xa5, 0xf0, 0x71, 0x43, 0xf1, 0xfe, 0xab, 0x78, 0xdb, 0x8a, 0x23, 0xff, 0x0a, 0x37, 0xf0, 0x4f,
+	0x9a, 0x37, 0x29, 0x4a, 0x65, 0x62, 0x8c, 0x0f, 0x69, 0x88, 0x92, 0x28, 0xd9, 0x98, 0x7b, 0xf4,
+	0x4f, 0x88, 0x7e, 0x9b, 0x10, 0x11, 0x28, 0x7b, 0x59, 0x09, 0xa3, 0xc6, 0x65, 0x47, 0x44, 0x73,
+	0xd6, 0xa3, 0xd2, 0x6f, 0x2d, 0xfd, 0xd6, 0xcd, 0xbc, 0xb8, 0x6c, 0xe9, 0xa8, 0x3d, 0x51, 0x82,
+	0xca, 0xb0, 0xa1, 0x18, 0x89, 0x40, 0x18, 0x9f, 0x01, 0x1c, 0x2f, 0x33, 0x77, 0x9b, 0xe3, 0x3d,
+	0x82, 0x66, 0xe1, 0x68, 0xd4, 0x5c, 0x12, 0xca, 0x2c, 0xd8, 0x6a, 0x84, 0xde, 0x02, 0xf8, 0x57,
+	0x7b, 0x5b, 0xe2, 0xbe, 0xf6, 0x48, 0xf4, 0xa6, 0xda, 0x64, 0xe6, 0x6a, 0x53, 0xd9, 0x60, 0x91,
+	0x9e, 0x6a, 0x6b, 0x25, 0x33, 0xbe, 0x00, 0x08, 0xcb, 0xcc, 0x7d, 0x1a, 0xb0, 0x9e, 0x8a, 0xdf,
+	0x03, 0x38, 0xdd, 0x0c, 0x06, 0xd4, 0xfc, 0x50, 0x69, 0x9e, 0x95, 0x9a, 0x3b, 0xea, 0x07, 0x53,
+	0xfd, 0x77, 0x52, 0x2d, 0x75, 0xef, 0x0b, 0xd9, 0x9b, 0x38, 0x3c, 0x20, 0x8c, 0x5f, 0x2b, 0xfb,
+	0x11, 0x44, 0xbf, 0xc4, 0xdf, 0x21, 0x01, 0xf5, 0xb3, 0x43, 0xa2, 0xf7, 0x8b, 0x97, 0x2d, 0x7d,
+	0xae, 0xcb, 0x11, 0x11, 0x18, 0xc3, 0x9e, 0x69, 0x5b, 0x6e, 0x5d, 0x4c, 0x19, 0x30, 0x7f, 0xdd,
+	0x87, 0xc4, 0x26, 0xac, 0x41, 0x03, 0x46, 0x8c, 0x05, 0xa8, 0x5d, 0xbd, 0x21, 0x92, 0xb7, 0x08,
+	0xce, 0xc4, 0xd9, 0x48, 0xe6, 0x32, 0xe2, 0x4e, 0x51, 0xfe, 0x77, 0xcc, 0xaa, 0xed, 0xc5, 0xb3,
+	0xc5, 0x77, 0x69, 0x38, 0x5c, 0x66, 0x2e, 0x7a, 0x0d, 0xe0, 0x7f, 0xdd, 0x3f, 0x68, 0x77, 0xcc,
+	0xee, 0x1f, 0x5e, 0xf3, 0x3a, 0xe5, 0xda, 0xbd, 0x41, 0x2b, 0x62, 0x35, 0x68, 0x1f, 0x4e, 0x77,
+	0x5e, 0x85, 0x4b, 0x7d, 0xc9, 0x12, 0xac, 0x56, 0xbc, 0x39, 0x36, 0x59, 0x72, 0x1b, 0x8e, 0xc8,
+	0x93, 0x95, 0xef, 0x51, 0x2c, 0x10, 0x5a, 0xa1, 0x1f, 0x22, 0x21, 0x7d, 0x01, 0xc7, 0xe2, 0xf8,
+	0x1b, 0x3d, 0x8a, 0x14, 0x46, 0x5b, 0xea, 0x8f, 0x69, 0xa7, 0x8e, 0x23, 0xda, 0x8b, 0x5a, 0x61,
+	0x7a, 0x52, 0x77, 0x64, 0xa1, 0xb4, 0x71, 0x72, 0x9e, 0x03, 0xa7, 0xe7, 0x39, 0xf0, 0xfd, 0x3c,
+	0x07, 0x8e, 0x2f, 0x72, 0xa9, 0xd3, 0x8b, 0x5c, 0xea, 0xeb, 0x45, 0x2e, 0xf5, 0x72, 0xb9, 0xed,
+	0x50, 0x75, 0xf9, 0xaf, 0x76, 0x98, 0x3c, 0x89, 0xf3, 0x55, 0x1d, 0x15, 0x57, 0xea, 0xdd, 0x1f,
+	0x01, 0x00, 0x00, 0xff, 0xff, 0x7d, 0xc2, 0xf7, 0xf6, 0xd8, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -662,7 +630,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// CreateFixedAmountPlan defines a method for creating a new fixed amount farming plan
+	// CreateFixedAmountPlan defines a method for creating a new fixed amount
+	// farming plan
 	CreateFixedAmountPlan(ctx context.Context, in *MsgCreateFixedAmountPlan, opts ...grpc.CallOption) (*MsgCreateFixedAmountPlanResponse, error)
 	// CreateRatioPlan defines a method for creating a new ratio farming plan
 	CreateRatioPlan(ctx context.Context, in *MsgCreateRatioPlan, opts ...grpc.CallOption) (*MsgCreateRatioPlanResponse, error)
@@ -670,8 +639,8 @@ type MsgClient interface {
 	Stake(ctx context.Context, in *MsgStake, opts ...grpc.CallOption) (*MsgStakeResponse, error)
 	// Unstake defines a method for unstaking coins from the farming plan
 	Unstake(ctx context.Context, in *MsgUnstake, opts ...grpc.CallOption) (*MsgUnstakeResponse, error)
-	// Claim defines a method for claiming farming rewards
-	Claim(ctx context.Context, in *MsgClaim, opts ...grpc.CallOption) (*MsgClaimResponse, error)
+	// harvest defines a method for claiming farming rewards
+	Harvest(ctx context.Context, in *MsgHarvest, opts ...grpc.CallOption) (*MsgHarvestResponse, error)
 }
 
 type msgClient struct {
@@ -684,7 +653,7 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 
 func (c *msgClient) CreateFixedAmountPlan(ctx context.Context, in *MsgCreateFixedAmountPlan, opts ...grpc.CallOption) (*MsgCreateFixedAmountPlanResponse, error) {
 	out := new(MsgCreateFixedAmountPlanResponse)
-	err := c.cc.Invoke(ctx, "/tendermint.farming.v1beta1.Msg/CreateFixedAmountPlan", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Msg/CreateFixedAmountPlan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -693,7 +662,7 @@ func (c *msgClient) CreateFixedAmountPlan(ctx context.Context, in *MsgCreateFixe
 
 func (c *msgClient) CreateRatioPlan(ctx context.Context, in *MsgCreateRatioPlan, opts ...grpc.CallOption) (*MsgCreateRatioPlanResponse, error) {
 	out := new(MsgCreateRatioPlanResponse)
-	err := c.cc.Invoke(ctx, "/tendermint.farming.v1beta1.Msg/CreateRatioPlan", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Msg/CreateRatioPlan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -702,7 +671,7 @@ func (c *msgClient) CreateRatioPlan(ctx context.Context, in *MsgCreateRatioPlan,
 
 func (c *msgClient) Stake(ctx context.Context, in *MsgStake, opts ...grpc.CallOption) (*MsgStakeResponse, error) {
 	out := new(MsgStakeResponse)
-	err := c.cc.Invoke(ctx, "/tendermint.farming.v1beta1.Msg/Stake", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Msg/Stake", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -711,16 +680,16 @@ func (c *msgClient) Stake(ctx context.Context, in *MsgStake, opts ...grpc.CallOp
 
 func (c *msgClient) Unstake(ctx context.Context, in *MsgUnstake, opts ...grpc.CallOption) (*MsgUnstakeResponse, error) {
 	out := new(MsgUnstakeResponse)
-	err := c.cc.Invoke(ctx, "/tendermint.farming.v1beta1.Msg/Unstake", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Msg/Unstake", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) Claim(ctx context.Context, in *MsgClaim, opts ...grpc.CallOption) (*MsgClaimResponse, error) {
-	out := new(MsgClaimResponse)
-	err := c.cc.Invoke(ctx, "/tendermint.farming.v1beta1.Msg/Claim", in, out, opts...)
+func (c *msgClient) Harvest(ctx context.Context, in *MsgHarvest, opts ...grpc.CallOption) (*MsgHarvestResponse, error) {
+	out := new(MsgHarvestResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Msg/Harvest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -729,7 +698,8 @@ func (c *msgClient) Claim(ctx context.Context, in *MsgClaim, opts ...grpc.CallOp
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// CreateFixedAmountPlan defines a method for creating a new fixed amount farming plan
+	// CreateFixedAmountPlan defines a method for creating a new fixed amount
+	// farming plan
 	CreateFixedAmountPlan(context.Context, *MsgCreateFixedAmountPlan) (*MsgCreateFixedAmountPlanResponse, error)
 	// CreateRatioPlan defines a method for creating a new ratio farming plan
 	CreateRatioPlan(context.Context, *MsgCreateRatioPlan) (*MsgCreateRatioPlanResponse, error)
@@ -737,8 +707,8 @@ type MsgServer interface {
 	Stake(context.Context, *MsgStake) (*MsgStakeResponse, error)
 	// Unstake defines a method for unstaking coins from the farming plan
 	Unstake(context.Context, *MsgUnstake) (*MsgUnstakeResponse, error)
-	// Claim defines a method for claiming farming rewards
-	Claim(context.Context, *MsgClaim) (*MsgClaimResponse, error)
+	// harvest defines a method for claiming farming rewards
+	Harvest(context.Context, *MsgHarvest) (*MsgHarvestResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -757,8 +727,8 @@ func (*UnimplementedMsgServer) Stake(ctx context.Context, req *MsgStake) (*MsgSt
 func (*UnimplementedMsgServer) Unstake(ctx context.Context, req *MsgUnstake) (*MsgUnstakeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unstake not implemented")
 }
-func (*UnimplementedMsgServer) Claim(ctx context.Context, req *MsgClaim) (*MsgClaimResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Claim not implemented")
+func (*UnimplementedMsgServer) Harvest(ctx context.Context, req *MsgHarvest) (*MsgHarvestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Harvest not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -775,7 +745,7 @@ func _Msg_CreateFixedAmountPlan_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tendermint.farming.v1beta1.Msg/CreateFixedAmountPlan",
+		FullMethod: "/cosmos.farming.v1beta1.Msg/CreateFixedAmountPlan",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateFixedAmountPlan(ctx, req.(*MsgCreateFixedAmountPlan))
@@ -793,7 +763,7 @@ func _Msg_CreateRatioPlan_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tendermint.farming.v1beta1.Msg/CreateRatioPlan",
+		FullMethod: "/cosmos.farming.v1beta1.Msg/CreateRatioPlan",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateRatioPlan(ctx, req.(*MsgCreateRatioPlan))
@@ -811,7 +781,7 @@ func _Msg_Stake_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tendermint.farming.v1beta1.Msg/Stake",
+		FullMethod: "/cosmos.farming.v1beta1.Msg/Stake",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Stake(ctx, req.(*MsgStake))
@@ -829,7 +799,7 @@ func _Msg_Unstake_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tendermint.farming.v1beta1.Msg/Unstake",
+		FullMethod: "/cosmos.farming.v1beta1.Msg/Unstake",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Unstake(ctx, req.(*MsgUnstake))
@@ -837,26 +807,26 @@ func _Msg_Unstake_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Claim_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgClaim)
+func _Msg_Harvest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgHarvest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Claim(ctx, in)
+		return srv.(MsgServer).Harvest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tendermint.farming.v1beta1.Msg/Claim",
+		FullMethod: "/cosmos.farming.v1beta1.Msg/Harvest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Claim(ctx, req.(*MsgClaim))
+		return srv.(MsgServer).Harvest(ctx, req.(*MsgHarvest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 var _Msg_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "tendermint.farming.v1beta1.Msg",
+	ServiceName: "cosmos.farming.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -876,8 +846,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_Unstake_Handler,
 		},
 		{
-			MethodName: "Claim",
-			Handler:    _Msg_Claim_Handler,
+			MethodName: "Harvest",
+			Handler:    _Msg_Harvest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -915,13 +885,8 @@ func (m *MsgCreateFixedAmountPlan) MarshalToSizedBuffer(dAtA []byte) (int, error
 				i = encodeVarintTx(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x32
+			dAtA[i] = 0x2a
 		}
-	}
-	if m.EpochDays != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.EpochDays))
-		i--
-		dAtA[i] = 0x28
 	}
 	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
 	if err1 != nil {
@@ -992,12 +957,7 @@ func (m *MsgCreateRatioPlan) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x32
-	if m.EpochDays != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.EpochDays))
-		i--
-		dAtA[i] = 0x28
-	}
+	dAtA[i] = 0x2a
 	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
 	if err3 != nil {
 		return 0, err3
@@ -1069,7 +1029,7 @@ func (m *MsgStake) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintTx(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x12
 		}
 	}
 	if len(m.Farmer) > 0 {
@@ -1077,12 +1037,7 @@ func (m *MsgStake) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Farmer)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Farmer)))
 		i--
-		dAtA[i] = 0x12
-	}
-	if m.PlanId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PlanId))
-		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1118,7 +1073,7 @@ func (m *MsgUnstake) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintTx(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x12
 		}
 	}
 	if len(m.Farmer) > 0 {
@@ -1126,17 +1081,12 @@ func (m *MsgUnstake) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Farmer)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Farmer)))
 		i--
-		dAtA[i] = 0x12
-	}
-	if m.PlanId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PlanId))
-		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgClaim) Marshal() (dAtA []byte, err error) {
+func (m *MsgHarvest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1146,27 +1096,29 @@ func (m *MsgClaim) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgClaim) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgHarvest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgClaim) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgHarvest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	if len(m.StakingCoinDenom) > 0 {
+		i -= len(m.StakingCoinDenom)
+		copy(dAtA[i:], m.StakingCoinDenom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.StakingCoinDenom)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.Farmer) > 0 {
 		i -= len(m.Farmer)
 		copy(dAtA[i:], m.Farmer)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Farmer)))
 		i--
-		dAtA[i] = 0x12
-	}
-	if m.PlanId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PlanId))
-		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1263,7 +1215,7 @@ func (m *MsgUnstakeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgClaimResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgHarvestResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1273,12 +1225,12 @@ func (m *MsgClaimResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgClaimResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgHarvestResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgClaimResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgHarvestResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1317,9 +1269,6 @@ func (m *MsgCreateFixedAmountPlan) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
 	n += 1 + l + sovTx(uint64(l))
-	if m.EpochDays != 0 {
-		n += 1 + sovTx(uint64(m.EpochDays))
-	}
 	if len(m.EpochAmount) > 0 {
 		for _, e := range m.EpochAmount {
 			l = e.Size()
@@ -1349,9 +1298,6 @@ func (m *MsgCreateRatioPlan) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
 	n += 1 + l + sovTx(uint64(l))
-	if m.EpochDays != 0 {
-		n += 1 + sovTx(uint64(m.EpochDays))
-	}
 	l = m.EpochRatio.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
@@ -1363,9 +1309,6 @@ func (m *MsgStake) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.PlanId != 0 {
-		n += 1 + sovTx(uint64(m.PlanId))
-	}
 	l = len(m.Farmer)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
@@ -1385,9 +1328,6 @@ func (m *MsgUnstake) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.PlanId != 0 {
-		n += 1 + sovTx(uint64(m.PlanId))
-	}
 	l = len(m.Farmer)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
@@ -1401,16 +1341,17 @@ func (m *MsgUnstake) Size() (n int) {
 	return n
 }
 
-func (m *MsgClaim) Size() (n int) {
+func (m *MsgHarvest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PlanId != 0 {
-		n += 1 + sovTx(uint64(m.PlanId))
-	}
 	l = len(m.Farmer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.StakingCoinDenom)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1453,7 +1394,7 @@ func (m *MsgUnstakeResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgClaimResponse) Size() (n int) {
+func (m *MsgHarvestResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1630,25 +1571,6 @@ func (m *MsgCreateFixedAmountPlan) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpochDays", wireType)
-			}
-			m.EpochDays = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.EpochDays |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EpochAmount", wireType)
 			}
@@ -1865,25 +1787,6 @@ func (m *MsgCreateRatioPlan) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpochDays", wireType)
-			}
-			m.EpochDays = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.EpochDays |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EpochRatio", wireType)
 			}
@@ -1968,25 +1871,6 @@ func (m *MsgStake) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
-			}
-			m.PlanId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PlanId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
 			}
@@ -2018,7 +1902,7 @@ func (m *MsgStake) Unmarshal(dAtA []byte) error {
 			}
 			m.Farmer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoins", wireType)
 			}
@@ -2103,25 +1987,6 @@ func (m *MsgUnstake) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
-			}
-			m.PlanId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PlanId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
 			}
@@ -2153,7 +2018,7 @@ func (m *MsgUnstake) Unmarshal(dAtA []byte) error {
 			}
 			m.Farmer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UnstakingCoins", wireType)
 			}
@@ -2208,7 +2073,7 @@ func (m *MsgUnstake) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgClaim) Unmarshal(dAtA []byte) error {
+func (m *MsgHarvest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2231,32 +2096,13 @@ func (m *MsgClaim) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgClaim: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgHarvest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgClaim: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgHarvest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
-			}
-			m.PlanId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PlanId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
 			}
@@ -2287,6 +2133,38 @@ func (m *MsgClaim) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Farmer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoinDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingCoinDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2509,7 +2387,7 @@ func (m *MsgUnstakeResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgClaimResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgHarvestResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2532,10 +2410,10 @@ func (m *MsgClaimResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgClaimResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgHarvestResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgClaimResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgHarvestResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

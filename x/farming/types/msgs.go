@@ -12,7 +12,7 @@ var (
 	_ sdk.Msg = (*MsgCreateRatioPlan)(nil)
 	_ sdk.Msg = (*MsgStake)(nil)
 	_ sdk.Msg = (*MsgUnstake)(nil)
-	_ sdk.Msg = (*MsgClaim)(nil)
+	_ sdk.Msg = (*MsgHarvest)(nil)
 )
 
 // Message types for the farming module
@@ -21,7 +21,7 @@ const (
 	TypeMsgCreateRatioPlan       = "create_ratio_plan"
 	TypeMsgStake                 = "stake"
 	TypeMsgUnstake               = "unstake"
-	TypeMsgClaim                 = "claim"
+	TypeMsgHarvest               = "harvest"
 )
 
 // NewMsgCreateFixedAmountPlan creates a new MsgCreateFixedAmountPlan.
@@ -30,7 +30,6 @@ func NewMsgCreateFixedAmountPlan(
 	stakingCoinWeights sdk.DecCoins,
 	startTime time.Time,
 	endTime time.Time,
-	epochDays uint32,
 	epochAmount sdk.Coins,
 ) *MsgCreateFixedAmountPlan {
 	return &MsgCreateFixedAmountPlan{
@@ -38,7 +37,6 @@ func NewMsgCreateFixedAmountPlan(
 		StakingCoinWeights: stakingCoinWeights,
 		StartTime:          startTime,
 		EndTime:            endTime,
-		EpochDays:          epochDays,
 		EpochAmount:        epochAmount,
 	}
 }
@@ -53,9 +51,6 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 	}
 	if !msg.EndTime.After(msg.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime, msg.StartTime)
-	}
-	if msg.EpochDays == 0 {
-		return sdkerrors.Wrapf(ErrInvalidPlanEpochDays, "epoch days must be positive")
 	}
 	if msg.StakingCoinWeights.Empty() {
 		return ErrEmptyStakingCoinWeights
@@ -98,7 +93,6 @@ func NewMsgCreateRatioPlan(
 	stakingCoinWeights sdk.DecCoins,
 	startTime time.Time,
 	endTime time.Time,
-	epochDays uint32,
 	epochRatio sdk.Dec,
 ) *MsgCreateRatioPlan {
 	return &MsgCreateRatioPlan{
@@ -106,7 +100,6 @@ func NewMsgCreateRatioPlan(
 		StakingCoinWeights: stakingCoinWeights,
 		StartTime:          startTime,
 		EndTime:            endTime,
-		EpochDays:          epochDays,
 		EpochRatio:         epochRatio,
 	}
 }
@@ -121,9 +114,6 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 	}
 	if !msg.EndTime.After(msg.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime, msg.StartTime)
-	}
-	if msg.EpochDays == 0 {
-		return sdkerrors.Wrapf(ErrInvalidPlanEpochDays, "epoch days must be positive")
 	}
 	if msg.StakingCoinWeights.Empty() {
 		return ErrEmptyStakingCoinWeights
@@ -159,12 +149,10 @@ func (msg MsgCreateRatioPlan) GetPlanCreator() sdk.AccAddress {
 
 // NewMsgStake creates a new MsgStake.
 func NewMsgStake(
-	planID uint64,
 	farmer sdk.AccAddress,
 	stakingCoins sdk.Coins,
 ) *MsgStake {
 	return &MsgStake{
-		PlanId:       planID,
 		Farmer:       farmer.String(),
 		StakingCoins: stakingCoins,
 	}
@@ -206,12 +194,10 @@ func (msg MsgStake) GetStaker() sdk.AccAddress {
 
 // NewMsgUnstake creates a new MsgUnstake.
 func NewMsgUnstake(
-	planID uint64,
 	farmer sdk.AccAddress,
 	unstakingCoins sdk.Coins,
 ) *MsgUnstake {
 	return &MsgUnstake{
-		PlanId:         planID,
 		Farmer:         farmer.String(),
 		UnstakingCoins: unstakingCoins,
 	}
@@ -251,33 +237,34 @@ func (msg MsgUnstake) GetUnstaker() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgClaim creates a new MsgClaim.
-func NewMsgClaim(
-	planID uint64,
+// NewMsgHarvest creates a new MsgHarvest.
+func NewMsgHarvest(
+	stakingCoinDenom string,
 	farmer sdk.AccAddress,
-) *MsgClaim {
-	return &MsgClaim{
-		PlanId: planID,
-		Farmer: farmer.String(),
+) *MsgHarvest {
+	return &MsgHarvest{
+		StakingCoinDenom: stakingCoinDenom,
+		Farmer:           farmer.String(),
 	}
 }
 
-func (msg MsgClaim) Route() string { return RouterKey }
+func (msg MsgHarvest) Route() string { return RouterKey }
 
-func (msg MsgClaim) Type() string { return TypeMsgClaim }
+func (msg MsgHarvest) Type() string { return TypeMsgHarvest }
 
-func (msg MsgClaim) ValidateBasic() error {
+func (msg MsgHarvest) ValidateBasic() error {
+	// TODO: validate stakingCoinDenom
 	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farmer address %q: %v", msg.Farmer, err)
 	}
 	return nil
 }
 
-func (msg MsgClaim) GetSignBytes() []byte {
+func (msg MsgHarvest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgClaim) GetSigners() []sdk.AccAddress {
+func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
 		panic(err)
@@ -285,7 +272,7 @@ func (msg MsgClaim) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgClaim) GetClaimer() sdk.AccAddress {
+func (msg MsgHarvest) GetClaimer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
 		panic(err)

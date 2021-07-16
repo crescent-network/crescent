@@ -76,7 +76,7 @@ func (k Keeper) GetNextPlanIDWithUpdate(ctx sdk.Context) uint64 {
 	var id uint64
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.GlobalFarmingPlanIDKey)
+	bz := store.Get(types.GlobalPlanIdKey)
 	if bz == nil {
 		// initialize the PlanId
 		id = 1
@@ -91,7 +91,7 @@ func (k Keeper) GetNextPlanIDWithUpdate(ctx sdk.Context) uint64 {
 		id = val.GetValue()
 	}
 	bz = k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id + 1})
-	store.Set(types.GlobalFarmingPlanIDKey, bz)
+	store.Set(types.GlobalPlanIdKey, bz)
 	return id
 }
 

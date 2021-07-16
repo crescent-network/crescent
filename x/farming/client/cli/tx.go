@@ -29,7 +29,7 @@ func GetTxCmd() *cobra.Command {
 		NewCreateRatioPlanCmd(),
 		NewStakeCmd(),
 		NewUnstakeCmd(),
-		NewClaimCmd(),
+		NewHarvestCmd(),
 	)
 
 	return farmingTxCmd
@@ -63,7 +63,6 @@ $ %s tx %s create-fixed-plan --from mykey
 			stakingCoinWeights := sdk.DecCoins{}
 			startTime := time.Time{}
 			endTime := time.Time{}
-			epochDays := uint32(1)
 			epochAmount := sdk.Coins{}
 
 			msg := types.NewMsgCreateFixedAmountPlan(
@@ -71,7 +70,6 @@ $ %s tx %s create-fixed-plan --from mykey
 				stakingCoinWeights,
 				startTime,
 				endTime,
-				epochDays,
 				epochAmount,
 			)
 
@@ -110,7 +108,6 @@ $ %s tx %s create-ratio-plan --from mykey
 			stakingCoinWeights := sdk.DecCoins{}
 			startTime := time.Time{}
 			endTime := time.Time{}
-			epochDays := uint32(1)
 			epochRatio := sdk.Dec{}
 
 			msg := types.NewMsgCreateRatioPlan(
@@ -118,7 +115,6 @@ $ %s tx %s create-ratio-plan --from mykey
 				stakingCoinWeights,
 				startTime,
 				endTime,
-				epochDays,
 				epochRatio,
 			)
 
@@ -152,12 +148,10 @@ $ %s tx %s stake --from mykey
 			fmt.Println("planCreator: ", planCreator)
 
 			// TODO: replace dummy data
-			planID := uint64(1)
 			farmer := sdk.AccAddress{}
 			stakingCoins := sdk.Coins{}
 
 			msg := types.NewMsgStake(
-				planID,
 				farmer,
 				stakingCoins,
 			)
@@ -192,12 +186,10 @@ $ %s tx %s unstake --from mykey
 			fmt.Println("planCreator: ", planCreator)
 
 			// TODO: replace dummy data
-			planID := uint64(1)
 			farmer := sdk.AccAddress{}
 			stakingCoins := sdk.Coins{}
 
 			msg := types.NewMsgUnstake(
-				planID,
 				farmer,
 				stakingCoins,
 			)
@@ -209,11 +201,11 @@ $ %s tx %s unstake --from mykey
 	return cmd
 }
 
-func NewClaimCmd() *cobra.Command {
+func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim",
+		Use:   "harvest",
 		Args:  cobra.ExactArgs(2),
-		Short: "claim farming rewards from the farming plan",
+		Short: "harvest farming rewards from the farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`claim farming rewards from the farming plan.
 Example:
@@ -232,11 +224,11 @@ $ %s tx %s claim --from mykey
 			fmt.Println("planCreator: ", planCreator)
 
 			// TODO: replace dummy data
-			planID := uint64(1)
+			stakingCoinDenom := "test"
 			farmer := sdk.AccAddress{}
 
-			msg := types.NewMsgClaim(
-				planID,
+			msg := types.NewMsgHarvest(
+				stakingCoinDenom,
 				farmer,
 			)
 

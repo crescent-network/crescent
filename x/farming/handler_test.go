@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,6 +12,8 @@ import (
 	"github.com/tendermint/farming/x/farming"
 	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // createTestInput returns a simapp with custom FarmingKeeper
@@ -45,7 +46,6 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 	)
 	startTime := time.Now().UTC()
 	endTime := startTime.AddDate(1, 0, 0)
-	epochDays := uint32(1)
 	epochAmount := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1)))
 
 	msg := types.NewMsgCreateFixedAmountPlan(
@@ -53,7 +53,6 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 		stakingCoinWeights,
 		startTime,
 		endTime,
-		epochDays,
 		epochAmount,
 	)
 
@@ -75,7 +74,6 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 	)
 	startTime := time.Now().UTC()
 	endTime := startTime.AddDate(1, 0, 0)
-	epochDays := uint32(1)
 	epochAmount := sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1)))
 
 	msg := types.NewMsgCreateFixedAmountPlan(
@@ -83,7 +81,6 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 		stakingCoinWeights,
 		startTime,
 		endTime,
-		epochDays,
 		epochAmount,
 	)
 
@@ -104,6 +101,6 @@ func TestMsgUnstake(t *testing.T) {
 	// TODO: not implemented yet
 }
 
-func TestMsgClaim(t *testing.T) {
+func TestMsgHarvest(t *testing.T) {
 	// TODO: not implemented yet
 }

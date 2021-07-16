@@ -94,10 +94,6 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 			return false, nil
 		}
 
-		if req.StakingReserveAddress != "" && plan.GetStakingReserveAddress().String() != req.StakingReserveAddress {
-			return false, nil
-		}
-
 		if req.StakingCoinDenom != "" {
 			found := false
 			for _, coin := range plan.GetStakingCoinWeights() {
@@ -188,8 +184,7 @@ func (k Querier) FarmerStakings(c context.Context, req *types.QueryFarmerStaking
 		if err := k.cdc.Unmarshal(value, &val); err != nil {
 			return err
 		}
-		planID := val.GetValue()
-		staking, found := k.GetStaking(ctx, planID, farmerAddr)
+		staking, found := k.GetStakingByFarmer(ctx, farmerAddr)
 		if !found { // TODO: Remove this check if we can sure that we're cleaning the store correctly.
 			return fmt.Errorf("staking not found")
 		}
@@ -214,7 +209,7 @@ func (k Querier) FarmerStaking(c context.Context, req *types.QueryFarmerStakingR
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	staking, found := k.GetStaking(ctx, req.PlanId, farmerAddr)
+	staking, found := k.GetStakingByFarmer(ctx, farmerAddr)
 	if !found {
 		return nil, status.Error(codes.NotFound, "staking not found")
 	}
@@ -223,28 +218,30 @@ func (k Querier) FarmerStaking(c context.Context, req *types.QueryFarmerStakingR
 }
 
 func (k Querier) PlanRewards(c context.Context, req *types.QueryPlanRewardsRequest) (*types.QueryPlanRewardsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	rewardStore := prefix.NewStore(store, types.GetRewardPrefix(req.PlanId))
-
-	var rewards []*types.Reward
-	pageRes, err := query.Paginate(rewardStore, req.Pagination, func(key []byte, value []byte) error {
-		reward, err := k.UnmarshalReward(value)
-		if err != nil {
-			return err
-		}
-		rewards = append(rewards, &reward)
-		return nil
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryPlanRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
+	// TODO: TBD this endpoint
+	//if req == nil {
+	//	return nil, status.Error(codes.InvalidArgument, "invalid request")
+	//}
+	//
+	//ctx := sdk.UnwrapSDKContext(c)
+	//store := ctx.KVStore(k.storeKey)
+	//rewardStore := prefix.NewStore(store, types.GetRewardKey(req.PlanId))
+	//
+	//var rewards []*types.Reward
+	//pageRes, err := query.Paginate(rewardStore, req.Pagination, func(key []byte, value []byte) error {
+	//	reward, err := k.UnmarshalReward(value)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	rewards = append(rewards, &reward)
+	//	return nil
+	//})
+	//if err != nil {
+	//	return nil, status.Error(codes.Internal, err.Error())
+	//}
+	//
+	//return &types.QueryPlanRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
+	return &types.QueryPlanRewardsResponse{}, nil
 }
 
 func (k Querier) FarmerRewards(c context.Context, req *types.QueryFarmerRewardsRequest) (*types.QueryFarmerRewardsResponse, error) {
@@ -259,20 +256,15 @@ func (k Querier) FarmerRewards(c context.Context, req *types.QueryFarmerRewardsR
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	planStore := prefix.NewStore(store, types.GetPlansByFarmerAddrIndexKey(farmerAddr))
+	farmerPrefix := prefix.NewStore(store, types.GetRewardByFarmerAddrIndexPrefix(farmerAddr))
 
 	var rewards []*types.Reward
-	pageRes, err := query.Paginate(planStore, req.Pagination, func(key []byte, value []byte) error {
-		var val gogotypes.UInt64Value
+	pageRes, err := query.Paginate(farmerPrefix, req.Pagination, func(key []byte, value []byte) error {
+		var val types.Reward
 		if err := k.cdc.Unmarshal(value, &val); err != nil {
 			return err
 		}
-		planID := val.GetValue()
-		reward, found := k.GetReward(ctx, planID, farmerAddr)
-		if !found { // TODO: Remove this check if we can sure that we're cleaning the store correctly.
-			return fmt.Errorf("reward not found")
-		}
-		rewards = append(rewards, &reward)
+		rewards = append(rewards, &val)
 		return nil
 	})
 	if err != nil {
@@ -283,20 +275,22 @@ func (k Querier) FarmerRewards(c context.Context, req *types.QueryFarmerRewardsR
 }
 
 func (k Querier) FarmerReward(c context.Context, req *types.QueryFarmerRewardRequest) (*types.QueryFarmerRewardResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid argument")
-	}
-
-	farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	reward, found := k.GetReward(ctx, req.PlanId, farmerAddr)
-	if !found {
-		return nil, status.Error(codes.NotFound, "reward not found")
-	}
-
-	return &types.QueryFarmerRewardResponse{Reward: &reward}, nil
+	// TODO: Deprecated
+	//if req == nil {
+	//	return nil, status.Error(codes.InvalidArgument, "invalid argument")
+	//}
+	//
+	//farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//ctx := sdk.UnwrapSDKContext(c)
+	//reward, found := k.GetReward(ctx, req.PlanId, farmerAddr)
+	//if !found {
+	//	return nil, status.Error(codes.NotFound, "reward not found")
+	//}
+	//
+	//return &types.QueryFarmerRewardResponse{Reward: &reward}, nil
+	return &types.QueryFarmerRewardResponse{}, nil
 }

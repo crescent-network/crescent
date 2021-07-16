@@ -32,8 +32,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Unstake(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgClaim:
-			res, err := msgServer.Claim(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgHarvest:
+			res, err := msgServer.Harvest(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:

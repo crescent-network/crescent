@@ -60,7 +60,7 @@ func WeightedOperations(
 	var weightMsgClaim int
 	appParams.GetOrGenerate(cdc, OpWeightMsgClaim, &weightMsgClaim, nil,
 		func(_ *rand.Rand) {
-			weightMsgClaim = params.DefaultWeightMsgClaim
+			weightMsgClaim = params.DefaultWeightMsgHarvest
 		},
 	)
 

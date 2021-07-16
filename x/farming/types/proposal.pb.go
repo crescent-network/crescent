@@ -29,7 +29,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type PublicPlanProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// plans specifies the plan interface(s); it can be FixedAmountPlan or RatioPlan
+	// plans specifies the plan interface(s); it can be FixedAmountPlan or
+	// RatioPlan
 	Plans []*types.Any `protobuf:"bytes,3,rep,name=plans,proto3" json:"plans,omitempty"`
 }
 

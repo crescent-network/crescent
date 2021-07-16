@@ -106,9 +106,9 @@ func (k Keeper) IteratePlansByFarmerAddr(ctx sdk.Context, farmerAcc sdk.AccAddre
 	}
 }
 
-// SetPlanIDByFarmerAddrIndex sets Index by FarmerAddr
+// SetPlanIdByFarmerAddrIndex sets Index by FarmerAddr
 // TODO: need to gas cost check for existing check or update everytime
-func (k Keeper) SetPlanIDByFarmerAddrIndex(ctx sdk.Context, planID uint64, farmerAcc sdk.AccAddress) {
+func (k Keeper) SetPlanIdByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAddress, planID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: planID})
 	store.Set(types.GetPlanByFarmerAddrIndexKey(farmerAcc, planID), b)
@@ -128,7 +128,6 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 		msg.GetStakingCoinWeights(),
 		msg.StartTime,
 		msg.EndTime,
-		msg.GetEpochDays(),
 	)
 
 	fixedPlan := types.NewFixedAmountPlan(basePlan, msg.EpochAmount)
@@ -152,7 +151,6 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		msg.GetStakingCoinWeights(),
 		msg.StartTime,
 		msg.EndTime,
-		msg.GetEpochDays(),
 	)
 
 	ratioPlan := types.NewRatioPlan(basePlan, msg.EpochRatio)

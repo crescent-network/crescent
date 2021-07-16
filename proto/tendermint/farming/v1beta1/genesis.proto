@@ -1,9 +1,6 @@
 syntax = "proto3";
 
-package tendermint.farming.v1beta1;
-
-option go_package = "github.com/tendermint/farming/x/farming/types";
-option (gogoproto.equal_all) = true;
+package cosmos.farming.v1beta1;
 
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
@@ -11,6 +8,9 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "tendermint/farming/v1beta1/farming.proto";
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tendermint/farming/x/farming/types";
+option (gogoproto.equal_all) = true;
 
 // GenesisState defines the farming module's genesis state.
 message GenesisState {
