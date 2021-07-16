@@ -18,7 +18,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
-	"github.com/tendermint/farming/x/farming/types"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
 )
 
@@ -80,8 +79,8 @@ func CreateTestInput() (*FarmingApp, sdk.Context) {
 
 	app.FarmingKeeper = farmingkeeper.NewKeeper(
 		appCodec,
-		app.GetKey(types.StoreKey),
-		app.GetSubspace(types.ModuleName),
+		app.GetKey(farmingtypes.StoreKey),
+		app.GetSubspace(farmingtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.DistrKeeper,
