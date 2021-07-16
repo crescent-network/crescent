@@ -4,6 +4,7 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 BINDIR ?= $(GOPATH)/bin
 DOCKER := $(shell which docker)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 BUILDDIR ?= $(CURDIR)/build
 
 export GO111MODULE = on
@@ -160,13 +161,13 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=latest
-containerProtoImage=bharvest/liquidity-proto-gen:$(containerProtoVer) 
+containerProtoVer=v0.2
+containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
 
-proto-all: proto-format proto-gen proto-swagger-gen update-swagger-docs
+proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
@@ -183,7 +184,7 @@ proto-format:
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
 		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
 
-proto-js-gen:
-	starport build --rebuild-proto-once
+proto-lint:
+	@$(DOCKER_BUF) lint --error-format=json
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-js-gen
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint

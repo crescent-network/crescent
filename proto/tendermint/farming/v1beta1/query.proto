@@ -28,45 +28,24 @@ service Query {
     option (google.api.http).get = "/cosmos/farming/v1beta1/plans/{plan_id}";
   }
 
-  // PlanStakings returns all stakings of the plan.
-  rpc PlanStakings(QueryPlanStakingsRequest)
-      returns (QueryPlanStakingsResponse) {
-    option (google.api.http).get =
-        "/cosmos/farming/v1beta1/plans/{plan_id}/stakings";
+  // Stakings returns all stakings.
+  rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
+    option (google.api.http).get = "/cosmos/farming/v1beta1/stakings";
   }
 
-  // FarmerStakings returns all stakings owned by the farmer.
-  rpc FarmerStakings(QueryFarmerStakingsRequest)
-      returns (QueryFarmerStakingsResponse) {
+  // FarmerStaking returns a staking owned by the farmer.
+  rpc FarmerStaking(QueryFarmerStakingRequest) returns (QueryFarmerStakingResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/stakings/{farmer}";
   }
 
-  // FarmerStaking returns a specific staking of the plan which is owned by the
-  // farmer.
-  rpc FarmerStaking(QueryFarmerStakingRequest)
-      returns (QueryFarmerStakingResponse) {
-    option (google.api.http).get =
-        "/cosmos/farming/v1beta1/stakings/{farmer}/plans/{plan_id}";
+  // Rewards returns all rewards.
+  rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
+    option (google.api.http).get = "/cosmos/farming/v1beta1/rewards";
   }
 
-  // PlanRewards returns all rewards of the plan.
-  rpc PlanRewards(QueryPlanRewardsRequest) returns (QueryPlanRewardsResponse) {
-    option (google.api.http).get =
-        "/cosmos/farming/v1beta1/plans/{plan_id}/rewards";
-  }
-
-  // FarmerRewards returns all rewards owned by the farmer.
-  rpc FarmerRewards(QueryFarmerRewardsRequest)
-      returns (QueryFarmerRewardsResponse) {
+  // FarmerRewards returns all the rewards owned by the farmer.
+  rpc FarmerRewards(QueryFarmerRewardsRequest) returns (QueryFarmerRewardsResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/rewards/{farmer}";
-  }
-
-  // FarmerReward returns a specific reward of the plan which is owned by the
-  // farmer.
-  rpc FarmerReward(QueryFarmerRewardRequest)
-      returns (QueryFarmerRewardResponse) {
-    option (google.api.http).get =
-        "/cosmos/farming/v1beta1/rewards/{farmer}/plans/{plan_id}";
   }
 }
 
@@ -75,109 +54,78 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryPlansRequest is the request type for the Query/Plans RPC method.
 message QueryPlansRequest {
-  string type = 1;
-  string farming_pool_address = 2;
-  string reward_pool_address = 3;
-  string termination_address = 4;
-  string staking_reserve_address = 5;
-  string staking_coin_denom = 6;
-  cosmos.base.query.v1beta1.PageRequest pagination = 7;
+  string                                type                 = 1;
+  string                                farming_pool_address = 2;
+  string                                reward_pool_address  = 3;
+  string                                termination_address  = 4;
+  string                                staking_coin_denom   = 5;
+  cosmos.base.query.v1beta1.PageRequest pagination           = 6;
 }
 
 // QueryPlansResponse is the response type for the Query/Plans RPC method.
 message QueryPlansResponse {
-  repeated google.protobuf.Any plans = 1
-      [ (cosmos_proto.accepts_interface) = "PlanI" ];
+  repeated google.protobuf.Any           plans      = 1 [(cosmos_proto.accepts_interface) = "PlanI"];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryPlanRequest is the request type for the Query/Plan RPC method.
-message QueryPlanRequest { uint64 plan_id = 1; }
+message QueryPlanRequest {
+  uint64 plan_id = 1;
+}
 
 // QueryPlanResponse is the response type for the Query/Plan RPC method.
 message QueryPlanResponse {
-  google.protobuf.Any plan = 1 [ (cosmos_proto.accepts_interface) = "PlanI" ];
+  google.protobuf.Any plan = 1 [(cosmos_proto.accepts_interface) = "PlanI"];
 }
 
-// QueryPlanStakingsRequest is the request type for the Query/PlanStakings RPC
-// method.
-message QueryPlanStakingsRequest {
-  uint64 plan_id = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+// QueryStakingsRequest is the request type for the Query/Stakings RPC method.
+message QueryStakingsRequest {
+  string                                staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+  cosmos.base.query.v1beta1.PageRequest pagination         = 2;
 }
 
-// QueryPlanStakingsResponse is the response type for the Query/PlanStakings RPC
-// method.
-message QueryPlanStakingsResponse {
-  repeated Staking stakings = 1;
+// QueryStakingsResponse is the response type for the Query/Stakings RPC method.
+message QueryStakingsResponse {
+  repeated Staking                       stakings   = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryFarmerStakingsRequest is the request type for the Query/FarmerStakings
-// RPC method.
-message QueryFarmerStakingsRequest {
-  string farmer = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
-}
-
-// QueryFarmerStakingsResponse is the response type for the Query/FarmerStakings
-// RPC method.
-message QueryFarmerStakingsResponse {
-  repeated Staking stakings = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryFarmerStakingRequest is the request type for the Query/FarmerStaking RPC
-// method.
+// QueryFarmerStakingRequest is the request type for the Query/FarmerStaking RPC method.
 message QueryFarmerStakingRequest {
   string farmer = 1;
-  uint64 plan_id = 2;
 }
 
-// QueryFarmerStakingResponse is the response type for the Query/FarmerStaking
-// RPC method.
-message QueryFarmerStakingResponse { Staking staking = 1; }
-
-// QueryPlanRewardsRequest is the request type for the Query/PlanRewards RPC
-// method.
-message QueryPlanRewardsRequest {
-  uint64 plan_id = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+// QueryFarmerStakingResponse is the response type for the Query/FarmerStaking RPC method.
+message QueryFarmerStakingResponse {
+  Staking staking = 1;
 }
 
-// QueryPlanRewardsResponse is the response type for the Query/PlanRewards RPC
-// method.
-message QueryPlanRewardsResponse {
-  repeated Reward rewards = 1;
+// QueryRewardsRequest is the request type for the Query/Rewards RPC method.
+message QueryRewardsRequest {
+  string                                staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+  cosmos.base.query.v1beta1.PageRequest pagination         = 2;
+}
+
+// QueryRewardsResponse is the response type for the Query/Rewards RPC method.
+message QueryRewardsResponse {
+  repeated Reward                        rewards    = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryFarmerRewardsRequest is the request type for the Query/FarmerRewards RPC
-// method.
+// QueryFarmerRewardsRequest is the request type for the Query/FarmerRewards RPC method.
 message QueryFarmerRewardsRequest {
-  string farmer = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  string                                farmer             = 1;
+  string                                staking_coin_denom = 2 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
 }
 
-// QueryFarmerRewardsResponse is the response type for the Query/FarmerRewards
-// RPC method.
+// QueryFarmerRewardsResponse is the response type for the Query/FarmerRewards RPC method.
 message QueryFarmerRewardsResponse {
-  repeated Reward rewards = 1;
+  repeated Reward                        rewards    = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-
-// QueryFarmerRewardRequest is the request type for the Query/FarmerReward RPC
-// method.
-message QueryFarmerRewardRequest {
-  string farmer = 1;
-  uint64 plan_id = 2;
-}
-
-// QueryFarmerRewardResponse is the response type for the Query/FarmerReward RPC
-// method.
-message QueryFarmerRewardResponse { Reward reward = 1; }

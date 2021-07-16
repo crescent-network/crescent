@@ -11,10 +11,10 @@ option go_package = "github.com/tendermint/farming/x/farming/types";
 
 // PublicPlanProposal details a proposal for creating a public plan.
 message PublicPlanProposal {
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string title = 1;
+  string title       = 1;
   string description = 2;
 
   // plans specifies the plan interface(s); it can be FixedAmountPlan or

@@ -116,13 +116,12 @@ func (m *QueryParamsResponse) GetParams() Params {
 
 // QueryPlansRequest is the request type for the Query/Plans RPC method.
 type QueryPlansRequest struct {
-	Type                  string             `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
-	FarmingPoolAddress    string             `protobuf:"bytes,2,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty"`
-	RewardPoolAddress     string             `protobuf:"bytes,3,opt,name=reward_pool_address,json=rewardPoolAddress,proto3" json:"reward_pool_address,omitempty"`
-	TerminationAddress    string             `protobuf:"bytes,4,opt,name=termination_address,json=terminationAddress,proto3" json:"termination_address,omitempty"`
-	StakingReserveAddress string             `protobuf:"bytes,5,opt,name=staking_reserve_address,json=stakingReserveAddress,proto3" json:"staking_reserve_address,omitempty"`
-	StakingCoinDenom      string             `protobuf:"bytes,6,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
-	Pagination            *query.PageRequest `protobuf:"bytes,7,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Type               string             `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	FarmingPoolAddress string             `protobuf:"bytes,2,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty"`
+	RewardPoolAddress  string             `protobuf:"bytes,3,opt,name=reward_pool_address,json=rewardPoolAddress,proto3" json:"reward_pool_address,omitempty"`
+	TerminationAddress string             `protobuf:"bytes,4,opt,name=termination_address,json=terminationAddress,proto3" json:"termination_address,omitempty"`
+	StakingCoinDenom   string             `protobuf:"bytes,5,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
+	Pagination         *query.PageRequest `protobuf:"bytes,6,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryPlansRequest) Reset()         { *m = QueryPlansRequest{} }
@@ -182,13 +181,6 @@ func (m *QueryPlansRequest) GetRewardPoolAddress() string {
 func (m *QueryPlansRequest) GetTerminationAddress() string {
 	if m != nil {
 		return m.TerminationAddress
-	}
-	return ""
-}
-
-func (m *QueryPlansRequest) GetStakingReserveAddress() string {
-	if m != nil {
-		return m.StakingReserveAddress
 	}
 	return ""
 }
@@ -350,25 +342,24 @@ func (m *QueryPlanResponse) GetPlan() *types.Any {
 	return nil
 }
 
-// QueryPlanStakingsRequest is the request type for the Query/PlanStakings RPC
-// method.
-type QueryPlanStakingsRequest struct {
-	PlanId     uint64             `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+// QueryStakingsRequest is the request type for the Query/Stakings RPC method.
+type QueryStakingsRequest struct {
+	StakingCoinDenom string             `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
+	Pagination       *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryPlanStakingsRequest) Reset()         { *m = QueryPlanStakingsRequest{} }
-func (m *QueryPlanStakingsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryPlanStakingsRequest) ProtoMessage()    {}
-func (*QueryPlanStakingsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryStakingsRequest) Reset()         { *m = QueryStakingsRequest{} }
+func (m *QueryStakingsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryStakingsRequest) ProtoMessage()    {}
+func (*QueryStakingsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00c8db58c274b111, []int{6}
 }
-func (m *QueryPlanStakingsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryStakingsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPlanStakingsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryStakingsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPlanStakingsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryStakingsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -378,159 +369,50 @@ func (m *QueryPlanStakingsRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryPlanStakingsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPlanStakingsRequest.Merge(m, src)
+func (m *QueryStakingsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStakingsRequest.Merge(m, src)
 }
-func (m *QueryPlanStakingsRequest) XXX_Size() int {
+func (m *QueryStakingsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPlanStakingsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPlanStakingsRequest.DiscardUnknown(m)
+func (m *QueryStakingsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStakingsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPlanStakingsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryStakingsRequest proto.InternalMessageInfo
 
-func (m *QueryPlanStakingsRequest) GetPlanId() uint64 {
+func (m *QueryStakingsRequest) GetStakingCoinDenom() string {
 	if m != nil {
-		return m.PlanId
-	}
-	return 0
-}
-
-func (m *QueryPlanStakingsRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryPlanStakingsResponse is the response type for the Query/PlanStakings RPC
-// method.
-type QueryPlanStakingsResponse struct {
-	Stakings   []*Staking          `protobuf:"bytes,1,rep,name=stakings,proto3" json:"stakings,omitempty"`
-	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *QueryPlanStakingsResponse) Reset()         { *m = QueryPlanStakingsResponse{} }
-func (m *QueryPlanStakingsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryPlanStakingsResponse) ProtoMessage()    {}
-func (*QueryPlanStakingsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{7}
-}
-func (m *QueryPlanStakingsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryPlanStakingsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryPlanStakingsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryPlanStakingsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPlanStakingsResponse.Merge(m, src)
-}
-func (m *QueryPlanStakingsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryPlanStakingsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPlanStakingsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryPlanStakingsResponse proto.InternalMessageInfo
-
-func (m *QueryPlanStakingsResponse) GetStakings() []*Staking {
-	if m != nil {
-		return m.Stakings
-	}
-	return nil
-}
-
-func (m *QueryPlanStakingsResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryFarmerStakingsRequest is the request type for the Query/FarmerStakings
-// RPC method.
-type QueryFarmerStakingsRequest struct {
-	Farmer     string             `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-func (m *QueryFarmerStakingsRequest) Reset()         { *m = QueryFarmerStakingsRequest{} }
-func (m *QueryFarmerStakingsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryFarmerStakingsRequest) ProtoMessage()    {}
-func (*QueryFarmerStakingsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{8}
-}
-func (m *QueryFarmerStakingsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryFarmerStakingsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryFarmerStakingsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryFarmerStakingsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFarmerStakingsRequest.Merge(m, src)
-}
-func (m *QueryFarmerStakingsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryFarmerStakingsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFarmerStakingsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryFarmerStakingsRequest proto.InternalMessageInfo
-
-func (m *QueryFarmerStakingsRequest) GetFarmer() string {
-	if m != nil {
-		return m.Farmer
+		return m.StakingCoinDenom
 	}
 	return ""
 }
 
-func (m *QueryFarmerStakingsRequest) GetPagination() *query.PageRequest {
+func (m *QueryStakingsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryFarmerStakingsResponse is the response type for the Query/FarmerStakings
-// RPC method.
-type QueryFarmerStakingsResponse struct {
+// QueryStakingsResponse is the response type for the Query/Stakings RPC method.
+type QueryStakingsResponse struct {
 	Stakings   []*Staking          `protobuf:"bytes,1,rep,name=stakings,proto3" json:"stakings,omitempty"`
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryFarmerStakingsResponse) Reset()         { *m = QueryFarmerStakingsResponse{} }
-func (m *QueryFarmerStakingsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryFarmerStakingsResponse) ProtoMessage()    {}
-func (*QueryFarmerStakingsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{9}
+func (m *QueryStakingsResponse) Reset()         { *m = QueryStakingsResponse{} }
+func (m *QueryStakingsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryStakingsResponse) ProtoMessage()    {}
+func (*QueryStakingsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00c8db58c274b111, []int{7}
 }
-func (m *QueryFarmerStakingsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryStakingsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryFarmerStakingsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryStakingsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryFarmerStakingsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryStakingsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -540,44 +422,42 @@ func (m *QueryFarmerStakingsResponse) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *QueryFarmerStakingsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFarmerStakingsResponse.Merge(m, src)
+func (m *QueryStakingsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStakingsResponse.Merge(m, src)
 }
-func (m *QueryFarmerStakingsResponse) XXX_Size() int {
+func (m *QueryStakingsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryFarmerStakingsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFarmerStakingsResponse.DiscardUnknown(m)
+func (m *QueryStakingsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStakingsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryFarmerStakingsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryStakingsResponse proto.InternalMessageInfo
 
-func (m *QueryFarmerStakingsResponse) GetStakings() []*Staking {
+func (m *QueryStakingsResponse) GetStakings() []*Staking {
 	if m != nil {
 		return m.Stakings
 	}
 	return nil
 }
 
-func (m *QueryFarmerStakingsResponse) GetPagination() *query.PageResponse {
+func (m *QueryStakingsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryFarmerStakingRequest is the request type for the Query/FarmerStaking RPC
-// method.
+// QueryFarmerStakingRequest is the request type for the Query/FarmerStaking RPC method.
 type QueryFarmerStakingRequest struct {
 	Farmer string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
-	PlanId uint64 `protobuf:"varint,2,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
 }
 
 func (m *QueryFarmerStakingRequest) Reset()         { *m = QueryFarmerStakingRequest{} }
 func (m *QueryFarmerStakingRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryFarmerStakingRequest) ProtoMessage()    {}
 func (*QueryFarmerStakingRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{10}
+	return fileDescriptor_00c8db58c274b111, []int{8}
 }
 func (m *QueryFarmerStakingRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -613,15 +493,7 @@ func (m *QueryFarmerStakingRequest) GetFarmer() string {
 	return ""
 }
 
-func (m *QueryFarmerStakingRequest) GetPlanId() uint64 {
-	if m != nil {
-		return m.PlanId
-	}
-	return 0
-}
-
-// QueryFarmerStakingResponse is the response type for the Query/FarmerStaking
-// RPC method.
+// QueryFarmerStakingResponse is the response type for the Query/FarmerStaking RPC method.
 type QueryFarmerStakingResponse struct {
 	Staking *Staking `protobuf:"bytes,1,opt,name=staking,proto3" json:"staking,omitempty"`
 }
@@ -630,7 +502,7 @@ func (m *QueryFarmerStakingResponse) Reset()         { *m = QueryFarmerStakingRe
 func (m *QueryFarmerStakingResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryFarmerStakingResponse) ProtoMessage()    {}
 func (*QueryFarmerStakingResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{11}
+	return fileDescriptor_00c8db58c274b111, []int{9}
 }
 func (m *QueryFarmerStakingResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -666,25 +538,24 @@ func (m *QueryFarmerStakingResponse) GetStaking() *Staking {
 	return nil
 }
 
-// QueryPlanRewardsRequest is the request type for the Query/PlanRewards RPC
-// method.
-type QueryPlanRewardsRequest struct {
-	PlanId     uint64             `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+// QueryRewardsRequest is the request type for the Query/Rewards RPC method.
+type QueryRewardsRequest struct {
+	StakingCoinDenom string             `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
+	Pagination       *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryPlanRewardsRequest) Reset()         { *m = QueryPlanRewardsRequest{} }
-func (m *QueryPlanRewardsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryPlanRewardsRequest) ProtoMessage()    {}
-func (*QueryPlanRewardsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{12}
+func (m *QueryRewardsRequest) Reset()         { *m = QueryRewardsRequest{} }
+func (m *QueryRewardsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRewardsRequest) ProtoMessage()    {}
+func (*QueryRewardsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00c8db58c274b111, []int{10}
 }
-func (m *QueryPlanRewardsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryRewardsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPlanRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPlanRewardsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRewardsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -694,51 +565,50 @@ func (m *QueryPlanRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *QueryPlanRewardsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPlanRewardsRequest.Merge(m, src)
+func (m *QueryRewardsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRewardsRequest.Merge(m, src)
 }
-func (m *QueryPlanRewardsRequest) XXX_Size() int {
+func (m *QueryRewardsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPlanRewardsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPlanRewardsRequest.DiscardUnknown(m)
+func (m *QueryRewardsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRewardsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPlanRewardsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryRewardsRequest proto.InternalMessageInfo
 
-func (m *QueryPlanRewardsRequest) GetPlanId() uint64 {
+func (m *QueryRewardsRequest) GetStakingCoinDenom() string {
 	if m != nil {
-		return m.PlanId
+		return m.StakingCoinDenom
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryPlanRewardsRequest) GetPagination() *query.PageRequest {
+func (m *QueryRewardsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryPlanRewardsResponse is the response type for the Query/PlanRewards RPC
-// method.
-type QueryPlanRewardsResponse struct {
+// QueryRewardsResponse is the response type for the Query/Rewards RPC method.
+type QueryRewardsResponse struct {
 	Rewards    []*Reward           `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards,omitempty"`
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryPlanRewardsResponse) Reset()         { *m = QueryPlanRewardsResponse{} }
-func (m *QueryPlanRewardsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryPlanRewardsResponse) ProtoMessage()    {}
-func (*QueryPlanRewardsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{13}
+func (m *QueryRewardsResponse) Reset()         { *m = QueryRewardsResponse{} }
+func (m *QueryRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRewardsResponse) ProtoMessage()    {}
+func (*QueryRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00c8db58c274b111, []int{11}
 }
-func (m *QueryPlanRewardsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryRewardsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPlanRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPlanRewardsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRewardsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -748,44 +618,44 @@ func (m *QueryPlanRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryPlanRewardsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPlanRewardsResponse.Merge(m, src)
+func (m *QueryRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRewardsResponse.Merge(m, src)
 }
-func (m *QueryPlanRewardsResponse) XXX_Size() int {
+func (m *QueryRewardsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPlanRewardsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPlanRewardsResponse.DiscardUnknown(m)
+func (m *QueryRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRewardsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPlanRewardsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryRewardsResponse proto.InternalMessageInfo
 
-func (m *QueryPlanRewardsResponse) GetRewards() []*Reward {
+func (m *QueryRewardsResponse) GetRewards() []*Reward {
 	if m != nil {
 		return m.Rewards
 	}
 	return nil
 }
 
-func (m *QueryPlanRewardsResponse) GetPagination() *query.PageResponse {
+func (m *QueryRewardsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryFarmerRewardsRequest is the request type for the Query/FarmerRewards RPC
-// method.
+// QueryFarmerRewardsRequest is the request type for the Query/FarmerRewards RPC method.
 type QueryFarmerRewardsRequest struct {
-	Farmer     string             `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Farmer           string             `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
+	StakingCoinDenom string             `protobuf:"bytes,2,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
+	Pagination       *query.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryFarmerRewardsRequest) Reset()         { *m = QueryFarmerRewardsRequest{} }
 func (m *QueryFarmerRewardsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryFarmerRewardsRequest) ProtoMessage()    {}
 func (*QueryFarmerRewardsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{14}
+	return fileDescriptor_00c8db58c274b111, []int{12}
 }
 func (m *QueryFarmerRewardsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -821,6 +691,13 @@ func (m *QueryFarmerRewardsRequest) GetFarmer() string {
 	return ""
 }
 
+func (m *QueryFarmerRewardsRequest) GetStakingCoinDenom() string {
+	if m != nil {
+		return m.StakingCoinDenom
+	}
+	return ""
+}
+
 func (m *QueryFarmerRewardsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
@@ -828,8 +705,7 @@ func (m *QueryFarmerRewardsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryFarmerRewardsResponse is the response type for the Query/FarmerRewards
-// RPC method.
+// QueryFarmerRewardsResponse is the response type for the Query/FarmerRewards RPC method.
 type QueryFarmerRewardsResponse struct {
 	Rewards    []*Reward           `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards,omitempty"`
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -839,7 +715,7 @@ func (m *QueryFarmerRewardsResponse) Reset()         { *m = QueryFarmerRewardsRe
 func (m *QueryFarmerRewardsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryFarmerRewardsResponse) ProtoMessage()    {}
 func (*QueryFarmerRewardsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{15}
+	return fileDescriptor_00c8db58c274b111, []int{13}
 }
 func (m *QueryFarmerRewardsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -882,106 +758,6 @@ func (m *QueryFarmerRewardsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryFarmerRewardRequest is the request type for the Query/FarmerReward RPC
-// method.
-type QueryFarmerRewardRequest struct {
-	Farmer string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
-	PlanId uint64 `protobuf:"varint,2,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
-}
-
-func (m *QueryFarmerRewardRequest) Reset()         { *m = QueryFarmerRewardRequest{} }
-func (m *QueryFarmerRewardRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryFarmerRewardRequest) ProtoMessage()    {}
-func (*QueryFarmerRewardRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{16}
-}
-func (m *QueryFarmerRewardRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryFarmerRewardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryFarmerRewardRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryFarmerRewardRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFarmerRewardRequest.Merge(m, src)
-}
-func (m *QueryFarmerRewardRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryFarmerRewardRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFarmerRewardRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryFarmerRewardRequest proto.InternalMessageInfo
-
-func (m *QueryFarmerRewardRequest) GetFarmer() string {
-	if m != nil {
-		return m.Farmer
-	}
-	return ""
-}
-
-func (m *QueryFarmerRewardRequest) GetPlanId() uint64 {
-	if m != nil {
-		return m.PlanId
-	}
-	return 0
-}
-
-// QueryFarmerRewardResponse is the response type for the Query/FarmerReward RPC
-// method.
-type QueryFarmerRewardResponse struct {
-	Reward *Reward `protobuf:"bytes,1,opt,name=reward,proto3" json:"reward,omitempty"`
-}
-
-func (m *QueryFarmerRewardResponse) Reset()         { *m = QueryFarmerRewardResponse{} }
-func (m *QueryFarmerRewardResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryFarmerRewardResponse) ProtoMessage()    {}
-func (*QueryFarmerRewardResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00c8db58c274b111, []int{17}
-}
-func (m *QueryFarmerRewardResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryFarmerRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryFarmerRewardResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryFarmerRewardResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFarmerRewardResponse.Merge(m, src)
-}
-func (m *QueryFarmerRewardResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryFarmerRewardResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFarmerRewardResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryFarmerRewardResponse proto.InternalMessageInfo
-
-func (m *QueryFarmerRewardResponse) GetReward() *Reward {
-	if m != nil {
-		return m.Reward
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.farming.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.farming.v1beta1.QueryParamsResponse")
@@ -989,18 +765,14 @@ func init() {
 	proto.RegisterType((*QueryPlansResponse)(nil), "cosmos.farming.v1beta1.QueryPlansResponse")
 	proto.RegisterType((*QueryPlanRequest)(nil), "cosmos.farming.v1beta1.QueryPlanRequest")
 	proto.RegisterType((*QueryPlanResponse)(nil), "cosmos.farming.v1beta1.QueryPlanResponse")
-	proto.RegisterType((*QueryPlanStakingsRequest)(nil), "cosmos.farming.v1beta1.QueryPlanStakingsRequest")
-	proto.RegisterType((*QueryPlanStakingsResponse)(nil), "cosmos.farming.v1beta1.QueryPlanStakingsResponse")
-	proto.RegisterType((*QueryFarmerStakingsRequest)(nil), "cosmos.farming.v1beta1.QueryFarmerStakingsRequest")
-	proto.RegisterType((*QueryFarmerStakingsResponse)(nil), "cosmos.farming.v1beta1.QueryFarmerStakingsResponse")
+	proto.RegisterType((*QueryStakingsRequest)(nil), "cosmos.farming.v1beta1.QueryStakingsRequest")
+	proto.RegisterType((*QueryStakingsResponse)(nil), "cosmos.farming.v1beta1.QueryStakingsResponse")
 	proto.RegisterType((*QueryFarmerStakingRequest)(nil), "cosmos.farming.v1beta1.QueryFarmerStakingRequest")
 	proto.RegisterType((*QueryFarmerStakingResponse)(nil), "cosmos.farming.v1beta1.QueryFarmerStakingResponse")
-	proto.RegisterType((*QueryPlanRewardsRequest)(nil), "cosmos.farming.v1beta1.QueryPlanRewardsRequest")
-	proto.RegisterType((*QueryPlanRewardsResponse)(nil), "cosmos.farming.v1beta1.QueryPlanRewardsResponse")
+	proto.RegisterType((*QueryRewardsRequest)(nil), "cosmos.farming.v1beta1.QueryRewardsRequest")
+	proto.RegisterType((*QueryRewardsResponse)(nil), "cosmos.farming.v1beta1.QueryRewardsResponse")
 	proto.RegisterType((*QueryFarmerRewardsRequest)(nil), "cosmos.farming.v1beta1.QueryFarmerRewardsRequest")
 	proto.RegisterType((*QueryFarmerRewardsResponse)(nil), "cosmos.farming.v1beta1.QueryFarmerRewardsResponse")
-	proto.RegisterType((*QueryFarmerRewardRequest)(nil), "cosmos.farming.v1beta1.QueryFarmerRewardRequest")
-	proto.RegisterType((*QueryFarmerRewardResponse)(nil), "cosmos.farming.v1beta1.QueryFarmerRewardResponse")
 }
 
 func init() {
@@ -1008,72 +780,66 @@ func init() {
 }
 
 var fileDescriptor_00c8db58c274b111 = []byte{
-	// 1034 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x97, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xc7, 0x33, 0xae, 0xe3, 0xd0, 0x97, 0x82, 0xda, 0x49, 0x68, 0xdc, 0x05, 0x9c, 0xc8, 0x12,
-	0xa9, 0x93, 0xd0, 0x5d, 0xdb, 0x11, 0x25, 0xa5, 0x1c, 0x48, 0x40, 0x2d, 0x15, 0x1c, 0xca, 0xe6,
-	0x80, 0xc4, 0xc5, 0x5a, 0xc7, 0x13, 0x63, 0x11, 0xef, 0xb8, 0xbb, 0x9b, 0x42, 0x08, 0xbd, 0x20,
-	0x71, 0x40, 0xe2, 0x80, 0x04, 0x57, 0x84, 0x10, 0x17, 0x90, 0xe0, 0x06, 0x07, 0xfe, 0x83, 0x8a,
-	0x53, 0x25, 0x38, 0x70, 0x42, 0x28, 0xe1, 0xc0, 0x9f, 0x81, 0xf6, 0xcd, 0x9b, 0xcd, 0xae, 0xb3,
-	0xce, 0xae, 0xab, 0x50, 0xf5, 0xe4, 0xdd, 0x9d, 0xf7, 0x7d, 0xef, 0x33, 0xef, 0xbd, 0xf9, 0x61,
-	0x58, 0x0c, 0x84, 0xdb, 0x11, 0x5e, 0xbf, 0xe7, 0x06, 0xd6, 0xb6, 0x13, 0xfe, 0x76, 0xad, 0xbb,
-	0x8d, 0xb6, 0x08, 0x9c, 0x86, 0x75, 0x67, 0x57, 0x78, 0x7b, 0xe6, 0xc0, 0x93, 0x81, 0xe4, 0x17,
-	0xb7, 0xa4, 0xdf, 0x97, 0xbe, 0x49, 0x36, 0x26, 0xd9, 0x18, 0xb5, 0x13, 0xf4, 0xda, 0x16, 0x3d,
-	0x18, 0xcb, 0xca, 0x83, 0xd5, 0x76, 0x7c, 0xa1, 0x5c, 0x47, 0x86, 0x03, 0xa7, 0xdb, 0x73, 0x9d,
-	0xa0, 0x27, 0x5d, 0xb2, 0x9d, 0xed, 0xca, 0xae, 0xc4, 0x47, 0x2b, 0x7c, 0xa2, 0xaf, 0x97, 0xba,
-	0x52, 0x76, 0x77, 0x84, 0x85, 0x6f, 0xed, 0xdd, 0x6d, 0xcb, 0x71, 0x09, 0xcf, 0x78, 0x96, 0x86,
-	0x9c, 0x41, 0xcf, 0x72, 0x5c, 0x57, 0x06, 0xe8, 0xcd, 0xd7, 0x42, 0x15, 0xba, 0xa5, 0x3c, 0xd2,
-	0x4c, 0xf0, 0xa5, 0x3a, 0x0b, 0xfc, 0xed, 0x90, 0xe5, 0xb6, 0xe3, 0x39, 0x7d, 0xdf, 0x16, 0x77,
-	0x76, 0x85, 0x1f, 0x54, 0x37, 0x61, 0x26, 0xf1, 0xd5, 0x1f, 0x48, 0xd7, 0x17, 0xfc, 0x15, 0x28,
-	0x0d, 0xf0, 0x4b, 0x99, 0x2d, 0xb0, 0xda, 0x74, 0xb3, 0x62, 0xa6, 0x67, 0xc5, 0x54, 0xba, 0x8d,
-	0xe2, 0xfd, 0xbf, 0xe6, 0x27, 0x6c, 0xd2, 0x54, 0xff, 0x2d, 0xc0, 0x05, 0xe5, 0x75, 0xc7, 0x71,
-	0x75, 0x28, 0xce, 0xa1, 0x18, 0xec, 0x0d, 0x04, 0x7a, 0x3c, 0x6b, 0xe3, 0x33, 0xaf, 0xc3, 0x2c,
-	0x79, 0x6c, 0x0d, 0xa4, 0xdc, 0x69, 0x39, 0x9d, 0x8e, 0x27, 0x7c, 0xbf, 0x5c, 0x40, 0x1b, 0x4e,
-	0x63, 0xb7, 0xa5, 0xdc, 0x59, 0x57, 0x23, 0xdc, 0x84, 0x19, 0x4f, 0x7c, 0xe0, 0x78, 0x9d, 0xa4,
-	0xe0, 0x0c, 0x0a, 0x2e, 0xa8, 0xa1, 0xb8, 0xbd, 0x05, 0x33, 0x01, 0x56, 0x0d, 0xf3, 0x14, 0xd9,
-	0x17, 0x55, 0x80, 0xd8, 0x90, 0x16, 0x5c, 0x85, 0x39, 0x3f, 0x70, 0xde, 0x0f, 0x91, 0x3c, 0xe1,
-	0x0b, 0xef, 0xae, 0x88, 0x44, 0x93, 0x28, 0x7a, 0x9a, 0x86, 0x6d, 0x35, 0xaa, 0x75, 0x2f, 0x00,
-	0xd7, 0xba, 0x2d, 0xd9, 0x73, 0x5b, 0x1d, 0xe1, 0xca, 0x7e, 0xb9, 0x84, 0x92, 0xf3, 0x34, 0xf2,
-	0x9a, 0xec, 0xb9, 0xaf, 0x87, 0xdf, 0xf9, 0x0d, 0x80, 0xa3, 0x5e, 0x28, 0x4f, 0x61, 0x92, 0x17,
-	0x75, 0x92, 0xc3, 0xc6, 0x31, 0x55, 0x4f, 0x1e, 0xe5, 0xb9, 0x2b, 0x28, 0x91, 0x76, 0x4c, 0x59,
-	0xfd, 0x8a, 0xe9, 0xb2, 0xaa, 0x54, 0x53, 0xfd, 0x5e, 0x84, 0xc9, 0x41, 0xf8, 0xa1, 0xcc, 0x16,
-	0xce, 0xd4, 0xa6, 0x9b, 0xb3, 0xa6, 0xea, 0x1a, 0x53, 0x37, 0x94, 0xb9, 0xee, 0xee, 0x6d, 0x9c,
-	0xfd, 0xed, 0xe7, 0x2b, 0x93, 0xa1, 0xee, 0x96, 0xad, 0xac, 0xf9, 0xcd, 0x04, 0x55, 0x01, 0xa9,
-	0x2e, 0x67, 0x52, 0xa9, 0x98, 0x09, 0xac, 0x15, 0x38, 0x1f, 0x51, 0xe9, 0xfa, 0xcf, 0xc1, 0x54,
-	0x18, 0xa5, 0xd5, 0xeb, 0x60, 0x0b, 0x14, 0xed, 0x52, 0xf8, 0x7a, 0xab, 0x53, 0x7d, 0x23, 0xd6,
-	0x2d, 0xd1, 0x0c, 0x56, 0xa1, 0x18, 0x0e, 0x53, 0xff, 0x65, 0x4e, 0x00, 0x8d, 0xab, 0xfb, 0x50,
-	0x8e, 0x3c, 0x6d, 0xaa, 0x94, 0xfb, 0x59, 0xe1, 0x87, 0x4a, 0x51, 0x78, 0xe8, 0x52, 0x7c, 0xcb,
-	0xe0, 0x52, 0x4a, 0x74, 0x9a, 0xcf, 0x75, 0x78, 0x82, 0x9a, 0x40, 0x17, 0x65, 0x7e, 0xd4, 0x9a,
-	0x22, 0xad, 0x1d, 0x09, 0x4e, 0xaf, 0x2e, 0x1f, 0x83, 0x81, 0x88, 0x37, 0x1c, 0xaf, 0x2f, 0xbc,
-	0xe1, 0x14, 0x5d, 0x84, 0xd2, 0x36, 0x0e, 0xd0, 0x1a, 0xa5, 0xb7, 0x53, 0xcb, 0xd0, 0x77, 0x0c,
-	0x9e, 0x49, 0x0d, 0xff, 0x58, 0xe5, 0xe8, 0x2d, 0x2a, 0x63, 0x02, 0x32, 0x2b, 0x45, 0xb1, 0xee,
-	0x2a, 0x24, 0x9a, 0xfb, 0x9d, 0xb4, 0x8c, 0x47, 0x33, 0xbe, 0x06, 0x53, 0x34, 0x01, 0x6a, 0xf4,
-	0xcc, 0x09, 0x6b, 0xfb, 0xea, 0x47, 0x30, 0x17, 0x5b, 0x35, 0xe1, 0xb6, 0xf7, 0xe8, 0x5a, 0xfd,
-	0x6b, 0x16, 0x5b, 0x68, 0x51, 0x70, 0x9a, 0xd3, 0x1a, 0x4c, 0xa9, 0x6d, 0x58, 0x17, 0x71, 0xe4,
-	0xe1, 0xa1, 0x94, 0xb6, 0x36, 0x3f, 0xbd, 0x12, 0xee, 0x27, 0x4a, 0x38, 0x94, 0x9d, 0xff, 0xbb,
-	0xcb, 0xbf, 0x61, 0x89, 0x92, 0x3f, 0x86, 0xe9, 0x79, 0x93, 0xaa, 0x17, 0x07, 0x7c, 0xe8, 0x06,
-	0xdf, 0x4c, 0xc9, 0x75, 0x34, 0xd9, 0xab, 0x50, 0x52, 0xf4, 0x59, 0xf7, 0x08, 0xd2, 0x91, 0x75,
-	0xf3, 0x8f, 0x69, 0x98, 0x44, 0xaf, 0xfc, 0x33, 0x06, 0x25, 0x75, 0xc9, 0xe0, 0xcb, 0xa3, 0xc4,
-	0xc7, 0xef, 0x35, 0xc6, 0x4a, 0x2e, 0x5b, 0x45, 0x59, 0x5d, 0xfc, 0xe4, 0xf7, 0x7f, 0xbe, 0x2c,
-	0x2c, 0xf0, 0x0a, 0xdd, 0x98, 0x8e, 0xdd, 0xef, 0xd4, 0xbd, 0x86, 0x7f, 0xca, 0x00, 0x8f, 0x1b,
-	0x9f, 0x2f, 0x9d, 0xec, 0x3e, 0x76, 0xed, 0x31, 0x96, 0xf3, 0x98, 0x12, 0xc8, 0xf3, 0x08, 0x32,
-	0xcf, 0x9f, 0x1b, 0x09, 0x82, 0xd1, 0x3f, 0x67, 0x50, 0x0c, 0x85, 0xbc, 0x96, 0xe9, 0x5b, 0x53,
-	0x2c, 0xe5, 0xb0, 0x24, 0x08, 0x0b, 0x21, 0x96, 0xf8, 0xe5, 0x13, 0x21, 0xac, 0x7d, 0x6a, 0x87,
-	0x7b, 0xfc, 0x27, 0x06, 0xe7, 0xe2, 0x67, 0x1e, 0xaf, 0x67, 0x06, 0x1b, 0x3a, 0x79, 0x8c, 0xc6,
-	0x18, 0x0a, 0xc2, 0x5c, 0x43, 0xcc, 0x26, 0xaf, 0xe7, 0xc4, 0xb4, 0xa2, 0x93, 0xe2, 0x47, 0x06,
-	0x4f, 0x25, 0x4f, 0x20, 0xde, 0x3c, 0x31, 0x7e, 0xea, 0x69, 0x69, 0xac, 0x8e, 0xa5, 0x21, 0xea,
-	0x06, 0x52, 0xaf, 0xf0, 0xa5, 0x51, 0xd4, 0x9a, 0xd2, 0xda, 0x57, 0x0b, 0xef, 0x1e, 0xff, 0x95,
-	0xc1, 0x93, 0x09, 0x6f, 0xbc, 0x91, 0x3f, 0xb2, 0x86, 0x6d, 0x8e, 0x23, 0x21, 0xd6, 0x75, 0x64,
-	0xbd, 0xce, 0xaf, 0xe5, 0x66, 0x3d, 0xd6, 0x1a, 0x3f, 0x30, 0x98, 0x8e, 0x9d, 0x11, 0xdc, 0xca,
-	0xd1, 0x86, 0xf1, 0xcd, 0xda, 0xa8, 0xe7, 0x17, 0x10, 0xf5, 0x4b, 0x48, 0xdd, 0xe0, 0x56, 0xde,
-	0xbe, 0xd0, 0xdb, 0xeb, 0xf7, 0x51, 0x9e, 0x35, 0x6d, 0x9e, 0x3c, 0x0f, 0xf1, 0x36, 0xc7, 0x91,
-	0x10, 0x71, 0x1d, 0x89, 0x97, 0x79, 0x6d, 0x14, 0x31, 0x11, 0x1e, 0xb5, 0xc4, 0x2f, 0x0c, 0xce,
-	0xc5, 0x7d, 0x65, 0xac, 0xb8, 0x94, 0x7d, 0xde, 0x68, 0x8c, 0xa1, 0x20, 0xce, 0x57, 0x91, 0xf3,
-	0x65, 0xbe, 0x96, 0x97, 0x73, 0x38, 0xd5, 0x1b, 0x37, 0xef, 0x1f, 0x54, 0xd8, 0x83, 0x83, 0x0a,
-	0xfb, 0xfb, 0xa0, 0xc2, 0xbe, 0x38, 0xac, 0x4c, 0x3c, 0x38, 0xac, 0x4c, 0xfc, 0x79, 0x58, 0x99,
-	0x78, 0xf7, 0x4a, 0xb7, 0x17, 0xbc, 0xb7, 0xdb, 0x36, 0xb7, 0x64, 0xdf, 0x4a, 0xf9, 0xa3, 0xfd,
-	0x61, 0xf4, 0x14, 0xfe, 0x6d, 0xf4, 0xdb, 0x25, 0xfc, 0x1f, 0xb0, 0xfa, 0x5f, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x17, 0x91, 0x2d, 0xba, 0xd5, 0x0f, 0x00, 0x00,
+	// 933 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xce, 0x38, 0x8e, 0x93, 0x4e, 0x85, 0xd4, 0x4e, 0x4c, 0x71, 0x56, 0x74, 0x6d, 0x56, 0x22,
+	0xb1, 0x9d, 0x64, 0xb7, 0x76, 0x84, 0xc4, 0xaf, 0x4b, 0x0d, 0x6a, 0xa9, 0xb8, 0x94, 0xed, 0x01,
+	0x89, 0x8b, 0x35, 0x8e, 0x37, 0xcb, 0x0a, 0x7b, 0x67, 0xbb, 0xbb, 0x06, 0xac, 0xaa, 0x17, 0x24,
+	0x0e, 0x48, 0x20, 0x81, 0xe0, 0xc2, 0x01, 0x71, 0x42, 0xe2, 0xc7, 0x85, 0x03, 0x7f, 0x44, 0xc4,
+	0xa9, 0x12, 0x17, 0x4e, 0x15, 0x4a, 0xf8, 0x0b, 0xf8, 0x0b, 0xd0, 0xbe, 0x79, 0xb3, 0xf5, 0x3a,
+	0x5e, 0xdb, 0xad, 0x72, 0xc8, 0xc9, 0xbb, 0x33, 0xdf, 0x7b, 0xef, 0x9b, 0xef, 0x9b, 0x79, 0xb3,
+	0xa6, 0xdb, 0xb1, 0xe3, 0xf7, 0x9d, 0x70, 0xe8, 0xf9, 0xb1, 0x75, 0xc4, 0x93, 0x5f, 0xd7, 0xfa,
+	0xb8, 0xd5, 0x73, 0x62, 0xde, 0xb2, 0xee, 0x8f, 0x9c, 0x70, 0x6c, 0x06, 0xa1, 0x88, 0x05, 0xbb,
+	0x76, 0x28, 0xa2, 0xa1, 0x88, 0x4c, 0xc4, 0x98, 0x88, 0xd1, 0xea, 0x73, 0xe2, 0x15, 0x16, 0x32,
+	0x68, 0x4d, 0x99, 0xc1, 0xea, 0xf1, 0xc8, 0x91, 0xa9, 0x53, 0x60, 0xc0, 0x5d, 0xcf, 0xe7, 0xb1,
+	0x27, 0x7c, 0xc4, 0x96, 0x5d, 0xe1, 0x0a, 0x78, 0xb4, 0x92, 0x27, 0x1c, 0xdd, 0x72, 0x85, 0x70,
+	0x07, 0x8e, 0x05, 0x6f, 0xbd, 0xd1, 0x91, 0xc5, 0x7d, 0xa4, 0xa7, 0xbd, 0x88, 0x53, 0x3c, 0xf0,
+	0x2c, 0xee, 0xfb, 0x22, 0x86, 0x6c, 0x91, 0x0a, 0x94, 0xa5, 0xbb, 0x32, 0x23, 0xae, 0x04, 0x5e,
+	0x8c, 0x32, 0x65, 0xef, 0x25, 0x5c, 0xee, 0xf2, 0x90, 0x0f, 0x23, 0xdb, 0xb9, 0x3f, 0x72, 0xa2,
+	0xd8, 0xb8, 0x47, 0x37, 0x33, 0xa3, 0x51, 0x20, 0xfc, 0xc8, 0x61, 0x6f, 0xd2, 0x52, 0x00, 0x23,
+	0x15, 0x52, 0x23, 0xf5, 0xcb, 0x6d, 0xdd, 0x9c, 0xad, 0x8a, 0x29, 0xe3, 0x3a, 0xc5, 0xe3, 0xc7,
+	0xd5, 0x15, 0x1b, 0x63, 0x8c, 0xdf, 0x0b, 0xf4, 0xaa, 0xcc, 0x3a, 0xe0, 0xbe, 0x2a, 0xc5, 0x18,
+	0x2d, 0xc6, 0xe3, 0xc0, 0x81, 0x8c, 0x97, 0x6c, 0x78, 0x66, 0x37, 0x68, 0x19, 0x33, 0x76, 0x03,
+	0x21, 0x06, 0x5d, 0xde, 0xef, 0x87, 0x4e, 0x14, 0x55, 0x0a, 0x80, 0x61, 0x38, 0x77, 0x57, 0x88,
+	0xc1, 0x4d, 0x39, 0xc3, 0x4c, 0xba, 0x19, 0x3a, 0x9f, 0xf0, 0xb0, 0x9f, 0x0d, 0x58, 0x85, 0x80,
+	0xab, 0x72, 0x6a, 0x12, 0x6f, 0xd1, 0xcd, 0x18, 0x5c, 0x03, 0x9d, 0x52, 0x7c, 0x51, 0x16, 0x98,
+	0x98, 0x52, 0x01, 0x7b, 0x94, 0x45, 0x31, 0xff, 0x28, 0xa1, 0x74, 0x28, 0x3c, 0xbf, 0xdb, 0x77,
+	0x7c, 0x31, 0xac, 0xac, 0x01, 0xfe, 0x0a, 0xce, 0xbc, 0x25, 0x3c, 0xff, 0xed, 0x64, 0x9c, 0xdd,
+	0xa2, 0xf4, 0x89, 0xa7, 0x95, 0x12, 0x88, 0xb5, 0xad, 0xc4, 0x4a, 0x36, 0x80, 0x29, 0xf7, 0xd6,
+	0x13, 0xbd, 0x5c, 0x07, 0x05, 0xb1, 0x27, 0x22, 0x8d, 0xef, 0x88, 0xb2, 0x47, 0x4a, 0x86, 0x3e,
+	0xbc, 0x42, 0xd7, 0x82, 0x64, 0xa0, 0x42, 0x6a, 0xab, 0xf5, 0xcb, 0xed, 0xb2, 0x29, 0xdd, 0x37,
+	0xd5, 0xc6, 0x30, 0x6f, 0xfa, 0xe3, 0xce, 0xa5, 0x3f, 0xff, 0xd8, 0x5f, 0x4b, 0xe2, 0xee, 0xd8,
+	0x12, 0xcd, 0x6e, 0x67, 0x58, 0x15, 0x80, 0xd5, 0xce, 0x42, 0x56, 0xb2, 0x66, 0x86, 0xd6, 0x2e,
+	0xbd, 0x92, 0xb2, 0x52, 0x3e, 0xbe, 0x40, 0xd7, 0x93, 0x2a, 0x5d, 0xaf, 0x0f, 0x56, 0x16, 0xed,
+	0x52, 0xf2, 0x7a, 0xa7, 0x6f, 0xbc, 0x33, 0xe1, 0x7a, 0xba, 0x82, 0x03, 0x5a, 0x4c, 0xa6, 0x71,
+	0x1f, 0x2d, 0x5c, 0x00, 0x80, 0x8d, 0xdf, 0x08, 0x2d, 0x43, 0xaa, 0x7b, 0x52, 0xef, 0x74, 0x0f,
+	0xbd, 0x3b, 0xd3, 0x1c, 0xd8, 0x51, 0x9d, 0xeb, 0xff, 0x3d, 0xae, 0x6e, 0x8d, 0xf9, 0x70, 0xf0,
+	0xba, 0x71, 0x16, 0x63, 0x2c, 0xf4, 0xae, 0xf0, 0xcc, 0xde, 0xfd, 0x40, 0xe8, 0xf3, 0x53, 0x6c,
+	0x71, 0xf1, 0x6f, 0xd0, 0x0d, 0xac, 0xaa, 0x1c, 0xac, 0xe6, 0x1d, 0x24, 0x8c, 0xb5, 0xd3, 0x80,
+	0xf3, 0x33, 0xf1, 0x80, 0x6e, 0x01, 0xbd, 0x5b, 0x3c, 0x1c, 0x3a, 0xa1, 0x2a, 0x84, 0x8a, 0x5e,
+	0xa3, 0xa5, 0x23, 0x18, 0xc7, 0x73, 0x89, 0x6f, 0xc6, 0xfb, 0x54, 0x9b, 0x15, 0x84, 0x0b, 0x7b,
+	0x8d, 0xae, 0x23, 0x4f, 0x34, 0x76, 0xe1, 0xba, 0x14, 0xde, 0xf8, 0x95, 0x60, 0xcb, 0xb1, 0xe1,
+	0xac, 0x5e, 0x6c, 0x6b, 0xbf, 0x57, 0x1b, 0x31, 0x25, 0x8b, 0x02, 0xbc, 0x4a, 0xd7, 0x65, 0xaf,
+	0x51, 0xc6, 0xe6, 0x76, 0x48, 0x19, 0x69, 0x2b, 0xf8, 0xf9, 0xd9, 0x7a, 0x4c, 0x32, 0xbe, 0x4e,
+	0xc9, 0x99, 0xe3, 0x6b, 0x8e, 0xcc, 0x85, 0xf3, 0x90, 0x79, 0xf5, 0x99, 0x65, 0xfe, 0x91, 0x64,
+	0x76, 0xdb, 0xc5, 0x13, 0xbb, 0xfd, 0xd3, 0x06, 0x5d, 0x03, 0x86, 0xec, 0x0b, 0x42, 0x4b, 0xf2,
+	0xd6, 0x63, 0xcd, 0x3c, 0x1a, 0x67, 0x2f, 0x5a, 0x6d, 0x77, 0x29, 0xac, 0xac, 0x6c, 0x6c, 0x7f,
+	0xf6, 0xd7, 0xbf, 0xdf, 0x16, 0x6a, 0x4c, 0xc7, 0x2b, 0xfc, 0xcc, 0x07, 0x87, 0xbc, 0x68, 0xd9,
+	0xe7, 0x84, 0x42, 0xdf, 0x8c, 0x58, 0x63, 0x7e, 0xfa, 0x89, 0x7b, 0x58, 0x6b, 0x2e, 0x03, 0x45,
+	0x22, 0x2f, 0x03, 0x91, 0x2a, 0xbb, 0x9e, 0x4b, 0x04, 0xaa, 0x7f, 0x49, 0x68, 0x31, 0x09, 0x64,
+	0xf5, 0x85, 0xb9, 0x15, 0x8b, 0xc6, 0x12, 0x48, 0x24, 0x61, 0x01, 0x89, 0x06, 0xdb, 0x99, 0x4b,
+	0xc2, 0x7a, 0x80, 0xb7, 0xd2, 0x43, 0xf6, 0x0d, 0xa1, 0x1b, 0xaa, 0x17, 0xb3, 0xbd, 0xb9, 0x85,
+	0xa6, 0x2e, 0x18, 0x6d, 0x7f, 0x49, 0x34, 0x52, 0xab, 0x03, 0x35, 0x83, 0xd5, 0xf2, 0xa8, 0xa5,
+	0xdd, 0xfc, 0x17, 0x42, 0x9f, 0xcb, 0xf4, 0x52, 0xd6, 0x9a, 0x5b, 0x6a, 0x56, 0xb3, 0xd6, 0xda,
+	0x4f, 0x13, 0x82, 0x14, 0x5b, 0x40, 0x71, 0x97, 0x35, 0x16, 0x51, 0xb4, 0x1e, 0xc8, 0x16, 0xf1,
+	0x90, 0x7d, 0x45, 0xe8, 0x3a, 0x9e, 0x41, 0x36, 0x7f, 0xdf, 0x66, 0x9b, 0x8e, 0xb6, 0xb7, 0x1c,
+	0x18, 0x99, 0xed, 0x00, 0xb3, 0x97, 0x58, 0x35, 0x8f, 0x99, 0x3a, 0xc5, 0x3f, 0xa7, 0xda, 0x29,
+	0x56, 0xcb, 0x68, 0x37, 0xc5, 0xad, 0xfd, 0x34, 0x21, 0xc8, 0xf0, 0x06, 0x30, 0x6c, 0xb2, 0xfa,
+	0x02, 0x86, 0xa9, 0x74, 0x9d, 0xdb, 0xc7, 0x27, 0x3a, 0x79, 0x74, 0xa2, 0x93, 0x7f, 0x4e, 0x74,
+	0xf2, 0xf5, 0xa9, 0xbe, 0xf2, 0xe8, 0x54, 0x5f, 0xf9, 0xfb, 0x54, 0x5f, 0xf9, 0x60, 0xdf, 0xf5,
+	0xe2, 0x0f, 0x47, 0x3d, 0xf3, 0x50, 0x0c, 0xad, 0x19, 0x7f, 0x25, 0x3e, 0x4d, 0x9f, 0x92, 0x0f,
+	0xe3, 0xa8, 0x57, 0x82, 0x2f, 0xa4, 0x83, 0xff, 0x03, 0x00, 0x00, 0xff, 0xff, 0x01, 0x51, 0x0f,
+	0x8a, 0xb7, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1094,20 +860,14 @@ type QueryClient interface {
 	Plans(ctx context.Context, in *QueryPlansRequest, opts ...grpc.CallOption) (*QueryPlansResponse, error)
 	// Plan returns a specific plan.
 	Plan(ctx context.Context, in *QueryPlanRequest, opts ...grpc.CallOption) (*QueryPlanResponse, error)
-	// PlanStakings returns all stakings of the plan.
-	PlanStakings(ctx context.Context, in *QueryPlanStakingsRequest, opts ...grpc.CallOption) (*QueryPlanStakingsResponse, error)
-	// FarmerStakings returns all stakings owned by the farmer.
-	FarmerStakings(ctx context.Context, in *QueryFarmerStakingsRequest, opts ...grpc.CallOption) (*QueryFarmerStakingsResponse, error)
-	// FarmerStaking returns a specific staking of the plan which is owned by the
-	// farmer.
+	// Stakings returns all stakings.
+	Stakings(ctx context.Context, in *QueryStakingsRequest, opts ...grpc.CallOption) (*QueryStakingsResponse, error)
+	// FarmerStaking returns a staking owned by the farmer.
 	FarmerStaking(ctx context.Context, in *QueryFarmerStakingRequest, opts ...grpc.CallOption) (*QueryFarmerStakingResponse, error)
-	// PlanRewards returns all rewards of the plan.
-	PlanRewards(ctx context.Context, in *QueryPlanRewardsRequest, opts ...grpc.CallOption) (*QueryPlanRewardsResponse, error)
-	// FarmerRewards returns all rewards owned by the farmer.
+	// Rewards returns all rewards.
+	Rewards(ctx context.Context, in *QueryRewardsRequest, opts ...grpc.CallOption) (*QueryRewardsResponse, error)
+	// FarmerRewards returns all the rewards owned by the farmer.
 	FarmerRewards(ctx context.Context, in *QueryFarmerRewardsRequest, opts ...grpc.CallOption) (*QueryFarmerRewardsResponse, error)
-	// FarmerReward returns a specific reward of the plan which is owned by the
-	// farmer.
-	FarmerReward(ctx context.Context, in *QueryFarmerRewardRequest, opts ...grpc.CallOption) (*QueryFarmerRewardResponse, error)
 }
 
 type queryClient struct {
@@ -1145,18 +905,9 @@ func (c *queryClient) Plan(ctx context.Context, in *QueryPlanRequest, opts ...gr
 	return out, nil
 }
 
-func (c *queryClient) PlanStakings(ctx context.Context, in *QueryPlanStakingsRequest, opts ...grpc.CallOption) (*QueryPlanStakingsResponse, error) {
-	out := new(QueryPlanStakingsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/PlanStakings", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) FarmerStakings(ctx context.Context, in *QueryFarmerStakingsRequest, opts ...grpc.CallOption) (*QueryFarmerStakingsResponse, error) {
-	out := new(QueryFarmerStakingsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/FarmerStakings", in, out, opts...)
+func (c *queryClient) Stakings(ctx context.Context, in *QueryStakingsRequest, opts ...grpc.CallOption) (*QueryStakingsResponse, error) {
+	out := new(QueryStakingsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/Stakings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1172,9 +923,9 @@ func (c *queryClient) FarmerStaking(ctx context.Context, in *QueryFarmerStakingR
 	return out, nil
 }
 
-func (c *queryClient) PlanRewards(ctx context.Context, in *QueryPlanRewardsRequest, opts ...grpc.CallOption) (*QueryPlanRewardsResponse, error) {
-	out := new(QueryPlanRewardsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/PlanRewards", in, out, opts...)
+func (c *queryClient) Rewards(ctx context.Context, in *QueryRewardsRequest, opts ...grpc.CallOption) (*QueryRewardsResponse, error) {
+	out := new(QueryRewardsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/Rewards", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1190,15 +941,6 @@ func (c *queryClient) FarmerRewards(ctx context.Context, in *QueryFarmerRewardsR
 	return out, nil
 }
 
-func (c *queryClient) FarmerReward(ctx context.Context, in *QueryFarmerRewardRequest, opts ...grpc.CallOption) (*QueryFarmerRewardResponse, error) {
-	out := new(QueryFarmerRewardResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/FarmerReward", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params returns parameters of the farming module.
@@ -1207,20 +949,14 @@ type QueryServer interface {
 	Plans(context.Context, *QueryPlansRequest) (*QueryPlansResponse, error)
 	// Plan returns a specific plan.
 	Plan(context.Context, *QueryPlanRequest) (*QueryPlanResponse, error)
-	// PlanStakings returns all stakings of the plan.
-	PlanStakings(context.Context, *QueryPlanStakingsRequest) (*QueryPlanStakingsResponse, error)
-	// FarmerStakings returns all stakings owned by the farmer.
-	FarmerStakings(context.Context, *QueryFarmerStakingsRequest) (*QueryFarmerStakingsResponse, error)
-	// FarmerStaking returns a specific staking of the plan which is owned by the
-	// farmer.
+	// Stakings returns all stakings.
+	Stakings(context.Context, *QueryStakingsRequest) (*QueryStakingsResponse, error)
+	// FarmerStaking returns a staking owned by the farmer.
 	FarmerStaking(context.Context, *QueryFarmerStakingRequest) (*QueryFarmerStakingResponse, error)
-	// PlanRewards returns all rewards of the plan.
-	PlanRewards(context.Context, *QueryPlanRewardsRequest) (*QueryPlanRewardsResponse, error)
-	// FarmerRewards returns all rewards owned by the farmer.
+	// Rewards returns all rewards.
+	Rewards(context.Context, *QueryRewardsRequest) (*QueryRewardsResponse, error)
+	// FarmerRewards returns all the rewards owned by the farmer.
 	FarmerRewards(context.Context, *QueryFarmerRewardsRequest) (*QueryFarmerRewardsResponse, error)
-	// FarmerReward returns a specific reward of the plan which is owned by the
-	// farmer.
-	FarmerReward(context.Context, *QueryFarmerRewardRequest) (*QueryFarmerRewardResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1236,23 +972,17 @@ func (*UnimplementedQueryServer) Plans(ctx context.Context, req *QueryPlansReque
 func (*UnimplementedQueryServer) Plan(ctx context.Context, req *QueryPlanRequest) (*QueryPlanResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Plan not implemented")
 }
-func (*UnimplementedQueryServer) PlanStakings(ctx context.Context, req *QueryPlanStakingsRequest) (*QueryPlanStakingsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PlanStakings not implemented")
-}
-func (*UnimplementedQueryServer) FarmerStakings(ctx context.Context, req *QueryFarmerStakingsRequest) (*QueryFarmerStakingsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FarmerStakings not implemented")
+func (*UnimplementedQueryServer) Stakings(ctx context.Context, req *QueryStakingsRequest) (*QueryStakingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Stakings not implemented")
 }
 func (*UnimplementedQueryServer) FarmerStaking(ctx context.Context, req *QueryFarmerStakingRequest) (*QueryFarmerStakingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FarmerStaking not implemented")
 }
-func (*UnimplementedQueryServer) PlanRewards(ctx context.Context, req *QueryPlanRewardsRequest) (*QueryPlanRewardsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PlanRewards not implemented")
+func (*UnimplementedQueryServer) Rewards(ctx context.Context, req *QueryRewardsRequest) (*QueryRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Rewards not implemented")
 }
 func (*UnimplementedQueryServer) FarmerRewards(ctx context.Context, req *QueryFarmerRewardsRequest) (*QueryFarmerRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FarmerRewards not implemented")
-}
-func (*UnimplementedQueryServer) FarmerReward(ctx context.Context, req *QueryFarmerRewardRequest) (*QueryFarmerRewardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FarmerReward not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1313,38 +1043,20 @@ func _Query_Plan_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_PlanStakings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryPlanStakingsRequest)
+func _Query_Stakings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryStakingsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).PlanStakings(ctx, in)
+		return srv.(QueryServer).Stakings(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.farming.v1beta1.Query/PlanStakings",
+		FullMethod: "/cosmos.farming.v1beta1.Query/Stakings",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).PlanStakings(ctx, req.(*QueryPlanStakingsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_FarmerStakings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFarmerStakingsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).FarmerStakings(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.farming.v1beta1.Query/FarmerStakings",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).FarmerStakings(ctx, req.(*QueryFarmerStakingsRequest))
+		return srv.(QueryServer).Stakings(ctx, req.(*QueryStakingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1367,20 +1079,20 @@ func _Query_FarmerStaking_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_PlanRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryPlanRewardsRequest)
+func _Query_Rewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRewardsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).PlanRewards(ctx, in)
+		return srv.(QueryServer).Rewards(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.farming.v1beta1.Query/PlanRewards",
+		FullMethod: "/cosmos.farming.v1beta1.Query/Rewards",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).PlanRewards(ctx, req.(*QueryPlanRewardsRequest))
+		return srv.(QueryServer).Rewards(ctx, req.(*QueryRewardsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1403,24 +1115,6 @@ func _Query_FarmerRewards_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_FarmerReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFarmerRewardRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).FarmerReward(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.farming.v1beta1.Query/FarmerReward",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).FarmerReward(ctx, req.(*QueryFarmerRewardRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.farming.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1438,28 +1132,20 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Plan_Handler,
 		},
 		{
-			MethodName: "PlanStakings",
-			Handler:    _Query_PlanStakings_Handler,
-		},
-		{
-			MethodName: "FarmerStakings",
-			Handler:    _Query_FarmerStakings_Handler,
+			MethodName: "Stakings",
+			Handler:    _Query_Stakings_Handler,
 		},
 		{
 			MethodName: "FarmerStaking",
 			Handler:    _Query_FarmerStaking_Handler,
 		},
 		{
-			MethodName: "PlanRewards",
-			Handler:    _Query_PlanRewards_Handler,
+			MethodName: "Rewards",
+			Handler:    _Query_Rewards_Handler,
 		},
 		{
 			MethodName: "FarmerRewards",
 			Handler:    _Query_FarmerRewards_Handler,
-		},
-		{
-			MethodName: "FarmerReward",
-			Handler:    _Query_FarmerReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1552,19 +1238,12 @@ func (m *QueryPlansRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x32
 	}
 	if len(m.StakingCoinDenom) > 0 {
 		i -= len(m.StakingCoinDenom)
 		copy(dAtA[i:], m.StakingCoinDenom)
 		i = encodeVarintQuery(dAtA, i, uint64(len(m.StakingCoinDenom)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.StakingReserveAddress) > 0 {
-		i -= len(m.StakingReserveAddress)
-		copy(dAtA[i:], m.StakingReserveAddress)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.StakingReserveAddress)))
 		i--
 		dAtA[i] = 0x2a
 	}
@@ -1711,7 +1390,7 @@ func (m *QueryPlanResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryPlanStakingsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryStakingsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1721,12 +1400,12 @@ func (m *QueryPlanStakingsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryPlanStakingsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryStakingsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPlanStakingsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryStakingsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1743,106 +1422,17 @@ func (m *QueryPlanStakingsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.PlanId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.PlanId))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryPlanStakingsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryPlanStakingsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryPlanStakingsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Stakings) > 0 {
-		for iNdEx := len(m.Stakings) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Stakings[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryFarmerStakingsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryFarmerStakingsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryFarmerStakingsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Farmer) > 0 {
-		i -= len(m.Farmer)
-		copy(dAtA[i:], m.Farmer)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Farmer)))
+	if len(m.StakingCoinDenom) > 0 {
+		i -= len(m.StakingCoinDenom)
+		copy(dAtA[i:], m.StakingCoinDenom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.StakingCoinDenom)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryFarmerStakingsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryStakingsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1852,12 +1442,12 @@ func (m *QueryFarmerStakingsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryFarmerStakingsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryStakingsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryFarmerStakingsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryStakingsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1911,11 +1501,6 @@ func (m *QueryFarmerStakingRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	if m.PlanId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.PlanId))
-		i--
-		dAtA[i] = 0x10
-	}
 	if len(m.Farmer) > 0 {
 		i -= len(m.Farmer)
 		copy(dAtA[i:], m.Farmer)
@@ -1961,7 +1546,7 @@ func (m *QueryFarmerStakingResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryPlanRewardsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryRewardsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1971,12 +1556,12 @@ func (m *QueryPlanRewardsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryPlanRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPlanRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1993,15 +1578,17 @@ func (m *QueryPlanRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.PlanId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.PlanId))
+	if len(m.StakingCoinDenom) > 0 {
+		i -= len(m.StakingCoinDenom)
+		copy(dAtA[i:], m.StakingCoinDenom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.StakingCoinDenom)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryPlanRewardsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryRewardsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2011,12 +1598,12 @@ func (m *QueryPlanRewardsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryPlanRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPlanRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2080,6 +1667,13 @@ func (m *QueryFarmerRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
 		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.StakingCoinDenom) > 0 {
+		i -= len(m.StakingCoinDenom)
+		copy(dAtA[i:], m.StakingCoinDenom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.StakingCoinDenom)))
+		i--
 		dAtA[i] = 0x12
 	}
 	if len(m.Farmer) > 0 {
@@ -2141,76 +1735,6 @@ func (m *QueryFarmerRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryFarmerRewardRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryFarmerRewardRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryFarmerRewardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.PlanId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.PlanId))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Farmer) > 0 {
-		i -= len(m.Farmer)
-		copy(dAtA[i:], m.Farmer)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Farmer)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryFarmerRewardResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryFarmerRewardResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryFarmerRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Reward != nil {
-		{
-			size, err := m.Reward.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2261,10 +1785,6 @@ func (m *QueryPlansRequest) Size() (n int) {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	l = len(m.TerminationAddress)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.StakingReserveAddress)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -2323,48 +1843,13 @@ func (m *QueryPlanResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryPlanStakingsRequest) Size() (n int) {
+func (m *QueryStakingsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PlanId != 0 {
-		n += 1 + sovQuery(uint64(m.PlanId))
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryPlanStakingsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Stakings) > 0 {
-		for _, e := range m.Stakings {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryFarmerStakingsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Farmer)
+	l = len(m.StakingCoinDenom)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -2375,7 +1860,7 @@ func (m *QueryFarmerStakingsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryFarmerStakingsResponse) Size() (n int) {
+func (m *QueryStakingsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2404,9 +1889,6 @@ func (m *QueryFarmerStakingRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.PlanId != 0 {
-		n += 1 + sovQuery(uint64(m.PlanId))
-	}
 	return n
 }
 
@@ -2423,14 +1905,15 @@ func (m *QueryFarmerStakingResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryPlanRewardsRequest) Size() (n int) {
+func (m *QueryRewardsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PlanId != 0 {
-		n += 1 + sovQuery(uint64(m.PlanId))
+	l = len(m.StakingCoinDenom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
@@ -2439,7 +1922,7 @@ func (m *QueryPlanRewardsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryPlanRewardsResponse) Size() (n int) {
+func (m *QueryRewardsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2468,6 +1951,10 @@ func (m *QueryFarmerRewardsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
+	l = len(m.StakingCoinDenom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
@@ -2489,35 +1976,6 @@ func (m *QueryFarmerRewardsResponse) Size() (n int) {
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryFarmerRewardRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Farmer)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	if m.PlanId != 0 {
-		n += 1 + sovQuery(uint64(m.PlanId))
-	}
-	return n
-}
-
-func (m *QueryFarmerRewardResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Reward != nil {
-		l = m.Reward.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -2821,38 +2279,6 @@ func (m *QueryPlansRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StakingReserveAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.StakingReserveAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoinDenom", wireType)
 			}
 			var stringLen uint64
@@ -2883,7 +2309,7 @@ func (m *QueryPlansRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.StakingCoinDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -3215,7 +2641,7 @@ func (m *QueryPlanResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryPlanStakingsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryStakingsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3238,240 +2664,15 @@ func (m *QueryPlanStakingsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPlanStakingsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryStakingsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPlanStakingsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
-			}
-			m.PlanId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PlanId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageRequest{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryPlanStakingsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPlanStakingsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPlanStakingsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryStakingsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Stakings", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Stakings = append(m.Stakings, &Staking{})
-			if err := m.Stakings[len(m.Stakings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageResponse{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryFarmerStakingsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFarmerStakingsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFarmerStakingsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoinDenom", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3499,7 +2700,7 @@ func (m *QueryFarmerStakingsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Farmer = string(dAtA[iNdEx:postIndex])
+			m.StakingCoinDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -3558,7 +2759,7 @@ func (m *QueryFarmerStakingsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryFarmerStakingsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryStakingsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3581,10 +2782,10 @@ func (m *QueryFarmerStakingsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFarmerStakingsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryStakingsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFarmerStakingsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryStakingsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3739,25 +2940,6 @@ func (m *QueryFarmerStakingRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Farmer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
-			}
-			m.PlanId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PlanId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -3865,7 +3047,7 @@ func (m *QueryFarmerStakingResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryPlanRewardsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryRewardsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3888,17 +3070,17 @@ func (m *QueryPlanRewardsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPlanRewardsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRewardsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPlanRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoinDenom", wireType)
 			}
-			m.PlanId = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -3908,11 +3090,24 @@ func (m *QueryPlanRewardsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PlanId |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingCoinDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
@@ -3970,7 +3165,7 @@ func (m *QueryPlanRewardsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryPlanRewardsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryRewardsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3993,10 +3188,10 @@ func (m *QueryPlanRewardsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPlanRewardsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRewardsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPlanRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4153,6 +3348,38 @@ func (m *QueryFarmerRewardsRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoinDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingCoinDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
 			var msglen int
@@ -4304,193 +3531,6 @@ func (m *QueryFarmerRewardsResponse) Unmarshal(dAtA []byte) error {
 				m.Pagination = &query.PageResponse{}
 			}
 			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryFarmerRewardRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFarmerRewardRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFarmerRewardRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Farmer = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
-			}
-			m.PlanId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PlanId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryFarmerRewardResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFarmerRewardResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFarmerRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Reward", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Reward == nil {
-				m.Reward = &Reward{}
-			}
-			if err := m.Reward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
