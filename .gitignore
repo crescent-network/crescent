@@ -14,8 +14,11 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# Build output
+build/
+
 # Localnet data
-data
+data/
 
 # IDE
 .idea/
