@@ -117,7 +117,7 @@ func (k Keeper) SetPlanIdByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAdd
 // CreateFixedAmountPlan sets fixed amount plan.
 func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixedAmountPlan, typ types.PlanType) *types.FixedAmountPlan {
 	nextId := k.GetNextPlanIDWithUpdate(ctx)
-	farmingPoolAddr := msg.GetFarmingPoolAddress()
+	farmingPoolAddr := msg.FarmingPoolAddress
 	terminationAddr := farmingPoolAddr
 
 	basePlan := types.NewBasePlan(
@@ -125,7 +125,7 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 		typ,
 		farmingPoolAddr,
 		terminationAddr,
-		msg.GetStakingCoinWeights(),
+		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
 	)
@@ -140,7 +140,7 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 // CreateRatioPlan sets ratio plan.
 func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, typ types.PlanType) *types.RatioPlan {
 	nextId := k.GetNextPlanIDWithUpdate(ctx)
-	farmingPoolAddr := msg.GetFarmingPoolAddress()
+	farmingPoolAddr := msg.FarmingPoolAddress
 	terminationAddr := farmingPoolAddr
 
 	basePlan := types.NewBasePlan(
@@ -148,7 +148,7 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		typ,
 		farmingPoolAddr,
 		terminationAddr,
-		msg.GetStakingCoinWeights(),
+		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
 	)

@@ -36,8 +36,8 @@ func TestGetSetNewPlan(t *testing.T) {
 	require.Equal(t, fixedPlan, plans[0])
 
 	// TODO: tmp test codes for testing functionality, need to separated
-	msgStake := types.NewMsgStake(farmerAddr, stakingCoins)
-	app.FarmingKeeper.Stake(ctx, msgStake)
+	_, err := app.FarmingKeeper.Stake(ctx, farmerAddr, stakingCoins)
+	require.NoError(t, err)
 
 	// stakings := app.FarmingKeeper.GetAllStakings(ctx)
 	// stakingsByPlan := app.FarmingKeeper.GetStaking(ctx, fixedPlan.Id)

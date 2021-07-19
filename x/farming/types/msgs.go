@@ -79,7 +79,7 @@ func (msg MsgCreateFixedAmountPlan) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgCreateFixedAmountPlan) GetPlanCreator() sdk.AccAddress {
+func (msg MsgCreateFixedAmountPlan) GetCreator() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
 	if err != nil {
 		panic(err)
@@ -139,7 +139,7 @@ func (msg MsgCreateRatioPlan) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgCreateRatioPlan) GetPlanCreator() sdk.AccAddress {
+func (msg MsgCreateRatioPlan) GetCreator() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
 	if err != nil {
 		panic(err)
@@ -184,7 +184,7 @@ func (msg MsgStake) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgStake) GetStaker() sdk.AccAddress {
+func (msg MsgStake) GetFarmer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
 		panic(err)
@@ -229,7 +229,7 @@ func (msg MsgUnstake) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgUnstake) GetUnstaker() sdk.AccAddress {
+func (msg MsgUnstake) GetFarmer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
 		panic(err)
@@ -239,12 +239,12 @@ func (msg MsgUnstake) GetUnstaker() sdk.AccAddress {
 
 // NewMsgHarvest creates a new MsgHarvest.
 func NewMsgHarvest(
-	stakingCoinDenom string,
 	farmer sdk.AccAddress,
+	stakingCoinDenoms []string,
 ) *MsgHarvest {
 	return &MsgHarvest{
-		StakingCoinDenom: stakingCoinDenom,
-		Farmer:           farmer.String(),
+		Farmer:            farmer.String(),
+		StakingCoinDenoms: stakingCoinDenoms,
 	}
 }
 
@@ -272,7 +272,7 @@ func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgHarvest) GetClaimer() sdk.AccAddress {
+func (msg MsgHarvest) GetFarmer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
 		panic(err)

@@ -122,55 +122,54 @@ func (k Keeper) ReleaseStakingCoins(ctx sdk.Context, farmer sdk.AccAddress, unst
 }
 
 // Stake stores staking coins to queued coins and it will be processed in the next epoch.
-func (k Keeper) Stake(ctx sdk.Context, msg *types.MsgStake) (types.Staking, error) {
-	farmerAcc, err := sdk.AccAddressFromBech32(msg.Farmer)
-	if err != nil {
+func (k Keeper) Stake(ctx sdk.Context, farmer sdk.AccAddress, amount sdk.Coins) (types.Staking, error) {
+	if err := k.ReserveStakingCoins(ctx, farmer, amount); err != nil {
 		return types.Staking{}, err
 	}
 
-	staking, found := k.GetStakingByFarmer(ctx, farmerAcc)
+	staking, found := k.GetStakingByFarmer(ctx, farmer)
 	if !found {
 		staking = types.Staking{
-			Farmer:      msg.Farmer,
-			StakedCoins: nil,
-			QueuedCoins: msg.StakingCoins,
+			Farmer:      farmer.String(),
+			StakedCoins: sdk.NewCoins(),
+			QueuedCoins: amount,
 		}
 	} else {
-		staking.QueuedCoins = staking.QueuedCoins.Add(msg.StakingCoins...)
+		staking.QueuedCoins = staking.QueuedCoins.Add(amount...)
 	}
-	// TODO: add detailed core logic and validation
+
 	k.SetStaking(ctx, staking)
-	k.ReserveStakingCoins(ctx, farmerAcc, staking.QueuedCoins)
 
 	return staking, nil
 }
 
 // Unstake unstakes an amount of staking coins from the staking reserve account.
-func (k Keeper) Unstake(ctx sdk.Context, msg *types.MsgUnstake) (types.Staking, error) {
-	farmerAcc, err := sdk.AccAddressFromBech32(msg.Farmer)
-	if err != nil {
-		return types.Staking{}, err
-	}
-
-	staking, found := k.GetStakingByFarmer(ctx, farmerAcc)
+func (k Keeper) Unstake(ctx sdk.Context, farmer sdk.AccAddress, amount sdk.Coins) (types.Staking, error) {
+	staking, found := k.GetStakingByFarmer(ctx, farmer)
 	if !found {
 		return types.Staking{}, types.ErrStakingNotExists
 	}
-	// TODO: add detailed core logic and validation
-	// TODO: double check with this logic
-	stakedDiff, hasNeg := staking.StakedCoins.SafeSub(msg.UnstakingCoins)
-	if hasNeg {
-		diff := stakedDiff.Add(staking.QueuedCoins...)
-		if diff.IsAnyNegative() {
-			return types.Staking{}, types.ErrInsufficientStakingAmount
-		}
-		staking.StakedCoins = sdk.Coins{}
-		staking.QueuedCoins = diff
+
+	if err := k.ReleaseStakingCoins(ctx, farmer, amount); err != nil {
+		return types.Staking{}, err
 	}
-	staking.StakedCoins = stakedDiff
+
+	var hasNeg bool
+	staking.QueuedCoins, hasNeg = staking.QueuedCoins.SafeSub(amount)
+	if hasNeg {
+		negativeCoins := sdk.NewCoins()
+		for _, coin := range staking.QueuedCoins {
+			if coin.IsNegative() {
+				negativeCoins = negativeCoins.Add(coin)
+				staking.QueuedCoins = staking.QueuedCoins.Add(sdk.NewCoin(coin.Denom, coin.Amount.Neg()))
+				staking.StakedCoins = staking.StakedCoins.Add(coin)
+			}
+		}
+		staking.QueuedCoins = staking.QueuedCoins.Sub(negativeCoins)
+		staking.StakedCoins = staking.QueuedCoins.Add(negativeCoins...)
+	}
 
 	k.SetStaking(ctx, staking)
-	k.ReleaseStakingCoins(ctx, farmerAcc, msg.UnstakingCoins)
 
-	return types.Staking{}, nil
+	return staking, nil
 }

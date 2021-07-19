@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -57,12 +56,6 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		}
 	}
 
-	if req.StakingReserveAddress != "" {
-		if _, err := sdk.AccAddressFromBech32(req.StakingReserveAddress); err != nil {
-			return nil, err
-		}
-	}
-
 	if err := sdk.ValidateDenom(req.StakingCoinDenom); err != nil {
 		return nil, err
 	}
@@ -72,7 +65,7 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 	planStore := prefix.NewStore(store, types.PlanKeyPrefix)
 
 	var plans []*codectypes.Any
-	pageRes, err := query.FilteredPaginate(planStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(planStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		plan, err := k.UnmarshalPlan(value)
 		if err != nil {
 			return false, err
@@ -139,158 +132,69 @@ func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.Qu
 	return &types.QueryPlanResponse{Plan: any}, nil
 }
 
-func (k Querier) PlanStakings(c context.Context, req *types.QueryPlanStakingsRequest) (*types.QueryPlanStakingsResponse, error) {
+func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*types.QueryStakingsResponse, error) {
+	panic("not implemented")
+}
+
+func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	stakingStore := prefix.NewStore(store, types.GetStakingPrefix(req.PlanId))
 
-	var stakings []*types.Staking
-	pageRes, err := query.Paginate(stakingStore, req.Pagination, func(key []byte, value []byte) error {
-		staking, err := k.UnmarshalStaking(value)
+	if req.Farmer != "" {
+		farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
+		if err != nil {
+			return nil, err
+		}
+
+		var rewards []*types.Reward
+		indexStore := prefix.NewStore(store, types.GetRewardByFarmerAddrIndexPrefix(farmerAddr))
+		pageRes, err := query.FilteredPaginate(indexStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+			stakingCoinDenom := types.GetRewardStakingCoinDenomFromIndexKey(key)
+			if req.StakingCoinDenom != "" {
+				if stakingCoinDenom != req.StakingCoinDenom {
+					return false, nil
+				}
+			}
+			reward, found := k.GetReward(ctx, farmerAddr, stakingCoinDenom)
+			if !found { // TODO: remove this check
+				return false, fmt.Errorf("reward not found")
+			}
+			if accumulate {
+				rewards = append(rewards, &reward)
+			}
+			return true, nil
+		})
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		return &types.QueryRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
+	}
+
+	var rewardPrefix []byte
+	if req.StakingCoinDenom != "" {
+		rewardPrefix = types.GetRewardByStakingCoinDenomPrefix(req.StakingCoinDenom)
+	} else {
+		rewardPrefix = types.RewardKeyPrefix
+	}
+	rewardStore := prefix.NewStore(store, rewardPrefix)
+
+	var rewards []*types.Reward
+	pageRes, err := query.Paginate(rewardStore, req.Pagination, func(key, value []byte) error {
+		reward, err := k.UnmarshalReward(value)
 		if err != nil {
 			return err
 		}
-		stakings = append(stakings, &staking)
+		rewards = append(rewards, &reward)
 		return nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryPlanStakingsResponse{Stakings: stakings, Pagination: pageRes}, nil
-}
-
-func (k Querier) FarmerStakings(c context.Context, req *types.QueryFarmerStakingsRequest) (*types.QueryFarmerStakingsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	planStore := prefix.NewStore(store, types.GetPlansByFarmerAddrIndexKey(farmerAddr))
-
-	var stakings []*types.Staking
-	pageRes, err := query.Paginate(planStore, req.Pagination, func(key []byte, value []byte) error {
-		var val gogotypes.UInt64Value
-		if err := k.cdc.Unmarshal(value, &val); err != nil {
-			return err
-		}
-		staking, found := k.GetStakingByFarmer(ctx, farmerAddr)
-		if !found { // TODO: Remove this check if we can sure that we're cleaning the store correctly.
-			return fmt.Errorf("staking not found")
-		}
-		stakings = append(stakings, &staking)
-		return nil
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryFarmerStakingsResponse{Stakings: stakings, Pagination: pageRes}, nil
-}
-
-func (k Querier) FarmerStaking(c context.Context, req *types.QueryFarmerStakingRequest) (*types.QueryFarmerStakingResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid argument")
-	}
-
-	farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	staking, found := k.GetStakingByFarmer(ctx, farmerAddr)
-	if !found {
-		return nil, status.Error(codes.NotFound, "staking not found")
-	}
-
-	return &types.QueryFarmerStakingResponse{Staking: &staking}, nil
-}
-
-func (k Querier) PlanRewards(c context.Context, req *types.QueryPlanRewardsRequest) (*types.QueryPlanRewardsResponse, error) {
-	// TODO: TBD this endpoint
-	//if req == nil {
-	//	return nil, status.Error(codes.InvalidArgument, "invalid request")
-	//}
-	//
-	//ctx := sdk.UnwrapSDKContext(c)
-	//store := ctx.KVStore(k.storeKey)
-	//rewardStore := prefix.NewStore(store, types.GetRewardKey(req.PlanId))
-	//
-	//var rewards []*types.Reward
-	//pageRes, err := query.Paginate(rewardStore, req.Pagination, func(key []byte, value []byte) error {
-	//	reward, err := k.UnmarshalReward(value)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	rewards = append(rewards, &reward)
-	//	return nil
-	//})
-	//if err != nil {
-	//	return nil, status.Error(codes.Internal, err.Error())
-	//}
-	//
-	//return &types.QueryPlanRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
-	return &types.QueryPlanRewardsResponse{}, nil
-}
-
-func (k Querier) FarmerRewards(c context.Context, req *types.QueryFarmerRewardsRequest) (*types.QueryFarmerRewardsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	farmerPrefix := prefix.NewStore(store, types.GetRewardByFarmerAddrIndexPrefix(farmerAddr))
-
-	var rewards []*types.Reward
-	pageRes, err := query.Paginate(farmerPrefix, req.Pagination, func(key []byte, value []byte) error {
-		var val types.Reward
-		if err := k.cdc.Unmarshal(value, &val); err != nil {
-			return err
-		}
-		rewards = append(rewards, &val)
-		return nil
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryFarmerRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
-}
-
-func (k Querier) FarmerReward(c context.Context, req *types.QueryFarmerRewardRequest) (*types.QueryFarmerRewardResponse, error) {
-	// TODO: Deprecated
-	//if req == nil {
-	//	return nil, status.Error(codes.InvalidArgument, "invalid argument")
-	//}
-	//
-	//farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//ctx := sdk.UnwrapSDKContext(c)
-	//reward, found := k.GetReward(ctx, req.PlanId, farmerAddr)
-	//if !found {
-	//	return nil, status.Error(codes.NotFound, "reward not found")
-	//}
-	//
-	//return &types.QueryFarmerRewardResponse{Reward: &reward}, nil
-	return &types.QueryFarmerRewardResponse{}, nil
+	return &types.QueryRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
 }

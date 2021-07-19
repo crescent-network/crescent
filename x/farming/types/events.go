@@ -6,7 +6,7 @@ const (
 	EventTypeCreateRatioPlan       = "create_ratio_plan"
 	EventTypeStake                 = "stake"
 	EventTypeUnstake               = "unstake"
-	EventTypeClaim                 = "claim"
+	EventTypeHarvest               = "harvest"
 
 	AttributeKeyPlanId                = "plan_id" //nolint:golint
 	AttributeKeyFarmingPoolAddress    = "farming_pool_address"
@@ -22,4 +22,5 @@ const (
 	AttributeKeyEpochDays             = "epoch_days"
 	AttributeKeyEpochAmount           = "epoch_amount"
 	AttributeKeyEpochRatio            = "epoch_ratio"
+	AttributeKeyFarmer                = "farmer"
 )
