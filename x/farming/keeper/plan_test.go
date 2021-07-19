@@ -8,41 +8,51 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/tendermint/farming/app"
 	"github.com/tendermint/farming/x/farming/types"
 )
 
 func TestGetSetNewPlan(t *testing.T) {
-	app, ctx := createTestApp(true)
+	simapp, ctx := createTestApp(true)
 
 	farmingPoolAddr := sdk.AccAddress([]byte("farmingPoolAddr"))
 	terminationAddr := sdk.AccAddress([]byte("terminationAddr"))
-	farmerAddr := sdk.AccAddress([]byte("farmer"))
-	stakingCoins := sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000)))
+	stakingCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
 	coinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
 	)
+
+	addrs := app.AddTestAddrs(simapp, ctx, 2, sdk.NewInt(2000000))
+	farmerAddr := addrs[0]
+
 	startTime := time.Now().UTC()
 	endTime := startTime.AddDate(1, 0, 0)
 	basePlan := types.NewBasePlan(1, 1, farmingPoolAddr.String(), terminationAddr.String(), coinWeights, startTime, endTime)
 	fixedPlan := types.NewFixedAmountPlan(basePlan, sdk.NewCoins(sdk.NewCoin("testFarmCoinDenom", sdk.NewInt(1000000))))
-	app.FarmingKeeper.SetPlan(ctx, fixedPlan)
+	simapp.FarmingKeeper.SetPlan(ctx, fixedPlan)
 
-	planGet, found := app.FarmingKeeper.GetPlan(ctx, 1)
+	planGet, found := simapp.FarmingKeeper.GetPlan(ctx, 1)
 	require.True(t, found)
 	require.Equal(t, fixedPlan, planGet)
 
-	plans := app.FarmingKeeper.GetAllPlans(ctx)
+	plans := simapp.FarmingKeeper.GetAllPlans(ctx)
 	require.Len(t, plans, 1)
 	require.Equal(t, fixedPlan, plans[0])
 
 	// TODO: tmp test codes for testing functionality, need to separated
-	_, err := app.FarmingKeeper.Stake(ctx, farmerAddr, stakingCoins)
+	_, err := simapp.FarmingKeeper.Stake(ctx, farmerAddr, stakingCoins)
 	require.NoError(t, err)
 
-	// stakings := app.FarmingKeeper.GetAllStakings(ctx)
-	// stakingsByPlan := app.FarmingKeeper.GetStaking(ctx, fixedPlan.Id)
+	// stakings := simapp.FarmingKeeper.GetAllStakings(ctx)
+	// stakingsByPlan := simapp.FarmingKeeper.GetStaking(ctx, fixedPlan.Id)
 	// require.Equal(t, stakings, stakingsByPlan)
-	plansByFarmer := app.FarmingKeeper.GetPlansByFarmerAddrIndex(ctx, farmerAddr)
 
-	require.Equal(t, plans, plansByFarmer)
+	simapp.FarmingKeeper.SetReward(ctx, sdk.DefaultBondDenom, farmerAddr, stakingCoins)
+
+	rewards := simapp.FarmingKeeper.GetAllRewards(ctx)
+	rewardsByFarmer := simapp.FarmingKeeper.GetRewardsByFarmer(ctx, farmerAddr)
+	rewardsByDenom := simapp.FarmingKeeper.GetRewardsByStakingCoinDenom(ctx, sdk.DefaultBondDenom)
+
+	require.Equal(t, rewards, rewardsByFarmer)
+	require.Equal(t, rewards, rewardsByDenom)
 }
