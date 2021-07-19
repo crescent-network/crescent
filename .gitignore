@@ -25,7 +25,7 @@ buf-stamp
 
 # Data - ideally these don't exist
 app/data/*
-x/liquidity/client/lcd/keys/*
+x/farming/client/lcd/keys/*
 mytestnet
 
 # Testing
