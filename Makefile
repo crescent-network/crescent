@@ -2,6 +2,7 @@
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
+PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 BINDIR ?= $(GOPATH)/bin
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
@@ -128,6 +129,30 @@ update-swagger-docs: statik
     fi
 
 .PHONY: update-swagger-docs
+
+###############################################################################
+###                           Tests & Simulation                            ###
+###############################################################################
+
+test: test-unit
+test-all: test-unit test-race test-cover
+
+test-unit: 
+	@VERSION=$(VERSION) go test -mod=readonly -tags='norace' $(PACKAGES_NOSIMULATION)
+
+test-race:
+	@go test -mod=readonly -timeout 30m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
+
+test-cover:
+	@go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+
+test-build: build
+	@go test -mod=readonly -p 4 `go list ./cli_test/...` -tags=cli_test -v
+
+benchmark:
+	@go test -mod=readonly -bench=. ./...
+
+.PHONY: test test-all test-unit test-race test-cover test-build
 
 ###############################################################################
 ###                               Localnet                                  ###
