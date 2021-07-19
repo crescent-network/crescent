@@ -8,7 +8,7 @@ import (
 )
 
 // GetReward returns a specific reward.
-func (k Keeper) GetReward(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) (reward types.Reward, found bool) {
+func (k Keeper) GetReward(ctx sdk.Context, stakingCoinDenom string, farmerAcc sdk.AccAddress) (reward types.Reward, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetRewardKey(stakingCoinDenom, farmerAcc))
 	if bz == nil {
@@ -49,13 +49,19 @@ func (k Keeper) GetRewardsByFarmer(ctx sdk.Context, farmer sdk.AccAddress) (rewa
 }
 
 // SetReward implements Reward.
-func (k Keeper) SetReward(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, reward types.Reward) {
+func (k Keeper) SetReward(ctx sdk.Context, stakingCoinDenom string, farmerAcc sdk.AccAddress, rewardCoins sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
 	// TODO: only rewardCoins
 	// 0x31 | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(sdk.Coins) RewardCoins
+	reward := types.Reward{
+		Farmer:           farmerAcc.String(),
+		StakingCoinDenom: stakingCoinDenom,
+		RewardCoins:      rewardCoins,
+	}
 	bz := k.cdc.MustMarshal(&reward)
 	store.Set(types.GetRewardKey(stakingCoinDenom, farmerAcc), bz)
-	store.Set(types.GetRewardByFarmerAddrIndexKey(farmerAcc, stakingCoinDenom), nil)
+	store.Set(types.GetRewardByFarmerAddrIndexKey(farmerAcc, stakingCoinDenom), []byte{})
+	// TODO: coin
 }
 
 // RemoveReward removes an reward for the reward mapper store.
@@ -111,8 +117,12 @@ func (k Keeper) IterateRewardsByFarmer(ctx sdk.Context, farmer sdk.AccAddress, c
 	for ; iterator.Valid(); iterator.Next() {
 		// TODO: unmarshal values by key
 		// RewardByFarmerAddrIndex: 0x32 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom -> nil
-		var reward types.Reward
-		k.cdc.MustUnmarshal(iterator.Value(), &reward)
+		farmer, denom, err := k.UnmarshalRewardByFarmerAddrIndexKey(iterator.Key())
+		// TODO: panic for debugging
+		if err != nil {
+			panic(err)
+		}
+		reward, _ := k.GetReward(ctx, denom, farmer)
 		if cb(reward) {
 			break
 		}
@@ -125,11 +135,19 @@ func (k Keeper) UnmarshalReward(bz []byte) (types.Reward, error) {
 	return reward, k.cdc.Unmarshal(bz, &reward)
 }
 
+// UnmarshalRewardByFarmerAddrIndexKey unmarshals a key of RewardByFarmerAddrIndex from bytes.
+func (k Keeper) UnmarshalRewardByFarmerAddrIndexKey(bz []byte) (sdk.AccAddress, string, error) {
+	farmer := sdk.AccAddress(bz[2 : bz[1]+2])
+	denom := string(bz[bz[1]+3:])
+	// TODO: add error case
+	return farmer, denom, nil
+}
+
 // Harvest claims farming rewards from the reward pool account.
 func (k Keeper) Harvest(ctx sdk.Context, farmer sdk.AccAddress, stakingCoinDenoms []string) (sdk.Coins, error) {
 	amount := sdk.NewCoins()
 	for _, denom := range stakingCoinDenoms {
-		reward, found := k.GetReward(ctx, farmer, denom)
+		reward, found := k.GetReward(ctx, denom, farmer)
 		if !found {
 			return nil, sdkerrors.Wrapf(types.ErrRewardNotExists, "no reward for staking coin denom %s", denom)
 		}
@@ -141,7 +159,7 @@ func (k Keeper) Harvest(ctx sdk.Context, farmer sdk.AccAddress, stakingCoinDenom
 	}
 
 	for _, denom := range stakingCoinDenoms {
-		k.SetReward(ctx, farmer, denom, types.Reward{RewardCoins: sdk.NewCoins()})
+		k.SetReward(ctx, denom, farmer, sdk.NewCoins())
 	}
 
 	return amount, nil

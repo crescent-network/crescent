@@ -159,7 +159,7 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 					return false, nil
 				}
 			}
-			reward, found := k.GetReward(ctx, farmerAddr, stakingCoinDenom)
+			reward, found := k.GetReward(ctx, stakingCoinDenom, farmerAddr)
 			if !found { // TODO: remove this check
 				return false, fmt.Errorf("reward not found")
 			}
