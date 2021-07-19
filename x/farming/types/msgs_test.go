@@ -12,10 +12,6 @@ import (
 	"github.com/tendermint/farming/x/farming/types"
 )
 
-const (
-	DefaultEpochDays = uint32(1)
-)
-
 func TestMsgCreateFixedAmountPlan(t *testing.T) {
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
 	stakingCoinWeights := sdk.NewDecCoins(
@@ -77,7 +73,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 			require.Nil(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetPlanCreator(), signers[0])
+			require.Equal(t, tc.msg.GetCreator(), signers[0])
 		} else {
 			require.EqualError(t, err, tc.expectedErr)
 		}
@@ -145,7 +141,7 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 			require.Nil(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetPlanCreator(), signers[0])
+			require.Equal(t, tc.msg.GetCreator(), signers[0])
 		} else {
 			require.EqualError(t, err, tc.expectedErr)
 		}
@@ -180,7 +176,7 @@ func TestMsgStake(t *testing.T) {
 			require.Nil(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetStaker(), signers[0])
+			require.Equal(t, tc.msg.GetFarmer(), signers[0])
 		} else {
 			require.EqualError(t, err, tc.expectedErr)
 		}
@@ -215,7 +211,7 @@ func TestMsgUnstake(t *testing.T) {
 			require.Nil(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetUnstaker(), signers[0])
+			require.Equal(t, tc.msg.GetFarmer(), signers[0])
 		} else {
 			require.EqualError(t, err, tc.expectedErr)
 		}
@@ -223,7 +219,7 @@ func TestMsgUnstake(t *testing.T) {
 }
 
 func TestMsgHarvest(t *testing.T) {
-	stakingCoinDenom := ""
+	stakingCoinDenoms := []string{""}
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
 
 	testCases := []struct {
@@ -232,7 +228,7 @@ func TestMsgHarvest(t *testing.T) {
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgHarvest(stakingCoinDenom, farmingPoolAddr),
+			types.NewMsgHarvest(farmingPoolAddr, stakingCoinDenoms),
 		},
 		// TODO" not implemented yet
 	}
@@ -248,7 +244,7 @@ func TestMsgHarvest(t *testing.T) {
 			require.Nil(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetClaimer(), signers[0])
+			require.Equal(t, tc.msg.GetFarmer(), signers[0])
 		} else {
 			require.EqualError(t, err, tc.expectedErr)
 		}

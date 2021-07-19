@@ -2,12 +2,13 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/farming/x/farming/types"
 )
 
-// GetReward return a specific reward
-func (k Keeper) GetReward(ctx sdk.Context, stakingCoinDenom string, farmerAcc sdk.AccAddress) (reward types.Reward, found bool) {
+// GetReward returns a specific reward.
+func (k Keeper) GetReward(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) (reward types.Reward, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetRewardKey(stakingCoinDenom, farmerAcc))
 	if bz == nil {
@@ -48,13 +49,13 @@ func (k Keeper) GetRewardsByFarmer(ctx sdk.Context, farmer sdk.AccAddress) (rewa
 }
 
 // SetReward implements Reward.
-func (k Keeper) SetReward(ctx sdk.Context, reward types.Reward) {
+func (k Keeper) SetReward(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, reward types.Reward) {
 	store := ctx.KVStore(k.storeKey)
 	// TODO: only rewardCoins
 	// 0x31 | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(sdk.Coins) RewardCoins
 	bz := k.cdc.MustMarshal(&reward)
-	store.Set(types.GetRewardKey(reward.StakingCoinDenom, reward.GetFarmerAddress()), bz)
-	store.Set(types.GetRewardByFarmerAddrIndexKey(reward.GetFarmerAddress(), reward.StakingCoinDenom), nil)
+	store.Set(types.GetRewardKey(stakingCoinDenom, farmerAcc), bz)
+	store.Set(types.GetRewardByFarmerAddrIndexKey(farmerAcc, stakingCoinDenom), nil)
 }
 
 // RemoveReward removes an reward for the reward mapper store.
@@ -125,20 +126,23 @@ func (k Keeper) UnmarshalReward(bz []byte) (types.Reward, error) {
 }
 
 // Harvest claims farming rewards from the reward pool account.
-func (k Keeper) Harvest(ctx sdk.Context, msg *types.MsgHarvest) (types.Reward, error) {
-	farmerAcc, err := sdk.AccAddressFromBech32(msg.Farmer)
-	if err != nil {
-		return types.Reward{}, err
+func (k Keeper) Harvest(ctx sdk.Context, farmer sdk.AccAddress, stakingCoinDenoms []string) (sdk.Coins, error) {
+	amount := sdk.NewCoins()
+	for _, denom := range stakingCoinDenoms {
+		reward, found := k.GetReward(ctx, farmer, denom)
+		if !found {
+			return nil, sdkerrors.Wrapf(types.ErrRewardNotExists, "no reward for staking coin denom %s", denom)
+		}
+		amount = amount.Add(reward.RewardCoins...)
 	}
 
-	reward, found := k.GetReward(ctx, msg.StakingCoinDenom, farmerAcc)
-	if !found {
-		return types.Reward{}, types.ErrRewardNotExists
-	}
-	// TODO: add detailed core logic and validation
-	if err := k.ReleaseStakingCoins(ctx, reward.GetFarmerAddress(), reward.RewardCoins); err != nil {
-		panic(err)
+	if err := k.ReleaseStakingCoins(ctx, farmer, amount); err != nil {
+		return nil, err
 	}
 
-	return types.Reward{}, nil
+	for _, denom := range stakingCoinDenoms {
+		k.SetReward(ctx, farmer, denom, types.Reward{RewardCoins: sdk.NewCoins()})
+	}
+
+	return amount, nil
 }

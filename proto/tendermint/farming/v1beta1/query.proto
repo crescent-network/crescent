@@ -33,19 +33,9 @@ service Query {
     option (google.api.http).get = "/cosmos/farming/v1beta1/stakings";
   }
 
-  // FarmerStaking returns a staking owned by the farmer.
-  rpc FarmerStaking(QueryFarmerStakingRequest) returns (QueryFarmerStakingResponse) {
-    option (google.api.http).get = "/cosmos/farming/v1beta1/stakings/{farmer}";
-  }
-
   // Rewards returns all rewards.
   rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/rewards";
-  }
-
-  // FarmerRewards returns all the rewards owned by the farmer.
-  rpc FarmerRewards(QueryFarmerRewardsRequest) returns (QueryFarmerRewardsResponse) {
-    option (google.api.http).get = "/cosmos/farming/v1beta1/rewards/{farmer}";
   }
 }
 
@@ -107,25 +97,13 @@ message QueryFarmerStakingResponse {
 
 // QueryRewardsRequest is the request type for the Query/Rewards RPC method.
 message QueryRewardsRequest {
-  string                                staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
-  cosmos.base.query.v1beta1.PageRequest pagination         = 2;
-}
-
-// QueryRewardsResponse is the response type for the Query/Rewards RPC method.
-message QueryRewardsResponse {
-  repeated Reward                        rewards    = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryFarmerRewardsRequest is the request type for the Query/FarmerRewards RPC method.
-message QueryFarmerRewardsRequest {
   string                                farmer             = 1;
   string                                staking_coin_denom = 2 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
   cosmos.base.query.v1beta1.PageRequest pagination         = 3;
 }
 
-// QueryFarmerRewardsResponse is the response type for the Query/FarmerRewards RPC method.
-message QueryFarmerRewardsResponse {
+// QueryRewardsResponse is the response type for the Query/Rewards RPC method.
+message QueryRewardsResponse {
   repeated Reward                        rewards    = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

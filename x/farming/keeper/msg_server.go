@@ -30,20 +30,16 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) CreateFixedAmountPlan(goCtx context.Context, msg *types.MsgCreateFixedAmountPlan) (*types.MsgCreateFixedAmountPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	fixedPlan := k.Keeper.CreateFixedAmountPlan(ctx, msg, types.PlanTypePrivate)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateFixedAmountPlan,
-			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.GetFarmingPoolAddress()),
+			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, fixedPlan.RewardPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
-			sdk.NewAttribute(types.AttributeKeyEpochAmount, fmt.Sprint(msg.GetEpochAmount())),
+			sdk.NewAttribute(types.AttributeKeyEpochAmount, msg.EpochAmount.String()),
 		),
 	})
 
@@ -54,16 +50,12 @@ func (k msgServer) CreateFixedAmountPlan(goCtx context.Context, msg *types.MsgCr
 func (k msgServer) CreateRatioPlan(goCtx context.Context, msg *types.MsgCreateRatioPlan) (*types.MsgCreateRatioPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	ratioPlan := k.Keeper.CreateRatioPlan(ctx, msg, types.PlanTypePrivate)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateRatioPlan,
-			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.GetFarmingPoolAddress()),
+			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, ratioPlan.RewardPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
@@ -78,16 +70,15 @@ func (k msgServer) CreateRatioPlan(goCtx context.Context, msg *types.MsgCreateRa
 func (k msgServer) Stake(goCtx context.Context, msg *types.MsgStake) (*types.MsgStakeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := k.Keeper.Stake(ctx, msg)
-	if err != nil {
+	if _, err := k.Keeper.Stake(ctx, msg.GetFarmer(), msg.StakingCoins); err != nil {
 		return &types.MsgStakeResponse{}, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeStake,
-			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.GetFarmer()),
-			sdk.NewAttribute(types.AttributeKeyStakingCoins, msg.GetStakingCoins().String()),
+			sdk.NewAttribute(types.AttributeKeyFarmer, msg.Farmer),
+			sdk.NewAttribute(types.AttributeKeyStakingCoins, msg.StakingCoins.String()),
 		),
 	})
 
@@ -98,16 +89,15 @@ func (k msgServer) Stake(goCtx context.Context, msg *types.MsgStake) (*types.Msg
 func (k msgServer) Unstake(goCtx context.Context, msg *types.MsgUnstake) (*types.MsgUnstakeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := k.Keeper.Unstake(ctx, msg)
-	if err != nil {
+	if _, err := k.Keeper.Unstake(ctx, msg.GetFarmer(), msg.UnstakingCoins); err != nil {
 		return &types.MsgUnstakeResponse{}, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeUnstake,
-			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.GetUnstaker().String()),
-			sdk.NewAttribute(types.AttributeKeyStakingCoins, msg.GetUnstakingCoins().String()),
+			sdk.NewAttribute(types.AttributeKeyFarmer, msg.Farmer),
+			sdk.NewAttribute(types.AttributeKeyUnstakingCoins, msg.UnstakingCoins.String()),
 		),
 	})
 
@@ -118,16 +108,16 @@ func (k msgServer) Unstake(goCtx context.Context, msg *types.MsgUnstake) (*types
 func (k msgServer) Harvest(goCtx context.Context, msg *types.MsgHarvest) (*types.MsgHarvestResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	reward, err := k.Keeper.Harvest(ctx, msg)
+	rewardCoins, err := k.Keeper.Harvest(ctx, msg.GetFarmer(), msg.StakingCoinDenoms)
 	if err != nil {
 		return &types.MsgHarvestResponse{}, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeClaim,
-			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.GetFarmer()),
-			sdk.NewAttribute(types.AttributeKeyRewardCoins, reward.RewardCoins.String()),
+			types.EventTypeHarvest,
+			sdk.NewAttribute(types.AttributeKeyFarmer, msg.Farmer),
+			sdk.NewAttribute(types.AttributeKeyRewardCoins, rewardCoins.String()),
 		),
 	})
 

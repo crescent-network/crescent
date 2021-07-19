@@ -121,3 +121,8 @@ func GetRewardByStakingCoinDenomPrefix(stakingCoinDenom string) []byte {
 func GetRewardByFarmerAddrIndexPrefix(farmerAcc sdk.AccAddress) []byte {
 	return append(RewardByFarmerAddrIndexKeyPrefix, address.MustLengthPrefix(farmerAcc.Bytes())...)
 }
+
+func GetRewardStakingCoinDenomFromIndexKey(key []byte) string {
+	addrLen := key[1]
+	return string(key[2+addrLen:])
+}

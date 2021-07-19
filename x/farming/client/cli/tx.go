@@ -224,13 +224,10 @@ $ %s tx %s claim --from mykey
 			fmt.Println("planCreator: ", planCreator)
 
 			// TODO: replace dummy data
-			stakingCoinDenom := "test"
 			farmer := sdk.AccAddress{}
+			stakingCoinDenoms := []string{"test"}
 
-			msg := types.NewMsgHarvest(
-				stakingCoinDenom,
-				farmer,
-			)
+			msg := types.NewMsgHarvest(farmer, stakingCoinDenoms)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

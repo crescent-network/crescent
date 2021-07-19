@@ -31,6 +31,8 @@ service Msg {
 // MsgCreateFixedAmountPlan defines a SDK message for creating a new fixed
 // amount farming plan.
 message MsgCreateFixedAmountPlan {
+  option (gogoproto.goproto_getters) = false;
+
   // farming_pool_address defines the bech32-encoded address of the farming pool
   string farming_pool_address = 1 [(gogoproto.moretags) = "yaml:\"farming_pool_address\""];
 
@@ -57,9 +59,15 @@ message MsgCreateFixedAmountPlan {
   ];
 }
 
+// MsgCreateFixedAmountPlanResponse defines the
+// Msg/CreateFixedAmountPlanResponse response type.
+message MsgCreateFixedAmountPlanResponse {}
+
 // MsgCreateRatioPlan defines a SDK message for creating a new ratio farming
 // plan.
 message MsgCreateRatioPlan {
+  option (gogoproto.goproto_getters) = false;
+
   // farming_pool_address defines the bech32-encoded address of the farming pool
   string farming_pool_address = 1 [(gogoproto.moretags) = "yaml:\"farming_pool_address\""];
 
@@ -86,8 +94,14 @@ message MsgCreateRatioPlan {
   ];
 }
 
+// MsgCreateRatioPlanResponse  defines the Msg/MsgCreateRatioPlanResponse
+// response type.
+message MsgCreateRatioPlanResponse {}
+
 // MsgStake defines a SDK message for staking coins into the farming plan.
 message MsgStake {
+  option (gogoproto.goproto_getters) = false;
+
   // farmer defines the bech32-encoded address of the farmer
   string farmer = 1;
 
@@ -99,9 +113,14 @@ message MsgStake {
   ];
 }
 
+// MsgStakeResponse  defines the Msg/MsgStakeResponse response type.
+message MsgStakeResponse {}
+
 // MsgUnstake defines a SDK message for performing unstaking of coins from the
 // farming plan.
 message MsgUnstake {
+  option (gogoproto.goproto_getters) = false;
+
   // farmer defines the bech32-encoded address of the farmer
   string farmer = 1;
 
@@ -113,29 +132,20 @@ message MsgUnstake {
   ];
 }
 
+// MsgUnstakeResponse defines the Msg/MsgUnstakeResponse response type.
+message MsgUnstakeResponse {}
+
 // MsgHarvest defines a SDK message for claiming rewards from the farming plan.
 message MsgHarvest {
+  option (gogoproto.goproto_getters) = false;
+
   // farmer defines the bech32-encoded address of the farmer
   string farmer = 1;
 
-  // staking_coin_denom is denom of staked coin as a source of the reward for
+  // staking_coin_denoms is the set of denoms of staked coins as a source of the reward for
   // harvesting
-  string staking_coin_denom = 2 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+  repeated string staking_coin_denoms = 2 [(gogoproto.moretags) = "yaml:\"staking_coin_denoms\""];
 }
-
-// MsgCreateFixedAmountPlanResponse defines the
-// Msg/CreateFixedAmountPlanResponse response type.
-message MsgCreateFixedAmountPlanResponse {}
-
-// MsgCreateRatioPlanResponse  defines the Msg/MsgCreateRatioPlanResponse
-// response type.
-message MsgCreateRatioPlanResponse {}
-
-// MsgStakeResponse  defines the Msg/MsgStakeResponse response type.
-message MsgStakeResponse {}
-
-// MsgUnstakeResponse defines the Msg/MsgUnstakeResponse response type.
-message MsgUnstakeResponse {}
 
 // MsgHarvestResponse defines the Msg/MsgHarvestResponse response type.
 message MsgHarvestResponse {}
