@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -94,9 +93,6 @@ func GetStakingByStakingCoinDenomIdIndexPrefix(denom string) []byte {
 func GetStakingByStakingCoinDenomIdIndexKey(denom string, id uint64) []byte {
 	idBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(idBytes, id)
-	fmt.Println(MustLengthPrefixString(denom))
-	fmt.Println(idBytes)
-	fmt.Println(append(append(StakingByStakingCoinDenomIdIndexKeyPrefix, MustLengthPrefixString(denom)...), idBytes...))
 	return append(append(StakingByStakingCoinDenomIdIndexKeyPrefix, MustLengthPrefixString(denom)...), idBytes...)
 }
 

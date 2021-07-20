@@ -126,7 +126,7 @@ func (k Keeper) GetStakingCreationFeePool(ctx sdk.Context) authtypes.ModuleAccou
 	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// GetStakingCreationFeePool returns module account for collecting Staking Creation Fee
+// GetStakingStakingReservePoolAcc returns module account for Staking Reserve Pool account
 func (k Keeper) GetStakingStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
 	return types.StakingReserveAcc
 }

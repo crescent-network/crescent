@@ -93,7 +93,7 @@ func (k Keeper) SetStaking(ctx sdk.Context, staking types.Staking) {
 // SetStakingIndex implements Staking.
 func (k Keeper) SetStakingIndex(ctx sdk.Context, staking types.Staking) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetStakingByFarmerAddrIndexKey(staking.FarmerAddress()), staking.IdBytes())
+	store.Set(types.GetStakingByFarmerAddrIndexKey(staking.GetFarmerAddress()), staking.IdBytes())
 	for _, denom := range staking.Denoms() {
 		store.Set(types.GetStakingByStakingCoinDenomIdIndexKey(denom, staking.Id), []byte{})
 	}
@@ -103,7 +103,7 @@ func (k Keeper) SetStakingIndex(ctx sdk.Context, staking types.Staking) {
 func (k Keeper) RemoveStaking(ctx sdk.Context, staking types.Staking) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetStakingKey(staking.Id))
-	store.Delete(types.GetStakingByFarmerAddrIndexKey(staking.FarmerAddress()))
+	store.Delete(types.GetStakingByFarmerAddrIndexKey(staking.GetFarmerAddress()))
 	for _, denom := range staking.Denoms() {
 		store.Delete(types.GetStakingByStakingCoinDenomIdIndexKey(denom, staking.Id))
 	}
@@ -140,11 +140,7 @@ func (k Keeper) IterateStakingsByStakingCoinDenom(ctx sdk.Context, denom string,
 	iterator := sdk.KVStorePrefixIterator(store, types.GetStakingByStakingCoinDenomIdIndexPrefix(denom))
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		//fmt.Println(iterator.Key(), iterator.Value(), len(iterator.Value())==0)
 		_, id := types.ParseStakingByStakingCoinDenomIdIndexKey(iterator.Key())
-		if err != nil {
-			panic(err)
-		}
 		staking, _ := k.GetStaking(ctx, id)
 		if cb(staking) {
 			break
@@ -160,7 +156,7 @@ func (k Keeper) UnmarshalStaking(bz []byte) (types.Staking, error) {
 
 // ReserveStakingCoins sends staking coins to the staking reserve account.
 func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmer sdk.AccAddress, stakingCoins sdk.Coins) error {
-	if err := k.bankKeeper.SendCoins(ctx, farmer, types.StakingReserveAcc, stakingCoins); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, farmer, k.GetStakingStakingReservePoolAcc(ctx), stakingCoins); err != nil {
 		return err
 	}
 	return nil
@@ -168,7 +164,7 @@ func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmer sdk.AccAddress, stak
 
 // ReleaseStakingCoins sends staking coins back to the farmer.
 func (k Keeper) ReleaseStakingCoins(ctx sdk.Context, farmer sdk.AccAddress, unstakingCoins sdk.Coins) error {
-	if err := k.bankKeeper.SendCoins(ctx, types.StakingReserveAcc, farmer, unstakingCoins); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, k.GetStakingStakingReservePoolAcc(ctx), farmer, unstakingCoins); err != nil {
 		return err
 	}
 	return nil

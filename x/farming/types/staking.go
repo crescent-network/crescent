@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (staking Staking) FarmerAddress() sdk.AccAddress {
+func (staking Staking) GetFarmerAddress() sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(staking.Farmer)
 	return addr
 }
