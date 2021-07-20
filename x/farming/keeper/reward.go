@@ -117,11 +117,7 @@ func (k Keeper) IterateRewardsByFarmer(ctx sdk.Context, farmer sdk.AccAddress, c
 	for ; iterator.Valid(); iterator.Next() {
 		// TODO: unmarshal values by key
 		// RewardByFarmerAddrIndex: 0x32 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomAddrLen (1 byte) | StakingCoinDenom -> nil
-		farmer, denom, err := k.UnmarshalRewardByFarmerAddrIndexKey(iterator.Key())
-		// TODO: panic for debugging
-		if err != nil {
-			panic(err)
-		}
+		farmer, denom := types.ParseRewardByFarmerAddrIndexKey(iterator.Key())
 		reward, _ := k.GetReward(ctx, denom, farmer)
 		if cb(reward) {
 			break
@@ -133,14 +129,6 @@ func (k Keeper) IterateRewardsByFarmer(ctx sdk.Context, farmer sdk.AccAddress, c
 func (k Keeper) UnmarshalReward(bz []byte) (types.Reward, error) {
 	var reward types.Reward
 	return reward, k.cdc.Unmarshal(bz, &reward)
-}
-
-// UnmarshalRewardByFarmerAddrIndexKey unmarshals a key of RewardByFarmerAddrIndex from bytes.
-func (k Keeper) UnmarshalRewardByFarmerAddrIndexKey(bz []byte) (sdk.AccAddress, string, error) {
-	farmer := sdk.AccAddress(bz[2 : bz[1]+2])
-	denom := string(bz[bz[1]+3:])
-	// TODO: add error case
-	return farmer, denom, nil
 }
 
 // Harvest claims farming rewards from the reward pool account.

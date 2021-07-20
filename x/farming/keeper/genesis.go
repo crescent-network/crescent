@@ -13,7 +13,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 
 	k.SetParams(ctx, genState.Params)
-
+	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	// TODO: unimplemented
 	//for _, record := range genState.PlanRecords {
 	//	k.SetPlanRecord(ctx, record)

@@ -1,6 +1,9 @@
 package types
 
 import (
+	"encoding/binary"
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -84,13 +87,18 @@ func GetStakingByFarmerAddrIndexKey(farmerAcc sdk.AccAddress) []byte {
 
 // GetStakingByStakingCoinDenomIdIndexPrefix returns prefix for the iterable staking list by the staking coin denomination
 func GetStakingByStakingCoinDenomIdIndexPrefix(denom string) []byte {
-	return append(StakingByFarmerAddrIndexKeyPrefix, MustLengthPrefixString(denom)...)
+	return append(StakingByStakingCoinDenomIdIndexKeyPrefix, MustLengthPrefixString(denom)...)
 }
 
-//// GetStakingByStakingCoinDenomIdIndexKey returns key for the staking index by the staking coin denomination
-//func GetStakingByStakingCoinDenomIdIndexKey(denom string, id uint64) []byte {
-//	return append(StakingByFarmerAddrIndexKeyPrefix, MustLengthPrefixString(denom)...)
-//}
+// GetStakingByStakingCoinDenomIdIndexKey returns key for the staking index by the staking coin denomination
+func GetStakingByStakingCoinDenomIdIndexKey(denom string, id uint64) []byte {
+	idBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(idBytes, id)
+	fmt.Println(MustLengthPrefixString(denom))
+	fmt.Println(idBytes)
+	fmt.Println(append(append(StakingByStakingCoinDenomIdIndexKeyPrefix, MustLengthPrefixString(denom)...), idBytes...))
+	return append(append(StakingByStakingCoinDenomIdIndexKeyPrefix, MustLengthPrefixString(denom)...), idBytes...)
+}
 
 // MustLengthPrefix is LengthPrefix with panic on error.
 func MustLengthPrefixString(str string) []byte {
@@ -125,4 +133,17 @@ func GetRewardByFarmerAddrIndexPrefix(farmerAcc sdk.AccAddress) []byte {
 func GetRewardStakingCoinDenomFromIndexKey(key []byte) string {
 	addrLen := key[1]
 	return string(key[2+addrLen:])
+}
+
+func ParseRewardByFarmerAddrIndexKey(bz []byte) (sdk.AccAddress, string) {
+	farmer := sdk.AccAddress(bz[2 : bz[1]+2])
+	denom := string(bz[bz[1]+3:])
+	return farmer, denom
+}
+
+// ParseStakingByStakingCoinDenomIdIndexKey unmarshals a key of RewardByFarmerAddrIndex from bytes.
+func ParseStakingByStakingCoinDenomIdIndexKey(bz []byte) (string, uint64) {
+	denom := string(bz[2 : bz[1]+2])
+	id := binary.BigEndian.Uint64(bz[bz[1]+2:])
+	return denom, id
 }
