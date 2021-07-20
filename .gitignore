@@ -1,24 +1,47 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# OS
+.DS_Store
+*.swp
+*.swo
+*.swl
+*.swm
+*.swn
+.vscode
+.idea
+*.pyc
 
-# Test binary, built with `go test -c`
-*.test
+# Build
+vendor
+build
+tools/bin/*
+examples/build/*
+docs/_build
+docs/tutorial
+docs/node_modules
+docs/modules
+dist
+tools-stamp
+proto-tools-stamp
+buf-stamp
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# Data - ideally these don't exist
+app/data/*
+x/farming/client/lcd/keys/*
+mytestnet
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Testing
+coverage.txt
+profile.out
+sim_log_file
 
-# Build output
-build/
-
-# Localnet data
-data/
+# Vagrant
+.vagrant/
+*.box
+*.log
+vagrant
 
 # IDE
 .idea/
+*.iml
+
+# Localnet
+data/

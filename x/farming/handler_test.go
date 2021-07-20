@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tendermint/farming/app"
+	farmingapp "github.com/tendermint/farming/app"
 	"github.com/tendermint/farming/x/farming"
 	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
@@ -18,8 +18,8 @@ import (
 
 // createTestInput returns a simapp with custom FarmingKeeper
 // to avoid messing with the hooks.
-func createTestInput() (*app.FarmingApp, sdk.Context, []sdk.AccAddress) {
-	app := app.Setup(false)
+func createTestInput() (*farmingapp.FarmingApp, sdk.Context, []sdk.AccAddress) {
+	app := farmingapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.FarmingKeeper = keeper.NewKeeper(
@@ -32,9 +32,7 @@ func createTestInput() (*app.FarmingApp, sdk.Context, []sdk.AccAddress) {
 		map[string]bool{},
 	)
 
-	// TODO: test_helpers.go
-	addrs := []sdk.AccAddress{}
-	// addrs := app.AddTestAddrs(app, ctx, 1, sdk.NewInt(100000))
+	addrs := farmingapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(100000))
 
 	return app, ctx, addrs
 }

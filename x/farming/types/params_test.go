@@ -18,6 +18,8 @@ func TestParams(t *testing.T) {
 	paramsStr := `private_plan_creation_fee:
 - denom: stake
   amount: "100000000"
+staking_creation_fee: []
+epoch_days: 0
 `
 	require.Equal(t, paramsStr, defaultParams.String())
 }
