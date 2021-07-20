@@ -104,9 +104,7 @@ func (k Keeper) RemoveStaking(ctx sdk.Context, staking types.Staking) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetStakingKey(staking.Id))
 	store.Delete(types.GetStakingByFarmerAddrIndexKey(staking.GetFarmerAddress()))
-	for _, denom := range staking.Denoms() {
-		store.Delete(types.GetStakingByStakingCoinDenomIdIndexKey(denom, staking.Id))
-	}
+	k.RemoveStakingCoinDenomsIndex(ctx, staking.Id, staking.Denoms())
 }
 
 // RemoveStaking removes an staking for the staking mapper store.
