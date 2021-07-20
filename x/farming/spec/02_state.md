@@ -126,8 +126,8 @@ The parameters of the Staking state are:
   - store latest staking id
 
 - Staking: `0x21 | Id -> ProtocolBuffer(Staking)`
-- StakingByFarmerAddrIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr -> Id`
-- StakingByStakingCoinDenomIdIndex: `0x23 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | Id -> nil`
+- StakingByFarmerAddrIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr -> BigEndian(Id)`
+- StakingByStakingCoinDenomIdIndex: `0x23 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Id) -> nil`
 
 ## Reward
 
