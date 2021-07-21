@@ -16,7 +16,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.PlanKeyPrefix),
-			bytes.Equal(kvA.Key[:1], types.PlanByFarmerAddrIndexKeyPrefix):
+			bytes.Equal(kvA.Key[:1], types.PlansByFarmerIndexKeyPrefix):
 			var pA, pB types.BasePlan
 			cdc.MustUnmarshal(kvA.Value, &pA)
 			cdc.MustUnmarshal(kvA.Value, &pB)

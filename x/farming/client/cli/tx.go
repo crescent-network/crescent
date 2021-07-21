@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -39,7 +40,7 @@ func NewCreateFixedAmountPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create-fixed-plan",
 		Aliases: []string{"cf"},
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(0),
 		Short:   "create fixed amount farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create fixed amount farming plan.
@@ -76,6 +77,7 @@ $ %s tx %s create-fixed-plan --from mykey
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -84,7 +86,7 @@ func NewCreateRatioPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create-ratio-plan",
 		Aliases: []string{"cr"},
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(0),
 		Short:   "create ratio farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create ratio farming plan.
@@ -121,6 +123,7 @@ $ %s tx %s create-ratio-plan --from mykey
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -128,7 +131,7 @@ $ %s tx %s create-ratio-plan --from mykey
 func NewStakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stake",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(0),
 		Short: "stake coins to the farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`stake coins to the farming plan.
@@ -143,22 +146,16 @@ $ %s tx %s stake --from mykey
 			if err != nil {
 				return err
 			}
-			planCreator := clientCtx.GetFromAddress()
+			farmer := clientCtx.GetFromAddress()
 
-			fmt.Println("planCreator: ", planCreator)
+			stakingCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000)) // TODO: get from flags
 
-			// TODO: replace dummy data
-			farmer := sdk.AccAddress{}
-			stakingCoins := sdk.Coins{}
-
-			msg := types.NewMsgStake(
-				farmer,
-				stakingCoins,
-			)
+			msg := types.NewMsgStake(farmer, stakingCoins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -166,7 +163,7 @@ $ %s tx %s stake --from mykey
 func NewUnstakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unstake",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(0),
 		Short: "unstake coins from the farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`unstake coins from the farming plan.
@@ -181,22 +178,16 @@ $ %s tx %s unstake --from mykey
 			if err != nil {
 				return err
 			}
-			planCreator := clientCtx.GetFromAddress()
+			farmer := clientCtx.GetFromAddress()
 
-			fmt.Println("planCreator: ", planCreator)
+			unstakingCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 500)) // TODO: get from flags
 
-			// TODO: replace dummy data
-			farmer := sdk.AccAddress{}
-			stakingCoins := sdk.Coins{}
-
-			msg := types.NewMsgUnstake(
-				farmer,
-				stakingCoins,
-			)
+			msg := types.NewMsgUnstake(farmer, unstakingCoins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -204,12 +195,12 @@ $ %s tx %s unstake --from mykey
 func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "harvest",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(0),
 		Short: "harvest farming rewards from the farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`claim farming rewards from the farming plan.
 Example:
-$ %s tx %s claim --from mykey
+$ %s tx %s harvest --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -219,12 +210,8 @@ $ %s tx %s claim --from mykey
 			if err != nil {
 				return err
 			}
-			planCreator := clientCtx.GetFromAddress()
+			farmer := clientCtx.GetFromAddress()
 
-			fmt.Println("planCreator: ", planCreator)
-
-			// TODO: replace dummy data
-			farmer := sdk.AccAddress{}
 			stakingCoinDenoms := []string{"test"}
 
 			msg := types.NewMsgHarvest(farmer, stakingCoinDenoms)
@@ -232,6 +219,7 @@ $ %s tx %s claim --from mykey
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

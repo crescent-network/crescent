@@ -97,15 +97,15 @@ const (
 
 The parameters of the Plan state are:
 
-- ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
-- Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
+- ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
+- Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
 - PlanByFarmerAddrIndex: `0x12 | FarmerAddrLen (1 byte) | FarmerAddr -> Id -> nil` (can be deprecated)
-- LastDistributedTime: `0x13 | Id -> time.Time`
+- LastDistributedTime: `0x13 | Id -> time.Time`
 - TotalDistributedRewardCoins: `0x14 | PlanId | StakingCoinDenomLen (1 byte) | StakingCoinDenom → ProtocolBuffer(sdk.Coins)`
-- GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
+- GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
   - store latest plan id
-- GlobalLastEpochTime: `[]byte("globalLastEpochTime") | Id -> time.Time`
-- ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
+- GlobalLastEpochTime: `[]byte("globalLastEpochTime") | Id -> time.Time`
+- ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
 
 ## Staking
 
@@ -121,13 +121,13 @@ type Staking struct {
 
 The parameters of the Staking state are:
 
-- GlobalStakingIdKey: `[]byte("globalStakingId") -> ProtocolBuffer(uint64)`
+- GlobalStakingIdKey: `[]byte("globalStakingId") -> ProtocolBuffer(uint64)`
 
   - store latest staking id
 
-- Staking: `0x21 | Id -> ProtocolBuffer(Staking)`
-- StakingByFarmerAddrIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr -> BigEndian(Id)`
-- StakingByStakingCoinDenomIdIndex: `0x23 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Id) -> nil`
+- Staking: `0x21 | Id -> ProtocolBuffer(Staking)`
+- StakingByFarmerAddrIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr -> BigEndian(Id)`
+- StakingByStakingCoinDenomIdIndex: `0x23 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Id) -> nil`
 
 ## Reward
 
@@ -142,8 +142,8 @@ type Reward struct {
 
 The parameters of the Reward state are:
 
-- Reward: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(sdk.Coins) RewardCoins`
-- RewardByFarmerAddrIndex: `0x32 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomLen (1 byte) | StakingCoinDenom -> nil`
+- Reward: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(sdk.Coins) RewardCoins`
+- RewardByFarmerAddrIndex: `0x32 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomLen (1 byte) | StakingCoinDenom -> nil`
 
 ## Examples
 

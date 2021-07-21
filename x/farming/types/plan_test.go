@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetPoolInformation(t *testing.T) {
-	commonTerminationAcc := sdk.AccAddress([]byte("terminationAddr"))
+	commonTerminationAcc := sdk.AccAddress("terminationAddr")
 	commonStartTime := time.Now().UTC()
 	commonEndTime := commonStartTime.AddDate(1, 0, 0)
 	commonCoinWeights := sdk.NewDecCoins(
@@ -31,7 +31,7 @@ func TestGetPoolInformation(t *testing.T) {
 		{
 			planId:          uint64(1),
 			planType:        types.PlanTypePublic,
-			farmingPoolAddr: sdk.AccAddress([]byte("farmingPoolAddr1")).String(),
+			farmingPoolAddr: sdk.AccAddress("farmingPoolAddr1").String(),
 			rewardPoolAddr:  "cosmos1yqurgw7xa94psk95ctje76ferlddg8vykflaln6xsgarj5w6jkrsuvh9dj",
 			reserveAddr:     "cosmos18f2zl0q0gpexruasqzav2vfwdthl4779gtmdxgqdpdl03sq9eygq42ff0u",
 		},

@@ -24,7 +24,7 @@ if ! mkdir -p $CHAIN_DIR/$CHAIN_ID 2>/dev/null; then
     echo "Failed to create chain folder. Aborting..."
     exit 1
 fi
-= 
+ 
 echo "Initializing $CHAIN_ID..."
 $BINARY --home $CHAIN_DIR/$CHAIN_ID init test --chain-id=$CHAIN_ID
 

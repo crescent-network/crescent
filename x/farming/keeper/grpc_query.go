@@ -133,7 +133,38 @@ func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.Qu
 }
 
 func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*types.QueryStakingsResponse, error) {
-	panic("not implemented")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	var stakings []*types.Staking
+	var pageRes *query.PageResponse
+	var err error
+
+	if req.StakingCoinDenom != "" {
+		indexStore := prefix.NewStore(store, types.GetStakingsByStakingCoinDenomIndexKey(req.StakingCoinDenom))
+		pageRes, err = query.Paginate(indexStore, req.Pagination, func(key, value []byte) error {
+			_, stakingID := types.ParseStakingsByStakingCoinDenomIndexKey(key)
+			staking, _ := k.GetStaking(ctx, stakingID)
+			stakings = append(stakings, &staking)
+			return nil
+		})
+	} else {
+		stakingStore := prefix.NewStore(store, types.StakingKeyPrefix)
+		pageRes, err = query.Paginate(stakingStore, req.Pagination, func(key, value []byte) error {
+			var staking types.Staking
+			k.cdc.MustUnmarshal(value, &staking)
+			stakings = append(stakings, &staking)
+			return nil
+		})
+	}
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryStakingsResponse{Stakings: stakings, Pagination: pageRes}, nil
 }
 
 func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
@@ -143,23 +174,26 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
+	var rewards []*types.Reward
+	var pageRes *query.PageResponse
+	var err error
 
 	if req.Farmer != "" {
-		farmerAddr, err := sdk.AccAddressFromBech32(req.Farmer)
+		var farmerAcc sdk.AccAddress
+		farmerAcc, err = sdk.AccAddressFromBech32(req.Farmer)
 		if err != nil {
 			return nil, err
 		}
 
-		var rewards []*types.Reward
-		indexStore := prefix.NewStore(store, types.GetRewardByFarmerAddrIndexPrefix(farmerAddr))
-		pageRes, err := query.FilteredPaginate(indexStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-			stakingCoinDenom := types.GetRewardStakingCoinDenomFromIndexKey(key)
+		indexStore := prefix.NewStore(store, types.GetRewardsByFarmerIndexKey(farmerAcc))
+		pageRes, err = query.FilteredPaginate(indexStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+			_, stakingCoinDenom := types.ParseRewardsByFarmerIndexKey(key)
 			if req.StakingCoinDenom != "" {
 				if stakingCoinDenom != req.StakingCoinDenom {
 					return false, nil
 				}
 			}
-			reward, found := k.GetReward(ctx, stakingCoinDenom, farmerAddr)
+			reward, found := k.GetReward(ctx, stakingCoinDenom, farmerAcc)
 			if !found { // TODO: remove this check
 				return false, fmt.Errorf("reward not found")
 			}
@@ -168,30 +202,29 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 			}
 			return true, nil
 		})
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		return &types.QueryRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
-	}
-
-	var rewardPrefix []byte
-	if req.StakingCoinDenom != "" {
-		rewardPrefix = types.GetRewardByStakingCoinDenomPrefix(req.StakingCoinDenom)
 	} else {
-		rewardPrefix = types.RewardKeyPrefix
-	}
-	rewardStore := prefix.NewStore(store, rewardPrefix)
-
-	var rewards []*types.Reward
-	pageRes, err := query.Paginate(rewardStore, req.Pagination, func(key, value []byte) error {
-		reward, err := k.UnmarshalReward(value)
-		if err != nil {
-			return err
+		var keyPrefix []byte
+		if req.StakingCoinDenom != "" {
+			keyPrefix = types.GetRewardsByStakingCoinDenomKey(req.StakingCoinDenom)
+		} else {
+			keyPrefix = types.RewardKeyPrefix
 		}
-		rewards = append(rewards, &reward)
-		return nil
-	})
+		rewardStore := prefix.NewStore(store, keyPrefix)
+
+		pageRes, err = query.Paginate(rewardStore, req.Pagination, func(key, value []byte) error {
+			stakingCoinDenom, farmerAcc := types.ParseRewardKey(key)
+			rewardCoins, err := k.UnmarshalRewardCoins(value)
+			if err != nil {
+				return err
+			}
+			rewards = append(rewards, &types.Reward{
+				Farmer:           farmerAcc.String(),
+				StakingCoinDenom: stakingCoinDenom,
+				RewardCoins:      rewardCoins.RewardCoins,
+			})
+			return nil
+		})
+	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

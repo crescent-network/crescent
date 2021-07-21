@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -40,7 +41,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 			),
 		},
 		{
-			"end time 2020-11-01 22:08:41 +0000 +0000 must be greater than start time 2021-11-01 22:08:41 +0000 +0000: invalid plan end time",
+			"end time 2020-11-01T22:08:41Z must be greater than start time 2021-11-01T22:08:41Z: invalid plan end time",
 			types.NewMsgCreateFixedAmountPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
 				startTime.AddDate(-1, 0, 0), sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
@@ -66,7 +67,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 		require.IsType(t, &types.MsgCreateFixedAmountPlan{}, tc.msg)
 		require.Equal(t, types.TypeMsgCreateFixedAmountPlan, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
-		require.Equal(t, sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
+		require.Equal(t, sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expectedErr == "" {
@@ -108,7 +109,7 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 			),
 		},
 		{
-			"end time 2020-11-01 22:08:41 +0000 +0000 must be greater than start time 2021-11-01 22:08:41 +0000 +0000: invalid plan end time",
+			"end time 2020-11-01T22:08:41Z must be greater than start time 2021-11-01T22:08:41Z: invalid plan end time",
 			types.NewMsgCreateRatioPlan(
 				farmingPoolAddr, stakingCoinWeights, startTime,
 				startTime.AddDate(-1, 0, 0), sdk.NewDec(1),
@@ -134,7 +135,7 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 		require.IsType(t, &types.MsgCreateRatioPlan{}, tc.msg)
 		require.Equal(t, types.TypeMsgCreateRatioPlan, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
-		require.Equal(t, sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
+		require.Equal(t, sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expectedErr == "" {
@@ -169,7 +170,7 @@ func TestMsgStake(t *testing.T) {
 		require.IsType(t, &types.MsgStake{}, tc.msg)
 		require.Equal(t, types.TypeMsgStake, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
-		require.Equal(t, sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
+		require.Equal(t, sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expectedErr == "" {
@@ -204,7 +205,7 @@ func TestMsgUnstake(t *testing.T) {
 		require.IsType(t, &types.MsgUnstake{}, tc.msg)
 		require.Equal(t, types.TypeMsgUnstake, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
-		require.Equal(t, sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
+		require.Equal(t, sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expectedErr == "" {
@@ -237,7 +238,7 @@ func TestMsgHarvest(t *testing.T) {
 		require.IsType(t, &types.MsgHarvest{}, tc.msg)
 		require.Equal(t, types.TypeMsgHarvest, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
-		require.Equal(t, sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
+		require.Equal(t, sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(tc.msg)), tc.msg.GetSignBytes())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expectedErr == "" {

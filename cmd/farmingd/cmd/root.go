@@ -35,7 +35,7 @@ import (
 	farmingparams "github.com/tendermint/farming/app/params"
 )
 
-// NewRootCmd creates a new root command for simd. It is called once in the
+// NewRootCmd creates a new root command for farmingd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 	encodingConfig := farmingapp.MakeEncodingConfig()

@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -50,7 +51,7 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", msg.FarmingPoolAddress, err)
 	}
 	if !msg.EndTime.After(msg.StartTime) {
-		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime, msg.StartTime)
+		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339Nano), msg.StartTime.Format(time.RFC3339Nano))
 	}
 	if msg.StakingCoinWeights.Empty() {
 		return ErrEmptyStakingCoinWeights
@@ -68,7 +69,7 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 }
 
 func (msg MsgCreateFixedAmountPlan) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateFixedAmountPlan) GetSigners() []sdk.AccAddress {
@@ -113,7 +114,7 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", msg.FarmingPoolAddress, err)
 	}
 	if !msg.EndTime.After(msg.StartTime) {
-		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime, msg.StartTime)
+		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339Nano), msg.StartTime.Format(time.RFC3339Nano))
 	}
 	if msg.StakingCoinWeights.Empty() {
 		return ErrEmptyStakingCoinWeights
@@ -128,7 +129,7 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 }
 
 func (msg MsgCreateRatioPlan) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateRatioPlan) GetSigners() []sdk.AccAddress {
@@ -173,7 +174,7 @@ func (msg MsgStake) ValidateBasic() error {
 }
 
 func (msg MsgStake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgStake) GetSigners() []sdk.AccAddress {
@@ -218,7 +219,7 @@ func (msg MsgUnstake) ValidateBasic() error {
 }
 
 func (msg MsgUnstake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgUnstake) GetSigners() []sdk.AccAddress {
@@ -261,7 +262,7 @@ func (msg MsgHarvest) ValidateBasic() error {
 }
 
 func (msg MsgHarvest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgHarvest) GetSigners() []sdk.AccAddress {

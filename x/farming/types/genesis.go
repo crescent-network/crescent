@@ -82,9 +82,6 @@ func (s Staking) Validate() error {
 
 // Validate validates Reward.
 func (r Reward) Validate() error {
-	if _, err := sdk.AccAddressFromBech32(r.Farmer); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", r.Farmer, err)
-	}
 	if err := r.RewardCoins.Validate(); err != nil {
 		return err
 	}

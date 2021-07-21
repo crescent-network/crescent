@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -89,7 +91,7 @@ func (k Keeper) GetPlansByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAddr
 // Stops iteration when callback returns true.
 func (k Keeper) IteratePlansByFarmerAddr(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(plan types.PlanI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPlansByFarmerAddrIndexKey(farmerAcc))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetPlansByFarmerIndexKey(farmerAcc))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -114,8 +116,53 @@ func (k Keeper) SetPlanIdByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAdd
 	store.Set(types.GetPlanByFarmerAddrIndexKey(farmerAcc, planID), b)
 }
 
+// GetNextPlanIDWithUpdate returns and increments the global Plan ID counter.
+// If the global plan number is not set, it initializes it with value 1.
+func (k Keeper) GetNextPlanIDWithUpdate(ctx sdk.Context) uint64 {
+	var id uint64
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(types.GlobalPlanIdKey)
+	if bz == nil {
+		// initialize the PlanId
+		id = 1
+	} else {
+		val := gogotypes.UInt64Value{}
+
+		err := k.cdc.Unmarshal(bz, &val)
+		if err != nil {
+			panic(err)
+		}
+
+		id = val.GetValue()
+	}
+	bz = k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id + 1})
+	store.Set(types.GlobalPlanIdKey, bz)
+	return id
+}
+
+func (k Keeper) decodePlan(bz []byte) types.PlanI {
+	acc, err := k.UnmarshalPlan(bz)
+	if err != nil {
+		panic(err)
+	}
+
+	return acc
+}
+
+// MarshalPlan protobuf serializes an Plan interface
+func (k Keeper) MarshalPlan(plan types.PlanI) ([]byte, error) { // nolint:interfacer
+	return k.cdc.MarshalInterface(plan)
+}
+
+// UnmarshalPlan returns an Plan interface from raw encoded plan
+// bytes of a Proto-based Plan type
+func (k Keeper) UnmarshalPlan(bz []byte) (plan types.PlanI, err error) {
+	return plan, k.cdc.UnmarshalInterface(bz, &plan)
+}
+
 // CreateFixedAmountPlan sets fixed amount plan.
-func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixedAmountPlan, typ types.PlanType) *types.FixedAmountPlan {
+func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixedAmountPlan, typ types.PlanType) error {
 	nextId := k.GetNextPlanIDWithUpdate(ctx)
 	farmingPoolAddr := msg.FarmingPoolAddress
 	terminationAddr := farmingPoolAddr
@@ -134,11 +181,22 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 
 	k.SetPlan(ctx, fixedPlan)
 
-	return fixedPlan
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreateFixedAmountPlan,
+			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
+			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, fixedPlan.RewardPoolAddress),
+			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
+			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
+			sdk.NewAttribute(types.AttributeKeyEpochAmount, msg.EpochAmount.String()),
+		),
+	})
+
+	return nil
 }
 
 // CreateRatioPlan sets ratio plan.
-func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, typ types.PlanType) *types.RatioPlan {
+func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, typ types.PlanType) error {
 	nextId := k.GetNextPlanIDWithUpdate(ctx)
 	farmingPoolAddr := msg.FarmingPoolAddress
 	terminationAddr := farmingPoolAddr
@@ -157,5 +215,16 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 
 	k.SetPlan(ctx, ratioPlan)
 
-	return ratioPlan
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreateRatioPlan,
+			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
+			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, ratioPlan.RewardPoolAddress),
+			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
+			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
+			sdk.NewAttribute(types.AttributeKeyEpochRatio, fmt.Sprint(msg.EpochRatio)),
+		),
+	})
+
+	return nil
 }

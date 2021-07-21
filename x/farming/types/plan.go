@@ -161,7 +161,7 @@ func NewRatioPlan(basePlan *BasePlan, epochRatio sdk.Dec) *RatioPlan {
 	}
 }
 
-// GetPlanName returns unique name of the plan
+// Name returns unique name of the plan
 func (plan BasePlan) Name() string {
 	return PlanName(plan.Id, plan.Type, plan.FarmingPoolAddress)
 }
@@ -177,13 +177,7 @@ func PlanName(id uint64, typ PlanType, farmingPoolAddr string) string {
 
 // GenerateRewardPoolAcc returns deterministically generated reward pool account for the given plan name
 func GenerateRewardPoolAcc(name string) sdk.AccAddress {
-	return sdk.AccAddress(address.Module(ModuleName, []byte(strings.Join([]string{RewardPoolAccKeyPrefix, name}, "/"))))
-}
-
-// TODO: deprecated
-// GenerateRewardPoolAcc returns deterministically generated staking reserve account for the given plan name
-func GenerateStakingReserveAcc(name string) sdk.AccAddress {
-	return sdk.AccAddress(address.Module(ModuleName, []byte(strings.Join([]string{StakingReserveAccKeyPrefix, name}, "/"))))
+	return address.Module(ModuleName, []byte(strings.Join([]string{RewardPoolAccKeyPrefix, name}, "/")))
 }
 
 type PlanI interface {
@@ -214,30 +208,4 @@ type PlanI interface {
 	SetEndTime(time.Time) error
 
 	String() string
-}
-
-func (s Staking) String() string {
-	out, _ := s.MarshalYAML()
-	return out.(string)
-}
-
-func (s Staking) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &s)
-	if err != nil {
-		return nil, err
-	}
-	return string(bz), err
-}
-
-func (r Reward) String() string {
-	out, _ := r.MarshalYAML()
-	return out.(string)
-}
-
-func (r Reward) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &r)
-	if err != nil {
-		return nil, err
-	}
-	return string(bz), err
 }
