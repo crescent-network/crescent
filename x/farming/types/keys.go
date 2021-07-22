@@ -1,8 +1,6 @@
 package types
 
 import (
-	"encoding/binary"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -123,7 +121,7 @@ func ParseRewardsByFarmerIndexKey(key []byte) (farmerAcc sdk.AccAddress, staking
 func ParseStakingsByStakingCoinDenomIndexKey(bz []byte) (stakingCoinDenom string, stakingID uint64) {
 	denomLen := bz[1]
 	stakingCoinDenom = string(bz[2 : 2+denomLen])
-	stakingID = binary.BigEndian.Uint64(bz[2+denomLen:])
+	stakingID = sdk.BigEndianToUint64(bz[2+denomLen:])
 	return
 }
 

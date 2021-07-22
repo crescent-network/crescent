@@ -56,8 +56,10 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		}
 	}
 
-	if err := sdk.ValidateDenom(req.StakingCoinDenom); err != nil {
-		return nil, err
+	if req.StakingCoinDenom != "" {
+		if err := sdk.ValidateDenom(req.StakingCoinDenom); err != nil {
+			return nil, err
+		}
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -144,9 +146,10 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 	var err error
 
 	if req.StakingCoinDenom != "" {
-		indexStore := prefix.NewStore(store, types.GetStakingsByStakingCoinDenomIndexKey(req.StakingCoinDenom))
+		storePrefix := types.GetStakingsByStakingCoinDenomIndexKey(req.StakingCoinDenom)
+		indexStore := prefix.NewStore(store, storePrefix)
 		pageRes, err = query.Paginate(indexStore, req.Pagination, func(key, value []byte) error {
-			_, stakingID := types.ParseStakingsByStakingCoinDenomIndexKey(key)
+			_, stakingID := types.ParseStakingsByStakingCoinDenomIndexKey(append(storePrefix, key...))
 			staking, _ := k.GetStaking(ctx, stakingID)
 			stakings = append(stakings, &staking)
 			return nil
@@ -185,9 +188,10 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 			return nil, err
 		}
 
-		indexStore := prefix.NewStore(store, types.GetRewardsByFarmerIndexKey(farmerAcc))
+		storePrefix := types.GetRewardsByFarmerIndexKey(farmerAcc)
+		indexStore := prefix.NewStore(store, storePrefix)
 		pageRes, err = query.FilteredPaginate(indexStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-			_, stakingCoinDenom := types.ParseRewardsByFarmerIndexKey(key)
+			_, stakingCoinDenom := types.ParseRewardsByFarmerIndexKey(append(storePrefix, key...))
 			if req.StakingCoinDenom != "" {
 				if stakingCoinDenom != req.StakingCoinDenom {
 					return false, nil
@@ -203,16 +207,16 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 			return true, nil
 		})
 	} else {
-		var keyPrefix []byte
+		var storePrefix []byte
 		if req.StakingCoinDenom != "" {
-			keyPrefix = types.GetRewardsByStakingCoinDenomKey(req.StakingCoinDenom)
+			storePrefix = types.GetRewardsByStakingCoinDenomKey(req.StakingCoinDenom)
 		} else {
-			keyPrefix = types.RewardKeyPrefix
+			storePrefix = types.RewardKeyPrefix
 		}
-		rewardStore := prefix.NewStore(store, keyPrefix)
+		rewardStore := prefix.NewStore(store, storePrefix)
 
 		pageRes, err = query.Paginate(rewardStore, req.Pagination, func(key, value []byte) error {
-			stakingCoinDenom, farmerAcc := types.ParseRewardKey(key)
+			stakingCoinDenom, farmerAcc := types.ParseRewardKey(append(storePrefix, key...))
 			rewardCoins, err := k.UnmarshalRewardCoins(value)
 			if err != nil {
 				return err
