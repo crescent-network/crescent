@@ -83,3 +83,9 @@ func (k Keeper) GetStakingCreationFeePool(ctx sdk.Context) authtypes.ModuleAccou
 func (k Keeper) GetStakingStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
 	return types.StakingReserveAcc
 }
+
+// GetFarmingFeeCollectorAcc returns module account for the farming fee collector account.
+func (k Keeper) GetFarmingFeeCollectorAcc(ctx sdk.Context) sdk.AccAddress {
+	params := k.GetParams(ctx)
+	return sdk.AccAddress(params.FarmingFeeCollector)
+}

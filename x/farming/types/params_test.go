@@ -1,10 +1,12 @@
 package types_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/farming/x/farming/types"
@@ -18,8 +20,69 @@ func TestParams(t *testing.T) {
 	paramsStr := `private_plan_creation_fee:
 - denom: stake
   amount: "100000000"
-staking_creation_fee: []
-epoch_days: 0
+staking_creation_fee:
+- denom: stake
+  amount: "100000"
+epoch_days: 1
+farming_fee_collector: cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x
 `
 	require.Equal(t, paramsStr, defaultParams.String())
+}
+
+func TestParams_Validate(t *testing.T) {
+	require.NoError(t, types.DefaultParams().Validate())
+
+	testCases := []struct {
+		name        string
+		configure   func(*types.Params)
+		expectedErr string
+	}{
+		{
+			"EmptyPrivatePlanCreationFee",
+			func(params *types.Params) {
+				params.PrivatePlanCreationFee = sdk.NewCoins()
+			},
+			"private plan creation fee must not be empty",
+		},
+		{
+			"EmptyStakingCreationFee",
+			func(params *types.Params) {
+				params.StakingCreationFee = sdk.NewCoins()
+			},
+			"staking creation fee must not be empty",
+		},
+		{
+			"NegativeEpochDays",
+			func(params *types.Params) {
+				params.EpochDays = uint32(0)
+			},
+			"epoch days must be positive: 0",
+		},
+		{
+			"EmptyFarmingFeeCollector",
+			func(params *types.Params) {
+				params.FarmingFeeCollector = ""
+			},
+			"farming fee collector address must not be empty",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			params := types.DefaultParams()
+			tc.configure(&params)
+			err := params.Validate()
+			require.EqualError(t, err, tc.expectedErr)
+
+			var err2 error
+			for _, p := range params.ParamSetPairs() {
+				err := p.ValidatorFn(reflect.ValueOf(p.Value).Elem().Interface())
+				if err != nil {
+					err2 = err
+					break
+				}
+			}
+			require.EqualError(t, err2, tc.expectedErr)
+		})
+	}
 }

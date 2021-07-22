@@ -184,7 +184,12 @@ func (k Keeper) Stake(ctx sdk.Context, farmer sdk.AccAddress, amount sdk.Coins) 
 
 	staking, found := k.GetStakingByFarmer(ctx, farmer)
 	if !found {
-		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, farmer, types.ModuleName, params.StakingCreationFee); err != nil {
+		farmingFeeCollectorAcc, err := sdk.AccAddressFromBech32(params.FarmingFeeCollector)
+		if err != nil {
+			return err
+		}
+
+		if err := k.bankKeeper.SendCoins(ctx, farmer, farmingFeeCollectorAcc, params.StakingCreationFee); err != nil {
 			return err
 		}
 

@@ -23,7 +23,7 @@ message Params {
   ];
 
   // When a farmer creates new staking, the farmer needs to pay
-  // staking_creation_fee to prevent spam on the staking struct.
+  // staking_creation_fee to prevent spam on the staking struct
   repeated cosmos.base.v1beta1.Coin staking_creation_fee = 2 [
     (gogoproto.moretags)     = "yaml:\"staking_creation_fee\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -31,8 +31,11 @@ message Params {
   ];
 
   // The universal epoch length in number of days. Every process for staking and
-  // reward distribution is executed with this epoch_days frequency.
+  // reward distribution is executed with this epoch_days frequency
   uint32 epoch_days = 3 [(gogoproto.moretags) = "yaml:\"epoch_days\""];
+
+  // farming_fee_collector is the module account address to collect fees within the farming module
+  string farming_fee_collector = 4 [(gogoproto.moretags) = "yaml:\"farming_fee_collector\""];
 }
 
 // BasePlan defines a base plan type. It contains all the necessary fields
