@@ -92,6 +92,22 @@ func (k Keeper) GetFarmingFeeCollectorAcc(ctx sdk.Context) sdk.AccAddress {
 	return sdk.AccAddress(params.FarmingFeeCollector)
 }
 
+// GetLastDistributedTime returns the last distributed time for a plan.
+func (k Keeper) GetLastDistributedTime(ctx sdk.Context, planID uint64) (time.Time, bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetLastDistributedTimeKey(planID))
+	if bz == nil {
+		return time.Time{}, false
+	}
+	var ts gogotypes.Timestamp
+	k.cdc.MustUnmarshal(bz, &ts)
+	t, err := gogotypes.TimestampFromProto(&ts)
+	if err != nil {
+		panic(err)
+	}
+	return t, true
+}
+
 // SetLastDistributedTime sets the last distributed time for a plan.
 func (k Keeper) SetLastDistributedTime(ctx sdk.Context, planID uint64, t time.Time) {
 	store := ctx.KVStore(k.storeKey)
@@ -104,19 +120,20 @@ func (k Keeper) SetLastDistributedTime(ctx sdk.Context, planID uint64, t time.Ti
 }
 
 // GetTotalDistributedRewardCoins returns the total distributed reward coins for a plan so far.
-func (k Keeper) GetTotalDistributedRewardCoins(ctx sdk.Context, planID uint64) (rewardCoins types.RewardCoins) {
+func (k Keeper) GetTotalDistributedRewardCoins(ctx sdk.Context, planID uint64) sdk.Coins {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTotalDistributedRewardCoinsKey(planID))
 	if bz == nil {
-		return
+		return nil
 	}
+	var rewardCoins types.RewardCoins
 	k.cdc.MustUnmarshal(bz, &rewardCoins)
-	return
+	return rewardCoins.RewardCoins
 }
 
 // SetTotalDistributedRewardCoins sets the total distributed reward coins for a plan so far.
-func (k Keeper) SetTotalDistributedRewardCoins(ctx sdk.Context, planID uint64, rewardCoins types.RewardCoins) {
+func (k Keeper) SetTotalDistributedRewardCoins(ctx sdk.Context, planID uint64, amt sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&rewardCoins)
+	bz := k.cdc.MustMarshal(&types.RewardCoins{RewardCoins: amt})
 	store.Set(types.GetTotalDistributedRewardCoinsKey(planID), bz)
 }
