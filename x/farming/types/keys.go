@@ -27,9 +27,9 @@ const (
 
 var (
 	// param key for global farming plan IDs
-	GlobalPlanIdKey           = []byte("globalPlanId")
-	GlobalLastEpochTimePrefix = []byte("globalLastEpochTime")
-	GlobalStakingIdKey        = []byte("globalStakingId")
+	GlobalPlanIdKey        = []byte("globalPlanId")
+	GlobalLastEpochTimeKey = []byte("globalLastEpochTime")
+	GlobalStakingIdKey     = []byte("globalStakingId")
 
 	PlanKeyPrefix                     = []byte{0x11}
 	PlansByFarmerIndexKeyPrefix       = []byte{0x12}

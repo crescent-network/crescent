@@ -26,7 +26,10 @@ func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, plansAny []*codectypes.
 				p.EpochAmount,
 			)
 
-			fixedPlan := k.CreateFixedAmountPlan(ctx, msg, types.PlanTypePublic)
+			fixedPlan, err := k.CreateFixedAmountPlan(ctx, msg, types.PlanTypePublic)
+			if err != nil {
+				return err
+			}
 
 			logger := k.Logger(ctx)
 			logger.Info("created public fixed amount plan", "fixed_amount_plan", fixedPlan)
@@ -40,7 +43,10 @@ func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, plansAny []*codectypes.
 				p.EpochRatio,
 			)
 
-			ratioPlan := k.CreateRatioPlan(ctx, msg, types.PlanTypePublic)
+			ratioPlan, err := k.CreateRatioPlan(ctx, msg, types.PlanTypePublic)
+			if err != nil {
+				return err
+			}
 
 			logger := k.Logger(ctx)
 			logger.Info("created public fixed amount plan", "ratio_plan", ratioPlan)

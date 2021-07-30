@@ -104,8 +104,11 @@ The parameters of the Plan state are:
 - TotalDistributedRewardCoins: `0x14 | PlanId | StakingCoinDenomLen (1 byte) | StakingCoinDenom → ProtocolBuffer(sdk.Coins)`
 - GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
   - store latest plan id
-- GlobalLastEpochTime: `[]byte("globalLastEpochTime") | Id -> time.Time`
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
+
+## Epoch
+
+- GlobalLastEpochTime: `[]byte("globalLastEpochTime") -> ProtocolBuffer(Timestamp)`
 
 ## Staking
 

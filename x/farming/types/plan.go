@@ -21,6 +21,7 @@ var (
 
 // NewBasePlan creates a new BasePlan object
 //nolint:interfacer
+// TODO: accept sdk.AccAddress instead of string for addresses
 func NewBasePlan(id uint64, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time) *BasePlan {
 	basePlan := &BasePlan{
 		Id:                 id,

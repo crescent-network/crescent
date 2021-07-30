@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -131,22 +129,10 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDe
 		amount = amount.Add(reward.RewardCoins...)
 	}
 
-	if err := k.ReleaseStakingCoins(ctx, farmerAcc, amount); err != nil {
-		return err
-	}
+	// TODO: send reward from the reward pool
 
 	for _, denom := range stakingCoinDenoms {
 		k.DeleteReward(ctx, denom, farmerAcc)
-	}
-
-	if len(k.GetRewardsByFarmer(ctx, farmerAcc)) == 0 {
-		staking, found := k.GetStakingByFarmer(ctx, farmerAcc)
-		if !found { // TODO: remove this check
-			return fmt.Errorf("staking not found")
-		}
-		if staking.StakedCoins.IsZero() && staking.QueuedCoins.IsZero() {
-			k.DeleteStaking(ctx, staking)
-		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -156,6 +142,121 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDe
 			sdk.NewAttribute(types.AttributeKeyRewardCoins, amount.String()),
 		),
 	})
+
+	return nil
+}
+
+type DistributionInfo struct {
+	Plan   types.PlanI
+	Amount sdk.Coins
+}
+
+func (k Keeper) DistributionInfos(ctx sdk.Context) []DistributionInfo {
+	farmingPoolBalances := make(map[string]sdk.Coins)   // farmingPoolAddress => sdk.Coins
+	distrCoins := make(map[string]map[uint64]sdk.Coins) // farmingPoolAddress => (planId => sdk.Coins)
+
+	plans := make(map[uint64]types.PlanI)
+	for _, plan := range k.GetAllPlans(ctx) {
+		// Filter plans by their start time and end time.
+		if !plan.GetStartTime().After(ctx.BlockTime()) && plan.GetEndTime().After(ctx.BlockTime()) {
+			plans[plan.GetId()] = plan
+		}
+	}
+
+	for _, plan := range plans {
+		farmingPoolAcc := plan.GetFarmingPoolAddress()
+		farmingPool := farmingPoolAcc.String()
+
+		balances, ok := farmingPoolBalances[farmingPool]
+		if !ok {
+			balances = k.bankKeeper.GetAllBalances(ctx, farmingPoolAcc)
+			farmingPoolBalances[farmingPool] = balances
+		}
+
+		dc, ok := distrCoins[farmingPool]
+		if !ok {
+			dc = make(map[uint64]sdk.Coins)
+			distrCoins[farmingPool] = dc
+		}
+
+		switch plan := plan.(type) {
+		case *types.FixedAmountPlan:
+			dc[plan.GetId()] = plan.EpochAmount
+		case *types.RatioPlan:
+			dc[plan.GetId()], _ = sdk.NewDecCoinsFromCoins(balances...).MulDecTruncate(plan.EpochRatio).TruncateDecimal()
+		}
+	}
+
+	var distrInfos []DistributionInfo
+	for farmingPool, coins := range distrCoins {
+		totalCoins := sdk.NewCoins()
+		for _, amt := range coins {
+			totalCoins = totalCoins.Add(amt...)
+		}
+
+		balances := farmingPoolBalances[farmingPool]
+		if !totalCoins.IsAllLT(balances) {
+			continue
+		}
+
+		for planID, amt := range coins {
+			distrInfos = append(distrInfos, DistributionInfo{
+				Plan:   plans[planID],
+				Amount: amt,
+			})
+		}
+	}
+
+	return distrInfos
+}
+
+func (k Keeper) DistributeRewards(ctx sdk.Context) error {
+	stakingsByDenom := make(map[string][]types.Staking)
+	totalStakedAmtByDenom := make(map[string]sdk.Int)
+
+	for _, distrInfo := range k.DistributionInfos(ctx) {
+		stakingCoinWeights := distrInfo.Plan.GetStakingCoinWeights()
+		totalDistrAmt := sdk.NewCoins()
+
+		totalWeight := sdk.ZeroDec()
+		for _, coinWeight := range stakingCoinWeights {
+			totalWeight = totalWeight.Add(coinWeight.Amount)
+		}
+
+		for _, coinWeight := range stakingCoinWeights {
+			stakings, ok := stakingsByDenom[coinWeight.Denom]
+			if !ok {
+				stakings = k.GetStakingsByStakingCoinDenom(ctx, coinWeight.Denom)
+				stakingsByDenom[coinWeight.Denom] = stakings
+
+				for _, staking := range stakings {
+					totalStakedAmtByDenom[coinWeight.Denom] = totalStakedAmtByDenom[coinWeight.Denom].Add(staking.StakedCoins.AmountOf(coinWeight.Denom))
+				}
+			}
+
+			totalStakedAmt := totalStakedAmtByDenom[coinWeight.Denom]
+
+			for _, staking := range stakings {
+				stakedAmt := staking.StakedCoins.AmountOf(coinWeight.Denom)
+				if !stakedAmt.IsPositive() {
+					continue
+				}
+
+				stakedProportion := stakedAmt.ToDec().QuoTruncate(totalStakedAmt.ToDec())
+				weightProportion := coinWeight.Amount.QuoTruncate(totalWeight)
+				distrAmt, _ := sdk.NewDecCoinsFromCoins(distrInfo.Amount...).MulDecTruncate(stakedProportion.MulTruncate(weightProportion)).TruncateDecimal()
+
+				reward, _ := k.GetReward(ctx, coinWeight.Denom, staking.GetFarmer())
+				reward.RewardCoins = reward.RewardCoins.Add(distrAmt...)
+				k.SetReward(ctx, coinWeight.Denom, staking.GetFarmer(), reward.RewardCoins)
+				totalDistrAmt = totalDistrAmt.Add(distrAmt...)
+			}
+		}
+
+		if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
