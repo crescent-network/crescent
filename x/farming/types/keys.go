@@ -61,6 +61,16 @@ func GetPlanByFarmerAddrIndexKey(farmerAcc sdk.AccAddress, planID uint64) []byte
 	return append(append(PlansByFarmerIndexKeyPrefix, address.MustLengthPrefix(farmerAcc.Bytes())...), sdk.Uint64ToBigEndian(planID)...)
 }
 
+// GetLastDistributedTimeKey returns key of the last distributed time for a plan.
+func GetLastDistributedTimeKey(planID uint64) []byte {
+	return append(LastDistributedTimeKeyPrefix, sdk.Uint64ToBigEndian(planID)...)
+}
+
+// GetTotalDistributedRewardCoinsKey returns key of the total distributed reward coins for a plan.
+func GetTotalDistributedRewardCoinsKey(planID uint64) []byte {
+	return append(TotalDistributedRewardCoinsPrefix, sdk.Uint64ToBigEndian(planID)...)
+}
+
 // GetStakingKey returns a key for staking of corresponding the id
 func GetStakingKey(id uint64) []byte {
 	return append(StakingKeyPrefix, sdk.Uint64ToBigEndian(id)...)

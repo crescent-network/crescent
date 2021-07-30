@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -88,4 +90,33 @@ func (k Keeper) GetStakingStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress 
 func (k Keeper) GetFarmingFeeCollectorAcc(ctx sdk.Context) sdk.AccAddress {
 	params := k.GetParams(ctx)
 	return sdk.AccAddress(params.FarmingFeeCollector)
+}
+
+// SetLastDistributedTime sets the last distributed time for a plan.
+func (k Keeper) SetLastDistributedTime(ctx sdk.Context, planID uint64, t time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	ts, err := gogotypes.TimestampProto(t)
+	if err != nil {
+		panic(err)
+	}
+	bz := k.cdc.MustMarshal(ts)
+	store.Set(types.GetLastDistributedTimeKey(planID), bz)
+}
+
+// GetTotalDistributedRewardCoins returns the total distributed reward coins for a plan so far.
+func (k Keeper) GetTotalDistributedRewardCoins(ctx sdk.Context, planID uint64) (rewardCoins types.RewardCoins) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetTotalDistributedRewardCoinsKey(planID))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &rewardCoins)
+	return
+}
+
+// SetTotalDistributedRewardCoins sets the total distributed reward coins for a plan so far.
+func (k Keeper) SetTotalDistributedRewardCoins(ctx sdk.Context, planID uint64, rewardCoins types.RewardCoins) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&rewardCoins)
+	store.Set(types.GetTotalDistributedRewardCoinsKey(planID), bz)
 }

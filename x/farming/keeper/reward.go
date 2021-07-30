@@ -253,10 +253,19 @@ func (k Keeper) DistributeRewards(ctx sdk.Context) error {
 			}
 		}
 
-		if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
-			return err
+		if !totalDistrAmt.IsZero() {
+			k.SetLastDistributedTime(ctx, distrInfo.Plan.GetId(), ctx.BlockTime())
+			totalDistributedRewardCoins := k.GetTotalDistributedRewardCoins(ctx, distrInfo.Plan.GetId())
+			totalDistributedRewardCoins.RewardCoins = totalDistributedRewardCoins.RewardCoins.Add(totalDistrAmt...)
+			k.SetTotalDistributedRewardCoins(ctx, distrInfo.Plan.GetId(), totalDistributedRewardCoins)
+
+			if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
+				return err
+			}
 		}
 	}
+
+	// TODO: emit an endblock event
 
 	return nil
 }
