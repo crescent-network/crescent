@@ -77,6 +77,10 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 			return false, err
 		}
 
+		if req.Type != "" && plan.GetType().String() != req.Type {
+			return false, nil
+		}
+
 		if req.FarmingPoolAddress != "" && plan.GetFarmingPoolAddress().String() != req.FarmingPoolAddress {
 			return false, nil
 		}
