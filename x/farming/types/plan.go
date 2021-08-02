@@ -247,7 +247,7 @@ func ValidateRatioPlans(i interface{}) error {
 
 	for _, farmerRatio := range totalEpochRatio {
 		if farmerRatio.GT(sdk.NewDec(1)) {
-			return sdkerrors.Wrap(ErrInvalidPlanEpochRatio, "total epoch ratio must be lower than 1")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total epoch ratio must be lower than 1")
 		}
 	}
 
