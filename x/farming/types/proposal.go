@@ -3,9 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -21,16 +20,14 @@ func init() {
 	gov.RegisterProposalTypeCodec(&PublicPlanProposal{}, "cosmos-sdk/PublicPlanProposal")
 }
 
-func NewPublicPlanProposal(title, description string, plans []PlanI) (gov.Content, error) {
-	plansAny, err := PackPlans(plans)
-	if err != nil {
-		panic(err)
-	}
-
+func NewPublicPlanProposal(title, description string, addReq []*AddRequestProposal,
+	updateReq []*UpdateRequestProposal, deleteReq []*DeleteRequestProposal) (gov.Content, error) {
 	return &PublicPlanProposal{
-		Title:       title,
-		Description: description,
-		Plans:       plansAny,
+		Title:                  title,
+		Description:            description,
+		AddRequestProposals:    addReq,
+		UpdateRequestProposals: updateReq,
+		DeleteRequestProposals: deleteReq,
 	}, nil
 }
 
@@ -43,65 +40,93 @@ func (p *PublicPlanProposal) ProposalRoute() string { return RouterKey }
 func (p *PublicPlanProposal) ProposalType() string { return ProposalTypePublicPlan }
 
 func (p *PublicPlanProposal) ValidateBasic() error {
-	for _, plan := range p.Plans {
-		_, ok := plan.GetCachedValue().(PlanI)
-		if !ok {
-			return fmt.Errorf("expected planI")
+	if p.AddRequestProposals == nil && p.UpdateRequestProposals == nil && p.DeleteRequestProposals == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal request must not be empty")
+	}
+
+	for _, ap := range p.AddRequestProposals {
+		if err := ap.Validate(); err != nil {
+			return err
 		}
-		// TODO: PlanI needs ValidateBasic()?
-		// if err := p.ValidateBasic(); err != nil {
-		// 	return err
-		// }
+	}
+
+	for _, up := range p.UpdateRequestProposals {
+		if err := up.Validate(); err != nil {
+			return err
+		}
+	}
+
+	for _, dp := range p.DeleteRequestProposals {
+		if err := dp.Validate(); err != nil {
+			return err
+		}
 	}
 	return gov.ValidateAbstract(p)
 }
 
 func (p PublicPlanProposal) String() string {
-	return fmt.Sprintf(`Create FixedAmountPlan Proposal:
-  Title:       %s
-  Description: %s
-  Plans: 	   %s
-`, p.Title, p.Description, p.Plans)
+	return fmt.Sprintf(`Public Plan Proposal:
+  Title:       			  %s
+  Description: 		      %s
+  AddRequestProposals: 	  %s
+  UpdateRequestProposals: %s
+  DeleteRequestProposals: %s
+`, p.Title, p.Description, p.AddRequestProposals, p.UpdateRequestProposals, p.DeleteRequestProposals)
 }
 
-// PackPlans converts PlanIs to Any slice.
-func PackPlans(plans []PlanI) ([]*types.Any, error) {
-	plansAny := make([]*types.Any, len(plans))
-	for i, plan := range plans {
-		msg, ok := plan.(proto.Message)
-		if !ok {
-			return nil, fmt.Errorf("cannot proto marshal %T", plan)
-		}
-		any, err := types.NewAnyWithValue(msg)
-		if err != nil {
-			return nil, err
-		}
-		plansAny[i] = any
+func (p *AddRequestProposal) Validate() error {
+	if len(p.Name) > MaxNameLength {
+		return sdkerrors.Wrapf(ErrInvalidNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
-
-	return plansAny, nil
+	if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
+	}
+	if err := p.StakingCoinWeights.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
+	}
+	if !p.EndTime.After(p.StartTime) {
+		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
+	}
+	if !p.EpochAmount.IsZero() && !p.EpochRatio.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio should be provided")
+	}
+	if p.EpochAmount.IsZero() && p.EpochRatio.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio must not be zero")
+	}
+	return nil
 }
 
-// UnpackPlans converts Any slice to PlanIs.
-func UnpackPlans(plansAny []*types.Any) ([]PlanI, error) {
-	plans := make([]PlanI, len(plansAny))
-	for i, any := range plansAny {
-		p, ok := any.GetCachedValue().(PlanI)
-		if !ok {
-			return nil, fmt.Errorf("expected planI")
-		}
-		plans[i] = p
+func (p *UpdateRequestProposal) Validate() error {
+	if p.PlanId == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
 	}
-
-	return plans, nil
+	if len(p.Name) > MaxNameLength {
+		return sdkerrors.Wrapf(ErrInvalidNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
+	}
+	if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
+	}
+	if err := p.StakingCoinWeights.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
+	}
+	if !p.EndTime.After(*p.StartTime) {
+		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
+	}
+	if !p.EpochAmount.Empty() && !p.EpochRatio.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount or epoch ratio must be provided")
+	}
+	return nil
 }
 
-// UnpackPlan converts Any slice to PlanI.
-func UnpackPlan(any *types.Any) (PlanI, error) {
-	p, ok := any.GetCachedValue().(PlanI)
-	if !ok {
-		return nil, fmt.Errorf("expected planI")
+func (p *DeleteRequestProposal) Validate() error {
+	if p.PlanId == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
 	}
-
-	return p, nil
+	return nil
 }

@@ -11,8 +11,10 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGetSetNewPlan() {
+	name := ""
 	farmingPoolAddr := sdk.AccAddress("farmingPoolAddr")
 	terminationAddr := sdk.AccAddress("terminationAddr")
+
 	stakingCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
 	coinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
@@ -23,7 +25,7 @@ func (suite *KeeperTestSuite) TestGetSetNewPlan() {
 
 	startTime := time.Now().UTC()
 	endTime := startTime.AddDate(1, 0, 0)
-	basePlan := types.NewBasePlan(1, 1, farmingPoolAddr.String(), terminationAddr.String(), coinWeights, startTime, endTime)
+	basePlan := types.NewBasePlan(1, name, 1, farmingPoolAddr.String(), terminationAddr.String(), coinWeights, startTime, endTime)
 	fixedPlan := types.NewFixedAmountPlan(basePlan, sdk.NewCoins(sdk.NewCoin("testFarmCoinDenom", sdk.NewInt(1000000))))
 	suite.keeper.SetPlan(suite.ctx, fixedPlan)
 

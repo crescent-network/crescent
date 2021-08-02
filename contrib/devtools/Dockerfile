@@ -6,7 +6,6 @@ ENV GOLANG_PROTOBUF_VERSION=1.3.5 \
   GOGO_PROTOBUF_VERSION=1.3.2 \
   GRPC_GATEWAY_VERSION=1.14.7 
 
-
 RUN GO111MODULE=on go get \
   github.com/golang/protobuf/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} \
   github.com/gogo/protobuf/protoc-gen-gogo@v${GOGO_PROTOBUF_VERSION} \

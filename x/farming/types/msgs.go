@@ -27,6 +27,7 @@ const (
 
 // NewMsgCreateFixedAmountPlan creates a new MsgCreateFixedAmountPlan.
 func NewMsgCreateFixedAmountPlan(
+	name string,
 	farmingPoolAddr sdk.AccAddress,
 	stakingCoinWeights sdk.DecCoins,
 	startTime time.Time,
@@ -34,6 +35,7 @@ func NewMsgCreateFixedAmountPlan(
 	epochAmount sdk.Coins,
 ) *MsgCreateFixedAmountPlan {
 	return &MsgCreateFixedAmountPlan{
+		Name:               name,
 		FarmingPoolAddress: farmingPoolAddr.String(),
 		StakingCoinWeights: stakingCoinWeights,
 		StartTime:          startTime,
@@ -51,7 +53,7 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", msg.FarmingPoolAddress, err)
 	}
 	if !msg.EndTime.After(msg.StartTime) {
-		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339Nano), msg.StartTime.Format(time.RFC3339Nano))
+		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
 	}
 	if msg.StakingCoinWeights.Empty() {
 		return ErrEmptyStakingCoinWeights
@@ -90,6 +92,7 @@ func (msg MsgCreateFixedAmountPlan) GetCreator() sdk.AccAddress {
 
 // NewMsgCreateRatioPlan creates a new MsgCreateRatioPlan.
 func NewMsgCreateRatioPlan(
+	name string,
 	farmingPoolAddr sdk.AccAddress,
 	stakingCoinWeights sdk.DecCoins,
 	startTime time.Time,
@@ -97,6 +100,7 @@ func NewMsgCreateRatioPlan(
 	epochRatio sdk.Dec,
 ) *MsgCreateRatioPlan {
 	return &MsgCreateRatioPlan{
+		Name:               name,
 		FarmingPoolAddress: farmingPoolAddr.String(),
 		StakingCoinWeights: stakingCoinWeights,
 		StartTime:          startTime,
@@ -114,7 +118,7 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", msg.FarmingPoolAddress, err)
 	}
 	if !msg.EndTime.After(msg.StartTime) {
-		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339Nano), msg.StartTime.Format(time.RFC3339Nano))
+		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
 	}
 	if msg.StakingCoinWeights.Empty() {
 		return ErrEmptyStakingCoinWeights
@@ -123,6 +127,9 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 		return err
 	}
 	if !msg.EpochRatio.IsPositive() {
+		return ErrInvalidPlanEpochRatio
+	}
+	if msg.EpochRatio.GT(sdk.NewDec(1)) {
 		return ErrInvalidPlanEpochRatio
 	}
 	return nil

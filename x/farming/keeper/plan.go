@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -174,9 +172,9 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 	params := k.GetParams(ctx)
 
 	balances := k.bankKeeper.GetAllBalances(ctx, farmingPoolAddrAcc)
-	_, hasNeg := balances.SafeSub(params.PrivatePlanCreationFee)
+	diffs, hasNeg := balances.SafeSub(params.PrivatePlanCreationFee)
 	if hasNeg {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "insufficient balance to pay private plan creation fee")
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "lack of %s coins to pay private plan createion fee", diffs.String())
 	}
 
 	farmingFeeCollectorAcc, err := sdk.AccAddressFromBech32(params.FarmingFeeCollector)
@@ -190,6 +188,7 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 
 	basePlan := types.NewBasePlan(
 		nextId,
+		msg.Name,
 		typ,
 		farmingPoolAddrAcc.String(),
 		terminationAddrAcc.String(),
@@ -228,9 +227,9 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 	params := k.GetParams(ctx)
 
 	balances := k.bankKeeper.GetAllBalances(ctx, farmingPoolAddrAcc)
-	_, hasNeg := balances.SafeSub(params.PrivatePlanCreationFee)
+	diffs, hasNeg := balances.SafeSub(params.PrivatePlanCreationFee)
 	if hasNeg {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "insufficient balance to pay private plan creation fee")
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "lack of %s coins to pay private plan createion fee", diffs.String())
 	}
 
 	farmingFeeCollectorAcc, err := sdk.AccAddressFromBech32(params.FarmingFeeCollector)
@@ -244,6 +243,7 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 
 	basePlan := types.NewBasePlan(
 		nextId,
+		msg.Name,
 		typ,
 		farmingPoolAddrAcc.String(),
 		terminationAddrAcc.String(),
@@ -263,7 +263,7 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, ratioPlan.RewardPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
-			sdk.NewAttribute(types.AttributeKeyEpochRatio, fmt.Sprint(msg.EpochRatio)),
+			sdk.NewAttribute(types.AttributeKeyEpochRatio, msg.EpochRatio.String()),
 		),
 	})
 

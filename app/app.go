@@ -88,6 +88,7 @@ import (
 
 	farmingparams "github.com/tendermint/farming/app/params"
 	"github.com/tendermint/farming/x/farming"
+	farmingclient "github.com/tendermint/farming/x/farming/client"
 	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
 
@@ -114,6 +115,7 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			farmingclient.ProposalHandler,
 			// todo: farming proposal handler
 		),
 		params.AppModuleBasic{},

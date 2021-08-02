@@ -3,14 +3,17 @@ package cli
 import (
 	"fmt"
 	"strings"
-	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/tendermint/farming/x/farming/types"
 )
@@ -38,14 +41,35 @@ func GetTxCmd() *cobra.Command {
 
 func NewCreateFixedAmountPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-fixed-plan",
-		Aliases: []string{"cf"},
-		Args:    cobra.ExactArgs(0),
-		Short:   "create fixed amount farming plan",
+		Use:   "create-private-fixed-plan [plan-file]",
+		Args:  cobra.ExactArgs(1),
+		Short: "create private fixed amount farming plan",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create fixed amount farming plan.
+			fmt.Sprintf(`Create private fixed amount farming plan.
+The plan details must be provided through a JSON file. 
+		
 Example:
-$ %s tx %s create-fixed-plan --from mykey
+$ %s tx %s create-private-fixed-plan <path/to/plan.json> --from mykey 
+
+Where plan.json contains:
+
+{
+  "name": "This plan intends to provide incentives for Cosmonauts!",
+  "staking_coin_weights": [
+    {
+      "denom": "uatom",
+      "amount": "1.000000000000000000"
+    }
+  ],
+  "start_time": "2021-07-24T08:41:21.662422Z",
+  "end_time": "2022-07-28T08:41:21.662422Z",
+  "epoch_amount": [
+    {
+      "denom": "uatom",
+      "amount": "1"
+    }
+  ]
+}
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -55,28 +79,29 @@ $ %s tx %s create-fixed-plan --from mykey
 			if err != nil {
 				return err
 			}
-			planCreator := clientCtx.GetFromAddress()
 
-			fmt.Println("planCreator: ", planCreator)
-
-			// TODO: replace dummy data
-			farmingPoolAddr := sdk.AccAddress{}
-			stakingCoinWeights := sdk.DecCoins{}
-			startTime := time.Time{}
-			endTime := time.Time{}
-			epochAmount := sdk.Coins{}
+			plan, err := ParsePrivateFixedPlan(args[0])
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to parse %s file due to %v", args[0], err)
+			}
 
 			msg := types.NewMsgCreateFixedAmountPlan(
-				farmingPoolAddr,
-				stakingCoinWeights,
-				startTime,
-				endTime,
-				epochAmount,
+				plan.Name,
+				clientCtx.GetFromAddress(),
+				plan.StakingCoinWeights,
+				plan.StartTime,
+				plan.EndTime,
+				plan.EpochAmount,
 			)
+
+			if err = msg.ValidateBasic(); err != nil {
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -84,14 +109,30 @@ $ %s tx %s create-fixed-plan --from mykey
 
 func NewCreateRatioPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-ratio-plan",
-		Aliases: []string{"cr"},
-		Args:    cobra.ExactArgs(0),
-		Short:   "create ratio farming plan",
+		Use:   "create-private-ratio-plan [plan-file]",
+		Args:  cobra.ExactArgs(1),
+		Short: "create private ratio farming plan",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create ratio farming plan.
+			fmt.Sprintf(`Create private ratio farming plan.
+The plan details must be provided through a JSON file. 
+		
 Example:
-$ %s tx %s create-ratio-plan --from mykey
+$ %s tx %s create-private-ratio-plan <path/to/plan.json> --from mykey 
+
+Where plan.json contains:
+
+{
+  "name": "This plan intends to provide incentives for Cosmonauts!",
+  "staking_coin_weights": [
+    {
+      "denom": "uatom",
+      "amount": "1.000000000000000000"
+    }
+  ],
+  "start_time": "2021-07-15T08:41:21.662422Z",
+  "end_time": "2022-07-16T08:41:21.662422Z",
+  "epoch_ratio": "1.000000000000000000"
+}
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -101,28 +142,29 @@ $ %s tx %s create-ratio-plan --from mykey
 			if err != nil {
 				return err
 			}
-			planCreator := clientCtx.GetFromAddress()
 
-			fmt.Println("planCreator: ", planCreator)
-
-			// TODO: replace dummy data
-			farmingPoolAddr := sdk.AccAddress{}
-			stakingCoinWeights := sdk.DecCoins{}
-			startTime := time.Time{}
-			endTime := time.Time{}
-			epochRatio := sdk.Dec{}
+			plan, err := ParsePrivateRatioPlan(args[0])
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to parse %s file due to %v", args[0], err)
+			}
 
 			msg := types.NewMsgCreateRatioPlan(
-				farmingPoolAddr,
-				stakingCoinWeights,
-				startTime,
-				endTime,
-				epochRatio,
+				plan.Name,
+				clientCtx.GetFromAddress(),
+				plan.StakingCoinWeights,
+				plan.StartTime,
+				plan.EndTime,
+				plan.EpochRatio,
 			)
+
+			if err = msg.ValidateBasic(); err != nil {
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -224,6 +266,93 @@ $ %s tx %s harvest --from mykey
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdSubmitPublicPlanProposal implements a command handler for submitting a public farming plan transaction to create, update, delete plan.
+func GetCmdSubmitPublicPlanProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "public-farming-plan [proposal-file] [flags]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a public farming plan",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a a public farming plan along with an initial deposit.
+The proposal details must be supplied via a JSON file.
+
+Example:
+$ %s tx gov submit-proposal public-farming-plan <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
+
+Where proposal.json contains:
+
+{
+  "title": "Public Farming Plan",
+  "description": "Are you ready to farm?",
+  "name": "Cosmos Hub Community Tax",
+  "add_request_proposals": [
+    {
+      "farming_pool_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
+      "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
+      "staking_coin_weights": [
+        {
+          "denom": "PoolCoinDenom",
+          "amount": "1.000000000000000000"
+        }
+      ],
+      "start_time": "2021-07-15T08:41:21.662422Z",
+      "end_time": "2022-07-16T08:41:21.662422Z",
+      "epoch_amount": [
+        {
+          "denom": "uatom",
+          "amount": "1"
+        }
+      ]
+    }
+  ]
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			proposal, err := ParsePublicPlanProposal(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			content, err := types.NewPublicPlanProposal(proposal.Title, proposal.Description,
+				proposal.AddRequestProposals, proposal.UpdateRequestProposals, proposal.DeleteRequestProposals)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 
 	return cmd
 }

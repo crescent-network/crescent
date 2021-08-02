@@ -14,6 +14,7 @@ import (
 )
 
 func TestMsgCreateFixedAmountPlan(t *testing.T) {
+	name := "test"
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
 	stakingCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
@@ -29,36 +30,36 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 		{
 			"", // empty means no error expected
 			types.NewMsgCreateFixedAmountPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				name, farmingPoolAddr, stakingCoinWeights,
+				startTime, endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"invalid farming pool address \"\": empty address string is not allowed: invalid address",
 			types.NewMsgCreateFixedAmountPlan(
-				sdk.AccAddress{}, stakingCoinWeights, startTime,
-				endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				name, sdk.AccAddress{}, stakingCoinWeights,
+				startTime, endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"end time 2020-11-01T22:08:41Z must be greater than start time 2021-11-01T22:08:41Z: invalid plan end time",
 			types.NewMsgCreateFixedAmountPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				startTime.AddDate(-1, 0, 0), sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				name, farmingPoolAddr, stakingCoinWeights,
+				startTime, startTime.AddDate(-1, 0, 0), sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"staking coin weights must not be empty",
 			types.NewMsgCreateFixedAmountPlan(
-				farmingPoolAddr, sdk.NewDecCoins(), startTime,
-				endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
+				name, farmingPoolAddr, sdk.NewDecCoins(),
+				startTime, endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
 			"epoch amount must not be empty",
 			types.NewMsgCreateFixedAmountPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, sdk.Coins{},
+				name, farmingPoolAddr, stakingCoinWeights,
+				startTime, endTime, sdk.Coins{},
 			),
 		},
 	}
@@ -82,6 +83,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 }
 
 func TestMsgCreateRatioPlan(t *testing.T) {
+	name := "test"
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
 	stakingCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
@@ -97,36 +99,36 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 		{
 			"", // empty means no error expected
 			types.NewMsgCreateRatioPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, sdk.NewDec(1),
+				name, farmingPoolAddr, stakingCoinWeights,
+				startTime, endTime, sdk.NewDec(1),
 			),
 		},
 		{
 			"invalid farming pool address \"\": empty address string is not allowed: invalid address",
 			types.NewMsgCreateRatioPlan(
-				sdk.AccAddress{}, stakingCoinWeights, startTime,
-				endTime, sdk.NewDec(1),
+				name, sdk.AccAddress{}, stakingCoinWeights,
+				startTime, endTime, sdk.NewDec(1),
 			),
 		},
 		{
 			"end time 2020-11-01T22:08:41Z must be greater than start time 2021-11-01T22:08:41Z: invalid plan end time",
 			types.NewMsgCreateRatioPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				startTime.AddDate(-1, 0, 0), sdk.NewDec(1),
+				name, farmingPoolAddr, stakingCoinWeights,
+				startTime, startTime.AddDate(-1, 0, 0), sdk.NewDec(1),
 			),
 		},
 		{
 			"staking coin weights must not be empty",
 			types.NewMsgCreateRatioPlan(
-				farmingPoolAddr, sdk.NewDecCoins(), startTime,
-				endTime, sdk.NewDec(1),
+				name, farmingPoolAddr, sdk.NewDecCoins(),
+				startTime, endTime, sdk.NewDec(1),
 			),
 		},
 		{
 			"invalid plan epoch ratio",
 			types.NewMsgCreateRatioPlan(
-				farmingPoolAddr, stakingCoinWeights, startTime,
-				endTime, sdk.NewDec(-1),
+				name, farmingPoolAddr, stakingCoinWeights,
+				startTime, endTime, sdk.NewDec(-1),
 			),
 		},
 	}

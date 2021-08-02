@@ -15,4 +15,6 @@ var (
 	ErrStakingNotExists        = sdkerrors.Register(ModuleName, 8, "staking not exists")
 	ErrRewardNotExists         = sdkerrors.Register(ModuleName, 9, "reward not exists")
 	ErrFeeCollectionFailure    = sdkerrors.Register(ModuleName, 10, "fee collection failure")
+	ErrInvalidNameLength       = sdkerrors.Register(ModuleName, 11, "invalid name length")
+	ErrDuplicatePlanName       = sdkerrors.Register(ModuleName, 12, "duplicate plan name")
 )

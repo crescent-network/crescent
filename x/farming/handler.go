@@ -46,7 +46,7 @@ func NewPublicPlanProposal(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.PublicPlanProposal:
-			return keeper.HandlePublicPlanProposal(ctx, k, c.Plans)
+			return keeper.HandlePublicPlanProposal(ctx, k, c)
 
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized farming proposal content type: %T", c)

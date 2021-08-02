@@ -11,12 +11,12 @@ import (
 func (suite *KeeperTestSuite) TestDistributionInfos() {
 	normalPlans := []types.PlanI{
 		types.NewFixedAmountPlan(
-			types.NewBasePlan(1, types.PlanTypePrivate, suite.addrs[0].String(), suite.addrs[0].String(),
+			types.NewBasePlan(1, "", types.PlanTypePrivate, suite.addrs[0].String(), suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
 				mustParseRFC3339("2021-07-27T00:00:00Z"), mustParseRFC3339("2021-07-28T00:00:00Z")),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))),
 		types.NewFixedAmountPlan(
-			types.NewBasePlan(2, types.PlanTypePrivate, suite.addrs[0].String(), suite.addrs[0].String(),
+			types.NewBasePlan(2, "", types.PlanTypePrivate, suite.addrs[0].String(), suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
 				mustParseRFC3339("2021-07-27T12:00:00Z"), mustParseRFC3339("2021-07-28T12:00:00Z")),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))),
@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestDistributionInfos() {
 			"insufficient farming pool balances",
 			[]types.PlanI{
 				types.NewFixedAmountPlan(
-					types.NewBasePlan(1, types.PlanTypePrivate, suite.addrs[0].String(), suite.addrs[0].String(),
+					types.NewBasePlan(1, "", types.PlanTypePrivate, suite.addrs[0].String(), suite.addrs[0].String(),
 						sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
 						mustParseRFC3339("2021-07-27T00:00:00Z"), mustParseRFC3339("2021-07-30T00:00:00Z")),
 					sdk.NewCoins(sdk.NewInt64Coin(denom3, 10_000_000_000))),

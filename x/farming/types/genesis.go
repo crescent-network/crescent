@@ -50,10 +50,6 @@ func ValidateGenesis(data GenesisState) error {
 
 // Validate validates PlanRecord.
 func (r PlanRecord) Validate() error {
-	_, err := UnpackPlan(&r.Plan)
-	if err != nil {
-		return err
-	}
 	if err := r.FarmingPoolCoins.Validate(); err != nil {
 		return err
 	}

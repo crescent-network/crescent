@@ -5,19 +5,24 @@ package types
 
 import (
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/regen-network/cosmos-proto"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -25,13 +30,21 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// PublicPlanProposal details a proposal for creating a public plan.
+// PublicPlanProposal defines a public farming plan governance proposal that receives one of the following requests:
+// A request that creates a public farming plan, a request that updates the plan, and a request that deletes the plan.
+// For public plan creation, depending on which field is passed, either epoch amount or epoch ratio, it creates a fixed
+// amount plan or ratio plan.
 type PublicPlanProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// title specifies the title of the plan
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description specifies the description of the plan
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// plans specifies the plan interface(s); it can be FixedAmountPlan or
-	// RatioPlan
-	Plans []*types.Any `protobuf:"bytes,3,rep,name=plans,proto3" json:"plans,omitempty"`
+	// add_request_proposals specifies AddRequestProposal object
+	AddRequestProposals []*AddRequestProposal `protobuf:"bytes,3,rep,name=add_request_proposals,json=addRequestProposals,proto3" json:"add_request_proposals,omitempty" yaml:"add_request_proposals"`
+	// update_request_proposals specifies UpdateRequestProposal object
+	UpdateRequestProposals []*UpdateRequestProposal `protobuf:"bytes,4,rep,name=update_request_proposals,json=updateRequestProposals,proto3" json:"update_request_proposals,omitempty" yaml:"update_request_proposals"`
+	// delete_request_proposals specifies DeleteRequestProposal object
+	DeleteRequestProposals []*DeleteRequestProposal `protobuf:"bytes,5,rep,name=delete_request_proposals,json=deleteRequestProposals,proto3" json:"delete_request_proposals,omitempty" yaml:"delete_request_proposals"`
 }
 
 func (m *PublicPlanProposal) Reset()      { *m = PublicPlanProposal{} }
@@ -66,8 +79,274 @@ func (m *PublicPlanProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PublicPlanProposal proto.InternalMessageInfo
 
+// AddRequestProposal details a proposal for creating a public plan.
+type AddRequestProposal struct {
+	// name specifies the plan name that describes what plan is for
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// farming_pool_address defines the bech32-encoded address of the farming pool
+	FarmingPoolAddress string `protobuf:"bytes,2,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty" yaml:"farming_pool_address"`
+	// termination_address defines the bech32-encoded address that terminates plan
+	// when the plan ends after the end time, the balance of farming pool address
+	// is transferred to the termination address
+	TerminationAddress string `protobuf:"bytes,3,opt,name=termination_address,json=terminationAddress,proto3" json:"termination_address,omitempty" yaml:"termination_address"`
+	// staking_coin_weights specifies coin weights for the plan
+	StakingCoinWeights github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,4,rep,name=staking_coin_weights,json=stakingCoinWeights,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"staking_coin_weights" yaml:"staking_coin_weights"`
+	// start_time specifies the start time of the plan
+	StartTime time.Time `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
+	// end_time specifies the end time of the plan
+	EndTime time.Time `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
+	// epoch_amount specifies the distributing amount for each epoch
+	EpochAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=epoch_amount,json=epochAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"epoch_amount" yaml:"epoch_amount"`
+	// epoch_ratio specifies the distributing amount by ratio
+	EpochRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=epoch_ratio,json=epochRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_ratio" yaml:"epoch_ratio"`
+}
+
+func (m *AddRequestProposal) Reset()         { *m = AddRequestProposal{} }
+func (m *AddRequestProposal) String() string { return proto.CompactTextString(m) }
+func (*AddRequestProposal) ProtoMessage()    {}
+func (*AddRequestProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4719b03c30c7910a, []int{1}
+}
+func (m *AddRequestProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AddRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AddRequestProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AddRequestProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddRequestProposal.Merge(m, src)
+}
+func (m *AddRequestProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *AddRequestProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddRequestProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddRequestProposal proto.InternalMessageInfo
+
+func (m *AddRequestProposal) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *AddRequestProposal) GetFarmingPoolAddress() string {
+	if m != nil {
+		return m.FarmingPoolAddress
+	}
+	return ""
+}
+
+func (m *AddRequestProposal) GetTerminationAddress() string {
+	if m != nil {
+		return m.TerminationAddress
+	}
+	return ""
+}
+
+func (m *AddRequestProposal) GetStakingCoinWeights() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.StakingCoinWeights
+	}
+	return nil
+}
+
+func (m *AddRequestProposal) GetStartTime() time.Time {
+	if m != nil {
+		return m.StartTime
+	}
+	return time.Time{}
+}
+
+func (m *AddRequestProposal) GetEndTime() time.Time {
+	if m != nil {
+		return m.EndTime
+	}
+	return time.Time{}
+}
+
+func (m *AddRequestProposal) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.EpochAmount
+	}
+	return nil
+}
+
+// UpdateRequestProposal details a proposal for updating an existing public plan.
+type UpdateRequestProposal struct {
+	// plan_id specifies index of the farming plan
+	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
+	// name specifies the plan name that describes what plan is for
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// farming_pool_address defines the bech32-encoded address of the farming pool
+	FarmingPoolAddress string `protobuf:"bytes,3,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty" yaml:"farming_pool_address"`
+	// termination_address defines the bech32-encoded address that terminates plan
+	// when the plan ends after the end time, the balance of farming pool address
+	// is transferred to the termination address
+	TerminationAddress string `protobuf:"bytes,4,opt,name=termination_address,json=terminationAddress,proto3" json:"termination_address,omitempty" yaml:"termination_address"`
+	// staking_coin_weights specifies coin weights for the plan
+	StakingCoinWeights github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,5,rep,name=staking_coin_weights,json=stakingCoinWeights,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"staking_coin_weights" yaml:"staking_coin_weights"`
+	// start_time specifies the start time of the plan
+	StartTime *time.Time `protobuf:"bytes,6,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time,omitempty" yaml:"start_time"`
+	// end_time specifies the end time of the plan
+	EndTime *time.Time `protobuf:"bytes,7,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time,omitempty" yaml:"end_time"`
+	// epoch_amount specifies the distributing amount for each epoch
+	EpochAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=epoch_amount,json=epochAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"epoch_amount" yaml:"epoch_amount"`
+	// epoch_ratio specifies the distributing amount by ratio
+	EpochRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,9,opt,name=epoch_ratio,json=epochRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_ratio" yaml:"epoch_ratio"`
+}
+
+func (m *UpdateRequestProposal) Reset()         { *m = UpdateRequestProposal{} }
+func (m *UpdateRequestProposal) String() string { return proto.CompactTextString(m) }
+func (*UpdateRequestProposal) ProtoMessage()    {}
+func (*UpdateRequestProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4719b03c30c7910a, []int{2}
+}
+func (m *UpdateRequestProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpdateRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpdateRequestProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpdateRequestProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateRequestProposal.Merge(m, src)
+}
+func (m *UpdateRequestProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpdateRequestProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateRequestProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateRequestProposal proto.InternalMessageInfo
+
+func (m *UpdateRequestProposal) GetPlanId() uint64 {
+	if m != nil {
+		return m.PlanId
+	}
+	return 0
+}
+
+func (m *UpdateRequestProposal) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *UpdateRequestProposal) GetFarmingPoolAddress() string {
+	if m != nil {
+		return m.FarmingPoolAddress
+	}
+	return ""
+}
+
+func (m *UpdateRequestProposal) GetTerminationAddress() string {
+	if m != nil {
+		return m.TerminationAddress
+	}
+	return ""
+}
+
+func (m *UpdateRequestProposal) GetStakingCoinWeights() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.StakingCoinWeights
+	}
+	return nil
+}
+
+func (m *UpdateRequestProposal) GetStartTime() *time.Time {
+	if m != nil {
+		return m.StartTime
+	}
+	return nil
+}
+
+func (m *UpdateRequestProposal) GetEndTime() *time.Time {
+	if m != nil {
+		return m.EndTime
+	}
+	return nil
+}
+
+func (m *UpdateRequestProposal) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.EpochAmount
+	}
+	return nil
+}
+
+// DeleteRequestProposal details a proposal for deleting an existing public plan.
+type DeleteRequestProposal struct {
+	// plan_id specifies index of the farming plan
+	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
+}
+
+func (m *DeleteRequestProposal) Reset()         { *m = DeleteRequestProposal{} }
+func (m *DeleteRequestProposal) String() string { return proto.CompactTextString(m) }
+func (*DeleteRequestProposal) ProtoMessage()    {}
+func (*DeleteRequestProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4719b03c30c7910a, []int{3}
+}
+func (m *DeleteRequestProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeleteRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeleteRequestProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeleteRequestProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteRequestProposal.Merge(m, src)
+}
+func (m *DeleteRequestProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeleteRequestProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteRequestProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteRequestProposal proto.InternalMessageInfo
+
+func (m *DeleteRequestProposal) GetPlanId() uint64 {
+	if m != nil {
+		return m.PlanId
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*PublicPlanProposal)(nil), "tendermint.farming.v1beta1.PublicPlanProposal")
+	proto.RegisterType((*AddRequestProposal)(nil), "tendermint.farming.v1beta1.AddRequestProposal")
+	proto.RegisterType((*UpdateRequestProposal)(nil), "tendermint.farming.v1beta1.UpdateRequestProposal")
+	proto.RegisterType((*DeleteRequestProposal)(nil), "tendermint.farming.v1beta1.DeleteRequestProposal")
 }
 
 func init() {
@@ -75,25 +354,56 @@ func init() {
 }
 
 var fileDescriptor_4719b03c30c7910a = []byte{
-	// 281 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xd2, 0x2c, 0x49, 0xcd, 0x4b,
-	0x49, 0x2d, 0xca, 0xcd, 0xcc, 0x2b, 0xd1, 0x4f, 0x4b, 0x04, 0xd1, 0xe9, 0xfa, 0x65, 0x86, 0x49,
-	0xa9, 0x25, 0x89, 0x86, 0xfa, 0x05, 0x45, 0xf9, 0x05, 0xf9, 0xc5, 0x89, 0x39, 0x7a, 0x05, 0x45,
-	0xf9, 0x25, 0xf9, 0x42, 0x52, 0x08, 0xa5, 0x7a, 0x50, 0xa5, 0x7a, 0x50, 0xa5, 0x52, 0x22, 0xe9,
-	0xf9, 0xe9, 0xf9, 0x60, 0x65, 0xfa, 0x20, 0x16, 0x44, 0x87, 0x94, 0x64, 0x72, 0x7e, 0x71, 0x6e,
-	0x7e, 0x71, 0x3c, 0x44, 0x02, 0xc2, 0x81, 0x4a, 0x69, 0xe0, 0xb1, 0x17, 0x66, 0x38, 0xd4, 0x90,
-	0xf4, 0xfc, 0xfc, 0xf4, 0x9c, 0x54, 0x7d, 0x30, 0x2f, 0xa9, 0x34, 0x4d, 0x3f, 0x31, 0xaf, 0x12,
-	0x22, 0xa5, 0xd4, 0xc4, 0xc8, 0x25, 0x14, 0x50, 0x9a, 0x94, 0x93, 0x99, 0x1c, 0x90, 0x93, 0x98,
-	0x17, 0x00, 0x75, 0xae, 0x90, 0x08, 0x17, 0x6b, 0x49, 0x66, 0x49, 0x4e, 0xaa, 0x04, 0xa3, 0x02,
-	0xa3, 0x06, 0x67, 0x10, 0x84, 0x23, 0xa4, 0xc0, 0xc5, 0x9d, 0x92, 0x5a, 0x9c, 0x5c, 0x94, 0x59,
-	0x50, 0x92, 0x99, 0x9f, 0x27, 0xc1, 0x04, 0x96, 0x43, 0x16, 0x12, 0xd2, 0xe2, 0x62, 0x2d, 0xc8,
-	0x49, 0xcc, 0x2b, 0x96, 0x60, 0x56, 0x60, 0xd6, 0xe0, 0x36, 0x12, 0xd1, 0x83, 0xd8, 0xac, 0x07,
-	0xb3, 0x59, 0xcf, 0x31, 0xaf, 0x32, 0x08, 0xa2, 0xc4, 0x8a, 0xa3, 0x63, 0x81, 0x3c, 0xc3, 0x8c,
-	0x05, 0xf2, 0x0c, 0x4e, 0xee, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91,
-	0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0xa5,
-	0x9b, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x8f, 0xc5, 0xbb, 0x15, 0x70,
-	0x56, 0x49, 0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0xd8, 0x1e, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x17, 0x42, 0x58, 0x21, 0x93, 0x01, 0x00, 0x00,
+	// 773 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0x4f, 0x4f, 0xdb, 0x48,
+	0x1c, 0x8d, 0xc9, 0x5f, 0x26, 0x2b, 0xad, 0x76, 0x08, 0x6c, 0x08, 0xac, 0x1d, 0x79, 0xa5, 0x55,
+	0x56, 0x2b, 0xec, 0x85, 0xde, 0xb8, 0x91, 0x22, 0xa1, 0x9e, 0x9a, 0x5a, 0xad, 0x5a, 0xf5, 0x62,
+	0x4d, 0x32, 0x43, 0xb0, 0xb0, 0x3d, 0xae, 0x67, 0xd2, 0x96, 0x73, 0x5b, 0xa9, 0xa7, 0x8a, 0x63,
+	0x8f, 0xa8, 0x47, 0x3e, 0x09, 0x47, 0x8e, 0x55, 0x0f, 0xa1, 0x82, 0x6f, 0x90, 0x4f, 0x50, 0x79,
+	0x66, 0x1c, 0xa2, 0xe2, 0x40, 0x90, 0xa8, 0xc4, 0xc9, 0xf3, 0x9b, 0xf9, 0xbd, 0x37, 0x6f, 0xde,
+	0xcc, 0x83, 0x80, 0x7f, 0x39, 0x09, 0x31, 0x89, 0x03, 0x2f, 0xe4, 0xf6, 0x2e, 0x4a, 0xbe, 0x7d,
+	0xfb, 0xf5, 0x7a, 0x97, 0x70, 0xb4, 0x6e, 0x47, 0x31, 0x8d, 0x28, 0x43, 0xbe, 0x15, 0xc5, 0x94,
+	0x53, 0xd8, 0xb8, 0x6c, 0xb5, 0x54, 0xab, 0xa5, 0x5a, 0x1b, 0xb5, 0x3e, 0xed, 0x53, 0xd1, 0x66,
+	0x27, 0x23, 0x89, 0x68, 0x2c, 0xf7, 0x28, 0x0b, 0x28, 0x73, 0xe5, 0x82, 0x2c, 0xd4, 0x92, 0x2e,
+	0x2b, 0xbb, 0x8b, 0x18, 0x19, 0x6f, 0xd8, 0xa3, 0x5e, 0xa8, 0xd6, 0x5b, 0xd7, 0xe8, 0x4a, 0x37,
+	0x97, 0x9d, 0x46, 0x9f, 0xd2, 0xbe, 0x4f, 0x6c, 0x51, 0x75, 0x07, 0xbb, 0x36, 0xf7, 0x02, 0xc2,
+	0x38, 0x0a, 0x22, 0xd9, 0x60, 0xbe, 0x2b, 0x00, 0xd8, 0x19, 0x74, 0x7d, 0xaf, 0xd7, 0xf1, 0x51,
+	0xd8, 0x51, 0x87, 0x82, 0x35, 0x50, 0xe4, 0x1e, 0xf7, 0x49, 0x5d, 0x6b, 0x6a, 0xad, 0x79, 0x47,
+	0x16, 0xb0, 0x09, 0xaa, 0x98, 0xb0, 0x5e, 0xec, 0x45, 0xdc, 0xa3, 0x61, 0x7d, 0x4e, 0xac, 0x4d,
+	0x4e, 0xc1, 0xf7, 0x1a, 0x58, 0x44, 0x18, 0xbb, 0x31, 0x79, 0x35, 0x20, 0x8c, 0xbb, 0xa9, 0x4b,
+	0xac, 0x9e, 0x6f, 0xe6, 0x5b, 0xd5, 0x0d, 0xcb, 0x9a, 0xee, 0x93, 0xb5, 0x85, 0xb1, 0x23, 0x71,
+	0xa9, 0x8e, 0x76, 0x73, 0x34, 0x34, 0x56, 0x0f, 0x50, 0xe0, 0x6f, 0x9a, 0x99, 0xb4, 0xa6, 0xb3,
+	0x80, 0xae, 0xa0, 0x18, 0x3c, 0xd4, 0x40, 0x7d, 0x10, 0x61, 0xc4, 0x49, 0x86, 0x92, 0x82, 0x50,
+	0xb2, 0x7e, 0x9d, 0x92, 0x67, 0x02, 0xfb, 0xb3, 0x98, 0xbf, 0x47, 0x43, 0xc3, 0x90, 0x62, 0xa6,
+	0x91, 0x9b, 0xce, 0xd2, 0x20, 0x0b, 0x2b, 0x25, 0x61, 0xe2, 0x93, 0x4c, 0x49, 0xc5, 0x9b, 0x25,
+	0x6d, 0x0b, 0xec, 0x35, 0x92, 0xa6, 0x91, 0x9b, 0xce, 0x12, 0xce, 0xc2, 0xb2, 0xcd, 0xca, 0xc7,
+	0x23, 0x23, 0xf7, 0xf9, 0xc8, 0xc8, 0x99, 0x9f, 0x4a, 0x00, 0x5e, 0x75, 0x1f, 0x42, 0x50, 0x08,
+	0x51, 0x90, 0x3e, 0x02, 0x31, 0x86, 0x4f, 0x40, 0x4d, 0x49, 0x73, 0x23, 0x4a, 0x7d, 0x17, 0x61,
+	0x1c, 0x13, 0xc6, 0xe4, 0x63, 0x68, 0x1b, 0xa3, 0xa1, 0xb1, 0x22, 0xf5, 0x64, 0x75, 0x99, 0x0e,
+	0x54, 0xd3, 0x1d, 0x4a, 0xfd, 0x2d, 0x39, 0x09, 0x1f, 0x83, 0x05, 0x2e, 0x4e, 0x8d, 0x92, 0x37,
+	0x34, 0x66, 0xcc, 0x0b, 0x46, 0x7d, 0x34, 0x34, 0x1a, 0x92, 0x31, 0xa3, 0xc9, 0x74, 0xe0, 0xc4,
+	0x6c, 0x4a, 0xf8, 0x45, 0x03, 0x35, 0xc6, 0xd1, 0x7e, 0xb2, 0x7d, 0x12, 0x1b, 0xf7, 0x0d, 0xf1,
+	0xfa, 0x7b, 0x3c, 0xbd, 0xfa, 0x55, 0x4b, 0xa5, 0x2d, 0xc9, 0xd7, 0x84, 0xc1, 0xbd, 0x87, 0xd4,
+	0x0b, 0xdb, 0xce, 0xc9, 0xd0, 0xc8, 0x5d, 0x1e, 0x23, 0x8b, 0xc7, 0x3c, 0x3e, 0x33, 0xfe, 0xeb,
+	0x7b, 0x7c, 0x6f, 0xd0, 0xb5, 0x7a, 0x34, 0x50, 0xe1, 0x55, 0x9f, 0x35, 0x86, 0xf7, 0x6d, 0x7e,
+	0x10, 0x11, 0x96, 0x52, 0x32, 0x07, 0x2a, 0x96, 0xa4, 0x7a, 0x2e, 0x39, 0xe0, 0x0b, 0x00, 0x18,
+	0x47, 0x31, 0x77, 0x93, 0x48, 0xd6, 0x8b, 0x4d, 0xad, 0x55, 0xdd, 0x68, 0x58, 0x32, 0xaf, 0x56,
+	0x9a, 0x57, 0xeb, 0x69, 0x9a, 0xd7, 0xf6, 0x5f, 0x4a, 0xd7, 0x1f, 0x63, 0x5d, 0x0a, 0x6b, 0x1e,
+	0x9e, 0x19, 0x9a, 0x33, 0x2f, 0x26, 0x92, 0x76, 0xe8, 0x80, 0x0a, 0x09, 0xb1, 0xe4, 0x2d, 0xdd,
+	0xc8, 0xbb, 0xa2, 0x78, 0x7f, 0x97, 0xbc, 0x29, 0x52, 0xb2, 0x96, 0x49, 0x88, 0x05, 0xe7, 0x07,
+	0x0d, 0xfc, 0x46, 0x22, 0xda, 0xdb, 0x73, 0x51, 0x40, 0x07, 0x21, 0xaf, 0x97, 0x85, 0x95, 0xcb,
+	0x99, 0x56, 0x0a, 0x1f, 0x77, 0x14, 0xef, 0x82, 0xe2, 0x9d, 0x00, 0x27, 0xfe, 0xb5, 0x66, 0xf0,
+	0x4f, 0x9a, 0x57, 0x15, 0xd0, 0x2d, 0x81, 0x84, 0x04, 0xc8, 0xd2, 0x8d, 0x93, 0x1b, 0xaf, 0x57,
+	0xc4, 0x1b, 0xd9, 0x4e, 0xb6, 0xfa, 0x36, 0x34, 0xfe, 0x99, 0xed, 0x4e, 0x46, 0x43, 0x03, 0x4e,
+	0x8a, 0x12, 0x54, 0xa6, 0x03, 0x44, 0xe5, 0x88, 0xe2, 0xb8, 0x04, 0x16, 0x33, 0xff, 0x08, 0xc0,
+	0x3f, 0x41, 0x39, 0xf2, 0x51, 0xe8, 0x7a, 0x58, 0xc4, 0xa2, 0xe0, 0x94, 0x92, 0xf2, 0x11, 0x1e,
+	0x87, 0x65, 0x6e, 0x86, 0xb0, 0xe4, 0xef, 0x3c, 0x2c, 0x85, 0xbb, 0x0f, 0x4b, 0xf1, 0xde, 0x86,
+	0xa5, 0x34, 0x53, 0x58, 0xb4, 0x5b, 0x87, 0xa5, 0x3c, 0x53, 0x58, 0xb4, 0xdb, 0x87, 0xa5, 0x72,
+	0x2f, 0xc2, 0x32, 0xff, 0x8b, 0xc2, 0xf2, 0x3f, 0x58, 0xcc, 0xfc, 0xef, 0x34, 0x35, 0x2b, 0xed,
+	0x9d, 0x93, 0x73, 0x5d, 0x3b, 0x3d, 0xd7, 0xb5, 0xef, 0xe7, 0xba, 0x76, 0x78, 0xa1, 0xe7, 0x4e,
+	0x2f, 0xf4, 0xdc, 0xd7, 0x0b, 0x3d, 0xf7, 0x72, 0x6d, 0x42, 0x55, 0xc6, 0xaf, 0x9c, 0xb7, 0xe3,
+	0x91, 0x10, 0xd8, 0x2d, 0x89, 0x3b, 0x7a, 0xf0, 0x23, 0x00, 0x00, 0xff, 0xff, 0x06, 0x3e, 0x94,
+	0x84, 0xaa, 0x09, 0x00, 0x00,
 }
 
 func (m *PublicPlanProposal) Marshal() (dAtA []byte, err error) {
@@ -116,10 +426,38 @@ func (m *PublicPlanProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Plans) > 0 {
-		for iNdEx := len(m.Plans) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.DeleteRequestProposals) > 0 {
+		for iNdEx := len(m.DeleteRequestProposals) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Plans[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.DeleteRequestProposals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposal(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.UpdateRequestProposals) > 0 {
+		for iNdEx := len(m.UpdateRequestProposals) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UpdateRequestProposals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposal(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.AddRequestProposals) > 0 {
+		for iNdEx := len(m.AddRequestProposals) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddRequestProposals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -143,6 +481,239 @@ func (m *PublicPlanProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintProposal(dAtA, i, uint64(len(m.Title)))
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AddRequestProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AddRequestProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AddRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.EpochRatio.Size()
+		i -= size
+		if _, err := m.EpochRatio.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintProposal(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x42
+	if len(m.EpochAmount) > 0 {
+		for iNdEx := len(m.EpochAmount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.EpochAmount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposal(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
+	if err1 != nil {
+		return 0, err1
+	}
+	i -= n1
+	i = encodeVarintProposal(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x32
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintProposal(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x2a
+	if len(m.StakingCoinWeights) > 0 {
+		for iNdEx := len(m.StakingCoinWeights) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.StakingCoinWeights[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposal(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.TerminationAddress) > 0 {
+		i -= len(m.TerminationAddress)
+		copy(dAtA[i:], m.TerminationAddress)
+		i = encodeVarintProposal(dAtA, i, uint64(len(m.TerminationAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.FarmingPoolAddress) > 0 {
+		i -= len(m.FarmingPoolAddress)
+		copy(dAtA[i:], m.FarmingPoolAddress)
+		i = encodeVarintProposal(dAtA, i, uint64(len(m.FarmingPoolAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintProposal(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *UpdateRequestProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpdateRequestProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpdateRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.EpochRatio.Size()
+		i -= size
+		if _, err := m.EpochRatio.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintProposal(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x4a
+	if len(m.EpochAmount) > 0 {
+		for iNdEx := len(m.EpochAmount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.EpochAmount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposal(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if m.EndTime != nil {
+		n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime):])
+		if err3 != nil {
+			return 0, err3
+		}
+		i -= n3
+		i = encodeVarintProposal(dAtA, i, uint64(n3))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if m.StartTime != nil {
+		n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.StartTime):])
+		if err4 != nil {
+			return 0, err4
+		}
+		i -= n4
+		i = encodeVarintProposal(dAtA, i, uint64(n4))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.StakingCoinWeights) > 0 {
+		for iNdEx := len(m.StakingCoinWeights) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.StakingCoinWeights[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposal(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.TerminationAddress) > 0 {
+		i -= len(m.TerminationAddress)
+		copy(dAtA[i:], m.TerminationAddress)
+		i = encodeVarintProposal(dAtA, i, uint64(len(m.TerminationAddress)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.FarmingPoolAddress) > 0 {
+		i -= len(m.FarmingPoolAddress)
+		copy(dAtA[i:], m.FarmingPoolAddress)
+		i = encodeVarintProposal(dAtA, i, uint64(len(m.FarmingPoolAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintProposal(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PlanId != 0 {
+		i = encodeVarintProposal(dAtA, i, uint64(m.PlanId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DeleteRequestProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeleteRequestProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeleteRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PlanId != 0 {
+		i = encodeVarintProposal(dAtA, i, uint64(m.PlanId))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -172,11 +743,120 @@ func (m *PublicPlanProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
-	if len(m.Plans) > 0 {
-		for _, e := range m.Plans {
+	if len(m.AddRequestProposals) > 0 {
+		for _, e := range m.AddRequestProposals {
 			l = e.Size()
 			n += 1 + l + sovProposal(uint64(l))
 		}
+	}
+	if len(m.UpdateRequestProposals) > 0 {
+		for _, e := range m.UpdateRequestProposals {
+			l = e.Size()
+			n += 1 + l + sovProposal(uint64(l))
+		}
+	}
+	if len(m.DeleteRequestProposals) > 0 {
+		for _, e := range m.DeleteRequestProposals {
+			l = e.Size()
+			n += 1 + l + sovProposal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AddRequestProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	l = len(m.FarmingPoolAddress)
+	if l > 0 {
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	l = len(m.TerminationAddress)
+	if l > 0 {
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	if len(m.StakingCoinWeights) > 0 {
+		for _, e := range m.StakingCoinWeights {
+			l = e.Size()
+			n += 1 + l + sovProposal(uint64(l))
+		}
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovProposal(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
+	n += 1 + l + sovProposal(uint64(l))
+	if len(m.EpochAmount) > 0 {
+		for _, e := range m.EpochAmount {
+			l = e.Size()
+			n += 1 + l + sovProposal(uint64(l))
+		}
+	}
+	l = m.EpochRatio.Size()
+	n += 1 + l + sovProposal(uint64(l))
+	return n
+}
+
+func (m *UpdateRequestProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PlanId != 0 {
+		n += 1 + sovProposal(uint64(m.PlanId))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	l = len(m.FarmingPoolAddress)
+	if l > 0 {
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	l = len(m.TerminationAddress)
+	if l > 0 {
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	if len(m.StakingCoinWeights) > 0 {
+		for _, e := range m.StakingCoinWeights {
+			l = e.Size()
+			n += 1 + l + sovProposal(uint64(l))
+		}
+	}
+	if m.StartTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.StartTime)
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	if m.EndTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.EndTime)
+		n += 1 + l + sovProposal(uint64(l))
+	}
+	if len(m.EpochAmount) > 0 {
+		for _, e := range m.EpochAmount {
+			l = e.Size()
+			n += 1 + l + sovProposal(uint64(l))
+		}
+	}
+	l = m.EpochRatio.Size()
+	n += 1 + l + sovProposal(uint64(l))
+	return n
+}
+
+func (m *DeleteRequestProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PlanId != 0 {
+		n += 1 + sovProposal(uint64(m.PlanId))
 	}
 	return n
 }
@@ -282,7 +962,7 @@ func (m *PublicPlanProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Plans", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AddRequestProposals", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -309,11 +989,801 @@ func (m *PublicPlanProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Plans = append(m.Plans, &types.Any{})
-			if err := m.Plans[len(m.Plans)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.AddRequestProposals = append(m.AddRequestProposals, &AddRequestProposal{})
+			if err := m.AddRequestProposals[len(m.AddRequestProposals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdateRequestProposals", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdateRequestProposals = append(m.UpdateRequestProposals, &UpdateRequestProposal{})
+			if err := m.UpdateRequestProposals[len(m.UpdateRequestProposals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeleteRequestProposals", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeleteRequestProposals = append(m.DeleteRequestProposals, &DeleteRequestProposal{})
+			if err := m.DeleteRequestProposals[len(m.DeleteRequestProposals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AddRequestProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AddRequestProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AddRequestProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPoolAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FarmingPoolAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TerminationAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TerminationAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoinWeights", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingCoinWeights = append(m.StakingCoinWeights, types.DecCoin{})
+			if err := m.StakingCoinWeights[len(m.StakingCoinWeights)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EpochAmount = append(m.EpochAmount, types.Coin{})
+			if err := m.EpochAmount[len(m.EpochAmount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochRatio", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.EpochRatio.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpdateRequestProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpdateRequestProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpdateRequestProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
+			}
+			m.PlanId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PlanId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPoolAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FarmingPoolAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TerminationAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TerminationAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingCoinWeights", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingCoinWeights = append(m.StakingCoinWeights, types.DecCoin{})
+			if err := m.StakingCoinWeights[len(m.StakingCoinWeights)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.StartTime == nil {
+				m.StartTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.EndTime == nil {
+				m.EndTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EpochAmount = append(m.EpochAmount, types.Coin{})
+			if err := m.EpochAmount[len(m.EpochAmount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochRatio", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposal
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.EpochRatio.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeleteRequestProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeleteRequestProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeleteRequestProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlanId", wireType)
+			}
+			m.PlanId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PlanId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipProposal(dAtA[iNdEx:])

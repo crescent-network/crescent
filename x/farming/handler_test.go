@@ -40,6 +40,7 @@ func createTestInput() (*farmingapp.FarmingApp, sdk.Context, []sdk.AccAddress) {
 func TestMsgCreateFixedAmountPlan(t *testing.T) {
 	app, ctx, addrs := createTestInput()
 
+	name := "test"
 	farmingPoolAddr := addrs[0]
 	stakingCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
@@ -49,6 +50,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 	epochAmount := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1)))
 
 	msg := types.NewMsgCreateFixedAmountPlan(
+		name,
 		farmingPoolAddr,
 		stakingCoinWeights,
 		startTime,
@@ -68,6 +70,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 func TestMsgCreateRatioPlan(t *testing.T) {
 	app, ctx, addrs := createTestInput()
 
+	name := "test"
 	farmingPoolAddr := addrs[0]
 	stakingCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
@@ -77,6 +80,7 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 	epochAmount := sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1)))
 
 	msg := types.NewMsgCreateFixedAmountPlan(
+		name,
 		farmingPoolAddr,
 		stakingCoinWeights,
 		startTime,

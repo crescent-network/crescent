@@ -14,6 +14,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+const (
+	MaxNameLength int = 140
+)
+
 var (
 	_ PlanI = (*FixedAmountPlan)(nil)
 	_ PlanI = (*RatioPlan)(nil)
@@ -21,13 +25,13 @@ var (
 
 // NewBasePlan creates a new BasePlan object
 //nolint:interfacer
-// TODO: accept sdk.AccAddress instead of string for addresses
-func NewBasePlan(id uint64, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time) *BasePlan {
+func NewBasePlan(id uint64, name string, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time) *BasePlan {
 	basePlan := &BasePlan{
 		Id:                 id,
+		Name:               name,
 		Type:               typ,
 		FarmingPoolAddress: farmingPoolAddr,
-		RewardPoolAddress:  GenerateRewardPoolAcc(PlanName(id, typ, farmingPoolAddr)).String(),
+		RewardPoolAddress:  GenerateRewardPoolAcc(PlanUniqueKey(id, typ, farmingPoolAddr)).String(),
 		TerminationAddress: terminationAddr,
 		StakingCoinWeights: coinWeights,
 		StartTime:          startTime,
@@ -125,6 +129,9 @@ func (plan BasePlan) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(plan.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", plan.TerminationAddress, err)
 	}
+	if len(plan.Name) > MaxNameLength {
+		return sdkerrors.Wrapf(ErrInvalidNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
+	}
 	if err := plan.StakingCoinWeights.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
 	}
@@ -162,13 +169,8 @@ func NewRatioPlan(basePlan *BasePlan, epochRatio sdk.Dec) *RatioPlan {
 	}
 }
 
-// Name returns unique name of the plan
-func (plan BasePlan) Name() string {
-	return PlanName(plan.Id, plan.Type, plan.FarmingPoolAddress)
-}
-
-// PlanName returns unique name of the plan consists of given Id, Type and FarmingPoolAddress.
-func PlanName(id uint64, typ PlanType, farmingPoolAddr string) string {
+// PlanUniqueKey returns unique name of the plan consists of given Id, Type and FarmingPoolAddress.
+func PlanUniqueKey(id uint64, typ PlanType, farmingPoolAddr string) string {
 	poolNameObjects := make([]string, 3)
 	poolNameObjects[0] = strconv.FormatUint(id, 10)
 	poolNameObjects[1] = strconv.FormatInt(int64(typ), 10)
@@ -209,4 +211,45 @@ type PlanI interface {
 	SetEndTime(time.Time) error
 
 	String() string
+}
+
+// ValidateRatioPlans validates a farmer's total epoch ratio and plan name.
+// A total epoch ratio cannot be higher than 1 and plan name must not be duplicate.
+func ValidateRatioPlans(i interface{}) error {
+	plans, ok := i.([]PlanI)
+	if !ok {
+		return sdkerrors.Wrapf(ErrInvalidPlanType, "invalid plan type %T", i)
+	}
+
+	totalEpochRatio := make(map[string]sdk.Dec)
+	names := make(map[string]bool)
+
+	for _, plan := range plans {
+		farmingPoolAddr := plan.GetFarmingPoolAddress().String()
+
+		if plan, ok := plan.(*RatioPlan); ok {
+			if err := plan.Validate(); err != nil {
+				return err
+			}
+
+			if epochRatio, ok := totalEpochRatio[farmingPoolAddr]; ok {
+				totalEpochRatio[farmingPoolAddr] = epochRatio.Add(plan.EpochRatio)
+			} else {
+				totalEpochRatio[farmingPoolAddr] = plan.EpochRatio
+			}
+
+			if _, ok := names[plan.Name]; ok {
+				return sdkerrors.Wrap(ErrDuplicatePlanName, plan.Name)
+			}
+			names[plan.Name] = true
+		}
+	}
+
+	for _, farmerRatio := range totalEpochRatio {
+		if farmerRatio.GT(sdk.NewDec(1)) {
+			return sdkerrors.Wrap(ErrInvalidPlanEpochRatio, "total epoch ratio must be lower than 1")
+		}
+	}
+
+	return nil
 }
