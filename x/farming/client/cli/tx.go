@@ -43,7 +43,7 @@ func NewCreateFixedAmountPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-private-fixed-plan [plan-file]",
 		Args:  cobra.ExactArgs(1),
-		Short: "create private fixed amount farming plan",
+		Short: "Create private fixed amount farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create private fixed amount farming plan.
 The plan details must be provided through a JSON file. 
@@ -70,6 +70,14 @@ Where plan.json contains:
     }
   ]
 }
+
+Description for the parameters:
+
+[name]: specifies the name for the plan 
+[staking_coin_weights]: specifies coin weights for the plan
+[start_time]: specifies the time for the plan to start 
+[end_time]: specifies the time for the plan to end
+[epoch_amount]: specifies an amount to distribute for every epoch
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -95,7 +103,7 @@ Where plan.json contains:
 			)
 
 			if err = msg.ValidateBasic(); err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -111,7 +119,7 @@ func NewCreateRatioPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-private-ratio-plan [plan-file]",
 		Args:  cobra.ExactArgs(1),
-		Short: "create private ratio farming plan",
+		Short: "Create private ratio farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create private ratio farming plan.
 The plan details must be provided through a JSON file. 
@@ -133,6 +141,14 @@ Where plan.json contains:
   "end_time": "2022-07-16T08:41:21.662422Z",
   "epoch_ratio": "1.000000000000000000"
 }
+
+Description for the parameters:
+
+[name]: specifies the name for the plan 
+[staking_coin_weights]: specifies coin weights for the plan
+[start_time]: specifies the time for the plan to start 
+[end_time]: specifies the time for the plan to end
+[epoch_ratio]: specifies a ratio to distribute for every epoch. 1.000000000000000000 means to distribute all coins for an epoch
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -158,7 +174,7 @@ Where plan.json contains:
 			)
 
 			if err = msg.ValidateBasic(); err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -174,9 +190,9 @@ func NewStakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stake [amount]",
 		Args:  cobra.ExactArgs(1),
-		Short: "stake coins",
+		Short: "Stake coins into the farming plan",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`stake coins.
+			fmt.Sprintf(`Stake coins into the farming plan.
 Example:
 $ %s tx %s stake 1000uatom --from mykey
 `,
@@ -189,16 +205,19 @@ $ %s tx %s stake 1000uatom --from mykey
 				return err
 			}
 
+			farmer := clientCtx.GetFromAddress()
+
 			stakingCoins, err := sdk.ParseCoinsNormalized(args[0])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgStake(clientCtx.GetFromAddress(), stakingCoins)
+			msg := types.NewMsgStake(farmer, stakingCoins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -206,11 +225,11 @@ $ %s tx %s stake 1000uatom --from mykey
 
 func NewUnstakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unstake",
+		Use:   "unstake [amount]",
 		Args:  cobra.ExactArgs(1),
-		Short: "unstake coins",
+		Short: "Unstake coins from the farming plan",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`unstake coins.
+			fmt.Sprintf(`Unstake coins from the farming plan.
 Example:
 $ %s tx %s unstake 1000uatom --from mykey
 `,
@@ -223,16 +242,19 @@ $ %s tx %s unstake 1000uatom --from mykey
 				return err
 			}
 
+			farmer := clientCtx.GetFromAddress()
+
 			unstakingCoins, err := sdk.ParseCoinsNormalized(args[0])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgUnstake(clientCtx.GetFromAddress(), unstakingCoins)
+			msg := types.NewMsgUnstake(farmer, unstakingCoins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -240,13 +262,13 @@ $ %s tx %s unstake 1000uatom --from mykey
 
 func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "harvest",
-		Args:  cobra.ExactArgs(0),
-		Short: "harvest farming rewards from the farming plan",
+		Use:   "harvest [denoms]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Harvest farming rewards from the farming plan",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`claim farming rewards from the farming plan.
+			fmt.Sprintf(`Harvest farming rewards from the farming plan.
 Example:
-$ %s tx %s harvest --from mykey
+$ %s tx %s harvest "uatom" --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -256,8 +278,11 @@ $ %s tx %s harvest --from mykey
 			if err != nil {
 				return err
 			}
+
 			farmer := clientCtx.GetFromAddress()
 
+			// TODO: not implemented yet
+			// reference gov vote client cli
 			stakingCoinDenoms := []string{"test"}
 
 			msg := types.NewMsgHarvest(farmer, stakingCoinDenoms)
