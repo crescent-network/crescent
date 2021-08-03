@@ -14,8 +14,13 @@ func (k Keeper) GetReward(ctx sdk.Context, stakingCoinDenom string, farmerAcc sd
 	if bz == nil {
 		return reward, false
 	}
-	k.cdc.MustUnmarshal(bz, &reward)
-	return reward, true
+	var rewardCoins types.RewardCoins
+	k.cdc.MustUnmarshal(bz, &rewardCoins)
+	return types.Reward{
+		Farmer:           farmerAcc.String(),
+		StakingCoinDenom: stakingCoinDenom,
+		RewardCoins:      rewardCoins.RewardCoins,
+	}, true
 }
 
 // GetRewardsByFarmer reads from kvstore and return a specific Reward indexed by given farmer's address
@@ -230,7 +235,11 @@ func (k Keeper) DistributeRewards(ctx sdk.Context) error {
 				stakingsByDenom[coinWeight.Denom] = stakings
 
 				for _, staking := range stakings {
-					totalStakedAmtByDenom[coinWeight.Denom] = totalStakedAmtByDenom[coinWeight.Denom].Add(staking.StakedCoins.AmountOf(coinWeight.Denom))
+					totalStakedAmt, ok := totalStakedAmtByDenom[coinWeight.Denom]
+					if !ok {
+						totalStakedAmt = sdk.ZeroInt()
+					}
+					totalStakedAmtByDenom[coinWeight.Denom] = totalStakedAmt.Add(staking.StakedCoins.AmountOf(coinWeight.Denom))
 				}
 			}
 
@@ -253,10 +262,19 @@ func (k Keeper) DistributeRewards(ctx sdk.Context) error {
 			}
 		}
 
-		if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
-			return err
+		if !totalDistrAmt.IsZero() {
+			k.SetLastDistributedTime(ctx, distrInfo.Plan.GetId(), ctx.BlockTime())
+			totalDistributedRewardCoins := k.GetTotalDistributedRewardCoins(ctx, distrInfo.Plan.GetId())
+			totalDistributedRewardCoins = totalDistributedRewardCoins.Add(totalDistrAmt...)
+			k.SetTotalDistributedRewardCoins(ctx, distrInfo.Plan.GetId(), totalDistributedRewardCoins)
+
+			if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
+				return err
+			}
 		}
 	}
+
+	// TODO: emit an endblock event
 
 	return nil
 }
