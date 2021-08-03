@@ -262,13 +262,13 @@ $ %s tx %s unstake 1000uatom --from mykey
 
 func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "harvest [denoms]",
+		Use:   "harvest [staking-coin-denoms]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Harvest farming rewards from the farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Harvest farming rewards from the farming plan.
 Example:
-$ %s tx %s harvest "uatom" --from mykey
+$ %s tx %s harvest "uatom,uiris,ukava" --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -281,29 +281,34 @@ $ %s tx %s harvest "uatom" --from mykey
 
 			farmer := clientCtx.GetFromAddress()
 
-			// TODO: not implemented yet
-			// reference gov vote client cli
-			stakingCoinDenoms := []string{"test"}
+			denoms := []string{}
+			denoms = append(denoms, strings.Split(args[0], ",")...)
 
-			msg := types.NewMsgHarvest(farmer, stakingCoinDenoms)
+			if len(denoms) == 0 {
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin denoms should be provided")
+			}
+
+			msg := types.NewMsgHarvest(farmer, denoms)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-// GetCmdSubmitPublicPlanProposal implements a command handler for submitting a public farming plan transaction to create, update, delete plan.
+// GetCmdSubmitPublicPlanProposal implements a command handler for submitting a public farming plan transaction to create, update, and delete plan.
 func GetCmdSubmitPublicPlanProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "public-farming-plan [proposal-file] [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a public farming plan",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a a public farming plan along with an initial deposit.
-The proposal details must be supplied via a JSON file.
+			fmt.Sprintf(`Submit a a public farming plan along with an initial deposit. You can submit this governance proposal
+to add, update, and delete farming plan. The proposal details must be supplied via a JSON file. A JSON file to add plan request proposal is 
+provided below. For more examples, please refer to https://github.com/tendermint/farming/blob/master/docs/How-To/farming_plans.md
 
 Example:
 $ %s tx gov submit-proposal public-farming-plan <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
