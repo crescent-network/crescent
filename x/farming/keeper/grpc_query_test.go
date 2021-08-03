@@ -150,3 +150,51 @@ func (suite *KeeperTestSuite) TestGRPCPlans() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGRPCPlan() {
+	for _, plan := range suite.samplePlans {
+		suite.keeper.SetPlan(suite.ctx, plan)
+	}
+
+	querier := keeper.Querier{Keeper: suite.keeper}
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryPlanRequest
+		expectErr bool
+		postRun   func(*types.QueryPlanResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"query by id",
+			&types.QueryPlanRequest{PlanId: 1},
+			false,
+			func(resp *types.QueryPlanResponse) {
+				plan, err := types.UnpackPlan(resp.Plan)
+				suite.Require().NoError(err)
+				suite.Require().Equal(plan.GetId(), uint64(1))
+			},
+		},
+		{
+			"id not found",
+			&types.QueryPlanRequest{PlanId: 5},
+			true,
+			nil,
+		},
+	} {
+		suite.Run(tc.name, func() {
+			resp, err := querier.Plan(sdk.WrapSDKContext(suite.ctx), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
