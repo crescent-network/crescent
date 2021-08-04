@@ -182,9 +182,12 @@ func NewStakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stake [amount]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Stake coins into the farming plan",
+		Short: "Stake coins",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Stake coins into the farming plan.
+			fmt.Sprintf(`Stake coins. 
+			
+To get farming rewards, it is recommended to check which plans are available on a network. 
+
 Example:
 $ %s tx %s stake 1000uatom --from mykey
 `,
@@ -219,9 +222,12 @@ func NewUnstakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unstake [amount]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Unstake coins from the farming plan",
+		Short: "Unstake coins",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Unstake coins from the farming plan.
+			fmt.Sprintf(`Unstake coins. 
+			
+Note that this action doesn't require any period to unstake your coins.
+
 Example:
 $ %s tx %s unstake 1000uatom --from mykey
 `,
@@ -256,7 +262,7 @@ func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "harvest [staking-coin-denoms]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Harvest farming rewards from the farming plan",
+		Short: "Harvest farming rewards from the denoms that belong to plans",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Harvest farming rewards from the farming plan.
 Example:
@@ -273,9 +279,7 @@ $ %s tx %s harvest "uatom,uiris,ukava" --from mykey
 
 			farmer := clientCtx.GetFromAddress()
 
-			denoms := []string{}
-			denoms = append(denoms, strings.Split(args[0], ",")...)
-
+			denoms := strings.Split(args[0], ",")
 			if len(denoms) == 0 {
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin denoms should be provided")
 			}
