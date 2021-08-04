@@ -16,11 +16,8 @@ import (
 func TestMsgCreateFixedAmountPlan(t *testing.T) {
 	name := "test"
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
-	stakingCoinWeights := sdk.NewDecCoins(
-		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
-	)
-	// needs to be deterministic for test
-	startTime, _ := time.Parse(time.RFC3339, "2021-11-01T22:08:41+00:00")
+	stakingCoinWeights := sdk.NewDecCoins(sdk.DecCoin{Denom: "farmingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")})
+	startTime, _ := time.Parse(time.RFC3339, "2021-11-01T22:08:41+00:00") // needs to be deterministic for test
 	endTime := startTime.AddDate(1, 0, 0)
 
 	testCases := []struct {
@@ -49,14 +46,14 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 			),
 		},
 		{
-			"staking coin weights must not be empty",
+			"staking coin weights must not be empty: invalid request",
 			types.NewMsgCreateFixedAmountPlan(
 				name, farmingPoolAddr, sdk.NewDecCoins(),
 				startTime, endTime, sdk.Coins{sdk.NewCoin("uatom", sdk.NewInt(1))},
 			),
 		},
 		{
-			"epoch amount must not be empty",
+			"epoch amount must not be empty: invalid request",
 			types.NewMsgCreateFixedAmountPlan(
 				name, farmingPoolAddr, stakingCoinWeights,
 				startTime, endTime, sdk.Coins{},
@@ -85,11 +82,8 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 func TestMsgCreateRatioPlan(t *testing.T) {
 	name := "test"
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
-	stakingCoinWeights := sdk.NewDecCoins(
-		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
-	)
-	// needs to be deterministic for test
-	startTime, _ := time.Parse(time.RFC3339, "2021-11-01T22:08:41+00:00")
+	stakingCoinWeights := sdk.NewDecCoins(sdk.DecCoin{Denom: "farmingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")})
+	startTime, _ := time.Parse(time.RFC3339, "2021-11-01T22:08:41+00:00") // needs to be deterministic for test
 	endTime := startTime.AddDate(1, 0, 0)
 
 	testCases := []struct {
@@ -118,14 +112,14 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 			),
 		},
 		{
-			"staking coin weights must not be empty",
+			"staking coin weights must not be empty: invalid request",
 			types.NewMsgCreateRatioPlan(
 				name, farmingPoolAddr, sdk.NewDecCoins(),
 				startTime, endTime, sdk.NewDec(1),
 			),
 		},
 		{
-			"invalid plan epoch ratio",
+			"invalid epoch ratio: invalid request",
 			types.NewMsgCreateRatioPlan(
 				name, farmingPoolAddr, stakingCoinWeights,
 				startTime, endTime, sdk.NewDec(-1),
@@ -153,9 +147,7 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 
 func TestMsgStake(t *testing.T) {
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
-	stakingCoins := sdk.NewCoins(
-		sdk.NewCoin("testFarmStakingCoinDenom", sdk.NewInt(1)),
-	)
+	stakingCoins := sdk.NewCoins(sdk.NewCoin("farmingCoinDenom", sdk.NewInt(1)))
 
 	testCases := []struct {
 		expectedErr string
@@ -165,7 +157,14 @@ func TestMsgStake(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgStake(farmingPoolAddr, stakingCoins),
 		},
-		// TODO" not implemented yet
+		{
+			"invalid farmer address \"\": empty address string is not allowed: invalid address",
+			types.NewMsgStake(sdk.AccAddress{}, stakingCoins),
+		},
+		{
+			"staking coins must not be zero: invalid request",
+			types.NewMsgStake(farmingPoolAddr, sdk.NewCoins(sdk.NewCoin("farmingCoinDenom", sdk.NewInt(0)))),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -188,9 +187,7 @@ func TestMsgStake(t *testing.T) {
 
 func TestMsgUnstake(t *testing.T) {
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
-	stakingCoins := sdk.NewCoins(
-		sdk.NewCoin("testFarmStakingCoinDenom", sdk.NewInt(1)),
-	)
+	stakingCoins := sdk.NewCoins(sdk.NewCoin("farmingCoinDenom", sdk.NewInt(1)))
 
 	testCases := []struct {
 		expectedErr string
@@ -200,7 +197,10 @@ func TestMsgUnstake(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgUnstake(farmingPoolAddr, stakingCoins),
 		},
-		// TODO" not implemented yet
+		{
+			"invalid farmer address \"\": empty address string is not allowed: invalid address",
+			types.NewMsgUnstake(sdk.AccAddress{}, stakingCoins),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -222,8 +222,8 @@ func TestMsgUnstake(t *testing.T) {
 }
 
 func TestMsgHarvest(t *testing.T) {
-	stakingCoinDenoms := []string{""}
 	farmingPoolAddr := sdk.AccAddress(crypto.AddressHash([]byte("farmingPoolAddr")))
+	stakingCoinDenoms := []string{"uatom", "uiris", "ukava"}
 
 	testCases := []struct {
 		expectedErr string
@@ -233,7 +233,14 @@ func TestMsgHarvest(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgHarvest(farmingPoolAddr, stakingCoinDenoms),
 		},
-		// TODO" not implemented yet
+		{
+			"invalid farmer address \"\": empty address string is not allowed: invalid address",
+			types.NewMsgHarvest(sdk.AccAddress{}, stakingCoinDenoms),
+		},
+		{
+			"staking coin denoms must be provided at least one: invalid request",
+			types.NewMsgHarvest(farmingPoolAddr, []string{}),
+		},
 	}
 
 	for _, tc := range testCases {

@@ -75,6 +75,10 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 				p.EpochRatio,
 			)
 
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			plan, err := k.CreateRatioPlan(ctx, msg, types.PlanTypePublic)
 			if err != nil {
 				return err
@@ -150,6 +154,10 @@ func (k Keeper) UpdatePublicPlanProposal(ctx sdk.Context, proposals []*types.Upd
 			logger.Info("updated public fixed amount plan", "fixed_amount_plan", plan)
 
 		case *types.RatioPlan:
+			if err := plan.Validate(); err != nil {
+				return err
+			}
+
 			if p.GetFarmingPoolAddress() != "" {
 				farmingPoolAddrAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
 				if err != nil {
