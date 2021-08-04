@@ -82,7 +82,7 @@ message QueryStakingsRequest {
 
 // QueryStakingsResponse is the response type for the Query/Stakings RPC method.
 message QueryStakingsResponse {
-  repeated Staking                       stakings   = 1;
+  repeated Staking                       stakings   = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -95,6 +95,6 @@ message QueryRewardsRequest {
 
 // QueryRewardsResponse is the response type for the Query/Rewards RPC method.
 message QueryRewardsResponse {
-  repeated Reward                        rewards    = 1;
+  repeated Reward                        rewards    = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

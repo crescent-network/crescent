@@ -228,7 +228,7 @@ func (suite *KeeperTestSuite) TestGRPCStakings() {
 			},
 		},
 		{
-			"query by farmer address",
+			"query by farmer addr",
 			&types.QueryStakingsRequest{Farmer: suite.addrs[0].String()},
 			false,
 			func(resp *types.QueryStakingsResponse) {
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestGRPCStakings() {
 			},
 		},
 		{
-			"invalid farmer address",
+			"invalid farmer addr",
 			&types.QueryStakingsRequest{Farmer: "invalid"},
 			true,
 			nil,
@@ -259,6 +259,20 @@ func (suite *KeeperTestSuite) TestGRPCStakings() {
 			true,
 			nil,
 		},
+		{
+			"query by farmer addr and staking coin denom",
+			&types.QueryStakingsRequest{
+				Farmer:           suite.addrs[0].String(),
+				StakingCoinDenom: denom1,
+			},
+			false,
+			func(resp *types.QueryStakingsResponse) {
+				suite.Require().Len(resp.Stakings, 1)
+				suite.Require().Equal(suite.addrs[0], resp.Stakings[0].GetFarmer())
+				suite.Require().True(
+					resp.Stakings[0].StakedCoins.Add(resp.Stakings[0].QueuedCoins...).AmountOf(denom1).IsPositive())
+			},
+		},
 	} {
 		suite.Run(tc.name, func() {
 			resp, err := suite.querier.Stakings(sdk.WrapSDKContext(suite.ctx), tc.req)
@@ -273,6 +287,13 @@ func (suite *KeeperTestSuite) TestGRPCStakings() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCRewards() {
+	// Set rewards manually for testing.
+	// Actual reward distribution doesn't work like this.
+	suite.keeper.SetReward(suite.ctx, denom1, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)))
+	suite.keeper.SetReward(suite.ctx, denom2, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)))
+	suite.keeper.SetReward(suite.ctx, denom1, suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)))
+	suite.keeper.SetReward(suite.ctx, denom2, suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)))
+
 	for _, tc := range []struct {
 		name      string
 		req       *types.QueryRewardsRequest
@@ -284,6 +305,61 @@ func (suite *KeeperTestSuite) TestGRPCRewards() {
 			nil,
 			true,
 			nil,
+		},
+		{
+			"query all",
+			&types.QueryRewardsRequest{},
+			false,
+			func(resp *types.QueryRewardsResponse) {
+				suite.Require().Len(resp.Rewards, 4)
+			},
+		},
+		{
+			"query by farmer addr",
+			&types.QueryRewardsRequest{Farmer: suite.addrs[0].String()},
+			false,
+			func(resp *types.QueryRewardsResponse) {
+				suite.Require().Len(resp.Rewards, 2)
+				for _, reward := range resp.Rewards {
+					suite.Require().Equal(suite.addrs[0].String(), reward.Farmer)
+				}
+			},
+		},
+		{
+			"invalid farmer addr",
+			&types.QueryRewardsRequest{Farmer: "invalid"},
+			true,
+			nil,
+		},
+		{
+			"query by staking coin denom",
+			&types.QueryRewardsRequest{StakingCoinDenom: denom1},
+			false,
+			func(resp *types.QueryRewardsResponse) {
+				suite.Require().Len(resp.Rewards, 2)
+				for _, reward := range resp.Rewards {
+					suite.Require().Equal(denom1, reward.StakingCoinDenom)
+				}
+			},
+		},
+		{
+			"invalid staking coin denom",
+			&types.QueryRewardsRequest{StakingCoinDenom: "!!!"},
+			true,
+			nil,
+		},
+		{
+			"query by farmer addr and staking coin denom",
+			&types.QueryRewardsRequest{
+				Farmer:           suite.addrs[0].String(),
+				StakingCoinDenom: denom1,
+			},
+			false,
+			func(resp *types.QueryRewardsResponse) {
+				suite.Require().Len(resp.Rewards, 1)
+				suite.Require().Equal(suite.addrs[0], resp.Rewards[0].GetFarmer())
+				suite.Require().Equal(denom1, resp.Rewards[0].StakingCoinDenom)
+			},
 		},
 	} {
 		suite.Run(tc.name, func() {

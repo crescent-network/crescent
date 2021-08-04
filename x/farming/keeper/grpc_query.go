@@ -151,7 +151,7 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	var stakings []*types.Staking
+	var stakings []types.Staking
 	var pageRes *query.PageResponse
 	var err error
 
@@ -177,7 +177,7 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 			}
 
 			if found {
-				stakings = append(stakings, &staking)
+				stakings = append(stakings, staking)
 			}
 		}
 
@@ -192,7 +192,7 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 			pageRes, err = query.Paginate(indexStore, req.Pagination, func(key, value []byte) error {
 				_, stakingID := types.ParseStakingsByStakingCoinDenomIndexKey(append(storePrefix, key...))
 				staking, _ := k.GetStaking(ctx, stakingID)
-				stakings = append(stakings, &staking)
+				stakings = append(stakings, staking)
 				return nil
 			})
 		} else {
@@ -200,7 +200,7 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 			pageRes, err = query.Paginate(stakingStore, req.Pagination, func(key, value []byte) error {
 				var staking types.Staking
 				k.cdc.MustUnmarshal(value, &staking)
-				stakings = append(stakings, &staking)
+				stakings = append(stakings, staking)
 				return nil
 			})
 		}
@@ -225,7 +225,7 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	var rewards []*types.Reward
+	var rewards []types.Reward
 	var pageRes *query.PageResponse
 	var err error
 
@@ -250,7 +250,7 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 				return false, fmt.Errorf("reward not found")
 			}
 			if accumulate {
-				rewards = append(rewards, &reward)
+				rewards = append(rewards, reward)
 			}
 			return true, nil
 		})
@@ -269,7 +269,7 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 			if err != nil {
 				return err
 			}
-			rewards = append(rewards, &types.Reward{
+			rewards = append(rewards, types.Reward{
 				Farmer:           farmerAcc.String(),
 				StakingCoinDenom: stakingCoinDenom,
 				RewardCoins:      rewardCoins.RewardCoins,
