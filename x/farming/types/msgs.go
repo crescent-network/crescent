@@ -56,13 +56,16 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
 	}
 	if msg.StakingCoinWeights.Empty() {
-		return ErrEmptyStakingCoinWeights
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
 	}
 	if err := msg.StakingCoinWeights.Validate(); err != nil {
 		return err
 	}
+	if ok := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	}
 	if msg.EpochAmount.Empty() {
-		return ErrEmptyEpochAmount
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
 	}
 	if err := msg.EpochAmount.Validate(); err != nil {
 		return err
@@ -121,16 +124,19 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
 	}
 	if msg.StakingCoinWeights.Empty() {
-		return ErrEmptyStakingCoinWeights
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
 	}
 	if err := msg.StakingCoinWeights.Validate(); err != nil {
 		return err
 	}
+	if ok := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	}
 	if !msg.EpochRatio.IsPositive() {
-		return ErrInvalidPlanEpochRatio
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
 	}
 	if msg.EpochRatio.GT(sdk.NewDec(1)) {
-		return ErrInvalidPlanEpochRatio
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
 	}
 	return nil
 }
@@ -173,6 +179,9 @@ func (msg MsgStake) Type() string { return TypeMsgStake }
 func (msg MsgStake) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farmer address %q: %v", msg.Farmer, err)
+	}
+	if ok := msg.StakingCoins.IsZero(); ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coins must not be zero")
 	}
 	if err := msg.StakingCoins.Validate(); err != nil {
 		return err
@@ -261,9 +270,16 @@ func (msg MsgHarvest) Route() string { return RouterKey }
 func (msg MsgHarvest) Type() string { return TypeMsgHarvest }
 
 func (msg MsgHarvest) ValidateBasic() error {
-	// TODO: validate stakingCoinDenom
 	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farmer address %q: %v", msg.Farmer, err)
+	}
+	if len(msg.StakingCoinDenoms) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin denoms must be provided at least one")
+	}
+	for _, denom := range msg.StakingCoinDenoms {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return err
+		}
 	}
 	return nil
 }

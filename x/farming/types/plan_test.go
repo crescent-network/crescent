@@ -96,7 +96,7 @@ func TestRatioPlans(t *testing.T) {
 					sdk.NewDec(1),
 				),
 			},
-			sdkerrors.Wrap(types.ErrInvalidPlanEpochRatio, "total epoch ratio must be lower than 1"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total epoch ratio must be lower than 1"),
 		},
 	}
 
