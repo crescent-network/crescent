@@ -3,16 +3,20 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
 )
+
+func (suite *KeeperTestSuite) TestGRPCParams() {
+	resp, err := suite.querier.Params(sdk.WrapSDKContext(suite.ctx), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+
+	suite.Require().Equal(suite.keeper.GetParams(suite.ctx), resp.Params)
+}
 
 func (suite *KeeperTestSuite) TestGRPCPlans() {
 	for _, plan := range suite.samplePlans {
 		suite.keeper.SetPlan(suite.ctx, plan)
 	}
-
-	querier := keeper.Querier{Keeper: suite.keeper}
 
 	for _, tc := range []struct {
 		name      string
@@ -140,7 +144,7 @@ func (suite *KeeperTestSuite) TestGRPCPlans() {
 		},
 	} {
 		suite.Run(tc.name, func() {
-			resp, err := querier.Plans(sdk.WrapSDKContext(suite.ctx), tc.req)
+			resp, err := suite.querier.Plans(sdk.WrapSDKContext(suite.ctx), tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
@@ -155,8 +159,6 @@ func (suite *KeeperTestSuite) TestGRPCPlan() {
 	for _, plan := range suite.samplePlans {
 		suite.keeper.SetPlan(suite.ctx, plan)
 	}
-
-	querier := keeper.Querier{Keeper: suite.keeper}
 
 	for _, tc := range []struct {
 		name      string
@@ -188,7 +190,59 @@ func (suite *KeeperTestSuite) TestGRPCPlan() {
 		},
 	} {
 		suite.Run(tc.name, func() {
-			resp, err := querier.Plan(sdk.WrapSDKContext(suite.ctx), tc.req)
+			resp, err := suite.querier.Plan(sdk.WrapSDKContext(suite.ctx), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCStakings() {
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryStakingsRequest
+		expectErr bool
+		postRun   func(response *types.QueryStakingsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+	} {
+		suite.Run(tc.name, func() {
+			resp, err := suite.querier.Stakings(sdk.WrapSDKContext(suite.ctx), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCRewards() {
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryRewardsRequest
+		expectErr bool
+		postRun   func(response *types.QueryRewardsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+	} {
+		suite.Run(tc.name, func() {
+			resp, err := suite.querier.Rewards(sdk.WrapSDKContext(suite.ctx), tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {

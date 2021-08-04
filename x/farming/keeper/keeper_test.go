@@ -34,6 +34,7 @@ type KeeperTestSuite struct {
 	app                 *simapp.FarmingApp
 	ctx                 sdk.Context
 	keeper              keeper.Keeper
+	querier             keeper.Querier
 	addrs               []sdk.AccAddress
 	sampleFixedAmtPlans []types.PlanI
 	sampleRatioPlans    []types.PlanI
@@ -51,6 +52,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.keeper = suite.app.FarmingKeeper
+	suite.querier = keeper.Querier{Keeper: suite.keeper}
 	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
 	for _, addr := range suite.addrs {
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
