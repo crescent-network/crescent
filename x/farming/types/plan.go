@@ -259,7 +259,7 @@ func ValidateRatioPlans(i interface{}) error {
 
 // ValidateStakingCoinTotalWeights validates the total staking coin weights must be equal to 1.
 func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) bool {
-	var totalWeight sdk.Dec
+	totalWeight := sdk.ZeroDec()
 	for _, w := range weights {
 		totalWeight = totalWeight.Add(w.Amount)
 	}
