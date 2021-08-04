@@ -202,6 +202,11 @@ func (suite *KeeperTestSuite) TestGRPCPlan() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCStakings() {
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500)))
+	suite.Stake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom2, 800)))
+	suite.keeper.ProcessQueuedCoins(suite.ctx)
+
 	for _, tc := range []struct {
 		name      string
 		req       *types.QueryStakingsRequest
@@ -211,6 +216,46 @@ func (suite *KeeperTestSuite) TestGRPCStakings() {
 		{
 			"nil request",
 			nil,
+			true,
+			nil,
+		},
+		{
+			"query all",
+			&types.QueryStakingsRequest{},
+			false,
+			func(resp *types.QueryStakingsResponse) {
+				suite.Require().Len(resp.Stakings, 3)
+			},
+		},
+		{
+			"query by farmer address",
+			&types.QueryStakingsRequest{Farmer: suite.addrs[0].String()},
+			false,
+			func(resp *types.QueryStakingsResponse) {
+				suite.Require().Len(resp.Stakings, 1)
+				suite.Require().Equal(suite.addrs[0], resp.Stakings[0].GetFarmer())
+			},
+		},
+		{
+			"invalid farmer address",
+			&types.QueryStakingsRequest{Farmer: "invalid"},
+			true,
+			nil,
+		},
+		{
+			"query by staking coin denom",
+			&types.QueryStakingsRequest{StakingCoinDenom: denom1},
+			false,
+			func(resp *types.QueryStakingsResponse) {
+				suite.Require().Len(resp.Stakings, 2)
+				for _, staking := range resp.Stakings {
+					suite.Require().True(staking.StakedCoins.Add(staking.QueuedCoins...).AmountOf(denom1).IsPositive())
+				}
+			},
+		},
+		{
+			"invalid staking coin denom",
+			&types.QueryStakingsRequest{Farmer: "!!!"},
 			true,
 			nil,
 		},
