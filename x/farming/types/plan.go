@@ -135,6 +135,9 @@ func (plan BasePlan) Validate() error {
 	if err := plan.StakingCoinWeights.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
 	}
+	if ok := ValidateStakingCoinTotalWeights(plan.StakingCoinWeights); !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	}
 	if !plan.EndTime.After(plan.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", plan.EndTime, plan.StartTime)
 	}
@@ -252,4 +255,13 @@ func ValidateRatioPlans(i interface{}) error {
 	}
 
 	return nil
+}
+
+// ValidateStakingCoinTotalWeights validates the total staking coin weights must be equal to 1.
+func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) bool {
+	var totalWeight sdk.Dec
+	for _, w := range weights {
+		totalWeight = totalWeight.Add(w.Amount)
+	}
+	return totalWeight.Equal(sdk.NewDec(1))
 }

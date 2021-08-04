@@ -102,10 +102,6 @@ Description for the parameters:
 				plan.EpochAmount,
 			)
 
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -172,10 +168,6 @@ Description for the parameters:
 				plan.EndTime,
 				plan.EpochRatio,
 			)
-
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

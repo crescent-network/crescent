@@ -61,6 +61,9 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 	if err := msg.StakingCoinWeights.Validate(); err != nil {
 		return err
 	}
+	if ok := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	}
 	if msg.EpochAmount.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
 	}
@@ -125,6 +128,9 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 	}
 	if err := msg.StakingCoinWeights.Validate(); err != nil {
 		return err
+	}
+	if ok := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
 	}
 	if !msg.EpochRatio.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
