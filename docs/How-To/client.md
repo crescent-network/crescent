@@ -33,6 +33,15 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 --yes
 
 # An example of private-fixed-plan.json file
+#
+# This private fixed amount farming plan intends to provide 100ATOM per epoch (measured in day) 
+# relative to the rate amount of denoms defined in staking coin weights. 
+#
+# Parameter Description
+#
+# name: it can be any name you prefer to be stored in a network. It cannot be overlap with the existing names.
+# staking_coin_weights: an amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
+# epoch_amount: this is an amount that you want to provide as incentive for staking denoms defined in staking coin weights.
 {
   "name": "This plan intends to provide incentives for Cosmonauts!",
   "staking_coin_weights": [
@@ -50,7 +59,7 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
   "epoch_amount": [
     {
       "denom": "uatom",
-      "amount": "1"
+      "amount": "100000000"
     }
   ]
 }
@@ -129,6 +138,15 @@ farmingd tx farming create-private-ratio-plan private-ratio-plan.json \
 --yes
 
 # An example of private-ratio-plan.json
+#
+# This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day).
+# In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has are going to be used as incentives for the stakings.
+#
+# Parameter Description
+#
+# name: it can be any name you prefer to be stored in a network. It cannot be overlap with the existing names.
+# staking_coin_weights: an amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
+# epoch_ratio: distributing ratio (of all coins that the creator has) per epoch. The total ratio cannot exceed 1.000000000000000000 (100%)
 {
   "name": "This plan intends to provide incentives for Cosmonauts!",
   "staking_coin_weights": [
@@ -139,7 +157,7 @@ farmingd tx farming create-private-ratio-plan private-ratio-plan.json \
   ],
   "start_time": "2021-07-15T08:41:21.662422Z",
   "end_time": "2022-07-16T08:41:21.662422Z",
-  "epoch_ratio": "0.500000000000000000"
+  "epoch_ratio": "0.100000000000000000"
 }
 ```
 
@@ -200,14 +218,14 @@ farmingd tx farming create-private-ratio-plan private-ratio-plan.json \
 
 ```bash
 # Stake coins into the farming plan
-farmingd tx farming stake 100000uatom \
+farmingd tx farming stake 10000000uatom \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
 --yes
 
 # Stake coins into the farming plan
-farmingd tx farming stake 100000stake \
+farmingd tx farming stake 10000000stake \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -225,7 +243,7 @@ farmingd tx farming stake 100000stake \
             "staking_coins": [
               {
                 "denom": "uatom",
-                "amount": "100000"
+                "amount": "10000000"
               }
             ]
           }
@@ -270,7 +288,7 @@ farmingd tx farming stake 100000stake \
 
 ```bash
 # Unstake coins from the farming plan
-farmingd tx farming unstake 5000uatom \
+farmingd tx farming unstake 50000uatom \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -288,7 +306,7 @@ farmingd tx farming unstake 5000uatom \
         "unstaking_coins": [
           {
             "denom": "uatom",
-            "amount": "5000"
+            "amount": "50000"
           }
         ]
       }
