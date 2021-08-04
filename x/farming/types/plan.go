@@ -132,6 +132,9 @@ func (plan BasePlan) Validate() error {
 	if len(plan.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
+	if plan.StakingCoinWeights.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
+	}
 	if err := plan.StakingCoinWeights.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
 	}
