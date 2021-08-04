@@ -89,7 +89,7 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
         "epoch_amount": [
           {
             "denom": "uatom",
-            "amount": "1"
+            "amount": "100000000"
           }
         ]
       }
