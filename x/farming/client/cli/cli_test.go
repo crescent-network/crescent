@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	farmingtestutil "github.com/tendermint/farming/x/farming/client/testutil"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
-	tmdb "github.com/tendermint/tm-db"
 )
 
 type IntegrationTestSuite struct {
