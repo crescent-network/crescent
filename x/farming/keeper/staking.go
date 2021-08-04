@@ -203,6 +203,14 @@ func (k Keeper) Stake(ctx sdk.Context, farmer sdk.AccAddress, amount sdk.Coins) 
 	k.SetStaking(ctx, staking)
 	k.SetStakingIndex(ctx, staking)
 
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeStake,
+			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
+			sdk.NewAttribute(types.AttributeKeyStakingCoins, amount.String()),
+		),
+	})
+
 	return staking, nil
 }
 
@@ -256,6 +264,14 @@ func (k Keeper) Unstake(ctx sdk.Context, farmer sdk.AccAddress, amount sdk.Coins
 			k.DeleteStakingCoinDenomsIndex(ctx, staking.Id, removedDenoms)
 		}
 	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUnstake,
+			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
+			sdk.NewAttribute(types.AttributeKeyUnstakingCoins, amount.String()),
+		),
+	})
 
 	// We're returning a Staking even if it has deleted.
 	return staking, nil
