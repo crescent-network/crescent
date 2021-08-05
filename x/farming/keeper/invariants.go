@@ -52,7 +52,7 @@ func RemainingRewardsAmountInvariant(k Keeper) sdk.Invariant {
 			return false
 		})
 		k.IterateAllRewards(ctx, func(reward types.Reward) (stop bool) {
-			totalRemainingRewards.Add(reward.RewardCoins...)
+			totalRemainingRewards = totalRemainingRewards.Add(reward.RewardCoins...)
 			return false
 		})
 

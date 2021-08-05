@@ -37,7 +37,6 @@ func (suite *KeeperTestSuite) TestGetSetNewPlan() {
 	suite.Require().Len(plans, 1)
 	suite.Require().Equal(fixedPlan, plans[0])
 
-	// TODO: tmp test codes for testing functionality, need to separated
 	_, err := suite.keeper.Stake(suite.ctx, farmerAddr, stakingCoins)
 	suite.Require().NoError(err)
 
@@ -49,13 +48,4 @@ func (suite *KeeperTestSuite) TestGetSetNewPlan() {
 	suite.Require().True(found)
 	suite.Require().Equal(stakings[0], stakingByFarmer)
 	suite.Require().Equal(stakings, stakingsByDenom)
-
-	suite.keeper.SetReward(suite.ctx, sdk.DefaultBondDenom, farmerAddr, stakingCoins)
-
-	//rewards := suite.keeper.GetAllRewards(ctx)
-	//rewardsByFarmer := suite.keeper.GetRewardsByFarmer(ctx, farmerAddr)
-	//rewardsByDenom := suite.keeper.GetRewardsByStakingCoinDenom(ctx, sdk.DefaultBondDenom)
-	//
-	//suite.Require().Equal(rewards, rewardsByFarmer)
-	//suite.Require().Equal(rewards, rewardsByDenom)
 }
