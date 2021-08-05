@@ -308,5 +308,5 @@ func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) bool {
 
 // IsPlanActiveAt returns if the plan is active at given time t.
 func IsPlanActiveAt(plan PlanI, t time.Time) bool {
-	return !plan.GetStartTime().After(t) && !plan.GetEndTime().Before(t)
+	return !plan.GetStartTime().After(t) && plan.GetEndTime().After(t)
 }
