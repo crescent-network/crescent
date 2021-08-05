@@ -164,7 +164,7 @@ func (k Keeper) UnmarshalStaking(bz []byte) (staking types.Staking, err error) {
 
 // ReserveStakingCoins sends staking coins to the staking reserve account.
 func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmer sdk.AccAddress, stakingCoins sdk.Coins) error {
-	if err := k.bankKeeper.SendCoins(ctx, farmer, k.GetStakingStakingReservePoolAcc(ctx), stakingCoins); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, farmer, k.GetStakingReservePoolAcc(ctx), stakingCoins); err != nil {
 		return err
 	}
 	return nil
@@ -172,7 +172,7 @@ func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmer sdk.AccAddress, stak
 
 // ReleaseStakingCoins sends staking coins back to the farmer.
 func (k Keeper) ReleaseStakingCoins(ctx sdk.Context, farmer sdk.AccAddress, unstakingCoins sdk.Coins) error {
-	if err := k.bankKeeper.SendCoins(ctx, k.GetStakingStakingReservePoolAcc(ctx), farmer, unstakingCoins); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, k.GetStakingReservePoolAcc(ctx), farmer, unstakingCoins); err != nil {
 		return err
 	}
 	return nil

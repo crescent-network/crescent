@@ -22,6 +22,7 @@ var (
 	DefaultEpochDays              = uint32(1)
 	DefaultFarmingFeeCollector    = sdk.AccAddress(address.Module(ModuleName, []byte("FarmingFeeCollectorAcc"))).String()
 	StakingReserveAcc             = sdk.AccAddress(address.Module(ModuleName, []byte("StakingReserveAcc")))
+	RewardsReserveAcc             = sdk.AccAddress(address.Module(ModuleName, []byte("RewardsReserveAcc")))
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
