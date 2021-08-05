@@ -81,9 +81,14 @@ func (k Keeper) GetStakingCreationFeePool(ctx sdk.Context) authtypes.ModuleAccou
 	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// GetStakingStakingReservePoolAcc returns module account for Staking Reserve Pool account
-func (k Keeper) GetStakingStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
+// GetStakingReservePoolAcc returns module account for Staking Reserve Pool account
+func (k Keeper) GetStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
 	return types.StakingReserveAcc
+}
+
+// GetRewardsReservePoolAcc returns temporary module account for Reward coins Reserve Pool account
+func (k Keeper) GetRewardsReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
+	return types.RewardsReserveAcc
 }
 
 // GetFarmingFeeCollectorAcc returns module account for the farming fee collector account.
