@@ -57,7 +57,7 @@ A farmer should harvest their farming rewards. The rewards are not automatically
 
 ```go
 type MsgHarvest struct {
-    Farmer             string
-    StakingCoinDenom   string
+    Farmer              string
+    StakingCoinDenoms   []string
 }
 ```
