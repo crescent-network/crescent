@@ -22,6 +22,7 @@ type Querier struct {
 
 var _ types.QueryServer = Querier{}
 
+// Params queries the parameters of the farming module.
 func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
@@ -29,6 +30,7 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
+// Plans queries all plans.
 func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.QueryPlansResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -119,6 +121,7 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 	return &types.QueryPlansResponse{Plans: plans, Pagination: pageRes}, nil
 }
 
+// Plan queries a specific plan.
 func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.QueryPlanResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -138,6 +141,7 @@ func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.Qu
 	return &types.QueryPlanResponse{Plan: any}, nil
 }
 
+// Stakings queries all stakings.
 func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*types.QueryStakingsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -212,6 +216,22 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 	return &types.QueryStakingsResponse{Stakings: stakings, Pagination: pageRes}, nil
 }
 
+// Staking queries a specific staking.
+func (k Querier) Staking(c context.Context, req *types.QueryStakingRequest) (*types.QueryStakingResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	staking, found := k.GetStaking(ctx, req.StakingId)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "staking %d not found", req.StakingId)
+	}
+
+	return &types.QueryStakingResponse{Staking: staking}, nil
+}
+
+// Rewards queries all rewards.
 func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

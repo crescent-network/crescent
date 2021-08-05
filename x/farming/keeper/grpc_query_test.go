@@ -286,6 +286,51 @@ func (suite *KeeperTestSuite) TestGRPCStakings() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGRPCStaking() {
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500)))
+	suite.Stake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom2, 800)))
+	suite.keeper.ProcessQueuedCoins(suite.ctx)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryStakingRequest
+		expectErr bool
+		postRun   func(*types.QueryStakingResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"query by id",
+			&types.QueryStakingRequest{StakingId: 1},
+			false,
+			func(resp *types.QueryStakingResponse) {
+				suite.Require().Equal(uint64(1), resp.Staking.Id)
+			},
+		},
+		{
+			"id not found",
+			&types.QueryStakingRequest{StakingId: 10},
+			true,
+			nil,
+		},
+	} {
+		suite.Run(tc.name, func() {
+			resp, err := suite.querier.Staking(sdk.WrapSDKContext(suite.ctx), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGRPCRewards() {
 	// Set rewards manually for testing.
 	// Actual reward distribution doesn't work like this.
