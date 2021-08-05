@@ -20,9 +20,6 @@ const (
 
 	// RewardPoolAccKeyPrefix is prefix for generating deterministic reward pool module account of the each plan
 	RewardPoolAccKeyPrefix = "RewardPoolAcc"
-
-	// StakingReserveAccKeyPrefix is prefix for generating deterministic staking reserve module account of the each plan
-	StakingReserveAccKeyPrefix = "StakingReserveAcc"
 )
 
 var (
@@ -42,8 +39,6 @@ var (
 
 	RewardKeyPrefix               = []byte{0x31}
 	RewardsByFarmerIndexKeyPrefix = []byte{0x32}
-
-	StakingReserveAcc = sdk.AccAddress(address.Module(ModuleName, []byte("StakingReserveAcc")))
 )
 
 // GetPlanKey returns kv indexing key of the plan
