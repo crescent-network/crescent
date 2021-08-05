@@ -1,5 +1,8 @@
 package cli
 
+// DONTCOVER
+// client is excluded from test coverage in MVP version
+
 import (
 	"fmt"
 	"strings"
@@ -57,12 +60,12 @@ Where plan.json contains:
   "name": "This plan intends to provide incentives for Cosmonauts!",
   "staking_coin_weights": [
     {
-      "denom": "uatom",
+      "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
       "amount": "1.000000000000000000"
     }
   ],
-  "start_time": "2021-07-24T08:41:21.662422Z",
-  "end_time": "2022-07-28T08:41:21.662422Z",
+  "start_time": "2021-08-06T09:00:00Z",
+  "end_time": "2022-08-13T09:00:00Z",
   "epoch_amount": [
     {
       "denom": "uatom",
@@ -129,12 +132,12 @@ Where plan.json contains:
   "name": "This plan intends to provide incentives for Cosmonauts!",
   "staking_coin_weights": [
     {
-      "denom": "uatom",
+      "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
       "amount": "1.000000000000000000"
     }
   ],
-  "start_time": "2021-07-15T08:41:21.662422Z",
-  "end_time": "2022-07-16T08:41:21.662422Z",
+  "start_time": "2021-08-06T09:00:00Z",
+  "end_time": "2022-08-13T09:00:00Z",
   "epoch_ratio": "1.000000000000000000"
 }
 
@@ -189,7 +192,7 @@ func NewStakeCmd() *cobra.Command {
 To get farming rewards, it is recommended to check which plans are available on a network. 
 
 Example:
-$ %s tx %s stake 1000uatom --from mykey
+$ %s tx %s stake 1000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -229,7 +232,7 @@ func NewUnstakeCmd() *cobra.Command {
 Note that this action doesn't require any period to unstake your coins.
 
 Example:
-$ %s tx %s unstake 1000uatom --from mykey
+$ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -321,12 +324,20 @@ Where proposal.json contains:
       "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
       "staking_coin_weights": [
         {
-          "denom": "PoolCoinDenom",
-          "amount": "1.000000000000000000"
+          "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+          "amount": "0.800000000000000000"
+        },
+        {
+          "denom": "stake",
+          "amount": "0.100000000000000000"
+        },
+        {
+          "denom": "uatom",
+          "amount": "0.100000000000000000"
         }
       ],
-      "start_time": "2021-07-15T08:41:21.662422Z",
-      "end_time": "2022-07-16T08:41:21.662422Z",
+      "start_time": "2021-08-06T09:00:00Z",
+      "end_time": "2022-08-13T09:00:00Z",
       "epoch_amount": [
         {
           "denom": "uatom",
