@@ -31,10 +31,14 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app    *simapp.FarmingApp
-	ctx    sdk.Context
-	keeper keeper.Keeper
-	addrs  []sdk.AccAddress
+	app                 *simapp.FarmingApp
+	ctx                 sdk.Context
+	keeper              keeper.Keeper
+	querier             keeper.Querier
+	addrs               []sdk.AccAddress
+	sampleFixedAmtPlans []types.PlanI
+	sampleRatioPlans    []types.PlanI
+	samplePlans         []types.PlanI
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -48,11 +52,79 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.keeper = suite.app.FarmingKeeper
-	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 4, sdk.ZeroInt())
+	suite.querier = keeper.Querier{Keeper: suite.keeper}
+	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
 	for _, addr := range suite.addrs {
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
 		suite.Require().NoError(err)
 	}
+	suite.sampleFixedAmtPlans = []types.PlanI{
+		types.NewFixedAmountPlan(
+			types.NewBasePlan(
+				1,
+				"",
+				types.PlanTypePrivate,
+				suite.addrs[4].String(),
+				suite.addrs[4].String(),
+				sdk.NewDecCoins(
+					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)), // 30%
+					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)), // 70%
+				),
+				mustParseRFC3339("2021-08-02T00:00:00Z"),
+				mustParseRFC3339("2021-08-10T00:00:00Z"),
+			),
+			sdk.NewCoins(),
+		),
+		types.NewFixedAmountPlan(
+			types.NewBasePlan(
+				2,
+				"",
+				types.PlanTypePublic,
+				suite.addrs[5].String(),
+				suite.addrs[5].String(),
+				sdk.NewDecCoins(
+					sdk.NewDecCoinFromDec(denom1, sdk.OneDec()), // 100%
+				),
+				mustParseRFC3339("2021-08-04T00:00:00Z"),
+				mustParseRFC3339("2021-08-12T00:00:00Z"),
+			),
+			sdk.NewCoins(),
+		),
+	}
+	suite.sampleRatioPlans = []types.PlanI{
+		types.NewRatioPlan(
+			types.NewBasePlan(
+				3,
+				"",
+				types.PlanTypePrivate,
+				suite.addrs[4].String(),
+				suite.addrs[4].String(),
+				sdk.NewDecCoins(
+					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(5, 1)), // 50%
+					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(5, 1)), // 50%
+				),
+				mustParseRFC3339("2021-08-01T00:00:00Z"),
+				mustParseRFC3339("2021-08-09T00:00:00Z"),
+			),
+			sdk.NewDecWithPrec(4, 2), // 4%
+		),
+		types.NewRatioPlan(
+			types.NewBasePlan(
+				4,
+				"",
+				types.PlanTypePublic,
+				suite.addrs[5].String(),
+				suite.addrs[5].String(),
+				sdk.NewDecCoins(
+					sdk.NewDecCoinFromDec(denom2, sdk.OneDec()), // 100%
+				),
+				mustParseRFC3339("2021-08-03T00:00:00Z"),
+				mustParseRFC3339("2021-08-07T00:00:00Z"),
+			),
+			sdk.NewDecWithPrec(3, 2), // 3%
+		),
+	}
+	suite.samplePlans = append(suite.sampleFixedAmtPlans, suite.sampleRatioPlans...)
 }
 
 // Stake is a convenient method to test Keeper.Stake.

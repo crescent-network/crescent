@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -258,6 +259,29 @@ func ValidateRatioPlans(i interface{}) error {
 	}
 
 	return nil
+}
+
+// UnpackPlan converts Any to PlanI.
+func UnpackPlan(any *codectypes.Any) (PlanI, error) {
+	v := any.GetCachedValue()
+	p, ok := v.(PlanI)
+	if !ok {
+		return nil, fmt.Errorf("expected PlanI, got %T", v)
+	}
+	return p, nil
+}
+
+// UnpackPlans converts Any slice to PlanIs.
+func UnpackPlans(plansAny []*codectypes.Any) ([]PlanI, error) {
+	plans := make([]PlanI, len(plansAny))
+	for i, any := range plansAny {
+		p, err := UnpackPlan(any)
+		if err != nil {
+			return nil, err
+		}
+		plans[i] = p
+	}
+	return plans, nil
 }
 
 // ValidateStakingCoinTotalWeights validates the total staking coin weights must be equal to 1.

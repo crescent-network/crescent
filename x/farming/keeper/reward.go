@@ -134,6 +134,7 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDe
 		amount = amount.Add(reward.RewardCoins...)
 	}
 
+	// TODO: remove staking
 	// TODO: send reward from the reward pool
 
 	for _, denom := range stakingCoinDenoms {
