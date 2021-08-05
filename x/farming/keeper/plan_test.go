@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestGetSetNewPlan() {
 
 	startTime := time.Now().UTC()
 	endTime := startTime.AddDate(1, 0, 0)
-	basePlan := types.NewBasePlan(1, name, 1, farmingPoolAddr.String(), terminationAddr.String(), coinWeights, startTime, endTime)
+	basePlan := types.NewBasePlan(1, name, 1, farmingPoolAddr.String(), terminationAddr.String(), coinWeights, startTime, endTime, false)
 	fixedPlan := types.NewFixedAmountPlan(basePlan, sdk.NewCoins(sdk.NewCoin("testFarmCoinDenom", sdk.NewInt(1000000))))
 	suite.keeper.SetPlan(suite.ctx, fixedPlan)
 

@@ -43,7 +43,7 @@ func TestGetPoolInformation(t *testing.T) {
 	for _, tc := range testCases {
 		uniqueKey := types.PlanUniqueKey(tc.planId, tc.planType, tc.farmingPoolAddr)
 		rewardPoolAcc := types.GenerateRewardPoolAcc(uniqueKey)
-		basePlan := types.NewBasePlan(tc.planId, tc.name, tc.planType, tc.farmingPoolAddr, commonTerminationAcc.String(), commonCoinWeights, commonStartTime, commonEndTime)
+		basePlan := types.NewBasePlan(tc.planId, tc.name, tc.planType, tc.farmingPoolAddr, commonTerminationAcc.String(), commonCoinWeights, commonStartTime, commonEndTime, false)
 		require.Equal(t, basePlan.RewardPoolAddress, rewardPoolAcc.String())
 	}
 }
@@ -66,7 +66,7 @@ func TestRatioPlans(t *testing.T) {
 		{
 			[]types.PlanI{
 				types.NewRatioPlan(
-					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime),
+					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime, false),
 					sdk.NewDec(1),
 				),
 			},
@@ -75,11 +75,11 @@ func TestRatioPlans(t *testing.T) {
 		{
 			[]types.PlanI{
 				types.NewRatioPlan(
-					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime),
+					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime, false),
 					sdk.NewDec(1),
 				),
 				types.NewRatioPlan(
-					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime),
+					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime, false),
 					sdk.NewDec(1),
 				),
 			},
@@ -88,11 +88,11 @@ func TestRatioPlans(t *testing.T) {
 		{
 			[]types.PlanI{
 				types.NewRatioPlan(
-					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime),
+					types.NewBasePlan(1, name1, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime, false),
 					sdk.NewDec(1),
 				),
 				types.NewRatioPlan(
-					types.NewBasePlan(1, name2, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime),
+					types.NewBasePlan(1, name2, 1, farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights, startTime, endTime, false),
 					sdk.NewDec(1),
 				),
 			},
@@ -105,6 +105,7 @@ func TestRatioPlans(t *testing.T) {
 		if tc.expectedErr == nil {
 			require.NoError(t, err)
 		} else {
+			require.Error(t, err)
 			require.Equal(t, tc.expectedErr.Error(), err.Error())
 		}
 	}

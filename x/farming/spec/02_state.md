@@ -37,6 +37,9 @@ type PlanI interface {
     GetEndTime() time.Time
     SetEndTime(time.Time) error
 
+    GetTerminated() bool
+    SetTerminated(bool) error
+
     String() string
 }
 ```
@@ -58,6 +61,7 @@ type BasePlan struct {
     StakingCoinWeights       sdk.DecCoins // coin weights for the plan
     StartTime                time.Time    // start time of the plan
     EndTime                  time.Time    // end time of the plan
+    Terminated               bool         // whether the plan has terminated or not
 }
 ```
 

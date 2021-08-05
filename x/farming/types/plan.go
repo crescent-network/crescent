@@ -26,7 +26,7 @@ var (
 
 // NewBasePlan creates a new BasePlan object
 //nolint:interfacer
-func NewBasePlan(id uint64, name string, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time) *BasePlan {
+func NewBasePlan(id uint64, name string, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time, terminated bool) *BasePlan {
 	basePlan := &BasePlan{
 		Id:                 id,
 		Name:               name,
@@ -37,6 +37,7 @@ func NewBasePlan(id uint64, name string, typ PlanType, farmingPoolAddr, terminat
 		StakingCoinWeights: coinWeights,
 		StartTime:          startTime,
 		EndTime:            endTime,
+		Terminated:         terminated,
 	}
 	return basePlan
 }
@@ -113,6 +114,15 @@ func (plan BasePlan) GetEndTime() time.Time {
 
 func (plan *BasePlan) SetEndTime(t time.Time) error {
 	plan.EndTime = t
+	return nil
+}
+
+func (plan *BasePlan) GetTerminated() bool {
+	return plan.Terminated
+}
+
+func (plan *BasePlan) SetTerminated(terminated bool) error {
+	plan.Terminated = terminated
 	return nil
 }
 
@@ -216,6 +226,9 @@ type PlanI interface {
 
 	GetEndTime() time.Time
 	SetEndTime(time.Time) error
+
+	GetTerminated() bool
+	SetTerminated(bool) error
 
 	String() string
 }

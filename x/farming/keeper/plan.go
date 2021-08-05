@@ -195,6 +195,7 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
+		false,
 	)
 
 	fixedPlan := types.NewFixedAmountPlan(basePlan, msg.EpochAmount)
@@ -250,6 +251,7 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
+		false,
 	)
 
 	ratioPlan := types.NewRatioPlan(basePlan, msg.EpochRatio)

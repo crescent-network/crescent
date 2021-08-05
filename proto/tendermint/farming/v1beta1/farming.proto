@@ -85,6 +85,9 @@ message BasePlan {
   // end_time specifies the end time of the plan
   google.protobuf.Timestamp end_time = 9
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+
+  // terminated indicates whether the plan has terminated or not.
+  bool terminated = 10;
 }
 
 // FixedAmountPlan defines a fixed amount plan that fixed amount of coins are
