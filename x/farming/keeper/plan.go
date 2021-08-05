@@ -271,3 +271,24 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 
 	return ratioPlan, nil
 }
+
+// TerminatePlan sends all remaining coins in the plan's farming pool to
+// the termination address and mark the plan as terminated.
+// Coins are sent only when the plan is a public plan.
+func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
+	if plan.GetType() == types.PlanTypePublic {
+		balances := k.bankKeeper.GetAllBalances(ctx, plan.GetFarmingPoolAddress())
+		if err := k.bankKeeper.SendCoins(ctx, plan.GetFarmingPoolAddress(), plan.GetTerminationAddress(), balances); err != nil {
+			return err
+		}
+	}
+
+	if err := plan.SetTerminated(true); err != nil {
+		return err
+	}
+	k.SetPlan(ctx, plan)
+
+	// TODO: emit event
+
+	return nil
+}

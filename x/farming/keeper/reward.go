@@ -164,7 +164,7 @@ func (k Keeper) DistributionInfos(ctx sdk.Context) []DistributionInfo {
 	plans := make(map[uint64]types.PlanI)
 	for _, plan := range k.GetAllPlans(ctx) {
 		// Filter plans by their start time and end time.
-		if !plan.GetTerminated() && !plan.GetStartTime().After(ctx.BlockTime()) && plan.GetEndTime().After(ctx.BlockTime()) {
+		if !plan.GetTerminated() && types.IsPlanActiveAt(plan, ctx.BlockTime()) {
 			plans[plan.GetId()] = plan
 		}
 	}

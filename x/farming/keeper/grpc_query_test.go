@@ -14,7 +14,10 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCPlans() {
-	for _, plan := range suite.samplePlans {
+	for i, plan := range suite.samplePlans {
+		if i == 1 || i == 3 { // Mark 2nd and 4th plans as terminated. This is just for testing query.
+			_ = plan.SetTerminated(true)
+		}
 		suite.keeper.SetPlan(suite.ctx, plan)
 	}
 
@@ -139,6 +142,38 @@ func (suite *KeeperTestSuite) TestGRPCPlans() {
 						}
 					}
 					suite.Require().True(found)
+				}
+			},
+		},
+		{
+			"invalid terminated",
+			&types.QueryPlansRequest{Terminated: "invalid"},
+			true,
+			nil,
+		},
+		{
+			"query by terminated(true)",
+			&types.QueryPlansRequest{Terminated: "true"},
+			false,
+			func(resp *types.QueryPlansResponse) {
+				plans, err := types.UnpackPlans(resp.Plans)
+				suite.Require().NoError(err)
+				suite.Require().Len(plans, 2)
+				for _, plan := range plans {
+					suite.Require().True(plan.GetTerminated())
+				}
+			},
+		},
+		{
+			"query by terminated(false)",
+			&types.QueryPlansRequest{Terminated: "false"},
+			false,
+			func(resp *types.QueryPlansResponse) {
+				plans, err := types.UnpackPlans(resp.Plans)
+				suite.Require().NoError(err)
+				suite.Require().Len(plans, 2)
+				for _, plan := range plans {
+					suite.Require().False(plan.GetTerminated())
 				}
 			},
 		},

@@ -13,6 +13,14 @@ import (
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
+	for _, plan := range k.GetAllPlans(ctx) {
+		if !plan.GetTerminated() && ctx.BlockTime().After(plan.GetEndTime()) {
+			if err := k.TerminatePlan(ctx, plan); err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	lastEpochTime, found := k.GetLastEpochTime(ctx)
 	if !found {
 		k.SetLastEpochTime(ctx, ctx.BlockTime())
@@ -24,6 +32,4 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 		k.SetLastEpochTime(ctx, ctx.BlockTime())
 	}
-
-	// TODO: implement plan termination logic
 }

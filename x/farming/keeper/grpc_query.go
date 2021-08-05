@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -64,6 +65,15 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		}
 	}
 
+	var terminated bool
+	if req.Terminated != "" {
+		var err error
+		terminated, err = strconv.ParseBool(req.Terminated)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
 	planStore := prefix.NewStore(store, types.PlanKeyPrefix)
@@ -104,6 +114,12 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 				}
 			}
 			if !found {
+				return false, nil
+			}
+		}
+
+		if req.Terminated != "" {
+			if plan.GetTerminated() != terminated {
 				return false, nil
 			}
 		}

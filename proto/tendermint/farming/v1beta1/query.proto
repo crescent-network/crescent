@@ -59,7 +59,7 @@ message QueryPlansRequest {
   string                                reward_pool_address  = 3;
   string                                termination_address  = 4;
   string                                staking_coin_denom   = 5;
-  bool                                  terminated           = 6 [(gogoproto.nullable) = true];
+  string                                terminated           = 6;
   cosmos.base.query.v1beta1.PageRequest pagination           = 7;
 }
 
