@@ -8,44 +8,56 @@ import (
 
 // RegisterInvariants registers all farming invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
-	ir.RegisterRoute(types.ModuleName, "escrow-amount",
-		FarmingPoolsEscrowAmountInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "staking-reserved",
+		StakingReservedAmountInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "remaining-rewards",
+		RemainingRewardsAmountInvariant(k))
 }
 
 // AllInvariants runs all invariants of the farming module.
 func AllInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		res, stop := FarmingPoolsEscrowAmountInvariant(k)(ctx)
-		return res, stop
+		res, stop := StakingReservedAmountInvariant(k)(ctx)
+		if stop {
+			return res, stop
+		}
+		return RemainingRewardsAmountInvariant(k)(ctx)
 	}
 }
 
-// FarmingPoolsEscrowAmountInvariant checks that outstanding unwithdrawn fees are never negative.
-func FarmingPoolsEscrowAmountInvariant(k Keeper) sdk.Invariant {
+// StakingReservedAmountInvariant checks that the balance of StakingReserveAcc greater than the amount of staked, Queued coins in all staking objects.
+func StakingReservedAmountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		// remainingCoins := sdk.NewCoins()
-		// batches := k.GetAllPoolBatches(ctx)
-		// for _, batch := range batches {
-		// 	swapMsgs := k.GetAllPoolBatchSwapMsgStatesNotToBeDeleted(ctx, batch)
-		// 	for _, msg := range swapMsgs {
-		// 		remainingCoins = remainingCoins.Add(msg.RemainingOfferCoin)
-		// 	}
-		// 	depositMsgs := k.GetAllPoolBatchDepositMsgStatesNotToBeDeleted(ctx, batch)
-		// 	for _, msg := range depositMsgs {
-		// 		remainingCoins = remainingCoins.Add(msg.Msg.DepositCoins...)
-		// 	}
-		// 	withdrawMsgs := k.GetAllPoolBatchWithdrawMsgStatesNotToBeDeleted(ctx, batch)
-		// 	for _, msg := range withdrawMsgs {
-		// 		remainingCoins = remainingCoins.Add(msg.Msg.PoolCoin)
-		// 	}
-		// }
+		var totalStakingAmt sdk.Coins
+		balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc)
 
-		batchEscrowAcc := k.accountKeeper.GetModuleAddress(types.ModuleName)
-		escrowAmt := k.bankKeeper.GetAllBalances(ctx, batchEscrowAcc)
+		k.IterateAllStakings(ctx, func(staking types.Staking) (stop bool) {
+			totalStakingAmt = totalStakingAmt.Add(staking.StakedCoins...).Add(staking.QueuedCoins...)
+			return false
+		})
 
-		broken := !escrowAmt.IsAllGTE(sdk.Coins{})
+		broken := !balanceStakingReserveAcc.IsAllGTE(totalStakingAmt)
+		return sdk.FormatInvariant(types.ModuleName, "staking reserved amount invariant broken",
+			"the balance of StakingReserveAcc less than the amount of staked, Queued coins in all staking objects"), broken
+	}
+}
 
-		return sdk.FormatInvariant(types.ModuleName, "batch escrow amount invariant broken",
-			"batch escrow amount LT batch remaining amount"), broken
+// RemainingRewardsAmountInvariant checks that the balance of the RewardPoolAddresses of all plans greater than the total amount of unwithdrawn reward coins in all reward objects
+func RemainingRewardsAmountInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		var totalRemainingRewards sdk.Coins
+		var totalBalancesRewardPools sdk.Coins
+		k.IterateAllPlans(ctx, func(plan types.PlanI) (stop bool) {
+			totalBalancesRewardPools = totalBalancesRewardPools.Add(k.bankKeeper.GetAllBalances(ctx, plan.GetRewardPoolAddress())...)
+			return false
+		})
+		k.IterateAllRewards(ctx, func(reward types.Reward) (stop bool) {
+			totalRemainingRewards = totalRemainingRewards.Add(reward.RewardCoins...)
+			return false
+		})
+
+		broken := !totalBalancesRewardPools.IsAllGTE(totalRemainingRewards)
+		return sdk.FormatInvariant(types.ModuleName, "remaining rewards amount invariant broken",
+			"the balance of the RewardPoolAddresses of all plans less than the total amount of unwithdrawn reward coins in all reward objects"), broken
 	}
 }

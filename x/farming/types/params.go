@@ -16,13 +16,12 @@ var (
 	KeyStakingCreationFee     = []byte("StakingCreationFee")
 	KeyEpochDays              = []byte("EpochDays")
 	KeyFarmingFeeCollector    = []byte("FarmingFeeCollector")
-)
 
-var (
 	DefaultPrivatePlanCreationFee = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)))
 	DefaultStakingCreationFee     = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000)))
 	DefaultEpochDays              = uint32(1)
 	DefaultFarmingFeeCollector    = sdk.AccAddress(address.Module(ModuleName, []byte("FarmingFeeCollectorAcc"))).String()
+	StakingReserveAcc             = sdk.AccAddress(address.Module(ModuleName, []byte("StakingReserveAcc")))
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
