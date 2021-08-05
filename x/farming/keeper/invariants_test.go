@@ -20,7 +20,9 @@ func (suite *KeeperTestSuite) TestStakingReservedAmountInvariant() {
 					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
 					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1))),
 				mustParseRFC3339("2021-07-30T00:00:00Z"),
-				mustParseRFC3339("2021-08-30T00:00:00Z")),
+				mustParseRFC3339("2021-08-30T00:00:00Z"),
+				false,
+			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000))),
 	}
 	for _, plan := range plans {
@@ -62,7 +64,9 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
 					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1))),
 				mustParseRFC3339("2021-07-30T00:00:00Z"),
-				mustParseRFC3339("2021-08-30T00:00:00Z")),
+				mustParseRFC3339("2021-08-30T00:00:00Z"),
+				false,
+			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000))),
 	}
 	for _, plan := range plans {
