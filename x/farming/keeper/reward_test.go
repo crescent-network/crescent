@@ -198,4 +198,6 @@ func (suite *KeeperTestSuite) TestHarvest() {
 
 	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 	suite.Require().True(coinsEq(balancesBefore.Add(rewards[0].RewardCoins...), balancesAfter))
+	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.keeper.GetRewardsReservePoolAcc(suite.ctx)).IsZero())
+	suite.Require().Empty(suite.keeper.GetRewardsByFarmer(suite.ctx, suite.addrs[0]))
 }
