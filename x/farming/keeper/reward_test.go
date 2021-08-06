@@ -184,3 +184,28 @@ func (suite *KeeperTestSuite) TestDistributeRewards() {
 	suite.Require().True(found)
 	suite.Require().Equal(suite.ctx.BlockTime(), lastDistributedAt)
 }
+
+func (suite *KeeperTestSuite) TestHarvest() {
+	for _, plan := range suite.samplePlans {
+		suite.keeper.SetPlan(suite.ctx, plan)
+	}
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1_000_000)))
+	suite.keeper.ProcessQueuedCoins(suite.ctx)
+
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+
+	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-08-05T00:00:00Z"))
+	err := suite.keeper.DistributeRewards(suite.ctx)
+	suite.Require().NoError(err)
+
+	rewards := suite.keeper.GetRewardsByFarmer(suite.ctx, suite.addrs[0])
+	suite.Require().Len(rewards, 1)
+	err = suite.keeper.Harvest(suite.ctx, suite.addrs[0], []string{denom1})
+	suite.Require().NoError(err)
+
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(balancesBefore.Add(rewards[0].RewardCoins...), balancesAfter))
+	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.keeper.GetRewardsReservePoolAcc(suite.ctx)).IsZero())
+	suite.Require().Empty(suite.keeper.GetRewardsByFarmer(suite.ctx, suite.addrs[0]))
+}

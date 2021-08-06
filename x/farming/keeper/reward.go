@@ -134,11 +134,20 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDe
 		amount = amount.Add(reward.RewardCoins...)
 	}
 
-	// TODO: remove staking
-	// TODO: send reward from the reward pool
+	if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, amount); err != nil {
+		return err
+	}
 
 	for _, denom := range stakingCoinDenoms {
 		k.DeleteReward(ctx, denom, farmerAcc)
+	}
+
+	staking, found := k.GetStakingByFarmer(ctx, farmerAcc)
+	if !found { // NOTE: this should never happen
+		return sdkerrors.Wrap(types.ErrStakingNotExists, "no staking found")
+	}
+	if staking.StakedCoins.IsZero() && staking.QueuedCoins.IsZero() && len(k.GetRewardsByFarmer(ctx, farmerAcc)) == 0 {
+		k.DeleteStaking(ctx, staking)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -269,7 +278,8 @@ func (k Keeper) DistributeRewards(ctx sdk.Context) error {
 			totalDistributedRewardCoins = totalDistributedRewardCoins.Add(totalDistrAmt...)
 			k.SetTotalDistributedRewardCoins(ctx, distrInfo.Plan.GetId(), totalDistributedRewardCoins)
 
-			if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
+			//if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
+			if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), k.GetRewardsReservePoolAcc(ctx), totalDistrAmt); err != nil {
 				return err
 			}
 		}
