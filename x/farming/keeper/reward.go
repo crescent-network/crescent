@@ -123,7 +123,7 @@ func (k Keeper) UnmarshalRewardCoins(bz []byte) (rewardCoins types.RewardCoins, 
 	return rewardCoins, k.cdc.Unmarshal(bz, &rewardCoins)
 }
 
-// Harvest claims farming rewards from the reward pool account.
+// Harvest claims farming rewards from the reward pool.
 func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenoms []string) error {
 	amount := sdk.NewCoins()
 	for _, denom := range stakingCoinDenoms {

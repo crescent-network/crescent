@@ -20,7 +20,6 @@ func (suite *KeeperTestSuite) TestDistributionInfos() {
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
 				mustParseRFC3339("2021-07-27T00:00:00Z"),
 				mustParseRFC3339("2021-07-28T00:00:00Z"),
-				false,
 			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))),
 		types.NewFixedAmountPlan(
@@ -33,7 +32,6 @@ func (suite *KeeperTestSuite) TestDistributionInfos() {
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
 				mustParseRFC3339("2021-07-27T12:00:00Z"),
 				mustParseRFC3339("2021-07-28T12:00:00Z"),
-				false,
 			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))),
 	}
@@ -57,7 +55,6 @@ func (suite *KeeperTestSuite) TestDistributionInfos() {
 						sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
 						mustParseRFC3339("2021-07-27T00:00:00Z"),
 						mustParseRFC3339("2021-07-30T00:00:00Z"),
-						false,
 					),
 					sdk.NewCoins(sdk.NewInt64Coin(denom3, 10_000_000_000))),
 			},
@@ -150,7 +147,6 @@ func (suite *KeeperTestSuite) TestDistributeRewards() {
 					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1))),
 				mustParseRFC3339("2021-07-30T00:00:00Z"),
 				mustParseRFC3339("2021-08-30T00:00:00Z"),
-				false,
 			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000))),
 	}

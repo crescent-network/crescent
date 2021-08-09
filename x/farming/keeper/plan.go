@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -195,7 +197,6 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
-		false,
 	)
 
 	fixedPlan := types.NewFixedAmountPlan(basePlan, msg.EpochAmount)
@@ -205,8 +206,9 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateFixedAmountPlan,
+			sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(nextId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPlanName, msg.Name),
 			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
-			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, fixedPlan.RewardPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEpochAmount, msg.EpochAmount.String()),
@@ -251,7 +253,6 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
-		false,
 	)
 
 	ratioPlan := types.NewRatioPlan(basePlan, msg.EpochRatio)
@@ -261,8 +262,9 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateRatioPlan,
+			sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(nextId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPlanName, msg.Name),
 			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
-			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, ratioPlan.RewardPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEpochRatio, msg.EpochRatio.String()),

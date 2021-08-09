@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -11,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -26,18 +23,20 @@ var (
 
 // NewBasePlan creates a new BasePlan object
 //nolint:interfacer
-func NewBasePlan(id uint64, name string, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time, terminated bool) *BasePlan {
+func NewBasePlan(id uint64, name string, typ PlanType, farmingPoolAddr, terminationAddr string, coinWeights sdk.DecCoins, startTime, endTime time.Time) *BasePlan {
 	basePlan := &BasePlan{
-		Id:                 id,
-		Name:               name,
-		Type:               typ,
-		FarmingPoolAddress: farmingPoolAddr,
-		RewardPoolAddress:  GenerateRewardPoolAcc(PlanUniqueKey(id, typ, farmingPoolAddr)).String(),
-		TerminationAddress: terminationAddr,
-		StakingCoinWeights: coinWeights,
-		StartTime:          startTime,
-		EndTime:            endTime,
-		Terminated:         terminated,
+		Id:                   id,
+		Name:                 name,
+		Type:                 typ,
+		FarmingPoolAddress:   farmingPoolAddr,
+		TerminationAddress:   terminationAddr,
+		StakingCoinWeights:   coinWeights,
+		StartTime:            startTime,
+		EndTime:              endTime,
+		Terminated:           false,
+		LastDistributionTime: nil,
+		DistributedCoins:     sdk.NewCoins(),
+		RewardCoins:          sdk.NewCoins(),
 	}
 	return basePlan
 }
@@ -67,16 +66,6 @@ func (plan BasePlan) GetFarmingPoolAddress() sdk.AccAddress {
 
 func (plan *BasePlan) SetFarmingPoolAddress(addr sdk.AccAddress) error {
 	plan.FarmingPoolAddress = addr.String()
-	return nil
-}
-
-func (plan BasePlan) GetRewardPoolAddress() sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(plan.RewardPoolAddress)
-	return addr
-}
-
-func (plan *BasePlan) SetRewardPoolAddress(addr sdk.AccAddress) error {
-	plan.RewardPoolAddress = addr.String()
 	return nil
 }
 
@@ -126,6 +115,33 @@ func (plan *BasePlan) SetTerminated(terminated bool) error {
 	return nil
 }
 
+func (plan *BasePlan) GetLastDistributionTime() *time.Time {
+	return plan.LastDistributionTime
+}
+
+func (plan *BasePlan) SetLastDistributionTime(t *time.Time) error {
+	plan.LastDistributionTime = t
+	return nil
+}
+
+func (plan *BasePlan) GetDistributedCoins() sdk.Coins {
+	return plan.DistributedCoins
+}
+
+func (plan *BasePlan) SetDistributedCoins(distributedCoins sdk.Coins) error {
+	plan.DistributedCoins = distributedCoins
+	return nil
+}
+
+func (plan *BasePlan) GetRewardCoins() sdk.Coins {
+	return plan.RewardCoins
+}
+
+func (plan *BasePlan) SetRewardCoins(rewardCoins sdk.Coins) error {
+	plan.RewardCoins = rewardCoins
+	return nil
+}
+
 // Validate checks for errors on the Plan fields
 func (plan BasePlan) Validate() error {
 	if plan.Type != PlanTypePrivate && plan.Type != PlanTypePublic {
@@ -133,9 +149,6 @@ func (plan BasePlan) Validate() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(plan.FarmingPoolAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", plan.FarmingPoolAddress, err)
-	}
-	if _, err := sdk.AccAddressFromBech32(plan.RewardPoolAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reward pool address %q: %v", plan.RewardPoolAddress, err)
 	}
 	if _, err := sdk.AccAddressFromBech32(plan.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", plan.TerminationAddress, err)
@@ -154,6 +167,12 @@ func (plan BasePlan) Validate() error {
 	}
 	if !plan.EndTime.After(plan.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", plan.EndTime, plan.StartTime)
+	}
+	if plan.DistributedCoins.IsAnyNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "distributed coins must not be negative")
+	}
+	if plan.RewardCoins.IsAnyNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "reward coins must not be negative")
 	}
 	return nil
 }
@@ -186,20 +205,6 @@ func NewRatioPlan(basePlan *BasePlan, epochRatio sdk.Dec) *RatioPlan {
 	}
 }
 
-// PlanUniqueKey returns unique name of the plan consists of given Id, Type and FarmingPoolAddress.
-func PlanUniqueKey(id uint64, typ PlanType, farmingPoolAddr string) string {
-	poolNameObjects := make([]string, 3)
-	poolNameObjects[0] = strconv.FormatUint(id, 10)
-	poolNameObjects[1] = strconv.FormatInt(int64(typ), 10)
-	poolNameObjects[2] = farmingPoolAddr
-	return strings.Join(poolNameObjects, "/")
-}
-
-// GenerateRewardPoolAcc returns deterministically generated reward pool account for the given plan name
-func GenerateRewardPoolAcc(name string) sdk.AccAddress {
-	return address.Module(ModuleName, []byte(strings.Join([]string{RewardPoolAccKeyPrefix, name}, "/")))
-}
-
 type PlanI interface {
 	proto.Message
 
@@ -211,9 +216,6 @@ type PlanI interface {
 
 	GetFarmingPoolAddress() sdk.AccAddress
 	SetFarmingPoolAddress(sdk.AccAddress) error
-
-	GetRewardPoolAddress() sdk.AccAddress
-	SetRewardPoolAddress(sdk.AccAddress) error
 
 	GetTerminationAddress() sdk.AccAddress
 	SetTerminationAddress(sdk.AccAddress) error
@@ -229,6 +231,15 @@ type PlanI interface {
 
 	GetTerminated() bool
 	SetTerminated(bool) error
+
+	GetLastDistributionTime() *time.Time
+	SetLastDistributionTime(*time.Time) error
+
+	GetDistributedCoins() sdk.Coins
+	SetDistributedCoins(sdk.Coins) error
+
+	GetRewardCoins() sdk.Coins
+	SetRewardCoins(sdk.Coins) error
 
 	String() string
 }

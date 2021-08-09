@@ -85,11 +85,11 @@ message BasePlan {
   // terminated indicates whether the plan has been terminated or not
   bool terminated = 9;
 
-  // last_distribution_time specifies the last time the distribution happened
+  // last_distribution_time specifies the last time a distribution happened
   google.protobuf.Timestamp last_distribution_time = 10
       [(gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"last_distribution_time\""];
 
-  // distributed_coins specifies the total coins distributed by this plan.
+  // distributed_coins specifies the total coins distributed by this plan
   repeated cosmos.base.v1beta1.Coin distributed_coins = 11 [
     (gogoproto.moretags)     = "yaml:\"distributed_coins\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -97,7 +97,7 @@ message BasePlan {
   ];
 
   // reward_coins specifies the total reward coins accumulated in the
-  // global reward pool for this plan.
+  // global reward pool for this plan
   repeated cosmos.base.v1beta1.Coin reward_coins = 12 [
     (gogoproto.moretags)     = "yaml:\"reward_coins\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",

@@ -22,9 +22,6 @@ type PlanI interface {
     GetFarmingPoolAddress() sdk.AccAddress
     SetFarmingPoolAddress(sdk.AccAddress) error
 
-    GetRewardPoolAddress() sdk.AccAddress
-    SetRewardPoolAddress(sdk.AccAddress) error
-
     GetTerminationAddress() sdk.AccAddress
     SetTerminationAddress(sdk.AccAddress) error
 
@@ -40,6 +37,15 @@ type PlanI interface {
     GetTerminated() bool
     SetTerminated(bool) error
 
+    GetLastDistributionTime() *time.Time
+    SetLastDistributionTime(*time.Time) error
+
+    GetDistributedCoins() sdk.Coins
+    SetDistributedCoins(sdk.Coins) error
+
+    GetRewardCoins() sdk.Coins
+    SetRewardCoins(sdk.Coins) error
+
     String() string
 }
 ```
@@ -53,15 +59,17 @@ A base plan is the simplest and most common plan type, which just stores all req
 // for basic farming plan functionality. Any custom farming plan type should extend this
 // type for additional functionality (e.g. fixed amount plan, ratio plan).
 type BasePlan struct {
-    Id                       uint64       // index of the plan
-    Type                     PlanType     // type of the plan; public or private
-    FarmingPoolAddress       string       // bech32-encoded farming pool address
-    RewardPoolAddress        string       // bech32-encoded reward pool address
-    TerminationAddress       string       // bech32-encoded termination address
-    StakingCoinWeights       sdk.DecCoins // coin weights for the plan
-    StartTime                time.Time    // start time of the plan
-    EndTime                  time.Time    // end time of the plan
-    Terminated               bool         // whether the plan has terminated or not
+    Id                   uint64       // index of the plan
+    Type                 PlanType     // type of the plan; public or private
+    FarmingPoolAddress   string       // bech32-encoded farming pool address
+    TerminationAddress   string       // bech32-encoded termination address
+    StakingCoinWeights   sdk.DecCoins // coin weights for the plan
+    StartTime            time.Time    // start time of the plan
+    EndTime              time.Time    // end time of the plan
+    Terminated           bool         // whether the plan has terminated or not
+    LastDistributionTime *time.Time   // last time a distribution happened
+    DistributedCoins     sdk.Coins    // total coins distributed
+    RewardCoins          sdk.Coins    // reward coins accumulated in the global reward pool
 }
 ```
 
@@ -70,7 +78,7 @@ type BasePlan struct {
 type FixedAmountPlan struct {
     *BasePlan
 
-    EpochAmount      sdk.Coins // distributing amount for each epoch
+    EpochAmount sdk.Coins // distributing amount for each epoch
 }
 ```
 
@@ -79,7 +87,7 @@ type FixedAmountPlan struct {
 type RatioPlan struct {
     *BasePlan
 
-    EpochRatio            sdk.Dec // distributing amount by ratio
+    EpochRatio sdk.Dec // distributing amount by ratio
 }
 ```
 

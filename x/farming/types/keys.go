@@ -18,7 +18,7 @@ const (
 	// QuerierRoute is the querier route for the farming module
 	QuerierRoute = ModuleName
 
-	// RewardPoolAccKeyPrefix is prefix for generating deterministic reward pool module account of the each plan
+	// RewardPoolAccKeyPrefix is prefix for generating deterministic reward pool module account of each plan
 	RewardPoolAccKeyPrefix = "RewardPoolAcc"
 )
 
