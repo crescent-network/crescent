@@ -2,7 +2,7 @@
 
 There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/tendermint/farming/blob/master/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
 
-In this tutorial, some sample data in JSON structure are provided. We will use command-line interfaces to test the functionality. 
+In this documentation, some sample data in JSON are provided. They will be used to test out farming plan functionality.
 
 ## Table of Contetns
 
@@ -16,7 +16,6 @@ In this tutorial, some sample data in JSON structure are provided. We will use c
 - [Private Farming Plan](#Private-Farming-Plan)
   * [PrivateFarmingFixedAmountPlan](#PrivateFarmingFixedAmountPlan)
   * [PrivateFarmingRatioPlan](#PrivateFarmingRatioPlan)
-- [REST APIs](#REST-APIs)
 
 # Bootstrap
 
@@ -63,9 +62,10 @@ $BINARY start
 ```
 
 # Public Farming Plan
+
 ## AddPublicFarmingFixedAmountPlan
 
-Create `public-fixed-plan-proposal.json` file in your local directory and copy the below json into the file. 
+Create `public-fixed-plan-proposal.json` file in your local directory and copy the below JSON into a file. To explain about what this public plan does is that i want to create a public fixed amount plan that provides `100000000uatom` as incentives for those who stake the denoms of `poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4` and `uatom` defined in `staking_coin_weights`. 
 
 ```json
 {
@@ -82,7 +82,7 @@ Create `public-fixed-plan-proposal.json` file in your local directory and copy t
           "amount": "0.800000000000000000"
         },
         {
-          "denom": "ukava",
+          "denom": "uatom",
           "amount": "0.200000000000000000"
         }
       ],
@@ -100,7 +100,7 @@ Create `public-fixed-plan-proposal.json` file in your local directory and copy t
 ```
 
 ```bash
-# Create public fixed amount plan through governance proposal
+# Send governance proposal to the network
 farmingd tx gov submit-proposal public-farming-plan public-fixed-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
@@ -111,16 +111,16 @@ farmingd tx gov submit-proposal public-farming-plan public-fixed-plan-proposal.j
 
 # Vote
 # Make sure to change proposal-id for the proposal
-farmingd tx gov vote <proposal-id> yes \
+farmingd tx gov vote 1 yes \
 --chain-id localnet \
---from val1 \
+--from user2 \
 --keyring-backend test \
 --yes
 ```
 
 ## AddPublicFarmingRatioPlan
 
-Create `public-ratio-plan-proposal.json` file in your local directory and copy the below json into the file. 
+Create `public-ratio-plan-proposal.json` file in your local directory and copy the below JSON into a file. To explain about what this public plan does is that i want to create a public ratio plan that provides 10% of what `farming_pool_address` has in balances as incentives for every epoch to those who stake the `poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4` denom defined in `staking_coin_weights`. 
 
 ```json
 {
@@ -139,14 +139,14 @@ Create `public-ratio-plan-proposal.json` file in your local directory and copy t
       ],
       "start_time": "2021-08-06T09:00:00Z",
       "end_time": "2021-08-13T09:00:00Z",
-      "epoch_ratio": "1.000000000000000000"
+      "epoch_ratio": "0.100000000000000000"
     }
   ]
 }
 ```
 
 ```bash
-# Create public ratio plan through governance proposal
+# Send governance proposal to the network
 farmingd tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
@@ -157,16 +157,16 @@ farmingd tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.j
 
 # Vote
 # Make sure to change proposal-id for the proposal
-farmingd tx gov vote <proposal-id> yes \
+farmingd tx gov vote 2 yes \
 --chain-id localnet \
---from val1 \
+--from user2 \
 --keyring-backend test \
 --yes
 ```
 
 ## AddMultiplePublicPlans
 
-Create `public-multiple-plans-proposal.json` file in your local directory and copy the below json into the file. 
+Create `public-multiple-plans-proposal.json` file in your local directory and copy the below JSON into a file. 
 
 ```json
 {
@@ -204,14 +204,14 @@ Create `public-multiple-plans-proposal.json` file in your local directory and co
       ],
       "start_time": "2021-08-06T09:00:00Z",
       "end_time": "2021-08-13T09:00:00Z",
-      "epoch_ratio": "1.000000000000000000"
+      "epoch_ratio": "0.100000000000000000"
     }
   ]
 }
 ```
 
 ```bash
-# Create public multiple plans through governance proposal
+# Send governance proposal to the network
 farmingd tx gov submit-proposal public-farming-plan public-multiple-plans-proposal.json \
 --chain-id localnet \
 --from user1 \
@@ -228,9 +228,10 @@ farmingd tx gov vote <proposal-id> yes \
 --keyring-backend test \
 --yes
 ```
+
 ## UpdatePublicFarmingFixedAmountPlan
 
-Create `update-plan-proposal.json` file in your local directory and copy the below json into the file. 
+Create `update-plan-proposal.json` file in your local directory and copy the below JSON into a file. 
 
 ```json
 {
@@ -261,7 +262,7 @@ Create `update-plan-proposal.json` file in your local directory and copy the bel
 ```
 
 ```bash
-# Update public plan through governance proposal
+# Send governance proposal to the network
 farmingd tx gov submit-proposal public-farming-plan update-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
@@ -281,7 +282,7 @@ farmingd tx gov vote <proposal-id> yes \
 
 ## DeletePublicFarmingFixedAmountPlan
 
-Create `delete-plan-proposal.json` file in your local directory and copy the below json into the file. 
+Create `delete-plan-proposal.json` file in your local directory and copy the below JSON into a file. 
 
 ```json
 {
@@ -296,7 +297,7 @@ Create `delete-plan-proposal.json` file in your local directory and copy the bel
 ```
 
 ```bash
-# Update public plan through governance proposal
+# Send governance proposal to the network
 farmingd tx gov submit-proposal public-farming-plan delete-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
@@ -316,7 +317,7 @@ farmingd tx gov vote <proposal-id> yes \
 
 # Private Farming Plan
 
-Create `private-fixed-plan.json` file in your local directory and copy the below json into the file. 
+Create `private-fixed-plan.json` file in your local directory and copy the below JSON into a file. 
 
 ## PrivateFarmingFixedAmountPlan
 
@@ -349,7 +350,7 @@ Create `private-fixed-plan.json` file in your local directory and copy the below
 ```
 
 ```bash
-# Create private fixed amount plan
+# Send to create a private fixed amount plan
 farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 --chain-id localnet \
 --from user1 \
@@ -359,7 +360,7 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 
 ## PrivateFarmingRatioPlan
 
-Create `private-ratio-plan.json` file in your local directory and copy the below json into the file. 
+Create `private-ratio-plan.json` file in your local directory and copy the below JSON into a file. 
 
 ```json
 {
@@ -385,17 +386,10 @@ Create `private-ratio-plan.json` file in your local directory and copy the below
 ```
 
 ```bash
-# Create private ratio plan
+# Send to create a private ratio plan
 farmingd tx farming create-private-fixed-plan private-ratio-plan.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
 --yes
 ```
-
-## REST APIs
-
-- http://localhost:1317/cosmos/bank/v1beta1/balances/{ADDRESS}
-- http://localhost:1317/cosmos/gov/v1beta1/proposals
-- http://localhost:1317/cosmos/farming/v1beta1/plans
-- http://localhost:1317/cosmos/tx/v1beta1/txs/{TX_HASH}
