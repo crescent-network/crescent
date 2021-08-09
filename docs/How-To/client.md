@@ -468,7 +468,7 @@ https://github.com/tendermint/farming/blob/master/proto/tendermint/farming/v1bet
 
 ```bash
 # Query the values set as farming parameters
-farmingd q farming params --output json
+farmingd q farming params --output json | jq
 ```
 
 ```json
@@ -493,23 +493,33 @@ farmingd q farming params --output json
 
 ```bash
 # Query for all farmings plans on a network
-farmingd q farming plans --output json
+farmingd q farming plans --output json | jq
 
 # Query for all farmings plans with the given plan type
 # plan type must be either public or private
-farmingd q farming plans --plan-type private --output json
+farmingd q farming plans \
+--plan-type private \
+--output json | jq
 
 # Query for all farmings plans with the given farming pool address
-farmingd q farming plans --farming-pool-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v --output json
+farmingd q farming plans \
+--farming-pool-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v \
+--output json | jq
 
 # Query for all farmings plans with the given reward pool address
-farmingd q farming plans --reward-pool-addr cosmos1gshap5099dwjdlxk2ym9z8u40jtkm7hvux45pze8em08fwarww6qc0tvl0 --output json
+farmingd q farming plans \
+--reward-pool-addr cosmos1gshap5099dwjdlxk2ym9z8u40jtkm7hvux45pze8em08fwarww6qc0tvl0 \
+--output json | jq
 
 # Query for all farmings plans with the given termination address
-farmingd q farming plans --termination-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v --output json
+farmingd q farming plans \
+--termination-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v \
+--output json | jq
 
 # Query for all farmings plans with the given staking coin denom
-farmingd q farming plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --output json
+farmingd q farming plans \
+--staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+--output json | jq
 ```
 
 ```json
@@ -579,7 +589,7 @@ farmingd q farming plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405
 
 ```bash
 # Query plan with the given plan id
-farmingd q farming plan 1 --output json
+farmingd q farming plan 1 --output json | jq
 ```
 
 ```json
@@ -588,7 +598,7 @@ farmingd q farming plan 1 --output json
     "@type": "/cosmos.farming.v1beta1.FixedAmountPlan",
     "base_plan": {
       "id": "1",
-      "name": "This plan intends to provide incentives for Cosmonauts!",
+      "name": "This plan intends to provide incentives for liquidity pool investors and ATOM holders",
       "type": "PLAN_TYPE_PRIVATE",
       "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
       "reward_pool_address": "cosmos1gshap5099dwjdlxk2ym9z8u40jtkm7hvux45pze8em08fwarww6qc0tvl0",
@@ -604,7 +614,8 @@ farmingd q farming plan 1 --output json
         }
       ],
       "start_time": "2021-08-06T09:00:00Z",
-      "end_time": "2021-08-13T09:00:00Z"
+      "end_time": "2021-08-13T09:00:00Z",
+      "terminated": false
     },
     "epoch_amount": [
       {
@@ -620,16 +631,23 @@ farmingd q farming plan 1 --output json
 
 ```bash
 # Query for all stakings on a network
-farmingd q farming stakings --output json
+farmingd q farming stakings --output json | jq
 
 # Query for all stakings with the given staking coin denom
-farmingd q farming stakings --staking-coin-denom stake --output json
+farmingd q farming stakings \
+--staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+--output json | jq
 
 # Query for all stakings with the given farmer address
-farmingd q farming stakings --farmer-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v --output json
+farmingd q farming stakings \
+--farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+--output json | jq
 
 # Query for all stakings with the given params
-farmingd q farming stakings --staking-coin-denom uatom --farmer-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v --output json
+farmingd q farming stakings \
+--staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+--farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+--output json | jq
 ```
 
 ```json
@@ -637,30 +655,19 @@ farmingd q farming stakings --staking-coin-denom uatom --farmer-addr cosmos1zaav
   "stakings": [
     {
       "id": "1",
-      "farmer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+      "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
       "staked_coins": [],
       "queued_coins": [
         {
-          "denom": "uatom",
-          "amount": "9950000"
-        }
-      ]
-    },
-    {
-      "id": "2",
-      "farmer": "cosmos13w4ueuk80d3kmwk7ntlhp84fk0arlm3mqf0w08",
-      "staked_coins": [],
-      "queued_coins": [
-        {
-          "denom": "stake",
-          "amount": "10000000"
+          "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+          "amount": "2500000"
         }
       ]
     }
   ],
   "pagination": {
     "next_key": null,
-    "total": "0"
+    "total": "1"
   }
 }
 ```
@@ -668,20 +675,21 @@ farmingd q farming stakings --staking-coin-denom uatom --farmer-addr cosmos1zaav
 ### Staking
 
 ```bash
-# Query for all stakings with the given staking id
-farmingd q farming staking 1 --output json
+# Query for the details of staking with the given staking id
+farmingd q farming staking 1 --output json | jq
+
 ```
 
 ```json
 {
   "staking": {
     "id": "1",
-    "farmer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+    "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
     "staked_coins": [],
     "queued_coins": [
       {
-        "denom": "uatom",
-        "amount": "9950000"
+        "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+        "amount": "2500000"
       }
     ]
   }
@@ -695,7 +703,7 @@ farmingd q farming staking 1 --output json
 farmingd q farming rewards
 
 # Query for all rewards with the given farmer address
-farmingd q farming rewards --farmer-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v --output json
+farmingd q farming rewards --farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json
 
 # Query for all rewards with the given staking coin denom
 farmingd q farming rewards --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --output json
@@ -703,7 +711,7 @@ farmingd q farming rewards --staking-coin-denom poolD35A0CC16EE598F90B044CE296A4
 # Query for all rewards with the given params
 farmingd q farming rewards \
 --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
---farmer-addr cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v \
+--farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json
 ```
 
@@ -711,12 +719,12 @@ farmingd q farming rewards \
 {
   "rewards": [
     {
-      "farmer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
-      "staking_coin_denom": "uatom",
+      "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
+      "staking_coin_denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
       "reward_coins": [
         {
           "denom": "uatom",
-          "amount": "1000000"
+          "amount": "80000000"
         }
       ]
     }
