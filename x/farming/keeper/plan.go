@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -288,7 +290,15 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 	}
 	k.SetPlan(ctx, plan)
 
-	// TODO: emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypePlanTerminated,
+			sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(plan.GetId(), 10)),
+			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, plan.GetFarmingPoolAddress().String()),
+			sdk.NewAttribute(types.AttributeKeyTerminationAddress, plan.GetTerminationAddress().String()),
+			// TODO: add refunded coins?
+		),
+	})
 
 	return nil
 }
