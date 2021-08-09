@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -282,10 +284,16 @@ func (k Keeper) DistributeRewards(ctx sdk.Context) error {
 			if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), k.GetRewardsReservePoolAcc(ctx), totalDistrAmt); err != nil {
 				return err
 			}
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypeRewardDistributed,
+					sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(distrInfo.Plan.GetId(), 10)),
+					sdk.NewAttribute(types.AttributeKeyAmount, totalDistrAmt.String()),
+				),
+			})
 		}
 	}
-
-	// TODO: emit an endblock event
 
 	return nil
 }
