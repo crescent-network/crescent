@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 	suite.Require().Equal(uint64(1), nextPlanId)
 
 	sampleFixedPlan := suite.sampleFixedAmtPlans[0].(*types.FixedAmountPlan)
-	suite.keeper.CreateFixedAmountPlan(suite.ctx, &types.MsgCreateFixedAmountPlan{
+	_, err := suite.keeper.CreateFixedAmountPlan(suite.ctx, &types.MsgCreateFixedAmountPlan{
 		Name:               sampleFixedPlan.Name,
 		FarmingPoolAddress: sampleFixedPlan.FarmingPoolAddress,
 		StakingCoinWeights: sampleFixedPlan.GetStakingCoinWeights(),
@@ -67,6 +67,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 		EndTime:            sampleFixedPlan.GetEndTime(),
 		EpochAmount:        sampleFixedPlan.EpochAmount,
 	}, types.PlanTypePublic)
+	suite.Require().NoError(err)
 
 	globalPlanId = suite.keeper.GetGlobalPlanId(suite.ctx)
 	suite.Require().Equal(uint64(1), globalPlanId)
@@ -80,7 +81,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 	suite.Require().Equal(uint64(2), nextPlanId)
 
 	sampleRatioPlan := suite.sampleRatioPlans[0].(*types.RatioPlan)
-	suite.keeper.CreateRatioPlan(suite.ctx, &types.MsgCreateRatioPlan{
+	_, err = suite.keeper.CreateRatioPlan(suite.ctx, &types.MsgCreateRatioPlan{
 		Name:               sampleRatioPlan.Name,
 		FarmingPoolAddress: sampleRatioPlan.FarmingPoolAddress,
 		StakingCoinWeights: sampleRatioPlan.GetStakingCoinWeights(),
@@ -88,6 +89,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 		EndTime:            sampleRatioPlan.GetEndTime(),
 		EpochRatio:         sampleRatioPlan.EpochRatio,
 	}, types.PlanTypePrivate)
+	suite.Require().NoError(err)
 
 	globalPlanId = suite.keeper.GetGlobalPlanId(suite.ctx)
 	suite.Require().Equal(uint64(2), globalPlanId)
