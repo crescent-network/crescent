@@ -8,11 +8,11 @@ Messages (Msg) are objects that trigger state transitions. Msgs are wrapped in t
 
 ```go
 type MsgCreateFixedAmountPlan struct {
-    FarmingPoolAddress  string
-    StakingCoinWeights  sdk.DecCoins
-    StartTime           time.Time
-    EndTime             time.Time
-    EpochAmount         sdk.Coins
+    FarmingPoolAddress string
+    StakingCoinWeights sdk.DecCoins
+    StartTime          time.Time
+    EndTime            time.Time
+    EpochAmount        sdk.Coins
 }
 ```
 
@@ -20,11 +20,11 @@ type MsgCreateFixedAmountPlan struct {
 
 ```go
 type MsgCreateRatioPlan struct {
-    FarmingPoolAddress  string
-    StakingCoinWeights  sdk.DecCoins
-    StartTime           time.Time
-    EndTime             time.Time
-    EpochRatio          sdk.Dec
+    FarmingPoolAddress string
+    StakingCoinWeights sdk.DecCoins
+    StartTime          time.Time
+    EndTime            time.Time
+    EpochRatio         sdk.Dec
 }
 ```
 
@@ -57,7 +57,7 @@ A farmer should harvest their farming rewards. The rewards are not automatically
 
 ```go
 type MsgHarvest struct {
-    Farmer              string
-    StakingCoinDenoms   []string
+    Farmer            string
+    StakingCoinDenoms []string
 }
 ```

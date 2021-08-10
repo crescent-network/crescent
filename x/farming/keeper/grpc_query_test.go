@@ -82,25 +82,6 @@ func (suite *KeeperTestSuite) TestGRPCPlans() {
 			},
 		},
 		{
-			"invalid reward pool addr",
-			&types.QueryPlansRequest{RewardPoolAddress: "invalid"},
-			true,
-			nil,
-		},
-		{
-			"query by reward pool addr",
-			&types.QueryPlansRequest{
-				RewardPoolAddress: suite.samplePlans[0].GetRewardPoolAddress().String(),
-			},
-			false,
-			func(resp *types.QueryPlansResponse) {
-				plans, err := types.UnpackPlans(resp.Plans)
-				suite.Require().NoError(err)
-				suite.Require().Len(plans, 1)
-				suite.Require().True(plans[0].GetRewardPoolAddress().Equals(suite.samplePlans[0].GetRewardPoolAddress()))
-			},
-		},
-		{
 			"invalid termination addr",
 			&types.QueryPlansRequest{TerminationAddress: "invalid"},
 			true,

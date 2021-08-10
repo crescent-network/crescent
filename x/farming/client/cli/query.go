@@ -90,13 +90,11 @@ Example:
 $ %s query %s plans
 $ %s query %s plans --plan-type private
 $ %s query %s plans --farming-pool-addr %s1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
-$ %s query %s plans --reward-pool-addr %s1gshap5099dwjdlxk2ym9z8u40jtkm7hvux45pze8em08fwarww6qc0tvl0
 $ %s query %s plans --termination-addr %s1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
 $ %s query %s plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
-				version.AppName, types.ModuleName, sdk.Bech32MainPrefix,
 				version.AppName, types.ModuleName, sdk.Bech32MainPrefix,
 				version.AppName, types.ModuleName, sdk.Bech32MainPrefix,
 				version.AppName, types.ModuleName,
@@ -110,7 +108,6 @@ $ %s query %s plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C3
 
 			planType, _ := cmd.Flags().GetString(FlagPlanType)
 			farmingPoolAddr, _ := cmd.Flags().GetString(FlagFarmingPoolAddr)
-			rewardPoolAddr, _ := cmd.Flags().GetString(FlagRewardPoolAddr)
 			terminationAddr, _ := cmd.Flags().GetString(FlagTerminationAddr)
 			stakingCoinDenom, _ := cmd.Flags().GetString(FlagStakingCoinDenom)
 
@@ -122,38 +119,23 @@ $ %s query %s plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C3
 				return err
 			}
 
+			req := &types.QueryPlansRequest{
+				FarmingPoolAddress: farmingPoolAddr,
+				TerminationAddress: terminationAddr,
+				StakingCoinDenom:   stakingCoinDenom,
+				Pagination:         pageReq,
+			}
 			if planType != "" {
-				var pType types.PlanType
-				if planType == "public" {
-					pType = types.PlanTypePublic
-				} else if planType == "private" {
-					pType = types.PlanTypePrivate
+				if planType == types.PlanTypePublic.String() || planType == types.PlanTypePrivate.String() {
+					req.Type = planType
 				} else {
 					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan type must be either public or private")
 				}
+			}
 
-				resp, err = queryClient.Plans(cmd.Context(), &types.QueryPlansRequest{
-					Type:               pType.String(),
-					FarmingPoolAddress: farmingPoolAddr,
-					RewardPoolAddress:  rewardPoolAddr,
-					TerminationAddress: terminationAddr,
-					StakingCoinDenom:   stakingCoinDenom,
-					Pagination:         pageReq,
-				})
-				if err != nil {
-					return err
-				}
-			} else {
-				resp, err = queryClient.Plans(cmd.Context(), &types.QueryPlansRequest{
-					FarmingPoolAddress: farmingPoolAddr,
-					RewardPoolAddress:  rewardPoolAddr,
-					TerminationAddress: terminationAddr,
-					StakingCoinDenom:   stakingCoinDenom,
-					Pagination:         pageReq,
-				})
-				if err != nil {
-					return err
-				}
+			resp, err = queryClient.Plans(cmd.Context(), req)
+			if err != nil {
+				return err
 			}
 
 			return clientCtx.PrintProto(resp)

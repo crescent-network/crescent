@@ -47,12 +47,6 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		}
 	}
 
-	if req.RewardPoolAddress != "" {
-		if _, err := sdk.AccAddressFromBech32(req.RewardPoolAddress); err != nil {
-			return nil, err
-		}
-	}
-
 	if req.TerminationAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(req.TerminationAddress); err != nil {
 			return nil, err
@@ -94,10 +88,6 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		}
 
 		if req.FarmingPoolAddress != "" && plan.GetFarmingPoolAddress().String() != req.FarmingPoolAddress {
-			return false, nil
-		}
-
-		if req.RewardPoolAddress != "" && plan.GetRewardPoolAddress().String() != req.RewardPoolAddress {
 			return false, nil
 		}
 

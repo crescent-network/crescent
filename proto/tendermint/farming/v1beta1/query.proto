@@ -56,11 +56,10 @@ message QueryParamsResponse {
 message QueryPlansRequest {
   string                                type                 = 1;
   string                                farming_pool_address = 2;
-  string                                reward_pool_address  = 3;
-  string                                termination_address  = 4;
-  string                                staking_coin_denom   = 5;
-  string                                terminated           = 6;
-  cosmos.base.query.v1beta1.PageRequest pagination           = 7;
+  string                                termination_address  = 3;
+  string                                staking_coin_denom   = 4;
+  string                                terminated           = 5;
+  cosmos.base.query.v1beta1.PageRequest pagination           = 6;
 }
 
 // QueryPlansResponse is the response type for the Query/Plans RPC method.
