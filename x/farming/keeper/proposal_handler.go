@@ -9,10 +9,6 @@ import (
 
 // HandlePublicPlanProposal is a handler for executing a public plan creation proposal.
 func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, proposal *types.PublicPlanProposal) error {
-	if err := proposal.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
 	if proposal.AddRequestProposals != nil {
 		if err := k.AddPublicPlanProposal(ctx, proposal.AddRequestProposals); err != nil {
 			return err
