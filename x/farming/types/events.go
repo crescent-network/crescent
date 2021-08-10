@@ -7,13 +7,13 @@ const (
 	EventTypeStake                 = "stake"
 	EventTypeUnstake               = "unstake"
 	EventTypeHarvest               = "harvest"
+	EventTypePlanTerminated        = "plan_terminated"
+	EventTypeRewardDistributed     = "reward_distributed"
 
 	AttributeKeyPlanId             = "plan_id" //nolint:golint
 	AttributeKeyPlanName           = "plan_name"
 	AttributeKeyFarmingPoolAddress = "farming_pool_address"
-	AttributeKeyRewardPoolAddress  = "reward_pool_address"
 	AttributeKeyTerminationAddress = "termination_address"
-	AttributeKeyStakingCoinWeights = "staking_coin_weights"
 	AttributeKeyStakingCoins       = "staking_coins"
 	AttributeKeyUnstakingCoins     = "unstaking_coins"
 	AttributeKeyRewardCoins        = "reward_coins"
@@ -22,4 +22,5 @@ const (
 	AttributeKeyEpochAmount        = "epoch_amount"
 	AttributeKeyEpochRatio         = "epoch_ratio"
 	AttributeKeyFarmer             = "farmer"
+	AttributeKeyAmount             = "amount"
 )
