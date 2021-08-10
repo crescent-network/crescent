@@ -95,14 +95,6 @@ message BasePlan {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable)     = false
   ];
-
-  // reward_coins specifies the total reward coins accumulated in the
-  // global reward pool for this plan
-  repeated cosmos.base.v1beta1.Coin reward_coins = 12 [
-    (gogoproto.moretags)     = "yaml:\"reward_coins\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false
-  ];
 }
 
 // FixedAmountPlan defines a fixed amount plan that fixed amount of coins are

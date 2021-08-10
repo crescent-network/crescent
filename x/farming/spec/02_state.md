@@ -43,9 +43,6 @@ type PlanI interface {
     GetDistributedCoins() sdk.Coins
     SetDistributedCoins(sdk.Coins) error
 
-    GetRewardCoins() sdk.Coins
-    SetRewardCoins(sdk.Coins) error
-
     String() string
 }
 ```
@@ -69,7 +66,6 @@ type BasePlan struct {
     Terminated           bool         // whether the plan has terminated or not
     LastDistributionTime *time.Time   // last time a distribution happened
     DistributedCoins     sdk.Coins    // total coins distributed
-    RewardCoins          sdk.Coins    // reward coins accumulated in the global reward pool
 }
 ```
 
@@ -112,8 +108,6 @@ The parameters of the Plan state are:
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
 - Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
 - PlanByFarmerAddrIndex: `0x12 | FarmerAddrLen (1 byte) | FarmerAddr -> Id -> nil` (can be deprecated)
-- LastDistributedTime: `0x13 | Id -> time.Time`
-- TotalDistributedRewardCoins: `0x14 | PlanId | StakingCoinDenomLen (1 byte) | StakingCoinDenom → ProtocolBuffer(sdk.Coins)`
 - GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
   - store latest plan id
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
@@ -127,10 +121,10 @@ The parameters of the Plan state are:
 ```go
 // Staking stores farmer's staking position status.
 type Staking struct {
-    Id                       uint64
-    Farmer                   string
-    StakedCoins              sdk.Coins
-    QueuedCoins              sdk.Coins
+    Id          uint64
+    Farmer      string
+    StakedCoins sdk.Coins
+    QueuedCoins sdk.Coins
 }
 ```
 
@@ -149,9 +143,9 @@ The parameters of the Staking state are:
 ```go
 // Reward defines a record of farming rewards for query result and exported state.
 type Reward struct {
-    Farmer                string
-    StakingCoinDenom      string
-    RewardCoins           sdk.Coins
+    Farmer           string
+    StakingCoinDenom string
+    RewardCoins      sdk.Coins
 }
 ```
 
