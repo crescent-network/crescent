@@ -22,9 +22,6 @@ type PlanI interface {
     GetFarmingPoolAddress() sdk.AccAddress
     SetFarmingPoolAddress(sdk.AccAddress) error
 
-    GetRewardPoolAddress() sdk.AccAddress
-    SetRewardPoolAddress(sdk.AccAddress) error
-
     GetTerminationAddress() sdk.AccAddress
     SetTerminationAddress(sdk.AccAddress) error
 
@@ -40,6 +37,12 @@ type PlanI interface {
     GetTerminated() bool
     SetTerminated(bool) error
 
+    GetLastDistributionTime() *time.Time
+    SetLastDistributionTime(*time.Time) error
+
+    GetDistributedCoins() sdk.Coins
+    SetDistributedCoins(sdk.Coins) error
+
     String() string
 }
 ```
@@ -53,15 +56,16 @@ A base plan is the simplest and most common plan type, which just stores all req
 // for basic farming plan functionality. Any custom farming plan type should extend this
 // type for additional functionality (e.g. fixed amount plan, ratio plan).
 type BasePlan struct {
-    Id                       uint64       // index of the plan
-    Type                     PlanType     // type of the plan; public or private
-    FarmingPoolAddress       string       // bech32-encoded farming pool address
-    RewardPoolAddress        string       // bech32-encoded reward pool address
-    TerminationAddress       string       // bech32-encoded termination address
-    StakingCoinWeights       sdk.DecCoins // coin weights for the plan
-    StartTime                time.Time    // start time of the plan
-    EndTime                  time.Time    // end time of the plan
-    Terminated               bool         // whether the plan has terminated or not
+    Id                   uint64       // index of the plan
+    Type                 PlanType     // type of the plan; public or private
+    FarmingPoolAddress   string       // bech32-encoded farming pool address
+    TerminationAddress   string       // bech32-encoded termination address
+    StakingCoinWeights   sdk.DecCoins // coin weights for the plan
+    StartTime            time.Time    // start time of the plan
+    EndTime              time.Time    // end time of the plan
+    Terminated           bool         // whether the plan has terminated or not
+    LastDistributionTime *time.Time   // last time a distribution happened
+    DistributedCoins     sdk.Coins    // total coins distributed
 }
 ```
 
@@ -70,7 +74,7 @@ type BasePlan struct {
 type FixedAmountPlan struct {
     *BasePlan
 
-    EpochAmount      sdk.Coins // distributing amount for each epoch
+    EpochAmount sdk.Coins // distributing amount for each epoch
 }
 ```
 
@@ -79,7 +83,7 @@ type FixedAmountPlan struct {
 type RatioPlan struct {
     *BasePlan
 
-    EpochRatio            sdk.Dec // distributing amount by ratio
+    EpochRatio sdk.Dec // distributing amount by ratio
 }
 ```
 
@@ -104,8 +108,6 @@ The parameters of the Plan state are:
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
 - Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
 - PlanByFarmerAddrIndex: `0x12 | FarmerAddrLen (1 byte) | FarmerAddr -> Id -> nil` (can be deprecated)
-- LastDistributedTime: `0x13 | Id -> time.Time`
-- TotalDistributedRewardCoins: `0x14 | PlanId | StakingCoinDenomLen (1 byte) | StakingCoinDenom → ProtocolBuffer(sdk.Coins)`
 - GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
   - store latest plan id
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
@@ -119,10 +121,10 @@ The parameters of the Plan state are:
 ```go
 // Staking stores farmer's staking position status.
 type Staking struct {
-    Id                       uint64
-    Farmer                   string
-    StakedCoins              sdk.Coins
-    QueuedCoins              sdk.Coins
+    Id          uint64
+    Farmer      string
+    StakedCoins sdk.Coins
+    QueuedCoins sdk.Coins
 }
 ```
 
@@ -141,9 +143,9 @@ The parameters of the Staking state are:
 ```go
 // Reward defines a record of farming rewards for query result and exported state.
 type Reward struct {
-    Farmer                string
-    StakingCoinDenom      string
-    RewardCoins           sdk.Coins
+    Farmer           string
+    StakingCoinDenom string
+    RewardCoins      sdk.Coins
 }
 ```
 

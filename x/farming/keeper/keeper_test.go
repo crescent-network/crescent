@@ -72,7 +72,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 				),
 				mustParseRFC3339("2021-08-02T00:00:00Z"),
 				mustParseRFC3339("2021-08-10T00:00:00Z"),
-				false,
 			),
 			sdk.NewCoins(),
 		),
@@ -88,7 +87,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 				),
 				mustParseRFC3339("2021-08-04T00:00:00Z"),
 				mustParseRFC3339("2021-08-12T00:00:00Z"),
-				false,
 			),
 			sdk.NewCoins(),
 		),
@@ -107,7 +105,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 				),
 				mustParseRFC3339("2021-08-01T00:00:00Z"),
 				mustParseRFC3339("2021-08-09T00:00:00Z"),
-				false,
 			),
 			sdk.NewDecWithPrec(4, 2), // 4%
 		),
@@ -123,7 +120,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 				),
 				mustParseRFC3339("2021-08-03T00:00:00Z"),
 				mustParseRFC3339("2021-08-07T00:00:00Z"),
-				false,
 			),
 			sdk.NewDecWithPrec(3, 2), // 3%
 		),

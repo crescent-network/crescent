@@ -13,7 +13,7 @@ import (
 
 // NewPlan sets the next plan number to a given plan interface
 func (k Keeper) NewPlan(ctx sdk.Context, plan types.PlanI) types.PlanI {
-	if err := plan.SetId(k.GetNextPlanIDWithUpdate(ctx)); err != nil {
+	if err := plan.SetId(k.GetNextPlanIdWithUpdate(ctx)); err != nil {
 		panic(err)
 	}
 
@@ -117,16 +117,25 @@ func (k Keeper) SetPlanIdByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAdd
 	store.Set(types.GetPlanByFarmerAddrIndexKey(farmerAcc, planID), b)
 }
 
-// GetNextPlanIDWithUpdate returns and increments the global Plan ID counter.
-// If the global plan number is not set, it initializes it with value 1.
-func (k Keeper) GetNextPlanIDWithUpdate(ctx sdk.Context) uint64 {
+// GetNextPlanIdWithUpdate returns and increments the global Plan ID counter.
+// If the global plan number is not set, it initializes it with value 0.
+func (k Keeper) GetNextPlanIdWithUpdate(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	id := k.GetGlobalPlanId(ctx) + 1
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
+	store.Set(types.GlobalPlanIdKey, bz)
+	return id
+}
+
+// GetGlobalPlanId returns the global Plan ID counter.
+func (k Keeper) GetGlobalPlanId(ctx sdk.Context) uint64 {
 	var id uint64
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.GlobalPlanIdKey)
 	if bz == nil {
 		// initialize the PlanId
-		id = 1
+		id = 0
 	} else {
 		val := gogotypes.UInt64Value{}
 
@@ -137,8 +146,6 @@ func (k Keeper) GetNextPlanIDWithUpdate(ctx sdk.Context) uint64 {
 
 		id = val.GetValue()
 	}
-	bz = k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id + 1})
-	store.Set(types.GlobalPlanIdKey, bz)
 	return id
 }
 
@@ -164,7 +171,7 @@ func (k Keeper) UnmarshalPlan(bz []byte) (plan types.PlanI, err error) {
 
 // CreateFixedAmountPlan sets fixed amount plan.
 func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixedAmountPlan, typ types.PlanType) (types.PlanI, error) {
-	nextId := k.GetNextPlanIDWithUpdate(ctx)
+	nextId := k.GetNextPlanIdWithUpdate(ctx)
 	farmingPoolAddrAcc, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
 	if err != nil {
 		return nil, err
@@ -197,7 +204,6 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
-		false,
 	)
 
 	fixedPlan := types.NewFixedAmountPlan(basePlan, msg.EpochAmount)
@@ -207,8 +213,9 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateFixedAmountPlan,
+			sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(nextId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPlanName, msg.Name),
 			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
-			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, fixedPlan.RewardPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEpochAmount, msg.EpochAmount.String()),
@@ -220,7 +227,7 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 
 // CreateRatioPlan sets ratio plan.
 func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, typ types.PlanType) (types.PlanI, error) {
-	nextId := k.GetNextPlanIDWithUpdate(ctx)
+	nextId := k.GetNextPlanIdWithUpdate(ctx)
 	farmingPoolAddrAcc, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
 	if err != nil {
 		return nil, err
@@ -253,7 +260,6 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		msg.StakingCoinWeights,
 		msg.StartTime,
 		msg.EndTime,
-		false,
 	)
 
 	ratioPlan := types.NewRatioPlan(basePlan, msg.EpochRatio)
@@ -263,8 +269,9 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateRatioPlan,
+			sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(nextId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPlanName, msg.Name),
 			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, msg.FarmingPoolAddress),
-			sdk.NewAttribute(types.AttributeKeyRewardPoolAddress, ratioPlan.RewardPoolAddress),
 			sdk.NewAttribute(types.AttributeKeyStartTime, msg.StartTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEndTime, msg.EndTime.String()),
 			sdk.NewAttribute(types.AttributeKeyEpochRatio, msg.EpochRatio.String()),
