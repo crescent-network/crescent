@@ -275,15 +275,15 @@ func (k Keeper) DistributeRewards(ctx sdk.Context) error {
 		}
 
 		if !totalDistrAmt.IsZero() {
-			k.SetLastDistributedTime(ctx, distrInfo.Plan.GetId(), ctx.BlockTime())
-			totalDistributedRewardCoins := k.GetTotalDistributedRewardCoins(ctx, distrInfo.Plan.GetId())
-			totalDistributedRewardCoins = totalDistributedRewardCoins.Add(totalDistrAmt...)
-			k.SetTotalDistributedRewardCoins(ctx, distrInfo.Plan.GetId(), totalDistributedRewardCoins)
-
 			//if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), distrInfo.Plan.GetRewardPoolAddress(), totalDistrAmt); err != nil {
 			if err := k.bankKeeper.SendCoins(ctx, distrInfo.Plan.GetFarmingPoolAddress(), k.GetRewardsReservePoolAcc(ctx), totalDistrAmt); err != nil {
 				return err
 			}
+
+			t := ctx.BlockTime()
+			_ = distrInfo.Plan.SetLastDistributionTime(&t)
+			_ = distrInfo.Plan.SetDistributedCoins(distrInfo.Plan.GetDistributedCoins().Add(totalDistrAmt...))
+			k.SetPlan(ctx, distrInfo.Plan)
 
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(

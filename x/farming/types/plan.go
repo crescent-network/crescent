@@ -36,7 +36,6 @@ func NewBasePlan(id uint64, name string, typ PlanType, farmingPoolAddr, terminat
 		Terminated:           false,
 		LastDistributionTime: nil,
 		DistributedCoins:     sdk.NewCoins(),
-		RewardCoins:          sdk.NewCoins(),
 	}
 	return basePlan
 }
@@ -133,15 +132,6 @@ func (plan *BasePlan) SetDistributedCoins(distributedCoins sdk.Coins) error {
 	return nil
 }
 
-func (plan *BasePlan) GetRewardCoins() sdk.Coins {
-	return plan.RewardCoins
-}
-
-func (plan *BasePlan) SetRewardCoins(rewardCoins sdk.Coins) error {
-	plan.RewardCoins = rewardCoins
-	return nil
-}
-
 // Validate checks for errors on the Plan fields
 func (plan BasePlan) Validate() error {
 	if plan.Type != PlanTypePrivate && plan.Type != PlanTypePublic {
@@ -170,9 +160,6 @@ func (plan BasePlan) Validate() error {
 	}
 	if plan.DistributedCoins.IsAnyNegative() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "distributed coins must not be negative")
-	}
-	if plan.RewardCoins.IsAnyNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "reward coins must not be negative")
 	}
 	return nil
 }
@@ -237,9 +224,6 @@ type PlanI interface {
 
 	GetDistributedCoins() sdk.Coins
 	SetDistributedCoins(sdk.Coins) error
-
-	GetRewardCoins() sdk.Coins
-	SetRewardCoins(sdk.Coins) error
 
 	String() string
 }

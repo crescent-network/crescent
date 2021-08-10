@@ -174,11 +174,12 @@ func (suite *KeeperTestSuite) TestDistributeRewards() {
 		}
 	}
 
-	totalRewardCoins := suite.keeper.GetTotalDistributedRewardCoins(suite.ctx, 1)
-	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000)), totalRewardCoins))
-	lastDistributedAt, found := suite.keeper.GetLastDistributedTime(suite.ctx, 1)
-	suite.Require().True(found)
-	suite.Require().Equal(suite.ctx.BlockTime(), lastDistributedAt)
+	plan, _ := suite.keeper.GetPlan(suite.ctx, 1)
+
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000)), plan.GetDistributedCoins()))
+	t := plan.GetLastDistributionTime()
+	suite.Require().NotNil(t)
+	suite.Require().Equal(suite.ctx.BlockTime(), *t)
 }
 
 func (suite *KeeperTestSuite) TestHarvest() {

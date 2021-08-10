@@ -28,10 +28,8 @@ var (
 	GlobalLastEpochTimeKey = []byte("globalLastEpochTime")
 	GlobalStakingIdKey     = []byte("globalStakingId")
 
-	PlanKeyPrefix                     = []byte{0x11}
-	PlansByFarmerIndexKeyPrefix       = []byte{0x12}
-	LastDistributedTimeKeyPrefix      = []byte{0x13}
-	TotalDistributedRewardCoinsPrefix = []byte{0x14}
+	PlanKeyPrefix               = []byte{0x11}
+	PlansByFarmerIndexKeyPrefix = []byte{0x12}
 
 	StakingKeyPrefix                         = []byte{0x21}
 	StakingByFarmerIndexKeyPrefix            = []byte{0x22}
@@ -54,16 +52,6 @@ func GetPlansByFarmerIndexKey(farmerAcc sdk.AccAddress) []byte {
 // GetPlanByFarmerAddrIndexKey returns kv indexing key of the plan indexed by reserve account
 func GetPlanByFarmerAddrIndexKey(farmerAcc sdk.AccAddress, planID uint64) []byte {
 	return append(append(PlansByFarmerIndexKeyPrefix, address.MustLengthPrefix(farmerAcc.Bytes())...), sdk.Uint64ToBigEndian(planID)...)
-}
-
-// GetLastDistributedTimeKey returns key of the last distributed time for a plan.
-func GetLastDistributedTimeKey(planID uint64) []byte {
-	return append(LastDistributedTimeKeyPrefix, sdk.Uint64ToBigEndian(planID)...)
-}
-
-// GetTotalDistributedRewardCoinsKey returns key of the total distributed reward coins for a plan.
-func GetTotalDistributedRewardCoinsKey(planID uint64) []byte {
-	return append(TotalDistributedRewardCoinsPrefix, sdk.Uint64ToBigEndian(planID)...)
 }
 
 // GetStakingKey returns a key for staking of corresponding the id
