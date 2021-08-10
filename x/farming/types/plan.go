@@ -206,6 +206,8 @@ type PlanI interface {
 	GetId() uint64
 	SetId(uint64) error
 
+	// TODO: add GetName to interface
+
 	GetType() PlanType
 	SetType(PlanType) error
 
