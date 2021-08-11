@@ -42,6 +42,10 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 		if err != nil {
 			return err
 		}
+		terminationAcc, err := sdk.AccAddressFromBech32(p.TerminationAddress)
+		if err != nil {
+			return err
+		}
 
 		if !p.EpochAmount.IsZero() && !p.EpochAmount.IsAnyNegative() {
 			msg := types.NewMsgCreateFixedAmountPlan(
@@ -53,7 +57,7 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 				p.EpochAmount,
 			)
 
-			plan, err := k.CreateFixedAmountPlan(ctx, msg, types.PlanTypePublic)
+			plan, err := k.CreateFixedAmountPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
 				return err
 			}
@@ -75,7 +79,7 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 				return err
 			}
 
-			plan, err := k.CreateRatioPlan(ctx, msg, types.PlanTypePublic)
+			plan, err := k.CreateRatioPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
 				return err
 			}

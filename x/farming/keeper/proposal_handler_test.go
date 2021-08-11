@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	_ "github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -145,7 +147,7 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		{
 			"name case #1",
 			case2,
-			sdkerrors.Wrapf(types.ErrInvalidNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
+			sdkerrors.Wrapf(types.ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
 		},
 		{
 			"staking coin weights case #1",
@@ -189,7 +191,9 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 				err := keeper.HandlePublicPlanProposal(suite.ctx, suite.keeper, proposal)
 				suite.Require().NoError(err)
 
-				_, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
+				plan, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
+				fmt.Println(plan)
+				// TODO: need to check each field same as expected
 				suite.Require().Equal(true, found)
 			} else {
 				suite.EqualError(err, tc.expectedErr.Error())
@@ -391,7 +395,7 @@ func (suite *KeeperTestSuite) TestUpdatePublicPlanProposal() {
 		{
 			"name case #1",
 			case3,
-			sdkerrors.Wrapf(types.ErrInvalidNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
+			sdkerrors.Wrapf(types.ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
 		},
 		{
 			"staking coin weights case #1",
@@ -435,7 +439,8 @@ func (suite *KeeperTestSuite) TestUpdatePublicPlanProposal() {
 				err := keeper.HandlePublicPlanProposal(suite.ctx, suite.keeper, proposal)
 				suite.Require().NoError(err)
 
-				_, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
+				plan, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
+				fmt.Println(plan)
 				suite.Require().Equal(true, found)
 			} else {
 				suite.EqualError(err, tc.expectedErr.Error())
