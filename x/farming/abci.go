@@ -21,10 +21,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		}
 	}
 
+	params := k.GetParams(ctx)
+
 	lastEpochTime, found := k.GetLastEpochTime(ctx)
 	if !found {
 		k.SetLastEpochTime(ctx, ctx.BlockTime())
-	} else if ctx.BlockTime().Day()-lastEpochTime.Day() > 0 {
+	} else if uint32(ctx.BlockTime().Sub(lastEpochTime).Seconds()) >= params.EpochDays * 86400 {
 		if err := k.DistributeRewards(ctx); err != nil {
 			panic(err)
 		}
