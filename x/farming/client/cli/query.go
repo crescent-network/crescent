@@ -80,7 +80,7 @@ $ %s query %s params
 
 func GetCmdQueryPlans() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "plans",
+		Use:   "plans [optional flags]",
 		Args:  cobra.NoArgs,
 		Short: "Query for all plans",
 		Long: strings.TrimSpace(
@@ -290,7 +290,7 @@ $ %s query %s staking 1
 
 func GetCmdQueryRewards() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rewards",
+		Use:   "rewards [optional flags]",
 		Args:  cobra.NoArgs,
 		Short: "Query for all rewards",
 		Long: strings.TrimSpace(

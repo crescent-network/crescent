@@ -263,14 +263,17 @@ $ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70
 
 func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "harvest [staking-coin-denoms]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Harvest farming rewards from the denoms that belong to plans",
+		Use:   "harvest [flags]",
+		Args:  cobra.NoArgs,
+		Short: "Harvest farming rewards",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Harvest farming rewards from the farming plan.
+			fmt.Sprintf(`Harvest farming that the staking coin denoms belong to plans.
+
 Example:
-$ %s tx %s harvest "uatom,uiris,ukava" --from mykey
+$ %s tx %s harvest --staking-coin-denoms="poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4" --from mykey
+$ %s tx %s harvest --staking-coin-denoms="poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,uatom" --from mykey
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -282,9 +285,9 @@ $ %s tx %s harvest "uatom,uiris,ukava" --from mykey
 
 			farmer := clientCtx.GetFromAddress()
 
-			denoms := strings.Split(args[0], ",")
-			if len(denoms) == 0 {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin denoms should be provided")
+			denoms, err := cmd.Flags().GetStringSlice(FlagStakingCoinDenoms)
+			if err != nil {
+				return err
 			}
 
 			msg := types.NewMsgHarvest(farmer, denoms)
@@ -293,6 +296,7 @@ $ %s tx %s harvest "uatom,uiris,ukava" --from mykey
 		},
 	}
 
+	cmd.Flags().AddFlagSet(flagSetHarvest())
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
