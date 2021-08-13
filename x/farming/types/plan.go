@@ -318,7 +318,5 @@ func IsPlanActiveAt(plan PlanI, t time.Time) bool {
 
 func PrivatePlanFarmingPoolAddress(name string, planId uint64) sdk.AccAddress {
 	poolAddrName := strings.Join([]string{PrivatePlanFarmingPoolAddrPrefix, fmt.Sprint(planId), name}, PoolAddrSplitter)
-	// TODO: remove debugging log poolAddrName
-	fmt.Println(poolAddrName)
 	return address.Module(ModuleName, []byte(poolAddrName))
 }

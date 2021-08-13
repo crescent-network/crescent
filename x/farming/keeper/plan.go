@@ -172,9 +172,6 @@ func (k Keeper) UnmarshalPlan(bz []byte) (plan types.PlanI, err error) {
 // CreateFixedAmountPlan sets fixed amount plan.
 func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixedAmountPlan, farmingPoolAcc, terminationAcc sdk.AccAddress, typ types.PlanType) (types.PlanI, error) {
 	nextId := k.GetNextPlanIdWithUpdate(ctx)
-	// TODO: if public proposal, It should be choose custom terminationAddr
-
-	// TODO: check if private, not equal msg.creator, terminationAcc
 	if typ == types.PlanTypePrivate {
 		params := k.GetParams(ctx)
 		balances := k.bankKeeper.GetAllBalances(ctx, msg.GetCreator())
@@ -226,8 +223,6 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 // CreateRatioPlan sets ratio plan.
 func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, farmingPoolAcc, terminationAcc sdk.AccAddress, typ types.PlanType) (types.PlanI, error) {
 	nextId := k.GetNextPlanIdWithUpdate(ctx)
-	// TODO: if public proposal, It should be choose custom terminationAddr
-	// TODO: check if private, not equal msg.creator, terminationAcc
 	if typ == types.PlanTypePrivate {
 		params := k.GetParams(ctx)
 		balances := k.bankKeeper.GetAllBalances(ctx, msg.GetCreator())
@@ -279,7 +274,6 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 // TerminatePlan sends all remaining coins in the plan's farming pool to
 // the termination address and mark the plan as terminated.
 func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
-	// TODO: private plan also
 	balances := k.bankKeeper.GetAllBalances(ctx, plan.GetFarmingPoolAddress())
 	if balances.IsAllPositive() {
 		if err := k.bankKeeper.SendCoins(ctx, plan.GetFarmingPoolAddress(), plan.GetTerminationAddress(), balances); err != nil {
