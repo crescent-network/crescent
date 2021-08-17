@@ -41,6 +41,9 @@ Unlike public farming plan, private farming plan can be created by anyone with s
 2. PrivatePlan: can be created by anyone (account).
     - MsgCreateFixedAmountPlan
     - MsgCreateRatioPlan
+
+Common Messages
+
     - MsgStake
     - MsgUnstake
     - MsgHarvest
@@ -95,7 +98,7 @@ Let's see what values are set as farming parameters.
 
 There are two different types of fee parameters `private_plan_creation_fee` is the fee for private plan creating and `staking_creation_fee` is for when staking coins. These fees are there to prevent from spamming attacks.
 
-The `epoch_days` is for reward distribution. It is measured in days. So, every UTC 00:00 end blocker calculates rewards and distributes to global reward pool address. Farmers should harvest their rewards from the pool.
+The `epoch_days` is for reward distribution. It is measured in days. So, EndBlocker on the first block after every UTC 00:00 calculates rewards and distributes to global reward pool address. Farmers should harvest their rewards from the pool.
 
 The last parameter `farming_fee_collector` is the module account that collects fees within the farming module. It is a global parameter because the module can be used by any Cosmos SDK based chains and chains can update the address for their need.
 
