@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,4 +74,14 @@ func TestRatioPlans(t *testing.T) {
 			require.Equal(t, tc.expectedErr.Error(), err.Error())
 		}
 	}
+}
+
+func TestPrivatePlanFarmingPoolAddress(t *testing.T) {
+	testAcc1 := types.PrivatePlanFarmingPoolAddress("test1", 55)
+	require.Equal(t, testAcc1, sdk.AccAddress(address.Module(types.ModuleName, []byte("PrivatePlan|55|test1"))))
+	require.Equal(t, "cosmos1wce0qjwacezxz42ghqwp6aqvxjt7mu80jywhh09zv2fdv8s4595qk7tzqc", testAcc1.String())
+
+	testAcc2 := types.PrivatePlanFarmingPoolAddress("test2", 1)
+	require.Equal(t, testAcc2, sdk.AccAddress(address.Module(types.ModuleName, []byte("PrivatePlan|1|test2"))))
+	require.Equal(t, "cosmos172yhzhxwgwul3s8m6qpgw2ww3auedq4k3dt224543d0sd44fgx4spcjthr", testAcc2.String())
 }

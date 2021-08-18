@@ -28,7 +28,7 @@ const (
 // NewMsgCreateFixedAmountPlan creates a new MsgCreateFixedAmountPlan.
 func NewMsgCreateFixedAmountPlan(
 	name string,
-	farmingPoolAddr sdk.AccAddress,
+	creatorAcc sdk.AccAddress,
 	stakingCoinWeights sdk.DecCoins,
 	startTime time.Time,
 	endTime time.Time,
@@ -36,7 +36,7 @@ func NewMsgCreateFixedAmountPlan(
 ) *MsgCreateFixedAmountPlan {
 	return &MsgCreateFixedAmountPlan{
 		Name:               name,
-		FarmingPoolAddress: farmingPoolAddr.String(),
+		Creator:            creatorAcc.String(),
 		StakingCoinWeights: stakingCoinWeights,
 		StartTime:          startTime,
 		EndTime:            endTime,
@@ -49,8 +49,8 @@ func (msg MsgCreateFixedAmountPlan) Route() string { return RouterKey }
 func (msg MsgCreateFixedAmountPlan) Type() string { return TypeMsgCreateFixedAmountPlan }
 
 func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", msg.FarmingPoolAddress, err)
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address %q: %v", msg.Creator, err)
 	}
 	if !msg.EndTime.After(msg.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
@@ -78,7 +78,7 @@ func (msg MsgCreateFixedAmountPlan) GetSignBytes() []byte {
 }
 
 func (msg MsgCreateFixedAmountPlan) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +86,7 @@ func (msg MsgCreateFixedAmountPlan) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgCreateFixedAmountPlan) GetCreator() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +96,7 @@ func (msg MsgCreateFixedAmountPlan) GetCreator() sdk.AccAddress {
 // NewMsgCreateRatioPlan creates a new MsgCreateRatioPlan.
 func NewMsgCreateRatioPlan(
 	name string,
-	farmingPoolAddr sdk.AccAddress,
+	CreatorAcc sdk.AccAddress,
 	stakingCoinWeights sdk.DecCoins,
 	startTime time.Time,
 	endTime time.Time,
@@ -104,7 +104,7 @@ func NewMsgCreateRatioPlan(
 ) *MsgCreateRatioPlan {
 	return &MsgCreateRatioPlan{
 		Name:               name,
-		FarmingPoolAddress: farmingPoolAddr.String(),
+		Creator:            CreatorAcc.String(),
 		StakingCoinWeights: stakingCoinWeights,
 		StartTime:          startTime,
 		EndTime:            endTime,
@@ -117,8 +117,8 @@ func (msg MsgCreateRatioPlan) Route() string { return RouterKey }
 func (msg MsgCreateRatioPlan) Type() string { return TypeMsgCreateRatioPlan }
 
 func (msg MsgCreateRatioPlan) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", msg.FarmingPoolAddress, err)
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address %q: %v", msg.Creator, err)
 	}
 	if !msg.EndTime.After(msg.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
@@ -146,7 +146,7 @@ func (msg MsgCreateRatioPlan) GetSignBytes() []byte {
 }
 
 func (msg MsgCreateRatioPlan) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}
@@ -154,7 +154,7 @@ func (msg MsgCreateRatioPlan) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgCreateRatioPlan) GetCreator() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.FarmingPoolAddress)
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}
