@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		{
 			"name case #1",
 			case2,
-			sdkerrors.Wrapf(types.ErrInvalidNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
+			sdkerrors.Wrapf(types.ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
 		},
 		{
 			"staking coin weights case #1",
@@ -190,6 +190,7 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 				suite.Require().NoError(err)
 
 				_, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
+				// TODO: need to check each field same as expected
 				suite.Require().Equal(true, found)
 			} else {
 				suite.EqualError(err, tc.expectedErr.Error())
@@ -391,7 +392,7 @@ func (suite *KeeperTestSuite) TestUpdatePublicPlanProposal() {
 		{
 			"name case #1",
 			case3,
-			sdkerrors.Wrapf(types.ErrInvalidNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
+			sdkerrors.Wrapf(types.ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
 		},
 		{
 			"staking coin weights case #1",

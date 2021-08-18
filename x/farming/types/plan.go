@@ -2,8 +2,10 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,7 +15,9 @@ import (
 )
 
 const (
-	MaxNameLength int = 140
+	MaxNameLength                    int    = 140
+	PrivatePlanFarmingPoolAddrPrefix string = "PrivatePlan"
+	PoolAddrSplitter                 string = "|"
 )
 
 var (
@@ -143,9 +147,13 @@ func (plan BasePlan) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(plan.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", plan.TerminationAddress, err)
 	}
-	if len(plan.Name) > MaxNameLength {
-		return sdkerrors.Wrapf(ErrInvalidNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
+	if strings.Contains(plan.Name, PoolAddrSplitter) {
+		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot contain %s", PoolAddrSplitter)
 	}
+	if len(plan.Name) > MaxNameLength {
+		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
+	}
+
 	if plan.StakingCoinWeights.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
 	}
@@ -306,4 +314,9 @@ func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) bool {
 // IsPlanActiveAt returns if the plan is active at given time t.
 func IsPlanActiveAt(plan PlanI, t time.Time) bool {
 	return !plan.GetStartTime().After(t) && plan.GetEndTime().After(t)
+}
+
+func PrivatePlanFarmingPoolAddress(name string, planId uint64) sdk.AccAddress {
+	poolAddrName := strings.Join([]string{PrivatePlanFarmingPoolAddrPrefix, fmt.Sprint(planId), name}, PoolAddrSplitter)
+	return address.Module(ModuleName, []byte(poolAddrName))
 }

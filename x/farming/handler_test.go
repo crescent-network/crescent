@@ -41,7 +41,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 	app, ctx, addrs := createTestInput()
 
 	name := "test"
-	farmingPoolAddr := addrs[0]
+	creator := addrs[0]
 	stakingCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
 	)
@@ -51,7 +51,7 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 
 	msg := types.NewMsgCreateFixedAmountPlan(
 		name,
-		farmingPoolAddr,
+		creator,
 		stakingCoinWeights,
 		startTime,
 		endTime,
@@ -64,14 +64,15 @@ func TestMsgCreateFixedAmountPlan(t *testing.T) {
 
 	plans := app.FarmingKeeper.GetAllPlans(ctx)
 	require.Equal(t, 1, len(plans))
-	require.Equal(t, farmingPoolAddr.String(), plans[0].GetFarmingPoolAddress().String())
+	require.Equal(t, creator.String(), plans[0].GetTerminationAddress().String())
+	require.Equal(t, types.PrivatePlanFarmingPoolAddress(name, 1), plans[0].GetFarmingPoolAddress())
 }
 
 func TestMsgCreateRatioPlan(t *testing.T) {
 	app, ctx, addrs := createTestInput()
 
 	name := "test"
-	farmingPoolAddr := addrs[0]
+	creator := addrs[0]
 	stakingCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
 	)
@@ -81,7 +82,7 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 
 	msg := types.NewMsgCreateFixedAmountPlan(
 		name,
-		farmingPoolAddr,
+		creator,
 		stakingCoinWeights,
 		startTime,
 		endTime,
@@ -94,7 +95,8 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 
 	plans := app.FarmingKeeper.GetAllPlans(ctx)
 	require.Equal(t, 1, len(plans))
-	require.Equal(t, farmingPoolAddr.String(), plans[0].GetFarmingPoolAddress().String())
+	require.Equal(t, creator.String(), plans[0].GetTerminationAddress().String())
+	require.Equal(t, types.PrivatePlanFarmingPoolAddress(name, 1), plans[0].GetFarmingPoolAddress())
 }
 
 func TestMsgStake(t *testing.T) {

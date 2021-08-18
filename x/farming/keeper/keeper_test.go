@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		types.NewFixedAmountPlan(
 			types.NewBasePlan(
 				1,
-				"",
+				"testPlan1",
 				types.PlanTypePrivate,
 				suite.addrs[4].String(),
 				suite.addrs[4].String(),
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		types.NewFixedAmountPlan(
 			types.NewBasePlan(
 				2,
-				"",
+				"testPlan2",
 				types.PlanTypePublic,
 				suite.addrs[5].String(),
 				suite.addrs[5].String(),
@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		types.NewRatioPlan(
 			types.NewBasePlan(
 				3,
-				"",
+				"testPlan3",
 				types.PlanTypePrivate,
 				suite.addrs[4].String(),
 				suite.addrs[4].String(),
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		types.NewRatioPlan(
 			types.NewBasePlan(
 				4,
-				"",
+				"testPlan4",
 				types.PlanTypePublic,
 				suite.addrs[5].String(),
 				suite.addrs[5].String(),

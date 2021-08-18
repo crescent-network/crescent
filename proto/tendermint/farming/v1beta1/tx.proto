@@ -36,8 +36,9 @@ message MsgCreateFixedAmountPlan {
   // name specifies the name for the plan
   string name = 1;
 
-  // farming_pool_address defines the bech32-encoded address of the farming pool
-  string farming_pool_address = 2 [(gogoproto.moretags) = "yaml:\"farming_pool_address\""];
+  // creator defines the bech32-encoded address of the creator for the private plan, termination address is also set to
+  // this creator.
+  string creator = 2;
 
   // staking_coin_weights specifies coins weight for the plan
   repeated cosmos.base.v1beta1.DecCoin staking_coin_weights = 3 [
@@ -62,8 +63,7 @@ message MsgCreateFixedAmountPlan {
   ];
 }
 
-// MsgCreateFixedAmountPlanResponse defines the
-// Msg/CreateFixedAmountPlanResponse response type.
+// MsgCreateFixedAmountPlanResponse defines the MsgCreateFixedAmountPlanResponse response type.
 message MsgCreateFixedAmountPlanResponse {}
 
 // MsgCreateRatioPlan defines a SDK message for creating a new ratio farming
@@ -74,8 +74,9 @@ message MsgCreateRatioPlan {
   // name specifies the name for the plan
   string name = 1;
 
-  // farming_pool_address defines the bech32-encoded address of the farming pool
-  string farming_pool_address = 2 [(gogoproto.moretags) = "yaml:\"farming_pool_address\""];
+  // creator defines the bech32-encoded address of the creator for the private plan, termination address is also set to
+  // this creator.
+  string creator = 2;
 
   // staking_coin_weights specifies coins weight for the plan
   repeated cosmos.base.v1beta1.DecCoin staking_coin_weights = 3 [
