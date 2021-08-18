@@ -7,7 +7,7 @@
         - distribution stops
         - remove plan states
         - keep stake, reward states for unstakable stakes and claimable rewards each farmers
-        - rest of the fund in `farmingPoolAddress` sent to `terminationAddress`, but in Private Plan case, `farmingPoolAddress` == `terminationAddress`, so the fund is not moved
+        - rest of the fund in `farmingPoolAddress` sent to `terminationAddress`, in Private Plan case, `terminationAddress` is plan creator
     - Public Plan
         - distribution stops
         - remove plan states

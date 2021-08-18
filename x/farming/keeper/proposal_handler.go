@@ -42,7 +42,7 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 		if err != nil {
 			return err
 		}
-		terminationAcc, err := sdk.AccAddressFromBech32(p.TerminationAddress)
+		terminationAcc, err := sdk.AccAddressFromBech32(p.GetTerminationAddress())
 		if err != nil {
 			return err
 		}

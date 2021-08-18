@@ -8,7 +8,8 @@ Messages (Msg) are objects that trigger state transitions. Msgs are wrapped in t
 
 ```go
 type MsgCreateFixedAmountPlan struct {
-    FarmingPoolAddress string
+    Name               string
+    Creator            string
     StakingCoinWeights sdk.DecCoins
     StartTime          time.Time
     EndTime            time.Time
@@ -20,7 +21,8 @@ type MsgCreateFixedAmountPlan struct {
 
 ```go
 type MsgCreateRatioPlan struct {
-    FarmingPoolAddress string
+    Name               string
+    Creator            string
     StakingCoinWeights sdk.DecCoins
     StartTime          time.Time
     EndTime            time.Time

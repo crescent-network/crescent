@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	_ "github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -191,8 +189,7 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 				err := keeper.HandlePublicPlanProposal(suite.ctx, suite.keeper, proposal)
 				suite.Require().NoError(err)
 
-				plan, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
-				fmt.Println(plan)
+				_, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
 				// TODO: need to check each field same as expected
 				suite.Require().Equal(true, found)
 			} else {
@@ -439,8 +436,7 @@ func (suite *KeeperTestSuite) TestUpdatePublicPlanProposal() {
 				err := keeper.HandlePublicPlanProposal(suite.ctx, suite.keeper, proposal)
 				suite.Require().NoError(err)
 
-				plan, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
-				fmt.Println(plan)
+				_, found := suite.keeper.GetPlan(suite.ctx, uint64(1))
 				suite.Require().Equal(true, found)
 			} else {
 				suite.EqualError(err, tc.expectedErr.Error())

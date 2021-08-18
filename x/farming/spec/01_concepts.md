@@ -11,10 +11,10 @@ There are two types of farming plans in the `farming` module as below.
 
 ### 1. Public Farming Plan
 
-A public farming plan can only be created through governance proposal meaning that the proporsal must be first agreed and passed in order to create a public plan.
+A public farming plan can only be created through governance proposal meaning that the proposal must be first agreed and passed in order to create a public plan.
 ### 2. Private Farming Plan
 
-A private farming plan can be created with any account. The plan creator's account is used as distributing account `FarmingPoolAddress` that will be distributed to farmers automatically. There is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack. 
+A private farming plan can be created with any account. The plan creator's account is used as `TerminationAddress`. There is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack. 
 
 ## Distribution Methods
 
