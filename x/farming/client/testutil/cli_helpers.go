@@ -50,16 +50,30 @@ var commonArgs = []string{
 	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 }
 
-// TODO: not implmemented yet
-
 // MsgCreateFixedAmountPlanExec creates a transaction for creating a private fixed amount plan.
-func MsgCreateFixedAmountPlanExec(clientCtx client.Context, from string, extraArgs ...string) (testutil.BufferWriter, error) {
+func MsgCreateFixedAmountPlanExec(clientCtx client.Context, from string, file string,
+	extraArgs ...string) (testutil.BufferWriter, error) {
 
 	args := append([]string{
+		file,
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...)
 
 	args = append(args, commonArgs...)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, farmingcli.NewCreateFixedAmountPlanCmd(), args)
+}
+
+// MsgStakeExec creates a transaction for staking coin.
+func MsgStakeExec(clientCtx client.Context, from string, stakingCoins string,
+	extraArgs ...string) (testutil.BufferWriter, error) {
+
+	args := append([]string{
+		stakingCoins,
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
+	}, commonArgs...)
+
+	args = append(args, commonArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, farmingcli.NewStakeCmd(), args)
 }

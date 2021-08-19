@@ -7,11 +7,12 @@ import (
 )
 
 const (
-	FlagPlanType         = "plan-type"
-	FlagFarmingPoolAddr  = "farming-pool-addr"
-	FlagTerminationAddr  = "termination-addr"
-	FlagStakingCoinDenom = "staking-coin-denom"
-	FlagFarmerAddr       = "farmer-addr"
+	FlagPlanType          = "plan-type"
+	FlagFarmingPoolAddr   = "farming-pool-addr"
+	FlagTerminationAddr   = "termination-addr"
+	FlagFarmerAddr        = "farmer-addr"
+	FlagStakingCoinDenom  = "staking-coin-denom"
+	FlagStakingCoinDenoms = "staking-coin-denoms"
 )
 
 func flagSetPlans() *flag.FlagSet {
@@ -39,6 +40,14 @@ func flagSetRewards() *flag.FlagSet {
 
 	fs.String(FlagStakingCoinDenom, "", "The staking coin denom")
 	fs.String(FlagFarmerAddr, "", "The bech32 address of the farmer account")
+
+	return fs
+}
+
+func flagSetHarvest() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.StringSlice(FlagStakingCoinDenoms, []string{""}, "The staking coin denoms to harvest farming rewards")
 
 	return fs
 }

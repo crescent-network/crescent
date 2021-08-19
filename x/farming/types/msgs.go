@@ -228,6 +228,9 @@ func (msg MsgUnstake) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farmer address %q: %v", msg.Farmer, err)
 	}
+	if ok := msg.UnstakingCoins.IsZero(); ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "unstaking coins must not be zero")
+	}
 	if err := msg.UnstakingCoins.Validate(); err != nil {
 		return err
 	}

@@ -76,3 +76,19 @@ func ParsePublicPlanProposal(cdc codec.JSONCodec, proposalFile string) (types.Pu
 
 	return proposal, nil
 }
+
+func (req PrivateFixedPlanRequest) String() string {
+	result, err := json.Marshal(&req)
+	if err != nil {
+		panic(err)
+	}
+	return string(result)
+}
+
+func (req PrivateRatioPlanRequest) String() string {
+	result, err := json.Marshal(&req)
+	if err != nil {
+		panic(err)
+	}
+	return string(result)
+}
