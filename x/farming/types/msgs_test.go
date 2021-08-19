@@ -201,6 +201,10 @@ func TestMsgUnstake(t *testing.T) {
 			"invalid farmer address \"\": empty address string is not allowed: invalid address",
 			types.NewMsgUnstake(sdk.AccAddress{}, stakingCoins),
 		},
+		{
+			"unstaking coins must not be zero: invalid request",
+			types.NewMsgUnstake(farmingPoolAddr, sdk.NewCoins(sdk.NewInt64Coin("farmingCoinDenom", 0))),
+		},
 	}
 
 	for _, tc := range testCases {

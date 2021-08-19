@@ -35,6 +35,7 @@ func TestParsePrivateFixedPlan(t *testing.T) {
 
 	plan, err := cli.ParsePrivateFixedPlan(okJSON.Name())
 	require.NoError(t, err)
+	require.NotEmpty(t, plan.String())
 
 	require.Equal(t, "This plan intends to provide incentives for Cosmonauts!", plan.Name)
 	require.Equal(t, "1.000000000000000000PoolCoinDenom", plan.StakingCoinWeights.String())
@@ -61,6 +62,7 @@ func TestParsePrivateRatioPlan(t *testing.T) {
 
 	plan, err := cli.ParsePrivateRatioPlan(okJSON.Name())
 	require.NoError(t, err)
+	require.NotEmpty(t, plan.String())
 
 	require.Equal(t, "This plan intends to provide incentives for Cosmonauts!", plan.Name)
 	require.Equal(t, "1.000000000000000000PoolCoinDenom", plan.StakingCoinWeights.String())
