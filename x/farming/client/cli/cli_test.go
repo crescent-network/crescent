@@ -27,8 +27,6 @@ type IntegrationTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
-
-	db *tmdb.MemDB // in-memory database is needed for exporting genesis cli integration test
 }
 
 // SetupTest creates a new network for _each_ integration test. We create a new
@@ -39,7 +37,6 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
 	db := tmdb.NewMemDB()
-
 	cfg := farmingtestutil.NewConfig(db)
 	cfg.NumValidators = 1
 
@@ -48,14 +45,12 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	genesisState.Params = farmingtypes.DefaultParams()
-
 	cfg.GenesisState[farmingtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&genesisState)
 	cfg.AccountTokens = sdk.NewInt(100_000_000_000) // node0token denom
 	cfg.StakingTokens = sdk.NewInt(100_000_000_000) // stake denom
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
-	s.db = db
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -522,90 +517,87 @@ func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewHarvestCmd() {
-	// TODO: not fully implemented yet
+	val := s.network.Validators[0]
 
-	// val := s.network.Validators[0]
+	// create fixed amount plan
+	req := cli.PrivateFixedPlanRequest{
+		Name:               "test",
+		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("stake", sdk.NewInt(1))),
+		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
+		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)),
+	}
 
-	// // create fixed amount plan
-	// req := cli.PrivateFixedPlanRequest{
-	// 	Name:               "test",
-	// 	StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("stake", sdk.NewInt(1))),
-	// 	StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-	// 	EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
-	// 	EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)),
-	// }
+	_, err := farmingtestutil.MsgCreateFixedAmountPlanExec(
+		val.ClientCtx,
+		val.Address.String(),
+		testutil.WriteToNewTempFile(s.T(), req.String()).Name(),
+	)
+	s.Require().NoError(err)
 
-	// file := testutil.WriteToNewTempFile(s.T(), req.String()).Name()
+	// stake coins
+	_, err = farmingtestutil.MsgStakeExec(
+		val.ClientCtx,
+		val.Address.String(),
+		sdk.NewCoin("stake", sdk.NewInt(10_000_000)).String(),
+	)
+	s.Require().NoError(err)
 
-	// _, err := farmingtestutil.MsgCreateFixedAmountPlanExec(
-	// 	val.ClientCtx,
-	// 	val.Address.String(),
-	// 	file,
-	// )
-	// s.Require().NoError(err)
+	// TODO: right now, there is no command-line interface that triggers keeeper
+	// to increase epoch days by 2 for reward distribution.
+	// handle invalid cases for now
 
-	// // stake coins
-	// _, err = farmingtestutil.MsgStakeExec(
-	// 	val.ClientCtx,
-	// 	val.Address.String(),
-	// 	sdk.NewCoin("stake", sdk.NewInt(10_000_000)).String(),
-	// )
-	// s.Require().NoError(err)
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"invalid transaction for no reward for staking coin denom stake",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagStakingCoinDenoms, "stake"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 6,
+		},
+		{
+			"invalid staking coin denoms case #1",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagStakingCoinDenoms, ""),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 18,
+		},
+	}
 
-	// // increase epoch days by 2 days so that reward distribution logic is triggered
+	for _, tc := range testCases {
+		tc := tc
 
-	// testCases := []struct {
-	// 	name         string
-	// 	args         []string
-	// 	expectErr    bool
-	// 	respType     proto.Message
-	// 	expectedCode uint32
-	// }{
-	// 	{
-	// 		"valid transaction",
-	// 		[]string{
-	// 			fmt.Sprintf("--%s=%s", cli.FlagStakingCoinDenoms, "stake"),
-	// 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-	// 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-	// 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-	// 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	// 		},
-	// 		false, &sdk.TxResponse{}, 0,
-	// 	},
-	// 	{
-	// 		"invalid staking coin denoms case #1",
-	// 		[]string{
-	// 			fmt.Sprintf("--%s=%s", cli.FlagStakingCoinDenoms, ""),
-	// 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-	// 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-	// 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-	// 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	// 		},
-	// 		true, &sdk.TxResponse{}, 0,
-	// 	},
-	// }
+		s.Run(tc.name, func() {
+			cmd := cli.NewHarvestCmd()
+			clientCtx := val.ClientCtx
 
-	// for _, tc := range testCases {
-	// 	tc := tc
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
-	// 	s.Run(tc.name, func() {
-	// 		cmd := cli.NewHarvestCmd()
-	// 		clientCtx := val.ClientCtx
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-	// 		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-	// 		fmt.Println("out: ", out)
-	// 		fmt.Println("err: ", err)
-	// 		if tc.expectErr {
-	// 			s.Require().Error(err)
-	// 		} else {
-	// 			s.Require().NoError(err, out.String())
-	// 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-	// 			txResp := tc.respType.(*sdk.TxResponse)
-	// 			s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-	// 		}
-	// 	})
-	// }
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
 }
 
 func mustParseRFC3339(s string) time.Time {
