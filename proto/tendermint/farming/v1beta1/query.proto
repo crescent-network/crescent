@@ -37,11 +37,6 @@ service Query {
   rpc Staking(QueryStakingRequest) returns (QueryStakingResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/stakings/{staking_id}";
   }
-
-  // Rewards returns all rewards.
-  rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
-    option (google.api.http).get = "/cosmos/farming/v1beta1/rewards";
-  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -99,17 +94,4 @@ message QueryStakingRequest {
 // QueryStakingResponse is the response type for the Query/Staking RPC method.
 message QueryStakingResponse {
   Staking staking = 1 [(gogoproto.nullable) = false];
-}
-
-// QueryRewardsRequest is the request type for the Query/Rewards RPC method.
-message QueryRewardsRequest {
-  string                                farmer             = 1;
-  string                                staking_coin_denom = 2 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
-  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
-}
-
-// QueryRewardsResponse is the response type for the Query/Rewards RPC method.
-message QueryRewardsResponse {
-  repeated Reward                        rewards    = 1 [(gogoproto.nullable) = false];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
