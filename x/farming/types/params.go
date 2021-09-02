@@ -86,10 +86,6 @@ func validatePrivatePlanCreationFee(i interface{}) error {
 		return err
 	}
 
-	if v.Empty() {
-		return fmt.Errorf("private plan creation fee must not be empty")
-	}
-
 	return nil
 }
 
@@ -103,10 +99,6 @@ func validateStakingCreationFee(i interface{}) error {
 		return err
 	}
 
-	if v.Empty() {
-		return fmt.Errorf("staking creation fee must not be empty")
-	}
-
 	return nil
 }
 
@@ -116,7 +108,7 @@ func validateEpochDays(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v == 0 {
+	if v <= 0 {
 		return fmt.Errorf("epoch days must be positive: %d", v)
 	}
 

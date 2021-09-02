@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/tendermint/farming/x/farming/types"
 )
 
@@ -15,21 +15,22 @@ func TestValidateGenesis(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			"happy case",
+			"default case",
 			func(genState *types.GenesisState) {
 				params := types.DefaultParams()
-				params.PrivatePlanCreationFee = sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(100)))
 				genState.Params = params
 			},
 			"",
 		},
-		// {
-		// 	"invalid case",
-		// 	func(genState *types.GenesisState) {
-		// 		genState.PoolRecords = []types.PoolRecord{{}}
-		// 	},
-		// 	"bad msg index of the batch",
-		// },
+		{
+			"invalid EpochDays case",
+			func(genState *types.GenesisState) {
+				params := types.DefaultParams()
+				params.EpochDays = 0
+				genState.Params = params
+			},
+			"epoch days must be positive: 0",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

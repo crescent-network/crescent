@@ -120,11 +120,16 @@ func (k Keeper) SetPlanIdByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAdd
 // GetNextPlanIdWithUpdate returns and increments the global Plan ID counter.
 // If the global plan number is not set, it initializes it with value 0.
 func (k Keeper) GetNextPlanIdWithUpdate(ctx sdk.Context) uint64 {
-	store := ctx.KVStore(k.storeKey)
 	id := k.GetGlobalPlanId(ctx) + 1
+	k.SetGlobalPlanId(ctx, id)
+	return id
+}
+
+// SetGlobalPlanId set the global Plan ID counter.
+func (k Keeper) SetGlobalPlanId(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 	store.Set(types.GlobalPlanIdKey, bz)
-	return id
 }
 
 // GetGlobalPlanId returns the global Plan ID counter.
@@ -306,4 +311,35 @@ func (k Keeper) GeneratePrivatePlanFarmingPoolAddress(ctx sdk.Context, name stri
 		return nil, types.ErrConflictPrivatePlanFarmingPool
 	}
 	return poolAcc, nil
+}
+
+// ValidateStakingReservedAmount checks that the balance of StakingReserveAcc greater than the amount of staked, Queued coins in all staking objects.
+func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
+	var totalStakingAmt sdk.Coins
+	balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc)
+
+	k.IterateAllStakings(ctx, func(staking types.Staking) (stop bool) {
+		totalStakingAmt = totalStakingAmt.Add(staking.StakedCoins...).Add(staking.QueuedCoins...)
+		return false
+	})
+
+	if !balanceStakingReserveAcc.IsAllGTE(totalStakingAmt) {
+		return types.ErrInvalidStakingReservedAmount
+	}
+	return nil
+}
+
+// ValidateRemainingRewardsAmount checks that the balance of the RewardPoolAddresses of all plans greater than the total amount of unwithdrawn reward coins in all reward objects
+func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
+	var totalRemainingRewards sdk.Coins
+	totalBalancesRewardPool := k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))
+	k.IterateAllRewards(ctx, func(reward types.Reward) (stop bool) {
+		totalRemainingRewards = totalRemainingRewards.Add(reward.RewardCoins...)
+		return false
+	})
+
+	if !totalBalancesRewardPool.IsAllGTE(totalRemainingRewards) {
+		return types.ErrInvalidRemainingRewardsAmount
+	}
+	return nil
 }

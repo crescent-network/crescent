@@ -5,13 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -50,6 +49,15 @@ func (plan BasePlan) GetId() uint64 { //nolint:golint
 
 func (plan *BasePlan) SetId(id uint64) error { //nolint:golint
 	plan.Id = id
+	return nil
+}
+
+func (plan BasePlan) GetName() string { //nolint:golint
+	return plan.Name
+}
+
+func (plan *BasePlan) SetName(name string) error { //nolint:golint
+	plan.Name = name
 	return nil
 }
 
@@ -206,7 +214,8 @@ type PlanI interface {
 	GetId() uint64
 	SetId(uint64) error
 
-	// TODO: add GetName to interface
+	GetName() string
+	SetName(string) error
 
 	GetType() PlanType
 	SetType(PlanType) error
@@ -236,6 +245,8 @@ type PlanI interface {
 	SetDistributedCoins(sdk.Coins) error
 
 	String() string
+
+	Validate() error
 }
 
 // ValidateRatioPlans validates a farmer's total epoch ratio and plan name.
@@ -277,6 +288,15 @@ func ValidateRatioPlans(i interface{}) error {
 	}
 
 	return nil
+}
+
+// PackPlan converts PlanI to Any
+func PackPlan(plan PlanI) (*codectypes.Any, error) {
+	any, err := codectypes.NewAnyWithValue(plan)
+	if err != nil {
+		return nil, err
+	}
+	return any, nil
 }
 
 // UnpackPlan converts Any to PlanI.

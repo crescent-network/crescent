@@ -15,6 +15,9 @@ type PlanI interface {
 
     GetId() uint64
     SetId(uint64) error
+    
+    GetName() string
+    SetName(name string) error
 
     GetType() int32
     SetType(int32) error
@@ -44,6 +47,8 @@ type PlanI interface {
     SetDistributedCoins(sdk.Coins) error
 
     String() string
+    
+    Validate() error
 }
 ```
 
