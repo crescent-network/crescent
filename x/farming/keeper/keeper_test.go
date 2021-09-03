@@ -128,11 +128,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // Stake is a convenient method to test Keeper.Stake.
-func (suite *KeeperTestSuite) Stake(farmer sdk.AccAddress, amt sdk.Coins) types.Staking {
-	staking, err := suite.keeper.Stake(suite.ctx, farmer, amt)
+func (suite *KeeperTestSuite) Stake(farmer sdk.AccAddress, amt sdk.Coins) {
+	err := suite.keeper.Stake(suite.ctx, farmer, amt)
 	suite.Require().NoError(err)
-
-	return staking
 }
 
 func intEq(exp, got sdk.Int) (bool, string, string, string) {

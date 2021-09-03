@@ -8,7 +8,7 @@ const (
 	EventTypeUnstake               = "unstake"
 	EventTypeHarvest               = "harvest"
 	EventTypePlanTerminated        = "plan_terminated"
-	EventTypeRewardDistributed     = "reward_distributed"
+	EventTypeRewardsAllocated      = "rewards_allocated"
 
 	AttributeKeyPlanId             = "plan_id" //nolint:golint
 	AttributeKeyPlanName           = "plan_name"

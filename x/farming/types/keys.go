@@ -17,26 +17,22 @@ const (
 
 	// QuerierRoute is the querier route for the farming module
 	QuerierRoute = ModuleName
-
-	// RewardPoolAccKeyPrefix is prefix for generating deterministic reward pool module account of each plan
-	RewardPoolAccKeyPrefix = "RewardPoolAcc"
 )
 
 var (
-	// param key for global farming plan IDs
 	GlobalPlanIdKey        = []byte("globalPlanId")
 	GlobalLastEpochTimeKey = []byte("globalLastEpochTime")
-	GlobalStakingIdKey     = []byte("globalStakingId")
 
 	PlanKeyPrefix               = []byte{0x11}
 	PlansByFarmerIndexKeyPrefix = []byte{0x12}
 
-	StakingKeyPrefix                         = []byte{0x21}
-	StakingByFarmerIndexKeyPrefix            = []byte{0x22}
-	StakingsByStakingCoinDenomIndexKeyPrefix = []byte{0x23}
+	StakingKeyPrefix       = []byte{0x21}
+	StakingIndexKeyPrefix  = []byte{0x22}
+	QueuedStakingKeyPrefix = []byte{0x23}
+	TotalStakingKeyPrefix  = []byte{0x24}
 
-	RewardKeyPrefix               = []byte{0x31}
-	RewardsByFarmerIndexKeyPrefix = []byte{0x32}
+	HistoricalRewardsKeyPrefix = []byte{0x31}
+	CurrentRewardsKeyPrefix    = []byte{0x32}
 )
 
 // GetPlanKey returns kv indexing key of the plan
@@ -55,66 +51,30 @@ func GetPlanByFarmerAddrIndexKey(farmerAcc sdk.AccAddress, planID uint64) []byte
 }
 
 // GetStakingKey returns a key for staking of corresponding the id
-func GetStakingKey(id uint64) []byte {
-	return append(StakingKeyPrefix, sdk.Uint64ToBigEndian(id)...)
+func GetStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
+	return append(append(StakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
 }
 
-// GetStakingByFarmerIndexKey returns key for the farmer's staking of corresponding
-func GetStakingByFarmerIndexKey(farmerAcc sdk.AccAddress) []byte {
-	return append(StakingByFarmerIndexKeyPrefix, address.MustLengthPrefix(farmerAcc.Bytes())...)
+func GetQueuedStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
+	return append(append(QueuedStakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
 }
 
-// GetStakingsByStakingCoinDenomIndexKey returns prefix for the iterable staking list by the staking coin denomination
-func GetStakingsByStakingCoinDenomIndexKey(denom string) []byte {
-	return append(StakingsByStakingCoinDenomIndexKeyPrefix, LengthPrefixString(denom)...)
+func GetTotalStakingKey(stakingCoinDenom string) []byte {
+	return append(TotalStakingKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
-// GetStakingByStakingCoinDenomIndexKey returns key for the staking index by the staking coin denomination
-func GetStakingByStakingCoinDenomIndexKey(denom string, id uint64) []byte {
-	return append(append(StakingsByStakingCoinDenomIndexKeyPrefix, LengthPrefixString(denom)...), sdk.Uint64ToBigEndian(id)...)
+func GetHistoricalRewardsKey(stakingCoinDenom string, epoch uint64) []byte {
+	return append(append(HistoricalRewardsKeyPrefix, LengthPrefixString(stakingCoinDenom)...), sdk.Uint64ToBigEndian(epoch)...)
 }
 
-// GetRewardKey returns key for staking coin denomination's reward of corresponding the farmer
-func GetRewardKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
-	return append(append(RewardKeyPrefix, LengthPrefixString(stakingCoinDenom)...), address.MustLengthPrefix(farmerAcc.Bytes())...)
+func GetCurrentRewardsKey(stakingCoinDenom string) []byte {
+	return append(CurrentRewardsKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
-// GetRewardByFarmerAndStakingCoinDenomIndexKey returns key for farmer's reward of corresponding the staking coin denomination
-func GetRewardByFarmerAndStakingCoinDenomIndexKey(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
-	return append(append(RewardsByFarmerIndexKeyPrefix, address.MustLengthPrefix(farmerAcc.Bytes())...), LengthPrefixString(stakingCoinDenom)...)
-}
-
-// GetRewardsByStakingCoinDenomKey returns prefix for staking coin denomination's reward list
-func GetRewardsByStakingCoinDenomKey(stakingCoinDenom string) []byte {
-	return append(RewardKeyPrefix, LengthPrefixString(stakingCoinDenom)...)
-}
-
-// GetRewardsByFarmerIndexKey returns prefix for farmer's reward list
-func GetRewardsByFarmerIndexKey(farmerAcc sdk.AccAddress) []byte {
-	return append(RewardsByFarmerIndexKeyPrefix, address.MustLengthPrefix(farmerAcc.Bytes())...)
-}
-
-// ParseRewardKey parses a RewardKey.
-func ParseRewardKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
+func ParseQueuedStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
 	denomLen := key[1]
 	stakingCoinDenom = string(key[2 : 2+denomLen])
-	farmerAcc = key[2+denomLen+1:]
-	return
-}
-
-// ParseRewardsByFarmerIndexKey parses a key of RewardsByFarmerIndex from bytes.
-func ParseRewardsByFarmerIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
-	addrLen := key[1]
-	farmerAcc = key[2 : 2+addrLen]
-	stakingCoinDenom = string(key[2+addrLen+1:])
-	return
-}
-
-// ParseStakingsByStakingCoinDenomIndexKey parses a key of StakingsByStakingCoinDenomIndex from bytes.
-func ParseStakingsByStakingCoinDenomIndexKey(bz []byte) (stakingCoinDenom string, stakingID uint64) {
-	denomLen := bz[1]
-	stakingCoinDenom = string(bz[2 : 2+denomLen])
-	stakingID = sdk.BigEndianToUint64(bz[2+denomLen:])
+	farmerAcc = key[2+denomLen:]
 	return
 }
 

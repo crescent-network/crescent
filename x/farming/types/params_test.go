@@ -45,13 +45,6 @@ func TestParams_Validate(t *testing.T) {
 			"private plan creation fee must not be empty",
 		},
 		{
-			"EmptyStakingCreationFee",
-			func(params *types.Params) {
-				params.StakingCreationFee = sdk.NewCoins()
-			},
-			"staking creation fee must not be empty",
-		},
-		{
 			"NegativeEpochDays",
 			func(params *types.Params) {
 				params.EpochDays = uint32(0)

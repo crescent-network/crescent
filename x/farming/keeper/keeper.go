@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/farming/x/farming/types"
@@ -21,7 +20,6 @@ type Keeper struct {
 
 	bankKeeper    types.BankKeeper
 	accountKeeper types.AccountKeeper
-	distrKeeper   types.DistributionKeeper
 
 	blockedAddrs map[string]bool
 }
@@ -31,7 +29,7 @@ type Keeper struct {
 // - sending to and from ModuleAccounts
 // - minting, burning PoolCoins
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, distrKeeper types.DistributionKeeper,
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
 	blockedAddrs map[string]bool,
 ) Keeper {
 	// ensure farming module account is set
@@ -50,7 +48,6 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 		paramSpace:    paramSpace,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
 		blockedAddrs:  blockedAddrs,
 	}
 }
@@ -73,11 +70,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 // GetCodec return codec.Codec object used by the keeper
 func (k Keeper) GetCodec() codec.BinaryCodec { return k.cdc }
-
-// GetStakingCreationFeePool returns module account for collecting Staking Creation Fee
-func (k Keeper) GetStakingCreationFeePool(ctx sdk.Context) authtypes.ModuleAccountI { // nolint:interfacer
-	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-}
 
 // GetStakingReservePoolAcc returns module account for Staking Reserve Pool account
 func (k Keeper) GetStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer

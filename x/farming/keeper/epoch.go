@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -33,4 +34,16 @@ func (k Keeper) SetLastEpochTime(ctx sdk.Context, t time.Time) {
 	}
 	bz := k.cdc.MustMarshal(ts)
 	store.Set(types.GlobalLastEpochTimeKey, bz)
+}
+
+func (k Keeper) AdvanceEpoch(ctx sdk.Context) error {
+	fmt.Println(">>> AdvanceEpoch()")
+	if err := k.AllocateRewards(ctx); err != nil {
+		return err
+	}
+	k.ProcessQueuedCoins(ctx)
+	k.SetLastEpochTime(ctx, ctx.BlockTime())
+	fmt.Println("<<< AdvanceEpoch()")
+
+	return nil
 }

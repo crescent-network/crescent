@@ -28,7 +28,6 @@ func createTestInput() (*farmingapp.FarmingApp, sdk.Context, []sdk.AccAddress) {
 		app.GetSubspace(types.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.DistrKeeper,
 		map[string]bool{},
 	)
 

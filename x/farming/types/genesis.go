@@ -1,17 +1,15 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"fmt"
 )
 
 // NewGenesisState returns new GenesisState.
-func NewGenesisState(params Params, planRecords []PlanRecord, stakings []Staking, rewards []Reward) *GenesisState {
+func NewGenesisState(params Params, planRecords []PlanRecord, stakings []Staking) *GenesisState {
 	return &GenesisState{
 		Params:      params,
 		PlanRecords: planRecords,
 		Stakings:    stakings,
-		Rewards:     rewards,
 	}
 }
 
@@ -21,7 +19,6 @@ func DefaultGenesisState() *GenesisState {
 		DefaultParams(),
 		[]PlanRecord{},
 		[]Staking{},
-		[]Reward{},
 	)
 }
 
@@ -40,20 +37,12 @@ func ValidateGenesis(data GenesisState) error {
 			return err
 		}
 	}
-	for _, reward := range data.Rewards {
-		if err := reward.Validate(); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
 // Validate validates PlanRecord.
 func (r PlanRecord) Validate() error {
 	if err := r.FarmingPoolCoins.Validate(); err != nil {
-		return err
-	}
-	if err := r.RewardPoolCoins.Validate(); err != nil {
 		return err
 	}
 	if err := r.StakingReserveCoins.Validate(); err != nil {
@@ -64,22 +53,8 @@ func (r PlanRecord) Validate() error {
 
 // Validate validates Staking.
 func (s Staking) Validate() error {
-	if _, err := sdk.AccAddressFromBech32(s.Farmer); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", s.Farmer, err)
-	}
-	if err := s.StakedCoins.Validate(); err != nil {
-		return err
-	}
-	if err := s.QueuedCoins.Validate(); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Validate validates Reward.
-func (r Reward) Validate() error {
-	if err := r.RewardCoins.Validate(); err != nil {
-		return err
+	if !s.Amount.IsPositive() {
+		return fmt.Errorf("amount must be positive")
 	}
 	return nil
 }

@@ -284,7 +284,7 @@ func NewFarmingApp(
 
 	app.FarmingKeeper = farmingkeeper.NewKeeper(
 		appCodec, keys[farmingtypes.StoreKey], app.GetSubspace(farmingtypes.ModuleName), app.AccountKeeper,
-		app.BankKeeper, app.DistrKeeper, app.ModuleAccountAddrs(),
+		app.BankKeeper, app.ModuleAccountAddrs(),
 	)
 	// todo: farming ordering
 

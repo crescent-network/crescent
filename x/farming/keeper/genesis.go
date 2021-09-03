@@ -59,7 +59,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	//	planRecords = []types.PlanRecord{}
 	//}
 
-	return types.NewGenesisState(params, planRecords, nil, nil)
+	return types.NewGenesisState(params, planRecords, nil)
 }
 
 // ValidateGenesis validates the farming module's genesis state.
