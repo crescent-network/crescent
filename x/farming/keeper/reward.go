@@ -54,8 +54,6 @@ func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stak
 }
 
 func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) (sdk.Coins, error) {
-	fmt.Printf("WithdrawRewards(%s, %s)\n", farmerAcc, stakingCoinDenom)
-
 	staking, found := k.GetStaking(ctx, stakingCoinDenom, farmerAcc)
 	if !found {
 		return nil, fmt.Errorf("empty starting info") // TODO: use correct error
@@ -63,11 +61,11 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 
 	current := k.GetCurrentRewards(ctx, stakingCoinDenom)
 	rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, current.Epoch-1)
-	fmt.Printf("  GetCurrentRewards(%s) := %+v\n", stakingCoinDenom, current)
-	fmt.Printf("  CalculateRewards(%s, %s, %d) := %+v\n", farmerAcc, stakingCoinDenom, current.Epoch-1, rewards)
 
 	if !rewards.IsZero() {
-		fmt.Printf("  sending %s to %s\n", rewards, farmerAcc)
+		if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, rewards); err != nil {
+			return nil, err
+		}
 	}
 
 	staking.StartingEpoch = current.Epoch
@@ -76,31 +74,52 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 	return rewards, nil
 }
 
+func (k Keeper) WithdrawAllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) (sdk.Coins, error) {
+	totalRewards := sdk.NewCoins()
+
+	k.IterateStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
+		current := k.GetCurrentRewards(ctx, stakingCoinDenom)
+		rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, current.Epoch-1)
+
+		if !rewards.IsZero() {
+			totalRewards = totalRewards.Add(rewards...)
+		}
+
+		staking.StartingEpoch = current.Epoch
+		k.SetStaking(ctx, stakingCoinDenom, farmerAcc, staking)
+
+		return false
+	})
+
+	if !totalRewards.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, totalRewards); err != nil {
+			return nil, err
+		}
+	}
+
+	return totalRewards, nil
+}
+
 // Harvest claims farming rewards from the reward pool.
 func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenoms []string) error {
-	//for _, denom := range stakingCoinDenoms {
-	//}
-	//
-	//if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, amount); err != nil {
-	//	return err
-	//}
-	//
-	//staking, found := k.GetStakingByFarmer(ctx, farmerAcc)
-	//if !found { // NOTE: this should never happen
-	//	return sdkerrors.Wrap(types.ErrStakingNotExists, "no staking found")
-	//}
-	//if staking.StakedCoins.IsZero() && staking.QueuedCoins.IsZero() && len(k.GetRewardsByFarmer(ctx, farmerAcc)) == 0 {
-	//	k.DeleteStaking(ctx, staking)
-	//}
-	//
-	//ctx.EventManager().EmitEvents(sdk.Events{
-	//	sdk.NewEvent(
-	//		types.EventTypeHarvest,
-	//		sdk.NewAttribute(types.AttributeKeyFarmer, farmerAcc.String()),
-	//		sdk.NewAttribute(types.AttributeKeyRewardCoins, amount.String()),
-	//	),
-	//})
-	//
+	totalRewards := sdk.NewCoins()
+
+	for _, denom := range stakingCoinDenoms {
+		rewards, err := k.WithdrawRewards(ctx, farmerAcc, denom)
+		if err != nil {
+			return err
+		}
+		totalRewards = totalRewards.Add(rewards...)
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeHarvest,
+			sdk.NewAttribute(types.AttributeKeyFarmer, farmerAcc.String()),
+			sdk.NewAttribute(types.AttributeKeyRewardCoins, totalRewards.String()),
+		),
+	})
+
 	return nil
 }
 
@@ -169,7 +188,6 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 }
 
 func (k Keeper) AllocateRewards(ctx sdk.Context) error {
-	fmt.Printf("AllocateRewards()\n")
 	for _, allocInfo := range k.AllocationInfos(ctx) {
 		totalWeight := sdk.ZeroDec()
 		for _, weight := range allocInfo.Plan.GetStakingCoinWeights() {
@@ -191,19 +209,11 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 
 			current := k.GetCurrentRewards(ctx, weight.Denom)
 			historical := k.GetHistoricalRewards(ctx, weight.Denom, current.Epoch-1)
-			fmt.Printf("  current rewards(before): %+v\n", current)
-			fmt.Printf("  historical rewards for %d: %+v\n", current.Epoch-1, historical)
 			k.SetHistoricalRewards(ctx, weight.Denom, current.Epoch, types.HistoricalRewards{
 				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoins.QuoDecTruncate(totalStaking.Amount.ToDec())...),
 			})
 			k.SetCurrentRewards(ctx, weight.Denom, types.CurrentRewards{
 				Epoch: current.Epoch + 1,
-			})
-			fmt.Printf("  current rewards(after): %+v\n", types.CurrentRewards{
-				Epoch: current.Epoch + 1,
-			})
-			fmt.Printf("  historical rewards for %d: %+v\n", current.Epoch, types.HistoricalRewards{
-				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoins.QuoDecTruncate(totalStaking.Amount.ToDec())...),
 			})
 
 			totalAllocCoins = totalAllocCoins.Add(allocCoins...)

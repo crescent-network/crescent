@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -55,6 +57,14 @@ func GetStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
 	return append(append(StakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
 }
 
+func GetStakingIndexKey(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
+	return append(append(StakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...), []byte(stakingCoinDenom)...)
+}
+
+func GetStakingsByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
+	return append(StakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...)
+}
+
 func GetQueuedStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
 	return append(append(QueuedStakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
 }
@@ -71,7 +81,20 @@ func GetCurrentRewardsKey(stakingCoinDenom string) []byte {
 	return append(CurrentRewardsKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
+func ParseStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
+	if !bytes.HasPrefix(key, StakingIndexKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	addrLen := key[1]
+	farmerAcc = key[2 : 2+addrLen]
+	stakingCoinDenom = string(key[2+addrLen:])
+	return
+}
+
 func ParseQueuedStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
+	if !bytes.HasPrefix(key, QueuedStakingKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
 	denomLen := key[1]
 	stakingCoinDenom = string(key[2 : 2+denomLen])
 	farmerAcc = key[2+denomLen:]

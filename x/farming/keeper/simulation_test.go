@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/tendermint/farming/app"
@@ -16,11 +18,8 @@ type StakeAction struct {
 	amount    sdk.Coins
 }
 
-func NewStakeAction(farmerAcc sdk.AccAddress, amount sdk.Coins) Action {
-	return StakeAction{farmerAcc, amount}
-}
-
 func (sa StakeAction) Do(suite *KeeperTestSuite) {
+	fmt.Printf("Stake(%s, %s)\n", sa.farmerAcc, sa.amount)
 	err := suite.keeper.Stake(suite.ctx, sa.farmerAcc, sa.amount)
 	suite.Require().NoError(err)
 }
@@ -30,11 +29,8 @@ type UnstakeAction struct {
 	amount    sdk.Coins
 }
 
-func NewUnstakeAction(farmerAcc sdk.AccAddress, amount sdk.Coins) Action {
-	return UnstakeAction{farmerAcc, amount}
-}
-
 func (ua UnstakeAction) Do(suite *KeeperTestSuite) {
+	fmt.Printf("Unstake(%s, %s)\n", ua.farmerAcc, ua.amount)
 	err := suite.keeper.Unstake(suite.ctx, ua.farmerAcc, ua.amount)
 	suite.Require().NoError(err)
 }
@@ -44,31 +40,18 @@ type HarvestAction struct {
 	stakingCoinDenoms []string
 }
 
-func NewHarvestAction(farmerAcc sdk.AccAddress, stakingCoinDenoms []string) Action {
-	return HarvestAction{farmerAcc, stakingCoinDenoms}
-}
-
 func (ha HarvestAction) Do(suite *KeeperTestSuite) {
+	fmt.Printf("Harvest(%s, %s)\n", ha.farmerAcc, ha.stakingCoinDenoms)
 	err := suite.keeper.Harvest(suite.ctx, ha.farmerAcc, ha.stakingCoinDenoms)
 	suite.Require().NoError(err)
 }
 
-type Assertion interface {
-	Assert(*KeeperTestSuite)
-}
+type AdvanceEpochAction struct{}
 
-type BalancesAssertion struct {
-	acc      sdk.AccAddress
-	balances sdk.Coins
-}
-
-func NewBalancesAssertion(acc sdk.AccAddress, balances sdk.Coins) Assertion {
-	return BalancesAssertion{acc, balances}
-}
-
-func (ba BalancesAssertion) Assert(suite *KeeperTestSuite) {
-	balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, ba.acc)
-	suite.Require().True(coinsEq(ba.balances, balances))
+func (AdvanceEpochAction) Do(suite *KeeperTestSuite) {
+	fmt.Println("AdvanceEpoch()")
+	err := suite.keeper.AdvanceEpoch(suite.ctx)
+	suite.Require().NoError(err)
 }
 
 type BalanceAssertion struct {
@@ -77,12 +60,9 @@ type BalanceAssertion struct {
 	amount sdk.Int
 }
 
-func NewBalanceAssertion(acc sdk.AccAddress, denom string, amount sdk.Int) Assertion {
-	return BalanceAssertion{acc, denom, amount}
-}
-
-func (ba BalanceAssertion) Assert(suite *KeeperTestSuite) {
+func (ba BalanceAssertion) Do(suite *KeeperTestSuite) {
 	balance := suite.app.BankKeeper.GetBalance(suite.ctx, ba.acc, ba.denom)
+	fmt.Printf("BalanceAssertion(%s, %s, %s)\n", ba.acc, ba.denom, ba.amount)
 	suite.Require().True(intEq(ba.amount, balance.Amount))
 }
 
@@ -92,14 +72,24 @@ type RewardsAssertion struct {
 	rewards          sdk.Coins
 }
 
-func NewRewardsAssertion(acc sdk.AccAddress, stakingCoinDenom string, rewards sdk.Coins) Assertion {
-	return RewardsAssertion{acc, stakingCoinDenom, rewards}
+func (ra RewardsAssertion) Do(suite *KeeperTestSuite) {
+	current := suite.keeper.GetCurrentRewards(suite.ctx, ra.stakingCoinDenom)
+	rewards := suite.keeper.CalculateRewards(suite.ctx, ra.acc, ra.stakingCoinDenom, current.Epoch-1)
+	fmt.Printf("RewardsAssertion(%s, %s, %s)\n", ra.acc, ra.stakingCoinDenom, ra.rewards)
+	suite.Require().True(coinsEq(ra.rewards, rewards))
 }
 
-func (ra RewardsAssertion) Assert(suite *KeeperTestSuite) {
-	current := suite.keeper.GetCurrentRewards(suite.ctx, ra.stakingCoinDenom)
-	rewards := suite.keeper.CalculateRewards(suite.ctx, ra.acc, ra.stakingCoinDenom, current.Epoch)
-	suite.Require().True(coinsEq(ra.rewards, rewards))
+type TotalRewardsAssertion struct {
+	acc     sdk.AccAddress
+	rewards sdk.Coins
+}
+
+func (tra TotalRewardsAssertion) Do(suite *KeeperTestSuite) {
+	fmt.Printf("TotalRewardsAssertion(%s, %s)\n", tra.acc, tra.rewards)
+	cacheCtx, _ := suite.ctx.CacheContext()
+	rewards, err := suite.keeper.WithdrawAllRewards(cacheCtx, tra.acc)
+	suite.Require().NoError(err)
+	suite.Require().True(coinsEq(tra.rewards, rewards))
 }
 
 func (suite *KeeperTestSuite) TestSimulation() {
@@ -134,43 +124,54 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		suite.Require().NoError(err)
 	}
 
-	for _, entry := range []struct {
-		actions      []Action
-		advanceEpoch bool
-		assertions   []Assertion
-	}{
-		{
-			[]Action{
-				NewStakeAction(addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000))),
-			},
-			false,
-			[]Assertion{
-				NewBalanceAssertion(addrs[0], denom3, sdk.ZeroInt()),
-				NewRewardsAssertion(addrs[0], denom1, sdk.NewCoins()),
-				NewBalanceAssertion(addrs[1], denom3, sdk.ZeroInt()),
-				NewRewardsAssertion(addrs[1], denom1, sdk.NewCoins()),
-			},
-		},
-		{
-			[]Action{
-				NewStakeAction(addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000), sdk.NewInt64Coin(denom2, 500000))),
-			},
-			true,
-			[]Assertion{
-				NewBalanceAssertion(addrs[0], denom3, sdk.ZeroInt()),
-				NewBalanceAssertion(addrs[1], denom3, sdk.ZeroInt()),
-			},
-		},
+	for i, action := range []Action{
+		BalanceAssertion{addrs[0], denom3, sdk.ZeroInt()},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins()},
+		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins()},
+
+		StakeAction{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000))},
+		StakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000), sdk.NewInt64Coin(denom2, 500000))},
+		AdvanceEpochAction{},
+		BalanceAssertion{addrs[0], denom3, sdk.ZeroInt()},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins()},
+		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins()},
+
+		AdvanceEpochAction{},
+		BalanceAssertion{addrs[0], denom3, sdk.ZeroInt()},
+		RewardsAssertion{addrs[0], denom1, sdk.NewCoins(sdk.NewInt64Coin(denom3, 200000))},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 200000))},
+		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 800000))},
+
+		StakeAction{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000))},
+		AdvanceEpochAction{},
+		BalanceAssertion{addrs[0], denom3, sdk.NewInt(400000)},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 0))},
+		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1600000))},
+
+		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 250000), sdk.NewInt64Coin(denom2, 250000))},
+		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins()},
+		AdvanceEpochAction{},
+		BalanceAssertion{addrs[0], denom3, sdk.NewInt(400000)},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 257142))}, // 300000 * (6/7)
+		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 742857))}, // 300000 * (1/7) + 700000
+
+		HarvestAction{addrs[0], []string{denom1}},
+		HarvestAction{addrs[1], []string{denom1, denom2}},
+		BalanceAssertion{addrs[0], denom3, sdk.NewInt(657142)},
+		BalanceAssertion{addrs[1], denom3, sdk.NewInt(2342857)},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins()},
+		AdvanceEpochAction{},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 257142))},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 742857))},
 	} {
-		for _, action := range entry.actions {
+		suite.Run(fmt.Sprintf("%d", i), func() {
 			action.Do(suite)
-		}
-		if entry.advanceEpoch {
-			err := suite.keeper.AdvanceEpoch(suite.ctx)
-			suite.Require().NoError(err)
-		}
-		for _, assertion := range entry.assertions {
-			assertion.Assert(suite)
-		}
+		})
 	}
 }
