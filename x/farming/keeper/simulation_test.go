@@ -138,7 +138,9 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1600000))},
 
-		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 250000), sdk.NewInt64Coin(denom2, 250000))},
+		// User can unstake multiple times before the end of the epoch
+		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 200000), sdk.NewInt64Coin(denom2, 200000))},
+		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 50000), sdk.NewInt64Coin(denom2, 50000))},
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins()},
 		AdvanceEpochAction{},
@@ -147,7 +149,10 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 742857))}, // 300000 * (1/7) + 700000
 
+		// User can harvest multiple times, and it does not affect the rewards
 		HarvestAction{addrs[0], []string{denom1}},
+		HarvestAction{addrs[1], []string{denom1, denom2}},
+		HarvestAction{addrs[1], []string{denom1, denom2}},
 		HarvestAction{addrs[1], []string{denom1, denom2}},
 		BalanceAssertion{addrs[0], denom3, sdk.NewInt(657142)},
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(2342857)},
