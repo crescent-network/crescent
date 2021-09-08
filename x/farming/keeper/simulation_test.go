@@ -66,19 +66,6 @@ func (ba BalanceAssertion) Do(suite *KeeperTestSuite) {
 	suite.Require().True(intEq(ba.amount, balance.Amount))
 }
 
-type RewardsAssertion struct {
-	acc              sdk.AccAddress
-	stakingCoinDenom string
-	rewards          sdk.Coins
-}
-
-func (ra RewardsAssertion) Do(suite *KeeperTestSuite) {
-	current := suite.keeper.GetCurrentRewards(suite.ctx, ra.stakingCoinDenom)
-	rewards := suite.keeper.CalculateRewards(suite.ctx, ra.acc, ra.stakingCoinDenom, current.Epoch-1)
-	fmt.Printf("RewardsAssertion(%s, %s, %s)\n", ra.acc, ra.stakingCoinDenom, ra.rewards)
-	suite.Require().True(coinsEq(ra.rewards, rewards))
-}
-
 type TotalRewardsAssertion struct {
 	acc     sdk.AccAddress
 	rewards sdk.Coins
@@ -140,7 +127,6 @@ func (suite *KeeperTestSuite) TestSimulation() {
 
 		AdvanceEpochAction{},
 		BalanceAssertion{addrs[0], denom3, sdk.ZeroInt()},
-		RewardsAssertion{addrs[0], denom1, sdk.NewCoins(sdk.NewInt64Coin(denom3, 200000))},
 		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 200000))},
 		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 800000))},
@@ -148,11 +134,13 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		StakeAction{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000))},
 		AdvanceEpochAction{},
 		BalanceAssertion{addrs[0], denom3, sdk.NewInt(400000)},
-		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 0))},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins()},
 		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1600000))},
 
-		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 250000), sdk.NewInt64Coin(denom2, 250000))},
+		// User can unstake multiple times before the end of the epoch
+		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 200000), sdk.NewInt64Coin(denom2, 200000))},
+		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 50000), sdk.NewInt64Coin(denom2, 50000))},
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins()},
 		AdvanceEpochAction{},
@@ -161,7 +149,10 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 742857))}, // 300000 * (1/7) + 700000
 
+		// User can harvest multiple times, and it does not affect the rewards
 		HarvestAction{addrs[0], []string{denom1}},
+		HarvestAction{addrs[1], []string{denom1, denom2}},
+		HarvestAction{addrs[1], []string{denom1, denom2}},
 		HarvestAction{addrs[1], []string{denom1, denom2}},
 		BalanceAssertion{addrs[0], denom3, sdk.NewInt(657142)},
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(2342857)},
