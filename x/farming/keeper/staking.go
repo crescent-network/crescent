@@ -220,6 +220,8 @@ func (k Keeper) Stake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coin
 
 // Unstake unstakes an amount of staking coins from the staking reserve account.
 func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coins) error {
+	// TODO: send coins at once, not in every WithdrawRewards
+
 	for _, coin := range amount {
 		staking, found := k.GetStaking(ctx, coin.Denom, farmerAcc)
 		if !found {
