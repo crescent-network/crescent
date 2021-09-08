@@ -20,16 +20,13 @@ func TestParams(t *testing.T) {
 	paramsStr := `private_plan_creation_fee:
 - denom: stake
   amount: "100000000"
-staking_creation_fee:
-- denom: stake
-  amount: "100000"
 epoch_days: 1
 farming_fee_collector: cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x
 `
 	require.Equal(t, paramsStr, defaultParams.String())
 }
 
-func TestParams_Validate(t *testing.T) {
+func TestParamsValidate(t *testing.T) {
 	require.NoError(t, types.DefaultParams().Validate())
 
 	testCases := []struct {
@@ -42,7 +39,7 @@ func TestParams_Validate(t *testing.T) {
 			func(params *types.Params) {
 				params.PrivatePlanCreationFee = sdk.NewCoins()
 			},
-			"private plan creation fee must not be empty",
+			"",
 		},
 		{
 			"NegativeEpochDays",
@@ -65,7 +62,6 @@ func TestParams_Validate(t *testing.T) {
 			params := types.DefaultParams()
 			tc.configure(&params)
 			err := params.Validate()
-			require.EqualError(t, err, tc.expectedErr)
 
 			var err2 error
 			for _, p := range params.ParamSetPairs() {
@@ -75,7 +71,13 @@ func TestParams_Validate(t *testing.T) {
 					break
 				}
 			}
-			require.EqualError(t, err2, tc.expectedErr)
+			if tc.expectedErr != "" {
+				require.EqualError(t, err, tc.expectedErr)
+				require.EqualError(t, err2, tc.expectedErr)
+			} else {
+				require.Nil(t, err)
+				require.Nil(t, err2)
+			}
 		})
 	}
 }

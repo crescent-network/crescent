@@ -16,4 +16,6 @@ var (
 	ErrDuplicatePlanName              = sdkerrors.Register(ModuleName, 9, "duplicate plan name")
 	ErrInvalidPlanName                = sdkerrors.Register(ModuleName, 10, "invalid plan name")
 	ErrConflictPrivatePlanFarmingPool = sdkerrors.Register(ModuleName, 11, "the address is already in use, please use a different plan name")
+	ErrInvalidStakingReservedAmount   = sdkerrors.Register(ModuleName, 12, "staking reserved amount invariant broken")
+	ErrInvalidRemainingRewardsAmount  = sdkerrors.Register(ModuleName, 13, "remaining rewards amount invariant broken")
 )
