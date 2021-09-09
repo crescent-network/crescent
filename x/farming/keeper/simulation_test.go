@@ -91,8 +91,8 @@ func (suite *KeeperTestSuite) TestSimulation() {
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(
-					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
-					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)),
+					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)), // 30%
+					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)), // 70%
 				),
 				mustParseRFC3339("0001-01-01T00:00:00Z"),
 				mustParseRFC3339("9999-12-31T00:00:00Z"),
@@ -127,9 +127,9 @@ func (suite *KeeperTestSuite) TestSimulation() {
 
 		AdvanceEpochAction{},
 		BalanceAssertion{addrs[0], denom3, sdk.ZeroInt()},
-		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 200000))},
+		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 200000))}, // 300000 * 2/3
 		BalanceAssertion{addrs[1], denom3, sdk.ZeroInt()},
-		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 800000))},
+		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 800000))}, // 300000 * 1/3 + 700000
 
 		StakeAction{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000))},
 		AdvanceEpochAction{},
@@ -141,6 +141,7 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		// User can unstake multiple times before the end of the epoch
 		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 200000), sdk.NewInt64Coin(denom2, 200000))},
 		UnstakeAction{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 50000), sdk.NewInt64Coin(denom2, 50000))},
+		// 250000denom1, 250000denom2
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins()},
 		AdvanceEpochAction{},
@@ -148,6 +149,7 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		TotalRewardsAssertion{addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom3, 257142))}, // 300000 * (6/7)
 		BalanceAssertion{addrs[1], denom3, sdk.NewInt(1600000)},
 		TotalRewardsAssertion{addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 742857))}, // 300000 * (1/7) + 700000
+		// 1000000 => 999999
 
 		// User can harvest multiple times, and it does not affect the rewards
 		HarvestAction{addrs[0], []string{denom1}},

@@ -164,9 +164,3 @@ message HistoricalRewards {
     (gogoproto.nullable)     = false
   ];
 }
-
-message CurrentRewards {
-  option (gogoproto.goproto_getters) = false;
-
-  uint64 epoch = 1;
-}
