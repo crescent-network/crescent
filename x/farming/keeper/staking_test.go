@@ -1,5 +1,11 @@
 package keeper_test
 
+import (
+	"math/rand"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 //func (suite *KeeperTestSuite) TestGetStaking() {
 //	_, found := suite.keeper.GetStaking(suite.ctx, 1)
 //	suite.False(found, "staking should not be present")
@@ -54,30 +60,6 @@ package keeper_test
 //			}
 //		})
 //	}
-//}
-//
-//func (suite *KeeperTestSuite) TestStakingCreationFee() {
-//	params := suite.keeper.GetParams(suite.ctx)
-//	params.StakingCreationFee = sdk.NewCoins(sdk.NewInt64Coin(denom1, 1_000_000))
-//	suite.keeper.SetParams(suite.ctx, params)
-//
-//	// Test accounts have 1,000,000,000 coins by default.
-//	balance := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom1)
-//	suite.Require().True(intEq(sdk.NewInt(1_000_000_000), balance.Amount))
-//
-//	// Stake 999,000,000 coins and pay 1,000,000 coins as staking creation fee because
-//	// it's the first time staking.
-//	_, err := suite.keeper.Stake(suite.ctx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 999_000_000)))
-//	suite.Require().NoError(err)
-//
-//	// Balance should be zero now.
-//	balance = suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom1)
-//	suite.Require().True(balance.Amount.IsZero())
-//
-//	// Taking a new account, staking 1_000_000_000 coins should fail because
-//	// there is no sufficient balance for staking creation fee.
-//	_, err = suite.keeper.Stake(suite.ctx, suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1_000_000_000)))
-//	suite.Require().Error(err)
 //}
 //
 //func (suite *KeeperTestSuite) TestUnstake() {
@@ -169,21 +151,46 @@ package keeper_test
 //	}
 //}
 //
-//func (suite *KeeperTestSuite) TestProcessQueuedCoins() {
-//	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000)))
-//
-//	staking, _ := suite.keeper.GetStakingByFarmer(suite.ctx, suite.addrs[0])
-//
-//	suite.Require().True(staking.StakedCoins.IsZero())
-//	suite.Require().True(intEq(sdk.NewInt(1000), staking.QueuedCoins.AmountOf(denom1)))
-//
-//	suite.keeper.ProcessQueuedCoins(suite.ctx)
-//
-//	staking, _ = suite.keeper.GetStakingByFarmer(suite.ctx, suite.addrs[0])
-//
-//	suite.Require().True(intEq(sdk.NewInt(1000), staking.StakedCoins.AmountOf(denom1)))
-//	suite.Require().True(staking.QueuedCoins.IsZero())
-//}
+
+func (suite *KeeperTestSuite) TestProcessQueuedCoins() {
+	for seed := int64(0); seed < 10; seed++ {
+		suite.SetupTest()
+
+		r := rand.New(rand.NewSource(seed))
+
+		stakedCoins := sdk.NewCoins()
+		queuedCoins := sdk.NewCoins()
+
+		iterations := 100
+		for i := 0; i < iterations; i++ {
+			if r.Intn(2) == 0 { // Stake with a 50% chance
+				// Construct random amount of coins to stake
+				stakingCoins := sdk.NewCoins()
+				for _, denom := range []string{denom1, denom2} {
+					balance := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom)
+					amt := r.Int63n(balance.Amount.ToDec().QuoTruncate(sdk.NewDec(int64(iterations))).TruncateInt64())
+					stakingCoins = stakingCoins.Add(sdk.NewInt64Coin(denom, amt))
+				}
+
+				if !stakingCoins.IsZero() {
+					suite.Stake(suite.addrs[0], stakingCoins)
+					queuedCoins = queuedCoins.Add(stakingCoins...)
+				}
+			}
+
+			suite.Require().True(coinsEq(queuedCoins, suite.QueuedCoins(suite.addrs[0])))
+			suite.Require().True(coinsEq(stakedCoins, suite.StakedCoins(suite.addrs[0])))
+
+			suite.keeper.ProcessQueuedCoins(suite.ctx)
+			stakedCoins = stakedCoins.Add(queuedCoins...)
+			queuedCoins = sdk.NewCoins()
+
+			suite.Require().True(coinsEq(queuedCoins, suite.QueuedCoins(suite.addrs[0])))
+			suite.Require().True(coinsEq(stakedCoins, suite.StakedCoins(suite.addrs[0])))
+		}
+	}
+}
+
 //
 //func (suite *KeeperTestSuite) TestEndBlockerProcessQueuedCoins() {
 //	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000)))

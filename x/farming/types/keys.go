@@ -28,10 +28,11 @@ var (
 	PlanKeyPrefix               = []byte{0x11}
 	PlansByFarmerIndexKeyPrefix = []byte{0x12}
 
-	StakingKeyPrefix       = []byte{0x21}
-	StakingIndexKeyPrefix  = []byte{0x22}
-	QueuedStakingKeyPrefix = []byte{0x23}
-	TotalStakingKeyPrefix  = []byte{0x24}
+	StakingKeyPrefix            = []byte{0x21}
+	StakingIndexKeyPrefix       = []byte{0x22}
+	QueuedStakingKeyPrefix      = []byte{0x23}
+	QueuedStakingIndexKeyPrefix = []byte{0x24}
+	TotalStakingKeyPrefix       = []byte{0x25}
 
 	HistoricalRewardsKeyPrefix = []byte{0x31}
 	CurrentEpochKeyPrefix      = []byte{0x32}
@@ -67,6 +68,14 @@ func GetStakingsByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
 
 func GetQueuedStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
 	return append(append(QueuedStakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
+}
+
+func GetQueuedStakingIndexKey(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
+	return append(append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...), []byte(stakingCoinDenom)...)
+}
+
+func GetQueuedStakingByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
+	return append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...)
 }
 
 func GetTotalStakingKey(stakingCoinDenom string) []byte {
@@ -108,6 +117,16 @@ func ParseQueuedStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.A
 	denomLen := key[1]
 	stakingCoinDenom = string(key[2 : 2+denomLen])
 	farmerAcc = key[2+denomLen:]
+	return
+}
+
+func ParseQueuedStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
+	if !bytes.HasPrefix(key, QueuedStakingIndexKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	addrLen := key[1]
+	farmerAcc = key[2 : 2+addrLen]
+	stakingCoinDenom = string(key[2+addrLen:])
 	return
 }
 
