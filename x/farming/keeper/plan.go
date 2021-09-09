@@ -313,20 +313,23 @@ func (k Keeper) GeneratePrivatePlanFarmingPoolAddress(ctx sdk.Context, name stri
 	return poolAcc, nil
 }
 
-// ValidateStakingReservedAmount checks that the balance of StakingReserveAcc greater than the amount of staked, Queued coins in all staking objects.
+// ValidateStakingReservedAmount checks that the balance of StakingReserveAcc greater than the amount of staked, queued coins in all staking objects.
 func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
-	var totalStakingAmt sdk.Coins
+	var totalStakingCoins sdk.Coins
+	k.IterateStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, staking types.Staking) (stop bool) {
+		totalStakingCoins = totalStakingCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
+		return false
+	})
+	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+		totalStakingCoins = totalStakingCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
+		return false
+	})
+
 	balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc)
-
-	// TODO: apply f1 logic
-	//k.IterateAllStakings(ctx, func(staking types.Staking) (stop bool) {
-	//	totalStakingAmt = totalStakingAmt.Add(staking.StakedCoins...).Add(staking.QueuedCoins...)
-	//	return false
-	//})
-
-	if !balanceStakingReserveAcc.IsAllGTE(totalStakingAmt) {
+	if !balanceStakingReserveAcc.IsAllGTE(totalStakingCoins) {
 		return types.ErrInvalidStakingReservedAmount
 	}
+
 	return nil
 }
 
