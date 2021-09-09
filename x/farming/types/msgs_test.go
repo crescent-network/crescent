@@ -4,9 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -265,12 +263,4 @@ func TestMsgHarvest(t *testing.T) {
 			require.EqualError(t, err, tc.expectedErr)
 		}
 	}
-}
-
-func TestFoo(t *testing.T) {
-	reg := codectypes.NewInterfaceRegistry()
-	types.RegisterInterfaces(reg)
-	cdc := codec.NewProtoCodec(reg)
-	var rewards types.HistoricalRewards
-	cdc.MustUnmarshal(nil, &rewards)
 }
