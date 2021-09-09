@@ -124,40 +124,46 @@ The parameters of the Plan state are:
 ## Staking
 
 ```go
-// Staking stores farmer's staking position status.
+// Staking defines a farmer's staking information.
 type Staking struct {
-    Id          uint64
-    Farmer      string
-    StakedCoins sdk.Coins
-    QueuedCoins sdk.Coins
+    Amount        sdk.Int
+    StartingEpoch uint64
 }
 ```
 
 The parameters of the Staking state are:
-
-- GlobalStakingIdKey: `[]byte("globalStakingId") -> ProtocolBuffer(uint64)`
-
-  - store latest staking id
-
-- Staking: `0x21 | Id -> ProtocolBuffer(Staking)`
-- StakingByFarmerAddrIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr -> BigEndian(Id)`
-- StakingByStakingCoinDenomIdIndex: `0x23 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Id) -> nil`
-
-## Reward
+- Staking: `0x21 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(Staking)`
+- StakingIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> nil`
 
 ```go
-// Reward defines a record of farming rewards for query result and exported state.
-type Reward struct {
-    Farmer           string
-    StakingCoinDenom string
-    RewardCoins      sdk.Coins
+type QueuedStaking struct {
+    Amount sdk.Int
 }
 ```
 
-The parameters of the Reward state are:
+- QueuedStaking: `0x23 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(QueuedStaking)`
+- QueuedStakingIndex: `0x24 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> nil`
 
-- Reward: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddrLen (1 byte) | FarmerAddr -> ProtocolBuffer(sdk.Coins) RewardCoins`
-- RewardByFarmerAddrIndex: `0x32 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomLen (1 byte) | StakingCoinDenom -> nil`
+```go
+type TotalStaking struct {
+    Amount sdk.Int
+}
+```
+
+- TotalStaking: `0x25 | StakingCoinDenom -> ProtocolBuffer(TotalStaking)`
+
+## Historical Rewards
+
+`HistoricalRewards` struct holds the cumulative unit rewards for each epoch which are needed for the reward calculation.
+
+```go
+type HistoricalRewards struct {
+    CumulativeUnitRewards sdk.DecCoins
+}
+```
+
+- HistoricalRewards: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Epoch) -> ProtocolBuffer(HistoricalRewards)`
+- CurrentEpoch: `0x32 | StakingCoinDenom -> BigEndian(CurrentEpoch)`
 
 ## Examples
 

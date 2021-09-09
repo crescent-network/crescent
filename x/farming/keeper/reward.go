@@ -44,7 +44,7 @@ func (k Keeper) IterateHistoricalRewards(ctx sdk.Context, cb func(stakingCoinDen
 
 func (k Keeper) GetCurrentEpoch(ctx sdk.Context, stakingCoinDenom string) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetCurrentRewardsKey(stakingCoinDenom))
+	bz := store.Get(types.GetCurrentEpochKey(stakingCoinDenom))
 	var val gogotypes.UInt64Value
 	k.cdc.MustUnmarshal(bz, &val)
 	return val.GetValue()
@@ -54,7 +54,7 @@ func (k Keeper) SetCurrentEpoch(ctx sdk.Context, stakingCoinDenom string, curren
 	store := ctx.KVStore(k.storeKey)
 	val := gogotypes.UInt64Value{Value: currentEpoch}
 	bz := k.cdc.MustMarshal(&val)
-	store.Set(types.GetCurrentRewardsKey(stakingCoinDenom), bz)
+	store.Set(types.GetCurrentEpochKey(stakingCoinDenom), bz)
 }
 
 func (k Keeper) IterateCurrentEpochs(ctx sdk.Context, cb func(stakingCoinDenom string, currentEpoch uint64) (stop bool)) {

@@ -86,7 +86,7 @@ func GetHistoricalRewardsKey(stakingCoinDenom string, epoch uint64) []byte {
 	return append(append(HistoricalRewardsKeyPrefix, LengthPrefixString(stakingCoinDenom)...), sdk.Uint64ToBigEndian(epoch)...)
 }
 
-func GetCurrentRewardsKey(stakingCoinDenom string) []byte {
+func GetCurrentEpochKey(stakingCoinDenom string) []byte {
 	return append(CurrentEpochKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
