@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 				mustParseRFC3339("2021-08-02T00:00:00Z"),
 				mustParseRFC3339("2021-08-10T00:00:00Z"),
 			),
-			sdk.NewCoins(),
+			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)),
 		),
 		types.NewFixedAmountPlan(
 			types.NewBasePlan(
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 				mustParseRFC3339("2021-08-04T00:00:00Z"),
 				mustParseRFC3339("2021-08-12T00:00:00Z"),
 			),
-			sdk.NewCoins(),
+			sdk.NewCoins(sdk.NewInt64Coin(denom3, 2000000)),
 		),
 	}
 	suite.sampleRatioPlans = []types.PlanI{

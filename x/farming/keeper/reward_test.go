@@ -133,54 +133,43 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 	}
 }
 
-//func (suite *KeeperTestSuite) TestAllocateRewards() {
-//	plans := []types.PlanI{
-//		types.NewFixedAmountPlan(
-//			types.NewBasePlan(
-//				1,
-//				"",
-//				types.PlanTypePrivate,
-//				suite.addrs[0].String(),
-//				suite.addrs[0].String(),
-//				sdk.NewDecCoins(
-//					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
-//					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1))),
-//				mustParseRFC3339("2021-07-30T00:00:00Z"),
-//				mustParseRFC3339("2021-08-30T00:00:00Z"),
-//			),
-//			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000))),
-//	}
-//	for _, plan := range plans {
-//		suite.keeper.SetPlan(suite.ctx, plan)
-//	}
-//
-//	suite.Stake(suite.addrs[1], sdk.NewCoins(
-//		sdk.NewInt64Coin(denom1, 1_000_000),
-//		sdk.NewInt64Coin(denom2, 1_000_000)))
-//	suite.keeper.ProcessQueuedCoins(suite.ctx)
-//
-//	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-07-31T00:00:00Z"))
-//	err := suite.keeper.AllocateRewards(suite.ctx)
-//	suite.Require().NoError(err)
-//
-//	rewards := suite.keeper.GetRewardsByFarmer(suite.ctx, suite.addrs[1])
-//	suite.Require().Len(rewards, 2)
-//	for _, reward := range rewards {
-//		switch reward.StakingCoinDenom {
-//		case denom1:
-//			suite.Require().True(intEq(sdk.NewInt(300_000), reward.RewardCoins.AmountOf(denom3)))
-//		case denom2:
-//			suite.Require().True(intEq(sdk.NewInt(700_000), reward.RewardCoins.AmountOf(denom3)))
-//		}
-//	}
-//
-//	plan, _ := suite.keeper.GetPlan(suite.ctx, 1)
-//
-//	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000)), plan.GetDistributedCoins()))
-//	t := plan.GetLastDistributionTime()
-//	suite.Require().NotNil(t)
-//	suite.Require().Equal(suite.ctx.BlockTime(), *t)
-//}
+func (suite *KeeperTestSuite) TestAllocateRewards() {
+	for _, plan := range suite.sampleFixedAmtPlans {
+		_ = plan.SetStartTime(mustParseRFC3339("0001-01-01T00:00:00Z"))
+		_ = plan.SetEndTime(mustParseRFC3339("9999-12-31T00:00:00Z"))
+		suite.keeper.SetPlan(suite.ctx, plan)
+	}
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
+	suite.keeper.ProcessQueuedCoins(suite.ctx)
+
+	prevDistrCoins := map[uint64]sdk.Coins{}
+
+	t := mustParseRFC3339("2021-09-01T00:00:00Z")
+	for i := 0; i < 365; i++ {
+		suite.ctx = suite.ctx.WithBlockTime(t)
+
+		err := suite.keeper.AllocateRewards(suite.ctx)
+		suite.Require().NoError(err)
+
+		for _, plan := range suite.sampleFixedAmtPlans {
+			plan, _ := suite.keeper.GetPlan(suite.ctx, plan.GetId())
+			fixedAmtPlan := plan.(*types.FixedAmountPlan)
+
+			dist := plan.GetDistributedCoins()
+			suite.Require().True(coinsEq(prevDistrCoins[plan.GetId()].Add(fixedAmtPlan.EpochAmount...), dist))
+			prevDistrCoins[plan.GetId()] = dist
+
+			t2 := plan.GetLastDistributionTime()
+			suite.Require().NotNil(t2)
+			suite.Require().Equal(t, *t2)
+		}
+
+		t = t.AddDate(0, 0, 1)
+	}
+}
+
 //
 //func (suite *KeeperTestSuite) TestHarvest() {
 //	for _, plan := range suite.samplePlans {
