@@ -34,7 +34,7 @@ var (
 	TotalStakingKeyPrefix  = []byte{0x24}
 
 	HistoricalRewardsKeyPrefix = []byte{0x31}
-	CurrentRewardsKeyPrefix    = []byte{0x32}
+	CurrentEpochKeyPrefix      = []byte{0x32}
 )
 
 // GetPlanKey returns kv indexing key of the plan
@@ -78,7 +78,17 @@ func GetHistoricalRewardsKey(stakingCoinDenom string, epoch uint64) []byte {
 }
 
 func GetCurrentRewardsKey(stakingCoinDenom string) []byte {
-	return append(CurrentRewardsKeyPrefix, []byte(stakingCoinDenom)...)
+	return append(CurrentEpochKeyPrefix, []byte(stakingCoinDenom)...)
+}
+
+func ParseStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
+	if !bytes.HasPrefix(key, StakingKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	denomLen := key[1]
+	stakingCoinDenom = string(key[2 : 2+denomLen])
+	farmerAcc = key[2+denomLen:]
+	return
 }
 
 func ParseStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
@@ -98,6 +108,24 @@ func ParseQueuedStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.A
 	denomLen := key[1]
 	stakingCoinDenom = string(key[2 : 2+denomLen])
 	farmerAcc = key[2+denomLen:]
+	return
+}
+
+func ParseHistoricalRewardsKey(key []byte) (stakingCoinDenom string, epoch uint64) {
+	if !bytes.HasPrefix(key, HistoricalRewardsKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	denomLen := key[1]
+	stakingCoinDenom = string(key[2 : 2+denomLen])
+	epoch = sdk.BigEndianToUint64(key[2+denomLen:])
+	return
+}
+
+func ParseCurrentEpochKey(key []byte) (stakingCoinDenom string) {
+	if !bytes.HasPrefix(key, CurrentEpochKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	stakingCoinDenom = string(key[1:])
 	return
 }
 

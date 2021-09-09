@@ -8,15 +8,21 @@ import (
 )
 
 // NewGenesisState returns new GenesisState.
-func NewGenesisState(params Params, planRecords []PlanRecord, stakings []Staking, stakingReserveCoins, rewardPoolCoins sdk.Coins, globalLastEpochTime time.Time) *GenesisState {
+func NewGenesisState(
+	params Params, plans []PlanRecord, stakings []StakingRecord, queuedStakings []QueuedStakingRecord,
+	historicalRewards []HistoricalRewardsRecord, currentEpochs []CurrentEpochRecord, stakingReserveCoins,
+	rewardPoolCoins sdk.Coins, globalLastEpochTime time.Time,
+) *GenesisState {
 	return &GenesisState{
-		Params:              params,
-		PlanRecords:         planRecords,
-		Stakings:            stakings,
-		StakingReserveCoins: stakingReserveCoins,
-		RewardPoolCoins:     rewardPoolCoins,
-		GlobalLastEpochTime: globalLastEpochTime,
-		// TODO: add queued staking and struct for f1
+		Params:                   params,
+		PlanRecords:              plans,
+		StakingRecords:           stakings,
+		QueuedStakingRecords:     queuedStakings,
+		HistoricalRewardsRecords: historicalRewards,
+		CurrentEpochRecords:      currentEpochs,
+		StakingReserveCoins:      stakingReserveCoins,
+		RewardPoolCoins:          rewardPoolCoins,
+		GlobalLastEpochTime:      globalLastEpochTime,
 	}
 }
 
@@ -25,10 +31,13 @@ func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(
 		DefaultParams(),
 		[]PlanRecord{},
-		[]Staking{},
+		[]StakingRecord{},
+		[]QueuedStakingRecord{},
+		[]HistoricalRewardsRecord{},
+		[]CurrentEpochRecord{},
 		sdk.Coins{},
 		sdk.Coins{},
-		time.Time{},)
+		time.Time{})
 }
 
 // ValidateGenesis validates GenesisState.
@@ -50,17 +59,14 @@ func ValidateGenesis(data GenesisState) error {
 			return fmt.Errorf("pool records must be sorted")
 		}
 		plans = append(plans, plan)
+		id = plan.GetId() + 1
 	}
 	err := ValidateRatioPlans(plans)
 	if err != nil {
 		return err
 	}
 
-	for _, staking := range data.Stakings {
-		if err := staking.Validate(); err != nil {
-			return err
-		}
-	}
+	// TODO: validate other fields
 	if err := data.RewardPoolCoins.Validate(); err != nil {
 		return err
 	}

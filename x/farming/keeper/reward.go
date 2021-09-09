@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/tendermint/farming/x/farming/types"
 )
@@ -27,17 +28,47 @@ func (k Keeper) DeleteHistoricalRewards(ctx sdk.Context, stakingCoinDenom string
 	store.Delete(types.GetHistoricalRewardsKey(stakingCoinDenom, epoch))
 }
 
-func (k Keeper) GetCurrentRewards(ctx sdk.Context, stakingCoinDenom string) (rewards types.CurrentRewards) {
+func (k Keeper) IterateHistoricalRewards(ctx sdk.Context, cb func(stakingCoinDenom string, epoch uint64, rewards types.HistoricalRewards) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetCurrentRewardsKey(stakingCoinDenom))
-	k.cdc.MustUnmarshal(bz, &rewards)
-	return
+	iter := sdk.KVStorePrefixIterator(store, types.HistoricalRewardsKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var rewards types.HistoricalRewards
+		k.cdc.MustUnmarshal(iter.Value(), &rewards)
+		stakingCoinDenom, epoch := types.ParseHistoricalRewardsKey(iter.Key())
+		if cb(stakingCoinDenom, epoch, rewards) {
+			break
+		}
+	}
 }
 
-func (k Keeper) SetCurrentRewards(ctx sdk.Context, stakingCoinDenom string, rewards types.CurrentRewards) {
+func (k Keeper) GetCurrentEpoch(ctx sdk.Context, stakingCoinDenom string) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&rewards)
+	bz := store.Get(types.GetCurrentRewardsKey(stakingCoinDenom))
+	var val gogotypes.UInt64Value
+	k.cdc.MustUnmarshal(bz, &val)
+	return val.GetValue()
+}
+
+func (k Keeper) SetCurrentEpoch(ctx sdk.Context, stakingCoinDenom string, currentEpoch uint64) {
+	store := ctx.KVStore(k.storeKey)
+	val := gogotypes.UInt64Value{Value: currentEpoch}
+	bz := k.cdc.MustMarshal(&val)
 	store.Set(types.GetCurrentRewardsKey(stakingCoinDenom), bz)
+}
+
+func (k Keeper) IterateCurrentEpochs(ctx sdk.Context, cb func(stakingCoinDenom string, currentEpoch uint64) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.CurrentEpochKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var val gogotypes.UInt64Value
+		k.cdc.MustUnmarshal(iter.Value(), &val)
+		stakingCoinDenom := types.ParseCurrentEpochKey(iter.Key())
+		if cb(stakingCoinDenom, val.GetValue()) {
+			break
+		}
+	}
 }
 
 func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, endingEpoch uint64) (rewards sdk.Coins) {
@@ -59,8 +90,9 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 		return nil, fmt.Errorf("empty starting info") // TODO: use correct error
 	}
 
-	current := k.GetCurrentRewards(ctx, stakingCoinDenom)
-	rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, current.Epoch-1)
+	currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
+	// TODO: handle if currentEpoch is 0
+	rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, currentEpoch-1)
 
 	if !rewards.IsZero() {
 		if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, rewards); err != nil {
@@ -68,7 +100,7 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 		}
 	}
 
-	staking.StartingEpoch = current.Epoch
+	staking.StartingEpoch = currentEpoch
 	k.SetStaking(ctx, stakingCoinDenom, farmerAcc, staking)
 
 	return rewards, nil
@@ -78,14 +110,14 @@ func (k Keeper) WithdrawAllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) (s
 	totalRewards := sdk.NewCoins()
 
 	k.IterateStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
-		current := k.GetCurrentRewards(ctx, stakingCoinDenom)
-		rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, current.Epoch-1)
+		currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
+		rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, currentEpoch-1)
 
 		if !rewards.IsZero() {
 			totalRewards = totalRewards.Add(rewards...)
 		}
 
-		staking.StartingEpoch = current.Epoch
+		staking.StartingEpoch = currentEpoch
 		k.SetStaking(ctx, stakingCoinDenom, farmerAcc, staking)
 
 		return false
@@ -207,14 +239,12 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			weightProportion := weight.Amount.QuoTruncate(totalWeight)
 			allocCoins := sdk.NewDecCoinsFromCoins(allocInfo.Amount...).MulDecTruncate(weightProportion)
 
-			current := k.GetCurrentRewards(ctx, weight.Denom)
-			historical := k.GetHistoricalRewards(ctx, weight.Denom, current.Epoch-1)
-			k.SetHistoricalRewards(ctx, weight.Denom, current.Epoch, types.HistoricalRewards{
+			currentEpoch := k.GetCurrentEpoch(ctx, weight.Denom)
+			historical := k.GetHistoricalRewards(ctx, weight.Denom, currentEpoch-1)
+			k.SetHistoricalRewards(ctx, weight.Denom, currentEpoch, types.HistoricalRewards{
 				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoins.QuoDecTruncate(totalStaking.Amount.ToDec())...),
 			})
-			k.SetCurrentRewards(ctx, weight.Denom, types.CurrentRewards{
-				Epoch: current.Epoch + 1,
-			})
+			k.SetCurrentEpoch(ctx, weight.Denom, currentEpoch+1)
 
 			totalAllocCoins = totalAllocCoins.Add(allocCoins...)
 		}
