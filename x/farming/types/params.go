@@ -13,12 +13,10 @@ import (
 // Parameter store keys
 var (
 	KeyPrivatePlanCreationFee = []byte("PrivatePlanCreationFee")
-	KeyStakingCreationFee     = []byte("StakingCreationFee")
 	KeyEpochDays              = []byte("EpochDays")
 	KeyFarmingFeeCollector    = []byte("FarmingFeeCollector")
 
 	DefaultPrivatePlanCreationFee = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)))
-	DefaultStakingCreationFee     = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000)))
 	DefaultEpochDays              = uint32(1)
 	DefaultFarmingFeeCollector    = sdk.AccAddress(address.Module(ModuleName, []byte("FarmingFeeCollectorAcc"))).String()
 	StakingReserveAcc             = sdk.AccAddress(address.Module(ModuleName, []byte("StakingReserveAcc")))
@@ -36,7 +34,6 @@ func ParamKeyTable() paramstypes.KeyTable {
 func DefaultParams() Params {
 	return Params{
 		PrivatePlanCreationFee: DefaultPrivatePlanCreationFee,
-		StakingCreationFee:     DefaultStakingCreationFee,
 		EpochDays:              DefaultEpochDays,
 		FarmingFeeCollector:    DefaultFarmingFeeCollector,
 	}
@@ -46,7 +43,6 @@ func DefaultParams() Params {
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyPrivatePlanCreationFee, &p.PrivatePlanCreationFee, validatePrivatePlanCreationFee),
-		paramstypes.NewParamSetPair(KeyStakingCreationFee, &p.StakingCreationFee, validateStakingCreationFee),
 		paramstypes.NewParamSetPair(KeyEpochDays, &p.EpochDays, validateEpochDays),
 		paramstypes.NewParamSetPair(KeyFarmingFeeCollector, &p.FarmingFeeCollector, validateFarmingFeeCollector),
 	}
@@ -65,7 +61,6 @@ func (p Params) Validate() error {
 		validator func(interface{}) error
 	}{
 		{p.PrivatePlanCreationFee, validatePrivatePlanCreationFee},
-		{p.StakingCreationFee, validateStakingCreationFee},
 		{p.EpochDays, validateEpochDays},
 		{p.FarmingFeeCollector, validateFarmingFeeCollector},
 	} {
@@ -77,19 +72,6 @@ func (p Params) Validate() error {
 }
 
 func validatePrivatePlanCreationFee(i interface{}) error {
-	v, ok := i.(sdk.Coins)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if err := v.Validate(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validateStakingCreationFee(i interface{}) error {
 	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

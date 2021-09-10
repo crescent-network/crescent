@@ -9,6 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -19,7 +20,6 @@ import (
 	"github.com/tendermint/farming/x/farming/client/cli"
 	farmingtestutil "github.com/tendermint/farming/x/farming/client/testutil"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
-	tmdb "github.com/tendermint/tm-db"
 )
 
 type IntegrationTestSuite struct {

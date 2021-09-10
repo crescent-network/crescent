@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 				mustParseRFC3339("2021-08-02T00:00:00Z"),
 				mustParseRFC3339("2021-08-10T00:00:00Z"),
 			),
-			sdk.NewCoins(),
+			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)),
 		),
 		types.NewFixedAmountPlan(
 			types.NewBasePlan(
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 				mustParseRFC3339("2021-08-04T00:00:00Z"),
 				mustParseRFC3339("2021-08-12T00:00:00Z"),
 			),
-			sdk.NewCoins(),
+			sdk.NewCoins(sdk.NewInt64Coin(denom3, 2000000)),
 		),
 	}
 	suite.sampleRatioPlans = []types.PlanI{
@@ -128,11 +128,34 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // Stake is a convenient method to test Keeper.Stake.
-func (suite *KeeperTestSuite) Stake(farmer sdk.AccAddress, amt sdk.Coins) types.Staking {
-	staking, err := suite.keeper.Stake(suite.ctx, farmer, amt)
+func (suite *KeeperTestSuite) Stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
+	err := suite.keeper.Stake(suite.ctx, farmerAcc, amt)
 	suite.Require().NoError(err)
+}
 
-	return staking
+func (suite *KeeperTestSuite) StakedCoins(farmerAcc sdk.AccAddress) sdk.Coins {
+	stakedCoins := sdk.NewCoins()
+	suite.keeper.IterateStakingsByFarmer(suite.ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
+		stakedCoins = stakedCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
+		return false
+	})
+	return stakedCoins
+}
+
+func (suite *KeeperTestSuite) QueuedCoins(farmerAcc sdk.AccAddress) sdk.Coins {
+	queuedCoins := sdk.NewCoins()
+	suite.keeper.IterateQueuedStakingsByFarmer(suite.ctx, farmerAcc, func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool) {
+		queuedCoins = queuedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
+		return false
+	})
+	return queuedCoins
+}
+
+func (suite *KeeperTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
+	cacheCtx, _ := suite.ctx.CacheContext()
+	rewards, err := suite.keeper.WithdrawAllRewards(cacheCtx, farmerAcc)
+	suite.Require().NoError(err)
+	return rewards
 }
 
 func intEq(exp, got sdk.Int) (bool, string, string, string) {

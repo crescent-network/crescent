@@ -30,12 +30,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		y, m, d := lastEpochTime.AddDate(0, 0, int(params.EpochDays)).Date()
 		y2, m2, d2 := ctx.BlockTime().Date()
 		if y == y2 && m == m2 && d == d2 {
-			if err := k.DistributeRewards(ctx); err != nil {
+			if err := k.AdvanceEpoch(ctx); err != nil {
 				panic(err)
 			}
-			k.ProcessQueuedCoins(ctx)
-
-			k.SetLastEpochTime(ctx, ctx.BlockTime())
 		}
 	}
 }

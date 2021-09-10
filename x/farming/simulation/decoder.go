@@ -28,11 +28,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvA.Value, &sB)
 			return fmt.Sprintf("%v\n%v", sA, sB)
 
-		case bytes.Equal(kvA.Key[:1], types.RewardKeyPrefix):
-			var rA, rB types.Reward
-			cdc.MustUnmarshal(kvA.Value, &rA)
-			return fmt.Sprintf("%v\n%v", rA, rB)
-
 		default:
 			panic(fmt.Sprintf("invalid farming key prefix %X", kvA.Key[:1]))
 		}

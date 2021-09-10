@@ -34,3 +34,13 @@ func (k Keeper) SetLastEpochTime(ctx sdk.Context, t time.Time) {
 	bz := k.cdc.MustMarshal(ts)
 	store.Set(types.GlobalLastEpochTimeKey, bz)
 }
+
+func (k Keeper) AdvanceEpoch(ctx sdk.Context) error {
+	if err := k.AllocateRewards(ctx); err != nil {
+		return err
+	}
+	k.ProcessQueuedCoins(ctx)
+	k.SetLastEpochTime(ctx, ctx.BlockTime())
+
+	return nil
+}

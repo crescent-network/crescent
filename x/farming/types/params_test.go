@@ -20,9 +20,6 @@ func TestParams(t *testing.T) {
 	paramsStr := `private_plan_creation_fee:
 - denom: stake
   amount: "100000000"
-staking_creation_fee:
-- denom: stake
-  amount: "100000"
 epoch_days: 1
 farming_fee_collector: cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x
 `
@@ -41,13 +38,6 @@ func TestParamsValidate(t *testing.T) {
 			"EmptyPrivatePlanCreationFee",
 			func(params *types.Params) {
 				params.PrivatePlanCreationFee = sdk.NewCoins()
-			},
-			"",
-		},
-		{
-			"EmptyStakingCreationFee",
-			func(params *types.Params) {
-				params.StakingCreationFee = nil
 			},
 			"",
 		},

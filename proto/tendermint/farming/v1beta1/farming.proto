@@ -22,20 +22,12 @@ message Params {
     (gogoproto.nullable)     = false
   ];
 
-  // When a farmer creates new staking, the farmer needs to pay
-  // staking_creation_fee to prevent spam on the staking struct
-  repeated cosmos.base.v1beta1.Coin staking_creation_fee = 2 [
-    (gogoproto.moretags)     = "yaml:\"staking_creation_fee\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false
-  ];
-
   // The universal epoch length in number of days. Every process for staking and
   // reward distribution is executed with this epoch_days frequency
-  uint32 epoch_days = 3 [(gogoproto.moretags) = "yaml:\"epoch_days\""];
+  uint32 epoch_days = 2 [(gogoproto.moretags) = "yaml:\"epoch_days\""];
 
   // farming_fee_collector is the module account address to collect fees within the farming module
-  string farming_fee_collector = 4 [(gogoproto.moretags) = "yaml:\"farming_fee_collector\""];
+  string farming_fee_collector = 3 [(gogoproto.moretags) = "yaml:\"farming_fee_collector\""];
 }
 
 // BasePlan defines a base plan type. It contains all the necessary fields
@@ -146,59 +138,29 @@ message Staking {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  // id specifies index of the staking
-  uint64 id = 1;
+  string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  // farmer defines the bech32-encoded address of the staker for the plan
-  string farmer = 2;
-
-  // staked_coins specifies the staking amount for the plan of farmer
-  repeated cosmos.base.v1beta1.Coin staked_coins = 3 [
-    (gogoproto.moretags)     = "yaml:\"staked_coins\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false
-  ];
-
-  // queued_coins specifies the coins on standby before current epoch passes and
-  // gets staked.
-  repeated cosmos.base.v1beta1.Coin queued_coins = 4 [
-    (gogoproto.moretags)     = "yaml:\"queued_coins\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false
-  ];
+  uint64 starting_epoch = 2 [(gogoproto.moretags) = "yaml:\"starting_epoch\""];
 }
 
-// Reward defines a record of farming rewards.
-message Reward {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+message QueuedStaking {
+  option (gogoproto.goproto_getters) = false;
 
-  // farmer defines the bech32-encoded address of the farmer
-  string farmer = 1;
-
-  // staking_coin_denom is denom of staked coin as a source of the reward
-  string staking_coin_denom = 2 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
-
-  // reward_coins specifies rewards amount at this point in time when farmers
-  // receive them from the farming plan
-  repeated cosmos.base.v1beta1.Coin reward_coins = 3 [
-    (gogoproto.moretags)     = "yaml:\"reward_coins\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false
-  ];
+  string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-// RewardCoins represents reward coins for specific staking coin denom for a farmer.
-// This is the actual struct that is stored in kvstore.
-message RewardCoins {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+message TotalStaking {
+  option (gogoproto.goproto_getters) = false;
 
-  // reward_coins specifies rewards amount at this point in time when farmers
-  // receive them from the farming plan
-  repeated cosmos.base.v1beta1.Coin reward_coins = 1 [
-    (gogoproto.moretags)     = "yaml:\"reward_coins\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+  string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message HistoricalRewards {
+  option (gogoproto.goproto_getters) = false;
+
+  repeated cosmos.base.v1beta1.DecCoin cumulative_unit_rewards = 1 [
+    (gogoproto.moretags)     = "yaml:\"cumulative_unit_rewards\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
 }

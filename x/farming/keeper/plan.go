@@ -313,19 +313,23 @@ func (k Keeper) GeneratePrivatePlanFarmingPoolAddress(ctx sdk.Context, name stri
 	return poolAcc, nil
 }
 
-// ValidateStakingReservedAmount checks that the balance of StakingReserveAcc greater than the amount of staked, Queued coins in all staking objects.
+// ValidateStakingReservedAmount checks that the balance of StakingReserveAcc greater than the amount of staked, queued coins in all staking objects.
 func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
-	var totalStakingAmt sdk.Coins
-	balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc)
-
-	k.IterateAllStakings(ctx, func(staking types.Staking) (stop bool) {
-		totalStakingAmt = totalStakingAmt.Add(staking.StakedCoins...).Add(staking.QueuedCoins...)
+	var totalStakingCoins sdk.Coins
+	k.IterateStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, staking types.Staking) (stop bool) {
+		totalStakingCoins = totalStakingCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
+		return false
+	})
+	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+		totalStakingCoins = totalStakingCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
 		return false
 	})
 
-	if !balanceStakingReserveAcc.IsAllGTE(totalStakingAmt) {
+	balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc)
+	if !balanceStakingReserveAcc.IsAllGTE(totalStakingCoins) {
 		return types.ErrInvalidStakingReservedAmount
 	}
+
 	return nil
 }
 
@@ -333,10 +337,11 @@ func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
 func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
 	var totalRemainingRewards sdk.Coins
 	totalBalancesRewardPool := k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))
-	k.IterateAllRewards(ctx, func(reward types.Reward) (stop bool) {
-		totalRemainingRewards = totalRemainingRewards.Add(reward.RewardCoins...)
-		return false
-	})
+	// TODO: apply f1 logic
+	//k.IterateAllRewards(ctx, func(reward types.Reward) (stop bool) {
+	//	totalRemainingRewards = totalRemainingRewards.Add(reward.RewardCoins...)
+	//	return false
+	//})
 
 	if !totalBalancesRewardPool.IsAllGTE(totalRemainingRewards) {
 		return types.ErrInvalidRemainingRewardsAmount

@@ -49,20 +49,23 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.keeper.ProcessQueuedCoins(suite.ctx)
 
 	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-07-31T00:00:00Z"))
-	err := suite.keeper.DistributeRewards(suite.ctx)
+
+	// Advance 2 epochs
+	err := suite.keeper.AdvanceEpoch(suite.ctx)
+	suite.Require().NoError(err)
+	err = suite.keeper.AdvanceEpoch(suite.ctx)
 	suite.Require().NoError(err)
 
 	var genState *types.GenesisState
 	suite.Require().NotPanics(func() {
 		genState = suite.keeper.ExportGenesis(suite.ctx)
-	},
-	)
+	})
+
 	err = types.ValidateGenesis(*genState)
 	suite.Require().NoError(err)
 
 	suite.Require().NotPanics(func() {
 		suite.keeper.InitGenesis(suite.ctx, *genState)
-	},
-	)
+	})
 	suite.Require().Equal(genState, suite.keeper.ExportGenesis(suite.ctx))
 }

@@ -57,7 +57,7 @@ func (k msgServer) CreateRatioPlan(goCtx context.Context, msg *types.MsgCreateRa
 func (k msgServer) Stake(goCtx context.Context, msg *types.MsgStake) (*types.MsgStakeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := k.Keeper.Stake(ctx, msg.GetFarmer(), msg.StakingCoins); err != nil {
+	if err := k.Keeper.Stake(ctx, msg.GetFarmer(), msg.StakingCoins); err != nil {
 		return nil, err
 	}
 
@@ -68,7 +68,7 @@ func (k msgServer) Stake(goCtx context.Context, msg *types.MsgStake) (*types.Msg
 func (k msgServer) Unstake(goCtx context.Context, msg *types.MsgUnstake) (*types.MsgUnstakeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := k.Keeper.Unstake(ctx, msg.GetFarmer(), msg.UnstakingCoins); err != nil {
+	if err := k.Keeper.Unstake(ctx, msg.GetFarmer(), msg.UnstakingCoins); err != nil {
 		return nil, err
 	}
 
