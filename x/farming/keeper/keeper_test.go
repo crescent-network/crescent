@@ -151,6 +151,13 @@ func (suite *KeeperTestSuite) QueuedCoins(farmerAcc sdk.AccAddress) sdk.Coins {
 	return queuedCoins
 }
 
+func (suite *KeeperTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
+	cacheCtx, _ := suite.ctx.CacheContext()
+	rewards, err := suite.keeper.WithdrawAllRewards(cacheCtx, farmerAcc)
+	suite.Require().NoError(err)
+	return rewards
+}
+
 func intEq(exp, got sdk.Int) (bool, string, string, string) {
 	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
