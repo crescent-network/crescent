@@ -114,7 +114,10 @@ func (k Keeper) IncreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom str
 }
 
 func (k Keeper) DecreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.Coins) {
-	outstanding, _ := k.GetOutstandingRewards(ctx, stakingCoinDenom)
+	outstanding, found := k.GetOutstandingRewards(ctx, stakingCoinDenom)
+	if !found {
+		panic("outstanding rewards not found")
+	}
 	if outstanding.Rewards.IsEqual(amount) {
 		k.DeleteOutstandingRewards(ctx, stakingCoinDenom)
 	} else {

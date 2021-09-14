@@ -23,11 +23,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 			panic(err)
 		}
 		k.SetPlan(ctx, plan)
-		if i == len(genState.PlanRecords) - 1 {
+		if i == len(genState.PlanRecords)-1 {
 			k.SetGlobalPlanId(ctx, plan.GetId())
 		}
 	}
 
+	totalStakings := map[string]sdk.Int{} // (staking coin denom) => (amount)
 
 	for _, record := range genState.StakingRecords {
 		farmerAcc, err := sdk.AccAddressFromBech32(record.Farmer)
@@ -35,6 +36,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 			panic(err)
 		}
 		k.SetStaking(ctx, record.StakingCoinDenom, farmerAcc, record.Staking)
+
+		amt, ok := totalStakings[record.StakingCoinDenom]
+		if !ok {
+			amt = sdk.ZeroInt()
+		}
+		amt = amt.Add(record.Staking.Amount)
+		totalStakings[record.StakingCoinDenom] = amt
 	}
 
 	for _, record := range genState.QueuedStakingRecords {
@@ -55,6 +63,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	if genState.LastEpochTime != nil {
 		k.SetLastEpochTime(ctx, *genState.LastEpochTime)
+	}
+
+	for stakingCoinDenom, amt := range totalStakings {
+		k.SetTotalStaking(ctx, stakingCoinDenom, types.TotalStaking{Amount: amt})
 	}
 
 	if err := k.ValidateRemainingRewardsAmount(ctx); err != nil {
