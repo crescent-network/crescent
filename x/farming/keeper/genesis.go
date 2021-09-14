@@ -17,18 +17,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	if _, err := sdk.AccAddressFromBech32(genState.Params.FarmingFeeCollector); err != nil {
-		panic(err)
-	}
-
-	for _, record := range genState.PlanRecords {
+	for i, record := range genState.PlanRecords {
 		plan, err := types.UnpackPlan(&record.Plan)
 		if err != nil {
 			panic(err)
 		}
 		k.SetPlan(ctx, plan)
-		k.SetGlobalPlanId(ctx, plan.GetId())
+		if i == len(genState.PlanRecords) - 1 {
+			k.SetGlobalPlanId(ctx, plan.GetId())
+		}
 	}
+
 
 	for _, record := range genState.StakingRecords {
 		farmerAcc, err := sdk.AccAddressFromBech32(record.Farmer)
