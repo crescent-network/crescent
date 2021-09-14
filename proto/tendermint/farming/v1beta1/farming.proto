@@ -164,3 +164,10 @@ message HistoricalRewards {
     (gogoproto.nullable)     = false
   ];
 }
+
+// OutstandingRewards represents outstanding(un-withdrawn) rewards
+// for a staking coin denom.
+message OutstandingRewards {
+  repeated cosmos.base.v1beta1.Coin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
