@@ -120,8 +120,8 @@ func (suite *KeeperTestSuite) TestUnstake() {
 				suite.Error(err)
 			} else {
 				if suite.NoError(err) {
-					suite.True(coinsEq(tc.remainingStaked, suite.StakedCoins(suite.addrs[tc.addrIdx])))
-					suite.True(coinsEq(tc.remainingQueued, suite.QueuedCoins(suite.addrs[tc.addrIdx])))
+					suite.True(coinsEq(tc.remainingStaked, suite.keeper.GetAllStakedCoinsByFarmer(suite.ctx, suite.addrs[tc.addrIdx])))
+					suite.True(coinsEq(tc.remainingQueued, suite.keeper.GetAllQueuedStakedCoinsByFarmer(suite.ctx, suite.addrs[tc.addrIdx])))
 				}
 			}
 		})
@@ -154,15 +154,15 @@ func (suite *KeeperTestSuite) TestProcessQueuedCoins() {
 				}
 			}
 
-			suite.Require().True(coinsEq(queuedCoins, suite.QueuedCoins(suite.addrs[0])))
-			suite.Require().True(coinsEq(stakedCoins, suite.StakedCoins(suite.addrs[0])))
+			suite.Require().True(coinsEq(queuedCoins, suite.keeper.GetAllQueuedStakedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+			suite.Require().True(coinsEq(stakedCoins, suite.keeper.GetAllStakedCoinsByFarmer(suite.ctx, suite.addrs[0])))
 
 			suite.keeper.ProcessQueuedCoins(suite.ctx)
 			stakedCoins = stakedCoins.Add(queuedCoins...)
 			queuedCoins = sdk.NewCoins()
 
-			suite.Require().True(coinsEq(queuedCoins, suite.QueuedCoins(suite.addrs[0])))
-			suite.Require().True(coinsEq(stakedCoins, suite.StakedCoins(suite.addrs[0])))
+			suite.Require().True(coinsEq(queuedCoins, suite.keeper.GetAllQueuedStakedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+			suite.Require().True(coinsEq(stakedCoins, suite.keeper.GetAllStakedCoinsByFarmer(suite.ctx, suite.addrs[0])))
 		}
 	}
 }

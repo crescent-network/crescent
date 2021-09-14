@@ -9,6 +9,7 @@ import (
 // InitGenesis initializes the farming module's state from a given genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	ctx, applyCache := ctx.CacheContext()
+
 	k.SetParams(ctx, genState.Params)
 	moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
@@ -34,9 +35,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	if err := k.ValidateRemainingRewardsAmount(ctx); err != nil {
 		panic(err)
 	}
+
 	if err := k.ValidateStakingReservedAmount(ctx); err != nil {
 		panic(err)
 	}
+
 	applyCache()
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -14,16 +15,16 @@ import (
 	"github.com/tendermint/farming/x/farming/types"
 )
 
-// Simulation operation weights constants
+// Simulation operation weights constants.
 const (
 	OpWeightMsgCreateFixedAmountPlan = "op_weight_msg_create_fixed_amount_plan"
 	OpWeightMsgCreateRatioPlan       = "op_weight_msg_create_ratio_plan"
 	OpWeightMsgStake                 = "op_weight_msg_stake"
 	OpWeightMsgUnstake               = "op_weight_msg_unstake"
-	OpWeightMsgClaim                 = "op_weight_msg_claim"
+	OpWeightMsgHarvest               = "op_weight_msg_harvest"
 )
 
-// WeightedOperations returns all the operations from the module with their respective weights
+// WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper,
@@ -57,10 +58,10 @@ func WeightedOperations(
 		},
 	)
 
-	var weightMsgClaim int
-	appParams.GetOrGenerate(cdc, OpWeightMsgClaim, &weightMsgClaim, nil,
+	var weightMsgHarvest int
+	appParams.GetOrGenerate(cdc, OpWeightMsgHarvest, &weightMsgHarvest, nil,
 		func(_ *rand.Rand) {
-			weightMsgClaim = params.DefaultWeightMsgHarvest
+			weightMsgHarvest = params.DefaultWeightMsgHarvest
 		},
 	)
 
@@ -82,8 +83,8 @@ func WeightedOperations(
 			SimulateMsgUnstake(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgClaim,
-			SimulateMsgClaim(ak, bk, k),
+			weightMsgHarvest,
+			SimulateMsgHarvest(ak, bk, k),
 		),
 	}
 }
@@ -94,8 +95,57 @@ func SimulateMsgCreateFixedAmountPlan(ak types.AccountKeeper, bk types.BankKeepe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// TODO: not implemented yet
-		return simtypes.OperationMsg{}, nil, nil
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		params := k.GetParams(ctx)
+		_, hasNeg := spendable.SafeSub(params.PrivatePlanCreationFee)
+		if hasNeg {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateFixedAmountPlan, "insufficient balance for plan creation fee"), nil, nil
+		}
+
+		// mint pool coins to simulate the real-world cases
+		poolCoins, err := mintPoolCoins(ctx, r, bk, simAccount)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateFixedAmountPlan, "unable to mint pool coins"), nil, nil
+		}
+
+		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
+		creatorAcc := account.GetAddress()
+		stakingCoinWeights := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
+		startTime := ctx.BlockTime()
+		endTime := startTime.AddDate(0, 1, 0)
+		epochAmount := sdk.NewCoins(
+			sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))),
+		)
+
+		msg := types.NewMsgCreateFixedAmountPlan(
+			name,
+			creatorAcc,
+			stakingCoinWeights,
+			startTime,
+			endTime,
+			epochAmount,
+		)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -105,19 +155,94 @@ func SimulateMsgCreateRatioPlan(ak types.AccountKeeper, bk types.BankKeeper, k k
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// TODO: not implemented yet
-		return simtypes.OperationMsg{}, nil, nil
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		params := k.GetParams(ctx)
+		_, hasNeg := spendable.SafeSub(params.PrivatePlanCreationFee)
+		if hasNeg {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateRatioPlan, "insufficient balance for plan creation fee"), nil, nil
+		}
+
+		// mint pool coins to simulate the real-world cases
+		_, err := mintPoolCoins(ctx, r, bk, simAccount)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateFixedAmountPlan, "unable to mint pool coins"), nil, nil
+		}
+
+		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
+		creatorAcc := account.GetAddress()
+		stakingCoinWeights := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
+		startTime := ctx.BlockTime()
+		endTime := startTime.AddDate(0, 1, 0)
+		epochRatio := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10)), 1)
+
+		msg := types.NewMsgCreateRatioPlan(
+			name,
+			creatorAcc,
+			stakingCoinWeights,
+			startTime,
+			endTime,
+			epochRatio,
+		)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
-// SimulateMsgStake generates a MsgCreateFixedAmountPlan with random values
+// SimulateMsgStake generates a MsgStake with random values
 // nolint: interfacer
 func SimulateMsgStake(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// TODO: not implemented yet
-		return simtypes.OperationMsg{}, nil, nil
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		farmer := account.GetAddress()
+		stakingCoins := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1_000_000, 1_000_000_000))),
+		)
+		if !spendable.IsAllGTE(stakingCoins) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnstake, "insufficient funds"), nil, nil
+		}
+
+		msg := types.NewMsgStake(farmer, stakingCoins)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -127,18 +252,147 @@ func SimulateMsgUnstake(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// TODO: not implemented yet
-		return simtypes.OperationMsg{}, nil, nil
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		farmer := account.GetAddress()
+		unstakingCoins := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1_000_000, 100_000_000))),
+		)
+
+		// staking must exist in order to unstake
+		staking, sf := k.GetStaking(ctx, sdk.DefaultBondDenom, farmer)
+		if !sf {
+			staking = types.Staking{
+				Amount: sdk.ZeroInt(),
+			}
+		}
+		queuedStaking, qsf := k.GetQueuedStaking(ctx, sdk.DefaultBondDenom, farmer)
+		if !qsf {
+			if !qsf {
+				queuedStaking = types.QueuedStaking{
+					Amount: sdk.ZeroInt(),
+				}
+			}
+		}
+		if !sf && !qsf {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnstake, "unable to find staking and queued staking"), nil, nil
+		}
+		// sum of staked and queued coins must be greater than unstaking coins
+		if !staking.Amount.Add(queuedStaking.Amount).GTE(unstakingCoins[0].Amount) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnstake, "insufficient funds"), nil, nil
+		}
+
+		// spendable must be greater than unstaking coins
+		if !spendable.IsAllGT(unstakingCoins) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnstake, "insufficient funds"), nil, nil
+		}
+
+		msg := types.NewMsgUnstake(farmer, unstakingCoins)
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
-// SimulateMsgClaim generates a MsgClaim with random values
+// SimulateMsgHarvest generates a MsgHarvest with random values
 // nolint: interfacer
-func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgHarvest(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// TODO: not implemented yet
-		return simtypes.OperationMsg{}, nil, nil
+		//
+		// TODO: not fully implemented yet. It needs debugging why
+		// there are no rewards although it processes queued coins and distribute rewards
+		//
+
+		var simAccount simtypes.Account
+
+		// find staking from the simulated accounts
+		var ranStaking sdk.Coins
+		for _, acc := range accs {
+			staking := k.GetAllStakedCoinsByFarmer(ctx, acc.Address)
+			if !staking.IsZero() {
+				simAccount = acc
+				ranStaking = staking
+				break
+			}
+		}
+
+		var stakingCoinDenoms []string
+		for _, coin := range ranStaking {
+			stakingCoinDenoms = append(stakingCoinDenoms, coin.Denom)
+		}
+
+		var totalRewards sdk.Coins
+		for _, denom := range stakingCoinDenoms {
+			rewards, err := k.WithdrawRewards(ctx, simAccount.Address, denom)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgHarvest, "unable to withdraw rewards"), nil, nil
+			}
+			totalRewards = totalRewards.Add(rewards...)
+		}
+
+		if totalRewards.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgHarvest, "no rewards to harvest"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		msg := types.NewMsgHarvest(simAccount.Address, stakingCoinDenoms)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
+}
+
+// mintPoolCoins mints random amount of coins with the provided pool coin denoms and
+// send them to the simulated account.
+func mintPoolCoins(ctx sdk.Context, r *rand.Rand, bk types.BankKeeper, acc simtypes.Account) (mintCoins sdk.Coins, err error) {
+	for _, denom := range []string{
+		"pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5",
+		"pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C",
+		"poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07",
+	} {
+		mintCoins = mintCoins.Add(sdk.NewInt64Coin(denom, int64(simtypes.RandIntBetween(r, 1e14, 1e15))))
+	}
+
+	if err := bk.MintCoins(ctx, types.ModuleName, mintCoins); err != nil {
+		return nil, err
+	}
+
+	if err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc.Address, mintCoins); err != nil {
+		return nil, err
+	}
+
+	return mintCoins, nil
 }

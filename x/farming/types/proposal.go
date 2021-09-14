@@ -20,15 +20,20 @@ func init() {
 	gov.RegisterProposalTypeCodec(&PublicPlanProposal{}, "cosmos-sdk/PublicPlanProposal")
 }
 
-func NewPublicPlanProposal(title, description string, addReq []*AddRequestProposal,
-	updateReq []*UpdateRequestProposal, deleteReq []*DeleteRequestProposal) (gov.Content, error) {
+func NewPublicPlanProposal(
+	title string,
+	description string,
+	addReq []*AddRequestProposal,
+	updateReq []*UpdateRequestProposal,
+	deleteReq []*DeleteRequestProposal,
+) *PublicPlanProposal {
 	return &PublicPlanProposal{
 		Title:                  title,
 		Description:            description,
 		AddRequestProposals:    addReq,
 		UpdateRequestProposals: updateReq,
 		DeleteRequestProposals: deleteReq,
-	}, nil
+	}
 }
 
 func (p *PublicPlanProposal) GetTitle() string { return p.Title }

@@ -82,8 +82,8 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 	case1 := cli.PrivateFixedPlanRequest{
 		Name:               name,
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 	}
 
@@ -94,8 +94,8 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 		OVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERMOVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERM
 		OVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERMOVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERM`,
 		StakingCoinWeights: sdk.NewDecCoins(),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 	}
 
@@ -103,8 +103,8 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 	case3 := cli.PrivateFixedPlanRequest{
 		Name:               name,
 		StakingCoinWeights: sdk.NewDecCoins(),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 	}
 
@@ -112,8 +112,8 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 	case4 := cli.PrivateFixedPlanRequest{
 		Name:               name,
 		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4", sdk.NewInt(2))),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 	}
 
@@ -130,8 +130,8 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 	case6 := cli.PrivateFixedPlanRequest{
 		Name:               name,
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-13T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-06T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 0)),
 	}
 
@@ -195,7 +195,7 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 1,
 		},
 		{
 			"invalid epoch amount case #1",
@@ -247,8 +247,8 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 	case1 := cli.PrivateRatioPlanRequest{
 		Name:               name,
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochRatio:         sdk.MustNewDecFromStr("0.1"),
 	}
 
@@ -259,8 +259,8 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 		OVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERMOVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERM
 		OVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERMOVERMAXLENGTHOVERMAXLENGTHOVERMAXLENGTHOVERM`,
 		StakingCoinWeights: sdk.NewDecCoins(),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochRatio:         sdk.MustNewDecFromStr("0.1"),
 	}
 
@@ -268,8 +268,8 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 	case3 := cli.PrivateRatioPlanRequest{
 		Name:               name,
 		StakingCoinWeights: sdk.NewDecCoins(),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochRatio:         sdk.MustNewDecFromStr("0.1"),
 	}
 
@@ -277,8 +277,8 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 	case4 := cli.PrivateRatioPlanRequest{
 		Name:               name,
 		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4", sdk.NewInt(2))),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochRatio:         sdk.MustNewDecFromStr("0.1"),
 	}
 
@@ -295,8 +295,8 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 	case6 := cli.PrivateRatioPlanRequest{
 		Name:               name,
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-13T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-06T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochRatio:         sdk.MustNewDecFromStr("1.1"),
 	}
 
@@ -510,6 +510,8 @@ func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
+				fmt.Println(txResp)
+				fmt.Println(out.String())
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
@@ -523,8 +525,8 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 	req := cli.PrivateFixedPlanRequest{
 		Name:               "test",
 		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("stake", sdk.NewInt(1))),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          mustParseRFC3339("0001-01-01T00:00:00Z"),
+		EndTime:            mustParseRFC3339("9999-01-01T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)),
 	}
 
@@ -563,7 +565,7 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 6,
+			false, &sdk.TxResponse{}, 1,
 		},
 		{
 			"invalid staking coin denoms case #1",

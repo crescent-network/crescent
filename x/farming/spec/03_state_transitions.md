@@ -42,7 +42,6 @@ const (
 ## Staking
 
 - New `Staking` object is created when a farmer creates a staking, and when the farmer does not have existing `Staking`.
-- When a farmer creates new staking, the farmer should pay `StakingCreationFee` to prevent spamming.
 - When a farmer add/remove stakings to/from existing `Staking`, `StakedCoins` and `QueuedCoins` are updated in the corresponding `Staking`.
 - `QueuedCoins` : newly staked coins are in this status until end of current epoch, and then migrated to `StakedCoins` at the end of current epoch.
 - When a farmer unstakes, `QueuedCoins` are unstaked first, and then `StakedCoins`.

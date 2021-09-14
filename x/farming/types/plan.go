@@ -249,16 +249,33 @@ type PlanI interface {
 	Validate() error
 }
 
-// ValidateRatioPlans validates a farmer's total epoch ratio and plan name.
-// A total epoch ratio cannot be higher than 1 and plan name must not be duplicate.
-func ValidateRatioPlans(i interface{}) error {
+// ValidateName validates duplicate plan name value.
+func ValidateName(i interface{}) error {
+	plans, ok := i.([]PlanI)
+	if !ok {
+		return sdkerrors.Wrapf(ErrInvalidPlanType, "invalid plan type %T", i)
+	}
+
+	names := map[string]struct{}{}
+
+	for _, plan := range plans {
+		if _, ok := names[plan.GetName()]; ok {
+			return sdkerrors.Wrap(ErrDuplicatePlanName, plan.GetName())
+		}
+		names[plan.GetName()] = struct{}{}
+	}
+
+	return nil
+}
+
+// ValidateTotalEpochRatio validates a farmer's total epoch ratio that must be equal to 1.
+func ValidateTotalEpochRatio(i interface{}) error {
 	plans, ok := i.([]PlanI)
 	if !ok {
 		return sdkerrors.Wrapf(ErrInvalidPlanType, "invalid plan type %T", i)
 	}
 
 	totalEpochRatio := make(map[string]sdk.Dec)
-	names := make(map[string]bool)
 
 	for _, plan := range plans {
 		farmingPoolAddr := plan.GetFarmingPoolAddress().String()
@@ -273,11 +290,6 @@ func ValidateRatioPlans(i interface{}) error {
 			} else {
 				totalEpochRatio[farmingPoolAddr] = plan.EpochRatio
 			}
-
-			if _, ok := names[plan.Name]; ok {
-				return sdkerrors.Wrap(ErrDuplicatePlanName, plan.Name)
-			}
-			names[plan.Name] = true
 		}
 	}
 

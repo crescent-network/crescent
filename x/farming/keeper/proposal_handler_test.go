@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
-	_ "github.com/stretchr/testify/suite"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/farming/app"
 	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
