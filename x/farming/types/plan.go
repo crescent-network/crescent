@@ -313,12 +313,17 @@ func PackPlan(plan PlanI) (*codectypes.Any, error) {
 
 // UnpackPlan converts Any to PlanI.
 func UnpackPlan(any *codectypes.Any) (PlanI, error) {
+	var plan PlanI
 	v := any.GetCachedValue()
-	p, ok := v.(PlanI)
+	plan, ok := v.(PlanI)
 	if !ok {
-		return nil, fmt.Errorf("expected PlanI, got %T", v)
+		registry := codectypes.NewInterfaceRegistry()
+		RegisterInterfaces(registry)
+		if err := registry.UnpackAny(any, &plan); err != nil {
+			return nil, err
+		}
 	}
-	return p, nil
+	return plan, nil
 }
 
 // UnpackPlans converts Any slice to PlanIs.
