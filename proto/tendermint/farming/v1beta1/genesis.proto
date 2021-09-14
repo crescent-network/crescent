@@ -51,12 +51,9 @@ message GenesisState {
     (gogoproto.nullable)     = false
   ];
 
-  // global_last_epoch_time specifies the last executed epoch time of the plans
-  google.protobuf.Timestamp global_last_epoch_time = 9 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"global_last_epoch_time\""
-  ];
+  // last_epoch_time specifies the last executed epoch time of the plans
+  google.protobuf.Timestamp last_epoch_time = 9
+      [(gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"last_epoch_time\""];
 }
 
 // PlanRecord is used for import/export via genesis json.
