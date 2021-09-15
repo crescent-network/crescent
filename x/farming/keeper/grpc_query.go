@@ -146,7 +146,7 @@ func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.Qu
 	return &types.QueryPlanResponse{Plan: any}, nil
 }
 
-func (k Querier) Staking(c context.Context, req *types.QueryStakingRequest) (*types.QueryStakingResponse, error) {
+func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*types.QueryStakingsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -164,7 +164,7 @@ func (k Querier) Staking(c context.Context, req *types.QueryStakingRequest) (*ty
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	resp := &types.QueryStakingResponse{
+	resp := &types.QueryStakingsResponse{
 		StakedCoins: sdk.NewCoins(),
 		QueuedCoins: sdk.NewCoins(),
 	}
@@ -191,7 +191,7 @@ func (k Querier) Staking(c context.Context, req *types.QueryStakingRequest) (*ty
 	return resp, nil
 }
 
-func (k Querier) TotalStaking(c context.Context, req *types.QueryTotalStakingRequest) (*types.QueryTotalStakingResponse, error) {
+func (k Querier) TotalStakings(c context.Context, req *types.QueryTotalStakingsRequest) (*types.QueryTotalStakingsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -202,17 +202,17 @@ func (k Querier) TotalStaking(c context.Context, req *types.QueryTotalStakingReq
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	totalStakings, found := k.GetTotalStaking(ctx, req.StakingCoinDenom)
+	totalStakings, found := k.GetTotalStakings(ctx, req.StakingCoinDenom)
 	if !found {
 		totalStakings.Amount = sdk.ZeroInt()
 	}
 
-	return &types.QueryTotalStakingResponse{
+	return &types.QueryTotalStakingsResponse{
 		Amount: totalStakings.Amount,
 	}, nil
 }
 
-func (k Querier) Reward(c context.Context, req *types.QueryRewardRequest) (*types.QueryRewardResponse, error) {
+func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -230,7 +230,7 @@ func (k Querier) Reward(c context.Context, req *types.QueryRewardRequest) (*type
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	resp := &types.QueryRewardResponse{
+	resp := &types.QueryRewardsResponse{
 		Rewards: sdk.NewCoins(),
 	}
 

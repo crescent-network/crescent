@@ -344,23 +344,23 @@ func (m *QueryPlanResponse) GetPlan() *types.Any {
 	return nil
 }
 
-type QueryStakingRequest struct {
+type QueryStakingsRequest struct {
 	Farmer           string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
 	StakingCoinDenom string `protobuf:"bytes,2,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
 }
 
-func (m *QueryStakingRequest) Reset()         { *m = QueryStakingRequest{} }
-func (m *QueryStakingRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryStakingRequest) ProtoMessage()    {}
-func (*QueryStakingRequest) Descriptor() ([]byte, []int) {
+func (m *QueryStakingsRequest) Reset()         { *m = QueryStakingsRequest{} }
+func (m *QueryStakingsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryStakingsRequest) ProtoMessage()    {}
+func (*QueryStakingsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00c8db58c274b111, []int{6}
 }
-func (m *QueryStakingRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryStakingsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryStakingRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryStakingsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryStakingRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryStakingsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -370,49 +370,49 @@ func (m *QueryStakingRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *QueryStakingRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryStakingRequest.Merge(m, src)
+func (m *QueryStakingsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStakingsRequest.Merge(m, src)
 }
-func (m *QueryStakingRequest) XXX_Size() int {
+func (m *QueryStakingsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryStakingRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryStakingRequest.DiscardUnknown(m)
+func (m *QueryStakingsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStakingsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryStakingRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryStakingsRequest proto.InternalMessageInfo
 
-func (m *QueryStakingRequest) GetFarmer() string {
+func (m *QueryStakingsRequest) GetFarmer() string {
 	if m != nil {
 		return m.Farmer
 	}
 	return ""
 }
 
-func (m *QueryStakingRequest) GetStakingCoinDenom() string {
+func (m *QueryStakingsRequest) GetStakingCoinDenom() string {
 	if m != nil {
 		return m.StakingCoinDenom
 	}
 	return ""
 }
 
-type QueryStakingResponse struct {
+type QueryStakingsResponse struct {
 	StakedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=staked_coins,json=stakedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"staked_coins"`
 	QueuedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=queued_coins,json=queuedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"queued_coins"`
 }
 
-func (m *QueryStakingResponse) Reset()         { *m = QueryStakingResponse{} }
-func (m *QueryStakingResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryStakingResponse) ProtoMessage()    {}
-func (*QueryStakingResponse) Descriptor() ([]byte, []int) {
+func (m *QueryStakingsResponse) Reset()         { *m = QueryStakingsResponse{} }
+func (m *QueryStakingsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryStakingsResponse) ProtoMessage()    {}
+func (*QueryStakingsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00c8db58c274b111, []int{7}
 }
-func (m *QueryStakingResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryStakingsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryStakingResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryStakingsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryStakingResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryStakingsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -422,48 +422,48 @@ func (m *QueryStakingResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *QueryStakingResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryStakingResponse.Merge(m, src)
+func (m *QueryStakingsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStakingsResponse.Merge(m, src)
 }
-func (m *QueryStakingResponse) XXX_Size() int {
+func (m *QueryStakingsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryStakingResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryStakingResponse.DiscardUnknown(m)
+func (m *QueryStakingsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStakingsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryStakingResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryStakingsResponse proto.InternalMessageInfo
 
-func (m *QueryStakingResponse) GetStakedCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *QueryStakingsResponse) GetStakedCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.StakedCoins
 	}
 	return nil
 }
 
-func (m *QueryStakingResponse) GetQueuedCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *QueryStakingsResponse) GetQueuedCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.QueuedCoins
 	}
 	return nil
 }
 
-type QueryTotalStakingRequest struct {
+type QueryTotalStakingsRequest struct {
 	StakingCoinDenom string `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
 }
 
-func (m *QueryTotalStakingRequest) Reset()         { *m = QueryTotalStakingRequest{} }
-func (m *QueryTotalStakingRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryTotalStakingRequest) ProtoMessage()    {}
-func (*QueryTotalStakingRequest) Descriptor() ([]byte, []int) {
+func (m *QueryTotalStakingsRequest) Reset()         { *m = QueryTotalStakingsRequest{} }
+func (m *QueryTotalStakingsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTotalStakingsRequest) ProtoMessage()    {}
+func (*QueryTotalStakingsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00c8db58c274b111, []int{8}
 }
-func (m *QueryTotalStakingRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryTotalStakingsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryTotalStakingRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTotalStakingsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryTotalStakingRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTotalStakingsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -473,41 +473,41 @@ func (m *QueryTotalStakingRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryTotalStakingRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryTotalStakingRequest.Merge(m, src)
+func (m *QueryTotalStakingsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTotalStakingsRequest.Merge(m, src)
 }
-func (m *QueryTotalStakingRequest) XXX_Size() int {
+func (m *QueryTotalStakingsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryTotalStakingRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryTotalStakingRequest.DiscardUnknown(m)
+func (m *QueryTotalStakingsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTotalStakingsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryTotalStakingRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryTotalStakingsRequest proto.InternalMessageInfo
 
-func (m *QueryTotalStakingRequest) GetStakingCoinDenom() string {
+func (m *QueryTotalStakingsRequest) GetStakingCoinDenom() string {
 	if m != nil {
 		return m.StakingCoinDenom
 	}
 	return ""
 }
 
-type QueryTotalStakingResponse struct {
+type QueryTotalStakingsResponse struct {
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
 }
 
-func (m *QueryTotalStakingResponse) Reset()         { *m = QueryTotalStakingResponse{} }
-func (m *QueryTotalStakingResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryTotalStakingResponse) ProtoMessage()    {}
-func (*QueryTotalStakingResponse) Descriptor() ([]byte, []int) {
+func (m *QueryTotalStakingsResponse) Reset()         { *m = QueryTotalStakingsResponse{} }
+func (m *QueryTotalStakingsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTotalStakingsResponse) ProtoMessage()    {}
+func (*QueryTotalStakingsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00c8db58c274b111, []int{9}
 }
-func (m *QueryTotalStakingResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryTotalStakingsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryTotalStakingResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTotalStakingsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryTotalStakingResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTotalStakingsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -517,35 +517,35 @@ func (m *QueryTotalStakingResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryTotalStakingResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryTotalStakingResponse.Merge(m, src)
+func (m *QueryTotalStakingsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTotalStakingsResponse.Merge(m, src)
 }
-func (m *QueryTotalStakingResponse) XXX_Size() int {
+func (m *QueryTotalStakingsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryTotalStakingResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryTotalStakingResponse.DiscardUnknown(m)
+func (m *QueryTotalStakingsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTotalStakingsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryTotalStakingResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryTotalStakingsResponse proto.InternalMessageInfo
 
-type QueryRewardRequest struct {
+type QueryRewardsRequest struct {
 	Farmer           string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
 	StakingCoinDenom string `protobuf:"bytes,2,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
 }
 
-func (m *QueryRewardRequest) Reset()         { *m = QueryRewardRequest{} }
-func (m *QueryRewardRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryRewardRequest) ProtoMessage()    {}
-func (*QueryRewardRequest) Descriptor() ([]byte, []int) {
+func (m *QueryRewardsRequest) Reset()         { *m = QueryRewardsRequest{} }
+func (m *QueryRewardsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRewardsRequest) ProtoMessage()    {}
+func (*QueryRewardsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00c8db58c274b111, []int{10}
 }
-func (m *QueryRewardRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryRewardsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryRewardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryRewardRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRewardsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -555,48 +555,48 @@ func (m *QueryRewardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *QueryRewardRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryRewardRequest.Merge(m, src)
+func (m *QueryRewardsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRewardsRequest.Merge(m, src)
 }
-func (m *QueryRewardRequest) XXX_Size() int {
+func (m *QueryRewardsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryRewardRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryRewardRequest.DiscardUnknown(m)
+func (m *QueryRewardsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRewardsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryRewardRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryRewardsRequest proto.InternalMessageInfo
 
-func (m *QueryRewardRequest) GetFarmer() string {
+func (m *QueryRewardsRequest) GetFarmer() string {
 	if m != nil {
 		return m.Farmer
 	}
 	return ""
 }
 
-func (m *QueryRewardRequest) GetStakingCoinDenom() string {
+func (m *QueryRewardsRequest) GetStakingCoinDenom() string {
 	if m != nil {
 		return m.StakingCoinDenom
 	}
 	return ""
 }
 
-type QueryRewardResponse struct {
+type QueryRewardsResponse struct {
 	Rewards github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
 }
 
-func (m *QueryRewardResponse) Reset()         { *m = QueryRewardResponse{} }
-func (m *QueryRewardResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryRewardResponse) ProtoMessage()    {}
-func (*QueryRewardResponse) Descriptor() ([]byte, []int) {
+func (m *QueryRewardsResponse) Reset()         { *m = QueryRewardsResponse{} }
+func (m *QueryRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRewardsResponse) ProtoMessage()    {}
+func (*QueryRewardsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00c8db58c274b111, []int{11}
 }
-func (m *QueryRewardResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryRewardsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryRewardResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRewardsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -606,19 +606,19 @@ func (m *QueryRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *QueryRewardResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryRewardResponse.Merge(m, src)
+func (m *QueryRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRewardsResponse.Merge(m, src)
 }
-func (m *QueryRewardResponse) XXX_Size() int {
+func (m *QueryRewardsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryRewardResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryRewardResponse.DiscardUnknown(m)
+func (m *QueryRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRewardsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryRewardResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryRewardsResponse proto.InternalMessageInfo
 
-func (m *QueryRewardResponse) GetRewards() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *QueryRewardsResponse) GetRewards() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Rewards
 	}
@@ -632,12 +632,12 @@ func init() {
 	proto.RegisterType((*QueryPlansResponse)(nil), "cosmos.farming.v1beta1.QueryPlansResponse")
 	proto.RegisterType((*QueryPlanRequest)(nil), "cosmos.farming.v1beta1.QueryPlanRequest")
 	proto.RegisterType((*QueryPlanResponse)(nil), "cosmos.farming.v1beta1.QueryPlanResponse")
-	proto.RegisterType((*QueryStakingRequest)(nil), "cosmos.farming.v1beta1.QueryStakingRequest")
-	proto.RegisterType((*QueryStakingResponse)(nil), "cosmos.farming.v1beta1.QueryStakingResponse")
-	proto.RegisterType((*QueryTotalStakingRequest)(nil), "cosmos.farming.v1beta1.QueryTotalStakingRequest")
-	proto.RegisterType((*QueryTotalStakingResponse)(nil), "cosmos.farming.v1beta1.QueryTotalStakingResponse")
-	proto.RegisterType((*QueryRewardRequest)(nil), "cosmos.farming.v1beta1.QueryRewardRequest")
-	proto.RegisterType((*QueryRewardResponse)(nil), "cosmos.farming.v1beta1.QueryRewardResponse")
+	proto.RegisterType((*QueryStakingsRequest)(nil), "cosmos.farming.v1beta1.QueryStakingsRequest")
+	proto.RegisterType((*QueryStakingsResponse)(nil), "cosmos.farming.v1beta1.QueryStakingsResponse")
+	proto.RegisterType((*QueryTotalStakingsRequest)(nil), "cosmos.farming.v1beta1.QueryTotalStakingsRequest")
+	proto.RegisterType((*QueryTotalStakingsResponse)(nil), "cosmos.farming.v1beta1.QueryTotalStakingsResponse")
+	proto.RegisterType((*QueryRewardsRequest)(nil), "cosmos.farming.v1beta1.QueryRewardsRequest")
+	proto.RegisterType((*QueryRewardsResponse)(nil), "cosmos.farming.v1beta1.QueryRewardsResponse")
 }
 
 func init() {
@@ -645,65 +645,65 @@ func init() {
 }
 
 var fileDescriptor_00c8db58c274b111 = []byte{
-	// 913 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xce, 0xba, 0xce, 0x46, 0x9d, 0xf4, 0x50, 0xa6, 0x56, 0x71, 0x2c, 0xd8, 0x44, 0x2b, 0x91,
-	0xda, 0x4e, 0xb3, 0x6b, 0xa7, 0xe2, 0x04, 0x1c, 0xea, 0xa2, 0xb6, 0xb9, 0x95, 0x2d, 0xa7, 0x72,
-	0xb0, 0xc6, 0xde, 0xe9, 0xb2, 0xaa, 0xbd, 0xb3, 0xd9, 0x59, 0x03, 0x51, 0xc9, 0x05, 0x89, 0x03,
-	0x12, 0x07, 0xa4, 0x82, 0xb8, 0x72, 0xe6, 0xcc, 0x81, 0x3f, 0xa1, 0xe2, 0x54, 0x89, 0x0b, 0xe2,
-	0x50, 0x50, 0xc2, 0xdf, 0xc0, 0x19, 0xcd, 0x9b, 0x37, 0xce, 0x6e, 0xeb, 0x5f, 0x48, 0xed, 0x29,
-	0x3b, 0x33, 0xef, 0x7d, 0xef, 0x9b, 0xef, 0x7d, 0x6f, 0x1c, 0xb2, 0x9b, 0xf3, 0x24, 0xe4, 0xd9,
-	0x38, 0x4e, 0x72, 0xff, 0x21, 0x53, 0x7f, 0x23, 0xff, 0xb3, 0xee, 0x80, 0xe7, 0xac, 0xeb, 0x1f,
-	0x4d, 0x78, 0x76, 0xec, 0xa5, 0x99, 0xc8, 0x05, 0xbd, 0x3a, 0x14, 0x72, 0x2c, 0xa4, 0x87, 0x31,
-	0x1e, 0xc6, 0x34, 0x9a, 0x0b, 0xf2, 0x4d, 0x2c, 0x20, 0x34, 0xda, 0x1a, 0xc1, 0x1f, 0x30, 0xc9,
-	0x35, 0xf4, 0x34, 0x30, 0x65, 0x51, 0x9c, 0xb0, 0x3c, 0x16, 0x09, 0xc6, 0xd6, 0x22, 0x11, 0x09,
-	0xf8, 0xf4, 0xd5, 0x17, 0xee, 0x6e, 0x45, 0x42, 0x44, 0x23, 0xee, 0xc3, 0x6a, 0x30, 0x79, 0xe8,
-	0xb3, 0x04, 0xe9, 0x35, 0xde, 0xc2, 0x23, 0x96, 0xc6, 0x3e, 0x4b, 0x12, 0x91, 0x03, 0x9a, 0x34,
-	0x89, 0xba, 0x74, 0x5f, 0x23, 0xe2, 0x4d, 0xf4, 0x91, 0x53, 0x64, 0x65, 0xf8, 0x0c, 0x45, 0x8c,
-	0x4c, 0xdc, 0x1a, 0xa1, 0x1f, 0x29, 0xae, 0xf7, 0x58, 0xc6, 0xc6, 0x32, 0xe0, 0x47, 0x13, 0x2e,
-	0x73, 0xf7, 0x3e, 0xb9, 0x52, 0xda, 0x95, 0xa9, 0x48, 0x24, 0xa7, 0xef, 0x13, 0x3b, 0x85, 0x9d,
-	0xba, 0xb5, 0x63, 0x35, 0x37, 0x0f, 0x1c, 0x6f, 0xb6, 0x6a, 0x9e, 0xce, 0xeb, 0x55, 0x9f, 0x3e,
-	0xdf, 0x5e, 0x0b, 0x30, 0xc7, 0xfd, 0xa9, 0x42, 0xde, 0xd0, 0xa8, 0x23, 0x96, 0x98, 0x52, 0x94,
-	0x92, 0x6a, 0x7e, 0x9c, 0x72, 0x40, 0xbc, 0x18, 0xc0, 0x37, 0xed, 0x90, 0x1a, 0x22, 0xf6, 0x53,
-	0x21, 0x46, 0x7d, 0x16, 0x86, 0x19, 0x97, 0xb2, 0x5e, 0x81, 0x18, 0x8a, 0x67, 0xf7, 0x84, 0x18,
-	0xdd, 0xd4, 0x27, 0xd4, 0x27, 0x57, 0x72, 0xe8, 0x12, 0xe8, 0x32, 0x4d, 0xb8, 0xa0, 0x13, 0x0a,
-	0x47, 0x26, 0xe1, 0x3a, 0xa1, 0x32, 0x67, 0x8f, 0x54, 0x09, 0xa5, 0x46, 0x3f, 0xe4, 0x89, 0x18,
-	0xd7, 0xab, 0x10, 0x7f, 0x19, 0x4f, 0x6e, 0x89, 0x38, 0xf9, 0x50, 0xed, 0x53, 0x87, 0x10, 0x83,
-	0xc1, 0xc3, 0xfa, 0x3a, 0x44, 0x15, 0x76, 0xe8, 0x6d, 0x42, 0xce, 0x7b, 0x5c, 0xb7, 0x41, 0x9c,
-	0x5d, 0x23, 0x8e, 0x92, 0xde, 0xd3, 0x5e, 0x3b, 0xd7, 0x27, 0xe2, 0x28, 0x40, 0x50, 0xc8, 0x74,
-	0xbf, 0xb7, 0x4c, 0x3b, 0xb4, 0x44, 0xa8, 0xfb, 0xbb, 0x64, 0x3d, 0x55, 0x1b, 0x75, 0x6b, 0xe7,
-	0x42, 0x73, 0xf3, 0xa0, 0xe6, 0x69, 0x37, 0x78, 0xc6, 0x28, 0xde, 0xcd, 0xe4, 0xb8, 0x77, 0xf1,
-	0xb7, 0x5f, 0xf6, 0xd7, 0x55, 0xde, 0x61, 0xa0, 0xa3, 0xe9, 0x9d, 0x12, 0xab, 0x0a, 0xb0, 0xba,
-	0xb6, 0x94, 0x95, 0xae, 0x59, 0xa2, 0xb5, 0x47, 0x2e, 0x4f, 0x59, 0x99, 0xbe, 0xbd, 0x49, 0x36,
-	0x54, 0x95, 0x7e, 0x1c, 0x42, 0xeb, 0xaa, 0x81, 0xad, 0x96, 0x87, 0xa1, 0x7b, 0xb7, 0xd0, 0xe5,
-	0xe9, 0x0d, 0x6e, 0x90, 0xaa, 0x3a, 0x46, 0xdf, 0x2c, 0xbd, 0x00, 0x04, 0xbb, 0x9f, 0xa0, 0x0b,
-	0xef, 0xeb, 0x76, 0x98, 0xca, 0x57, 0x89, 0xad, 0x1c, 0xc0, 0x33, 0xf4, 0x0c, 0xae, 0xe6, 0xb4,
-	0xb4, 0x32, 0xbb, 0xa5, 0xee, 0xbf, 0x16, 0xa9, 0x95, 0xd1, 0x91, 0x6a, 0x42, 0x2e, 0xa9, 0x60,
-	0x1e, 0x02, 0x8a, 0xd1, 0x7c, 0xab, 0xa4, 0x9b, 0x51, 0x4c, 0xc1, 0xf5, 0x3a, 0xca, 0xe5, 0x3f,
-	0xff, 0xb5, 0xdd, 0x8c, 0xe2, 0xfc, 0xd3, 0xc9, 0xc0, 0x1b, 0x8a, 0x31, 0xce, 0x20, 0xfe, 0xd9,
-	0x97, 0xe1, 0x23, 0x5f, 0x19, 0x5b, 0x42, 0x82, 0x0c, 0x36, 0x75, 0x01, 0x58, 0xa8, 0x7a, 0x47,
-	0x13, 0x3e, 0x99, 0xd6, 0xab, 0xbc, 0x86, 0x7a, 0xba, 0x00, 0x2c, 0xdc, 0xbb, 0xa4, 0x0e, 0xf7,
-	0xfe, 0x58, 0xe4, 0x6c, 0xf4, 0x82, 0xb4, 0xb3, 0x25, 0xb4, 0xe6, 0x48, 0x38, 0x24, 0x5b, 0x33,
-	0x90, 0x50, 0xc6, 0xdb, 0xc4, 0x66, 0x63, 0x31, 0x49, 0x72, 0x9d, 0xde, 0xf3, 0x14, 0xeb, 0x3f,
-	0x9f, 0x6f, 0xef, 0xae, 0xc0, 0xfa, 0x30, 0xc9, 0x03, 0xcc, 0x76, 0x1f, 0xe0, 0x44, 0x04, 0xfc,
-	0x73, 0x96, 0x85, 0xaf, 0xd6, 0x03, 0x5f, 0xa2, 0xc1, 0x0c, 0x36, 0x52, 0xe7, 0x64, 0x23, 0x83,
-	0x9d, 0xd7, 0xd2, 0x7c, 0x83, 0x7d, 0xf0, 0xc3, 0x06, 0x59, 0x87, 0xf2, 0xf4, 0x1b, 0x8b, 0xd8,
-	0xfa, 0xc9, 0xa4, 0xed, 0x79, 0x4f, 0xea, 0xcb, 0xaf, 0x74, 0x63, 0x6f, 0xa5, 0x58, 0x7d, 0x29,
-	0x77, 0xf7, 0xab, 0xdf, 0xff, 0x79, 0x52, 0xd9, 0xa1, 0x8e, 0xa1, 0xf7, 0xe2, 0xaf, 0x99, 0x7e,
-	0xa5, 0xe9, 0xd7, 0x16, 0x81, 0x21, 0x94, 0xb4, 0xb5, 0x18, 0xbe, 0xf0, 0x88, 0x37, 0xda, 0xab,
-	0x84, 0x22, 0x91, 0x77, 0x80, 0xc8, 0x36, 0x7d, 0x7b, 0x2e, 0x11, 0xa8, 0xfe, 0xad, 0x45, 0xaa,
-	0x2a, 0x91, 0x36, 0x97, 0x62, 0x1b, 0x16, 0xad, 0x15, 0x22, 0x91, 0x84, 0x0f, 0x24, 0x5a, 0xf4,
-	0xda, 0x42, 0x12, 0xfe, 0x63, 0x7c, 0xe2, 0x4e, 0xe8, 0x8f, 0x16, 0xd9, 0x40, 0x8b, 0xd3, 0xc5,
-	0xba, 0x97, 0x47, 0xaa, 0x71, 0x7d, 0xb5, 0x60, 0xe4, 0xd5, 0x05, 0x5e, 0x7b, 0xb4, 0x35, 0x8f,
-	0x17, 0x7a, 0x58, 0xfa, 0x8f, 0xb5, 0xe3, 0x4f, 0xe8, 0xaf, 0x16, 0xb9, 0x54, 0x9c, 0x40, 0xda,
-	0x59, 0x58, 0x71, 0xc6, 0xd8, 0x37, 0xba, 0xff, 0x23, 0x03, 0x89, 0xde, 0x02, 0xa2, 0x1f, 0xd0,
-	0xf7, 0xe6, 0x11, 0xcd, 0x55, 0x56, 0xff, 0x9c, 0xee, 0xcb, 0x63, 0x79, 0x42, 0x9f, 0x58, 0xc4,
-	0xd6, 0xb3, 0xb7, 0xc4, 0xf7, 0xa5, 0xe1, 0x5f, 0xe2, 0xfb, 0xf2, 0x30, 0xbb, 0x1d, 0x20, 0xda,
-	0xa6, 0xcd, 0x79, 0x44, 0x71, 0x1c, 0xa7, 0x82, 0xf6, 0xee, 0x3c, 0x3d, 0x75, 0xac, 0x67, 0xa7,
-	0x8e, 0xf5, 0xf7, 0xa9, 0x63, 0x7d, 0x77, 0xe6, 0xac, 0x3d, 0x3b, 0x73, 0xd6, 0xfe, 0x38, 0x73,
-	0xd6, 0x1e, 0xec, 0x17, 0x86, 0x7c, 0xc6, 0xff, 0x85, 0x5f, 0x4c, 0xbf, 0x60, 0xde, 0x07, 0x36,
-	0xfc, 0xbc, 0xdd, 0xf8, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x76, 0x6a, 0x52, 0x62, 0x84, 0x0a, 0x00,
-	0x00,
+	// 918 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0xba, 0x8e, 0x43, 0x5f, 0x40, 0x2a, 0x53, 0x53, 0x9c, 0x15, 0x6c, 0xa2, 0x95, 0x48,
+	0x9d, 0xaf, 0xdd, 0x24, 0x15, 0x27, 0xe0, 0x50, 0x17, 0xb5, 0xe4, 0x56, 0xb6, 0x9c, 0x00, 0xc9,
+	0x1a, 0x67, 0xa7, 0x66, 0x55, 0x7b, 0x67, 0xb3, 0xb3, 0x06, 0xa2, 0x2a, 0x17, 0x24, 0x0e, 0x48,
+	0x1c, 0x90, 0x40, 0x1c, 0x38, 0x20, 0xce, 0x9c, 0xb9, 0xf1, 0x0f, 0x54, 0x9c, 0x2a, 0x71, 0x41,
+	0x1c, 0x0a, 0x4a, 0xf8, 0x1f, 0xb8, 0xa2, 0x79, 0xf3, 0x66, 0x63, 0xbb, 0xb6, 0x63, 0xa4, 0xf6,
+	0xe4, 0xf9, 0x78, 0xef, 0xf7, 0x7e, 0xf3, 0x7b, 0x1f, 0x6b, 0x58, 0x2f, 0x44, 0x1a, 0x8b, 0xbc,
+	0x9f, 0xa4, 0x45, 0x78, 0x9f, 0xeb, 0xdf, 0x6e, 0xf8, 0xe9, 0x5e, 0x47, 0x14, 0x7c, 0x2f, 0x3c,
+	0x1a, 0x88, 0xfc, 0x38, 0xc8, 0x72, 0x59, 0x48, 0x76, 0xed, 0x50, 0xaa, 0xbe, 0x54, 0x01, 0xd9,
+	0x04, 0x64, 0xe3, 0x36, 0x67, 0xf8, 0x5b, 0x5b, 0x44, 0x70, 0x37, 0x0d, 0x42, 0xd8, 0xe1, 0x4a,
+	0x18, 0xe8, 0xd2, 0x30, 0xe3, 0xdd, 0x24, 0xe5, 0x45, 0x22, 0x53, 0xb2, 0xad, 0x77, 0x65, 0x57,
+	0xe2, 0x32, 0xd4, 0x2b, 0x3a, 0x5d, 0xe9, 0x4a, 0xd9, 0xed, 0x89, 0x10, 0x77, 0x9d, 0xc1, 0xfd,
+	0x90, 0xa7, 0x44, 0xcf, 0x7d, 0x8d, 0xae, 0x78, 0x96, 0x84, 0x3c, 0x4d, 0x65, 0x81, 0x68, 0xca,
+	0x3a, 0x9a, 0xd0, 0x6d, 0x83, 0x48, 0x2f, 0x31, 0x57, 0xde, 0x30, 0x2b, 0xcb, 0xe7, 0x50, 0x26,
+	0xc4, 0xc4, 0xaf, 0x03, 0x7b, 0x5f, 0x73, 0xbd, 0xcb, 0x73, 0xde, 0x57, 0x91, 0x38, 0x1a, 0x08,
+	0x55, 0xf8, 0xf7, 0xe0, 0xea, 0xc8, 0xa9, 0xca, 0x64, 0xaa, 0x04, 0x7b, 0x1b, 0x6a, 0x19, 0x9e,
+	0x34, 0x9c, 0x35, 0xa7, 0xb9, 0xbc, 0xef, 0x05, 0x93, 0x55, 0x0b, 0x8c, 0x5f, 0xab, 0xfa, 0xe8,
+	0xc9, 0xea, 0x42, 0x44, 0x3e, 0xfe, 0x4f, 0x15, 0x78, 0xd9, 0xa0, 0xf6, 0x78, 0x6a, 0x43, 0x31,
+	0x06, 0xd5, 0xe2, 0x38, 0x13, 0x88, 0x78, 0x39, 0xc2, 0x35, 0xdb, 0x85, 0x3a, 0x21, 0xb6, 0x33,
+	0x29, 0x7b, 0x6d, 0x1e, 0xc7, 0xb9, 0x50, 0xaa, 0x51, 0x41, 0x1b, 0x46, 0x77, 0x77, 0xa5, 0xec,
+	0xdd, 0x34, 0x37, 0x2c, 0x84, 0xab, 0x05, 0x66, 0x09, 0x75, 0x29, 0x1d, 0x2e, 0x19, 0x87, 0xa1,
+	0x2b, 0xeb, 0xb0, 0x0d, 0x4c, 0x15, 0xfc, 0x81, 0x0e, 0xa1, 0xd5, 0x68, 0xc7, 0x22, 0x95, 0xfd,
+	0x46, 0x15, 0xed, 0xaf, 0xd0, 0xcd, 0x2d, 0x99, 0xa4, 0xef, 0xea, 0x73, 0xe6, 0x01, 0x58, 0x0c,
+	0x11, 0x37, 0x16, 0xd1, 0x6a, 0xe8, 0x84, 0xdd, 0x06, 0x38, 0xcf, 0x71, 0xa3, 0x86, 0xe2, 0xac,
+	0x5b, 0x71, 0xb4, 0xf4, 0x81, 0xa9, 0xb5, 0x73, 0x7d, 0xba, 0x82, 0x04, 0x88, 0x86, 0x3c, 0xfd,
+	0xef, 0x1c, 0x9b, 0x0e, 0x23, 0x11, 0xe9, 0xfe, 0x26, 0x2c, 0x66, 0xfa, 0xa0, 0xe1, 0xac, 0x5d,
+	0x6a, 0x2e, 0xef, 0xd7, 0x03, 0x53, 0x0d, 0x81, 0x2d, 0x94, 0xe0, 0x66, 0x7a, 0xdc, 0xba, 0xfc,
+	0xdb, 0x2f, 0x3b, 0x8b, 0xda, 0xef, 0x20, 0x32, 0xd6, 0xec, 0xce, 0x08, 0xab, 0x0a, 0xb2, 0xba,
+	0x7e, 0x21, 0x2b, 0x13, 0x73, 0x84, 0xd6, 0x16, 0x5c, 0x29, 0x59, 0xd9, 0xbc, 0xbd, 0x0a, 0x4b,
+	0x3a, 0x4a, 0x3b, 0x89, 0x31, 0x75, 0xd5, 0xa8, 0xa6, 0xb7, 0x07, 0xb1, 0xff, 0xde, 0x50, 0x96,
+	0xcb, 0x17, 0xdc, 0x80, 0xaa, 0xbe, 0xa6, 0xba, 0xb9, 0xf0, 0x01, 0x68, 0xec, 0x7f, 0x0c, 0x75,
+	0x44, 0xba, 0x67, 0xd2, 0x51, 0x96, 0xcc, 0x35, 0xa8, 0xe9, 0x12, 0x10, 0x39, 0x15, 0x0d, 0xed,
+	0xa6, 0xe4, 0xb4, 0x32, 0x39, 0xa7, 0xfe, 0xbf, 0x0e, 0xbc, 0x32, 0x06, 0x4f, 0x64, 0x53, 0x78,
+	0x51, 0x5b, 0x8b, 0x18, 0x61, 0xac, 0xea, 0x2b, 0x23, 0xca, 0x59, 0xcd, 0x34, 0x5e, 0x6b, 0x57,
+	0xd7, 0xf9, 0xcf, 0x7f, 0xad, 0x36, 0xbb, 0x49, 0xf1, 0xc9, 0xa0, 0x13, 0x1c, 0xca, 0x3e, 0x75,
+	0x21, 0xfd, 0xec, 0xa8, 0xf8, 0x41, 0xa8, 0x4b, 0x5b, 0xa1, 0x83, 0x8a, 0x96, 0x4d, 0x00, 0xdc,
+	0xe8, 0x78, 0x47, 0x03, 0x31, 0x28, 0xe3, 0x55, 0x9e, 0x43, 0x3c, 0x13, 0x00, 0x37, 0xfe, 0x01,
+	0xac, 0xe0, 0xc3, 0x3f, 0x90, 0x05, 0xef, 0x8d, 0x8b, 0x3b, 0x59, 0x44, 0x67, 0x8a, 0x88, 0x31,
+	0xb8, 0x93, 0xa0, 0x48, 0xc8, 0xdb, 0x50, 0xe3, 0x7d, 0x39, 0x48, 0x0b, 0xe3, 0xdf, 0x0a, 0x34,
+	0xef, 0x3f, 0x9f, 0xac, 0xae, 0xcf, 0xc1, 0xfb, 0x20, 0x2d, 0x22, 0xf2, 0xf6, 0x3f, 0xa2, 0x71,
+	0x14, 0x89, 0xcf, 0x78, 0x1e, 0x3f, 0xe3, 0x3a, 0x38, 0xa1, 0x2a, 0x2b, 0xc1, 0x89, 0xbc, 0x80,
+	0xa5, 0xdc, 0x1c, 0x3d, 0x8f, 0x02, 0xb0, 0xd8, 0xfb, 0x3f, 0x2e, 0xc1, 0x22, 0xc6, 0x67, 0x5f,
+	0x39, 0x50, 0x33, 0x83, 0x93, 0x6d, 0x4e, 0x1b, 0xac, 0x4f, 0xcf, 0x6a, 0x77, 0x6b, 0x2e, 0x5b,
+	0xf3, 0x28, 0x7f, 0xfd, 0x8b, 0xdf, 0xff, 0xf9, 0xb6, 0xb2, 0xc6, 0x3c, 0x4b, 0x6f, 0xfc, 0x9b,
+	0x66, 0x66, 0x35, 0xfb, 0xd2, 0x01, 0x6c, 0x45, 0xc5, 0x36, 0x66, 0xc3, 0x0f, 0x8d, 0x72, 0x77,
+	0x73, 0x1e, 0x53, 0x22, 0xf2, 0x06, 0x12, 0x59, 0x65, 0xaf, 0x4f, 0x25, 0x82, 0xd1, 0xbf, 0x76,
+	0xa0, 0xaa, 0x1d, 0x59, 0xf3, 0x42, 0x6c, 0xcb, 0x62, 0x63, 0x0e, 0x4b, 0x22, 0x11, 0x22, 0x89,
+	0x0d, 0x76, 0x7d, 0x26, 0x89, 0xf0, 0x21, 0x0d, 0xba, 0x13, 0xf6, 0x83, 0x03, 0x2f, 0xd8, 0x2a,
+	0x67, 0xdb, 0x33, 0x03, 0x8d, 0xf5, 0x95, 0xbb, 0x33, 0xa7, 0x35, 0x51, 0xdb, 0x43, 0x6a, 0x5b,
+	0x6c, 0x63, 0x1a, 0x35, 0xaa, 0x63, 0x15, 0x3e, 0x34, 0x55, 0x7f, 0xc2, 0x7e, 0x75, 0xe0, 0xa5,
+	0x91, 0x3e, 0x64, 0x7b, 0x33, 0x63, 0x4e, 0x6a, 0x7f, 0x77, 0xff, 0xff, 0xb8, 0x10, 0xd7, 0x5b,
+	0xc8, 0xf5, 0x1d, 0xf6, 0xd6, 0x34, 0xae, 0x85, 0x76, 0x6b, 0x9f, 0x33, 0x7e, 0xba, 0x3b, 0x4f,
+	0xd8, 0xf7, 0x0e, 0x2c, 0x51, 0x0b, 0xb2, 0xd9, 0x25, 0x3d, 0x3a, 0x05, 0xdc, 0xed, 0xf9, 0x8c,
+	0x89, 0xeb, 0x2e, 0x72, 0xdd, 0x64, 0xcd, 0x69, 0x5c, 0xa9, 0x2f, 0x4b, 0x59, 0x5b, 0x77, 0x1e,
+	0x9d, 0x7a, 0xce, 0xe3, 0x53, 0xcf, 0xf9, 0xfb, 0xd4, 0x73, 0xbe, 0x39, 0xf3, 0x16, 0x1e, 0x9f,
+	0x79, 0x0b, 0x7f, 0x9c, 0x79, 0x0b, 0x1f, 0xee, 0x0c, 0x75, 0xfb, 0x84, 0xbf, 0x89, 0x9f, 0x97,
+	0x2b, 0x6c, 0xfc, 0x4e, 0x0d, 0xbf, 0x76, 0x37, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x8a, 0xd0,
+	0x8c, 0x18, 0x93, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -724,9 +724,9 @@ type QueryClient interface {
 	Plans(ctx context.Context, in *QueryPlansRequest, opts ...grpc.CallOption) (*QueryPlansResponse, error)
 	// Plan returns a specific plan.
 	Plan(ctx context.Context, in *QueryPlanRequest, opts ...grpc.CallOption) (*QueryPlanResponse, error)
-	Staking(ctx context.Context, in *QueryStakingRequest, opts ...grpc.CallOption) (*QueryStakingResponse, error)
-	TotalStaking(ctx context.Context, in *QueryTotalStakingRequest, opts ...grpc.CallOption) (*QueryTotalStakingResponse, error)
-	Reward(ctx context.Context, in *QueryRewardRequest, opts ...grpc.CallOption) (*QueryRewardResponse, error)
+	Stakings(ctx context.Context, in *QueryStakingsRequest, opts ...grpc.CallOption) (*QueryStakingsResponse, error)
+	TotalStakings(ctx context.Context, in *QueryTotalStakingsRequest, opts ...grpc.CallOption) (*QueryTotalStakingsResponse, error)
+	Rewards(ctx context.Context, in *QueryRewardsRequest, opts ...grpc.CallOption) (*QueryRewardsResponse, error)
 }
 
 type queryClient struct {
@@ -764,27 +764,27 @@ func (c *queryClient) Plan(ctx context.Context, in *QueryPlanRequest, opts ...gr
 	return out, nil
 }
 
-func (c *queryClient) Staking(ctx context.Context, in *QueryStakingRequest, opts ...grpc.CallOption) (*QueryStakingResponse, error) {
-	out := new(QueryStakingResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/Staking", in, out, opts...)
+func (c *queryClient) Stakings(ctx context.Context, in *QueryStakingsRequest, opts ...grpc.CallOption) (*QueryStakingsResponse, error) {
+	out := new(QueryStakingsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/Stakings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) TotalStaking(ctx context.Context, in *QueryTotalStakingRequest, opts ...grpc.CallOption) (*QueryTotalStakingResponse, error) {
-	out := new(QueryTotalStakingResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/TotalStaking", in, out, opts...)
+func (c *queryClient) TotalStakings(ctx context.Context, in *QueryTotalStakingsRequest, opts ...grpc.CallOption) (*QueryTotalStakingsResponse, error) {
+	out := new(QueryTotalStakingsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/TotalStakings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) Reward(ctx context.Context, in *QueryRewardRequest, opts ...grpc.CallOption) (*QueryRewardResponse, error) {
-	out := new(QueryRewardResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/Reward", in, out, opts...)
+func (c *queryClient) Rewards(ctx context.Context, in *QueryRewardsRequest, opts ...grpc.CallOption) (*QueryRewardsResponse, error) {
+	out := new(QueryRewardsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.farming.v1beta1.Query/Rewards", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -799,9 +799,9 @@ type QueryServer interface {
 	Plans(context.Context, *QueryPlansRequest) (*QueryPlansResponse, error)
 	// Plan returns a specific plan.
 	Plan(context.Context, *QueryPlanRequest) (*QueryPlanResponse, error)
-	Staking(context.Context, *QueryStakingRequest) (*QueryStakingResponse, error)
-	TotalStaking(context.Context, *QueryTotalStakingRequest) (*QueryTotalStakingResponse, error)
-	Reward(context.Context, *QueryRewardRequest) (*QueryRewardResponse, error)
+	Stakings(context.Context, *QueryStakingsRequest) (*QueryStakingsResponse, error)
+	TotalStakings(context.Context, *QueryTotalStakingsRequest) (*QueryTotalStakingsResponse, error)
+	Rewards(context.Context, *QueryRewardsRequest) (*QueryRewardsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -817,14 +817,14 @@ func (*UnimplementedQueryServer) Plans(ctx context.Context, req *QueryPlansReque
 func (*UnimplementedQueryServer) Plan(ctx context.Context, req *QueryPlanRequest) (*QueryPlanResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Plan not implemented")
 }
-func (*UnimplementedQueryServer) Staking(ctx context.Context, req *QueryStakingRequest) (*QueryStakingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Staking not implemented")
+func (*UnimplementedQueryServer) Stakings(ctx context.Context, req *QueryStakingsRequest) (*QueryStakingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Stakings not implemented")
 }
-func (*UnimplementedQueryServer) TotalStaking(ctx context.Context, req *QueryTotalStakingRequest) (*QueryTotalStakingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TotalStaking not implemented")
+func (*UnimplementedQueryServer) TotalStakings(ctx context.Context, req *QueryTotalStakingsRequest) (*QueryTotalStakingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalStakings not implemented")
 }
-func (*UnimplementedQueryServer) Reward(ctx context.Context, req *QueryRewardRequest) (*QueryRewardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Reward not implemented")
+func (*UnimplementedQueryServer) Rewards(ctx context.Context, req *QueryRewardsRequest) (*QueryRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Rewards not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -885,56 +885,56 @@ func _Query_Plan_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Staking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryStakingRequest)
+func _Query_Stakings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryStakingsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Staking(ctx, in)
+		return srv.(QueryServer).Stakings(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.farming.v1beta1.Query/Staking",
+		FullMethod: "/cosmos.farming.v1beta1.Query/Stakings",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Staking(ctx, req.(*QueryStakingRequest))
+		return srv.(QueryServer).Stakings(ctx, req.(*QueryStakingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_TotalStaking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryTotalStakingRequest)
+func _Query_TotalStakings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalStakingsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).TotalStaking(ctx, in)
+		return srv.(QueryServer).TotalStakings(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.farming.v1beta1.Query/TotalStaking",
+		FullMethod: "/cosmos.farming.v1beta1.Query/TotalStakings",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).TotalStaking(ctx, req.(*QueryTotalStakingRequest))
+		return srv.(QueryServer).TotalStakings(ctx, req.(*QueryTotalStakingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Reward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryRewardRequest)
+func _Query_Rewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRewardsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Reward(ctx, in)
+		return srv.(QueryServer).Rewards(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.farming.v1beta1.Query/Reward",
+		FullMethod: "/cosmos.farming.v1beta1.Query/Rewards",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Reward(ctx, req.(*QueryRewardRequest))
+		return srv.(QueryServer).Rewards(ctx, req.(*QueryRewardsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -956,16 +956,16 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Plan_Handler,
 		},
 		{
-			MethodName: "Staking",
-			Handler:    _Query_Staking_Handler,
+			MethodName: "Stakings",
+			Handler:    _Query_Stakings_Handler,
 		},
 		{
-			MethodName: "TotalStaking",
-			Handler:    _Query_TotalStaking_Handler,
+			MethodName: "TotalStakings",
+			Handler:    _Query_TotalStakings_Handler,
 		},
 		{
-			MethodName: "Reward",
-			Handler:    _Query_Reward_Handler,
+			MethodName: "Rewards",
+			Handler:    _Query_Rewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1210,7 +1210,7 @@ func (m *QueryPlanResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryStakingRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryStakingsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1220,12 +1220,12 @@ func (m *QueryStakingRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryStakingRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryStakingsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryStakingRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryStakingsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1247,7 +1247,7 @@ func (m *QueryStakingRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryStakingResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryStakingsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1257,12 +1257,12 @@ func (m *QueryStakingResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryStakingResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryStakingsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryStakingResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryStakingsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1298,7 +1298,7 @@ func (m *QueryStakingResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryTotalStakingRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryTotalStakingsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1308,12 +1308,12 @@ func (m *QueryTotalStakingRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryTotalStakingRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTotalStakingsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryTotalStakingRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTotalStakingsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1328,7 +1328,7 @@ func (m *QueryTotalStakingRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryTotalStakingResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryTotalStakingsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1338,12 +1338,12 @@ func (m *QueryTotalStakingResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryTotalStakingResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTotalStakingsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryTotalStakingResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTotalStakingsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1361,7 +1361,7 @@ func (m *QueryTotalStakingResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryRewardRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryRewardsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1371,12 +1371,12 @@ func (m *QueryRewardRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryRewardRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryRewardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1398,7 +1398,7 @@ func (m *QueryRewardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryRewardResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryRewardsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1408,12 +1408,12 @@ func (m *QueryRewardResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1543,7 +1543,7 @@ func (m *QueryPlanResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryStakingRequest) Size() (n int) {
+func (m *QueryStakingsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1560,7 +1560,7 @@ func (m *QueryStakingRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryStakingResponse) Size() (n int) {
+func (m *QueryStakingsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1581,7 +1581,7 @@ func (m *QueryStakingResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryTotalStakingRequest) Size() (n int) {
+func (m *QueryTotalStakingsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1594,7 +1594,7 @@ func (m *QueryTotalStakingRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryTotalStakingResponse) Size() (n int) {
+func (m *QueryTotalStakingsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1605,7 +1605,7 @@ func (m *QueryTotalStakingResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryRewardRequest) Size() (n int) {
+func (m *QueryRewardsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1622,7 +1622,7 @@ func (m *QueryRewardRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryRewardResponse) Size() (n int) {
+func (m *QueryRewardsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2297,7 +2297,7 @@ func (m *QueryPlanResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryStakingRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryStakingsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2320,10 +2320,10 @@ func (m *QueryStakingRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryStakingRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryStakingsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryStakingRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryStakingsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2411,7 +2411,7 @@ func (m *QueryStakingRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryStakingResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryStakingsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2434,10 +2434,10 @@ func (m *QueryStakingResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryStakingResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryStakingsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryStakingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryStakingsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2529,7 +2529,7 @@ func (m *QueryStakingResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryTotalStakingRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryTotalStakingsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2552,10 +2552,10 @@ func (m *QueryTotalStakingRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryTotalStakingRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTotalStakingsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryTotalStakingRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTotalStakingsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2611,7 +2611,7 @@ func (m *QueryTotalStakingRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryTotalStakingResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryTotalStakingsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2634,10 +2634,10 @@ func (m *QueryTotalStakingResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryTotalStakingResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTotalStakingsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryTotalStakingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTotalStakingsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2695,7 +2695,7 @@ func (m *QueryTotalStakingResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryRewardRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryRewardsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2718,10 +2718,10 @@ func (m *QueryRewardRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryRewardRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRewardsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryRewardRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2809,7 +2809,7 @@ func (m *QueryRewardRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryRewardResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryRewardsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2832,10 +2832,10 @@ func (m *QueryRewardResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryRewardResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRewardsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
