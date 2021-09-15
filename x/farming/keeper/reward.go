@@ -107,13 +107,13 @@ func (k Keeper) IterateOutstandingRewards(ctx sdk.Context, cb func(stakingCoinDe
 	}
 }
 
-func (k Keeper) IncreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.Coins) {
+func (k Keeper) IncreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.DecCoins) {
 	outstanding, _ := k.GetOutstandingRewards(ctx, stakingCoinDenom)
 	outstanding.Rewards = outstanding.Rewards.Add(amount...)
 	k.SetOutstandingRewards(ctx, stakingCoinDenom, outstanding)
 }
 
-func (k Keeper) DecreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.Coins) {
+func (k Keeper) DecreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.DecCoins) {
 	outstanding, found := k.GetOutstandingRewards(ctx, stakingCoinDenom)
 	if !found {
 		panic("outstanding rewards not found")
@@ -126,16 +126,16 @@ func (k Keeper) DecreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom str
 	}
 }
 
-func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, endingEpoch uint64) (rewards sdk.Coins) {
+func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, endingEpoch uint64) (rewards sdk.DecCoins) {
 	staking, found := k.GetStaking(ctx, stakingCoinDenom, farmerAcc)
 	if !found {
-		staking.Amount = sdk.ZeroInt()
+		return sdk.NewDecCoins()
 	}
 
 	starting := k.GetHistoricalRewards(ctx, stakingCoinDenom, staking.StartingEpoch-1)
 	ending := k.GetHistoricalRewards(ctx, stakingCoinDenom, endingEpoch)
 	diff := ending.CumulativeUnitRewards.Sub(starting.CumulativeUnitRewards)
-	rewards, _ = diff.MulDecTruncate(staking.Amount.ToDec()).TruncateDecimal()
+	rewards = diff.MulDecTruncate(staking.Amount.ToDec())
 	return
 }
 
@@ -148,10 +148,13 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 	currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
 	// TODO: handle if currentEpoch is 0
 	rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, currentEpoch-1)
+	truncatedRewards, _ := rewards.TruncateDecimal()
 
 	if !rewards.IsZero() {
-		if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, rewards); err != nil {
-			return nil, err
+		if !truncatedRewards.IsZero() {
+			if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, truncatedRewards); err != nil {
+				return nil, err
+			}
 		}
 
 		k.DecreaseOutstandingRewards(ctx, stakingCoinDenom, rewards)
@@ -160,19 +163,18 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 	staking.StartingEpoch = currentEpoch
 	k.SetStaking(ctx, stakingCoinDenom, farmerAcc, staking)
 
-	return rewards, nil
+	return truncatedRewards, nil
 }
 
 func (k Keeper) WithdrawAllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) (sdk.Coins, error) {
 	totalRewards := sdk.NewCoins()
-
 	k.IterateStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
 		currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
 		rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, currentEpoch-1)
+		truncatedRewards, _ := rewards.TruncateDecimal()
+		totalRewards = totalRewards.Add(truncatedRewards...)
 
 		if !rewards.IsZero() {
-			totalRewards = totalRewards.Add(rewards...)
-
 			k.DecreaseOutstandingRewards(ctx, stakingCoinDenom, rewards)
 		}
 
@@ -297,15 +299,16 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 
 			weightProportion := weight.Amount.QuoTruncate(totalWeight)
 			allocCoins, _ := sdk.NewDecCoinsFromCoins(allocInfo.Amount...).MulDecTruncate(weightProportion).TruncateDecimal()
+			allocCoinsDec := sdk.NewDecCoinsFromCoins(allocCoins...)
 
 			currentEpoch := k.GetCurrentEpoch(ctx, weight.Denom)
 			historical := k.GetHistoricalRewards(ctx, weight.Denom, currentEpoch-1)
 			k.SetHistoricalRewards(ctx, weight.Denom, currentEpoch, types.HistoricalRewards{
-				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(sdk.NewDecCoinsFromCoins(allocCoins...).QuoDecTruncate(totalStaking.Amount.ToDec())...),
+				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoinsDec.QuoDecTruncate(totalStaking.Amount.ToDec())...),
 			})
 			k.SetCurrentEpoch(ctx, weight.Denom, currentEpoch+1)
 
-			k.IncreaseOutstandingRewards(ctx, weight.Denom, allocCoins)
+			k.IncreaseOutstandingRewards(ctx, weight.Denom, allocCoinsDec)
 
 			totalAllocCoins = totalAllocCoins.Add(allocCoins...)
 		}

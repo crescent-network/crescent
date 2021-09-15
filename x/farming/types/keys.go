@@ -34,8 +34,8 @@ var (
 	QueuedStakingIndexKeyPrefix = []byte{0x24}
 	TotalStakingKeyPrefix       = []byte{0x25}
 
-	HistoricalRewardsKeyPrefix = []byte{0x31}
-	CurrentEpochKeyPrefix      = []byte{0x32}
+	HistoricalRewardsKeyPrefix  = []byte{0x31}
+	CurrentEpochKeyPrefix       = []byte{0x32}
 	OutstandingRewardsKeyPrefix = []byte{0x33}
 )
 
