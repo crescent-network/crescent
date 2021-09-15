@@ -68,3 +68,17 @@ func (suite *KeeperTestSuite) TestEpochDays() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestDelayedBlockTime() {
+	// Entire network can be down for several days,
+	// and the epoch should be advanced after the downtime.
+	suite.keeper.SetLastEpochTime(suite.ctx, mustParseRFC3339("2021-09-23T00:00:05Z"))
+
+	t := mustParseRFC3339("2021-10-03T00:00:04Z")
+	suite.ctx = suite.ctx.WithBlockTime(t)
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	lastEpochTime, found := suite.keeper.GetLastEpochTime(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Equal(t, lastEpochTime)
+}

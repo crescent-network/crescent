@@ -29,7 +29,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	} else {
 		y, m, d := lastEpochTime.AddDate(0, 0, int(params.EpochDays)).Date()
 		y2, m2, d2 := ctx.BlockTime().Date()
-		if y == y2 && m == m2 && d == d2 {
+		if !time.Date(y2, m2, d2, 0, 0, 0, 0, time.UTC).Before(time.Date(y, m, d, 0, 0, 0, 0, time.UTC)) {
 			if err := k.AdvanceEpoch(ctx); err != nil {
 				panic(err)
 			}
