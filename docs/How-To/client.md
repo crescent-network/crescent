@@ -110,7 +110,6 @@ $BINARY start
     }
   ]
 }
-```
 
 # Send to create a private fixed amount plan
 farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
@@ -119,6 +118,7 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 --keyring-backend test \
 --broadcast-mode block \
 --yes
+```
 
 ```json
 {

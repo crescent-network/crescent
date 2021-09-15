@@ -76,6 +76,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	if err := k.ValidateRemainingRewardsAmount(ctx); err != nil {
 		panic(err)
 	}
+
 	if err := k.ValidateStakingReservedAmount(ctx); err != nil {
 		panic(err)
 	}

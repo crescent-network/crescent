@@ -78,45 +78,6 @@ func (k Keeper) IterateAllPlans(ctx sdk.Context, cb func(plan types.PlanI) (stop
 	}
 }
 
-// GetPlansByFarmerAddrIndex reads from kvstore and return a specific Plan indexed by given farmer address
-func (k Keeper) GetPlansByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAddress) (plans []types.PlanI) {
-	k.IteratePlansByFarmerAddr(ctx, farmerAcc, func(plan types.PlanI) bool {
-		plans = append(plans, plan)
-		return false
-	})
-
-	return plans
-}
-
-// IteratePlansByFarmerAddr iterates over all the stored plans and performs a callback function.
-// Stops iteration when callback returns true.
-func (k Keeper) IteratePlansByFarmerAddr(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(plan types.PlanI) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPlansByFarmerIndexKey(farmerAcc))
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		planID := gogotypes.UInt64Value{}
-
-		err := k.cdc.Unmarshal(iterator.Value(), &planID)
-		if err != nil {
-			panic(err)
-		}
-		plan, _ := k.GetPlan(ctx, planID.GetValue())
-		if cb(plan) {
-			break
-		}
-	}
-}
-
-// SetPlanIdByFarmerAddrIndex sets Index by FarmerAddr
-// TODO: need to gas cost check for existing check or update everytime
-func (k Keeper) SetPlanIdByFarmerAddrIndex(ctx sdk.Context, farmerAcc sdk.AccAddress, planID uint64) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: planID})
-	store.Set(types.GetPlanByFarmerAddrIndexKey(farmerAcc, planID), b)
-}
-
 // GetNextPlanIdWithUpdate returns and increments the global Plan ID counter.
 // If the global plan number is not set, it initializes it with value 0.
 func (k Keeper) GetNextPlanIdWithUpdate(ctx sdk.Context) uint64 {

@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	_ "github.com/stretchr/testify/suite"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tendermint/farming/x/farming/types"
@@ -179,7 +181,6 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	suite.keeper.ProcessQueuedCoins(suite.ctx)
 
 	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
-
 	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-08-05T00:00:00Z"))
 	err := suite.keeper.AllocateRewards(suite.ctx)
 	suite.Require().NoError(err)

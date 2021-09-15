@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	_ "github.com/stretchr/testify/suite"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tendermint/farming/x/farming/types"
@@ -11,7 +13,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		types.NewFixedAmountPlan(
 			types.NewBasePlan(
 				1,
-				"",
+				"name1",
 				types.PlanTypePrivate,
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
@@ -25,7 +27,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		types.NewRatioPlan(
 			types.NewBasePlan(
 				2,
-				"",
+				"name2",
 				types.PlanTypePublic,
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),

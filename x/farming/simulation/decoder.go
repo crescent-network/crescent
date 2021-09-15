@@ -15,8 +15,7 @@ import (
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.PlanKeyPrefix),
-			bytes.Equal(kvA.Key[:1], types.PlansByFarmerIndexKeyPrefix):
+		case bytes.Equal(kvA.Key[:1], types.PlanKeyPrefix):
 			var pA, pB types.BasePlan
 			cdc.MustUnmarshal(kvA.Value, &pA)
 			cdc.MustUnmarshal(kvA.Value, &pB)
@@ -28,6 +27,13 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvA.Value, &sB)
 			return fmt.Sprintf("%v\n%v", sA, sB)
 
+		case bytes.Equal(kvA.Key[:1], types.QueuedStakingKeyPrefix):
+			var sA, sB types.QueuedStaking
+			cdc.MustUnmarshal(kvA.Value, &sA)
+			cdc.MustUnmarshal(kvA.Value, &sB)
+			return fmt.Sprintf("%v\n%v", sA, sB)
+
+		//TODO: add f1 struct
 		default:
 			panic(fmt.Sprintf("invalid farming key prefix %X", kvA.Key[:1]))
 		}

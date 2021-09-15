@@ -32,7 +32,13 @@ func (k msgServer) CreateFixedAmountPlan(goCtx context.Context, msg *types.MsgCr
 	if err != nil {
 		return nil, err
 	}
+
 	if _, err := k.Keeper.CreateFixedAmountPlan(ctx, msg, poolAcc, msg.GetCreator(), types.PlanTypePrivate); err != nil {
+		return nil, err
+	}
+
+	plans := k.GetAllPlans(ctx)
+	if err := types.ValidateName(plans); err != nil {
 		return nil, err
 	}
 
@@ -46,7 +52,17 @@ func (k msgServer) CreateRatioPlan(goCtx context.Context, msg *types.MsgCreateRa
 	if err != nil {
 		return nil, err
 	}
+
 	if _, err := k.Keeper.CreateRatioPlan(ctx, msg, poolAcc, msg.GetCreator(), types.PlanTypePrivate); err != nil {
+		return nil, err
+	}
+
+	plans := k.GetAllPlans(ctx)
+	if err := types.ValidateName(plans); err != nil {
+		return nil, err
+	}
+
+	if err := types.ValidateTotalEpochRatio(plans); err != nil {
 		return nil, err
 	}
 

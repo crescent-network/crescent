@@ -112,7 +112,6 @@ The parameters of the Plan state are:
 
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
 - Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
-- PlanByFarmerAddrIndex: `0x12 | FarmerAddrLen (1 byte) | FarmerAddr -> Id -> nil` (can be deprecated)
 - GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
   - store latest plan id
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`

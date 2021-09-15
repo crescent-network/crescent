@@ -7,6 +7,7 @@ BINDIR ?= $(GOPATH)/bin
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 BUILDDIR ?= $(CURDIR)/build
+SIMAPP = ./app
 
 export GO111MODULE = on
 
@@ -153,6 +154,24 @@ benchmark:
 	@go test -mod=readonly -bench=. ./...
 
 .PHONY: test test-all test-unit test-race test-cover test-build
+
+test-sim-nondeterminism:
+	@echo "Running non-determinism test..."
+	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+
+test-sim-import-export: runsim
+	@echo "Running application import/export simulation. This may take several minutes..."
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 10 5 TestAppImportExport
+
+test-sim-after-import: runsim
+	@echo "Running application simulation-after-import. This may take several minutes..."
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 10 5 TestAppSimulationAfterImport
+
+.PHONY: \
+test-sim-nondeterminism \
+test-sim-import-export \
+test-sim-after-import 
 
 ###############################################################################
 ###                               Localnet                                  ###

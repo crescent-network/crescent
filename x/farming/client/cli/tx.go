@@ -376,11 +376,13 @@ Where proposal.json contains:
 				return err
 			}
 
-			content, err := types.NewPublicPlanProposal(proposal.Title, proposal.Description,
-				proposal.AddRequestProposals, proposal.UpdateRequestProposals, proposal.DeleteRequestProposals)
-			if err != nil {
-				return err
-			}
+			content := types.NewPublicPlanProposal(
+				proposal.Title,
+				proposal.Description,
+				proposal.AddRequestProposals,
+				proposal.UpdateRequestProposals,
+				proposal.DeleteRequestProposals,
+			)
 
 			from := clientCtx.GetFromAddress()
 
