@@ -8,6 +8,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/tendermint/farming/x/farming/types";
 
@@ -26,6 +27,18 @@ service Query {
   // Plan returns a specific plan.
   rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/plans/{plan_id}";
+  }
+
+  rpc Staking(QueryStakingRequest) returns (QueryStakingResponse) {
+    option (google.api.http).get = "/cosmos/farming/v1beta1/stakings/{farmer}";
+  }
+
+  rpc TotalStaking(QueryTotalStakingRequest) returns (QueryTotalStakingResponse) {
+    option (google.api.http).get = "/cosmos/farming/v1beta1/total_stakings/{staking_coin_denom}";
+  }
+
+  rpc Reward(QueryRewardRequest) returns (QueryRewardResponse) {
+    option (google.api.http).get = "/cosmos/farming/v1beta1/rewards/{farmer}";
   }
 }
 
@@ -61,4 +74,34 @@ message QueryPlanRequest {
 // QueryPlanResponse is the response type for the Query/Plan RPC method.
 message QueryPlanResponse {
   google.protobuf.Any plan = 1 [(cosmos_proto.accepts_interface) = "PlanI"];
+}
+
+message QueryStakingRequest {
+  string farmer             = 1;
+  string staking_coin_denom = 2;
+}
+
+message QueryStakingResponse {
+  repeated cosmos.base.v1beta1.Coin staked_coins = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin queued_coins = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message QueryTotalStakingRequest {
+  string staking_coin_denom = 1;
+}
+
+message QueryTotalStakingResponse {
+  string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message QueryRewardRequest {
+  string farmer             = 1;
+  string staking_coin_denom = 2;
+}
+
+message QueryRewardResponse {
+  repeated cosmos.base.v1beta1.Coin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
