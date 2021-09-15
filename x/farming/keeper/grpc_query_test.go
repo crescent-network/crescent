@@ -217,132 +217,78 @@ func (suite *KeeperTestSuite) TestGRPCPlan() {
 	}
 }
 
-//func (suite *KeeperTestSuite) TestGRPCStakings() {
-//	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
-//	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500)))
-//	suite.Stake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom2, 800)))
-//	suite.keeper.ProcessQueuedCoins(suite.ctx)
-//
-//	for _, tc := range []struct {
-//		name      string
-//		req       *types.QueryStakingsRequest
-//		expectErr bool
-//		postRun   func(response *types.QueryStakingsResponse)
-//	}{
-//		{
-//			"nil request",
-//			nil,
-//			true,
-//			nil,
-//		},
-//		{
-//			"query all",
-//			&types.QueryStakingsRequest{},
-//			false,
-//			func(resp *types.QueryStakingsResponse) {
-//				suite.Require().Len(resp.Stakings, 3)
-//			},
-//		},
-//		{
-//			"query by farmer addr",
-//			&types.QueryStakingsRequest{Farmer: suite.addrs[0].String()},
-//			false,
-//			func(resp *types.QueryStakingsResponse) {
-//				suite.Require().Len(resp.Stakings, 1)
-//				suite.Require().Equal(suite.addrs[0], resp.Stakings[0].GetFarmer())
-//			},
-//		},
-//		{
-//			"invalid farmer addr",
-//			&types.QueryStakingsRequest{Farmer: "invalid"},
-//			true,
-//			nil,
-//		},
-//		{
-//			"query by staking coin denom",
-//			&types.QueryStakingsRequest{StakingCoinDenom: denom1},
-//			false,
-//			func(resp *types.QueryStakingsResponse) {
-//				suite.Require().Len(resp.Stakings, 2)
-//				for _, staking := range resp.Stakings {
-//					suite.Require().True(staking.StakedCoins.Add(staking.QueuedCoins...).AmountOf(denom1).IsPositive())
-//				}
-//			},
-//		},
-//		{
-//			"invalid staking coin denom",
-//			&types.QueryStakingsRequest{Farmer: "!!!"},
-//			true,
-//			nil,
-//		},
-//		{
-//			"query by farmer addr and staking coin denom",
-//			&types.QueryStakingsRequest{
-//				Farmer:           suite.addrs[0].String(),
-//				StakingCoinDenom: denom1,
-//			},
-//			false,
-//			func(resp *types.QueryStakingsResponse) {
-//				suite.Require().Len(resp.Stakings, 1)
-//				suite.Require().Equal(suite.addrs[0], resp.Stakings[0].GetFarmer())
-//				suite.Require().True(
-//					resp.Stakings[0].StakedCoins.Add(resp.Stakings[0].QueuedCoins...).AmountOf(denom1).IsPositive())
-//			},
-//		},
-//	} {
-//		suite.Run(tc.name, func() {
-//			resp, err := suite.querier.Stakings(sdk.WrapSDKContext(suite.ctx), tc.req)
-//			if tc.expectErr {
-//				suite.Require().Error(err)
-//			} else {
-//				suite.Require().NoError(err)
-//				tc.postRun(resp)
-//			}
-//		})
-//	}
-//}
-//
-//func (suite *KeeperTestSuite) TestGRPCStaking() {
-//	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
-//	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500)))
-//	suite.Stake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom2, 800)))
-//	suite.keeper.ProcessQueuedCoins(suite.ctx)
-//
-//	for _, tc := range []struct {
-//		name      string
-//		req       *types.QueryStakingRequest
-//		expectErr bool
-//		postRun   func(*types.QueryStakingResponse)
-//	}{
-//		{
-//			"nil request",
-//			nil,
-//			true,
-//			nil,
-//		},
-//		{
-//			"query by id",
-//			&types.QueryStakingRequest{StakingId: 1},
-//			false,
-//			func(resp *types.QueryStakingResponse) {
-//				suite.Require().Equal(uint64(1), resp.Staking.Id)
-//			},
-//		},
-//		{
-//			"id not found",
-//			&types.QueryStakingRequest{StakingId: 10},
-//			true,
-//			nil,
-//		},
-//	} {
-//		suite.Run(tc.name, func() {
-//			resp, err := suite.querier.Staking(sdk.WrapSDKContext(suite.ctx), tc.req)
-//			if tc.expectErr {
-//				suite.Require().Error(err)
-//			} else {
-//				suite.Require().NoError(err)
-//				tc.postRun(resp)
-//			}
-//		})
-//	}
-//}
+func (suite *KeeperTestSuite) TestGRPCStaking() {
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500), sdk.NewInt64Coin(denom2, 2000)))
+	suite.keeper.ProcessQueuedCoins(suite.ctx)
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500), sdk.NewInt64Coin(denom2, 2000)))
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryStakingRequest
+		expectErr bool
+		postRun   func(*types.QueryStakingResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"query by farmer addr",
+			&types.QueryStakingRequest{Farmer: suite.addrs[0].String()},
+			false,
+			func(resp *types.QueryStakingResponse) {
+				suite.Require().True(coinsEq(
+					sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)),
+					resp.StakedCoins))
+				suite.Require().True(coinsEq(
+					sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)),
+					resp.QueuedCoins))
+			},
+		},
+		{
+			"invalid farmer addr",
+			&types.QueryStakingRequest{Farmer: "invalid"},
+			true,
+			nil,
+		},
+		{
+			"query with staking coin denom",
+			&types.QueryStakingRequest{Farmer: suite.addrs[1].String(), StakingCoinDenom: denom2},
+			false,
+			func(resp *types.QueryStakingResponse) {
+				suite.Require().True(coinsEq(
+					sdk.NewCoins(sdk.NewInt64Coin(denom2, 2000)),
+					resp.StakedCoins))
+				suite.Require().True(coinsEq(
+					sdk.NewCoins(sdk.NewInt64Coin(denom2, 2000)),
+					resp.QueuedCoins))
+			},
+		},
+		{
+			"invalid staking coin denom",
+			&types.QueryStakingRequest{StakingCoinDenom: "!"},
+			true,
+			nil,
+		},
+		{
+			"query with staking coin denom, without farmer addr",
+			&types.QueryStakingRequest{StakingCoinDenom: denom1},
+			true,
+			nil,
+		},
+	} {
+		suite.Run(tc.name, func() {
+			resp, err := suite.querier.Staking(sdk.WrapSDKContext(suite.ctx), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
