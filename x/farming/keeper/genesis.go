@@ -57,6 +57,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetHistoricalRewards(ctx, record.StakingCoinDenom, record.Epoch, record.HistoricalRewards)
 	}
 
+	for _, record := range genState.OutstandingRewardsRecords {
+		k.SetOutstandingRewards(ctx, record.StakingCoinDenom, record.OutstandingRewards)
+	}
+
 	for _, record := range genState.CurrentEpochRecords {
 		k.SetCurrentEpoch(ctx, record.StakingCoinDenom, record.CurrentEpoch)
 	}
@@ -125,6 +129,15 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
+	var outstandingRewards []types.OutstandingRewardsRecord
+	k.IterateOutstandingRewards(ctx, func(stakingCoinDenom string, rewards types.OutstandingRewards) (stop bool) {
+		outstandingRewards = append(outstandingRewards, types.OutstandingRewardsRecord{
+			StakingCoinDenom:   stakingCoinDenom,
+			OutstandingRewards: rewards,
+		})
+		return false
+	})
+
 	var currentEpochs []types.CurrentEpochRecord
 	k.IterateCurrentEpochs(ctx, func(stakingCoinDenom string, currentEpoch uint64) (stop bool) {
 		currentEpochs = append(currentEpochs, types.CurrentEpochRecord{
@@ -146,6 +159,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		stakings,
 		queuedStakings,
 		historicalRewards,
+		outstandingRewards,
 		currentEpochs,
 		k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc),
 		k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc),

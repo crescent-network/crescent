@@ -10,19 +10,20 @@ import (
 // NewGenesisState returns new GenesisState.
 func NewGenesisState(
 	params Params, plans []PlanRecord, stakings []StakingRecord, queuedStakings []QueuedStakingRecord,
-	historicalRewards []HistoricalRewardsRecord, currentEpochs []CurrentEpochRecord, stakingReserveCoins,
-	rewardPoolCoins sdk.Coins, lastEpochTime *time.Time,
+	historicalRewards []HistoricalRewardsRecord, outstandingRewards []OutstandingRewardsRecord,
+	currentEpochs []CurrentEpochRecord, stakingReserveCoins, rewardPoolCoins sdk.Coins, lastEpochTime *time.Time,
 ) *GenesisState {
 	return &GenesisState{
-		Params:                   params,
-		PlanRecords:              plans,
-		StakingRecords:           stakings,
-		QueuedStakingRecords:     queuedStakings,
-		HistoricalRewardsRecords: historicalRewards,
-		CurrentEpochRecords:      currentEpochs,
-		StakingReserveCoins:      stakingReserveCoins,
-		RewardPoolCoins:          rewardPoolCoins,
-		LastEpochTime:            lastEpochTime,
+		Params:                    params,
+		PlanRecords:               plans,
+		StakingRecords:            stakings,
+		QueuedStakingRecords:      queuedStakings,
+		HistoricalRewardsRecords:  historicalRewards,
+		OutstandingRewardsRecords: outstandingRewards,
+		CurrentEpochRecords:       currentEpochs,
+		StakingReserveCoins:       stakingReserveCoins,
+		RewardPoolCoins:           rewardPoolCoins,
+		LastEpochTime:             lastEpochTime,
 	}
 }
 
@@ -34,6 +35,7 @@ func DefaultGenesisState() *GenesisState {
 		[]StakingRecord{},
 		[]QueuedStakingRecord{},
 		[]HistoricalRewardsRecord{},
+		[]OutstandingRewardsRecord{},
 		[]CurrentEpochRecord{},
 		sdk.Coins{},
 		sdk.Coins{},
@@ -73,21 +75,6 @@ func ValidateGenesis(data GenesisState) error {
 	if err := data.StakingReserveCoins.Validate(); err != nil {
 		return err
 	}
-	return nil
-}
-
-// Validate validates Staking.
-func (s Staking) Validate() error {
-	// TODO: fix to f1 struct
-	//if _, err := sdk.AccAddressFromBech32(s.Farmer); err != nil {
-	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", s.Farmer, err)
-	//}
-	//if err := s.StakedCoins.Validate(); err != nil {
-	//	return err
-	//}
-	//if err := s.QueuedCoins.Validate(); err != nil {
-	//	return err
-	//}
 	return nil
 }
 
