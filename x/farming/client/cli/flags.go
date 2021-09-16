@@ -26,6 +26,22 @@ func flagSetPlans() *flag.FlagSet {
 	return fs
 }
 
+func flagSetStakings() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.String(FlagStakingCoinDenom, "", "The staking coin denom")
+
+	return fs
+}
+
+func flagSetRewards() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.String(FlagStakingCoinDenom, "", "The staking coin denom")
+
+	return fs
+}
+
 func flagSetHarvest() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 

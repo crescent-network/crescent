@@ -34,6 +34,9 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryParams(),
 		GetCmdQueryPlans(),
 		GetCmdQueryPlan(),
+		GetCmdQueryStakings(),
+		GetCmdQueryTotalStakings(),
+		GetCmdQueryRewards(),
 	)
 
 	return farmingQueryCmd
@@ -184,6 +187,152 @@ $ %s query %s plan
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetCmdQueryStakings() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "stakings [farmer]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query stakings by a farmer",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all stakings by a farmer.
+
+Optionally restrict coins for a staking coin denom.
+
+Example:
+$ %s query %s stakings %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query %s stakings %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+`,
+				version.AppName, types.ModuleName, bech32PrefixAccAddr,
+				version.AppName, types.ModuleName, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			farmerAcc, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			stakingCoinDenom, _ := cmd.Flags().GetString(FlagStakingCoinDenom)
+
+			resp, err := queryClient.Stakings(cmd.Context(), &types.QueryStakingsRequest{
+				Farmer:           farmerAcc.String(),
+				StakingCoinDenom: stakingCoinDenom,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(flagSetStakings())
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetCmdQueryTotalStakings() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-stakings [staking-coin-denom]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query total staking amount for a staking coin denom",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query total staking amount for a staking coin denom.
+
+Example:
+$ %s query %s total-stakings poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			stakingCoinDenom := args[0]
+			if err := sdk.ValidateDenom(stakingCoinDenom); err != nil {
+				return err
+			}
+
+			resp, err := queryClient.TotalStakings(cmd.Context(), &types.QueryTotalStakingsRequest{
+				StakingCoinDenom: stakingCoinDenom,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetCmdQueryRewards() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "rewards [farmer]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query rewards for a farmer",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all rewards for a farmer.
+
+Optionally restrict rewards for a staking coin denom.
+
+Example:
+$ %s query %s rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query %s rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+`,
+				version.AppName, types.ModuleName, bech32PrefixAccAddr,
+				version.AppName, types.ModuleName, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			farmerAcc, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			stakingCoinDenom, _ := cmd.Flags().GetString(FlagStakingCoinDenom)
+
+			resp, err := queryClient.Rewards(cmd.Context(), &types.QueryRewardsRequest{
+				Farmer:           farmerAcc.String(),
+				StakingCoinDenom: stakingCoinDenom,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(flagSetRewards())
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

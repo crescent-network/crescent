@@ -7,6 +7,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -100,4 +101,20 @@ func (k msgServer) Harvest(goCtx context.Context, msg *types.MsgHarvest) (*types
 	}
 
 	return &types.MsgHarvestResponse{}, nil
+}
+
+// AdvanceEpoch defines a method for advancing epoch by one, just for testing purpose
+// and shouldn't be used in real world.
+func (k msgServer) AdvanceEpoch(goCtx context.Context, msg *types.MsgAdvanceEpoch) (*types.MsgAdvanceEpochResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if EnableAdvanceEpoch {
+		if err := k.Keeper.AdvanceEpoch(ctx); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("AdvanceEpoch is disabled")
+	}
+
+	return &types.MsgAdvanceEpochResponse{}, nil
 }

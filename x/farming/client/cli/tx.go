@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
 )
 
@@ -38,6 +39,9 @@ func GetTxCmd() *cobra.Command {
 		NewUnstakeCmd(),
 		NewHarvestCmd(),
 	)
+	if keeper.EnableAdvanceEpoch {
+		farmingTxCmd.AddCommand(NewAdvanceEpochCmd())
+	}
 
 	return farmingTxCmd
 }
@@ -297,6 +301,30 @@ $ %s tx %s harvest --staking-coin-denoms="poolD35A0CC16EE598F90B044CE296A405BA9C
 	}
 
 	cmd.Flags().AddFlagSet(flagSetHarvest())
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewAdvanceEpochCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "advance-epoch",
+		Args:  cobra.NoArgs,
+		Short: "advance epoch by one to simulate reward distribution",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			requesterAcc := clientCtx.GetFromAddress()
+
+			msg := types.NewMsgAdvanceEpoch(requesterAcc)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

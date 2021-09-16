@@ -3,6 +3,8 @@ package testutil
 import (
 	"fmt"
 
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,7 +19,6 @@ import (
 
 	farmingapp "github.com/tendermint/farming/app"
 	farmingcli "github.com/tendermint/farming/x/farming/client/cli"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // NewConfig returns config that defines the necessary testing requirements
