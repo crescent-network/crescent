@@ -67,7 +67,7 @@ func GetQueuedStakingByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
 	return append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...)
 }
 
-func GetTotalStakingKey(stakingCoinDenom string) []byte {
+func GetTotalStakingsKey(stakingCoinDenom string) []byte {
 	return append(TotalStakingKeyPrefix, []byte(stakingCoinDenom)...)
 }
 

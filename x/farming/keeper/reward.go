@@ -228,11 +228,11 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 
 		totalAllocCoins := sdk.NewDecCoins()
 		for _, weight := range allocInfo.Plan.GetStakingCoinWeights() {
-			totalStaking, found := k.GetTotalStaking(ctx, weight.Denom)
+			totalStakings, found := k.GetTotalStakings(ctx, weight.Denom)
 			if !found {
 				continue
 			}
-			if !totalStaking.Amount.IsPositive() {
+			if !totalStakings.Amount.IsPositive() {
 				continue
 			}
 
@@ -242,7 +242,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			currentEpoch := k.GetCurrentEpoch(ctx, weight.Denom)
 			historical := k.GetHistoricalRewards(ctx, weight.Denom, currentEpoch-1)
 			k.SetHistoricalRewards(ctx, weight.Denom, currentEpoch, types.HistoricalRewards{
-				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoins.QuoDecTruncate(totalStaking.Amount.ToDec())...),
+				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoins.QuoDecTruncate(totalStakings.Amount.ToDec())...),
 			})
 			k.SetCurrentEpoch(ctx, weight.Denom, currentEpoch+1)
 
