@@ -42,6 +42,10 @@ func (suite *KeeperTestSuite) TestStake() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMultipleStake() {
+	// TODO: implement
+}
+
 func (suite *KeeperTestSuite) TestUnstake() {
 	for _, tc := range []struct {
 		name            string
@@ -126,6 +130,14 @@ func (suite *KeeperTestSuite) TestUnstake() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestMultipleUnstake() {
+	// TODO: implement
+}
+
+func (suite *KeeperTestSuite) TestTotalStaking() {
+	// TODO: implement
 }
 
 func (suite *KeeperTestSuite) TestProcessQueuedCoins() {

@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"time"
 
-	_ "github.com/stretchr/testify/suite"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tendermint/farming/x/farming/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (suite *KeeperTestSuite) TestAllocationInfos() {
@@ -172,6 +172,43 @@ func (suite *KeeperTestSuite) TestAllocateRewards() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestOutstandingRewards() {
+	// The block time here is not important, and has chosen randomly.
+	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-09-01T00:00:00Z"))
+
+	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{
+		denom1: "1",
+	}, map[string]int64{
+		denom3: 1000,
+	})
+
+	// Three farmers stake same amount of coins.
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.Stake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	// At first, the outstanding rewards shouldn't exist.
+	_, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().False(found)
+
+	suite.AdvanceEpoch() // Queued staking coins have now staked.
+	suite.AdvanceEpoch() // Allocate rewards for staked coins.
+
+	// After the first allocation of rewards, the outstanding rewards should be 1000denom3.
+	outstanding, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1000)), outstanding.Rewards))
+
+	// All farmers harvest rewards, so the outstanding rewards should be (approximately)0.
+	suite.Harvest(suite.addrs[0], []string{denom1})
+	suite.Harvest(suite.addrs[1], []string{denom1})
+	suite.Harvest(suite.addrs[2], []string{denom1})
+
+	outstanding, _ = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	truncatedOutstanding, _ := outstanding.Rewards.TruncateDecimal()
+	suite.Require().True(truncatedOutstanding.IsZero())
+}
+
 func (suite *KeeperTestSuite) TestHarvest() {
 	for _, plan := range suite.samplePlans {
 		suite.keeper.SetPlan(suite.ctx, plan)
@@ -194,4 +231,8 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	suite.Require().True(coinsEq(balancesBefore.Add(rewards...), balancesAfter))
 	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.keeper.GetRewardsReservePoolAcc(suite.ctx)).IsZero())
 	suite.Require().True(suite.Rewards(suite.addrs[0]).IsZero())
+}
+
+func (suite *KeeperTestSuite) TestMultipleHarvest() {
+	// TODO: implement
 }

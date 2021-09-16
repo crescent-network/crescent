@@ -146,6 +146,33 @@ func (k Keeper) SetTotalStakings(ctx sdk.Context, stakingCoinDenom string, total
 	store.Set(types.GetTotalStakingsKey(stakingCoinDenom), bz)
 }
 
+func (k Keeper) DeleteTotalStakings(ctx sdk.Context, stakingCoinDenom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetTotalStakingsKey(stakingCoinDenom))
+}
+
+func (k Keeper) IncreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, amount sdk.Int) {
+	totalStaking, found := k.GetTotalStakings(ctx, stakingCoinDenom)
+	if !found {
+		totalStaking.Amount = sdk.ZeroInt()
+	}
+	totalStaking.Amount = totalStaking.Amount.Add(amount)
+	k.SetTotalStakings(ctx, stakingCoinDenom, totalStaking)
+}
+
+func (k Keeper) DecreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, amount sdk.Int) {
+	totalStaking, found := k.GetTotalStakings(ctx, stakingCoinDenom)
+	if !found {
+		panic("total stakings not found")
+	}
+	if totalStaking.Amount.Equal(amount) {
+		k.DeleteTotalStakings(ctx, stakingCoinDenom)
+	} else {
+		totalStaking.Amount = totalStaking.Amount.Sub(amount)
+		k.SetTotalStakings(ctx, stakingCoinDenom, totalStaking)
+	}
+}
+
 // ReserveStakingCoins sends staking coins to the staking reserve account.
 func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoins sdk.Coins) error {
 	if err := k.bankKeeper.SendCoins(ctx, farmerAcc, k.GetStakingReservePoolAcc(ctx), stakingCoins); err != nil {
@@ -237,12 +264,7 @@ func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Co
 			k.DeleteQueuedStaking(ctx, coin.Denom, farmerAcc)
 		}
 
-		totalStakings, found := k.GetTotalStakings(ctx, coin.Denom)
-		if !found {
-			totalStakings.Amount = sdk.ZeroInt()
-		}
-		totalStakings.Amount = totalStakings.Amount.Sub(removedFromStaking)
-		k.SetTotalStakings(ctx, coin.Denom, totalStakings)
+		k.DecreaseTotalStakings(ctx, coin.Denom, removedFromStaking)
 	}
 
 	if err := k.ReleaseStakingCoins(ctx, farmerAcc, amount); err != nil {
@@ -278,13 +300,7 @@ func (k Keeper) ProcessQueuedCoins(ctx sdk.Context) {
 			StartingEpoch: k.GetCurrentEpoch(ctx, stakingCoinDenom),
 		})
 
-		totalStakings, found := k.GetTotalStakings(ctx, stakingCoinDenom)
-		if !found {
-			totalStakings.Amount = sdk.ZeroInt()
-		}
-		k.SetTotalStakings(ctx, stakingCoinDenom, types.TotalStakings{
-			Amount: totalStakings.Amount.Add(queuedStaking.Amount),
-		})
+		k.IncreaseTotalStakings(ctx, stakingCoinDenom, queuedStaking.Amount)
 
 		return false
 	})

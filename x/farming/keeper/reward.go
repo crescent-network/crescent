@@ -71,16 +71,71 @@ func (k Keeper) IterateCurrentEpochs(ctx sdk.Context, cb func(stakingCoinDenom s
 	}
 }
 
-func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, endingEpoch uint64) (rewards sdk.Coins) {
+func (k Keeper) GetOutstandingRewards(ctx sdk.Context, stakingCoinDenom string) (rewards types.OutstandingRewards, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetOutstandingRewardsKey(stakingCoinDenom))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &rewards)
+	found = true
+	return
+}
+
+func (k Keeper) SetOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, rewards types.OutstandingRewards) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&rewards)
+	store.Set(types.GetOutstandingRewardsKey(stakingCoinDenom), bz)
+}
+
+func (k Keeper) DeleteOutstandingRewards(ctx sdk.Context, stakingCoinDenom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetOutstandingRewardsKey(stakingCoinDenom))
+}
+
+func (k Keeper) IterateOutstandingRewards(ctx sdk.Context, cb func(stakingCoinDenom string, rewards types.OutstandingRewards) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.OutstandingRewardsKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var rewards types.OutstandingRewards
+		k.cdc.MustUnmarshal(iter.Value(), &rewards)
+		stakingCoinDenom := types.ParseOutstandingRewardsKey(iter.Key())
+		if cb(stakingCoinDenom, rewards) {
+			break
+		}
+	}
+}
+
+func (k Keeper) IncreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.DecCoins) {
+	outstanding, _ := k.GetOutstandingRewards(ctx, stakingCoinDenom)
+	outstanding.Rewards = outstanding.Rewards.Add(amount...)
+	k.SetOutstandingRewards(ctx, stakingCoinDenom, outstanding)
+}
+
+func (k Keeper) DecreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.DecCoins) {
+	outstanding, found := k.GetOutstandingRewards(ctx, stakingCoinDenom)
+	if !found {
+		panic("outstanding rewards not found")
+	}
+	if outstanding.Rewards.IsEqual(amount) {
+		k.DeleteOutstandingRewards(ctx, stakingCoinDenom)
+	} else {
+		outstanding.Rewards = outstanding.Rewards.Sub(amount)
+		k.SetOutstandingRewards(ctx, stakingCoinDenom, outstanding)
+	}
+}
+
+func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, endingEpoch uint64) (rewards sdk.DecCoins) {
 	staking, found := k.GetStaking(ctx, stakingCoinDenom, farmerAcc)
 	if !found {
-		staking.Amount = sdk.ZeroInt()
+		return sdk.NewDecCoins()
 	}
 
 	starting := k.GetHistoricalRewards(ctx, stakingCoinDenom, staking.StartingEpoch-1)
 	ending := k.GetHistoricalRewards(ctx, stakingCoinDenom, endingEpoch)
 	diff := ending.CumulativeUnitRewards.Sub(starting.CumulativeUnitRewards)
-	rewards, _ = diff.MulDecTruncate(staking.Amount.ToDec()).TruncateDecimal()
+	rewards = diff.MulDecTruncate(staking.Amount.ToDec())
 	return
 }
 
@@ -93,28 +148,34 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 	currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
 	// TODO: handle if currentEpoch is 0
 	rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, currentEpoch-1)
+	truncatedRewards, _ := rewards.TruncateDecimal()
 
 	if !rewards.IsZero() {
-		if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, rewards); err != nil {
-			return nil, err
+		if !truncatedRewards.IsZero() {
+			if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, truncatedRewards); err != nil {
+				return nil, err
+			}
 		}
+
+		k.DecreaseOutstandingRewards(ctx, stakingCoinDenom, rewards)
 	}
 
 	staking.StartingEpoch = currentEpoch
 	k.SetStaking(ctx, stakingCoinDenom, farmerAcc, staking)
 
-	return rewards, nil
+	return truncatedRewards, nil
 }
 
 func (k Keeper) WithdrawAllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) (sdk.Coins, error) {
 	totalRewards := sdk.NewCoins()
-
 	k.IterateStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
 		currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
 		rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, currentEpoch-1)
+		truncatedRewards, _ := rewards.TruncateDecimal()
+		totalRewards = totalRewards.Add(truncatedRewards...)
 
 		if !rewards.IsZero() {
-			totalRewards = totalRewards.Add(rewards...)
+			k.DecreaseOutstandingRewards(ctx, stakingCoinDenom, rewards)
 		}
 
 		staking.StartingEpoch = currentEpoch
@@ -226,7 +287,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			totalWeight = totalWeight.Add(weight.Amount)
 		}
 
-		totalAllocCoins := sdk.NewDecCoins()
+		totalAllocCoins := sdk.NewCoins()
 		for _, weight := range allocInfo.Plan.GetStakingCoinWeights() {
 			totalStakings, found := k.GetTotalStakings(ctx, weight.Denom)
 			if !found {
@@ -237,14 +298,17 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			}
 
 			weightProportion := weight.Amount.QuoTruncate(totalWeight)
-			allocCoins := sdk.NewDecCoinsFromCoins(allocInfo.Amount...).MulDecTruncate(weightProportion)
+			allocCoins, _ := sdk.NewDecCoinsFromCoins(allocInfo.Amount...).MulDecTruncate(weightProportion).TruncateDecimal()
+			allocCoinsDec := sdk.NewDecCoinsFromCoins(allocCoins...)
 
 			currentEpoch := k.GetCurrentEpoch(ctx, weight.Denom)
 			historical := k.GetHistoricalRewards(ctx, weight.Denom, currentEpoch-1)
 			k.SetHistoricalRewards(ctx, weight.Denom, currentEpoch, types.HistoricalRewards{
-				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoins.QuoDecTruncate(totalStakings.Amount.ToDec())...),
+				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoinsDec.QuoDecTruncate(totalStakings.Amount.ToDec())...),
 			})
 			k.SetCurrentEpoch(ctx, weight.Denom, currentEpoch+1)
+
+			k.IncreaseOutstandingRewards(ctx, weight.Denom, allocCoinsDec)
 
 			totalAllocCoins = totalAllocCoins.Add(allocCoins...)
 		}
@@ -253,23 +317,21 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			continue
 		}
 
-		truncatedAllocCoins, _ := totalAllocCoins.TruncateDecimal()
-
 		rewardsReserveAcc := k.GetRewardsReservePoolAcc(ctx)
-		if err := k.bankKeeper.SendCoins(ctx, allocInfo.Plan.GetFarmingPoolAddress(), rewardsReserveAcc, truncatedAllocCoins); err != nil {
+		if err := k.bankKeeper.SendCoins(ctx, allocInfo.Plan.GetFarmingPoolAddress(), rewardsReserveAcc, totalAllocCoins); err != nil {
 			return err
 		}
 
 		t := ctx.BlockTime()
 		_ = allocInfo.Plan.SetLastDistributionTime(&t)
-		_ = allocInfo.Plan.SetDistributedCoins(allocInfo.Plan.GetDistributedCoins().Add(truncatedAllocCoins...))
+		_ = allocInfo.Plan.SetDistributedCoins(allocInfo.Plan.GetDistributedCoins().Add(totalAllocCoins...))
 		k.SetPlan(ctx, allocInfo.Plan)
 
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
 				types.EventTypeRewardsAllocated,
 				sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(allocInfo.Plan.GetId(), 10)),
-				sdk.NewAttribute(types.AttributeKeyAmount, truncatedAllocCoins.String()),
+				sdk.NewAttribute(types.AttributeKeyAmount, totalAllocCoins.String()),
 			),
 		})
 	}
