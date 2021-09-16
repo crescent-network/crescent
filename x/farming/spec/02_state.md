@@ -120,6 +120,8 @@ The parameters of the Plan state are:
 
 - GlobalLastEpochTime: `[]byte("globalLastEpochTime") -> ProtocolBuffer(Timestamp)`
 
+- CurrentEpochDays: `[]byte("currentEpochDays") -> uint32` 
+
 ## Staking
 
 ```go

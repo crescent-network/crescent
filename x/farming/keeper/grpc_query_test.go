@@ -360,11 +360,11 @@ func (suite *KeeperTestSuite) TestGRPCRewards() {
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
 	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000)))
 
-	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-08-06T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-06T00:00:00Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper)
-	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-08-07T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-07T00:00:00Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper)
-	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-08-08T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-08T00:00:00Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper)
 
 	for _, tc := range []struct {

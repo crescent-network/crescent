@@ -4,6 +4,8 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (suite *KeeperTestSuite) TestStake() {

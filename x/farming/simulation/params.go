@@ -25,9 +25,9 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 				return string(bz)
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, string(types.KeyEpochDays),
+		simulation.NewSimParamChange(types.ModuleName, string(types.KeyNextEpochDays),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", GenEpochDays(r))
+				return fmt.Sprintf("%d", GenNextEpochDays(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyFarmingFeeCollector),

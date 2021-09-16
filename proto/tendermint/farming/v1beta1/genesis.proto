@@ -57,6 +57,9 @@ message GenesisState {
   // last_epoch_time specifies the last executed epoch time of the plans
   google.protobuf.Timestamp last_epoch_time = 10
       [(gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"last_epoch_time\""];
+
+  // current_epoch_days specifies the epoch used when allocating farming rewards in end blocker
+  uint32 current_epoch_days = 11;
 }
 
 // PlanRecord is used for import/export via genesis json.

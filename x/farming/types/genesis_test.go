@@ -23,13 +23,13 @@ func TestValidateGenesis(t *testing.T) {
 			"",
 		},
 		{
-			"invalid EpochDays case",
+			"invalid NextEpochDays case",
 			func(genState *types.GenesisState) {
 				params := types.DefaultParams()
-				params.EpochDays = 0
+				params.NextEpochDays = 0
 				genState.Params = params
 			},
-			"epoch days must be positive: 0",
+			"next epoch days must be positive: 0",
 		},
 	}
 	for _, tc := range testCases {

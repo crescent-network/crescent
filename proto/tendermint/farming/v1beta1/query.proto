@@ -40,6 +40,11 @@ service Query {
   rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/rewards/{farmer}";
   }
+
+  // CurrentEpochDays returns current epoch days.
+  rpc CurrentEpochDays(QueryCurrentEpochDaysRequest) returns (QueryCurrentEpochDaysResponse) {
+    option (google.api.http).get = "/cosmos/farming/v1beta1/current_epoch_days";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -104,4 +109,12 @@ message QueryRewardsRequest {
 message QueryRewardsResponse {
   repeated cosmos.base.v1beta1.Coin rewards = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// QueryCurrentEpochDaysRequest is the request type for the Query/CurrentEpochDays RPC method.
+message QueryCurrentEpochDaysRequest {}
+
+// QuerCurrentEpochDaysResponse is the response type for the Query/CurrentEpochDays RPC method.
+message QueryCurrentEpochDaysResponse {
+  uint32 current_epoch_days = 1;
 }

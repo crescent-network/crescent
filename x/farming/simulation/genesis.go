@@ -17,7 +17,7 @@ import (
 // Simulation parameter constants.
 const (
 	PrivatePlanCreationFee = "private_plan_creation_fee"
-	EpochDays              = "epoch_days"
+	NextEpochDays          = "next_epoch_days"
 	FarmingFeeCollector    = "farming_fee_collector"
 )
 
@@ -26,9 +26,9 @@ func GenPrivatePlanCreationFee(r *rand.Rand) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 0, 100_000_000))))
 }
 
-// GenEpochDays return default epoch days.
-func GenEpochDays(r *rand.Rand) uint32 {
-	return uint32(simulation.RandIntBetween(r, int(types.DefaultEpochDays), 10))
+// GenNextEpochDays return default next epoch days.
+func GenNextEpochDays(r *rand.Rand) uint32 {
+	return uint32(simulation.RandIntBetween(r, int(types.DefaultNextEpochDays), 10))
 }
 
 // GenFarmingFeeCollector returns default farming fee collector.
@@ -44,10 +44,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { privatePlanCreationFee = GenPrivatePlanCreationFee(r) },
 	)
 
-	var epochDays uint32
+	var nextEpochDays uint32
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, EpochDays, &epochDays, simState.Rand,
-		func(r *rand.Rand) { epochDays = GenEpochDays(r) },
+		simState.Cdc, NextEpochDays, &nextEpochDays, simState.Rand,
+		func(r *rand.Rand) { nextEpochDays = GenNextEpochDays(r) },
 	)
 
 	var feeCollector string
@@ -59,7 +59,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	farmingGenesis := types.GenesisState{
 		Params: types.Params{
 			PrivatePlanCreationFee: privatePlanCreationFee,
-			EpochDays:              epochDays,
+			NextEpochDays:          nextEpochDays,
 			FarmingFeeCollector:    feeCollector,
 		},
 	}

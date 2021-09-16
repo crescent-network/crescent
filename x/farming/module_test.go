@@ -1,7 +1,6 @@
-package keeper_test
+package farming_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -15,9 +14,9 @@ import (
 )
 
 const (
-	denom1 = "denom1"
-	denom2 = "denom2"
-	denom3 = "denom3"
+	denom1 = "denom1" // staking coin denom 1
+	denom2 = "denom2" // staking coin denom 2
+	denom3 = "denom3" // epoch amount for a fixed amount plan
 )
 
 var (
@@ -28,7 +27,7 @@ var (
 		sdk.NewInt64Coin(denom3, 1_000_000_000))
 )
 
-type KeeperTestSuite struct {
+type ModuleTestSuite struct {
 	suite.Suite
 
 	app                 *simapp.FarmingApp
@@ -41,11 +40,11 @@ type KeeperTestSuite struct {
 	samplePlans         []types.PlanI
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+func TestModuleTestSuite(t *testing.T) {
+	suite.Run(t, new(ModuleTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (suite *ModuleTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -71,9 +70,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)), // 70%
 				),
 				types.ParseTime("2021-08-02T00:00:00Z"),
-				types.ParseTime("2021-08-10T00:00:00Z"),
+				types.ParseTime("2021-09-02T00:00:00Z"),
 			),
-			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)),
+			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000)),
 		),
 		types.NewFixedAmountPlan(
 			types.NewBasePlan(
@@ -88,7 +87,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 				types.ParseTime("2021-08-04T00:00:00Z"),
 				types.ParseTime("2021-08-12T00:00:00Z"),
 			),
-			sdk.NewCoins(sdk.NewInt64Coin(denom3, 2000000)),
+			sdk.NewCoins(sdk.NewInt64Coin(denom3, 2_000_000)),
 		),
 	}
 	suite.sampleRatioPlans = []types.PlanI{
@@ -128,61 +127,19 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // Stake is a convenient method to test Keeper.Stake.
-func (suite *KeeperTestSuite) Stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
+func (suite *ModuleTestSuite) Stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
 	err := suite.keeper.Stake(suite.ctx, farmerAcc, amt)
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
+// Rewards is a convenient method to test Keeper.WithdrawAllRewards.
+func (suite *ModuleTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
 	cacheCtx, _ := suite.ctx.CacheContext()
 	rewards, err := suite.keeper.WithdrawAllRewards(cacheCtx, farmerAcc)
 	suite.Require().NoError(err)
 	return rewards
 }
 
-func (suite *KeeperTestSuite) Harvest(farmerAcc sdk.AccAddress, stakingCoinDenoms []string) {
-	err := suite.keeper.Harvest(suite.ctx, farmerAcc, stakingCoinDenoms)
-	suite.Require().NoError(err)
-}
-
-func (suite *KeeperTestSuite) AdvanceEpoch() {
-	err := suite.keeper.AdvanceEpoch(suite.ctx)
-	suite.Require().NoError(err)
-}
-
-func (suite *KeeperTestSuite) SetFixedAmountPlan(id uint64, farmingPoolAcc sdk.AccAddress, stakingCoinWeighsMap map[string]string, epochAmountMap map[string]int64) {
-	stakingCoinWeights := sdk.NewDecCoins()
-	for denom, weight := range stakingCoinWeighsMap {
-		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
-	}
-
-	epochAmount := sdk.NewCoins()
-	for denom, amount := range epochAmountMap {
-		epochAmount = epochAmount.Add(sdk.NewInt64Coin(denom, amount))
-	}
-
-	suite.keeper.SetPlan(suite.ctx, types.NewFixedAmountPlan(
-		types.NewBasePlan(
-			id,
-			fmt.Sprintf("plan%d", id),
-			types.PlanTypePublic,
-			farmingPoolAcc.String(),
-			farmingPoolAcc.String(),
-			stakingCoinWeights,
-			types.ParseTime("0001-01-01T00:00:00Z"),
-			types.ParseTime("9999-12-31T00:00:00Z"),
-		), epochAmount,
-	))
-}
-
-func intEq(exp, got sdk.Int) (bool, string, string, string) {
-	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
-
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
-	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
-
-func decCoinsEq(exp, got sdk.DecCoins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

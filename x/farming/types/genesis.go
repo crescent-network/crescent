@@ -11,7 +11,8 @@ import (
 func NewGenesisState(
 	params Params, plans []PlanRecord, stakings []StakingRecord, queuedStakings []QueuedStakingRecord,
 	historicalRewards []HistoricalRewardsRecord, outstandingRewards []OutstandingRewardsRecord,
-	currentEpochs []CurrentEpochRecord, stakingReserveCoins, rewardPoolCoins sdk.Coins, lastEpochTime *time.Time,
+	currentEpochs []CurrentEpochRecord, stakingReserveCoins, rewardPoolCoins sdk.Coins,
+	lastEpochTime *time.Time, currentEpochDays uint32,
 ) *GenesisState {
 	return &GenesisState{
 		Params:                    params,
@@ -24,6 +25,7 @@ func NewGenesisState(
 		StakingReserveCoins:       stakingReserveCoins,
 		RewardPoolCoins:           rewardPoolCoins,
 		LastEpochTime:             lastEpochTime,
+		CurrentEpochDays:          currentEpochDays,
 	}
 }
 
@@ -39,7 +41,9 @@ func DefaultGenesisState() *GenesisState {
 		[]CurrentEpochRecord{},
 		sdk.Coins{},
 		sdk.Coins{},
-		nil)
+		nil,
+		DefaultCurrentEpochDays,
+	)
 }
 
 // ValidateGenesis validates GenesisState.

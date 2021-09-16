@@ -1,111 +1,139 @@
 package farming_test
 
 import (
-	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	farmingapp "github.com/tendermint/farming/app"
 	"github.com/tendermint/farming/x/farming"
-	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	_ "github.com/stretchr/testify/suite"
 )
 
-// createTestInput returns a simapp with custom FarmingKeeper
-// to avoid messing with the hooks.
-func createTestInput() (*farmingapp.FarmingApp, sdk.Context, []sdk.AccAddress) {
-	app := farmingapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	app.FarmingKeeper = keeper.NewKeeper(
-		app.AppCodec(),
-		app.GetKey(types.StoreKey),
-		app.GetSubspace(types.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		map[string]bool{},
-	)
-
-	addrs := farmingapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(200_000_000))
-
-	return app, ctx, addrs
-}
-
-func TestMsgCreateFixedAmountPlan(t *testing.T) {
-	app, ctx, addrs := createTestInput()
-
-	name := "test"
-	creator := addrs[0]
-	stakingCoinWeights := sdk.NewDecCoins(
-		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
-	)
-	startTime := time.Now().UTC()
-	endTime := startTime.AddDate(1, 0, 0)
-	epochAmount := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1)))
-
+func (suite *ModuleTestSuite) TestMsgCreateFixedAmountPlan() {
 	msg := types.NewMsgCreateFixedAmountPlan(
-		name,
-		creator,
-		stakingCoinWeights,
-		startTime,
-		endTime,
-		epochAmount,
+		"handlerTestPlan1",
+		suite.addrs[0],
+		sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)), // 30%
+			sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)), // 70%
+		),
+		types.ParseTime("2021-08-02T00:00:00Z"),
+		types.ParseTime("2021-08-10T00:00:00Z"),
+		sdk.NewCoins(sdk.NewInt64Coin(denom3, 10_000_000)),
 	)
 
-	handler := farming.NewHandler(app.FarmingKeeper)
-	_, err := handler(ctx, msg)
-	require.NoError(t, err)
+	handler := farming.NewHandler(suite.keeper)
+	_, err := handler(suite.ctx, msg)
+	suite.Require().NoError(err)
 
-	plans := app.FarmingKeeper.GetAllPlans(ctx)
-	require.Equal(t, 1, len(plans))
-	require.Equal(t, creator.String(), plans[0].GetTerminationAddress().String())
-	require.Equal(t, types.PrivatePlanFarmingPoolAddress(name, 1), plans[0].GetFarmingPoolAddress())
+	plan, found := suite.keeper.GetPlan(suite.ctx, 1)
+	suite.Require().Equal(true, found)
+
+	suite.Require().Equal(msg.Name, plan.GetName())
+	suite.Require().Equal(msg.Creator, plan.GetTerminationAddress().String())
+	suite.Require().Equal(msg.StakingCoinWeights, plan.GetStakingCoinWeights())
+	suite.Require().Equal(types.PrivatePlanFarmingPoolAddress(msg.Name, 1), plan.GetFarmingPoolAddress())
+	suite.Require().Equal(types.ParseTime("2021-08-02T00:00:00Z"), plan.GetStartTime())
+	suite.Require().Equal(types.ParseTime("2021-08-10T00:00:00Z"), plan.GetEndTime())
+	suite.Require().Equal(msg.EpochAmount, plan.(*types.FixedAmountPlan).EpochAmount)
 }
 
-func TestMsgCreateRatioPlan(t *testing.T) {
-	app, ctx, addrs := createTestInput()
-
-	name := "test"
-	creator := addrs[0]
-	stakingCoinWeights := sdk.NewDecCoins(
-		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
-	)
-	startTime := time.Now().UTC()
-	endTime := startTime.AddDate(1, 0, 0)
-	epochAmount := sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1)))
-
-	msg := types.NewMsgCreateFixedAmountPlan(
-		name,
-		creator,
-		stakingCoinWeights,
-		startTime,
-		endTime,
-		epochAmount,
+func (suite *ModuleTestSuite) TestMsgCreateRatioPlan() {
+	msg := types.NewMsgCreateRatioPlan(
+		"handlerTestPlan2",
+		suite.addrs[0],
+		sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)), // 30%
+			sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)), // 70%
+		),
+		types.ParseTime("2021-08-02T00:00:00Z"),
+		types.ParseTime("2021-08-10T00:00:00Z"),
+		sdk.NewDecWithPrec(4, 2), // 4%,
 	)
 
-	handler := farming.NewHandler(app.FarmingKeeper)
-	_, err := handler(ctx, msg)
-	require.NoError(t, err)
+	handler := farming.NewHandler(suite.keeper)
+	_, err := handler(suite.ctx, msg)
+	suite.Require().NoError(err)
 
-	plans := app.FarmingKeeper.GetAllPlans(ctx)
-	require.Equal(t, 1, len(plans))
-	require.Equal(t, creator.String(), plans[0].GetTerminationAddress().String())
-	require.Equal(t, types.PrivatePlanFarmingPoolAddress(name, 1), plans[0].GetFarmingPoolAddress())
+	plan, found := suite.keeper.GetPlan(suite.ctx, 1)
+	suite.Require().Equal(true, found)
+
+	suite.Require().Equal(msg.Name, plan.GetName())
+	suite.Require().Equal(msg.Creator, plan.GetTerminationAddress().String())
+	suite.Require().Equal(msg.StakingCoinWeights, plan.GetStakingCoinWeights())
+	suite.Require().Equal(types.PrivatePlanFarmingPoolAddress(msg.Name, 1), plan.GetFarmingPoolAddress())
+	suite.Require().Equal(types.ParseTime("2021-08-02T00:00:00Z"), plan.GetStartTime())
+	suite.Require().Equal(types.ParseTime("2021-08-10T00:00:00Z"), plan.GetEndTime())
+	suite.Require().Equal(msg.EpochRatio, plan.(*types.RatioPlan).EpochRatio)
 }
 
-func TestMsgStake(t *testing.T) {
-	// TODO: not implemented yet
+func (suite *ModuleTestSuite) TestMsgStake() {
+	msg := types.NewMsgStake(
+		suite.addrs[0],
+		sdk.NewCoins(sdk.NewInt64Coin(denom1, 10_000_000)),
+	)
+
+	handler := farming.NewHandler(suite.keeper)
+	_, err := handler(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	_, found := suite.keeper.GetQueuedStaking(suite.ctx, denom1, suite.addrs[0])
+	suite.Require().Equal(true, found)
+
+	queuedCoins := sdk.NewCoins()
+	suite.keeper.IterateQueuedStakingsByFarmer(suite.ctx, suite.addrs[0],
+		func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool) {
+			queuedCoins = queuedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
+			return false
+		},
+	)
+	suite.Require().Equal(msg.StakingCoins, queuedCoins)
 }
 
-func TestMsgUnstake(t *testing.T) {
-	// TODO: not implemented yet
+func (suite *ModuleTestSuite) TestMsgUnstake() {
+	stakeCoin := sdk.NewInt64Coin(denom1, 10_000_000)
+	suite.Stake(suite.addrs[0], sdk.NewCoins(stakeCoin))
+
+	_, found := suite.keeper.GetQueuedStaking(suite.ctx, denom1, suite.addrs[0])
+	suite.Require().Equal(true, found)
+
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+
+	unstakeCoin := sdk.NewInt64Coin(denom1, 5_000_000)
+	msg := types.NewMsgUnstake(suite.addrs[0], sdk.NewCoins(unstakeCoin))
+
+	handler := farming.NewHandler(suite.keeper)
+	_, err := handler(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(balancesBefore.Add(unstakeCoin), balancesAfter))
 }
 
-func TestMsgHarvest(t *testing.T) {
-	// TODO: not implemented yet
+func (suite *ModuleTestSuite) TestMsgHarvest() {
+	for _, plan := range suite.samplePlans {
+		suite.keeper.SetPlan(suite.ctx, plan)
+	}
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom2, 10_000_000)))
+	suite.keeper.ProcessQueuedCoins(suite.ctx)
+
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-05T00:00:00Z"))
+	err := suite.keeper.AllocateRewards(suite.ctx)
+	suite.Require().NoError(err)
+
+	rewards := suite.Rewards(suite.addrs[0])
+
+	msg := types.NewMsgHarvest(suite.addrs[0], []string{denom2})
+
+	handler := farming.NewHandler(suite.keeper)
+	_, err = handler(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(balancesBefore.Add(rewards...), balancesAfter))
+	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.keeper.GetRewardsReservePoolAcc(suite.ctx)).IsZero())
+	suite.Require().True(suite.Rewards(suite.addrs[0]).IsZero())
 }

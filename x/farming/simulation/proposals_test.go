@@ -55,8 +55,8 @@ func TestProposalContents(t *testing.T) {
 		StakingCoinWeights: sdk.NewDecCoins(
 			sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10, 1)), // 100%
 		),
-		StartTime:   mustParseRFC3339("2021-08-01T00:00:00Z"),
-		EndTime:     mustParseRFC3339("2021-08-31T00:00:00Z"),
+		StartTime:   types.ParseTime("2021-08-01T00:00:00Z"),
+		EndTime:     types.ParseTime("2021-08-31T00:00:00Z"),
 		EpochAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000_000)),
 	}
 
@@ -80,5 +80,4 @@ func TestProposalContents(t *testing.T) {
 	require.Equal(t, "MBcObErwgTDNGWnwQMUgFFSKtPDMEoEQCTKVREqrXZSGLqwTMcxHfWotDllNkIJPMbXzjDVjPOOjCFuIvTyhXKLyhUScOXvYthRX", content2.GetDescription())
 	require.Equal(t, "farming", content2.ProposalRoute())
 	require.Equal(t, "PublicPlan", content2.ProposalType())
-
 }

@@ -12,8 +12,8 @@ package keeper_test
 //				sdk.NewDecCoins(
 //					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
 //					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1))),
-//				mustParseRFC3339("2021-07-30T00:00:00Z"),
-//				mustParseRFC3339("2021-08-30T00:00:00Z"),
+//				types.ParseTime("2021-07-30T00:00:00Z"),
+//				types.ParseTime("2021-08-30T00:00:00Z"),
 //			),
 //			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000))),
 //	}
@@ -55,8 +55,8 @@ package keeper_test
 //				sdk.NewDecCoins(
 //					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
 //					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1))),
-//				mustParseRFC3339("2021-07-30T00:00:00Z"),
-//				mustParseRFC3339("2021-08-30T00:00:00Z"),
+//				types.ParseTime("2021-07-30T00:00:00Z"),
+//				types.ParseTime("2021-08-30T00:00:00Z"),
 //			),
 //			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1_000_000))),
 //	}
@@ -70,7 +70,7 @@ package keeper_test
 //
 //	suite.keeper.ProcessQueuedCoins(suite.ctx)
 //
-//	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-07-31T00:00:00Z"))
+//	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-07-31T00:00:00Z"))
 //	err := suite.keeper.AllocateRewards(suite.ctx)
 //	suite.Require().NoError(err)
 //

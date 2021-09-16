@@ -45,7 +45,7 @@ func TestRandomizedGenState(t *testing.T) {
 	dec4 := "cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x"
 
 	require.Equal(t, dec1, genState.Params.PrivatePlanCreationFee)
-	require.Equal(t, dec3, genState.Params.EpochDays)
+	require.Equal(t, dec3, genState.Params.NextEpochDays)
 	require.Equal(t, dec4, genState.Params.FarmingFeeCollector)
 }
 

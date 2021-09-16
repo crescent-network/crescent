@@ -37,6 +37,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryStakings(),
 		GetCmdQueryTotalStakings(),
 		GetCmdQueryRewards(),
+		GetCmdQueryCurrentEpochDays(),
 	)
 
 	return farmingQueryCmd
@@ -49,7 +50,6 @@ func GetCmdQueryParams() *cobra.Command {
 		Short: "Query the current farming parameters information",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query values set as farming parameters.
-
 Example:
 $ %s query %s params
 `,
@@ -85,7 +85,6 @@ func GetCmdQueryPlans() *cobra.Command {
 		Short: "Query for all plans",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details about all farming plans on a network.
-
 Example:
 $ %s query %s plans
 $ %s query %s plans --plan-type private
@@ -156,7 +155,6 @@ func GetCmdQueryPlan() *cobra.Command {
 		Short: "Query a specific plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details about a specific plan.
-
 Example:
 $ %s query %s plan
 `,
@@ -333,6 +331,42 @@ $ %s query %s rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-d
 	}
 
 	cmd.Flags().AddFlagSet(flagSetRewards())
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetCmdQueryCurrentEpochDays() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "current-epoch-days",
+		Args:  cobra.NoArgs,
+		Short: "Query the value of current epoch days",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the value set as current epoch days.
+
+Example:
+$ %s query %s current-epoch-days
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			resp, err := queryClient.CurrentEpochDays(context.Background(), &types.QueryCurrentEpochDaysRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
