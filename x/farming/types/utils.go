@@ -1,6 +1,6 @@
 package types
 
-import time "time"
+import "time"
 
 // ParseTime parses string time to time in RFC3339 format.
 func ParseTime(s string) time.Time {

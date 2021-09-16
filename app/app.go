@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
+	"github.com/tendermint/budget/x/budget"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -85,6 +86,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
+	budgettypes "github.com/tendermint/budget/x/budget/types"
+
 	farmingparams "github.com/tendermint/farming/app/params"
 	"github.com/tendermint/farming/x/farming"
 	farmingclient "github.com/tendermint/farming/x/farming/client"
@@ -125,8 +129,8 @@ var (
 		evidence.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		budget.AppModuleBasic{},
 		farming.AppModuleBasic{},
-		// todo: farming ordering
 	)
 
 	// module account permissions
@@ -137,8 +141,9 @@ var (
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
-		farmingtypes.ModuleName:        {authtypes.Minter},
-		// todo: farming Staking Reserve Coin TBD
+		budgettypes.ModuleName:         nil,
+		// TODO: remove minter permission for farming module, currently it used only for simulation
+		farmingtypes.ModuleName: {authtypes.Minter},
 	}
 )
 
@@ -176,6 +181,7 @@ type FarmingApp struct {
 	AuthzKeeper      authzkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
+	BudgetKeeper     budgetkeeper.Keeper
 	FarmingKeeper    farmingkeeper.Keeper
 
 	// the module manager
@@ -217,7 +223,7 @@ func NewFarmingApp(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey, farmingtypes.StoreKey,
+		evidencetypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey, budgettypes.StoreKey, farmingtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -282,11 +288,15 @@ func NewFarmingApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter())
 
+	app.BudgetKeeper = budgetkeeper.NewKeeper(
+		appCodec, keys[budgettypes.StoreKey], app.GetSubspace(budgettypes.ModuleName), app.AccountKeeper,
+		app.BankKeeper, app.ModuleAccountAddrs(),
+	)
+
 	app.FarmingKeeper = farmingkeeper.NewKeeper(
 		appCodec, keys[farmingtypes.StoreKey], app.GetSubspace(farmingtypes.ModuleName), app.AccountKeeper,
 		app.BankKeeper, app.ModuleAccountAddrs(),
 	)
-	// todo: farming ordering
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -295,7 +305,6 @@ func NewFarmingApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposal(app.FarmingKeeper))
-		// todo: implementing...
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
@@ -338,14 +347,14 @@ func NewFarmingApp(
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		budget.NewAppModule(appCodec, app.BudgetKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper),
-		// todo: farming ordering
+		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -354,15 +363,13 @@ func NewFarmingApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName, farmingtypes.ModuleName,
-		// todo: farming ordering
+		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, budgettypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		evidencetypes.ModuleName, stakingtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName,
 		stakingtypes.ModuleName, farmingtypes.ModuleName,
-		// todo: farming ordering
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -374,8 +381,7 @@ func NewFarmingApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
 		stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName,
 		crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
-		feegrant.ModuleName, farmingtypes.ModuleName,
-		// todo: farming ordering
+		feegrant.ModuleName, budgettypes.ModuleName, farmingtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -397,14 +403,15 @@ func NewFarmingApp(
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
+		budget.NewAppModule(appCodec, app.BudgetKeeper, app.AccountKeeper, app.BankKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper),
-		// todo: farming ordering
+		budget.NewAppModule(appCodec, app.BudgetKeeper, app.AccountKeeper, app.BankKeeper),
+		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -602,7 +609,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(farmingtypes.ModuleName)
-	// todo: farming ordering
+	paramsKeeper.Subspace(budgettypes.ModuleName)
 
 	return paramsKeeper
 }

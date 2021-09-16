@@ -3,8 +3,6 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,8 +61,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 			FarmingFeeCollector:    feeCollector,
 		},
 	}
-
-	bz, _ := json.MarshalIndent(&farmingGenesis, "", " ")
-	fmt.Printf("Selected randomly generated farming parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&farmingGenesis)
 }

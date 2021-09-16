@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/budget/x/budget"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
@@ -187,6 +188,7 @@ func TestRunMigrations(t *testing.T) {
 					"crisis":       crisis.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
 					"capability":   capability.AppModule{}.ConsensusVersion(),
+					"budget":       budget.AppModule{}.ConsensusVersion(),
 					"farming":      farming.AppModule{}.ConsensusVersion(),
 				},
 			)
@@ -240,6 +242,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"crisis":       crisis.AppModule{}.ConsensusVersion(),
 			"genutil":      genutil.AppModule{}.ConsensusVersion(),
 			"capability":   capability.AppModule{}.ConsensusVersion(),
+			"budget":       budget.AppModule{}.ConsensusVersion(),
 			"farming":      farming.AppModule{}.ConsensusVersion(),
 		},
 	)

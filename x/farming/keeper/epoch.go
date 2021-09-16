@@ -12,7 +12,7 @@ import (
 
 func (k Keeper) GetLastEpochTime(ctx sdk.Context) (time.Time, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GlobalLastEpochTimeKey)
+	bz := store.Get(types.LastEpochTimeKey)
 	if bz == nil {
 		return time.Time{}, false
 	}
@@ -32,7 +32,7 @@ func (k Keeper) SetLastEpochTime(ctx sdk.Context, t time.Time) {
 		panic(err)
 	}
 	bz := k.cdc.MustMarshal(ts)
-	store.Set(types.GlobalLastEpochTimeKey, bz)
+	store.Set(types.LastEpochTimeKey, bz)
 }
 
 func (k Keeper) AdvanceEpoch(ctx sdk.Context) error {
