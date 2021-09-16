@@ -149,7 +149,7 @@ message QueuedStaking {
   string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message TotalStaking {
+message TotalStakings {
   option (gogoproto.goproto_getters) = false;
 
   string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
