@@ -70,7 +70,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 
 	for stakingCoinDenom, amt := range totalStakings {
-		k.SetTotalStaking(ctx, stakingCoinDenom, types.TotalStaking{Amount: amt})
+		k.SetTotalStakings(ctx, stakingCoinDenom, types.TotalStakings{Amount: amt})
 	}
 
 	if err := k.ValidateRemainingRewardsAmount(ctx); err != nil {
