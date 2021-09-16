@@ -16,11 +16,6 @@ make install
 The following script is prepared to bootstrap a single chain with a single validator in your local machine. Copy the script and run them in your terminal.
 
 ```bash
-# Clone the project 
-git clone https://github.com/tendermint/farming.git
-cd farming
-make install
-
 # Configure variables
 export BINARY=farmingd
 export HOME_FARMINGAPP=$HOME/.farmingapp

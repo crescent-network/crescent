@@ -31,17 +31,15 @@ In order to test out the following command-line interfaces, you need to set up a
 
 ### MsgCreateFixedAmountPlan
 
-```bash
-# An example of private-fixed-plan.json file
-#
-# This private fixed amount farming plan intends to provide 100ATOM per epoch (measured in day) 
-# relative to the rate amount of denoms defined in staking coin weights. 
-#
-# Parameter Description
-#
-# name: it can be any name you prefer to be stored in a network. It cannot be overlap with the existing names.
-# staking_coin_weights: an amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
-# epoch_amount: this is an amount that you want to provide as incentive for staking denoms defined in staking coin weights.
+Create a file name `private-fixed-plan.json`. This private fixed amount farming plan intends to provide 100ATOM per epoch (measured in day) relative to the rate amount of denoms defined in staking coin weights.
+
+- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network; however it cannot overlap with the existing plan names.
+- `staking_coin_weights`: is the distributing amount for each epoch. An amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
+- `start_time`: is start time of the farming plan 
+- `end_time`: is end time of the farming plan
+- `epoch_amount`: is an amount that will be distributed per epoch as an incentive for staking denoms defined in the staking coin weights.
+
+```json
 {
   "name": "This plan intends to provide incentives for liquidity pool investors and ATOM holders",
   "staking_coin_weights": [
@@ -63,14 +61,17 @@ In order to test out the following command-line interfaces, you need to set up a
     }
   ]
 }
+```
 
-# Send to create a private fixed amount plan
+```bash
+# Create a private fixed amount plan
 farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
 --broadcast-mode block \
---yes
+--yes \
+--output json | jq
 ```
 
 ```json
@@ -81,7 +82,7 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
       {
         "@type": "/cosmos.farming.v1beta1.MsgCreateFixedAmountPlan",
         "name": "This plan intends to provide incentives for liquidity pool investors and ATOM holders",
-        "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+        "creator": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
         "staking_coin_weights": [
           {
             "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
@@ -137,17 +138,15 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 
 ### MsgCreateRatioPlan
 
-```bash
-# An example of private-ratio-plan.json
-#
-# This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day).
-# In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has in balances are used as incentives for the denoms defined in staking_coin_weights.
-#
-# Parameter Description
-#
-# name: it can be any name you prefer to be stored in a network. It cannot be overlap with the existing names.
-# staking_coin_weights: an amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
-# epoch_ratio: distributing ratio (of all coins that the creator has) per epoch. The total ratio cannot exceed 1.000000000000000000 (100%)
+Create a file name `private-fixed-plan.json`. This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day). In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has in balances are used as incentives for the denoms defined in the staking coin weights.
+
+- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network; however it cannot overlap with the existing plan names.
+- `staking_coin_weights`: is the distributing amount for each epoch. An amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
+- `start_time`: is start time of the farming plan 
+- `end_time`: is end time of the farming plan
+- `epoch_ratio`: is a ratio that will be distributed per epoch as an incentive for staking denoms defined in staking coin weights. The ratio refers to all coins that the creator has in his/her account. Note that the total ratio cannot exceed 1.0 (100%). 
+
+```json
 {
   "name": "This plan intends to provide incentives for Cosmonauts!",
   "staking_coin_weights": [
@@ -164,14 +163,17 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
   "end_time": "2021-08-13T09:00:00Z",
   "epoch_ratio": "0.100000000000000000"
 }
+```
 
-# Send to create a private ratio plan
+```bash
+# Create a private ratio plan
 farmingd tx farming create-private-ratio-plan private-ratio-plan.json \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
 --broadcast-mode block \
---yes
+--yes \
+--output json | jq
 ```
 
 ```json
@@ -182,7 +184,7 @@ farmingd tx farming create-private-ratio-plan private-ratio-plan.json \
       {
         "@type": "/cosmos.farming.v1beta1.MsgCreateRatioPlan",
         "name": "This plan intends to provide incentives for Cosmonauts!",
-        "farming_pool_address": "cosmos13w4ueuk80d3kmwk7ntlhp84fk0arlm3mqf0w08",
+        "creator": "cosmos13w4ueuk80d3kmwk7ntlhp84fk0arlm3mqf0w08",
         "staking_coin_weights": [
           {
             "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
@@ -240,7 +242,9 @@ farmingd tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837
 --from user2 \
 --keyring-backend test \
 --broadcast-mode block \
---yes
+--yes \
+--output json | jq
+```
 
 ```json
 {
@@ -300,7 +304,8 @@ farmingd tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E388
 --from user2 \
 --keyring-backend test \
 --broadcast-mode block \
---yes
+--yes \
+--output json | jq
 ```
 
 ```json
@@ -356,14 +361,15 @@ farmingd tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E388
 
 ```bash
 # Harvest farming rewards from the farming plan
-# Note that epoch_days are meausred in days so you will confront a log stating that
-# there is no reward for staking coin denom
-farmingd tx farming harvest "uatom" \
+# Note that there won't be any rewards if the time hasn't passed by the epoch days
+farmingd tx farming harvest \
+--staking-coin-denoms="uatom" \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
 --broadcast-mode block \
---yes
+--yes \
+--output json | jq
 ```
 
 ```json
