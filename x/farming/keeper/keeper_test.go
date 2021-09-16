@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -140,11 +141,50 @@ func (suite *KeeperTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
 	return rewards
 }
 
+func (suite *KeeperTestSuite) Harvest(farmerAcc sdk.AccAddress, stakingCoinDenoms []string) {
+	err := suite.keeper.Harvest(suite.ctx, farmerAcc, stakingCoinDenoms)
+	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) AdvanceEpoch() {
+	err := suite.keeper.AdvanceEpoch(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) SetFixedAmountPlan(id uint64, farmingPoolAcc sdk.AccAddress, stakingCoinWeighsMap map[string]string, epochAmountMap map[string]int64) {
+	stakingCoinWeights := sdk.NewDecCoins()
+	for denom, weight := range stakingCoinWeighsMap {
+		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
+	}
+
+	epochAmount := sdk.NewCoins()
+	for denom, amount := range epochAmountMap {
+		epochAmount = epochAmount.Add(sdk.NewInt64Coin(denom, amount))
+	}
+
+	suite.keeper.SetPlan(suite.ctx, types.NewFixedAmountPlan(
+		types.NewBasePlan(
+			id,
+			fmt.Sprintf("plan%d", id),
+			types.PlanTypePublic,
+			farmingPoolAcc.String(),
+			farmingPoolAcc.String(),
+			stakingCoinWeights,
+			mustParseRFC3339("0001-01-01T00:00:00Z"),
+			mustParseRFC3339("9999-12-31T00:00:00Z"),
+		), epochAmount,
+	))
+}
+
 func intEq(exp, got sdk.Int) (bool, string, string, string) {
 	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
+	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func decCoinsEq(exp, got sdk.DecCoins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
