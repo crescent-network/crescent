@@ -5,7 +5,7 @@ Description: A high-level overview of gRPC-gateway REST Routes in farming module
 
 ## Swagger Documentation
 
-- [Swagger Docs v0.2.0](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.2.0)
+- [Swagger Docs v0.1.2](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.2)
 
 ## gRPC-gateway REST Routes
 

@@ -17,9 +17,9 @@ message Params {
   // private_plan_creation_fee specifies the fee for plan creation
   // this fee prevents from spamming and it is collected in the community pool
   repeated cosmos.base.v1beta1.Coin private_plan_creation_fee = 1 [
-    (gogoproto.moretags) = "yaml:\"private_plan_creation_fee\"",
+    (gogoproto.moretags)     = "yaml:\"private_plan_creation_fee\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)     = false
   ];
 
   // next_epoch_days is the epoch length in number of days
@@ -160,9 +160,9 @@ message HistoricalRewards {
   option (gogoproto.goproto_getters) = false;
 
   repeated cosmos.base.v1beta1.DecCoin cumulative_unit_rewards = 1 [
-    (gogoproto.moretags) = "yaml:\"cumulative_unit_rewards\"",
+    (gogoproto.moretags)     = "yaml:\"cumulative_unit_rewards\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)     = false
   ];
 }
 
@@ -170,5 +170,5 @@ message HistoricalRewards {
 // for a staking coin denom.
 message OutstandingRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1
-  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
