@@ -29,8 +29,8 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 		EpochRatio:         sdk.ZeroDec(),
 	}
@@ -45,8 +45,8 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 		EpochRatio:         sdk.ZeroDec(),
 	}
@@ -58,8 +58,8 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: sdk.NewDecCoins(),
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 0)),
 		EpochRatio:         sdk.ZeroDec(),
 	}
@@ -76,8 +76,8 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 				Amount: sdk.MustNewDecFromStr("0.1"),
 			},
 		),
-		StartTime:   mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:     mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:   types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:     types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount: sdk.NewCoins(sdk.NewInt64Coin("uatom", 0)),
 		EpochRatio:  sdk.ZeroDec(),
 	}
@@ -89,8 +89,8 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-13T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-06T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-13T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-06T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 0)),
 		EpochRatio:         sdk.ZeroDec(),
 	}
@@ -102,8 +102,8 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 1)),
 		EpochRatio:         sdk.NewDec(1),
 	}
@@ -115,8 +115,8 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(),
 		EpochRatio:         sdk.ZeroDec(),
 	}
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestAddPublicPlanProposal() {
 			case5,
 			sdkerrors.Wrapf(types.ErrInvalidPlanEndTime,
 				"end time %s must be greater than start time %s",
-				mustParseRFC3339("2021-08-06T00:00:00Z"), mustParseRFC3339("2021-08-13T00:00:00Z")),
+				types.ParseTime("2021-08-06T00:00:00Z"), types.ParseTime("2021-08-13T00:00:00Z")),
 		},
 		{
 			"epoch amount & epoch ratio case #1",
@@ -217,8 +217,8 @@ func (suite *KeeperTestSuite) TestUpdatePublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 		EpochRatio:         sdk.ZeroDec(),
 	}
@@ -242,8 +242,8 @@ func (suite *KeeperTestSuite) TestUpdatePublicPlanProposal() {
 	suite.Require().Equal(true, found)
 
 	// case1
-	startTime := mustParseRFC3339("2021-08-06T00:00:00Z")
-	endTime := mustParseRFC3339("2021-08-13T00:00:00Z")
+	startTime := types.ParseTime("2021-08-06T00:00:00Z")
+	endTime := types.ParseTime("2021-08-13T00:00:00Z")
 
 	req := &types.UpdateRequestProposal{
 		PlanId:             uint64(1),
@@ -409,7 +409,7 @@ func (suite *KeeperTestSuite) TestUpdatePublicPlanProposal() {
 			case6,
 			sdkerrors.Wrapf(types.ErrInvalidPlanEndTime,
 				"end time %s must be greater than start time %s",
-				mustParseRFC3339("2021-08-06T00:00:00Z"), mustParseRFC3339("2021-08-13T00:00:00Z")),
+				types.ParseTime("2021-08-06T00:00:00Z"), types.ParseTime("2021-08-13T00:00:00Z")),
 		},
 		{
 			"epoch amount & epoch ratio case #1",
@@ -463,8 +463,8 @@ func (suite *KeeperTestSuite) TestDeletePublicPlanProposal() {
 		FarmingPoolAddress: farmerAddr.String(),
 		TerminationAddress: terminationAddr.String(),
 		StakingCoinWeights: coinWeights,
-		StartTime:          mustParseRFC3339("2021-08-06T00:00:00Z"),
-		EndTime:            mustParseRFC3339("2021-08-13T00:00:00Z"),
+		StartTime:          types.ParseTime("2021-08-06T00:00:00Z"),
+		EndTime:            types.ParseTime("2021-08-13T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
 		EpochRatio:         sdk.ZeroDec(),
 	}

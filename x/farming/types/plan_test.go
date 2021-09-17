@@ -134,8 +134,8 @@ func TestUnpackPlan(t *testing.T) {
 				types.PrivatePlanFarmingPoolAddress("farmingPoolAddr1", 1).String(),
 				sdk.AccAddress("terminationAddr1").String(),
 				sdk.NewDecCoins(sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")}),
-				mustParseRFC3339("2021-08-03T00:00:00Z"),
-				mustParseRFC3339("2021-08-07T00:00:00Z"),
+				types.ParseTime("2021-08-03T00:00:00Z"),
+				types.ParseTime("2021-08-07T00:00:00Z"),
 			),
 			sdk.NewDec(1),
 		),
@@ -162,12 +162,4 @@ func TestUnpackPlan(t *testing.T) {
 
 	_, err = types.UnpackPlan(&planRecord.Plan)
 	require.NoError(t, err)
-}
-
-func mustParseRFC3339(s string) time.Time {
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		panic(err)
-	}
-	return t
 }

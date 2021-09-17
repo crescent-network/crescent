@@ -118,7 +118,9 @@ The parameters of the Plan state are:
 
 ## Epoch
 
-- GlobalLastEpochTime: `[]byte("globalLastEpochTime") -> ProtocolBuffer(Timestamp)`
+- LastEpochTime: `[]byte("lastEpochTime") -> ProtocolBuffer(Timestamp)`
+
+- CurrentEpochDays: `[]byte("currentEpochDays") -> uint32` 
 
 ## Staking
 
@@ -163,6 +165,18 @@ type HistoricalRewards struct {
 
 - HistoricalRewards: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Epoch) -> ProtocolBuffer(HistoricalRewards)`
 - CurrentEpoch: `0x32 | StakingCoinDenom -> BigEndian(CurrentEpoch)`
+
+## Outstanding Rewards
+
+`OutstandingRewards` struct holds outstanding(un-withdrawn) rewards for a staking denom.
+
+```go
+type OutstandingRewards struct {
+    Rewards sdk.DecCoins
+}
+```
+
+- OutstandingRewards: `0x33 | StakingCoinDenom -> ProtocolBuffer(OutstandingRewards)`
 
 ## Examples
 

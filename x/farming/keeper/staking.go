@@ -129,21 +129,48 @@ func (k Keeper) IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.Acc
 	}
 }
 
-func (k Keeper) GetTotalStaking(ctx sdk.Context, stakingCoinDenom string) (totalStaking types.TotalStaking, found bool) {
+func (k Keeper) GetTotalStakings(ctx sdk.Context, stakingCoinDenom string) (totalStakings types.TotalStakings, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetTotalStakingKey(stakingCoinDenom))
+	bz := store.Get(types.GetTotalStakingsKey(stakingCoinDenom))
 	if bz == nil {
 		return
 	}
-	k.cdc.MustUnmarshal(bz, &totalStaking)
+	k.cdc.MustUnmarshal(bz, &totalStakings)
 	found = true
 	return
 }
 
-func (k Keeper) SetTotalStaking(ctx sdk.Context, stakingCoinDenom string, totalStaking types.TotalStaking) {
+func (k Keeper) SetTotalStakings(ctx sdk.Context, stakingCoinDenom string, totalStakings types.TotalStakings) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&totalStaking)
-	store.Set(types.GetTotalStakingKey(stakingCoinDenom), bz)
+	bz := k.cdc.MustMarshal(&totalStakings)
+	store.Set(types.GetTotalStakingsKey(stakingCoinDenom), bz)
+}
+
+func (k Keeper) DeleteTotalStakings(ctx sdk.Context, stakingCoinDenom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetTotalStakingsKey(stakingCoinDenom))
+}
+
+func (k Keeper) IncreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, amount sdk.Int) {
+	totalStaking, found := k.GetTotalStakings(ctx, stakingCoinDenom)
+	if !found {
+		totalStaking.Amount = sdk.ZeroInt()
+	}
+	totalStaking.Amount = totalStaking.Amount.Add(amount)
+	k.SetTotalStakings(ctx, stakingCoinDenom, totalStaking)
+}
+
+func (k Keeper) DecreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, amount sdk.Int) {
+	totalStaking, found := k.GetTotalStakings(ctx, stakingCoinDenom)
+	if !found {
+		panic("total stakings not found")
+	}
+	if totalStaking.Amount.Equal(amount) {
+		k.DeleteTotalStakings(ctx, stakingCoinDenom)
+	} else {
+		totalStaking.Amount = totalStaking.Amount.Sub(amount)
+		k.SetTotalStakings(ctx, stakingCoinDenom, totalStaking)
+	}
 }
 
 // ReserveStakingCoins sends staking coins to the staking reserve account.
@@ -237,12 +264,9 @@ func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Co
 			k.DeleteQueuedStaking(ctx, coin.Denom, farmerAcc)
 		}
 
-		totalStaking, found := k.GetTotalStaking(ctx, coin.Denom)
-		if !found {
-			totalStaking.Amount = sdk.ZeroInt()
+		if removedFromStaking.IsPositive() {
+			k.DecreaseTotalStakings(ctx, coin.Denom, removedFromStaking)
 		}
-		totalStaking.Amount = totalStaking.Amount.Sub(removedFromStaking)
-		k.SetTotalStaking(ctx, coin.Denom, totalStaking)
 	}
 
 	if err := k.ReleaseStakingCoins(ctx, farmerAcc, amount); err != nil {
@@ -278,13 +302,7 @@ func (k Keeper) ProcessQueuedCoins(ctx sdk.Context) {
 			StartingEpoch: k.GetCurrentEpoch(ctx, stakingCoinDenom),
 		})
 
-		totalStaking, found := k.GetTotalStaking(ctx, stakingCoinDenom)
-		if !found {
-			totalStaking.Amount = sdk.ZeroInt()
-		}
-		k.SetTotalStaking(ctx, stakingCoinDenom, types.TotalStaking{
-			Amount: totalStaking.Amount.Add(queuedStaking.Amount),
-		})
+		k.IncreaseTotalStakings(ctx, stakingCoinDenom, queuedStaking.Amount)
 
 		return false
 	})

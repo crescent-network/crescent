@@ -80,7 +80,7 @@ func (tra TotalRewardsAssertion) Do(suite *KeeperTestSuite) {
 }
 
 func (suite *KeeperTestSuite) TestSimulation() {
-	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-09-01T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-09-01T00:00:00Z"))
 
 	for _, plan := range []types.PlanI{
 		types.NewFixedAmountPlan(
@@ -94,8 +94,8 @@ func (suite *KeeperTestSuite) TestSimulation() {
 					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)), // 30%
 					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)), // 70%
 				),
-				mustParseRFC3339("0001-01-01T00:00:00Z"),
-				mustParseRFC3339("9999-12-31T00:00:00Z"),
+				types.ParseTime("0001-01-01T00:00:00Z"),
+				types.ParseTime("9999-12-31T00:00:00Z"),
 			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)),
 		),

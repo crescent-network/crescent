@@ -20,7 +20,7 @@ func TestParams(t *testing.T) {
 	paramsStr := `private_plan_creation_fee:
 - denom: stake
   amount: "100000000"
-epoch_days: 1
+next_epoch_days: 1
 farming_fee_collector: cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x
 `
 	require.Equal(t, paramsStr, defaultParams.String())
@@ -42,11 +42,11 @@ func TestParamsValidate(t *testing.T) {
 			"",
 		},
 		{
-			"NegativeEpochDays",
+			"ZeroNextEpochDays",
 			func(params *types.Params) {
-				params.EpochDays = uint32(0)
+				params.NextEpochDays = uint32(0)
 			},
-			"epoch days must be positive: 0",
+			"next epoch days must be positive: 0",
 		},
 		{
 			"EmptyFarmingFeeCollector",

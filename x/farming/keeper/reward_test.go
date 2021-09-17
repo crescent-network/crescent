@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"time"
 
-	_ "github.com/stretchr/testify/suite"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tendermint/farming/x/farming/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (suite *KeeperTestSuite) TestAllocationInfos() {
@@ -20,8 +20,8 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
-				mustParseRFC3339("2021-07-27T00:00:00Z"),
-				mustParseRFC3339("2021-07-28T00:00:00Z"),
+				types.ParseTime("2021-07-27T00:00:00Z"),
+				types.ParseTime("2021-07-28T00:00:00Z"),
 			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))),
 		types.NewFixedAmountPlan(
@@ -32,8 +32,8 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
-				mustParseRFC3339("2021-07-27T12:00:00Z"),
-				mustParseRFC3339("2021-07-28T12:00:00Z"),
+				types.ParseTime("2021-07-27T12:00:00Z"),
+				types.ParseTime("2021-07-28T12:00:00Z"),
 			),
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))),
 	}
@@ -55,36 +55,36 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 						suite.addrs[0].String(),
 						suite.addrs[0].String(),
 						sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
-						mustParseRFC3339("2021-07-27T00:00:00Z"),
-						mustParseRFC3339("2021-07-30T00:00:00Z"),
+						types.ParseTime("2021-07-27T00:00:00Z"),
+						types.ParseTime("2021-07-30T00:00:00Z"),
 					),
 					sdk.NewCoins(sdk.NewInt64Coin(denom3, 10_000_000_000))),
 			},
-			mustParseRFC3339("2021-07-28T00:00:00Z"),
+			types.ParseTime("2021-07-28T00:00:00Z"),
 			nil,
 		},
 		{
 			"start time & end time edgecase #1",
 			normalPlans,
-			mustParseRFC3339("2021-07-26T23:59:59Z"),
+			types.ParseTime("2021-07-26T23:59:59Z"),
 			nil,
 		},
 		{
 			"start time & end time edgecase #2",
 			normalPlans,
-			mustParseRFC3339("2021-07-27T00:00:00Z"),
+			types.ParseTime("2021-07-27T00:00:00Z"),
 			map[uint64]sdk.Coins{1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #3",
 			normalPlans,
-			mustParseRFC3339("2021-07-27T11:59:59Z"),
+			types.ParseTime("2021-07-27T11:59:59Z"),
 			map[uint64]sdk.Coins{1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #4",
 			normalPlans,
-			mustParseRFC3339("2021-07-27T12:00:00Z"),
+			types.ParseTime("2021-07-27T12:00:00Z"),
 			map[uint64]sdk.Coins{
 				1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)),
 				2: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 		{
 			"start time & end time edgecase #5",
 			normalPlans,
-			mustParseRFC3339("2021-07-27T23:59:59Z"),
+			types.ParseTime("2021-07-27T23:59:59Z"),
 			map[uint64]sdk.Coins{
 				1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)),
 				2: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
@@ -100,19 +100,19 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 		{
 			"start time & end time edgecase #6",
 			normalPlans,
-			mustParseRFC3339("2021-07-28T00:00:00Z"),
+			types.ParseTime("2021-07-28T00:00:00Z"),
 			map[uint64]sdk.Coins{2: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #7",
 			normalPlans,
-			mustParseRFC3339("2021-07-28T11:59:59Z"),
+			types.ParseTime("2021-07-28T11:59:59Z"),
 			map[uint64]sdk.Coins{2: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #8",
 			normalPlans,
-			mustParseRFC3339("2021-07-28T12:00:00Z"),
+			types.ParseTime("2021-07-28T12:00:00Z"),
 			nil,
 		},
 	} {
@@ -137,8 +137,8 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 
 func (suite *KeeperTestSuite) TestAllocateRewards() {
 	for _, plan := range suite.sampleFixedAmtPlans {
-		_ = plan.SetStartTime(mustParseRFC3339("0001-01-01T00:00:00Z"))
-		_ = plan.SetEndTime(mustParseRFC3339("9999-12-31T00:00:00Z"))
+		_ = plan.SetStartTime(types.ParseTime("0001-01-01T00:00:00Z"))
+		_ = plan.SetEndTime(types.ParseTime("9999-12-31T00:00:00Z"))
 		suite.keeper.SetPlan(suite.ctx, plan)
 	}
 
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestAllocateRewards() {
 
 	prevDistrCoins := map[uint64]sdk.Coins{}
 
-	t := mustParseRFC3339("2021-09-01T00:00:00Z")
+	t := types.ParseTime("2021-09-01T00:00:00Z")
 	for i := 0; i < 365; i++ {
 		suite.ctx = suite.ctx.WithBlockTime(t)
 
@@ -172,6 +172,43 @@ func (suite *KeeperTestSuite) TestAllocateRewards() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestOutstandingRewards() {
+	// The block time here is not important, and has chosen randomly.
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-09-01T00:00:00Z"))
+
+	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{
+		denom1: "1",
+	}, map[string]int64{
+		denom3: 1000,
+	})
+
+	// Three farmers stake same amount of coins.
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.Stake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	// At first, the outstanding rewards shouldn't exist.
+	_, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().False(found)
+
+	suite.AdvanceEpoch() // Queued staking coins have now staked.
+	suite.AdvanceEpoch() // Allocate rewards for staked coins.
+
+	// After the first allocation of rewards, the outstanding rewards should be 1000denom3.
+	outstanding, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1000)), outstanding.Rewards))
+
+	// All farmers harvest rewards, so the outstanding rewards should be (approximately)0.
+	suite.Harvest(suite.addrs[0], []string{denom1})
+	suite.Harvest(suite.addrs[1], []string{denom1})
+	suite.Harvest(suite.addrs[2], []string{denom1})
+
+	outstanding, _ = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	truncatedOutstanding, _ := outstanding.Rewards.TruncateDecimal()
+	suite.Require().True(truncatedOutstanding.IsZero())
+}
+
 func (suite *KeeperTestSuite) TestHarvest() {
 	for _, plan := range suite.samplePlans {
 		suite.keeper.SetPlan(suite.ctx, plan)
@@ -181,7 +218,7 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	suite.keeper.ProcessQueuedCoins(suite.ctx)
 
 	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
-	suite.ctx = suite.ctx.WithBlockTime(mustParseRFC3339("2021-08-05T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-05T00:00:00Z"))
 	err := suite.keeper.AllocateRewards(suite.ctx)
 	suite.Require().NoError(err)
 
@@ -194,4 +231,8 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	suite.Require().True(coinsEq(balancesBefore.Add(rewards...), balancesAfter))
 	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.keeper.GetRewardsReservePoolAcc(suite.ctx)).IsZero())
 	suite.Require().True(suite.Rewards(suite.addrs[0]).IsZero())
+}
+
+func (suite *KeeperTestSuite) TestMultipleHarvest() {
+	// TODO: implement
 }

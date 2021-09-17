@@ -14,6 +14,7 @@ var (
 	_ sdk.Msg = (*MsgStake)(nil)
 	_ sdk.Msg = (*MsgUnstake)(nil)
 	_ sdk.Msg = (*MsgHarvest)(nil)
+	_ sdk.Msg = (*MsgAdvanceEpoch)(nil)
 )
 
 // Message types for the farming module
@@ -23,6 +24,7 @@ const (
 	TypeMsgStake                 = "stake"
 	TypeMsgUnstake               = "unstake"
 	TypeMsgHarvest               = "harvest"
+	TypeMsgAdvanceEpoch          = "advance_epoch"
 )
 
 // NewMsgCreateFixedAmountPlan creates a new MsgCreateFixedAmountPlan.
@@ -305,4 +307,34 @@ func (msg MsgHarvest) GetFarmer() sdk.AccAddress {
 		panic(err)
 	}
 	return addr
+}
+
+// NewMsgAdvanceEpoch creates a new MsgAdvanceEpoch.
+func NewMsgAdvanceEpoch(requesterAcc sdk.AccAddress) *MsgAdvanceEpoch {
+	return &MsgAdvanceEpoch{
+		Requester: requesterAcc.String(),
+	}
+}
+
+func (msg MsgAdvanceEpoch) Route() string { return RouterKey }
+
+func (msg MsgAdvanceEpoch) Type() string { return TypeMsgAdvanceEpoch }
+
+func (msg MsgAdvanceEpoch) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Requester); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid requester address %q: %v", msg.Requester, err)
+	}
+	return nil
+}
+
+func (msg MsgAdvanceEpoch) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgAdvanceEpoch) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Requester)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

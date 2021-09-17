@@ -17,14 +17,15 @@ message Params {
   // private_plan_creation_fee specifies the fee for plan creation
   // this fee prevents from spamming and it is collected in the community pool
   repeated cosmos.base.v1beta1.Coin private_plan_creation_fee = 1 [
-    (gogoproto.moretags)     = "yaml:\"private_plan_creation_fee\"",
+    (gogoproto.moretags) = "yaml:\"private_plan_creation_fee\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false
+    (gogoproto.nullable) = false
   ];
 
-  // The universal epoch length in number of days. Every process for staking and
-  // reward distribution is executed with this epoch_days frequency
-  uint32 epoch_days = 2 [(gogoproto.moretags) = "yaml:\"epoch_days\""];
+  // next_epoch_days is the epoch length in number of days
+  // it updates internal state called CurrentEpochDays that is used to process
+  // staking and reward distribution in end blocker
+  uint32 next_epoch_days = 2 [(gogoproto.moretags) = "yaml:\"next_epoch_days\""];
 
   // farming_fee_collector is the module account address to collect fees within the farming module
   string farming_fee_collector = 3 [(gogoproto.moretags) = "yaml:\"farming_fee_collector\""];
@@ -149,7 +150,7 @@ message QueuedStaking {
   string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message TotalStaking {
+message TotalStakings {
   option (gogoproto.goproto_getters) = false;
 
   string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
@@ -159,8 +160,15 @@ message HistoricalRewards {
   option (gogoproto.goproto_getters) = false;
 
   repeated cosmos.base.v1beta1.DecCoin cumulative_unit_rewards = 1 [
-    (gogoproto.moretags)     = "yaml:\"cumulative_unit_rewards\"",
+    (gogoproto.moretags) = "yaml:\"cumulative_unit_rewards\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
+    (gogoproto.nullable) = false
   ];
+}
+
+// OutstandingRewards represents outstanding(un-withdrawn) rewards
+// for a staking coin denom.
+message OutstandingRewards {
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }

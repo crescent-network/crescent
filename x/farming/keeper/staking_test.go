@@ -4,6 +4,8 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (suite *KeeperTestSuite) TestStake() {
@@ -40,6 +42,10 @@ func (suite *KeeperTestSuite) TestStake() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestMultipleStake() {
+	// TODO: implement
 }
 
 func (suite *KeeperTestSuite) TestUnstake() {
@@ -126,6 +132,14 @@ func (suite *KeeperTestSuite) TestUnstake() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestMultipleUnstake() {
+	// TODO: implement
+}
+
+func (suite *KeeperTestSuite) TestTotalStaking() {
+	// TODO: implement
 }
 
 func (suite *KeeperTestSuite) TestProcessQueuedCoins() {

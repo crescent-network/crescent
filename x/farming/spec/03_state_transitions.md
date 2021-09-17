@@ -31,11 +31,11 @@ const (
   - Each `farmingPlan` has its own `startTime` and `endTime`
 - Distribution Method
   - `FixedAmountPlan`
-    - fixed amount of coins are distributed for each `epochDays`
-    - amount in `sdk.Coins`
+    - fixed amount of coins are distributed per `CurrentEpochDays`
+    - `epochAmount` is `sdk.Coins`
   - `RatioPlan`
-    - `epochRatio` of total assets in `farmingPoolAddress` is distributed for each `epochDays`
-    - `epochRatio` in percentage
+    - ratio of total assets in `farmingPoolAddress` is distributed per `CurrentEpochDays`
+    - `epochRatio` is in percentage
 - Termination Address
   - When the plan ends after the `endTime`, transfer the balance of `farmingPoolAddress` to `terminationAddress`.
 

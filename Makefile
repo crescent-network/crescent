@@ -63,7 +63,10 @@ endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
+testing_ldflags = -X github.com/tendermint/farming/x/farming/keeper.enableAdvanceEpoch=true
+
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
+TESTING_BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags) $(testing_ldflags)'
 
 all: tools install lint
 
@@ -86,6 +89,9 @@ build-linux: go.sum
 
 install: go.sum
 	go install $(BUILD_FLAGS) ./cmd/farmingd
+
+install-testing: go.sum
+	go install $(TESTING_BUILD_FLAGS) ./cmd/farmingd
 
 build-reproducible: go.sum
 	$(DOCKER) rm latest-build || true

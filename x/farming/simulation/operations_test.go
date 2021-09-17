@@ -3,7 +3,6 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -222,7 +221,7 @@ func TestSimulateMsgHarvest(t *testing.T) {
 
 	// setup epoch days to 1 to ease the test
 	params := app.FarmingKeeper.GetParams(ctx)
-	params.EpochDays = 1
+	params.NextEpochDays = 1
 	app.FarmingKeeper.SetParams(ctx, params)
 
 	// setup a fixed amount plan
@@ -232,8 +231,8 @@ func TestSimulateMsgHarvest(t *testing.T) {
 		StakingCoinWeights: sdk.NewDecCoins(
 			sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10, 1)), // 100%
 		),
-		StartTime:   mustParseRFC3339("0001-01-01T00:00:00Z"),
-		EndTime:     mustParseRFC3339("9999-01-01T00:00:00Z"),
+		StartTime:   types.ParseTime("0001-01-01T00:00:00Z"),
+		EndTime:     types.ParseTime("9999-01-01T00:00:00Z"),
 		EpochAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000_000)),
 	}
 
@@ -316,12 +315,4 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *farmingapp.FarmingApp, 
 	}
 
 	return accounts
-}
-
-func mustParseRFC3339(s string) time.Time {
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		panic(err)
-	}
-	return t
 }

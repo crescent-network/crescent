@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -11,6 +12,19 @@ import (
 
 	"github.com/tendermint/farming/x/farming/types"
 )
+
+var (
+	enableAdvanceEpoch = "false" // set it to "true" using build flags to enable AdvanceEpoch msg handling.
+	EnableAdvanceEpoch = false
+)
+
+func init() {
+	var err error
+	EnableAdvanceEpoch, err = strconv.ParseBool(enableAdvanceEpoch)
+	if err != nil {
+		panic(err)
+	}
+}
 
 // Keeper of the farming store
 type Keeper struct {
