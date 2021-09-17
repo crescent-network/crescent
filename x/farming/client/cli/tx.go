@@ -267,21 +267,23 @@ $ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70
 
 func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "harvest [flags]",
-		Args:  cobra.NoArgs,
+		Use:   "harvest [staking-coin-denoms]",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "Harvest farming rewards",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Harvest farming that the staking coin denoms belong to plans.
 
 Example:
-$ %s tx %s harvest --staking-coin-denoms="poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4" --from mykey
-$ %s tx %s harvest --staking-coin-denoms="poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,uatom" --from mykey
+$ %s tx %s harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,uatom --from mykey
+$ %s tx %s harvest --all --from mykey
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var denoms []string
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -289,9 +291,29 @@ $ %s tx %s harvest --staking-coin-denoms="poolD35A0CC16EE598F90B044CE296A405BA9C
 
 			farmer := clientCtx.GetFromAddress()
 
-			denoms, err := cmd.Flags().GetStringSlice(FlagStakingCoinDenoms)
-			if err != nil {
-				return err
+			switch len(args) {
+			case 0:
+				all, _ := cmd.Flags().GetBool(FlagAll)
+				if !all {
+					return fmt.Errorf("either staking-coin-denoms or --all flag must be specified")
+				}
+				queryClient := types.NewQueryClient(clientCtx)
+				resp, err := queryClient.Stakings(cmd.Context(), &types.QueryStakingsRequest{
+					Farmer: farmer.String(),
+				})
+				if err != nil {
+					return err
+				}
+				for _, stakedCoin := range resp.StakedCoins {
+					denoms = append(denoms, stakedCoin.Denom)
+				}
+				if len(denoms) == 0 {
+					return fmt.Errorf("there is no staked coins")
+				}
+			case 1:
+				denoms = strings.Split(args[0], ",")
+			default:
+				return fmt.Errorf("either staking-coin-denoms or --all flag must be specified")
 			}
 
 			msg := types.NewMsgHarvest(farmer, denoms)

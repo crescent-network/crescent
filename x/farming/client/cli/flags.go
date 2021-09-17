@@ -7,12 +7,11 @@ import (
 )
 
 const (
-	FlagPlanType          = "plan-type"
-	FlagFarmingPoolAddr   = "farming-pool-addr"
-	FlagTerminationAddr   = "termination-addr"
-	FlagFarmerAddr        = "farmer-addr"
-	FlagStakingCoinDenom  = "staking-coin-denom"
-	FlagStakingCoinDenoms = "staking-coin-denoms"
+	FlagPlanType         = "plan-type"
+	FlagFarmingPoolAddr  = "farming-pool-addr"
+	FlagTerminationAddr  = "termination-addr"
+	FlagStakingCoinDenom = "staking-coin-denom"
+	FlagAll              = "all"
 )
 
 func flagSetPlans() *flag.FlagSet {
@@ -45,7 +44,7 @@ func flagSetRewards() *flag.FlagSet {
 func flagSetHarvest() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.StringSlice(FlagStakingCoinDenoms, []string{""}, "The staking coin denoms to harvest farming rewards")
+	fs.Bool(FlagAll, false, "Harvest for all staking coin denoms")
 
 	return fs
 }
