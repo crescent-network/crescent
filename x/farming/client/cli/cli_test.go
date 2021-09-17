@@ -56,7 +56,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.Require().NoError(err)
 }
 
-// TearDownTest cleans up the curret test network after each test in the suite.
+// TearDownTest cleans up the current test network after each test in the suite.
 func (s *IntegrationTestSuite) TearDownTest() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
@@ -559,7 +559,7 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 		{
 			"invalid transaction for no reward for staking coin denom stake",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagStakingCoinDenoms, "stake"),
+				"stake",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -570,7 +570,7 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 		{
 			"invalid staking coin denoms case #1",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagStakingCoinDenoms, ""),
+				"!",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

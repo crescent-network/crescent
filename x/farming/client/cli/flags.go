@@ -10,7 +10,6 @@ const (
 	FlagPlanType         = "plan-type"
 	FlagFarmingPoolAddr  = "farming-pool-addr"
 	FlagTerminationAddr  = "termination-addr"
-	FlagFarmerAddr       = "farmer-addr"
 	FlagStakingCoinDenom = "staking-coin-denom"
 	FlagAll              = "all"
 )
