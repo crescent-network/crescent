@@ -281,6 +281,8 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 }
 
 func (k Keeper) AllocateRewards(ctx sdk.Context) error {
+	unitRewardsByDenom := map[string]sdk.DecCoins{} // (staking coin denom) => (unit rewards)
+
 	for _, allocInfo := range k.AllocationInfos(ctx) {
 		totalWeight := sdk.ZeroDec()
 		for _, weight := range allocInfo.Plan.GetStakingCoinWeights() {
@@ -301,12 +303,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			allocCoins, _ := sdk.NewDecCoinsFromCoins(allocInfo.Amount...).MulDecTruncate(weightProportion).TruncateDecimal()
 			allocCoinsDec := sdk.NewDecCoinsFromCoins(allocCoins...)
 
-			currentEpoch := k.GetCurrentEpoch(ctx, weight.Denom)
-			historical := k.GetHistoricalRewards(ctx, weight.Denom, currentEpoch-1)
-			k.SetHistoricalRewards(ctx, weight.Denom, currentEpoch, types.HistoricalRewards{
-				CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(allocCoinsDec.QuoDecTruncate(totalStakings.Amount.ToDec())...),
-			})
-			k.SetCurrentEpoch(ctx, weight.Denom, currentEpoch+1)
+			unitRewardsByDenom[weight.Denom] = unitRewardsByDenom[weight.Denom].Add(allocCoinsDec.QuoDecTruncate(totalStakings.Amount.ToDec())...)
 
 			k.IncreaseOutstandingRewards(ctx, weight.Denom, allocCoinsDec)
 
@@ -334,6 +331,15 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 				sdk.NewAttribute(types.AttributeKeyAmount, totalAllocCoins.String()),
 			),
 		})
+	}
+
+	for stakingCoinDenom, unitRewards := range unitRewardsByDenom {
+		currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
+		historical := k.GetHistoricalRewards(ctx, stakingCoinDenom, currentEpoch-1)
+		k.SetHistoricalRewards(ctx, stakingCoinDenom, currentEpoch, types.HistoricalRewards{
+			CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(unitRewards...),
+		})
+		k.SetCurrentEpoch(ctx, stakingCoinDenom, currentEpoch+1)
 	}
 
 	return nil
