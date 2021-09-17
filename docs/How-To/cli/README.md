@@ -22,8 +22,9 @@ In order to test out the following command-line interfaces, you need to set up a
     * [Plans](#Plans)
     * [Plan](#Plan)
     * [Stakings](#Stakings)
-    * [Staking](#Staking)
+    * [TotalStakings](#TotalStakings)
     * [Rewards](#Rewards)
+    * [CurrentEpochDays](#CurrentEpochDays)
 
 ## Transaction
 
@@ -589,108 +590,72 @@ farmingd q farming plan 1 --output json | jq
 ### Stakings 
 
 ```bash
-# Query for all stakings on a network
-farmingd q farming stakings --output json | jq
+# Query for all stakings by a farmer 
+farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
 
-# Query for all stakings with the given staking coin denom
-farmingd q farming stakings \
+# Query for all stakings by a farmer with the given staking coin denom
+farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
---output json | jq
-
-# Query for all stakings with the given farmer address
-farmingd q farming stakings \
---farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
---output json | jq
-
-# Query for all stakings with the given params
-farmingd q farming stakings \
---staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
---farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 ```
 
 ```json
 {
-  "stakings": [
+  "staked_coins": [],
+  "queued_coins": [
     {
-      "id": "1",
-      "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
-      "staked_coins": [],
-      "queued_coins": [
-        {
-          "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
-          "amount": "2500000"
-        }
-      ]
+      "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+      "amount": "5000000"
     }
-  ],
-  "pagination": {
-    "next_key": null,
-    "total": "1"
-  }
+  ]
 }
 ```
 
-### Staking
+### TotalStakings
 
 ```bash
-# Query for the details of staking with the given staking id
-farmingd q farming staking 1 --output json | jq
-
+# Query for total stakings by a staking coin denom 
+farmingd q farming total-stakings poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --output json | jq
 ```
 
 ```json
 {
-  "staking": {
-    "id": "1",
-    "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
-    "staked_coins": [],
-    "queued_coins": [
-      {
-        "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
-        "amount": "2500000"
-      }
-    ]
-  }
+  "amount": "2500000"
 }
 ```
 
 ### Rewards
 
 ```bash
-# Query for all rewards on a network
-farmingd q farming rewards
+# Query for all rewards by a farmer 
+farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
 
-# Query for all rewards with the given farmer address
-farmingd q farming rewards --farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json
-
-# Query for all rewards with the given staking coin denom
-farmingd q farming rewards --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --output json
-
-# Query for all rewards with the given params
-farmingd q farming rewards \
+# Query for all rewards by a farmer with the staking coin denom
+farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
---farmer-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
---output json
+--output json | jq
 ```
 
 ```json
 {
   "rewards": [
     {
-      "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
-      "staking_coin_denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
-      "reward_coins": [
-        {
-          "denom": "uatom",
-          "amount": "80000000"
-        }
-      ]
+      "denom": "stake",
+      "amount": "2346201014138"
     }
-  ],
-  "pagination": {
-    "next_key": null,
-    "total": "0"
-  }
+  ]
+}
+```
+
+### CurrentEpochDays 
+
+```bash
+# Query for the current epoch days
+farmingd q farming current-epoch-days --output json | jq
+```
+
+```json
+{
+  "current_epoch_days": 1
 }
 ```

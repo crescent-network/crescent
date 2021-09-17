@@ -5,7 +5,7 @@ Description: A high-level overview of how the REST API interfaces work for the f
 
 ## Swagger Documentation
 
-- [Swagger Docs v0.1.0](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.0)
+- [Swagger Docs v0.1.1](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.1)
 
 ## REST APIs
 
@@ -17,7 +17,7 @@ In order to test out the following REST APIs, you need to set up a local node to
 - [Stakings](#Stakings)
 - [TotalStakings](#TotalStakings)
 - [Rewards](#Rewards)
-
+- [CurrentEpochDays](#CurrentEpochDays)
 ### Params
 
 Query the values set as farming parameters
@@ -156,6 +156,92 @@ http://localhost:1317/cosmos/farming/v1beta1/plans/1
 
 ### Stakings
 
+Query for all stakings by a farmer 
+
+http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
+
+```json
+{
+  "staked_coins": [
+    {
+      "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+      "amount": "2500000"
+    }
+  ],
+  "queued_coins": [
+  ]
+}
+```
+
+Query for all stakings by a farmer with the given staking coin denom
+
+http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny?staking_coin_denom=poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+
+```json
+{
+  "staked_coins": [
+    {
+      "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+      "amount": "2500000"
+    }
+  ],
+  "queued_coins": [
+  ]
+}
+```
 ### TotalStakings
 
+Query for total stakings by a staking coin denom 
+
+http://localhost:1317/cosmos/farming/v1beta1/total_stakings/poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+
+```json
+{
+  "amount": "2500000"
+}
+```
+
 ### Rewards
+
+Query for all rewards by a farmer 
+
+http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
+
+```json
+{
+  "rewards": [
+    {
+      "denom": "stake",
+      "amount": "2346201014138"
+    }
+  ]
+}
+```
+
+
+Query for all rewards by a farmer with the staking coin denom
+
+http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny?staking_coin_denom=poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+
+```json
+{
+  "rewards": [
+    {
+      "denom": "stake",
+      "amount": "2346201014138"
+    }
+  ]
+}
+```
+
+### CurrentEpochDays
+
+Query for the current epoch days
+
+http://localhost:1317/cosmos/farming/v1beta1/current_epoch_days
+
+```json
+{
+  "current_epoch_days": 1
+}
+```
