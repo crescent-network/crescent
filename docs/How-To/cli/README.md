@@ -363,8 +363,19 @@ farmingd tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E388
 ```bash
 # Harvest farming rewards from the farming plan
 # Note that there won't be any rewards if the time hasn't passed by the epoch days
+farmingd tx farming harvest uatom \
+--chain-id localnet \
+--from user2 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# or
+
+# Harvest all with --all flag
 farmingd tx farming harvest \
---staking-coin-denoms="uatom" \
+--all \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
