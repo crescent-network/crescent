@@ -5,7 +5,7 @@ Description: A high-level overview of how the REST API interfaces work for the f
 
 ## Swagger Documentation
 
-- [Swagger Docs v0.1.1](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.1)
+- [Swagger Docs v0.2.0](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.2.0)
 
 ## REST APIs
 
