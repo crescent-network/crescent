@@ -265,7 +265,7 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 		}
 
 		balances := farmingPoolBalances[farmingPool]
-		if !totalCoins.IsAllLT(balances) {
+		if !totalCoins.IsAllLTE(balances) {
 			continue
 		}
 
