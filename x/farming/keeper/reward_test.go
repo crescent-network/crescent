@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	simapp "github.com/tendermint/farming/app"
 	"github.com/tendermint/farming/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -133,6 +134,29 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestAllocateRewards_AllocateAllBalances() {
+	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	suite.Require().NoError(err)
+
+	suite.SetRatioPlan(1, farmingPoolAcc, map[string]string{
+		denom1: "0.5",
+		denom2: "0.5",
+	}, "0.5")
+	suite.SetRatioPlan(2, farmingPoolAcc, map[string]string{
+		denom1: "0.5",
+		denom2: "0.5",
+	}, "0.5")
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	rewards := suite.Rewards(suite.addrs[0])
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
 }
 
 func (suite *KeeperTestSuite) TestAllocateRewards() {
