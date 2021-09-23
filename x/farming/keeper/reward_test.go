@@ -136,29 +136,6 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestAllocateRewards_AllocateAllBalances() {
-	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
-	suite.Require().NoError(err)
-
-	suite.SetRatioPlan(1, farmingPoolAcc, map[string]string{
-		denom1: "0.5",
-		denom2: "0.5",
-	}, "0.5")
-	suite.SetRatioPlan(2, farmingPoolAcc, map[string]string{
-		denom1: "0.5",
-		denom2: "0.5",
-	}, "0.5")
-
-	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
-
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
-
-	rewards := suite.Rewards(suite.addrs[0])
-	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
-}
-
 func (suite *KeeperTestSuite) TestAllocateRewards() {
 	for _, plan := range suite.sampleFixedAmtPlans {
 		_ = plan.SetStartTime(types.ParseTime("0001-01-01T00:00:00Z"))
@@ -194,6 +171,79 @@ func (suite *KeeperTestSuite) TestAllocateRewards() {
 
 		t = t.AddDate(0, 0, 1)
 	}
+}
+
+func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanAllBalances() {
+	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	suite.Require().NoError(err)
+
+	// The sum of epoch ratios is exactly 1.
+	suite.SetFixedAmountPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, map[string]int64{denom3: 600000})
+	suite.SetFixedAmountPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, map[string]int64{denom3: 400000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	rewards := suite.Rewards(suite.addrs[0])
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
+}
+
+func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanAllBalances() {
+	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	suite.Require().NoError(err)
+
+	// The sum of epoch ratios is exactly 1.
+	suite.SetRatioPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, "0.5")
+	suite.SetRatioPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, "0.5")
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	rewards := suite.Rewards(suite.addrs[0])
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
+}
+
+func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanOverBalances() {
+	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	suite.Require().NoError(err)
+
+	// The sum of epoch amounts is over the balances the farming pool has,
+	// so the reward allocation should never happen.
+	suite.SetFixedAmountPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, map[string]int64{denom3: 700000})
+	suite.SetFixedAmountPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, map[string]int64{denom3: 400000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	rewards := suite.Rewards(suite.addrs[0])
+	suite.Require().True(rewards.IsZero())
+}
+
+func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanOverBalances() {
+	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	suite.Require().NoError(err)
+
+	// The sum of epoch ratios is over 1, so the reward allocation should never happen.
+	suite.SetRatioPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, "0.8")
+	suite.SetRatioPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, "0.5")
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	rewards := suite.Rewards(suite.addrs[0])
+	suite.Require().True(rewards.IsZero())
 }
 
 func (suite *KeeperTestSuite) TestOutstandingRewards() {
