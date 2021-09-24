@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/tendermint/farming/branch/master/graph/badge.svg)](https://codecov.io/gh/tendermint/farming?branch=master)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/tendermint/farming)](https://pkg.go.dev/github.com/tendermint/farming)
+
 # Farming Module
 
 A farming module is a Cosmos SDK module that implements farming functionality, which provides farming rewards to participants called farmers. One use case is to use this module to provide incentives for liquidity pool investors for their pool participation. 
