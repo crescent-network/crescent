@@ -26,9 +26,9 @@ Are there any disadvantages of including this feature? -->
 
 <!-- Detailed description of requirements of implementation -->
 
-## Bullet Points
+## Tasks
 
-- [ ] 
+- 
 
 ## References
 

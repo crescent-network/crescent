@@ -22,9 +22,9 @@ v    Please also ensure that this is not a duplicate issue :)
 
 <!-- What commands in order should someone run to reproduce your problem? -->
 
-## Bullet Points
+## Tasks
 
-- [ ] 
+- 
 
 ## References
 
