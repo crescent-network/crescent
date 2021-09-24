@@ -150,9 +150,9 @@ func (suite *KeeperTestSuite) AdvanceEpoch() {
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) SetFixedAmountPlan(id uint64, farmingPoolAcc sdk.AccAddress, stakingCoinWeighsMap map[string]string, epochAmountMap map[string]int64) {
+func (suite *KeeperTestSuite) SetFixedAmountPlan(id uint64, farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {
 	stakingCoinWeights := sdk.NewDecCoins()
-	for denom, weight := range stakingCoinWeighsMap {
+	for denom, weight := range stakingCoinWeightsMap {
 		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
 	}
 
@@ -172,6 +172,28 @@ func (suite *KeeperTestSuite) SetFixedAmountPlan(id uint64, farmingPoolAcc sdk.A
 			types.ParseTime("0001-01-01T00:00:00Z"),
 			types.ParseTime("9999-12-31T00:00:00Z"),
 		), epochAmount,
+	))
+}
+
+func (suite *KeeperTestSuite) SetRatioPlan(id uint64, farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochRatioStr string) {
+	stakingCoinWeights := sdk.NewDecCoins()
+	for denom, weight := range stakingCoinWeightsMap {
+		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
+	}
+
+	epochRatio := sdk.MustNewDecFromStr(epochRatioStr)
+
+	suite.keeper.SetPlan(suite.ctx, types.NewRatioPlan(
+		types.NewBasePlan(
+			id,
+			fmt.Sprintf("plan%d", id),
+			types.PlanTypePublic,
+			farmingPoolAcc.String(),
+			farmingPoolAcc.String(),
+			stakingCoinWeights,
+			types.ParseTime("0001-01-01T00:00:00Z"),
+			types.ParseTime("9999-12-31T00:00:00Z"),
+		), epochRatio,
 	))
 }
 
