@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,6 +21,7 @@ func init() {
 	gov.RegisterProposalTypeCodec(&PublicPlanProposal{}, "cosmos-sdk/PublicPlanProposal")
 }
 
+// NewPublicPlanProposal creates a new PublicPlanProposal object.
 func NewPublicPlanProposal(
 	title string,
 	description string,
@@ -83,6 +85,29 @@ func (p PublicPlanProposal) String() string {
 `, p.Title, p.Description, p.AddRequestProposals, p.UpdateRequestProposals, p.DeleteRequestProposals)
 }
 
+// NewAddRequestProposal creates a new AddRequestProposal object
+func NewAddRequestProposal(
+	name string,
+	farmingPoolAddr string,
+	terminationAddr string,
+	stakingCoinWeights sdk.DecCoins,
+	startTime time.Time,
+	endTime time.Time,
+	epochAmount sdk.Coins,
+	epochRatio sdk.Dec,
+) *AddRequestProposal {
+	return &AddRequestProposal{
+		Name:               name,
+		FarmingPoolAddress: farmingPoolAddr,
+		TerminationAddress: terminationAddr,
+		StakingCoinWeights: stakingCoinWeights,
+		StartTime:          startTime,
+		EndTime:            endTime,
+		EpochAmount:        epochAmount,
+		EpochRatio:         epochRatio,
+	}
+}
+
 func (p *AddRequestProposal) Validate() error {
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
@@ -112,6 +137,31 @@ func (p *AddRequestProposal) Validate() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio must not be zero")
 	}
 	return nil
+}
+
+// NewUpdateRequestProposal creates a new UpdateRequestProposal object.
+func NewUpdateRequestProposal(
+	id uint64,
+	name string,
+	farmingPoolAddr string,
+	terminationAddr string,
+	stakingCoinWeights sdk.DecCoins,
+	startTime time.Time,
+	endTime time.Time,
+	epochAmount sdk.Coins,
+	epochRatio sdk.Dec,
+) *UpdateRequestProposal {
+	return &UpdateRequestProposal{
+		PlanId:             id,
+		Name:               name,
+		FarmingPoolAddress: farmingPoolAddr,
+		TerminationAddress: terminationAddr,
+		StakingCoinWeights: stakingCoinWeights,
+		StartTime:          &startTime,
+		EndTime:            &endTime,
+		EpochAmount:        epochAmount,
+		EpochRatio:         epochRatio,
+	}
 }
 
 func (p *UpdateRequestProposal) Validate() error {
@@ -146,6 +196,13 @@ func (p *UpdateRequestProposal) Validate() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio must not be zero")
 	}
 	return nil
+}
+
+// NewDeleteRequestProposal creates a new DeleteRequestProposal object.
+func NewDeleteRequestProposal(id uint64) *DeleteRequestProposal {
+	return &DeleteRequestProposal{
+		PlanId: id,
+	}
 }
 
 func (p *DeleteRequestProposal) Validate() error {
