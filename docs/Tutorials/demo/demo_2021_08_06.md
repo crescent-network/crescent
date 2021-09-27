@@ -15,7 +15,7 @@ Farming module is in active development by the Gravity DEX team in Tendermint. T
 - [Github Repo](https://github.com/tendermint/farming)
 - [Spec Docs](https://github.com/tendermint/farming/blob/master/x/farming/spec/01_concepts.md)
 - MVP branch uses [local-testing](https://github.com/tendermint/farming/tree/local-testing) 
-- Other useful resources are available in [docs](https://github.com/tendermint/farming/blob/master/docs/How-To/client.md) folder
+- Other useful resources are available in [docs](https://github.com/tendermint/farming/blob/master/docs) folder
 - [Swagger Docs v0.1.0](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.0)
 
 ## Build

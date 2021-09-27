@@ -16,7 +16,6 @@ This approach outlines four specific use cases for documentation:
 * [Tutorials](./Tutorials/README.md)
 * [How-Tos](./How-To/README.md)
 * [Explanation](./Explanation/README.md)
-* [Reference](./Reference/README.md)
 
 For further background please see [the ADR relating to the documentation structure](./Explanation/ADR/adr-002-docs-structure.md). 
 
