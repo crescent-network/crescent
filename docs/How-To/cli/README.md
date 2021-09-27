@@ -9,7 +9,7 @@ This document provides a high-level overview of how the command-line (CLI) inter
 
 ## Command-Line Interfaces
 
-In order to test out the following command-line interfaces, you need to set up a local node to either send transaction or query from. You can refer to this [localnet tutorial](./Tutorials/localnet) on how to build `farmingd` binary and bootstrap a local network in your local machine.
+In order to test out the following command-line interfaces, you need to set up a local node to either send transaction or query from. You can refer to this [localnet tutorial](../../Tutorials/localnet) on how to build `farmingd` binary and bootstrap a local network in your local machine.
 
 - [Transaction](#Transaction)
     * [MsgCreateFixedAmountPlan](#MsgCreateFixedAmountPlan)

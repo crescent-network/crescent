@@ -144,6 +144,22 @@ func (plan *BasePlan) SetDistributedCoins(distributedCoins sdk.Coins) error {
 	return nil
 }
 
+func (plan BasePlan) GetBasePlan() *BasePlan {
+	return &BasePlan{
+		Id:                   plan.GetId(),
+		Name:                 plan.GetName(),
+		Type:                 plan.GetType(),
+		FarmingPoolAddress:   plan.GetFarmingPoolAddress().String(),
+		TerminationAddress:   plan.GetTerminationAddress().String(),
+		StakingCoinWeights:   plan.GetStakingCoinWeights(),
+		StartTime:            plan.GetStartTime(),
+		EndTime:              plan.GetEndTime(),
+		Terminated:           plan.GetTerminated(),
+		LastDistributionTime: plan.GetLastDistributionTime(),
+		DistributedCoins:     plan.GetDistributedCoins(),
+	}
+}
+
 // Validate checks for errors on the Plan fields
 func (plan BasePlan) Validate() error {
 	if plan.Type != PlanTypePrivate && plan.Type != PlanTypePublic {
@@ -243,6 +259,8 @@ type PlanI interface {
 
 	GetDistributedCoins() sdk.Coins
 	SetDistributedCoins(sdk.Coins) error
+
+	GetBasePlan() *BasePlan
 
 	String() string
 
