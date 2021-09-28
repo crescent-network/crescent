@@ -310,3 +310,28 @@ func (suite *KeeperTestSuite) TestHarvest() {
 func (suite *KeeperTestSuite) TestMultipleHarvest() {
 	// TODO: implement
 }
+
+func (suite *KeeperTestSuite) TestHistoricalRewards() {
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-06T00:00:00Z"))
+
+	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	// Advancing epoch(s) before any staking is made doesn't create any historical rewards records.
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+
+	// After a farmer has staked(not queued) coins, historical rewards records will be created for each epoch.
+	// Here we advance epoch three times, and this will create 3 historical rewards records.
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	for i := uint64(0); i < 3; i++ {
+		historical, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, i)
+		suite.Require().True(found)
+		suite.Require().True(historical.CumulativeUnitRewards.IsAllPositive())
+	}
+}
