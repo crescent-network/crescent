@@ -32,6 +32,8 @@ In order to test out the following command-line interfaces, you need to set up a
 
 ### MsgCreateFixedAmountPlan
 
+This is one of the private plan type messages that anyone can create. A fixed amount plan plans to distribute amount of coins by a fixed amount defined in `EpochAmount`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan and the creator should query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. There is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack.
+
 Create a file name `private-fixed-plan.json`. This private fixed amount farming plan intends to provide 100ATOM per epoch (measured in day) relative to the rate amount of denoms defined in staking coin weights.
 
 - `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network; however it cannot overlap with the existing plan names.
@@ -138,6 +140,8 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 ```
 
 ### MsgCreateRatioPlan
+
+This is one of the private plan type messages that anyone can create. A ratio plan plans to distribute amount of coins by ratio defined in `EpochRatio`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan and the creator should query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. For a ratio plan, whichever coins that the farming pool address has in balances are used every epoch. Note that there is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack.
 
 Create a file name `private-fixed-plan.json`. This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day). In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has in balances are used as incentives for the denoms defined in the staking coin weights.
 
