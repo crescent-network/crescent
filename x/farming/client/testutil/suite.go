@@ -1,13 +1,13 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
+	"os"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tendermint/farming/x/farming/client/cli"
-	farmingtestutil "github.com/tendermint/farming/x/farming/client/testutil"
+	farmingcli "github.com/tendermint/farming/x/farming/client/cli"
 	"github.com/tendermint/farming/x/farming/types"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
 )
@@ -37,7 +37,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
 	db := tmdb.NewMemDB()
-	cfg := farmingtestutil.NewConfig(db)
+	cfg := NewConfig(db)
 	cfg.NumValidators = 1
 
 	var genesisState farmingtypes.GenesisState
@@ -60,11 +60,6 @@ func (s *IntegrationTestSuite) SetupTest() {
 func (s *IntegrationTestSuite) TearDownTest() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
-}
-
-// TestIntegrationTestSuite every integration test suite.
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
@@ -456,7 +451,7 @@ func (s *IntegrationTestSuite) TestNewStakeCmd() {
 func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
 	val := s.network.Validators[0]
 
-	_, err := farmingtestutil.MsgStakeExec(
+	_, err := MsgStakeExec(
 		val.ClientCtx,
 		val.Address.String(),
 		sdk.NewCoin("stake", sdk.NewInt(10_000_000)).String(),
@@ -530,7 +525,7 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)),
 	}
 
-	_, err := farmingtestutil.MsgCreateFixedAmountPlanExec(
+	_, err := MsgCreateFixedAmountPlanExec(
 		val.ClientCtx,
 		val.Address.String(),
 		testutil.WriteToNewTempFile(s.T(), req.String()).Name(),
@@ -538,7 +533,7 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 	s.Require().NoError(err)
 
 	// stake coins
-	_, err = farmingtestutil.MsgStakeExec(
+	_, err = MsgStakeExec(
 		val.ClientCtx,
 		val.Address.String(),
 		sdk.NewCoin("stake", sdk.NewInt(10_000_000)).String(),
@@ -597,6 +592,159 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+type QueryCmdTestSuite struct {
+	suite.Suite
+
+	cfg     network.Config
+	network *network.Network
+}
+
+func (s *QueryCmdTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
+
+	db := tmdb.NewMemDB()
+	cfg := NewConfig(db)
+	cfg.NumValidators = 1
+
+	var genesisState farmingtypes.GenesisState
+	err := cfg.Codec.UnmarshalJSON(cfg.GenesisState[farmingtypes.ModuleName], &genesisState)
+	s.Require().NoError(err)
+
+	genesisState.Params = farmingtypes.DefaultParams()
+	cfg.GenesisState[farmingtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&genesisState)
+	cfg.AccountTokens = sdk.NewInt(100_000_000_000) // node0token denom
+	cfg.StakingTokens = sdk.NewInt(100_000_000_000) // stake denom
+
+	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	s.createFixedAmountPlan(
+		"test",
+		sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 1)),
+		types.ParseTime("0001-01-01T00:00:00Z"),
+		types.ParseTime("9999-01-01T00:00:00Z"),
+		sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)),
+	)
+}
+
+func (s *QueryCmdTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
+
+func (s *QueryCmdTestSuite) createFixedAmountPlan(name string, stakingCoinWeights sdk.DecCoins, startTime, endTime time.Time, epochAmount sdk.Coins) {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	req := cli.PrivateFixedPlanRequest{
+		Name:               name,
+		StakingCoinWeights: stakingCoinWeights,
+		StartTime:          startTime,
+		EndTime:            endTime,
+		EpochAmount:        epochAmount,
+	}
+	file := testutil.WriteToNewTempFile(s.T(), req.String())
+	defer os.Remove(file.Name())
+
+	args := append([]string{
+		file.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+	}, commonArgs...)
+
+	cmd := farmingcli.NewCreateFixedAmountPlanCmd()
+
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+}
+
+func (s *QueryCmdTestSuite) TestCmdQueryParams() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"happy case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+		{
+			"with specific height",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParams()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				s.Require().NoError(err)
+
+				var params farmingtypes.Params
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &params))
+				s.Require().NotEmpty(params.FarmingFeeCollector)
+			}
+		})
+	}
+}
+
+func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	types.RegisterInterfaces(clientCtx.InterfaceRegistry) // TODO: can we remove this line?
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		postRun      func(*types.QueryPlansResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			"",
+			func(resp *farmingtypes.QueryPlansResponse) {
+				plans, err := types.UnpackPlans(resp.Plans)
+				s.Require().NoError(err)
+				s.Require().Len(plans, 1)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryPlans()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err)
+				var resp types.QueryPlansResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(&resp)
 			}
 		})
 	}
