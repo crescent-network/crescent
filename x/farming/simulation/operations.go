@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	liquiditytypes "github.com/gravity-devs/liquidity/x/liquidity/types"
 
 	"github.com/tendermint/farming/app/params"
 	"github.com/tendermint/farming/x/farming/keeper"
@@ -111,7 +112,6 @@ func SimulateMsgCreateFixedAmountPlan(ak types.AccountKeeper, bk types.BankKeepe
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateFixedAmountPlan, "unable to mint pool coins"), nil, nil
 		}
-
 		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
 		creatorAcc := account.GetAddress()
 		stakingCoinWeights := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
@@ -169,7 +169,7 @@ func SimulateMsgCreateRatioPlan(ak types.AccountKeeper, bk types.BankKeeper, k k
 		// mint pool coins to simulate the real-world cases
 		_, err := mintPoolCoins(ctx, r, bk, simAccount)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateFixedAmountPlan, "unable to mint pool coins"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateRatioPlan, "unable to mint pool coins"), nil, nil
 		}
 
 		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
@@ -386,13 +386,12 @@ func mintPoolCoins(ctx sdk.Context, r *rand.Rand, bk types.BankKeeper, acc simty
 		mintCoins = mintCoins.Add(sdk.NewInt64Coin(denom, int64(simtypes.RandIntBetween(r, 1e14, 1e15))))
 	}
 
-	if err := bk.MintCoins(ctx, types.ModuleName, mintCoins); err != nil {
+	if err := bk.MintCoins(ctx, liquiditytypes.ModuleName, mintCoins); err != nil {
 		return nil, err
 	}
 
-	if err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc.Address, mintCoins); err != nil {
+	if err := bk.SendCoinsFromModuleToAccount(ctx, liquiditytypes.ModuleName, acc.Address, mintCoins); err != nil {
 		return nil, err
 	}
-
 	return mintCoins, nil
 }
