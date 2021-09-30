@@ -10,10 +10,14 @@ import (
 	"github.com/tendermint/farming/x/farming/types"
 )
 
-func (k Keeper) GetHistoricalRewards(ctx sdk.Context, stakingCoinDenom string, epoch uint64) (rewards types.HistoricalRewards) {
+func (k Keeper) GetHistoricalRewards(ctx sdk.Context, stakingCoinDenom string, epoch uint64) (rewards types.HistoricalRewards, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetHistoricalRewardsKey(stakingCoinDenom, epoch))
+	if bz == nil {
+		return
+	}
 	k.cdc.MustUnmarshal(bz, &rewards)
+	found = true
 	return
 }
 
@@ -132,8 +136,8 @@ func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stak
 		return sdk.NewDecCoins()
 	}
 
-	starting := k.GetHistoricalRewards(ctx, stakingCoinDenom, staking.StartingEpoch-1)
-	ending := k.GetHistoricalRewards(ctx, stakingCoinDenom, endingEpoch)
+	starting, _ := k.GetHistoricalRewards(ctx, stakingCoinDenom, staking.StartingEpoch-1)
+	ending, _ := k.GetHistoricalRewards(ctx, stakingCoinDenom, endingEpoch)
 	diff := ending.CumulativeUnitRewards.Sub(starting.CumulativeUnitRewards)
 	rewards = diff.MulDecTruncate(staking.Amount.ToDec())
 	return
@@ -335,7 +339,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 
 	for stakingCoinDenom, unitRewards := range unitRewardsByDenom {
 		currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
-		historical := k.GetHistoricalRewards(ctx, stakingCoinDenom, currentEpoch-1)
+		historical, _ := k.GetHistoricalRewards(ctx, stakingCoinDenom, currentEpoch-1)
 		k.SetHistoricalRewards(ctx, stakingCoinDenom, currentEpoch, types.HistoricalRewards{
 			CumulativeUnitRewards: historical.CumulativeUnitRewards.Add(unitRewards...),
 		})
