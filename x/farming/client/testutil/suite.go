@@ -695,7 +695,7 @@ func (s *QueryCmdTestSuite) fundFarmingPool(poolId uint64, amount sdk.Coins) {
 		plan.GetFarmingPoolAddress().String(),
 		amount.String(),
 	}, commonArgs...)
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 }
 
