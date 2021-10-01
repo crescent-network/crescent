@@ -3,6 +3,7 @@ package testutil
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -15,9 +16,11 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
 	"github.com/tendermint/farming/x/farming/client/cli"
 	farmingcli "github.com/tendermint/farming/x/farming/client/cli"
+	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
 )
@@ -628,11 +631,15 @@ func (s *QueryCmdTestSuite) SetupSuite() {
 
 	s.createFixedAmountPlan(
 		"test",
-		sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 1)),
+		sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1)),
 		types.ParseTime("0001-01-01T00:00:00Z"),
 		types.ParseTime("9999-01-01T00:00:00Z"),
 		sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)),
 	)
+	s.fundFarmingPool(1, sdk.NewCoins(sdk.NewInt64Coin("node0token", 1_000_000_000)))
+	s.stake(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)))
+	s.advanceEpoch()
+	s.advanceEpoch()
 }
 
 func (s *QueryCmdTestSuite) TearDownSuite() {
@@ -660,6 +667,64 @@ func (s *QueryCmdTestSuite) createFixedAmountPlan(name string, stakingCoinWeight
 	}, commonArgs...)
 
 	cmd := farmingcli.NewCreateFixedAmountPlanCmd()
+
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+}
+
+func (s *QueryCmdTestSuite) fundFarmingPool(poolId uint64, amount sdk.Coins) {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	types.RegisterInterfaces(clientCtx.InterfaceRegistry) // TODO: can we remove this line?
+
+	cmd := farmingcli.GetCmdQueryPlan()
+	args := []string{
+		strconv.FormatUint(poolId, 10),
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	}
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+	var resp types.QueryPlanResponse
+	clientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &resp)
+	plan, err := types.UnpackPlan(resp.Plan)
+	s.Require().NoError(err)
+
+	cmd = bankcli.NewSendTxCmd()
+	args = append([]string{
+		val.Address.String(),
+		plan.GetFarmingPoolAddress().String(),
+		amount.String(),
+	}, commonArgs...)
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+}
+
+func (s *QueryCmdTestSuite) stake(amount sdk.Coins) {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	args := append([]string{
+		amount.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+	}, commonArgs...)
+
+	cmd := farmingcli.NewStakeCmd()
+
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+}
+
+func (s *QueryCmdTestSuite) advanceEpoch() {
+	farmingkeeper.EnableAdvanceEpoch = true
+
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	args := append([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+	}, commonArgs...)
+
+	cmd := farmingcli.NewAdvanceEpochCmd()
 
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -711,11 +776,10 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 	types.RegisterInterfaces(clientCtx.InterfaceRegistry) // TODO: can we remove this line?
 
 	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectErrMsg string
-		postRun      func(*types.QueryPlansResponse)
+		name      string
+		args      []string
+		expectErr bool
+		postRun   func(*types.QueryPlansResponse)
 	}{
 		{
 			"happy case",
@@ -723,12 +787,48 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			"",
 			func(resp *farmingtypes.QueryPlansResponse) {
 				plans, err := types.UnpackPlans(resp.Plans)
 				s.Require().NoError(err)
 				s.Require().Len(plans, 1)
+				s.Require().Equal(uint64(1), plans[0].GetId())
 			},
+		},
+		{
+			"invalid plan type",
+			[]string{
+				fmt.Sprintf("--%s=%s", farmingcli.FlagPlanType, "invalid"),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+		},
+		{
+			"invalid farming pool addr",
+			[]string{
+				fmt.Sprintf("--%s=%s", farmingcli.FlagFarmingPoolAddr, "invalid"),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+		},
+		{
+			"invalid termination addr",
+			[]string{
+				fmt.Sprintf("--%s=%s", farmingcli.FlagTerminationAddr, "invalid"),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+		},
+		{
+			"invalid staking coin denom",
+			[]string{
+				fmt.Sprintf("--%s=%s", farmingcli.FlagStakingCoinDenom, "!"),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
 		},
 	}
 
@@ -739,7 +839,6 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err)
 				var resp types.QueryPlansResponse
@@ -748,4 +847,250 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 			}
 		})
 	}
+}
+
+func (s *QueryCmdTestSuite) TestCmdQueryPlan() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	types.RegisterInterfaces(clientCtx.InterfaceRegistry) // TODO: can we remove this line?
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		postRun   func(*types.QueryPlanResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				strconv.Itoa(1),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			func(resp *farmingtypes.QueryPlanResponse) {
+				plan, err := types.UnpackPlan(resp.Plan)
+				s.Require().NoError(err)
+				s.Require().Equal(uint64(1), plan.GetId())
+			},
+		},
+		{
+			"id not found",
+			[]string{
+				strconv.Itoa(10),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryPlan()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var resp types.QueryPlanResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(&resp)
+			}
+		})
+	}
+}
+
+func (s *QueryCmdTestSuite) TestCmdQueryStakings() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		postRun   func(*types.QueryStakingsResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			func(resp *farmingtypes.QueryStakingsResponse) {
+				s.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)), resp.StakedCoins))
+			},
+		},
+		{
+			"invalid farmer addr",
+			[]string{
+				"invalid",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryStakings()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var resp types.QueryStakingsResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(&resp)
+			}
+		})
+	}
+}
+
+func (s *QueryCmdTestSuite) TestCmdQueryTotalStakings() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		postRun   func(*types.QueryTotalStakingsResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				sdk.DefaultBondDenom,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			func(resp *farmingtypes.QueryTotalStakingsResponse) {
+				s.Require().True(intEq(sdk.NewInt(1000000), resp.Amount))
+			},
+		},
+		{
+			"invalid staking coin denom",
+			[]string{
+				"!",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryTotalStakings()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var resp types.QueryTotalStakingsResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(&resp)
+			}
+		})
+	}
+}
+
+func (s *QueryCmdTestSuite) TestCmdQueryRewards() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		postRun   func(*types.QueryRewardsResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			func(resp *farmingtypes.QueryRewardsResponse) {
+				s.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)), resp.Rewards))
+			},
+		},
+		{
+			"invalid farmer addr",
+			[]string{
+				"invalid",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryRewards()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var resp types.QueryRewardsResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(&resp)
+			}
+		})
+	}
+}
+
+func (s *QueryCmdTestSuite) TestCmdQueryCurrentEpochDays() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		postRun   func(*types.QueryCurrentEpochDaysResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			func(resp *farmingtypes.QueryCurrentEpochDaysResponse) {
+				s.Require().Equal(uint32(1), resp.CurrentEpochDays)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryCurrentEpochDays()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var resp types.QueryCurrentEpochDaysResponse
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(&resp)
+			}
+		})
+	}
+}
+
+func intEq(exp, got sdk.Int) (bool, string, string, string) {
+	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
+	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
