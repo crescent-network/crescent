@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,9 +11,14 @@ import (
 
 // InitGenesis initializes the farming module's state from a given genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
+	if err := types.ValidateGenesis(genState); err != nil {
+		panic(err)
+	}
+
 	ctx, writeCache := ctx.CacheContext()
 
 	k.SetParams(ctx, genState.Params)
+	// TODO: what if CurrentEpochDays field was empty?
 	k.SetCurrentEpochDays(ctx, genState.CurrentEpochDays)
 	moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
@@ -73,11 +79,27 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetTotalStakings(ctx, stakingCoinDenom, types.TotalStakings{Amount: amt})
 	}
 
-	if err := k.ValidateRemainingRewardsAmount(ctx); err != nil {
+	err := k.ValidateRemainingRewardsAmount(ctx)
+	if err != nil {
 		panic(err)
 	}
+	rewardsPoolCoins := k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))
+	if !genState.RewardPoolCoins.IsEqual(rewardsPoolCoins) {
+		panic(fmt.Sprintf("RewardPoolCoins differs from the actual value; have %s, want %s",
+			rewardsPoolCoins, genState.RewardPoolCoins))
+	}
 
-	if err := k.ValidateStakingReservedAmount(ctx); err != nil {
+	err = k.ValidateStakingReservedAmount(ctx)
+	if err != nil {
+		panic(err)
+	}
+	stakingReserveCoins := k.bankKeeper.GetAllBalances(ctx, k.GetStakingReservePoolAcc(ctx))
+	if !genState.StakingReserveCoins.IsEqual(stakingReserveCoins) {
+		panic(fmt.Sprintf("StakingReserveCoins differs from the actual value; have %s, expected %s",
+			stakingReserveCoins, genState.StakingReserveCoins))
+	}
+
+	if err := k.ValidateOutstandingRewards(ctx); err != nil {
 		panic(err)
 	}
 
@@ -88,8 +110,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	var plans []types.PlanRecord
-	for _, plan := range k.GetAllPlans(ctx) {
+	plans := []types.PlanRecord{}
+	for _, plan := range k.GetPlans(ctx) {
 		any, err := types.PackPlan(plan)
 		if err != nil {
 			panic(err)
@@ -100,7 +122,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 	}
 
-	var stakings []types.StakingRecord
+	stakings := []types.StakingRecord{}
 	k.IterateStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, staking types.Staking) (stop bool) {
 		stakings = append(stakings, types.StakingRecord{
 			StakingCoinDenom: stakingCoinDenom,
@@ -110,7 +132,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	var queuedStakings []types.QueuedStakingRecord
+	queuedStakings := []types.QueuedStakingRecord{}
 	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
 		queuedStakings = append(queuedStakings, types.QueuedStakingRecord{
 			StakingCoinDenom: stakingCoinDenom,
@@ -120,7 +142,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	var historicalRewards []types.HistoricalRewardsRecord
+	historicalRewards := []types.HistoricalRewardsRecord{}
 	k.IterateHistoricalRewards(ctx, func(stakingCoinDenom string, epoch uint64, rewards types.HistoricalRewards) (stop bool) {
 		historicalRewards = append(historicalRewards, types.HistoricalRewardsRecord{
 			StakingCoinDenom:  stakingCoinDenom,
@@ -130,7 +152,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	var outstandingRewards []types.OutstandingRewardsRecord
+	outstandingRewards := []types.OutstandingRewardsRecord{}
 	k.IterateOutstandingRewards(ctx, func(stakingCoinDenom string, rewards types.OutstandingRewards) (stop bool) {
 		outstandingRewards = append(outstandingRewards, types.OutstandingRewardsRecord{
 			StakingCoinDenom:   stakingCoinDenom,
@@ -139,7 +161,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	var currentEpochs []types.CurrentEpochRecord
+	currentEpochs := []types.CurrentEpochRecord{}
 	k.IterateCurrentEpochs(ctx, func(stakingCoinDenom string, currentEpoch uint64) (stop bool) {
 		currentEpochs = append(currentEpochs, types.CurrentEpochRecord{
 			StakingCoinDenom: stakingCoinDenom,

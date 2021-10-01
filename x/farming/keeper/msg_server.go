@@ -38,8 +38,8 @@ func (k msgServer) CreateFixedAmountPlan(goCtx context.Context, msg *types.MsgCr
 		return nil, err
 	}
 
-	plans := k.GetAllPlans(ctx)
-	if err := types.ValidateName(plans); err != nil {
+	plans := k.GetPlans(ctx)
+	if err := types.ValidatePlanNames(plans); err != nil {
 		return nil, err
 	}
 
@@ -58,8 +58,8 @@ func (k msgServer) CreateRatioPlan(goCtx context.Context, msg *types.MsgCreateRa
 		return nil, err
 	}
 
-	plans := k.GetAllPlans(ctx)
-	if err := types.ValidateName(plans); err != nil {
+	plans := k.GetPlans(ctx)
+	if err := types.ValidatePlanNames(plans); err != nil {
 		return nil, err
 	}
 

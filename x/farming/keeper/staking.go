@@ -307,3 +307,23 @@ func (k Keeper) ProcessQueuedCoins(ctx sdk.Context) {
 		return false
 	})
 }
+
+// ValidateStakingReservedAmount checks that the balance of StakingReserveAcc greater than the amount of staked, queued coins in all staking objects.
+func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
+	reservedCoins := sdk.NewCoins()
+	k.IterateStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, staking types.Staking) (stop bool) {
+		reservedCoins = reservedCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
+		return false
+	})
+	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+		reservedCoins = reservedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
+		return false
+	})
+
+	balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc)
+	if !balanceStakingReserveAcc.IsAllGTE(reservedCoins) {
+		return types.ErrInvalidStakingReservedAmount
+	}
+
+	return nil
+}

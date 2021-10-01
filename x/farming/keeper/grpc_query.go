@@ -26,7 +26,7 @@ var _ types.QueryServer = Querier{}
 func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
-	k.paramSpace.GetParamSet(ctx, &params)
+	k.Keeper.paramSpace.GetParamSet(ctx, &params)
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
@@ -73,7 +73,7 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 
 	var plans []*codectypes.Any
 	pageRes, err := query.FilteredPaginate(planStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		plan, err := k.UnmarshalPlan(value)
+		plan, err := k.Keeper.UnmarshalPlan(value)
 		if err != nil {
 			return false, err
 		}
@@ -133,7 +133,7 @@ func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.Qu
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	plan, found := k.GetPlan(ctx, req.PlanId)
+	plan, found := k.Keeper.GetPlan(ctx, req.PlanId)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "plan %d not found", req.PlanId)
 	}
@@ -169,20 +169,20 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 		QueuedCoins: sdk.NewCoins(),
 	}
 	if req.StakingCoinDenom == "" {
-		k.IterateStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
+		k.Keeper.IterateStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
 			resp.StakedCoins = resp.StakedCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
 			return false
 		})
-		k.IterateQueuedStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool) {
+		k.Keeper.IterateQueuedStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool) {
 			resp.QueuedCoins = resp.QueuedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
 			return false
 		})
 	} else {
-		staking, found := k.GetStaking(ctx, req.StakingCoinDenom, farmerAcc)
+		staking, found := k.Keeper.GetStaking(ctx, req.StakingCoinDenom, farmerAcc)
 		if found {
 			resp.StakedCoins = resp.StakedCoins.Add(sdk.NewCoin(req.StakingCoinDenom, staking.Amount))
 		}
-		queuedStaking, found := k.GetQueuedStaking(ctx, req.StakingCoinDenom, farmerAcc)
+		queuedStaking, found := k.Keeper.GetQueuedStaking(ctx, req.StakingCoinDenom, farmerAcc)
 		if found {
 			resp.QueuedCoins = resp.QueuedCoins.Add(sdk.NewCoin(req.StakingCoinDenom, queuedStaking.Amount))
 		}
@@ -202,7 +202,7 @@ func (k Querier) TotalStakings(c context.Context, req *types.QueryTotalStakingsR
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	totalStakings, found := k.GetTotalStakings(ctx, req.StakingCoinDenom)
+	totalStakings, found := k.Keeper.GetTotalStakings(ctx, req.StakingCoinDenom)
 	if !found {
 		totalStakings.Amount = sdk.ZeroInt()
 	}
@@ -236,17 +236,9 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 
 	var rewards sdk.Coins
 	if req.StakingCoinDenom == "" {
-		var err error
-		rewards, err = k.WithdrawAllRewards(ctx, farmerAcc)
-		if err != nil {
-			return nil, err
-		}
+		rewards = k.Keeper.AllRewards(ctx, farmerAcc)
 	} else {
-		var err error
-		rewards, err = k.WithdrawRewards(ctx, farmerAcc, req.StakingCoinDenom)
-		if err != nil {
-			return nil, err
-		}
+		rewards = k.Keeper.Rewards(ctx, farmerAcc, req.StakingCoinDenom)
 	}
 	resp.Rewards = rewards
 
@@ -260,7 +252,7 @@ func (k Querier) CurrentEpochDays(c context.Context, req *types.QueryCurrentEpoc
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	currentEpochDays := k.GetCurrentEpochDays(ctx)
+	currentEpochDays := k.Keeper.GetCurrentEpochDays(ctx)
 
 	return &types.QueryCurrentEpochDaysResponse{CurrentEpochDays: currentEpochDays}, nil
 }

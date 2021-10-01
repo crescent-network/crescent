@@ -28,7 +28,7 @@ import (
 //	suite.Require().Equal(fixedPlan.Id, planGet.GetId())
 //	suite.Require().Equal(fixedPlan.FarmingPoolAddress, planGet.GetFarmingPoolAddress().String())
 //
-//	plans := suite.keeper.GetAllPlans(suite.ctx)
+//	plans := suite.keeper.GetPlans(suite.ctx)
 //	suite.Require().Len(plans, 1)
 //	suite.Require().Equal(fixedPlan.Id, plans[0].GetId())
 //	suite.Require().Equal(fixedPlan.FarmingPoolAddress, plans[0].GetFarmingPoolAddress().String())
@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 	globalPlanId = suite.keeper.GetGlobalPlanId(suite.ctx)
 	suite.Require().Equal(uint64(1), globalPlanId)
 
-	plans := suite.keeper.GetAllPlans(suite.ctx)
+	plans := suite.keeper.GetPlans(suite.ctx)
 	suite.Require().Len(plans, 1)
 	suite.Require().Equal(uint64(len(plans)), globalPlanId)
 
@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 	globalPlanId = suite.keeper.GetGlobalPlanId(suite.ctx)
 	suite.Require().Equal(uint64(2), globalPlanId)
 
-	plans = suite.keeper.GetAllPlans(suite.ctx)
+	plans = suite.keeper.GetPlans(suite.ctx)
 	suite.Require().Len(plans, 2)
 	suite.Require().Equal(uint64(len(plans)), globalPlanId)
 

@@ -17,6 +17,7 @@ const (
 	PrivatePlanCreationFee = "private_plan_creation_fee"
 	NextEpochDays          = "next_epoch_days"
 	FarmingFeeCollector    = "farming_fee_collector"
+	CurrentEpochDays       = "current_epoch_days"
 )
 
 // GenPrivatePlanCreationFee return randomized private plan creation fee.
@@ -27,6 +28,11 @@ func GenPrivatePlanCreationFee(r *rand.Rand) sdk.Coins {
 // GenNextEpochDays return default next epoch days.
 func GenNextEpochDays(r *rand.Rand) uint32 {
 	return uint32(simulation.RandIntBetween(r, int(types.DefaultNextEpochDays), 10))
+}
+
+// GenCurrentEpochDays returns current epoch days.
+func GenCurrentEpochDays(r *rand.Rand) uint32 {
+	return uint32(simulation.RandIntBetween(r, int(types.DefaultCurrentEpochDays), 10))
 }
 
 // GenFarmingFeeCollector returns default farming fee collector.
@@ -54,12 +60,19 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { feeCollector = GenFarmingFeeCollector(r) },
 	)
 
+	var currentEpochDays uint32
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, CurrentEpochDays, &currentEpochDays, simState.Rand,
+		func(r *rand.Rand) { currentEpochDays = GenCurrentEpochDays(r) },
+	)
+
 	farmingGenesis := types.GenesisState{
 		Params: types.Params{
 			PrivatePlanCreationFee: privatePlanCreationFee,
 			NextEpochDays:          nextEpochDays,
 			FarmingFeeCollector:    feeCollector,
 		},
+		CurrentEpochDays: currentEpochDays,
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&farmingGenesis)
 }

@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanAllBalances() {
 	suite.AdvanceEpoch()
 	suite.AdvanceEpoch()
 
-	rewards := suite.Rewards(suite.addrs[0])
+	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
 	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
 }
 
@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanAllBalances() {
 	suite.AdvanceEpoch()
 	suite.AdvanceEpoch()
 
-	rewards := suite.Rewards(suite.addrs[0])
+	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
 	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
 }
 
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanOverBalances() 
 	suite.AdvanceEpoch()
 	suite.AdvanceEpoch()
 
-	rewards := suite.Rewards(suite.addrs[0])
+	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
 	suite.Require().True(rewards.IsZero())
 }
 
@@ -242,7 +242,7 @@ func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanOverBalances() {
 	suite.AdvanceEpoch()
 	suite.AdvanceEpoch()
 
-	rewards := suite.Rewards(suite.addrs[0])
+	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
 	suite.Require().True(rewards.IsZero())
 }
 
@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	err := suite.keeper.AllocateRewards(suite.ctx)
 	suite.Require().NoError(err)
 
-	rewards := suite.Rewards(suite.addrs[0])
+	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
 
 	err = suite.keeper.Harvest(suite.ctx, suite.addrs[0], []string{denom1})
 	suite.Require().NoError(err)
@@ -304,7 +304,7 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 	suite.Require().True(coinsEq(balancesBefore.Add(rewards...), balancesAfter))
 	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.keeper.GetRewardsReservePoolAcc(suite.ctx)).IsZero())
-	suite.Require().True(suite.Rewards(suite.addrs[0]).IsZero())
+	suite.Require().True(suite.keeper.AllRewards(suite.ctx, suite.addrs[0]).IsZero())
 }
 
 func (suite *KeeperTestSuite) TestMultipleHarvest() {

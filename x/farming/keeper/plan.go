@@ -31,9 +31,9 @@ func (k Keeper) GetPlan(ctx sdk.Context, id uint64) (plan types.PlanI, found boo
 	return k.decodePlan(bz), true
 }
 
-// GetAllPlans returns all plans in the Keeper.
-func (k Keeper) GetAllPlans(ctx sdk.Context) (plans []types.PlanI) {
-	k.IterateAllPlans(ctx, func(plan types.PlanI) (stop bool) {
+// GetPlans returns all plans in the Keeper.
+func (k Keeper) GetPlans(ctx sdk.Context) (plans []types.PlanI) {
+	k.IteratePlans(ctx, func(plan types.PlanI) (stop bool) {
 		plans = append(plans, plan)
 		return false
 	})
@@ -62,9 +62,9 @@ func (k Keeper) RemovePlan(ctx sdk.Context, plan types.PlanI) {
 	store.Delete(types.GetPlanKey(id))
 }
 
-// IterateAllPlans iterates over all the stored plans and performs a callback function.
+// IteratePlans iterates over all the stored plans and performs a callback function.
 // Stops iteration when callback returns true.
-func (k Keeper) IterateAllPlans(ctx sdk.Context, cb func(plan types.PlanI) (stop bool)) {
+func (k Keeper) IteratePlans(ctx sdk.Context, cb func(plan types.PlanI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.PlanKeyPrefix)
 
@@ -272,40 +272,4 @@ func (k Keeper) GeneratePrivatePlanFarmingPoolAddress(ctx sdk.Context, name stri
 		return nil, types.ErrConflictPrivatePlanFarmingPool
 	}
 	return poolAcc, nil
-}
-
-// ValidateStakingReservedAmount checks that the balance of StakingReserveAcc greater than the amount of staked, queued coins in all staking objects.
-func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
-	var totalStakingCoins sdk.Coins
-	k.IterateStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, staking types.Staking) (stop bool) {
-		totalStakingCoins = totalStakingCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
-		return false
-	})
-	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
-		totalStakingCoins = totalStakingCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
-		return false
-	})
-
-	balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc)
-	if !balanceStakingReserveAcc.IsAllGTE(totalStakingCoins) {
-		return types.ErrInvalidStakingReservedAmount
-	}
-
-	return nil
-}
-
-// ValidateRemainingRewardsAmount checks that the balance of the RewardPoolAddresses of all plans greater than the total amount of unwithdrawn reward coins in all reward objects
-func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
-	var totalRemainingRewards sdk.Coins
-	totalBalancesRewardPool := k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))
-	// TODO: apply f1 logic
-	//k.IterateAllRewards(ctx, func(reward types.Reward) (stop bool) {
-	//	totalRemainingRewards = totalRemainingRewards.Add(reward.RewardCoins...)
-	//	return false
-	//})
-
-	if !totalBalancesRewardPool.IsAllGTE(totalRemainingRewards) {
-		return types.ErrInvalidRemainingRewardsAmount
-	}
-	return nil
 }

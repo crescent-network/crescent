@@ -74,8 +74,7 @@ type TotalRewardsAssertion struct {
 func (tra TotalRewardsAssertion) Do(suite *KeeperTestSuite) {
 	fmt.Printf("TotalRewardsAssertion(%s, %s)\n", tra.acc, tra.rewards)
 	cacheCtx, _ := suite.ctx.CacheContext()
-	rewards, err := suite.keeper.WithdrawAllRewards(cacheCtx, tra.acc)
-	suite.Require().NoError(err)
+	rewards := suite.keeper.AllRewards(cacheCtx, tra.acc)
 	suite.Require().True(coinsEq(tra.rewards, rewards))
 }
 

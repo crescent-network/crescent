@@ -114,7 +114,7 @@ func SimulateUpdatePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 		req := &types.UpdateRequestProposal{}
 
 		// TODO: decide which values of fields to randomize
-		plans := k.GetAllPlans(ctx)
+		plans := k.GetPlans(ctx)
 		for _, p := range plans {
 			if p.GetType() == types.PlanTypePublic {
 				startTime := ctx.BlockTime()
@@ -176,7 +176,7 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 
 		req := &types.DeleteRequestProposal{}
 
-		plans := k.GetAllPlans(ctx)
+		plans := k.GetPlans(ctx)
 		for _, p := range plans {
 			if p.GetType() == types.PlanTypePublic {
 				req.PlanId = p.GetId()

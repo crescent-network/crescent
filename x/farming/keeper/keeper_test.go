@@ -133,13 +133,6 @@ func (suite *KeeperTestSuite) Stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
-	cacheCtx, _ := suite.ctx.CacheContext()
-	rewards, err := suite.keeper.WithdrawAllRewards(cacheCtx, farmerAcc)
-	suite.Require().NoError(err)
-	return rewards
-}
-
 func (suite *KeeperTestSuite) Harvest(farmerAcc sdk.AccAddress, stakingCoinDenoms []string) {
 	err := suite.keeper.Harvest(suite.ctx, farmerAcc, stakingCoinDenoms)
 	suite.Require().NoError(err)

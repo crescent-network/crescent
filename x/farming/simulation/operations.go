@@ -340,10 +340,7 @@ func SimulateMsgHarvest(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 
 		var totalRewards sdk.Coins
 		for _, denom := range stakingCoinDenoms {
-			rewards, err := k.WithdrawRewards(ctx, simAccount.Address, denom)
-			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgHarvest, "unable to withdraw rewards"), nil, nil
-			}
+			rewards := k.Rewards(ctx, simAccount.Address, denom)
 			totalRewards = totalRewards.Add(rewards...)
 		}
 

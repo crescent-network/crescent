@@ -13,7 +13,7 @@ import (
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
-	for _, plan := range k.GetAllPlans(ctx) {
+	for _, plan := range k.GetPlans(ctx) {
 		if !plan.GetTerminated() && ctx.BlockTime().After(plan.GetEndTime()) {
 			if err := k.TerminatePlan(ctx, plan); err != nil {
 				panic(err)

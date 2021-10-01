@@ -27,8 +27,8 @@ func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, proposal *types.PublicP
 		}
 	}
 
-	plans := k.GetAllPlans(ctx)
-	if err := types.ValidateName(plans); err != nil {
+	plans := k.GetPlans(ctx)
+	if err := types.ValidatePlanNames(plans); err != nil {
 		return err
 	}
 

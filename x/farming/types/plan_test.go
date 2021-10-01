@@ -52,7 +52,7 @@ func TestPlanName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := types.ValidateName(tc.plans)
+		err := types.ValidatePlanNames(tc.plans)
 		if tc.expectedErr == nil {
 			require.NoError(t, err)
 		} else {

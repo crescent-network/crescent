@@ -77,14 +77,6 @@ message PlanRecord {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable)     = false
   ];
-
-  // staking_reserve_coins specifies balance of the staking reserve pool staked
-  // in the plan this param is needed for import/export validation
-  repeated cosmos.base.v1beta1.Coin staking_reserve_coins = 3 [
-    (gogoproto.moretags)     = "yaml:\"staking_reserve_coins\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.nullable)     = false
-  ];
 }
 
 message StakingRecord {
