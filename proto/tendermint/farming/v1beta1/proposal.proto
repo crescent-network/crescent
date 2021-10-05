@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tendermint.farming.v1beta1;
+package cosmos.farming.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
