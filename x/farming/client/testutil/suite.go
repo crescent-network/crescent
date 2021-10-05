@@ -675,7 +675,7 @@ func (s *QueryCmdTestSuite) createFixedAmountPlan(name string, stakingCoinWeight
 func (s *QueryCmdTestSuite) fundFarmingPool(poolId uint64, amount sdk.Coins) {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	types.RegisterInterfaces(clientCtx.InterfaceRegistry) // TODO: can we remove this line?
+	types.RegisterInterfaces(clientCtx.InterfaceRegistry)
 
 	cmd := farmingcli.GetCmdQueryPlan()
 	args := []string{
@@ -773,7 +773,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryParams() {
 func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	types.RegisterInterfaces(clientCtx.InterfaceRegistry) // TODO: can we remove this line?
+	types.RegisterInterfaces(clientCtx.InterfaceRegistry)
 
 	testCases := []struct {
 		name      string
@@ -852,7 +852,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 func (s *QueryCmdTestSuite) TestCmdQueryPlan() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	types.RegisterInterfaces(clientCtx.InterfaceRegistry) // TODO: can we remove this line?
+	types.RegisterInterfaces(clientCtx.InterfaceRegistry)
 
 	testCases := []struct {
 		name      string
