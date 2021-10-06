@@ -59,7 +59,7 @@ func TestPublicPlanProposal_ValidateBasic(t *testing.T) {
 				"description",
 				[]*types.AddRequestProposal{
 					{
-						Name:               "",
+						Name:               "name",
 						FarmingPoolAddress: sdk.AccAddress(crypto.AddressHash([]byte("address1"))).String(),
 						TerminationAddress: sdk.AccAddress(crypto.AddressHash([]byte("address1"))).String(),
 						StakingCoinWeights: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake1", 1)),
@@ -133,7 +133,7 @@ func TestAddRequestProposal_Validate(t *testing.T) {
 			func(proposal *types.AddRequestProposal) {
 				proposal.Name = ""
 			},
-			"",
+			"plan name must not be empty: invalid request",
 		},
 		{
 			"too long name",
@@ -258,7 +258,7 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 			func(proposal *types.UpdateRequestProposal) {
 				proposal.Name = ""
 			},
-			"",
+			"plan name must not be empty: invalid request",
 		},
 		{
 			"too long name",
@@ -282,11 +282,11 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 			"invalid termination address \"invalid\": decoding bech32 failed: invalid bech32 string length 7: invalid address",
 		},
 		{
-			"invalid staking coin weights - empty",
+			"not updating staking coin weights",
 			func(proposal *types.UpdateRequestProposal) {
 				proposal.StakingCoinWeights = nil
 			},
-			"staking coin weights must not be empty: invalid request",
+			"",
 		},
 		{
 			"invalid staking coin weights - invalid",

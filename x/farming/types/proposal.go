@@ -113,6 +113,9 @@ func (p *AddRequestProposal) IsForRatioPlan() bool {
 }
 
 func (p *AddRequestProposal) Validate() error {
+	if p.Name == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan name must not be empty")
+	}
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
@@ -177,6 +180,9 @@ func (p *UpdateRequestProposal) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
 	}
+	if p.Name == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan name must not be empty")
+	}
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
@@ -186,14 +192,13 @@ func (p *UpdateRequestProposal) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
 	}
-	if p.StakingCoinWeights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-	}
-	if err := p.StakingCoinWeights.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
-	}
-	if ok := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	if p.StakingCoinWeights != nil {
+		if err := p.StakingCoinWeights.Validate(); err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
+		}
+		if !ValidateStakingCoinTotalWeights(p.StakingCoinWeights) {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+		}
 	}
 	if p.StartTime != nil && p.EndTime != nil {
 		if !p.EndTime.After(*p.StartTime) {
