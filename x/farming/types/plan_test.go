@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -199,6 +200,141 @@ func TestPlanI(t *testing.T) {
 				require.True(t, tc.equal(tc.newVal, val))
 			} else {
 				require.Equal(t, tc.newVal, val)
+			}
+		})
+	}
+}
+
+func TestBasePlanValidate(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		malleate    func(*types.BasePlan)
+		expectedErr string
+	}{
+		{
+			"happy case",
+			func(plan *types.BasePlan) {},
+			"",
+		},
+		{
+			"invalid plan type",
+			func(plan *types.BasePlan) {
+				plan.Type = 3
+			},
+			"unknown plan type: 3: invalid plan type",
+		},
+		{
+			"invalid farming pool addr",
+			func(plan *types.BasePlan) {
+				plan.FarmingPoolAddress = "invalid"
+			},
+			"invalid farming pool address \"invalid\": decoding bech32 failed: invalid bech32 string length 7: invalid address",
+		},
+		{
+			"invalid termination addr",
+			func(plan *types.BasePlan) {
+				plan.TerminationAddress = "invalid"
+			},
+			"invalid termination address \"invalid\": decoding bech32 failed: invalid bech32 string length 7: invalid address",
+		},
+		{
+			"invalid plan name",
+			func(plan *types.BasePlan) {
+				plan.Name = "a|b|c"
+			},
+			"plan name cannot contain |: invalid plan name",
+		},
+		{
+			"too long plan name",
+			func(plan *types.BasePlan) {
+				plan.Name = strings.Repeat("a", 256)
+			},
+			"plan name cannot be longer than max length of 140: invalid plan name length",
+		},
+		{
+			"invalid staking coin weights - empty weights",
+			func(plan *types.BasePlan) {
+				plan.StakingCoinWeights = sdk.DecCoins{}
+			},
+			"staking coin weights must not be empty: invalid request",
+		},
+		{
+			"invalid staking coin weights - invalid denom",
+			func(plan *types.BasePlan) {
+				plan.StakingCoinWeights = sdk.DecCoins{
+					sdk.DecCoin{Denom: "!", Amount: sdk.NewDec(1)},
+				}
+			},
+			"invalid staking coin weights: invalid denom: !: invalid request",
+		},
+		{
+			"invalid staking coin weights - invalid amount",
+			func(plan *types.BasePlan) {
+				plan.StakingCoinWeights = sdk.DecCoins{
+					sdk.DecCoin{Denom: "stake1", Amount: sdk.NewDec(-1)},
+				}
+			},
+			"invalid staking coin weights: coin -1.000000000000000000stake1 amount is not positive: invalid request",
+		},
+		{
+			"invalid staking coin weights - invalid sum of weights #1",
+			func(plan *types.BasePlan) {
+				plan.StakingCoinWeights = sdk.NewDecCoins(
+					sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(7, 1)),
+				)
+			},
+			"total weight must be 1: invalid request",
+		},
+		{
+			"invalid staking coin weights - invalid sum of weights #2",
+			func(plan *types.BasePlan) {
+				plan.StakingCoinWeights = sdk.NewDecCoins(
+					sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(7, 1)),
+					sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(4, 1)),
+				)
+			},
+			"total weight must be 1: invalid request",
+		},
+		{
+			"invalid start/end time",
+			func(plan *types.BasePlan) {
+				plan.StartTime = types.ParseTime("2021-10-01T00:00:00Z")
+				plan.EndTime = types.ParseTime("2021-09-30T00:00:00Z")
+			},
+			"end time 2021-09-30 00:00:00 +0000 UTC must be greater than start time 2021-10-01 00:00:00 +0000 UTC: invalid plan end time",
+		},
+		{
+			"valid distributed coins",
+			func(plan *types.BasePlan) {
+				plan.DistributedCoins = sdk.NewCoins()
+			},
+			"",
+		},
+		{
+			"invalid distributed coins - invalid amount",
+			func(plan *types.BasePlan) {
+				plan.DistributedCoins = sdk.Coins{sdk.Coin{Denom: "reward1", Amount: sdk.ZeroInt()}}
+			},
+			"invalid distributed coins: coin 0reward1 amount is not positive: invalid coins",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			bp := types.NewBasePlan(
+				1,
+				"sample plan",
+				types.PlanTypePublic,
+				sdk.AccAddress(crypto.AddressHash([]byte("address1"))).String(),
+				sdk.AccAddress(crypto.AddressHash([]byte("address2"))).String(),
+				sdk.NewDecCoins(sdk.NewInt64DecCoin("stake1", 1)),
+				types.ParseTime("0001-01-01T00:00:00Z"),
+				types.ParseTime("9999-12-31T00:00:00Z"),
+			)
+			tc.malleate(bp)
+			err := bp.Validate()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
 			}
 		})
 	}
