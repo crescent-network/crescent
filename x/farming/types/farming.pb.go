@@ -114,7 +114,7 @@ var xxx_messageInfo_Params proto.InternalMessageInfo
 type BasePlan struct {
 	// id specifies index of the farming plan
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// name specifies the name for the base plan
+	// name specifies the name for the plan
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// type specifies the plan type; type 0 is public and 1 is private
 	// public plan must be created through governance proposal and private plan is

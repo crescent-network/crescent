@@ -36,7 +36,7 @@ This is one of the private plan type messages that anyone can create. A fixed am
 
 Create a file name `private-fixed-plan.json`. This private fixed amount farming plan intends to provide 100ATOM per epoch (measured in day) relative to the rate amount of denoms defined in staking coin weights.
 
-- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network; however it cannot overlap with the existing plan names.
+- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network. It allows duplicate value.
 - `staking_coin_weights`: is the distributing amount for each epoch. An amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
 - `start_time`: is start time of the farming plan 
 - `end_time`: is end time of the farming plan
@@ -145,7 +145,7 @@ This is one of the private plan type messages that anyone can create. A ratio pl
 
 Create a file name `private-fixed-plan.json`. This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day). In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has in balances are used as incentives for the denoms defined in the staking coin weights.
 
-- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network; however it cannot overlap with the existing plan names.
+- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network. It allows duplicate value.
 - `staking_coin_weights`: is the distributing amount for each epoch. An amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
 - `start_time`: is start time of the farming plan 
 - `end_time`: is end time of the farming plan

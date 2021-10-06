@@ -167,54 +167,6 @@ func TestValidateGenesis(t *testing.T) {
 			"pool records must be sorted",
 		},
 		{
-			"duplicate plan name",
-			func(genState *types.GenesisState) {
-				planA := types.NewRatioPlan(
-					types.NewBasePlan(
-						1,
-						"planA",
-						types.PlanTypePublic,
-						validAcc.String(),
-						validAcc.String(),
-						sdk.NewDecCoins(
-							sdk.NewInt64DecCoin(validStakingCoinDenom, 1),
-						),
-						types.ParseTime("0001-01-01T00:00:00Z"),
-						types.ParseTime("9999-12-31T00:00:00Z"),
-					),
-					sdk.NewDecWithPrec(5, 2),
-				)
-				planB := types.NewFixedAmountPlan(
-					types.NewBasePlan(
-						2,
-						"planA",
-						types.PlanTypePublic,
-						validAcc.String(),
-						validAcc.String(),
-						sdk.NewDecCoins(
-							sdk.NewInt64DecCoin(validStakingCoinDenom, 1),
-						),
-						types.ParseTime("0001-01-01T00:00:00Z"),
-						types.ParseTime("9999-12-31T00:00:00Z"),
-					),
-					sdk.NewCoins(sdk.NewInt64Coin("denom3", 1000000)),
-				)
-				planAAny, _ := types.PackPlan(planA)
-				planBAny, _ := types.PackPlan(planB)
-				genState.PlanRecords = []types.PlanRecord{
-					{
-						Plan:             *planAAny,
-						FarmingPoolCoins: sdk.NewCoins(),
-					},
-					{
-						Plan:             *planBAny,
-						FarmingPoolCoins: sdk.NewCoins(),
-					},
-				}
-			},
-			"planA: duplicate plan name",
-		},
-		{
 			"invalid plan records - invalid sum of epoch ratio",
 			func(genState *types.GenesisState) {
 				planA := types.NewRatioPlan(

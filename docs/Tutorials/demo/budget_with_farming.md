@@ -194,7 +194,7 @@ In this demo, we plan to create a public farming ratio plan that plans to distri
 
 Explanation about each field in the JSON file
 
-- `name`: is the name of the farming plan used for display
+- `name`: is the name of the farming plan used for display. It allows duplicate value.
 - `farming_pool_address`: is the faucet address for the plan
 - `termination_address`: is the address that the remaining coins are transferred to when the plan ends
 - `staking_coin_weights`: are the coin weights for the plan. The weights must add up to 1

@@ -62,6 +62,7 @@ A base plan is the simplest and most common plan type, which just stores all req
 // type for additional functionality (e.g. fixed amount plan, ratio plan).
 type BasePlan struct {
     Id                   uint64       // index of the plan
+    Name                 string       // name specifies the name for the plan
     Type                 PlanType     // type of the plan; public or private
     FarmingPoolAddress   string       // bech32-encoded farming pool address
     TerminationAddress   string       // bech32-encoded termination address
@@ -186,6 +187,7 @@ An example of `FixedAmountPlan`
 {
   "base_plan": {
     "id": 0,
+    "name": "testPlan",
     "type": 0,
     "farmingPoolAddress": "cosmos1...",
     "rewardPoolAddress": "cosmos1...",
@@ -220,6 +222,7 @@ An example of `RatioPlan`
 {
   "base_plan": {
     "id": 0,
+    "name": "testPlan",
     "type": 0,
     "farmingPoolAddress": "cosmos1...",
     "rewardPoolAddress": "cosmos1...",

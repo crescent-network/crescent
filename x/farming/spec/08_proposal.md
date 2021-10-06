@@ -31,7 +31,7 @@ Note that when requesting `AddRequestProposal` depending on which field is passe
 ```go
 // AddRequestProposal details a proposal for creating a public plan.
 type AddRequestProposal struct {
-	// name specifies the plan name that describes what plan is for
+	// name specifies the name of the plan 
 	Name string
 	// farming_pool_address defines the bech32-encoded address of the farming pool
 	FarmingPoolAddress string   
@@ -59,6 +59,8 @@ type AddRequestProposal struct {
 type UpdateRequestProposal struct {
 	// plan_id specifies index of the farming plan
 	PlanId uint64 
+	// name specifies the name of the plan 
+	Name string
 	// farming_pool_address defines the bech32-encoded address of the farming pool
 	FarmingPoolAddress string 
 	// termination_address defines the bech32-encoded address that terminates plan

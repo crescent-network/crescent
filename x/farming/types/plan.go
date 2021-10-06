@@ -267,25 +267,6 @@ type PlanI interface {
 	Validate() error
 }
 
-// ValidatePlanNames validates duplicate plan name value.
-func ValidatePlanNames(i interface{}) error {
-	plans, ok := i.([]PlanI)
-	if !ok {
-		return sdkerrors.Wrapf(ErrInvalidPlanType, "invalid plan type %T", i)
-	}
-
-	names := map[string]struct{}{}
-
-	for _, plan := range plans {
-		if _, ok := names[plan.GetName()]; ok {
-			return sdkerrors.Wrap(ErrDuplicatePlanName, plan.GetName())
-		}
-		names[plan.GetName()] = struct{}{}
-	}
-
-	return nil
-}
-
 // ValidateTotalEpochRatio validates a farmer's total epoch ratio that must be equal to 1.
 func ValidateTotalEpochRatio(i interface{}) error {
 	plans, ok := i.([]PlanI)
