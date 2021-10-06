@@ -202,8 +202,8 @@ func (p *UpdateRequestProposal) Validate() error {
 			return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 		}
 	}
-	if p.IsForFixedAmountPlan() == p.IsForRatioPlan() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided")
+	if p.IsForFixedAmountPlan() && p.IsForRatioPlan() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided")
 	}
 	return nil
 }

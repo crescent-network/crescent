@@ -233,18 +233,18 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 			"",
 		},
 		{
-			"ambiguous plan type #1",
-			func(proposal *types.UpdateRequestProposal) {
-				proposal.EpochRatio = sdk.NewDecWithPrec(5, 2)
-			},
-			"only one of epoch amount or epoch ratio must be provided: invalid request",
-		},
-		{
-			"ambiguous plan type #2",
+			"not updating distribution info",
 			func(proposal *types.UpdateRequestProposal) {
 				proposal.EpochAmount = nil
 			},
-			"only one of epoch amount or epoch ratio must be provided: invalid request",
+			"",
+		},
+		{
+			"ambiguous plan type",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.EpochRatio = sdk.NewDecWithPrec(5, 2)
+			},
+			"at most one of epoch amount or epoch ratio must be provided: invalid request",
 		},
 		{
 			"invalid plan id",
