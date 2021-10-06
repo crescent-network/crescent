@@ -180,9 +180,6 @@ func (p *UpdateRequestProposal) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
 	}
-	if p.Name == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan name must not be empty")
-	}
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}

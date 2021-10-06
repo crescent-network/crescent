@@ -258,7 +258,7 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 			func(proposal *types.UpdateRequestProposal) {
 				proposal.Name = ""
 			},
-			"plan name must not be empty: invalid request",
+			"",
 		},
 		{
 			"too long name",
