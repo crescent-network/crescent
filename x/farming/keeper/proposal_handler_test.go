@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 				sdk.NewCoins(sdk.NewInt64Coin(denom3, 1)),
 				sdk.NewDec(1),
 			)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio should be provided"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided"),
 		},
 		{
 			"epoch amount & epoch ratio case #2",
@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 				sdk.NewCoins(),
 				sdk.ZeroDec(),
 			)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio must not be zero"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided"),
 		},
 	} {
 		suite.Run(tc.name, func() {
@@ -320,7 +320,7 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 					sdk.NewCoins(sdk.NewInt64Coin("stake", 100_000)),
 					plan.(*types.RatioPlan).EpochRatio,
 				)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio should be provided"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided"),
 		},
 		{
 			"epoch amount & epoch ratio case #2",
@@ -336,7 +336,7 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 					sdk.NewCoins(sdk.NewInt64Coin("stake", 0)),
 					sdk.ZeroDec(),
 				)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio must not be zero"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided"),
 		},
 	} {
 		suite.Run(tc.name, func() {

@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -47,10 +47,6 @@ func (p *PublicPlanProposal) ProposalRoute() string { return RouterKey }
 func (p *PublicPlanProposal) ProposalType() string { return ProposalTypePublicPlan }
 
 func (p *PublicPlanProposal) ValidateBasic() error {
-	if p.AddRequestProposals == nil && p.UpdateRequestProposals == nil && p.DeleteRequestProposals == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal request must not be empty")
-	}
-
 	if len(p.AddRequestProposals) == 0 && len(p.UpdateRequestProposals) == 0 && len(p.DeleteRequestProposals) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal request must not be empty")
 	}
@@ -108,6 +104,14 @@ func NewAddRequestProposal(
 	}
 }
 
+func (p *AddRequestProposal) IsForFixedAmountPlan() bool {
+	return !p.EpochAmount.IsZero()
+}
+
+func (p *AddRequestProposal) IsForRatioPlan() bool {
+	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
+}
+
 func (p *AddRequestProposal) Validate() error {
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
@@ -130,11 +134,8 @@ func (p *AddRequestProposal) Validate() error {
 	if !p.EndTime.After(p.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 	}
-	if !p.EpochAmount.IsZero() && !p.EpochRatio.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio should be provided")
-	}
-	if p.EpochAmount.IsZero() && p.EpochRatio.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio must not be zero")
+	if p.IsForFixedAmountPlan() == p.IsForRatioPlan() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided")
 	}
 	return nil
 }
@@ -164,6 +165,14 @@ func NewUpdateRequestProposal(
 	}
 }
 
+func (p *UpdateRequestProposal) IsForFixedAmountPlan() bool {
+	return !p.EpochAmount.IsZero()
+}
+
+func (p *UpdateRequestProposal) IsForRatioPlan() bool {
+	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
+}
+
 func (p *UpdateRequestProposal) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
@@ -186,14 +195,13 @@ func (p *UpdateRequestProposal) Validate() error {
 	if ok := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); !ok {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
 	}
-	if !p.EndTime.After(*p.StartTime) {
-		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
+	if p.StartTime != nil && p.EndTime != nil {
+		if !p.EndTime.After(*p.StartTime) {
+			return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
+		}
 	}
-	if !p.EpochAmount.IsZero() && !p.EpochRatio.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio should be provided")
-	}
-	if p.EpochAmount.IsZero() && p.EpochRatio.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "either epoch amount or epoch ratio must not be zero")
+	if p.IsForFixedAmountPlan() == p.IsForRatioPlan() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided")
 	}
 	return nil
 }

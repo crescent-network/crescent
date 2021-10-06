@@ -190,8 +190,8 @@ func (plan BasePlan) Validate() error {
 	if !plan.EndTime.After(plan.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", plan.EndTime, plan.StartTime)
 	}
-	if plan.DistributedCoins.IsAnyNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "distributed coins must not be negative")
+	if err := plan.DistributedCoins.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid distributed coins: %v", err)
 	}
 	return nil
 }
@@ -201,7 +201,7 @@ func (plan BasePlan) String() string {
 	return out.(string)
 }
 
-// MarshalYAML returns the YAML representation of an Plan.
+// MarshalYAML returns the YAML representation of a Plan.
 func (plan BasePlan) MarshalYAML() (interface{}, error) {
 	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &plan)
 	if err != nil {
