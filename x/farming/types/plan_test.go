@@ -340,6 +340,37 @@ func TestBasePlanValidate(t *testing.T) {
 	}
 }
 
+func TestIsPlanActiveAt(t *testing.T) {
+	plan := types.NewFixedAmountPlan(
+		types.NewBasePlan(
+			1,
+			"sample plan",
+			types.PlanTypePublic,
+			sdk.AccAddress(crypto.AddressHash([]byte("address1"))).String(),
+			sdk.AccAddress(crypto.AddressHash([]byte("address2"))).String(),
+			sdk.NewDecCoins(sdk.NewInt64DecCoin("stake1", 1)),
+			types.ParseTime("2021-10-10T00:00:00Z"),
+			types.ParseTime("2021-10-15T00:00:00Z"),
+		),
+		sdk.NewCoins(sdk.NewInt64Coin("reward1", 10000000)),
+	)
+
+	for _, tc := range []struct {
+		timeStr string
+		active  bool
+	}{
+		{"2021-09-01T00:00:00Z", false},
+		{"2021-10-09T23:59:59Z", false},
+		{"2021-10-10T00:00:00Z", true},
+		{"2021-10-13T12:00:00Z", true},
+		{"2021-10-14T23:59:59Z", true},
+		{"2021-10-15T00:00:00Z", false},
+		{"2021-11-01T00:00:00Z", false},
+	} {
+		require.Equal(t, tc.active, types.IsPlanActiveAt(plan, types.ParseTime(tc.timeStr)))
+	}
+}
+
 func TestTotalEpochRatio(t *testing.T) {
 	name1 := "testPlan1"
 	name2 := "testPlan2"

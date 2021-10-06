@@ -201,7 +201,7 @@ func (plan BasePlan) String() string {
 	return out.(string)
 }
 
-// MarshalYAML returns the YAML representation of an Plan.
+// MarshalYAML returns the YAML representation of a Plan.
 func (plan BasePlan) MarshalYAML() (interface{}, error) {
 	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &plan)
 	if err != nil {
