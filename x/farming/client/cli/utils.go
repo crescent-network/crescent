@@ -77,6 +77,7 @@ func ParsePublicPlanProposal(cdc codec.JSONCodec, proposalFile string) (types.Pu
 	return proposal, nil
 }
 
+// String returns a human readable string representation of the request.
 func (req PrivateFixedPlanRequest) String() string {
 	result, err := json.Marshal(&req)
 	if err != nil {
@@ -85,6 +86,7 @@ func (req PrivateFixedPlanRequest) String() string {
 	return string(result)
 }
 
+// String returns a human readable string representation of the request.
 func (req PrivateRatioPlanRequest) String() string {
 	result, err := json.Marshal(&req)
 	if err != nil {
