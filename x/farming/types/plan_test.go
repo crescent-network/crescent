@@ -371,6 +371,49 @@ func TestIsPlanActiveAt(t *testing.T) {
 	}
 }
 
+func TestValidateStakingCoinTotalWeights(t *testing.T) {
+	for _, tc := range []struct {
+		stakingCoinWeights sdk.DecCoins
+		valid              bool
+	}{
+		{
+			nil,
+			false,
+		},
+		{
+			sdk.DecCoins{},
+			false,
+		},
+		{
+			sdk.NewDecCoins(sdk.NewInt64DecCoin("stake1", 1)),
+			true,
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(5, 1)),
+				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(5, 1)),
+			),
+			true,
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(3, 1)),
+				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(6, 1)),
+			),
+			false,
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(5, 1)),
+				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(6, 1)),
+			),
+			false,
+		},
+	} {
+		require.Equal(t, tc.valid, types.ValidateStakingCoinTotalWeights(tc.stakingCoinWeights))
+	}
+}
+
 func TestTotalEpochRatio(t *testing.T) {
 	name1 := "testPlan1"
 	name2 := "testPlan2"
