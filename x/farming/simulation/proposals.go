@@ -15,7 +15,7 @@ import (
 /*
 [TODO]:
 	We need to come up with better ways to simulate public plan proposals.
-	Currently, the details are igored and only basic logics are written to simulate.
+	Currently, the details are ignored and only basic logics are written to simulate.
 
 	These are some of the following considerations that i think need to be discussed and addressed:
 	1. Randomize staking coin weights (single or multiple denoms)
@@ -78,7 +78,6 @@ func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, 
 			StartTime:          ctx.BlockTime(),
 			EndTime:            ctx.BlockTime().AddDate(0, 1, 0),
 			EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000)))),
-			EpochRatio:         sdk.ZeroDec(),
 		}
 		addRequests := []*types.AddRequestProposal{req}
 
