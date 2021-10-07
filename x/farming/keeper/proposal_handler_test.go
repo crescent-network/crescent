@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 				types.ParseTime("2021-08-01T00:00:00Z"),
 				types.ParseTime("2021-08-30T00:00:00Z"),
 				sdk.NewCoins(sdk.NewInt64Coin(denom3, 100_000_000)),
-				sdk.ZeroDec(),
+				sdk.Dec{},
 			)},
 			nil,
 		},
@@ -155,7 +155,9 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 			}
 
 			err := proposal.ValidateBasic()
-			if err == nil {
+			if tc.expectedErr == nil {
+				suite.NoError(err)
+
 				err := keeper.HandlePublicPlanProposal(suite.ctx, suite.keeper, proposal)
 				suite.Require().NoError(err)
 
@@ -320,7 +322,7 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 					sdk.NewCoins(sdk.NewInt64Coin("stake", 100_000)),
 					plan.(*types.RatioPlan).EpochRatio,
 				)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided"),
 		},
 		{
 			"epoch amount & epoch ratio case #2",
@@ -336,7 +338,7 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 					sdk.NewCoins(sdk.NewInt64Coin("stake", 0)),
 					sdk.ZeroDec(),
 				)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided"),
 		},
 	} {
 		suite.Run(tc.name, func() {
@@ -349,7 +351,9 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 			}
 
 			err := proposal.ValidateBasic()
-			if err == nil {
+			if tc.expectedErr == nil {
+				suite.NoError(err)
+
 				err := keeper.HandlePublicPlanProposal(suite.ctx, suite.keeper, proposal)
 				suite.Require().NoError(err)
 
