@@ -105,11 +105,11 @@ func NewAddRequestProposal(
 }
 
 func (p *AddRequestProposal) IsForFixedAmountPlan() bool {
-	return !p.EpochAmount.IsZero()
+	return p.EpochAmount != nil
 }
 
 func (p *AddRequestProposal) IsForRatioPlan() bool {
-	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
+	return !p.EpochRatio.IsNil()
 }
 
 func (p *AddRequestProposal) Validate() error {
@@ -140,6 +140,21 @@ func (p *AddRequestProposal) Validate() error {
 	if p.IsForFixedAmountPlan() == p.IsForRatioPlan() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided")
 	}
+	if p.IsForFixedAmountPlan() {
+		if p.EpochAmount.Empty() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
+		}
+		if err := p.EpochAmount.Validate(); err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
+		}
+	} else {
+		if !p.EpochRatio.IsPositive() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be positive: %s", p.EpochRatio)
+		}
+		if p.EpochRatio.GT(sdk.OneDec()) {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be less than 1: %s", p.EpochRatio)
+		}
+	}
 	return nil
 }
 
@@ -169,11 +184,11 @@ func NewUpdateRequestProposal(
 }
 
 func (p *UpdateRequestProposal) IsForFixedAmountPlan() bool {
-	return !p.EpochAmount.IsZero()
+	return p.EpochAmount != nil
 }
 
 func (p *UpdateRequestProposal) IsForRatioPlan() bool {
-	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
+	return !p.EpochRatio.IsNil()
 }
 
 func (p *UpdateRequestProposal) Validate() error {
@@ -183,13 +198,20 @@ func (p *UpdateRequestProposal) Validate() error {
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
-	if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
+	if p.FarmingPoolAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
+		}
 	}
-	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
+	if p.TerminationAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
+		}
 	}
 	if p.StakingCoinWeights != nil {
+		if p.StakingCoinWeights.Empty() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
+		}
 		if err := p.StakingCoinWeights.Validate(); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
 		}
@@ -202,8 +224,25 @@ func (p *UpdateRequestProposal) Validate() error {
 			return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 		}
 	}
-	if p.IsForFixedAmountPlan() && p.IsForRatioPlan() {
+	isForFixedAmountPlan := p.IsForFixedAmountPlan()
+	isForRatioPlan := p.IsForRatioPlan()
+	switch {
+	case isForFixedAmountPlan && isForRatioPlan:
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided")
+	case isForFixedAmountPlan:
+		if p.EpochAmount.Empty() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
+		}
+		if err := p.EpochAmount.Validate(); err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
+		}
+	case isForRatioPlan:
+		if !p.EpochRatio.IsPositive() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be positive: %s", p.EpochRatio)
+		}
+		if p.EpochRatio.GT(sdk.OneDec()) {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be less than 1: %s", p.EpochRatio)
+		}
 	}
 	return nil
 }

@@ -190,6 +190,36 @@ func TestAddRequestProposal_Validate(t *testing.T) {
 			},
 			"end time 2021-09-01 00:00:00 +0000 UTC must be greater than start time 2021-10-01 00:00:00 +0000 UTC: invalid plan end time",
 		},
+		{
+			"empty epoch amount",
+			func(proposal *types.AddRequestProposal) {
+				proposal.EpochAmount = sdk.NewCoins()
+			},
+			"epoch amount must not be empty: invalid request",
+		},
+		{
+			"invalid epoch amount",
+			func(proposal *types.AddRequestProposal) {
+				proposal.EpochAmount = sdk.Coins{sdk.NewInt64Coin("reward1", 0)}
+			},
+			"invalid epoch amount: coin 0reward1 amount is not positive: invalid request",
+		},
+		{
+			"zero epoch ratio",
+			func(proposal *types.AddRequestProposal) {
+				proposal.EpochAmount = nil
+				proposal.EpochRatio = sdk.ZeroDec()
+			},
+			"epoch ratio must be positive: 0.000000000000000000: invalid request",
+		},
+		{
+			"too big epoch ratio",
+			func(proposal *types.AddRequestProposal) {
+				proposal.EpochAmount = nil
+				proposal.EpochRatio = sdk.NewDec(2)
+			},
+			"epoch ratio must be less than 1: 2.000000000000000000: invalid request",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			proposal := types.NewAddRequestProposal(
@@ -268,11 +298,25 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 			"plan name cannot be longer than max length of 140: invalid plan name length",
 		},
 		{
+			"not updating farming pool addr",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.FarmingPoolAddress = ""
+			},
+			"",
+		},
+		{
 			"invalid farming pool addr",
 			func(proposal *types.UpdateRequestProposal) {
 				proposal.FarmingPoolAddress = "invalid"
 			},
 			"invalid farming pool address \"invalid\": decoding bech32 failed: invalid bech32 string length 7: invalid address",
+		},
+		{
+			"not updating termination addr",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.TerminationAddress = ""
+			},
+			"",
 		},
 		{
 			"invalid termination addr",
@@ -287,6 +331,13 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 				proposal.StakingCoinWeights = nil
 			},
 			"",
+		},
+		{
+			"empty staking coin weights",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.StakingCoinWeights = sdk.NewDecCoins()
+			},
+			"staking coin weights must not be empty: invalid request",
 		},
 		{
 			"invalid staking coin weights - invalid",
@@ -306,6 +357,14 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 				)
 			},
 			"total weight must be 1: invalid request",
+		},
+		{
+			"not updating start/end time",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.StartTime = nil
+				proposal.EndTime = nil
+			},
+			"",
 		},
 		{
 			"invalid start/end time",
@@ -332,6 +391,36 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 				proposal.EndTime = &t
 			},
 			"",
+		},
+		{
+			"empty epoch amount",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.EpochAmount = sdk.NewCoins()
+			},
+			"epoch amount must not be empty: invalid request",
+		},
+		{
+			"invalid epoch amount",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.EpochAmount = sdk.Coins{sdk.NewInt64Coin("reward1", 0)}
+			},
+			"invalid epoch amount: coin 0reward1 amount is not positive: invalid request",
+		},
+		{
+			"zero epoch ratio",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.EpochAmount = nil
+				proposal.EpochRatio = sdk.ZeroDec()
+			},
+			"epoch ratio must be positive: 0.000000000000000000: invalid request",
+		},
+		{
+			"too big epoch ratio",
+			func(proposal *types.UpdateRequestProposal) {
+				proposal.EpochAmount = nil
+				proposal.EpochRatio = sdk.NewDec(2)
+			},
+			"epoch ratio must be less than 1: 2.000000000000000000: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
