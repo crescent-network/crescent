@@ -119,14 +119,14 @@ func TestAddRequestProposal_Validate(t *testing.T) {
 			func(proposal *types.AddRequestProposal) {
 				proposal.EpochRatio = sdk.NewDecWithPrec(5, 2)
 			},
-			"only one of epoch amount or epoch ratio must be provided: invalid request",
+			"exactly one of epoch amount or epoch ratio must be provided: invalid request",
 		},
 		{
 			"ambiguous plan type #2",
 			func(proposal *types.AddRequestProposal) {
 				proposal.EpochAmount = nil
 			},
-			"only one of epoch amount or epoch ratio must be provided: invalid request",
+			"exactly one of epoch amount or epoch ratio must be provided: invalid request",
 		},
 		{
 			"empty name",

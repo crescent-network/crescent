@@ -137,17 +137,19 @@ func (p *AddRequestProposal) Validate() error {
 	if !p.EndTime.After(p.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 	}
-	if p.IsForFixedAmountPlan() == p.IsForRatioPlan() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided")
-	}
-	if p.IsForFixedAmountPlan() {
+	isForFixedAmountPlan := p.IsForFixedAmountPlan()
+	isForRatioPlan := p.IsForRatioPlan()
+	switch {
+	case isForFixedAmountPlan == isForRatioPlan:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "exactly one of epoch amount or epoch ratio must be provided")
+	case isForFixedAmountPlan:
 		if p.EpochAmount.Empty() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
 		}
 		if err := p.EpochAmount.Validate(); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
 		}
-	} else {
+	case isForRatioPlan:
 		if !p.EpochRatio.IsPositive() {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be positive: %s", p.EpochRatio)
 		}
