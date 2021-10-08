@@ -195,7 +195,7 @@ func TestAddRequestProposal_Validate(t *testing.T) {
 			func(proposal *types.AddRequestProposal) {
 				proposal.EpochAmount = sdk.NewCoins()
 			},
-			"epoch amount must not be empty: invalid request",
+			"exactly one of epoch amount or epoch ratio must be provided: invalid request",
 		},
 		{
 			"invalid epoch amount",
@@ -210,7 +210,7 @@ func TestAddRequestProposal_Validate(t *testing.T) {
 				proposal.EpochAmount = nil
 				proposal.EpochRatio = sdk.ZeroDec()
 			},
-			"epoch ratio must be positive: 0.000000000000000000: invalid request",
+			"exactly one of epoch amount or epoch ratio must be provided: invalid request",
 		},
 		{
 			"too big epoch ratio",
@@ -397,7 +397,7 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 			func(proposal *types.UpdateRequestProposal) {
 				proposal.EpochAmount = sdk.NewCoins()
 			},
-			"epoch amount must not be empty: invalid request",
+			"",
 		},
 		{
 			"invalid epoch amount",
@@ -412,7 +412,7 @@ func TestUpdateRequestProposal_Validate(t *testing.T) {
 				proposal.EpochAmount = nil
 				proposal.EpochRatio = sdk.ZeroDec()
 			},
-			"epoch ratio must be positive: 0.000000000000000000: invalid request",
+			"",
 		},
 		{
 			"too big epoch ratio",

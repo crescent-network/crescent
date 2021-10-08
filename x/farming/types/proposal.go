@@ -105,11 +105,11 @@ func NewAddRequestProposal(
 }
 
 func (p *AddRequestProposal) IsForFixedAmountPlan() bool {
-	return p.EpochAmount != nil
+	return !p.EpochAmount.Empty()
 }
 
 func (p *AddRequestProposal) IsForRatioPlan() bool {
-	return !p.EpochRatio.IsNil()
+	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
 }
 
 func (p *AddRequestProposal) Validate() error {
@@ -143,9 +143,6 @@ func (p *AddRequestProposal) Validate() error {
 	case isForFixedAmountPlan == isForRatioPlan:
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "exactly one of epoch amount or epoch ratio must be provided")
 	case isForFixedAmountPlan:
-		if p.EpochAmount.Empty() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
-		}
 		if err := p.EpochAmount.Validate(); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
 		}
@@ -186,11 +183,11 @@ func NewUpdateRequestProposal(
 }
 
 func (p *UpdateRequestProposal) IsForFixedAmountPlan() bool {
-	return p.EpochAmount != nil
+	return !p.EpochAmount.Empty()
 }
 
 func (p *UpdateRequestProposal) IsForRatioPlan() bool {
-	return !p.EpochRatio.IsNil()
+	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
 }
 
 func (p *UpdateRequestProposal) Validate() error {
@@ -232,9 +229,6 @@ func (p *UpdateRequestProposal) Validate() error {
 	case isForFixedAmountPlan && isForRatioPlan:
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided")
 	case isForFixedAmountPlan:
-		if p.EpochAmount.Empty() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
-		}
 		if err := p.EpochAmount.Validate(); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
 		}

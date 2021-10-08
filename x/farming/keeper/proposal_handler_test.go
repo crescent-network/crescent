@@ -335,10 +335,10 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 					plan.GetStakingCoinWeights(),
 					plan.GetStartTime(),
 					plan.GetEndTime(),
-					sdk.NewCoins(sdk.NewInt64Coin("stake", 0)),
+					sdk.Coins{sdk.NewInt64Coin("stake", 0)},
 					sdk.ZeroDec(),
 				)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided"),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch amount: coin 0stake amount is not positive"),
 		},
 	} {
 		suite.Run(tc.name, func() {
