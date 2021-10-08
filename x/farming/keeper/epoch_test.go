@@ -24,12 +24,11 @@ func (suite *KeeperTestSuite) TestLastEpochTime() {
 
 func (suite *KeeperTestSuite) TestFirstEpoch() {
 	// The first epoch may run very quickly depending on when
-	// the farming module is deployed,
+	// the farming module was activated,
 	// meaning that (block time) - (last epoch time) may be smaller
-	// than epoch_days parameter on the first epoch.
+	// than the current epoch_days for the first epoch.
 
-	params := suite.keeper.GetParams(suite.ctx)
-	suite.Require().Equal(uint32(1), params.NextEpochDays)
+	suite.Require().Equal(uint32(1), suite.keeper.GetCurrentEpochDays(suite.ctx))
 
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-11T23:59:59Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper)
@@ -39,7 +38,7 @@ func (suite *KeeperTestSuite) TestFirstEpoch() {
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-12T00:00:00Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper)
 	t, _ := suite.keeper.GetLastEpochTime(suite.ctx)
-	suite.Require().True(t.After(lastEpochTime)) // Indicating that the epoch advanced.
+	suite.Require().True(t.After(lastEpochTime)) // Indicating that the epoch ended.
 }
 
 func (suite *KeeperTestSuite) TestEpochDays() {

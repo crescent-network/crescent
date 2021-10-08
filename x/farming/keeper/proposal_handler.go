@@ -217,7 +217,7 @@ func (k Keeper) UpdatePublicPlanProposal(ctx sdk.Context, proposals []*types.Upd
 	return nil
 }
 
-// DeletePublicPlanProposal delets public plan proposal once the governance proposal is passed.
+// DeletePublicPlanProposal deletes public plan proposal once the governance proposal is passed.
 func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []*types.DeleteRequestProposal) error {
 	for _, p := range proposals {
 		plan, found := k.GetPlan(ctx, p.GetPlanId())

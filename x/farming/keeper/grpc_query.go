@@ -77,7 +77,7 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		if err != nil {
 			return false, err
 		}
-		any, err := codectypes.NewAnyWithValue(plan)
+		planAny, err := types.PackPlan(plan)
 		if err != nil {
 			return false, err
 		}
@@ -114,7 +114,7 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		}
 
 		if accumulate {
-			plans = append(plans, any)
+			plans = append(plans, planAny)
 		}
 
 		return true, nil
@@ -138,14 +138,15 @@ func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.Qu
 		return nil, status.Errorf(codes.NotFound, "plan %d not found", req.PlanId)
 	}
 
-	any, err := codectypes.NewAnyWithValue(plan)
+	planAny, err := types.PackPlan(plan)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryPlanResponse{Plan: any}, nil
+	return &types.QueryPlanResponse{Plan: planAny}, nil
 }
 
+// Stakings queries stakings for a farmer.
 func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*types.QueryStakingsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -191,6 +192,7 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 	return resp, nil
 }
 
+// TotalStakings queries total staking coin amount for a specific staking coin denom.
 func (k Querier) TotalStakings(c context.Context, req *types.QueryTotalStakingsRequest) (*types.QueryTotalStakingsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -212,6 +214,7 @@ func (k Querier) TotalStakings(c context.Context, req *types.QueryTotalStakingsR
 	}, nil
 }
 
+// Rewards queries accumulated rewards for a farmer.
 func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
