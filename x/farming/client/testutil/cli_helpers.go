@@ -16,6 +16,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
 	farmingapp "github.com/tendermint/farming/app"
 	farmingcli "github.com/tendermint/farming/x/farming/client/cli"
@@ -77,4 +78,32 @@ func MsgStakeExec(clientCtx client.Context, from string, stakingCoins string,
 	args = append(args, commonArgs...)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, farmingcli.NewStakeCmd(), args)
+}
+
+// MsgAdvanceEpochExec creates a transaction to advance epoch by 1.
+func MsgAdvanceEpochExec(clientCtx client.Context, from string,
+	extraAtgs ...string) (testutil.BufferWriter, error) {
+
+	args := append([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
+	}, commonArgs...)
+
+	args = append(args, commonArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, farmingcli.NewAdvanceEpochCmd(), args)
+}
+
+// MsgSendExec creates a transaction to transfer coins.
+func MsgSendExec(clientCtx client.Context, from string, to string, amount string,
+	extraAtgs ...string) (testutil.BufferWriter, error) {
+
+	args := append([]string{
+		from,
+		to,
+		amount,
+	}, commonArgs...)
+
+	args = append(args, commonArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(), args)
 }

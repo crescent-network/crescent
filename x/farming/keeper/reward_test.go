@@ -288,12 +288,15 @@ func (suite *KeeperTestSuite) TestHarvest() {
 		suite.keeper.SetPlan(suite.ctx, plan)
 	}
 
+	err := suite.keeper.Harvest(suite.ctx, suite.addrs[0], []string{denom1})
+	suite.Require().EqualError(types.ErrStakingNotExists, err.Error())
+
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1_000_000)))
 	suite.keeper.ProcessQueuedCoins(suite.ctx)
 
 	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-05T00:00:00Z"))
-	err := suite.keeper.AllocateRewards(suite.ctx)
+	err = suite.keeper.AllocateRewards(suite.ctx)
 	suite.Require().NoError(err)
 
 	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
