@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -164,7 +163,7 @@ func (k Keeper) AllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins 
 func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) (sdk.Coins, error) {
 	staking, found := k.GetStaking(ctx, stakingCoinDenom, farmerAcc)
 	if !found {
-		return nil, fmt.Errorf("empty starting info") // TODO: use correct error
+		return nil, types.ErrStakingNotExists
 	}
 
 	currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)

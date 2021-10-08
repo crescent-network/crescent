@@ -196,11 +196,13 @@ func NewStakeCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Stake coins. 
 			
-To get farming rewards, it is recommended to check which plans are available on a network. 
+To get farming rewards, you must stake coins that are defined in available plans on a network. 
 
 Example:
 $ %s tx %s stake 1000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
+$ %s tx %s stake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,500pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5 --from mykey
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -237,11 +239,13 @@ func NewUnstakeCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Unstake coins. 
 			
-Note that this action doesn't require any period to unstake your coins.
+Note that unstaking doesn't require any period and your accumulated rewards are automatically withdrawn to your wallet.
 
 Example:
 $ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
+$ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,500pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5 --from mykey
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -276,12 +280,14 @@ func NewHarvestCmd() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		Short: "Harvest farming rewards",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Harvest farming that the staking coin denoms belong to plans.
+			fmt.Sprintf(`Harvest farming rewards from the staking coin denoms that are defined in the availble plans.
 
 Example:
-$ %s tx %s harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,uatom --from mykey
+$ %s tx %s harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
+$ %s tx %s harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5 --from mykey
 $ %s tx %s harvest --all --from mykey
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
@@ -338,7 +344,17 @@ func NewAdvanceEpochCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "advance-epoch",
 		Args:  cobra.NoArgs,
-		Short: "advance epoch by one to simulate reward distribution",
+		Short: "Advance epoch by 1 to simulate reward distribution",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Advance epoch by 1 to simulate reward distribution.
+This message is available for testing purpose and it can only be enabled when you build the binary with "make install-testing" command. 
+
+Example:
+$ %s tx %s advance-epoch --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -367,7 +383,7 @@ func GetCmdSubmitPublicPlanProposal() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a a public farming plan along with an initial deposit. You can submit this governance proposal
 to add, update, and delete farming plan. The proposal details must be supplied via a JSON file. A JSON file to add plan request proposal is 
-provided below. For more examples, please refer to https://github.com/tendermint/farming/blob/master/docs/How-To/farming_plans.md
+provided below. For more examples, please refer to https://github.com/tendermint/farming/blob/master/docs/Tutorials/demo/plans.md
 
 Example:
 $ %s tx gov submit-proposal public-farming-plan <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
