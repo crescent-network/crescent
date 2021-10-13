@@ -2,7 +2,13 @@
 
 # Proposal
 
-The farming module contains the following public plan governance proposal that receives one of the following requests. A request `AddRequestProposal` that creates a public farming plan, a request `UpdateRequestProposal` that updates the plan, and a request `DeleteRequestProposal` that deletes the plan. For most cases, it expects that a single request is used, but note that `PublicPlanProposal` accepts more than a single request to cover broader use cases. Also,
+The farming module contains the following public plan governance proposal that receives one of the following requests. 
+
+- `AddRequestProposal` is the request proposal that requests the module to create a public farming plan. You can either input epoch amount `EpochAmount` or epoch ratio `EpochRatio`. Depending on which value of the parameter you input, it creates the following plan type `FixedAmountPlan` or `RatioPlan`.
+
+- `UpdateRequestProposal` is the request proposal that requests the module to update the plan. You can also update the plan type. 
+
+- `DeleteRequestProposal` is the request proposal that requests the module to delete the plan. It sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
 
 ## PublicPlanProposal
 
@@ -26,7 +32,7 @@ type PublicPlanProposal struct {
 
 ## AddRequestProposal
 
-Note that when requesting `AddRequestProposal` depending on which field is passed, either `EpochAmount` or `EpochRatio`, it creates a `FixedAmountPlan` or `RatioPlan`.
+You can either input epoch amount `EpochAmount` or epoch ratio `EpochRatio`. Depending on which value of the parameter you input, it creates the following plan type `FixedAmountPlan` or `RatioPlan`.
 
 ```go
 // AddRequestProposal details a proposal for creating a public plan.
@@ -81,6 +87,8 @@ type UpdateRequestProposal struct {
 ```
 
 ## DeleteRequestProposal
+
+The request requests the module to delete the plan and it sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
 
 ```go
 // DeleteRequestProposal details a proposal for deleting an existing public plan.

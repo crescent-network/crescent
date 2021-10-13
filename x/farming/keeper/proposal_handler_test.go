@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -406,26 +408,24 @@ func (suite *KeeperTestSuite) TestValidateDeletePublicPlanProposal() {
 
 func (suite *KeeperTestSuite) TestUpdatePlanType() {
 	// create a ratio public plan
-	addRequests := []*types.AddRequestProposal{
-		types.NewAddRequestProposal(
-			"testPlan",
-			suite.addrs[0].String(),
-			suite.addrs[0].String(),
-			sdk.NewDecCoins(
-				sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)), // 30%
-				sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)), // 70%
-			),
-			types.ParseTime("2021-08-01T00:00:00Z"),
-			types.ParseTime("2021-08-30T00:00:00Z"),
-			nil,
-			sdk.NewDecWithPrec(10, 2), // 10%
-		),
-	}
-
 	err := keeper.HandlePublicPlanProposal(
 		suite.ctx,
 		suite.keeper,
-		types.NewPublicPlanProposal("testTitle", "testDescription", addRequests, nil, nil),
+		types.NewPublicPlanProposal("testTitle", "testDescription", []*types.AddRequestProposal{
+			types.NewAddRequestProposal(
+				"testPlan",
+				suite.addrs[0].String(),
+				suite.addrs[0].String(),
+				sdk.NewDecCoins(
+					sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
+					sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)),
+				),
+				types.ParseTime("0001-01-01T00:00:00Z"),
+				types.ParseTime("9999-12-31T00:00:00Z"),
+				sdk.NewCoins(),
+				sdk.NewDecWithPrec(10, 2),
+			),
+		}, nil, nil),
 	)
 	suite.Require().NoError(err)
 
@@ -433,24 +433,23 @@ func (suite *KeeperTestSuite) TestUpdatePlanType() {
 	suite.Require().Equal(true, found)
 	suite.Require().Equal(plan.(*types.RatioPlan).EpochRatio, sdk.NewDecWithPrec(10, 2))
 
-	// update the ratio plan to fixed amount plan type
-	updateRequests := []*types.UpdateRequestProposal{
-		types.NewUpdateRequestProposal(
-			plan.GetId(),
-			plan.GetName(),
-			plan.GetFarmingPoolAddress().String(),
-			plan.GetTerminationAddress().String(),
-			plan.GetStakingCoinWeights(),
-			plan.GetStartTime(),
-			plan.GetEndTime(),
-			sdk.NewCoins(sdk.NewInt64Coin("stake", 100_000)),
-			sdk.ZeroDec(),
-		)}
-
+	// update the ratio plan type to fixed amount plan type
 	err = keeper.HandlePublicPlanProposal(
 		suite.ctx,
 		suite.keeper,
-		types.NewPublicPlanProposal("testTitle", "testDescription", nil, updateRequests, nil),
+		types.NewPublicPlanProposal("testTitle", "testDescription", nil, []*types.UpdateRequestProposal{
+			types.NewUpdateRequestProposal(
+				plan.GetId(),
+				plan.GetName(),
+				plan.GetFarmingPoolAddress().String(),
+				plan.GetTerminationAddress().String(),
+				plan.GetStakingCoinWeights(),
+				plan.GetStartTime(),
+				plan.GetEndTime(),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 100_000)),
+				sdk.ZeroDec(),
+			),
+		}, nil),
 	)
 	suite.Require().NoError(err)
 
@@ -458,28 +457,104 @@ func (suite *KeeperTestSuite) TestUpdatePlanType() {
 	suite.Require().Equal(true, found)
 	suite.Require().Equal(plan.(*types.FixedAmountPlan).EpochAmount, sdk.NewCoins(sdk.NewInt64Coin("stake", 100_000)))
 
-	// update the fixed amount plan back to ratio plan
-	updateRequests = []*types.UpdateRequestProposal{
-		types.NewUpdateRequestProposal(
-			plan.GetId(),
-			plan.GetName(),
-			plan.GetFarmingPoolAddress().String(),
-			plan.GetTerminationAddress().String(),
-			plan.GetStakingCoinWeights(),
-			plan.GetStartTime(),
-			plan.GetEndTime(),
-			nil,
-			sdk.NewDecWithPrec(7, 2), // 7%
-		)}
-
+	// update back to ratio plan with different epoch ratio
 	err = keeper.HandlePublicPlanProposal(
 		suite.ctx,
 		suite.keeper,
-		types.NewPublicPlanProposal("testTitle", "testDescription", nil, updateRequests, nil),
+		types.NewPublicPlanProposal("testTitle", "testDescription", nil, []*types.UpdateRequestProposal{
+			types.NewUpdateRequestProposal(
+				plan.GetId(),
+				plan.GetName(),
+				plan.GetFarmingPoolAddress().String(),
+				plan.GetTerminationAddress().String(),
+				plan.GetStakingCoinWeights(),
+				plan.GetStartTime(),
+				plan.GetEndTime(),
+				nil,
+				sdk.NewDecWithPrec(7, 2), // 7%
+			),
+		}, nil),
 	)
 	suite.Require().NoError(err)
 
 	plan, found = suite.keeper.GetPlan(suite.ctx, uint64(1))
 	suite.Require().Equal(true, found)
 	suite.Require().Equal(plan.(*types.RatioPlan).EpochRatio, sdk.NewDecWithPrec(7, 2))
+}
+
+func (suite *KeeperTestSuite) TestDeletePublicPlan() {
+	for _, tc := range []struct {
+		name             string
+		farmingPoolAddr  sdk.AccAddress
+		terminationAddr  sdk.AccAddress
+		expectedBalances sdk.Coins
+	}{
+		{
+			"farming pool address and termination address are equal",
+			suite.addrs[0],
+			suite.addrs[0],
+			initialBalances,
+		},
+		{
+			"farming pool address and termination address are not equal",
+			suite.addrs[1],
+			suite.addrs[2],
+			sdk.Coins{},
+		},
+	} {
+		suite.Run(tc.name, func() {
+			cacheCtx, _ := suite.ctx.CacheContext()
+
+			// create a public plan
+			err := keeper.HandlePublicPlanProposal(
+				cacheCtx,
+				suite.keeper,
+				types.NewPublicPlanProposal("testTitle", "testDescription", []*types.AddRequestProposal{
+					types.NewAddRequestProposal(
+						"testPlan",
+						tc.farmingPoolAddr.String(),
+						tc.terminationAddr.String(),
+						sdk.NewDecCoins(
+							sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(3, 1)),
+							sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(7, 1)),
+						),
+						types.ParseTime("0001-01-01T00:00:00Z"),
+						types.ParseTime("9999-12-31T00:00:00Z"),
+						sdk.NewCoins(sdk.NewInt64Coin(denom3, 100_000_000)),
+						sdk.ZeroDec(),
+					),
+				}, nil, nil),
+			)
+			suite.Require().NoError(err)
+
+			plans := suite.keeper.GetPlans(cacheCtx)
+
+			// delete the plan
+			err = keeper.HandlePublicPlanProposal(
+				cacheCtx,
+				suite.keeper,
+				types.NewPublicPlanProposal("testTitle", "testDescription", nil, nil, []*types.DeleteRequestProposal{
+					types.NewDeleteRequestProposal(plans[0].GetId()),
+				}),
+			)
+			suite.Require().NoError(err)
+
+			// the plan should be successfully removed and coins meet the expected balances
+			_, found := suite.keeper.GetPlan(cacheCtx, plans[0].GetId())
+			suite.Require().Equal(false, found)
+			suite.Require().Equal(tc.expectedBalances, suite.app.BankKeeper.GetAllBalances(cacheCtx, tc.farmingPoolAddr))
+
+			isPlanTerminatedEventType := false
+			for _, e := range cacheCtx.EventManager().ABCIEvents() {
+				if e.Type == types.EventTypePlanTerminated {
+					suite.Require().Equal(fmt.Sprint(plans[0].GetId()), string(e.Attributes[0].Value))
+					suite.Require().Equal(tc.farmingPoolAddr.String(), string(e.Attributes[1].Value))
+					suite.Require().Equal(tc.terminationAddr.String(), string(e.Attributes[2].Value))
+					isPlanTerminatedEventType = true
+					break
+				}
+			}
+			suite.Require().True(isPlanTerminatedEventType, "plan_terminated events should be emitted")
+		})
+	}
 }

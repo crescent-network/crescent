@@ -225,6 +225,10 @@ func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []*types.Del
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "plan %d is not found", p.GetPlanId())
 		}
 
+		if err := k.TerminatePlan(ctx, plan); err != nil {
+			panic(err)
+		}
+
 		k.RemovePlan(ctx, plan)
 
 		logger := k.Logger(ctx)

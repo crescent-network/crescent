@@ -240,10 +240,12 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 // TerminatePlan sends all remaining coins in the plan's farming pool to
 // the termination address and mark the plan as terminated.
 func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
-	balances := k.bankKeeper.GetAllBalances(ctx, plan.GetFarmingPoolAddress())
-	if balances.IsAllPositive() {
-		if err := k.bankKeeper.SendCoins(ctx, plan.GetFarmingPoolAddress(), plan.GetTerminationAddress(), balances); err != nil {
-			return err
+	if plan.GetFarmingPoolAddress().String() != plan.GetTerminationAddress().String() {
+		balances := k.bankKeeper.GetAllBalances(ctx, plan.GetFarmingPoolAddress())
+		if balances.IsAllPositive() {
+			if err := k.bankKeeper.SendCoins(ctx, plan.GetFarmingPoolAddress(), plan.GetTerminationAddress(), balances); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -258,7 +260,6 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 			sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(plan.GetId(), 10)),
 			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, plan.GetFarmingPoolAddress().String()),
 			sdk.NewAttribute(types.AttributeKeyTerminationAddress, plan.GetTerminationAddress().String()),
-			// TODO: add refunded coins?
 		),
 	})
 
