@@ -17,6 +17,13 @@ service Query {
   // Params returns parameters of the farming module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+        description: "Returns all parameters of the farming module.";
+        external_docs: {
+            url: "https://github.com/tendermint/farming/blob/master/x/farming/spec/07_params.md";
+            description: "Find out more about the params";
+        }
+    };
   }
 
   // Plans returns all plans.
