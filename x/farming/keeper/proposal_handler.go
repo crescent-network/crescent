@@ -58,10 +58,6 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 				p.EpochAmount,
 			)
 
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
-
 			plan, err := k.CreateFixedAmountPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
 				return err
@@ -69,7 +65,7 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 
 			logger := k.Logger(ctx)
 			logger.Info("created public fixed amount plan", "fixed_amount_plan", plan)
-		} else if p.IsForRatioPlan() { // TODO: if all validations were correct, we can use `else` here
+		} else {
 			msg := types.NewMsgCreateRatioPlan(
 				p.GetName(),
 				farmingPoolAddrAcc,
@@ -78,10 +74,6 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 				p.GetEndTime(),
 				p.EpochRatio,
 			)
-
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			plan, err := k.CreateRatioPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
