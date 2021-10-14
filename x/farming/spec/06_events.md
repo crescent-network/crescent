@@ -6,13 +6,16 @@ The farming module emits the following events:
 
 ## EndBlocker
 
-| Type              | Attribute Key        | Attribute Value          |
-| ----------------- | -------------------- | ------------------------ |
-| plan_terminated   | plan_id              | {planID}                 |
-| plan_terminated   | farming_pool_address | {farmingPoolAddress}     |
-| plan_terminated   | termination_address  | {terminationAddress}     |
-| rewards_allocated | plan_id              | {planID}                 |
-| rewards_allocated | amount               | {totalAllocatedAmount}   |
+| Type              | Attribute Key        | Attribute Value        |
+| ----------------- | -------------------- | ---------------------- |
+| plan_terminated   | plan_id              | {planID}               |
+| plan_terminated   | farming_pool_address | {farmingPoolAddress}   |
+| plan_terminated   | termination_address  | {terminationAddress}   |
+| rewards_allocated | plan_id              | {planID}               |
+| rewards_allocated | amount               | {totalAllocatedAmount} |
+| rewards_withdrawn | farmer               | {farmer}               |
+| rewards_withdrawn | staking_coin_denom   | {stakingCoinDenom}     |
+| rewards_withdrawn | rewards_coins        | {rewardCoins}          |
 
 ## Handlers
 
@@ -56,23 +59,27 @@ The farming module emits the following events:
 
 ### MsgUnstake
 
-| Type    | Attribute Key   | Attribute Value  |
-| ------- | --------------- | ---------------- |
-| unstake | farmer          | {farmer}         |
-| unstake | unstaking_coins | {unstakingCoins} | 
-| message | module          | farming          |
-| message | action          | unstake          |
-| message | sender          | {senderAddress}  |
+| Type              | Attribute Key      | Attribute Value    |
+| ----------------- | ------------------ | ------------------ |
+| unstake           | farmer             | {farmer}           |
+| unstake           | unstaking_coins    | {unstakingCoins}   |
+| rewards_withdrawn | farmer             | {farmer}           |
+| rewards_withdrawn | staking_coin_denom | {stakingCoinDenom} |
+| rewards_withdrawn | rewards_coins      | {rewardCoins}      |
+| message           | module             | farming            |
+| message           | action             | unstake            |
+| message           | sender             | {senderAddress}    |
 
 ### MsgHarvest
 
-| Type    | Attribute Key | Attribute Value |
-| ------- | ------------- | --------------- |
-| harvest | farmer        | {farmer}        |
-| harvest | reward_coins  | {rewardCoins}   |
-| message | module        | farming         |
-| message | action        | harvest         |
-| message | sender        | {senderAddress} |
+| Type    | Attribute Key       | Attribute Value     |
+| ------- | ------------------- | ------------------- |
+| harvest | farmer              | {farmer}            |
+| harvest | staking_coin_denoms | {stakingCoinDenoms} |
+| message | module              | farming             |
+| message | action              | harvest             |
+| message | sender              | {senderAddress}     |
+
 ### MsgAdvanceEpoch
 
 This message is for testing purpose. It is only available when you build `farmingd` binary by `make install-testing` command.

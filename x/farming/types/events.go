@@ -7,6 +7,7 @@ const (
 	EventTypeStake                 = "stake"
 	EventTypeUnstake               = "unstake"
 	EventTypeHarvest               = "harvest"
+	EventTypeRewardsWithdrawn      = "rewards_withdrawn"
 	EventTypePlanTerminated        = "plan_terminated"
 	EventTypeRewardsAllocated      = "rewards_allocated"
 
@@ -23,4 +24,6 @@ const (
 	AttributeKeyEpochRatio         = "epoch_ratio"
 	AttributeKeyFarmer             = "farmer"
 	AttributeKeyAmount             = "amount"
+	AttributeKeyStakingCoinDenom   = "staking_coin_denom"
+	AttributeKeyStakingCoinDenoms  = "staking_coin_denoms"
 )
