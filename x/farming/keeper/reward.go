@@ -418,7 +418,6 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 // ValidateRemainingRewardsAmount checks that the balance of the
 // rewards reserve pool is greater than the total amount of
 // unwithdrawn rewards.
-// TODO: correct comment above
 func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
 	remainingRewards := sdk.NewCoins()
 	k.IterateStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, staking types.Staking) (stop bool) {
