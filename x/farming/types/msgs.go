@@ -122,8 +122,8 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 	if err := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); err != nil {
 		return err
 	}
-	if !msg.EpochRatio.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
+	if err := ValidateEpochRatio(msg.EpochRatio); err != nil {
+		return err
 	}
 	if msg.EpochRatio.GT(sdk.NewDec(1)) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")

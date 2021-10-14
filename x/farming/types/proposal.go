@@ -138,26 +138,14 @@ func (p *AddRequestProposal) Validate() error {
 	case isForFixedAmountPlan == isForRatioPlan:
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "exactly one of epoch amount or epoch ratio must be provided")
 	case isForFixedAmountPlan:
-		if err := p.EpochAmount.Validate(); err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
+		if err := ValidateEpochAmount(p.EpochAmount); err != nil {
+			return err
 		}
 	case isForRatioPlan:
-		if !p.EpochRatio.IsPositive() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be positive: %s", p.EpochRatio)
-		}
-		if p.EpochRatio.GT(sdk.OneDec()) {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be less than 1: %s", p.EpochRatio)
+		if err := ValidateEpochRatio(p.EpochRatio); err != nil {
+			return err
 		}
 	}
-	//if p.IsForRatioPlan() {
-	//	if !p.EpochRatio.IsPositive() {
-	//		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
-	//	}
-	//	if p.EpochRatio.GT(sdk.NewDec(1)) {
-	//		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
-	//	}
-	//} else if p.IsForFixedAmountPlan() {
-
 	return nil
 }
 
@@ -227,15 +215,12 @@ func (p *UpdateRequestProposal) Validate() error {
 	case isForFixedAmountPlan && isForRatioPlan:
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided")
 	case isForFixedAmountPlan:
-		if err := p.EpochAmount.Validate(); err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
+		if err := ValidateEpochAmount(p.EpochAmount); err != nil {
+			return err
 		}
 	case isForRatioPlan:
-		if !p.EpochRatio.IsPositive() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be positive: %s", p.EpochRatio)
-		}
-		if p.EpochRatio.GT(sdk.OneDec()) {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be less than 1: %s", p.EpochRatio)
+		if err := ValidateEpochRatio(p.EpochRatio); err != nil {
+			return err
 		}
 	}
 	return nil

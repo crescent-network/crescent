@@ -294,6 +294,25 @@ func ValidateTotalEpochRatio(i interface{}) error {
 	return nil
 }
 
+// ValidateEpochRatio validate a epoch ratio that must be positive and less than 1.
+func ValidateEpochRatio(epochRatio sdk.Dec) error {
+	if !epochRatio.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be positive: %s", epochRatio)
+	}
+	if epochRatio.GT(sdk.OneDec()) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be less than 1: %s", epochRatio)
+	}
+	return nil
+}
+
+// ValidateEpochAmount validate a epoch amount that must be valid coins.
+func ValidateEpochAmount(epochAmount sdk.Coins) error {
+	if err := epochAmount.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid epoch amount: %v", err)
+	}
+	return nil
+}
+
 // PackPlan converts PlanI to Any
 func PackPlan(plan PlanI) (*codectypes.Any, error) {
 	any, err := codectypes.NewAnyWithValue(plan)
