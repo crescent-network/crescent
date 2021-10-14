@@ -217,7 +217,10 @@ message QueryPlansRequest {
 
 // QueryPlansResponse is the response type for the Query/Plans RPC method.
 message QueryPlansResponse {
+  // plans are the existing plans
   repeated google.protobuf.Any           plans      = 1 [(cosmos_proto.accepts_interface) = "PlanI"];
+
+  // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

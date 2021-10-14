@@ -204,7 +204,9 @@ func (m *QueryPlansRequest) GetPagination() *query.PageRequest {
 
 // QueryPlansResponse is the response type for the Query/Plans RPC method.
 type QueryPlansResponse struct {
-	Plans      []*types.Any        `protobuf:"bytes,1,rep,name=plans,proto3" json:"plans,omitempty"`
+	// plans are the existing plans
+	Plans []*types.Any `protobuf:"bytes,1,rep,name=plans,proto3" json:"plans,omitempty"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
