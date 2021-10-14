@@ -105,7 +105,7 @@ func NewAddRequestProposal(
 }
 
 func (p *AddRequestProposal) IsForFixedAmountPlan() bool {
-	return !p.EpochAmount.IsZero()
+	return !p.EpochAmount.Empty()
 }
 
 func (p *AddRequestProposal) IsForRatioPlan() bool {
@@ -113,6 +113,9 @@ func (p *AddRequestProposal) IsForRatioPlan() bool {
 }
 
 func (p *AddRequestProposal) Validate() error {
+	if p.Name == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan name must not be empty")
+	}
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
@@ -122,20 +125,26 @@ func (p *AddRequestProposal) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
 	}
-	if p.StakingCoinWeights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-	}
-	if err := p.StakingCoinWeights.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
-	}
-	if ok := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	if err := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); err != nil {
+		return err
 	}
 	if !p.EndTime.After(p.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 	}
-	if p.IsForFixedAmountPlan() == p.IsForRatioPlan() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided")
+
+	isForFixedAmountPlan := p.IsForFixedAmountPlan()
+	isForRatioPlan := p.IsForRatioPlan()
+	switch {
+	case isForFixedAmountPlan == isForRatioPlan:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "exactly one of epoch amount or epoch ratio must be provided")
+	case isForFixedAmountPlan:
+		if err := ValidateEpochAmount(p.EpochAmount); err != nil {
+			return err
+		}
+	case isForRatioPlan:
+		if err := ValidateEpochRatio(p.EpochRatio); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -166,7 +175,7 @@ func NewUpdateRequestProposal(
 }
 
 func (p *UpdateRequestProposal) IsForFixedAmountPlan() bool {
-	return !p.EpochAmount.IsZero()
+	return !p.EpochAmount.Empty()
 }
 
 func (p *UpdateRequestProposal) IsForRatioPlan() bool {
@@ -180,28 +189,39 @@ func (p *UpdateRequestProposal) Validate() error {
 	if len(p.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
-	if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
+	if p.FarmingPoolAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
+		}
 	}
-	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
+	if p.TerminationAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
+		}
 	}
-	if p.StakingCoinWeights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-	}
-	if err := p.StakingCoinWeights.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
-	}
-	if ok := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	if p.StakingCoinWeights != nil {
+		if err := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); err != nil {
+			return err
+		}
 	}
 	if p.StartTime != nil && p.EndTime != nil {
 		if !p.EndTime.After(*p.StartTime) {
 			return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 		}
 	}
-	if p.IsForFixedAmountPlan() == p.IsForRatioPlan() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "only one of epoch amount or epoch ratio must be provided")
+	isForFixedAmountPlan := p.IsForFixedAmountPlan()
+	isForRatioPlan := p.IsForRatioPlan()
+	switch {
+	case isForFixedAmountPlan && isForRatioPlan:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "at most one of epoch amount or epoch ratio must be provided")
+	case isForFixedAmountPlan:
+		if err := ValidateEpochAmount(p.EpochAmount); err != nil {
+			return err
+		}
+	case isForRatioPlan:
+		if err := ValidateEpochRatio(p.EpochRatio); err != nil {
+			return err
+		}
 	}
 	return nil
 }

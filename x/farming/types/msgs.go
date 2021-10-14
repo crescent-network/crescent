@@ -57,14 +57,8 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 	if !msg.EndTime.After(msg.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
 	}
-	if msg.StakingCoinWeights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-	}
-	if err := msg.StakingCoinWeights.Validate(); err != nil {
+	if err := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); err != nil {
 		return err
-	}
-	if ok := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
 	}
 	if msg.EpochAmount.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
@@ -125,17 +119,11 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 	if !msg.EndTime.After(msg.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", msg.EndTime.Format(time.RFC3339), msg.StartTime.Format(time.RFC3339))
 	}
-	if msg.StakingCoinWeights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-	}
-	if err := msg.StakingCoinWeights.Validate(); err != nil {
+	if err := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); err != nil {
 		return err
 	}
-	if ok := ValidateStakingCoinTotalWeights(msg.StakingCoinWeights); !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
-	}
-	if !msg.EpochRatio.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
+	if err := ValidateEpochRatio(msg.EpochRatio); err != nil {
+		return err
 	}
 	if msg.EpochRatio.GT(sdk.NewDec(1)) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")

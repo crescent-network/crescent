@@ -119,7 +119,7 @@ func TestMsgCreateRatioPlan(t *testing.T) {
 			),
 		},
 		{
-			"invalid epoch ratio: invalid request",
+			"epoch ratio must be positive: -1.000000000000000000: invalid request",
 			types.NewMsgCreateRatioPlan(
 				name, creatorAddr, stakingCoinWeights,
 				startTime, endTime, sdk.NewDec(-1),
