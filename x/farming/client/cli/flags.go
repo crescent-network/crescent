@@ -14,6 +14,7 @@ const (
 	FlagAll              = "all"
 )
 
+// flagSetPlans returns the FlagSet used for farming plan related opertations.
 func flagSetPlans() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
@@ -25,6 +26,7 @@ func flagSetPlans() *flag.FlagSet {
 	return fs
 }
 
+// flagSetStakings returns the FlagSet used for farmer's staking coin denom.
 func flagSetStakings() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
@@ -33,6 +35,7 @@ func flagSetStakings() *flag.FlagSet {
 	return fs
 }
 
+// flagSetRewards returns the FlagSet used for farmer's rewards.
 func flagSetRewards() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
@@ -41,6 +44,7 @@ func flagSetRewards() *flag.FlagSet {
 	return fs
 }
 
+// flagSetHarvest returns the FlagSet used for harvest all staking coin denoms.
 func flagSetHarvest() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 

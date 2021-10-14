@@ -203,6 +203,7 @@ func (plan BasePlan) MarshalYAML() (interface{}, error) {
 	return string(bz), err
 }
 
+// NewFixedAmountPlan returns a new fixed amount plan.
 func NewFixedAmountPlan(basePlan *BasePlan, epochAmount sdk.Coins) *FixedAmountPlan {
 	return &FixedAmountPlan{
 		BasePlan:    basePlan,
@@ -210,6 +211,7 @@ func NewFixedAmountPlan(basePlan *BasePlan, epochAmount sdk.Coins) *FixedAmountP
 	}
 }
 
+// NewRatioPlan returns a new ratio plan.
 func NewRatioPlan(basePlan *BasePlan, epochRatio sdk.Dec) *RatioPlan {
 	return &RatioPlan{
 		BasePlan:   basePlan,
@@ -217,6 +219,7 @@ func NewRatioPlan(basePlan *BasePlan, epochRatio sdk.Dec) *RatioPlan {
 	}
 }
 
+// PlanI represents a farming plan.
 type PlanI interface {
 	proto.Message
 
@@ -383,6 +386,8 @@ func IsPlanActiveAt(plan PlanI, t time.Time) bool {
 	return !plan.GetStartTime().After(t) && plan.GetEndTime().After(t)
 }
 
+// PrivatePlanFarmingPoolAddress returns a unique farming pool address
+// for a newly created plan.
 func PrivatePlanFarmingPoolAddress(name string, planId uint64) sdk.AccAddress {
 	poolAddrName := strings.Join([]string{PrivatePlanFarmingPoolAddrPrefix, fmt.Sprint(planId), name}, PoolAddrSplitter)
 	return address.Module(ModuleName, []byte(poolAddrName))

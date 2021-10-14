@@ -46,6 +46,7 @@ func GetTxCmd() *cobra.Command {
 	return farmingTxCmd
 }
 
+// NewCreateFixedAmountPlanCmd implements the create a fixed amount plan command handler.
 func NewCreateFixedAmountPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-private-fixed-plan [plan-file]",
@@ -118,6 +119,7 @@ Description for the parameters:
 	return cmd
 }
 
+// NewCreateRatioPlanCmd implements the create a ratio plan command handler.
 func NewCreateRatioPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-private-ratio-plan [plan-file]",
@@ -185,6 +187,7 @@ Description for the parameters:
 	return cmd
 }
 
+// NewStakeCmd implements the stake coin(s) command handler.
 func NewStakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stake [amount]",
@@ -227,6 +230,7 @@ $ %s tx %s stake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2
 	return cmd
 }
 
+// NewUnstakeCmd implements the unstake coin(s) command handler.
 func NewUnstakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unstake [amount]",
@@ -269,6 +273,7 @@ $ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70
 	return cmd
 }
 
+// NewHarvestCmd implements the harvest rewards command handler.
 func NewHarvestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "harvest [staking-coin-denoms]",
@@ -334,6 +339,7 @@ $ %s tx %s harvest --all --from mykey
 	return cmd
 }
 
+// NewAdvanceEpochCmd implements the advance epoch by 1 command handler.
 func NewAdvanceEpochCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "advance-epoch",
@@ -368,7 +374,7 @@ $ %s tx %s advance-epoch --from mykey
 	return cmd
 }
 
-// GetCmdSubmitPublicPlanProposal implements a command handler for submitting a public farming plan transaction to create, update, and delete plan.
+// GetCmdSubmitPublicPlanProposal implements the create/update/delete public farming plan command handler.
 func GetCmdSubmitPublicPlanProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "public-farming-plan [proposal-file] [flags]",

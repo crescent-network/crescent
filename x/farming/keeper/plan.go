@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/farming/x/farming/types"
 )
 
-// NewPlan sets the next plan number to a given plan interface
+// NewPlan sets the next plan number to a given PlanI.
 func (k Keeper) NewPlan(ctx sdk.Context, plan types.PlanI) types.PlanI {
 	if err := plan.SetId(k.GetNextPlanIdWithUpdate(ctx)); err != nil {
 		panic(err)
@@ -20,7 +20,7 @@ func (k Keeper) NewPlan(ctx sdk.Context, plan types.PlanI) types.PlanI {
 	return plan
 }
 
-// GetPlan implements PlanI.
+// GetPlan returns a plan for a given plan id.
 func (k Keeper) GetPlan(ctx sdk.Context, id uint64) (plan types.PlanI, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPlanKey(id))
@@ -31,7 +31,7 @@ func (k Keeper) GetPlan(ctx sdk.Context, id uint64) (plan types.PlanI, found boo
 	return k.decodePlan(bz), true
 }
 
-// GetPlans returns all plans in the Keeper.
+// GetPlans returns all plans in the store.
 func (k Keeper) GetPlans(ctx sdk.Context) (plans []types.PlanI) {
 	k.IteratePlans(ctx, func(plan types.PlanI) (stop bool) {
 		plans = append(plans, plan)
@@ -41,7 +41,7 @@ func (k Keeper) GetPlans(ctx sdk.Context) (plans []types.PlanI) {
 	return plans
 }
 
-// SetPlan implements PlanI.
+// SetPlan sets a plan for a given plan id.
 func (k Keeper) SetPlan(ctx sdk.Context, plan types.PlanI) {
 	id := plan.GetId()
 	store := ctx.KVStore(k.storeKey)
@@ -54,7 +54,7 @@ func (k Keeper) SetPlan(ctx sdk.Context, plan types.PlanI) {
 	store.Set(types.GetPlanKey(id), bz)
 }
 
-// RemovePlan removes an plan for the plan mapper store.
+// RemovePlan removes a plan from the store.
 // NOTE: this will cause supply invariant violation if called
 func (k Keeper) RemovePlan(ctx sdk.Context, plan types.PlanI) {
 	id := plan.GetId()
@@ -86,7 +86,7 @@ func (k Keeper) GetNextPlanIdWithUpdate(ctx sdk.Context) uint64 {
 	return id
 }
 
-// SetGlobalPlanId set the global Plan ID counter.
+// SetGlobalPlanId sets the global Plan ID counter.
 func (k Keeper) SetGlobalPlanId(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
@@ -124,13 +124,13 @@ func (k Keeper) decodePlan(bz []byte) types.PlanI {
 	return acc
 }
 
-// MarshalPlan protobuf serializes an Plan interface
+// MarshalPlan serializes a plan.
 func (k Keeper) MarshalPlan(plan types.PlanI) ([]byte, error) { // nolint:interfacer
 	return k.cdc.MarshalInterface(plan)
 }
 
-// UnmarshalPlan returns an Plan interface from raw encoded plan
-// bytes of a Proto-based Plan type
+// UnmarshalPlan returns a plan from raw serialized
+// bytes of a Proto-based Plan type.
 func (k Keeper) UnmarshalPlan(bz []byte) (plan types.PlanI, err error) {
 	return plan, k.cdc.UnmarshalInterface(bz, &plan)
 }
@@ -266,6 +266,8 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 	return nil
 }
 
+// GeneratePrivatePlanFarmingPoolAddress returns a unique account address
+// of a farming pool for a private plan.
 func (k Keeper) GeneratePrivatePlanFarmingPoolAddress(ctx sdk.Context, name string) (sdk.AccAddress, error) {
 	nextPlanId := k.GetGlobalPlanId(ctx) + 1
 	poolAcc := types.PrivatePlanFarmingPoolAddress(name, nextPlanId)

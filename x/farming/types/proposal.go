@@ -104,14 +104,21 @@ func NewAddRequestProposal(
 	}
 }
 
+// IsForFixedAmountPlan returns true if the request is for
+// fixed amount plan.
+// It checks if EpochAmount is not zero.
 func (p *AddRequestProposal) IsForFixedAmountPlan() bool {
 	return !p.EpochAmount.Empty()
 }
 
+// IsForRatioPlan returns true if the request is for
+// ratio plan.
+// It checks if EpochRatio is not zero.
 func (p *AddRequestProposal) IsForRatioPlan() bool {
 	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
 }
 
+// Validate validates AddRequestProposal.
 func (p *AddRequestProposal) Validate() error {
 	if p.Name == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan name must not be empty")
@@ -174,14 +181,21 @@ func NewUpdateRequestProposal(
 	}
 }
 
+// IsForFixedAmountPlan returns true if the request is for
+// fixed amount plan.
+// It checks if EpochAmount is not zero.
 func (p *UpdateRequestProposal) IsForFixedAmountPlan() bool {
 	return !p.EpochAmount.Empty()
 }
 
+// IsForRatioPlan returns true if the request is for
+// ratio plan.
+// It checks if EpochRatio is not zero.
 func (p *UpdateRequestProposal) IsForRatioPlan() bool {
 	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
 }
 
+// Validate validates UpdateRequestProposal.
 func (p *UpdateRequestProposal) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
@@ -233,6 +247,7 @@ func NewDeleteRequestProposal(id uint64) *DeleteRequestProposal {
 	}
 }
 
+// Validate validates DeleteRequestProposal.
 func (p *DeleteRequestProposal) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)

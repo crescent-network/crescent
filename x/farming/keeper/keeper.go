@@ -14,7 +14,10 @@ import (
 )
 
 var (
-	enableAdvanceEpoch = "false" // set it to "true" using build flags to enable AdvanceEpoch msg handling.
+	enableAdvanceEpoch = "false" // Set this to "true" using build flags to enable AdvanceEpoch msg handling.
+
+	// EnableAdvanceEpoch indicates whether msgServer accepts MsgAdvanceEpoch or not.
+	// Never set this to true in production mode. Doing that will expose serious attack vector.
 	EnableAdvanceEpoch = false
 )
 
@@ -71,7 +74,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// GetParams gets the parameters for the farming module.
+// GetParams returns the parameters for the farming module.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
@@ -82,15 +85,15 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// GetCodec return codec.Codec object used by the keeper
+// GetCodec returns codec.Codec object used by the keeper>
 func (k Keeper) GetCodec() codec.BinaryCodec { return k.cdc }
 
-// GetStakingReservePoolAcc returns module account for Staking Reserve Pool account
+// GetStakingReservePoolAcc returns module account for the staking reserve pool account.
 func (k Keeper) GetStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
 	return types.StakingReserveAcc
 }
 
-// GetRewardsReservePoolAcc returns temporary module account for Reward coins Reserve Pool account
+// GetRewardsReservePoolAcc returns module account for the rewards reserve pool account.
 func (k Keeper) GetRewardsReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
 	return types.RewardsReserveAcc
 }

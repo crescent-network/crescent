@@ -50,42 +50,54 @@ func GetStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
 	return append(append(StakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
 }
 
+// GetStakingIndexKey returns an indexing key for a staking.
 func GetStakingIndexKey(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
 	return append(append(StakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...), []byte(stakingCoinDenom)...)
 }
 
+// GetStakingsByFarmerPrefix returns a key prefix used to iterate
+// stakings by a farmer.
 func GetStakingsByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
 	return append(StakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...)
 }
 
+// GetQueuedStakingKey returns a key for a queued staking.
 func GetQueuedStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
 	return append(append(QueuedStakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
 }
 
+// GetQueuedStakingIndexKey returns an indexing key for a queuded staking.
 func GetQueuedStakingIndexKey(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
 	return append(append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...), []byte(stakingCoinDenom)...)
 }
 
+// GetQueuedStakingByFarmerPrefix returns a key prefix used to iterate
+// queued stakings by a farmer.
 func GetQueuedStakingByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
 	return append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...)
 }
 
+// GetTotalStakingsKey returns a key for a total stakings info.
 func GetTotalStakingsKey(stakingCoinDenom string) []byte {
 	return append(TotalStakingKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
+// GetHistoricalRewardsKey returns a key for a historical rewards record.
 func GetHistoricalRewardsKey(stakingCoinDenom string, epoch uint64) []byte {
 	return append(append(HistoricalRewardsKeyPrefix, LengthPrefixString(stakingCoinDenom)...), sdk.Uint64ToBigEndian(epoch)...)
 }
 
+// GetCurrentEpochKey returns a key for a current epoch info.
 func GetCurrentEpochKey(stakingCoinDenom string) []byte {
 	return append(CurrentEpochKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
+// GetOutstandingRewardsKey returns a key for an outstanding rewards record.
 func GetOutstandingRewardsKey(stakingCoinDenom string) []byte {
 	return append(OutstandingRewardsKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
+// ParseStakingKey parses a staking key.
 func ParseStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
 	if !bytes.HasPrefix(key, StakingKeyPrefix) {
 		panic("key does not have proper prefix")
@@ -96,6 +108,7 @@ func ParseStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddr
 	return
 }
 
+// ParseStakingIndexKey parses a staking index key.
 func ParseStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
 	if !bytes.HasPrefix(key, StakingIndexKeyPrefix) {
 		panic("key does not have proper prefix")
@@ -106,6 +119,7 @@ func ParseStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDeno
 	return
 }
 
+// ParseQueuedStakingKey parses a queued staking key.
 func ParseQueuedStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
 	if !bytes.HasPrefix(key, QueuedStakingKeyPrefix) {
 		panic("key does not have proper prefix")
@@ -116,6 +130,7 @@ func ParseQueuedStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.A
 	return
 }
 
+// ParseQueuedStakingIndexKey parses a queued staking index key.
 func ParseQueuedStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
 	if !bytes.HasPrefix(key, QueuedStakingIndexKeyPrefix) {
 		panic("key does not have proper prefix")
@@ -126,6 +141,7 @@ func ParseQueuedStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCo
 	return
 }
 
+// ParseHistoricalRewardsKey parses a historical rewards key.
 func ParseHistoricalRewardsKey(key []byte) (stakingCoinDenom string, epoch uint64) {
 	if !bytes.HasPrefix(key, HistoricalRewardsKeyPrefix) {
 		panic("key does not have proper prefix")
@@ -136,6 +152,7 @@ func ParseHistoricalRewardsKey(key []byte) (stakingCoinDenom string, epoch uint6
 	return
 }
 
+// ParseCurrentEpochKey parses a current epoch key.
 func ParseCurrentEpochKey(key []byte) (stakingCoinDenom string) {
 	if !bytes.HasPrefix(key, CurrentEpochKeyPrefix) {
 		panic("key does not have proper prefix")
@@ -144,6 +161,7 @@ func ParseCurrentEpochKey(key []byte) (stakingCoinDenom string) {
 	return
 }
 
+// ParseOutstandingRewardsKey parses an outstanding rewards key.
 func ParseOutstandingRewardsKey(key []byte) (stakingCoinDenom string) {
 	if !bytes.HasPrefix(key, OutstandingRewardsKeyPrefix) {
 		panic("key does not have proper prefix")
@@ -152,7 +170,8 @@ func ParseOutstandingRewardsKey(key []byte) (stakingCoinDenom string) {
 	return
 }
 
-// LengthPrefixString is LengthPrefix for string.
+// LengthPrefixString returns length-prefixed bytes representation
+// of a string.
 func LengthPrefixString(s string) []byte {
 	bz := []byte(s)
 	bzLen := len(bz)
