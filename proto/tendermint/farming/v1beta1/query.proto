@@ -114,7 +114,7 @@ service Query {
   rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/stakings/{farmer}";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            description: "Returns a list of all stakings that corresponds to the farmer";
+            description: "Returns all stakings (staked and queued coins) that corresponds to the farmer";
             external_docs: {
                 url: "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#stakings";
                 description: "Find out more about the query and error codes";
@@ -156,7 +156,7 @@ service Query {
   rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
     option (google.api.http).get = "/cosmos/farming/v1beta1/rewards/{farmer}";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "Returns a list of rewards that corresponds to the farmer";
+      description: "Returns all rewards coins that corresponds to the farmer";
           external_docs: {
               url: "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#rewards";
               description: "Find out more about the query and error codes";
