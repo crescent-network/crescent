@@ -20,13 +20,16 @@ func TestDecodeFarmingStore(t *testing.T) {
 	basePlan := types.BasePlan{}
 	staking := types.Staking{}
 	queuedStaking := types.QueuedStaking{}
+	historicalRewards := types.HistoricalRewards{}
+	outstandingRewards := types.OutstandingRewards{}
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.PlanKeyPrefix, Value: cdc.MustMarshal(&basePlan)},
 			{Key: types.StakingKeyPrefix, Value: cdc.MustMarshal(&staking)},
 			{Key: types.QueuedStakingKeyPrefix, Value: cdc.MustMarshal(&queuedStaking)},
-			// TODO: f1 structs, indexes
+			{Key: types.HistoricalRewardsKeyPrefix, Value: cdc.MustMarshal(&historicalRewards)},
+			{Key: types.OutstandingRewardsKeyPrefix, Value: cdc.MustMarshal(&outstandingRewards)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -38,6 +41,8 @@ func TestDecodeFarmingStore(t *testing.T) {
 		{"Plan", fmt.Sprintf("%v\n%v", basePlan, basePlan)},
 		{"Staking", fmt.Sprintf("%v\n%v", staking, staking)},
 		{"QueuedStaking", fmt.Sprintf("%v\n%v", queuedStaking, queuedStaking)},
+		{"HistoricalRewardsKeyPrefix", fmt.Sprintf("%v\n%v", historicalRewards, historicalRewards)},
+		{"OutstandingRewardsKeyPrefix", fmt.Sprintf("%v\n%v", outstandingRewards, outstandingRewards)},
 		{"other", ""},
 	}
 	for i, tt := range tests {
