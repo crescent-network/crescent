@@ -12,16 +12,6 @@ import (
 	"github.com/tendermint/farming/x/farming/types"
 )
 
-/*
-[TODO]:
-	We need to come up with better ways to simulate public plan proposals.
-	Currently, the details are ignored and only basic logics are written to simulate.
-
-	These are some of the following considerations that i think need to be discussed and addressed:
-	1. Randomize staking coin weights (single or multiple denoms)
-	2. Simulate multiple proposals (add new weighted proposal content for multiple plans?)
-*/
-
 // Simulation operation weights constants.
 const (
 	OpWeightSimulateAddPublicPlanProposal    = "op_weight_add_public_plan_proposal"
@@ -69,17 +59,7 @@ func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, 
 			return nil
 		}
 
-		// add request proposal
-		req := &types.AddRequestProposal{
-			Name:               "simulation-test-" + simtypes.RandStringOfLength(r, 5),
-			FarmingPoolAddress: simAccount.Address.String(),
-			TerminationAddress: simAccount.Address.String(),
-			StakingCoinWeights: sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1)),
-			StartTime:          ctx.BlockTime(),
-			EndTime:            ctx.BlockTime().AddDate(0, 1, 0),
-			EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000)))),
-		}
-		addRequests := []*types.AddRequestProposal{req}
+		addRequests := genAddRequestProposals(r, ctx, simAccount, poolCoins)
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
@@ -112,17 +92,16 @@ func SimulateUpdatePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 
 		req := &types.UpdateRequestProposal{}
 
-		// TODO: decide which values of fields to randomize
 		plans := k.GetPlans(ctx)
 		for _, p := range plans {
 			if p.GetType() == types.PlanTypePublic {
 				startTime := ctx.BlockTime()
-				endTime := startTime.AddDate(0, 1, 0)
+				endTime := startTime.AddDate(0, simtypes.RandIntBetween(r, 1, 28), 0)
 
 				switch plan := p.(type) {
 				case *types.FixedAmountPlan:
 					req.PlanId = plan.GetId()
-					req.Name = plan.GetName()
+					req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
 					req.FarmingPoolAddress = plan.GetFarmingPoolAddress().String()
 					req.TerminationAddress = plan.GetTerminationAddress().String()
 					req.StakingCoinWeights = plan.GetStakingCoinWeights()
@@ -131,13 +110,13 @@ func SimulateUpdatePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 					req.EpochAmount = sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))))
 				case *types.RatioPlan:
 					req.PlanId = plan.GetId()
-					req.Name = plan.GetName()
+					req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
 					req.FarmingPoolAddress = plan.GetFarmingPoolAddress().String()
 					req.TerminationAddress = plan.GetTerminationAddress().String()
 					req.StakingCoinWeights = plan.GetStakingCoinWeights()
 					req.StartTime = &startTime
 					req.EndTime = &endTime
-					req.EpochRatio = sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10)), 1)
+					req.EpochRatio = sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 5)), 1)
 				}
 				break
 			}
@@ -197,4 +176,36 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			deleteRequest,
 		)
 	}
+}
+
+// genAddRequestProposals returns randomized add request proposals.
+func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.Account, poolCoins sdk.Coins) []*types.AddRequestProposal {
+	ranProposals := make([]*types.AddRequestProposal, 0)
+
+	// generate random number of proposals with random values of each parameter
+	// it generates a fixed amount plan if pseudo-random integer is an even number then and
+	// it generates a ratio plan if it is an odo number
+	for i := 0; i < simtypes.RandIntBetween(r, 1, 3); i++ {
+		req := &types.AddRequestProposal{}
+		if r.Int()%2 == 0 {
+			req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
+			req.FarmingPoolAddress = simAccount.Address.String()
+			req.TerminationAddress = simAccount.Address.String()
+			req.StakingCoinWeights = sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
+			req.StartTime = ctx.BlockTime()
+			req.EndTime = ctx.BlockTime().AddDate(0, simtypes.RandIntBetween(r, 1, 28), 0)
+			req.EpochAmount = sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))))
+		} else {
+			req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
+			req.FarmingPoolAddress = simAccount.Address.String()
+			req.TerminationAddress = simAccount.Address.String()
+			req.StakingCoinWeights = sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
+			req.StartTime = ctx.BlockTime()
+			req.EndTime = ctx.BlockTime().AddDate(0, simtypes.RandIntBetween(r, 1, 28), 0)
+			req.EpochRatio = sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 5)), 1)
+		}
+
+		ranProposals = append(ranProposals, req)
+	}
+	return ranProposals
 }
