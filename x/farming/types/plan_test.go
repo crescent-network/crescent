@@ -419,7 +419,7 @@ func TestValidateStakingCoinTotalWeights(t *testing.T) {
 		{
 			"invalid case 3",
 			sdk.DecCoins{
-				sdk.DecCoin{"stake1", sdk.NewDec(-1)},
+				sdk.DecCoin{Denom: "stake1", Amount: sdk.NewDec(-1)},
 			},
 			"invalid staking coin weights: coin -1.000000000000000000stake1 amount is not positive: invalid request",
 		},
