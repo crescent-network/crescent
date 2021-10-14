@@ -315,11 +315,6 @@ func SimulateMsgHarvest(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		//
-		// TODO: not fully implemented yet. It needs debugging why
-		// there are no rewards although it processes queued coins and distribute rewards
-		//
-
 		var simAccount simtypes.Account
 
 		// find staking from the simulated accounts

@@ -183,8 +183,8 @@ func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.A
 	ranProposals := make([]*types.AddRequestProposal, 0)
 
 	// generate random number of proposals with random values of each parameter
-	// it generates a fixed amount plan if pseudo-random integer is an even number then and
-	// it generates a ratio plan if it is an odo number
+	// it generates a fixed amount plan if pseudo-random integer is an even number and
+	// it generates a ratio plan if it is an odd number
 	for i := 0; i < simtypes.RandIntBetween(r, 1, 3); i++ {
 		req := &types.AddRequestProposal{}
 		if r.Int()%2 == 0 {
@@ -194,7 +194,7 @@ func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.A
 			req.StakingCoinWeights = sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
 			req.StartTime = ctx.BlockTime()
 			req.EndTime = ctx.BlockTime().AddDate(0, simtypes.RandIntBetween(r, 1, 28), 0)
-			req.EpochAmount = sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))))
+			req.EpochAmount = sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 100_000_000))))
 		} else {
 			req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
 			req.FarmingPoolAddress = simAccount.Address.String()
@@ -202,9 +202,8 @@ func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.A
 			req.StakingCoinWeights = sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
 			req.StartTime = ctx.BlockTime()
 			req.EndTime = ctx.BlockTime().AddDate(0, simtypes.RandIntBetween(r, 1, 28), 0)
-			req.EpochRatio = sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 5)), 1)
+			req.EpochRatio = sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10)), 2) // 1% ~ 10%
 		}
-
 		ranProposals = append(ranProposals, req)
 	}
 	return ranProposals
