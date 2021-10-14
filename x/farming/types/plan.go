@@ -177,15 +177,8 @@ func (plan BasePlan) Validate() error {
 	if len(plan.Name) > MaxNameLength {
 		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
-
-	if plan.StakingCoinWeights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-	}
-	if err := plan.StakingCoinWeights.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
-	}
-	if ok := ValidateStakingCoinTotalWeights(plan.StakingCoinWeights); !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	if err := ValidateStakingCoinTotalWeights(plan.StakingCoinWeights); err != nil {
+		return err
 	}
 	if !plan.EndTime.After(plan.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", plan.EndTime, plan.StartTime)
@@ -349,12 +342,21 @@ func UnpackPlans(plansAny []*codectypes.Any) ([]PlanI, error) {
 }
 
 // ValidateStakingCoinTotalWeights validates the total staking coin weights must be equal to 1.
-func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) bool {
+func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) error {
+	if weights.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
+	}
+	if err := weights.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
+	}
 	totalWeight := sdk.ZeroDec()
 	for _, w := range weights {
 		totalWeight = totalWeight.Add(w.Amount)
 	}
-	return totalWeight.Equal(sdk.NewDec(1))
+	if !totalWeight.Equal(sdk.OneDec()) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	}
+	return nil
 }
 
 // IsPlanActiveAt returns if the plan is active at given time t.

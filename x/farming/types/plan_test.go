@@ -373,44 +373,63 @@ func TestIsPlanActiveAt(t *testing.T) {
 
 func TestValidateStakingCoinTotalWeights(t *testing.T) {
 	for _, tc := range []struct {
+		name               string
 		stakingCoinWeights sdk.DecCoins
-		valid              bool
+		expectedErr        string
 	}{
 		{
+			"nil case",
 			nil,
-			false,
+			"staking coin weights must not be empty: invalid request",
 		},
 		{
+			"empty case",
 			sdk.DecCoins{},
-			false,
+			"staking coin weights must not be empty: invalid request",
 		},
 		{
+			"valid case 1",
 			sdk.NewDecCoins(sdk.NewInt64DecCoin("stake1", 1)),
-			true,
+			"",
 		},
 		{
+			"valid case 2",
 			sdk.NewDecCoins(
 				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(5, 1)),
 				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(5, 1)),
 			),
-			true,
+			"",
 		},
 		{
+			"invalid case 1",
 			sdk.NewDecCoins(
 				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(3, 1)),
 				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(6, 1)),
 			),
-			false,
+			"total weight must be 1: invalid request",
 		},
 		{
+			"invalid case 2",
 			sdk.NewDecCoins(
 				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(5, 1)),
 				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(6, 1)),
 			),
-			false,
+			"total weight must be 1: invalid request",
+		},
+		{
+			"invalid case 3",
+			sdk.DecCoins{
+				sdk.DecCoin{"stake1", sdk.NewDec(-1)},
+			},
+			"invalid staking coin weights: coin -1.000000000000000000stake1 amount is not positive: invalid request",
 		},
 	} {
-		require.Equal(t, tc.valid, types.ValidateStakingCoinTotalWeights(tc.stakingCoinWeights))
+		err := types.ValidateStakingCoinTotalWeights(tc.stakingCoinWeights)
+		if tc.expectedErr == "" {
+			require.Nil(t, err)
+		} else {
+			require.Equal(t, tc.expectedErr, err.Error())
+		}
 	}
 }
 

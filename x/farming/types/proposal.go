@@ -125,18 +125,13 @@ func (p *AddRequestProposal) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
 	}
-	if p.StakingCoinWeights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-	}
-	if err := p.StakingCoinWeights.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
-	}
-	if ok := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+	if err := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); err != nil {
+		return err
 	}
 	if !p.EndTime.After(p.StartTime) {
 		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 	}
+
 	isForFixedAmountPlan := p.IsForFixedAmountPlan()
 	isForRatioPlan := p.IsForRatioPlan()
 	switch {
@@ -154,6 +149,15 @@ func (p *AddRequestProposal) Validate() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "epoch ratio must be less than 1: %s", p.EpochRatio)
 		}
 	}
+	//if p.IsForRatioPlan() {
+	//	if !p.EpochRatio.IsPositive() {
+	//		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
+	//	}
+	//	if p.EpochRatio.GT(sdk.NewDec(1)) {
+	//		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
+	//	}
+	//} else if p.IsForFixedAmountPlan() {
+
 	return nil
 }
 
@@ -208,14 +212,8 @@ func (p *UpdateRequestProposal) Validate() error {
 		}
 	}
 	if p.StakingCoinWeights != nil {
-		if p.StakingCoinWeights.Empty() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
-		}
-		if err := p.StakingCoinWeights.Validate(); err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
-		}
-		if !ValidateStakingCoinTotalWeights(p.StakingCoinWeights) {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+		if err := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); err != nil {
+			return err
 		}
 	}
 	if p.StartTime != nil && p.EndTime != nil {
