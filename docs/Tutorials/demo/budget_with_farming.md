@@ -3,10 +3,11 @@
 ## Changelog
 
 - 2021.09.27: initial document
+- 2021.10.15: update farming, budget version
 
 ## Disclaimer
 
-The [budget](https://github.com/tendermint/budget) and [farming](https://github.com/tendermint/farming) modules are in active development by the Gravity DEX team in Tendermint. This demo includes MVP versions of [budget](https://github.com/tendermint/budget/releases/tag/v0.1.0) and [farming](https://github.com/tendermint/farming/releases/tag/v0.1.0) modules meaning that it is not stable version. We are aware that there are a lot of rooms for improvements and there may be breaking changes along the way. We welcome any outside contributors to contribute to the modules and we are happy to receive any feedbacks or suggestions.
+The [budget](https://github.com/tendermint/budget) and [farming](https://github.com/tendermint/farming) modules are in active development by the Gravity DEX team in Tendermint. This demo includes MVP versions of budget and farming modules meaning that it is not stable version. We are aware that there are a lot of rooms for improvements and there may be breaking changes along the way. We welcome any outside contributors to contribute to the modules and we are happy to receive any feedbacks or suggestions.
 
 ## What does budget module do?
 
@@ -26,7 +27,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 - [Github Repo](https://github.com/tendermint/budget)
 - [Spec Docs](https://github.com/tendermint/budget/blob/master/x/budget/spec/01_concepts.md)
-- This demo version [v0.1.0](https://github.com/tendermint/budget/releases/tag/v0.1.0)
+- This demo version [v0.1.1](https://github.com/tendermint/budget/releases)
 - Other useful resources are available in [docs](https://github.com/tendermint/budget/blob/master/docs) folder
 - Swagger Docs [v0.1.0](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/0.1.0)
 
@@ -34,9 +35,9 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 - [Github Repo](https://github.com/tendermint/farming)
 - [Spec Docs](https://github.com/tendermint/farming/blob/master/x/farming/spec/01_concepts.md)
-- Today's demo version [v0.1.0](https://github.com/tendermint/farming/releases/tag/v0.1.0)
+- Today's demo version [v0.1.1](https://github.com/tendermint/farming/releases)
 - Other useful resources are available in [docs](https://github.com/tendermint/farming/blob/master/docs) folder
-- Swagger Docs [v0.1.2](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.2)    
+- Swagger Docs [v0.1.3](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.3)    
 
 ## Demo
 
@@ -44,7 +45,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 ```bash
 # Clone the demo project and build `farmingd` for testing
-git clone -b v0.1.0 https://github.com/tendermint/farming.git
+git clone -b v0.1.1 https://github.com/tendermint/farming.git
 cd farming
 make install-testing
 ```

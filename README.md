@@ -14,8 +14,8 @@ If you haven't already, install Golang by following the [official docs](https://
 
 Requirement | Notes
 ----------- | -----------------
-Go version  | Go1.15 or higher
-Cosmos SDK  | v0.44.0 or higher
+Go version  | Go1.16 or higher
+Cosmos SDK  | v0.44.2 or higher
 
 ### Get Farming Module source code
 
