@@ -180,3 +180,21 @@ func (suite *KeeperTestSuite) TestProcessQueuedCoins() {
 		}
 	}
 }
+
+func (suite *KeeperTestSuite) TestDelayedStakingGasFee() {
+	suite.ctx = suite.ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	err := suite.keeper.Stake(suite.ctx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 10000000)))
+	suite.Require().NoError(err)
+	gasConsumedNormal := suite.ctx.GasMeter().GasConsumed()
+
+	suite.AdvanceEpoch()
+
+	suite.ctx = suite.ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	err = suite.keeper.Stake(suite.ctx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 10000000)))
+	suite.Require().NoError(err)
+	gasConsumedWithStaking := suite.ctx.GasMeter().GasConsumed()
+
+	params := suite.keeper.GetParams(suite.ctx)
+	suite.Require().GreaterOrEqual(gasConsumedWithStaking, params.DelayedStakingGasFee)
+	suite.Require().Greater(gasConsumedWithStaking, gasConsumedNormal)
+}

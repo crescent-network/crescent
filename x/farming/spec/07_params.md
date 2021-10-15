@@ -9,6 +9,7 @@ The farming module contains the following parameters:
 | PrivatePlanCreationFee     | sdk.Coins | [{"denom":"stake","amount":"100000000"}]                            |
 | NextEpochDays              | uint32    | 1                                                                   |
 | FarmingFeeCollector        | string    | "cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x" |
+| DelayedStakingGasFee       | sdk.Gas   | 60000                                                               |
 
 ## PrivatePlanCreationFee
 
@@ -21,3 +22,10 @@ Fee paid for to create a Private type Farming plan. This fee prevents spamming a
 ## FarmingFeeCollector
 
 A farming fee collector is a module account address that collects farming fees, such as staking creation fee and private plan creation fee.
+
+## DelayedStakingGasFee
+
+Since the farming module has adopted delayed staking,
+handling `MsgStake` does not immediately consumes gas.
+Instead, gas for this newly queued staking is consumed at the end of the epoch.
+`DelayedStakingGasFee` is to impose gas fee for this reason.

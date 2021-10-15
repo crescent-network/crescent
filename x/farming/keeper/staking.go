@@ -224,6 +224,7 @@ func (k Keeper) Stake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coin
 		return err
 	}
 
+	numStakingCoinDenoms := 0
 	for _, coin := range amount {
 		queuedStaking, found := k.GetQueuedStaking(ctx, coin.Denom, farmerAcc)
 		if !found {
@@ -231,7 +232,15 @@ func (k Keeper) Stake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coin
 		}
 		queuedStaking.Amount = queuedStaking.Amount.Add(coin.Amount)
 		k.SetQueuedStaking(ctx, coin.Denom, farmerAcc, queuedStaking)
+
+		_, found = k.GetStaking(ctx, coin.Denom, farmerAcc)
+		if found {
+			numStakingCoinDenoms++
+		}
 	}
+
+	params := k.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(sdk.Gas(numStakingCoinDenoms)*params.DelayedStakingGasFee, "DelayedStakingGasFee")
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

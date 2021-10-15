@@ -29,6 +29,13 @@ message Params {
 
   // farming_fee_collector is the module account address to collect fees within the farming module
   string farming_fee_collector = 3 [(gogoproto.moretags) = "yaml:\"farming_fee_collector\""];
+
+  // delayed_staking_gas_fee is used to impose gas fee for the delayed staking
+  uint64 delayed_staking_gas_fee = 4 [
+    (gogoproto.moretags)   = "yaml:\"delayed_staking_gas_fee\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // BasePlan defines a base plan type. It contains all the necessary fields
