@@ -23,6 +23,7 @@ lint:
     - cosmos_proto
     - google
     - confio
+    - protoc-gen-openapiv2
 breaking:
   use:
     - FILE
@@ -32,3 +33,4 @@ breaking:
     - cosmos_proto
     - google
     - confio
+    - protoc-gen-openapiv2

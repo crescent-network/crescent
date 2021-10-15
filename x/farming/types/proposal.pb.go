@@ -81,7 +81,7 @@ var xxx_messageInfo_PublicPlanProposal proto.InternalMessageInfo
 
 // AddRequestProposal details a proposal for creating a public plan.
 type AddRequestProposal struct {
-	// name specifies the plan name for diplay
+	// name specifies the plan name for display
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// farming_pool_address defines the bech32-encoded address of the farming pool
 	FarmingPoolAddress string `protobuf:"bytes,2,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty" yaml:"farming_pool_address"`
