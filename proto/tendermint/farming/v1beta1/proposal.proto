@@ -38,7 +38,7 @@ message PublicPlanProposal {
 
 // AddRequestProposal details a proposal for creating a public plan.
 message AddRequestProposal {
-  // name specifies the plan name for diplay
+  // name specifies the plan name for display
   string name = 1;
 
   // farming_pool_address defines the bech32-encoded address of the farming pool
