@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 				sdk.NewCoins(sdk.NewInt64Coin(denom3, 100_000_000)),
 				sdk.ZeroDec(),
 			)},
-			sdkerrors.Wrapf(types.ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
+			sdkerrors.Wrapf(types.ErrInvalidPlanName, "plan name cannot be longer than max length of %d", types.MaxNameLength),
 		},
 		{
 			"staking coin weights case #1",
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 				sdk.NewCoins(sdk.NewInt64Coin(denom3, 100_000_000)),
 				sdk.ZeroDec(),
 			)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty"),
+			sdkerrors.Wrap(types.ErrInvalidStakingCoinWeights, "staking coin weights must not be empty"),
 		},
 		{
 			"staking coin weights case #2",
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 				sdk.NewCoins(sdk.NewInt64Coin(denom3, 100_000_000)),
 				sdk.ZeroDec(),
 			)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1"),
+			sdkerrors.Wrap(types.ErrInvalidStakingCoinWeights, "total weight must be 1"),
 		},
 		{
 			"start time & end time case #1",
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 				nil,
 				plan.(*types.RatioPlan).EpochRatio,
 			)},
-			sdkerrors.Wrapf(types.ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", types.MaxNameLength),
+			sdkerrors.Wrapf(types.ErrInvalidPlanName, "plan name cannot be longer than max length of %d", types.MaxNameLength),
 		},
 		{
 			"staking coin weights case #1",
@@ -271,7 +271,7 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 				nil,
 				plan.(*types.RatioPlan).EpochRatio,
 			)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty"),
+			sdkerrors.Wrap(types.ErrInvalidStakingCoinWeights, "staking coin weights must not be empty"),
 		},
 		{
 			"staking coin weights case #2",
@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) TestValidateUpdatePublicPlanProposal() {
 				nil,
 				plan.(*types.RatioPlan).EpochRatio,
 			)},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1"),
+			sdkerrors.Wrap(types.ErrInvalidStakingCoinWeights, "total weight must be 1"),
 		},
 		{
 			"start time & end time case #1",

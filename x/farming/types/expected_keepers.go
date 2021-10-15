@@ -9,7 +9,6 @@ import (
 type BankKeeper interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	//GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error

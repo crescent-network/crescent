@@ -39,10 +39,10 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryRewards(),
 		GetCmdQueryCurrentEpochDays(),
 	)
-
 	return farmingQueryCmd
 }
 
+// GetCmdQueryParams implements the query params command.
 func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
@@ -78,6 +78,7 @@ $ %s query %s params
 	return cmd
 }
 
+// GetCmdQueryPlans implements the query all plans command.
 func GetCmdQueryPlans() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plans [optional flags]",
@@ -148,6 +149,7 @@ $ %s query %s plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C3
 	return cmd
 }
 
+// GetCmdQueryPlan implements the query the particular plan command.
 func GetCmdQueryPlan() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plan [plan-id]",
@@ -190,6 +192,7 @@ $ %s query %s plan
 	return cmd
 }
 
+// GetCmdQueryStakings implements the query all stakings command.
 func GetCmdQueryStakings() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
@@ -242,6 +245,7 @@ $ %s query %s stakings %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-
 	return cmd
 }
 
+// GetCmdQueryTotalStakings implements the query total staking amounts for a staking coin denom command.
 func GetCmdQueryTotalStakings() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-stakings [staking-coin-denom]",
@@ -284,6 +288,7 @@ $ %s query %s total-stakings poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D
 	return cmd
 }
 
+// GetCmdQueryRewards implements the query all rewards for a farmer command.
 func GetCmdQueryRewards() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
@@ -336,6 +341,7 @@ $ %s query %s rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-d
 	return cmd
 }
 
+// GetCmdQueryCurrentEpochDays implements the query current epoch days command.
 func GetCmdQueryCurrentEpochDays() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "current-epoch-days",

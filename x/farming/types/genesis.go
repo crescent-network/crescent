@@ -115,6 +115,7 @@ func ValidateGenesis(data GenesisState) error {
 	return nil
 }
 
+// Validate validates PlanRecord.
 func (record PlanRecord) Validate() error {
 	plan, err := UnpackPlan(&record.Plan)
 	if err != nil {
@@ -129,6 +130,7 @@ func (record PlanRecord) Validate() error {
 	return nil
 }
 
+// Validate validates StakingRecord.
 func (record StakingRecord) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(record.Farmer); err != nil {
 		return err
@@ -142,6 +144,7 @@ func (record StakingRecord) Validate() error {
 	return nil
 }
 
+// Validate validates QueuedStakingRecord.
 func (record QueuedStakingRecord) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(record.Farmer); err != nil {
 		return err
@@ -155,6 +158,7 @@ func (record QueuedStakingRecord) Validate() error {
 	return nil
 }
 
+// Validate validates HistoricalRewardsRecord.
 func (record HistoricalRewardsRecord) Validate() error {
 	if err := sdk.ValidateDenom(record.StakingCoinDenom); err != nil {
 		return err
@@ -165,6 +169,7 @@ func (record HistoricalRewardsRecord) Validate() error {
 	return nil
 }
 
+// Validate validates OutstandingRewardsRecord.
 func (record OutstandingRewardsRecord) Validate() error {
 	if err := sdk.ValidateDenom(record.StakingCoinDenom); err != nil {
 		return err
@@ -175,6 +180,7 @@ func (record OutstandingRewardsRecord) Validate() error {
 	return nil
 }
 
+// Validate validates CurrentEpochRecord.
 func (record CurrentEpochRecord) Validate() error {
 	if err := sdk.ValidateDenom(record.StakingCoinDenom); err != nil {
 		return err

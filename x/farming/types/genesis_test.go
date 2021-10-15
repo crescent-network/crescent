@@ -212,7 +212,7 @@ func TestValidateGenesis(t *testing.T) {
 					},
 				}
 			},
-			"total epoch ratio must be lower than 1: invalid request",
+			"total epoch ratio must be lower than 1: invalid total epoch ratio",
 		},
 		{
 			"invalid staking records - invalid staking coin denom",
