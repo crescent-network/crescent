@@ -175,7 +175,7 @@ func (plan BasePlan) Validate() error {
 		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot contain %s", PoolAddrSplitter)
 	}
 	if len(plan.Name) > MaxNameLength {
-		return sdkerrors.Wrapf(ErrInvalidPlanNameLength, "plan name cannot be longer than max length of %d", MaxNameLength)
+		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot be longer than max length of %d", MaxNameLength)
 	}
 	if err := ValidateStakingCoinTotalWeights(plan.StakingCoinWeights); err != nil {
 		return err
@@ -264,12 +264,7 @@ type PlanI interface {
 }
 
 // ValidateTotalEpochRatio validates a farmer's total epoch ratio that must be equal to 1.
-func ValidateTotalEpochRatio(i interface{}) error {
-	plans, ok := i.([]PlanI)
-	if !ok {
-		return sdkerrors.Wrapf(ErrInvalidPlanType, "invalid plan type %T", i)
-	}
-
+func ValidateTotalEpochRatio(plans []PlanI) error {
 	totalEpochRatio := make(map[string]sdk.Dec)
 
 	for _, plan := range plans {
@@ -289,8 +284,8 @@ func ValidateTotalEpochRatio(i interface{}) error {
 	}
 
 	for _, farmerRatio := range totalEpochRatio {
-		if farmerRatio.GT(sdk.NewDec(1)) {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total epoch ratio must be lower than 1")
+		if farmerRatio.GT(sdk.OneDec()) {
+			return sdkerrors.Wrap(ErrInvalidTotalEpochRatio, "total epoch ratio must be lower than 1")
 		}
 	}
 
@@ -366,17 +361,17 @@ func UnpackPlans(plansAny []*codectypes.Any) ([]PlanI, error) {
 // ValidateStakingCoinTotalWeights validates the total staking coin weights must be equal to 1.
 func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) error {
 	if weights.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "staking coin weights must not be empty")
+		return sdkerrors.Wrap(ErrInvalidStakingCoinWeights, "staking coin weights must not be empty")
 	}
 	if err := weights.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid staking coin weights: %v", err)
+		return sdkerrors.Wrapf(ErrInvalidStakingCoinWeights, "invalid staking coin weights: %v", err)
 	}
 	totalWeight := sdk.ZeroDec()
 	for _, w := range weights {
 		totalWeight = totalWeight.Add(w.Amount)
 	}
 	if !totalWeight.Equal(sdk.OneDec()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total weight must be 1")
+		return sdkerrors.Wrap(ErrInvalidStakingCoinWeights, "total weight must be 1")
 	}
 	return nil
 }

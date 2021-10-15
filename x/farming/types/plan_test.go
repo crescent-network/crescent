@@ -249,14 +249,14 @@ func TestBasePlanValidate(t *testing.T) {
 			func(plan *types.BasePlan) {
 				plan.Name = strings.Repeat("a", 256)
 			},
-			"plan name cannot be longer than max length of 140: invalid plan name length",
+			"plan name cannot be longer than max length of 140: invalid plan name",
 		},
 		{
 			"invalid staking coin weights - empty weights",
 			func(plan *types.BasePlan) {
 				plan.StakingCoinWeights = sdk.DecCoins{}
 			},
-			"staking coin weights must not be empty: invalid request",
+			"staking coin weights must not be empty: invalid staking coin weights",
 		},
 		{
 			"invalid staking coin weights - invalid denom",
@@ -265,7 +265,7 @@ func TestBasePlanValidate(t *testing.T) {
 					sdk.DecCoin{Denom: "!", Amount: sdk.NewDec(1)},
 				}
 			},
-			"invalid staking coin weights: invalid denom: !: invalid request",
+			"invalid staking coin weights: invalid denom: !: invalid staking coin weights",
 		},
 		{
 			"invalid staking coin weights - invalid amount",
@@ -274,7 +274,7 @@ func TestBasePlanValidate(t *testing.T) {
 					sdk.DecCoin{Denom: "stake1", Amount: sdk.NewDec(-1)},
 				}
 			},
-			"invalid staking coin weights: coin -1.000000000000000000stake1 amount is not positive: invalid request",
+			"invalid staking coin weights: coin -1.000000000000000000stake1 amount is not positive: invalid staking coin weights",
 		},
 		{
 			"invalid staking coin weights - invalid sum of weights #1",
@@ -283,7 +283,7 @@ func TestBasePlanValidate(t *testing.T) {
 					sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(7, 1)),
 				)
 			},
-			"total weight must be 1: invalid request",
+			"total weight must be 1: invalid staking coin weights",
 		},
 		{
 			"invalid staking coin weights - invalid sum of weights #2",
@@ -293,7 +293,7 @@ func TestBasePlanValidate(t *testing.T) {
 					sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(4, 1)),
 				)
 			},
-			"total weight must be 1: invalid request",
+			"total weight must be 1: invalid staking coin weights",
 		},
 		{
 			"invalid start/end time",
@@ -380,12 +380,12 @@ func TestValidateStakingCoinTotalWeights(t *testing.T) {
 		{
 			"nil case",
 			nil,
-			"staking coin weights must not be empty: invalid request",
+			"staking coin weights must not be empty: invalid staking coin weights",
 		},
 		{
 			"empty case",
 			sdk.DecCoins{},
-			"staking coin weights must not be empty: invalid request",
+			"staking coin weights must not be empty: invalid staking coin weights",
 		},
 		{
 			"valid case 1",
@@ -406,7 +406,7 @@ func TestValidateStakingCoinTotalWeights(t *testing.T) {
 				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(3, 1)),
 				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(6, 1)),
 			),
-			"total weight must be 1: invalid request",
+			"total weight must be 1: invalid staking coin weights",
 		},
 		{
 			"invalid case 2",
@@ -414,14 +414,14 @@ func TestValidateStakingCoinTotalWeights(t *testing.T) {
 				sdk.NewDecCoinFromDec("stake1", sdk.NewDecWithPrec(5, 1)),
 				sdk.NewDecCoinFromDec("stake2", sdk.NewDecWithPrec(6, 1)),
 			),
-			"total weight must be 1: invalid request",
+			"total weight must be 1: invalid staking coin weights",
 		},
 		{
 			"invalid case 3",
 			sdk.DecCoins{
 				sdk.DecCoin{Denom: "stake1", Amount: sdk.NewDec(-1)},
 			},
-			"invalid staking coin weights: coin -1.000000000000000000stake1 amount is not positive: invalid request",
+			"invalid staking coin weights: coin -1.000000000000000000stake1 amount is not positive: invalid staking coin weights",
 		},
 	} {
 		err := types.ValidateStakingCoinTotalWeights(tc.stakingCoinWeights)
@@ -468,7 +468,7 @@ func TestTotalEpochRatio(t *testing.T) {
 					sdk.NewDec(1),
 				),
 			},
-			sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "total epoch ratio must be lower than 1"),
+			sdkerrors.Wrap(types.ErrInvalidTotalEpochRatio, "total epoch ratio must be lower than 1"),
 		},
 	}
 

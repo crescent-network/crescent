@@ -21,10 +21,11 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		}
 	}
 
-	// CurrentEpochDays is intialized with the value of NextEpochDays in genesis and
+	// CurrentEpochDays is initialized with the value of NextEpochDays in genesis, and
 	// it is used here to prevent from affecting the epoch days for farming rewards allocation.
-	// Suppose NextEpochDays is 7 days and it is proposed to change the value to 1 day through governance proposal.
-	// Although the proposal is passed, farming rewards allocation should continue to proceed with 7 days and then it gets updated.
+	// Suppose NextEpochDays is 7 days, and it is proposed to change the value to 1 day through governance proposal.
+	// Although the proposal is passed, farming rewards allocation should continue to proceed with 7 days,
+	// and then it gets updated.
 	currentEpochDays := k.GetCurrentEpochDays(ctx)
 
 	lastEpochTime, found := k.GetLastEpochTime(ctx)
