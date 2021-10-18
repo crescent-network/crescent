@@ -25,7 +25,11 @@ A farming fee collector is a module account address that collects farming fees, 
 
 ## DelayedStakingGasFee
 
-Since the farming module has adopted delayed staking,
-handling `MsgStake` does not immediately consumes gas.
-Instead, gas for this newly queued staking is consumed at the end of the epoch.
-`DelayedStakingGasFee` is to impose gas fee for this reason.
+Since the farming module has adopted F1 reward distribution,
+changes in staked coins cause withdrawal of accrued rewards.
+In addition, the farming module employs a concept of delayed staking which means
+when a farmer stakes coins through `MsgStake`, staked coins are not modified immediately.
+Instead, at the end of the epoch, queued staking coins becomes staked and the rewards will be withdrawn.
+For this reason, we added `DelayedStakingGasFee` to impose gas fee for
+the future call of `WithdrawRewards` if a farmer has any staked coins with same
+denom of newly staking coin.

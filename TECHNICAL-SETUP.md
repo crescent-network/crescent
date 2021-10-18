@@ -1,6 +1,6 @@
 # Technical Setup
 
-To ensure you have a successful experience working with our farming module, Tendermint recommends this technical setup.
+To ensure you have a successful experience working with our farming module, we recommend this technical setup.
 
 ## Github Integration
 
@@ -54,6 +54,11 @@ For cross-builds use the standard `GOOS` and `GOARCH` env vars. i.e. to build fo
 GOOS=windows GOARCH=amd64 make build
 ```
 
+## Installation
+
+To install the node client on your machine, run `make install` command from the project's root folder. 
+
+> 💡 you can also use the default `go` command to build the project, check the content of the [Makefile](https://github.com/tendermint/farming/blob/master/Makefile#L90) for reference
 
 ## Testing
 
@@ -61,8 +66,3 @@ Run `make test-all` command to run tests.
 
 > 💡 you can also use the default `go` command to build the project, check the content of the [Makefile](https://github.com/tendermint/farming/blob/master/Makefile#L145) for reference
 
-## Installation
-
-To install the node client on your machine, run `make install` command from the project's root folder. 
-
-> 💡 you can also use the default `go` command to build the project, check the content of the [Makefile](https://github.com/tendermint/farming/blob/master/Makefile#L90) for reference

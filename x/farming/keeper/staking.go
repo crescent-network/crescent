@@ -239,8 +239,10 @@ func (k Keeper) Stake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coin
 		}
 	}
 
-	params := k.GetParams(ctx)
-	ctx.GasMeter().ConsumeGas(sdk.Gas(numStakingCoinDenoms)*params.DelayedStakingGasFee, "DelayedStakingGasFee")
+	if numStakingCoinDenoms > 0 {
+		params := k.GetParams(ctx)
+		ctx.GasMeter().ConsumeGas(sdk.Gas(numStakingCoinDenoms)*params.DelayedStakingGasFee, "DelayedStakingGasFee")
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

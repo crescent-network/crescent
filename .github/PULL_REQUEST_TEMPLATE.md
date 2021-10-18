@@ -32,6 +32,6 @@ write a little note why.
 - [ ] Code follows the [module structure standards](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/structure.md).
 - [ ] Wrote unit and integration
 - [ ] Updated relevant documentation (`docs/`) or specification (`x/<module>/spec/`)
-- [ ] Added relevant `godoc` [comments](https://blog.golang.org/godoc-documenting-go-code).
+- [ ] Added relevant `godoc` [comments](https://go.dev/blog/godoc).
 - [ ] Re-reviewed `Files changed` in the Github PR explorer
 - [ ] Review `Codecov Report` in the comment section below once CI passes
