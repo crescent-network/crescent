@@ -218,6 +218,15 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 			if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, truncatedRewards); err != nil {
 				return nil, err
 			}
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypeRewardsWithdrawn,
+					sdk.NewAttribute(types.AttributeKeyFarmer, farmerAcc.String()),
+					sdk.NewAttribute(types.AttributeKeyStakingCoinDenom, stakingCoinDenom),
+					sdk.NewAttribute(types.AttributeKeyRewardCoins, truncatedRewards.String()),
+				),
+			})
 		}
 
 		k.DecreaseOutstandingRewards(ctx, stakingCoinDenom, rewards)
@@ -225,15 +234,6 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 
 	staking.StartingEpoch = currentEpoch
 	k.SetStaking(ctx, stakingCoinDenom, farmerAcc, staking)
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRewardsWithdrawn,
-			sdk.NewAttribute(types.AttributeKeyFarmer, farmerAcc.String()),
-			sdk.NewAttribute(types.AttributeKeyStakingCoinDenom, stakingCoinDenom),
-			sdk.NewAttribute(types.AttributeKeyRewardCoins, truncatedRewards.String()),
-		),
-	})
 
 	return truncatedRewards, nil
 }
