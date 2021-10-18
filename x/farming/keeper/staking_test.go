@@ -48,6 +48,27 @@ func (suite *KeeperTestSuite) TestMultipleStake() {
 	// TODO: implement
 }
 
+func (suite *KeeperTestSuite) TestStakeInAdvance() {
+	// Staking in advance must not affect the total rewards.
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{
+		denom1: "1.0",
+	}, map[string]int64{
+		denom3: 1000000,
+	})
+	suite.Require().True(coinsEq(sdk.NewCoins(), suite.AllRewards(suite.addrs[0])))
+	suite.AdvanceEpoch()
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), suite.AllRewards(suite.addrs[0])))
+}
+
 func (suite *KeeperTestSuite) TestUnstake() {
 	for _, tc := range []struct {
 		name            string
@@ -134,12 +155,81 @@ func (suite *KeeperTestSuite) TestUnstake() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestUnstakePriority() {
+	// Unstake must withdraw coins from queued staking coins first,
+	// not from already staked coins.
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+
+	check := func(staked, queued int64) {
+		suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom1, staked)), suite.keeper.GetAllStakedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+		suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom1, queued)), suite.keeper.GetAllQueuedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+	}
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000)))
+	check(1000000, 500000)
+
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 300000)))
+	check(1000000, 200000)
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000)))
+	check(1000000, 700000)
+
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 300000)))
+	check(1000000, 400000)
+}
+
+func (suite *KeeperTestSuite) TestUnstakeNotAlwaysWithdraw() {
+	// Unstaking from queued staking coins should not trigger
+	// reward withdrawal.
+
+	suite.SetRatioPlan(1, suite.addrs[4], map[string]string{denom1: "1.0"}, "0.1")
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch() // Now, there are rewards to be withdrawn.
+
+	rewards := suite.AllRewards(suite.addrs[0])
+
+	// Stake and immediately unstake.
+	// This will not affect the amount of staked coins.
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000)))
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000)))
+
+	rewards2 := suite.AllRewards(suite.addrs[0])
+
+	suite.Require().True(coinsEq(rewards, rewards2))
+}
+
 func (suite *KeeperTestSuite) TestMultipleUnstake() {
 	// TODO: implement
 }
 
-func (suite *KeeperTestSuite) TestTotalStaking() {
-	// TODO: implement
+func (suite *KeeperTestSuite) TestTotalStakings() {
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	_, found := suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().False(found)
+
+	suite.AdvanceEpoch()
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000)))
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 300000)))
+	totalStakings, found := suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(intEq(sdk.NewInt(1000000), totalStakings.Amount))
+
+	suite.AdvanceEpoch()
+	totalStakings, _ = suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(intEq(sdk.NewInt(1200000), totalStakings.Amount))
+
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	totalStakings, _ = suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().True(intEq(sdk.NewInt(200000), totalStakings.Amount))
+
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 200000)))
+	_, found = suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().False(found)
 }
 
 func (suite *KeeperTestSuite) TestProcessQueuedCoins() {

@@ -275,18 +275,14 @@ func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Co
 				sdkerrors.ErrInsufficientFunds, "%s%s is smaller than %s%s", availableAmt, coin.Denom, coin.Amount, coin.Denom)
 		}
 
-		if staking.Amount.IsPositive() {
+		queuedStaking.Amount = queuedStaking.Amount.Sub(coin.Amount)
+		if queuedStaking.Amount.IsNegative() {
 			if _, err := k.WithdrawRewards(ctx, farmerAcc, coin.Denom); err != nil {
 				return err
 			}
-		}
 
-		removedFromStaking := sdk.ZeroInt()
-
-		queuedStaking.Amount = queuedStaking.Amount.Sub(coin.Amount)
-		if queuedStaking.Amount.IsNegative() {
 			staking.Amount = staking.Amount.Add(queuedStaking.Amount)
-			removedFromStaking = queuedStaking.Amount.Neg()
+			removedFromStaking := queuedStaking.Amount.Neg()
 			queuedStaking.Amount = sdk.ZeroInt()
 			if staking.Amount.IsPositive() {
 				currentEpoch := k.GetCurrentEpoch(ctx, coin.Denom)
@@ -295,16 +291,14 @@ func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Co
 			} else {
 				k.DeleteStaking(ctx, coin.Denom, farmerAcc)
 			}
+
+			k.DecreaseTotalStakings(ctx, coin.Denom, removedFromStaking)
 		}
 
 		if queuedStaking.Amount.IsPositive() {
 			k.SetQueuedStaking(ctx, coin.Denom, farmerAcc, queuedStaking)
 		} else {
 			k.DeleteQueuedStaking(ctx, coin.Denom, farmerAcc)
-		}
-
-		if removedFromStaking.IsPositive() {
-			k.DecreaseTotalStakings(ctx, coin.Denom, removedFromStaking)
 		}
 	}
 

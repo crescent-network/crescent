@@ -133,9 +133,19 @@ func (suite *KeeperTestSuite) Stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
 	suite.Require().NoError(err)
 }
 
+// Unstake is a convenient method to test Keeper.Unstake.
+func (suite *KeeperTestSuite) Unstake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
+	err := suite.keeper.Unstake(suite.ctx, farmerAcc, amt)
+	suite.Require().NoError(err)
+}
+
 func (suite *KeeperTestSuite) Harvest(farmerAcc sdk.AccAddress, stakingCoinDenoms []string) {
 	err := suite.keeper.Harvest(suite.ctx, farmerAcc, stakingCoinDenoms)
 	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) AllRewards(farmerAcc sdk.AccAddress) sdk.Coins {
+	return suite.keeper.AllRewards(suite.ctx, farmerAcc)
 }
 
 func (suite *KeeperTestSuite) AdvanceEpoch() {

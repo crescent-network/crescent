@@ -170,14 +170,8 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 		QueuedCoins: sdk.NewCoins(),
 	}
 	if req.StakingCoinDenom == "" {
-		k.Keeper.IterateStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, staking types.Staking) (stop bool) {
-			resp.StakedCoins = resp.StakedCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
-			return false
-		})
-		k.Keeper.IterateQueuedStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool) {
-			resp.QueuedCoins = resp.QueuedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
-			return false
-		})
+		resp.StakedCoins = k.Keeper.GetAllStakedCoinsByFarmer(ctx, farmerAcc)
+		resp.QueuedCoins = k.Keeper.GetAllQueuedCoinsByFarmer(ctx, farmerAcc)
 	} else {
 		staking, found := k.Keeper.GetStaking(ctx, req.StakingCoinDenom, farmerAcc)
 		if found {
