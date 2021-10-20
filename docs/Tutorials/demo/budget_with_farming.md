@@ -105,7 +105,7 @@ In this demo, we plan to create a budget plan that distributes partial amount of
 
 ```go
 // cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky 
-sdk.AccAddress(address.Module(ModuleName, []byte("GravityDEXFarmingBudget")))
+sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
 ```
 
 Explanation about each field in the JSON file
