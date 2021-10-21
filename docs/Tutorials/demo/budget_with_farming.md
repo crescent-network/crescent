@@ -78,18 +78,24 @@ $BINARY add-genesis-account $($BINARY keys show user2 --keyring-backend test -a)
 $BINARY gentx val1 50000000000000000stake --chain-id $CHAIN_ID --keyring-backend test
 $BINARY collect-gentxs
 
+# Check OS for sed -i option value
+export SED_I=""
+if [[ "$OSTYPE" == "darwin"* ]]; then 
+    export SED_I="''"
+fi 
+
 # Modify app.toml
-sed -i '' 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
-sed -i '' 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
+sed -i $SED_I 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
+sed -i $SED_I 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
 
 # Modify parameters for the governance proposal
-sed -i '' 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_FARMINGAPP/config/genesis.json
 
 # Modify inflation rate from 13% to 33%
-sed -i '' 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_FARMINGAPP/config/genesis.json
 
 # Start
 $BINARY start
