@@ -259,7 +259,7 @@ paths:
                       private_plan_creation_fee specifies the fee for plan
                       creation
 
-                      this fee prevents from spamming and it is collected in the
+                      this fee prevents from spamming and is collected in the
                       community pool
                   next_epoch_days:
                     type: integer
@@ -2213,11 +2213,9 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-        title: >-
+        title: |-
           private_plan_creation_fee specifies the fee for plan creation
-
-          this fee prevents from spamming and it is collected in the community
-          pool
+          this fee prevents from spamming and is collected in the community pool
       next_epoch_days:
         type: integer
         format: int64
@@ -2275,8 +2273,8 @@ definitions:
             title: >-
               private_plan_creation_fee specifies the fee for plan creation
 
-              this fee prevents from spamming and it is collected in the
-              community pool
+              this fee prevents from spamming and is collected in the community
+              pool
           next_epoch_days:
             type: integer
             format: int64

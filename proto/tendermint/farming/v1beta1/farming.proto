@@ -97,7 +97,7 @@ message BasePlan {
   ];
 }
 
-// FixedAmountPlan defines a fixed amount plan that distributes a fixed amount  
+// FixedAmountPlan defines a fixed amount plan that distributes a fixed amount
 // of coins for every epoch.
 message FixedAmountPlan {
   option (gogoproto.goproto_getters)  = false;
@@ -113,7 +113,7 @@ message FixedAmountPlan {
   ];
 }
 
-// RatioPlan defines a plan that distributes to farmers by ratio 
+// RatioPlan defines a plan that distributes to farmers by ratio
 // distribution for every epoch day.
 message RatioPlan {
   option (gogoproto.goproto_getters)  = false;
