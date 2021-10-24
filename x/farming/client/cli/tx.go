@@ -308,6 +308,13 @@ $ %s tx %s harvest --all --from mykey
 				if !all {
 					return fmt.Errorf("either staking-coin-denoms or --all flag must be specified")
 				}
+
+				// The transaction cannot be generated offline with --all flag since it
+				// requires a query to get all the staking denoms.
+				if clientCtx.Offline {
+					return fmt.Errorf("cannot generate tx in offline mode with --all flag")
+				}
+
 				queryClient := types.NewQueryClient(clientCtx)
 				resp, err := queryClient.Stakings(cmd.Context(), &types.QueryStakingsRequest{
 					Farmer: farmer.String(),
