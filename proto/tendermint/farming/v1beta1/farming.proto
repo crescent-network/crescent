@@ -15,7 +15,7 @@ message Params {
   option (gogoproto.goproto_stringer) = false;
 
   // private_plan_creation_fee specifies the fee for plan creation
-  // this fee prevents from spamming and it is collected in the community pool
+  // this fee prevents from spamming and is collected in the community pool
   repeated cosmos.base.v1beta1.Coin private_plan_creation_fee = 1 [
     (gogoproto.moretags)     = "yaml:\"private_plan_creation_fee\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -38,9 +38,9 @@ message Params {
   ];
 }
 
-// BasePlan defines a base plan type. It contains all the necessary fields
-// for basic farming plan functionality. Any custom farming plan type should
-// extend this type for additional functionality (e.g. fixed amount plan, ratio
+// BasePlan defines a base plan type and contains the required fields
+// for basic farming plan functionality. Any custom farming plan type must
+// extend this type for additional functionality (for example, fixed amount plan, ratio
 // plan).
 message BasePlan {
   option (gogoproto.goproto_getters)  = false;
@@ -62,12 +62,12 @@ message BasePlan {
   // farming_pool_address defines the bech32-encoded address of the farming pool
   string farming_pool_address = 4 [(gogoproto.moretags) = "yaml:\"farming_pool_address\""];
 
-  // termination_address defines the bech32-encoded address that terminates plan
-  // when the plan ends after the end time, the balance of farming pool address
+  // termination_address defines the Bech32-encoded address that terminates the plan
+  // when the plan ends after the end time, the balance of the farming pool address
   // is transferred to the termination address
   string termination_address = 5 [(gogoproto.moretags) = "yaml:\"termination_address\""];
 
-  // staking_coin_weights specifies coin weights for the plan
+  // staking_coin_weights specifies the coin weights for the plan
   repeated cosmos.base.v1beta1.DecCoin staking_coin_weights = 6 [
     (gogoproto.moretags)     = "yaml:\"staking_coin_weights\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
@@ -85,7 +85,7 @@ message BasePlan {
   // terminated indicates whether the plan has been terminated or not
   bool terminated = 9;
 
-  // last_distribution_time specifies the last time a distribution happened
+  // last_distribution_time specifies the last time a distribution occurred
   google.protobuf.Timestamp last_distribution_time = 10
       [(gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"last_distribution_time\""];
 
@@ -97,8 +97,8 @@ message BasePlan {
   ];
 }
 
-// FixedAmountPlan defines a fixed amount plan that fixed amount of coins are
-// distributed for every epoch.
+// FixedAmountPlan defines a fixed amount plan that distributes a fixed amount
+// of coins for every epoch.
 message FixedAmountPlan {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
@@ -113,8 +113,8 @@ message FixedAmountPlan {
   ];
 }
 
-// RatioPlan defines a ratio plan that ratio of total coins in farming pool
-// address is distributed for every epoch.
+// RatioPlan defines a plan that distributes to farmers by ratio
+// distribution for every epoch day.
 message RatioPlan {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
@@ -173,7 +173,7 @@ message HistoricalRewards {
   ];
 }
 
-// OutstandingRewards represents outstanding(un-withdrawn) rewards
+// OutstandingRewards represents outstanding (un-withdrawn) rewards
 // for a staking coin denom.
 message OutstandingRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1

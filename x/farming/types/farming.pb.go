@@ -65,7 +65,7 @@ func (PlanType) EnumDescriptor() ([]byte, []int) {
 // Params defines the set of params for the farming module.
 type Params struct {
 	// private_plan_creation_fee specifies the fee for plan creation
-	// this fee prevents from spamming and it is collected in the community pool
+	// this fee prevents from spamming and is collected in the community pool
 	PrivatePlanCreationFee github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=private_plan_creation_fee,json=privatePlanCreationFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"private_plan_creation_fee" yaml:"private_plan_creation_fee"`
 	// next_epoch_days is the epoch length in number of days
 	// it updates internal state called CurrentEpochDays that is used to process
@@ -109,9 +109,9 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
-// BasePlan defines a base plan type. It contains all the necessary fields
-// for basic farming plan functionality. Any custom farming plan type should
-// extend this type for additional functionality (e.g. fixed amount plan, ratio
+// BasePlan defines a base plan type and contains the required fields
+// for basic farming plan functionality. Any custom farming plan type must
+// extend this type for additional functionality (for example, fixed amount plan, ratio
 // plan).
 type BasePlan struct {
 	// id specifies index of the farming plan
@@ -124,11 +124,11 @@ type BasePlan struct {
 	Type PlanType `protobuf:"varint,3,opt,name=type,proto3,enum=cosmos.farming.v1beta1.PlanType" json:"type,omitempty"`
 	// farming_pool_address defines the bech32-encoded address of the farming pool
 	FarmingPoolAddress string `protobuf:"bytes,4,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty" yaml:"farming_pool_address"`
-	// termination_address defines the bech32-encoded address that terminates plan
-	// when the plan ends after the end time, the balance of farming pool address
+	// termination_address defines the Bech32-encoded address that terminates the plan
+	// when the plan ends after the end time, the balance of the farming pool address
 	// is transferred to the termination address
 	TerminationAddress string `protobuf:"bytes,5,opt,name=termination_address,json=terminationAddress,proto3" json:"termination_address,omitempty" yaml:"termination_address"`
-	// staking_coin_weights specifies coin weights for the plan
+	// staking_coin_weights specifies the coin weights for the plan
 	StakingCoinWeights github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,6,rep,name=staking_coin_weights,json=stakingCoinWeights,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"staking_coin_weights" yaml:"staking_coin_weights"`
 	// start_time specifies the start time of the plan
 	StartTime time.Time `protobuf:"bytes,7,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
@@ -136,7 +136,7 @@ type BasePlan struct {
 	EndTime time.Time `protobuf:"bytes,8,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
 	// terminated indicates whether the plan has been terminated or not
 	Terminated bool `protobuf:"varint,9,opt,name=terminated,proto3" json:"terminated,omitempty"`
-	// last_distribution_time specifies the last time a distribution happened
+	// last_distribution_time specifies the last time a distribution occurred
 	LastDistributionTime *time.Time `protobuf:"bytes,10,opt,name=last_distribution_time,json=lastDistributionTime,proto3,stdtime" json:"last_distribution_time,omitempty" yaml:"last_distribution_time"`
 	// distributed_coins specifies the total coins distributed by this plan
 	DistributedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,11,rep,name=distributed_coins,json=distributedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"distributed_coins" yaml:"distributed_coins"`
@@ -174,8 +174,8 @@ func (m *BasePlan) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BasePlan proto.InternalMessageInfo
 
-// FixedAmountPlan defines a fixed amount plan that fixed amount of coins are
-// distributed for every epoch.
+// FixedAmountPlan defines a fixed amount plan that distributes a fixed amount
+// of coins for every epoch.
 type FixedAmountPlan struct {
 	*BasePlan `protobuf:"bytes,1,opt,name=base_plan,json=basePlan,proto3,embedded=base_plan" json:"base_plan,omitempty" yaml:"base_plan"`
 	// epoch_amount specifies the distributing amount for each epoch
@@ -214,8 +214,8 @@ func (m *FixedAmountPlan) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_FixedAmountPlan proto.InternalMessageInfo
 
-// RatioPlan defines a ratio plan that ratio of total coins in farming pool
-// address is distributed for every epoch.
+// RatioPlan defines a plan that distributes to farmers by ratio
+// distribution for every epoch day.
 type RatioPlan struct {
 	*BasePlan `protobuf:"bytes,1,opt,name=base_plan,json=basePlan,proto3,embedded=base_plan" json:"base_plan,omitempty" yaml:"base_plan"`
 	// epoch_ratio specifies the distributing amount by ratio
@@ -403,7 +403,7 @@ func (m *HistoricalRewards) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_HistoricalRewards proto.InternalMessageInfo
 
-// OutstandingRewards represents outstanding(un-withdrawn) rewards
+// OutstandingRewards represents outstanding (un-withdrawn) rewards
 // for a staking coin denom.
 type OutstandingRewards struct {
 	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
