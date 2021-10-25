@@ -12,7 +12,10 @@ There are two types of farming plans in the `farming` module:
 
 ### Public Farming Plan
 
-A public farming plan can be created only through governance proposal. The proposal must be first agreed and passed before a public farming plan can be created. 
+A public farming plan can be created only through governance proposal. 
+
+- The proposal must be first agreed and passed before a public farming plan can be created. 
+- A creation fee is not required.
 
 ### Private Farming Plan
 
