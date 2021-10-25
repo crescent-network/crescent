@@ -2,11 +2,13 @@
 
 # State
 
-The farming module keeps track of the staking and rewards states.
+The `farming` module keeps track of the staking and rewards states.
 
 ## Plan Interface
 
-The plan interface exposes methods to read and write standard farming plan information. Note that all of these methods operate on a plan struct confirming to the interface and in order to write the plan to the store, the plan keeper will need to be used.
+The plan interface exposes methods to read and write standard farming plan information. 
+
+Note that all of these methods operate on a plan struct that confirms to the interface. In order to write the plan to the store, the plan keeper is required.
 
 ```go
 // PlanI is an interface used to store plan records within state.
@@ -56,7 +58,7 @@ type PlanI interface {
 
 ## Base Plan
 
-A base plan is the simplest and most common plan type, which just stores all requisite fields directly in a struct.
+A base plan is the simplest and most common plan type that just stores all requisite fields directly in a struct.
 
 ```go
 // BasePlan defines a base plan type. It contains all the necessary fields
@@ -111,7 +113,7 @@ const (
 )
 ```
 
-The parameters of the Plan state are:
+The parameters of the plan state are:
 
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
 - Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
@@ -135,7 +137,8 @@ type Staking struct {
 }
 ```
 
-The parameters of the Staking state are:
+The parameters of the staking state are:
+
 - Staking: `0x21 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(Staking)`
 - StakingIndex: `0x22 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> nil`
 
@@ -158,7 +161,7 @@ type TotalStakings struct {
 
 ## Historical Rewards
 
-`HistoricalRewards` struct holds the cumulative unit rewards for each epoch which are needed for the reward calculation.
+The `HistoricalRewards` struct holds the cumulative unit rewards for each epoch that are required for the reward calculation.
 
 ```go
 type HistoricalRewards struct {
@@ -171,7 +174,7 @@ type HistoricalRewards struct {
 
 ## Outstanding Rewards
 
-`OutstandingRewards` struct holds outstanding(un-withdrawn) rewards for a staking denom.
+The `OutstandingRewards` struct holds outstanding (un-withdrawn) rewards for a staking denom.
 
 ```go
 type OutstandingRewards struct {
@@ -183,7 +186,7 @@ type OutstandingRewards struct {
 
 ## Examples
 
-An example of `FixedAmountPlan`
+An example of `FixedAmountPlan`:
 
 ```json
 {
@@ -227,7 +230,7 @@ An example of `FixedAmountPlan`
 }
 ```
 
-An example of `RatioPlan`
+An example of `RatioPlan`:
 
 ```json
 {

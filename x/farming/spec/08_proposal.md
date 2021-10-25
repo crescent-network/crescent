@@ -2,13 +2,13 @@
 
 # Proposal
 
-The farming module contains the following public plan governance proposal that receives one of the following requests. 
+The `farming` module contains the following public plan governance proposal that receives one of the following requests. 
 
-- `AddRequestProposal` is the request proposal that requests the module to create a public farming plan. You can either input epoch amount `EpochAmount` or epoch ratio `EpochRatio`. Depending on which value of the parameter you input, it creates the following plan type `FixedAmountPlan` or `RatioPlan`.
+- `AddRequestProposal` is the request proposal that requests the module to create a public farming plan. 
 
-- `UpdateRequestProposal` is the request proposal that requests the module to update the plan. You can also update the plan type. 
+- `UpdateRequestProposal` is the request proposal that requests the module to update the plan. Updating the the plan type is also supported. 
 
-- `DeleteRequestProposal` is the request proposal that requests the module to delete the plan. It sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
+- `DeleteRequestProposal` is the request proposal that requests the module to delete the plan. 
 
 ## PublicPlanProposal
 
@@ -32,7 +32,10 @@ type PublicPlanProposal struct {
 
 ## AddRequestProposal
 
-You can either input epoch amount `EpochAmount` or epoch ratio `EpochRatio`. Depending on which value of the parameter you input, it creates the following plan type `FixedAmountPlan` or `RatioPlan`.
+Request the module to create a public farming plan. 
+
+- For each request, you must specify epoch amount `EpochAmount` or epoch ratio `EpochRatio`. 
+- Depending on the value, the plan type `FixedAmountPlan` or `RatioPlan` is created.
 
 ```go
 // AddRequestProposal details a proposal for creating a public plan.
@@ -59,6 +62,8 @@ type AddRequestProposal struct {
 ```
 
 ## UpdateRequestProposal
+
+Request the module to update the plan or the plan type.
 
 ```go
 // UpdateRequestProposal details a proposal for updating an existing public plan.
@@ -88,7 +93,7 @@ type UpdateRequestProposal struct {
 
 ## DeleteRequestProposal
 
-The request requests the module to delete the plan and it sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
+Request the module to delete the plan. All remaining coins in the plan's farming pool `FarmingPoolAddress` are sent to the termination address `TerminationAddress` and the plan is marked as terminated.
 
 ```go
 // DeleteRequestProposal details a proposal for deleting an existing public plan.

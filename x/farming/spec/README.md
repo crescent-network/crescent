@@ -4,7 +4,9 @@
 
 ## Abstract
 
-This document specifies the farming module of the Cosmos SDK that serves farming feature
+This document specifies the farming module of the Cosmos SDK that serves farming feature. The farming module implements farming functionality that provides farming rewards to participants called farmers. 
+
+A primary use case of the farming module is to provide incentives for liquidity pool investors for their pool participation.
 
 ## Contents
 
