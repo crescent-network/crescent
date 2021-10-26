@@ -383,7 +383,7 @@ func GetCmdSubmitPublicPlanProposal() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a a public farming plan along with an initial deposit. You can submit this governance proposal
 to add, update, and delete farming plan. The proposal details must be supplied via a JSON file. A JSON file to add plan request proposal is 
-provided below. For more examples, please refer to https://github.com/tendermint/farming/blob/master/docs/Tutorials/demo/plans.md
+provided below. For more examples, please refer to https://github.com/tendermint/farming/blob/main/docs/Tutorials/demo/plans.md
 
 Example:
 $ %s tx gov submit-proposal public-farming-plan <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
