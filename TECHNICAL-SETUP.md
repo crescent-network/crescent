@@ -58,11 +58,11 @@ GOOS=windows GOARCH=amd64 make build
 
 To install the node client on your machine, run `make install` command from the project's root folder. 
 
-> 💡 you can also use the default `go` command to build the project, check the content of the [Makefile](https://github.com/tendermint/farming/blob/master/Makefile#L90) for reference
+> 💡 you can also use the default `go` command to build the project, check the content of the [Makefile](https://github.com/tendermint/farming/blob/main/Makefile#L90) for reference
 
 ## Testing
 
 Run `make test-all` command to run tests.
 
-> 💡 you can also use the default `go` command to build the project, check the content of the [Makefile](https://github.com/tendermint/farming/blob/master/Makefile#L145) for reference
+> 💡 you can also use the default `go` command to build the project, check the content of the [Makefile](https://github.com/tendermint/farming/blob/main/Makefile#L145) for reference
 

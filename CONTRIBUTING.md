@@ -1,13 +1,13 @@
 # Contributing
 
-We welcome contributions from anyone who is willing to create a new PR on farming module, make sure that you read and comply with this document. See the [open issues](https://github.com/tendermint/farming/issues) that we need help with. Feel free to inform us if you are willing to work on any issue. Note that the `master` branch contains the latest development version. 
+We welcome contributions from anyone who is willing to create a new PR on farming module, make sure that you read and comply with this document. See the [open issues](https://github.com/tendermint/farming/issues) that we need help with. Feel free to inform us if you are willing to work on any issue. Note that the `main` branch contains the latest development version. 
 
 We follow standard github best practices: 
 
 - Fork the repository
-- Make sure your `branch` is from the tip of `master` branch
+- Make sure your `branch` is from the tip of `main` branch
 - Make some commits to resolve an issue
-- Submit a pull request to `master`
+- Submit a pull request to `main`
 
 Rule of thumb:
 
