@@ -28,7 +28,7 @@ In order to test out the following command-line interfaces, you need to set up a
 
 ## Transaction
 
-+++ https://github.com/tendermint/farming/blob/master/proto/tendermint/farming/v1beta1/tx.proto#L13-L29
++++ https://github.com/tendermint/farming/blob/main/proto/tendermint/farming/v1beta1/tx.proto#L13-L29
 
 ### MsgCreateFixedAmountPlan
 
@@ -437,7 +437,7 @@ farmingd tx farming harvest \
 
 ## Query
 
-https://github.com/tendermint/farming/blob/master/proto/tendermint/farming/v1beta1/query.proto#L15-L40
+https://github.com/tendermint/farming/blob/main/proto/tendermint/farming/v1beta1/query.proto#L15-L40
 
 ### Params 
 

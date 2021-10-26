@@ -223,7 +223,7 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/tendermint/farming/tree/master/docs/How-To/cli#currentepochdays
+          https://github.com/tendermint/farming/tree/main/docs/How-To/cli#currentepochdays
   /cosmos/farming/v1beta1/params:
     get:
       summary: Params returns parameters of the farming module.
@@ -480,7 +480,7 @@ paths:
       externalDocs:
         description: Find out more about the params
         url: >-
-          https://github.com/tendermint/farming/blob/master/x/farming/spec/07_params.md
+          https://github.com/tendermint/farming/blob/main/x/farming/spec/07_params.md
   /cosmos/farming/v1beta1/plans:
     get:
       summary: Plans returns all plans.
@@ -980,8 +980,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/tendermint/farming/tree/master/docs/How-To/cli#Plans
+        url: 'https://github.com/tendermint/farming/tree/main/docs/How-To/cli#Plans'
   '/cosmos/farming/v1beta1/plans/{plan_id}':
     get:
       summary: Plan returns a specific plan.
@@ -1390,7 +1389,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: 'https://github.com/tendermint/farming/tree/master/docs/How-To/cli#plan'
+        url: 'https://github.com/tendermint/farming/tree/main/docs/How-To/cli#plan'
   '/cosmos/farming/v1beta1/rewards/{farmer}':
     get:
       description: Returns all rewards coins that corresponds to the farmer
@@ -1629,7 +1628,7 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/tendermint/farming/tree/master/docs/How-To/cli#rewards
+          https://github.com/tendermint/farming/tree/main/docs/How-To/cli#rewards
   '/cosmos/farming/v1beta1/stakings/{farmer}':
     get:
       description: >-
@@ -1887,7 +1886,7 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/tendermint/farming/tree/master/docs/How-To/cli#stakings
+          https://github.com/tendermint/farming/tree/main/docs/How-To/cli#stakings
   '/cosmos/farming/v1beta1/total_stakings/{staking_coin_denom}':
     get:
       description: Returns total stakings that corresponds to the staking_coin_denom
@@ -2107,7 +2106,7 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/tendermint/farming/tree/master/docs/How-To/cli#totalstakings
+          https://github.com/tendermint/farming/tree/main/docs/How-To/cli#totalstakings
 definitions:
   cosmos.base.query.v1beta1.PageRequest:
     type: object
