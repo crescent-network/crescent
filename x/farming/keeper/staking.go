@@ -202,6 +202,23 @@ func (k Keeper) DecreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, 
 	}
 }
 
+// IterateTotalStakings iterates through all total stakings
+// stored in the store and invokes callback function for each item.
+// Stops the iteration when the callback function returns true.
+func (k Keeper) IterateTotalStakings(ctx sdk.Context, cb func(stakingCoinDenom string, totalStakings types.TotalStakings) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.TotalStakingKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var totalStakings types.TotalStakings
+		k.cdc.MustUnmarshal(iter.Value(), &totalStakings)
+		stakingCoinDenom := types.ParseTotalStakingsKey(iter.Key())
+		if cb(stakingCoinDenom, totalStakings) {
+			break
+		}
+	}
+}
+
 // ReserveStakingCoins sends staking coins to the staking reserve account.
 func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoins sdk.Coins) error {
 	if err := k.bankKeeper.SendCoins(ctx, farmerAcc, k.GetStakingReservePoolAcc(ctx), stakingCoins); err != nil {

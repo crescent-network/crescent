@@ -141,6 +141,15 @@ func ParseQueuedStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCo
 	return
 }
 
+// ParseTotalStakingsKey parses a total stakings key.
+func ParseTotalStakingsKey(key []byte) (stakingCoinDenom string) {
+	if !bytes.HasPrefix(key, TotalStakingKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	stakingCoinDenom = string(key[1:])
+	return
+}
+
 // ParseHistoricalRewardsKey parses a historical rewards key.
 func ParseHistoricalRewardsKey(key []byte) (stakingCoinDenom string, epoch uint64) {
 	if !bytes.HasPrefix(key, HistoricalRewardsKeyPrefix) {
