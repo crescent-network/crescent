@@ -79,6 +79,7 @@ message PlanRecord {
   ];
 }
 
+// StakingRecord is used for import/export via genesis json.
 message StakingRecord {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -90,6 +91,7 @@ message StakingRecord {
   Staking staking = 3 [(gogoproto.nullable) = false];
 }
 
+// QueuedStakingRecord is used for import/export via genesis json.
 message QueuedStakingRecord {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -101,6 +103,7 @@ message QueuedStakingRecord {
   QueuedStaking queued_staking = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"queued_staking\""];
 }
 
+// HistoricalRewardsRecord is used for import/export via genesis json.
 message HistoricalRewardsRecord {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -113,6 +116,7 @@ message HistoricalRewardsRecord {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"historical_rewards\""];
 }
 
+// OutstandingRewardsRecord is used for import/export via genesis json.
 message OutstandingRewardsRecord {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -123,6 +127,7 @@ message OutstandingRewardsRecord {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"outstanding_rewards\""];
 }
 
+// CurrentEpochRecord is used for import/export via genesis json.
 message CurrentEpochRecord {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;

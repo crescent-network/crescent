@@ -26,16 +26,16 @@ func init() {
 func NewPublicPlanProposal(
 	title string,
 	description string,
-	addReq []*AddRequestProposal,
-	updateReq []*UpdateRequestProposal,
-	deleteReq []*DeleteRequestProposal,
+	addReqs []*AddPlanRequest,
+	modifyReqs []*ModifyPlanRequest,
+	deleteReqs []*DeletePlanRequest,
 ) *PublicPlanProposal {
 	return &PublicPlanProposal{
-		Title:                  title,
-		Description:            description,
-		AddRequestProposals:    addReq,
-		UpdateRequestProposals: updateReq,
-		DeleteRequestProposals: deleteReq,
+		Title:              title,
+		Description:        description,
+		AddPlanRequests:    addReqs,
+		ModifyPlanRequests: modifyReqs,
+		DeletePlanRequests: deleteReqs,
 	}
 }
 
@@ -48,23 +48,23 @@ func (p *PublicPlanProposal) ProposalRoute() string { return RouterKey }
 func (p *PublicPlanProposal) ProposalType() string { return ProposalTypePublicPlan }
 
 func (p *PublicPlanProposal) ValidateBasic() error {
-	if len(p.AddRequestProposals) == 0 && len(p.UpdateRequestProposals) == 0 && len(p.DeleteRequestProposals) == 0 {
+	if len(p.AddPlanRequests) == 0 && len(p.ModifyPlanRequests) == 0 && len(p.DeletePlanRequests) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal request must not be empty")
 	}
 
-	for _, ap := range p.AddRequestProposals {
+	for _, ap := range p.AddPlanRequests {
 		if err := ap.Validate(); err != nil {
 			return err
 		}
 	}
 
-	for _, up := range p.UpdateRequestProposals {
+	for _, up := range p.ModifyPlanRequests {
 		if err := up.Validate(); err != nil {
 			return err
 		}
 	}
 
-	for _, dp := range p.DeleteRequestProposals {
+	for _, dp := range p.DeletePlanRequests {
 		if err := dp.Validate(); err != nil {
 			return err
 		}
@@ -76,14 +76,14 @@ func (p PublicPlanProposal) String() string {
 	return fmt.Sprintf(`Public Plan Proposal:
   Title:       			  %s
   Description: 		      %s
-  AddRequestProposals: 	  %s
-  UpdateRequestProposals: %s
-  DeleteRequestProposals: %s
-`, p.Title, p.Description, p.AddRequestProposals, p.UpdateRequestProposals, p.DeleteRequestProposals)
+  AddPlanRequests: 	  %s
+  UpdatePlanRequests: %s
+  DeletePlanRequests: %s
+`, p.Title, p.Description, p.AddPlanRequests, p.ModifyPlanRequests, p.DeletePlanRequests)
 }
 
-// NewAddRequestProposal creates a new AddRequestProposal object
-func NewAddRequestProposal(
+// NewAddPlanRequest creates a new AddPlanRequest object
+func NewAddPlanRequest(
 	name string,
 	farmingPoolAddr string,
 	terminationAddr string,
@@ -92,8 +92,8 @@ func NewAddRequestProposal(
 	endTime time.Time,
 	epochAmount sdk.Coins,
 	epochRatio sdk.Dec,
-) *AddRequestProposal {
-	return &AddRequestProposal{
+) *AddPlanRequest {
+	return &AddPlanRequest{
 		Name:               name,
 		FarmingPoolAddress: farmingPoolAddr,
 		TerminationAddress: terminationAddr,
@@ -108,19 +108,19 @@ func NewAddRequestProposal(
 // IsForFixedAmountPlan returns true if the request is for
 // fixed amount plan.
 // It checks if EpochAmount is not zero.
-func (p *AddRequestProposal) IsForFixedAmountPlan() bool {
+func (p *AddPlanRequest) IsForFixedAmountPlan() bool {
 	return !p.EpochAmount.Empty()
 }
 
 // IsForRatioPlan returns true if the request is for
 // ratio plan.
 // It checks if EpochRatio is not zero.
-func (p *AddRequestProposal) IsForRatioPlan() bool {
+func (p *AddPlanRequest) IsForRatioPlan() bool {
 	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
 }
 
-// Validate validates AddRequestProposal.
-func (p *AddRequestProposal) Validate() error {
+// Validate validates AddPlanRequest.
+func (p *AddPlanRequest) Validate() error {
 	if p.Name == "" {
 		return sdkerrors.Wrap(ErrInvalidPlanName, "plan name must not be empty")
 	}
@@ -160,8 +160,8 @@ func (p *AddRequestProposal) Validate() error {
 	return nil
 }
 
-// NewUpdateRequestProposal creates a new UpdateRequestProposal object.
-func NewUpdateRequestProposal(
+// NewModifyPlanRequest creates a new ModifyPlanRequest object.
+func NewModifyPlanRequest(
 	id uint64,
 	name string,
 	farmingPoolAddr string,
@@ -171,8 +171,8 @@ func NewUpdateRequestProposal(
 	endTime time.Time,
 	epochAmount sdk.Coins,
 	epochRatio sdk.Dec,
-) *UpdateRequestProposal {
-	return &UpdateRequestProposal{
+) *ModifyPlanRequest {
+	return &ModifyPlanRequest{
 		PlanId:             id,
 		Name:               name,
 		FarmingPoolAddress: farmingPoolAddr,
@@ -188,19 +188,19 @@ func NewUpdateRequestProposal(
 // IsForFixedAmountPlan returns true if the request is for
 // fixed amount plan.
 // It checks if EpochAmount is not zero.
-func (p *UpdateRequestProposal) IsForFixedAmountPlan() bool {
+func (p *ModifyPlanRequest) IsForFixedAmountPlan() bool {
 	return !p.EpochAmount.Empty()
 }
 
 // IsForRatioPlan returns true if the request is for
 // ratio plan.
 // It checks if EpochRatio is not zero.
-func (p *UpdateRequestProposal) IsForRatioPlan() bool {
+func (p *ModifyPlanRequest) IsForRatioPlan() bool {
 	return !p.EpochRatio.IsNil() && !p.EpochRatio.IsZero()
 }
 
-// Validate validates UpdateRequestProposal.
-func (p *UpdateRequestProposal) Validate() error {
+// Validate validates ModifyPlanRequest.
+func (p *ModifyPlanRequest) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
 	}
@@ -247,15 +247,15 @@ func (p *UpdateRequestProposal) Validate() error {
 	return nil
 }
 
-// NewDeleteRequestProposal creates a new DeleteRequestProposal object.
-func NewDeleteRequestProposal(id uint64) *DeleteRequestProposal {
-	return &DeleteRequestProposal{
+// NewDeletePlanRequest creates a new DeletePlanRequest object.
+func NewDeletePlanRequest(id uint64) *DeletePlanRequest {
+	return &DeletePlanRequest{
 		PlanId: id,
 	}
 }
 
-// Validate validates DeleteRequestProposal.
-func (p *DeleteRequestProposal) Validate() error {
+// Validate validates DeletePlanRequest.
+func (p *DeletePlanRequest) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
 	}

@@ -3,7 +3,7 @@
 
 # Farming Module
 
-A farming module is a Cosmos SDK module that implements farming functionality, which provides farming rewards to participants called farmers. A primary use case is to use this module to provide incentives for liquidity pool investors for their pool participation. 
+The farming module is a Cosmos SDK module that implements farming functionality, which provides farming rewards to participants called farmers. A primary use case is to use this module to provide incentives for liquidity pool investors for their pool participation. 
 
 ⚠ **Farming module v1 is in active development** ⚠ 
 - see the [main](https://github.com/tendermint/farming/tree/main) branch for the latest 

@@ -4,11 +4,11 @@
 
 The farming module contains the following public plan governance proposal that receives one of the following requests. 
 
-- `AddRequestProposal` is the request proposal that requests the module to create a public farming plan. You can either input epoch amount `EpochAmount` or epoch ratio `EpochRatio`. Depending on which value of the parameter you input, it creates the following plan type `FixedAmountPlan` or `RatioPlan`.
+- `AddPlanRequest` is the request proposal that requests the module to create a public farming plan. You can either input epoch amount `EpochAmount` or epoch ratio `EpochRatio`. Depending on which value of the parameter you input, it creates the following plan type `FixedAmountPlan` or `RatioPlan`.
 
-- `UpdateRequestProposal` is the request proposal that requests the module to update the plan. You can also update the plan type. 
+- `ModifyPlanRequest` is the request proposal that requests the module to update the plan. You can also update the plan type. 
 
-- `DeleteRequestProposal` is the request proposal that requests the module to delete the plan. It sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
+- `DeletePlanRequest` is the request proposal that requests the module to delete the plan. It sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
 
 ## PublicPlanProposal
 
@@ -21,22 +21,22 @@ type PublicPlanProposal struct {
 	Title string 
 	// description specifies the description of the plan
 	Description string 
-	// add_request_proposals specifies AddRequestProposal object
-	AddRequestProposals []*AddRequestProposal 
-	// update_request_proposals specifies UpdateRequestProposal object
-	UpdateRequestProposals []*UpdateRequestProposal 
-	// delete_request_proposals specifies DeleteRequestProposal object
-	DeleteRequestProposals []*DeleteRequestProposal 
+	// add_plan_requests specifies AddPlanRequest object
+	AddPlanRequests []*AddPlanRequest 
+	// modify_plan_requests specifies ModifyPlanRequest object
+	ModifyPlanRequests []*ModifyPlanRequest 
+	// delete_plan_requests specifies DeletePlanRequest object
+	DeletePlanRequests []*DeletePlanRequest 
 }
 ```
 
-## AddRequestProposal
+## AddPlanRequest
 
 You can either input epoch amount `EpochAmount` or epoch ratio `EpochRatio`. Depending on which value of the parameter you input, it creates the following plan type `FixedAmountPlan` or `RatioPlan`.
 
 ```go
-// AddRequestProposal details a proposal for creating a public plan.
-type AddRequestProposal struct {
+// AddPlanRequest details a proposal for creating a public plan.
+type AddPlanRequest struct {
 	// name specifies the name of the plan 
 	Name string
 	// farming_pool_address defines the bech32-encoded address of the farming pool
@@ -58,11 +58,11 @@ type AddRequestProposal struct {
 }
 ```
 
-## UpdateRequestProposal
+## ModifyPlanRequest
 
 ```go
-// UpdateRequestProposal details a proposal for updating an existing public plan.
-type UpdateRequestProposal struct {
+// ModifyPlanRequest details a proposal for updating an existing public plan.
+type ModifyPlanRequest struct {
 	// plan_id specifies index of the farming plan
 	PlanId uint64 
 	// name specifies the name of the plan 
@@ -86,13 +86,13 @@ type UpdateRequestProposal struct {
 }
 ```
 
-## DeleteRequestProposal
+## DeletePlanRequests
 
 The request requests the module to delete the plan and it sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
 
 ```go
-// DeleteRequestProposal details a proposal for deleting an existing public plan.
-type DeleteRequestProposal struct {
+// DeletePlanRequests details a proposal for deleting an existing public plan.
+type DeletePlanRequests struct {
 	// plan_id specifies index of the farming plan
 	PlanId uint64 
 }

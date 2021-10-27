@@ -121,6 +121,7 @@ key:
 };
 }
 
+// Stakings returns all stakings by a farmer.
 rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
   option (google.api.http).get                                           = "/cosmos/farming/v1beta1/stakings/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -145,6 +146,7 @@ key:
 };
 }
 
+// TotalStakings returns total staking amount for a staking coin denom
 rpc TotalStakings(QueryTotalStakingsRequest) returns (QueryTotalStakingsResponse) {
   option (google.api.http).get = "/cosmos/farming/v1beta1/total_stakings/{staking_coin_denom}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -169,6 +171,7 @@ key:
 };
 }
 
+// Rewards returns rewards for a farmer
 rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
   option (google.api.http).get                                           = "/cosmos/farming/v1beta1/rewards/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -256,11 +259,13 @@ message QueryPlanResponse {
   google.protobuf.Any plan = 1 [(cosmos_proto.accepts_interface) = "PlanI"];
 }
 
+// QueryStakingsRequest is the request type for the Query/Stakings RPC method.
 message QueryStakingsRequest {
   string farmer             = 1;
   string staking_coin_denom = 2;
 }
 
+// QueryStakingsResponse is the response type for the Query/Stakings RPC method.
 message QueryStakingsResponse {
   repeated cosmos.base.v1beta1.Coin staked_coins = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
@@ -268,19 +273,23 @@ message QueryStakingsResponse {
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
+// QueryTotalStakingsRequest is the request type for the Query/TotalStakings RPC method.
 message QueryTotalStakingsRequest {
   string staking_coin_denom = 1;
 }
 
+// QueryTotalStakingsResponse is the response type for the Query/TotalStakings RPC method.
 message QueryTotalStakingsResponse {
   string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
+// QueryRewardsRequest is the request type for the Query/Rewards RPC method.
 message QueryRewardsRequest {
   string farmer             = 1;
   string staking_coin_denom = 2;
 }
 
+// QueryRewardsResponse is the response type for the Query/Rewards RPC method.
 message QueryRewardsResponse {
   repeated cosmos.base.v1beta1.Coin rewards = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];

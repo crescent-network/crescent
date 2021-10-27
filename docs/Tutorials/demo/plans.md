@@ -77,7 +77,7 @@ Create `public-fixed-plan-proposal.json` file in your local directory and copy t
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Fixed Amount Plan",
       "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
@@ -132,7 +132,7 @@ Create `public-ratio-plan-proposal.json` file in your local directory and copy t
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Ratio Plan",
       "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
@@ -178,7 +178,7 @@ Create `public-multiple-plans-proposal.json` file in your local directory and co
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Fixed Amount Plan",
       "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
@@ -243,7 +243,7 @@ Create `update-plan-proposal.json` file in your local directory and copy the bel
 {
   "title": "Update the Farming Plan 1",
   "description": "FarmingPoolAddress needs to be changed",
-  "update_request_proposals": [
+  "modify_plan_requests": [
     {
       "plan_id": 1,
       "farming_pool_address": "cosmos13w4ueuk80d3kmwk7ntlhp84fk0arlm3mqf0w08",
@@ -294,7 +294,7 @@ Create `delete-plan-proposal.json` file in your local directory and copy the bel
 {
   "title": "Delete Public Farming Plan 1",
   "description": "This plan is no longer needed",
-  "delete_request_proposals": [
+  "delete_plan_requests": [
     {
       "plan_id": 1
     }
