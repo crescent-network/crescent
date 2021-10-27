@@ -60,7 +60,7 @@ func PositiveStakingAmountInvariant(k Keeper) sdk.Invariant {
 		k.IterateStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, staking types.Staking) (stop bool) {
 			if !staking.Amount.IsPositive() {
 				msg += fmt.Sprintf("\t%v has non-positive staking amount: %v\n",
-					farmerAcc, sdk.NewCoin(stakingCoinDenom, staking.Amount))
+					farmerAcc, sdk.Coin{Denom: stakingCoinDenom, Amount: staking.Amount})
 				count++
 			}
 			return false
@@ -81,7 +81,7 @@ func PositiveQueuedStakingAmountInvariant(k Keeper) sdk.Invariant {
 		k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
 			if !queuedStaking.Amount.IsPositive() {
 				msg += fmt.Sprintf("\t%v has non-positive queued staking amount: %v\n",
-					farmerAcc, sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
+					farmerAcc, sdk.Coin{Denom: stakingCoinDenom, Amount: queuedStaking.Amount})
 				count++
 			}
 			return false
@@ -99,8 +99,9 @@ func StakingReservedAmountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		err := k.ValidateStakingReservedAmount(ctx)
 		broken := err != nil
-		return sdk.FormatInvariant(types.ModuleName, "staking reserved amount invariant broken",
-			"the balance of StakingReserveAcc less than the amount of staked, Queued coins in all staking objects"), broken
+		return sdk.FormatInvariant(types.ModuleName, "staking reserved amount",
+			"the balance of StakingReserveAcc less than the amount of staked, queued coins in all staking objects",
+		), broken
 	}
 }
 
@@ -109,8 +110,9 @@ func RemainingRewardsAmountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		err := k.ValidateRemainingRewardsAmount(ctx)
 		broken := err != nil
-		return sdk.FormatInvariant(types.ModuleName, "remaining rewards amount invariant broken",
-			"the balance of the RewardPoolAddresses of all plans less than the total amount of unwithdrawn reward coins in all reward objects"), broken
+		return sdk.FormatInvariant(types.ModuleName, "remaining rewards amount",
+			"the balance of the RewardPoolAddresses of all plans less than the total amount of unwithdrawn reward coins in all reward objects",
+		), broken
 	}
 }
 
