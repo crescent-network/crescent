@@ -183,7 +183,7 @@ func (m *AddPlanRequest) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coi
 	return nil
 }
 
-// ModifyPlanRequest details a proposal for updating an existing public plan.
+// ModifyPlanRequest details a proposal for modifying the existing public plan.
 type ModifyPlanRequest struct {
 	// plan_id specifies index of the farming plan
 	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`

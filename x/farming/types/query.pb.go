@@ -347,6 +347,7 @@ func (m *QueryPlanResponse) GetPlan() *types.Any {
 	return nil
 }
 
+// QueryStakingsRequest is the request type for the Query/Stakings RPC method.
 type QueryStakingsRequest struct {
 	Farmer           string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
 	StakingCoinDenom string `protobuf:"bytes,2,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
@@ -399,6 +400,7 @@ func (m *QueryStakingsRequest) GetStakingCoinDenom() string {
 	return ""
 }
 
+// QueryStakingsResponse is the response type for the Query/Stakings RPC method.
 type QueryStakingsResponse struct {
 	StakedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=staked_coins,json=stakedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"staked_coins"`
 	QueuedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=queued_coins,json=queuedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"queued_coins"`
@@ -451,6 +453,7 @@ func (m *QueryStakingsResponse) GetQueuedCoins() github_com_cosmos_cosmos_sdk_ty
 	return nil
 }
 
+// QueryTotalStakingsRequest is the request type for the Query/TotalStakings RPC method.
 type QueryTotalStakingsRequest struct {
 	StakingCoinDenom string `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
 }
@@ -495,6 +498,7 @@ func (m *QueryTotalStakingsRequest) GetStakingCoinDenom() string {
 	return ""
 }
 
+// QueryTotalStakingsResponse is the response type for the Query/TotalStakings RPC method.
 type QueryTotalStakingsResponse struct {
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
 }
@@ -532,6 +536,7 @@ func (m *QueryTotalStakingsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTotalStakingsResponse proto.InternalMessageInfo
 
+// QueryRewardsRequest is the request type for the Query/Rewards RPC method.
 type QueryRewardsRequest struct {
 	Farmer           string `protobuf:"bytes,1,opt,name=farmer,proto3" json:"farmer,omitempty"`
 	StakingCoinDenom string `protobuf:"bytes,2,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty"`
@@ -584,6 +589,7 @@ func (m *QueryRewardsRequest) GetStakingCoinDenom() string {
 	return ""
 }
 
+// QueryRewardsResponse is the response type for the Query/Rewards RPC method.
 type QueryRewardsResponse struct {
 	Rewards github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
 }
@@ -853,8 +859,11 @@ type QueryClient interface {
 	Plans(ctx context.Context, in *QueryPlansRequest, opts ...grpc.CallOption) (*QueryPlansResponse, error)
 	// Plan returns a specific plan.
 	Plan(ctx context.Context, in *QueryPlanRequest, opts ...grpc.CallOption) (*QueryPlanResponse, error)
+	// Stakings returns all stakings by a farmer.
 	Stakings(ctx context.Context, in *QueryStakingsRequest, opts ...grpc.CallOption) (*QueryStakingsResponse, error)
+	// TotalStakings returns total staking amount for a staking coin denom
 	TotalStakings(ctx context.Context, in *QueryTotalStakingsRequest, opts ...grpc.CallOption) (*QueryTotalStakingsResponse, error)
+	// Rewards returns rewards for a farmer
 	Rewards(ctx context.Context, in *QueryRewardsRequest, opts ...grpc.CallOption) (*QueryRewardsResponse, error)
 	// CurrentEpochDays returns current epoch days.
 	CurrentEpochDays(ctx context.Context, in *QueryCurrentEpochDaysRequest, opts ...grpc.CallOption) (*QueryCurrentEpochDaysResponse, error)
@@ -939,8 +948,11 @@ type QueryServer interface {
 	Plans(context.Context, *QueryPlansRequest) (*QueryPlansResponse, error)
 	// Plan returns a specific plan.
 	Plan(context.Context, *QueryPlanRequest) (*QueryPlanResponse, error)
+	// Stakings returns all stakings by a farmer.
 	Stakings(context.Context, *QueryStakingsRequest) (*QueryStakingsResponse, error)
+	// TotalStakings returns total staking amount for a staking coin denom
 	TotalStakings(context.Context, *QueryTotalStakingsRequest) (*QueryTotalStakingsResponse, error)
+	// Rewards returns rewards for a farmer
 	Rewards(context.Context, *QueryRewardsRequest) (*QueryRewardsResponse, error)
 	// CurrentEpochDays returns current epoch days.
 	CurrentEpochDays(context.Context, *QueryCurrentEpochDaysRequest) (*QueryCurrentEpochDaysResponse, error)

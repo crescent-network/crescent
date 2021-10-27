@@ -1392,6 +1392,7 @@ paths:
         url: 'https://github.com/tendermint/farming/tree/main/docs/How-To/cli#plan'
   '/cosmos/farming/v1beta1/rewards/{farmer}':
     get:
+      summary: Rewards returns rewards for a farmer
       description: Returns all rewards coins that corresponds to the farmer
       operationId: Rewards
       responses:
@@ -1417,6 +1418,9 @@ paths:
                     method
 
                     signatures required by gogoproto.
+            description: >-
+              QueryRewardsResponse is the response type for the Query/Rewards
+              RPC method.
         '400':
           description: Bad Request
           schema: {}
@@ -1631,6 +1635,7 @@ paths:
           https://github.com/tendermint/farming/tree/main/docs/How-To/cli#rewards
   '/cosmos/farming/v1beta1/stakings/{farmer}':
     get:
+      summary: Stakings returns all stakings by a farmer.
       description: >-
         Returns all stakings (staked and queued coins) that corresponds to the
         farmer
@@ -1675,6 +1680,9 @@ paths:
                     method
 
                     signatures required by gogoproto.
+            description: >-
+              QueryStakingsResponse is the response type for the Query/Stakings
+              RPC method.
         '400':
           description: Bad Request
           schema: {}
@@ -1889,6 +1897,7 @@ paths:
           https://github.com/tendermint/farming/tree/main/docs/How-To/cli#stakings
   '/cosmos/farming/v1beta1/total_stakings/{staking_coin_denom}':
     get:
+      summary: TotalStakings returns total staking amount for a staking coin denom
       description: Returns total stakings that corresponds to the staking_coin_denom
       operationId: TotalStakings
       responses:
@@ -1899,6 +1908,9 @@ paths:
             properties:
               amount:
                 type: string
+            description: >-
+              QueryTotalStakingsResponse is the response type for the
+              Query/TotalStakings RPC method.
         '400':
           description: Bad Request
           schema: {}
@@ -2664,6 +2676,9 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+    description: >-
+      QueryRewardsResponse is the response type for the Query/Rewards RPC
+      method.
   cosmos.farming.v1beta1.QueryStakingsResponse:
     type: object
     properties:
@@ -2695,11 +2710,17 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+    description: >-
+      QueryStakingsResponse is the response type for the Query/Stakings RPC
+      method.
   cosmos.farming.v1beta1.QueryTotalStakingsResponse:
     type: object
     properties:
       amount:
         type: string
+    description: >-
+      QueryTotalStakingsResponse is the response type for the
+      Query/TotalStakings RPC method.
   google.protobuf.Any:
     type: object
     properties:

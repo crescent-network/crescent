@@ -292,6 +292,7 @@ func (m *Staking) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Staking proto.InternalMessageInfo
 
+// QueuedStaking defines staking that is waiting in a queue.
 type QueuedStaking struct {
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
 }
@@ -329,6 +330,7 @@ func (m *QueuedStaking) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueuedStaking proto.InternalMessageInfo
 
+// TotalStakings defines the total staking amount for a staking coin denom.
 type TotalStakings struct {
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
 }
@@ -366,6 +368,7 @@ func (m *TotalStakings) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TotalStakings proto.InternalMessageInfo
 
+// HistoricalRewards defines the culative unit rewards for a given staking coin denom and an epoch number.
 type HistoricalRewards struct {
 	CumulativeUnitRewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=cumulative_unit_rewards,json=cumulativeUnitRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"cumulative_unit_rewards" yaml:"cumulative_unit_rewards"`
 }
