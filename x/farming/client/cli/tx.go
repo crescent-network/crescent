@@ -451,9 +451,9 @@ Where proposal.json contains:
 			content := types.NewPublicPlanProposal(
 				proposal.Title,
 				proposal.Description,
-				proposal.AddRequestProposals,
-				proposal.UpdateRequestProposals,
-				proposal.DeleteRequestProposals,
+				proposal.AddPlanRequests,
+				proposal.ModifyPlanRequests,
+				proposal.DeletePlanRequests,
 			)
 
 			from := clientCtx.GetFromAddress()

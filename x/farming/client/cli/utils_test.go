@@ -78,7 +78,7 @@ func TestParsePublicPlanProposal(t *testing.T) {
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Farming Plan",
       "farming_pool_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",

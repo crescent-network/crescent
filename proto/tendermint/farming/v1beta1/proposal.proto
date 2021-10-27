@@ -24,20 +24,18 @@ message PublicPlanProposal {
   // description specifies the description of the plan
   string description = 2;
 
-  // add_request_proposals specifies AddRequestProposal object
-  repeated AddRequestProposal add_request_proposals = 3 [(gogoproto.moretags) = "yaml:\"add_request_proposals\""];
+  // add_plan_requests specifies AddPlanRequest object
+  repeated AddPlanRequest add_plan_requests = 3 [(gogoproto.moretags) = "yaml:\"add_plan_requests\""];
 
-  // update_request_proposals specifies UpdateRequestProposal object
-  repeated UpdateRequestProposal update_request_proposals = 4
-      [(gogoproto.moretags) = "yaml:\"update_request_proposals\""];
+  // modify_plan_requests specifies ModifyPlanRequest object
+  repeated ModifyPlanRequest modify_plan_requests = 4 [(gogoproto.moretags) = "yaml:\"modify_plan_requests\""];
 
-  // delete_request_proposals specifies DeleteRequestProposal object
-  repeated DeleteRequestProposal delete_request_proposals = 5
-      [(gogoproto.moretags) = "yaml:\"delete_request_proposals\""];
+  // delete_plan_requests specifies DeletePlanRequest object
+  repeated DeletePlanRequest delete_plan_requests = 5 [(gogoproto.moretags) = "yaml:\"delete_plan_requests\""];
 }
 
-// AddRequestProposal details a proposal for creating a public plan.
-message AddRequestProposal {
+// AddPlanRequest details a proposal for creating a public plan.
+message AddPlanRequest {
   // name specifies the plan name for display
   string name = 1;
 
@@ -79,8 +77,8 @@ message AddRequestProposal {
   ];
 }
 
-// UpdateRequestProposal details a proposal for updating an existing public plan.
-message UpdateRequestProposal {
+// ModifyPlanRequest details a proposal for updating an existing public plan.
+message ModifyPlanRequest {
   // plan_id specifies index of the farming plan
   uint64 plan_id = 1;
 
@@ -125,8 +123,8 @@ message UpdateRequestProposal {
   ];
 }
 
-// DeleteRequestProposal details a proposal for deleting an existing public plan.
-message DeleteRequestProposal {
+// DeletePlanRequest details a proposal for deleting an existing public plan.
+message DeletePlanRequest {
   // plan_id specifies index of the farming plan
   uint64 plan_id = 1;
 }
