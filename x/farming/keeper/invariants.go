@@ -12,6 +12,8 @@ import (
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "positive-staking-amount",
 		PositiveStakingAmountInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "positive-queued-staking-amount",
+		PositiveQueuedStakingAmountInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "staking-reserved-amount",
 		StakingReservedAmountInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "remaining-rewards-amount",
@@ -63,6 +65,19 @@ func PositiveStakingAmountInvariant(k Keeper) sdk.Invariant {
 			}
 			return false
 		})
+		broken := count != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "positive staking amount",
+			fmt.Sprintf("found %d staking coins with non-positive amount\n%s", count, msg),
+		), broken
+	}
+}
+
+// PositiveQueuedStakingAmountInvariant checks that the amount of queued staking coins is positive.
+func PositiveQueuedStakingAmountInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		msg := ""
+		count := 0
 		k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
 			if !queuedStaking.Amount.IsPositive() {
 				msg += fmt.Sprintf("\t%v has non-positive queued staking amount: %v\n",
@@ -73,8 +88,8 @@ func PositiveStakingAmountInvariant(k Keeper) sdk.Invariant {
 		})
 		broken := count != 0
 		return sdk.FormatInvariant(
-			types.ModuleName, "positive staking amount",
-			fmt.Sprintf("found %d staking(or queued to be) coin with non-positive amount\n%s", count, msg),
+			types.ModuleName, "positive queued staking amount",
+			fmt.Sprintf("found %d queued staking coins with non-positive amount\n%s", count, msg),
 		), broken
 	}
 }
