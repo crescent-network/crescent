@@ -2,11 +2,18 @@
 
 # Messages
 
-Messages (Msg) are objects that trigger state transitions. Msgs are wrapped in transactions (Txs) that clients submit to the network. The Cosmos SDK wraps and unwraps farming module messages from transactions.
+Messages (Msg) are objects that trigger state transitions. Msgs are wrapped in transactions (Txs) that clients submit to the network. The Cosmos SDK wraps and unwraps `farming` module messages from transactions.
 
 ## MsgCreateFixedAmountPlan
 
-This is one of the private plan type messages that anyone can create. A fixed amount plan plans to distribute amount of coins by a fixed amount defined in `EpochAmount`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan and the creator should query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. Note that there is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack.
+Anyone can create this private plan type message. 
+
+- A fixed amount plan distributes the amount of coins by a fixed amount that is defined in `EpochAmount`. 
+- Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan. 
+
+The creator must query the plan and send the amount of coins to the farming pool address so that the plan distributes as intended. 
+
+**Note:** The `PlanCreationFee` must be paid on plan creation to prevent spamming attacks.
 
 ```go
 type MsgCreateFixedAmountPlan struct {
@@ -21,7 +28,17 @@ type MsgCreateFixedAmountPlan struct {
 
 ## MsgCreateRatioPlan
 
-This is one of the private plan type messages that anyone can create. A ratio plan plans to distribute amount of coins by ratio defined in `EpochRatio`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan and the creator should query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. For a ratio plan, whichever coins that the farming pool address has in balances are used every epoch. Note that there is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack.
+Anyone can create this private plan type message. 
+
+- A ratio plan plans to distribute amount of coins by ratio defined in `EpochRatio`.
+- Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan.
+
+The creator must query the plan and send the amount of coins to the farming pool address so that the plan distributes as intended. 
+
+For a ratio plan, whichever coins the farming pool address has in balances are used every epoch. 
+
+**Note:** The `PlanCreationFee` must be paid on plan creation to prevent spamming attacks.
+
 
 ```go
 type MsgCreateRatioPlan struct {
@@ -36,7 +53,7 @@ type MsgCreateRatioPlan struct {
 
 ## MsgStake
 
-A farmer must have sufficient amount of coins to stake. If a farmer stakes coin(s) that are defined in staking coin weights of plans, then the farmer becomes eligible to receive rewards.
+A farmer must have sufficient amount of coins to stake. If a farmer stakes coin or coins that are defined in staking the coin weights of plans, then the farmer becomes eligible to receive rewards.
 
 ```go
 type MsgStake struct {
@@ -47,7 +64,11 @@ type MsgStake struct {
 
 ## MsgUnstake
 
-A farmer must have some staking coins to trigger this message. Unlike Cosmos SDK's [staking](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/spec/01_state.md) module, there is no concept of unbonding period that requires some time to unstake coins. All the accumulated farming rewards are automatically withdrawn to the farmer once unstaking event is triggered.
+A farmer must have some staking coins to trigger this message.
+
+In contrast to the Cosmos SDK [staking](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/spec/01_state.md) module, there is no concept of an unbonding period where some time is required to unstake coins. 
+
+All of the accumulated farming rewards are automatically withdrawn to the farmer after an unstaking event is triggered.
 
 ```go
 type MsgUnstake struct {
@@ -58,7 +79,9 @@ type MsgUnstake struct {
 
 ## MsgHarvest
 
-The farming rewards are automatically accumulated, but they are not automatically distributed. A farmer should harvest their farming rewards. This mechanism is similar with Cosmos SDK's [distribution](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/spec/01_concepts.md) module.
+The farming rewards are automatically accumulated, but they are not automatically distributed. 
+
+A farmer must harvest their farming rewards. This mechanism is similar to the Cosmos SDK [distribution](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/spec/01_concepts.md) module.
 
 ```go
 type MsgHarvest struct {
@@ -69,8 +92,15 @@ type MsgHarvest struct {
 
 ## MsgAdvanceEpoch
 
-This is custom message to advance epoch by one for the testing purpose. Enabling this message is possibly only if you build `farmingd` binary with `make install-testing` command. 
-When you send `MsgAdvanceEpoch` to the network, it increases epoch by 1.
+For testing purposes only, this custom message is used to advance epoch by 1. 
+
+To enable this message, you must build the `farmingd` binary:
+
+```sh
+make install-testing
+```
+
+When you send the `MsgAdvanceEpoch` message to the network, epoch increases by 1.
 
 ```go
 type MsgAdvanceEpoch struct {

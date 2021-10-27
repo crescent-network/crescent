@@ -2,7 +2,7 @@
 
 # Events
 
-The farming module emits the following events:
+The `farming` module emits the following events:
 
 ## EndBlocker
 
@@ -82,4 +82,4 @@ The farming module emits the following events:
 
 ### MsgAdvanceEpoch
 
-This message is for testing purpose. It is only available when you build `farmingd` binary by `make install-testing` command.
+The `MsgAdvanceEpoch` message is for testing purposes only and requires that you build the `farmingd` binary. See [MsgAdvanceEpoch](04_messages.md#MsgAdvanceEpoch).
