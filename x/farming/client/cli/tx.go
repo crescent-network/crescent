@@ -394,7 +394,7 @@ Where proposal.json contains:
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
   "name": "Cosmos Hub Community Tax",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "farming_pool_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
       "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
