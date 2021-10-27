@@ -151,18 +151,21 @@ message Staking {
   uint64 starting_epoch = 2 [(gogoproto.moretags) = "yaml:\"starting_epoch\""];
 }
 
+// QueuedStaking defines staking that is waiting in a queue.
 message QueuedStaking {
   option (gogoproto.goproto_getters) = false;
 
   string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
+// TotalStakings defines the total staking amount for a staking coin denom.
 message TotalStakings {
   option (gogoproto.goproto_getters) = false;
 
   string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
+// HistoricalRewards defines the culative unit rewards for a given staking coin denom and an epoch number.
 message HistoricalRewards {
   option (gogoproto.goproto_getters) = false;
 

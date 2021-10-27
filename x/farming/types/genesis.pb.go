@@ -129,6 +129,7 @@ func (m *PlanRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PlanRecord proto.InternalMessageInfo
 
+// StakingRecord is used for import/export via genesis json.
 type StakingRecord struct {
 	StakingCoinDenom string  `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
 	Farmer           string  `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
@@ -168,6 +169,7 @@ func (m *StakingRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StakingRecord proto.InternalMessageInfo
 
+// QueuedStakingRecord is used for import/export via genesis json.
 type QueuedStakingRecord struct {
 	StakingCoinDenom string        `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
 	Farmer           string        `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
@@ -207,6 +209,7 @@ func (m *QueuedStakingRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueuedStakingRecord proto.InternalMessageInfo
 
+// HistoricalRewardsRecord is used for import/export via genesis json.
 type HistoricalRewardsRecord struct {
 	StakingCoinDenom  string            `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
 	Epoch             uint64            `protobuf:"varint,2,opt,name=epoch,proto3" json:"epoch,omitempty"`
@@ -246,6 +249,7 @@ func (m *HistoricalRewardsRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_HistoricalRewardsRecord proto.InternalMessageInfo
 
+// OutstandingRewardsRecord is used for import/export via genesis json.
 type OutstandingRewardsRecord struct {
 	StakingCoinDenom   string             `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
 	OutstandingRewards OutstandingRewards `protobuf:"bytes,2,opt,name=outstanding_rewards,json=outstandingRewards,proto3" json:"outstanding_rewards" yaml:"outstanding_rewards"`
@@ -284,6 +288,7 @@ func (m *OutstandingRewardsRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_OutstandingRewardsRecord proto.InternalMessageInfo
 
+// CurrentEpochRecord is used for import/export via genesis json.
 type CurrentEpochRecord struct {
 	StakingCoinDenom string `protobuf:"bytes,1,opt,name=staking_coin_denom,json=stakingCoinDenom,proto3" json:"staking_coin_denom,omitempty" yaml:"staking_coin_denom"`
 	CurrentEpoch     uint64 `protobuf:"varint,2,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty" yaml:"current_epoch"`

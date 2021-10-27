@@ -9,20 +9,20 @@ import (
 
 // HandlePublicPlanProposal is a handler for executing a public plan creation proposal.
 func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, proposal *types.PublicPlanProposal) error {
-	if proposal.AddRequestProposals != nil {
-		if err := k.AddPublicPlanProposal(ctx, proposal.AddRequestProposals); err != nil {
+	if proposal.AddPlanRequests != nil {
+		if err := k.AddPublicPlanProposal(ctx, proposal.AddPlanRequests); err != nil {
 			return err
 		}
 	}
 
-	if proposal.UpdateRequestProposals != nil {
-		if err := k.UpdatePublicPlanProposal(ctx, proposal.UpdateRequestProposals); err != nil {
+	if proposal.ModifyPlanRequests != nil {
+		if err := k.ModifyPublicPlanProposal(ctx, proposal.ModifyPlanRequests); err != nil {
 			return err
 		}
 	}
 
-	if proposal.DeleteRequestProposals != nil {
-		if err := k.DeletePublicPlanProposal(ctx, proposal.DeleteRequestProposals); err != nil {
+	if proposal.DeletePlanRequests != nil {
+		if err := k.DeletePublicPlanProposal(ctx, proposal.DeletePlanRequests); err != nil {
 			return err
 		}
 	}
@@ -36,9 +36,9 @@ func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, proposal *types.PublicP
 }
 
 // AddPublicPlanProposal adds a new public plan once the governance proposal is passed.
-func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddRequestProposal) error {
+func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddPlanRequest) error {
 	for _, p := range proposals {
-		farmingPoolAddrAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
+		farmingPoolAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
 		if err != nil {
 			return err
 		}
@@ -51,14 +51,14 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 		if p.IsForFixedAmountPlan() {
 			msg := types.NewMsgCreateFixedAmountPlan(
 				p.GetName(),
-				farmingPoolAddrAcc,
+				farmingPoolAcc,
 				p.GetStakingCoinWeights(),
 				p.GetStartTime(),
 				p.GetEndTime(),
 				p.EpochAmount,
 			)
 
-			plan, err := k.CreateFixedAmountPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
+			plan, err := k.CreateFixedAmountPlan(ctx, msg, farmingPoolAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
 				return err
 			}
@@ -68,14 +68,14 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 		} else {
 			msg := types.NewMsgCreateRatioPlan(
 				p.GetName(),
-				farmingPoolAddrAcc,
+				farmingPoolAcc,
 				p.GetStakingCoinWeights(),
 				p.GetStartTime(),
 				p.GetEndTime(),
 				p.EpochRatio,
 			)
 
-			plan, err := k.CreateRatioPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
+			plan, err := k.CreateRatioPlan(ctx, msg, farmingPoolAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
 				return err
 			}
@@ -88,8 +88,8 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddReq
 	return nil
 }
 
-// UpdatePublicPlanProposal overwrites the plan with the new plan proposal once the governance proposal is passed.
-func (k Keeper) UpdatePublicPlanProposal(ctx sdk.Context, proposals []*types.UpdateRequestProposal) error {
+// ModifyPublicPlanProposal overwrites the plan with the new plan proposal once the governance proposal is passed.
+func (k Keeper) ModifyPublicPlanProposal(ctx sdk.Context, proposals []*types.ModifyPlanRequest) error {
 	for _, p := range proposals {
 		plan, found := k.GetPlan(ctx, p.GetPlanId())
 		if !found {
@@ -103,21 +103,21 @@ func (k Keeper) UpdatePublicPlanProposal(ctx sdk.Context, proposals []*types.Upd
 		}
 
 		if p.GetFarmingPoolAddress() != "" {
-			farmingPoolAddrAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
+			farmingPoolAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
 			if err != nil {
 				return err
 			}
-			if err := plan.SetFarmingPoolAddress(farmingPoolAddrAcc); err != nil {
+			if err := plan.SetFarmingPoolAddress(farmingPoolAcc); err != nil {
 				return err
 			}
 		}
 
 		if p.GetTerminationAddress() != "" {
-			terminationAddrAcc, err := sdk.AccAddressFromBech32(p.GetTerminationAddress())
+			terminationAcc, err := sdk.AccAddressFromBech32(p.GetTerminationAddress())
 			if err != nil {
 				return err
 			}
-			if err := plan.SetTerminationAddress(terminationAddrAcc); err != nil {
+			if err := plan.SetTerminationAddress(terminationAcc); err != nil {
 				return err
 			}
 		}
@@ -162,7 +162,7 @@ func (k Keeper) UpdatePublicPlanProposal(ctx sdk.Context, proposals []*types.Upd
 }
 
 // DeletePublicPlanProposal deletes public plan proposal once the governance proposal is passed.
-func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []*types.DeleteRequestProposal) error {
+func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []*types.DeletePlanRequest) error {
 	for _, p := range proposals {
 		plan, found := k.GetPlan(ctx, p.GetPlanId())
 		if !found {

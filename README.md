@@ -1,12 +1,12 @@
-[![codecov](https://codecov.io/gh/tendermint/farming/branch/master/graph/badge.svg)](https://codecov.io/gh/tendermint/farming?branch=master)
+[![codecov](https://codecov.io/gh/tendermint/farming/branch/main/graph/badge.svg)](https://codecov.io/gh/tendermint/farming?branch=main)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/tendermint/farming)](https://pkg.go.dev/github.com/tendermint/farming)
 
 # Farming Module
 
-A farming module is a Cosmos SDK module that implements farming functionality, which provides farming rewards to participants called farmers. A primary use case is to use this module to provide incentives for liquidity pool investors for their pool participation. 
+The farming module is a Cosmos SDK module that implements farming functionality, which provides farming rewards to participants called farmers. A primary use case is to use this module to provide incentives for liquidity pool investors for their pool participation. 
 
 ⚠ **Farming module v1 is in active development** ⚠ 
-- see the [master](https://github.com/tendermint/farming/tree/master) branch for the latest 
+- see the [main](https://github.com/tendermint/farming/tree/main) branch for the latest 
 - see [releases](https://github.com/tendermint/farming/releases) for the latest release
 
 ## Dependencies
@@ -33,7 +33,7 @@ To get started to the project, visit the [TECHNICAL-SETUP.md](./TECHNICAL-SETUP.
 
 ## Documentation
 
-The farming module documentation is available in [docs](./docs) folder and technical specification is available in [specs](https://github.com/tendermint/farming/blob/master/x/farming/spec/README.md) folder. 
+The farming module documentation is available in [docs](./docs) folder and technical specification is available in [specs](https://github.com/tendermint/farming/blob/main/x/farming/spec/README.md) folder. 
 
 These are some of the documents that help you to quickly get you on board with the farming module.
 
@@ -44,4 +44,4 @@ These are some of the documents that help you to quickly get you on board with t
 
 ## Contributing
 
-We welcome contributions from everyone. The [master](https://github.com/tendermint/farming/tree/master) branch contains the development version of the code. You can branch of from master and create a pull request, or maintain your own fork and submit a cross-repository pull request. If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop farming module. Thank you to all those who have contributed to farming module!
+We welcome contributions from everyone. The [main](https://github.com/tendermint/farming/tree/main) branch contains the development version of the code. You can branch of from main and create a pull request, or maintain your own fork and submit a cross-repository pull request. If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop farming module. Thank you to all those who have contributed to farming module!
