@@ -42,7 +42,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-func NewPublicPlanProposal(k keeper.Keeper) govtypes.Handler {
+// NewPublicPlanProposalHandler creates a governance handler to manage new proposal types.
+// It enables PublicPlanProposal to propose a plan creation / modification / deletion.
+func NewPublicPlanProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.PublicPlanProposal:

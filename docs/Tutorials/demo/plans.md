@@ -1,6 +1,6 @@
 # Farming Plans
 
-There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/tendermint/farming/blob/master/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
+There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
 
 In this documentation, some sample data in JSON are provided. They will be used to test out farming plan functionality.
 
@@ -47,15 +47,21 @@ $BINARY add-genesis-account $($BINARY keys show user2 --keyring-backend test -a)
 $BINARY gentx val1 100000000stake --chain-id $CHAIN_ID --keyring-backend test
 $BINARY collect-gentxs
 
+# Check OS for sed -i option value
+export SED_I=""
+if [[ "$OSTYPE" == "darwin"* ]]; then 
+    export SED_I="''"
+fi 
+
 # Modify app.toml
-sed -i '' 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
-sed -i '' 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
+sed -i $SED_I 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
+sed -i $SED_I 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
 
 # (Optional) Modify governance proposal for testing public plan proposal
-sed -i '' 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"voting_period": "172800s"%"voting_period": "60s"%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"voting_period": "172800s"%"voting_period": "60s"%g' $HOME_FARMINGAPP/config/genesis.json
 
 # Start
 $BINARY start
@@ -71,7 +77,7 @@ Create `public-fixed-plan-proposal.json` file in your local directory and copy t
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Fixed Amount Plan",
       "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
@@ -126,7 +132,7 @@ Create `public-ratio-plan-proposal.json` file in your local directory and copy t
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Ratio Plan",
       "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
@@ -172,7 +178,7 @@ Create `public-multiple-plans-proposal.json` file in your local directory and co
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Fixed Amount Plan",
       "farming_pool_address": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
@@ -237,7 +243,7 @@ Create `update-plan-proposal.json` file in your local directory and copy the bel
 {
   "title": "Update the Farming Plan 1",
   "description": "FarmingPoolAddress needs to be changed",
-  "update_request_proposals": [
+  "modify_plan_requests": [
     {
       "plan_id": 1,
       "farming_pool_address": "cosmos13w4ueuk80d3kmwk7ntlhp84fk0arlm3mqf0w08",
@@ -288,7 +294,7 @@ Create `delete-plan-proposal.json` file in your local directory and copy the bel
 {
   "title": "Delete Public Farming Plan 1",
   "description": "This plan is no longer needed",
-  "delete_request_proposals": [
+  "delete_plan_requests": [
     {
       "plan_id": 1
     }

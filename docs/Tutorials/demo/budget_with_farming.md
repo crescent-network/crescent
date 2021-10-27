@@ -3,10 +3,11 @@
 ## Changelog
 
 - 2021.09.27: initial document
+- 2021.10.15: update farming, budget version
 
 ## Disclaimer
 
-The [budget](https://github.com/tendermint/budget) and [farming](https://github.com/tendermint/farming) modules are in active development by the Gravity DEX team in Tendermint. This demo includes MVP versions of [budget](https://github.com/tendermint/budget/releases/tag/v0.1.0) and [farming](https://github.com/tendermint/farming/releases/tag/v0.1.0) modules meaning that it is not stable version. We are aware that there are a lot of rooms for improvements and there may be breaking changes along the way. We welcome any outside contributors to contribute to the modules and we are happy to receive any feedbacks or suggestions.
+The [budget](https://github.com/tendermint/budget) and [farming](https://github.com/tendermint/farming) modules are in active development by the Gravity DEX team in Tendermint. This demo includes MVP versions of budget and farming modules meaning that it is not stable version. We are aware that there are a lot of rooms for improvements and there may be breaking changes along the way. We welcome any outside contributors to contribute to the modules and we are happy to receive any feedbacks or suggestions.
 
 ## What does budget module do?
 
@@ -25,18 +26,18 @@ One use case is to use the module to provide incentives for liquidity pool inves
 **Budget module**
 
 - [Github Repo](https://github.com/tendermint/budget)
-- [Spec Docs](https://github.com/tendermint/budget/blob/master/x/budget/spec/01_concepts.md)
-- This demo version [v0.1.0](https://github.com/tendermint/budget/releases/tag/v0.1.0)
-- Other useful resources are available in [docs](https://github.com/tendermint/budget/blob/master/docs) folder
+- [Spec Docs](https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md)
+- This demo version [v0.1.2](https://github.com/tendermint/budget/releases)
+- Other useful resources are available in [docs](https://github.com/tendermint/budget/blob/main/docs) folder
 - Swagger Docs [v0.1.0](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/0.1.0)
 
 **Farming module**
 
 - [Github Repo](https://github.com/tendermint/farming)
-- [Spec Docs](https://github.com/tendermint/farming/blob/master/x/farming/spec/01_concepts.md)
-- Today's demo version [v0.1.0](https://github.com/tendermint/farming/releases/tag/v0.1.0)
-- Other useful resources are available in [docs](https://github.com/tendermint/farming/blob/master/docs) folder
-- Swagger Docs [v0.1.2](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.2)    
+- [Spec Docs](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md)
+- Today's demo version [v0.1.2](https://github.com/tendermint/farming/releases)
+- Other useful resources are available in [docs](https://github.com/tendermint/farming/blob/main/docs) folder
+- Swagger Docs [v0.1.3](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.3)    
 
 ## Demo
 
@@ -44,7 +45,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 ```bash
 # Clone the demo project and build `farmingd` for testing
-git clone -b v0.1.0 https://github.com/tendermint/farming.git
+git clone -b v0.1.2 https://github.com/tendermint/farming.git
 cd farming
 make install-testing
 ```
@@ -77,18 +78,24 @@ $BINARY add-genesis-account $($BINARY keys show user2 --keyring-backend test -a)
 $BINARY gentx val1 50000000000000000stake --chain-id $CHAIN_ID --keyring-backend test
 $BINARY collect-gentxs
 
+# Check OS for sed -i option value
+export SED_I=""
+if [[ "$OSTYPE" == "darwin"* ]]; then 
+    export SED_I="''"
+fi 
+
 # Modify app.toml
-sed -i '' 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
-sed -i '' 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
+sed -i $SED_I 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
+sed -i $SED_I 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
 
 # Modify parameters for the governance proposal
-sed -i '' 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i '' 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_FARMINGAPP/config/genesis.json
 
 # Modify inflation rate from 13% to 33%
-sed -i '' 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_FARMINGAPP/config/genesis.json
 
 # Start
 $BINARY start
@@ -104,7 +111,7 @@ In this demo, we plan to create a budget plan that distributes partial amount of
 
 ```go
 // cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky 
-sdk.AccAddress(address.Module(ModuleName, []byte("GravityDEXFarmingBudget")))
+sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
 ```
 
 Explanation about each field in the JSON file
@@ -208,7 +215,7 @@ We use the following values of the fields.
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Ratio Plan",
       "farming_pool_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
@@ -298,7 +305,7 @@ farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 
 To simulate reward distribution for this demo, we have this custom transaction message `AdvanceEpoch` that can be enabled when you build the binary `farmingd` with `make install-testing` command. When you send `AdvanceEpoch` message to the network, it increases epoch by day 1.
 
-In this step, you might wonder why we need to increase 2 epochs by sending two transactions to the network. The reaon for that is because it is for the fairness of distribution. There is a global parameter called `next_epoch_days` that can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, we use an internal state called `current_epoch_days` that is used to process staking and reward distribution in an end blocker. This is technical decision that is made by the Gravity DEX team. To understand more about this, feel free to jump right into [the code](https://github.com/tendermint/farming/blob/master/x/farming/abci.go#L13).
+In this step, you might wonder why we need to increase 2 epochs by sending two transactions to the network. The reaon for that is because it is for the fairness of distribution. There is a global parameter called `next_epoch_days` that can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, we use an internal state called `current_epoch_days` that is used to process staking and reward distribution in an end blocker. This is technical decision that is made by the Gravity DEX team. To understand more about this, feel free to jump right into [the code](https://github.com/tendermint/farming/blob/main/x/farming/abci.go#L13).
 
 ```bash
 # Increase epoch by 1 
@@ -392,7 +399,7 @@ Add second public ratio plan proposal
 {
   "title": "Update Public Farming Plan",
   "description": "Are you ready to farm?",
-  "update_request_proposals": [
+  "modify_plan_requests": [
     {
       "plan_id": 1,
       "name": "First Public Ratio Plan",
@@ -409,7 +416,7 @@ Add second public ratio plan proposal
       "epoch_ratio": "0.500000000000000000"
     }
   ],
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "Second Public Ratio Plan",
       "farming_pool_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",

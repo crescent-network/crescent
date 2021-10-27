@@ -15,13 +15,16 @@ var (
 	KeyPrivatePlanCreationFee = []byte("PrivatePlanCreationFee")
 	KeyNextEpochDays          = []byte("NextEpochDays")
 	KeyFarmingFeeCollector    = []byte("FarmingFeeCollector")
+	KeyDelayedStakingGasFee   = []byte("DelayedStakingGasFee")
 
 	DefaultPrivatePlanCreationFee = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)))
 	DefaultCurrentEpochDays       = uint32(1)
 	DefaultNextEpochDays          = uint32(1)
 	DefaultFarmingFeeCollector    = sdk.AccAddress(address.Module(ModuleName, []byte("FarmingFeeCollectorAcc"))).String()
-	StakingReserveAcc             = sdk.AccAddress(address.Module(ModuleName, []byte("StakingReserveAcc")))
-	RewardsReserveAcc             = sdk.AccAddress(address.Module(ModuleName, []byte("RewardsReserveAcc")))
+	DefaultDelayedStakingGasFee   = sdk.Gas(60000) // See https://github.com/tendermint/farming/issues/102 for details.
+
+	StakingReserveAcc = sdk.AccAddress(address.Module(ModuleName, []byte("StakingReserveAcc")))
+	RewardsReserveAcc = sdk.AccAddress(address.Module(ModuleName, []byte("RewardsReserveAcc")))
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -37,6 +40,7 @@ func DefaultParams() Params {
 		PrivatePlanCreationFee: DefaultPrivatePlanCreationFee,
 		NextEpochDays:          DefaultNextEpochDays,
 		FarmingFeeCollector:    DefaultFarmingFeeCollector,
+		DelayedStakingGasFee:   DefaultDelayedStakingGasFee,
 	}
 }
 
@@ -46,6 +50,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyPrivatePlanCreationFee, &p.PrivatePlanCreationFee, validatePrivatePlanCreationFee),
 		paramstypes.NewParamSetPair(KeyNextEpochDays, &p.NextEpochDays, validateNextEpochDays),
 		paramstypes.NewParamSetPair(KeyFarmingFeeCollector, &p.FarmingFeeCollector, validateFarmingFeeCollector),
+		paramstypes.NewParamSetPair(KeyDelayedStakingGasFee, &p.DelayedStakingGasFee, validateDelayedStakingGas),
 	}
 }
 
@@ -64,6 +69,7 @@ func (p Params) Validate() error {
 		{p.PrivatePlanCreationFee, validatePrivatePlanCreationFee},
 		{p.NextEpochDays, validateNextEpochDays},
 		{p.FarmingFeeCollector, validateFarmingFeeCollector},
+		{p.DelayedStakingGasFee, validateDelayedStakingGas},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
@@ -111,6 +117,15 @@ func validateFarmingFeeCollector(i interface{}) error {
 	_, err := sdk.AccAddressFromBech32(v)
 	if err != nil {
 		return fmt.Errorf("invalid account address: %v", v)
+	}
+
+	return nil
+}
+
+func validateDelayedStakingGas(i interface{}) error {
+	_, ok := i.(sdk.Gas)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	return nil

@@ -18,7 +18,7 @@ ADR creation is an **iterative** process. Instead of trying to solve all decisio
 
 2. After the motivation is validated, create a new document that is on the `adr-template.md`.
 
-3. An ADR solution doesn't have to arrive to the `master` branch with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge PRs iteratively and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, not merged Pull Requests.
+3. An ADR solution doesn't have to arrive to the `main` branch with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge PRs iteratively and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, not merged Pull Requests.
 
 4. If a _proposed_ ADR is merged, then the outstanding changes must be clearly documented in outstanding issues in ADR document notes or in a GitHub Issue.
 

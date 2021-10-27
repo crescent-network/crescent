@@ -46,8 +46,10 @@ type PlanI interface {
     GetDistributedCoins() sdk.Coins
     SetDistributedCoins(sdk.Coins) error
 
+    GetBasePlan() *BasePlan
+
     String() string
-    
+
     Validate() error
 }
 ```
@@ -147,12 +149,12 @@ type QueuedStaking struct {
 - QueuedStakingIndex: `0x24 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> nil`
 
 ```go
-type TotalStaking struct {
+type TotalStakings struct {
     Amount sdk.Int
 }
 ```
 
-- TotalStaking: `0x25 | StakingCoinDenom -> ProtocolBuffer(TotalStaking)`
+- TotalStakings: `0x25 | StakingCoinDenom -> ProtocolBuffer(TotalStakings)`
 
 ## Historical Rewards
 
@@ -186,12 +188,12 @@ An example of `FixedAmountPlan`
 ```json
 {
   "base_plan": {
-    "id": 0,
+    "id": 1,
     "name": "testPlan",
-    "type": 0,
-    "farmingPoolAddress": "cosmos1...",
-    "rewardPoolAddress": "cosmos1...",
-    "stakingCoinWeights": [
+    "type": 1,
+    "farming_pool_address": "cosmos1...",
+    "termination_address": "cosmos1...",
+    "staking_coin_weights": [
       {
         "denom": "xxx",
         "amount": "0.200000000000000000"
@@ -205,14 +207,23 @@ An example of `FixedAmountPlan`
         "amount": "0.500000000000000000"
       }
     ],
-    "startTime": "2021-10-01T00:00:00Z",
-    "endTime": "2022-04-01T00:00:00Z",
-    "terminationAddress": "cosmos1..."
+    "start_time": "2021-10-01T00:00:00Z",
+    "end_time": "2022-04-01T00:00:00Z",
+    "terminated": false,
+    "last_distribution_time": "2021-10-11T00:00:00Z",
+    "distributed_coins": [
+      {
+        "denom": "uatom",
+        "amount": "10000000"
+      }
+    ]
   },
-  "epochAmount": {
-    "denom": "uatom",
-    "amount": "10000000"
-  }
+  "epoch_amount": [
+    {
+      "denom": "uatom",
+      "amount": "10000000"
+    }
+  ]
 }
 ```
 
@@ -221,12 +232,12 @@ An example of `RatioPlan`
 ```json
 {
   "base_plan": {
-    "id": 0,
+    "id": 1,
     "name": "testPlan",
-    "type": 0,
-    "farmingPoolAddress": "cosmos1...",
-    "rewardPoolAddress": "cosmos1...",
-    "stakingCoinWeights": [
+    "type": 1,
+    "farming_pool_address": "cosmos1...",
+    "termination_address": "cosmos1...",
+    "staking_coin_weights": [
       {
         "denom": "xxx",
         "amount": "0.200000000000000000"
@@ -240,10 +251,12 @@ An example of `RatioPlan`
         "amount": "0.500000000000000000"
       }
     ],
-    "startTime": "2021-10-01T00:00:00Z",
-    "endTime": "2022-04-01T00:00:00Z",
-    "terminationAddress": "cosmos1..."
+    "start_time": "2021-10-01T00:00:00Z",
+    "end_time": "2022-04-01T00:00:00Z",
+    "terminated": false,
+    "last_distribution_time": null,
+    "distributed_coins": []
   },
-  "epochRatio": "0.01"
+  "epoch_ratio": "0.010000000000000000"
 }
 ```

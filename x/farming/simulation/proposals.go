@@ -30,7 +30,7 @@ func ProposalContents(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keep
 		simulation.NewWeightedProposalContent(
 			OpWeightSimulateUpdatePublicPlanProposal,
 			params.DefaultWeightUpdatePublicPlanProposal,
-			SimulateUpdatePublicPlanProposal(ak, bk, k),
+			SimulateModifyPublicPlanProposal(ak, bk, k),
 		),
 		simulation.NewWeightedProposalContent(
 			OpWeightSimulateDeletePublicPlanProposal,
@@ -65,14 +65,14 @@ func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, 
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			addRequests,
-			[]*types.UpdateRequestProposal{},
-			[]*types.DeleteRequestProposal{},
+			[]*types.ModifyPlanRequest{},
+			[]*types.DeletePlanRequest{},
 		)
 	}
 }
 
-// SimulateUpdatePublicPlanProposal generates random public plan proposal content
-func SimulateUpdatePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
+// SimulateModifyPublicPlanProposal generates random public plan proposal content
+func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
@@ -90,7 +90,7 @@ func SimulateUpdatePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		req := &types.UpdateRequestProposal{}
+		req := &types.ModifyPlanRequest{}
 
 		plans := k.GetPlans(ctx)
 		for _, p := range plans {
@@ -126,14 +126,14 @@ func SimulateUpdatePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		updateRequests := []*types.UpdateRequestProposal{req}
+		updateRequests := []*types.ModifyPlanRequest{req}
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			[]*types.AddRequestProposal{},
+			[]*types.AddPlanRequest{},
 			updateRequests,
-			[]*types.DeleteRequestProposal{},
+			[]*types.DeletePlanRequest{},
 		)
 	}
 }
@@ -152,7 +152,7 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		req := &types.DeleteRequestProposal{}
+		req := &types.DeletePlanRequest{}
 
 		plans := k.GetPlans(ctx)
 		for _, p := range plans {
@@ -166,27 +166,27 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		deleteRequest := []*types.DeleteRequestProposal{req}
+		deleteRequest := []*types.DeletePlanRequest{req}
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			[]*types.AddRequestProposal{},
-			[]*types.UpdateRequestProposal{},
+			[]*types.AddPlanRequest{},
+			[]*types.ModifyPlanRequest{},
 			deleteRequest,
 		)
 	}
 }
 
 // genAddRequestProposals returns randomized add request proposals.
-func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.Account, poolCoins sdk.Coins) []*types.AddRequestProposal {
-	ranProposals := make([]*types.AddRequestProposal, 0)
+func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.Account, poolCoins sdk.Coins) []*types.AddPlanRequest {
+	ranProposals := make([]*types.AddPlanRequest, 0)
 
 	// generate random number of proposals with random values of each parameter
 	// it generates a fixed amount plan if pseudo-random integer is an even number and
 	// it generates a ratio plan if it is an odd number
 	for i := 0; i < simtypes.RandIntBetween(r, 1, 3); i++ {
-		req := &types.AddRequestProposal{}
+		req := &types.AddPlanRequest{}
 		if r.Int()%2 == 0 {
 			req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
 			req.FarmingPoolAddress = simAccount.Address.String()

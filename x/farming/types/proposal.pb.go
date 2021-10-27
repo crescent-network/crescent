@@ -39,12 +39,12 @@ type PublicPlanProposal struct {
 	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	// description specifies the description of the plan
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// add_request_proposals specifies AddRequestProposal object
-	AddRequestProposals []*AddRequestProposal `protobuf:"bytes,3,rep,name=add_request_proposals,json=addRequestProposals,proto3" json:"add_request_proposals,omitempty" yaml:"add_request_proposals"`
-	// update_request_proposals specifies UpdateRequestProposal object
-	UpdateRequestProposals []*UpdateRequestProposal `protobuf:"bytes,4,rep,name=update_request_proposals,json=updateRequestProposals,proto3" json:"update_request_proposals,omitempty" yaml:"update_request_proposals"`
-	// delete_request_proposals specifies DeleteRequestProposal object
-	DeleteRequestProposals []*DeleteRequestProposal `protobuf:"bytes,5,rep,name=delete_request_proposals,json=deleteRequestProposals,proto3" json:"delete_request_proposals,omitempty" yaml:"delete_request_proposals"`
+	// add_plan_requests specifies AddPlanRequest object
+	AddPlanRequests []*AddPlanRequest `protobuf:"bytes,3,rep,name=add_plan_requests,json=addPlanRequests,proto3" json:"add_plan_requests,omitempty" yaml:"add_plan_requests"`
+	// modify_plan_requests specifies ModifyPlanRequest object
+	ModifyPlanRequests []*ModifyPlanRequest `protobuf:"bytes,4,rep,name=modify_plan_requests,json=modifyPlanRequests,proto3" json:"modify_plan_requests,omitempty" yaml:"modify_plan_requests"`
+	// delete_plan_requests specifies DeletePlanRequest object
+	DeletePlanRequests []*DeletePlanRequest `protobuf:"bytes,5,rep,name=delete_plan_requests,json=deletePlanRequests,proto3" json:"delete_plan_requests,omitempty" yaml:"delete_plan_requests"`
 }
 
 func (m *PublicPlanProposal) Reset()      { *m = PublicPlanProposal{} }
@@ -79,8 +79,8 @@ func (m *PublicPlanProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PublicPlanProposal proto.InternalMessageInfo
 
-// AddRequestProposal details a proposal for creating a public plan.
-type AddRequestProposal struct {
+// AddPlanRequest details a proposal for creating a public plan.
+type AddPlanRequest struct {
 	// name specifies the plan name for display
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// farming_pool_address defines the bech32-encoded address of the farming pool
@@ -101,18 +101,18 @@ type AddRequestProposal struct {
 	EpochRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=epoch_ratio,json=epochRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_ratio" yaml:"epoch_ratio"`
 }
 
-func (m *AddRequestProposal) Reset()         { *m = AddRequestProposal{} }
-func (m *AddRequestProposal) String() string { return proto.CompactTextString(m) }
-func (*AddRequestProposal) ProtoMessage()    {}
-func (*AddRequestProposal) Descriptor() ([]byte, []int) {
+func (m *AddPlanRequest) Reset()         { *m = AddPlanRequest{} }
+func (m *AddPlanRequest) String() string { return proto.CompactTextString(m) }
+func (*AddPlanRequest) ProtoMessage()    {}
+func (*AddPlanRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4719b03c30c7910a, []int{1}
 }
-func (m *AddRequestProposal) XXX_Unmarshal(b []byte) error {
+func (m *AddPlanRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AddPlanRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddRequestProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AddPlanRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -122,69 +122,69 @@ func (m *AddRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *AddRequestProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddRequestProposal.Merge(m, src)
+func (m *AddPlanRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddPlanRequest.Merge(m, src)
 }
-func (m *AddRequestProposal) XXX_Size() int {
+func (m *AddPlanRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddRequestProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddRequestProposal.DiscardUnknown(m)
+func (m *AddPlanRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddPlanRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddRequestProposal proto.InternalMessageInfo
+var xxx_messageInfo_AddPlanRequest proto.InternalMessageInfo
 
-func (m *AddRequestProposal) GetName() string {
+func (m *AddPlanRequest) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *AddRequestProposal) GetFarmingPoolAddress() string {
+func (m *AddPlanRequest) GetFarmingPoolAddress() string {
 	if m != nil {
 		return m.FarmingPoolAddress
 	}
 	return ""
 }
 
-func (m *AddRequestProposal) GetTerminationAddress() string {
+func (m *AddPlanRequest) GetTerminationAddress() string {
 	if m != nil {
 		return m.TerminationAddress
 	}
 	return ""
 }
 
-func (m *AddRequestProposal) GetStakingCoinWeights() github_com_cosmos_cosmos_sdk_types.DecCoins {
+func (m *AddPlanRequest) GetStakingCoinWeights() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.StakingCoinWeights
 	}
 	return nil
 }
 
-func (m *AddRequestProposal) GetStartTime() time.Time {
+func (m *AddPlanRequest) GetStartTime() time.Time {
 	if m != nil {
 		return m.StartTime
 	}
 	return time.Time{}
 }
 
-func (m *AddRequestProposal) GetEndTime() time.Time {
+func (m *AddPlanRequest) GetEndTime() time.Time {
 	if m != nil {
 		return m.EndTime
 	}
 	return time.Time{}
 }
 
-func (m *AddRequestProposal) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *AddPlanRequest) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.EpochAmount
 	}
 	return nil
 }
 
-// UpdateRequestProposal details a proposal for updating an existing public plan.
-type UpdateRequestProposal struct {
+// ModifyPlanRequest details a proposal for modifying the existing public plan.
+type ModifyPlanRequest struct {
 	// plan_id specifies index of the farming plan
 	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
 	// name specifies the plan name for diplay
@@ -207,18 +207,18 @@ type UpdateRequestProposal struct {
 	EpochRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,9,opt,name=epoch_ratio,json=epochRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_ratio" yaml:"epoch_ratio"`
 }
 
-func (m *UpdateRequestProposal) Reset()         { *m = UpdateRequestProposal{} }
-func (m *UpdateRequestProposal) String() string { return proto.CompactTextString(m) }
-func (*UpdateRequestProposal) ProtoMessage()    {}
-func (*UpdateRequestProposal) Descriptor() ([]byte, []int) {
+func (m *ModifyPlanRequest) Reset()         { *m = ModifyPlanRequest{} }
+func (m *ModifyPlanRequest) String() string { return proto.CompactTextString(m) }
+func (*ModifyPlanRequest) ProtoMessage()    {}
+func (*ModifyPlanRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4719b03c30c7910a, []int{2}
 }
-func (m *UpdateRequestProposal) XXX_Unmarshal(b []byte) error {
+func (m *ModifyPlanRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ModifyPlanRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateRequestProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ModifyPlanRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -228,92 +228,92 @@ func (m *UpdateRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *UpdateRequestProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateRequestProposal.Merge(m, src)
+func (m *ModifyPlanRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModifyPlanRequest.Merge(m, src)
 }
-func (m *UpdateRequestProposal) XXX_Size() int {
+func (m *ModifyPlanRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateRequestProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateRequestProposal.DiscardUnknown(m)
+func (m *ModifyPlanRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModifyPlanRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateRequestProposal proto.InternalMessageInfo
+var xxx_messageInfo_ModifyPlanRequest proto.InternalMessageInfo
 
-func (m *UpdateRequestProposal) GetPlanId() uint64 {
+func (m *ModifyPlanRequest) GetPlanId() uint64 {
 	if m != nil {
 		return m.PlanId
 	}
 	return 0
 }
 
-func (m *UpdateRequestProposal) GetName() string {
+func (m *ModifyPlanRequest) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *UpdateRequestProposal) GetFarmingPoolAddress() string {
+func (m *ModifyPlanRequest) GetFarmingPoolAddress() string {
 	if m != nil {
 		return m.FarmingPoolAddress
 	}
 	return ""
 }
 
-func (m *UpdateRequestProposal) GetTerminationAddress() string {
+func (m *ModifyPlanRequest) GetTerminationAddress() string {
 	if m != nil {
 		return m.TerminationAddress
 	}
 	return ""
 }
 
-func (m *UpdateRequestProposal) GetStakingCoinWeights() github_com_cosmos_cosmos_sdk_types.DecCoins {
+func (m *ModifyPlanRequest) GetStakingCoinWeights() github_com_cosmos_cosmos_sdk_types.DecCoins {
 	if m != nil {
 		return m.StakingCoinWeights
 	}
 	return nil
 }
 
-func (m *UpdateRequestProposal) GetStartTime() *time.Time {
+func (m *ModifyPlanRequest) GetStartTime() *time.Time {
 	if m != nil {
 		return m.StartTime
 	}
 	return nil
 }
 
-func (m *UpdateRequestProposal) GetEndTime() *time.Time {
+func (m *ModifyPlanRequest) GetEndTime() *time.Time {
 	if m != nil {
 		return m.EndTime
 	}
 	return nil
 }
 
-func (m *UpdateRequestProposal) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *ModifyPlanRequest) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.EpochAmount
 	}
 	return nil
 }
 
-// DeleteRequestProposal details a proposal for deleting an existing public plan.
-type DeleteRequestProposal struct {
+// DeletePlanRequest details a proposal for deleting an existing public plan.
+type DeletePlanRequest struct {
 	// plan_id specifies index of the farming plan
 	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
 }
 
-func (m *DeleteRequestProposal) Reset()         { *m = DeleteRequestProposal{} }
-func (m *DeleteRequestProposal) String() string { return proto.CompactTextString(m) }
-func (*DeleteRequestProposal) ProtoMessage()    {}
-func (*DeleteRequestProposal) Descriptor() ([]byte, []int) {
+func (m *DeletePlanRequest) Reset()         { *m = DeletePlanRequest{} }
+func (m *DeletePlanRequest) String() string { return proto.CompactTextString(m) }
+func (*DeletePlanRequest) ProtoMessage()    {}
+func (*DeletePlanRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4719b03c30c7910a, []int{3}
 }
-func (m *DeleteRequestProposal) XXX_Unmarshal(b []byte) error {
+func (m *DeletePlanRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *DeleteRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *DeletePlanRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_DeleteRequestProposal.Marshal(b, m, deterministic)
+		return xxx_messageInfo_DeletePlanRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -323,19 +323,19 @@ func (m *DeleteRequestProposal) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *DeleteRequestProposal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeleteRequestProposal.Merge(m, src)
+func (m *DeletePlanRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeletePlanRequest.Merge(m, src)
 }
-func (m *DeleteRequestProposal) XXX_Size() int {
+func (m *DeletePlanRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *DeleteRequestProposal) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeleteRequestProposal.DiscardUnknown(m)
+func (m *DeletePlanRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeletePlanRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DeleteRequestProposal proto.InternalMessageInfo
+var xxx_messageInfo_DeletePlanRequest proto.InternalMessageInfo
 
-func (m *DeleteRequestProposal) GetPlanId() uint64 {
+func (m *DeletePlanRequest) GetPlanId() uint64 {
 	if m != nil {
 		return m.PlanId
 	}
@@ -344,9 +344,9 @@ func (m *DeleteRequestProposal) GetPlanId() uint64 {
 
 func init() {
 	proto.RegisterType((*PublicPlanProposal)(nil), "cosmos.farming.v1beta1.PublicPlanProposal")
-	proto.RegisterType((*AddRequestProposal)(nil), "cosmos.farming.v1beta1.AddRequestProposal")
-	proto.RegisterType((*UpdateRequestProposal)(nil), "cosmos.farming.v1beta1.UpdateRequestProposal")
-	proto.RegisterType((*DeleteRequestProposal)(nil), "cosmos.farming.v1beta1.DeleteRequestProposal")
+	proto.RegisterType((*AddPlanRequest)(nil), "cosmos.farming.v1beta1.AddPlanRequest")
+	proto.RegisterType((*ModifyPlanRequest)(nil), "cosmos.farming.v1beta1.ModifyPlanRequest")
+	proto.RegisterType((*DeletePlanRequest)(nil), "cosmos.farming.v1beta1.DeletePlanRequest")
 }
 
 func init() {
@@ -354,56 +354,56 @@ func init() {
 }
 
 var fileDescriptor_4719b03c30c7910a = []byte{
-	// 775 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0x3f, 0x6f, 0xdb, 0x38,
-	0x1c, 0xb5, 0xe2, 0xbf, 0xa1, 0x0f, 0x38, 0x1c, 0xe3, 0xe4, 0x1c, 0x27, 0x27, 0x19, 0x3a, 0xe0,
-	0xe0, 0xbb, 0x43, 0xa4, 0x26, 0xdd, 0xb2, 0xc5, 0x0d, 0x10, 0x74, 0xaa, 0x2b, 0xb4, 0x68, 0xd1,
-	0x45, 0xa0, 0x4d, 0xc6, 0x11, 0x22, 0x89, 0xaa, 0x48, 0xb7, 0xcd, 0xd6, 0xa5, 0x40, 0x87, 0xa2,
-	0xc8, 0xd8, 0x31, 0xe8, 0x98, 0x4f, 0x92, 0x31, 0x63, 0xd1, 0xc1, 0x29, 0x92, 0x6f, 0xe0, 0xa5,
-	0x6b, 0x21, 0x92, 0x72, 0x8d, 0x46, 0x4e, 0x1d, 0x20, 0x05, 0x32, 0x89, 0x3f, 0xf2, 0xf7, 0x1e,
-	0x9f, 0x1e, 0xf9, 0x6c, 0x81, 0x7f, 0x39, 0x09, 0x31, 0x89, 0x03, 0x2f, 0xe4, 0xf6, 0x2e, 0x4a,
-	0x9e, 0x7d, 0xfb, 0xc5, 0x7a, 0x97, 0x70, 0xb4, 0x6e, 0x47, 0x31, 0x8d, 0x28, 0x43, 0xbe, 0x15,
-	0xc5, 0x94, 0x53, 0xb8, 0xd4, 0xa3, 0x2c, 0xa0, 0xcc, 0x52, 0x6d, 0x96, 0x6a, 0x6b, 0xd4, 0xfa,
-	0xb4, 0x4f, 0x45, 0x8b, 0x9d, 0x8c, 0x64, 0x77, 0x63, 0x59, 0x76, 0xbb, 0x72, 0x41, 0x41, 0xe5,
-	0x92, 0x2e, 0x2b, 0xbb, 0x8b, 0x18, 0x19, 0x6f, 0xd6, 0xa3, 0x5e, 0xa8, 0xd6, 0x5b, 0x57, 0x68,
-	0x4a, 0x37, 0x97, 0x9d, 0x46, 0x9f, 0xd2, 0xbe, 0x4f, 0x6c, 0x51, 0x75, 0x07, 0xbb, 0x36, 0xf7,
-	0x02, 0xc2, 0x38, 0x0a, 0x22, 0xd9, 0x60, 0x7e, 0xcd, 0x03, 0xd8, 0x19, 0x74, 0x7d, 0xaf, 0xd7,
-	0xf1, 0x51, 0xd8, 0x51, 0x2f, 0x04, 0x6b, 0xa0, 0xc8, 0x3d, 0xee, 0x93, 0xba, 0xd6, 0xd4, 0x5a,
-	0xf3, 0x8e, 0x2c, 0x60, 0x13, 0x54, 0x31, 0x61, 0xbd, 0xd8, 0x8b, 0xb8, 0x47, 0xc3, 0xfa, 0x9c,
-	0x58, 0x9b, 0x9c, 0x82, 0xaf, 0x35, 0xb0, 0x88, 0x30, 0x76, 0x63, 0xf2, 0x7c, 0x40, 0x18, 0x77,
-	0x53, 0x87, 0x58, 0x3d, 0xdf, 0xcc, 0xb7, 0xaa, 0x1b, 0xff, 0x59, 0xd9, 0x1e, 0x59, 0x5b, 0x18,
-	0x3b, 0x12, 0x93, 0x6a, 0x68, 0x37, 0x47, 0x43, 0x63, 0xf5, 0x00, 0x05, 0xfe, 0xa6, 0x99, 0x49,
-	0x69, 0x3a, 0x0b, 0xe8, 0x12, 0x8a, 0xc1, 0x77, 0x1a, 0xa8, 0x0f, 0x22, 0x8c, 0x38, 0xc9, 0x50,
-	0x51, 0x10, 0x2a, 0xd6, 0xa6, 0xa9, 0x78, 0x2c, 0x70, 0x3f, 0x0a, 0xf9, 0x7b, 0x34, 0x34, 0x0c,
-	0x29, 0x64, 0x1a, 0xb1, 0xe9, 0x2c, 0x0d, 0xb2, 0xb0, 0x52, 0x0e, 0x26, 0x3e, 0xc9, 0x94, 0x53,
-	0xbc, 0x5a, 0xce, 0xb6, 0xc0, 0x5d, 0x21, 0x67, 0x1a, 0xb1, 0xe9, 0x2c, 0xe1, 0x2c, 0x2c, 0xdb,
-	0xac, 0xbc, 0x3d, 0x32, 0x72, 0x1f, 0x8e, 0x8c, 0x9c, 0xf9, 0xbe, 0x04, 0xe0, 0x65, 0xd7, 0x21,
-	0x04, 0x85, 0x10, 0x05, 0xe9, 0xc1, 0x8b, 0x31, 0x7c, 0x08, 0x6a, 0x4a, 0x9a, 0x1b, 0x51, 0xea,
-	0xbb, 0x08, 0xe3, 0x98, 0x30, 0x26, 0x2f, 0x40, 0xdb, 0x18, 0x0d, 0x8d, 0x15, 0xa9, 0x27, 0xab,
-	0xcb, 0x74, 0xa0, 0x9a, 0xee, 0x50, 0xea, 0x6f, 0xc9, 0x49, 0xf8, 0x00, 0x2c, 0x70, 0x71, 0x83,
-	0x51, 0x72, 0x6f, 0xc6, 0x8c, 0x79, 0xc1, 0xa8, 0x8f, 0x86, 0x46, 0x43, 0x32, 0x66, 0x34, 0x99,
-	0x0e, 0x9c, 0x98, 0x4d, 0x09, 0x3f, 0x6a, 0xa0, 0xc6, 0x38, 0xda, 0x4f, 0xb6, 0x4f, 0xa2, 0xe2,
-	0xbe, 0x24, 0x5e, 0x7f, 0x8f, 0xa7, 0x47, 0xbe, 0x9a, 0x7a, 0x9c, 0x64, 0x6a, 0xc2, 0xe0, 0xde,
-	0x3d, 0xea, 0x85, 0x6d, 0xe7, 0x64, 0x68, 0xe4, 0xbe, 0xbf, 0x46, 0x16, 0x8f, 0x79, 0x7c, 0x66,
-	0xfc, 0xdf, 0xf7, 0xf8, 0xde, 0xa0, 0x6b, 0xf5, 0x68, 0xa0, 0x02, 0xab, 0x1e, 0x6b, 0x0c, 0xef,
-	0xdb, 0xfc, 0x20, 0x22, 0x2c, 0xa5, 0x64, 0x0e, 0x54, 0x2c, 0x49, 0xf5, 0x44, 0x72, 0xc0, 0xa7,
-	0x00, 0x30, 0x8e, 0x62, 0xee, 0x26, 0x31, 0xac, 0x17, 0x9b, 0x5a, 0xab, 0xba, 0xd1, 0xb0, 0x64,
-	0x46, 0xad, 0x34, 0xa3, 0xd6, 0xa3, 0x34, 0xa3, 0xed, 0xbf, 0x94, 0xae, 0x3f, 0xc6, 0xba, 0x14,
-	0xd6, 0x3c, 0x3c, 0x33, 0x34, 0x67, 0x5e, 0x4c, 0x24, 0xed, 0xd0, 0x01, 0x15, 0x12, 0x62, 0xc9,
-	0x5b, 0xfa, 0x29, 0xef, 0x8a, 0xe2, 0xfd, 0x5d, 0xf2, 0xa6, 0x48, 0xc9, 0x5a, 0x26, 0x21, 0x16,
-	0x9c, 0x6f, 0x34, 0xf0, 0x1b, 0x89, 0x68, 0x6f, 0xcf, 0x45, 0x01, 0x1d, 0x84, 0xbc, 0x5e, 0x16,
-	0x56, 0x2e, 0x67, 0x5a, 0x29, 0x7c, 0xdc, 0x51, 0xbc, 0x0b, 0x8a, 0x77, 0x02, 0x9c, 0xf8, 0xd7,
-	0x9a, 0xc1, 0x3f, 0x69, 0x5e, 0x55, 0x40, 0xb7, 0x04, 0x12, 0x12, 0x20, 0x4b, 0x37, 0x4e, 0x4e,
-	0xbc, 0x5e, 0x11, 0x77, 0x64, 0x3b, 0xd9, 0xea, 0xf3, 0xd0, 0xf8, 0x67, 0xb6, 0x33, 0x19, 0x0d,
-	0x0d, 0x38, 0x29, 0x4a, 0x50, 0x99, 0x0e, 0x10, 0x95, 0x23, 0x8a, 0xe3, 0x12, 0x58, 0xcc, 0xfc,
-	0x01, 0x80, 0x7f, 0x82, 0x72, 0xe4, 0xa3, 0xd0, 0xf5, 0xb0, 0x88, 0x45, 0xc1, 0x29, 0x25, 0xe5,
-	0x7d, 0x3c, 0x0e, 0xcb, 0xdc, 0x0c, 0x61, 0xc9, 0xdf, 0x78, 0x58, 0x0a, 0x37, 0x1f, 0x96, 0xe2,
-	0xad, 0x0d, 0x4b, 0x69, 0xa6, 0xb0, 0x68, 0xd7, 0x0e, 0x4b, 0x79, 0xa6, 0xb0, 0x68, 0xd7, 0x0f,
-	0x4b, 0xe5, 0x56, 0x84, 0x65, 0xfe, 0x17, 0x85, 0xe5, 0x0e, 0x58, 0xcc, 0xfc, 0x77, 0x9a, 0x9a,
-	0x95, 0xf6, 0xce, 0xc9, 0xb9, 0xae, 0x9d, 0x9e, 0xeb, 0xda, 0x97, 0x73, 0x5d, 0x3b, 0xbc, 0xd0,
-	0x73, 0xa7, 0x17, 0x7a, 0xee, 0xd3, 0x85, 0x9e, 0x7b, 0xb6, 0x36, 0xa1, 0x2a, 0xe3, 0xcb, 0xe6,
-	0xd5, 0x78, 0x24, 0x04, 0x76, 0x4b, 0xe2, 0x8c, 0xee, 0x7e, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x88,
-	0x08, 0x21, 0xe4, 0x9a, 0x09, 0x00, 0x00,
+	// 770 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcf, 0x4f, 0xdb, 0x48,
+	0x14, 0x8e, 0xc9, 0x4f, 0x26, 0xab, 0x45, 0x19, 0xa2, 0xdd, 0x10, 0x58, 0x3b, 0xf2, 0x01, 0x05,
+	0xed, 0x62, 0x0b, 0xf6, 0xc6, 0x8d, 0x2c, 0x12, 0xda, 0x43, 0xd5, 0xd4, 0xaa, 0xd4, 0xaa, 0x17,
+	0x6b, 0x92, 0x19, 0x82, 0x85, 0xed, 0x71, 0x3d, 0x93, 0xb6, 0x48, 0xbd, 0x56, 0xaa, 0x7a, 0xe2,
+	0xd8, 0x23, 0xea, 0xa1, 0x87, 0xfe, 0x1d, 0x3d, 0x70, 0xe4, 0x58, 0xf5, 0x10, 0x2a, 0xf8, 0x0f,
+	0xf2, 0x17, 0x54, 0x9e, 0xb1, 0x53, 0x13, 0x0c, 0x0d, 0x12, 0x95, 0x38, 0xd9, 0xef, 0xcd, 0xf7,
+	0xbe, 0xef, 0xf9, 0xbd, 0xf9, 0x94, 0x80, 0x35, 0x4e, 0x7c, 0x4c, 0x42, 0xcf, 0xf1, 0xb9, 0xb9,
+	0x87, 0xa2, 0xe7, 0xc0, 0x7c, 0xb1, 0xd1, 0x23, 0x1c, 0x6d, 0x98, 0x41, 0x48, 0x03, 0xca, 0x90,
+	0x6b, 0x04, 0x21, 0xe5, 0x14, 0xfe, 0xd1, 0xa7, 0xcc, 0xa3, 0xcc, 0x88, 0x61, 0x46, 0x0c, 0x6b,
+	0xd6, 0x07, 0x74, 0x40, 0x05, 0xc4, 0x8c, 0xde, 0x24, 0xba, 0xb9, 0x24, 0xd1, 0xb6, 0x3c, 0x88,
+	0x4b, 0xe5, 0x91, 0x2a, 0x23, 0xb3, 0x87, 0x18, 0x99, 0x88, 0xf5, 0xa9, 0xe3, 0xc7, 0xe7, 0xed,
+	0x1b, 0x7a, 0x4a, 0xc4, 0x25, 0x52, 0x1b, 0x50, 0x3a, 0x70, 0x89, 0x29, 0xa2, 0xde, 0x70, 0xcf,
+	0xe4, 0x8e, 0x47, 0x18, 0x47, 0x5e, 0x20, 0x01, 0xfa, 0xe7, 0x3c, 0x80, 0xdd, 0x61, 0xcf, 0x75,
+	0xfa, 0x5d, 0x17, 0xf9, 0xdd, 0xf8, 0x83, 0x60, 0x1d, 0x14, 0xb9, 0xc3, 0x5d, 0xd2, 0x50, 0x5a,
+	0x4a, 0x7b, 0xde, 0x92, 0x01, 0x6c, 0x81, 0x2a, 0x26, 0xac, 0x1f, 0x3a, 0x01, 0x77, 0xa8, 0xdf,
+	0x98, 0x13, 0x67, 0xe9, 0x14, 0x0c, 0x40, 0x0d, 0x61, 0x6c, 0x07, 0x2e, 0xf2, 0xed, 0x90, 0x3c,
+	0x1f, 0x12, 0xc6, 0x59, 0x23, 0xdf, 0xca, 0xb7, 0xab, 0x9b, 0xab, 0x46, 0xf6, 0x78, 0x8c, 0x6d,
+	0x8c, 0x23, 0x6d, 0x4b, 0xc2, 0x3b, 0x2b, 0xe3, 0x91, 0xd6, 0x38, 0x44, 0x9e, 0xbb, 0xa5, 0x5f,
+	0xa1, 0xd2, 0xad, 0x05, 0x74, 0x09, 0xcd, 0xe0, 0x6b, 0x50, 0xf7, 0x28, 0x76, 0xf6, 0x0e, 0xa7,
+	0x44, 0x0b, 0x42, 0x74, 0xed, 0x3a, 0xd1, 0x07, 0xa2, 0x26, 0xad, 0xab, 0x8d, 0x47, 0xda, 0xb2,
+	0xd4, 0xcd, 0x22, 0xd4, 0x2d, 0xe8, 0x4d, 0xd7, 0x08, 0x75, 0x4c, 0x5c, 0xc2, 0xc9, 0x94, 0x7a,
+	0xf1, 0x66, 0xf5, 0x1d, 0x51, 0x73, 0x8d, 0x7a, 0x16, 0xa1, 0x6e, 0x41, 0x3c, 0x5d, 0xc3, 0xb6,
+	0x2a, 0x6f, 0x8f, 0xb5, 0xdc, 0xfb, 0x63, 0x2d, 0xa7, 0xbf, 0x2b, 0x81, 0xdf, 0x2f, 0xcf, 0x11,
+	0x42, 0x50, 0xf0, 0x91, 0x97, 0x6c, 0x50, 0xbc, 0xc3, 0x47, 0xa0, 0x1e, 0xb7, 0x62, 0x07, 0x94,
+	0xba, 0x36, 0xc2, 0x38, 0x24, 0x8c, 0xc9, 0x4d, 0xa6, 0x7b, 0xc8, 0x42, 0xe9, 0x16, 0x8c, 0xd3,
+	0x5d, 0x4a, 0xdd, 0x6d, 0x99, 0x84, 0x0f, 0xc1, 0x22, 0x17, 0x57, 0x11, 0x45, 0x17, 0x60, 0xc2,
+	0x98, 0x17, 0x8c, 0xea, 0x78, 0xa4, 0x35, 0x25, 0x63, 0x06, 0x48, 0xb7, 0x60, 0x2a, 0x9b, 0x10,
+	0x7e, 0x50, 0x40, 0x9d, 0x71, 0x74, 0x10, 0xc9, 0x47, 0x77, 0xde, 0x7e, 0x49, 0x9c, 0xc1, 0xfe,
+	0x64, 0xa3, 0x2b, 0xc9, 0x4c, 0x23, 0x73, 0xa4, 0x06, 0xda, 0xff, 0x8f, 0x3a, 0x7e, 0xc7, 0x3a,
+	0x19, 0x69, 0xb9, 0x1f, 0x9f, 0x91, 0xc5, 0xa3, 0x7f, 0x3a, 0xd3, 0xfe, 0x1e, 0x38, 0x7c, 0x7f,
+	0xd8, 0x33, 0xfa, 0xd4, 0x8b, 0x9d, 0x17, 0x3f, 0xd6, 0x19, 0x3e, 0x30, 0xf9, 0x61, 0x40, 0x58,
+	0x42, 0xc9, 0x2c, 0x18, 0xb3, 0x44, 0xd1, 0x13, 0xc9, 0x01, 0x9f, 0x02, 0xc0, 0x38, 0x0a, 0xb9,
+	0x1d, 0xf9, 0xa9, 0x51, 0x6c, 0x29, 0xed, 0xea, 0x66, 0xd3, 0x90, 0x66, 0x33, 0x12, 0xb3, 0x19,
+	0x8f, 0x13, 0xb3, 0x75, 0xfe, 0x8a, 0xfb, 0xaa, 0x4d, 0xfa, 0x8a, 0x6b, 0xf5, 0xa3, 0x33, 0x4d,
+	0xb1, 0xe6, 0x45, 0x22, 0x82, 0x43, 0x0b, 0x54, 0x88, 0x8f, 0x25, 0x6f, 0xe9, 0xa7, 0xbc, 0xcb,
+	0x31, 0xef, 0x82, 0xe4, 0x4d, 0x2a, 0x25, 0x6b, 0x99, 0xf8, 0x58, 0x70, 0xbe, 0x51, 0xc0, 0x6f,
+	0x24, 0xa0, 0xfd, 0x7d, 0x1b, 0x79, 0x74, 0xe8, 0xf3, 0x46, 0x59, 0x8c, 0x72, 0x29, 0x73, 0x94,
+	0x62, 0x8e, 0xbb, 0x31, 0xef, 0x62, 0xcc, 0x9b, 0x2a, 0x8e, 0xe6, 0xd7, 0x9e, 0x61, 0x7e, 0x72,
+	0x78, 0x55, 0x51, 0xba, 0x2d, 0x2a, 0x21, 0x01, 0x32, 0xb4, 0xc3, 0x68, 0xe3, 0x8d, 0x8a, 0xb8,
+	0x23, 0x3b, 0x91, 0xd4, 0xd7, 0x91, 0xb6, 0x3a, 0xdb, 0x4e, 0xc6, 0x23, 0x0d, 0xa6, 0x9b, 0x12,
+	0x54, 0xba, 0x05, 0x44, 0x64, 0x89, 0xe0, 0x63, 0x09, 0xd4, 0xae, 0xf8, 0x1b, 0xfe, 0x09, 0xca,
+	0xc2, 0x52, 0x0e, 0x16, 0x96, 0x28, 0x58, 0xa5, 0x28, 0xfc, 0x1f, 0x4f, 0x8c, 0x32, 0x37, 0x83,
+	0x51, 0xf2, 0x77, 0x6e, 0x94, 0xc2, 0xdd, 0x1b, 0xa5, 0x78, 0x6f, 0x8d, 0x52, 0x9a, 0xc9, 0x28,
+	0xca, 0xad, 0x8d, 0x52, 0x9e, 0xc9, 0x28, 0xca, 0xed, 0x8d, 0x52, 0xb9, 0x17, 0x46, 0x99, 0xff,
+	0x45, 0x46, 0xf9, 0x07, 0xd4, 0xae, 0xfc, 0x12, 0x5d, 0xeb, 0x93, 0xce, 0xee, 0xc9, 0xb9, 0xaa,
+	0x9c, 0x9e, 0xab, 0xca, 0xb7, 0x73, 0x55, 0x39, 0xba, 0x50, 0x73, 0xa7, 0x17, 0x6a, 0xee, 0xcb,
+	0x85, 0x9a, 0x7b, 0xb6, 0x9e, 0xea, 0x28, 0xe3, 0xaf, 0xc9, 0xab, 0xc9, 0x9b, 0x68, 0xae, 0x57,
+	0x12, 0xfb, 0xf9, 0xf7, 0x7b, 0x00, 0x00, 0x00, 0xff, 0xff, 0x55, 0x6b, 0xe6, 0x37, 0x5b, 0x09,
+	0x00, 0x00,
 }
 
 func (m *PublicPlanProposal) Marshal() (dAtA []byte, err error) {
@@ -426,10 +426,10 @@ func (m *PublicPlanProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.DeleteRequestProposals) > 0 {
-		for iNdEx := len(m.DeleteRequestProposals) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.DeletePlanRequests) > 0 {
+		for iNdEx := len(m.DeletePlanRequests) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.DeleteRequestProposals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.DeletePlanRequests[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -440,10 +440,10 @@ func (m *PublicPlanProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x2a
 		}
 	}
-	if len(m.UpdateRequestProposals) > 0 {
-		for iNdEx := len(m.UpdateRequestProposals) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.ModifyPlanRequests) > 0 {
+		for iNdEx := len(m.ModifyPlanRequests) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.UpdateRequestProposals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.ModifyPlanRequests[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -454,10 +454,10 @@ func (m *PublicPlanProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x22
 		}
 	}
-	if len(m.AddRequestProposals) > 0 {
-		for iNdEx := len(m.AddRequestProposals) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.AddPlanRequests) > 0 {
+		for iNdEx := len(m.AddPlanRequests) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.AddRequestProposals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.AddPlanRequests[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -485,7 +485,7 @@ func (m *PublicPlanProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *AddRequestProposal) Marshal() (dAtA []byte, err error) {
+func (m *AddPlanRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -495,12 +495,12 @@ func (m *AddRequestProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddRequestProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *AddPlanRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AddPlanRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -583,7 +583,7 @@ func (m *AddRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateRequestProposal) Marshal() (dAtA []byte, err error) {
+func (m *ModifyPlanRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -593,12 +593,12 @@ func (m *UpdateRequestProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpdateRequestProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *ModifyPlanRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ModifyPlanRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -690,7 +690,7 @@ func (m *UpdateRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *DeleteRequestProposal) Marshal() (dAtA []byte, err error) {
+func (m *DeletePlanRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -700,12 +700,12 @@ func (m *DeleteRequestProposal) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DeleteRequestProposal) MarshalTo(dAtA []byte) (int, error) {
+func (m *DeletePlanRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *DeleteRequestProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *DeletePlanRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -743,20 +743,20 @@ func (m *PublicPlanProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
-	if len(m.AddRequestProposals) > 0 {
-		for _, e := range m.AddRequestProposals {
+	if len(m.AddPlanRequests) > 0 {
+		for _, e := range m.AddPlanRequests {
 			l = e.Size()
 			n += 1 + l + sovProposal(uint64(l))
 		}
 	}
-	if len(m.UpdateRequestProposals) > 0 {
-		for _, e := range m.UpdateRequestProposals {
+	if len(m.ModifyPlanRequests) > 0 {
+		for _, e := range m.ModifyPlanRequests {
 			l = e.Size()
 			n += 1 + l + sovProposal(uint64(l))
 		}
 	}
-	if len(m.DeleteRequestProposals) > 0 {
-		for _, e := range m.DeleteRequestProposals {
+	if len(m.DeletePlanRequests) > 0 {
+		for _, e := range m.DeletePlanRequests {
 			l = e.Size()
 			n += 1 + l + sovProposal(uint64(l))
 		}
@@ -764,7 +764,7 @@ func (m *PublicPlanProposal) Size() (n int) {
 	return n
 }
 
-func (m *AddRequestProposal) Size() (n int) {
+func (m *AddPlanRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -803,7 +803,7 @@ func (m *AddRequestProposal) Size() (n int) {
 	return n
 }
 
-func (m *UpdateRequestProposal) Size() (n int) {
+func (m *ModifyPlanRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -849,7 +849,7 @@ func (m *UpdateRequestProposal) Size() (n int) {
 	return n
 }
 
-func (m *DeleteRequestProposal) Size() (n int) {
+func (m *DeletePlanRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -962,7 +962,7 @@ func (m *PublicPlanProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AddRequestProposals", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AddPlanRequests", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -989,14 +989,14 @@ func (m *PublicPlanProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AddRequestProposals = append(m.AddRequestProposals, &AddRequestProposal{})
-			if err := m.AddRequestProposals[len(m.AddRequestProposals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.AddPlanRequests = append(m.AddPlanRequests, &AddPlanRequest{})
+			if err := m.AddPlanRequests[len(m.AddPlanRequests)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpdateRequestProposals", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ModifyPlanRequests", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1023,14 +1023,14 @@ func (m *PublicPlanProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.UpdateRequestProposals = append(m.UpdateRequestProposals, &UpdateRequestProposal{})
-			if err := m.UpdateRequestProposals[len(m.UpdateRequestProposals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.ModifyPlanRequests = append(m.ModifyPlanRequests, &ModifyPlanRequest{})
+			if err := m.ModifyPlanRequests[len(m.ModifyPlanRequests)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DeleteRequestProposals", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DeletePlanRequests", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1057,8 +1057,8 @@ func (m *PublicPlanProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DeleteRequestProposals = append(m.DeleteRequestProposals, &DeleteRequestProposal{})
-			if err := m.DeleteRequestProposals[len(m.DeleteRequestProposals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.DeletePlanRequests = append(m.DeletePlanRequests, &DeletePlanRequest{})
+			if err := m.DeletePlanRequests[len(m.DeletePlanRequests)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1083,7 +1083,7 @@ func (m *PublicPlanProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AddRequestProposal) Unmarshal(dAtA []byte) error {
+func (m *AddPlanRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1106,10 +1106,10 @@ func (m *AddRequestProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddRequestProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: AddPlanRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddRequestProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AddPlanRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1397,7 +1397,7 @@ func (m *AddRequestProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateRequestProposal) Unmarshal(dAtA []byte) error {
+func (m *ModifyPlanRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1420,10 +1420,10 @@ func (m *UpdateRequestProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateRequestProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: ModifyPlanRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateRequestProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ModifyPlanRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1736,7 +1736,7 @@ func (m *UpdateRequestProposal) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DeleteRequestProposal) Unmarshal(dAtA []byte) error {
+func (m *DeletePlanRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1759,10 +1759,10 @@ func (m *DeleteRequestProposal) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DeleteRequestProposal: wiretype end group for non-group")
+			return fmt.Errorf("proto: DeletePlanRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DeleteRequestProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DeletePlanRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

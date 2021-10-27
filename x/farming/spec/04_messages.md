@@ -66,3 +66,14 @@ type MsgHarvest struct {
     StakingCoinDenoms []string // staking coin denoms that the farmer has staked
 }
 ```
+
+## MsgAdvanceEpoch
+
+This is custom message to advance epoch by one for the testing purpose. Enabling this message is possibly only if you build `farmingd` binary with `make install-testing` command. 
+When you send `MsgAdvanceEpoch` to the network, it increases epoch by 1.
+
+```go
+type MsgAdvanceEpoch struct {
+	Requester string // requester defines the bech32-encoded address of the requester
+}
+```

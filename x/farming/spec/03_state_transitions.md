@@ -22,55 +22,39 @@ const (
 )
 ```
 
-- Staking Coins for Farming
-  - Each `farmingPlan` predefines list of `stakingCoinWeights` using `sdk.DecCoins`
-  - `weight` mean that each group of stakers with each coin `denom` will receive each predefined `weight` of the total rewards
-- Multiple Farming Coins within a `farmingPoolAddress`
-  - If `farmingPoolAddress` has multiple kinds of coins, then all coins are identically distributed following the given `farmingPlan`
-- Time Parameters
-  - Each `farmingPlan` has its own `startTime` and `endTime`
-- Distribution Method
-  - `FixedAmountPlan`
-    - fixed amount of coins are distributed per `CurrentEpochDays`
-    - `epochAmount` is `sdk.Coins`
-  - `RatioPlan`
-    - ratio of total assets in `farmingPoolAddress` is distributed per `CurrentEpochDays`
-    - `epochRatio` is in percentage
-- Termination Address
-  - When the plan ends after the `endTime`, transfer the balance of `farmingPoolAddress` to `terminationAddress`.
+## Stake
 
-## Staking
+When a farmer stakes an amount of coins, the following state transitions occur:
 
-- New `Staking` object is created when a farmer creates a staking, and when the farmer does not have existing `Staking`.
-- When a farmer add/remove stakings to/from existing `Staking`, `StakedCoins` and `QueuedCoins` are updated in the corresponding `Staking`.
-- `QueuedCoins` : newly staked coins are in this status until end of current epoch, and then migrated to `StakedCoins` at the end of current epoch.
-- When a farmer unstakes, `QueuedCoins` are unstaked first, and then `StakedCoins`.
+- it reserves the amount of coins to the staking reserve pool account `StakingReservePoolAcc` 
+- it creates `QueuedStaking` object and stores the staking coins in `QueueStaking`, which are waiting in a queue until the end of epoch to move to `Staking` object
+- it imposes more gas if the farmer already has `Staking` with the same coin denom(see [07_params.md](07_params.md#DelayedStakingGasFee) for details)
 
-## Reward Withdrawal
+## Unstake
 
-To assume constant staking amount for reward withdrawal, automatic withdrawal is designed as below:
-- Add staking position : When there exists `QueuedCoins` in `Staking` at the end of current epoch
-  - accumulated rewards until current epoch are automatically withdrawn
-  - `StartEpochId` is modified to the `EpochId` of the next epoch
-  - `QueuedCoins` is migrated to `StakedCoins`
-- Remove staking position : When a farmer remove stakings from `StakedCoins`
-  - accumulated rewards until last epoch are immediately withdrawn
-  - `StartEpochId` is modified to the `EpochId` of the current epoch
-  - unstake executed immediately and `StakedCoins` are reduced accordingly
-- Manual reward withdrawal : When a farmer request a reward withdrawal
-  - accumulated rewards until last epoch are immediately withdrawn
-  - `StartEpochId` is modified to the `EpochId` of the current epoch
+When a farmer unstakes an amount of coins, the following state transitions occur:
 
-## Accumulated Reward Calculation
+- it adds `Staking` and `QueueStaking` amounts to see if the unstaking amount is sufficient
+- it automatically withdraws rewards for the coin denom which are accumulated over the last epochs
+- it subtracts the unstaking amount of coins from `QueueStaking` first and if it is not sufficient then it subtracts from `Staking`
+- it releases the unstaking amount of coins to the farmer
 
-- Accumulated Unit Reward : AUR represents accumulated rewards(for each staking coin) of a staking position with amount 1.
-- AUR for each staking coin for each epoch can be calculated as below
-  - ![](https://latex.codecogs.com/svg.latex?\Large&space;\sum_{i=0}^{now}\frac{TR_i}{TS_i})
-    - ![](https://latex.codecogs.com/svg.latex?\Large&space;i) : each `EpochId`
-    - ![](https://latex.codecogs.com/svg.latex?\Large&space;now) : current `EpochId`
-    - ![](https://latex.codecogs.com/svg.latex?\Large&space;TS_i) : total staking amount of the staking coin for epoch i
-    - ![](https://latex.codecogs.com/svg.latex?\Large&space;TR_i) : total reward amount of the staking coin for epoch i
-- Accumulated rewards from any staking position can be calculated from AUR and the staking amount of the position as below
-  - ![](https://latex.codecogs.com/svg.latex?\Large&space;x*\(\sum_{i=0}^{now}\frac{TR_i}{TS_i}-\sum_{i=0}^{start}\frac{TR_i}{TS_i}\))
-    - assuming constant staking amount for the staking epochs
-    - ![](https://latex.codecogs.com/svg.latex?\Large&space;x) : staking amount for the staking period
+## Harvest (Reward Withdrawal)
+
+- it calculates `CumulativeUnitRewards` in `HistoricalRewards` object in order to get the rewards for the staking coin denom which are accumulated over the last epochs for the farmer
+- it releases the accumulated rewards to the farmer if it is not zero and decreases the `OutstandingRewards`
+- it sets `StartingEpoch` in `Staking` object
+
+## Reward Allocation
+
+If the sum of total calculated `EpochAmount` (or `EpochRatio` multiplied by the farming pool's balance) exceeds the farming pool's balance, then the reward allocation is skipped for that epoch.
+
+Each abci end block call, the operations to update rewards allocation are to execute:
+
+++ https://github.com/tendermint/farming/blob/69db071ce30b99617b8ba9bb6efac76e74cd100b/x/farming/keeper/reward.go#L363-L426
+
+- it calculates rewards allocation information for the end of the current epoch depending on plan type `FixedAmountPlan` or `RatioPlan`
+- it distributes total allocated coins from each plan’s farming pool address `FarmingPoolAddress` to the rewards reserve pool account `RewardsReserveAcc`
+- it calculates staking coin weight for each denom in each plan and gets the unit rewards by denom
+- it updates `HistoricalRewards` and `CurrentEpoch` based on the allocation information
+- it deletes `QueueStaking` object after moving `QueueCoins` to `StakedCoins` in `Staking` object
