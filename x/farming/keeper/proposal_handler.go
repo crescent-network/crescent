@@ -38,7 +38,7 @@ func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, proposal *types.PublicP
 // AddPublicPlanProposal adds a new public plan once the governance proposal is passed.
 func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddPlanRequest) error {
 	for _, p := range proposals {
-		farmingPoolAddrAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
+		farmingPoolAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
 		if err != nil {
 			return err
 		}
@@ -51,14 +51,14 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddPla
 		if p.IsForFixedAmountPlan() {
 			msg := types.NewMsgCreateFixedAmountPlan(
 				p.GetName(),
-				farmingPoolAddrAcc,
+				farmingPoolAcc,
 				p.GetStakingCoinWeights(),
 				p.GetStartTime(),
 				p.GetEndTime(),
 				p.EpochAmount,
 			)
 
-			plan, err := k.CreateFixedAmountPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
+			plan, err := k.CreateFixedAmountPlan(ctx, msg, farmingPoolAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
 				return err
 			}
@@ -68,14 +68,14 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddPla
 		} else {
 			msg := types.NewMsgCreateRatioPlan(
 				p.GetName(),
-				farmingPoolAddrAcc,
+				farmingPoolAcc,
 				p.GetStakingCoinWeights(),
 				p.GetStartTime(),
 				p.GetEndTime(),
 				p.EpochRatio,
 			)
 
-			plan, err := k.CreateRatioPlan(ctx, msg, farmingPoolAddrAcc, terminationAcc, types.PlanTypePublic)
+			plan, err := k.CreateRatioPlan(ctx, msg, farmingPoolAcc, terminationAcc, types.PlanTypePublic)
 			if err != nil {
 				return err
 			}
@@ -103,21 +103,21 @@ func (k Keeper) ModifyPublicPlanProposal(ctx sdk.Context, proposals []*types.Mod
 		}
 
 		if p.GetFarmingPoolAddress() != "" {
-			farmingPoolAddrAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
+			farmingPoolAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
 			if err != nil {
 				return err
 			}
-			if err := plan.SetFarmingPoolAddress(farmingPoolAddrAcc); err != nil {
+			if err := plan.SetFarmingPoolAddress(farmingPoolAcc); err != nil {
 				return err
 			}
 		}
 
 		if p.GetTerminationAddress() != "" {
-			terminationAddrAcc, err := sdk.AccAddressFromBech32(p.GetTerminationAddress())
+			terminationAcc, err := sdk.AccAddressFromBech32(p.GetTerminationAddress())
 			if err != nil {
 				return err
 			}
-			if err := plan.SetTerminationAddress(terminationAddrAcc); err != nil {
+			if err := plan.SetTerminationAddress(terminationAcc); err != nil {
 				return err
 			}
 		}
