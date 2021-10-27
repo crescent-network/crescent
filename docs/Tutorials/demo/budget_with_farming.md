@@ -215,7 +215,7 @@ We use the following values of the fields.
 {
   "title": "Public Farming Plan",
   "description": "Are you ready to farm?",
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "First Public Ratio Plan",
       "farming_pool_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
@@ -399,7 +399,7 @@ Add second public ratio plan proposal
 {
   "title": "Update Public Farming Plan",
   "description": "Are you ready to farm?",
-  "update_request_proposals": [
+  "modify_plan_requests": [
     {
       "plan_id": 1,
       "name": "First Public Ratio Plan",
@@ -416,7 +416,7 @@ Add second public ratio plan proposal
       "epoch_ratio": "0.500000000000000000"
     }
   ],
-  "add_request_proposals": [
+  "add_plan_requests": [
     {
       "name": "Second Public Ratio Plan",
       "farming_pool_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
