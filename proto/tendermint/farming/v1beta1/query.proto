@@ -22,7 +22,7 @@ service Query {
       description: "Returns all parameters of the farming module.";
   external_docs: {
   url:
-    "https://github.com/tendermint/farming/blob/master/x/farming/spec/07_params.md";
+    "https://github.com/tendermint/farming/blob/main/x/farming/spec/07_params.md";
   description:
     "Find out more about the params";
   }
@@ -36,7 +36,7 @@ rpc Plans(QueryPlansRequest) returns (QueryPlansResponse) {
     description: "Returns a list of all farming plans with pagination result.";
 external_docs: {
 url:
-  "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#Plans";
+  "https://github.com/tendermint/farming/tree/main/docs/How-To/cli#Plans";
 description:
   "Find out more about the query and error codes";
 }
@@ -82,7 +82,7 @@ rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
     description: "Returns the farming plan that corresponds to the plan_id.";
 external_docs: {
 url:
-  "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#plan";
+  "https://github.com/tendermint/farming/tree/main/docs/How-To/cli#plan";
 description:
   "Find out more about the query and error codes";
 }
@@ -127,7 +127,7 @@ rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
     description: "Returns all stakings (staked and queued coins) that corresponds to the farmer";
 external_docs: {
 url:
-  "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#stakings";
+  "https://github.com/tendermint/farming/tree/main/docs/How-To/cli#stakings";
 description:
   "Find out more about the query and error codes";
 }
@@ -151,7 +151,7 @@ rpc TotalStakings(QueryTotalStakingsRequest) returns (QueryTotalStakingsResponse
     description: "Returns total stakings that corresponds to the staking_coin_denom";
 external_docs: {
 url:
-  "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#totalstakings";
+  "https://github.com/tendermint/farming/tree/main/docs/How-To/cli#totalstakings";
 description:
   "Find out more about the query and error codes";
 }
@@ -175,7 +175,7 @@ rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
     description: "Returns all rewards coins that corresponds to the farmer";
 external_docs: {
 url:
-  "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#rewards";
+  "https://github.com/tendermint/farming/tree/main/docs/How-To/cli#rewards";
 description:
   "Find out more about the query and error codes";
 }
@@ -200,7 +200,7 @@ rpc CurrentEpochDays(QueryCurrentEpochDaysRequest) returns (QueryCurrentEpochDay
     description: "Returns the current epoch days";
 external_docs: {
 url:
-  "https://github.com/tendermint/farming/tree/master/docs/How-To/cli#currentepochdays";
+  "https://github.com/tendermint/farming/tree/main/docs/How-To/cli#currentepochdays";
 description:
   "Find out more about the query and error codes";
 }

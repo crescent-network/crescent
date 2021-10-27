@@ -82,6 +82,6 @@ We need two kinds of governance processes to activate Gravity DEX liquidity ince
 
 Detail description of the spec can be found below:
 
-- Budget Module: https://github.com/tendermint/budget/tree/master/x/budget/spec
+- Budget Module: https://github.com/tendermint/budget/tree/main/x/budget/spec
 
-- Farming Module: https://github.com/tendermint/farming/tree/master/x/farming/spec
+- Farming Module: https://github.com/tendermint/farming/tree/main/x/farming/spec
