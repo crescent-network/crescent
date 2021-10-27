@@ -129,5 +129,90 @@ func (suite *KeeperTestSuite) TestStakingReservedAmountInvariant() {
 }
 
 func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
-	// TODO: implement
+	k, ctx := suite.keeper, suite.ctx
+
+	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	_, broken := farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Withdrawable rewards amount in the store < balance of rewards reserve acc.
+	// Should not be OK.
+	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 3)),
+	})
+	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
+
+	// Reset.
+	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 2)),
+	})
+	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Send coins into the rewards reserve acc.
+	// Should be OK.
+	err := suite.app.BankKeeper.SendCoins(
+		ctx, suite.addrs[1], k.GetRewardsReservePoolAcc(ctx), sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	suite.Require().NoError(err)
+	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Send coins from the rewards reserve acc to another acc.
+	// Should not be OK.
+	err = suite.app.BankKeeper.SendCoins(
+		ctx, k.GetRewardsReservePoolAcc(ctx), suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000001)))
+	suite.Require().NoError(err)
+	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
+}
+
+func (suite *KeeperTestSuite) TestNonNegativeOutstandingRewardsInvariant() {
+	k, ctx := suite.keeper, suite.ctx
+
+	k.SetOutstandingRewards(ctx, denom1, types.OutstandingRewards{
+		Rewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1000000)),
+	})
+	_, broken := farmingkeeper.NonNegativeOutstandingRewardsInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Zero-amount outstanding rewards
+	// It's acceptable, and for the initial epoch, the outstanding rewards is set to 0.
+	k.SetOutstandingRewards(ctx, denom2, types.OutstandingRewards{
+		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: denom3, Amount: sdk.ZeroDec()}},
+	})
+	_, broken = farmingkeeper.NonNegativeOutstandingRewardsInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Delete the zero-amount outstanding rewards.
+	k.DeleteOutstandingRewards(ctx, denom2)
+
+	// Negative-amount outstanding rewards
+	// This should not be OK.
+	k.SetOutstandingRewards(ctx, denom2, types.OutstandingRewards{
+		Rewards: sdk.DecCoins{sdk.DecCoin{Denom: denom3, Amount: sdk.NewDec(-1)}},
+	})
+	_, broken = farmingkeeper.NonNegativeOutstandingRewardsInvariant(k)(ctx)
+	suite.Require().True(broken)
+}
+
+func (suite *KeeperTestSuite) TestOutstandingRewardsAmountInvariant() {
+}
+
+func (suite *KeeperTestSuite) TestNonNegativeHistoricalRewardsInvariant() {
+
+}
+
+func (suite *KeeperTestSuite) TestPositiveTotalStakingsAmountInvariant() {
+
+}
+
+func (suite *KeeperTestSuite) TestPlanTerminationStatusInvariant() {
+
 }
