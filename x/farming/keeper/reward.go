@@ -444,10 +444,10 @@ func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
 	return nil
 }
 
-// ValidateOutstandingRewards checks that the balance of the
+// ValidateOutstandingRewardsAmount checks that the balance of the
 // rewards reserve pool is greater than the total amount of
 // outstanding rewards.
-func (k Keeper) ValidateOutstandingRewards(ctx sdk.Context) error {
+func (k Keeper) ValidateOutstandingRewardsAmount(ctx sdk.Context) error {
 	totalOutstandingRewards := sdk.NewDecCoins()
 	k.IterateOutstandingRewards(ctx, func(stakingCoinDenom string, rewards types.OutstandingRewards) (stop bool) {
 		totalOutstandingRewards = totalOutstandingRewards.Add(rewards.Rewards...)

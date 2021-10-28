@@ -204,9 +204,26 @@ func (s *keysTestSuite) TestGetQueuedStakingByFarmerPrefix() {
 		0x53, 0x25, 0x2c, 0x9f}, types.GetQueuedStakingByFarmerPrefix(farmer3))
 }
 
-func (s *keysTestSuite) TestGetTotalStakingKey() {
-	s.Require().Equal([]byte{0x25}, types.GetTotalStakingsKey(""))
-	s.Require().Equal([]byte{0x25, 0x73, 0x74, 0x61, 0x6b, 0x65}, types.GetTotalStakingsKey(sdk.DefaultBondDenom))
+func (s *keysTestSuite) TestGetTotalStakingsKey() {
+	for _, tc := range []struct {
+		stakingCoinDenom string
+		expected         []byte
+	}{
+		{
+			"denom1",
+			[]byte{0x25, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x31},
+		},
+		{
+			sdk.DefaultBondDenom,
+			[]byte{0x25, 0x73, 0x74, 0x61, 0x6b, 0x65},
+		},
+	} {
+		key := types.GetTotalStakingsKey(tc.stakingCoinDenom)
+		s.Require().Equal(tc.expected, key)
+
+		stakingCoinDenom := types.ParseTotalStakingsKey(key)
+		s.Require().Equal(tc.stakingCoinDenom, stakingCoinDenom)
+	}
 }
 
 func (s *keysTestSuite) TestGetHistoricalRewardsKey() {
