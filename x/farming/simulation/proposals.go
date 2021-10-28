@@ -40,7 +40,7 @@ func ProposalContents(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keep
 	}
 }
 
-// SimulateAddPublicPlanProposal generates random public plan proposal content
+// SimulateAddPublicPlanProposal generates random public add plan proposal content.
 func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
@@ -59,19 +59,19 @@ func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, 
 			return nil
 		}
 
-		addRequests := genAddRequestProposals(r, ctx, simAccount, poolCoins)
+		addPlanReqs := ranAddPlanRequests(r, ctx, simAccount, poolCoins)
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			addRequests,
+			addPlanReqs,
 			[]*types.ModifyPlanRequest{},
 			[]*types.DeletePlanRequest{},
 		)
 	}
 }
 
-// SimulateModifyPublicPlanProposal generates random public plan proposal content
+// SimulateModifyPublicPlanProposal generates random public modify plan proposal content.
 func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
@@ -107,7 +107,9 @@ func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 					req.StakingCoinWeights = plan.GetStakingCoinWeights()
 					req.StartTime = &startTime
 					req.EndTime = &endTime
-					req.EpochAmount = sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))))
+					req.EpochAmount = sdk.NewCoins(
+						sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))),
+					)
 				case *types.RatioPlan:
 					req.PlanId = plan.GetId()
 					req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
@@ -126,19 +128,19 @@ func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		updateRequests := []*types.ModifyPlanRequest{req}
+		modifyPlanReqs := []*types.ModifyPlanRequest{req}
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			[]*types.AddPlanRequest{},
-			updateRequests,
+			modifyPlanReqs,
 			[]*types.DeletePlanRequest{},
 		)
 	}
 }
 
-// SimulateDeletePublicPlanProposal generates random public plan proposal content
+// SimulateDeletePublicPlanProposal generates random public delete plan proposal content.
 func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
@@ -166,24 +168,24 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		deleteRequest := []*types.DeletePlanRequest{req}
+		deletePlanReqs := []*types.DeletePlanRequest{req}
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			[]*types.AddPlanRequest{},
 			[]*types.ModifyPlanRequest{},
-			deleteRequest,
+			deletePlanReqs,
 		)
 	}
 }
 
-// genAddRequestProposals returns randomized add request proposals.
-func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.Account, poolCoins sdk.Coins) []*types.AddPlanRequest {
+// ranAddPlanRequests returns randomized add request proposals.
+func ranAddPlanRequests(r *rand.Rand, ctx sdk.Context, simAccount simtypes.Account, poolCoins sdk.Coins) []*types.AddPlanRequest {
 	ranProposals := make([]*types.AddPlanRequest, 0)
 
-	// generate random number of proposals with random values of each parameter
-	// it generates a fixed amount plan if pseudo-random integer is an even number and
+	// It generates random number of proposals with random values of each parameter;
+	// if pseudo-random integer is an even number, it generates a fixed amount plan and
 	// it generates a ratio plan if it is an odd number
 	for i := 0; i < simtypes.RandIntBetween(r, 1, 3); i++ {
 		req := &types.AddPlanRequest{}
@@ -194,7 +196,9 @@ func genAddRequestProposals(r *rand.Rand, ctx sdk.Context, simAccount simtypes.A
 			req.StakingCoinWeights = sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
 			req.StartTime = ctx.BlockTime()
 			req.EndTime = ctx.BlockTime().AddDate(0, simtypes.RandIntBetween(r, 1, 28), 0)
-			req.EpochAmount = sdk.NewCoins(sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 100_000_000))))
+			req.EpochAmount = sdk.NewCoins(
+				sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 100_000_000))),
+			)
 		} else {
 			req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
 			req.FarmingPoolAddress = simAccount.Address.String()
