@@ -187,7 +187,7 @@ func TestSimulateMsgUnstake(t *testing.T) {
 	err := app.FarmingKeeper.Stake(ctx, accounts[0].Address, stakingCoins)
 	require.NoError(t, err)
 
-	// begin a new block
+	// begin a new block and advance epoch
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 	err = app.FarmingKeeper.AdvanceEpoch(ctx)
 	require.NoError(t, err)
@@ -217,7 +217,7 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	accounts := getTestingAccounts(t, r, app, ctx, 1)
+	accounts := getTestingAccounts(t, r, app, ctx, 2)
 
 	// setup epoch days to 1 to ease the test
 	params := app.FarmingKeeper.GetParams(ctx)
@@ -225,52 +225,42 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	app.FarmingKeeper.SetParams(ctx, params)
 
 	// setup a fixed amount plan
-	msgPlan := &types.MsgCreateFixedAmountPlan{
-		Name:    "simulation",
-		Creator: accounts[0].Address.String(),
-		StakingCoinWeights: sdk.NewDecCoins(
-			sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10, 1)), // 100%
-		),
-		StartTime:   types.ParseTime("0001-01-01T00:00:00Z"),
-		EndTime:     types.ParseTime("9999-01-01T00:00:00Z"),
-		EpochAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000_000)),
-	}
-
 	_, err := app.FarmingKeeper.CreateFixedAmountPlan(
 		ctx,
-		msgPlan,
+		&types.MsgCreateFixedAmountPlan{
+			Name:    "simulation-test",
+			Creator: accounts[0].Address.String(),
+			StakingCoinWeights: sdk.NewDecCoins(
+				sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10, 1)), // 100%
+			),
+			StartTime: types.ParseTime("0001-01-01T00:00:00Z"),
+			EndTime:   types.ParseTime("9999-01-01T00:00:00Z"),
+			EpochAmount: sdk.NewCoins(
+				sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 300_000_000),
+			),
+		},
 		accounts[0].Address,
 		accounts[0].Address,
 		types.PlanTypePrivate,
 	)
 	require.NoError(t, err)
 
-	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
-
-	// set staking
-	stakingCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000))
-	err = app.FarmingKeeper.Stake(ctx, accounts[0].Address, stakingCoins)
+	// stake
+	err = app.FarmingKeeper.Stake(ctx, accounts[1].Address, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)))
 	require.NoError(t, err)
 
-	queuedStaking, found := app.FarmingKeeper.GetQueuedStaking(ctx, sdk.DefaultBondDenom, accounts[0].Address)
-	require.Equal(t, true, found)
-	require.Equal(t, true, queuedStaking.Amount.IsPositive())
+	_, qsf := app.FarmingKeeper.GetQueuedStaking(ctx, sdk.DefaultBondDenom, accounts[1].Address)
+	require.True(t, qsf)
 
-	// begin a new block
+	// begin a new block and advance epoch
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 	err = app.FarmingKeeper.AdvanceEpoch(ctx)
 	require.NoError(t, err)
 
 	// check that queue coins are moved to staked coins
-	staking, found := app.FarmingKeeper.GetStaking(ctx, sdk.DefaultBondDenom, accounts[0].Address)
-	require.Equal(t, true, found)
-	require.Equal(t, true, staking.Amount.IsPositive())
-	queuedStaking, found = app.FarmingKeeper.GetQueuedStaking(ctx, sdk.DefaultBondDenom, accounts[0].Address)
-	require.Equal(t, false, found)
+	_, sf := app.FarmingKeeper.GetStaking(ctx, sdk.DefaultBondDenom, accounts[1].Address)
+	require.True(t, sf)
 
-	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 	err = app.FarmingKeeper.AdvanceEpoch(ctx)
 	require.NoError(t, err)
 
@@ -285,9 +275,12 @@ func TestSimulateMsgHarvest(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgHarvest, msg.Type())
-	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Farmer)
+	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Farmer)
 	require.Equal(t, []string{"stake"}, msg.StakingCoinDenoms)
 	require.Len(t, futureOperations, 0)
+
+	balances := app.BankKeeper.GetBalance(ctx, accounts[1].Address, "pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5")
+	require.Equal(t, sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 100300000000), balances)
 }
 
 func createTestApp(isCheckTx bool) (*farmingapp.FarmingApp, sdk.Context) {
@@ -304,7 +297,10 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *farmingapp.FarmingApp, 
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 100_000_000_000)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+	initCoins := sdk.NewCoins(
+		sdk.NewCoin(sdk.DefaultBondDenom, initAmt),
+		sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 100_000_000_000),
+	)
 
 	// add coins to the accounts
 	for _, account := range accounts {
