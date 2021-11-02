@@ -38,6 +38,17 @@ func (k Keeper) DeleteHistoricalRewards(ctx sdk.Context, stakingCoinDenom string
 	store.Delete(types.GetHistoricalRewardsKey(stakingCoinDenom, epoch))
 }
 
+// DeleteAllHistoricalRewards deletes all historical rewards for a
+// staking coin denom.
+func (k Keeper) DeleteAllHistoricalRewards(ctx sdk.Context, stakingCoinDenom string) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetHistoricalRewardsPrefix(stakingCoinDenom))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+}
+
 // IterateHistoricalRewards iterates through all historical rewards
 // stored in the store and invokes callback function for each item.
 // Stops the iteration when the callback function returns true.
@@ -72,6 +83,13 @@ func (k Keeper) SetCurrentEpoch(ctx sdk.Context, stakingCoinDenom string, curren
 	val := gogotypes.UInt64Value{Value: currentEpoch}
 	bz := k.cdc.MustMarshal(&val)
 	store.Set(types.GetCurrentEpochKey(stakingCoinDenom), bz)
+}
+
+// DeleteCurrentEpoch deletes current epoch info for a given
+// staking coin denom.
+func (k Keeper) DeleteCurrentEpoch(ctx sdk.Context, stakingCoinDenom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetCurrentEpochKey(stakingCoinDenom))
 }
 
 // IterateCurrentEpochs iterates through all current epoch infos
@@ -139,7 +157,10 @@ func (k Keeper) IterateOutstandingRewards(ctx sdk.Context, cb func(stakingCoinDe
 // IncreaseOutstandingRewards increases outstanding rewards for a given
 // staking coin denom by given amount.
 func (k Keeper) IncreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom string, amount sdk.DecCoins) {
-	outstanding, _ := k.GetOutstandingRewards(ctx, stakingCoinDenom)
+	outstanding, found := k.GetOutstandingRewards(ctx, stakingCoinDenom)
+	if !found {
+		panic("outstanding rewards not found")
+	}
 	outstanding.Rewards = outstanding.Rewards.Add(amount...)
 	k.SetOutstandingRewards(ctx, stakingCoinDenom, outstanding)
 }
@@ -153,12 +174,8 @@ func (k Keeper) DecreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom str
 	if !found {
 		panic("outstanding rewards not found")
 	}
-	if outstanding.Rewards.IsEqual(amount) {
-		k.DeleteOutstandingRewards(ctx, stakingCoinDenom)
-	} else {
-		outstanding.Rewards = outstanding.Rewards.Sub(amount)
-		k.SetOutstandingRewards(ctx, stakingCoinDenom, outstanding)
-	}
+	outstanding.Rewards = outstanding.Rewards.Sub(amount)
+	k.SetOutstandingRewards(ctx, stakingCoinDenom, outstanding)
 }
 
 // CalculateRewards returns rewards accumulated until endingEpoch
