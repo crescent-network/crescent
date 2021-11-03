@@ -226,7 +226,6 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 	}
 
 	currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
-	// TODO: handle if currentEpoch is 0
 	rewards := k.CalculateRewards(ctx, farmerAcc, stakingCoinDenom, currentEpoch-1)
 	truncatedRewards, _ := rewards.TruncateDecimal()
 
