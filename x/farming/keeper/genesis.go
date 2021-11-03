@@ -18,7 +18,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	ctx, writeCache := ctx.CacheContext()
 
 	k.SetParams(ctx, genState.Params)
-	// TODO: what if CurrentEpochDays field was empty?
 	k.SetCurrentEpochDays(ctx, genState.CurrentEpochDays)
 	moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
