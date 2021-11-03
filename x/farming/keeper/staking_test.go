@@ -63,10 +63,10 @@ func (suite *KeeperTestSuite) TestMultipleStake() {
 	suite.Require().True(coinsEq(sdk.Coins{}, suite.keeper.GetAllQueuedCoinsByFarmer(suite.ctx, suite.addrs[0])))
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	balanceBefore := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
-	suite.Require().True(coinsEq(balancesBefore, balancesAfter))
+	balanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
+	suite.Require().True(intEq(balanceBefore.Amount, balanceAfter.Amount))
 }
 
 func (suite *KeeperTestSuite) TestStakeInAdvance() {
@@ -232,10 +232,10 @@ func (suite *KeeperTestSuite) TestMultipleUnstake() {
 	suite.AdvanceEpoch()
 
 	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 250000)))
-	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	balanceBefore := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
 	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 250000)))
-	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
-	suite.Require().True(coinsEq(balancesBefore, balancesAfter))
+	balanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
+	suite.Require().True(intEq(balanceBefore.Amount, balanceAfter.Amount))
 }
 
 func (suite *KeeperTestSuite) TestTotalStakings() {
