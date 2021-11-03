@@ -311,7 +311,23 @@ func (suite *KeeperTestSuite) TestHarvest() {
 }
 
 func (suite *KeeperTestSuite) TestMultipleHarvest() {
-	// TODO: implement
+	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Harvest(suite.addrs[0], []string{denom1})
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	delta := balancesAfter.Sub(balancesBefore)
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), delta))
+
+	balancesBefore = balancesAfter
+	suite.Harvest(suite.addrs[0], []string{denom1})
+	balancesAfter = suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(balancesBefore, balancesAfter))
 }
 
 func (suite *KeeperTestSuite) TestHistoricalRewards() {
