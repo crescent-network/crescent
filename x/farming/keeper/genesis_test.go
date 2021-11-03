@@ -299,7 +299,6 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 					suite.Require().Equal(uint64(0), record.Epoch)
 					suite.Require().Contains([]string{denom1, denom2}, record.StakingCoinDenom)
 					suite.Require().False(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
-					// TODO: need to check actual value?
 				}
 			},
 		},
