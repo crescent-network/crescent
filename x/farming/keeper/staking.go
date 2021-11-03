@@ -255,7 +255,19 @@ func (k Keeper) afterStakingCoinAdded(ctx sdk.Context, stakingCoinDenom string) 
 // afterStakingCoinRemoved is called after a staking coin denom got removed
 // during Unstake.
 func (k Keeper) afterStakingCoinRemoved(ctx sdk.Context, stakingCoinDenom string) error {
-	// TODO: send remaining outstanding rewards to the fee pool
+	// Send remaining outstanding rewards to the farming fee collector.
+	// A staking coin is removed only after there is no farmers
+	// have rewards.
+	// Note that there should never be any remaining integral rewards
+	// in general situations, so this exists for confidence.
+	outstanding, _ := k.GetOutstandingRewards(ctx, stakingCoinDenom)
+	coins, _ := outstanding.Rewards.TruncateDecimal() // Ignore remainder, since it cannot be sent.
+	if !coins.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), k.GetFarmingFeeCollectorAcc(ctx), coins); err != nil {
+			return err
+		}
+	}
+
 	k.DeleteOutstandingRewards(ctx, stakingCoinDenom)
 	k.DeleteAllHistoricalRewards(ctx, stakingCoinDenom)
 	k.DeleteCurrentEpoch(ctx, stakingCoinDenom)
