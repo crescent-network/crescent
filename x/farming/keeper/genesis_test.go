@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -287,12 +289,18 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		{
 			"HistoricalRewards",
 			func() {
-				suite.Require().Len(genState.HistoricalRewardsRecords, 2)
+				suite.Require().Len(genState.HistoricalRewardsRecords, 4)
 				for _, record := range genState.HistoricalRewardsRecords {
-					suite.Require().Equal(uint64(0), record.Epoch)
 					suite.Require().Contains([]string{denom1, denom2}, record.StakingCoinDenom)
-					suite.Require().False(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
-					// TODO: need to check actual value?
+					switch record.Epoch {
+					case 0:
+						suite.Require().True(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
+					case 1:
+						// TODO: need to check actual value?
+						suite.Require().False(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
+					default:
+						panic(fmt.Sprintf("unexpected epoch %d", record.Epoch))
+					}
 				}
 			},
 		},
@@ -319,7 +327,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 			func() {
 				suite.Require().Len(genState.CurrentEpochRecords, 2)
 				for _, record := range genState.CurrentEpochRecords {
-					suite.Require().Equal(uint64(1), record.CurrentEpoch)
+					suite.Require().Equal(uint64(2), record.CurrentEpoch)
 				}
 			},
 		},
