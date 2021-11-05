@@ -82,7 +82,7 @@ message ModifyPlanRequest {
   // plan_id specifies index of the farming plan
   uint64 plan_id = 1;
 
-  // name specifies the plan name for diplay
+  // name specifies the plan name for display
   string name = 2;
 
   // farming_pool_address defines the bech32-encoded address of the farming pool

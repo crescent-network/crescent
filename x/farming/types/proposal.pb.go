@@ -187,7 +187,7 @@ func (m *AddPlanRequest) GetEpochAmount() github_com_cosmos_cosmos_sdk_types.Coi
 type ModifyPlanRequest struct {
 	// plan_id specifies index of the farming plan
 	PlanId uint64 `protobuf:"varint,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
-	// name specifies the plan name for diplay
+	// name specifies the plan name for display
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// farming_pool_address defines the bech32-encoded address of the farming pool
 	FarmingPoolAddress string `protobuf:"bytes,3,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty" yaml:"farming_pool_address"`
