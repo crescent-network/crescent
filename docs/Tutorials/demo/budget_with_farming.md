@@ -11,13 +11,13 @@ The [budget](https://github.com/tendermint/budget) and [farming](https://github.
 
 ## What does budget module do?
 
-A budget module is a Cosmos SDK module that implements budget functionality. It is an independent module from other SDK modules and core functionality is to enable anyone to create a budget plan through governance param change proposal. Once it is agreed within the community, voted, and passed, it uses the budget source address to distribute amount of coins by the rate defined in the plan to the collection address. Collecting all budgets and distribution take place every epoch blocks that can be modified by a governance proposal.
+The budget module is a Cosmos SDK module that implements budget functionality. It is an independent module from other SDK modules and core functionality is to enable anyone to create a budget plan through governance param change proposal. After it is agreed within the community, voted, and passed, it uses the budget source address to distribute amount of coins by the rate that is defined in the plan to the destination address. Collecting all budgets and distribution take place every epoch blocks that can be modified by a governance proposal.
 
-One use case is for Gravity DEX farming plan. Budget module can be used to create a budget plan that defines Cosmos Hub's FeeCollector module account where transaction gas fees and part of ATOM inflation are collected as budget source address and uses custom module account (created by budget creator) as collection address. 
+One use case is the Gravity DEX farming plan. The budget module can be used to create a budget plan that defines the Cosmos Hub FeeCollector module account where transaction gas fees and part of ATOM inflation are collected as budget source address and uses a custom module account (created by budget creator) as the collection address. 
 
-## What does farming module do?
+## What does the farming module do?
 
-A farming module is a Cosmos SDK based module that implements farming functionality that provides farming rewards to staking participants called farmers. 
+The farming module is a Cosmos SDK-based module that implements farming functionality that provides farming rewards to staking participants called farmers. 
 
 One use case is to use the module to provide incentives for liquidity pool investors for their pool participation.
 
@@ -25,19 +25,19 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 **Budget module**
 
-- [Github Repo](https://github.com/tendermint/budget)
-- [Spec Docs](https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md)
-- This demo version [v0.1.2](https://github.com/tendermint/budget/releases)
-- Other useful resources are available in [docs](https://github.com/tendermint/budget/blob/main/docs) folder
-- Swagger Docs [v0.1.0](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/0.1.0)
+- [tendermint/budget GitHub repo](https://github.com/tendermint/budget)
+- [x/budget spec docs](https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md)
+- Audit-ready [demo version](https://github.com/tendermint/budget/releases)
+- Other useful resources are available in the [budget docs](https://github.com/tendermint/budget/blob/main/docs) folder
+- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/)
 
 **Farming module**
 
-- [Github Repo](https://github.com/tendermint/farming)
-- [Spec Docs](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md)
-- Today's demo version [v0.1.2](https://github.com/tendermint/farming/releases)
-- Other useful resources are available in [docs](https://github.com/tendermint/farming/blob/main/docs) folder
-- Swagger Docs [v0.1.3](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.3)    
+- [tendermint/farming GitHub repo](https://github.com/tendermint/farming)
+- [x/farming spec docs](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md)
+- Audit-ready [demo version](https://github.com/tendermint/farming/releases)
+- Other useful resources are available in the [farming docs](https://github.com/tendermint/farming/blob/main/docs) folder
+- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/)    
 
 ## Demo
 
@@ -103,28 +103,28 @@ $BINARY start
 
 ### Step 3. Send a governance proposal to create a budget plan 
 
-Let's create `budget-proposal.json` file and copy the below JSON into a file. Depending on what budget plan you plan to create, you can customize the following values of the fields for your need. 
+Create the `budget-proposal.json` file and copy the following JSON contents into the file. Depending on what budget plan you create, you can customize values of the fields. 
 
-In this demo, we plan to create a budget plan that distributes partial amount of coins from the [FeeCollector module account](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/keys.go#L15) which collects gas fees and ATOM inflation in Cosmos Hub. This will be used for Gravity DEX farming plan to `GravityDEXFarmingBudget` account. 
+In this demo, you create a budget plan that distributes partial amount of coins from the [FeeCollector module account](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/keys.go#L15) that collects gas fees and ATOM inflation in Cosmos Hub. This budget plan will be used for Gravity DEX farming plan to `GravityDEXFarmingBudget` account. 
 
-`GravityDEXFarmingBudget` account is created using the following code snippet.
+The `GravityDEXFarmingBudget` account is created using the following code snippet.
 
 ```go
 // cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky 
 sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
 ```
 
-Explanation about each field in the JSON file
+where the fields in the JSON file are:
 
-- `name`: is the name of the budget plan used for display
-- `description`: is the description of the budget plan used for display
-- `rate`: is the distributing amount by ratio of the total budget source
-- `budget_source_address`: is the address where the source of budget comes from
-- `collection_address`: is the address that collects budget from the budget source address
-- `start_time`: is start time of the budget plan
-- `end_time`: is end time of the budget plan
+- `name`: the name of the budget plan used for display
+- `description`: the description of the budget plan used for display
+- `rate`: the distributing amount by ratio of the total budget source
+- `source_address`: the address where the source of budget comes from
+- `destination_address`: the address that collects budget from the budget source address
+- `start_time`: start time of the budget plan
+- `end_time`: end time of the budget plan
 
-We use the following values of the fields.
+Use the following values for the fields:
 
 ```json
 {
@@ -150,7 +150,7 @@ We use the following values of the fields.
 }
 ```
 
-Now, let's copy each command and paste it in your terminal. 
+Now, run each command one at a time. You can copy and paste each command in the command line in your terminal:
 
 ```bash
 # Submit a param-change governance proposal
@@ -195,11 +195,11 @@ farmingd q bank balances cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafg
 
 ### Step 5. Send a governance proposal to create a public ratio amount plan
 
-Let's create `public-ratio-plan-proposal.json` file and copy the below JSON into a file.
+Now, create the `public-ratio-plan-proposal.json` file and copy the following JSON contents into the file. 
 
-In this demo, we plan to create a public farming ratio plan that plans to distribute 90% of what farming pool address has in balance for those who stake those coins defined in staking coin weights starting from Sept. 01, 2021 to Sept. 24, 2021. 
+In this demo, you create a public farming ratio plan to distribute 90% of of the balance of the farming pool address to the accounts who stake the coins that are defined in staking coin weights, the time period is from Sept. 01, 2021 to Sept. 24, 2021. 
 
-Explanation about each field in the JSON file
+where the fields in the JSON file are:
 
 - `name`: is the name of the farming plan used for display. It allows duplicate value.
 - `farming_pool_address`: is the faucet address for the plan
@@ -209,7 +209,7 @@ Explanation about each field in the JSON file
 - `end_time`: is start time of the farming plan
 - `epoch_ratio`: is the distributing amount by ratio per epoch
 
-We use the following values of the fields.
+where the fields in the JSON file are:
 
 ```json
 {
@@ -238,7 +238,7 @@ We use the following values of the fields.
 }
 ```
 
-Now, let's copy each command and paste it in your terminal. 
+Now, run each command one at a time. You can copy and paste each command in the command line in your terminal:
 
 ```bash
 # Submit a public ratio plan governance proposal
@@ -303,9 +303,11 @@ farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 
 ### Step 7. (Custom Message) Send AdvanceEpoch for Reward Distribution
 
-To simulate reward distribution for this demo, we have this custom transaction message `AdvanceEpoch` that can be enabled when you build the binary `farmingd` with `make install-testing` command. When you send `AdvanceEpoch` message to the network, it increases epoch by day 1.
+To simulate reward distribution for this demo, enable a custom transaction message `AdvanceEpoch` when you build the binary `farmingd` with the `make install-testing` command. 
 
-In this step, you might wonder why we need to increase 2 epochs by sending two transactions to the network. The reaon for that is because it is for the fairness of distribution. There is a global parameter called `next_epoch_days` that can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, we use an internal state called `current_epoch_days` that is used to process staking and reward distribution in an end blocker. This is technical decision that is made by the Gravity DEX team. To understand more about this, feel free to jump right into [the code](https://github.com/tendermint/farming/blob/main/x/farming/abci.go#L13).
+When you send the `AdvanceEpoch` message to the network, it increases epoch by day 1.
+
+In this step, you might wonder why you need to increase 2 epochs by sending two transactions to the network. The reason is to ensure fairness of distribution. The global parameter called `next_epoch_days` can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, the internal state `current_epoch_days` is used to process staking and reward distribution in an end blocker. This technical decision has been made by the Gravity DEX team. To understand more about this decision, feel free to jump right into [the code](https://github.com/tendermint/farming/blob/main/x/farming/abci.go#L13).
 
 ```bash
 # Increase epoch by 1 
@@ -371,11 +373,11 @@ farmingd tx farming harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D9
 
 ### Step 9. Modify the public farming ratio plan
 
-Let's create `multiple-public-ratio-plan-proposals.json` file and copy the below JSON into a file. 
+Now create the `multiple-public-ratio-plan-proposals.json` file and copy the JSON contents into the file. 
 
-This step is intended to demonstrate the fact that we don't need to create another public ratio plan by sending another governance proposal. We can just modify the existing one and add another ratio plan.
+This step is intended to demonstrate the fact that you don't need to create another public ratio plan by sending another governance proposal. You can just modify the existing proposal and add another ratio plan.
 
-Update the following values of the fields
+Update the following values of the fields:
 
 - `plan_id`: 1
 - `staking_coin_weights`
@@ -383,7 +385,7 @@ Update the following values of the fields
     - `poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4` weight 50% → 0% ( deleted)
 - `epoch_ratio`: 0.500000000000000000 (50%)
 
-Add second public ratio plan proposal 
+Add a second public ratio plan proposal:
 
 - `name`: Second Public Ratio Plan
 - `farming_pool_address`: the Gravity DEX budget collector account address
@@ -519,6 +521,6 @@ farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 ```
 
-## Finish
+## Conclusion
 
-Throughout the demo, you should probably learn what budget and farming modules are and how they work to provide eseential functionalities in Cosmos ecosystem. Thank you for taking your time and your interest.
+Throughout the demo, you learn what the budget and farming modules are and how they work to provide eseential functionalities in the Cosmos ecosystem. Thank you for taking your time and your interest. 
