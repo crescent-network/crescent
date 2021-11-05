@@ -1,15 +1,15 @@
 ---
 Title: Farmingd
-Description: A high-level overview of how the command-line (CLI) interfaces work for the farming module.
+Description: A high-level overview of how the command-line interfaces (CLI) work for the farming module.
 ---
 
-# Farmingd
+# farmingd
 
-This document provides a high-level overview of how the command-line (CLI) interfaces work for the farming module.
+This document provides a high-level overview of how the command line (CLI) interface works for the farming module.
 
-## Command-Line Interfaces
+## Command Line Interfaces
 
-In order to test out the following command-line interfaces, you need to set up a local node to either send transaction or query from. You can refer to this [localnet tutorial](../../Tutorials/localnet) on how to build `farmingd` binary and bootstrap a local network in your local machine.
+In order to test out the following command line interfaces, you must set up a local node to send transactions or queries. See the [localnet tutorial](../../Tutorials/localnet) for details on how to build the `farmingd` binary and bootstrap a local network in your local machine.
 
 - [Transaction](#Transaction)
     * [MsgCreateFixedAmountPlan](#MsgCreateFixedAmountPlan)
@@ -32,15 +32,17 @@ In order to test out the following command-line interfaces, you need to set up a
 
 ### MsgCreateFixedAmountPlan
 
-This is one of the private plan type messages that anyone can create. A fixed amount plan plans to distribute amount of coins by a fixed amount defined in `EpochAmount`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan and the creator should query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. There is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack.
+Anyone can create this private plan type message. A fixed amount plan plans to distribute amount of coins by a fixed amount defined in `EpochAmount`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan. The creator queries the plan and sends amount of coins to the farming pool address so that the plan distributes as intended. To prevent spamming attacks, a `PlanCreationFee` fee must be paid on plan creation.
 
-Create a file name `private-fixed-plan.json`. This private fixed amount farming plan intends to provide 100ATOM per epoch (measured in day) relative to the rate amount of denoms defined in staking coin weights.
+Create a `private-fixed-plan.json` file. This private fixed amount farming plan intends to provide 100ATOM per epoch (measured in day), relative to the rate amount of denoms that is defined in staking coin weights.
 
-- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network. It allows duplicate value.
-- `staking_coin_weights`: is the distributing amount for each epoch. An amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
-- `start_time`: is start time of the farming plan 
-- `end_time`: is end time of the farming plan
-- `epoch_amount`: is an amount that will be distributed per epoch as an incentive for staking denoms defined in the staking coin weights.
+- `name`: the name of the farming plan can be any name to store in a blockchain network, duplicate values are allowed
+- `staking_coin_weights`: the distributing amount for each epoch. An amount must be decimal, not an integer. The sum of total weight must be 1.000000000000000000
+- `start_time`: start time of the farming plan 
+- `end_time`: end time of the farming plan
+- `epoch_amount`: the amount to distribute per epoch as an incentive for staking denoms that are defined in the staking coin weights
+
+JSON example:
 
 ```json
 {
@@ -66,6 +68,8 @@ Create a file name `private-fixed-plan.json`. This private fixed amount farming 
 }
 ```
 
+Example command:
+
 ```bash
 # Create a private fixed amount plan
 farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
@@ -76,6 +80,8 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 --yes \
 --output json | jq
 ```
+
+Result:
 
 ```json
 {
@@ -141,15 +147,15 @@ farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
 
 ### MsgCreateRatioPlan
 
-This is one of the private plan type messages that anyone can create. A ratio plan plans to distribute amount of coins by ratio defined in `EpochRatio`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan and the creator should query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. For a ratio plan, whichever coins that the farming pool address has in balances are used every epoch. Note that there is a fee `PlanCreationFee` paid upon plan creation to prevent from spamming attack.
+Anyone can create this private plan type message. A ratio plan plans to distribute amount of coins by ratio that is defined in `EpochRatio`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan. The creator must query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. For a ratio plan, whichever coins that the farming pool address has in balances are used every epoch. To prevent spamming attacks, a `PlanCreationFee` fee must be paid on plan creation.
 
-Create a file name `private-fixed-plan.json`. This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day). In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has in balances are used as incentives for the denoms defined in the staking coin weights.
+Create the `private-fixed-plan.json` file. This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day). In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has in balances are used as incentives for the denoms that are defined in the staking coin weights.
 
-- `name`: is the name of the farming plan. It can be any name you prefer to be stored in a blockchain network. It allows duplicate value.
-- `staking_coin_weights`: is the distributing amount for each epoch. An amount should be decimal, not an integer. The sum of total weight must be 1.000000000000000000
-- `start_time`: is start time of the farming plan 
-- `end_time`: is end time of the farming plan
-- `epoch_ratio`: is a ratio that will be distributed per epoch as an incentive for staking denoms defined in staking coin weights. The ratio refers to all coins that the creator has in his/her account. Note that the total ratio cannot exceed 1.0 (100%). 
+- `name`: the name of the farming plan can be any name to store in a blockchain network, duplicate values are allowed
+- `staking_coin_weights`: the distributing amount for each epoch. An amount must be decimal, not an integer. The sum of total weight must be 1.000000000000000000
+- `start_time`: start time of the farming plan 
+- `end_time`: end time of the farming plan
+- `epoch_ratio`: a ratio to distribute per epoch as an incentive for staking denoms that are defined in staking coin weights. The ratio refers to all coins that the creator has in their account. Note that the total ratio cannot exceed 1.0 (100%). 
 
 ```json
 {
