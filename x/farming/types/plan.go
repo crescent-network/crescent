@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -189,20 +188,6 @@ func (plan BasePlan) Validate() error {
 	return nil
 }
 
-func (plan BasePlan) String() string {
-	out, _ := plan.MarshalYAML()
-	return out.(string)
-}
-
-// MarshalYAML returns the YAML representation of a Plan.
-func (plan BasePlan) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &plan)
-	if err != nil {
-		return nil, err
-	}
-	return string(bz), err
-}
-
 // NewFixedAmountPlan returns a new fixed amount plan.
 func NewFixedAmountPlan(basePlan *BasePlan, epochAmount sdk.Coins) *FixedAmountPlan {
 	return &FixedAmountPlan{
@@ -257,8 +242,6 @@ type PlanI interface {
 	SetDistributedCoins(sdk.Coins) error
 
 	GetBasePlan() *BasePlan
-
-	String() string
 
 	Validate() error
 }

@@ -74,9 +74,9 @@ func (p *PublicPlanProposal) ValidateBasic() error {
 
 func (p PublicPlanProposal) String() string {
 	return fmt.Sprintf(`Public Plan Proposal:
-  Title:       			  %s
-  Description: 		      %s
-  AddPlanRequests: 	  %s
+  Title:              %s
+  Description:        %s
+  AddPlanRequests:    %s
   UpdatePlanRequests: %s
   DeletePlanRequests: %s
 `, p.Title, p.Description, p.AddPlanRequests, p.ModifyPlanRequests, p.DeletePlanRequests)

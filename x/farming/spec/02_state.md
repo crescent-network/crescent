@@ -50,8 +50,6 @@ type PlanI interface {
 
     GetBasePlan() *BasePlan
 
-    String() string
-
     Validate() error
 }
 ```
