@@ -363,12 +363,69 @@ func (suite *KeeperTestSuite) TestHistoricalRewards() {
 		count++
 		return false
 	})
-	suite.Require().Equal(count, 3)
+	suite.Require().Equal(4, count)
 
 	// Next, check if cumulative unit rewards is correct.
-	for i := uint64(0); i < 3; i++ {
+	for i := uint64(1); i <= 3; i++ {
 		historical, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, i)
 		suite.Require().True(found)
-		suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, int64((i+1)*2))), historical.CumulativeUnitRewards))
+		suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, int64(i*2))), historical.CumulativeUnitRewards))
 	}
+}
+
+// Test if initialization and pruning of staking coin info work properly.
+func (suite *KeeperTestSuite) TestInitializeAndPruneStakingCoinInfo() {
+	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	suite.Require().Equal(uint64(0), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	_, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 0)
+	suite.Require().False(found)
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().False(found)
+	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().False(found)
+
+	suite.AdvanceEpoch()
+
+	suite.Require().Equal(uint64(1), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	historical, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 0)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.DecCoins{}, historical.CumulativeUnitRewards))
+	outstanding, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.DecCoins{}, outstanding.Rewards))
+
+	suite.AdvanceEpoch()
+
+	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	historical, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1)), historical.CumulativeUnitRewards))
+	outstanding, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1000000)), outstanding.Rewards))
+	// Historical rewards for epoch 2 must not be present at this point,
+	// since current epoch is 2, and it has not ended yet.
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 2)
+	suite.Require().False(found)
+
+	// Unstake most of the coins. This should not delete any info
+	// about the staking coin yet.
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 999999)))
+	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().True(found)
+	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+
+	// Now unstake the rest of the coins. This should delete info
+	// about the staking coin.
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1)))
+	suite.Require().Equal(uint64(0), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().False(found)
+	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().False(found)
 }

@@ -87,6 +87,12 @@ func GetHistoricalRewardsKey(stakingCoinDenom string, epoch uint64) []byte {
 	return append(append(HistoricalRewardsKeyPrefix, LengthPrefixString(stakingCoinDenom)...), sdk.Uint64ToBigEndian(epoch)...)
 }
 
+// GetHistoricalRewardsPrefix returns a key prefix used to iterate
+// historical rewards by a staking coin denom.
+func GetHistoricalRewardsPrefix(stakingCoinDenom string) []byte {
+	return append(HistoricalRewardsKeyPrefix, LengthPrefixString(stakingCoinDenom)...)
+}
+
 // GetCurrentEpochKey returns a key for a current epoch info.
 func GetCurrentEpochKey(stakingCoinDenom string) []byte {
 	return append(CurrentEpochKeyPrefix, []byte(stakingCoinDenom)...)

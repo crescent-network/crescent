@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 
 	// Withdrawable rewards amount in the store > balance of rewards reserve acc.
 	// Should not be OK.
-	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+	k.SetHistoricalRewards(ctx, denom1, 2, types.HistoricalRewards{
 		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 3)),
 	})
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
@@ -141,14 +141,14 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 
 	// Withdrawable rewards amount in the store <= balance of rewards reserve acc.
 	// Should be OK.
-	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+	k.SetHistoricalRewards(ctx, denom1, 2, types.HistoricalRewards{
 		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1)),
 	})
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
 
 	// Reset.
-	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+	k.SetHistoricalRewards(ctx, denom1, 2, types.HistoricalRewards{
 		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 2)),
 	})
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
