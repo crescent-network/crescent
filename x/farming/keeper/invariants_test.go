@@ -276,6 +276,22 @@ func (suite *KeeperTestSuite) TestNonNegativeHistoricalRewardsInvariant() {
 }
 
 func (suite *KeeperTestSuite) TestPositiveTotalStakingsAmountInvariant() {
+	k, ctx := suite.keeper, suite.ctx
+
+	// This is normal.
+	k.SetTotalStakings(ctx, denom1, types.TotalStakings{Amount: sdk.NewInt(1000000)})
+	_, broken := farmingkeeper.PositiveTotalStakingsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Zero-amount total stakings.
+	k.SetTotalStakings(ctx, denom1, types.TotalStakings{Amount: sdk.ZeroInt()})
+	_, broken = farmingkeeper.PositiveTotalStakingsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
+
+	// Negative-amount total stakings.
+	k.SetTotalStakings(ctx, denom1, types.TotalStakings{Amount: sdk.NewInt(-1)})
+	_, broken = farmingkeeper.PositiveTotalStakingsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
 }
 
 func (suite *KeeperTestSuite) TestPlanTerminationStatusInvariant() {
