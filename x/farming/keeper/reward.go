@@ -473,7 +473,7 @@ func (k Keeper) ValidateOutstandingRewardsAmount(ctx sdk.Context) error {
 	rewardsReservePoolBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))...)
 	_, hasNeg := rewardsReservePoolBalances.SafeSub(totalOutstandingRewards)
 	if hasNeg {
-		return types.ErrInvalidRemainingRewardsAmount // TODO: use different error type
+		return types.ErrInvalidOutstandingRewardsAmount
 	}
 
 	return nil

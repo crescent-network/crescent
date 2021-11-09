@@ -377,13 +377,13 @@ func TestValidateGenesis(t *testing.T) {
 			},
 			"coin 0denom1 amount is not positive",
 		},
-		//{
-		//	"invalid current epoch days",
-		//	func(genState *types.GenesisState) {
-		//		genState.CurrentEpochDays = 0
-		//	},
-		//	"not implemented",
-		//},
+		{
+			"invalid current epoch days",
+			func(genState *types.GenesisState) {
+				genState.CurrentEpochDays = 0
+			},
+			"current epoch days must be positive",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

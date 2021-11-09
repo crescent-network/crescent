@@ -154,6 +154,13 @@ func (suite *KeeperTestSuite) TestInitGenesisPanics() {
 			},
 			true,
 		},
+		{
+			"invalid current epoch days",
+			func(genState *types.GenesisState) {
+				genState.CurrentEpochDays = 0
+			},
+			true,
+		},
 	} {
 		suite.Run(tc.name, func() {
 			genState := suite.keeper.ExportGenesis(cacheCtx)

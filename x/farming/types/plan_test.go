@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -493,8 +495,6 @@ func TestPrivatePlanFarmingPoolAddress(t *testing.T) {
 	require.Equal(t, "cosmos172yhzhxwgwul3s8m6qpgw2ww3auedq4k3dt224543d0sd44fgx4spcjthr", testAcc2.String())
 }
 
-// TODO: needs to cover more cases
-// https://github.com/tendermint/farming/issues/90
 func TestUnpackPlan(t *testing.T) {
 	plan := []types.PlanI{
 		types.NewRatioPlan(
@@ -518,19 +518,53 @@ func TestUnpackPlan(t *testing.T) {
 	marshaled, err := any.Marshal()
 	require.NoError(t, err)
 
-	any.Value = []byte{}
-	err = any.Unmarshal(marshaled)
+	var any2 codectypes.Any
+	err = any2.Unmarshal(marshaled)
 	require.NoError(t, err)
 
-	reMarshal, err := any.Marshal()
+	reMarshal, err := any2.Marshal()
 	require.NoError(t, err)
 	require.Equal(t, marshaled, reMarshal)
 
 	planRecord := types.PlanRecord{
-		Plan:             *any,
+		Plan:             any2,
 		FarmingPoolCoins: sdk.NewCoins(),
 	}
 
 	_, err = types.UnpackPlan(&planRecord.Plan)
 	require.NoError(t, err)
+}
+
+func TestUnpackPlanJSON(t *testing.T) {
+	plan := types.NewRatioPlan(
+		types.NewBasePlan(
+			1,
+			"testPlan1",
+			types.PlanTypePrivate,
+			types.PrivatePlanFarmingPoolAddress("farmingPoolAddr1", 1).String(),
+			sdk.AccAddress("terminationAddr1").String(),
+			sdk.NewDecCoins(sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")}),
+			types.ParseTime("2021-08-03T00:00:00Z"),
+			types.ParseTime("2021-08-07T00:00:00Z"),
+		),
+		sdk.NewDec(1),
+	)
+
+	any, err := types.PackPlan(plan)
+	require.NoError(t, err)
+
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	bz := cdc.MustMarshalJSON(any)
+
+	var any2 codectypes.Any
+	err = cdc.UnmarshalJSON(bz, &any2)
+	require.NoError(t, err)
+
+	plan2, err := types.UnpackPlan(&any2)
+	require.NoError(t, err)
+
+	require.Equal(t, uint64(1), plan2.GetId())
 }
