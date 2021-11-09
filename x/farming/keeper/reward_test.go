@@ -39,6 +39,33 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))),
 	}
 
+	ratioPlans := []types.PlanI{
+		types.NewRatioPlan(
+			types.NewBasePlan(
+				3,
+				"",
+				types.PlanTypePrivate,
+				suite.addrs[0].String(),
+				suite.addrs[0].String(),
+				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
+				types.ParseTime("2021-07-27T00:00:00Z"),
+				types.ParseTime("2021-07-28T00:00:00Z"),
+			),
+			sdk.MustNewDecFromStr("0.5")),
+		types.NewRatioPlan(
+			types.NewBasePlan(
+				4,
+				"",
+				types.PlanTypePrivate,
+				suite.addrs[0].String(),
+				suite.addrs[0].String(),
+				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
+				types.ParseTime("2021-07-27T12:00:00Z"),
+				types.ParseTime("2021-07-28T12:00:00Z"),
+			),
+			sdk.MustNewDecFromStr("0.6")),
+	}
+
 	for _, tc := range []struct {
 		name      string
 		plans     []types.PlanI
@@ -115,6 +142,28 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			normalPlans,
 			types.ParseTime("2021-07-28T12:00:00Z"),
 			nil,
+		},
+		{
+			"test case for ratio plans #1",
+			ratioPlans,
+			types.ParseTime("2021-07-27T00:00:00Z"),
+			map[uint64]sdk.Coins{
+				3: sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000000), sdk.NewInt64Coin(denom2, 500000000),
+					sdk.NewInt64Coin(denom3, 500000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 500000000))},
+		},
+		{
+			"test case for ratio plans #2",
+			ratioPlans,
+			types.ParseTime("2021-07-27T12:00:00Z"),
+			nil,
+		},
+		{
+			"test case for ratio plans #3",
+			ratioPlans,
+			types.ParseTime("2021-07-28T11:00:00Z"),
+			map[uint64]sdk.Coins{
+				4: sdk.NewCoins(sdk.NewInt64Coin(denom1, 600000000), sdk.NewInt64Coin(denom2, 600000000),
+					sdk.NewInt64Coin(denom3, 600000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 600000000))},
 		},
 	} {
 		suite.Run(tc.name, func() {
