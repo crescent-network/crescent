@@ -22,11 +22,11 @@ type PublicPlanProposal struct {
 	// description specifies the description of the plan
 	Description string 
 	// add_plan_requests specifies AddPlanRequest object
-	AddPlanRequests []*AddPlanRequest 
+	AddPlanRequests []AddPlanRequest
 	// modify_plan_requests specifies ModifyPlanRequest object
-	ModifyPlanRequests []*ModifyPlanRequest 
+	ModifyPlanRequests []ModifyPlanRequest
 	// delete_plan_requests specifies DeletePlanRequest object
-	DeletePlanRequests []*DeletePlanRequest 
+	DeletePlanRequests []DeletePlanRequest
 }
 ```
 

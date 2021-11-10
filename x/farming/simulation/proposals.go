@@ -65,8 +65,8 @@ func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, 
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			addPlanReqs,
-			[]*types.ModifyPlanRequest{},
-			[]*types.DeletePlanRequest{},
+			[]types.ModifyPlanRequest{},
+			[]types.DeletePlanRequest{},
 		)
 	}
 }
@@ -90,7 +90,7 @@ func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		req := &types.ModifyPlanRequest{}
+		req := types.ModifyPlanRequest{}
 
 		plans := k.GetPlans(ctx)
 		for _, p := range plans {
@@ -128,14 +128,14 @@ func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		modifyPlanReqs := []*types.ModifyPlanRequest{req}
+		modifyPlanReqs := []types.ModifyPlanRequest{req}
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			[]*types.AddPlanRequest{},
+			[]types.AddPlanRequest{},
 			modifyPlanReqs,
-			[]*types.DeletePlanRequest{},
+			[]types.DeletePlanRequest{},
 		)
 	}
 }
@@ -154,7 +154,7 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		req := &types.DeletePlanRequest{}
+		req := types.DeletePlanRequest{}
 
 		plans := k.GetPlans(ctx)
 		for _, p := range plans {
@@ -168,25 +168,25 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		deletePlanReqs := []*types.DeletePlanRequest{req}
+		deletePlanReqs := []types.DeletePlanRequest{req}
 
 		return types.NewPublicPlanProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			[]*types.AddPlanRequest{},
-			[]*types.ModifyPlanRequest{},
+			[]types.AddPlanRequest{},
+			[]types.ModifyPlanRequest{},
 			deletePlanReqs,
 		)
 	}
 }
 
 // ranAddPlanRequests returns randomized add request proposals.
-func ranAddPlanRequests(r *rand.Rand, ctx sdk.Context, simAccount simtypes.Account, poolCoins sdk.Coins) []*types.AddPlanRequest {
-	ranProposals := make([]*types.AddPlanRequest, 0)
+func ranAddPlanRequests(r *rand.Rand, ctx sdk.Context, simAccount simtypes.Account, poolCoins sdk.Coins) []types.AddPlanRequest {
+	ranProposals := make([]types.AddPlanRequest, 0)
 
 	// Generate a random number of proposals with random values of each parameter
 	for i := 0; i < simtypes.RandIntBetween(r, 1, 3); i++ {
-		req := &types.AddPlanRequest{}
+		req := types.AddPlanRequest{}
 		req.Name = "simulation-test-" + simtypes.RandStringOfLength(r, 5)
 		req.FarmingPoolAddress = simAccount.Address.String()
 		req.TerminationAddress = simAccount.Address.String()

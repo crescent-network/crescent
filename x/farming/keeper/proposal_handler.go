@@ -36,7 +36,7 @@ func HandlePublicPlanProposal(ctx sdk.Context, k Keeper, proposal *types.PublicP
 }
 
 // AddPublicPlanProposal adds a new public plan once the governance proposal is passed.
-func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddPlanRequest) error {
+func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []types.AddPlanRequest) error {
 	for _, p := range proposals {
 		farmingPoolAcc, err := sdk.AccAddressFromBech32(p.GetFarmingPoolAddress())
 		if err != nil {
@@ -89,7 +89,7 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []*types.AddPla
 }
 
 // ModifyPublicPlanProposal overwrites the plan with the new plan proposal once the governance proposal is passed.
-func (k Keeper) ModifyPublicPlanProposal(ctx sdk.Context, proposals []*types.ModifyPlanRequest) error {
+func (k Keeper) ModifyPublicPlanProposal(ctx sdk.Context, proposals []types.ModifyPlanRequest) error {
 	for _, p := range proposals {
 		plan, found := k.GetPlan(ctx, p.GetPlanId())
 		if !found {
@@ -162,7 +162,7 @@ func (k Keeper) ModifyPublicPlanProposal(ctx sdk.Context, proposals []*types.Mod
 }
 
 // DeletePublicPlanProposal deletes public plan proposal once the governance proposal is passed.
-func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []*types.DeletePlanRequest) error {
+func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []types.DeletePlanRequest) error {
 	for _, p := range proposals {
 		plan, found := k.GetPlan(ctx, p.GetPlanId())
 		if !found {

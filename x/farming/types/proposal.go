@@ -26,9 +26,9 @@ func init() {
 func NewPublicPlanProposal(
 	title string,
 	description string,
-	addReqs []*AddPlanRequest,
-	modifyReqs []*ModifyPlanRequest,
-	deleteReqs []*DeletePlanRequest,
+	addReqs []AddPlanRequest,
+	modifyReqs []ModifyPlanRequest,
+	deleteReqs []DeletePlanRequest,
 ) *PublicPlanProposal {
 	return &PublicPlanProposal{
 		Title:              title,
@@ -76,9 +76,9 @@ func (p PublicPlanProposal) String() string {
 	return fmt.Sprintf(`Public Plan Proposal:
   Title:              %s
   Description:        %s
-  AddPlanRequests:    %s
-  UpdatePlanRequests: %s
-  DeletePlanRequests: %s
+  AddPlanRequests:    %v
+  UpdatePlanRequests: %v
+  DeletePlanRequests: %v
 `, p.Title, p.Description, p.AddPlanRequests, p.ModifyPlanRequests, p.DeletePlanRequests)
 }
 
@@ -92,8 +92,8 @@ func NewAddPlanRequest(
 	endTime time.Time,
 	epochAmount sdk.Coins,
 	epochRatio sdk.Dec,
-) *AddPlanRequest {
-	return &AddPlanRequest{
+) AddPlanRequest {
+	return AddPlanRequest{
 		Name:               name,
 		FarmingPoolAddress: farmingPoolAddr,
 		TerminationAddress: terminationAddr,
@@ -171,8 +171,8 @@ func NewModifyPlanRequest(
 	endTime time.Time,
 	epochAmount sdk.Coins,
 	epochRatio sdk.Dec,
-) *ModifyPlanRequest {
-	return &ModifyPlanRequest{
+) ModifyPlanRequest {
+	return ModifyPlanRequest{
 		PlanId:             id,
 		Name:               name,
 		FarmingPoolAddress: farmingPoolAddr,
@@ -248,8 +248,8 @@ func (p *ModifyPlanRequest) Validate() error {
 }
 
 // NewDeletePlanRequest creates a new DeletePlanRequest object.
-func NewDeletePlanRequest(id uint64) *DeletePlanRequest {
-	return &DeletePlanRequest{
+func NewDeletePlanRequest(id uint64) DeletePlanRequest {
+	return DeletePlanRequest{
 		PlanId: id,
 	}
 }

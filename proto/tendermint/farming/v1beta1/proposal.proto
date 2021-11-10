@@ -25,13 +25,16 @@ message PublicPlanProposal {
   string description = 2;
 
   // add_plan_requests specifies AddPlanRequest object
-  repeated AddPlanRequest add_plan_requests = 3 [(gogoproto.moretags) = "yaml:\"add_plan_requests\""];
+  repeated AddPlanRequest add_plan_requests = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"add_plan_requests\""];
 
   // modify_plan_requests specifies ModifyPlanRequest object
-  repeated ModifyPlanRequest modify_plan_requests = 4 [(gogoproto.moretags) = "yaml:\"modify_plan_requests\""];
+  repeated ModifyPlanRequest modify_plan_requests = 4
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"modify_plan_requests\""];
 
   // delete_plan_requests specifies DeletePlanRequest object
-  repeated DeletePlanRequest delete_plan_requests = 5 [(gogoproto.moretags) = "yaml:\"delete_plan_requests\""];
+  repeated DeletePlanRequest delete_plan_requests = 5
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"delete_plan_requests\""];
 }
 
 // AddPlanRequest details a proposal for creating a public plan.
