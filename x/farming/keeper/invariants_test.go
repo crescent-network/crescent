@@ -293,6 +293,3 @@ func (suite *KeeperTestSuite) TestPositiveTotalStakingsAmountInvariant() {
 	_, broken = farmingkeeper.PositiveTotalStakingsAmountInvariant(k)(ctx)
 	suite.Require().True(broken)
 }
-
-func (suite *KeeperTestSuite) TestPlanTerminationStatusInvariant() {
-}
