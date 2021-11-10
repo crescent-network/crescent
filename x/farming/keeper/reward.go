@@ -299,6 +299,7 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDe
 			types.EventTypeHarvest,
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmerAcc.String()),
 			sdk.NewAttribute(types.AttributeKeyStakingCoinDenoms, strings.Join(stakingCoinDenoms, ",")),
+			sdk.NewAttribute(types.AttributeKeyRewardCoins, totalRewards.String()),
 		),
 	})
 
@@ -316,33 +317,50 @@ type AllocationInfo struct {
 // When total allocated coins for a farming pool exceeds the pool's
 // balance, then allocation will not happen.
 func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
-	farmingPoolBalances := make(map[string]sdk.Coins)   // farmingPoolAddress => sdk.Coins
-	allocCoins := make(map[string]map[uint64]sdk.Coins) // farmingPoolAddress => (planId => sdk.Coins)
+	// farmingPoolBalances is a cache for balances of each farming pool,
+	// to reduce number of BankKeeper.GetAllBalances calls.
+	// It maps farmingPoolAddress to the pool's balance.
+	farmingPoolBalances := map[string]sdk.Coins{}
 
-	plans := make(map[uint64]types.PlanI)
+	// allocCoins is a table that records which farming pool allocates
+	// how many coins to which plan.
+	// It maps farmingPoolAddress to a map that maps planId to amount of
+	// coins to allocate.
+	allocCoins := map[string]map[uint64]sdk.Coins{}
+
+	plans := map[uint64]types.PlanI{} // it maps planId to plan.
 	for _, plan := range k.GetPlans(ctx) {
-		// Filter plans by their start time and end time.
+		// Add plans that are not terminated and active to the map.
 		if !plan.GetTerminated() && types.IsPlanActiveAt(plan, ctx.BlockTime()) {
 			plans[plan.GetId()] = plan
 		}
 	}
 
+	// Calculate how many coins the plans want to allocate rewards from farming pools.
+	// Note that in this step, we don't check if the farming pool has
+	// sufficient balance for all allocations. We'll do that check in the next step.
 	for _, plan := range plans {
 		farmingPoolAcc := plan.GetFarmingPoolAddress()
 		farmingPool := farmingPoolAcc.String()
 
+		// Lookup if we already have the farming pool's balance in the cache.
+		// If not, call BankKeeper.GetAllBalances and add the result to the cache.
 		balances, ok := farmingPoolBalances[farmingPool]
 		if !ok {
 			balances = k.bankKeeper.GetAllBalances(ctx, farmingPoolAcc)
 			farmingPoolBalances[farmingPool] = balances
 		}
 
+		// Lookup if we already have the farming pool's allocation map in the cache.
+		// If not, create new allocation map and add it to the cache.
 		ac, ok := allocCoins[farmingPool]
 		if !ok {
-			ac = make(map[uint64]sdk.Coins)
+			ac = map[uint64]sdk.Coins{}
 			allocCoins[farmingPool] = ac
 		}
 
+		// Based on the plan's type, record how many coins the plan wants to
+		// allocate in the allocation map.
 		switch plan := plan.(type) {
 		case *types.FixedAmountPlan:
 			ac[plan.GetId()] = plan.EpochAmount
@@ -351,10 +369,12 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 		}
 	}
 
+	// In this step, we check if farming pools have sufficient balance for allocations.
+	// If not, we don't allocate rewards from that farming pool for this epoch.
 	var allocInfos []AllocationInfo
-	for farmingPool, coins := range allocCoins {
+	for farmingPool, planCoins := range allocCoins {
 		totalCoins := sdk.NewCoins()
-		for _, amt := range coins {
+		for _, amt := range planCoins {
 			totalCoins = totalCoins.Add(amt...)
 		}
 
@@ -363,7 +383,7 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 			continue
 		}
 
-		for planID, amt := range coins {
+		for planID, amt := range planCoins {
 			allocInfos = append(allocInfos, AllocationInfo{
 				Plan:   plans[planID],
 				Amount: amt,
@@ -377,28 +397,33 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 // AllocateRewards updates historical rewards and current epoch info
 // based on the allocation infos.
 func (k Keeper) AllocateRewards(ctx sdk.Context) error {
-	unitRewardsByDenom := map[string]sdk.DecCoins{} // (staking coin denom) => (unit rewards)
+	// unitRewardsByDenom is a table that records how much unit rewards should
+	// be increased in this epoch, for each staking coin denom.
+	// It maps staking coin denom to unit rewards.
+	unitRewardsByDenom := map[string]sdk.DecCoins{}
 
-	for _, allocInfo := range k.AllocationInfos(ctx) {
-		totalWeight := sdk.ZeroDec()
-		for _, weight := range allocInfo.Plan.GetStakingCoinWeights() {
-			totalWeight = totalWeight.Add(weight.Amount)
-		}
+	// Get allocation information first.
+	allocInfos := k.AllocationInfos(ctx)
 
+	for _, allocInfo := range allocInfos {
 		totalAllocCoins := sdk.NewCoins()
+
+		// Calculate how many coins are allocated based on each staking coin weight.
+		// It is calculated with the following formula:
+		// (unit rewards for this epoch) = (weighted rewards for the denom) / (total staking amount for the denom)
 		for _, weight := range allocInfo.Plan.GetStakingCoinWeights() {
+			// Check if there are any coins staked for this denom.
+			// If not, skip this denom for rewards allocation.
 			totalStakings, found := k.GetTotalStakings(ctx, weight.Denom)
 			if !found {
 				continue
 			}
-			if !totalStakings.Amount.IsPositive() {
-				continue
-			}
 
-			weightProportion := weight.Amount.QuoTruncate(totalWeight)
-			allocCoins, _ := sdk.NewDecCoinsFromCoins(allocInfo.Amount...).MulDecTruncate(weightProportion).TruncateDecimal()
+			allocCoins, _ := sdk.NewDecCoinsFromCoins(allocInfo.Amount...).MulDecTruncate(weight.Amount).TruncateDecimal()
 			allocCoinsDec := sdk.NewDecCoinsFromCoins(allocCoins...)
 
+			// Multiple plans can have same denom in their staking coin weights,
+			// so we accumulate all unit rewards for this denom in the table.
 			unitRewardsByDenom[weight.Denom] = unitRewardsByDenom[weight.Denom].Add(allocCoinsDec.QuoDecTruncate(totalStakings.Amount.ToDec())...)
 
 			k.IncreaseOutstandingRewards(ctx, weight.Denom, allocCoinsDec)
@@ -406,6 +431,8 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			totalAllocCoins = totalAllocCoins.Add(allocCoins...)
 		}
 
+		// If total allocated amount for this plan is zero, then skip allocation
+		// for this plan.
 		if totalAllocCoins.IsZero() {
 			continue
 		}
@@ -429,6 +456,8 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 		})
 	}
 
+	// For each staking coin denom in the table, increase cumulative unit rewards
+	// and increment current epoch number by 1.
 	for stakingCoinDenom, unitRewards := range unitRewardsByDenom {
 		currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
 		historical, _ := k.GetHistoricalRewards(ctx, stakingCoinDenom, currentEpoch-1)

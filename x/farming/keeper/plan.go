@@ -140,11 +140,6 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 	nextId := k.GetNextPlanIdWithUpdate(ctx)
 	if typ == types.PlanTypePrivate {
 		params := k.GetParams(ctx)
-		balances := k.bankKeeper.GetAllBalances(ctx, msg.GetCreator())
-		diffs, hasNeg := balances.SafeSub(params.PrivatePlanCreationFee)
-		if hasNeg {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "lack of %s coins to pay private plan creation fee", diffs.String())
-		}
 
 		farmingFeeCollectorAcc, err := sdk.AccAddressFromBech32(params.FarmingFeeCollector)
 		if err != nil {
@@ -152,7 +147,7 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 		}
 
 		if err := k.bankKeeper.SendCoins(ctx, msg.GetCreator(), farmingFeeCollectorAcc, params.PrivatePlanCreationFee); err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(err, "failed to pay private plan creation fee")
 		}
 	}
 
@@ -191,11 +186,6 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 	nextId := k.GetNextPlanIdWithUpdate(ctx)
 	if typ == types.PlanTypePrivate {
 		params := k.GetParams(ctx)
-		balances := k.bankKeeper.GetAllBalances(ctx, msg.GetCreator())
-		diffs, hasNeg := balances.SafeSub(params.PrivatePlanCreationFee)
-		if hasNeg {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "lack of %s coins to pay private plan createion fee", diffs.String())
-		}
 
 		farmingFeeCollectorAcc, err := sdk.AccAddressFromBech32(params.FarmingFeeCollector)
 		if err != nil {
@@ -203,7 +193,7 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		}
 
 		if err := k.bankKeeper.SendCoins(ctx, msg.GetCreator(), farmingFeeCollectorAcc, params.PrivatePlanCreationFee); err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(err, "failed to pay private plan creation fee")
 		}
 	}
 

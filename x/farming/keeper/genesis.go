@@ -19,8 +19,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	k.SetParams(ctx, genState.Params)
 	k.SetCurrentEpochDays(ctx, genState.CurrentEpochDays)
-	moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	if addr := k.accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
 
 	for i, record := range genState.PlanRecords {
 		plan, err := types.UnpackPlan(&record.Plan)
