@@ -96,6 +96,10 @@ func (k Keeper) ModifyPublicPlanProposal(ctx sdk.Context, proposals []types.Modi
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "plan %d is not found", p.GetPlanId())
 		}
 
+		if plan.GetType() != types.PlanTypePublic {
+			return sdkerrors.Wrapf(types.ErrInvalidPlanType, "plan %d is not a public plan", p.GetPlanId())
+		}
+
 		if p.GetName() != "" {
 			if err := plan.SetName(p.GetName()); err != nil {
 				return err
@@ -167,6 +171,10 @@ func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []types.Dele
 		plan, found := k.GetPlan(ctx, p.GetPlanId())
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "plan %d is not found", p.GetPlanId())
+		}
+
+		if plan.GetType() != types.PlanTypePublic {
+			return sdkerrors.Wrapf(types.ErrInvalidPlanType, "plan %d is not a public plan", p.GetPlanId())
 		}
 
 		if err := k.TerminatePlan(ctx, plan); err != nil {

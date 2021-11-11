@@ -23,7 +23,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-
 	for i, record := range genState.PlanRecords {
 		plan, err := types.UnpackPlan(&record.Plan)
 		if err != nil {
