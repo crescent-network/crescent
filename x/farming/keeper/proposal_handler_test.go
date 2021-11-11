@@ -161,6 +161,17 @@ func (suite *KeeperTestSuite) TestModifyPlanRequest() {
 	ratioPlan, ok := plan.(*types.RatioPlan)
 	suite.Require().True(ok)
 	suite.Require().True(decEq(sdk.MustNewDecFromStr("0.05"), ratioPlan.EpochRatio))
+
+	// Test for private plan cannot be modified.
+	err = plan.SetType(types.PlanTypePrivate)
+	suite.Require().NoError(err)
+	suite.Require().Equal(plan.GetType(), types.PlanTypePrivate)
+	suite.keeper.SetPlan(suite.ctx, plan)
+
+	req = testModifyPlanRequest(1, "", "", "", "", "", "", "", "0.1")
+	proposal = types.NewPublicPlanProposal("title", "description", nil, []types.ModifyPlanRequest{req}, nil)
+	err = suite.govHandler(suite.ctx, proposal)
+	suite.Require().ErrorIs(err, types.ErrInvalidPlanType, "plan 2 is not a public plan: invalid plan type")
 }
 
 func (suite *KeeperTestSuite) TestDeletePlanRequest() {
@@ -172,6 +183,20 @@ func (suite *KeeperTestSuite) TestDeletePlanRequest() {
 
 	plans := suite.keeper.GetPlans(suite.ctx)
 	suite.Require().Empty(plans)
+
+	// Test for private plan cannot be deleted.
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+	plans = suite.keeper.GetPlans(suite.ctx)
+	suite.Require().Equal(plans[0].GetId(), uint64(2))
+
+	err = plans[0].SetType(types.PlanTypePrivate)
+	suite.Require().NoError(err)
+	suite.Require().Equal(plans[0].GetType(), types.PlanTypePrivate)
+	suite.keeper.SetPlan(suite.ctx, plans[0])
+
+	proposal = types.NewPublicPlanProposal("title", "description", nil, nil, []types.DeletePlanRequest{{PlanId: 2}})
+	err = suite.govHandler(suite.ctx, proposal)
+	suite.Require().ErrorIs(err, types.ErrInvalidPlanType, "plan 2 is not a public plan: invalid plan type")
 }
 
 func (suite *KeeperTestSuite) TestWithdrawRewardsAfterPlanDeleted() {
