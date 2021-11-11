@@ -421,8 +421,7 @@ func (suite *KeeperTestSuite) TestGRPCRewards() {
 			nil,
 		},
 	} {
-		cacheCtx, _ := suite.ctx.CacheContext() // TODO: can we omit the 'cached' context?
-		resp, err := suite.querier.Rewards(sdk.WrapSDKContext(cacheCtx), tc.req)
+		resp, err := suite.querier.Rewards(sdk.WrapSDKContext(suite.ctx), tc.req)
 		if tc.expectErr {
 			suite.Require().Error(err)
 		} else {

@@ -179,8 +179,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanAllBalances() {
 	suite.Require().NoError(err)
 
 	// The sum of epoch ratios is exactly 1.
-	suite.SetFixedAmountPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, map[string]int64{denom3: 600000})
-	suite.SetFixedAmountPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, map[string]int64{denom3: 400000})
+	suite.CreateFixedAmountPlan(farmingPoolAcc, map[string]string{denom1: "1"}, map[string]int64{denom3: 600000})
+	suite.CreateFixedAmountPlan(farmingPoolAcc, map[string]string{denom2: "1"}, map[string]int64{denom3: 400000})
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
@@ -197,8 +197,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanAllBalances() {
 	suite.Require().NoError(err)
 
 	// The sum of epoch ratios is exactly 1.
-	suite.SetRatioPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, "0.5")
-	suite.SetRatioPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, "0.5")
+	suite.CreateRatioPlan(farmingPoolAcc, map[string]string{denom1: "1"}, "0.5")
+	suite.CreateRatioPlan(farmingPoolAcc, map[string]string{denom2: "1"}, "0.5")
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
@@ -216,8 +216,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanOverBalances() 
 
 	// The sum of epoch amounts is over the balances the farming pool has,
 	// so the reward allocation should never happen.
-	suite.SetFixedAmountPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, map[string]int64{denom3: 700000})
-	suite.SetFixedAmountPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, map[string]int64{denom3: 400000})
+	suite.CreateFixedAmountPlan(farmingPoolAcc, map[string]string{denom1: "1"}, map[string]int64{denom3: 700000})
+	suite.CreateFixedAmountPlan(farmingPoolAcc, map[string]string{denom2: "1"}, map[string]int64{denom3: 400000})
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
@@ -234,8 +234,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanOverBalances() {
 	suite.Require().NoError(err)
 
 	// The sum of epoch ratios is over 1, so the reward allocation should never happen.
-	suite.SetRatioPlan(1, farmingPoolAcc, map[string]string{denom1: "1.0"}, "0.8")
-	suite.SetRatioPlan(2, farmingPoolAcc, map[string]string{denom2: "1.0"}, "0.5")
+	suite.CreateRatioPlan(farmingPoolAcc, map[string]string{denom1: "1"}, "0.8")
+	suite.CreateRatioPlan(farmingPoolAcc, map[string]string{denom2: "1"}, "0.5")
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
@@ -250,11 +250,7 @@ func (suite *KeeperTestSuite) TestOutstandingRewards() {
 	// The block time here is not important, and has chosen randomly.
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-09-01T00:00:00Z"))
 
-	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{
-		denom1: "1",
-	}, map[string]int64{
-		denom3: 1000,
-	})
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000})
 
 	// Three farmers stake same amount of coins.
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
@@ -311,15 +307,31 @@ func (suite *KeeperTestSuite) TestHarvest() {
 }
 
 func (suite *KeeperTestSuite) TestMultipleHarvest() {
-	// TODO: implement
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Harvest(suite.addrs[0], []string{denom1})
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	delta := balancesAfter.Sub(balancesBefore)
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), delta))
+
+	balancesBefore = balancesAfter
+	suite.Harvest(suite.addrs[0], []string{denom1})
+	balancesAfter = suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(balancesBefore, balancesAfter))
 }
 
 func (suite *KeeperTestSuite) TestHistoricalRewards() {
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-06T00:00:00Z"))
 
 	// Create two plans that share same staking coin denom in their staking coin weights.
-	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
-	suite.SetFixedAmountPlan(2, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 
 	// Advancing epoch(s) before any staking is made doesn't create any historical rewards records.
 	suite.AdvanceEpoch()
@@ -347,12 +359,69 @@ func (suite *KeeperTestSuite) TestHistoricalRewards() {
 		count++
 		return false
 	})
-	suite.Require().Equal(count, 3)
+	suite.Require().Equal(4, count)
 
 	// Next, check if cumulative unit rewards is correct.
-	for i := uint64(0); i < 3; i++ {
+	for i := uint64(1); i <= 3; i++ {
 		historical, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, i)
 		suite.Require().True(found)
-		suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, int64((i+1)*2))), historical.CumulativeUnitRewards))
+		suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, int64(i*2))), historical.CumulativeUnitRewards))
 	}
+}
+
+// Test if initialization and pruning of staking coin info work properly.
+func (suite *KeeperTestSuite) TestInitializeAndPruneStakingCoinInfo() {
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	suite.Require().Equal(uint64(0), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	_, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 0)
+	suite.Require().False(found)
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().False(found)
+	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().False(found)
+
+	suite.AdvanceEpoch()
+
+	suite.Require().Equal(uint64(1), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	historical, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 0)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.DecCoins{}, historical.CumulativeUnitRewards))
+	outstanding, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.DecCoins{}, outstanding.Rewards))
+
+	suite.AdvanceEpoch()
+
+	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	historical, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1)), historical.CumulativeUnitRewards))
+	outstanding, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(decCoinsEq(sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1000000)), outstanding.Rewards))
+	// Historical rewards for epoch 2 must not be present at this point,
+	// since current epoch is 2, and it has not ended yet.
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 2)
+	suite.Require().False(found)
+
+	// Unstake most of the coins. This should not delete any info
+	// about the staking coin yet.
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 999999)))
+	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().True(found)
+	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().True(found)
+
+	// Now unstake the rest of the coins. This should delete info
+	// about the staking coin.
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1)))
+	suite.Require().Equal(uint64(0), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
+	suite.Require().False(found)
+	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
+	suite.Require().False(found)
 }

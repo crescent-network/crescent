@@ -1,15 +1,15 @@
 ---
 Title: REST APIs
-Description: A high-level overview of gRPC-gateway REST Routes in farming module.
+Description: A high-level overview of gRPC-gateway REST routes in farming module.
 ---
 
 ## Swagger Documentation
 
-- [Swagger Docs v0.1.3](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.3)
+- Swagger Cosmos SDK Farming Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/0.1.3)
 
 ## gRPC-gateway REST Routes
 
-In order to test out the following REST routes, you need to set up a local node to query from. You can refer to this [localnet tutorial](../../Tutorials/localnet) on how to build `farmingd` binary and bootstrap a local network in your local machine.
+In order to test out the following REST routes, set up a local node to query from. See the [localnet tutorial](../../Tutorials/localnet) on how to build the `farmingd` binary and bootstrap a local network in your local machine.
 
 - [Params](#Params)
 - [Plans](#Plans)
@@ -21,7 +21,7 @@ In order to test out the following REST routes, you need to set up a local node 
 
 ### Params
 
-Query the values set as farming parameters
+Query the values set as farming parameters:
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/params
 
@@ -42,7 +42,7 @@ http://localhost:1317/cosmos/farming/v1beta1/params
 
 ### Plans
 
-Query all the farming plans exist in the network
+Query all the farming plans exist in the network:
 
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/plans
@@ -91,7 +91,7 @@ http://localhost:1317/cosmos/farming/v1beta1/plans
 
 ### Plan
 
-Query a particular plan 
+Query a particular plan:
 
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/plans/1
@@ -134,7 +134,7 @@ http://localhost:1317/cosmos/farming/v1beta1/plans/1
 
 ### Stakings
 
-Query for all stakings by a farmer 
+Query for all stakings by a farmer: 
 
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
@@ -171,7 +171,7 @@ http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qa
 ```
 ### TotalStakings
 
-Query for total stakings by a staking coin denom 
+Query for total stakings by a staking coin denom: 
 
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/total_stakings/poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 
@@ -184,7 +184,7 @@ http://localhost:1317/cosmos/farming/v1beta1/total_stakings/poolD35A0CC16EE598F9
 
 ### Rewards
 
-Query for all rewards by a farmer 
+Query for all rewards by a farmer:
 
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
@@ -201,7 +201,7 @@ http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qad
 ```
 
 
-Query for all rewards by a farmer with the staking coin denom
+Query for all rewards by a farmer with the staking coin denom:
 
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny?staking_coin_denom=poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
@@ -219,7 +219,7 @@ http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qad
 
 ### CurrentEpochDays
 
-Query for the current epoch days
+Query for the current epoch days:
 
 <!-- markdown-link-check-disable-next-line -->
 http://localhost:1317/cosmos/farming/v1beta1/current_epoch_days

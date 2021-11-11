@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/tendermint/farming/app"
+	"github.com/tendermint/farming/x/farming"
 	"github.com/tendermint/farming/x/farming/keeper"
 	"github.com/tendermint/farming/x/farming/types"
 )
@@ -35,6 +37,7 @@ type KeeperTestSuite struct {
 	ctx                 sdk.Context
 	keeper              keeper.Keeper
 	querier             keeper.Querier
+	govHandler          govtypes.Handler
 	addrs               []sdk.AccAddress
 	sampleFixedAmtPlans []types.PlanI
 	sampleRatioPlans    []types.PlanI
@@ -53,6 +56,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx
 	suite.keeper = suite.app.FarmingKeeper
 	suite.querier = keeper.Querier{Keeper: suite.keeper}
+	suite.govHandler = farming.NewPublicPlanProposalHandler(suite.keeper)
 	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
 	for _, addr := range suite.addrs {
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
@@ -127,6 +131,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.samplePlans = append(suite.sampleFixedAmtPlans, suite.sampleRatioPlans...)
 }
 
+func (suite *KeeperTestSuite) AddTestAddrs(num int, coins sdk.Coins) []sdk.AccAddress {
+	addrs := simapp.AddTestAddrs(suite.app, suite.ctx, num, sdk.ZeroInt())
+	for _, addr := range addrs {
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
+		suite.Require().NoError(err)
+	}
+	return addrs
+}
+
 // Stake is a convenient method to test Keeper.Stake.
 func (suite *KeeperTestSuite) Stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
 	err := suite.keeper.Stake(suite.ctx, farmerAcc, amt)
@@ -153,7 +166,7 @@ func (suite *KeeperTestSuite) AdvanceEpoch() {
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) SetFixedAmountPlan(id uint64, farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {
+func (suite *KeeperTestSuite) CreateFixedAmountPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {
 	stakingCoinWeights := sdk.NewDecCoins()
 	for denom, weight := range stakingCoinWeightsMap {
 		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
@@ -164,21 +177,19 @@ func (suite *KeeperTestSuite) SetFixedAmountPlan(id uint64, farmingPoolAcc sdk.A
 		epochAmount = epochAmount.Add(sdk.NewInt64Coin(denom, amount))
 	}
 
-	suite.keeper.SetPlan(suite.ctx, types.NewFixedAmountPlan(
-		types.NewBasePlan(
-			id,
-			fmt.Sprintf("plan%d", id),
-			types.PlanTypePublic,
-			farmingPoolAcc.String(),
-			farmingPoolAcc.String(),
-			stakingCoinWeights,
-			types.ParseTime("0001-01-01T00:00:00Z"),
-			types.ParseTime("9999-12-31T00:00:00Z"),
-		), epochAmount,
-	))
+	msg := types.NewMsgCreateFixedAmountPlan(
+		fmt.Sprintf("plan%d", suite.keeper.GetGlobalPlanId(suite.ctx)+1),
+		farmingPoolAcc,
+		stakingCoinWeights,
+		types.ParseTime("0001-01-01T00:00:00Z"),
+		types.ParseTime("9999-12-31T00:00:00Z"),
+		epochAmount,
+	)
+	_, err := suite.keeper.CreateFixedAmountPlan(suite.ctx, msg, farmingPoolAcc, farmingPoolAcc, types.PlanTypePublic)
+	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) SetRatioPlan(id uint64, farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochRatioStr string) {
+func (suite *KeeperTestSuite) CreateRatioPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochRatioStr string) {
 	stakingCoinWeights := sdk.NewDecCoins()
 	for denom, weight := range stakingCoinWeightsMap {
 		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
@@ -186,21 +197,23 @@ func (suite *KeeperTestSuite) SetRatioPlan(id uint64, farmingPoolAcc sdk.AccAddr
 
 	epochRatio := sdk.MustNewDecFromStr(epochRatioStr)
 
-	suite.keeper.SetPlan(suite.ctx, types.NewRatioPlan(
-		types.NewBasePlan(
-			id,
-			fmt.Sprintf("plan%d", id),
-			types.PlanTypePublic,
-			farmingPoolAcc.String(),
-			farmingPoolAcc.String(),
-			stakingCoinWeights,
-			types.ParseTime("0001-01-01T00:00:00Z"),
-			types.ParseTime("9999-12-31T00:00:00Z"),
-		), epochRatio,
-	))
+	msg := types.NewMsgCreateRatioPlan(
+		fmt.Sprintf("plan%d", suite.keeper.GetGlobalPlanId(suite.ctx)+1),
+		farmingPoolAcc,
+		stakingCoinWeights,
+		types.ParseTime("0001-01-01T00:00:00Z"),
+		types.ParseTime("9999-12-31T00:00:00Z"),
+		epochRatio,
+	)
+	_, err := suite.keeper.CreateRatioPlan(suite.ctx, msg, farmingPoolAcc, farmingPoolAcc, types.PlanTypePublic)
+	suite.Require().NoError(err)
 }
 
 func intEq(exp, got sdk.Int) (bool, string, string, string) {
+	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func decEq(exp, got sdk.Dec) (bool, string, string, string) {
 	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 

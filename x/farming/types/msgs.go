@@ -92,7 +92,7 @@ func (msg MsgCreateFixedAmountPlan) GetCreator() sdk.AccAddress {
 // NewMsgCreateRatioPlan creates a new MsgCreateRatioPlan.
 func NewMsgCreateRatioPlan(
 	name string,
-	CreatorAcc sdk.AccAddress,
+	creatorAcc sdk.AccAddress,
 	stakingCoinWeights sdk.DecCoins,
 	startTime time.Time,
 	endTime time.Time,
@@ -100,7 +100,7 @@ func NewMsgCreateRatioPlan(
 ) *MsgCreateRatioPlan {
 	return &MsgCreateRatioPlan{
 		Name:               name,
-		Creator:            CreatorAcc.String(),
+		Creator:            creatorAcc.String(),
 		StakingCoinWeights: stakingCoinWeights,
 		StartTime:          startTime,
 		EndTime:            endTime,

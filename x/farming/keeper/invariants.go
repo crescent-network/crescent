@@ -26,8 +26,6 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 		NonNegativeHistoricalRewardsInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "positive-total-stakings-amount",
 		PositiveTotalStakingsAmountInvariant(k))
-	ir.RegisterRoute(types.ModuleName, "plan-termination-status",
-		PlanTerminationStatusInvariant(k))
 }
 
 // AllInvariants runs all invariants of the farming module.
@@ -41,7 +39,6 @@ func AllInvariants(k Keeper) sdk.Invariant {
 			OutstandingRewardsAmountInvariant,
 			NonNegativeHistoricalRewardsInvariant,
 			PositiveTotalStakingsAmountInvariant,
-			PlanTerminationStatusInvariant,
 		} {
 			res, stop := inv(k)(ctx)
 			if stop {
@@ -199,29 +196,6 @@ func PositiveTotalStakingsAmountInvariant(k Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(
 			types.ModuleName, "positive total stakings amount",
 			fmt.Sprintf("found %d total stakings with non-positive amount\n%s", count, msg),
-		), broken
-	}
-}
-
-// PlanTerminationStatusInvariant checks that all plans that should have been
-// terminated have been terminated.
-func PlanTerminationStatusInvariant(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) (string, bool) {
-		msg := ""
-		count := 0
-		k.IteratePlans(ctx, func(plan types.PlanI) (stop bool) {
-			expected := ctx.BlockTime().After(plan.GetEndTime())
-			terminated := plan.GetTerminated()
-			if terminated != expected {
-				msg += fmt.Sprintf("\tplan %d should have been terminated but not\n", plan.GetId())
-				count++
-			}
-			return false
-		})
-		broken := count != 0
-		return sdk.FormatInvariant(
-			types.ModuleName, "plan termination status",
-			fmt.Sprintf("found %d plans have not been terminated\n%s", count, msg),
 		), broken
 	}
 }

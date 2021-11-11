@@ -45,7 +45,28 @@ func (suite *KeeperTestSuite) TestStake() {
 }
 
 func (suite *KeeperTestSuite) TestMultipleStake() {
-	// TODO: implement
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	suite.Require().True(coinsEq(
+		sdk.NewCoins(sdk.NewInt64Coin(denom1, 2000000)),
+		suite.keeper.GetAllQueuedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+	suite.Require().True(coinsEq(sdk.Coins{}, suite.keeper.GetAllStakedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+
+	suite.AdvanceEpoch()
+
+	suite.Require().True(coinsEq(
+		sdk.NewCoins(sdk.NewInt64Coin(denom1, 2000000)),
+		suite.keeper.GetAllStakedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+	suite.Require().True(coinsEq(sdk.Coins{}, suite.keeper.GetAllQueuedCoinsByFarmer(suite.ctx, suite.addrs[0])))
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	balanceBefore := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	balanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
+	suite.Require().True(intEq(balanceBefore.Amount, balanceAfter.Amount))
 }
 
 func (suite *KeeperTestSuite) TestStakeInAdvance() {
@@ -59,11 +80,7 @@ func (suite *KeeperTestSuite) TestStakeInAdvance() {
 	suite.AdvanceEpoch()
 	suite.AdvanceEpoch()
 
-	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{
-		denom1: "1.0",
-	}, map[string]int64{
-		denom3: 1000000,
-	})
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 	suite.Require().True(coinsEq(sdk.NewCoins(), suite.AllRewards(suite.addrs[0])))
 	suite.AdvanceEpoch()
 	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), suite.AllRewards(suite.addrs[0])))
@@ -184,7 +201,7 @@ func (suite *KeeperTestSuite) TestUnstakeNotAlwaysWithdraw() {
 	// Unstaking from queued staking coins should not trigger
 	// reward withdrawal.
 
-	suite.SetRatioPlan(1, suite.addrs[4], map[string]string{denom1: "1.0"}, "0.1")
+	suite.CreateRatioPlan(suite.addrs[4], map[string]string{denom1: "1"}, "0.1")
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 	suite.AdvanceEpoch()
@@ -203,7 +220,18 @@ func (suite *KeeperTestSuite) TestUnstakeNotAlwaysWithdraw() {
 }
 
 func (suite *KeeperTestSuite) TestMultipleUnstake() {
-	// TODO: implement
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 250000)))
+	balanceBefore := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 250000)))
+	balanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[0], denom3)
+	suite.Require().True(intEq(balanceBefore.Amount, balanceAfter.Amount))
 }
 
 func (suite *KeeperTestSuite) TestTotalStakings() {

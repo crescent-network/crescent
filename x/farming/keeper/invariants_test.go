@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) TestStakingReservedAmountInvariant() {
 func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 	k, ctx := suite.keeper, suite.ctx
 
-	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 	suite.AdvanceEpoch()
@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 
 	// Withdrawable rewards amount in the store > balance of rewards reserve acc.
 	// Should not be OK.
-	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+	k.SetHistoricalRewards(ctx, denom1, 2, types.HistoricalRewards{
 		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 3)),
 	})
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
@@ -141,14 +141,14 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 
 	// Withdrawable rewards amount in the store <= balance of rewards reserve acc.
 	// Should be OK.
-	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+	k.SetHistoricalRewards(ctx, denom1, 2, types.HistoricalRewards{
 		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 1)),
 	})
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
 
 	// Reset.
-	k.SetHistoricalRewards(ctx, denom1, 1, types.HistoricalRewards{
+	k.SetHistoricalRewards(ctx, denom1, 2, types.HistoricalRewards{
 		CumulativeUnitRewards: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom3, 2)),
 	})
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
@@ -203,7 +203,7 @@ func (suite *KeeperTestSuite) TestNonNegativeOutstandingRewardsInvariant() {
 func (suite *KeeperTestSuite) TestOutstandingRewardsAmountInvariant() {
 	k, ctx := suite.keeper, suite.ctx
 
-	suite.SetFixedAmountPlan(1, suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 	suite.AdvanceEpoch()
@@ -276,7 +276,20 @@ func (suite *KeeperTestSuite) TestNonNegativeHistoricalRewardsInvariant() {
 }
 
 func (suite *KeeperTestSuite) TestPositiveTotalStakingsAmountInvariant() {
-}
+	k, ctx := suite.keeper, suite.ctx
 
-func (suite *KeeperTestSuite) TestPlanTerminationStatusInvariant() {
+	// This is normal.
+	k.SetTotalStakings(ctx, denom1, types.TotalStakings{Amount: sdk.NewInt(1000000)})
+	_, broken := farmingkeeper.PositiveTotalStakingsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Zero-amount total stakings.
+	k.SetTotalStakings(ctx, denom1, types.TotalStakings{Amount: sdk.ZeroInt()})
+	_, broken = farmingkeeper.PositiveTotalStakingsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
+
+	// Negative-amount total stakings.
+	k.SetTotalStakings(ctx, denom1, types.TotalStakings{Amount: sdk.NewInt(-1)})
+	_, broken = farmingkeeper.PositiveTotalStakingsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
 }
