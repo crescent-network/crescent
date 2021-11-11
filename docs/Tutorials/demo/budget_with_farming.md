@@ -4,10 +4,7 @@
 
 - 2021.09.27: initial document
 - 2021.10.15: update farming, budget version
-
-## Disclaimer
-
-The [budget](https://github.com/tendermint/budget) and [farming](https://github.com/tendermint/farming) modules are in active development by the Gravity DEX team in Tendermint. This demo includes MVP versions of budget and farming modules meaning that it is not stable version. We are aware that there are a lot of rooms for improvements and there may be breaking changes along the way. We welcome any outside contributors to contribute to the modules and we are happy to receive any feedbacks or suggestions.
+- 2021.11.12: update farming, budget version to v1.0.0-rc1
 
 ## What does budget module do?
 
@@ -45,7 +42,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 ```bash
 # Clone the demo project and build `farmingd` for testing
-git clone -b v0.1.2 https://github.com/tendermint/farming.git
+git clone -b v1.0.0-rc1 https://github.com/tendermint/farming.git
 cd farming
 make install-testing
 ```
@@ -107,7 +104,11 @@ Create the `budget-proposal.json` file and copy the following JSON contents into
 
 In this demo, you create a budget plan that distributes partial amount of coins from the [FeeCollector module account](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/keys.go#L15) that collects gas fees and ATOM inflation in Cosmos Hub. This budget plan will be used for Gravity DEX farming plan to `GravityDEXFarmingBudget` account. 
 
-The `GravityDEXFarmingBudget` account is created using the following code snippet.
+The `GravityDEXFarmingBudget` account is derived using the following query or code snippet.
+```bash
+$BINARY query budget address GravityDEXFarmingBudget --module-name farming
+# > address: cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
+```
 
 ```go
 // cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky 
