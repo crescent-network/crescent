@@ -12,12 +12,12 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestAllocationInfos() {
-	normalPlans := []types.PlanI{
+	fixedAmountPlans := []types.PlanI{
 		types.NewFixedAmountPlan(
 			types.NewBasePlan(
 				1,
 				"",
-				types.PlanTypePrivate,
+				types.PlanTypePublic,
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			types.NewBasePlan(
 				2,
 				"",
-				types.PlanTypePrivate,
+				types.PlanTypePublic,
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			types.NewBasePlan(
 				3,
 				"",
-				types.PlanTypePrivate,
+				types.PlanTypePublic,
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			types.NewBasePlan(
 				4,
 				"",
-				types.PlanTypePrivate,
+				types.PlanTypePublic,
 				suite.addrs[0].String(),
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
@@ -65,6 +65,19 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			),
 			sdk.MustNewDecFromStr("0.6")),
 	}
+
+	hugeRatioPlan := types.NewRatioPlan(
+		types.NewBasePlan(
+			5,
+			"",
+			types.PlanTypePrivate,
+			suite.addrs[0].String(),
+			suite.addrs[0].String(),
+			sdk.NewDecCoins(sdk.NewDecCoinFromDec(denom1, sdk.NewDec(1))),
+			types.ParseTime("2021-07-27T12:00:00Z"),
+			types.ParseTime("2021-07-28T12:00:00Z"),
+		),
+		sdk.MustNewDecFromStr("0.999999"))
 
 	for _, tc := range []struct {
 		name      string
@@ -93,25 +106,25 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 		},
 		{
 			"start time & end time edgecase #1",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-26T23:59:59Z"),
 			nil,
 		},
 		{
 			"start time & end time edgecase #2",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-27T00:00:00Z"),
 			map[uint64]sdk.Coins{1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #3",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-27T11:59:59Z"),
 			map[uint64]sdk.Coins{1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #4",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-27T12:00:00Z"),
 			map[uint64]sdk.Coins{
 				1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)),
@@ -119,7 +132,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 		},
 		{
 			"start time & end time edgecase #5",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-27T23:59:59Z"),
 			map[uint64]sdk.Coins{
 				1: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000)),
@@ -127,19 +140,19 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 		},
 		{
 			"start time & end time edgecase #6",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-28T00:00:00Z"),
 			map[uint64]sdk.Coins{2: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #7",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-28T11:59:59Z"),
 			map[uint64]sdk.Coins{2: sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000))},
 		},
 		{
 			"start time & end time edgecase #8",
-			normalPlans,
+			fixedAmountPlans,
 			types.ParseTime("2021-07-28T12:00:00Z"),
 			nil,
 		},
@@ -165,8 +178,23 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 				4: sdk.NewCoins(sdk.NewInt64Coin(denom1, 600000000), sdk.NewInt64Coin(denom2, 600000000),
 					sdk.NewInt64Coin(denom3, 600000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 600000000))},
 		},
+		{
+			"test case for fixed plans with a ratio plan over balance #1",
+			append(fixedAmountPlans, hugeRatioPlan),
+			types.ParseTime("2021-07-27T12:00:00Z"),
+			nil,
+		},
+		{
+			"test case for fixed plans with a ratio plan over balance #2",
+			append([]types.PlanI{hugeRatioPlan}, fixedAmountPlans...),
+			types.ParseTime("2021-07-27T12:00:00Z"),
+			nil,
+		},
 	} {
 		suite.Run(tc.name, func() {
+			for _, plan := range suite.keeper.GetPlans(suite.ctx) {
+				suite.keeper.RemovePlan(suite.ctx, plan)
+			}
 			for _, plan := range tc.plans {
 				suite.keeper.SetPlan(suite.ctx, plan)
 			}
