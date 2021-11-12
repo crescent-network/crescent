@@ -32,6 +32,7 @@ Types of changes (Stanzas):
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
+<!-- markdown-link-check-disable -->
 
 # Changelog
 
