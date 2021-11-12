@@ -4,10 +4,7 @@
 
 - 2021.09.27: initial document
 - 2021.10.15: update farming, budget version
-
-## Disclaimer
-
-The [budget](https://github.com/tendermint/budget) and [farming](https://github.com/tendermint/farming) modules are in active development by the Gravity DEX team in Tendermint. This demo includes MVP versions of budget and farming modules meaning that it is not stable version. We are aware that there are a lot of rooms for improvements and there may be breaking changes along the way. We welcome any outside contributors to contribute to the modules and we are happy to receive any feedbacks or suggestions.
+- 2021.11.12: update farming, budget version to v1.0.0-rc1
 
 ## What does budget module do?
 
@@ -29,7 +26,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 - [x/budget spec docs](https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md)
 - Audit-ready [demo version](https://github.com/tendermint/budget/releases)
 - Other useful resources are available in the [budget docs](https://github.com/tendermint/budget/blob/main/docs) folder
-- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/)
+- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs v1.0.0](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/1.0.0)
 
 **Farming module**
 
@@ -37,7 +34,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 - [x/farming spec docs](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md)
 - Audit-ready [demo version](https://github.com/tendermint/farming/releases)
 - Other useful resources are available in the [farming docs](https://github.com/tendermint/farming/blob/main/docs) folder
-- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/)    
+- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs v1.0.0](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/1.0.0)
 
 ## Demo
 
@@ -45,7 +42,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 ```bash
 # Clone the demo project and build `farmingd` for testing
-git clone -b v0.1.2 https://github.com/tendermint/farming.git
+git clone -b v1.0.0-rc1 https://github.com/tendermint/farming.git
 cd farming
 make install-testing
 ```
@@ -107,10 +104,14 @@ Create the `budget-proposal.json` file and copy the following JSON contents into
 
 In this demo, you create a budget plan that distributes partial amount of coins from the [FeeCollector module account](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/keys.go#L15) that collects gas fees and ATOM inflation in Cosmos Hub. This budget plan will be used for Gravity DEX farming plan to `GravityDEXFarmingBudget` account. 
 
-The `GravityDEXFarmingBudget` account is created using the following code snippet.
+The `GravityDEXFarmingBudget` account is derived using the following query or code snippet.
+```bash
+$BINARY query budget address GravityDEXFarmingBudget --module-name farming
+# > address: cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
+```
 
 ```go
-// cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky 
+// cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
 sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
 ```
 
@@ -138,8 +139,8 @@ Use the following values for the fields:
         {
           "name": "gravity-dex-farming-20213Q-20313Q",
           "rate": "0.500000000000000000",
-          "budget_source_address": "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta",
-          "collection_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
+          "source_address": "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta",
+          "destination_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
           "start_time": "2021-09-01T00:00:00Z",
           "end_time": "2031-09-30T00:00:00Z"
         }
@@ -507,7 +508,7 @@ farmingd tx farming stake 5000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC1
 farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
-# Increase epoch by 1 again to distribute rewards
+# Increase epoch by 2 again to distribute rewards
 farmingd tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \

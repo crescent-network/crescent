@@ -69,9 +69,20 @@ $BINARY start
 
 # Public Farming Plan
 
+The `cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v` address for `farming_pool_address` is derived using the following query or code snippet.
+```bash
+$BINARY query budget address GravityDEXFarmingBudget --module-name farming
+# > address: cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
+```
+
+```go
+// cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
+sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
+```
+
 ## AddPublicFarmingFixedAmountPlan
 
-Create `public-fixed-plan-proposal.json` file in your local directory and copy the below JSON into a file. To explain about what this public plan does is that i want to create a public fixed amount plan that provides `100000000uatom` as incentives for those who stake the denoms of `poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4` and `uatom` defined in `staking_coin_weights`. 
+Create `public-fixed-plan-proposal.json` file in your local directory and copy the below JSON into a file. To explain about what this public plan does is that i want to create a public fixed amount plan that provides `100000000uatom` as incentives for those who stake the denoms of `poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4` and `uatom` defined in `staking_coin_weights`.
 
 ```json
 {
