@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#216](https://github.com/tendermint/farming/pull/216) test: add tests for gov proposal
 * [\#225](https://github.com/tendermint/farming/pull/225) fix: add plan type validation for public plan proposal
 * [\#206](https://github.com/tendermint/farming/pull/206) build: bump cosmos-sdk version to v0.44.3
+* [\#228](https://github.com/tendermint/farming/pull/228) test: add test cases for reward allocation of ratio plan
 
 ## [v0.1.2](https://github.com/tendermint/farming/releases/tag/v0.1.2) - 2021-10-18
 

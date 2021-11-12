@@ -26,7 +26,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 - [x/budget spec docs](https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md)
 - Audit-ready [demo version](https://github.com/tendermint/budget/releases)
 - Other useful resources are available in the [budget docs](https://github.com/tendermint/budget/blob/main/docs) folder
-- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/)
+- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs v1.0.0](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/1.0.0)
 
 **Farming module**
 
@@ -34,7 +34,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 - [x/farming spec docs](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md)
 - Audit-ready [demo version](https://github.com/tendermint/farming/releases)
 - Other useful resources are available in the [farming docs](https://github.com/tendermint/farming/blob/main/docs) folder
-- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/)    
+- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs v1.0.0](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/1.0.0)
 
 ## Demo
 
@@ -111,7 +111,7 @@ $BINARY query budget address GravityDEXFarmingBudget --module-name farming
 ```
 
 ```go
-// cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky 
+// cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
 sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
 ```
 
@@ -139,8 +139,8 @@ Use the following values for the fields:
         {
           "name": "gravity-dex-farming-20213Q-20313Q",
           "rate": "0.500000000000000000",
-          "budget_source_address": "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta",
-          "collection_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
+          "source_address": "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta",
+          "destination_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
           "start_time": "2021-09-01T00:00:00Z",
           "end_time": "2031-09-30T00:00:00Z"
         }
@@ -508,7 +508,7 @@ farmingd tx farming stake 5000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC1
 farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
-# Increase epoch by 1 again to distribute rewards
+# Increase epoch by 2 again to distribute rewards
 farmingd tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \
