@@ -21,7 +21,7 @@ A public farming plan can be created only through governance proposal.
 
 A private farming plan can be created with any account. 
 
-- The account address of the plan creator account is used as the `TerminationAddress`. 
+- The account address of the plan creator account is used as the `TerminationAddress`, when the plan ends after the end time, the balance of the farming pool address is transferred to the termination address.
 - To prevent spamming attacks, the `PlanCreationFee` fee must be paid on plan creation. 
 - Internally, the private plan's farming pool address is derived from the following derivation rule of `address.Module(ModuleName, []byte("PrivatePlan|{planId}|{planName}"))` and it is assigned to the plan. 
 - After creation, need to query the plan and send the amount of coins to the farming pool address so that the plan distributes as intended.
