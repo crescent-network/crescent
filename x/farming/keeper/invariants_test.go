@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestStakingReservedAmountInvariant() {
 	// Send coins into the staking reserve acc.
 	// Staking amount in the store <= balance of staking reserve acc. This should be OK.
 	err := suite.app.BankKeeper.SendCoins(
-		ctx, suite.addrs[1], k.GetStakingReservePoolAcc(ctx), sdk.NewCoins(sdk.NewInt64Coin(denom1, 1)))
+		ctx, suite.addrs[1], types.StakingReserveAcc(denom1), sdk.NewCoins(sdk.NewInt64Coin(denom1, 1)))
 	suite.Require().NoError(err)
 	_, broken = farmingkeeper.StakingReservedAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestStakingReservedAmountInvariant() {
 	// Send coins from staking reserve acc to another acc.
 	// Staking amount in the store < balance of staking reserve acc. This shouldn't be OK.
 	err = suite.app.BankKeeper.SendCoins(
-		ctx, k.GetStakingReservePoolAcc(ctx), suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 2)))
+		ctx, types.StakingReserveAcc(denom1), suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 2)))
 	suite.Require().NoError(err)
 	_, broken = farmingkeeper.StakingReservedAmountInvariant(k)(ctx)
 	suite.Require().True(broken)

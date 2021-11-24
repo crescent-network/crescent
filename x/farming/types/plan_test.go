@@ -485,12 +485,12 @@ func TestTotalEpochRatio(t *testing.T) {
 	}
 }
 
-func TestPrivatePlanFarmingPoolAddress(t *testing.T) {
-	testAcc1 := types.PrivatePlanFarmingPoolAddress("test1", 55)
+func TestPrivatePlanFarmingPoolAcc(t *testing.T) {
+	testAcc1 := types.PrivatePlanFarmingPoolAcc("test1", 55)
 	require.Equal(t, testAcc1, sdk.AccAddress(address.Module(types.ModuleName, []byte("PrivatePlan|55|test1"))))
 	require.Equal(t, "cosmos1wce0qjwacezxz42ghqwp6aqvxjt7mu80jywhh09zv2fdv8s4595qk7tzqc", testAcc1.String())
 
-	testAcc2 := types.PrivatePlanFarmingPoolAddress("test2", 1)
+	testAcc2 := types.PrivatePlanFarmingPoolAcc("test2", 1)
 	require.Equal(t, testAcc2, sdk.AccAddress(address.Module(types.ModuleName, []byte("PrivatePlan|1|test2"))))
 	require.Equal(t, "cosmos172yhzhxwgwul3s8m6qpgw2ww3auedq4k3dt224543d0sd44fgx4spcjthr", testAcc2.String())
 }
@@ -502,7 +502,7 @@ func TestUnpackPlan(t *testing.T) {
 				1,
 				"testPlan1",
 				types.PlanTypePrivate,
-				types.PrivatePlanFarmingPoolAddress("farmingPoolAddr1", 1).String(),
+				types.PrivatePlanFarmingPoolAcc("farmingPoolAddr1", 1).String(),
 				sdk.AccAddress("terminationAddr1").String(),
 				sdk.NewDecCoins(sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")}),
 				types.ParseTime("2021-08-03T00:00:00Z"),
@@ -541,7 +541,7 @@ func TestUnpackPlanJSON(t *testing.T) {
 			1,
 			"testPlan1",
 			types.PlanTypePrivate,
-			types.PrivatePlanFarmingPoolAddress("farmingPoolAddr1", 1).String(),
+			types.PrivatePlanFarmingPoolAcc("farmingPoolAddr1", 1).String(),
 			sdk.AccAddress("terminationAddr1").String(),
 			sdk.NewDecCoins(sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")}),
 			types.ParseTime("2021-08-03T00:00:00Z"),
@@ -567,4 +567,25 @@ func TestUnpackPlanJSON(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(1), plan2.GetId())
+}
+
+func TestStakingReserveAcc(t *testing.T) {
+	testCases := []struct {
+		stakingCoinDenom string
+		expectedAcc      string
+	}{
+		{
+			"uatom",
+			"cosmos1qxs9gxctmd637l7ckpc99kw6ax6thgxx5kshpgzc8kup675xp9dsank7up",
+		},
+		{
+			"stake",
+			"cosmos1jn5vt4c3xg38ud89xjl8aumlf3akgdpllmt986w5tj9lureh65dsvk5z3t",
+		},
+	}
+
+	for _, tc := range testCases {
+		acc := types.StakingReserveAcc(tc.stakingCoinDenom)
+		require.Equal(t, tc.expectedAcc, acc.String())
+	}
 }

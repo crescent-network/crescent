@@ -180,3 +180,13 @@ message OutstandingRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
+
+// AddressType enumerates the available types of a address.
+enum AddressType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // the 32 bytes length address type of ADR 028.
+  ADDRESS_TYPE_32_BYTES = 0 [(gogoproto.enumvalue_customname) = "AddressType32Bytes"];
+  // the default 20 bytes length address type.
+  ADDRESS_TYPE_20_BYTES = 1 [(gogoproto.enumvalue_customname) = "AddressType20Bytes"];
+}

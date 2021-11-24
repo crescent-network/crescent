@@ -140,13 +140,6 @@ func (suite *KeeperTestSuite) TestInitGenesisPanics() {
 			true,
 		},
 		{
-			"invalid staking reserve coins",
-			func(genState *types.GenesisState) {
-				genState.StakingReserveCoins = sdk.NewCoins(sdk.NewInt64Coin(denom1, 100))
-			},
-			true,
-		},
-		{
 			"invalid outstanding rewards records",
 			func(genState *types.GenesisState) {
 				genState.OutstandingRewardsRecords[0].OutstandingRewards.Rewards = genState.OutstandingRewardsRecords[0].OutstandingRewards.Rewards.Add(
@@ -294,6 +287,26 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 			},
 		},
 		{
+			"TotalStakingsRecords",
+			func() {
+				suite.Require().Len(genState.TotalStakingsRecords, 2)
+				for _, record := range genState.TotalStakingsRecords {
+					switch record.StakingCoinDenom {
+					case denom1:
+						suite.Require().True(intEq(record.Amount, sdk.NewInt(1500000)))
+						suite.Require().True(coinsEq(
+							sdk.NewCoins(sdk.NewInt64Coin(denom1, 5000000)),
+							record.StakingReserveCoins))
+					case denom2:
+						suite.Require().True(intEq(record.Amount, sdk.NewInt(1500000)))
+						suite.Require().True(coinsEq(
+							sdk.NewCoins(sdk.NewInt64Coin(denom2, 3000000)),
+							record.StakingReserveCoins))
+					}
+				}
+			},
+		},
+		{
 			"HistoricalRewards",
 			func() {
 				suite.Require().Len(genState.HistoricalRewardsRecords, 4)
@@ -303,7 +316,6 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 					case 0:
 						suite.Require().True(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
 					case 1:
-						// TODO: need to check actual value?
 						suite.Require().False(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
 					default:
 						panic(fmt.Sprintf("unexpected epoch %d", record.Epoch))
@@ -336,14 +348,6 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 				for _, record := range genState.CurrentEpochRecords {
 					suite.Require().Equal(uint64(2), record.CurrentEpoch)
 				}
-			},
-		},
-		{
-			"StakingReserveCoins",
-			func() {
-				suite.Require().True(coinsEq(
-					sdk.NewCoins(sdk.NewInt64Coin(denom1, 5000000), sdk.NewInt64Coin(denom2, 3000000)),
-					genState.StakingReserveCoins))
 			},
 		},
 		{

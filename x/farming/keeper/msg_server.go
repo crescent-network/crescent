@@ -29,7 +29,7 @@ var _ types.MsgServer = msgServer{}
 // CreateFixedAmountPlan defines a method for creating fixed amount farming plan.
 func (k msgServer) CreateFixedAmountPlan(goCtx context.Context, msg *types.MsgCreateFixedAmountPlan) (*types.MsgCreateFixedAmountPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	poolAcc, err := k.GeneratePrivatePlanFarmingPoolAddress(ctx, msg.Name)
+	poolAcc, err := k.DerivePrivatePlanFarmingPoolAcc(ctx, msg.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (k msgServer) CreateFixedAmountPlan(goCtx context.Context, msg *types.MsgCr
 // CreateRatioPlan defines a method for creating ratio farming plan.
 func (k msgServer) CreateRatioPlan(goCtx context.Context, msg *types.MsgCreateRatioPlan) (*types.MsgCreateRatioPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	poolAcc, err := k.GeneratePrivatePlanFarmingPoolAddress(ctx, msg.Name)
+	poolAcc, err := k.DerivePrivatePlanFarmingPoolAcc(ctx, msg.Name)
 	if err != nil {
 		return nil, err
 	}

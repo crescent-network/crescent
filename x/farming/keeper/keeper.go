@@ -88,11 +88,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 // GetCodec returns codec.Codec object used by the keeper>
 func (k Keeper) GetCodec() codec.BinaryCodec { return k.cdc }
 
-// GetStakingReservePoolAcc returns module account for the staking reserve pool account.
-func (k Keeper) GetStakingReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
-	return types.StakingReserveAcc
-}
-
 // GetRewardsReservePoolAcc returns module account for the rewards reserve pool account.
 func (k Keeper) GetRewardsReservePoolAcc(ctx sdk.Context) sdk.AccAddress { // nolint:interfacer
 	return types.RewardsReserveAcc

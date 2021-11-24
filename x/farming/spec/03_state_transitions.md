@@ -30,7 +30,7 @@ const (
 
 When a farmer stakes an amount of coins, the following state transitions occur:
 
-- Reserves the amount of coins to the staking reserve pool account `StakingReservePoolAcc` 
+- Reserves the amount of coins to the staking reserve account for each staking coin denom `address.Module(ModuleName, []byte("StakingReserveAcc|"+stakingCoinDenom))` 
 - Creates `QueuedStaking` object and stores the staking coins in `QueueStaking`, which then  wait in a queue until the end of epoch to move to the `Staking` object
 - Imposes more gas if the farmer already has `Staking` with the same coin denom. See [Parameters](07_params.md#DelayedStakingGasFee) for details.
 

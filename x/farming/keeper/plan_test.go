@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 	suite.Require().Equal(uint64(1), nextPlanId)
 
 	sampleFixedPlan := suite.sampleFixedAmtPlans[0].(*types.FixedAmountPlan)
-	poolAcc, err := suite.keeper.GeneratePrivatePlanFarmingPoolAddress(suite.ctx, sampleFixedPlan.Name)
+	poolAcc, err := suite.keeper.DerivePrivatePlanFarmingPoolAcc(suite.ctx, sampleFixedPlan.Name)
 	suite.Require().NoError(err)
 	_, err = suite.keeper.CreateFixedAmountPlan(suite.ctx, &types.MsgCreateFixedAmountPlan{
 		Name:               sampleFixedPlan.Name,
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestGlobalPlanId() {
 	suite.Require().Equal(uint64(2), nextPlanId)
 
 	sampleRatioPlan := suite.sampleRatioPlans[0].(*types.RatioPlan)
-	poolAcc, err = suite.keeper.GeneratePrivatePlanFarmingPoolAddress(suite.ctx, sampleRatioPlan.Name)
+	poolAcc, err = suite.keeper.DerivePrivatePlanFarmingPoolAcc(suite.ctx, sampleRatioPlan.Name)
 	suite.Require().NoError(err)
 	_, err = suite.keeper.CreateRatioPlan(suite.ctx, &types.MsgCreateRatioPlan{
 		Name:               sampleRatioPlan.Name,

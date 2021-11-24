@@ -311,6 +311,30 @@ func TestValidateGenesis(t *testing.T) {
 			"invalid denom: !",
 		},
 		{
+			"invalid total staking records - invalid staking coin denom",
+			func(genState *types.GenesisState) {
+				genState.TotalStakingsRecords = []types.TotalStakingsRecord{
+					{
+						StakingCoinDenom: "!",
+						Amount:           sdk.OneInt(),
+					},
+				}
+			},
+			"invalid denom: !",
+		},
+		{
+			"invalid total staking records - invalid staking amount",
+			func(genState *types.GenesisState) {
+				genState.TotalStakingsRecords = []types.TotalStakingsRecord{
+					{
+						StakingCoinDenom: "uatom",
+						Amount:           sdk.ZeroInt(),
+					},
+				}
+			},
+			"total staking amount must be positive: 0",
+		},
+		{
 			"invalid historical rewards records - invalid historical rewards",
 			func(genState *types.GenesisState) {
 				genState.HistoricalRewardsRecords = []types.HistoricalRewardsRecord{
@@ -362,13 +386,6 @@ func TestValidateGenesis(t *testing.T) {
 				}
 			},
 			"invalid denom: !",
-		},
-		{
-			"invalid staking reserve coins",
-			func(genState *types.GenesisState) {
-				genState.StakingReserveCoins = sdk.Coins{sdk.NewInt64Coin(validStakingCoinDenom, 0)}
-			},
-			"coin 0denom1 amount is not positive",
 		},
 		{
 			"invalid reward pool coins",

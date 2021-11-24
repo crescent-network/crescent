@@ -256,11 +256,11 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 	return nil
 }
 
-// GeneratePrivatePlanFarmingPoolAddress returns a unique account address
+// DerivePrivatePlanFarmingPoolAcc returns a unique account address
 // of a farming pool for a private plan.
-func (k Keeper) GeneratePrivatePlanFarmingPoolAddress(ctx sdk.Context, name string) (sdk.AccAddress, error) {
+func (k Keeper) DerivePrivatePlanFarmingPoolAcc(ctx sdk.Context, name string) (sdk.AccAddress, error) {
 	nextPlanId := k.GetGlobalPlanId(ctx) + 1
-	poolAcc := types.PrivatePlanFarmingPoolAddress(name, nextPlanId)
+	poolAcc := types.PrivatePlanFarmingPoolAcc(name, nextPlanId)
 	if !k.bankKeeper.GetAllBalances(ctx, poolAcc).Empty() {
 		return nil, types.ErrConflictPrivatePlanFarmingPool
 	}
