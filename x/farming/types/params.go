@@ -23,13 +23,12 @@ var (
 	DefaultFarmingFeeCollector    = sdk.AccAddress(address.Module(ModuleName, []byte("FarmingFeeCollectorAcc"))).String()
 	DefaultDelayedStakingGasFee   = sdk.Gas(60000) // See https://github.com/tendermint/farming/issues/102 for details.
 
-	RewardsReserveAcc = sdk.AccAddress(address.Module(ModuleName, []byte("RewardsReserveAcc")))
-
 	// ReserveAddressType is an address type of reserve accounts for staking or rewards.
 	// The module uses the address type of 32 bytes length, but it can be changed depending on Cosmos SDK's direction.
 	// The discussion around this issue can be found in this link.
 	// https://github.com/tendermint/farming/issues/200
 	ReserveAddressType = AddressType32Bytes
+	RewardsReserveAcc  = DeriveAddress(ReserveAddressType, ModuleName, RewardReserveAccPrefix)
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
