@@ -5,6 +5,7 @@
 - 2021.09.27: initial document
 - 2021.10.15: update farming, budget version
 - 2021.11.12: update farming, budget version to v1.0.0-rc1
+- 2021.11.26: update farming, budget version to v1.0.0
 
 ## What does budget module do?
 
@@ -42,7 +43,7 @@ One use case is to use the module to provide incentives for liquidity pool inves
 
 ```bash
 # Clone the demo project and build `farmingd` for testing
-git clone -b v1.0.0-rc1 https://github.com/tendermint/farming.git
+git clone -b v1.0.0 https://github.com/tendermint/farming.git
 cd farming
 make install-testing
 ```
