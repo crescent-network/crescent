@@ -231,7 +231,7 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 
 	if !rewards.IsZero() {
 		if !truncatedRewards.IsZero() {
-			if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, truncatedRewards); err != nil {
+			if err := k.bankKeeper.SendCoins(ctx, types.RewardsReserveAcc, farmerAcc, truncatedRewards); err != nil {
 				return nil, err
 			}
 
@@ -274,7 +274,7 @@ func (k Keeper) WithdrawAllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) (s
 	})
 
 	if !totalRewards.IsZero() {
-		if err := k.bankKeeper.SendCoins(ctx, k.GetRewardsReservePoolAcc(ctx), farmerAcc, totalRewards); err != nil {
+		if err := k.bankKeeper.SendCoins(ctx, types.RewardsReserveAcc, farmerAcc, totalRewards); err != nil {
 			return nil, err
 		}
 	}
@@ -437,7 +437,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			continue
 		}
 
-		rewardsReserveAcc := k.GetRewardsReservePoolAcc(ctx)
+		rewardsReserveAcc := types.RewardsReserveAcc
 		if err := k.bankKeeper.SendCoins(ctx, allocInfo.Plan.GetFarmingPoolAddress(), rewardsReserveAcc, totalAllocCoins); err != nil {
 			return err
 		}
@@ -481,7 +481,7 @@ func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
 		return false
 	})
 
-	rewardsReservePoolBalances := k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))
+	rewardsReservePoolBalances := k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)
 	if !rewardsReservePoolBalances.IsAllGTE(remainingRewards) {
 		return types.ErrInvalidRemainingRewardsAmount
 	}
@@ -499,7 +499,7 @@ func (k Keeper) ValidateOutstandingRewardsAmount(ctx sdk.Context) error {
 		return false
 	})
 
-	rewardsReservePoolBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))...)
+	rewardsReservePoolBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)...)
 	_, hasNeg := rewardsReservePoolBalances.SafeSub(totalOutstandingRewards)
 	if hasNeg {
 		return types.ErrInvalidOutstandingRewardsAmount

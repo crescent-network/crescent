@@ -178,7 +178,7 @@ func (k Keeper) DeletePublicPlanProposal(ctx sdk.Context, proposals []types.Dele
 		}
 
 		if err := k.TerminatePlan(ctx, plan); err != nil {
-			panic(err)
+			return err
 		}
 
 		k.RemovePlan(ctx, plan)

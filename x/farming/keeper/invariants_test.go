@@ -157,7 +157,7 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 	// Send coins into the rewards reserve acc.
 	// Should be OK.
 	err := suite.app.BankKeeper.SendCoins(
-		ctx, suite.addrs[1], k.GetRewardsReservePoolAcc(ctx), sdk.NewCoins(sdk.NewInt64Coin(denom3, 1)))
+		ctx, suite.addrs[1], types.RewardsReserveAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1)))
 	suite.Require().NoError(err)
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 	// Send coins from the rewards reserve acc to another acc.
 	// Should not be OK.
 	err = suite.app.BankKeeper.SendCoins(
-		ctx, k.GetRewardsReservePoolAcc(ctx), suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 2)))
+		ctx, types.RewardsReserveAcc, suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 2)))
 	suite.Require().NoError(err)
 	_, broken = farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
 	suite.Require().True(broken)
@@ -237,14 +237,14 @@ func (suite *KeeperTestSuite) TestOutstandingRewardsAmountInvariant() {
 
 	// Send coins into the rewards reserve acc. Should be OK.
 	err := suite.app.BankKeeper.SendCoins(
-		ctx, suite.addrs[1], k.GetRewardsReservePoolAcc(ctx), sdk.NewCoins(sdk.NewInt64Coin(denom3, 1)))
+		ctx, suite.addrs[1], types.RewardsReserveAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1)))
 	suite.Require().NoError(err)
 	_, broken = farmingkeeper.OutstandingRewardsAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
 
 	// Send coins from the rewards reserve acc to another acc. Should not be OK.
 	err = suite.app.BankKeeper.SendCoins(
-		ctx, k.GetRewardsReservePoolAcc(ctx), suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 2)))
+		ctx, types.RewardsReserveAcc, suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 2)))
 	suite.Require().NoError(err)
 	_, broken = farmingkeeper.OutstandingRewardsAmountInvariant(k)(ctx)
 	suite.Require().True(broken)

@@ -134,6 +134,6 @@ func (suite *ModuleTestSuite) TestMsgHarvest() {
 
 	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 	suite.Require().True(coinsEq(balancesBefore.Add(rewards...), balancesAfter))
-	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.keeper.GetRewardsReservePoolAcc(suite.ctx)).IsZero())
+	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, types.RewardsReserveAcc).IsZero())
 	suite.Require().True(suite.Rewards(suite.addrs[0]).IsZero())
 }

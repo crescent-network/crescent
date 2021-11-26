@@ -11,15 +11,6 @@ import (
 	"github.com/tendermint/farming/x/farming/types"
 )
 
-// NewPlan sets the next plan number to a given PlanI.
-func (k Keeper) NewPlan(ctx sdk.Context, plan types.PlanI) types.PlanI {
-	if err := plan.SetId(k.GetNextPlanIdWithUpdate(ctx)); err != nil {
-		panic(err)
-	}
-
-	return plan
-}
-
 // GetPlan returns a plan for a given plan id.
 func (k Keeper) GetPlan(ctx sdk.Context, id uint64) (plan types.PlanI, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -104,12 +95,7 @@ func (k Keeper) GetGlobalPlanId(ctx sdk.Context) uint64 {
 		id = 0
 	} else {
 		val := gogotypes.UInt64Value{}
-
-		err := k.cdc.Unmarshal(bz, &val)
-		if err != nil {
-			panic(err)
-		}
-
+		k.cdc.MustUnmarshal(bz, &val)
 		id = val.GetValue()
 	}
 	return id
@@ -239,9 +225,7 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 		}
 	}
 
-	if err := plan.SetTerminated(true); err != nil {
-		return err
-	}
+	_ = plan.SetTerminated(true)
 	k.SetPlan(ctx, plan)
 
 	ctx.EventManager().EmitEvents(sdk.Events{

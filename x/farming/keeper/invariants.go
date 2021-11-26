@@ -143,7 +143,7 @@ func OutstandingRewardsAmountInvariant(k Keeper) sdk.Invariant {
 			totalRewards = totalRewards.Add(rewards.Rewards...)
 			return false
 		})
-		balances := k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))
+		balances := k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)
 		_, hasNeg := sdk.NewDecCoinsFromCoins(balances...).SafeSub(totalRewards)
 		broken := hasNeg
 		return sdk.FormatInvariant(

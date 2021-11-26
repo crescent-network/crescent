@@ -100,7 +100,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	if err != nil {
 		panic(err)
 	}
-	rewardsPoolCoins := k.bankKeeper.GetAllBalances(ctx, k.GetRewardsReservePoolAcc(ctx))
+	rewardsPoolCoins := k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)
 	if !genState.RewardPoolCoins.IsEqual(rewardsPoolCoins) {
 		panic(fmt.Sprintf("RewardPoolCoins differs from the actual value; have %s, want %s",
 			rewardsPoolCoins, genState.RewardPoolCoins))
