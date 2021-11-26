@@ -36,10 +36,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased] v1.0.0 - 2021-11-26
+## v1.0.0 - 2021-11-26
 
 * [\#64](https://github.com/tendermint/farming/pull/64) docs: improve documentation for audit release
-
 * [\#187](https://github.com/tendermint/farming/pull/187) edit farming.proto
 * [\#196](https://github.com/tendermint/farming/pull/196) doc: fix to be broken links by renaming branch name
 * [\#189](https://github.com/tendermint/farming/pull/189) feat: Create CODEOWNERS file and update contributing.md
@@ -59,6 +58,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#225](https://github.com/tendermint/farming/pull/225) fix: add plan type validation for public plan proposal
 * [\#206](https://github.com/tendermint/farming/pull/206) build: bump cosmos-sdk version to v0.44.3
 * [\#228](https://github.com/tendermint/farming/pull/228) test: add test cases for reward allocation of ratio plan
+* [\#229](https://github.com/tendermint/farming/pull/229) fix: split staking reserve acc by staking denom
+* [\#230](https://github.com/tendermint/farming/pull/230) fix: minimize panics and refactor
+* [\#233](https://github.com/tendermint/farming/pull/233) fix: refactor RewardsReserveAcc to be derived by deriveAddress
+* [\#185](https://github.com/tendermint/farming/pull/185) feat: prune abandoned state
 
 ## [v0.1.2](https://github.com/tendermint/farming/releases/tag/v0.1.2) - 2021-10-18
 
