@@ -5,11 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/gravity-devs/liquidity/x/liquidity"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/budget/x/budget"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,6 +26,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v2/modules/core"
+	"github.com/golang/mock/gomock"
+	"github.com/gravity-devs/liquidity/x/liquidity"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/budget/x/budget"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -192,6 +193,8 @@ func TestRunMigrations(t *testing.T) {
 					"liquidity":    liquidity.AppModule{}.ConsensusVersion(),
 					"budget":       budget.AppModule{}.ConsensusVersion(),
 					"farming":      farming.AppModule{}.ConsensusVersion(),
+					"ibc":          ibc.AppModule{}.ConsensusVersion(),
+					"transfer":     transfer.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
