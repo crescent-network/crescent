@@ -1,0 +1,63 @@
+syntax = "proto3";
+package gdex.liquidstaking.v1beta1;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gdex/liquidstaking/v1beta1/liquidstaking.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/tendermint/farming/x/liquidstaking/types";
+
+// Query defines the gRPC query service for the liquidstaking module.
+service Query {
+  // Params returns parameters of the liquidstaking module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get                                           = "/gdex/liquidstaking/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns all parameters of the liquid staking module.";
+  external_docs: {
+  url:
+    "https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md";
+  description:
+    "Find out more about the params";
+  }
+  };
+}
+// LiquidValidators returns liquid validators of the liquidstaking module.
+rpc LiquidValidators(QueryLiquidValidatorsRequest) returns (QueryLiquidValidatorsResponse) {
+  option (google.api.http).get                                           = "/gdex/liquidstaking/v1beta1/validators";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns all liquid validators of the liquid staking module.";
+external_docs: {
+url:
+  "https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec";
+description:
+  "Find out more about the liquid validators";
+}
+};
+}
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryLiquidValidatorsRequest is the request type for the Query/LiquidValidators RPC method.
+message QueryLiquidValidatorsRequest {
+  // TODO: status, etc query strings
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryLiquidValidatorsResponse is the response type for the Query/LiquidValidators RPC method.
+message QueryLiquidValidatorsResponse {
+  repeated LiquidValidator liquid_validators = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

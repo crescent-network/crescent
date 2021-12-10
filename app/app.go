@@ -10,6 +10,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -85,12 +89,11 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
-	"github.com/gorilla/mux"
-	"github.com/gravity-devs/liquidity/x/liquidity"
-	liquiditykeeper "github.com/gravity-devs/liquidity/x/liquidity/keeper"
-	liquiditytypes "github.com/gravity-devs/liquidity/x/liquidity/types"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
+
+	"github.com/tendermint/farming/x/liquidity"
+	liquiditykeeper "github.com/tendermint/farming/x/liquidity/keeper"
+	liquiditytypes "github.com/tendermint/farming/x/liquidity/types"
+
 	"github.com/tendermint/budget/x/budget"
 	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
@@ -104,6 +107,10 @@ import (
 	farmingclient "github.com/tendermint/farming/x/farming/client"
 	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
+
+	"github.com/tendermint/farming/x/liquidstaking"
+	liquidstakingkeeper "github.com/tendermint/farming/x/liquidstaking/keeper"
+	liquidstakingtypes "github.com/tendermint/farming/x/liquidstaking/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/tendermint/farming/client/docs/statik"
@@ -148,6 +155,7 @@ var (
 		budget.AppModuleBasic{},
 		farming.AppModuleBasic{},
 		liquidity.AppModuleBasic{},
+		liquidstaking.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -161,7 +169,9 @@ var (
 		budgettypes.ModuleName:         nil,
 		farmingtypes.ModuleName:        nil,
 		liquiditytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		// TODO: set perms to liquidstaking
+		liquidstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		ibctransfertypes.ModuleName:   {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -188,25 +198,26 @@ type FarmingApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	StakingKeeper    stakingkeeper.Keeper
-	SlashingKeeper   slashingkeeper.Keeper
-	MintKeeper       mintkeeper.Keeper
-	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     crisiskeeper.Keeper
-	UpgradeKeeper    upgradekeeper.Keeper
-	ParamsKeeper     paramskeeper.Keeper
-	IBCKeeper        *ibckeeper.Keeper
-	EvidenceKeeper   evidencekeeper.Keeper
-	TransferKeeper   ibctransferkeeper.Keeper
-	FeeGrantKeeper   feegrantkeeper.Keeper
-	AuthzKeeper      authzkeeper.Keeper
-	BudgetKeeper     budgetkeeper.Keeper
-	FarmingKeeper    farmingkeeper.Keeper
-	LiquidityKeeper  liquiditykeeper.Keeper
+	AccountKeeper       authkeeper.AccountKeeper
+	BankKeeper          bankkeeper.Keeper
+	CapabilityKeeper    *capabilitykeeper.Keeper
+	StakingKeeper       stakingkeeper.Keeper
+	SlashingKeeper      slashingkeeper.Keeper
+	MintKeeper          mintkeeper.Keeper
+	DistrKeeper         distrkeeper.Keeper
+	GovKeeper           govkeeper.Keeper
+	CrisisKeeper        crisiskeeper.Keeper
+	UpgradeKeeper       upgradekeeper.Keeper
+	ParamsKeeper        paramskeeper.Keeper
+	IBCKeeper           *ibckeeper.Keeper
+	EvidenceKeeper      evidencekeeper.Keeper
+	TransferKeeper      ibctransferkeeper.Keeper
+	FeeGrantKeeper      feegrantkeeper.Keeper
+	AuthzKeeper         authzkeeper.Keeper
+	BudgetKeeper        budgetkeeper.Keeper
+	FarmingKeeper       farmingkeeper.Keeper
+	LiquidityKeeper     liquiditykeeper.Keeper
+	LiquidStakingKeeper liquidstakingkeeper.Keeper
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -271,6 +282,7 @@ func NewFarmingApp(
 		budgettypes.StoreKey,
 		farmingtypes.StoreKey,
 		liquiditytypes.StoreKey,
+		liquidstakingtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -409,9 +421,17 @@ func NewFarmingApp(
 		appCodec,
 		keys[liquiditytypes.StoreKey],
 		app.GetSubspace(liquiditytypes.ModuleName),
-		app.BankKeeper,
+	)
+
+	// TODO: fix liquidstaking keeper deps
+	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
+		appCodec,
+		keys[liquidstakingtypes.StoreKey],
+		app.GetSubspace(liquidstakingtypes.ModuleName),
 		app.AccountKeeper,
-		app.DistrKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.ModuleAccountAddrs(),
 	)
 
 	// register the proposal types
@@ -484,8 +504,10 @@ func NewFarmingApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
-		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper),
+		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
+		// TODO: fix liquidstaking module deps
+		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
 		transferModule,
 	)
 
@@ -502,6 +524,7 @@ func NewFarmingApp(
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
+		liquidstakingtypes.ModuleName,
 		liquiditytypes.ModuleName,
 		ibchost.ModuleName,
 	)
@@ -510,6 +533,8 @@ func NewFarmingApp(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		liquiditytypes.ModuleName,
+		// TODO: fix ordering of liquidstaking module
+		liquidstakingtypes.ModuleName,
 		farmingtypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
@@ -539,6 +564,7 @@ func NewFarmingApp(
 		budgettypes.ModuleName,
 		farmingtypes.ModuleName,
 		liquiditytypes.ModuleName,
+		liquidstakingtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -566,7 +592,9 @@ func NewFarmingApp(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
-		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper),
+		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
+		// TODO: add simulations for liquidstaking module
+		//liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 	)
@@ -772,6 +800,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(budgettypes.ModuleName)
 	paramsKeeper.Subspace(farmingtypes.ModuleName)
 	paramsKeeper.Subspace(liquiditytypes.ModuleName)
+	paramsKeeper.Subspace(liquidstakingtypes.ModuleName)
 
 	return paramsKeeper
 }

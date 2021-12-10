@@ -29,9 +29,9 @@ import (
 	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v2/modules/core"
 	"github.com/golang/mock/gomock"
-	"github.com/gravity-devs/liquidity/x/liquidity"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/budget/x/budget"
+	"github.com/tendermint/farming/x/liquidstaking"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -190,11 +190,12 @@ func TestRunMigrations(t *testing.T) {
 					"crisis":       crisis.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
 					"capability":   capability.AppModule{}.ConsensusVersion(),
-					"liquidity":    liquidity.AppModule{}.ConsensusVersion(),
-					"budget":       budget.AppModule{}.ConsensusVersion(),
-					"farming":      farming.AppModule{}.ConsensusVersion(),
-					"ibc":          ibc.AppModule{}.ConsensusVersion(),
-					"transfer":     transfer.AppModule{}.ConsensusVersion(),
+					//"liquidity":     liquidity.AppModule{}.ConsensusVersion(),
+					"budget":        budget.AppModule{}.ConsensusVersion(),
+					"farming":       farming.AppModule{}.ConsensusVersion(),
+					"liquidstaking": liquidstaking.AppModule{}.ConsensusVersion(),
+					"ibc":           ibc.AppModule{}.ConsensusVersion(),
+					"transfer":      transfer.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
@@ -249,6 +250,9 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"capability":   capability.AppModule{}.ConsensusVersion(),
 			"budget":       budget.AppModule{}.ConsensusVersion(),
 			"farming":      farming.AppModule{}.ConsensusVersion(),
+			//"liquidstaking": liquidstaking.AppModule{}.ConsensusVersion(),
+			"ibc":      ibc.AppModule{}.ConsensusVersion(),
+			"transfer": transfer.AppModule{}.ConsensusVersion(),
 		},
 	)
 	require.NoError(t, err)
