@@ -89,11 +89,6 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
-
-	"github.com/tendermint/farming/x/liquidity"
-	liquiditykeeper "github.com/tendermint/farming/x/liquidity/keeper"
-	liquiditytypes "github.com/tendermint/farming/x/liquidity/types"
-
 	"github.com/tendermint/budget/x/budget"
 	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
@@ -107,7 +102,9 @@ import (
 	farmingclient "github.com/tendermint/farming/x/farming/client"
 	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
-
+	"github.com/tendermint/farming/x/liquidity"
+	liquiditykeeper "github.com/tendermint/farming/x/liquidity/keeper"
+	liquiditytypes "github.com/tendermint/farming/x/liquidity/types"
 	"github.com/tendermint/farming/x/liquidstaking"
 	liquidstakingkeeper "github.com/tendermint/farming/x/liquidstaking/keeper"
 	liquidstakingtypes "github.com/tendermint/farming/x/liquidstaking/types"
@@ -422,7 +419,6 @@ func NewFarmingApp(
 		keys[liquiditytypes.StoreKey],
 		app.GetSubspace(liquiditytypes.ModuleName),
 	)
-
 	// TODO: fix liquidstaking keeper deps
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
 		appCodec,
