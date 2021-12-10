@@ -1,5 +1,60 @@
 package keeper
 
+import (
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
+)
+
+func (k Keeper) LiquidStaking(
+	ctx sdk.Context, moduleAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin,
+	validator types.Validator) (newShares sdk.Dec, err error) {
+
+	// TODO: send liquidStaker to moduleAcc
+
+	// TODO: check stakingCoin denom
+
+	// NOTE: source funds are always unbonded
+	newShares, err = k.stakingKeeper.Delegate(ctx, moduleAcc, stakingCoin.Amount, types.Unbonded, validator, true)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	return newShares, nil
+}
+
+func (k Keeper) LiquidUnstaking(
+	ctx sdk.Context, moduleAcc, liquidStaker sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
+) (time.Time, error) {
+	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
+	if !found {
+		return time.Time{}, types.ErrNoDelegatorForAddress
+	}
+
+	if k.stakingKeeper.HasMaxUnbondingDelegationEntries(ctx, moduleAcc, valAddr) {
+		return time.Time{}, types.ErrMaxUnbondingDelegationEntries
+	}
+
+	returnAmount, err := k.stakingKeeper.Unbond(ctx, moduleAcc, valAddr, sharesAmount)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	// transfer the validator tokens to the not bonded pool
+	if validator.IsBonded() {
+		coins := sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), returnAmount))
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, types.NotBondedPoolName, coins); err != nil {
+			panic(err)
+		}
+	}
+
+	completionTime := ctx.BlockHeader().Time.Add(k.stakingKeeper.UnbondingTime(ctx))
+	ubd := k.stakingKeeper.SetUnbondingDelegationEntry(ctx, liquidStaker, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
+	k.stakingKeeper.InsertUBDQueue(ctx, ubd, completionTime)
+
+	return completionTime, nil
+}
+
 //// CollectBiquidStakings collects all the valid liquidStakings registered in params.BiquidStakings and
 //// distributes the total collected coins to destination address.
 //func (k Keeper) CollectBiquidStakings(ctx sdk.Context) error {
