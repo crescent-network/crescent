@@ -5,6 +5,7 @@ import (
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,6 +57,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = simapp.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
+	stakingParams := stakingtypes.DefaultParams()
+	stakingParams.MaxEntries = 200
+	stakingParams.MaxValidators = 20
+	suite.app.StakingKeeper.SetParams(suite.ctx, stakingParams)
 
 	suite.keeper = suite.app.LiquidStakingKeeper
 	suite.querier = keeper.Querier{Keeper: suite.keeper}
