@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/tendermint/farming/app"
@@ -23,12 +24,13 @@ const (
 )
 
 var (
-//initialBalances = sdk.NewCoins(
-//	sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000),
-//	sdk.NewInt64Coin(denom1, 1_000_000_000),
-//	sdk.NewInt64Coin(denom2, 1_000_000_000),
-//	sdk.NewInt64Coin(denom3, 1_000_000_000))
-//smallBalances = mustParseCoinsNormalized("1denom1,2denom2,3denom3,1000000000stake")
+	//initialBalances = sdk.NewCoins(
+	//	sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000),
+	//	sdk.NewInt64Coin(denom1, 1_000_000_000),
+	//	sdk.NewInt64Coin(denom2, 1_000_000_000),
+	//	sdk.NewInt64Coin(denom3, 1_000_000_000))
+	//smallBalances = mustParseCoinsNormalized("1denom1,2denom2,3denom3,1000000000stake")
+	PKs = simapp.CreateTestPubKeys(500)
 )
 
 type KeeperTestSuite struct {
@@ -40,6 +42,8 @@ type KeeperTestSuite struct {
 	querier    keeper.Querier
 	govHandler govtypes.Handler
 	addrs      []sdk.AccAddress
+	delAddrs   []sdk.AccAddress
+	valAddrs   []sdk.ValAddress
 	//sourceAddrs           []sdk.AccAddress
 	//destinationAddrs      []sdk.AccAddress
 	whitelistedValidators []types.WhitelistedValidator
@@ -64,7 +68,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.keeper = suite.app.LiquidStakingKeeper
 	suite.querier = keeper.Querier{Keeper: suite.keeper}
-	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 10, sdk.ZeroInt())
+	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 10, sdk.NewInt(1_000_000_000))
+	suite.delAddrs = simapp.AddTestAddrs(suite.app, suite.ctx, 10, sdk.NewInt(1_000_000_000))
+	suite.valAddrs = simapp.ConvertAddrsToValAddrs(suite.delAddrs)
 	//dAddr1 := types.DeriveAddress(types.AddressType32Bytes, types.ModuleName, "destinationAddr1")
 	//dAddr2 := types.DeriveAddress(types.AddressType32Bytes, types.ModuleName, "destinationAddr2")
 	//dAddr3 := types.DeriveAddress(types.AddressType32Bytes, types.ModuleName, "destinationAddr3")
@@ -105,3 +111,43 @@ func (suite *KeeperTestSuite) SetupTest() {
 //	}
 //	return coins
 //}
+
+func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrs := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, 5, sdk.NewInt(30000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
+	pks := simapp.CreateTestPubKeys(5)
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
+
+	suite.app.StakingKeeper = stakingkeeper.NewKeeper(
+		cdc,
+		suite.app.GetKey(stakingtypes.StoreKey),
+		suite.app.AccountKeeper,
+		suite.app.BankKeeper,
+		suite.app.GetSubspace(stakingtypes.ModuleName),
+	)
+
+	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
+	suite.Require().NoError(err)
+	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
+	suite.Require().NoError(err)
+	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
+	suite.Require().NoError(err)
+
+	suite.app.StakingKeeper.SetValidator(suite.ctx, val1)
+	suite.app.StakingKeeper.SetValidator(suite.ctx, val2)
+	suite.app.StakingKeeper.SetValidator(suite.ctx, val3)
+	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val1)
+	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val2)
+	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val3)
+	suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val1)
+	suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val2)
+	suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val3)
+
+	_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
+	_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
+	_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[2], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
+
+	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
+
+	return addrs, valAddrs
+}

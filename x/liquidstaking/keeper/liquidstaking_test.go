@@ -1,5 +1,151 @@
 package keeper_test
 
+import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/tendermint/farming/x/liquidstaking/types"
+)
+
+// tests GetDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
+func (suite *KeeperTestSuite) TestDelegation() {
+	addrs, vals := suite.CreateValidators([]int64{25, 6, 7})
+	fmt.Println(addrs, vals)
+
+	////construct the validators
+	//amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
+	//var validators [3]stakingtypes.Validator
+	//for i, amt := range amts {
+	//	validators[i], _ = stakingtypes.NewValidator(suite.valAddrs[i], PKs[i], stakingtypes.Description{})
+	//	validators[i], _ = validators[i].AddTokensFromDel(amt)
+	//	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validators[i])
+	//	validators[i] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[i], true)
+	//}
+	//
+	////validators[0] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[0], true)
+	////validators[1] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[1], true)
+	////validators[2] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[2], true)
+	//
+	//// first add a validators[0] to delegate too
+	//bond1to1 := stakingtypes.NewDelegation(suite.delAddrs[0], suite.valAddrs[0], sdk.NewDec(9))
+
+	//addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
+	//
+	//delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	//val1, found := app.StakingKeeper.GetValidator(ctx, vals[0])
+	//require.True(t, found)
+	//val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
+	//require.True(t, found)
+
+	validator0, found := suite.app.StakingKeeper.GetValidator(suite.ctx, vals[0])
+	suite.Require().True(found)
+
+	// set and retrieve a record
+	newShares, err := suite.app.StakingKeeper.Delegate(suite.ctx, suite.delAddrs[0], sdk.NewInt(10000), stakingtypes.Unbonded, validator0, true)
+	fmt.Println(newShares, err)
+	suite.Require().NoError(err)
+	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond1to1)
+	resBond, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], vals[0])
+	suite.Require().True(found)
+	fmt.Println(resBond, found)
+	//suite.Require().Equal(bond1to1, resBond)
+
+	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
+
+	kvals := suite.app.StakingKeeper.GetAllValidators(suite.ctx)
+	fmt.Println(kvals)
+
+	// TODO: fix panic on IncrementValidatorPeriod, decrementReferenceCount
+	newShares, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.addrs[2], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)), validator0)
+	fmt.Println(newShares, err)
+
+	//
+	//// modify a records, save, and retrieve
+	//bond1to1.Shares = sdk.NewDec(99)
+	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond1to1)
+	//resBond, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, addrDels[0], valAddrs[0])
+	//require.True(t, found)
+	//require.Equal(t, bond1to1, resBond)
+	//
+	//// add some more records
+	//bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], sdk.NewDec(9))
+	//bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], sdk.NewDec(9))
+	//bond2to1 := types.NewDelegation(addrDels[1], valAddrs[0], sdk.NewDec(9))
+	//bond2to2 := types.NewDelegation(addrDels[1], valAddrs[1], sdk.NewDec(9))
+	//bond2to3 := types.NewDelegation(addrDels[1], valAddrs[2], sdk.NewDec(9))
+	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond1to2)
+	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond1to3)
+	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond2to1)
+	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond2to2)
+	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond2to3)
+	//
+	//// test all bond retrieve capabilities
+	//resBonds := app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 5)
+	//require.Equal(t, 3, len(resBonds))
+	//require.Equal(t, bond1to1, resBonds[0])
+	//require.Equal(t, bond1to2, resBonds[1])
+	//require.Equal(t, bond1to3, resBonds[2])
+	//resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[0])
+	//require.Equal(t, 3, len(resBonds))
+	//resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
+	//require.Equal(t, 2, len(resBonds))
+	//resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
+	//require.Equal(t, 3, len(resBonds))
+	//require.Equal(t, bond2to1, resBonds[0])
+	//require.Equal(t, bond2to2, resBonds[1])
+	//require.Equal(t, bond2to3, resBonds[2])
+	//allBonds := app.StakingKeeper.GetAllDelegations(ctx)
+	//require.Equal(t, 6, len(allBonds))
+	//require.Equal(t, bond1to1, allBonds[0])
+	//require.Equal(t, bond1to2, allBonds[1])
+	//require.Equal(t, bond1to3, allBonds[2])
+	//require.Equal(t, bond2to1, allBonds[3])
+	//require.Equal(t, bond2to2, allBonds[4])
+	//require.Equal(t, bond2to3, allBonds[5])
+	//
+	//resVals := app.StakingKeeper.GetDelegatorValidators(ctx, addrDels[0], 3)
+	//require.Equal(t, 3, len(resVals))
+	//resVals = app.StakingKeeper.GetDelegatorValidators(ctx, addrDels[1], 4)
+	//require.Equal(t, 3, len(resVals))
+	//
+	//for i := 0; i < 3; i++ {
+	//	resVal, err := app.StakingKeeper.GetDelegatorValidator(ctx, addrDels[0], valAddrs[i])
+	//	require.Nil(t, err)
+	//	require.Equal(t, valAddrs[i], resVal.GetOperator())
+	//
+	//	resVal, err = app.StakingKeeper.GetDelegatorValidator(ctx, addrDels[1], valAddrs[i])
+	//	require.Nil(t, err)
+	//	require.Equal(t, valAddrs[i], resVal.GetOperator())
+	//
+	//	resDels := app.StakingKeeper.GetValidatorDelegations(ctx, valAddrs[i])
+	//	require.Len(t, resDels, 2)
+	//}
+	//
+	//// delete a record
+	//app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
+	//_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
+	//require.False(t, found)
+	//resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
+	//require.Equal(t, 2, len(resBonds))
+	//require.Equal(t, bond2to1, resBonds[0])
+	//require.Equal(t, bond2to2, resBonds[1])
+	//
+	//resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[1])
+	//require.Equal(t, 2, len(resBonds))
+	//
+	//// delete all the records from delegator 2
+	//app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
+	//app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
+	//_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
+	//require.False(t, found)
+	//_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
+	//require.False(t, found)
+	//resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
+	//require.Equal(t, 0, len(resBonds))
+}
+
 //func (suite *KeeperTestSuite) TestCollectBiquidStakings() {
 //	for _, tc := range []struct {
 //		name           string

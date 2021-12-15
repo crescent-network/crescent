@@ -7,10 +7,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	farmingtypes "github.com/tendermint/farming/x/farming/types"
 )
 
 // LiquidBondDenom is temporary liquid staking bond denom
-const LiquidBondDenom = "bgdex"
+// TODO: to immutable params
+const LiquidBondDenom = "bstake"
 
 // Parameter store keys
 var (
@@ -23,6 +25,8 @@ var (
 	// Const variables
 
 	MinimumStakingAmount = sdk.NewInt(1000000)
+
+	LiquidStakingProxyAcc = farmingtypes.DeriveAddress(farmingtypes.AddressType32Bytes, ModuleName, "LiquidStakingProxyAcc")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)

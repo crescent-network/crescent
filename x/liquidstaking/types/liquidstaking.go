@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,4 +44,24 @@ type LiquidValidators []LiquidValidator
 func (vs LiquidValidators) MinMax() (minVals LiquidValidators, maxVals LiquidValidators) {
 
 	return
+}
+
+func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {
+	return cdc.MustMarshal(val)
+}
+
+// must unmarshal a liquid validator from a store value
+func MustUnmarshalLiquidValidator(cdc codec.BinaryCodec, value []byte) LiquidValidator {
+	validator, err := UnmarshalLiquidValidator(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return validator
+}
+
+// unmarshal a liquid validator from a store value
+func UnmarshalLiquidValidator(cdc codec.BinaryCodec, value []byte) (val LiquidValidator, err error) {
+	err = cdc.Unmarshal(value, &val)
+	return val, err
 }
