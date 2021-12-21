@@ -450,6 +450,14 @@ func NewFarmingApp(
 		govRouter,
 	)
 
+	app.GovKeeper = *app.GovKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+			// TODO: register the governance hooks
+			app.LiquidStakingKeeper.Hooks(),
+		//app.FarmingKeeper.Hooks()
+		),
+	)
+
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
