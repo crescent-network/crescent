@@ -58,6 +58,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
+	// TODO: add hooking for stakingkeeper
 	suite.app = simapp.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
@@ -113,9 +114,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 //}
 
 func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrs := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, 5, sdk.NewInt(30000000))
+	num := len(powers)
+	addrs := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, num, sdk.NewInt(30000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	pks := simapp.CreateTestPubKeys(5)
+	pks := simapp.CreateTestPubKeys(num)
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 
 	suite.app.StakingKeeper = stakingkeeper.NewKeeper(
@@ -126,28 +128,44 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		suite.app.GetSubspace(stakingtypes.ModuleName),
 	)
 
-	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
-	suite.Require().NoError(err)
-	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
-	suite.Require().NoError(err)
-	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
-	suite.Require().NoError(err)
+	for i, power := range powers {
+		val, err := stakingtypes.NewValidator(valAddrs[i], pks[i], stakingtypes.Description{})
+		suite.Require().NoError(err)
+		suite.app.StakingKeeper.SetValidator(suite.ctx, val)
+		suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val)
+		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
+		suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
+		suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
+		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, power), stakingtypes.Unbonded, val, true)
+	}
 
-	suite.app.StakingKeeper.SetValidator(suite.ctx, val1)
-	suite.app.StakingKeeper.SetValidator(suite.ctx, val2)
-	suite.app.StakingKeeper.SetValidator(suite.ctx, val3)
-	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val1)
-	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val2)
-	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val3)
-	suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val1)
-	suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val2)
-	suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val3)
-
-	_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
-	_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
-	_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[2], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
-
+	//val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
+	//suite.Require().NoError(err)
+	//val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
+	//suite.Require().NoError(err)
+	//val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
+	//suite.Require().NoError(err)
+	//
+	//suite.app.StakingKeeper.SetValidator(suite.ctx, val1)
+	//suite.app.StakingKeeper.SetValidator(suite.ctx, val2)
+	//suite.app.StakingKeeper.SetValidator(suite.ctx, val3)
+	//suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val1)
+	//suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val2)
+	//suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val3)
+	//suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val1)
+	//suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val2)
+	//suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val3)
+	//
+	//suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val1.GetOperator())
+	//suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val2.GetOperator())
+	//suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val3.GetOperator())
+	//suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val1.GetOperator())
+	//suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val2.GetOperator())
+	//suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val3.GetOperator())
+	//
+	//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
+	//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
+	//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[2], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
 	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
-
 	return addrs, valAddrs
 }

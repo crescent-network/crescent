@@ -3,11 +3,11 @@ package types
 import (
 	"fmt"
 
+	farmingtypes "github.com/tendermint/farming/x/farming/types"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	farmingtypes "github.com/tendermint/farming/x/farming/types"
 )
 
 // LiquidBondDenom is temporary liquid staking bond denom
@@ -26,6 +26,7 @@ var (
 
 	MinimumStakingAmount = sdk.NewInt(1000000)
 
+	//LiquidStakingProxyAcc = farmingtypes.DeriveAddress(farmingtypes.AddressType20Bytes, ModuleName, "LiquidStakingProxyAcc")
 	LiquidStakingProxyAcc = farmingtypes.DeriveAddress(farmingtypes.AddressType32Bytes, ModuleName, "LiquidStakingProxyAcc")
 )
 

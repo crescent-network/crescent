@@ -27,6 +27,7 @@ func (k Keeper) LiquidStaking(
 		)
 	}
 
+	// TODO: a validator to whitelisted validator list with weight
 	// NOTE: source funds are always unbonded
 	newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, stakingCoin.Amount, stakingtypes.Unbonded, validator, true)
 	if err != nil {
@@ -37,19 +38,20 @@ func (k Keeper) LiquidStaking(
 
 func (k Keeper) LiquidUnstaking(
 	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
-) (time.Time, error) {
+) (time.Time, stakingtypes.UnbondingDelegation, error) {
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
 	if !found {
-		return time.Time{}, stakingtypes.ErrNoDelegatorForAddress
+		return time.Time{}, stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoDelegatorForAddress
 	}
 
-	if k.stakingKeeper.HasMaxUnbondingDelegationEntries(ctx, proxyAcc, valAddr) {
-		return time.Time{}, stakingtypes.ErrMaxUnbondingDelegationEntries
-	}
+	// skip max entries checking
+	//if k.stakingKeeper.HasMaxUnbondingDelegationEntries(ctx, proxyAcc, valAddr) {
+	//	return time.Time{}, stakingtypes.ErrMaxUnbondingDelegationEntries
+	//}
 
 	returnAmount, err := k.stakingKeeper.Unbond(ctx, proxyAcc, valAddr, sharesAmount)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, stakingtypes.UnbondingDelegation{}, err
 	}
 
 	// transfer the validator tokens to the not bonded pool
@@ -64,7 +66,7 @@ func (k Keeper) LiquidUnstaking(
 	ubd := k.stakingKeeper.SetUnbondingDelegationEntry(ctx, liquidStaker, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
 	k.stakingKeeper.InsertUBDQueue(ctx, ubd, completionTime)
 
-	return completionTime, nil
+	return completionTime, ubd, nil
 }
 
 // GetLiquidValidator get a single liquid validator

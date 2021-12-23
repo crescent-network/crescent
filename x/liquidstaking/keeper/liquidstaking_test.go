@@ -1,65 +1,75 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tendermint/farming/x/liquidstaking/types"
 )
 
 // tests GetDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
 func (suite *KeeperTestSuite) TestDelegation() {
-	addrs, vals := suite.CreateValidators([]int64{25, 6, 7})
-	fmt.Println(addrs, vals)
-
-	////construct the validators
-	//amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	//var validators [3]stakingtypes.Validator
-	//for i, amt := range amts {
-	//	validators[i], _ = stakingtypes.NewValidator(suite.valAddrs[i], PKs[i], stakingtypes.Description{})
-	//	validators[i], _ = validators[i].AddTokensFromDel(amt)
-	//	suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validators[i])
-	//	validators[i] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[i], true)
-	//}
-	//
-	////validators[0] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[0], true)
-	////validators[1] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[1], true)
-	////validators[2] = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validators[2], true)
-	//
-	//// first add a validators[0] to delegate too
-	//bond1to1 := stakingtypes.NewDelegation(suite.delAddrs[0], suite.valAddrs[0], sdk.NewDec(9))
-
-	//addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
-	//
-	//delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	//val1, found := app.StakingKeeper.GetValidator(ctx, vals[0])
-	//require.True(t, found)
-	//val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
-	//require.True(t, found)
+	_, vals := suite.CreateValidators([]int64{1000000, 2000000, 3000000})
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
 
 	validator0, found := suite.app.StakingKeeper.GetValidator(suite.ctx, vals[0])
 	suite.Require().True(found)
 
-	// set and retrieve a record
-	newShares, err := suite.app.StakingKeeper.Delegate(suite.ctx, suite.delAddrs[0], sdk.NewInt(10000), stakingtypes.Unbonded, validator0, true)
-	fmt.Println(newShares, err)
+	stakingAmt := sdk.NewInt(50000)
+	newShares, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt), validator0)
+	suite.Require().Equal(newShares, stakingAmt.ToDec())
 	suite.Require().NoError(err)
-	//suite.app.StakingKeeper.SetDelegation(suite.ctx, bond1to1)
-	resBond, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], vals[0])
+
+	_, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], vals[0])
+	suite.Require().False(found)
+
+	proxyAccDel, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, vals[0])
+	suite.Require().Equal(proxyAccDel.Shares, stakingAmt.ToDec())
 	suite.Require().True(found)
-	fmt.Println(resBond, found)
-	//suite.Require().Equal(bond1to1, resBond)
 
-	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
+	balanceBeforeUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
+	suite.Require().Equal(balanceBeforeUBD.Amount, sdk.NewInt(999950000))
 
-	kvals := suite.app.StakingKeeper.GetAllValidators(suite.ctx)
-	fmt.Println(kvals)
+	ubdAmt := sdk.NewInt(10000)
+	ubdTime, ubd, err := suite.keeper.LiquidUnstaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], vals[0], ubdAmt.ToDec())
+	suite.Require().NoError(err)
+	suite.Require().Equal(ubd.DelegatorAddress, suite.delAddrs[0].String())
+	suite.Require().Equal(ubdTime, types.MustParseRFC3339("2022-03-22T00:00:00Z"))
 
-	// TODO: fix panic on IncrementValidatorPeriod, decrementReferenceCount
-	newShares, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.addrs[2], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)), validator0)
-	fmt.Println(newShares, err)
+	balanceBeginUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
+	suite.Require().Equal(balanceBeginUBD.Amount, balanceBeforeUBD.Amount)
+
+	proxyAccDel, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, vals[0])
+	suite.Require().Equal(proxyAccDel.Shares, stakingAmt.Sub(ubdAmt).ToDec())
+	suite.Require().True(found)
+
+	suite.ctx = suite.ctx.WithBlockHeight(200).WithBlockTime(ubdTime.Add(1))
+	updates := suite.app.StakingKeeper.BlockValidatorUpdates(suite.ctx) // EndBlock of staking keeper
+	suite.Require().Empty(updates)
+	balanceCompleteUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
+	suite.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(ubdAmt))
+
+	// set and retrieve a record
+	//newShares, err := suite.app.StakingKeeper.Delegate(suite.ctx, suite.delAddrs[1], sdk.NewInt(10000), stakingtypes.Unbonded, validator0, true)
+	//fmt.Println(newShares, err)
+	//suite.Require().NoError(err)
+	//resBond, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[1], vals[0])
+	//suite.Require().True(found)
+	//fmt.Println(resBond, found)
+	//_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
+
+	//stakingCoin := sdk.NewCoin("stake", sdk.NewInt(10000))
+	//err = suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[2], types.LiquidStakingProxyAcc, sdk.NewCoins(stakingCoin))
+	//suite.Require().NoError(err)
+	//newShares, err = suite.app.StakingKeeper.Delegate(suite.ctx, types.LiquidStakingProxyAcc, sdk.NewInt(5000), stakingtypes.Unbonded, validator0, true)
+	//fmt.Println(newShares, err)
+	//suite.Require().NoError(err)
+	//newShares, err = suite.app.StakingKeeper.Delegate(suite.ctx, types.LiquidStakingProxyAcc, sdk.NewInt(5000), stakingtypes.Unbonded, validator0, true)
+	//fmt.Println(newShares, err)
+	//suite.Require().NoError(err)
+	//newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, stakingCoin.Amount, stakingtypes.Unbonded, validator, true)
+	// // fix panic on IncrementValidatorPeriod, decrementReferenceCount
+	//reward := suite.app.DistrKeeper.GetValidatorCurrentRewards(suite.ctx, validator0.GetOperator())
+	//fmt.Println(reward)
+	//histRewards := suite.app.DistrKeeper.GetValidatorHistoricalRewards(suite.ctx, validator0.GetOperator(), reward.Period-1)
 
 	//
 	//// modify a records, save, and retrieve
