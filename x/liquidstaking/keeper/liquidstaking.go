@@ -1,5 +1,109 @@
 package keeper
 
+import (
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/tendermint/farming/x/liquidstaking/types"
+)
+
+func (k Keeper) LiquidStaking(
+	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin,
+	validator stakingtypes.Validator) (newShares sdk.Dec, err error) {
+
+	// send staking coin to liquid staking proxy account to proxy delegation
+	err = k.bankKeeper.SendCoins(ctx, liquidStaker, proxyAcc, sdk.NewCoins(stakingCoin))
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+
+	// check bond denomination
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
+	if stakingCoin.Denom != bondDenom {
+		return sdk.ZeroDec(), sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", stakingCoin.Denom, bondDenom,
+		)
+	}
+
+	// TODO: a validator to whitelisted validator list with weight
+	// NOTE: source funds are always unbonded
+	newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, stakingCoin.Amount, stakingtypes.Unbonded, validator, true)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	return newShares, nil
+}
+
+func (k Keeper) LiquidUnstaking(
+	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
+) (time.Time, stakingtypes.UnbondingDelegation, error) {
+	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
+	if !found {
+		return time.Time{}, stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoDelegatorForAddress
+	}
+
+	// skip max entries checking
+	//if k.stakingKeeper.HasMaxUnbondingDelegationEntries(ctx, proxyAcc, valAddr) {
+	//	return time.Time{}, stakingtypes.ErrMaxUnbondingDelegationEntries
+	//}
+
+	returnAmount, err := k.stakingKeeper.Unbond(ctx, proxyAcc, valAddr, sharesAmount)
+	if err != nil {
+		return time.Time{}, stakingtypes.UnbondingDelegation{}, err
+	}
+
+	// transfer the validator tokens to the not bonded pool
+	if validator.IsBonded() {
+		coins := sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), returnAmount))
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, coins); err != nil {
+			panic(err)
+		}
+	}
+
+	completionTime := ctx.BlockHeader().Time.Add(k.stakingKeeper.UnbondingTime(ctx))
+	ubd := k.stakingKeeper.SetUnbondingDelegationEntry(ctx, liquidStaker, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
+	k.stakingKeeper.InsertUBDQueue(ctx, ubd, completionTime)
+
+	return completionTime, ubd, nil
+}
+
+// GetLiquidValidator get a single liquid validator
+func (k Keeper) GetLiquidValidator(ctx sdk.Context, addr sdk.ValAddress) (val types.LiquidValidator, found bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	value := store.Get(types.GetLiquidValidatorKey(addr))
+	if value == nil {
+		return val, false
+	}
+
+	val = types.MustUnmarshalLiquidValidator(k.cdc, value)
+	return val, true
+}
+
+// SetValidator set the main record holding liquid validator details
+func (k Keeper) SetValidator(ctx sdk.Context, val types.LiquidValidator) {
+	store := ctx.KVStore(k.storeKey)
+	bz := types.MustMarshalLiquidValidator(k.cdc, &val)
+	store.Set(types.GetLiquidValidatorKey(val.GetOperator()), bz)
+}
+
+// GetAllLiquidValidators get the set of all liquid validators with no limits, used during genesis dump
+func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals []types.LiquidValidator) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
+		vals = append(vals, val)
+	}
+
+	return vals
+}
+
 //// CollectBiquidStakings collects all the valid liquidStakings registered in params.BiquidStakings and
 //// distributes the total collected coins to destination address.
 //func (k Keeper) CollectBiquidStakings(ctx sdk.Context) error {

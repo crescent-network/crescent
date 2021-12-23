@@ -75,11 +75,6 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestGetMaccPerms(t *testing.T) {
-	dup := GetMaccPerms()
-	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
-}
-
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
