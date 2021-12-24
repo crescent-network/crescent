@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -89,6 +90,13 @@ type StakingKeeper interface {
 	BeginRedelegation(
 		ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 	) (completionTime time.Time, err error)
+}
+
+// GovKeeper expected gov keeper (noalias)
+type GovKeeper interface {
+	Tally(ctx sdk.Context, proposal govtypes.Proposal) (passes bool, burnDeposits bool, tallyResults govtypes.TallyResult)
+	GetVotes(ctx sdk.Context, proposalID uint64) (votes govtypes.Votes)
+	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govtypes.Vote, found bool)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)
