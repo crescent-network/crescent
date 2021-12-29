@@ -11,7 +11,7 @@ import (
 )
 
 // LiquidBondDenom is temporary liquid staking bond denom
-// TODO: to immutable params
+// TODO: to immutable params and LiquidBondDenom() on keeper for exported
 const LiquidBondDenom = "bstake"
 
 // Parameter store keys
@@ -40,6 +40,7 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default liquidstaking module parameters.
 func DefaultParams() Params {
 	return Params{
+		// TODO: add btoken denom immutable
 		WhitelistedValidators: []WhitelistedValidator{},
 		UnstakeFeeRate:        DefaultUnstakeFeeRate,
 	}

@@ -427,6 +427,7 @@ func NewFarmingApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
+		app.DistrKeeper,
 		app.GovKeeper,
 		app.ModuleAccountAddrs(),
 	)

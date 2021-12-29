@@ -136,7 +136,8 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
 		suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
 		suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
-		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, power), stakingtypes.Unbonded, val, true)
+		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
+		//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, power), stakingtypes.Unbonded, val, true)
 	}
 
 	//val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})

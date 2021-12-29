@@ -65,6 +65,7 @@ func (ValidatorStatus) EnumDescriptor() ([]byte, []int) {
 
 // Params defines the set of params for the farming module.
 type Params struct {
+	// TODO: add btoken denom
 	WhitelistedValidators []WhitelistedValidator `protobuf:"bytes,1,rep,name=whitelisted_validators,json=whitelistedValidators,proto3" json:"whitelisted_validators" yaml:"whitelisted_validators"`
 	// unstake_fee_rate specifies the ...
 	UnstakeFeeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=unstake_fee_rate,json=unstakeFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"unstake_fee_rate" yaml:"unstake_fee_rate"`

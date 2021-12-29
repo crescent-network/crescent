@@ -1,6 +1,7 @@
 package liquidstaking
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -17,4 +18,36 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	//if err != nil {
 	//	panic(err)
 	//}
+}
+
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
+	params := k.GetParams(ctx)
+	liquidValsMap := k.GetAllLiquidValidatorsMap(ctx)
+
+	whitelistedValMap := make(map[string]types.WhitelistedValidator)
+	// Set Liquid validators for added whitelist validators
+	for _, wv := range params.WhitelistedValidators {
+		if lv, ok := liquidValsMap[wv.ValidatorAddress]; ok {
+			// TODO: update states
+			fmt.Println("[already active liquid validator]", lv)
+		} else {
+			k.SetLiquidValidator(ctx, types.LiquidValidator{
+				OperatorAddress: wv.ValidatorAddress,
+				Status:          types.ValidatorStatusWhiteListed,
+				LiquidTokens:    sdk.ZeroInt(),
+				Weight:          wv.Weight,
+			})
+			// add and set val
+		}
+		whitelistedValMap[wv.ValidatorAddress] = wv
+	}
+	// TODO: delisting logic
+	for _, lv := range k.GetAllLiquidValidators(ctx) {
+		if wv, ok := whitelistedValMap[lv.OperatorAddress]; !ok && lv.Status == types.ValidatorStatusWhiteListed {
+			lv.Status = types.ValidatorStatusDelisting
+			k.SetLiquidValidator(ctx, lv)
+			fmt.Println("[delisting liquid validator]", lv, wv)
+		}
+	}
 }

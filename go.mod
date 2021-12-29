@@ -27,7 +27,7 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/b-harvest/cosmos-sdk v0.43.0-rc0.0.20211221190102-5ba5b35e26c4
+	github.com/cosmos/cosmos-sdk => /Users/dongsamb/git-local/cosmos-sdk
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
