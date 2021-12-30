@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
 	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.MaxEntries = 200
-	stakingParams.MaxValidators = 20
+	stakingParams.MaxValidators = 30
 	suite.app.StakingKeeper.SetParams(suite.ctx, stakingParams)
 
 	suite.keeper = suite.app.LiquidStakingKeeper
@@ -136,7 +136,7 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
 		suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
 		suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
-		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
+		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[i], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
 		//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, power), stakingtypes.Unbonded, val, true)
 	}
 

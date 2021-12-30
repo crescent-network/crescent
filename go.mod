@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.1
+	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/spf13/cast v1.4.1
@@ -27,7 +28,7 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => /Users/dongsamb/git-local/cosmos-sdk
+	github.com/cosmos/cosmos-sdk => /Users/dongsamb/git-local/cosmos-sdk // https://github.com/b-harvest/cosmos-sdk/tree/0.44.3-gov
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2

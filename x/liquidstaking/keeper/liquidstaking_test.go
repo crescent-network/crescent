@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 	suite.keeper.SetParams(suite.ctx, params)
 
 	// v1, v2, v3, v4
-	vals, valOpers := suite.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000})
+	vals, valOpers := suite.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
 	//params := suite.keeper.GetParams(suite.ctx)
 	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{valOpers[0].String(), sdk.OneDec()},
@@ -279,7 +279,7 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 
 	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[0], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
 	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[1], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[2], govtypes.NewNonSplitVoteOption(govtypes.OptionEmpty))
+	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[2], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
 	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[3], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
 
 	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delA, govtypes.NewNonSplitVoteOption(govtypes.OptionEmpty))
@@ -298,6 +298,11 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 
 	//bonded := suite.app.StakingKeeper.GetBondedValidatorsByPower(suite.ctx)
 	//fmt.Println(bonded)
+	suite.app.StakingKeeper.IterateBondedValidatorsByPower(suite.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+		fmt.Println(validator)
+		return false
+	})
+
 	pass, burnDeposit, result := suite.app.GovKeeper.Tally(suite.ctx, proposal)
 	fmt.Println(pass, burnDeposit, result)
 	fmt.Println(types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc.String())
