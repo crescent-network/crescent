@@ -24,13 +24,10 @@ func (h Hooks) AfterProposalFailedMinDeposit(_ sdk.Context, _ uint64)          {
 func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64)         {}
 
 func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
-	// TODO: WIP, add types for arg
-	//(*votes)["testaddress"] = make(map[govtypes.VoteOption]sdk.Dec)
 	liquidVals := h.k.GetActiveLiquidValidators(ctx)
 	lenLiquidVals := len(liquidVals)
 	totalSupply := h.k.bankKeeper.GetSupply(ctx, types.LiquidBondDenom).Amount.ToDec()
 	totalVotingPower := sdk.ZeroDec()
-	// TODO: btoken balance to power conversion by netAmount
 	for _, vote := range *votes {
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
 		if err != nil {
@@ -42,29 +39,18 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 		(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
 		for _, val := range liquidVals {
 			(*otherVotes)[vote.Voter][val.OperatorAddress] = lTokenBalance
-			//ovote[val.OperatorAddress] = map[govtypes.VoteOption]sdk.Dec{}
-			//ovote[val.OperatorAddress]
 		}
 	}
-	powerRate := totalVotingPower.QuoTruncate(totalSupply)
-	pp.Println(powerRate.String(), totalVotingPower.String(), totalSupply.String())
-	for voter, vals := range *otherVotes {
-		// TODO: call by ref
-		for val, power := range vals {
-			// TODO: decimal correction
-			(*otherVotes)[voter][val] = power.MulTruncate(powerRate).QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
-			//ovote[val.OperatorAddress] = map[govtypes.VoteOption]sdk.Dec{}
-			//ovote[val.OperatorAddress]
+	if totalSupply.IsPositive() && totalVotingPower.IsPositive() {
+		powerRate := totalVotingPower.QuoTruncate(totalSupply)
+		pp.Println(powerRate.String(), totalVotingPower.String(), totalSupply.String())
+		for voter, vals := range *otherVotes {
+			for val, power := range vals {
+				// TODO: decimal correction
+				(*otherVotes)[voter][val] = power.MulTruncate(powerRate).QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
+			}
 		}
-		//for valAddrStr, optionMap := range ovote {
-		//	for option, power := range optionMap {
-		//
-		//	}
-		//}
+		pp.Print("[GetOtherVotes on liquid-staking votes", *votes)
+		pp.Print("[GetOtherVotes on liquid-staking otherVotes", *otherVotes)
 	}
-	//(*votes)["testaddress"] = map[govtypes.VoteOption]sdk.Dec{}
-	//(*votes)["testaddress"][govtypes.OptionYes] = sdk.MustNewDecFromStr("99999999.9")
-	//fmt.Println("[GetOtherVotes on liquid-staking", *votes, *otherVotes)
-	pp.Print("[GetOtherVotes on liquid-staking votes", *votes)
-	pp.Print("[GetOtherVotes on liquid-staking otherVotes", *otherVotes)
 }

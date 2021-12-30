@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/k0kubun/pp"
 	"github.com/tendermint/farming/x/liquidstaking"
 	"github.com/tendermint/farming/x/liquidstaking/types"
 )
@@ -241,6 +242,49 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 	_, err := suite.app.StakingKeeper.Delegate(suite.ctx, delG, sdk.NewInt(60000000), stakingtypes.Unbonded, val4, true)
 	suite.Require().NoError(err)
 
+	// v5(H, 40) already
+	//_, err = suite.app.StakingKeeper.Delegate(suite.ctx, suite.addrs[3], sdk.NewInt(40), stakingtypes.Unbonded, val2, true)
+	//suite.Require().NoError(err)
+
+	// 7 addr B, C, D, E, F, G, H
+	tp := govtypes.NewTextProposal("Test", "description")
+	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
+	suite.Require().NoError(err)
+
+	proposal.Status = govtypes.StatusVotingPeriod
+	suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
+
+	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[0], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
+	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[1], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
+	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[2], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
+	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[3], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
+
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delB, govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
+	suite.Require().NoError(err)
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delC, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
+	suite.Require().NoError(err)
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delD, govtypes.NewNonSplitVoteOption(govtypes.OptionNoWithVeto))
+	suite.Require().NoError(err)
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delE, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
+	suite.Require().NoError(err)
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delF, govtypes.NewNonSplitVoteOption(govtypes.OptionAbstain))
+	suite.Require().NoError(err)
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delG, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
+	suite.Require().NoError(err)
+
+	suite.app.StakingKeeper.IterateBondedValidatorsByPower(suite.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+		pp.Println(validator.GetOperator().String(), validator.GetDelegatorShares().String())
+		return false
+	})
+
+	cachedCtx, _ := suite.ctx.CacheContext()
+	pass, burnDeposit, result := suite.app.GovKeeper.Tally(cachedCtx, proposal)
+	pp.Print(pass, burnDeposit, result.String())
+	suite.Require().Equal(sdk.NewInt(80000000), result.Yes)
+	suite.Require().Equal(sdk.NewInt(10000000), result.No)
+	suite.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
+	suite.Require().Equal(sdk.NewInt(0), result.Abstain)
+
 	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delA, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000000)))
 	suite.Require().NoError(err)
 	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delA, types.LiquidBondDenom))
@@ -265,47 +309,20 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 	suite.Require().NoError(err)
 	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delF, types.LiquidBondDenom))
 
-	// v5(H, 40) already
-	//_, err = suite.app.StakingKeeper.Delegate(suite.ctx, suite.addrs[3], sdk.NewInt(40), stakingtypes.Unbonded, val2, true)
-	//suite.Require().NoError(err)
-
-	// 7 addr B, C, D, E, F, G, H
-	tp := govtypes.NewTextProposal("Test", "description")
-	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
-	suite.Require().NoError(err)
-
-	proposal.Status = govtypes.StatusVotingPeriod
-	suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
-
-	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[0], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[1], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[2], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
-	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[3], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
-
-	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delA, govtypes.NewNonSplitVoteOption(govtypes.OptionEmpty))
-	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delB, govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
-	suite.Require().NoError(err)
-	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delC, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-	suite.Require().NoError(err)
-	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delD, govtypes.NewNonSplitVoteOption(govtypes.OptionNoWithVeto))
-	suite.Require().NoError(err)
-	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delE, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-	suite.Require().NoError(err)
-	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delF, govtypes.NewNonSplitVoteOption(govtypes.OptionAbstain))
-	suite.Require().NoError(err)
-	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delG, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-	suite.Require().NoError(err)
-
-	//bonded := suite.app.StakingKeeper.GetBondedValidatorsByPower(suite.ctx)
-	//fmt.Println(bonded)
 	suite.app.StakingKeeper.IterateBondedValidatorsByPower(suite.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-		fmt.Println(validator)
+		pp.Println(validator.GetOperator().String(), validator.GetDelegatorShares().String())
 		return false
 	})
 
-	pass, burnDeposit, result := suite.app.GovKeeper.Tally(suite.ctx, proposal)
-	fmt.Println(pass, burnDeposit, result)
-	fmt.Println(types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc.String())
+	cachedCtx, _ = suite.ctx.CacheContext()
+	pass, burnDeposit, result = suite.app.GovKeeper.Tally(cachedCtx, proposal)
+	// TODO: correct decimal error on rebalancing or something
+	//suite.Require().Equal(sdk.NewInt(240000000), result.Yes)
+	//suite.Require().Equal(sdk.NewInt(100000000), result.No)
+	//suite.Require().Equal(sdk.NewInt(20000000), result.NoWithVeto)
+	//suite.Require().Equal(sdk.NewInt(120000000), result.Abstain)
+	pp.Print(pass, burnDeposit, result.String())
+
 	//_, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], valOpers[0])
 	//suite.Require().False(found)
 
