@@ -10,28 +10,24 @@ import (
 	"github.com/tendermint/farming/x/liquidstaking/types"
 )
 
-func (k Keeper) NetAmountTBD(ctx sdk.Context) sdk.Dec {
-	// TODO: delegation amount + unbonding amount + reward amount for the liquid staking module account
-	// balance of types.LiquidStakingProxyAcc, remaining reward, unbonding amount
+func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
+	// delegation power, bondDenom balance, remaining reward, unbonding amount of types.LiquidStakingProxyAcc
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, bondDenom)
 	ubds := k.stakingKeeper.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
 	liquidPower := sdk.ZeroDec()
 	unbondingPower := sdk.ZeroInt()
 	totalRewards := sdk.ZeroDec()
-	//var delRewards []distrtypes.DelegationDelegatorReward
 
+	// Cache ctx for calculate rewards
 	cachedCtx, _ := ctx.CacheContext()
 	k.stakingKeeper.IterateDelegations(
-		// TODO: cache ctx
 		cachedCtx, types.LiquidStakingProxyAcc,
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(cachedCtx, valAddr)
 			endingPeriod := k.distrKeeper.IncrementValidatorPeriod(cachedCtx, val)
 			delReward := k.distrKeeper.CalculateDelegationRewards(cachedCtx, val, del, endingPeriod)
-
-			//delRewards = append(delRewards, distrtypes.NewDelegationDelegatorReward(valAddr, delReward))
 			liquidPower = liquidPower.Add(del.GetShares())
 			totalRewards = totalRewards.Add(delReward.AmountOf(bondDenom))
 			return false
@@ -40,36 +36,34 @@ func (k Keeper) NetAmountTBD(ctx sdk.Context) sdk.Dec {
 
 	for _, ubd := range ubds {
 		for _, entry := range ubd.Entries {
-			// TODO: Balance or InitialBalance(without slashing)
+			// use Balance(slashing applied) not InitialBalance(without slashing)
 			unbondingPower = unbondingPower.Add(entry.Balance)
 		}
 	}
 
-	// TODO: unbonding power is on delegation? no
-	// TODO: decimal handling
 	fmt.Println("[balance, liquidPower, totalRewards, unbondingPower]", balance, liquidPower, totalRewards, unbondingPower)
 	return balance.Amount.ToDec().Add(liquidPower).Add(totalRewards).Add(unbondingPower.ToDec())
 }
 
-func (k Keeper) NetAmount(ctx sdk.Context) sdk.Int {
-	return k.bankKeeper.GetSupply(ctx, types.LiquidBondDenom).Amount
-}
+//func (k Keeper) NetAmountTmp(ctx sdk.Context) sdk.Int {
+//	return k.bankKeeper.GetSupply(ctx, types.LiquidBondDenom).Amount
+//}
 
 // LiquidStaking ...
 // TODO: distribute activeValidators or make upper level function
 func (k Keeper) LiquidStaking(
 	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin) (newShares sdk.Dec, err error) {
 
-	netAmount := k.NetAmountTBD(ctx)
-	//netAmount := k.NetAmount(ctx).ToDec()
+	netAmount := k.NetAmount(ctx)
+
 	// send staking coin to liquid staking proxy account to proxy delegation
 	err = k.bankKeeper.SendCoins(ctx, liquidStaker, proxyAcc, sdk.NewCoins(stakingCoin))
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	// TODO: mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
-	// TODO: types.BtokenDenom to be params.LiquidBondDenom
+	// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
+	// TODO: types.LiquidBondDenom to be params.LiquidBondDenom and keeper.LiquidBondDenom()
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, types.LiquidBondDenom)
 	mintAmt := stakingCoin.Amount
 	stakingAmt := stakingCoin.Amount.ToDec()
@@ -77,8 +71,8 @@ func (k Keeper) LiquidStaking(
 		// TODO: review decimal issue
 		mintAmt = bTokenTotalSupply.Amount.ToDec().Mul(stakingAmt).QuoTruncate(netAmount).TruncateInt()
 	}
-	fmt.Println("[NetAmount, NetAmountTBD, mint]", k.NetAmount(ctx), netAmount, mintAmt, stakingAmt, bTokenTotalSupply)
-	// TODO: mint on module and send
+
+	// mint on module acc and send
 	mintCoin := sdk.NewCoins(sdk.NewCoin(types.LiquidBondDenom, mintAmt))
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoin)
 	if err != nil {
@@ -99,11 +93,16 @@ func (k Keeper) LiquidStaking(
 		)
 	}
 
-	// TODO: rebalancing and sum validation, total should be same with decimal error correction
+	// TODO: rebalancing(get liquidPower), mul weight and sum validation, total should be same with decimal error correction
 	activeVals := k.GetActiveLiquidValidators(ctx)
-	share := stakingAmt.QuoTruncate(sdk.NewDec(int64(len(activeVals)))).TruncateInt()
+	lenActiveVals := len(activeVals)
+	share := stakingAmt.QuoTruncate(sdk.NewDec(int64(lenActiveVals))).TruncateInt()
+	decimalErrorAmt := stakingAmt.TruncateInt().Sub(share.MulRaw(int64(lenActiveVals)))
 	totalNewShares := sdk.ZeroDec()
-	for _, val := range activeVals {
+	for i, val := range activeVals {
+		if i+1 == lenActiveVals {
+			share = share.Add(decimalErrorAmt)
+		}
 		// TODO: a validator to whitelisted validator list with weight
 		// NOTE: source funds are always unbonded
 		validator, found := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
@@ -114,6 +113,8 @@ func (k Keeper) LiquidStaking(
 		if err != nil {
 			return sdk.ZeroDec(), err
 		}
+		val.LiquidTokens = val.LiquidTokens.Add(share)
+		k.SetLiquidValidator(ctx, val)
 		totalNewShares = totalNewShares.Add(newShares)
 	}
 
@@ -134,11 +135,10 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, []stakingtypes.UnbondingDelegation{}, fmt.Errorf("LiquidBondDenom supply is not positive")
 	}
 	amountDec := amount.Amount.ToDec()
-	netAmount := k.NetAmountTBD(ctx)
+	netAmount := k.NetAmount(ctx)
 	//netAmount := k.NetAmount(ctx).ToDec()
 	unstakeAmount := netAmount.Mul(amountDec.QuoTruncate(bTokenTotalSupply.Amount.ToDec())).Mul(sdk.OneDec().Sub(params.UnstakeFeeRate)).TruncateDec()
 	fmt.Println(unstakeAmount)
-	fmt.Println("[NetAmount, NetAmountTBD]", k.NetAmount(ctx), k.NetAmountTBD(ctx))
 
 	// TODO: burn or reserve queue for burning btoken, is unstake make reduce power immediately?
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, liquidStaker, types.ModuleName, sdk.NewCoins(amount))
@@ -153,11 +153,17 @@ func (k Keeper) LiquidUnstaking(
 	}
 
 	activeVals := k.GetActiveLiquidValidators(ctx)
+	lenActiveVals := len(activeVals)
 	// TODO: Get 1/n power len(activeVals) with rebalancing, checking sum of shares under total unstakeAmount
-	share := unstakeAmount.QuoTruncate(sdk.NewDec(int64(len(activeVals))))
+	share := unstakeAmount.QuoTruncate(sdk.NewDec(int64(lenActiveVals)))
+	decimalErrorAmt := unstakeAmount.TruncateInt().Sub(share.TruncateInt().MulRaw(int64(lenActiveVals)))
+
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
-	for _, val := range activeVals {
+	for i, val := range activeVals {
+		if i+1 == lenActiveVals {
+			share = share.Add(decimalErrorAmt.ToDec())
+		}
 		var ubd stakingtypes.UnbondingDelegation
 		ubdTime, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), share)
 		if err != nil {
@@ -165,6 +171,8 @@ func (k Keeper) LiquidUnstaking(
 			panic(err)
 		}
 		ubds = append(ubds, ubd)
+		val.LiquidTokens = val.LiquidTokens.Sub(share.TruncateInt())
+		k.SetLiquidValidator(ctx, val)
 	}
 	return ubdTime, ubds, nil
 }
