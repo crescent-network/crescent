@@ -82,126 +82,8 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	fmt.Println("proxyAccDel1 after after", proxyAccDel1)
 }
 
-//
-//// test Liquid Staking gov power
-//func (suite *KeeperTestSuite) TestLiquidStakingGov() {
-//	// v1, v2, v3, v4
-//	valopers, vals := suite.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000})
-//	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
-//
-//	val1, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, vals[0])
-//	val2, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, vals[1])
-//	val3, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, vals[2])
-//	val4, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, vals[3])
-//	//val5, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, vals[0])
-//
-//	delA := suite.addrs[0]
-//	delB := suite.addrs[1]
-//	delC := suite.addrs[2]
-//	delD := suite.addrs[3]
-//	delE := suite.addrs[4]
-//	delF := suite.addrs[5]
-//	delG := suite.addrs[6]
-//	//delH := suite.addrs[3]
-//	//delTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 10)
-//
-//	_, err := suite.app.StakingKeeper.Delegate(suite.ctx, delG, sdk.NewInt(60000000), stakingtypes.Unbonded, val4, true)
-//	suite.Require().NoError(err)
-//
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delA, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)), val1)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delA, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)), val2)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delA, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)), val3)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delA, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)), val4)
-//	suite.Require().NoError(err)
-//
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val1)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val2)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val3)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val4)
-//	suite.Require().NoError(err)
-//
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delC, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000000)), val1)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delC, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000000)), val2)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delC, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000000)), val3)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delC, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000000)), val4)
-//	suite.Require().NoError(err)
-//
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delD, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5000000)), val1)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delD, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5000000)), val2)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delD, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5000000)), val3)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delD, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5000000)), val4)
-//	suite.Require().NoError(err)
-//
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delE, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val1)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delE, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val2)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delE, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val3)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delE, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)), val4)
-//	suite.Require().NoError(err)
-//
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delF, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000000)), val1)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delF, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000000)), val2)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delF, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000000)), val3)
-//	suite.Require().NoError(err)
-//	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delF, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000000)), val4)
-//	suite.Require().NoError(err)
-//
-//	// v5(H, 40) already
-//	//_, err = suite.app.StakingKeeper.Delegate(suite.ctx, suite.addrs[3], sdk.NewInt(40), stakingtypes.Unbonded, val2, true)
-//	//suite.Require().NoError(err)
-//
-//	// 7 addr B, C, D, E, F, G, H
-//	tp := govtypes.NewTextProposal("Test", "description")
-//	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
-//	suite.Require().NoError(err)
-//
-//	proposal.Status = govtypes.StatusVotingPeriod
-//	suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
-//
-//	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, valopers[0], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-//	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, valopers[1], govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-//	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, valopers[2], govtypes.NewNonSplitVoteOption(govtypes.OptionEmpty))
-//	suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, valopers[3], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
-//
-//	//suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delA, govtypes.NewNonSplitVoteOption(govtypes.OptionEmpty))
-//	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delB, govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
-//	suite.Require().NoError(err)
-//	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delC, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-//	suite.Require().NoError(err)
-//	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delD, govtypes.NewNonSplitVoteOption(govtypes.OptionNoWithVeto))
-//	suite.Require().NoError(err)
-//	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delE, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-//	suite.Require().NoError(err)
-//	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delF, govtypes.NewNonSplitVoteOption(govtypes.OptionAbstain))
-//	suite.Require().NoError(err)
-//	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delG, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
-//	suite.Require().NoError(err)
-//
-//	//bonded := suite.app.StakingKeeper.GetBondedValidatorsByPower(suite.ctx)
-//	//fmt.Println(bonded)
-//	pass, burnDeposit, result := suite.app.GovKeeper.Tally(suite.ctx, proposal)
-//	fmt.Println(pass, burnDeposit, result)
-//	fmt.Println(types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc.String())
-//}
-//
 // test Liquid Staking gov power
-func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
+func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	suite.SetupTest()
 	params := types.DefaultParams()
 	params.UnstakeFeeRate = sdk.ZeroDec()
@@ -209,7 +91,6 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 
 	// v1, v2, v3, v4
 	vals, valOpers := suite.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
-	//params := suite.keeper.GetParams(suite.ctx)
 	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{valOpers[0].String(), sdk.OneDec()},
 		{valOpers[1].String(), sdk.OneDec()},
@@ -287,40 +168,45 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 
 	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delA, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000000)))
 	suite.Require().NoError(err)
-	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delA, types.LiquidBondDenom))
+	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delA, types.LiquidBondDenom), "delA", delA.String())
 
 	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(80000000)))
 	suite.Require().NoError(err)
-	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delB, types.LiquidBondDenom))
+	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delB, types.LiquidBondDenom), "delB", delB.String())
 
 	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delC, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(60000000)))
 	suite.Require().NoError(err)
-	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delC, types.LiquidBondDenom))
+	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delC, types.LiquidBondDenom), "delC", delC.String())
 
 	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delD, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000000)))
 	suite.Require().NoError(err)
-	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delD, types.LiquidBondDenom))
+	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delD, types.LiquidBondDenom), "delD", delD.String())
 
 	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delE, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(80000000)))
 	suite.Require().NoError(err)
-	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delE, types.LiquidBondDenom))
+	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delE, types.LiquidBondDenom), "delE", delE.String())
 
 	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delF, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(120000000)))
 	suite.Require().NoError(err)
-	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delF, types.LiquidBondDenom))
+	fmt.Println(suite.app.BankKeeper.GetBalance(suite.ctx, delF, types.LiquidBondDenom), "delF", delF.String())
 
+	totalPower := sdk.ZeroInt()
+	totalShare := sdk.ZeroDec()
 	suite.app.StakingKeeper.IterateBondedValidatorsByPower(suite.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 		pp.Println(validator.GetOperator().String(), validator.GetDelegatorShares().String())
+		totalPower = totalPower.Add(validator.GetTokens())
+		totalShare = totalShare.Add(validator.GetDelegatorShares())
 		return false
 	})
 
+	fmt.Println(totalPower, totalShare)
 	cachedCtx, _ = suite.ctx.CacheContext()
 	pass, burnDeposit, result = suite.app.GovKeeper.Tally(cachedCtx, proposal)
 	// TODO: correct decimal error on rebalancing or something
-	//suite.Require().Equal(sdk.NewInt(240000000), result.Yes)
-	//suite.Require().Equal(sdk.NewInt(100000000), result.No)
-	//suite.Require().Equal(sdk.NewInt(20000000), result.NoWithVeto)
-	//suite.Require().Equal(sdk.NewInt(120000000), result.Abstain)
+	suite.Require().Equal(sdk.NewInt(240000000), result.Yes)
+	suite.Require().Equal(sdk.NewInt(100000000), result.No)
+	suite.Require().Equal(sdk.NewInt(20000000), result.NoWithVeto)
+	suite.Require().Equal(sdk.NewInt(120000000), result.Abstain)
 	pp.Print(pass, burnDeposit, result.String())
 
 	//_, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], valOpers[0])
