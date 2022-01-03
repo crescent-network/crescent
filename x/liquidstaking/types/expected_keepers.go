@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -64,6 +65,8 @@ type StakingKeeper interface {
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool))
 
+	GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.UnbondingDelegation
+
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 
@@ -91,6 +94,13 @@ type StakingKeeper interface {
 	) (completionTime time.Time, err error)
 }
 
+// GovKeeper expected gov keeper (noalias)
+type GovKeeper interface {
+	Tally(ctx sdk.Context, proposal govtypes.Proposal) (passes bool, burnDeposits bool, tallyResults govtypes.TallyResult)
+	GetVotes(ctx sdk.Context, proposalID uint64) (votes govtypes.Votes)
+	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govtypes.Vote, found bool)
+}
+
 // StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)                           // Must be called when a validator is created
@@ -100,4 +110,10 @@ type StakingHooks interface {
 	BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) // Must be called when a delegation's shares are modified
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress)
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec)
+}
+
+type Distrkeeper interface {
+	//DelegationTotalRewards(c sdk.Context, req *types.QueryDelegationTotalRewardsRequest) (*distrtypes.QueryDelegationTotalRewardsResponse, error)
+	IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64
+	CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins)
 }

@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
 	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.MaxEntries = 200
-	stakingParams.MaxValidators = 20
+	stakingParams.MaxValidators = 30
 	suite.app.StakingKeeper.SetParams(suite.ctx, stakingParams)
 
 	suite.keeper = suite.app.LiquidStakingKeeper
@@ -136,36 +136,9 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
 		suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
 		suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
-		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, power), stakingtypes.Unbonded, val, true)
+		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[i], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
 	}
 
-	//val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
-	//suite.Require().NoError(err)
-	//val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
-	//suite.Require().NoError(err)
-	//val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
-	//suite.Require().NoError(err)
-	//
-	//suite.app.StakingKeeper.SetValidator(suite.ctx, val1)
-	//suite.app.StakingKeeper.SetValidator(suite.ctx, val2)
-	//suite.app.StakingKeeper.SetValidator(suite.ctx, val3)
-	//suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val1)
-	//suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val2)
-	//suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val3)
-	//suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val1)
-	//suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val2)
-	//suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val3)
-	//
-	//suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val1.GetOperator())
-	//suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val2.GetOperator())
-	//suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val3.GetOperator())
-	//suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val1.GetOperator())
-	//suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val2.GetOperator())
-	//suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val3.GetOperator())
-	//
-	//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[0], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
-	//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
-	//_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[2], suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
 	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
 	return addrs, valAddrs
 }

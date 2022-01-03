@@ -427,6 +427,8 @@ func NewFarmingApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
+		app.DistrKeeper,
+		app.GovKeeper,
 		app.ModuleAccountAddrs(),
 	)
 
@@ -448,6 +450,14 @@ func NewFarmingApp(
 		app.BankKeeper,
 		&stakingKeeper,
 		govRouter,
+	)
+
+	app.GovKeeper = *app.GovKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+			// TODO: register the governance hooks
+			app.LiquidStakingKeeper.Hooks(),
+			//app.FarmingKeeper.Hooks()
+		),
 	)
 
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
