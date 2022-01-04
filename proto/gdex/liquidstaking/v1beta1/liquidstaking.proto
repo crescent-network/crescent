@@ -14,11 +14,13 @@ message Params {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  repeated WhitelistedValidator whitelisted_validators = 1
+  string liquid_bond_denom = 1 [(gogoproto.moretags) = "yaml:\"liquid_bond_denom\""];
+
+  repeated WhitelistedValidator whitelisted_validators = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"whitelisted_validators\""];
 
   // unstake_fee_rate specifies the ...
-  string unstake_fee_rate = 2 [
+  string unstake_fee_rate = 3 [
     (gogoproto.moretags)   = "yaml:\"unstake_fee_rate\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -31,8 +33,8 @@ enum ValidatorStatus {
 
   // VALIDATOR_STATUS_UNSPECIFIED defines the default status.
   VALIDATOR_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ValidatorStatusNil"];
-  // VALIDATOR_STATUS_WHITELISTED defines the ...
-  VALIDATOR_STATUS_WHITELISTED = 1 [(gogoproto.enumvalue_customname) = "ValidatorStatusWhiteListed"];
+  // VALIDATOR_STATUS_ACTIVE defines the ...
+  VALIDATOR_STATUS_ACTIVE = 1 [(gogoproto.enumvalue_customname) = "ValidatorStatusActive"];
   // VALIDATOR_STATUS_DELISTING defines the ...
   VALIDATOR_STATUS_DELISTING = 2 [(gogoproto.enumvalue_customname) = "ValidatorStatusDelisting"];
   // VALIDATOR_STATUS_DELISTED defines the ...
@@ -56,7 +58,7 @@ message WhitelistedValidator {
 
 // LiquidValidator defines a ... TBD
 message LiquidValidator {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.

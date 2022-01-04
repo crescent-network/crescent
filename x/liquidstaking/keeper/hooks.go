@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/k0kubun/pp"
-	"github.com/tendermint/farming/x/liquidstaking/types"
 )
 
 // Wrapper struct
@@ -24,9 +23,10 @@ func (h Hooks) AfterProposalFailedMinDeposit(_ sdk.Context, _ uint64)          {
 func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64)         {}
 
 func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
-	liquidVals := h.k.GetActiveLiquidValidators(ctx)
+	liquidVals, _ := h.k.GetActiveLiquidValidators(ctx)
 	lenLiquidVals := len(liquidVals)
-	totalSupply := h.k.bankKeeper.GetSupply(ctx, types.LiquidBondDenom).Amount.ToDec()
+	liquidBondDenom := h.k.LiquidBondDenom(ctx)
+	totalSupply := h.k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount.ToDec()
 	if totalSupply.IsPositive() {
 		for _, vote := range *votes {
 			voter, err := sdk.AccAddressFromBech32(vote.Voter)
@@ -35,7 +35,7 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 				//continue
 			}
 			// lToken balance
-			lTokenBalance := h.k.bankKeeper.GetBalance(ctx, voter, types.LiquidBondDenom).Amount.ToDec()
+			lTokenBalance := h.k.bankKeeper.GetBalance(ctx, voter, liquidBondDenom).Amount.ToDec()
 			if lTokenBalance.IsPositive() {
 				(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
 				dividedPower := lTokenBalance.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))

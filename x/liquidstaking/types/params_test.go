@@ -24,7 +24,8 @@ func TestParams(t *testing.T) {
 
 	defaultParams := types.DefaultParams()
 
-	paramsStr := `whitelisted_validators: []
+	paramsStr := `liquid_bond_denom: bstake
+whitelisted_validators: []
 unstake_fee_rate: "0.001000000000000000"
 `
 	require.Equal(t, paramsStr, defaultParams.String())
@@ -34,3 +35,5 @@ func TestValidateWhitelistedValidators(t *testing.T) {
 	err := types.ValidateWhitelistedValidators([]types.WhitelistedValidator{whitelistedValidators[0]})
 	require.NoError(t, err)
 }
+
+// TODO: add testcodes for params

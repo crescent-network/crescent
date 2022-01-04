@@ -34,7 +34,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		} else {
 			k.SetLiquidValidator(ctx, types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
-				Status:          types.ValidatorStatusWhiteListed,
+				Status:          types.ValidatorStatusActive,
 				LiquidTokens:    sdk.ZeroInt(),
 				Weight:          wv.Weight,
 			})
@@ -44,7 +44,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	}
 	// TODO: delisting logic
 	for _, lv := range k.GetAllLiquidValidators(ctx) {
-		if wv, ok := whitelistedValMap[lv.OperatorAddress]; !ok && lv.Status == types.ValidatorStatusWhiteListed {
+		if wv, ok := whitelistedValMap[lv.OperatorAddress]; !ok && lv.Status == types.ValidatorStatusActive {
 			lv.Status = types.ValidatorStatusDelisting
 			k.SetLiquidValidator(ctx, lv)
 			fmt.Println("[delisting liquid validator]", lv, wv)

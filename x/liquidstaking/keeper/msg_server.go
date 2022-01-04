@@ -8,6 +8,7 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/farming/x/liquidstaking/types"
 )
 
@@ -24,17 +25,27 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 var _ types.MsgServer = msgServer{}
 
 func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake) (*types.MsgLiquidStakeResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
-	// TODO: unimplemented
-	//k.LiquidStaking()
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	_, err := k.LiquidStaking(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: add event
 	return &types.MsgLiquidStakeResponse{}, nil
 }
 
 func (k msgServer) LiquidUnstake(goCtx context.Context, msg *types.MsgLiquidUnstake) (*types.MsgLiquidUnstakeResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
-	// TODO: unimplemented
-	//k.LiquidUnstaking()
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	return &types.MsgLiquidUnstakeResponse{}, nil
+	completionTime, _, err := k.LiquidUnstaking(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: add event
+	return &types.MsgLiquidUnstakeResponse{
+		CompletionTime: completionTime,
+	}, nil
 }

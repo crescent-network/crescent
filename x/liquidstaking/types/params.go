@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	farmingtypes "github.com/tendermint/farming/x/farming/types"
 	"gopkg.in/yaml.v2"
@@ -10,17 +11,16 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// LiquidBondDenom is temporary liquid staking bond denom
-// TODO: to immutable params and LiquidBondDenom() on keeper for exported
-const LiquidBondDenom = "bstake"
-
 // Parameter store keys
 var (
+	KeyLiquidBondDenom       = []byte("LiquidBondDenom")
 	KeyWhitelistedValidators = []byte("WhitelistedValidators")
 	KeyUnstakeFeeRate        = []byte("UnstakeFeeRate")
 
+	DefaultLiquidBondDenom = "bstake"
 	// DefaultUnstakeFeeRate is the default Unstake Fee Rate.
 	DefaultUnstakeFeeRate = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
+	// TODO: DefaultRebalancingThreshold
 
 	// Const variables
 
@@ -40,7 +40,8 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default liquidstaking module parameters.
 func DefaultParams() Params {
 	return Params{
-		// TODO: add btoken denom immutable
+		// TODO: btoken denom immutable
+		LiquidBondDenom:       DefaultLiquidBondDenom,
 		WhitelistedValidators: []WhitelistedValidator{},
 		UnstakeFeeRate:        DefaultUnstakeFeeRate,
 	}
@@ -49,6 +50,7 @@ func DefaultParams() Params {
 // ParamSetPairs implements paramstypes.ParamSet.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
+		paramstypes.NewParamSetPair(KeyLiquidBondDenom, &p.LiquidBondDenom, ValidateLiquidBondDenom),
 		paramstypes.NewParamSetPair(KeyWhitelistedValidators, &p.WhitelistedValidators, ValidateWhitelistedValidators),
 		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, validateUnstakeFeeRate),
 	}
@@ -66,6 +68,7 @@ func (p Params) Validate() error {
 		value     interface{}
 		validator func(interface{}) error
 	}{
+		{p.LiquidBondDenom, ValidateLiquidBondDenom},
 		{p.WhitelistedValidators, ValidateWhitelistedValidators},
 		{p.UnstakeFeeRate, validateUnstakeFeeRate},
 	} {
@@ -96,7 +99,6 @@ func ValidateWhitelistedValidators(i interface{}) error {
 			return fmt.Errorf("liquidstaking validator weight must not be negative: %s", wv.Weight)
 		}
 	}
-	// TODO: TBD total weight should be 1 or not
 	return nil
 }
 
@@ -118,5 +120,21 @@ func validateUnstakeFeeRate(i interface{}) error {
 		return fmt.Errorf("unstake fee rate too large: %s", v)
 	}
 
+	return nil
+}
+
+func ValidateLiquidBondDenom(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if strings.TrimSpace(v) == "" {
+		return fmt.Errorf("bond denom cannot be blank")
+	}
+
+	if err := sdk.ValidateDenom(v); err != nil {
+		return err
+	}
 	return nil
 }

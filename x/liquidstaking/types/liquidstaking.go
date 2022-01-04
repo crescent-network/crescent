@@ -40,10 +40,25 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 // LiquidValidators is a collection of LiquidValidator
 type LiquidValidators []LiquidValidator
 
-// TODO: Unimplemented, MinMax Return the list of LiquidValidator with the maximum and minimum values of LiquidTokens, respectively.
-func (vs LiquidValidators) MinMax() (minVals LiquidValidators, maxVals LiquidValidators) {
+// MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
+func (vs LiquidValidators) MinMaxGap(targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
+	maxGap := sdk.ZeroInt()
+	minGap := sdk.ZeroInt()
 
-	return
+	for _, val := range vs {
+		target := targetMap[val.OperatorAddress]
+		if val.LiquidTokens.Sub(target).GT(maxGap) {
+			maxGap = val.LiquidTokens.Sub(target)
+			maxGapVal = val
+		}
+		if val.LiquidTokens.Sub(target).LT(minGap) {
+			minGap = val.LiquidTokens.Sub(target)
+			minGapVal = val
+		}
+	}
+	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
+
+	return minGapVal, maxGapVal, amountNeeded
 }
 
 func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {
