@@ -85,7 +85,9 @@ func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
+		bk.RemoveBlockedAddr(ctx, simAccount.Address)
 		poolCoins, err := mintPoolCoins(ctx, r, bk, simAccount)
+		bk.AddBlockedAddr(ctx, simAccount.Address)
 		if err != nil {
 			return nil
 		}

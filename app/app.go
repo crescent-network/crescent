@@ -412,7 +412,6 @@ func NewFarmingApp(
 		app.GetSubspace(farmingtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.ModuleAccountAddrs(),
 	)
 	app.LiquidityKeeper = liquiditykeeper.NewKeeper(
 		appCodec,
@@ -679,7 +678,8 @@ func (app *FarmingApp) ModuleAccountAddrs() map[string]bool {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 
-	// add liquidstaking proxy account
+	// add farming, liquidstaking proxy account
+	modAccAddrs[farmingtypes.RewardsReserveAcc.String()] = true
 	modAccAddrs[liquidstakingtypes.LiquidStakingProxyAcc.String()] = true
 
 	return modAccAddrs

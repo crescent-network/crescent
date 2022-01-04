@@ -185,8 +185,12 @@ func (suite *KeeperTestSuite) CreateFixedAmountPlan(farmingPoolAcc sdk.AccAddres
 		types.ParseTime("9999-12-31T00:00:00Z"),
 		epochAmount,
 	)
-	_, err := suite.keeper.CreateFixedAmountPlan(suite.ctx, msg, farmingPoolAcc, farmingPoolAcc, types.PlanTypePublic)
+	plan, err := suite.keeper.CreateFixedAmountPlan(suite.ctx, msg, farmingPoolAcc, farmingPoolAcc, types.PlanTypePublic)
 	suite.Require().NoError(err)
+	blocked := suite.app.BankKeeper.BlockedAddr(suite.ctx, plan.GetFarmingPoolAddress())
+	suite.Require().True(blocked)
+	blocked = suite.app.BankKeeper.BlockedAddr(suite.ctx, types.RewardsReserveAcc)
+	suite.Require().True(blocked)
 }
 
 func (suite *KeeperTestSuite) CreateRatioPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochRatioStr string) {
@@ -205,8 +209,12 @@ func (suite *KeeperTestSuite) CreateRatioPlan(farmingPoolAcc sdk.AccAddress, sta
 		types.ParseTime("9999-12-31T00:00:00Z"),
 		epochRatio,
 	)
-	_, err := suite.keeper.CreateRatioPlan(suite.ctx, msg, farmingPoolAcc, farmingPoolAcc, types.PlanTypePublic)
+	plan, err := suite.keeper.CreateRatioPlan(suite.ctx, msg, farmingPoolAcc, farmingPoolAcc, types.PlanTypePublic)
 	suite.Require().NoError(err)
+	blocked := suite.app.BankKeeper.BlockedAddr(suite.ctx, plan.GetFarmingPoolAddress())
+	suite.Require().True(blocked)
+	blocked = suite.app.BankKeeper.BlockedAddr(suite.ctx, types.RewardsReserveAcc)
+	suite.Require().True(blocked)
 }
 
 func intEq(exp, got sdk.Int) (bool, string, string, string) {
