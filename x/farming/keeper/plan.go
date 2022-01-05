@@ -151,7 +151,6 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 	fixedPlan := types.NewFixedAmountPlan(basePlan, msg.EpochAmount)
 
 	k.SetPlan(ctx, fixedPlan)
-	k.bankKeeper.AddBlockedAddr(ctx, farmingPoolAcc)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -198,7 +197,6 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 	ratioPlan := types.NewRatioPlan(basePlan, msg.EpochRatio)
 
 	k.SetPlan(ctx, ratioPlan)
-	k.bankKeeper.AddBlockedAddr(ctx, farmingPoolAcc)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

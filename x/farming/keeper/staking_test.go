@@ -447,11 +447,14 @@ func (suite *KeeperTestSuite) TestReserveAndReleaseStakingCoins() {
 				} else {
 					suite.Require().NoError(errRelease)
 					for _, coin := range tc.stakingCoins {
+						reserveAcc := types.StakingReserveAcc(coin.Denom)
+						suite.Require().True(suite.app.BankKeeper.BlockedAddr(suite.ctx, reserveAcc))
 						reservedBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, types.StakingReserveAcc(coin.Denom))
 						suite.Require().Equal(tc.stakingCoins.Sub(tc.releaseCoins).AmountOf(coin.Denom), reservedBalance.AmountOf(coin.Denom))
 					}
 				}
 			}
 		})
+
 	}
 }

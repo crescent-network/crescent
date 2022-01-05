@@ -428,7 +428,6 @@ func NewFarmingApp(
 		app.StakingKeeper,
 		app.DistrKeeper,
 		app.GovKeeper,
-		app.ModuleAccountAddrs(),
 	)
 
 	// register the proposal types
