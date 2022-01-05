@@ -707,7 +707,7 @@ func (s *QueryCmdTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// query the farming pool address that is assigned to the pool and
-	// trasnfer some amount of coins to the address
+	// transfer some amount of coins to the address
 	s.fundFarmingPool(1, sdk.NewCoins(sdk.NewInt64Coin("node0token", 1_000_000_000)))
 
 	_, err = MsgStakeExec(

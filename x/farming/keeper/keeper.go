@@ -37,8 +37,6 @@ type Keeper struct {
 
 	bankKeeper    types.BankKeeper
 	accountKeeper types.AccountKeeper
-
-	blockedAddrs map[string]bool
 }
 
 // NewKeeper returns a farming keeper. It handles:
@@ -47,7 +45,6 @@ type Keeper struct {
 // - minting, burning PoolCoins
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
-	blockedAddrs map[string]bool,
 ) Keeper {
 	// ensure farming module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -65,7 +62,6 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 		paramSpace:    paramSpace,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
-		blockedAddrs:  blockedAddrs,
 	}
 }
 

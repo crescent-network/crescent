@@ -23,8 +23,6 @@ type Keeper struct {
 	stakingKeeper types.StakingKeeper
 	distrKeeper   types.Distrkeeper
 	govKeeper     types.GovKeeper
-
-	blockedAddrs map[string]bool
 }
 
 // NewKeeper returns a liquidstaking keeper. It handles:
@@ -33,7 +31,6 @@ type Keeper struct {
 // - minting, burning PoolCoins
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, distrKeeper types.Distrkeeper, govKeeper types.GovKeeper,
-	blockedAddrs map[string]bool,
 ) Keeper {
 	// ensure liquidstaking module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -54,7 +51,6 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 		stakingKeeper: stakingKeeper,
 		distrKeeper:   distrKeeper,
 		govKeeper:     govKeeper,
-		blockedAddrs:  blockedAddrs,
 	}
 }
 
