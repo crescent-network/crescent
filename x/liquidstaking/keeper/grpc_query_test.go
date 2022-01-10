@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tendermint/farming/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCParams() {

@@ -1,4 +1,4 @@
-module github.com/tendermint/farming
+module github.com/crescent-network/crescent
 
 go 1.16
 

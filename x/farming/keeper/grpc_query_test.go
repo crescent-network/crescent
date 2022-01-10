@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tendermint/farming/x/farming"
-	"github.com/tendermint/farming/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCParams() {

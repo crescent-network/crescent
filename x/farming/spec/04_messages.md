@@ -94,7 +94,7 @@ type MsgHarvest struct {
 
 For testing purposes only, this custom message is used to advance epoch by 1. 
 
-To enable this message, you must build the `farmingd` binary:
+To enable this message, you must build the `crescentd` binary:
 
 ```sh
 make install-testing

@@ -42,9 +42,9 @@ One use case is to use the module to provide incentives for liquidity pool inves
 ### Step 1. Build from source
 
 ```bash
-# Clone the demo project and build `farmingd` for testing
-git clone -b v1.0.0 https://github.com/tendermint/farming.git
-cd farming
+# Clone the demo project and build `crescentd` for testing
+git clone https://github.com/crescent-network/crescent.git
+cd crescent
 make install-testing
 ```
 
@@ -55,8 +55,8 @@ make install-testing
 - Modify governance parameters to lower threshold and decrease time to reduce governance process
 
 ```bash
-export BINARY=farmingd
-export HOME_FARMINGAPP=$HOME/.farmingapp
+export BINARY=crescentd
+export HOME_FARMINGAPP=$HOME/.crescentapp
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
@@ -166,7 +166,7 @@ Now, run each command one at a time. You can copy and paste each command in the 
 
 ```bash
 # Submit a param-change governance proposal
-farmingd tx gov submit-proposal param-change budget-proposal.json \
+$BINARY tx gov submit-proposal param-change budget-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -175,10 +175,10 @@ farmingd tx gov submit-proposal param-change budget-proposal.json \
 --output json | jq
 
 # Query the proposal to check the status PROPOSAL_STATUS_VOTING_PERIOD
-farmingd q gov proposals --output json | jq
+$BINARY q gov proposals --output json | jq
 
 # Vote
-farmingd tx gov vote 1 yes \
+$BINARY tx gov vote 1 yes \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
@@ -191,17 +191,17 @@ farmingd tx gov vote 1 yes \
 #
 
 # Query the proposal again to check the status PROPOSAL_STATUS_PASSED
-farmingd q gov proposals --output json | jq
+$BINARY q gov proposals --output json | jq
 
 # Query the values set as budget parameters
-farmingd q budget params --output json | jq
+$BINARY q budget params --output json | jq
 ```
 
 ### Step 4. Query `GravityDEXFarmingBudget` account to see if coins are accrued
 
 ```bash
 # Query balances of the Gravity DEX budget collector account address
-farmingd q bank balances cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky \
+$BINARY q bank balances cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky \
 --output json | jq
 ```
 
@@ -254,7 +254,7 @@ Now, run each command one at a time. You can copy and paste each command in the 
 
 ```bash
 # Submit a public ratio plan governance proposal
-farmingd tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.json \
+$BINARY tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -264,10 +264,10 @@ farmingd tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.j
 --output json | jq
 
 # Query the proposal to check the status PROPOSAL_STATUS_VOTING_PERIOD
-farmingd q gov proposals --output json | jq
+$BINARY q gov proposals --output json | jq
 
 # Vote
-farmingd tx gov vote 2 yes \
+$BINARY tx gov vote 2 yes \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
@@ -280,21 +280,21 @@ farmingd tx gov vote 2 yes \
 #
 
 # Query the proposal again to check the status PROPOSAL_STATUS_PASSED
-farmingd q gov proposals --output json | jq
+$BINARY q gov proposals --output json | jq
 
 # Query for all plans on a network
-farmingd q farming plans --output json | jq
+$BINARY q farming plans --output json | jq
 ```
 
 ### Step 6. Stake coins
 
 ```bash
 # Query balance of user2
-farmingd q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # Stake pool coin
-farmingd tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+$BINARY tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -303,19 +303,19 @@ farmingd tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837
 --output json | jq
 
 # Query for all stakings by a staker address
-farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # You can also query using the following command
 # Query for all stakings by a staker address with the given staking coin denom
-farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --output json | jq
 ```
 
 ### Step 7. (Custom Message) Send AdvanceEpoch for Reward Distribution
 
-To simulate reward distribution for this demo, enable a custom transaction message `AdvanceEpoch` when you build the binary `farmingd` with the `make install-testing` command. 
+To simulate reward distribution for this demo, enable a custom transaction message `AdvanceEpoch` when you build the binary `crescentd` with the `make install-testing` command. 
 
 When you send the `AdvanceEpoch` message to the network, it increases epoch by day 1.
 
@@ -323,7 +323,7 @@ In this step, you might wonder why you need to increase 2 epochs by sending two 
 
 ```bash
 # Increase epoch by 1 
-farmingd tx farming advance-epoch \
+$BINARY tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -333,11 +333,11 @@ farmingd tx farming advance-epoch \
 
 # Query for all stakings by a staker address
 # Queued coins should have been moved to staked coins 
-farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # Increase epoch by 1 again to distribute rewards
-farmingd tx farming advance-epoch \
+$BINARY tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -346,7 +346,7 @@ farmingd tx farming advance-epoch \
 --output json | jq
 
 # Query rewards
-farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 ```
 
@@ -355,11 +355,11 @@ farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 ```bash
 # Query balance of user2 account 
 # There should be no rewards claimed yet
-farmingd q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # Harvest all with all flag
-farmingd tx farming harvest \
+$BINARY tx farming harvest \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -369,12 +369,12 @@ farmingd tx farming harvest \
 --output json | jq
 
 # Query the balance again to see if stake coin has increased
-farmingd q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # You can also query with the following command
 # Harvest farming rewards from the farming plan with the staking coin
-farmingd tx farming harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+$BINARY tx farming harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -455,7 +455,7 @@ Add a second public ratio plan proposal:
 
 ```bash
 # Submit a public plan governance proposal
-farmingd tx gov submit-proposal public-farming-plan multiple-public-ratio-plan-proposals.json \
+$BINARY tx gov submit-proposal public-farming-plan multiple-public-ratio-plan-proposals.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -466,10 +466,10 @@ farmingd tx gov submit-proposal public-farming-plan multiple-public-ratio-plan-p
 --output json | jq
 
 # Query the proposal to check the status PROPOSAL_STATUS_VOTING_PERIOD
-farmingd q gov proposals --output json | jq
+$BINARY q gov proposals --output json | jq
 
 # Vote
-farmingd tx gov vote 3 yes \
+$BINARY tx gov vote 3 yes \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
@@ -482,17 +482,17 @@ farmingd tx gov vote 3 yes \
 #
 
 # Query the proposal again to check the status PROPOSAL_STATUS_PASSED
-farmingd q gov proposals --output json | jq
+$BINARY q gov proposals --output json | jq
 
 # Query for all plans on a network
-farmingd q farming plans --output json | jq
+$BINARY q farming plans --output json | jq
 
 #
 # Plans are updated!
 #
 
 # Increase epoch by 1
-farmingd tx farming advance-epoch \
+$BINARY tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -503,11 +503,11 @@ farmingd tx farming advance-epoch \
 # Query rewards
 # Rewards should be empty because user2's staking coin is not defined
 # in staking coin weights any more
-farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # Stake another pool coin that is defined in the second plan
-farmingd tx farming stake 5000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C \
+$BINARY tx farming stake 5000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -516,11 +516,11 @@ farmingd tx farming stake 5000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC1
 --output json | jq
 
 # Query what user2 is staking
-farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # Increase epoch by 2 again to distribute rewards
-farmingd tx farming advance-epoch \
+$BINARY tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -529,7 +529,7 @@ farmingd tx farming advance-epoch \
 --output json | jq
 
 # Query rewards
-farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 ```
 

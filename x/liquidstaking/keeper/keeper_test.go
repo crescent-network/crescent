@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/tendermint/farming/app"
-	"github.com/tendermint/farming/x/liquidstaking/keeper"
-	"github.com/tendermint/farming/x/liquidstaking/types"
+	simapp "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 const (

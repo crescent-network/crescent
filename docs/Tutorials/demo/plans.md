@@ -1,6 +1,6 @@
 # Farming Plans
 
-There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
+There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/crescent-network/crescent/blob/main/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
 
 In this documentation, some sample data in JSON are provided. They will be used to test out farming plan functionality.
 
@@ -21,13 +21,13 @@ In this documentation, some sample data in JSON are provided. They will be used 
 
 ```bash
 # Clone the project 
-git clone https://github.com/tendermint/farming.git
-cd farming
+git clone https://github.com/crescent-network/crescent.git
+cd crescent
 make install
 
 # Configure variables
-export BINARY=farmingd
-export HOME_FARMINGAPP=$HOME/.farmingapp
+export BINARY=crescentd
+export HOME_APP=$HOME/.crescentapp
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
@@ -54,14 +54,14 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi 
 
 # Modify app.toml
-sed -i $SED_I 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
-sed -i $SED_I 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
+sed -i $SED_I 's/enable = false/enable = true/g' $HOME_APP/config/app.toml
+sed -i $SED_I 's/swagger = false/swagger = true/g' $HOME_APP/config/app.toml
 
 # (Optional) Modify governance proposal for testing public plan proposal
-sed -i $SED_I 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i $SED_I 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i $SED_I 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-sed -i $SED_I 's%"voting_period": "172800s"%"voting_period": "60s"%g' $HOME_FARMINGAPP/config/genesis.json
+sed -i $SED_I 's%"amount": "10000000"%"amount": "1"%g' $HOME_APP/config/genesis.json
+sed -i $SED_I 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+sed -i $SED_I 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+sed -i $SED_I 's%"voting_period": "172800s"%"voting_period": "60s"%g' $HOME_APP/config/genesis.json
 
 # Start
 $BINARY start
@@ -118,7 +118,7 @@ Create `public-fixed-plan-proposal.json` file in your local directory and copy t
 
 ```bash
 # Send governance proposal to the network
-farmingd tx gov submit-proposal public-farming-plan public-fixed-plan-proposal.json \
+$BINARY tx gov submit-proposal public-farming-plan public-fixed-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -128,7 +128,7 @@ farmingd tx gov submit-proposal public-farming-plan public-fixed-plan-proposal.j
 
 # Vote
 # Make sure to change proposal-id for the proposal
-farmingd tx gov vote 1 yes \
+$BINARY tx gov vote 1 yes \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -164,7 +164,7 @@ Create `public-ratio-plan-proposal.json` file in your local directory and copy t
 
 ```bash
 # Send governance proposal to the network
-farmingd tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.json \
+$BINARY tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -174,7 +174,7 @@ farmingd tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.j
 
 # Vote
 # Make sure to change proposal-id for the proposal
-farmingd tx gov vote 2 yes \
+$BINARY tx gov vote 2 yes \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -229,7 +229,7 @@ Create `public-multiple-plans-proposal.json` file in your local directory and co
 
 ```bash
 # Send governance proposal to the network
-farmingd tx gov submit-proposal public-farming-plan public-multiple-plans-proposal.json \
+$BINARY tx gov submit-proposal public-farming-plan public-multiple-plans-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -239,7 +239,7 @@ farmingd tx gov submit-proposal public-farming-plan public-multiple-plans-propos
 
 # Vote
 # Make sure to change proposal-id for the proposal
-farmingd tx gov vote <proposal-id> yes \
+$BINARY tx gov vote <proposal-id> yes \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
@@ -280,7 +280,7 @@ Create `update-plan-proposal.json` file in your local directory and copy the bel
 
 ```bash
 # Send governance proposal to the network
-farmingd tx gov submit-proposal public-farming-plan update-plan-proposal.json \
+$BINARY tx gov submit-proposal public-farming-plan update-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -290,7 +290,7 @@ farmingd tx gov submit-proposal public-farming-plan update-plan-proposal.json \
 
 # Vote
 # Make sure to change proposal-id for the proposal
-farmingd tx gov vote <proposal-id> yes \
+$BINARY tx gov vote <proposal-id> yes \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
@@ -315,7 +315,7 @@ Create `delete-plan-proposal.json` file in your local directory and copy the bel
 
 ```bash
 # Send governance proposal to the network
-farmingd tx gov submit-proposal public-farming-plan delete-plan-proposal.json \
+$BINARY tx gov submit-proposal public-farming-plan delete-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -325,7 +325,7 @@ farmingd tx gov submit-proposal public-farming-plan delete-plan-proposal.json \
 
 # Vote
 # Make sure to change proposal-id for the proposal
-farmingd tx gov vote <proposal-id> yes \
+$BINARY tx gov vote <proposal-id> yes \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
@@ -368,7 +368,7 @@ Create `private-fixed-plan.json` file in your local directory and copy the below
 
 ```bash
 # Send to create a private fixed amount plan
-farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
+$BINARY tx farming create-private-fixed-plan private-fixed-plan.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -404,7 +404,7 @@ Create `private-ratio-plan.json` file in your local directory and copy the below
 
 ```bash
 # Send to create a private ratio plan
-farmingd tx farming create-private-fixed-plan private-ratio-plan.json \
+$BINARY tx farming create-private-fixed-plan private-ratio-plan.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \

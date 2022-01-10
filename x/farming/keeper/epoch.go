@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tendermint/farming/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 // GetLastEpochTime returns the last time the epoch ended.

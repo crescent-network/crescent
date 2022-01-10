@@ -17,10 +17,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/tendermint/farming/x/liquidity/client/cli"
-	"github.com/tendermint/farming/x/liquidity/keeper"
-	"github.com/tendermint/farming/x/liquidity/simulation"
-	"github.com/tendermint/farming/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/client/cli"
+	"github.com/crescent-network/crescent/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/x/liquidity/simulation"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 var (

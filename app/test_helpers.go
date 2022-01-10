@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	simappparams "github.com/tendermint/farming/app/params"
+	simappparams "github.com/crescent-network/crescent/app/params"
 
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/stretchr/testify/require"
@@ -68,7 +68,7 @@ func MakeTestEncodingConfig() simappparams.EncodingConfig {
 func setup(withGenesis bool, invCheckPeriod uint) (*CrescentApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewFarmingApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := NewCrescentApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/tendermint/farming/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

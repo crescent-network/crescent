@@ -31,14 +31,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	farmingapp "github.com/tendermint/farming/app"
-	farmingparams "github.com/tendermint/farming/app/params"
+	crescentapp "github.com/crescent-network/crescent/app"
+	farmingparams "github.com/crescent-network/crescent/app/params"
 )
 
 // NewRootCmd creates a new root command for crescentd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
-	encodingConfig := farmingapp.MakeEncodingConfig()
+	encodingConfig := crescentapp.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -46,7 +46,7 @@ func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(farmingapp.DefaultNodeHome).
+		WithHomeDir(crescentapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
@@ -143,27 +143,27 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingCo
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(farmingapp.ModuleBasics, farmingapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, farmingapp.DefaultNodeHome),
+		genutilcli.InitCmd(crescentapp.ModuleBasics, crescentapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, crescentapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(farmingapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, farmingapp.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(farmingapp.ModuleBasics),
-		AddGenesisAccountCmd(farmingapp.DefaultNodeHome),
+		genutilcli.GenTxCmd(crescentapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, crescentapp.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(crescentapp.ModuleBasics),
+		AddGenesisAccountCmd(crescentapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(farmingapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(crescentapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
 
 	a := appCreator{encodingConfig}
-	server.AddCommands(rootCmd, farmingapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, crescentapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(farmingapp.DefaultNodeHome),
+		keys.Commands(crescentapp.DefaultNodeHome),
 	)
 
 	// add rosetta
@@ -192,7 +192,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	farmingapp.ModuleBasics.AddQueryCommands(cmd)
+	crescentapp.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -218,7 +218,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	farmingapp.ModuleBasics.AddTxCommands(cmd)
+	crescentapp.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -256,7 +256,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
-	return farmingapp.NewFarmingApp(
+	return crescentapp.NewCrescentApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -282,20 +282,20 @@ func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
 
-	var farmingApp *farmingapp.CrescentApp
+	var farmingApp *crescentapp.CrescentApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
 	if height != -1 {
-		farmingApp = farmingapp.NewFarmingApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		farmingApp = crescentapp.NewCrescentApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 
 		if err := farmingApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		farmingApp = farmingapp.NewFarmingApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		farmingApp = crescentapp.NewCrescentApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 	}
 
 	return farmingApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

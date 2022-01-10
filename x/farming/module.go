@@ -17,11 +17,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	//"github.com/tendermint/farming/x/farming/client/rest"
-	"github.com/tendermint/farming/x/farming/client/cli"
-	"github.com/tendermint/farming/x/farming/keeper"
-	"github.com/tendermint/farming/x/farming/simulation"
-	"github.com/tendermint/farming/x/farming/types"
+	//"github.com/crescent-network/crescent/x/farming/client/rest"
+	"github.com/crescent-network/crescent/x/farming/client/cli"
+	"github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/simulation"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 var (

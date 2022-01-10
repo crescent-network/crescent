@@ -63,7 +63,7 @@ endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
-testing_ldflags = -X github.com/tendermint/farming/x/farming/keeper.enableAdvanceEpoch=true
+testing_ldflags = -X github.com/crescent-network/crescent/x/farming/keeper.enableAdvanceEpoch=true
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 TESTING_BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags) $(testing_ldflags)'
@@ -203,7 +203,7 @@ lint:
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs goimports -w -local github.com/tendermint/farming
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs goimports -w -local github.com/crescent-network/crescent
 
 .PHONY: format
 

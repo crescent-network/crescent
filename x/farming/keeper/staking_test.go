@@ -4,9 +4,9 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simapp "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/farming/types"
 	_ "github.com/stretchr/testify/suite"
-	simapp "github.com/tendermint/farming/app"
-	"github.com/tendermint/farming/x/farming/types"
 )
 
 func (suite *KeeperTestSuite) TestStake() {

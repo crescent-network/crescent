@@ -1,4 +1,5 @@
 package types_test
+
 //
 //import (
 //	"testing"
@@ -7,7 +8,7 @@ package types_test
 //	"github.com/stretchr/testify/require"
 //	"github.com/tendermint/tendermint/crypto"
 //
-//	"github.com/tendermint/farming/x/liquidity/types"
+//	"github.com/crescent-network/crescent/x/liquidity/types"
 //)
 //
 //var testOrderer = sdk.AccAddress(crypto.AddressHash([]byte("orderer")))

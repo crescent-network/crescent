@@ -97,20 +97,20 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	farmingparams "github.com/tendermint/farming/app/params"
-	"github.com/tendermint/farming/x/farming"
-	farmingclient "github.com/tendermint/farming/x/farming/client"
-	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
-	farmingtypes "github.com/tendermint/farming/x/farming/types"
-	"github.com/tendermint/farming/x/liquidity"
-	liquiditykeeper "github.com/tendermint/farming/x/liquidity/keeper"
-	liquiditytypes "github.com/tendermint/farming/x/liquidity/types"
-	"github.com/tendermint/farming/x/liquidstaking"
-	liquidstakingkeeper "github.com/tendermint/farming/x/liquidstaking/keeper"
-	liquidstakingtypes "github.com/tendermint/farming/x/liquidstaking/types"
+	farmingparams "github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/x/farming"
+	farmingclient "github.com/crescent-network/crescent/x/farming/client"
+	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
+	"github.com/crescent-network/crescent/x/liquidity"
+	liquiditykeeper "github.com/crescent-network/crescent/x/liquidity/keeper"
+	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidstaking"
+	liquidstakingkeeper "github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
 
 	// unnamed import of statik for swagger UI support
-	_ "github.com/tendermint/farming/client/docs/statik"
+	_ "github.com/crescent-network/crescent/client/docs/statik"
 )
 
 const appName = "CrescentApp"
@@ -234,11 +234,11 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".farmingapp")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".crescentapp")
 }
 
-// NewFarmingApp returns a reference to an initialized CrescentApp.
-func NewFarmingApp(
+// NewCrescentApp returns a reference to an initialized CrescentApp.
+func NewCrescentApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,

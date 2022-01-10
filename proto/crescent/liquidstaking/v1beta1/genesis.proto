@@ -1,10 +1,10 @@
 syntax = "proto3";
-package gdex.liquidstaking.v1beta1;
+package crescent.liquidstaking.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "gdex/liquidstaking/v1beta1/liquidstaking.proto";
+import "crescent/liquidstaking/v1beta1/liquidstaking.proto";
 
-option go_package            = "github.com/tendermint/farming/x/liquidstaking/types";
+option go_package            = "github.com/crescent-network/crescent/x/liquidstaking/types";
 option (gogoproto.equal_all) = true;
 
 // GenesisState defines the liquidity module's genesis state.

@@ -10,10 +10,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/tendermint/farming/app"
-	"github.com/tendermint/farming/x/farming"
-	"github.com/tendermint/farming/x/farming/keeper"
-	"github.com/tendermint/farming/x/farming/types"
+	simapp "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 const (
