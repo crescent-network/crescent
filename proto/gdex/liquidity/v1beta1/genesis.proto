@@ -1,7 +1,13 @@
 syntax = "proto3";
 package gdex.liquidity.v1beta1;
 
-option go_package = "github.com/tendermint/farming/x/liquidity/types";
+import "gogoproto/gogo.proto";
+import "gdex/liquidity/v1beta1/liquidity.proto";
+
+option go_package                      = "github.com/tendermint/farming/x/liquidity/types";
+option (gogoproto.goproto_getters_all) = false;
 
 // GenesisState defines the liquidity module's genesis state.
-message GenesisState {}
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

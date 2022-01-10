@@ -1,0 +1,77 @@
+syntax = "proto3";
+package gdex.liquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package                      = "github.com/tendermint/farming/x/liquidity/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Params defines the parameters for the liquidity module.
+message Params {
+  string initial_pool_coin_supply = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  uint32 batch_size = 2;
+
+  uint32 tick_precision = 3;
+}
+
+// Pool defines a basic liquidity pool with no min-price and max-price.
+message Pool {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  repeated string reserve_coin_denoms = 3;
+
+  string reserve_address = 4;
+
+  string pool_coin_denom = 5;
+
+  uint64 last_deposit_request_id = 6;
+
+  uint64 last_withdraw_request_id = 7;
+}
+
+// Pair defines a coin pair.
+message Pair {
+  uint64 id = 1;
+
+  repeated string coin_denoms = 2;
+
+  uint64 last_swap_request_id = 3;
+
+  string last_price = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+// SwapRequest defines a swap request.
+message SwapRequest {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  string orderer = 3;
+
+  SwapDirection direction = 4;
+
+  string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string remaining_amount = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  string received_amount = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+// SwapDirection enumerates swap directions.
+enum SwapDirection {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction.
+  SWAP_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapDirectionUnspecified"];
+  // SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction.
+  SWAP_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "SwapDirectionBuy"];
+  // SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction.
+  SWAP_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "SwapDirectionSell"];
+}
