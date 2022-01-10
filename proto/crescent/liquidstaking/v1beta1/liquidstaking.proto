@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/crescent-network/crescent/x/liquidstaking/types";
 
-// Params defines the set of params for the farming module.
+// Params defines the set of params for the liquidstaking module.
 message Params {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;

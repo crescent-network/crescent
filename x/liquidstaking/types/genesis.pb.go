@@ -23,9 +23,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState defines the liquidity module's genesis state.
+// GenesisState defines the liquidstaking module's genesis state.
 type GenesisState struct {
-	// params defines all the parameters for the farming module
+	// params defines all the parameters for the liquidstaking module
 	Params           Params            `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	LiquidValidators []LiquidValidator `protobuf:"bytes,2,rep,name=liquid_validators,json=liquidValidators,proto3" json:"liquid_validators" yaml:"liquid_validators"`
 }

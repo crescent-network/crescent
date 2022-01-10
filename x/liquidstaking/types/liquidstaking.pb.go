@@ -63,7 +63,7 @@ func (ValidatorStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_f11ef7f6d0889fb0, []int{0}
 }
 
-// Params defines the set of params for the farming module.
+// Params defines the set of params for the liquidstaking module.
 type Params struct {
 	LiquidBondDenom       string                 `protobuf:"bytes,1,opt,name=liquid_bond_denom,json=liquidBondDenom,proto3" json:"liquid_bond_denom,omitempty" yaml:"liquid_bond_denom"`
 	WhitelistedValidators []WhitelistedValidator `protobuf:"bytes,2,rep,name=whitelisted_validators,json=whitelistedValidators,proto3" json:"whitelisted_validators" yaml:"whitelisted_validators"`
