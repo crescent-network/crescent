@@ -416,6 +416,7 @@ func NewFarmingApp(
 		appCodec,
 		keys[liquiditytypes.StoreKey],
 		app.GetSubspace(liquiditytypes.ModuleName),
+		app.BankKeeper,
 	)
 
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(

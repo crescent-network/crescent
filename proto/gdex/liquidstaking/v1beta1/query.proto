@@ -5,7 +5,6 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gdex/liquidstaking/v1beta1/liquidstaking.proto";
 import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/tendermint/farming/x/liquidstaking/types";

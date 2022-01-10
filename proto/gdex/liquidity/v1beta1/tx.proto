@@ -1,7 +1,76 @@
 syntax = "proto3";
 package gdex.liquidity.v1beta1;
 
-option go_package = "github.com/tendermint/farming/x/liquidity/types";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/duration.proto";
+
+option go_package                      = "github.com/tendermint/farming/x/liquidity/types";
+option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+  // CreatePool defines ...
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+
+  // DepositBatch defines ...
+  rpc DepositBatch(MsgDepositBatch) returns (MsgDepositBatchResponse);
+
+  // WithdrawBatch defines ...
+  rpc WithdrawBatch(MsgWithdrawBatch) returns (MsgWithdrawBatchResponse);
+
+  // SwapBatch defines ...
+  rpc SwapBatch(MsgSwapBatch) returns (MsgSwapBatchResponse);
+}
+
+// MsgCreatePool defines ...
+message MsgCreatePool {
+  string creator = 1;
+
+  repeated cosmos.base.v1beta1.Coin deposit_coins = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// MsgCreatePoolResponse defines ...
+message MsgCreatePoolResponse {}
+
+// MsgDepositBatch defines ...
+message MsgDepositBatch {
+  string depositor = 1;
+
+  uint64 pool_id = 2;
+
+  repeated cosmos.base.v1beta1.Coin coins = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// MsgDepositBatchResponse defines ...
+message MsgDepositBatchResponse {}
+
+// MsgWithdrawBatch defines ...
+message MsgWithdrawBatch {
+  string withdrawer = 1;
+
+  uint64 pool_id = 2;
+
+  cosmos.base.v1beta1.Coin pool_coin = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgWithdrawBatchResponse defines ...
+message MsgWithdrawBatchResponse {}
+
+// MsgSwapBatch defines ...
+message MsgSwapBatch {
+  string orderer = 1;
+
+  cosmos.base.v1beta1.Coin coin = 2;
+
+  string demand_coin_denom = 3;
+
+  string price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  google.protobuf.Duration order_lifespan = 5 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+// MsgSwapBatchResponse defines ...
+message MsgSwapBatchResponse {}
