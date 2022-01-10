@@ -1,5 +1,5 @@
 ---
-Title: Farmingd
+Title: crescentd
 Description: A high-level overview of how the command-line interfaces (CLI) work for the farming module.
 ---
 

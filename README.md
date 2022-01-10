@@ -20,7 +20,7 @@ Cosmos SDK  | v0.44.3 or higher
 ## Installation
 
 ```bash
-# Use git to clone farming module source code and install `farmingd`
+# Use git to clone farming module source code and install `crescentd`
 git clone https://github.com/tendermint/farming.git
 cd farming
 make install

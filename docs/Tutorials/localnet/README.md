@@ -1,6 +1,6 @@
 ---
 Title: Localnet
-Description: A tutorial of how to build `farmingd` and bootstrap local network.
+Description: A tutorial of how to build `crescentd` and bootstrap local network.
 ---
 
 ### Get farming module source code
@@ -17,7 +17,7 @@ The following script is prepared to bootstrap a single chain with a single valid
 
 ```bash
 # Configure variables
-export BINARY=farmingd
+export BINARY=crescentd
 export HOME_FARMINGAPP=$HOME/.farmingapp
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"

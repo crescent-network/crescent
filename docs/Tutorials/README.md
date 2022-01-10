@@ -15,4 +15,4 @@ This section contains Tutorials documentation for farming module.
 Tutorials Documentation will come in various forms:
 
 * [Demo](./demo) - contains any type of demo or presentation for farming module
-* [Localnet](./localnet) - contains guideline of how to build `farmingd` and bootstrap local network
+* [Localnet](./localnet) - contains guideline of how to build `crescentd` and bootstrap local network

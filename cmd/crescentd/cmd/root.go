@@ -35,7 +35,7 @@ import (
 	farmingparams "github.com/tendermint/farming/app/params"
 )
 
-// NewRootCmd creates a new root command for farmingd. It is called once in the
+// NewRootCmd creates a new root command for crescentd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 	encodingConfig := farmingapp.MakeEncodingConfig()
@@ -50,8 +50,8 @@ func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
-		Use:   "farmingd",
-		Short: "farming app",
+		Use:   "crescentd",
+		Short: "crescent app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Set localnet settings
-BINARY=farmingd
+BINARY=crescentd
 CHAIN_ID=localnet
 CHAIN_DIR=./data
 RPC_PORT=26657
@@ -14,7 +14,7 @@ GENESIS_COINS=10000000000stake,10000000000token,10000000000atom
 # Stop process if it is already running 
 if pgrep -x "$BINARY" >/dev/null; then
     echo "Terminating $BINARY..."
-    killall farmingd
+    killall crescentd
 fi
 
 # Remove previous data

@@ -8,7 +8,7 @@ import (
 
 	"github.com/tendermint/farming/app"
 	_ "github.com/tendermint/farming/client/docs/statik"
-	"github.com/tendermint/farming/cmd/farmingd/cmd"
+	"github.com/tendermint/farming/cmd/crescentd/cmd"
 )
 
 func main() {
