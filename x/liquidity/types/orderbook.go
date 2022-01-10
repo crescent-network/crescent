@@ -8,8 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ OrderSource = (*OrderBook)(nil)
-
 type PriceDirection int
 
 const (
