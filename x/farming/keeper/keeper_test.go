@@ -33,7 +33,7 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app                 *simapp.FarmingApp
+	app                 *simapp.CrescentApp
 	ctx                 sdk.Context
 	keeper              keeper.Keeper
 	querier             keeper.Querier

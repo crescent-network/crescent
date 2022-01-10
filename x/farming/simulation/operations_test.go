@@ -283,7 +283,7 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	require.Equal(t, sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 100300000000), balances)
 }
 
-func createTestApp(isCheckTx bool) (*farmingapp.FarmingApp, sdk.Context) {
+func createTestApp(isCheckTx bool) (*farmingapp.CrescentApp, sdk.Context) {
 	app := farmingapp.Setup(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
@@ -293,7 +293,7 @@ func createTestApp(isCheckTx bool) (*farmingapp.FarmingApp, sdk.Context) {
 	return app, ctx
 }
 
-func getTestingAccounts(t *testing.T, r *rand.Rand, app *farmingapp.FarmingApp, ctx sdk.Context, n int) []simtypes.Account {
+func getTestingAccounts(t *testing.T, r *rand.Rand, app *farmingapp.CrescentApp, ctx sdk.Context, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 100_000_000_000)
