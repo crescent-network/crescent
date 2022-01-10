@@ -28,21 +28,17 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	whitelistedValMap := make(map[string]types.WhitelistedValidator)
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
-		if lv, ok := liquidValsMap[wv.ValidatorAddress]; ok {
-			// TODO: update states
-			fmt.Println("[already active liquid validator]", lv)
-		} else {
+		if _, ok := liquidValsMap[wv.ValidatorAddress]; !ok {
 			k.SetLiquidValidator(ctx, types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 				Status:          types.ValidatorStatusActive,
 				LiquidTokens:    sdk.ZeroInt(),
 				Weight:          wv.Weight,
 			})
-			// add and set val
 		}
 		whitelistedValMap[wv.ValidatorAddress] = wv
 	}
-	// TODO: delisting logic
+	// TODO: rebalancing and delisting logic
 	for _, lv := range k.GetAllLiquidValidators(ctx) {
 		if wv, ok := whitelistedValMap[lv.OperatorAddress]; !ok && lv.Status == types.ValidatorStatusActive {
 			lv.Status = types.ValidatorStatusDelisting

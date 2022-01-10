@@ -21,13 +21,13 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 		{valOpers[1].String(), sdk.OneDec()},
 		{valOpers[2].String(), sdk.OneDec()},
 	}
+	params.UnstakeFeeRate = sdk.ZeroDec()
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
 	stakingAmt := sdk.NewInt(50000)
-	_, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
-	// TODO: total share should be same with decimal error collection on LiquidStaking
-	//suite.Require().Equal(newShares, stakingAmt.ToDec())
+	newShares, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	suite.Require().Equal(newShares, stakingAmt.ToDec())
 	suite.Require().NoError(err)
 
 	_, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], valOpers[0])
@@ -38,11 +38,11 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().False(found)
 
 	proxyAccDel1, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
-	fmt.Println("proxyAccDel1", proxyAccDel1)
+	proxyAccDel2, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[1])
+	proxyAccDel3, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	suite.Require().True(found)
-	// TODO: total share should be same with decimal error collection on LiquidStaking
 	suite.Require().Equal(proxyAccDel1.Shares, stakingAmt.ToDec().QuoInt64(3).TruncateDec())
-	suite.Require().True(found)
+	suite.Require().Equal(stakingAmt.ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
 	balanceBeforeUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
 	suite.Require().Equal(balanceBeforeUBD.Amount, sdk.NewInt(999950000))
@@ -51,36 +51,37 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	ubdAmt := sdk.NewCoin(liquidBondDenom, sdk.NewInt(10000))
 	bTokenBalance := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], liquidBondDenom)
 	bTokenTotalSupply := suite.app.BankKeeper.GetSupply(suite.ctx, liquidBondDenom)
-	fmt.Println(bTokenBalance, bTokenTotalSupply)
+	suite.Require().Equal(bTokenBalance, sdk.NewCoin(liquidBondDenom, sdk.NewInt(50000)))
+	suite.Require().Equal(bTokenBalance, bTokenTotalSupply)
+
 	ubdTime, ubds, err := suite.keeper.LiquidUnstaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], ubdAmt)
 	suite.Require().NoError(err)
 	suite.Require().Len(ubds, 3)
 	suite.Require().Equal(ubds[0].DelegatorAddress, suite.delAddrs[0].String())
 	suite.Require().Equal(ubdTime, types.MustParseRFC3339("2022-03-22T00:00:00Z"))
 	bTokenBalanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], liquidBondDenom)
-	fmt.Println("Btoken", bTokenBalance, bTokenBalanceAfter)
+	suite.Require().Equal(bTokenBalanceAfter, sdk.NewCoin(liquidBondDenom, sdk.NewInt(40000)))
 
 	balanceBeginUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
 	suite.Require().Equal(balanceBeginUBD.Amount, balanceBeforeUBD.Amount)
 
 	proxyAccDel1, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
-	fmt.Println("proxyAccDel1 after", proxyAccDel1)
-	// TODO: verify shares after liquidUnstaking
-	//suite.Require().Equal(proxyAccDel1.Shares, stakingAmt.Sub(ubdAmt).ToDec())
-	suite.Require().True(found)
+	proxyAccDel2, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[1])
+	proxyAccDel3, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
+	suite.Require().Equal(stakingAmt.Sub(ubdAmt.Amount).ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
 	suite.ctx = suite.ctx.WithBlockHeight(200).WithBlockTime(ubdTime.Add(1))
 	updates := suite.app.StakingKeeper.BlockValidatorUpdates(suite.ctx) // EndBlock of staking keeper
 	suite.Require().Empty(updates)
-	// TODO: correct decimal errors
-	//balanceCompleteUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
-	//suite.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(ubdAmt))
-
-	bonded := suite.app.StakingKeeper.GetBondedValidatorsByPower(suite.ctx)
-	fmt.Println(bonded)
+	balanceCompleteUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
+	suite.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(ubdAmt.Amount))
 
 	proxyAccDel1, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
-	fmt.Println("proxyAccDel1 after after", proxyAccDel1)
+	proxyAccDel2, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[1])
+	proxyAccDel3, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
+	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel1.Shares)
+	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel2.Shares)
+	suite.Require().Equal(sdk.MustNewDecFromStr("13334.0"), proxyAccDel3.Shares)
 	// TODO: add cases for weight
 }
 
@@ -89,7 +90,6 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	suite.SetupTest()
 	params := types.DefaultParams()
 	params.UnstakeFeeRate = sdk.ZeroDec()
-	suite.keeper.SetParams(suite.ctx, params)
 	liquidBondDenom := suite.keeper.LiquidBondDenom(suite.ctx)
 
 	// v1, v2, v3, v4
@@ -205,7 +205,6 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	fmt.Println(totalPower, totalShare)
 	cachedCtx, _ = suite.ctx.CacheContext()
 	pass, burnDeposit, result = suite.app.GovKeeper.Tally(cachedCtx, proposal)
-	// TODO: correct decimal error on rebalancing or something
 	suite.Require().Equal(sdk.NewInt(240000000), result.Yes)
 	suite.Require().Equal(sdk.NewInt(100000000), result.No)
 	suite.Require().Equal(sdk.NewInt(20000000), result.NoWithVeto)
@@ -230,6 +229,76 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	//suite.Require().Empty(updates)
 	//balanceCompleteUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
 	//suite.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(ubdAmt))
+}
+
+// test Liquid Staking gov power
+func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
+	suite.SetupTest()
+	params := types.DefaultParams()
+	params.UnstakeFeeRate = sdk.ZeroDec()
+	suite.keeper.SetParams(suite.ctx, params)
+
+	vals, valOpers := suite.CreateValidators([]int64{10000000})
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{valOpers[0].String(), sdk.MustNewDecFromStr("0.25")},
+	}
+	suite.keeper.SetParams(suite.ctx, params)
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+
+	val1, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, valOpers[0])
+
+	delA := suite.addrs[0]
+	delB := suite.addrs[1]
+
+	_, err := suite.app.StakingKeeper.Delegate(suite.ctx, delA, sdk.NewInt(50000000), stakingtypes.Unbonded, val1, true)
+	suite.Require().NoError(err)
+
+	tp := govtypes.NewTextProposal("Test", "description")
+	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
+	suite.Require().NoError(err)
+
+	proposal.Status = govtypes.StatusVotingPeriod
+	suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
+
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delA, govtypes.NewNonSplitVoteOption(govtypes.OptionYes))
+	suite.Require().NoError(err)
+
+	cachedCtx, _ := suite.ctx.CacheContext()
+	_, _, result := suite.app.GovKeeper.Tally(cachedCtx, proposal)
+	suite.Require().Equal(sdk.NewInt(50000000), result.Yes)
+	suite.Require().Equal(sdk.NewInt(0), result.No)
+	suite.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
+	suite.Require().Equal(sdk.NewInt(0), result.Abstain)
+
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, vals[0], govtypes.NewNonSplitVoteOption(govtypes.OptionNo))
+	suite.Require().NoError(err)
+	cachedCtx, _ = suite.ctx.CacheContext()
+	_, _, result = suite.app.GovKeeper.Tally(cachedCtx, proposal)
+	suite.Require().Equal(sdk.NewInt(50000000), result.Yes)
+	suite.Require().Equal(sdk.NewInt(10000000), result.No)
+	suite.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
+	suite.Require().Equal(sdk.NewInt(0), result.Abstain)
+
+	_, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50000000)))
+	suite.Require().NoError(err)
+
+	cachedCtx, _ = suite.ctx.CacheContext()
+	_, _, result = suite.app.GovKeeper.Tally(cachedCtx, proposal)
+	suite.Require().Equal(sdk.NewInt(50000000), result.Yes)
+	suite.Require().Equal(sdk.NewInt(60000000), result.No)
+	suite.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
+	suite.Require().Equal(sdk.NewInt(0), result.Abstain)
+
+	err = suite.app.GovKeeper.AddVote(suite.ctx, proposal.ProposalId, delB, govtypes.NewNonSplitVoteOption(govtypes.OptionAbstain))
+	suite.Require().NoError(err)
+
+	cachedCtx, _ = suite.ctx.CacheContext()
+	_, _, result = suite.app.GovKeeper.Tally(cachedCtx, proposal)
+	suite.Require().Equal(sdk.NewInt(50000000), result.Yes)
+	suite.Require().Equal(sdk.NewInt(10000000), result.No)
+	suite.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
+	suite.Require().Equal(sdk.NewInt(50000000), result.Abstain)
 }
 
 //func (suite *KeeperTestSuite) TestCollectBiquidStakings() {

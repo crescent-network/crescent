@@ -166,9 +166,8 @@ var (
 		budgettypes.ModuleName:         nil,
 		farmingtypes.ModuleName:        nil,
 		liquiditytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
-		// TODO: set perms to liquidstaking
-		liquidstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-		ibctransfertypes.ModuleName:   {authtypes.Minter, authtypes.Burner},
+		liquidstakingtypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -418,7 +417,7 @@ func NewFarmingApp(
 		keys[liquiditytypes.StoreKey],
 		app.GetSubspace(liquiditytypes.ModuleName),
 	)
-	// TODO: fix liquidstaking keeper deps
+
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
 		appCodec,
 		keys[liquidstakingtypes.StoreKey],
@@ -452,9 +451,7 @@ func NewFarmingApp(
 
 	app.GovKeeper = *app.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// TODO: register the governance hooks
 			app.LiquidStakingKeeper.Hooks(),
-			//app.FarmingKeeper.Hooks()
 		),
 	)
 
@@ -510,7 +507,6 @@ func NewFarmingApp(
 		params.NewAppModule(app.ParamsKeeper),
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
-		// TODO: fix liquidstaking module deps
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
 		transferModule,
 	)

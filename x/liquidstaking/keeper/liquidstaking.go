@@ -76,7 +76,6 @@ func (k Keeper) LiquidStaking(
 	mintAmt := stakingCoin.Amount
 	stakingAmt := stakingCoin.Amount.ToDec()
 	if bTokenTotalSupply.IsPositive() {
-		// TODO: review decimal issue
 		mintAmt = bTokenTotalSupply.Amount.ToDec().Mul(stakingAmt).QuoTruncate(netAmount).TruncateInt()
 	}
 
@@ -84,12 +83,10 @@ func (k Keeper) LiquidStaking(
 	mintCoin := sdk.NewCoins(sdk.NewCoin(liquidBondDenom, mintAmt))
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoin)
 	if err != nil {
-		// TODO: make custom err
 		return sdk.ZeroDec(), err
 	}
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, liquidStaker, mintCoin)
 	if err != nil {
-		// TODO: make custom err
 		return sdk.ZeroDec(), err
 	}
 
@@ -123,7 +120,6 @@ func (k Keeper) LiquidStaking(
 }
 
 // LiquidUnstaking ...
-// TODO: distribute activeValidators or make upper level function
 func (k Keeper) LiquidUnstaking(
 	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, amount sdk.Coin,
 ) (time.Time, []stakingtypes.UnbondingDelegation, error) {
@@ -144,19 +140,14 @@ func (k Keeper) LiquidUnstaking(
 	}
 	amountDec := amount.Amount.ToDec()
 	netAmount := k.NetAmount(ctx)
-	//netAmount := k.NetAmount(ctx).ToDec()
 	unstakeAmount := netAmount.Mul(amountDec.QuoTruncate(bTokenTotalSupply.Amount.ToDec())).Mul(sdk.OneDec().Sub(params.UnstakeFeeRate)).TruncateDec()
-	fmt.Println(unstakeAmount)
 
-	// TODO: burn or reserve queue for burning btoken, is unstake make reduce power immediately?
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, liquidStaker, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
-		// TODO: make custom err
 		return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
 	}
 	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(liquidBondDenom, amount.Amount)))
 	if err != nil {
-		// TODO: make custom err
 		return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
 	}
 
@@ -165,7 +156,6 @@ func (k Keeper) LiquidUnstaking(
 	share := unstakeAmount.QuoTruncate(totalWeight).TruncateInt()
 	leftAmount := unstakeAmount.TruncateInt()
 	var weightedShare sdk.Int
-	//decimalErrorAmt := unstakeAmount.TruncateInt().Sub(share.TruncateInt().MulRaw(int64(lenActiveVals)))
 
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
@@ -179,8 +169,7 @@ func (k Keeper) LiquidUnstaking(
 		var ubd stakingtypes.UnbondingDelegation
 		ubdTime, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare.ToDec())
 		if err != nil {
-			// TODO: should be revertable, only in msg_server
-			panic(err)
+			return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
 		}
 		ubds = append(ubds, ubd)
 		val.LiquidTokens = val.LiquidTokens.Sub(weightedShare)
