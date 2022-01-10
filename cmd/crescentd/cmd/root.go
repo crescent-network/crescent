@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -35,9 +36,52 @@ import (
 	farmingparams "github.com/crescent-network/crescent/app/params"
 )
 
+const (
+	CoinType           = uint32(118)
+	FullFundraiserPath = "44'/118'/0'/0/0"
+
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	Bech32PrefixAccAddr = "crescent"
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
+	Bech32PrefixAccPub = Bech32PrefixAccAddr + "pub"
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
+	Bech32PrefixValAddr = Bech32PrefixAccAddr + "valoper"
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
+	Bech32PrefixValPub = Bech32PrefixAccAddr + "valoperpub"
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	Bech32PrefixConsAddr = Bech32PrefixAccAddr + "valcons"
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	Bech32PrefixConsPub = Bech32PrefixAccAddr + "valconspub"
+)
+
+var (
+	// AddressVerifier crescent address verifier
+	AddressVerifier = func(bz []byte) error {
+		if n := len(bz); n != 20 && n != 32 {
+			return fmt.Errorf("incorrect address length %d", n)
+		}
+
+		return nil
+	}
+)
+
+func GetConfig() *sdk.Config {
+	sdkConfig := sdk.GetConfig()
+	sdkConfig.SetCoinType(CoinType)
+	sdkConfig.SetFullFundraiserPath(FullFundraiserPath)
+	sdkConfig.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
+	sdkConfig.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
+	sdkConfig.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
+	sdkConfig.SetAddressVerifier(AddressVerifier)
+	return sdkConfig
+}
+
 // NewRootCmd creates a new root command for crescentd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
+	sdkConfig := GetConfig()
+	sdkConfig.Seal()
+
 	encodingConfig := crescentapp.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -139,9 +183,6 @@ lru_size = 0`
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingConfig) {
-	cfg := sdk.GetConfig()
-	cfg.Seal()
-
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(crescentapp.ModuleBasics, crescentapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, crescentapp.DefaultNodeHome),

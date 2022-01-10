@@ -37,7 +37,7 @@ func GenCurrentEpochDays(r *rand.Rand) uint32 {
 
 // GenFarmingFeeCollector returns default farming fee collector.
 func GenFarmingFeeCollector(r *rand.Rand) string {
-	return types.DefaultFarmingFeeCollector
+	return types.DefaultFarmingFeeCollector.String()
 }
 
 // RandomizedGenState generates a random GenesisState for farming.
