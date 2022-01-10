@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/farming/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 func (k Keeper) UpdateLiquidValidators(ctx sdk.Context) {

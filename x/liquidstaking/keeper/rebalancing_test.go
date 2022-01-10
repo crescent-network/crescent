@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/farming/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 

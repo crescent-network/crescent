@@ -7,7 +7,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/farming/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 var (

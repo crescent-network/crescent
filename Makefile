@@ -50,8 +50,8 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=farmingd \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=farmingd \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=crescentd \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=crescentd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
@@ -63,7 +63,7 @@ endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
-testing_ldflags = -X github.com/tendermint/farming/x/farming/keeper.enableAdvanceEpoch=true
+testing_ldflags = -X github.com/crescent-network/crescent/x/farming/keeper.enableAdvanceEpoch=true
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 TESTING_BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags) $(testing_ldflags)'
@@ -79,25 +79,25 @@ include contrib/devtools/Makefile
 
 build: go.sum
 ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -o build/farmingd.exe ./cmd/farmingd
+	go build $(BUILD_FLAGS) -o build/crescentd.exe ./cmd/crescentd
 else
-	go build $(BUILD_FLAGS) -o build/farmingd ./cmd/farmingd
+	go build $(BUILD_FLAGS) -o build/crescentd ./cmd/crescentd
 endif
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 install: go.sum
-	go install $(BUILD_FLAGS) ./cmd/farmingd
+	go install $(BUILD_FLAGS) ./cmd/crescentd
 
 install-testing: go.sum
-	go install $(TESTING_BUILD_FLAGS) ./cmd/farmingd
+	go install $(TESTING_BUILD_FLAGS) ./cmd/crescentd
 
 build-reproducible: go.sum
 	$(DOCKER) rm latest-build || true
 	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64' \
-        --env APP=farmingd \
+        --env APP=crescentd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
@@ -203,7 +203,7 @@ lint:
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs goimports -w -local github.com/tendermint/farming
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs goimports -w -local github.com/crescent-network/crescent
 
 .PHONY: format
 

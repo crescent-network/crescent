@@ -18,8 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
-	farmingapp "github.com/tendermint/farming/app"
-	farmingcli "github.com/tendermint/farming/x/farming/client/cli"
+	crescentapp "github.com/crescent-network/crescent/app"
+	crescentcli "github.com/crescent-network/crescent/x/farming/client/cli"
 )
 
 // NewConfig returns config that defines the necessary testing requirements
@@ -28,17 +28,17 @@ func NewConfig(dbm *dbm.MemDB) network.Config {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	cfg := network.DefaultConfig()
-	cfg.AppConstructor = NewAppConstructor(encCfg, dbm)                  // the ABCI application constructor
-	cfg.GenesisState = farmingapp.ModuleBasics.DefaultGenesis(cfg.Codec) // farming genesis state to provide
+	cfg.AppConstructor = NewAppConstructor(encCfg, dbm)                   // the ABCI application constructor
+	cfg.GenesisState = crescentapp.ModuleBasics.DefaultGenesis(cfg.Codec) // farming genesis state to provide
 	return cfg
 }
 
 // NewAppConstructor returns a new network AppConstructor.
 func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
-		return farmingapp.NewFarmingApp(
+		return crescentapp.NewCrescentApp(
 			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			farmingapp.MakeEncodingConfig(),
+			crescentapp.MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
 			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
@@ -63,7 +63,7 @@ func MsgCreateFixedAmountPlanExec(clientCtx client.Context, from string, file st
 
 	args = append(args, commonArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, farmingcli.NewCreateFixedAmountPlanCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, crescentcli.NewCreateFixedAmountPlanCmd(), args)
 }
 
 // MsgStakeExec creates a transaction for staking coin.
@@ -77,7 +77,7 @@ func MsgStakeExec(clientCtx client.Context, from string, stakingCoins string,
 
 	args = append(args, commonArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, farmingcli.NewStakeCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, crescentcli.NewStakeCmd(), args)
 }
 
 // MsgAdvanceEpochExec creates a transaction to advance epoch by 1.
@@ -90,7 +90,7 @@ func MsgAdvanceEpochExec(clientCtx client.Context, from string,
 
 	args = append(args, commonArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, farmingcli.NewAdvanceEpochCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, crescentcli.NewAdvanceEpochCmd(), args)
 }
 
 // MsgSendExec creates a transaction to transfer coins.

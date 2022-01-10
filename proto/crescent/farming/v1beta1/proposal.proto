@@ -1,14 +1,14 @@
 syntax = "proto3";
 
-package cosmos.farming.v1beta1;
+package crescent.farming.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "tendermint/farming/v1beta1/farming.proto";
+import "crescent/farming/v1beta1/farming.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/tendermint/farming/x/farming/types";
+option go_package = "github.com/crescent-network/crescent/x/farming/types";
 
 // PublicPlanProposal defines a public farming plan governance proposal that receives one of the following requests:
 // A request that creates a public farming plan, a request that updates the plan, and a request that deletes the plan.

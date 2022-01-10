@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/tendermint/farming/app"
-	"github.com/tendermint/farming/x/liquidstaking/keeper"
-	"github.com/tendermint/farming/x/liquidstaking/types"
+	simapp "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 const (
@@ -36,7 +36,7 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app        *simapp.FarmingApp
+	app        *simapp.CrescentApp
 	ctx        sdk.Context
 	keeper     keeper.Keeper
 	querier    keeper.Querier
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	num := len(powers)
-	addrs := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, num, sdk.NewInt(30000000))
+	addrs := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, num, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(num)
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
@@ -136,7 +136,9 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
 		suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
 		suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
-		_, _ = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[i], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
+		newShares, err := suite.app.StakingKeeper.Delegate(suite.ctx, addrs[i], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
+		suite.Require().NoError(err)
+		suite.Require().Equal(newShares.TruncateInt(), sdk.NewInt(power))
 	}
 
 	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)

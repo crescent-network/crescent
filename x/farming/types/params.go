@@ -20,7 +20,7 @@ var (
 	DefaultPrivatePlanCreationFee = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)))
 	DefaultCurrentEpochDays       = uint32(1)
 	DefaultNextEpochDays          = uint32(1)
-	DefaultFarmingFeeCollector    = sdk.AccAddress(address.Module(ModuleName, []byte("FarmingFeeCollectorAcc"))).String()
+	DefaultFarmingFeeCollector    = sdk.AccAddress(address.Module(ModuleName, []byte("FarmingFeeCollectorAcc")))
 	DefaultDelayedStakingGasFee   = sdk.Gas(60000) // See https://github.com/tendermint/farming/issues/102 for details.
 
 	// ReserveAddressType is an address type of reserve accounts for staking or rewards.
@@ -43,7 +43,7 @@ func DefaultParams() Params {
 	return Params{
 		PrivatePlanCreationFee: DefaultPrivatePlanCreationFee,
 		NextEpochDays:          DefaultNextEpochDays,
-		FarmingFeeCollector:    DefaultFarmingFeeCollector,
+		FarmingFeeCollector:    DefaultFarmingFeeCollector.String(),
 		DelayedStakingGasFee:   DefaultDelayedStakingGasFee,
 	}
 }

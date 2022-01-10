@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/tendermint/farming/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 func (suite *KeeperTestSuite) TestGlobalPlanId() {

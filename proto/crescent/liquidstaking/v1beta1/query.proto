@@ -1,13 +1,13 @@
 syntax = "proto3";
-package gdex.liquidstaking.v1beta1;
+package crescent.liquidstaking.v1beta1;
 
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "gdex/liquidstaking/v1beta1/liquidstaking.proto";
+import "crescent/liquidstaking/v1beta1/liquidstaking.proto";
 import "gogoproto/gogo.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-option go_package = "github.com/tendermint/farming/x/liquidstaking/types";
+option go_package = "github.com/crescent-network/crescent/x/liquidstaking/types";
 
 // Query defines the gRPC query service for the liquidstaking module.
 service Query {

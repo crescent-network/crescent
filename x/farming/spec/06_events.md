@@ -82,4 +82,4 @@ The `farming` module emits the following events:
 
 ### MsgAdvanceEpoch
 
-The `MsgAdvanceEpoch` message is for testing purposes only and requires that you build the `farmingd` binary. See [MsgAdvanceEpoch](04_messages.md#MsgAdvanceEpoch).
+The `MsgAdvanceEpoch` message is for testing purposes only and requires that you build the `crescentd` binary. See [MsgAdvanceEpoch](04_messages.md#MsgAdvanceEpoch).

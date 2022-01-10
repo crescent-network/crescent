@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/farming/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

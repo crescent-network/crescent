@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/tendermint/farming/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 // Simulation parameter constants.
@@ -37,7 +37,7 @@ func GenCurrentEpochDays(r *rand.Rand) uint32 {
 
 // GenFarmingFeeCollector returns default farming fee collector.
 func GenFarmingFeeCollector(r *rand.Rand) string {
-	return types.DefaultFarmingFeeCollector
+	return types.DefaultFarmingFeeCollector.String()
 }
 
 // RandomizedGenState generates a random GenesisState for farming.

@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"github.com/tendermint/farming/app"
-	_ "github.com/tendermint/farming/client/docs/statik"
-	"github.com/tendermint/farming/cmd/farmingd/cmd"
+	"github.com/crescent-network/crescent/app"
+	_ "github.com/crescent-network/crescent/client/docs/statik"
+	"github.com/crescent-network/crescent/cmd/crescentd/cmd"
 )
 
 func main() {

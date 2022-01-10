@@ -9,7 +9,7 @@ Description: A high-level overview of gRPC-gateway REST routes in farming module
 
 ## gRPC-gateway REST Routes
 
-In order to test out the following REST routes, set up a local node to query from. See the [localnet tutorial](../../Tutorials/localnet) on how to build the `farmingd` binary and bootstrap a local network in your local machine.
+In order to test out the following REST routes, set up a local node to query from. See the [localnet tutorial](../../Tutorials/localnet) on how to build the `crescentd` binary and bootstrap a local network in your local machine.
 
 - [Params](#Params)
 - [Plans](#Plans)

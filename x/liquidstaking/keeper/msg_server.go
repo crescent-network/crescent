@@ -9,14 +9,15 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/farming/x/liquidstaking/types"
+
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 type msgServer struct {
 	Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the farming MsgServer interface
+// NewMsgServerImpl returns an implementation of the liquidstaking MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}

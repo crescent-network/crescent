@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/tendermint/farming/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 var _ types.MsgServer = msgServer{}

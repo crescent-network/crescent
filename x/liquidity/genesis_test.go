@@ -7,9 +7,9 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/tendermint/farming/app"
-	"github.com/tendermint/farming/x/liquidity"
-	"github.com/tendermint/farming/x/liquidity/types"
+	"github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/liquidity"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 func TestGenesis(t *testing.T) {

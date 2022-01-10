@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	simappparams "github.com/tendermint/farming/app/params"
+	simappparams "github.com/crescent-network/crescent/app/params"
 
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/stretchr/testify/require"
@@ -38,7 +38,7 @@ import (
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
-// FarmingApp testing.
+// CrescentApp testing.
 var DefaultConsensusParams = &abci.ConsensusParams{
 	Block: &abci.BlockParams{
 		MaxBytes: 200000,
@@ -65,18 +65,18 @@ func MakeTestEncodingConfig() simappparams.EncodingConfig {
 	return encodingConfig
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*FarmingApp, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint) (*CrescentApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewFarmingApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := NewCrescentApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
 }
 
-// Setup initializes a new FarmingApp. A Nop logger is set in FarmingApp.
-func Setup(isCheckTx bool) *FarmingApp {
+// Setup initializes a new CrescentApp. A Nop logger is set in CrescentApp.
+func Setup(isCheckTx bool) *CrescentApp {
 	app, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
@@ -98,11 +98,11 @@ func Setup(isCheckTx bool) *FarmingApp {
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new FarmingApp with a validator set and genesis accounts
+// SetupWithGenesisValSet initializes a new CrescentApp with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
-// account. A Nop logger is set in FarmingApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *FarmingApp {
+// account. A Nop logger is set in CrescentApp.
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *CrescentApp {
 	app, genesisState := setup(true, 5)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
@@ -179,9 +179,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
-// SetupWithGenesisAccounts initializes a new FarmingApp with the provided genesis
+// SetupWithGenesisAccounts initializes a new CrescentApp with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *FarmingApp {
+func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *CrescentApp {
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -248,8 +248,8 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	return addresses
 }
 
-// AddTestAddrsFromPubKeys adds the addresses into the FarmingApp providing only the public keys.
-func AddTestAddrsFromPubKeys(app *FarmingApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
+// AddTestAddrsFromPubKeys adds the addresses into the CrescentApp providing only the public keys.
+func AddTestAddrsFromPubKeys(app *CrescentApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
 
 	for _, pk := range pubKeys {
@@ -259,17 +259,17 @@ func AddTestAddrsFromPubKeys(app *FarmingApp, ctx sdk.Context, pubKeys []cryptot
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(app *FarmingApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrs(app *CrescentApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *FarmingApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(app *CrescentApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
-func addTestAddrs(app *FarmingApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(app *CrescentApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
@@ -281,7 +281,7 @@ func addTestAddrs(app *FarmingApp, ctx sdk.Context, accNum int, accAmt sdk.Int, 
 	return testAddrs
 }
 
-func initAccountWithCoins(app *FarmingApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func initAccountWithCoins(app *CrescentApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		panic(err)
@@ -326,7 +326,7 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 }
 
 // CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *FarmingApp, addr sdk.AccAddress, balances sdk.Coins) {
+func CheckBalance(t *testing.T, app *CrescentApp, addr sdk.AccAddress, balances sdk.Coins) {
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/farming/x/farming"
-	"github.com/tendermint/farming/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

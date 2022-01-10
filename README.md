@@ -1,12 +1,15 @@
-[![codecov](https://codecov.io/gh/tendermint/farming/branch/main/graph/badge.svg)](https://codecov.io/gh/tendermint/farming?branch=main)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/tendermint/farming)](https://pkg.go.dev/github.com/tendermint/farming)
+# Crescent
 
-# Farming Module
+The Crescent Network containing below Cosmos SDK modules
 
-The farming module is a Cosmos SDK module that implements farming functionality, which provides farming rewards to participants called farmers. A primary use case is to use this module to provide incentives for liquidity pool investors for their pool participation. 
+- liquidity
+- liquidstaking
+- farming
+- ...
 
-- see the [main](https://github.com/tendermint/farming/tree/main) branch for the latest 
-- see [releases](https://github.com/tendermint/farming/releases) for the latest release
+
+- see the [main](https://github.com/crescent-network/crescent/tree/main) branch for the latest 
+- see [releases](https://github.com/crescent-network/crescent/releases) for the latest release
 
 ## Dependencies
 
@@ -20,9 +23,9 @@ Cosmos SDK  | v0.44.3 or higher
 ## Installation
 
 ```bash
-# Use git to clone farming module source code and install `farmingd`
-git clone https://github.com/tendermint/farming.git
-cd farming
+# Use git to clone the source code and install `crescentd`
+git clone https://github.com/crescent-network/crescent.git
+cd crescent
 make install
 ```
 
@@ -32,7 +35,7 @@ To get started to the project, visit the [TECHNICAL-SETUP.md](./TECHNICAL-SETUP.
 
 ## Documentation
 
-The farming module documentation is available in [docs](./docs) folder and technical specification is available in [specs](https://github.com/tendermint/farming/blob/main/x/farming/spec/README.md) folder. 
+The Crescent documentation is available in [docs](./docs) folder and technical specification is available in [specs](https://github.com/crescent-network/crescent/blob/main/x/farming/spec/README.md) folder. 
 
 These are some of the documents that help you to quickly get you on board with the farming module.
 
@@ -43,4 +46,4 @@ These are some of the documents that help you to quickly get you on board with t
 
 ## Contributing
 
-We welcome contributions from everyone. The [main](https://github.com/tendermint/farming/tree/main) branch contains the development version of the code. You can branch of from main and create a pull request, or maintain your own fork and submit a cross-repository pull request. If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop farming module. Thank you to all those who have contributed to farming module!
+We welcome contributions from everyone. The [main](https://github.com/crescent-network/crescent/tree/main) branch contains the development version of the code. You can branch of from main and create a pull request, or maintain your own fork and submit a cross-repository pull request. If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop crescent. Thank you to all those who have contributed to crescent network!

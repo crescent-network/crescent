@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
-	"github.com/tendermint/farming/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 // GetQueryCmd returns a root CLI command handler for all x/liquidstaking query commands.

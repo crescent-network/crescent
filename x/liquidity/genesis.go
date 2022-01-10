@@ -3,8 +3,8 @@ package liquidity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tendermint/farming/x/liquidity/keeper"
-	"github.com/tendermint/farming/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

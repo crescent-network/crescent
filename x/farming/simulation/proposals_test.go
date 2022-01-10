@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/farming/app/params"
-	"github.com/tendermint/farming/x/farming/simulation"
-	"github.com/tendermint/farming/x/farming/types"
+	"github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/x/farming/simulation"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 func TestProposalContents(t *testing.T) {

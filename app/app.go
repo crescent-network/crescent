@@ -97,23 +97,23 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	farmingparams "github.com/tendermint/farming/app/params"
-	"github.com/tendermint/farming/x/farming"
-	farmingclient "github.com/tendermint/farming/x/farming/client"
-	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
-	farmingtypes "github.com/tendermint/farming/x/farming/types"
-	"github.com/tendermint/farming/x/liquidity"
-	liquiditykeeper "github.com/tendermint/farming/x/liquidity/keeper"
-	liquiditytypes "github.com/tendermint/farming/x/liquidity/types"
-	"github.com/tendermint/farming/x/liquidstaking"
-	liquidstakingkeeper "github.com/tendermint/farming/x/liquidstaking/keeper"
-	liquidstakingtypes "github.com/tendermint/farming/x/liquidstaking/types"
+	farmingparams "github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/x/farming"
+	farmingclient "github.com/crescent-network/crescent/x/farming/client"
+	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
+	"github.com/crescent-network/crescent/x/liquidity"
+	liquiditykeeper "github.com/crescent-network/crescent/x/liquidity/keeper"
+	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidstaking"
+	liquidstakingkeeper "github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
 
 	// unnamed import of statik for swagger UI support
-	_ "github.com/tendermint/farming/client/docs/statik"
+	_ "github.com/crescent-network/crescent/client/docs/statik"
 )
 
-const appName = "FarmingApp"
+const appName = "CrescentApp"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -166,22 +166,21 @@ var (
 		budgettypes.ModuleName:         nil,
 		farmingtypes.ModuleName:        nil,
 		liquiditytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
-		// TODO: set perms to liquidstaking
-		liquidstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-		ibctransfertypes.ModuleName:   {authtypes.Minter, authtypes.Burner},
+		liquidstakingtypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	}
 )
 
 // Verify app interface at compile time
 var (
-	_ simapp.App              = (*FarmingApp)(nil)
-	_ servertypes.Application = (*FarmingApp)(nil)
+	_ simapp.App              = (*CrescentApp)(nil)
+	_ servertypes.Application = (*CrescentApp)(nil)
 )
 
-// FarmingApp extends an ABCI application, but with most of its parameters exported.
+// CrescentApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type FarmingApp struct {
+type CrescentApp struct {
 	*baseapp.BaseApp
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -235,11 +234,11 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".farmingapp")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".crescentapp")
 }
 
-// NewFarmingApp returns a reference to an initialized FarmingApp.
-func NewFarmingApp(
+// NewCrescentApp returns a reference to an initialized CrescentApp.
+func NewCrescentApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -250,7 +249,7 @@ func NewFarmingApp(
 	encodingConfig farmingparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) *FarmingApp {
+) *CrescentApp {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -284,7 +283,7 @@ func NewFarmingApp(
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	app := &FarmingApp{
+	app := &CrescentApp{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
@@ -419,7 +418,7 @@ func NewFarmingApp(
 		app.GetSubspace(liquiditytypes.ModuleName),
 		app.BankKeeper,
 	)
-	// TODO: fix liquidstaking keeper deps
+
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
 		appCodec,
 		keys[liquidstakingtypes.StoreKey],
@@ -453,9 +452,7 @@ func NewFarmingApp(
 
 	app.GovKeeper = *app.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// TODO: register the governance hooks
 			app.LiquidStakingKeeper.Hooks(),
-			//app.FarmingKeeper.Hooks()
 		),
 	)
 
@@ -511,7 +508,6 @@ func NewFarmingApp(
 		params.NewAppModule(app.ParamsKeeper),
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
-		// TODO: fix liquidstaking module deps
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
 		transferModule,
 	)
@@ -644,20 +640,20 @@ func NewFarmingApp(
 }
 
 // Name returns the name of the App.
-func (app *FarmingApp) Name() string { return app.BaseApp.Name() }
+func (app *CrescentApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
-func (app *FarmingApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *CrescentApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block.
-func (app *FarmingApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *CrescentApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
 // InitChainer application update at chain initialization.
-func (app *FarmingApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *CrescentApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -667,12 +663,12 @@ func (app *FarmingApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 }
 
 // LoadHeight loads a particular height.
-func (app *FarmingApp) LoadHeight(height int64) error {
+func (app *CrescentApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *FarmingApp) ModuleAccountAddrs() map[string]bool {
+func (app *CrescentApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
@@ -685,64 +681,64 @@ func (app *FarmingApp) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// LegacyAmino returns FarmingApp's amino codec.
+// LegacyAmino returns CrescentApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *FarmingApp) LegacyAmino() *codec.LegacyAmino {
+func (app *CrescentApp) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 
-// AppCodec returns FarmingApp's app codec.
+// AppCodec returns CrescentApp's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *FarmingApp) AppCodec() codec.Codec {
+func (app *CrescentApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns FarmingApp's InterfaceRegistry
-func (app *FarmingApp) InterfaceRegistry() types.InterfaceRegistry {
+// InterfaceRegistry returns CrescentApp's InterfaceRegistry
+func (app *CrescentApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *FarmingApp) GetKey(storeKey string) *sdk.KVStoreKey {
+func (app *CrescentApp) GetKey(storeKey string) *sdk.KVStoreKey {
 	return app.keys[storeKey]
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *FarmingApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
+func (app *CrescentApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
 
 // GetMemKey returns the MemStoreKey for the provided mem key.
 //
 // NOTE: This is solely used for testing purposes.
-func (app *FarmingApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+func (app *CrescentApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
 	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *FarmingApp) GetSubspace(moduleName string) paramstypes.Subspace {
+func (app *CrescentApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *FarmingApp) SimulationManager() *module.SimulationManager {
+func (app *CrescentApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *FarmingApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *CrescentApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register legacy tx routes.
@@ -763,12 +759,12 @@ func (app *FarmingApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
-func (app *FarmingApp) RegisterTxService(clientCtx client.Context) {
+func (app *CrescentApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *FarmingApp) RegisterTendermintService(clientCtx client.Context) {
+func (app *CrescentApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 

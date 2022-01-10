@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package cosmos.farming.v1beta1;
+package crescent.farming.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/tendermint/farming/x/farming/types";
+option go_package = "github.com/crescent-network/crescent/x/farming/types";
 
 // Msg defines the farming Msg service.
 service Msg {

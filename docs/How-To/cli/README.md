@@ -1,15 +1,15 @@
 ---
-Title: Farmingd
+Title: crescentd
 Description: A high-level overview of how the command-line interfaces (CLI) work for the farming module.
 ---
 
-# farmingd
+# crescentd
 
 This document provides a high-level overview of how the command line (CLI) interface works for the farming module.
 
 ## Command Line Interfaces
 
-In order to test out the following command line interfaces, you must set up a local node to send transactions or queries. See the [localnet tutorial](../../Tutorials/localnet) for details on how to build the `farmingd` binary and bootstrap a local network in your local machine.
+In order to test out the following command line interfaces, you must set up a local node to send transactions or queries. See the [localnet tutorial](../../Tutorials/localnet) for details on how to build the `crescentd` binary and bootstrap a local network in your local machine.
 
 - [Transaction](#Transaction)
     * [MsgCreateFixedAmountPlan](#MsgCreateFixedAmountPlan)
@@ -72,7 +72,7 @@ Example command:
 
 ```bash
 # Create a private fixed amount plan
-farmingd tx farming create-private-fixed-plan private-fixed-plan.json \
+$BINARY tx farming create-private-fixed-plan private-fixed-plan.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -178,7 +178,7 @@ Create the `private-fixed-plan.json` file. This private ratio farming plan inten
 
 ```bash
 # Create a private ratio plan
-farmingd tx farming create-private-ratio-plan private-ratio-plan.json \
+$BINARY tx farming create-private-ratio-plan private-ratio-plan.json \
 --chain-id localnet \
 --from val1 \
 --keyring-backend test \
@@ -248,7 +248,7 @@ farmingd tx farming create-private-ratio-plan private-ratio-plan.json \
 
 ```bash
 # Stake pool coin
-farmingd tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+$BINARY tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -310,7 +310,7 @@ farmingd tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837
 
 ```bash
 # Unstake coins from the farming plan
-farmingd tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+$BINARY tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -373,7 +373,7 @@ farmingd tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E388
 ```bash
 # Harvest farming rewards from the farming plan
 # Note that there won't be any rewards if the time hasn't passed by the epoch days
-farmingd tx farming harvest uatom \
+$BINARY tx farming harvest uatom \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -384,7 +384,7 @@ farmingd tx farming harvest uatom \
 # or
 
 # Harvest all with --all flag
-farmingd tx farming harvest \
+$BINARY tx farming harvest \
 --all \
 --chain-id localnet \
 --from user2 \
@@ -449,7 +449,7 @@ https://github.com/tendermint/farming/blob/main/proto/tendermint/farming/v1beta1
 
 ```bash
 # Query the values set as farming parameters
-farmingd q farming params --output json | jq
+$BINARY q farming params --output json | jq
 ```
 
 ```json
@@ -468,31 +468,31 @@ farmingd q farming params --output json | jq
 
 ```bash
 # Query for all farmings plans on a network
-farmingd q farming plans --output json | jq
+$BINARY q farming plans --output json | jq
 
 # Query for all farmings plans with the given plan type
 # plan type must be either PLAN_TYPE_PUBLIC or PLAN_TYPE_PRIVATE
-farmingd q farming plans \
+$BINARY q farming plans \
 --plan-type PLAN_TYPE_PUBLIC \
 --output json | jq
 
 # Query for all farmings plans with the given farming pool address
-farmingd q farming plans \
+$BINARY q farming plans \
 --farming-pool-addr cosmos13w4ueuk80d3kmwk7ntlhp84fk0arlm3mqf0w08 \
 --output json | jq
 
 # Query for all farmings plans with the given reward pool address
-farmingd q farming plans \
+$BINARY q farming plans \
 --reward-pool-addr cosmos1gshap5099dwjdlxk2ym9z8u40jtkm7hvux45pze8em08fwarww6qc0tvl0 \
 --output json | jq
 
 # Query for all farmings plans with the given termination address
-farmingd q farming plans \
+$BINARY q farming plans \
 --termination-addr cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
 # Query for all farmings plans with the given staking coin denom
-farmingd q farming plans \
+$BINARY q farming plans \
 --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --output json | jq
 ```
@@ -542,7 +542,7 @@ farmingd q farming plans \
 
 ```bash
 # Query plan with the given plan id
-farmingd q farming plan 1 --output json | jq
+$BINARY q farming plan 1 --output json | jq
 ```
 
 ```json
@@ -591,10 +591,10 @@ farmingd q farming plan 1 --output json | jq
 
 ```bash
 # Query for all stakings by a farmer 
-farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
+$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
 
 # Query for all stakings by a farmer with the given staking coin denom
-farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --output json | jq
 ```
@@ -615,7 +615,7 @@ farmingd q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 
 ```bash
 # Query for total stakings by a staking coin denom 
-farmingd q farming total-stakings poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --output json | jq
+$BINARY q farming total-stakings poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --output json | jq
 ```
 
 ```json
@@ -628,10 +628,10 @@ farmingd q farming total-stakings poolD35A0CC16EE598F90B044CE296A405BA9C381E3883
 
 ```bash
 # Query for all rewards by a farmer 
-farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
+$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
 
 # Query for all rewards by a farmer with the staking coin denom
-farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
 --output json | jq
 ```
@@ -651,7 +651,7 @@ farmingd q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 
 ```bash
 # Query for the current epoch days
-farmingd q farming current-epoch-days --output json | jq
+$BINARY q farming current-epoch-days --output json | jq
 ```
 
 ```json

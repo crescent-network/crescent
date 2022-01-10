@@ -15,11 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tendermint/farming/x/farming/client/cli"
-	farmingcli "github.com/tendermint/farming/x/farming/client/cli"
-	farmingkeeper "github.com/tendermint/farming/x/farming/keeper"
-	"github.com/tendermint/farming/x/farming/types"
-	farmingtypes "github.com/tendermint/farming/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/client/cli"
+	farmingcli "github.com/crescent-network/crescent/x/farming/client/cli"
+	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/types"
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
 )
 
 type IntegrationTestSuite struct {

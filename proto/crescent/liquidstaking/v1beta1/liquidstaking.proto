@@ -1,15 +1,15 @@
 syntax = "proto3";
 
-package gdex.liquidstaking.v1beta1;
+package crescent.liquidstaking.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/tendermint/farming/x/liquidstaking/types";
+option go_package = "github.com/crescent-network/crescent/x/liquidstaking/types";
 
-// Params defines the set of params for the farming module.
+// Params defines the set of params for the liquidstaking module.
 message Params {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;

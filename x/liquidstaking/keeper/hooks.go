@@ -36,6 +36,7 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 			}
 			// lToken balance
 			lTokenBalance := h.k.bankKeeper.GetBalance(ctx, voter, liquidBondDenom).Amount.ToDec()
+			// TODO: exchange rate for native token, netAmount function
 			if lTokenBalance.IsPositive() {
 				(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
 				dividedPower := lTokenBalance.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
@@ -47,7 +48,7 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 					}
 				}
 			}
-			// TODO: farming staking position
+			// TODO: farming staking position, liquidity pool
 		}
 	}
 	// TODO: remove debug logging

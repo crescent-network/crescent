@@ -9,6 +9,6 @@ import (
 // Simulation parameter constants.
 const ()
 
-// RandomizedGenState generates a random GenesisState for farming.
+// RandomizedGenState generates a random GenesisState for liquidity.
 func RandomizedGenState(simState *module.SimulationState) {
 }
