@@ -15,11 +15,11 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// logger := k.Logger(ctx)
 
-	params := k.GetParams(ctx)
-	if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
-		// TODO: match orders
+	//params := k.GetParams(ctx)
+	//if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
+	// TODO: match orders
 
-		// TODO: find deposit requests and handle them
-		// TODO: find withdrawal requests and handle them
-	}
+	// TODO: find deposit requests and handle them
+	// TODO: find withdrawal requests and handle them
+	//}
 }

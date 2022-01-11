@@ -17,12 +17,6 @@ import (
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
-const (
-	denom1 = "denom1"
-	denom2 = "denom2"
-	denom3 = "denom3"
-)
-
 var (
 	//initialBalances = sdk.NewCoins(
 	//	sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000),
@@ -132,7 +126,8 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		val, err := stakingtypes.NewValidator(valAddrs[i], pks[i], stakingtypes.Description{})
 		suite.Require().NoError(err)
 		suite.app.StakingKeeper.SetValidator(suite.ctx, val)
-		suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val)
+		err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val)
+		suite.Require().NoError(err)
 		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
 		suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
 		suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())

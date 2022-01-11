@@ -74,7 +74,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 // GetTxCmd returns the root tx command for the liquidstaking module.
 // Modifying parameters of a liquidstaking can be done through governance process, not through transaction level.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.GetTxCmd()
 }
 
 // GetQueryCmd returns the root query command for the liquidstaking module.
