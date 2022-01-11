@@ -6,20 +6,18 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	utilcli "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/crescent-network/crescent/x/farming/client/cli"
-	farmingcli "github.com/crescent-network/crescent/x/farming/client/cli"
-	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/keeper"
 	"github.com/crescent-network/crescent/x/farming/types"
-	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
 )
 
 type IntegrationTestSuite struct {
@@ -36,18 +34,18 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
-	farmingkeeper.EnableAdvanceEpoch = true
+	keeper.EnableAdvanceEpoch = true
 
 	db := tmdb.NewMemDB()
 	cfg := NewConfig(db)
 	cfg.NumValidators = 1
 
-	var genesisState farmingtypes.GenesisState
-	err := cfg.Codec.UnmarshalJSON(cfg.GenesisState[farmingtypes.ModuleName], &genesisState)
+	var genesisState types.GenesisState
+	err := cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &genesisState)
 	s.Require().NoError(err)
 
-	genesisState.Params = farmingtypes.DefaultParams()
-	cfg.GenesisState[farmingtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&genesisState)
+	genesisState.Params = types.DefaultParams()
+	cfg.GenesisState[types.ModuleName] = cfg.Codec.MustMarshalJSON(&genesisState)
 	cfg.AccountTokens = sdk.NewInt(100_000_000_000) // node0token denom
 	cfg.StakingTokens = sdk.NewInt(100_000_000_000) // stake denom
 
@@ -65,6 +63,7 @@ func (s *IntegrationTestSuite) TearDownTest() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
+	s.SetupTest()
 	val := s.network.Validators[0]
 
 	name := "test"
@@ -214,7 +213,7 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 			cmd := cli.NewCreateFixedAmountPlanCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -230,6 +229,7 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
+	s.SetupTest()
 	val := s.network.Validators[0]
 
 	name := "test"
@@ -379,7 +379,7 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 			cmd := cli.NewCreateRatioPlanCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -395,6 +395,7 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewStakeCmd() {
+	s.SetupTest()
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -446,7 +447,7 @@ func (s *IntegrationTestSuite) TestNewStakeCmd() {
 			cmd := cli.NewStakeCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -462,6 +463,7 @@ func (s *IntegrationTestSuite) TestNewStakeCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
+	s.SetupTest()
 	val := s.network.Validators[0]
 
 	_, err := MsgStakeExec(
@@ -523,7 +525,7 @@ func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
 			cmd := cli.NewUnstakeCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -539,6 +541,7 @@ func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewHarvestCmd() {
+	s.SetupTest()
 	val := s.network.Validators[0]
 
 	req := cli.PrivateFixedPlanRequest{
@@ -642,7 +645,7 @@ func (s *IntegrationTestSuite) TestNewHarvestCmd() {
 			cmd := cli.NewHarvestCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -667,18 +670,18 @@ type QueryCmdTestSuite struct {
 func (s *QueryCmdTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	farmingkeeper.EnableAdvanceEpoch = true
+	keeper.EnableAdvanceEpoch = true
 
 	db := tmdb.NewMemDB()
 	cfg := NewConfig(db)
 	cfg.NumValidators = 1
 
-	var genesisState farmingtypes.GenesisState
-	err := cfg.Codec.UnmarshalJSON(cfg.GenesisState[farmingtypes.ModuleName], &genesisState)
+	var genesisState types.GenesisState
+	err := cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &genesisState)
 	s.Require().NoError(err)
 
-	genesisState.Params = farmingtypes.DefaultParams()
-	cfg.GenesisState[farmingtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&genesisState)
+	genesisState.Params = types.DefaultParams()
+	cfg.GenesisState[types.ModuleName] = cfg.Codec.MustMarshalJSON(&genesisState)
 	cfg.AccountTokens = sdk.NewInt(100_000_000_000) // node0token denom
 	cfg.StakingTokens = sdk.NewInt(100_000_000_000) // stake denom
 
@@ -754,14 +757,14 @@ func (s *QueryCmdTestSuite) TestCmdQueryParams() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryParams()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
 				s.Require().NoError(err)
 
-				var params farmingtypes.Params
+				var params types.Params
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &params))
 				s.Require().NotEmpty(params.FarmingFeeCollector)
 			}
@@ -786,7 +789,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			func(resp *farmingtypes.QueryPlansResponse) {
+			func(resp *types.QueryPlansResponse) {
 				plans, err := types.UnpackPlans(resp.Plans)
 				s.Require().NoError(err)
 				s.Require().Len(plans, 1)
@@ -796,7 +799,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 		{
 			"invalid plan type",
 			[]string{
-				fmt.Sprintf("--%s=%s", farmingcli.FlagPlanType, "invalid"),
+				fmt.Sprintf("--%s=%s", cli.FlagPlanType, "invalid"),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
@@ -805,7 +808,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 		{
 			"invalid farming pool addr",
 			[]string{
-				fmt.Sprintf("--%s=%s", farmingcli.FlagFarmingPoolAddr, "invalid"),
+				fmt.Sprintf("--%s=%s", cli.FlagFarmingPoolAddr, "invalid"),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
@@ -814,7 +817,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 		{
 			"invalid termination addr",
 			[]string{
-				fmt.Sprintf("--%s=%s", farmingcli.FlagTerminationAddr, "invalid"),
+				fmt.Sprintf("--%s=%s", cli.FlagTerminationAddr, "invalid"),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
@@ -823,7 +826,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 		{
 			"invalid staking coin denom",
 			[]string{
-				fmt.Sprintf("--%s=%s", farmingcli.FlagStakingCoinDenom, "!"),
+				fmt.Sprintf("--%s=%s", cli.FlagStakingCoinDenom, "!"),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
@@ -835,7 +838,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlans() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryPlans()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -866,7 +869,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlan() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			func(resp *farmingtypes.QueryPlanResponse) {
+			func(resp *types.QueryPlanResponse) {
 				plan, err := types.UnpackPlan(resp.Plan)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(1), plan.GetId())
@@ -887,7 +890,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryPlan() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryPlan()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -917,7 +920,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryStakings() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			func(resp *farmingtypes.QueryStakingsResponse) {
+			func(resp *types.QueryStakingsResponse) {
 				s.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)), resp.StakedCoins))
 			},
 		},
@@ -936,7 +939,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryStakings() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryStakings()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -966,7 +969,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryTotalStakings() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			func(resp *farmingtypes.QueryTotalStakingsResponse) {
+			func(resp *types.QueryTotalStakingsResponse) {
 				s.Require().True(intEq(sdk.NewInt(1000000), resp.Amount))
 			},
 		},
@@ -985,7 +988,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryTotalStakings() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryTotalStakings()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -1015,7 +1018,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			func(resp *farmingtypes.QueryRewardsResponse) {
+			func(resp *types.QueryRewardsResponse) {
 				s.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin("node0token", 100_000_000)), resp.Rewards))
 			},
 		},
@@ -1034,7 +1037,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryRewards() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryRewards()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -1063,7 +1066,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryCurrentEpochDays() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			func(resp *farmingtypes.QueryCurrentEpochDaysResponse) {
+			func(resp *types.QueryCurrentEpochDaysResponse) {
 				s.Require().Equal(uint32(1), resp.CurrentEpochDays)
 			},
 		},
@@ -1073,7 +1076,7 @@ func (s *QueryCmdTestSuite) TestCmdQueryCurrentEpochDays() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryCurrentEpochDays()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -1091,13 +1094,13 @@ func (s *QueryCmdTestSuite) fundFarmingPool(poolId uint64, amount sdk.Coins) {
 	clientCtx := val.ClientCtx
 	types.RegisterInterfaces(clientCtx.InterfaceRegistry)
 
-	cmd := farmingcli.GetCmdQueryPlan()
+	cmd := cli.GetCmdQueryPlan()
 	args := []string{
 		strconv.FormatUint(poolId, 10),
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
 
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
 	var resp types.QueryPlanResponse

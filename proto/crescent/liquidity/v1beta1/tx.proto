@@ -10,67 +10,96 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the Msg service.
 service Msg {
-  // CreatePool defines ...
+  // CreatePool defines a method for creating a pool
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
-  // DepositBatch defines ...
+  // DepositBatch defines a method for depositing coins to the pool
   rpc DepositBatch(MsgDepositBatch) returns (MsgDepositBatchResponse);
 
-  // WithdrawBatch defines ...
+  // WithdrawBatch defines a method for withdrawing pool coin from the pool
   rpc WithdrawBatch(MsgWithdrawBatch) returns (MsgWithdrawBatchResponse);
 
-  // SwapBatch defines ...
+  // SwapBatch defines a method for swapping X coin to Y coin from the pool
   rpc SwapBatch(MsgSwapBatch) returns (MsgSwapBatchResponse);
+
+  // CancelSwapBatch defines a method for cancelling a swap request
+  rpc CancelSwapBatch(MsgCancelSwapBatch) returns (MsgCancelSwapBatchResponse);
 }
 
-// MsgCreatePool defines ...
+// MsgCreatePool defines an SDK message for creating a pool.
 message MsgCreatePool {
+  // creator specifies the bech32-encoded address that is the pool creator
   string creator = 1;
 
+  // deposit_coins specifies the two depositing coins
   repeated cosmos.base.v1beta1.Coin deposit_coins = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-// MsgCreatePoolResponse defines ...
+// MsgCreatePoolResponse defines the Msg/CreatePool response type.
 message MsgCreatePoolResponse {}
 
-// MsgDepositBatch defines ...
+// MsgDepositBatch defines an SDK message for depositing coins to the pool
 message MsgDepositBatch {
+  // depositor specifies the bech32-encoded address that makes a deposit to the pool
   string depositor = 1;
 
+  // pool_id specifies the pool id
   uint64 pool_id = 2;
 
+  // coins specifies the two depositing coins
   repeated cosmos.base.v1beta1.Coin coins = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-// MsgDepositBatchResponse defines ...
+// MsgDepositBatchResponse defines the Msg/DepositBatch response type.
 message MsgDepositBatchResponse {}
 
-// MsgWithdrawBatch defines ...
+// MsgWithdrawBatch defines an SDK message for withdrawing pool coin from the pool
 message MsgWithdrawBatch {
+  // withdrawer specifies the bech32-encoded address that withdraws pool coin from the pool
   string withdrawer = 1;
 
+  // pool_id specifies the pool id
   uint64 pool_id = 2;
 
+  // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
   cosmos.base.v1beta1.Coin pool_coin = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgWithdrawBatchResponse defines ...
+// MsgWithdrawBatchResponse defines the Msg/WithdrawBatch response type.
 message MsgWithdrawBatchResponse {}
 
-// MsgSwapBatch defines ...
+// MsgSwapBatch defines an SDK message for swapping X coin to Y coin from the pool
 message MsgSwapBatch {
+  // orderer specifies the bech32-encoded address that makes an order to swap from the pool
   string orderer = 1;
 
-  cosmos.base.v1beta1.Coin coin = 2;
+  // coin specifies the offer coin that the orderer offers to swap with
+  cosmos.base.v1beta1.Coin coin = 2 [(gogoproto.nullable) = false];
 
+  // demand_coin_denom specifies the coin denom that is exchanged during the swap request; it must match the denom in
+  // the pool
   string demand_coin_denom = 3;
 
+  // price specifies ...
   string price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
+  // order_lifespan specifies the order lifespan
   google.protobuf.Duration order_lifespan = 5 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
-// MsgSwapBatchResponse defines ...
+// MsgSwapBatchResponse defines the Msg/SwapBatch response type.
 message MsgSwapBatchResponse {}
+
+// MsgCancelSwapBatch defines an SDK message for cancelling a swap request
+message MsgCancelSwapBatch {
+  // swap_request_id specifies the swap request id
+  uint64 swap_request_id = 1;
+
+  // orderer specifies the bech32-encoded address that makes an order to swap from the pool
+  string orderer = 2;
+}
+
+// MsgCancelSwapBatchResponse defines the Msg/CancelSwapBatch response type.
+message MsgCancelSwapBatchResponse {}

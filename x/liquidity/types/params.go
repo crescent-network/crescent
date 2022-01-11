@@ -7,6 +7,8 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+const ReserveCoinNum = 2
+
 var (
 	KeyInitialPoolCoinSupply = []byte("InitialPoolCoinSupply")
 	KeyBatchSize             = []byte("BatchSize")
@@ -17,6 +19,8 @@ var (
 	DefaultInitialPoolCoinSupply        = sdk.NewInt(1_000_000_000_000)
 	DefaultBatchSize             uint32 = 1
 	DefaultTickPrecision         uint32 = 3
+
+	MinOfferCoinAmount = sdk.NewInt(100) // This value can be modified in the future
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)

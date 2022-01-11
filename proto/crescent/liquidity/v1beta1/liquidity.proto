@@ -2,6 +2,7 @@ syntax = "proto3";
 package crescent.liquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -45,21 +46,66 @@ message Pair {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
-// SwapRequest defines a swap request.
-message SwapRequest {
+// DepositRequest defines a deposit request.
+message DepositRequest {
+  // id specifies the id for the request
   uint64 id = 1;
 
+  // pool_id specifies the pool id
+  uint64 pool_id = 2;
+
+  // msg_height specifies the block height when the request is stored for the batch execution
+  int64 msg_height = 3;
+
+  // depositor specifies the bech32-encoded address that makes a deposit to the pool
+  string depositor = 4;
+
+  // coins specifies the two depositing coins
+  repeated cosmos.base.v1beta1.Coin coins = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// WithdrawRequest defines a withdraw request.
+message WithdrawRequest {
+  // id specifies the id for the request
+  uint64 id = 1;
+
+  // pool_id specifies the pool id
+  uint64 pool_id = 2;
+
+  // msg_height specifies the block height when the request is stored for the batch execution
+  int64 msg_height = 3;
+
+  // withdrawer specifies the bech32-encoded address that withdraws pool coin from the pool
+  string withdrawer = 4;
+
+  // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
+  cosmos.base.v1beta1.Coin pool_coin = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+}
+
+// SwapRequest defines a swap request.
+message SwapRequest {
+  // id specifies the id for the request
+  uint64 id = 1;
+
+  // pool_id specifies the pool id
   uint64 pair_id = 2;
 
+  // orderer specifies the bech32-encoded address that makes an order to swap from the pool
   string orderer = 3;
 
+  // direction specifies the swap direction; either buy or sell
   SwapDirection direction = 4;
 
+  // price specifies the price that an orderer is willing to swap
   string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
+  // remaining_amount specifies the remaining amount after the swap
   string remaining_amount = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
+  // received_amount specifies the received amount after the swap
   string received_amount = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
@@ -68,10 +114,12 @@ message SwapRequest {
 enum SwapDirection {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  // SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction.
+  // SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
   SWAP_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapDirectionUnspecified"];
-  // SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction.
+
+  // SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
   SWAP_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "SwapDirectionBuy"];
-  // SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction.
+
+  // SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
   SWAP_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "SwapDirectionSell"];
 }
