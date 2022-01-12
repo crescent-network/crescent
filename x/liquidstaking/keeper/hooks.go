@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/k0kubun/pp"
 )
 
 // Wrapper struct
@@ -51,19 +50,19 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 			// TODO: farming staking position, liquidity pool
 		}
 	}
-	// TODO: remove debug logging
-	for _, vote := range *votes {
-		pp.Print("[GetOtherVotes on liquid-staking votes]", vote.Voter)
-		for _, option := range vote.Options {
-			pp.Println(option.Option, option.Weight.String(), option.Option)
-		}
-	}
-	for voter, voteMap := range *otherVotes {
-		pp.Println("[GetOtherVotes on liquid-staking otherVotes]", voter)
-		for vali, option := range voteMap {
-			pp.Println(vali, option.String())
-		}
-	}
+	//// TODO: remove debug logging
+	//for _, vote := range *votes {
+	//	pp.Print("[GetOtherVotes on liquid-staking votes]", vote.Voter)
+	//	for _, option := range vote.Options {
+	//		pp.Println(option.Option, option.Weight.String(), option.Option)
+	//	}
+	//}
+	//for voter, voteMap := range *otherVotes {
+	//	pp.Println("[GetOtherVotes on liquid-staking otherVotes]", voter)
+	//	for vali, option := range voteMap {
+	//		pp.Println(vali, option.String())
+	//	}
+	//}
 	////if totalSupply.IsPositive() && totalVotingPower.IsPositive() {
 	//if totalSupply.IsPositive() {
 	//	//powerRate := sdk.OneDec()
