@@ -237,4 +237,4 @@ proto-format:
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format
