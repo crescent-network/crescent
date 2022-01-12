@@ -38,11 +38,13 @@ message Pool {
 message Pair {
   uint64 id = 1;
 
-  repeated string coin_denoms = 2;
+  string x_coin_denom = 2;
 
-  uint64 last_swap_request_id = 3;
+  string y_coin_denom = 3;
 
-  string last_price = 4
+  uint64 last_swap_request_id = 4;
+
+  string last_price = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
@@ -60,9 +62,11 @@ message DepositRequest {
   // depositor specifies the bech32-encoded address that makes a deposit to the pool
   string depositor = 4;
 
-  // coins specifies the two depositing coins
-  repeated cosmos.base.v1beta1.Coin coins = 5
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  // x_coin specifies the deposit coin x
+  cosmos.base.v1beta1.Coin x_coin = 5 [(gogoproto.nullable) = false];
+
+  // y_coin specifies the deposit coin y
+  cosmos.base.v1beta1.Coin y_coin = 6 [(gogoproto.nullable) = false];
 }
 
 // WithdrawRequest defines a withdraw request.
