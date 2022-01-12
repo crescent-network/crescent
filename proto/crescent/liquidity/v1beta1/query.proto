@@ -1,10 +1,242 @@
 syntax = "proto3";
 package crescent.liquidity.v1beta1;
 
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "crescent/liquidity/v1beta1/liquidity.proto";
 
 option go_package = "github.com/crescent-network/crescent/x/liquidity/types";
 
 // Query defines the gRPC querier service.
-service Query {}
+service Query {
+  // Params returns parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/params";
+  }
+
+  // Pools returns all liquidity pools.
+  rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools";
+  }
+
+  // Pool returns the specific liquidity pool.
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}";
+  }
+
+  // PoolsByPair returns all pools that correspond to the pair.
+  rpc PoolsByPair(QueryPoolsByPairRequest) returns (QueryPoolsByPairResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/pools";
+  }
+
+  // PoolsByReserveAcc returns all pools that correspond to the reserve account.
+  rpc PoolsByReserveAcc(QueryPoolsByReserveAccRequest) returns (QueryPoolsByReserveAccResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/reserve_acc/{reserve_acc}";
+  }
+
+  // PoolsByPoolCoinDenom returns all pools that correspond to the pool coin denom.
+  rpc PoolsByPoolCoinDenom(QueryPoolsByPoolCoinDenomRequest) returns (QueryPoolsByPoolCoinDenomResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}";
+  }
+
+  // Pairs returns all liquidity pairs.
+  rpc Pairs(QueryPairsRequest) returns (QueryPairsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs";
+  }
+
+  // Pair returns the specific pair.
+  rpc Pair(QueryPairRequest) returns (QueryPairResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}";
+  }
+
+  // Deposits returns all deposit requests.
+  rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests";
+  }
+
+  // Deposit returns the specific deposit request.
+  rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}";
+  }
+
+  // Withdraws returns all withdraw requests.
+  rpc Withdraws(QueryWithdrawsRequest) returns (QueryWithdrawsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests";
+  }
+
+  // Withdraw returns the specific withdraw request.
+  rpc Withdraw(QueryWithdrawRequest) returns (QueryWithdrawResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}";
+  }
+
+  // Swaps returns all swap requests.
+  rpc Swaps(QuerySwapsRequest) returns (QuerySwapsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/swap_requests";
+  }
+
+  // Swap returns the specific swap request.
+  rpc Swap(QuerySwapRequest) returns (QuerySwapResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/swap_requests/{id}";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPoolsRequest is request type for the Query/Pools RPC method.
+message QueryPoolsRequest {
+  string x_denom = 1;
+  string y_denom = 2;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryPoolsResponse is response type for the Query/Pools RPC method.
+message QueryPoolsResponse {
+  repeated Pool pools = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryPoolRequest is request type for the Query/Pool RPC method.
+message QueryPoolRequest {
+  uint64 pool_id = 1;
+}
+
+// QueryPoolResponse is response type for the Query/Pool RPC method.
+message QueryPoolResponse {
+  Pool pool = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPoolsByPairRequest is request type for the Query/PoolsByPair RPC method.
+message QueryPoolsByPairRequest {
+  uint64 pair_id = 1;
+}
+
+// QueryPoolsByPairResponse is response type for the Query/PoolsByPair RPC method.
+message QueryPoolsByPairResponse {
+  repeated Pool pools = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryPoolsByReserveAccRequest is request type for the Query/PoolsByReserveAcc RPC method.
+message QueryPoolsByReserveAccRequest {
+  string reserve_acc = 1;
+}
+
+// QueryPoolsByReserveAccResponse is response type for the Query/PoolsByReserveAcc RPC method.
+message QueryPoolsByReserveAccResponse {
+  Pool pool = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPoolsByPoolCoinDenomRequest is request type for the Query/PoolsByPoolCoinDenom RPC method.
+message QueryPoolsByPoolCoinDenomRequest {
+  string pool_coin_denom = 1;
+}
+
+// QueryPoolsByPoolCoinDenomResponse is response type for the Query/PoolsByPoolCoinDenom RPC method.
+message QueryPoolsByPoolCoinDenomResponse {
+  Pool pool = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPairsRequest is request type for the Query/Pairs RPC method.
+message QueryPairsRequest {
+  string x_denom = 1;
+  string y_denom = 2;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryPairsResponse is response type for the Query/Pairs RPC method.
+message QueryPairsResponse {
+  repeated Pair pairs = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryPairRequest is request type for the Query/Pair RPC method.
+message QueryPairRequest {
+  uint64 pair_id = 1;
+}
+
+// QueryPairResponse is response type for the Query/Pair RPC method.
+message QueryPairResponse {
+  Pair pair = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryDepositsRequest is request type for the Query/Deposits RPC method.
+message QueryDepositsRequest {
+  uint64 pool_id = 1;
+}
+
+// QueryDepositsResponse is response type for the Query/Deposits RPC method.
+message QueryDepositsResponse {
+  repeated DepositRequest deposit_requests = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryDepositRequest is request type for the Query/Deposit RPC method.
+message QueryDepositRequest {
+  uint64 pool_id = 1;
+  uint64 id      = 2;
+}
+
+// QueryDepositResponse is response type for the Query/Deposit RPC method.
+message QueryDepositResponse {
+  DepositRequest deposit_request = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryWithdrawsRequest is request type for the Query/Withdraws RPC method.
+message QueryWithdrawsRequest {
+  uint64 pool_id = 1;
+}
+
+// QueryWithdrawsResponse is response type for the Query/Withdraws RPC method.
+message QueryWithdrawsResponse {
+  repeated WithdrawRequest withdraw_requests = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryWithdrawRequest is request type for the Query/Withdraw RPC method.
+message QueryWithdrawRequest {
+  uint64 pool_id = 1;
+  uint64 id      = 2;
+}
+
+// QueryWithdrawResponse is response type for the Query/Withdraw RPC method.
+message QueryWithdrawResponse {
+  WithdrawRequest withdraw_request = 1 [(gogoproto.nullable) = false];
+}
+
+// QuerySwapsRequest is request type for the Query/Swaps RPC method.
+message QuerySwapsRequest {
+  uint64 pool_id = 1;
+  uint64 id      = 2;
+}
+
+// QuerySwapsResponse is response type for the Query/Swaps RPC method.
+message QuerySwapsResponse {
+  repeated SwapRequest swap_requests = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySwapRequest is request type for the Query/Swap RPC method.
+message QuerySwapRequest {
+  uint64 pool_id = 1;
+  uint64 id      = 2;
+}
+
+// QuerySwapResponse is response type for the Query/Swap RPC method.
+message QuerySwapResponse {
+  SwapRequest swap_request = 1 [(gogoproto.nullable) = false];
+}
