@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -101,4 +102,92 @@ func WithdrawFromPool(pool PoolI, pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
 	y = ry.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // ry * proportion * multiplier
 
 	return
+}
+
+// MustMarshalPool returns the pool bytes.
+// It throws panic if it fails.
+func MustMarshalPool(cdc codec.BinaryCodec, pool Pool) []byte {
+	return cdc.MustMarshal(&pool)
+}
+
+// MustUnmarshalPool return the unmarshaled pool from bytes.
+// It throws panic if it fails.
+func MustUnmarshalPool(cdc codec.BinaryCodec, value []byte) Pool {
+	pool, err := UnmarshalPool(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return pool
+}
+
+// UnmarshalPool returns the pool from bytes.
+func UnmarshalPool(cdc codec.BinaryCodec, value []byte) (pool Pool, err error) {
+	err = cdc.Unmarshal(value, &pool)
+	return pool, err
+}
+
+// MustMarshalDepositRequest returns the DepositRequest bytes. Panics if fails.
+func MustMarshalDepositRequest(cdc codec.BinaryCodec, msg DepositRequest) []byte {
+	return cdc.MustMarshal(&msg)
+}
+
+// UnmarshalDepositMsgState returns the DepositRequest from bytes.
+func UnmarshalDepositRequest(cdc codec.BinaryCodec, value []byte) (msg DepositRequest, err error) {
+	err = cdc.Unmarshal(value, &msg)
+	return msg, err
+}
+
+// MustUnmarshalDepositRequest returns the DepositRequest from bytes.
+// It throws panic if it fails.
+func MustUnmarshalDepositRequest(cdc codec.BinaryCodec, value []byte) DepositRequest {
+	msg, err := UnmarshalDepositRequest(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return msg
+}
+
+// MustMarshaWithdrawRequest returns the WithdrawRequest bytes.
+// It throws panic if it fails.
+func MustMarshaWithdrawRequest(cdc codec.BinaryCodec, msg WithdrawRequest) []byte {
+	return cdc.MustMarshal(&msg)
+}
+
+// UnmarshalWithdrawRequest returns the WithdrawRequest from bytes.
+func UnmarshalWithdrawRequest(cdc codec.BinaryCodec, value []byte) (msg WithdrawRequest, err error) {
+	err = cdc.Unmarshal(value, &msg)
+	return msg, err
+}
+
+// MustUnmarshaWithdrawRequest returns the WithdrawRequest from bytes.
+// It throws panic if it fails.
+func MustUnmarshaWithdrawRequest(cdc codec.BinaryCodec, value []byte) WithdrawRequest {
+	msg, err := UnmarshalWithdrawRequest(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return msg
+}
+
+// MustMarshaSwapRequest returns the SwapRequest bytes.
+// It throws panic if it fails.
+func MustMarshaSwapRequest(cdc codec.BinaryCodec, msg SwapRequest) []byte {
+	return cdc.MustMarshal(&msg)
+}
+
+// UnmarshalSwapRequest returns the SwapRequest from bytes.
+func UnmarshalSwapRequest(cdc codec.BinaryCodec, value []byte) (msg SwapRequest, err error) {
+	err = cdc.Unmarshal(value, &msg)
+	return msg, err
+}
+
+// MustUnmarshaSwapRequest returns the SwapRequest from bytes.
+// It throws panic if it fails.
+func MustUnmarshaSwapRequest(cdc codec.BinaryCodec, value []byte) SwapRequest {
+	msg, err := UnmarshalSwapRequest(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return msg
 }
