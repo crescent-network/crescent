@@ -152,7 +152,6 @@ func (os PoolOrderSource) AmountLTE(price sdk.Dec) sdk.Int {
 
 func (os PoolOrderSource) Orders(price sdk.Dec) Orders {
 	panic("not implemented")
-	return nil
 }
 
 func (os PoolOrderSource) UpTick(price sdk.Dec) (tick sdk.Dec, found bool) {

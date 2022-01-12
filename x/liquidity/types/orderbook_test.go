@@ -60,39 +60,39 @@ func TestOrderBookTicks_FindPrice(t *testing.T) {
 
 func TestOrderBookTicks_AddOrder(t *testing.T) {
 	checkSorted := func(ticks *types.OrderBookTicks) {
-		require.True(t, sort.SliceIsSorted(ticks, func(i, j int) bool {
+		require.True(t, sort.SliceIsSorted(ticks.Ticks, func(i, j int) bool {
 			return ticks.Ticks[i].Price.GTE(ticks.Ticks[j].Price)
 		}), "ticks must be sorted")
 	}
 
 	ticks := testOrderBookTicks()
 	checkSorted(ticks)
-	require.Len(t, ticks, 11)
+	require.Len(t, ticks.Ticks, 11)
 
 	// Same price already exists
 	ticks.AddOrder(newBuyOrder("18.0", 1000))
 	checkSorted(ticks)
-	require.Len(t, ticks, 11)
+	require.Len(t, ticks.Ticks, 11)
 
 	// New price. We don't care about the tick precision here
 	ticks.AddOrder(newBuyOrder("18.000000000000000001", 1000))
 	checkSorted(ticks)
-	require.Len(t, ticks, 12)
+	require.Len(t, ticks.Ticks, 12)
 
 	// Add an order with same price as above again
 	ticks.AddOrder(newBuyOrder("18.000000000000000001", 1000))
 	checkSorted(ticks)
-	require.Len(t, ticks, 12)
+	require.Len(t, ticks.Ticks, 12)
 
 	// Add an order with higher price than the highest price in ticks.
 	ticks.AddOrder(newBuyOrder("21.0", 1000))
 	checkSorted(ticks)
-	require.Len(t, ticks, 13)
+	require.Len(t, ticks.Ticks, 13)
 
 	// Add an order with lower price than the lowest price in ticks.
 	ticks.AddOrder(newBuyOrder("9.0", 1000))
 	checkSorted(ticks)
-	require.Len(t, ticks, 14)
+	require.Len(t, ticks.Ticks, 14)
 }
 
 func TestOrderBookTicks_AmountGTE(t *testing.T) {

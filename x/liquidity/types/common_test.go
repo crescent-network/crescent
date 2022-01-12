@@ -10,6 +10,7 @@ func newBuyOrder(price string, amount int64) *types.Order {
 	return types.NewOrder(sdk.AccAddress{}, types.SwapDirectionBuy, newDec(price), sdk.NewInt(amount))
 }
 
+//nolint
 func newSellOrder(price string, amount int64) *types.Order {
 	return types.NewOrder(sdk.AccAddress{}, types.SwapDirectionSell, newDec(price), sdk.NewInt(amount))
 }
