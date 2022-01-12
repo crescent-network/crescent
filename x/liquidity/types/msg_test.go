@@ -20,41 +20,32 @@ func TestMsgCreatePool(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgCreatePool(
 				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 100_000_000),
-					sdk.NewInt64Coin("denom2", 100_000_000),
-				),
+				sdk.NewInt64Coin("denom1", 100_000_000),
+				sdk.NewInt64Coin("denom2", 100_000_000),
 			),
 		},
 		{
 			"invalid creator address: empty address string is not allowed: invalid address",
 			types.NewMsgCreatePool(
 				sdk.AccAddress{},
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 100_000_000),
-					sdk.NewInt64Coin("denom2", 100_000_000),
-				),
+				sdk.NewInt64Coin("denom1", 100_000_000),
+				sdk.NewInt64Coin("denom2", 100_000_000),
 			),
 		},
 		{
 			"deposit coins must be positive: invalid request",
 			types.NewMsgCreatePool(
 				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 0),
-					sdk.NewInt64Coin("denom2", 0),
-				),
+				sdk.NewInt64Coin("denom1", 100_000),
+				sdk.NewInt64Coin("denom2", 0),
 			),
 		},
 		{
-			"invalid number of deposit coin: invalid request",
+			"deposit coins must be positive: invalid request",
 			types.NewMsgCreatePool(
 				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 100_000_000),
-					sdk.NewInt64Coin("denom2", 100_000_000),
-					sdk.NewInt64Coin("denom3", 100_000_000),
-				),
+				sdk.NewInt64Coin("denom1", 0),
+				sdk.NewInt64Coin("denom2", 100_000),
 			),
 		},
 	}
@@ -77,6 +68,65 @@ func TestMsgCreatePool(t *testing.T) {
 }
 
 func TestMsgDepositBatch(t *testing.T) {
+	testCases := []struct {
+		expErr string
+		msg    *types.MsgDepositBatch
+	}{
+		{
+			"", // empty means no error expected
+			types.NewMsgDepositBatch(
+				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
+				uint64(1),
+				sdk.NewInt64Coin("denom1", 100_000_000),
+				sdk.NewInt64Coin("denom2", 100_000_000),
+			),
+		},
+		{
+			"invalid depositor address: empty address string is not allowed: invalid address",
+			types.NewMsgDepositBatch(
+				sdk.AccAddress{},
+				uint64(1),
+				sdk.NewInt64Coin("denom1", 100_000_000),
+				sdk.NewInt64Coin("denom2", 100_000_000),
+			),
+		},
+		{
+			"deposit coins must be positive: invalid request",
+			types.NewMsgDepositBatch(
+				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
+				uint64(1),
+				sdk.NewInt64Coin("denom1", 100_000),
+				sdk.NewInt64Coin("denom2", 0),
+			),
+		},
+		{
+			"deposit coins must be positive: invalid request",
+			types.NewMsgDepositBatch(
+				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
+				uint64(1),
+				sdk.NewInt64Coin("denom1", 0),
+				sdk.NewInt64Coin("denom2", 100_000),
+			),
+		},
+	}
+
+	for _, tc := range testCases {
+		require.IsType(t, &types.MsgDepositBatch{}, tc.msg)
+		require.Equal(t, types.TypeMsgDepositBatch, tc.msg.Type())
+		require.Equal(t, types.RouterKey, tc.msg.Route())
+
+		err := tc.msg.ValidateBasic()
+		if tc.expErr == "" {
+			require.Nil(t, err)
+			signers := tc.msg.GetSigners()
+			require.Len(t, signers, 1)
+			require.Equal(t, tc.msg.GetDepositor(), signers[0])
+		} else {
+			require.EqualError(t, err, tc.expErr)
+		}
+	}
+}
+func TestMsgWithdrawBatch(t *testing.T) {
 	testCases := []struct {
 		expErr string
 		msg    *types.MsgWithdrawBatch
@@ -124,75 +174,6 @@ func TestMsgDepositBatch(t *testing.T) {
 	}
 }
 
-func TestMsgWithdrawBatch(t *testing.T) {
-	testCases := []struct {
-		expErr string
-		msg    *types.MsgDepositBatch
-	}{
-		{
-			"", // empty means no error expected
-			types.NewMsgDepositBatch(
-				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				uint64(1),
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 100_000_000),
-					sdk.NewInt64Coin("denom2", 100_000_000),
-				),
-			),
-		},
-		{
-			"invalid depositor address: empty address string is not allowed: invalid address",
-			types.NewMsgDepositBatch(
-				sdk.AccAddress{},
-				uint64(1),
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 100_000_000),
-					sdk.NewInt64Coin("denom2", 100_000_000),
-				),
-			),
-		},
-		{
-			"deposit coins must be positive: invalid request",
-			types.NewMsgDepositBatch(
-				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				uint64(1),
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 0),
-					sdk.NewInt64Coin("denom2", 0),
-				),
-			),
-		},
-		{
-			"invalid number of deposit coin: invalid request",
-			types.NewMsgDepositBatch(
-				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				uint64(1),
-				sdk.NewCoins(
-					sdk.NewInt64Coin("denom1", 100_000_000),
-					sdk.NewInt64Coin("denom2", 100_000_000),
-					sdk.NewInt64Coin("denom3", 100_000_000),
-				),
-			),
-		},
-	}
-
-	for _, tc := range testCases {
-		require.IsType(t, &types.MsgDepositBatch{}, tc.msg)
-		require.Equal(t, types.TypeMsgDepositBatch, tc.msg.Type())
-		require.Equal(t, types.RouterKey, tc.msg.Route())
-
-		err := tc.msg.ValidateBasic()
-		if tc.expErr == "" {
-			require.Nil(t, err)
-			signers := tc.msg.GetSigners()
-			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetDepositor(), signers[0])
-		} else {
-			require.EqualError(t, err, tc.expErr)
-		}
-	}
-}
-
 func TestMsgSwapBatch(t *testing.T) {
 	orderLifespan := 20 * time.Second
 
@@ -203,6 +184,7 @@ func TestMsgSwapBatch(t *testing.T) {
 		{
 			"", // empty means no error expected
 			types.NewMsgSwapBatch(
+				uint64(1),
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				sdk.NewInt64Coin("denom2", 100_000_000),
 				"denom1",
@@ -213,6 +195,7 @@ func TestMsgSwapBatch(t *testing.T) {
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
 			types.NewMsgSwapBatch(
+				uint64(1),
 				sdk.AccAddress{},
 				sdk.NewInt64Coin("denom2", 100_000_000),
 				"denom1",
@@ -223,6 +206,7 @@ func TestMsgSwapBatch(t *testing.T) {
 		{
 			"offer coin must be positive: invalid request",
 			types.NewMsgSwapBatch(
+				uint64(1),
 				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
 				sdk.NewInt64Coin("denom2", 0),
 				"denom1",
@@ -233,6 +217,7 @@ func TestMsgSwapBatch(t *testing.T) {
 		{
 			"invalid demand coin denom: invalid request",
 			types.NewMsgSwapBatch(
+				uint64(1),
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				sdk.NewInt64Coin("denom2", 100_000_000),
 				"denom2",

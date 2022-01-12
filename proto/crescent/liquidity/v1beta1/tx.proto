@@ -31,9 +31,11 @@ message MsgCreatePool {
   // creator specifies the bech32-encoded address that is the pool creator
   string creator = 1;
 
-  // deposit_coins specifies the two depositing coins
-  repeated cosmos.base.v1beta1.Coin deposit_coins = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  // x_coin specifies the deposit coin x
+  cosmos.base.v1beta1.Coin x_coin = 2 [(gogoproto.nullable) = false];
+
+  // y_coin specifies the deposit coin y
+  cosmos.base.v1beta1.Coin y_coin = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgCreatePoolResponse defines the Msg/CreatePool response type.
@@ -47,9 +49,11 @@ message MsgDepositBatch {
   // pool_id specifies the pool id
   uint64 pool_id = 2;
 
-  // coins specifies the two depositing coins
-  repeated cosmos.base.v1beta1.Coin coins = 3
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  // x_coin specifies the deposit coin x
+  cosmos.base.v1beta1.Coin x_coin = 3 [(gogoproto.nullable) = false];
+
+  // y_coin specifies the deposit coin y
+  cosmos.base.v1beta1.Coin y_coin = 4 [(gogoproto.nullable) = false];
 }
 
 // MsgDepositBatchResponse defines the Msg/DepositBatch response type.
@@ -72,21 +76,24 @@ message MsgWithdrawBatchResponse {}
 
 // MsgSwapBatch defines an SDK message for swapping X coin to Y coin from the pool
 message MsgSwapBatch {
+  // pair_id specifies the pair id; 0 refers not to specifiy pair
+  uint64 pair_id = 1;
+
   // orderer specifies the bech32-encoded address that makes an order to swap from the pool
-  string orderer = 1;
+  string orderer = 2;
 
   // coin specifies the offer coin that the orderer offers to swap with
-  cosmos.base.v1beta1.Coin coin = 2 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin coin = 3 [(gogoproto.nullable) = false];
 
   // demand_coin_denom specifies the coin denom that is exchanged during the swap request; it must match the denom in
   // the pool
-  string demand_coin_denom = 3;
+  string demand_coin_denom = 4;
 
   // price specifies ...
-  string price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
   // order_lifespan specifies the order lifespan
-  google.protobuf.Duration order_lifespan = 5 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration order_lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // MsgSwapBatchResponse defines the Msg/SwapBatch response type.
