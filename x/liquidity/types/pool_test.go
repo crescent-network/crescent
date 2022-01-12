@@ -10,6 +10,34 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
+func TestPoolReserveAcc(t *testing.T) {
+	for _, tc := range []struct {
+		poolId   uint64
+		expected string
+	}{
+		{1, "cosmos13zr89pc7yem32x9vufeynd8ecvg26433dmgylxsftnc7twfpk8usxeszlr"},
+		{2, "cosmos1tnckpch7u5p2znwr7trct9w5yt5vmggr3kvq6vx2ry65jmr8tswq43uxqh"},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, tc.expected, types.PoolReserveAcc(tc.poolId).String())
+		})
+	}
+}
+
+func TestPoolCoinDenom(t *testing.T) {
+	for _, tc := range []struct {
+		poolId   uint64
+		expected string
+	}{
+		{1, "pool1"},
+		{10, "pool10"},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, tc.expected, types.PoolCoinDenom(tc.poolId))
+		})
+	}
+}
+
 func TestPoolInfo_Price(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
