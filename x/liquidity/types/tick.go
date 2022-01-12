@@ -7,34 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO: remove
-func TickToIndex(tick sdk.Dec, prec int) int {
-	b := tick.BigInt()
-	l := len(b.Text(10)) - 1
-	d := int64(l - prec)
-	if d > 0 {
-		q := big.NewInt(10)
-		q.Exp(q, big.NewInt(d), nil)
-		b.Quo(b, q)
-	}
-	p := int(math.Pow10(prec))
-	b.Sub(b, big.NewInt(int64(p)))
-	return (l-prec)*9*p + int(b.Int64())
-}
-
-// TODO: remove
-func TickFromIndex(i, prec int) sdk.Dec {
-	p := int(math.Pow10(prec))
-	l := i/(9*p) + prec
-	t := big.NewInt(int64(p + i%(p*9)))
-	if l > prec {
-		m := big.NewInt(10)
-		m.Exp(m, big.NewInt(int64(l-prec)), nil)
-		t.Mul(t, m)
-	}
-	return sdk.NewDecFromBigIntWithPrec(t, sdk.Precision)
-}
-
 // char returns the characteristic(integral part) of
 // log10(x * pow(10, sdk.Precision)).
 func char(x sdk.Dec) int {
@@ -109,4 +81,34 @@ func DownTick(price sdk.Dec, prec int) sdk.Dec {
 // LowestTick returns the lowest possible price tick.
 func LowestTick(prec int) sdk.Dec {
 	return sdk.NewDecWithPrec(1, int64(sdk.Precision-prec))
+}
+
+// TickToIndex returns a tick index for given price.
+// Tick index 0 means the lowest possible price fit in ticks.
+func TickToIndex(price sdk.Dec, prec int) int {
+	b := price.BigInt()
+	l := len(b.Text(10)) - 1
+	d := int64(l - prec)
+	if d > 0 {
+		q := big.NewInt(10)
+		q.Exp(q, big.NewInt(d), nil)
+		b.Quo(b, q)
+	}
+	p := int(math.Pow10(prec))
+	b.Sub(b, big.NewInt(int64(p)))
+	return (l-prec)*9*p + int(b.Int64())
+}
+
+// TickFromIndex returns a price for given tick index.
+// See TickToIndex for more details about tick indices.
+func TickFromIndex(i, prec int) sdk.Dec {
+	p := int(math.Pow10(prec))
+	l := i/(9*p) + prec
+	t := big.NewInt(int64(p + i%(p*9)))
+	if l > prec {
+		m := big.NewInt(10)
+		m.Exp(m, big.NewInt(int64(l-prec)), nil)
+		t.Mul(t, m)
+	}
+	return sdk.NewDecFromBigIntWithPrec(t, sdk.Precision)
 }
