@@ -1,8 +1,20 @@
 package types
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
+)
+
+const (
+	PoolReserveAccPrefix = "PoolReserveAcc"
+	AccNameSplitter      = "|"
+	ReserveAddressType   = farmingtypes.AddressType32Bytes
 )
 
 var (
@@ -17,6 +29,20 @@ func (pool Pool) GetReserveAddress() sdk.AccAddress {
 		panic(err)
 	}
 	return addr
+}
+
+// PoolReserveAcc returns a unique pool reserve account address for each pool.
+func PoolReserveAcc(poolId uint64) sdk.AccAddress {
+	return farmingtypes.DeriveAddress(
+		ReserveAddressType,
+		ModuleName,
+		strings.Join([]string{PoolReserveAccPrefix, strconv.FormatUint(poolId, 10)}, AccNameSplitter),
+	)
+}
+
+// PoolCoinDenom returns a unique pool coin denom for a pool.
+func PoolCoinDenom(poolId uint64) string {
+	return fmt.Sprintf("pool%d", poolId)
 }
 
 type PoolI interface {
