@@ -8,11 +8,11 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
-// GetLastPairId returns the global pair id counter.
+// GetLastPairId returns the last pair id.
 func (k Keeper) GetLastPairId(ctx sdk.Context) uint64 {
 	var id uint64
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.PairIdKey)
+	bz := store.Get(types.LastPairIdKey)
 	if bz == nil {
 		id = 0 // initialize the pair id
 	} else {
@@ -24,6 +24,13 @@ func (k Keeper) GetLastPairId(ctx sdk.Context) uint64 {
 		id = val.GetValue()
 	}
 	return id
+}
+
+// SetLastPairId stores the last pair id.
+func (k Keeper) SetLastPairId(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
+	store.Set(types.LastPairIdKey, bz)
 }
 
 // GetPair returns pair object for the given pair id.
@@ -41,6 +48,18 @@ func (k Keeper) GetPair(ctx sdk.Context, id uint64) (pair types.Pair, found bool
 	return pair, true
 }
 
+// GetPairByDenoms returns a types.Pair for given denoms.
+func (k Keeper) GetPairByDenoms(ctx sdk.Context, denomX, denomY string) (pair types.Pair, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetPairIndexKey(denomX, denomY))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &pair)
+	found = true
+	return
+}
+
 // GetAllPairs returns all pairs in the store.
 func (k Keeper) GetAllPairs(ctx sdk.Context) (pairs []types.Pair) {
 	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
@@ -51,26 +70,27 @@ func (k Keeper) GetAllPairs(ctx sdk.Context) (pairs []types.Pair) {
 	return pairs
 }
 
-// SetLastPairId stores the global pair id counter.
-func (k Keeper) SetLastPairId(ctx sdk.Context, id uint64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
-	store.Set(types.PairIdKey, bz)
-}
-
 // SetPair stores the particular pair.
 func (k Keeper) SetPair(ctx sdk.Context, pair types.Pair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalPair(k.cdc, pair)
 	store.Set(types.GetPairKey(pair.Id), bz)
 	k.SetPairIndex(ctx, pair.XCoinDenom, pair.YCoinDenom, pair.Id)
-	k.SetPairIndex(ctx, pair.YCoinDenom, pair.XCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.XCoinDenom, pair.YCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.YCoinDenom, pair.XCoinDenom, pair.Id)
 }
 
-// SetPairIndex stores the particular denom pair.
-func (k Keeper) SetPairIndex(ctx sdk.Context, denomA string, denomB string, pairId uint64) {
+// SetPairIndex stores a pair index.
+func (k Keeper) SetPairIndex(ctx sdk.Context, denomX, denomY string, pairId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPairIndexKey(denomA, denomB, pairId), []byte{})
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: pairId})
+	store.Set(types.GetPairIndexKey(denomX, denomY), bz)
+}
+
+// SetPairLookupIndex stores a pair lookup index for given denoms.
+func (k Keeper) SetPairLookupIndex(ctx sdk.Context, denomA string, denomB string, pairId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetPairLookupIndexKey(denomA, denomB, pairId), []byte{})
 }
 
 // IterateAllPairs iterates over all the stored pairs and performs a callback function.
@@ -106,11 +126,11 @@ func (k Keeper) IteratePairsByDenom(ctx sdk.Context, denom string, cb func(pair 
 	}
 }
 
-// GetLastPoolId returns the global pool id counter.
+// GetLastPoolId returns the last pool id.
 func (k Keeper) GetLastPoolId(ctx sdk.Context) uint64 {
 	var id uint64
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.PoolIdKey)
+	bz := store.Get(types.LastPoolIdKey)
 	if bz == nil {
 		id = 0 // initialize the pool id
 	} else {
@@ -122,6 +142,13 @@ func (k Keeper) GetLastPoolId(ctx sdk.Context) uint64 {
 		id = val.GetValue()
 	}
 	return id
+}
+
+// SetLastPoolId stores the last pool id.
+func (k Keeper) SetLastPoolId(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
+	store.Set(types.LastPoolIdKey, bz)
 }
 
 // GetPool returns pool object for the given pool id.
@@ -142,7 +169,7 @@ func (k Keeper) GetPool(ctx sdk.Context, id uint64) (pool types.Pool, found bool
 // GetPoolByReserveAcc returns pool object for the givern reserve account address.
 func (k Keeper) GetPoolByReserveAcc(ctx sdk.Context, reserveAcc sdk.AccAddress) (pool types.Pool, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetPoolByReserveAccKey(reserveAcc)
+	key := types.GetPoolByReserveAccIndexKey(reserveAcc)
 
 	value := store.Get(key)
 	if value == nil {
@@ -168,31 +195,26 @@ func (k Keeper) GetAllPools(ctx sdk.Context) (pools []types.Pool) {
 	return pools
 }
 
-// SetLastPoolId stores the global pool id counter.
-func (k Keeper) SetLastPoolId(ctx sdk.Context, id uint64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
-	store.Set(types.PoolIdKey, bz)
-}
-
 // SetPool stores the particular pool.
 func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalPool(k.cdc, pool)
 	store.Set(types.GetPoolKey(pool.Id), bz)
+	k.SetPoolByReserveIndex(ctx, pool)
+	k.SetPoolsByPairIndex(ctx, pool)
 }
 
-// SetPoolByReserveAccKey stores a pool by reserve account index key.
-func (k Keeper) SetPoolByReserveAccKey(ctx sdk.Context, pool types.Pool) {
+// SetPoolByReserveIndex stores a pool by reserve account index key.
+func (k Keeper) SetPoolByReserveIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: pool.Id})
-	store.Set(types.GetPoolByReserveAccKey(pool.GetReserveAddress()), bz)
+	store.Set(types.GetPoolByReserveAccIndexKey(pool.GetReserveAddress()), bz)
 }
 
-// SetPoolByPairIndexKey stores a pool by pair index key.
-func (k Keeper) SetPoolByPairIndexKey(ctx sdk.Context, pairId uint64, poolId uint64) {
+// SetPoolsByPairIndex stores a pool by pair index key.
+func (k Keeper) SetPoolsByPairIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPoolsByPairIndexKey(pairId, poolId), []byte{})
+	store.Set(types.GetPoolsByPairIndexKey(pool.PairId, pool.Id), []byte{})
 }
 
 // IterateAllPools iterates over all the stored pools and performs a callback function.
@@ -216,7 +238,7 @@ func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop 
 func (k Keeper) IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool types.Pool) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByPairKey(pairId))
+	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByPairIndexKeyPrefix(pairId))
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -257,9 +279,9 @@ func (k Keeper) GetWithdrawRequest(ctx sdk.Context, poolId, id uint64) (state ty
 }
 
 // GetSwapRequest returns the particular swap request.
-func (k Keeper) GetSwapRequest(ctx sdk.Context, poolId, id uint64) (state types.SwapRequest, found bool) {
+func (k Keeper) GetSwapRequest(ctx sdk.Context, pairId, id uint64) (state types.SwapRequest, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetSwapRequestKey(poolId, id)
+	key := types.GetSwapRequestKey(pairId, id)
 
 	value := store.Get(key)
 	if value == nil {
@@ -271,22 +293,41 @@ func (k Keeper) GetSwapRequest(ctx sdk.Context, poolId, id uint64) (state types.
 }
 
 // SetDepositRequest stores deposit request for the batch execution.
-func (k Keeper) SetDepositRequest(ctx sdk.Context, poolId uint64, id uint64, state types.DepositRequest) {
+func (k Keeper) SetDepositRequest(ctx sdk.Context, poolId uint64, req types.DepositRequest) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshalDepositRequest(k.cdc, state)
-	store.Set(types.GetDepositRequestKey(poolId, id), bz)
+	bz := types.MustMarshalDepositRequest(k.cdc, req)
+	store.Set(types.GetDepositRequestKey(poolId, req.Id), bz)
 }
 
 // SetWithdrawRequest stores withdraw request for the batch execution.
-func (k Keeper) SetWithdrawRequest(ctx sdk.Context, poolId uint64, id uint64, state types.WithdrawRequest) {
+func (k Keeper) SetWithdrawRequest(ctx sdk.Context, poolId uint64, req types.WithdrawRequest) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshaWithdrawRequest(k.cdc, state)
-	store.Set(types.GetWithdrawRequestKey(poolId, id), bz)
+	bz := types.MustMarshaWithdrawRequest(k.cdc, req)
+	store.Set(types.GetWithdrawRequestKey(poolId, req.Id), bz)
 }
 
 // SetSwapRequest stores swap request for the batch execution.
-func (k Keeper) SetSwapRequest(ctx sdk.Context, poolId uint64, id uint64, state types.SwapRequest) {
+func (k Keeper) SetSwapRequest(ctx sdk.Context, pairId uint64, req types.SwapRequest) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshaSwapRequest(k.cdc, state)
-	store.Set(types.GetDepositRequestKey(poolId, id), bz)
+	bz := types.MustMarshaSwapRequest(k.cdc, req)
+	store.Set(types.GetSwapRequestKey(pairId, req.Id), bz)
+}
+
+// DeleteSwapRequest deletes a swap request.
+func (k Keeper) DeleteSwapRequest(ctx sdk.Context, pairId, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetSwapRequestKey(pairId, id))
+}
+
+// SetCancelSwapRequest stores types.CancelSwapRequest for the batch execution.
+func (k Keeper) SetCancelSwapRequest(ctx sdk.Context, pairId uint64, req types.CancelSwapRequest) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&req)
+	store.Set(types.GetCancelSwapRequestKey(pairId, req.Id), bz)
+}
+
+// DeleteCancelSwapRequest deletes a cancel swap request.
+func (k Keeper) DeleteCancelSwapRequest(ctx sdk.Context, pairId, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetCancelSwapRequestKey(pairId, id))
 }

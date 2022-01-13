@@ -15,6 +15,20 @@ message Params {
   uint32 batch_size = 2;
 
   uint32 tick_precision = 3;
+
+  string min_initial_deposit_amount = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  string fee_collector_address = 6;
+
+  string max_price_limit_ratio = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string swap_fee_rate = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // Pool defines a basic liquidity pool with no min-price and max-price.
@@ -23,15 +37,17 @@ message Pool {
 
   uint64 pair_id = 2;
 
-  repeated string reserve_coin_denoms = 3;
+  string x_coin_denom = 3;
 
-  string reserve_address = 4;
+  string y_coin_denom = 4;
 
-  string pool_coin_denom = 5;
+  string reserve_address = 5;
 
-  uint64 last_deposit_request_id = 6;
+  string pool_coin_denom = 6;
 
-  uint64 last_withdraw_request_id = 7;
+  uint64 last_deposit_request_id = 7;
+
+  uint64 last_withdraw_request_id = 8;
 }
 
 // Pair defines a coin pair.
@@ -42,10 +58,15 @@ message Pair {
 
   string y_coin_denom = 3;
 
-  uint64 last_swap_request_id = 4;
+  string escrow_address = 4;
 
-  string last_price = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 last_swap_request_id = 5;
+
+  uint64 last_cancel_swap_request_id = 6;
+
+  string last_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  uint64 current_batch_id = 8;
 }
 
 // DepositRequest defines a deposit request.
@@ -96,22 +117,43 @@ message SwapRequest {
   // pool_id specifies the pool id
   uint64 pair_id = 2;
 
+  // msg_height specifies the block height when the request is stored for the batch execution
+  int64 msg_height = 3;
+
   // orderer specifies the bech32-encoded address that makes an order to swap from the pool
-  string orderer = 3;
+  string orderer = 4;
 
   // direction specifies the swap direction; either buy or sell
-  SwapDirection direction = 4;
+  SwapDirection direction = 5;
 
   // price specifies the price that an orderer is willing to swap
-  string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
   // remaining_amount specifies the remaining amount after the swap
-  string remaining_amount = 6
+  string remaining_amount = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // received_amount specifies the received amount after the swap
-  string received_amount = 7
+  string received_amount = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // batch_id specifies the pair's batch id when the request is stored
+  uint64 batch_id = 9;
+}
+
+// CancelSwapRequest defines a request to cancel a swap request.
+message CancelSwapRequest {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  int64 msg_height = 3;
+
+  string orderer = 4;
+
+  uint64 swap_request_id = 5;
+
+  uint64 batch_id = 6;
 }
 
 // SwapDirection enumerates swap directions.

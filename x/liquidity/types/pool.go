@@ -11,17 +11,25 @@ import (
 	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
 )
 
-const (
-	PoolReserveAccPrefix = "PoolReserveAcc"
-	AccNameSplitter      = "|"
-	ReserveAddressType   = farmingtypes.AddressType32Bytes
-)
-
 var (
 	_ PoolI = (*PoolInfo)(nil)
 	// TODO: add RangedPoolInfo for v2
 	_ OrderSource = (*PoolOrderSource)(nil)
 )
+
+// NewPool returns a new pool object.
+func NewPool(id, pairId uint64, xCoinDenom, yCoinDenom string) Pool {
+	return Pool{
+		Id:                    id,
+		PairId:                pairId,
+		XCoinDenom:            xCoinDenom,
+		YCoinDenom:            yCoinDenom,
+		ReserveAddress:        PoolReserveAcc(id).String(),
+		PoolCoinDenom:         PoolCoinDenom(id),
+		LastDepositRequestId:  0,
+		LastWithdrawRequestId: 0,
+	}
+}
 
 func (pool Pool) GetReserveAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(pool.ReserveAddress)
@@ -32,11 +40,12 @@ func (pool Pool) GetReserveAddress() sdk.AccAddress {
 }
 
 // PoolReserveAcc returns a unique pool reserve account address for each pool.
+// TODO: rename to PoolReserveAddr
 func PoolReserveAcc(poolId uint64) sdk.AccAddress {
 	return farmingtypes.DeriveAddress(
-		ReserveAddressType,
+		AddressType,
 		ModuleName,
-		strings.Join([]string{PoolReserveAccPrefix, strconv.FormatUint(poolId, 10)}, AccNameSplitter),
+		strings.Join([]string{PoolReserveAccPrefix, strconv.FormatUint(poolId, 10)}, ModuleAddrNameSplitter),
 	)
 }
 
