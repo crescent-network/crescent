@@ -132,14 +132,7 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error 
 	}
 
 	requestId := k.GetNextDepositRequestIdWithUpdate(ctx, pool)
-	req := types.DepositRequest{
-		Id:        requestId,
-		PoolId:    pool.Id,
-		MsgHeight: ctx.BlockHeight(),
-		Depositor: msg.Depositor,
-		XCoin:     msg.XCoin,
-		YCoin:     msg.YCoin,
-	}
+	req := types.NewDepositRequest(msg, requestId, ctx.BlockHeight())
 	k.SetDepositRequest(ctx, req)
 
 	// TODO: need to emit an event?
@@ -163,13 +156,7 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 	}
 
 	requestId := k.GetNextWithdrawRequestIdWithUpdate(ctx, pool)
-	req := types.WithdrawRequest{
-		Id:         requestId,
-		PoolId:     pool.Id,
-		MsgHeight:  ctx.BlockHeight(),
-		Withdrawer: msg.Withdrawer,
-		PoolCoin:   msg.PoolCoin,
-	}
+	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
 	k.SetWithdrawRequest(ctx, req)
 
 	// TODO: need to emit an event?

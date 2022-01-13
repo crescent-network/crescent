@@ -21,21 +21,27 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	params := k.GetParams(ctx)
 	if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
-		k.CancelSwapRequests(ctx)
-
+		// Handle CancelSwapRequests.
+		k.IterateAllCancelSwapRequests(ctx, func(req types.CancelSwapRequest) (stop bool) {
+			k.ExecuteCancelSwapRequest(ctx, req)
+			return false
+		})
+		// Run order book matching on all pairs.
 		k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
 			if err := k.ExecuteMatching(ctx, pair); err != nil {
 				panic(err)
 			}
 			return false
 		})
-
+		// TODO: Cancel expired SwapRequests.
+		// Handle DepositRequests.
 		k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
 			if err := k.ExecuteDepositRequest(ctx, req); err != nil {
 				panic(err)
 			}
 			return false
 		})
+		// Handle WithdrawRequests.
 		k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool) {
 			if err := k.ExecuteWithdrawRequest(ctx, req); err != nil {
 				panic(err)

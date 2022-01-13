@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,4 +51,31 @@ func TestDepositWithdraw(t *testing.T) {
 	err = app.LiquidityKeeper.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(depositor, pool.Id, poolCoin))
 	require.NoError(t, err)
 	liquidity.EndBlocker(ctx, app.LiquidityKeeper)
+}
+
+func TestSwap(t *testing.T) {
+	app := crescentapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	addrs := crescentapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
+
+	user1, user2 := addrs[0], addrs[1]
+
+	err := crescentapp.FundAccount(app.BankKeeper, ctx, user1, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000)))
+	require.NoError(t, err)
+	err = crescentapp.FundAccount(app.BankKeeper, ctx, user2, sdk.NewCoins(sdk.NewInt64Coin("denom2", 1100)))
+	require.NoError(t, err)
+
+	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user1, "denom1", "denom2", sdk.NewInt64Coin("denom1", 1000), "denom2", sdk.MustNewDecFromStr("1.5"), 0))
+	require.NoError(t, err)
+	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user2, "denom1", "denom2", sdk.NewInt64Coin("denom2", 1100), "denom1", sdk.MustNewDecFromStr("0.5"), 0))
+	require.NoError(t, err)
+	pair, found := app.LiquidityKeeper.GetPairByDenoms(ctx, "denom1", "denom2")
+	require.True(t, found)
+
+	liquidity.EndBlocker(ctx, app.LiquidityKeeper)
+
+	fmt.Println(app.BankKeeper.GetAllBalances(ctx, user1))
+	fmt.Println(app.BankKeeper.GetAllBalances(ctx, user2))
+	fmt.Println(app.BankKeeper.GetAllBalances(ctx, pair.GetEscrowAddress()))
 }

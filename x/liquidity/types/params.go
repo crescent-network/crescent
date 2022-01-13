@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -27,6 +28,7 @@ var (
 	KeyMaxPriceLimitRatio      = []byte("MaxPriceLimitRatio")
 	KeySwapFeeRate             = []byte("SwapFeeRate")
 	KeyWithdrawFeeRate         = []byte("WithdrawFeeRate")
+	KeyMaxOrderLifespan        = []byte("MaxOrderLifespan")
 )
 
 var (
@@ -39,6 +41,7 @@ var (
 	DefaultMaxPriceLimitRatio             = sdk.NewDecWithPrec(1, 1) // 10%
 	DefaultSwapFeeRate                    = sdk.ZeroDec()
 	DefaultWithdrawFeeRate                = sdk.ZeroDec()
+	DefaultMaxOrderLifespan               = 24 * time.Hour
 )
 
 var (
@@ -64,6 +67,7 @@ func DefaultParams() Params {
 		MaxPriceLimitRatio:      DefaultMaxPriceLimitRatio,
 		SwapFeeRate:             DefaultSwapFeeRate,
 		WithdrawFeeRate:         DefaultWithdrawFeeRate,
+		MaxOrderLifespan:        DefaultMaxOrderLifespan,
 	}
 }
 
@@ -78,6 +82,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyMaxPriceLimitRatio, &params.MaxPriceLimitRatio, validateMaxPriceLimitRatio),
 		paramstypes.NewParamSetPair(KeySwapFeeRate, &params.SwapFeeRate, validateSwapFeeRate),
 		paramstypes.NewParamSetPair(KeyWithdrawFeeRate, &params.WithdrawFeeRate, validateWithdrawFeeRate),
+		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 	}
 }
 
@@ -95,6 +100,7 @@ func (params Params) Validate() error {
 		{params.MaxPriceLimitRatio, validateMaxPriceLimitRatio},
 		{params.SwapFeeRate, validateSwapFeeRate},
 		{params.WithdrawFeeRate, validateWithdrawFeeRate},
+		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -215,6 +221,19 @@ func validateWithdrawFeeRate(i interface{}) error {
 
 	if v.IsNegative() {
 		return fmt.Errorf("withdraw fee rate must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxOrderLifespan(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("max order lifespan must not be negative: %s", v)
 	}
 
 	return nil

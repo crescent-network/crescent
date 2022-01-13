@@ -3,6 +3,8 @@ package crescent.liquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -32,6 +34,8 @@ message Params {
 
   string withdraw_fee_rate = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  google.protobuf.Duration max_order_lifespan = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // Pool defines a basic liquidity pool with no min-price and max-price.
@@ -151,11 +155,13 @@ message SwapRequest {
   // batch_id specifies the pair's batch id when the request is stored
   uint64 batch_id = 9;
 
-  bool matched = 10;
+  google.protobuf.Timestamp canceled_at = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
-  bool canceled = 11;
+  bool matched = 11;
 
-  bool to_be_deleted = 12;
+  bool canceled = 12;
+
+  bool to_be_deleted = 13;
 }
 
 // CancelSwapRequest defines a request to cancel a swap request.

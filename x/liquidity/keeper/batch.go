@@ -34,22 +34,18 @@ func (k Keeper) MarkCancelSwapRequestToBeDeleted(ctx sdk.Context, req types.Canc
 	k.SetCancelSwapRequest(ctx, req)
 }
 
-// CancelSwapRequests cancels swap requests and deletes cancel swap requests.
-func (k Keeper) CancelSwapRequests(ctx sdk.Context) {
-	k.IterateAllCancelSwapRequests(ctx, func(req types.CancelSwapRequest) (stop bool) {
-		swapReq, found := k.GetSwapRequest(ctx, req.PairId, req.SwapRequestId)
-		if !found {
-			k.MarkCancelSwapRequestToBeDeleted(ctx, req, false)
-			return false // continue iteration
-		}
+// ExecuteCancelSwapRequest cancels swap requests and deletes cancel swap requests.
+func (k Keeper) ExecuteCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRequest) {
+	swapReq, found := k.GetSwapRequest(ctx, req.PairId, req.SwapRequestId)
+	if !found {
+		k.MarkCancelSwapRequestToBeDeleted(ctx, req, false)
+		return
+	}
 
-		if swapReq.BatchId < req.BatchId {
-			k.CancelSwapRequest(ctx, swapReq)
-			k.MarkCancelSwapRequestToBeDeleted(ctx, req, true)
-		}
-
-		return false
-	})
+	if swapReq.BatchId < req.BatchId {
+		k.CancelSwapRequest(ctx, swapReq)
+		k.MarkCancelSwapRequestToBeDeleted(ctx, req, true)
+	}
 }
 
 // DeleteRequestsToBeDeleted deletes all requests that are marked as
