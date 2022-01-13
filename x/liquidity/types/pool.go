@@ -94,7 +94,8 @@ type PoolOrderSource struct {
 	PoolPrice      sdk.Dec
 	Direction      SwapDirection
 	TickPrecision  int
-	// TODO: need a tick cache?
+	pxCache        map[string]sdk.Int // map(price => providableXOnTick)
+	pyCache        map[string]sdk.Int // map(price => providableYOnTick)
 }
 
 func NewPoolOrderSource(pool PoolI, reserveAddr sdk.AccAddress, dir SwapDirection, prec int) OrderSource {
@@ -106,6 +107,8 @@ func NewPoolOrderSource(pool PoolI, reserveAddr sdk.AccAddress, dir SwapDirectio
 		PoolPrice:      pool.Price(),
 		Direction:      dir,
 		TickPrecision:  prec,
+		pxCache:        map[string]sdk.Int{},
+		pyCache:        map[string]sdk.Int{},
 	}
 }
 
@@ -127,14 +130,26 @@ func (os PoolOrderSource) ProvidableXOnTick(price sdk.Dec) sdk.Int {
 	if price.GTE(os.PoolPrice) {
 		return sdk.ZeroInt()
 	}
-	return os.ProvidableX(price).Sub(os.ProvidableX(UpTick(price, os.TickPrecision)))
+	s := price.String()
+	px, ok := os.pxCache[s]
+	if !ok {
+		px = os.ProvidableX(price).Sub(os.ProvidableX(UpTick(price, os.TickPrecision)))
+		os.pxCache[s] = px
+	}
+	return px
 }
 
 func (os PoolOrderSource) ProvidableYOnTick(price sdk.Dec) sdk.Int {
 	if price.LTE(os.PoolPrice) {
 		return sdk.ZeroInt()
 	}
-	return os.ProvidableY(price).Sub(os.ProvidableY(DownTick(price, os.TickPrecision)))
+	s := price.String()
+	py, ok := os.pyCache[s]
+	if !ok {
+		py = os.ProvidableY(price).Sub(os.ProvidableY(DownTick(price, os.TickPrecision)))
+		os.pyCache[s] = py
+	}
+	return py
 }
 
 func (os PoolOrderSource) AmountGTE(price sdk.Dec) sdk.Int {
@@ -190,9 +205,9 @@ func (os PoolOrderSource) AmountLTE(price sdk.Dec) sdk.Int {
 func (os PoolOrderSource) Orders(price sdk.Dec) Orders {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionBuy, price, os.ProvidableX(price))}
+		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionBuy, price, os.ProvidableXOnTick(price))}
 	case SwapDirectionSell:
-		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionSell, price, os.ProvidableY(price))}
+		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionSell, price, os.ProvidableYOnTick(price))}
 	}
 	return nil
 }
