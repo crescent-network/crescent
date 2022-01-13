@@ -184,7 +184,7 @@ func NewSwapBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Swap x coin to y coin from the specified liquidity pool.
 Example:
-$ %s tx %s swap 1 10000000uatom 500000000ucsnt 0.5 20s --from mykey
+$ %s tx %s swap ucsnt uatom 10000uatom uscnt 1.0 10 --from mykey
 
 [x-coin-denom]: x coin denomination
 [y-coin-denom]: y coin denomination

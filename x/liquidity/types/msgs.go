@@ -230,7 +230,7 @@ func (msg MsgSwapBatch) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid demand coin denom")
 	}
 	if msg.GetDirection() == SwapDirectionUnspecified {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer and demand coin denom pair doesn't match with x and y coin denom pair")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid swap direction")
 	}
 	if !msg.OfferCoin.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin must be positive")
