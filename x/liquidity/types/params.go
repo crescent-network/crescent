@@ -34,7 +34,7 @@ var (
 	DefaultTickPrecision           uint32 = 3
 	DefaultMinInitialDepositAmount        = sdk.NewInt(1000000)
 	DefaultPoolCreationFee                = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
-	DefaultFeeCollectorAddress            = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector").String()
+	DefaultFeeCollectorAddress            = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
 	DefaultMaxPriceLimitRatio             = sdk.NewDecWithPrec(1, 1) // 10%
 	DefaultSwapFeeRate                    = sdk.ZeroDec()
 )
@@ -58,7 +58,7 @@ func DefaultParams() Params {
 		TickPrecision:           DefaultTickPrecision,
 		MinInitialDepositAmount: DefaultMinInitialDepositAmount,
 		PoolCreationFee:         DefaultPoolCreationFee,
-		FeeCollectorAddress:     DefaultFeeCollectorAddress,
+		FeeCollectorAddress:     DefaultFeeCollectorAddress.String(),
 		MaxPriceLimitRatio:      DefaultMaxPriceLimitRatio,
 		SwapFeeRate:             DefaultSwapFeeRate,
 	}
