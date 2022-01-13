@@ -50,7 +50,7 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 	store := ctx.KVStore(k.storeKey)
 	poolStore := prefix.NewStore(store, types.PoolKeyPrefix)
 
-	pools := []types.Pool{}
+	var pools []types.Pool
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		pool, err := types.UnmarshalPool(k.cdc, value)
 		if err != nil {
@@ -93,7 +93,7 @@ func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairReque
 	store := ctx.KVStore(k.storeKey)
 	poolsStore := prefix.NewStore(store, types.GetPoolsByPairKey(req.PairId))
 
-	pools := []types.Pool{}
+	var pools []types.Pool
 	pageRes, err := query.Paginate(poolsStore, req.Pagination, func(key []byte, value []byte) error {
 		pool, err := types.UnmarshalPool(k.cdc, value)
 		if err != nil {
@@ -117,6 +117,10 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	pool, found := k.GetPool(ctx, req.PoolId)
@@ -131,6 +135,10 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 func (k Querier) PoolByReserveAcc(c context.Context, req *types.QueryPoolByReserveAccRequest) (*types.QueryPoolResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.ReserveAcc == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty reserve account address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -154,9 +162,13 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.PoolCoinDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty pool coin denom")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
-	poolId := types.TrimPoolPrefix(req.PoolCoinDenom)
+	poolId := types.ParsePoolCoinDenom(req.PoolCoinDenom)
 
 	pool, found := k.GetPool(ctx, poolId)
 	if !found {
@@ -188,7 +200,7 @@ func (k Querier) Pairs(c context.Context, req *types.QueryPairsRequest) (*types.
 	store := ctx.KVStore(k.storeKey)
 	pairStore := prefix.NewStore(store, types.PairKeyPrefix)
 
-	pairs := []types.Pair{}
+	var pairs []types.Pair
 	pageRes, err := query.FilteredPaginate(pairStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		pair, err := types.UnmarshalPair(k.cdc, value)
 		if err != nil {
@@ -227,6 +239,10 @@ func (k Querier) Pair(c context.Context, req *types.QueryPairRequest) (*types.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.PairId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pair id cannot be 0")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	pair, found := k.GetPair(ctx, req.PairId)
@@ -239,36 +255,189 @@ func (k Querier) Pair(c context.Context, req *types.QueryPairRequest) (*types.Qu
 
 // DepositRequests queries all deposit requests.
 func (k Querier) DepositRequests(c context.Context, req *types.QueryDepositRequestsRequest) (*types.QueryDepositRequestsResponse, error) {
-	// TODO: not implemented yet
-	return &types.QueryDepositRequestsResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	drsStore := prefix.NewStore(store, types.DepositRequestKeyPrefix)
+
+	var drs []types.DepositRequest
+	pageRes, err := query.FilteredPaginate(drsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		dr, err := types.UnmarshalDepositRequest(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+
+		if dr.PoolId != req.PoolId {
+			return false, nil
+		}
+
+		if accumulate {
+			drs = append(drs, dr)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryDepositRequestsResponse{DepositRequests: drs, Pagination: pageRes}, nil
 }
 
 // DepositRequest quereis the specific deposit request.
 func (k Querier) DepositRequest(c context.Context, req *types.QueryDepositRequestRequest) (*types.QueryDepositRequestResponse, error) {
-	// TODO: not implemented yet
-	return &types.QueryDepositRequestResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	}
+
+	if req.Id == 0 {
+		return nil, status.Error(codes.InvalidArgument, "id cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	dq, found := k.GetDepositRequest(ctx, req.PoolId, req.Id)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "deposit request of pool id %d and request id %d doesn't exist or deleted", req.PoolId, req.Id)
+	}
+
+	return &types.QueryDepositRequestResponse{DepositRequest: dq}, nil
 }
 
 // WithdrawRequests quereis all withdraw requests.
 func (k Querier) WithdrawRequests(c context.Context, req *types.QueryWithdrawRequestsRequest) (*types.QueryWithdrawRequestsResponse, error) {
-	// TODO: not implemented yet
-	return &types.QueryWithdrawRequestsResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	drsStore := prefix.NewStore(store, types.WithdrawRequestKeyPrefix)
+
+	var wrs []types.WithdrawRequest
+	pageRes, err := query.FilteredPaginate(drsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		wr, err := types.UnmarshalWithdrawRequest(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+
+		if wr.PoolId != req.PoolId {
+			return false, nil
+		}
+
+		if accumulate {
+			wrs = append(wrs, wr)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryWithdrawRequestsResponse{WithdrawRequests: wrs, Pagination: pageRes}, nil
 }
 
 // WithdrawRequest quereis the specific withdraw request.
 func (k Querier) WithdrawRequest(c context.Context, req *types.QueryWithdrawRequestRequest) (*types.QueryWithdrawRequestResponse, error) {
-	// TODO: not implemented yet
-	return &types.QueryWithdrawRequestResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	}
+
+	if req.Id == 0 {
+		return nil, status.Error(codes.InvalidArgument, "id cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	wq, found := k.GetWithdrawRequest(ctx, req.PoolId, req.Id)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "withdraw request of pool id %d and request id %d doesn't exist or deleted", req.PoolId, req.Id)
+	}
+
+	return &types.QueryWithdrawRequestResponse{WithdrawRequest: wq}, nil
 }
 
 // SwapRequests queries all swap requests.
 func (k Querier) SwapRequests(c context.Context, req *types.QuerySwapRequestsRequest) (*types.QuerySwapRequestsResponse, error) {
-	// TODO: not implemented yet
-	return &types.QuerySwapRequestsResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.PairId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pair id cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	drsStore := prefix.NewStore(store, types.SwapRequestKeyPrefix)
+
+	var srs []types.SwapRequest
+	pageRes, err := query.FilteredPaginate(drsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		sr, err := types.UnmarshalSwapRequest(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+
+		if sr.PairId != req.PairId {
+			return false, nil
+		}
+
+		if accumulate {
+			srs = append(srs, sr)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QuerySwapRequestsResponse{SwapRequests: srs, Pagination: pageRes}, nil
 }
 
 // SwapRequest queries the specific swap request.
 func (k Querier) SwapRequest(c context.Context, req *types.QuerySwapRequestRequest) (*types.QuerySwapRequestResponse, error) {
-	// TODO: not implemented yet
-	return &types.QuerySwapRequestResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.PairId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pair id cannot be 0")
+	}
+
+	if req.Id == 0 {
+		return nil, status.Error(codes.InvalidArgument, "id cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	sq, found := k.GetSwapRequest(ctx, req.PairId, req.Id)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "swap request of pair id %d and request id %d doesn't exist or deleted", req.PairId, req.Id)
+	}
+
+	return &types.QuerySwapRequestResponse{SwapRequest: sq}, nil
 }

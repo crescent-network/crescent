@@ -72,12 +72,12 @@ service Query {
 
   // SwapRequests returns all swap requests.
   rpc SwapRequests(QuerySwapRequestsRequest) returns (QuerySwapRequestsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/swap_requests";
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pair_id}/swap_requests";
   }
 
   // SwapRequest returns the specific swap request.
   rpc SwapRequest(QuerySwapRequestRequest) returns (QuerySwapRequestResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/swap_requests/{id}";
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pair_id}/swap_requests/{id}";
   }
 }
 
@@ -208,7 +208,7 @@ message QueryWithdrawRequestResponse {
 
 // QuerySwapRequestsRequest is request type for the Query/SwapRequests RPC method.
 message QuerySwapRequestsRequest {
-  uint64 pool_id = 1;
+  uint64 pair_id = 1;
 
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
@@ -222,7 +222,7 @@ message QuerySwapRequestsResponse {
 
 // QuerySwapRequestRequest is request type for the Query/SwapRequest RPC method.
 message QuerySwapRequestRequest {
-  uint64 pool_id = 1;
+  uint64 pair_id = 1;
   uint64 id      = 2;
 }
 
