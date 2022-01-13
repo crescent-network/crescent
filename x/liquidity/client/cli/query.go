@@ -31,10 +31,10 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		QueryPool(),
 		QueryPairs(),
 		QueryPair(),
-		// QueryDepositRequests(),
-		// QueryDepositRequest(),
-		// QueryWithdrawRequests(),
-		// QueryWithdrawRequest(),
+		QueryDepositRequests(),
+		QueryDepositRequest(),
+		QueryWithdrawRequests(),
+		QueryWithdrawRequest(),
 		// QuerySwapRequests(),
 		// QuerySwapRequest(),
 	)
@@ -433,6 +433,100 @@ $ %s query %s deposit-requests 1 1
 			res, err := queryClient.DepositRequest(
 				context.Background(),
 				&types.QueryDepositRequestRequest{
+					PoolId: poolId,
+					Id:     id,
+				})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func QueryWithdrawRequests() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-requests [pool-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query for all withdraw requests",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for all withdraw requests.
+Example:
+$ %s query %s withdraw-requests
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.WithdrawRequests(
+				context.Background(),
+				&types.QueryWithdrawRequestsRequest{
+					PoolId: poolId,
+				})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func QueryWithdrawRequest() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-request [pool-id] [id]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Query details of the specific withdraw request",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query details of the specific withdraw request.
+Example:
+$ %s query %s withdraw-requests 1 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.WithdrawRequest(
+				context.Background(),
+				&types.QueryWithdrawRequestRequest{
 					PoolId: poolId,
 					Id:     id,
 				})

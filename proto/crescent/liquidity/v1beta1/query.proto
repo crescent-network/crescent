@@ -107,6 +107,8 @@ message QueryPoolsResponse {
 // QueryPoolsByPairRequest is request type for the Query/PoolsByPair RPC method.
 message QueryPoolsByPairRequest {
   uint64 pair_id = 1;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryPoolRequest is request type for the Query/Pool RPC method.
