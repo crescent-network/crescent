@@ -114,10 +114,10 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 
 type PoolOrder struct {
 	Order
-	PoolReserveAddr sdk.AccAddress
+	ReserveAddress sdk.AccAddress
 }
 
-func NewPoolOrder(pool Pool, dir SwapDirection, price sdk.Dec, amount sdk.Int) *PoolOrder {
+func NewPoolOrder(reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amount sdk.Int) *PoolOrder {
 	return &PoolOrder{
 		Order: Order{
 			Direction:       dir,
@@ -127,7 +127,7 @@ func NewPoolOrder(pool Pool, dir SwapDirection, price sdk.Dec, amount sdk.Int) *
 			ReceivedAmount:  sdk.ZeroInt(),
 			Matched:         false,
 		},
-		PoolReserveAddr: pool.GetReserveAddress(),
+		ReserveAddress: reserveAddr,
 	}
 }
 

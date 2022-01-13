@@ -89,21 +89,23 @@ func (info PoolInfo) Price() sdk.Dec {
 }
 
 type PoolOrderSource struct {
-	RX, RY        sdk.Int
-	PoolPrice     sdk.Dec
-	Direction     SwapDirection
-	TickPrecision int
+	ReserveAddress sdk.AccAddress
+	RX, RY         sdk.Int
+	PoolPrice      sdk.Dec
+	Direction      SwapDirection
+	TickPrecision  int
 	// TODO: need a tick cache?
 }
 
-func NewPoolOrderSource(pool PoolI, dir SwapDirection, prec int) OrderSource {
+func NewPoolOrderSource(pool PoolI, reserveAddr sdk.AccAddress, dir SwapDirection, prec int) OrderSource {
 	rx, ry := pool.Balance()
 	return &PoolOrderSource{
-		RX:            rx,
-		RY:            ry,
-		PoolPrice:     pool.Price(),
-		Direction:     dir,
-		TickPrecision: prec,
+		ReserveAddress: reserveAddr,
+		RX:             rx,
+		RY:             ry,
+		PoolPrice:      pool.Price(),
+		Direction:      dir,
+		TickPrecision:  prec,
 	}
 }
 
@@ -186,7 +188,13 @@ func (os PoolOrderSource) AmountLTE(price sdk.Dec) sdk.Int {
 }
 
 func (os PoolOrderSource) Orders(price sdk.Dec) Orders {
-	panic("not implemented")
+	switch os.Direction {
+	case SwapDirectionBuy:
+		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionBuy, price, os.ProvidableX(price))}
+	case SwapDirectionSell:
+		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionSell, price, os.ProvidableY(price))}
+	}
+	return nil
 }
 
 func (os PoolOrderSource) UpTick(price sdk.Dec) (tick sdk.Dec, found bool) {

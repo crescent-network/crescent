@@ -154,8 +154,10 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		rx, ry := k.GetPoolBalance(ctx, pool)
 		poolInfo := types.NewPoolInfo(rx, ry, sdk.ZeroInt()) // Pool coin supply is not used when matching
 		pools = append(pools, poolInfo)
-		poolBuySources = append(poolBuySources, types.NewPoolOrderSource(poolInfo, types.SwapDirectionBuy, tickPrec))
-		poolSellSources = append(poolSellSources, types.NewPoolOrderSource(poolInfo, types.SwapDirectionSell, tickPrec))
+
+		poolReserveAddr := pool.GetReserveAddress()
+		poolBuySources = append(poolBuySources, types.NewPoolOrderSource(poolInfo, poolReserveAddr, types.SwapDirectionBuy, tickPrec))
+		poolSellSources = append(poolSellSources, types.NewPoolOrderSource(poolInfo, poolReserveAddr, types.SwapDirectionSell, tickPrec))
 		return false
 	})
 
@@ -188,13 +190,32 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	lastPrice = types.PriceToTick(lastPrice, tickPrec) // TODO: remove this and make Match to handle this
 
 	engine := types.NewMatchEngine(buySource, sellSource, tickPrec)
-	ob, _, matched := engine.Match(lastPrice)
+	ob, swapPrice, matched := engine.Match(lastPrice)
 
 	if matched {
+		orders := ob.AllOrders()
 		bulkOp := types.NewBulkSendCoinsOperation()
-		for _, order := range ob.AllOrders() {
+		for _, order := range orders {
 			if order.IsMatched() {
-				// TODO: is the order of Input/Output matters?
+				if order, ok := order.(*types.PoolOrder); ok {
+					var offerCoinDenom string
+					switch order.Direction {
+					case types.SwapDirectionBuy:
+						offerCoinDenom = pair.XCoinDenom
+					case types.SwapDirectionSell:
+						offerCoinDenom = pair.YCoinDenom
+					}
+					offerCoin := sdk.NewCoin(offerCoinDenom, order.Amount.Sub(order.RemainingAmount))
+					bulkOp.SendCoins(order.ReserveAddress, pair.GetEscrowAddress(), sdk.NewCoins(offerCoin))
+				}
+			}
+		}
+		if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
+			return err
+		}
+		bulkOp = types.NewBulkSendCoinsOperation()
+		for _, order := range orders {
+			if order.IsMatched() {
 				switch order := order.(type) {
 				case *types.UserOrder:
 					// TODO: optimize read/write (can there be only one write?)
@@ -214,17 +235,15 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
 					bulkOp.SendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(demandCoin))
 				case *types.PoolOrder:
-					var offerCoinDenom, demandCoinDenom string
+					var demandCoinDenom string
 					switch order.Direction {
 					case types.SwapDirectionBuy:
-						offerCoinDenom, demandCoinDenom = pair.XCoinDenom, pair.YCoinDenom
+						demandCoinDenom = pair.YCoinDenom
 					case types.SwapDirectionSell:
-						offerCoinDenom, demandCoinDenom = pair.YCoinDenom, pair.XCoinDenom
+						demandCoinDenom = pair.XCoinDenom
 					}
-					offerCoin := sdk.NewCoin(offerCoinDenom, order.Amount.Sub(order.RemainingAmount))
 					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
-					bulkOp.SendCoins(order.PoolReserveAddr, pair.GetEscrowAddress(), sdk.NewCoins(offerCoin))
-					bulkOp.SendCoins(pair.GetEscrowAddress(), order.PoolReserveAddr, sdk.NewCoins(demandCoin))
+					bulkOp.SendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(demandCoin))
 				}
 			}
 		}
@@ -234,6 +253,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	}
 
 	// TODO: emit an event?
+	_ = swapPrice
 	return nil
 }
 
