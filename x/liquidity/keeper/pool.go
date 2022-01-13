@@ -36,7 +36,7 @@ func (k Keeper) GetNextWithdrawRequestIdWithUpdate(ctx sdk.Context, pool types.P
 func (k Keeper) GetPoolBalance(ctx sdk.Context, pool types.Pool) (rx sdk.Int, ry sdk.Int) {
 	reserveAddr := pool.GetReserveAddress()
 	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pool.XCoinDenom).Amount
-	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pool.YCoinDenom).Amount
+	ry = k.bankKeeper.GetBalance(ctx, reserveAddr, pool.YCoinDenom).Amount
 	return
 }
 
