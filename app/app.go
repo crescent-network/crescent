@@ -416,6 +416,7 @@ func NewCrescentApp(
 		appCodec,
 		keys[liquiditytypes.StoreKey],
 		app.GetSubspace(liquiditytypes.ModuleName),
+		app.AccountKeeper,
 		app.BankKeeper,
 	)
 

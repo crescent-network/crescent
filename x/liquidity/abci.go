@@ -22,9 +22,20 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
 	if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
 		k.CancelSwapRequests(ctx)
+
 		//TODO: match orders
-		//
-		//TODO: find deposit requests and handle them
-		//TODO: find withdrawal requests and handle them
+
+		k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
+			if err := k.ExecuteDepositRequest(ctx, req); err != nil {
+				panic(err)
+			}
+			return false
+		})
+		k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool) {
+			if err := k.ExecuteWithdrawRequest(ctx, req); err != nil {
+				panic(err)
+			}
+			return false
+		})
 	}
 }

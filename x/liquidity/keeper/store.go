@@ -290,7 +290,7 @@ func (k Keeper) IterateAllDepositRequests(ctx sdk.Context, cb func(req types.Dep
 	}
 }
 
-func (k Keeper) DeleteAllDepositRequestsToBeDeleted(ctx sdk.Context) {
+func (k Keeper) DeleteDepositRequestsToBeDeleted(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.DepositRequestKeyPrefix)
 	defer iter.Close()
@@ -343,7 +343,7 @@ func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.Wi
 	}
 }
 
-func (k Keeper) DeleteAllWithdrawRequestsToBeDeleted(ctx sdk.Context) {
+func (k Keeper) DeleteWithdrawRequestsToBeDeleted(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.WithdrawRequestKeyPrefix)
 	defer iter.Close()
@@ -396,7 +396,7 @@ func (k Keeper) IterateAllSwapRequests(ctx sdk.Context, cb func(req types.SwapRe
 	}
 }
 
-func (k Keeper) DeleteAllSwapRequestsToBeDeleted(ctx sdk.Context) {
+func (k Keeper) DeleteSwapRequestsToBeDeleted(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.SwapRequestKeyPrefix)
 	defer iter.Close()
@@ -435,7 +435,7 @@ func (k Keeper) IterateAllCancelSwapRequests(ctx sdk.Context, cb func(req types.
 	}
 }
 
-func (k Keeper) DeleteAllCancelSwapRequestsToBeDeleted(ctx sdk.Context) {
+func (k Keeper) DeleteCancelSwapRequestsToBeDeleted(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.CancelSwapRequestKeyPrefix)
 	defer iter.Close()
