@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -35,6 +37,12 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 			}
 		}
 	}
+
+	fmt.Println("pair: ", pair.Id)
+	fmt.Println("pair: ", pair.XCoinDenom)
+	fmt.Println("pair: ", pair.YCoinDenom)
+	fmt.Println("pair: ", pair.EscrowAddress)
+	fmt.Println("pair: ", pair.LastPrice)
 
 	if err := k.bankKeeper.SendCoins(ctx, msg.GetOrderer(), pair.GetEscrowAddress(), sdk.NewCoins(msg.OfferCoin)); err != nil {
 		return err
