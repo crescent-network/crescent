@@ -20,23 +20,23 @@ service Query {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools";
   }
 
+  // PoolsByPair returns all pools that correspond to the pair.
+  rpc PoolsByPair(QueryPoolsByPairRequest) returns (QueryPoolsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/pools";
+  }
+
   // Pool returns the specific liquidity pool.
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}";
   }
 
-  // PoolsByPair returns all pools that correspond to the pair.
-  rpc PoolsByPair(QueryPoolsByPairRequest) returns (QueryPoolsByPairResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/pools";
-  }
-
-  // PoolsByReserveAcc returns all pools that correspond to the reserve account.
-  rpc PoolsByReserveAcc(QueryPoolsByReserveAccRequest) returns (QueryPoolsByReserveAccResponse) {
+  // PoolByReserveAcc returns all pools that correspond to the reserve account.
+  rpc PoolByReserveAcc(QueryPoolByReserveAccRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/reserve_acc/{reserve_acc}";
   }
 
-  // PoolsByPoolCoinDenom returns all pools that correspond to the pool coin denom.
-  rpc PoolsByPoolCoinDenom(QueryPoolsByPoolCoinDenomRequest) returns (QueryPoolsByPoolCoinDenomResponse) {
+  // PoolByPoolCoinDenom returns all pools that correspond to the pool coin denom.
+  rpc PoolByPoolCoinDenom(QueryPoolByPoolCoinDenomRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}";
   }
 
@@ -104,6 +104,11 @@ message QueryPoolsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+// QueryPoolsByPairRequest is request type for the Query/PoolsByPair RPC method.
+message QueryPoolsByPairRequest {
+  uint64 pair_id = 1;
+}
+
 // QueryPoolRequest is request type for the Query/Pool RPC method.
 message QueryPoolRequest {
   uint64 pool_id = 1;
@@ -114,36 +119,14 @@ message QueryPoolResponse {
   Pool pool = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryPoolsByPairRequest is request type for the Query/PoolsByPair RPC method.
-message QueryPoolsByPairRequest {
-  uint64 pair_id = 1;
-}
-
-// QueryPoolsByPairResponse is response type for the Query/PoolsByPair RPC method.
-message QueryPoolsByPairResponse {
-  repeated Pool pools = 1 [(gogoproto.nullable) = false];
-
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryPoolsByReserveAccRequest is request type for the Query/PoolsByReserveAcc RPC method.
-message QueryPoolsByReserveAccRequest {
+// QueryPoolByReserveAccRequest is request type for the Query/PoolByReserveAcc RPC method.
+message QueryPoolByReserveAccRequest {
   string reserve_acc = 1;
 }
 
-// QueryPoolsByReserveAccResponse is response type for the Query/PoolsByReserveAcc RPC method.
-message QueryPoolsByReserveAccResponse {
-  Pool pool = 1 [(gogoproto.nullable) = false];
-}
-
-// QueryPoolsByPoolCoinDenomRequest is request type for the Query/PoolsByPoolCoinDenom RPC method.
-message QueryPoolsByPoolCoinDenomRequest {
+// QueryPoolByPoolCoinDenomRequest is request type for the Query/PoolByPoolCoinDenom RPC method.
+message QueryPoolByPoolCoinDenomRequest {
   string pool_coin_denom = 1;
-}
-
-// QueryPoolsByPoolCoinDenomResponse is response type for the Query/PoolsByPoolCoinDenom RPC method.
-message QueryPoolsByPoolCoinDenomResponse {
-  Pool pool = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryPairsRequest is request type for the Query/Pairs RPC method.

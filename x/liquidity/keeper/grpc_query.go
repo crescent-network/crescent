@@ -29,6 +29,12 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 	return &types.QueryPoolsResponse{}, nil
 }
 
+// ...
+func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairRequest) (*types.QueryPoolsResponse, error) {
+	// TODO: not implemented yet
+	return &types.QueryPoolsResponse{}, nil
+}
+
 // Pool queries all pool.
 func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.QueryPoolResponse, error) {
 	// TODO: not implemented yet
@@ -36,21 +42,15 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 }
 
 // ...
-func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairRequest) (*types.QueryPoolsByPairResponse, error) {
+func (k Querier) PoolByReserveAcc(c context.Context, req *types.QueryPoolByReserveAccRequest) (*types.QueryPoolResponse, error) {
 	// TODO: not implemented yet
-	return &types.QueryPoolsByPairResponse{}, nil
+	return &types.QueryPoolResponse{}, nil
 }
 
 // ...
-func (k Querier) PoolsByReserveAcc(c context.Context, req *types.QueryPoolsByReserveAccRequest) (*types.QueryPoolsByReserveAccResponse, error) {
+func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPoolCoinDenomRequest) (*types.QueryPoolResponse, error) {
 	// TODO: not implemented yet
-	return &types.QueryPoolsByReserveAccResponse{}, nil
-}
-
-// ...
-func (k Querier) PoolsByPoolCoinDenom(c context.Context, req *types.QueryPoolsByPoolCoinDenomRequest) (*types.QueryPoolsByPoolCoinDenomResponse, error) {
-	// TODO: not implemented yet
-	return &types.QueryPoolsByPoolCoinDenomResponse{}, nil
+	return &types.QueryPoolResponse{}, nil
 }
 
 // ...
