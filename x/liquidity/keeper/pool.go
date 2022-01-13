@@ -140,7 +140,7 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error 
 		XCoin:     msg.XCoin,
 		YCoin:     msg.YCoin,
 	}
-	k.SetDepositRequest(ctx, pool.Id, req)
+	k.SetDepositRequest(ctx, req)
 
 	// TODO: need to emit an event?
 
@@ -170,7 +170,7 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 		Withdrawer: msg.Withdrawer,
 		PoolCoin:   msg.PoolCoin,
 	}
-	k.SetWithdrawRequest(ctx, pool.Id, req)
+	k.SetWithdrawRequest(ctx, req)
 
 	// TODO: need to emit an event?
 

@@ -264,6 +264,45 @@ func (k Keeper) GetDepositRequest(ctx sdk.Context, poolId, id uint64) (state typ
 	return state, true
 }
 
+// SetDepositRequest stores deposit request for the batch execution.
+func (k Keeper) SetDepositRequest(ctx sdk.Context, req types.DepositRequest) {
+	store := ctx.KVStore(k.storeKey)
+	bz := types.MustMarshalDepositRequest(k.cdc, req)
+	store.Set(types.GetDepositRequestKey(req.PoolId, req.Id), bz)
+}
+
+// DeleteDepositRequest deletes a deposit request.
+func (k Keeper) DeleteDepositRequest(ctx sdk.Context, poolId, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetDepositRequestKey(poolId, id))
+}
+
+func (k Keeper) IterateAllDepositRequests(ctx sdk.Context, cb func(req types.DepositRequest) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.DepositRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.DepositRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if cb(req) {
+			break
+		}
+	}
+}
+
+func (k Keeper) DeleteAllDepositRequestsToBeDeleted(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.DepositRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.DepositRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if req.ToBeDeleted {
+			store.Delete(iter.Key())
+		}
+	}
+}
+
 // GetWithdrawRequest returns the particular withdraw request.
 func (k Keeper) GetWithdrawRequest(ctx sdk.Context, poolId, id uint64) (state types.WithdrawRequest, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -276,6 +315,45 @@ func (k Keeper) GetWithdrawRequest(ctx sdk.Context, poolId, id uint64) (state ty
 
 	state = types.MustUnmarshaWithdrawRequest(k.cdc, value)
 	return state, true
+}
+
+// SetWithdrawRequest stores withdraw request for the batch execution.
+func (k Keeper) SetWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) {
+	store := ctx.KVStore(k.storeKey)
+	bz := types.MustMarshaWithdrawRequest(k.cdc, req)
+	store.Set(types.GetWithdrawRequestKey(req.PoolId, req.Id), bz)
+}
+
+// DeleteWithdrawRequest deletes a withdraw request.
+func (k Keeper) DeleteWithdrawRequest(ctx sdk.Context, poolId, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetWithdrawRequestKey(poolId, id))
+}
+
+func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.WithdrawRequest) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.WithdrawRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.WithdrawRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if cb(req) {
+			break
+		}
+	}
+}
+
+func (k Keeper) DeleteAllWithdrawRequestsToBeDeleted(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.WithdrawRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.WithdrawRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if req.ToBeDeleted {
+			store.Delete(iter.Key())
+		}
+	}
 }
 
 // GetSwapRequest returns the particular swap request.
@@ -292,25 +370,11 @@ func (k Keeper) GetSwapRequest(ctx sdk.Context, pairId, id uint64) (state types.
 	return state, true
 }
 
-// SetDepositRequest stores deposit request for the batch execution.
-func (k Keeper) SetDepositRequest(ctx sdk.Context, poolId uint64, req types.DepositRequest) {
-	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshalDepositRequest(k.cdc, req)
-	store.Set(types.GetDepositRequestKey(poolId, req.Id), bz)
-}
-
-// SetWithdrawRequest stores withdraw request for the batch execution.
-func (k Keeper) SetWithdrawRequest(ctx sdk.Context, poolId uint64, req types.WithdrawRequest) {
-	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshaWithdrawRequest(k.cdc, req)
-	store.Set(types.GetWithdrawRequestKey(poolId, req.Id), bz)
-}
-
 // SetSwapRequest stores swap request for the batch execution.
-func (k Keeper) SetSwapRequest(ctx sdk.Context, pairId uint64, req types.SwapRequest) {
+func (k Keeper) SetSwapRequest(ctx sdk.Context, req types.SwapRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshaSwapRequest(k.cdc, req)
-	store.Set(types.GetSwapRequestKey(pairId, req.Id), bz)
+	store.Set(types.GetSwapRequestKey(req.PairId, req.Id), bz)
 }
 
 // DeleteSwapRequest deletes a swap request.
@@ -319,15 +383,67 @@ func (k Keeper) DeleteSwapRequest(ctx sdk.Context, pairId, id uint64) {
 	store.Delete(types.GetSwapRequestKey(pairId, id))
 }
 
+func (k Keeper) IterateAllSwapRequests(ctx sdk.Context, cb func(req types.SwapRequest) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.SwapRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.SwapRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if cb(req) {
+			break
+		}
+	}
+}
+
+func (k Keeper) DeleteAllSwapRequestsToBeDeleted(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.SwapRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.SwapRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if req.ToBeDeleted {
+			store.Delete(iter.Key())
+		}
+	}
+}
+
 // SetCancelSwapRequest stores types.CancelSwapRequest for the batch execution.
-func (k Keeper) SetCancelSwapRequest(ctx sdk.Context, pairId uint64, req types.CancelSwapRequest) {
+func (k Keeper) SetCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&req)
-	store.Set(types.GetCancelSwapRequestKey(pairId, req.Id), bz)
+	store.Set(types.GetCancelSwapRequestKey(req.PairId, req.Id), bz)
 }
 
 // DeleteCancelSwapRequest deletes a cancel swap request.
 func (k Keeper) DeleteCancelSwapRequest(ctx sdk.Context, pairId, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetCancelSwapRequestKey(pairId, id))
+}
+
+func (k Keeper) IterateAllCancelSwapRequests(ctx sdk.Context, cb func(req types.CancelSwapRequest) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.CancelSwapRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.CancelSwapRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if cb(req) {
+			break
+		}
+	}
+}
+
+func (k Keeper) DeleteAllCancelSwapRequestsToBeDeleted(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.CancelSwapRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.CancelSwapRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if req.ToBeDeleted {
+			store.Delete(iter.Key())
+		}
+	}
 }

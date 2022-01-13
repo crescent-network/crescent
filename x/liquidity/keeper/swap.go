@@ -52,7 +52,7 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 		RemainingAmount: msg.OfferCoin.Amount,
 		ReceivedAmount:  sdk.ZeroInt(),
 	}
-	k.SetSwapRequest(ctx, pair.Id, req)
+	k.SetSwapRequest(ctx, req)
 
 	// TODO: need to emit an event?
 
@@ -84,7 +84,7 @@ func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) 
 		SwapRequestId: msg.SwapRequestId,
 		BatchId:       pair.CurrentBatchId,
 	}
-	k.SetCancelSwapRequest(ctx, msg.PairId, req)
+	k.SetCancelSwapRequest(ctx, req)
 
 	return nil
 }

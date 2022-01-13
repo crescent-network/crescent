@@ -88,6 +88,10 @@ message DepositRequest {
 
   // y_coin specifies the deposit coin y
   cosmos.base.v1beta1.Coin y_coin = 6 [(gogoproto.nullable) = false];
+
+  bool succeeded = 7;
+
+  bool to_be_deleted = 8;
 }
 
 // WithdrawRequest defines a withdraw request.
@@ -107,6 +111,10 @@ message WithdrawRequest {
   // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
   cosmos.base.v1beta1.Coin pool_coin = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+
+  bool succeeded = 6;
+
+  bool to_be_deleted = 7;
 }
 
 // SwapRequest defines a swap request.
@@ -139,6 +147,12 @@ message SwapRequest {
 
   // batch_id specifies the pair's batch id when the request is stored
   uint64 batch_id = 9;
+
+  bool matched = 10;
+
+  bool canceled = 11;
+
+  bool to_be_deleted = 12;
 }
 
 // CancelSwapRequest defines a request to cancel a swap request.
@@ -154,6 +168,10 @@ message CancelSwapRequest {
   uint64 swap_request_id = 5;
 
   uint64 batch_id = 6;
+
+  bool succeeded = 7;
+
+  bool to_be_deleted = 8;
 }
 
 // SwapDirection enumerates swap directions.
