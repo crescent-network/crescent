@@ -58,13 +58,13 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 		}
 
 		if req.XDenom != "" {
-			if pool.ReserveCoinDenoms[0] != req.XDenom {
+			if pool.XCoinDenom != req.XDenom {
 				return false, nil
 			}
 		}
 
 		if req.YDenom != "" {
-			if pool.ReserveCoinDenoms[1] != req.YDenom {
+			if pool.YCoinDenom != req.YDenom {
 				return false, nil
 			}
 		}
@@ -95,7 +95,7 @@ func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	poolsStore := prefix.NewStore(store, types.GetPoolsByPairKey(req.PairId))
+	poolsStore := prefix.NewStore(store, types.GetPoolsByPairIndexKeyPrefix(req.PairId))
 
 	var pools []types.Pool
 	pageRes, err := query.FilteredPaginate(poolsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
