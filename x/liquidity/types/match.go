@@ -186,21 +186,23 @@ func MatchOrders(buyOrders, sellOrders Orders, price sdk.Dec) {
 	}
 
 	for _, order := range smallerOrders {
-		proportion := order.RemainingAmount.ToDec().QuoInt(smallerAmount)
-		order.RemainingAmount = sdk.ZeroInt()
+		proportion := order.GetRemainingAmount().ToDec().QuoInt(smallerAmount)
+		order.SetRemainingAmount(sdk.ZeroInt())
 		in := proportion.MulInt(smallerDemandAmount).TruncateInt()
-		order.ReceivedAmount = order.ReceivedAmount.Add(in)
+		order.SetReceivedAmount(order.GetReceivedAmount().Add(in))
+		order.SetMatched(true)
 	}
 
 	for _, order := range biggerOrders {
-		proportion := order.RemainingAmount.ToDec().QuoInt(biggerAmount)
+		proportion := order.GetRemainingAmount().ToDec().QuoInt(biggerAmount)
 		if matchAll {
-			order.RemainingAmount = sdk.ZeroInt()
+			order.SetRemainingAmount(sdk.ZeroInt())
 		} else {
 			out := proportion.MulInt(smallerDemandAmount).TruncateInt()
-			order.RemainingAmount = order.RemainingAmount.Sub(out)
+			order.SetRemainingAmount(order.GetRemainingAmount().Sub(out))
 		}
 		in := proportion.MulInt(smallerAmount).TruncateInt()
-		order.ReceivedAmount = order.ReceivedAmount.Add(in)
+		order.SetReceivedAmount(order.GetReceivedAmount().Add(in))
+		order.SetMatched(true)
 	}
 }

@@ -138,7 +138,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	ob := types.NewOrderBook(tickPrec)
 	k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
-		ob.AddOrder(req.Order())
+		ob.AddOrder(types.NewUserOrder(req))
 		return false
 	})
 
@@ -183,8 +183,47 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	engine := types.NewMatchEngine(buySource, sellSource, tickPrec)
 	ob, _, matched := engine.Match(lastPrice)
+
 	if matched {
-		// TODO: transact coins
+		bulkOp := types.NewBulkSendCoinsOperation()
+		for _, order := range ob.AllOrders() {
+			if order.IsMatched() {
+				// TODO: is the order of Input/Output matters?
+				switch order := order.(type) {
+				case *types.UserOrder:
+					// TODO: optimize read/write (can there be only one write?)
+					req, _ := k.GetSwapRequest(ctx, pair.Id, order.RequestId)
+					req.RemainingAmount = order.RemainingAmount
+					req.ReceivedAmount = req.ReceivedAmount.Add(order.ReceivedAmount)
+					k.SetSwapRequest(ctx, req)
+
+					var demandCoinDenom string
+					switch order.Direction {
+					case types.SwapDirectionBuy:
+						demandCoinDenom = pair.YCoinDenom
+					case types.SwapDirectionSell:
+						demandCoinDenom = pair.XCoinDenom
+					}
+					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
+					bulkOp.SendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(demandCoin))
+				case *types.PoolOrder:
+					var offerCoinDenom, demandCoinDenom string
+					switch order.Direction {
+					case types.SwapDirectionBuy:
+						offerCoinDenom, demandCoinDenom = pair.XCoinDenom, pair.YCoinDenom
+					case types.SwapDirectionSell:
+						offerCoinDenom, demandCoinDenom = pair.YCoinDenom, pair.XCoinDenom
+					}
+					offerCoin := sdk.NewCoin(offerCoinDenom, order.Amount.Sub(order.RemainingAmount))
+					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
+					bulkOp.SendCoins(order.PoolReserveAddr, pair.GetEscrowAddress(), sdk.NewCoins(offerCoin))
+					bulkOp.SendCoins(pair.GetEscrowAddress(), order.PoolReserveAddr, sdk.NewCoins(demandCoin))
+				}
+			}
+		}
+		if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
+			return err
+		}
 	}
 
 	// TODO: emit an event?
