@@ -18,7 +18,7 @@ func NewBulkSendCoinsOperation() *BulkSendCoinsOperation {
 }
 
 func (op *BulkSendCoinsOperation) SendCoins(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
-	if amt.IsValid() {
+	if amt.IsValid() && !amt.IsZero() {
 		op.Inputs = append(op.Inputs, banktypes.NewInput(fromAddr, amt))
 		op.Outputs = append(op.Outputs, banktypes.NewOutput(toAddr, amt))
 	}
