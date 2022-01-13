@@ -38,9 +38,3 @@ func (k Keeper) CreatePair(ctx sdk.Context, xCoinDenom, yCoinDenom string) types
 	k.SetPair(ctx, pair)
 	return pair
 }
-
-// IncrementBatchId increments the pair's current batch id.
-func (k Keeper) IncrementBatchId(ctx sdk.Context, pair types.Pair) {
-	pair.CurrentBatchId++
-	k.SetPair(ctx, pair)
-}

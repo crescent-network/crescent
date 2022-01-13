@@ -250,7 +250,12 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 			return err
 		}
+
+		pair.LastPrice = &swapPrice
 	}
+
+	pair.CurrentBatchId++
+	k.SetPair(ctx, pair)
 
 	// TODO: emit an event?
 	_ = swapPrice
