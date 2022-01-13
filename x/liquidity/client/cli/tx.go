@@ -62,7 +62,7 @@ $ %s tx %s create-pool 1000000000uatom 50000000000ucsnt --from mykey
 				return err
 			}
 
-			yCoin, err := sdk.ParseCoinNormalized(args[0])
+			yCoin, err := sdk.ParseCoinNormalized(args[1])
 			if err != nil {
 				return err
 			}
@@ -211,7 +211,7 @@ $ %s tx %s swap 1 10000000uatom 500000000ucsnt 0.5 20s --from mykey
 				return err
 			}
 
-			if err := sdk.ValidateDenom(args[3]); err != nil {
+			if err := sdk.ValidateDenom(args[2]); err != nil {
 				return err
 			}
 
