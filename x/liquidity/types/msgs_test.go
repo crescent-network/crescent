@@ -219,7 +219,7 @@ func TestMsgSwapBatch(t *testing.T) {
 			),
 		},
 		{
-			"offer and demand coin denom pair doesn't match with x and y coin denom pair: invalid request",
+			"invalid swap direction: invalid request",
 			types.NewMsgSwapBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				"denom1",
