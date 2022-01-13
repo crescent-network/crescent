@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -142,7 +144,15 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error 
 	}
 	k.SetDepositRequest(ctx, pool.Id, req)
 
-	// TODO: need to emit an event?
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreatePool,
+			sdk.NewAttribute(types.AttributeKeyDepositor, msg.Depositor),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyXCoin, msg.XCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyYCoin, msg.YCoin.String()),
+		),
+	})
 
 	return nil
 }
@@ -172,7 +182,14 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 	}
 	k.SetWithdrawRequest(ctx, pool.Id, req)
 
-	// TODO: need to emit an event?
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreatePool,
+			sdk.NewAttribute(types.AttributeKeyWithdrawer, msg.Withdrawer),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolCoin, msg.PoolCoin.String()),
+		),
+	})
 
 	return nil
 }

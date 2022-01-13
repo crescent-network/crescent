@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -54,7 +56,17 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 	}
 	k.SetSwapRequest(ctx, pair.Id, req)
 
-	// TODO: need to emit an event?
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreatePool,
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
+			sdk.NewAttribute(types.AttributeKeySwapDirection, req.Direction.String()),
+			sdk.NewAttribute(types.AttributeKeyRemainingAmount, req.RemainingAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyReceivedAmount, req.ReceivedAmount.String()),
+		),
+	})
 
 	return nil
 }
