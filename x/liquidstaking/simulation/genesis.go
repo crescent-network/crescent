@@ -38,20 +38,15 @@ func GenLiquidValidators(r *rand.Rand) []types.LiquidValidator {
 
 // RandomizedGenState generates a random GenesisState for liquidstaking.
 func RandomizedGenState(simState *module.SimulationState) {
-	//var epochBlocks uint32
 	var liquidValidators []types.LiquidValidator
 	//simState.AppParams.GetOrGenerate(
-	//	simState.Cdc, EpochBlocks, &epochBlocks, simState.Rand,
-	//	//func(r *rand.Rand) { epochBlocks = GenEpochBlocks(r) },
+	//	simState.Cdc, LiquidValidators, &liquidValidators, simState.Rand,
+	//	func(r *rand.Rand) { liquidValidators = GenLiquidValidators(r) },
 	//)
 
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, LiquidValidators, &liquidValidators, simState.Rand,
-		func(r *rand.Rand) { liquidValidators = GenLiquidValidators(r) },
-	)
-
 	liquidValidatorGenesis := types.GenesisState{
-		Params: types.Params{},
+		Params:           types.DefaultParams(),
+		LiquidValidators: liquidValidators,
 	}
 
 	bz, _ := json.MarshalIndent(&liquidValidatorGenesis, "", " ")

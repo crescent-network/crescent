@@ -8,6 +8,7 @@ The Crescent Network containing below Cosmos SDK modules
 - ...
 
 
+- <!-- markdown-link-check-disable -->
 - see the [main](https://github.com/crescent-network/crescent/tree/main) branch for the latest 
 - see [releases](https://github.com/crescent-network/crescent/releases) for the latest release
 
@@ -18,7 +19,7 @@ If you haven't already, install Golang by following the [official docs](https://
 Requirement | Notes
 ----------- | -----------------
 Go version  | Go1.16 or higher
-Cosmos SDK  | v0.44.3 or higher
+Cosmos SDK  | v0.44.5 or higher
 
 ## Installation
 

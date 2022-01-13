@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/crescent-network/crescent/app"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -37,7 +38,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	keeper.EnableAdvanceEpoch = true
 
 	db := tmdb.NewMemDB()
-	cfg := NewConfig(db)
+	cfg := app.NewConfig(db)
 	cfg.NumValidators = 1
 
 	var genesisState types.GenesisState
@@ -63,7 +64,7 @@ func (s *IntegrationTestSuite) TearDownTest() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
-	s.SetupTest()
+	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	name := "test"
@@ -229,7 +230,7 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
-	s.SetupTest()
+	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	name := "test"
@@ -395,7 +396,7 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewStakeCmd() {
-	s.SetupTest()
+	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -463,7 +464,7 @@ func (s *IntegrationTestSuite) TestNewStakeCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
-	s.SetupTest()
+	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	_, err := MsgStakeExec(
@@ -541,7 +542,7 @@ func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewHarvestCmd() {
-	s.SetupTest()
+	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	req := cli.PrivateFixedPlanRequest{
@@ -673,7 +674,7 @@ func (s *QueryCmdTestSuite) SetupSuite() {
 	keeper.EnableAdvanceEpoch = true
 
 	db := tmdb.NewMemDB()
-	cfg := NewConfig(db)
+	cfg := app.NewConfig(db)
 	cfg.NumValidators = 1
 
 	var genesisState types.GenesisState
