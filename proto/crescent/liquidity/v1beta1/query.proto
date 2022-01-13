@@ -159,6 +159,8 @@ message QueryPairResponse {
 // QueryDepositRequestsRequest is request type for the Query/DepositRequests RPC method.
 message QueryDepositRequestsRequest {
   uint64 pool_id = 1;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryDepositRequestsResponse is response type for the Query/DepositRequests RPC method.
@@ -182,6 +184,8 @@ message QueryDepositRequestResponse {
 // QueryWithdrawRequestsRequest is request type for the Query/WithdrawRequests RPC method.
 message QueryWithdrawRequestsRequest {
   uint64 pool_id = 1;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryWithdrawRequestsResponse is response type for the Query/WithdrawRequests RPC method.
@@ -205,7 +209,8 @@ message QueryWithdrawRequestResponse {
 // QuerySwapRequestsRequest is request type for the Query/SwapRequests RPC method.
 message QuerySwapRequestsRequest {
   uint64 pool_id = 1;
-  uint64 id      = 2;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QuerySwapRequestsResponse is response type for the Query/SwapRequests RPC method.
