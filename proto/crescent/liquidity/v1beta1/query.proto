@@ -72,12 +72,12 @@ service Query {
 
   // SwapRequests returns all swap requests.
   rpc SwapRequests(QuerySwapRequestsRequest) returns (QuerySwapRequestsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pair_id}/swap_requests";
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/swap_requests";
   }
 
   // SwapRequest returns the specific swap request.
   rpc SwapRequest(QuerySwapRequestRequest) returns (QuerySwapRequestResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pair_id}/swap_requests/{id}";
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/swap_requests/{id}";
   }
 }
 

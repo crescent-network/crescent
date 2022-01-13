@@ -1488,9 +1488,9 @@ var (
 
 	pattern_Query_WithdrawRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"crescent", "liquidity", "v1beta1", "pools", "pool_id", "withdraw_requests", "id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SwapRequests_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidity", "v1beta1", "pools", "pair_id", "swap_requests"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_SwapRequests_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidity", "v1beta1", "pairs", "pair_id", "swap_requests"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SwapRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"crescent", "liquidity", "v1beta1", "pools", "pair_id", "swap_requests", "id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_SwapRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"crescent", "liquidity", "v1beta1", "pairs", "pair_id", "swap_requests", "id"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
