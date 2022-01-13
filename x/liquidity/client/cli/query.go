@@ -35,8 +35,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		QueryDepositRequest(),
 		QueryWithdrawRequests(),
 		QueryWithdrawRequest(),
-		// QuerySwapRequests(),
-		// QuerySwapRequest(),
+		QuerySwapRequests(),
+		QuerySwapRequest(),
 	)
 
 	return cmd
@@ -363,13 +363,18 @@ func QueryDepositRequests() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all deposit requests.
 Example:
-$ %s query %s deposit-requests
+$ %s query %s deposit-requests 1
 `,
 				version.AppName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -384,7 +389,8 @@ $ %s query %s deposit-requests
 			res, err := queryClient.DepositRequests(
 				context.Background(),
 				&types.QueryDepositRequestsRequest{
-					PoolId: poolId,
+					PoolId:     poolId,
+					Pagination: pageReq,
 				})
 			if err != nil {
 				return err
@@ -457,13 +463,18 @@ func QueryWithdrawRequests() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all withdraw requests.
 Example:
-$ %s query %s withdraw-requests
+$ %s query %s withdraw-requests 1
 `,
 				version.AppName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -478,7 +489,8 @@ $ %s query %s withdraw-requests
 			res, err := queryClient.WithdrawRequests(
 				context.Background(),
 				&types.QueryWithdrawRequestsRequest{
-					PoolId: poolId,
+					PoolId:     poolId,
+					Pagination: pageReq,
 				})
 			if err != nil {
 				return err
@@ -528,6 +540,106 @@ $ %s query %s withdraw-requests 1 1
 				context.Background(),
 				&types.QueryWithdrawRequestRequest{
 					PoolId: poolId,
+					Id:     id,
+				})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func QuerySwapRequests() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "swap-requests [pair-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query for all swap requests",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for all swap requests.
+Example:
+$ %s query %s swap-requests
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SwapRequests(
+				context.Background(),
+				&types.QuerySwapRequestsRequest{
+					PairId:     pairId,
+					Pagination: pageReq,
+				})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func QuerySwapRequest() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "swap-request [pair-id] [id]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Query details of the specific swap request",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query details of the specific swap request.
+Example:
+$ %s query %s swap-requests 1 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			id, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SwapRequest(
+				context.Background(),
+				&types.QuerySwapRequestRequest{
+					PairId: pairId,
 					Id:     id,
 				})
 			if err != nil {
