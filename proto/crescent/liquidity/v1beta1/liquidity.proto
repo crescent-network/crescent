@@ -29,6 +29,9 @@ message Params {
 
   string swap_fee_rate = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string withdraw_fee_rate = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // Pool defines a basic liquidity pool with no min-price and max-price.

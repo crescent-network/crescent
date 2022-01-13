@@ -26,6 +26,7 @@ var (
 	KeyFeeCollectorAddress     = []byte("FeeCollectorAddress")
 	KeyMaxPriceLimitRatio      = []byte("MaxPriceLimitRatio")
 	KeySwapFeeRate             = []byte("SwapFeeRate")
+	KeyWithdrawFeeRate         = []byte("WithdrawFeeRate")
 )
 
 var (
@@ -37,6 +38,7 @@ var (
 	DefaultFeeCollectorAddress            = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector").String()
 	DefaultMaxPriceLimitRatio             = sdk.NewDecWithPrec(1, 1) // 10%
 	DefaultSwapFeeRate                    = sdk.ZeroDec()
+	DefaultWithdrawFeeRate                = sdk.ZeroDec()
 )
 
 var (
@@ -61,6 +63,7 @@ func DefaultParams() Params {
 		FeeCollectorAddress:     DefaultFeeCollectorAddress,
 		MaxPriceLimitRatio:      DefaultMaxPriceLimitRatio,
 		SwapFeeRate:             DefaultSwapFeeRate,
+		WithdrawFeeRate:         DefaultWithdrawFeeRate,
 	}
 }
 
@@ -74,6 +77,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &params.FeeCollectorAddress, validateFeeCollectorAddress),
 		paramstypes.NewParamSetPair(KeyMaxPriceLimitRatio, &params.FeeCollectorAddress, validateMaxPriceLimitRatio),
 		paramstypes.NewParamSetPair(KeySwapFeeRate, &params.SwapFeeRate, validateSwapFeeRate),
+		paramstypes.NewParamSetPair(KeyWithdrawFeeRate, &params.WithdrawFeeRate, validateWithdrawFeeRate),
 	}
 }
 
@@ -90,6 +94,7 @@ func (params Params) Validate() error {
 		{params.FeeCollectorAddress, validateFeeCollectorAddress},
 		{params.MaxPriceLimitRatio, validateMaxPriceLimitRatio},
 		{params.SwapFeeRate, validateSwapFeeRate},
+		{params.WithdrawFeeRate, validateWithdrawFeeRate},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -197,6 +202,19 @@ func validateSwapFeeRate(i interface{}) error {
 
 	if v.IsNegative() {
 		return fmt.Errorf("swap fee rate must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateWithdrawFeeRate(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("withdraw fee rate must not be negative: %s", v)
 	}
 
 	return nil
