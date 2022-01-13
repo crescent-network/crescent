@@ -178,15 +178,16 @@ $ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2D
 
 func NewSwapBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [pair-id] [offer-coin] [demand-coin-denom] [order-price] [order-life-span]",
-		Args:  cobra.ExactArgs(5),
+		Use:   "swap [x-coin-denom] [y-coin-denom] [offer-coin] [demand-coin-denom] [order-price] [order-life-span]",
+		Args:  cobra.ExactArgs(6),
 		Short: "Swap x coin to y coin from the specified liquidity pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Swap x coin to y coin from the specified liquidity pool.
 Example:
 $ %s tx %s swap 1 10000000uatom 500000000ucsnt 0.5 20s --from mykey
 
-[pair-id]: the pair id
+[x-coin-denom]: x coin denomination
+[y-coin-denom]: y coin denomination
 [offer-coin]: the amount of offer coin to swap 
 [demand-coin-denom]: the denom to exchange with the offer coin
 [order-price]: the limir order price for the swap; the exchange ratio is X/Y where X is the amount of first coin and Y is the amount of second coin
@@ -201,35 +202,42 @@ $ %s tx %s swap 1 10000000uatom 500000000ucsnt 0.5 20s --from mykey
 				return err
 			}
 
-			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			xCoinDenom := args[0]
+			if err := sdk.ValidateDenom(xCoinDenom); err != nil {
+				return err
+			}
+
+			yCoinDenom := args[1]
+			if err := sdk.ValidateDenom(yCoinDenom); err != nil {
+				return err
+			}
+
+			offerCoin, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
 				return err
 			}
 
-			offerCoin, err := sdk.ParseCoinNormalized(args[1])
+			demandCoinDenom := args[3]
+			if err := sdk.ValidateDenom(demandCoinDenom); err != nil {
+				return err
+			}
+
+			orderPrice, err := sdk.NewDecFromStr(args[4])
 			if err != nil {
 				return err
 			}
 
-			if err := sdk.ValidateDenom(args[2]); err != nil {
-				return err
-			}
-
-			orderPrice, err := sdk.NewDecFromStr(args[3])
-			if err != nil {
-				return err
-			}
-
-			orderLifespan, err := time.ParseDuration(args[4])
+			orderLifespan, err := time.ParseDuration(args[5])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgSwapBatch(
-				pairId,
 				clientCtx.GetFromAddress(),
+				xCoinDenom,
+				yCoinDenom,
 				offerCoin,
-				args[3],
+				demandCoinDenom,
 				orderPrice,
 				orderLifespan,
 			)
@@ -245,8 +253,8 @@ $ %s tx %s swap 1 10000000uatom 500000000ucsnt 0.5 20s --from mykey
 
 func NewCancelSwapBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-swap [swap-request-id]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "cancel-swap [pair-id] [swap-request-id]",
+		Args:  cobra.ExactArgs(2),
 		Short: "Cancel swap request",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Cancel swap request.
@@ -262,12 +270,21 @@ $ %s tx %s cancel-swap 1 --from mykey
 				return err
 			}
 
-			id, err := strconv.ParseUint(args[0], 10, 64)
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCancelSwapBatch(clientCtx.GetFromAddress(), id)
+			swapRequestId, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgCancelSwapBatch(
+				clientCtx.GetFromAddress(),
+				pairId,
+				swapRequestId,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
