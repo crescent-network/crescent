@@ -55,8 +55,9 @@ func (k Keeper) GetPairByDenoms(ctx sdk.Context, denomX, denomY string) (pair ty
 	if bz == nil {
 		return
 	}
-	k.cdc.MustUnmarshal(bz, &pair)
-	found = true
+	var val gogotypes.UInt64Value
+	k.cdc.MustUnmarshal(bz, &val)
+	pair, found = k.GetPair(ctx, val.Value)
 	return
 }
 
