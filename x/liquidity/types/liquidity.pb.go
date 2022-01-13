@@ -283,7 +283,7 @@ var xxx_messageInfo_WithdrawRequest proto.InternalMessageInfo
 type SwapRequest struct {
 	// id specifies the id for the request
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// pool_id specifies the pool id
+	// pair_id specifies the pair id
 	PairId uint64 `protobuf:"varint,2,opt,name=pair_id,json=pairId,proto3" json:"pair_id,omitempty"`
 	// orderer specifies the bech32-encoded address that makes an order to swap from the pool
 	Orderer string `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`

@@ -93,7 +93,7 @@ message SwapRequest {
   // id specifies the id for the request
   uint64 id = 1;
 
-  // pool_id specifies the pool id
+  // pair_id specifies the pair id
   uint64 pair_id = 2;
 
   // orderer specifies the bech32-encoded address that makes an order to swap from the pool

@@ -2,12 +2,16 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/crescent-network/crescent/x/liquidity/types"
@@ -52,12 +56,24 @@ $ %s tx %s create-pool 1000000000uatom 50000000000ucsnt --from mykey
 			if err != nil {
 				return err
 			}
-			fmt.Println(clientCtx)
 
-			// TODO: not implemented yet
+			xCoin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
 
-			// return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-			return nil
+			yCoin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgCreatePool(
+				clientCtx.GetFromAddress(),
+				xCoin,
+				yCoin,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -84,12 +100,30 @@ $ %s tx %s deposit 1 1000000000uatom 50000000000ucsnt --from mykey
 			if err != nil {
 				return err
 			}
-			fmt.Println(clientCtx)
 
-			// TODO: not implemented yet
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
-			// return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-			return nil
+			xCoin, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			yCoin, err := sdk.ParseCoinNormalized(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDepositBatch(
+				clientCtx.GetFromAddress(),
+				poolId,
+				xCoin,
+				yCoin,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -116,12 +150,24 @@ $ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2D
 			if err != nil {
 				return err
 			}
-			fmt.Println(clientCtx)
 
-			// TODO: not implemented yet
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
-			// return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-			return nil
+			poolCoin, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgWithdrawBatch(
+				clientCtx.GetFromAddress(),
+				poolId,
+				poolCoin,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -132,13 +178,19 @@ $ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2D
 
 func NewSwapBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [pool-id] [pool-coin]",
-		Args:  cobra.ExactArgs(2),
+		Use:   "swap [pair-id] [offer-coin] [demand-coin-denom] [order-price] [order-life-span]",
+		Args:  cobra.ExactArgs(5),
 		Short: "Swap x coin to y coin from the specified liquidity pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Swap x coin to y coin from the specified liquidity pool.
 Example:
-$ %s tx %s swap 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2DA6F0B75D17A6295 --from mykey
+$ %s tx %s swap 1 10000000uatom 500000000ucsnt 0.5 20s --from mykey
+
+[pair-id]: the pair id
+[offer-coin]: the amount of offer coin to swap 
+[demand-coin-denom]: the denom to exchange with the offer coin
+[order-price]: the limir order price for the swap; the exchange ratio is X/Y where X is the amount of first coin and Y is the amount of second coin
+[order-life-span]: the time duration that the swap order request lives until it is executed; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -148,12 +200,41 @@ $ %s tx %s swap 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2DA6F0
 			if err != nil {
 				return err
 			}
-			fmt.Println(clientCtx)
 
-			// TODO: not implemented yet
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
-			// return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-			return nil
+			offerCoin, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			if err := sdk.ValidateDenom(args[3]); err != nil {
+				return err
+			}
+
+			orderPrice, err := sdk.NewDecFromStr(args[3])
+			if err != nil {
+				return err
+			}
+
+			orderLifespan, err := time.ParseDuration(args[4])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSwapBatch(
+				pairId,
+				clientCtx.GetFromAddress(),
+				offerCoin,
+				args[3],
+				orderPrice,
+				orderLifespan,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -180,12 +261,15 @@ $ %s tx %s cancel-swap 1 --from mykey
 			if err != nil {
 				return err
 			}
-			fmt.Println(clientCtx)
 
-			// TODO: not implemented yet
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
-			// return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-			return nil
+			msg := types.NewMsgCancelSwapBatch(clientCtx.GetFromAddress(), id)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
