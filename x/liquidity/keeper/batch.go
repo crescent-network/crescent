@@ -131,3 +131,62 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	// TODO: emit an event?
 	return nil
 }
+
+func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
+	params := k.GetParams(ctx)
+	tickPrec := int(params.TickPrecision)
+
+	ob := types.NewOrderBook(tickPrec)
+	k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
+		ob.AddOrder(req.Order())
+		return false
+	})
+
+	var pools []types.PoolI
+	var poolBuySources, poolSellSources []types.OrderSource
+	k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
+		rx, ry := k.GetPoolBalance(ctx, pool)
+		poolInfo := types.NewPoolInfo(rx, ry, sdk.ZeroInt()) // Pool coin supply is not used when matching
+		pools = append(pools, poolInfo)
+		poolBuySources = append(poolBuySources, types.NewPoolOrderSource(poolInfo, types.SwapDirectionBuy, tickPrec))
+		poolSellSources = append(poolSellSources, types.NewPoolOrderSource(poolInfo, types.SwapDirectionSell, tickPrec))
+		return false
+	})
+
+	buySource := types.MergeOrderSources(append(poolBuySources, ob.OrderSource(types.SwapDirectionBuy))...)
+	sellSource := types.MergeOrderSources(append(poolSellSources, ob.OrderSource(types.SwapDirectionSell))...)
+
+	var lastPrice sdk.Dec
+	if pair.LastPrice != nil {
+		lastPrice = *pair.LastPrice
+	} else {
+		// If there is a pool, then the last price is the pool's price.
+		// TODO: assuming there is only one active(not disabled) pool right now
+		//   Later, the algorithm to determine the initial last price should be changed
+		if len(pools) > 0 {
+			lastPrice = pools[0].Price()
+		} else {
+			highestBuyPrice, found := buySource.HighestTick()
+			if !found {
+				// There is no buy order.
+				return nil
+			}
+			lowestSellPrice, found := sellSource.LowestTick()
+			if !found {
+				// There is no sell order.
+				return nil
+			}
+			lastPrice = highestBuyPrice.Add(lowestSellPrice).QuoInt64(2)
+		}
+	}
+	lastPrice = types.PriceToTick(lastPrice, tickPrec) // TODO: remove this and make Match to handle this
+
+	engine := types.NewMatchEngine(buySource, sellSource, tickPrec)
+	ob, _, matched := engine.Match(lastPrice)
+	if matched {
+		// TODO: transact coins
+	}
+
+	// TODO: emit an event?
+	return nil
+}

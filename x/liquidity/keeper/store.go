@@ -396,6 +396,19 @@ func (k Keeper) IterateAllSwapRequests(ctx sdk.Context, cb func(req types.SwapRe
 	}
 }
 
+func (k Keeper) IterateSwapRequestsByPair(ctx sdk.Context, pairId uint64, cb func(req types.SwapRequest) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetSwapRequestsByPairKeyPrefix(pairId))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.SwapRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		if cb(req) {
+			break
+		}
+	}
+}
+
 func (k Keeper) DeleteSwapRequestsToBeDeleted(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.SwapRequestKeyPrefix)

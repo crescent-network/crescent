@@ -21,6 +21,7 @@ const (
 )
 
 type Order struct {
+	RequestId       *uint64
 	Orderer         sdk.AccAddress
 	Direction       SwapDirection
 	Price           sdk.Dec
@@ -31,6 +32,7 @@ type Order struct {
 
 func NewOrder(orderer sdk.AccAddress, dir SwapDirection, price sdk.Dec, amount sdk.Int) *Order {
 	return &Order{
+		RequestId:       nil,
 		Orderer:         orderer,
 		Direction:       dir,
 		Price:           price,
@@ -116,6 +118,14 @@ func (ticks *OrderBookTicks) AddOrders(orders ...*Order) {
 	for _, order := range orders {
 		ticks.AddOrder(order)
 	}
+}
+
+func (ticks *OrderBookTicks) AllOrders() []*Order {
+	var orders []*Order
+	for _, tick := range ticks.Ticks {
+		orders = append(orders, tick.Orders...)
+	}
+	return orders
 }
 
 func (ticks *OrderBookTicks) AmountGTE(price sdk.Dec) sdk.Int {
@@ -241,6 +251,14 @@ func (ob OrderBook) OrderSource(dir SwapDirection) OrderSource {
 	default:
 		panic(fmt.Sprintf("unknown swap direction: %v", dir))
 	}
+}
+
+func (ob OrderBook) AllOrders() []*Order {
+	var orders []*Order
+	for _, ticks := range []*OrderBookTicks{ob.BuyTicks, ob.SellTicks} {
+		orders = append(orders, ticks.AllOrders()...)
+	}
+	return orders
 }
 
 func (ob OrderBook) String() string {

@@ -59,6 +59,7 @@ func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 		return sa
 	}
 
+	// TODO: lastPrice could be a price not fit in ticks.
 	currentPrice := lastPrice
 	for {
 		i := TickToIndex(currentPrice, engine.TickPrecision)

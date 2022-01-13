@@ -23,7 +23,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
 		k.CancelSwapRequests(ctx)
 
-		//TODO: match orders
+		k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
+			if err := k.ExecuteMatching(ctx, pair); err != nil {
+				panic(err)
+			}
+			return false
+		})
 
 		k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
 			if err := k.ExecuteDepositRequest(ctx, req); err != nil {

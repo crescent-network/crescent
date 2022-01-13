@@ -27,3 +27,15 @@ func (req SwapRequest) GetOrderer() sdk.AccAddress {
 	}
 	return addr
 }
+
+func (req SwapRequest) Order() *Order {
+	return &Order{
+		RequestId:       &req.Id,
+		Orderer:         req.GetOrderer(),
+		Direction:       req.Direction,
+		Price:           req.Price,
+		OrderAmount:     req.RemainingAmount, // TODO: introduce new OrderAmount field in SwapRequest?
+		RemainingAmount: req.RemainingAmount,
+		ReceivedAmount:  sdk.ZeroInt(),
+	}
+}
