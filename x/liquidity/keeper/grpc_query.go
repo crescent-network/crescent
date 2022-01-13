@@ -66,37 +66,37 @@ func (k Querier) Pair(c context.Context, req *types.QueryPairRequest) (*types.Qu
 }
 
 // ...
-func (k Querier) Deposits(c context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
+func (k Querier) DepositRequests(c context.Context, req *types.QueryDepositRequestsRequest) (*types.QueryDepositRequestsResponse, error) {
 	// TODO: not implemented yet
-	return &types.QueryDepositsResponse{}, nil
+	return &types.QueryDepositRequestsResponse{}, nil
 }
 
 // ...
-func (k Querier) Deposit(c context.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {
+func (k Querier) DepositRequest(c context.Context, req *types.QueryDepositRequestRequest) (*types.QueryDepositRequestResponse, error) {
 	// TODO: not implemented yet
-	return &types.QueryDepositResponse{}, nil
+	return &types.QueryDepositRequestResponse{}, nil
 }
 
 // ...
-func (k Querier) Withdraws(c context.Context, req *types.QueryWithdrawsRequest) (*types.QueryWithdrawsResponse, error) {
+func (k Querier) WithdrawRequests(c context.Context, req *types.QueryWithdrawRequestsRequest) (*types.QueryWithdrawRequestsResponse, error) {
 	// TODO: not implemented yet
-	return &types.QueryWithdrawsResponse{}, nil
+	return &types.QueryWithdrawRequestsResponse{}, nil
 }
 
 // ...
-func (k Querier) Withdraw(c context.Context, req *types.QueryWithdrawRequest) (*types.QueryWithdrawResponse, error) {
+func (k Querier) WithdrawRequest(c context.Context, req *types.QueryWithdrawRequestRequest) (*types.QueryWithdrawRequestResponse, error) {
 	// TODO: not implemented yet
-	return &types.QueryWithdrawResponse{}, nil
+	return &types.QueryWithdrawRequestResponse{}, nil
 }
 
 // ...
-func (k Querier) Swaps(c context.Context, req *types.QuerySwapsRequest) (*types.QuerySwapsResponse, error) {
+func (k Querier) SwapRequests(c context.Context, req *types.QuerySwapRequestsRequest) (*types.QuerySwapRequestsResponse, error) {
 	// TODO: not implemented yet
-	return &types.QuerySwapsResponse{}, nil
+	return &types.QuerySwapRequestsResponse{}, nil
 }
 
 // ...
-func (k Querier) Swap(c context.Context, req *types.QuerySwapRequest) (*types.QuerySwapResponse, error) {
+func (k Querier) SwapRequest(c context.Context, req *types.QuerySwapRequestRequest) (*types.QuerySwapRequestResponse, error) {
 	// TODO: not implemented yet
-	return &types.QuerySwapResponse{}, nil
+	return &types.QuerySwapRequestResponse{}, nil
 }

@@ -50,33 +50,33 @@ service Query {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}";
   }
 
-  // Deposits returns all deposit requests.
-  rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
+  // DepositRequests returns all deposit requests.
+  rpc DepositRequests(QueryDepositRequestsRequest) returns (QueryDepositRequestsResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests";
   }
 
-  // Deposit returns the specific deposit request.
-  rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
+  // DepositRequest returns the specific deposit request.
+  rpc DepositRequest(QueryDepositRequestRequest) returns (QueryDepositRequestResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}";
   }
 
-  // Withdraws returns all withdraw requests.
-  rpc Withdraws(QueryWithdrawsRequest) returns (QueryWithdrawsResponse) {
+  // WithdrawRequests returns all withdraw requests.
+  rpc WithdrawRequests(QueryWithdrawRequestsRequest) returns (QueryWithdrawRequestsResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests";
   }
 
-  // Withdraw returns the specific withdraw request.
-  rpc Withdraw(QueryWithdrawRequest) returns (QueryWithdrawResponse) {
+  // WithdrawRequest returns the specific withdraw request.
+  rpc WithdrawRequest(QueryWithdrawRequestRequest) returns (QueryWithdrawRequestResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}";
   }
 
-  // Swaps returns all swap requests.
-  rpc Swaps(QuerySwapsRequest) returns (QuerySwapsResponse) {
+  // SwapRequests returns all swap requests.
+  rpc SwapRequests(QuerySwapRequestsRequest) returns (QuerySwapRequestsResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/swap_requests";
   }
 
-  // Swap returns the specific swap request.
-  rpc Swap(QuerySwapRequest) returns (QuerySwapResponse) {
+  // SwapRequest returns the specific swap request.
+  rpc SwapRequest(QuerySwapRequestRequest) returns (QuerySwapRequestResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/swap_requests/{id}";
   }
 }
@@ -154,72 +154,72 @@ message QueryPairResponse {
   Pair pair = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryDepositsRequest is request type for the Query/Deposits RPC method.
-message QueryDepositsRequest {
+// QueryDepositRequestsRequest is request type for the Query/DepositRequests RPC method.
+message QueryDepositRequestsRequest {
   uint64 pool_id = 1;
 }
 
-// QueryDepositsResponse is response type for the Query/Deposits RPC method.
-message QueryDepositsResponse {
+// QueryDepositRequestsResponse is response type for the Query/DepositRequests RPC method.
+message QueryDepositRequestsResponse {
   repeated DepositRequest deposit_requests = 1 [(gogoproto.nullable) = false];
 
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryDepositRequest is request type for the Query/Deposit RPC method.
-message QueryDepositRequest {
+// QueryDepositRequestRequest is request type for the Query/DepositRequest RPC method.
+message QueryDepositRequestRequest {
   uint64 pool_id = 1;
   uint64 id      = 2;
 }
 
-// QueryDepositResponse is response type for the Query/Deposit RPC method.
-message QueryDepositResponse {
+// QueryDepositRequestResponse is response type for the Query/DepositRequest RPC method.
+message QueryDepositRequestResponse {
   DepositRequest deposit_request = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryWithdrawsRequest is request type for the Query/Withdraws RPC method.
-message QueryWithdrawsRequest {
+// QueryWithdrawRequestsRequest is request type for the Query/WithdrawRequests RPC method.
+message QueryWithdrawRequestsRequest {
   uint64 pool_id = 1;
 }
 
-// QueryWithdrawsResponse is response type for the Query/Withdraws RPC method.
-message QueryWithdrawsResponse {
+// QueryWithdrawRequestsResponse is response type for the Query/WithdrawRequests RPC method.
+message QueryWithdrawRequestsResponse {
   repeated WithdrawRequest withdraw_requests = 1 [(gogoproto.nullable) = false];
 
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryWithdrawRequest is request type for the Query/Withdraw RPC method.
-message QueryWithdrawRequest {
+// QueryWithdrawRequestRequest is request type for the Query/WithdrawRequest RPC method.
+message QueryWithdrawRequestRequest {
   uint64 pool_id = 1;
   uint64 id      = 2;
 }
 
-// QueryWithdrawResponse is response type for the Query/Withdraw RPC method.
-message QueryWithdrawResponse {
+// QueryWithdrawRequestResponse is response type for the Query/WithdrawRequest RPC method.
+message QueryWithdrawRequestResponse {
   WithdrawRequest withdraw_request = 1 [(gogoproto.nullable) = false];
 }
 
-// QuerySwapsRequest is request type for the Query/Swaps RPC method.
-message QuerySwapsRequest {
+// QuerySwapRequestsRequest is request type for the Query/SwapRequests RPC method.
+message QuerySwapRequestsRequest {
   uint64 pool_id = 1;
   uint64 id      = 2;
 }
 
-// QuerySwapsResponse is response type for the Query/Swaps RPC method.
-message QuerySwapsResponse {
+// QuerySwapRequestsResponse is response type for the Query/SwapRequests RPC method.
+message QuerySwapRequestsResponse {
   repeated SwapRequest swap_requests = 1 [(gogoproto.nullable) = false];
 
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QuerySwapRequest is request type for the Query/Swap RPC method.
-message QuerySwapRequest {
+// QuerySwapRequestRequest is request type for the Query/SwapRequest RPC method.
+message QuerySwapRequestRequest {
   uint64 pool_id = 1;
   uint64 id      = 2;
 }
 
-// QuerySwapResponse is response type for the Query/Swap RPC method.
-message QuerySwapResponse {
+// QuerySwapRequestResponse is response type for the Query/SwapRequest RPC method.
+message QuerySwapRequestResponse {
   SwapRequest swap_request = 1 [(gogoproto.nullable) = false];
 }

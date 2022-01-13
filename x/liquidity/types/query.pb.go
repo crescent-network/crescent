@@ -655,23 +655,23 @@ func (m *QueryPairResponse) GetPair() Pair {
 	return Pair{}
 }
 
-// QueryDepositsRequest is request type for the Query/Deposits RPC method.
-type QueryDepositsRequest struct {
+// QueryDepositRequestsRequest is request type for the Query/DepositRequests RPC method.
+type QueryDepositRequestsRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }
 
-func (m *QueryDepositsRequest) Reset()         { *m = QueryDepositsRequest{} }
-func (m *QueryDepositsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryDepositsRequest) ProtoMessage()    {}
-func (*QueryDepositsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryDepositRequestsRequest) Reset()         { *m = QueryDepositRequestsRequest{} }
+func (m *QueryDepositRequestsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDepositRequestsRequest) ProtoMessage()    {}
+func (*QueryDepositRequestsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{13}
 }
-func (m *QueryDepositsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryDepositRequestsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryDepositsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDepositRequestsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryDepositsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDepositRequestsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -681,43 +681,43 @@ func (m *QueryDepositsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *QueryDepositsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryDepositsRequest.Merge(m, src)
+func (m *QueryDepositRequestsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDepositRequestsRequest.Merge(m, src)
 }
-func (m *QueryDepositsRequest) XXX_Size() int {
+func (m *QueryDepositRequestsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryDepositsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryDepositsRequest.DiscardUnknown(m)
+func (m *QueryDepositRequestsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDepositRequestsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryDepositsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryDepositRequestsRequest proto.InternalMessageInfo
 
-func (m *QueryDepositsRequest) GetPoolId() uint64 {
+func (m *QueryDepositRequestsRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-// QueryDepositsResponse is response type for the Query/Deposits RPC method.
-type QueryDepositsResponse struct {
+// QueryDepositRequestsResponse is response type for the Query/DepositRequests RPC method.
+type QueryDepositRequestsResponse struct {
 	DepositRequests []DepositRequest    `protobuf:"bytes,1,rep,name=deposit_requests,json=depositRequests,proto3" json:"deposit_requests"`
 	Pagination      *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryDepositsResponse) Reset()         { *m = QueryDepositsResponse{} }
-func (m *QueryDepositsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryDepositsResponse) ProtoMessage()    {}
-func (*QueryDepositsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryDepositRequestsResponse) Reset()         { *m = QueryDepositRequestsResponse{} }
+func (m *QueryDepositRequestsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDepositRequestsResponse) ProtoMessage()    {}
+func (*QueryDepositRequestsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{14}
 }
-func (m *QueryDepositsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryDepositRequestsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryDepositsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDepositRequestsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryDepositsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDepositRequestsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -727,50 +727,50 @@ func (m *QueryDepositsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *QueryDepositsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryDepositsResponse.Merge(m, src)
+func (m *QueryDepositRequestsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDepositRequestsResponse.Merge(m, src)
 }
-func (m *QueryDepositsResponse) XXX_Size() int {
+func (m *QueryDepositRequestsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryDepositsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryDepositsResponse.DiscardUnknown(m)
+func (m *QueryDepositRequestsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDepositRequestsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryDepositsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryDepositRequestsResponse proto.InternalMessageInfo
 
-func (m *QueryDepositsResponse) GetDepositRequests() []DepositRequest {
+func (m *QueryDepositRequestsResponse) GetDepositRequests() []DepositRequest {
 	if m != nil {
 		return m.DepositRequests
 	}
 	return nil
 }
 
-func (m *QueryDepositsResponse) GetPagination() *query.PageResponse {
+func (m *QueryDepositRequestsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryDepositRequest is request type for the Query/Deposit RPC method.
-type QueryDepositRequest struct {
+// QueryDepositRequestRequest is request type for the Query/DepositRequest RPC method.
+type QueryDepositRequestRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	Id     uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *QueryDepositRequest) Reset()         { *m = QueryDepositRequest{} }
-func (m *QueryDepositRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryDepositRequest) ProtoMessage()    {}
-func (*QueryDepositRequest) Descriptor() ([]byte, []int) {
+func (m *QueryDepositRequestRequest) Reset()         { *m = QueryDepositRequestRequest{} }
+func (m *QueryDepositRequestRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDepositRequestRequest) ProtoMessage()    {}
+func (*QueryDepositRequestRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{15}
 }
-func (m *QueryDepositRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryDepositRequestRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryDepositRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDepositRequestRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryDepositRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDepositRequestRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -780,49 +780,49 @@ func (m *QueryDepositRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *QueryDepositRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryDepositRequest.Merge(m, src)
+func (m *QueryDepositRequestRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDepositRequestRequest.Merge(m, src)
 }
-func (m *QueryDepositRequest) XXX_Size() int {
+func (m *QueryDepositRequestRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryDepositRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryDepositRequest.DiscardUnknown(m)
+func (m *QueryDepositRequestRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDepositRequestRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryDepositRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryDepositRequestRequest proto.InternalMessageInfo
 
-func (m *QueryDepositRequest) GetPoolId() uint64 {
+func (m *QueryDepositRequestRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-func (m *QueryDepositRequest) GetId() uint64 {
+func (m *QueryDepositRequestRequest) GetId() uint64 {
 	if m != nil {
 		return m.Id
 	}
 	return 0
 }
 
-// QueryDepositResponse is response type for the Query/Deposit RPC method.
-type QueryDepositResponse struct {
+// QueryDepositRequestResponse is response type for the Query/DepositRequest RPC method.
+type QueryDepositRequestResponse struct {
 	DepositRequest DepositRequest `protobuf:"bytes,1,opt,name=deposit_request,json=depositRequest,proto3" json:"deposit_request"`
 }
 
-func (m *QueryDepositResponse) Reset()         { *m = QueryDepositResponse{} }
-func (m *QueryDepositResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryDepositResponse) ProtoMessage()    {}
-func (*QueryDepositResponse) Descriptor() ([]byte, []int) {
+func (m *QueryDepositRequestResponse) Reset()         { *m = QueryDepositRequestResponse{} }
+func (m *QueryDepositRequestResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDepositRequestResponse) ProtoMessage()    {}
+func (*QueryDepositRequestResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{16}
 }
-func (m *QueryDepositResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryDepositRequestResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryDepositResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryDepositRequestResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryDepositResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryDepositRequestResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -832,42 +832,42 @@ func (m *QueryDepositResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *QueryDepositResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryDepositResponse.Merge(m, src)
+func (m *QueryDepositRequestResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDepositRequestResponse.Merge(m, src)
 }
-func (m *QueryDepositResponse) XXX_Size() int {
+func (m *QueryDepositRequestResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryDepositResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryDepositResponse.DiscardUnknown(m)
+func (m *QueryDepositRequestResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDepositRequestResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryDepositResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryDepositRequestResponse proto.InternalMessageInfo
 
-func (m *QueryDepositResponse) GetDepositRequest() DepositRequest {
+func (m *QueryDepositRequestResponse) GetDepositRequest() DepositRequest {
 	if m != nil {
 		return m.DepositRequest
 	}
 	return DepositRequest{}
 }
 
-// QueryWithdrawsRequest is request type for the Query/Withdraws RPC method.
-type QueryWithdrawsRequest struct {
+// QueryWithdrawRequestsRequest is request type for the Query/WithdrawRequests RPC method.
+type QueryWithdrawRequestsRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }
 
-func (m *QueryWithdrawsRequest) Reset()         { *m = QueryWithdrawsRequest{} }
-func (m *QueryWithdrawsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryWithdrawsRequest) ProtoMessage()    {}
-func (*QueryWithdrawsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryWithdrawRequestsRequest) Reset()         { *m = QueryWithdrawRequestsRequest{} }
+func (m *QueryWithdrawRequestsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryWithdrawRequestsRequest) ProtoMessage()    {}
+func (*QueryWithdrawRequestsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{17}
 }
-func (m *QueryWithdrawsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryWithdrawRequestsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryWithdrawsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryWithdrawRequestsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryWithdrawsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryWithdrawRequestsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -877,43 +877,43 @@ func (m *QueryWithdrawsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *QueryWithdrawsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryWithdrawsRequest.Merge(m, src)
+func (m *QueryWithdrawRequestsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryWithdrawRequestsRequest.Merge(m, src)
 }
-func (m *QueryWithdrawsRequest) XXX_Size() int {
+func (m *QueryWithdrawRequestsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryWithdrawsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryWithdrawsRequest.DiscardUnknown(m)
+func (m *QueryWithdrawRequestsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryWithdrawRequestsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryWithdrawsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryWithdrawRequestsRequest proto.InternalMessageInfo
 
-func (m *QueryWithdrawsRequest) GetPoolId() uint64 {
+func (m *QueryWithdrawRequestsRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-// QueryWithdrawsResponse is response type for the Query/Withdraws RPC method.
-type QueryWithdrawsResponse struct {
+// QueryWithdrawRequestsResponse is response type for the Query/WithdrawRequests RPC method.
+type QueryWithdrawRequestsResponse struct {
 	WithdrawRequests []WithdrawRequest   `protobuf:"bytes,1,rep,name=withdraw_requests,json=withdrawRequests,proto3" json:"withdraw_requests"`
 	Pagination       *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryWithdrawsResponse) Reset()         { *m = QueryWithdrawsResponse{} }
-func (m *QueryWithdrawsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryWithdrawsResponse) ProtoMessage()    {}
-func (*QueryWithdrawsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryWithdrawRequestsResponse) Reset()         { *m = QueryWithdrawRequestsResponse{} }
+func (m *QueryWithdrawRequestsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryWithdrawRequestsResponse) ProtoMessage()    {}
+func (*QueryWithdrawRequestsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{18}
 }
-func (m *QueryWithdrawsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryWithdrawRequestsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryWithdrawsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryWithdrawRequestsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryWithdrawsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryWithdrawRequestsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -923,50 +923,50 @@ func (m *QueryWithdrawsResponse) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *QueryWithdrawsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryWithdrawsResponse.Merge(m, src)
+func (m *QueryWithdrawRequestsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryWithdrawRequestsResponse.Merge(m, src)
 }
-func (m *QueryWithdrawsResponse) XXX_Size() int {
+func (m *QueryWithdrawRequestsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryWithdrawsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryWithdrawsResponse.DiscardUnknown(m)
+func (m *QueryWithdrawRequestsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryWithdrawRequestsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryWithdrawsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryWithdrawRequestsResponse proto.InternalMessageInfo
 
-func (m *QueryWithdrawsResponse) GetWithdrawRequests() []WithdrawRequest {
+func (m *QueryWithdrawRequestsResponse) GetWithdrawRequests() []WithdrawRequest {
 	if m != nil {
 		return m.WithdrawRequests
 	}
 	return nil
 }
 
-func (m *QueryWithdrawsResponse) GetPagination() *query.PageResponse {
+func (m *QueryWithdrawRequestsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryWithdrawRequest is request type for the Query/Withdraw RPC method.
-type QueryWithdrawRequest struct {
+// QueryWithdrawRequestRequest is request type for the Query/WithdrawRequest RPC method.
+type QueryWithdrawRequestRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	Id     uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *QueryWithdrawRequest) Reset()         { *m = QueryWithdrawRequest{} }
-func (m *QueryWithdrawRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryWithdrawRequest) ProtoMessage()    {}
-func (*QueryWithdrawRequest) Descriptor() ([]byte, []int) {
+func (m *QueryWithdrawRequestRequest) Reset()         { *m = QueryWithdrawRequestRequest{} }
+func (m *QueryWithdrawRequestRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryWithdrawRequestRequest) ProtoMessage()    {}
+func (*QueryWithdrawRequestRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{19}
 }
-func (m *QueryWithdrawRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryWithdrawRequestRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryWithdrawRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryWithdrawRequestRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryWithdrawRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryWithdrawRequestRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -976,49 +976,49 @@ func (m *QueryWithdrawRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *QueryWithdrawRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryWithdrawRequest.Merge(m, src)
+func (m *QueryWithdrawRequestRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryWithdrawRequestRequest.Merge(m, src)
 }
-func (m *QueryWithdrawRequest) XXX_Size() int {
+func (m *QueryWithdrawRequestRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryWithdrawRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryWithdrawRequest.DiscardUnknown(m)
+func (m *QueryWithdrawRequestRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryWithdrawRequestRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryWithdrawRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryWithdrawRequestRequest proto.InternalMessageInfo
 
-func (m *QueryWithdrawRequest) GetPoolId() uint64 {
+func (m *QueryWithdrawRequestRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-func (m *QueryWithdrawRequest) GetId() uint64 {
+func (m *QueryWithdrawRequestRequest) GetId() uint64 {
 	if m != nil {
 		return m.Id
 	}
 	return 0
 }
 
-// QueryWithdrawResponse is response type for the Query/Withdraw RPC method.
-type QueryWithdrawResponse struct {
+// QueryWithdrawRequestResponse is response type for the Query/WithdrawRequest RPC method.
+type QueryWithdrawRequestResponse struct {
 	WithdrawRequest WithdrawRequest `protobuf:"bytes,1,opt,name=withdraw_request,json=withdrawRequest,proto3" json:"withdraw_request"`
 }
 
-func (m *QueryWithdrawResponse) Reset()         { *m = QueryWithdrawResponse{} }
-func (m *QueryWithdrawResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryWithdrawResponse) ProtoMessage()    {}
-func (*QueryWithdrawResponse) Descriptor() ([]byte, []int) {
+func (m *QueryWithdrawRequestResponse) Reset()         { *m = QueryWithdrawRequestResponse{} }
+func (m *QueryWithdrawRequestResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryWithdrawRequestResponse) ProtoMessage()    {}
+func (*QueryWithdrawRequestResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{20}
 }
-func (m *QueryWithdrawResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryWithdrawRequestResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryWithdrawResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryWithdrawRequestResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryWithdrawResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryWithdrawRequestResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1028,43 +1028,43 @@ func (m *QueryWithdrawResponse) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *QueryWithdrawResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryWithdrawResponse.Merge(m, src)
+func (m *QueryWithdrawRequestResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryWithdrawRequestResponse.Merge(m, src)
 }
-func (m *QueryWithdrawResponse) XXX_Size() int {
+func (m *QueryWithdrawRequestResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryWithdrawResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryWithdrawResponse.DiscardUnknown(m)
+func (m *QueryWithdrawRequestResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryWithdrawRequestResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryWithdrawResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryWithdrawRequestResponse proto.InternalMessageInfo
 
-func (m *QueryWithdrawResponse) GetWithdrawRequest() WithdrawRequest {
+func (m *QueryWithdrawRequestResponse) GetWithdrawRequest() WithdrawRequest {
 	if m != nil {
 		return m.WithdrawRequest
 	}
 	return WithdrawRequest{}
 }
 
-// QuerySwapsRequest is request type for the Query/Swaps RPC method.
-type QuerySwapsRequest struct {
+// QuerySwapRequestsRequest is request type for the Query/SwapRequests RPC method.
+type QuerySwapRequestsRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	Id     uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *QuerySwapsRequest) Reset()         { *m = QuerySwapsRequest{} }
-func (m *QuerySwapsRequest) String() string { return proto.CompactTextString(m) }
-func (*QuerySwapsRequest) ProtoMessage()    {}
-func (*QuerySwapsRequest) Descriptor() ([]byte, []int) {
+func (m *QuerySwapRequestsRequest) Reset()         { *m = QuerySwapRequestsRequest{} }
+func (m *QuerySwapRequestsRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySwapRequestsRequest) ProtoMessage()    {}
+func (*QuerySwapRequestsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{21}
 }
-func (m *QuerySwapsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QuerySwapRequestsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QuerySwapsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySwapRequestsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QuerySwapsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySwapRequestsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1074,50 +1074,50 @@ func (m *QuerySwapsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *QuerySwapsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QuerySwapsRequest.Merge(m, src)
+func (m *QuerySwapRequestsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySwapRequestsRequest.Merge(m, src)
 }
-func (m *QuerySwapsRequest) XXX_Size() int {
+func (m *QuerySwapRequestsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QuerySwapsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QuerySwapsRequest.DiscardUnknown(m)
+func (m *QuerySwapRequestsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySwapRequestsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QuerySwapsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QuerySwapRequestsRequest proto.InternalMessageInfo
 
-func (m *QuerySwapsRequest) GetPoolId() uint64 {
+func (m *QuerySwapRequestsRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-func (m *QuerySwapsRequest) GetId() uint64 {
+func (m *QuerySwapRequestsRequest) GetId() uint64 {
 	if m != nil {
 		return m.Id
 	}
 	return 0
 }
 
-// QuerySwapsResponse is response type for the Query/Swaps RPC method.
-type QuerySwapsResponse struct {
+// QuerySwapRequestsResponse is response type for the Query/SwapRequests RPC method.
+type QuerySwapRequestsResponse struct {
 	SwapRequests []SwapRequest       `protobuf:"bytes,1,rep,name=swap_requests,json=swapRequests,proto3" json:"swap_requests"`
 	Pagination   *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QuerySwapsResponse) Reset()         { *m = QuerySwapsResponse{} }
-func (m *QuerySwapsResponse) String() string { return proto.CompactTextString(m) }
-func (*QuerySwapsResponse) ProtoMessage()    {}
-func (*QuerySwapsResponse) Descriptor() ([]byte, []int) {
+func (m *QuerySwapRequestsResponse) Reset()         { *m = QuerySwapRequestsResponse{} }
+func (m *QuerySwapRequestsResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySwapRequestsResponse) ProtoMessage()    {}
+func (*QuerySwapRequestsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{22}
 }
-func (m *QuerySwapsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QuerySwapRequestsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QuerySwapsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySwapRequestsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QuerySwapsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySwapRequestsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1127,50 +1127,50 @@ func (m *QuerySwapsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *QuerySwapsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QuerySwapsResponse.Merge(m, src)
+func (m *QuerySwapRequestsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySwapRequestsResponse.Merge(m, src)
 }
-func (m *QuerySwapsResponse) XXX_Size() int {
+func (m *QuerySwapRequestsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QuerySwapsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QuerySwapsResponse.DiscardUnknown(m)
+func (m *QuerySwapRequestsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySwapRequestsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QuerySwapsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QuerySwapRequestsResponse proto.InternalMessageInfo
 
-func (m *QuerySwapsResponse) GetSwapRequests() []SwapRequest {
+func (m *QuerySwapRequestsResponse) GetSwapRequests() []SwapRequest {
 	if m != nil {
 		return m.SwapRequests
 	}
 	return nil
 }
 
-func (m *QuerySwapsResponse) GetPagination() *query.PageResponse {
+func (m *QuerySwapRequestsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QuerySwapRequest is request type for the Query/Swap RPC method.
-type QuerySwapRequest struct {
+// QuerySwapRequestRequest is request type for the Query/SwapRequest RPC method.
+type QuerySwapRequestRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	Id     uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *QuerySwapRequest) Reset()         { *m = QuerySwapRequest{} }
-func (m *QuerySwapRequest) String() string { return proto.CompactTextString(m) }
-func (*QuerySwapRequest) ProtoMessage()    {}
-func (*QuerySwapRequest) Descriptor() ([]byte, []int) {
+func (m *QuerySwapRequestRequest) Reset()         { *m = QuerySwapRequestRequest{} }
+func (m *QuerySwapRequestRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySwapRequestRequest) ProtoMessage()    {}
+func (*QuerySwapRequestRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{23}
 }
-func (m *QuerySwapRequest) XXX_Unmarshal(b []byte) error {
+func (m *QuerySwapRequestRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QuerySwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySwapRequestRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QuerySwapRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySwapRequestRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1180,49 +1180,49 @@ func (m *QuerySwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *QuerySwapRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QuerySwapRequest.Merge(m, src)
+func (m *QuerySwapRequestRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySwapRequestRequest.Merge(m, src)
 }
-func (m *QuerySwapRequest) XXX_Size() int {
+func (m *QuerySwapRequestRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QuerySwapRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QuerySwapRequest.DiscardUnknown(m)
+func (m *QuerySwapRequestRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySwapRequestRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QuerySwapRequest proto.InternalMessageInfo
+var xxx_messageInfo_QuerySwapRequestRequest proto.InternalMessageInfo
 
-func (m *QuerySwapRequest) GetPoolId() uint64 {
+func (m *QuerySwapRequestRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-func (m *QuerySwapRequest) GetId() uint64 {
+func (m *QuerySwapRequestRequest) GetId() uint64 {
 	if m != nil {
 		return m.Id
 	}
 	return 0
 }
 
-// QuerySwapResponse is response type for the Query/Swap RPC method.
-type QuerySwapResponse struct {
+// QuerySwapRequestResponse is response type for the Query/SwapRequest RPC method.
+type QuerySwapRequestResponse struct {
 	SwapRequest SwapRequest `protobuf:"bytes,1,opt,name=swap_request,json=swapRequest,proto3" json:"swap_request"`
 }
 
-func (m *QuerySwapResponse) Reset()         { *m = QuerySwapResponse{} }
-func (m *QuerySwapResponse) String() string { return proto.CompactTextString(m) }
-func (*QuerySwapResponse) ProtoMessage()    {}
-func (*QuerySwapResponse) Descriptor() ([]byte, []int) {
+func (m *QuerySwapRequestResponse) Reset()         { *m = QuerySwapRequestResponse{} }
+func (m *QuerySwapRequestResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySwapRequestResponse) ProtoMessage()    {}
+func (*QuerySwapRequestResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8e63b16e9937d1f1, []int{24}
 }
-func (m *QuerySwapResponse) XXX_Unmarshal(b []byte) error {
+func (m *QuerySwapRequestResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QuerySwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySwapRequestResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QuerySwapResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySwapRequestResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1232,19 +1232,19 @@ func (m *QuerySwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *QuerySwapResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QuerySwapResponse.Merge(m, src)
+func (m *QuerySwapRequestResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySwapRequestResponse.Merge(m, src)
 }
-func (m *QuerySwapResponse) XXX_Size() int {
+func (m *QuerySwapRequestResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QuerySwapResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QuerySwapResponse.DiscardUnknown(m)
+func (m *QuerySwapRequestResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySwapRequestResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QuerySwapResponse proto.InternalMessageInfo
+var xxx_messageInfo_QuerySwapRequestResponse proto.InternalMessageInfo
 
-func (m *QuerySwapResponse) GetSwapRequest() SwapRequest {
+func (m *QuerySwapRequestResponse) GetSwapRequest() SwapRequest {
 	if m != nil {
 		return m.SwapRequest
 	}
@@ -1265,18 +1265,18 @@ func init() {
 	proto.RegisterType((*QueryPairsResponse)(nil), "crescent.liquidity.v1beta1.QueryPairsResponse")
 	proto.RegisterType((*QueryPairRequest)(nil), "crescent.liquidity.v1beta1.QueryPairRequest")
 	proto.RegisterType((*QueryPairResponse)(nil), "crescent.liquidity.v1beta1.QueryPairResponse")
-	proto.RegisterType((*QueryDepositsRequest)(nil), "crescent.liquidity.v1beta1.QueryDepositsRequest")
-	proto.RegisterType((*QueryDepositsResponse)(nil), "crescent.liquidity.v1beta1.QueryDepositsResponse")
-	proto.RegisterType((*QueryDepositRequest)(nil), "crescent.liquidity.v1beta1.QueryDepositRequest")
-	proto.RegisterType((*QueryDepositResponse)(nil), "crescent.liquidity.v1beta1.QueryDepositResponse")
-	proto.RegisterType((*QueryWithdrawsRequest)(nil), "crescent.liquidity.v1beta1.QueryWithdrawsRequest")
-	proto.RegisterType((*QueryWithdrawsResponse)(nil), "crescent.liquidity.v1beta1.QueryWithdrawsResponse")
-	proto.RegisterType((*QueryWithdrawRequest)(nil), "crescent.liquidity.v1beta1.QueryWithdrawRequest")
-	proto.RegisterType((*QueryWithdrawResponse)(nil), "crescent.liquidity.v1beta1.QueryWithdrawResponse")
-	proto.RegisterType((*QuerySwapsRequest)(nil), "crescent.liquidity.v1beta1.QuerySwapsRequest")
-	proto.RegisterType((*QuerySwapsResponse)(nil), "crescent.liquidity.v1beta1.QuerySwapsResponse")
-	proto.RegisterType((*QuerySwapRequest)(nil), "crescent.liquidity.v1beta1.QuerySwapRequest")
-	proto.RegisterType((*QuerySwapResponse)(nil), "crescent.liquidity.v1beta1.QuerySwapResponse")
+	proto.RegisterType((*QueryDepositRequestsRequest)(nil), "crescent.liquidity.v1beta1.QueryDepositRequestsRequest")
+	proto.RegisterType((*QueryDepositRequestsResponse)(nil), "crescent.liquidity.v1beta1.QueryDepositRequestsResponse")
+	proto.RegisterType((*QueryDepositRequestRequest)(nil), "crescent.liquidity.v1beta1.QueryDepositRequestRequest")
+	proto.RegisterType((*QueryDepositRequestResponse)(nil), "crescent.liquidity.v1beta1.QueryDepositRequestResponse")
+	proto.RegisterType((*QueryWithdrawRequestsRequest)(nil), "crescent.liquidity.v1beta1.QueryWithdrawRequestsRequest")
+	proto.RegisterType((*QueryWithdrawRequestsResponse)(nil), "crescent.liquidity.v1beta1.QueryWithdrawRequestsResponse")
+	proto.RegisterType((*QueryWithdrawRequestRequest)(nil), "crescent.liquidity.v1beta1.QueryWithdrawRequestRequest")
+	proto.RegisterType((*QueryWithdrawRequestResponse)(nil), "crescent.liquidity.v1beta1.QueryWithdrawRequestResponse")
+	proto.RegisterType((*QuerySwapRequestsRequest)(nil), "crescent.liquidity.v1beta1.QuerySwapRequestsRequest")
+	proto.RegisterType((*QuerySwapRequestsResponse)(nil), "crescent.liquidity.v1beta1.QuerySwapRequestsResponse")
+	proto.RegisterType((*QuerySwapRequestRequest)(nil), "crescent.liquidity.v1beta1.QuerySwapRequestRequest")
+	proto.RegisterType((*QuerySwapRequestResponse)(nil), "crescent.liquidity.v1beta1.QuerySwapRequestResponse")
 }
 
 func init() {
@@ -1284,82 +1284,83 @@ func init() {
 }
 
 var fileDescriptor_8e63b16e9937d1f1 = []byte{
-	// 1199 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x98, 0x4d, 0x6f, 0x1b, 0x45,
-	0x18, 0xc7, 0x33, 0xae, 0x93, 0xb6, 0x8f, 0xdb, 0xc6, 0x9d, 0x06, 0x1a, 0x59, 0x95, 0x13, 0x16,
-	0x94, 0x96, 0xa4, 0xde, 0x8d, 0x1d, 0x09, 0x51, 0x92, 0x26, 0x8d, 0x93, 0x16, 0x05, 0x0e, 0x0d,
-	0xe6, 0x50, 0xf1, 0x22, 0xa2, 0x8d, 0x77, 0xe5, 0x8e, 0x70, 0x76, 0x36, 0xbb, 0xeb, 0x3a, 0x56,
-	0x94, 0x0b, 0x17, 0x4e, 0x48, 0x20, 0x84, 0x84, 0xc4, 0x27, 0x40, 0x88, 0x03, 0x07, 0x84, 0x10,
-	0x42, 0x82, 0x5b, 0x4f, 0xa8, 0x12, 0x17, 0x4e, 0x08, 0x25, 0x7c, 0x10, 0xb4, 0x33, 0xb3, 0xeb,
-	0xd9, 0x6d, 0x62, 0xcf, 0xb6, 0x39, 0x70, 0xa9, 0xea, 0xd9, 0xe7, 0xe5, 0xf7, 0xbc, 0xcc, 0xf4,
-	0xaf, 0xc2, 0x4c, 0xd3, 0xb3, 0xfd, 0xa6, 0xed, 0x04, 0x46, 0x9b, 0xec, 0x76, 0x88, 0x45, 0x82,
-	0x9e, 0xf1, 0xa8, 0xba, 0x6d, 0x07, 0x66, 0xd5, 0xd8, 0xed, 0xd8, 0x5e, 0x4f, 0x77, 0x3d, 0x1a,
-	0x50, 0x5c, 0x8a, 0xec, 0xf4, 0xd8, 0x4e, 0x17, 0x76, 0xa5, 0x89, 0x16, 0x6d, 0x51, 0x66, 0x66,
-	0x84, 0x7f, 0xe3, 0x1e, 0xa5, 0x6b, 0x2d, 0x4a, 0x5b, 0x6d, 0xdb, 0x30, 0x5d, 0x62, 0x98, 0x8e,
-	0x43, 0x03, 0x33, 0x20, 0xd4, 0xf1, 0xc5, 0xd7, 0xd9, 0x26, 0xf5, 0x77, 0xa8, 0x6f, 0x6c, 0x9b,
-	0xbe, 0xcd, 0x13, 0xc5, 0x69, 0x5d, 0xb3, 0x45, 0x1c, 0x66, 0x1c, 0xdb, 0x9e, 0xcc, 0xd8, 0xa7,
-	0x61, 0xb6, 0xda, 0x04, 0xe0, 0x77, 0xc2, 0x68, 0x9b, 0xa6, 0x67, 0xee, 0xf8, 0x0d, 0x7b, 0xb7,
-	0x63, 0xfb, 0x81, 0xf6, 0x00, 0xae, 0x24, 0x4e, 0x7d, 0x97, 0x3a, 0xbe, 0x8d, 0xef, 0xc0, 0x98,
-	0xcb, 0x4e, 0x26, 0xd1, 0x34, 0xba, 0x51, 0xa8, 0x69, 0xfa, 0xc9, 0x55, 0xea, 0xdc, 0xb7, 0x9e,
-	0x7f, 0xfc, 0xf7, 0xd4, 0x48, 0x43, 0xf8, 0x69, 0x9f, 0x21, 0xb8, 0xcc, 0x23, 0x53, 0xda, 0x8e,
-	0xd2, 0xe1, 0xab, 0x70, 0x76, 0x6f, 0xcb, 0xb2, 0x1d, 0xba, 0xc3, 0x02, 0x9f, 0x6f, 0x8c, 0xed,
-	0xad, 0x87, 0xbf, 0xc2, 0x0f, 0x3d, 0xf1, 0x21, 0xc7, 0x3f, 0xf4, 0xf8, 0x87, 0x7b, 0x00, 0xfd,
-	0xb2, 0x27, 0xcf, 0x30, 0x9a, 0x19, 0x9d, 0xf7, 0x48, 0x0f, 0x7b, 0xa4, 0xf3, 0x61, 0xf4, 0x61,
-	0x5a, 0xb6, 0xc8, 0xd6, 0x90, 0x3c, 0xb5, 0x6f, 0x50, 0x54, 0x3f, 0xe7, 0x11, 0x85, 0x2e, 0xc1,
-	0xa8, 0x1b, 0x1e, 0x4c, 0xa2, 0xe9, 0x33, 0x37, 0x0a, 0xb5, 0xe9, 0x81, 0x75, 0x52, 0xda, 0x16,
-	0x55, 0x72, 0x27, 0xfc, 0x66, 0x02, 0x2e, 0xc7, 0xe0, 0xae, 0x0f, 0x85, 0xe3, 0xa9, 0x13, 0x74,
-	0x35, 0xb8, 0xda, 0x87, 0xab, 0xf7, 0x36, 0x4d, 0xe2, 0x49, 0x2d, 0x73, 0x4d, 0xe2, 0x6d, 0x11,
-	0x8b, 0xb5, 0x2c, 0x1f, 0x76, 0x98, 0x78, 0x1b, 0x96, 0x36, 0x07, 0xc5, 0xd8, 0x47, 0x36, 0xa6,
-	0xb4, 0x2d, 0x1b, 0x53, 0xda, 0xde, 0xb0, 0xb4, 0xfb, 0xd2, 0x34, 0xe2, 0xe2, 0xdf, 0x80, 0x7c,
-	0xf8, 0x59, 0xcc, 0x58, 0xb5, 0x76, 0xe6, 0xa3, 0xad, 0xc0, 0xb5, 0x38, 0x60, 0xbd, 0xd7, 0xb0,
-	0x7d, 0xdb, 0x7b, 0x64, 0xaf, 0x36, 0x9b, 0x11, 0xc9, 0x14, 0x14, 0x3c, 0x7e, 0xb8, 0x65, 0x36,
-	0x9b, 0x62, 0xda, 0xe0, 0xc5, 0x76, 0xda, 0x06, 0x4c, 0x49, 0x01, 0xc2, 0x3f, 0xd7, 0x28, 0x71,
-	0xd8, 0xd0, 0xa3, 0x18, 0x33, 0x30, 0xce, 0xaa, 0x69, 0x52, 0xe2, 0x24, 0xb6, 0xe6, 0xa2, 0x2b,
-	0x9b, 0x4b, 0xbb, 0x66, 0x12, 0xef, 0x7f, 0xb5, 0x6b, 0x9c, 0x47, 0xda, 0xb5, 0xf0, 0x40, 0x69,
-	0xd7, 0x4c, 0xe2, 0xc5, 0xbb, 0x16, 0x3a, 0x9d, 0xde, 0xae, 0xc5, 0x7b, 0xa3, 0xb2, 0x64, 0xf7,
-	0xa5, 0xce, 0x26, 0xf6, 0xc6, 0x24, 0x9e, 0xd2, 0xde, 0xf4, 0xeb, 0x60, 0x3e, 0x9a, 0x01, 0x13,
-	0x2c, 0xe0, 0xba, 0xed, 0x52, 0x9f, 0x04, 0xfe, 0xd0, 0xcd, 0xfd, 0x15, 0xc1, 0x0b, 0x29, 0x0f,
-	0x81, 0xf1, 0x01, 0x14, 0x2d, 0x7e, 0xb6, 0xe5, 0xf1, 0x28, 0x51, 0x6b, 0x67, 0x07, 0x21, 0x89,
-	0x38, 0x22, 0xb1, 0x80, 0x1b, 0xb7, 0x12, 0xa7, 0xa7, 0xd8, 0xee, 0x65, 0xf1, 0xc2, 0x26, 0xd3,
-	0x9e, 0x58, 0x2f, 0xbe, 0x04, 0x39, 0x62, 0xb1, 0x84, 0xf9, 0x46, 0x8e, 0x58, 0xda, 0x6e, 0xb2,
-	0x61, 0x71, 0xf5, 0xef, 0xc1, 0x78, 0xaa, 0x7a, 0x31, 0x8f, 0xec, 0xc5, 0x5f, 0x4a, 0x16, 0xaf,
-	0xcd, 0x8b, 0x8e, 0x3f, 0x20, 0xc1, 0x43, 0xcb, 0x33, 0xbb, 0xc3, 0x87, 0xf4, 0x3b, 0x82, 0x17,
-	0xd3, 0x2e, 0x82, 0xf3, 0x23, 0xb8, 0xdc, 0x15, 0x87, 0xe9, 0x31, 0xcd, 0x0d, 0x22, 0x8d, 0x22,
-	0x25, 0x51, 0x8b, 0xdd, 0xe4, 0xf1, 0x29, 0x0e, 0x6a, 0x45, 0x34, 0x3a, 0x95, 0x58, 0x7d, 0x52,
-	0x9d, 0x54, 0xdb, 0xe2, 0x16, 0x7c, 0x08, 0xc5, 0x74, 0x0b, 0xc4, 0xac, 0x9e, 0xa1, 0x03, 0xe3,
-	0xa9, 0x0e, 0x68, 0x4b, 0xe2, 0x8a, 0xbe, 0xdb, 0x35, 0x5d, 0x3f, 0x33, 0xf4, 0x0f, 0xd1, 0x5b,
-	0x25, 0xdc, 0x05, 0x72, 0x03, 0x2e, 0xfa, 0x5d, 0xd3, 0x4d, 0x4f, 0xec, 0xfa, 0x20, 0xde, 0x30,
-	0x42, 0x92, 0xf5, 0x82, 0xdf, 0x3f, 0x3a, 0xc5, 0x49, 0x2d, 0x8a, 0x17, 0x4c, 0x4a, 0xa8, 0x5e,
-	0xb0, 0x2d, 0xb5, 0x2b, 0x2e, 0x77, 0x13, 0x2e, 0xc8, 0xe5, 0x8a, 0xe9, 0x64, 0xac, 0xb6, 0x20,
-	0x55, 0x5b, 0xfb, 0xf4, 0x0a, 0x8c, 0xb2, 0x3c, 0xf8, 0x2b, 0x04, 0x63, 0x5c, 0x22, 0x61, 0x7d,
-	0x50, 0xc0, 0xa7, 0xd5, 0x59, 0xc9, 0x50, 0xb6, 0xe7, 0x75, 0x68, 0xb3, 0x9f, 0xfc, 0xf9, 0xef,
-	0x97, 0xb9, 0x57, 0xb0, 0x66, 0x0c, 0x50, 0x86, 0x5c, 0xa1, 0xe1, 0x2f, 0x10, 0x8c, 0x32, 0xbd,
-	0x81, 0x2b, 0xc3, 0xd3, 0x48, 0x22, 0xae, 0xa4, 0xab, 0x9a, 0x0b, 0xa8, 0x57, 0x19, 0xd4, 0xcb,
-	0xf8, 0xa5, 0x81, 0x50, 0x8c, 0xe4, 0x7b, 0x04, 0x05, 0x49, 0x03, 0xe1, 0x05, 0xb5, 0x54, 0x09,
-	0xc5, 0x94, 0x99, 0xef, 0x16, 0xe3, 0x5b, 0xc0, 0xd5, 0xc1, 0x4d, 0x23, 0x9e, 0x6f, 0xec, 0x8b,
-	0x7f, 0x25, 0x0f, 0x04, 0xef, 0xd7, 0x08, 0xf2, 0x61, 0x30, 0x7c, 0x53, 0x29, 0x67, 0x44, 0x58,
-	0x51, 0xb4, 0x16, 0x80, 0x0b, 0x0c, 0xb0, 0x82, 0xe7, 0x86, 0x36, 0xd0, 0xd8, 0x17, 0x97, 0xe0,
-	0x00, 0xff, 0x86, 0xa0, 0x98, 0x16, 0x67, 0xf8, 0x75, 0xa5, 0xc4, 0xc7, 0xe8, 0xb9, 0xac, 0xc8,
-	0x6b, 0x0c, 0xf9, 0x36, 0x5e, 0x1c, 0x8e, 0x2c, 0xc9, 0x44, 0x63, 0x5f, 0xfa, 0x71, 0x80, 0xff,
-	0x40, 0x70, 0xe5, 0x18, 0x79, 0x88, 0x17, 0x15, 0xab, 0x38, 0x4e, 0x54, 0x66, 0x2d, 0xe4, 0x6d,
-	0x56, 0xc8, 0x5d, 0xbc, 0x36, 0xbc, 0x90, 0x94, 0x56, 0x15, 0xb3, 0xe8, 0x1f, 0x1c, 0xf0, 0x2b,
-	0xc7, 0xd4, 0x9c, 0x02, 0x85, 0xa4, 0x65, 0x55, 0x56, 0x5a, 0x96, 0x9a, 0x8a, 0x57, 0x8e, 0x91,
-	0xb0, 0x15, 0x0e, 0xef, 0xda, 0x4d, 0xa5, 0x1c, 0x19, 0xda, 0x28, 0x49, 0x46, 0xc5, 0x15, 0x4e,
-	0xde, 0x31, 0xfc, 0x23, 0x82, 0x73, 0x91, 0xea, 0xc3, 0xf3, 0x43, 0x13, 0xa6, 0x24, 0x65, 0xa9,
-	0x9a, 0xc1, 0x43, 0x60, 0xae, 0x33, 0xcc, 0x65, 0xbc, 0x94, 0xe1, 0xa6, 0x19, 0x69, 0x11, 0x8a,
-	0x7f, 0x42, 0x70, 0x56, 0x84, 0xc6, 0x86, 0x2a, 0x44, 0x44, 0x3d, 0xaf, 0xee, 0x20, 0xa0, 0x37,
-	0x18, 0xf4, 0x1a, 0x5e, 0x7d, 0x1e, 0x68, 0x63, 0x3f, 0xec, 0xf8, 0xcf, 0x08, 0xce, 0xc7, 0x12,
-	0x0e, 0x0f, 0x6f, 0x60, 0x5a, 0x21, 0x96, 0x6a, 0x59, 0x5c, 0x04, 0xff, 0x5d, 0xc6, 0xbf, 0x82,
-	0x6f, 0x67, 0xe1, 0x7f, 0x4a, 0x53, 0xe2, 0x5f, 0x10, 0x9c, 0x8b, 0x82, 0x2b, 0x6c, 0x4b, 0x4a,
-	0x5d, 0x95, 0xaa, 0x19, 0x3c, 0x04, 0xf8, 0x5b, 0x0c, 0x7c, 0x1d, 0xd7, 0x9f, 0x0b, 0x9c, 0x77,
-	0xfe, 0x5b, 0x04, 0xa3, 0x4c, 0x82, 0x29, 0x3c, 0x0d, 0xb2, 0xd2, 0x53, 0x78, 0x1a, 0x12, 0xca,
-	0x4e, 0x5b, 0x65, 0xd0, 0x8b, 0xf8, 0x56, 0x16, 0xe8, 0x84, 0x16, 0xc4, 0xdf, 0x21, 0xc8, 0x87,
-	0x41, 0x15, 0x9e, 0x0c, 0x49, 0x25, 0x95, 0x2a, 0x8a, 0xd6, 0x02, 0xf4, 0x1e, 0x03, 0xbd, 0x83,
-	0x97, 0x9f, 0x19, 0x94, 0x75, 0xb6, 0xbe, 0xf9, 0xf8, 0xb0, 0x8c, 0x9e, 0x1c, 0x96, 0xd1, 0x3f,
-	0x87, 0x65, 0xf4, 0xf9, 0x51, 0x79, 0xe4, 0xc9, 0x51, 0x79, 0xe4, 0xaf, 0xa3, 0xf2, 0xc8, 0xfb,
-	0xaf, 0xb5, 0x48, 0xf0, 0xb0, 0xb3, 0xad, 0x37, 0xe9, 0x4e, 0x9c, 0xa3, 0xe2, 0xd8, 0x41, 0x97,
-	0x7a, 0x1f, 0xf7, 0x93, 0xee, 0x49, 0x69, 0x83, 0x9e, 0x6b, 0xfb, 0xdb, 0x63, 0xec, 0x7f, 0xd4,
-	0x16, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x39, 0x6a, 0xa9, 0x88, 0x23, 0x14, 0x00, 0x00,
+	// 1203 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0x4d, 0x4f, 0x24, 0x45,
+	0x18, 0xa6, 0x58, 0xc0, 0xf8, 0x0e, 0xcb, 0xcc, 0xd6, 0x92, 0x2c, 0xb6, 0xeb, 0x80, 0xad, 0x61,
+	0x57, 0x58, 0xba, 0x03, 0xac, 0x7c, 0xc8, 0x7e, 0x31, 0x03, 0x18, 0xf4, 0xb0, 0x38, 0x1e, 0x36,
+	0x7e, 0x44, 0xd2, 0x4c, 0x77, 0x66, 0x2b, 0x0e, 0x5d, 0x4d, 0x77, 0xb3, 0xc3, 0x04, 0xb9, 0x98,
+	0x78, 0x34, 0xd1, 0x18, 0x13, 0x13, 0x7f, 0x83, 0x77, 0x4f, 0xc6, 0x83, 0x07, 0x62, 0xcc, 0x86,
+	0xc4, 0x8b, 0x27, 0x63, 0xc0, 0x1f, 0x62, 0xba, 0xba, 0xa6, 0xa7, 0xba, 0xa7, 0x99, 0xa9, 0x66,
+	0x39, 0x78, 0x21, 0x4c, 0xd5, 0xfb, 0xf1, 0x3c, 0xcf, 0xfb, 0x16, 0xf3, 0x04, 0x98, 0xac, 0xba,
+	0x96, 0x57, 0xb5, 0x6c, 0x5f, 0xaf, 0x93, 0xbd, 0x7d, 0x62, 0x12, 0xbf, 0xa9, 0x3f, 0x9b, 0xdd,
+	0xb1, 0x7c, 0x63, 0x56, 0xdf, 0xdb, 0xb7, 0xdc, 0xa6, 0xe6, 0xb8, 0xd4, 0xa7, 0x58, 0x69, 0xc5,
+	0x69, 0x51, 0x9c, 0xc6, 0xe3, 0x94, 0xd1, 0x1a, 0xad, 0x51, 0x16, 0xa6, 0x07, 0xbf, 0x85, 0x19,
+	0xca, 0xcd, 0x1a, 0xa5, 0xb5, 0xba, 0xa5, 0x1b, 0x0e, 0xd1, 0x0d, 0xdb, 0xa6, 0xbe, 0xe1, 0x13,
+	0x6a, 0x7b, 0xfc, 0x76, 0xaa, 0x4a, 0xbd, 0x5d, 0xea, 0xe9, 0x3b, 0x86, 0x67, 0x85, 0x8d, 0xa2,
+	0xb6, 0x8e, 0x51, 0x23, 0x36, 0x0b, 0x8e, 0x62, 0xcf, 0xc7, 0xd8, 0x46, 0xc3, 0x62, 0xd5, 0x51,
+	0xc0, 0x1f, 0x04, 0xd5, 0xb6, 0x0c, 0xd7, 0xd8, 0xf5, 0x2a, 0xd6, 0xde, 0xbe, 0xe5, 0xf9, 0xea,
+	0x13, 0xb8, 0x1e, 0x3b, 0xf5, 0x1c, 0x6a, 0x7b, 0x16, 0x7e, 0x04, 0x43, 0x0e, 0x3b, 0x19, 0x43,
+	0x13, 0xe8, 0x76, 0x6e, 0x4e, 0xd5, 0xce, 0x67, 0xa9, 0x85, 0xb9, 0xa5, 0x81, 0xe3, 0xbf, 0xc7,
+	0xfb, 0x2a, 0x3c, 0x4f, 0xfd, 0x1a, 0xc1, 0xb5, 0xb0, 0x32, 0xa5, 0xf5, 0x56, 0x3b, 0x7c, 0x03,
+	0x5e, 0x3a, 0xd8, 0x36, 0x2d, 0x9b, 0xee, 0xb2, 0xc2, 0x2f, 0x57, 0x86, 0x0e, 0xd6, 0x82, 0x4f,
+	0xc1, 0x45, 0x93, 0x5f, 0xf4, 0x87, 0x17, 0xcd, 0xf0, 0x62, 0x03, 0xa0, 0x4d, 0x7b, 0xec, 0x0a,
+	0x43, 0x33, 0xa9, 0x85, 0x1a, 0x69, 0x81, 0x46, 0x5a, 0x38, 0x8c, 0x36, 0x98, 0x9a, 0xc5, 0xbb,
+	0x55, 0x84, 0x4c, 0xf5, 0x47, 0xd4, 0xe2, 0x1f, 0xe2, 0xe1, 0x44, 0xef, 0xc1, 0xa0, 0x13, 0x1c,
+	0x8c, 0xa1, 0x89, 0x2b, 0xb7, 0x73, 0x73, 0x13, 0x5d, 0x79, 0x52, 0x5a, 0xe7, 0x2c, 0xc3, 0x24,
+	0xfc, 0x6e, 0x0c, 0x5c, 0x3f, 0x03, 0x77, 0xab, 0x27, 0xb8, 0xb0, 0x75, 0x0c, 0xdd, 0x1c, 0xdc,
+	0x68, 0x83, 0x2b, 0x35, 0xb7, 0x0c, 0xe2, 0x0a, 0x92, 0x39, 0x06, 0x71, 0xb7, 0x89, 0xc9, 0x24,
+	0x1b, 0x08, 0x14, 0x26, 0xee, 0xa6, 0xa9, 0x4e, 0x43, 0x21, 0xca, 0x11, 0x83, 0x29, 0xad, 0x8b,
+	0xc1, 0x94, 0xd6, 0x37, 0x4d, 0xf5, 0xb1, 0x30, 0x8d, 0x88, 0xfc, 0x3b, 0x30, 0x10, 0x5c, 0xf3,
+	0x19, 0xcb, 0x72, 0x67, 0x39, 0xea, 0x43, 0xb8, 0x19, 0x15, 0x2c, 0x35, 0x2b, 0x96, 0x67, 0xb9,
+	0xcf, 0xac, 0xd5, 0x6a, 0xb5, 0x85, 0x64, 0x1c, 0x72, 0x6e, 0x78, 0xb8, 0x6d, 0x54, 0xab, 0x7c,
+	0xda, 0xe0, 0x46, 0x71, 0xea, 0x26, 0x8c, 0x0b, 0x05, 0x82, 0x9f, 0x65, 0x4a, 0x6c, 0x36, 0xf4,
+	0x56, 0x8d, 0x49, 0xc8, 0x33, 0x36, 0x55, 0x4a, 0xec, 0xd8, 0xd6, 0x5c, 0x75, 0xc4, 0x70, 0x61,
+	0xd7, 0x0c, 0xe2, 0xfe, 0xaf, 0x76, 0x2d, 0xc4, 0x23, 0xec, 0x5a, 0x70, 0x20, 0xb5, 0x6b, 0x06,
+	0x71, 0xa3, 0x5d, 0x0b, 0x92, 0x2e, 0x6f, 0xd7, 0xa2, 0xbd, 0x91, 0x59, 0xb2, 0xc7, 0x82, 0xb2,
+	0xb1, 0xbd, 0x31, 0x88, 0x2b, 0xb5, 0x37, 0x6d, 0x1e, 0x2c, 0x47, 0x5d, 0x80, 0x57, 0x59, 0xc1,
+	0x35, 0xcb, 0xa1, 0x1e, 0xf1, 0x39, 0x00, 0xaf, 0xe7, 0x02, 0xff, 0x86, 0xf8, 0xc2, 0x75, 0x24,
+	0x72, 0x50, 0x9f, 0x40, 0xc1, 0x0c, 0xaf, 0xb6, 0x5d, 0x7e, 0xc7, 0x85, 0x9e, 0xea, 0x06, 0x30,
+	0x5e, 0x8e, 0x43, 0xcd, 0x9b, 0xf1, 0x26, 0x97, 0x27, 0xfe, 0x3a, 0x28, 0x29, 0x2c, 0x7a, 0xb1,
+	0xc7, 0x23, 0xd0, 0x4f, 0x4c, 0xd6, 0x77, 0xa0, 0xd2, 0x4f, 0x4c, 0xf5, 0x20, 0x55, 0xc5, 0x48,
+	0x8b, 0x8f, 0x20, 0x9f, 0xd0, 0x82, 0xcf, 0x2a, 0xbb, 0x14, 0x23, 0x71, 0x29, 0xd4, 0x45, 0x3e,
+	0x86, 0x27, 0xc4, 0x7f, 0x6a, 0xba, 0x46, 0x43, 0x7a, 0x80, 0xc7, 0x08, 0x5e, 0x3b, 0x27, 0x93,
+	0xa3, 0xfe, 0x0c, 0xae, 0x35, 0xf8, 0x5d, 0x72, 0x84, 0xd3, 0xdd, 0x70, 0x27, 0x0a, 0x72, 0xe0,
+	0x85, 0x46, 0xa2, 0xcf, 0xe5, 0x0d, 0x71, 0x83, 0xab, 0x9f, 0x68, 0x9c, 0x79, 0x8a, 0x5f, 0xa4,
+	0x6b, 0x19, 0x09, 0xf2, 0x29, 0x14, 0x92, 0x82, 0xf0, 0x39, 0x5e, 0x40, 0x8f, 0x7c, 0x42, 0x0f,
+	0xb5, 0x0c, 0x63, 0xac, 0xfb, 0x87, 0x0d, 0xc3, 0x91, 0x9d, 0x62, 0x07, 0x85, 0x9f, 0x11, 0xbc,
+	0x92, 0x52, 0x85, 0x13, 0xa8, 0xc0, 0x55, 0xaf, 0x61, 0x38, 0xc9, 0x69, 0xde, 0xea, 0x86, 0x5e,
+	0x28, 0xc4, 0x91, 0x0f, 0x7b, 0x42, 0xed, 0xcb, 0x9b, 0x62, 0x89, 0x7f, 0xe7, 0x0a, 0x0d, 0x33,
+	0xd3, 0xaf, 0x77, 0x6a, 0x18, 0x91, 0xdf, 0x82, 0x61, 0x91, 0x3c, 0x9f, 0x5c, 0x46, 0xee, 0x39,
+	0x81, 0xfb, 0xdc, 0x57, 0xa3, 0x30, 0xc8, 0xda, 0xe1, 0xef, 0x11, 0x0c, 0x85, 0xb6, 0x0b, 0x6b,
+	0xdd, 0x0a, 0x76, 0x3a, 0x3e, 0x45, 0x97, 0x8e, 0x0f, 0x79, 0xa8, 0x53, 0x5f, 0xfe, 0xf9, 0xef,
+	0x77, 0xfd, 0x6f, 0x62, 0x55, 0xef, 0xe2, 0x36, 0x43, 0xd7, 0x87, 0xbf, 0x45, 0x30, 0xc8, 0x3c,
+	0x0c, 0x9e, 0xe9, 0xdd, 0x46, 0x30, 0x86, 0x8a, 0x26, 0x1b, 0xce, 0x41, 0xbd, 0xc5, 0x40, 0xbd,
+	0x81, 0x5f, 0xef, 0x0a, 0x8a, 0x21, 0xf9, 0x09, 0x41, 0x4e, 0xf0, 0x55, 0x78, 0x5e, 0xae, 0x55,
+	0xcc, 0x85, 0x65, 0xc6, 0xb7, 0xcc, 0xf0, 0xcd, 0xe3, 0xd9, 0xee, 0xa2, 0x11, 0xd7, 0xd3, 0x0f,
+	0xf9, 0x37, 0xef, 0x11, 0xc7, 0xfb, 0x03, 0x82, 0x81, 0xa0, 0x18, 0xbe, 0x23, 0xd5, 0xb3, 0x85,
+	0x70, 0x46, 0x32, 0x9a, 0x03, 0x9c, 0x67, 0x00, 0x67, 0xf0, 0x74, 0x4f, 0x01, 0xf5, 0x43, 0xfe,
+	0x16, 0x8e, 0xf0, 0xaf, 0x08, 0x0a, 0x49, 0xc3, 0x87, 0x97, 0xa4, 0x1a, 0xa7, 0x78, 0xc4, 0xac,
+	0x90, 0xcb, 0x0c, 0xf2, 0x7d, 0xbc, 0xd2, 0x1b, 0xb2, 0x60, 0x3d, 0xf5, 0x43, 0xe1, 0xc3, 0x11,
+	0x7e, 0x8e, 0xe0, 0x7a, 0x8a, 0xe5, 0xc4, 0x2b, 0x92, 0x2c, 0xd2, 0x8c, 0x6a, 0x56, 0x22, 0xef,
+	0x33, 0x22, 0xeb, 0xb8, 0xdc, 0x9b, 0x48, 0xc2, 0xff, 0xf2, 0x59, 0xb4, 0x0f, 0x8e, 0xc2, 0x27,
+	0xc7, 0x1c, 0xa2, 0x04, 0x0a, 0xc1, 0x1f, 0xcb, 0xac, 0xb4, 0x68, 0x5f, 0x25, 0x9f, 0x1c, 0x43,
+	0xc2, 0x56, 0x38, 0x78, 0x6b, 0x77, 0xa4, 0x7a, 0x64, 0x90, 0x51, 0xb0, 0xa1, 0x92, 0x2b, 0x1c,
+	0x7f, 0x63, 0xf8, 0x77, 0x04, 0xf9, 0x84, 0x85, 0xc4, 0x8b, 0x3d, 0xfb, 0xa6, 0xbb, 0x55, 0x65,
+	0x29, 0x7b, 0x22, 0xc7, 0xbe, 0xc6, 0xb0, 0x3f, 0xc0, 0xf7, 0x32, 0x3c, 0x3f, 0x3d, 0xe9, 0x6f,
+	0xf1, 0x1f, 0x08, 0x46, 0xe2, 0x1d, 0xf0, 0x42, 0x46, 0x48, 0x2d, 0x2a, 0x8b, 0x99, 0xf3, 0x38,
+	0x93, 0x4d, 0xc6, 0xa4, 0x8c, 0x57, 0x5f, 0x84, 0x89, 0x7e, 0x18, 0xcc, 0xe6, 0x39, 0x82, 0x42,
+	0xd2, 0x1d, 0x4a, 0xfc, 0x79, 0x39, 0xc7, 0x8a, 0x2a, 0xcb, 0x17, 0xc8, 0xe4, 0xa4, 0xd6, 0x19,
+	0xa9, 0x87, 0xf8, 0x7e, 0x16, 0x52, 0x1d, 0xe6, 0x15, 0x9f, 0x20, 0xc8, 0x27, 0x7a, 0x48, 0x2c,
+	0x5b, 0xba, 0xad, 0x54, 0x96, 0xb2, 0x27, 0x72, 0x36, 0xef, 0x31, 0x36, 0x6b, 0xb8, 0xf4, 0x42,
+	0x6c, 0xc2, 0x19, 0xfd, 0x82, 0x60, 0x58, 0xf4, 0x7a, 0xf8, 0x6e, 0x4f, 0x58, 0x29, 0x06, 0x53,
+	0x79, 0x3b, 0x63, 0x16, 0x67, 0xb2, 0xca, 0x98, 0xac, 0xe0, 0xe5, 0x2c, 0x4c, 0x62, 0x16, 0x34,
+	0xf8, 0x0e, 0xcb, 0x09, 0xb5, 0x25, 0xec, 0x40, 0xa7, 0x41, 0x54, 0xee, 0x66, 0x4b, 0xe2, 0xe8,
+	0x37, 0x18, 0xfa, 0x47, 0xf8, 0xc1, 0x85, 0xd1, 0xb3, 0x19, 0x94, 0xb6, 0x8e, 0x4f, 0x8b, 0xe8,
+	0xe4, 0xb4, 0x88, 0xfe, 0x39, 0x2d, 0xa2, 0x6f, 0xce, 0x8a, 0x7d, 0x27, 0x67, 0xc5, 0xbe, 0xbf,
+	0xce, 0x8a, 0x7d, 0x1f, 0x2f, 0xd4, 0x88, 0xff, 0x74, 0x7f, 0x47, 0xab, 0xd2, 0xdd, 0xa8, 0xc7,
+	0x8c, 0x6d, 0xf9, 0x0d, 0xea, 0x7e, 0xde, 0x6e, 0x7a, 0x20, 0xb4, 0xf5, 0x9b, 0x8e, 0xe5, 0xed,
+	0x0c, 0xb1, 0xff, 0x11, 0xce, 0xff, 0x17, 0x00, 0x00, 0xff, 0xff, 0xc4, 0x49, 0x3e, 0x05, 0xf5,
+	0x14, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1390,18 +1391,18 @@ type QueryClient interface {
 	Pairs(ctx context.Context, in *QueryPairsRequest, opts ...grpc.CallOption) (*QueryPairsResponse, error)
 	// Pair returns the specific pair.
 	Pair(ctx context.Context, in *QueryPairRequest, opts ...grpc.CallOption) (*QueryPairResponse, error)
-	// Deposits returns all deposit requests.
-	Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
-	// Deposit returns the specific deposit request.
-	Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error)
-	// Withdraws returns all withdraw requests.
-	Withdraws(ctx context.Context, in *QueryWithdrawsRequest, opts ...grpc.CallOption) (*QueryWithdrawsResponse, error)
-	// Withdraw returns the specific withdraw request.
-	Withdraw(ctx context.Context, in *QueryWithdrawRequest, opts ...grpc.CallOption) (*QueryWithdrawResponse, error)
-	// Swaps returns all swap requests.
-	Swaps(ctx context.Context, in *QuerySwapsRequest, opts ...grpc.CallOption) (*QuerySwapsResponse, error)
-	// Swap returns the specific swap request.
-	Swap(ctx context.Context, in *QuerySwapRequest, opts ...grpc.CallOption) (*QuerySwapResponse, error)
+	// DepositRequests returns all deposit requests.
+	DepositRequests(ctx context.Context, in *QueryDepositRequestsRequest, opts ...grpc.CallOption) (*QueryDepositRequestsResponse, error)
+	// DepositRequest returns the specific deposit request.
+	DepositRequest(ctx context.Context, in *QueryDepositRequestRequest, opts ...grpc.CallOption) (*QueryDepositRequestResponse, error)
+	// WithdrawRequests returns all withdraw requests.
+	WithdrawRequests(ctx context.Context, in *QueryWithdrawRequestsRequest, opts ...grpc.CallOption) (*QueryWithdrawRequestsResponse, error)
+	// WithdrawRequest returns the specific withdraw request.
+	WithdrawRequest(ctx context.Context, in *QueryWithdrawRequestRequest, opts ...grpc.CallOption) (*QueryWithdrawRequestResponse, error)
+	// SwapRequests returns all swap requests.
+	SwapRequests(ctx context.Context, in *QuerySwapRequestsRequest, opts ...grpc.CallOption) (*QuerySwapRequestsResponse, error)
+	// SwapRequest returns the specific swap request.
+	SwapRequest(ctx context.Context, in *QuerySwapRequestRequest, opts ...grpc.CallOption) (*QuerySwapRequestResponse, error)
 }
 
 type queryClient struct {
@@ -1484,54 +1485,54 @@ func (c *queryClient) Pair(ctx context.Context, in *QueryPairRequest, opts ...gr
 	return out, nil
 }
 
-func (c *queryClient) Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error) {
-	out := new(QueryDepositsResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/Deposits", in, out, opts...)
+func (c *queryClient) DepositRequests(ctx context.Context, in *QueryDepositRequestsRequest, opts ...grpc.CallOption) (*QueryDepositRequestsResponse, error) {
+	out := new(QueryDepositRequestsResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/DepositRequests", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error) {
-	out := new(QueryDepositResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/Deposit", in, out, opts...)
+func (c *queryClient) DepositRequest(ctx context.Context, in *QueryDepositRequestRequest, opts ...grpc.CallOption) (*QueryDepositRequestResponse, error) {
+	out := new(QueryDepositRequestResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/DepositRequest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) Withdraws(ctx context.Context, in *QueryWithdrawsRequest, opts ...grpc.CallOption) (*QueryWithdrawsResponse, error) {
-	out := new(QueryWithdrawsResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/Withdraws", in, out, opts...)
+func (c *queryClient) WithdrawRequests(ctx context.Context, in *QueryWithdrawRequestsRequest, opts ...grpc.CallOption) (*QueryWithdrawRequestsResponse, error) {
+	out := new(QueryWithdrawRequestsResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/WithdrawRequests", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) Withdraw(ctx context.Context, in *QueryWithdrawRequest, opts ...grpc.CallOption) (*QueryWithdrawResponse, error) {
-	out := new(QueryWithdrawResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/Withdraw", in, out, opts...)
+func (c *queryClient) WithdrawRequest(ctx context.Context, in *QueryWithdrawRequestRequest, opts ...grpc.CallOption) (*QueryWithdrawRequestResponse, error) {
+	out := new(QueryWithdrawRequestResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/WithdrawRequest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) Swaps(ctx context.Context, in *QuerySwapsRequest, opts ...grpc.CallOption) (*QuerySwapsResponse, error) {
-	out := new(QuerySwapsResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/Swaps", in, out, opts...)
+func (c *queryClient) SwapRequests(ctx context.Context, in *QuerySwapRequestsRequest, opts ...grpc.CallOption) (*QuerySwapRequestsResponse, error) {
+	out := new(QuerySwapRequestsResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/SwapRequests", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) Swap(ctx context.Context, in *QuerySwapRequest, opts ...grpc.CallOption) (*QuerySwapResponse, error) {
-	out := new(QuerySwapResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/Swap", in, out, opts...)
+func (c *queryClient) SwapRequest(ctx context.Context, in *QuerySwapRequestRequest, opts ...grpc.CallOption) (*QuerySwapRequestResponse, error) {
+	out := new(QuerySwapRequestResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidity.v1beta1.Query/SwapRequest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1556,18 +1557,18 @@ type QueryServer interface {
 	Pairs(context.Context, *QueryPairsRequest) (*QueryPairsResponse, error)
 	// Pair returns the specific pair.
 	Pair(context.Context, *QueryPairRequest) (*QueryPairResponse, error)
-	// Deposits returns all deposit requests.
-	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
-	// Deposit returns the specific deposit request.
-	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
-	// Withdraws returns all withdraw requests.
-	Withdraws(context.Context, *QueryWithdrawsRequest) (*QueryWithdrawsResponse, error)
-	// Withdraw returns the specific withdraw request.
-	Withdraw(context.Context, *QueryWithdrawRequest) (*QueryWithdrawResponse, error)
-	// Swaps returns all swap requests.
-	Swaps(context.Context, *QuerySwapsRequest) (*QuerySwapsResponse, error)
-	// Swap returns the specific swap request.
-	Swap(context.Context, *QuerySwapRequest) (*QuerySwapResponse, error)
+	// DepositRequests returns all deposit requests.
+	DepositRequests(context.Context, *QueryDepositRequestsRequest) (*QueryDepositRequestsResponse, error)
+	// DepositRequest returns the specific deposit request.
+	DepositRequest(context.Context, *QueryDepositRequestRequest) (*QueryDepositRequestResponse, error)
+	// WithdrawRequests returns all withdraw requests.
+	WithdrawRequests(context.Context, *QueryWithdrawRequestsRequest) (*QueryWithdrawRequestsResponse, error)
+	// WithdrawRequest returns the specific withdraw request.
+	WithdrawRequest(context.Context, *QueryWithdrawRequestRequest) (*QueryWithdrawRequestResponse, error)
+	// SwapRequests returns all swap requests.
+	SwapRequests(context.Context, *QuerySwapRequestsRequest) (*QuerySwapRequestsResponse, error)
+	// SwapRequest returns the specific swap request.
+	SwapRequest(context.Context, *QuerySwapRequestRequest) (*QuerySwapRequestResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1598,23 +1599,23 @@ func (*UnimplementedQueryServer) Pairs(ctx context.Context, req *QueryPairsReque
 func (*UnimplementedQueryServer) Pair(ctx context.Context, req *QueryPairRequest) (*QueryPairResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Pair not implemented")
 }
-func (*UnimplementedQueryServer) Deposits(ctx context.Context, req *QueryDepositsRequest) (*QueryDepositsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Deposits not implemented")
+func (*UnimplementedQueryServer) DepositRequests(ctx context.Context, req *QueryDepositRequestsRequest) (*QueryDepositRequestsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositRequests not implemented")
 }
-func (*UnimplementedQueryServer) Deposit(ctx context.Context, req *QueryDepositRequest) (*QueryDepositResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+func (*UnimplementedQueryServer) DepositRequest(ctx context.Context, req *QueryDepositRequestRequest) (*QueryDepositRequestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositRequest not implemented")
 }
-func (*UnimplementedQueryServer) Withdraws(ctx context.Context, req *QueryWithdrawsRequest) (*QueryWithdrawsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Withdraws not implemented")
+func (*UnimplementedQueryServer) WithdrawRequests(ctx context.Context, req *QueryWithdrawRequestsRequest) (*QueryWithdrawRequestsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawRequests not implemented")
 }
-func (*UnimplementedQueryServer) Withdraw(ctx context.Context, req *QueryWithdrawRequest) (*QueryWithdrawResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
+func (*UnimplementedQueryServer) WithdrawRequest(ctx context.Context, req *QueryWithdrawRequestRequest) (*QueryWithdrawRequestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawRequest not implemented")
 }
-func (*UnimplementedQueryServer) Swaps(ctx context.Context, req *QuerySwapsRequest) (*QuerySwapsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Swaps not implemented")
+func (*UnimplementedQueryServer) SwapRequests(ctx context.Context, req *QuerySwapRequestsRequest) (*QuerySwapRequestsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapRequests not implemented")
 }
-func (*UnimplementedQueryServer) Swap(ctx context.Context, req *QuerySwapRequest) (*QuerySwapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Swap not implemented")
+func (*UnimplementedQueryServer) SwapRequest(ctx context.Context, req *QuerySwapRequestRequest) (*QuerySwapRequestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapRequest not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1765,110 +1766,110 @@ func _Query_Pair_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Deposits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryDepositsRequest)
+func _Query_DepositRequests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDepositRequestsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Deposits(ctx, in)
+		return srv.(QueryServer).DepositRequests(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidity.v1beta1.Query/Deposits",
+		FullMethod: "/crescent.liquidity.v1beta1.Query/DepositRequests",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Deposits(ctx, req.(*QueryDepositsRequest))
+		return srv.(QueryServer).DepositRequests(ctx, req.(*QueryDepositRequestsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryDepositRequest)
+func _Query_DepositRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDepositRequestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Deposit(ctx, in)
+		return srv.(QueryServer).DepositRequest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidity.v1beta1.Query/Deposit",
+		FullMethod: "/crescent.liquidity.v1beta1.Query/DepositRequest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Deposit(ctx, req.(*QueryDepositRequest))
+		return srv.(QueryServer).DepositRequest(ctx, req.(*QueryDepositRequestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Withdraws_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryWithdrawsRequest)
+func _Query_WithdrawRequests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryWithdrawRequestsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Withdraws(ctx, in)
+		return srv.(QueryServer).WithdrawRequests(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidity.v1beta1.Query/Withdraws",
+		FullMethod: "/crescent.liquidity.v1beta1.Query/WithdrawRequests",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Withdraws(ctx, req.(*QueryWithdrawsRequest))
+		return srv.(QueryServer).WithdrawRequests(ctx, req.(*QueryWithdrawRequestsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryWithdrawRequest)
+func _Query_WithdrawRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryWithdrawRequestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Withdraw(ctx, in)
+		return srv.(QueryServer).WithdrawRequest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidity.v1beta1.Query/Withdraw",
+		FullMethod: "/crescent.liquidity.v1beta1.Query/WithdrawRequest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Withdraw(ctx, req.(*QueryWithdrawRequest))
+		return srv.(QueryServer).WithdrawRequest(ctx, req.(*QueryWithdrawRequestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Swaps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QuerySwapsRequest)
+func _Query_SwapRequests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySwapRequestsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Swaps(ctx, in)
+		return srv.(QueryServer).SwapRequests(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidity.v1beta1.Query/Swaps",
+		FullMethod: "/crescent.liquidity.v1beta1.Query/SwapRequests",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Swaps(ctx, req.(*QuerySwapsRequest))
+		return srv.(QueryServer).SwapRequests(ctx, req.(*QuerySwapRequestsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Swap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QuerySwapRequest)
+func _Query_SwapRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySwapRequestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Swap(ctx, in)
+		return srv.(QueryServer).SwapRequest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidity.v1beta1.Query/Swap",
+		FullMethod: "/crescent.liquidity.v1beta1.Query/SwapRequest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Swap(ctx, req.(*QuerySwapRequest))
+		return srv.(QueryServer).SwapRequest(ctx, req.(*QuerySwapRequestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1910,28 +1911,28 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Pair_Handler,
 		},
 		{
-			MethodName: "Deposits",
-			Handler:    _Query_Deposits_Handler,
+			MethodName: "DepositRequests",
+			Handler:    _Query_DepositRequests_Handler,
 		},
 		{
-			MethodName: "Deposit",
-			Handler:    _Query_Deposit_Handler,
+			MethodName: "DepositRequest",
+			Handler:    _Query_DepositRequest_Handler,
 		},
 		{
-			MethodName: "Withdraws",
-			Handler:    _Query_Withdraws_Handler,
+			MethodName: "WithdrawRequests",
+			Handler:    _Query_WithdrawRequests_Handler,
 		},
 		{
-			MethodName: "Withdraw",
-			Handler:    _Query_Withdraw_Handler,
+			MethodName: "WithdrawRequest",
+			Handler:    _Query_WithdrawRequest_Handler,
 		},
 		{
-			MethodName: "Swaps",
-			Handler:    _Query_Swaps_Handler,
+			MethodName: "SwapRequests",
+			Handler:    _Query_SwapRequests_Handler,
 		},
 		{
-			MethodName: "Swap",
-			Handler:    _Query_Swap_Handler,
+			MethodName: "SwapRequest",
+			Handler:    _Query_SwapRequest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2400,7 +2401,7 @@ func (m *QueryPairResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryDepositsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryDepositRequestsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2410,12 +2411,12 @@ func (m *QueryDepositsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryDepositsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryDepositsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2428,7 +2429,7 @@ func (m *QueryDepositsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryDepositsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryDepositRequestsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2438,12 +2439,12 @@ func (m *QueryDepositsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryDepositsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryDepositsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2477,7 +2478,7 @@ func (m *QueryDepositsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryDepositRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryDepositRequestRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2487,12 +2488,12 @@ func (m *QueryDepositRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryDepositRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryDepositRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2510,7 +2511,7 @@ func (m *QueryDepositRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryDepositResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryDepositRequestResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2520,12 +2521,12 @@ func (m *QueryDepositResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryDepositResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryDepositRequestResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2543,7 +2544,7 @@ func (m *QueryDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryWithdrawsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryWithdrawRequestsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2553,12 +2554,12 @@ func (m *QueryWithdrawsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryWithdrawsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryWithdrawsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2571,7 +2572,7 @@ func (m *QueryWithdrawsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryWithdrawsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryWithdrawRequestsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2581,12 +2582,12 @@ func (m *QueryWithdrawsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryWithdrawsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryWithdrawsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2620,7 +2621,7 @@ func (m *QueryWithdrawsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryWithdrawRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryWithdrawRequestRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2630,12 +2631,12 @@ func (m *QueryWithdrawRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryWithdrawRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryWithdrawRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2653,7 +2654,7 @@ func (m *QueryWithdrawRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryWithdrawResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryWithdrawRequestResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2663,12 +2664,12 @@ func (m *QueryWithdrawResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryWithdrawResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryWithdrawResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryWithdrawRequestResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2686,7 +2687,7 @@ func (m *QueryWithdrawResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QuerySwapsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QuerySwapRequestsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2696,12 +2697,12 @@ func (m *QuerySwapsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QuerySwapsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QuerySwapsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2719,7 +2720,7 @@ func (m *QuerySwapsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QuerySwapsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QuerySwapRequestsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2729,12 +2730,12 @@ func (m *QuerySwapsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QuerySwapsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QuerySwapsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2768,7 +2769,7 @@ func (m *QuerySwapsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QuerySwapRequest) Marshal() (dAtA []byte, err error) {
+func (m *QuerySwapRequestRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2778,12 +2779,12 @@ func (m *QuerySwapRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QuerySwapRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QuerySwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2801,7 +2802,7 @@ func (m *QuerySwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QuerySwapResponse) Marshal() (dAtA []byte, err error) {
+func (m *QuerySwapRequestResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2811,12 +2812,12 @@ func (m *QuerySwapResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QuerySwapResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QuerySwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySwapRequestResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3029,7 +3030,7 @@ func (m *QueryPairResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryDepositsRequest) Size() (n int) {
+func (m *QueryDepositRequestsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3041,7 +3042,7 @@ func (m *QueryDepositsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryDepositsResponse) Size() (n int) {
+func (m *QueryDepositRequestsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3060,7 +3061,7 @@ func (m *QueryDepositsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryDepositRequest) Size() (n int) {
+func (m *QueryDepositRequestRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3075,7 +3076,7 @@ func (m *QueryDepositRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryDepositResponse) Size() (n int) {
+func (m *QueryDepositRequestResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3086,7 +3087,7 @@ func (m *QueryDepositResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryWithdrawsRequest) Size() (n int) {
+func (m *QueryWithdrawRequestsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3098,7 +3099,7 @@ func (m *QueryWithdrawsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryWithdrawsResponse) Size() (n int) {
+func (m *QueryWithdrawRequestsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3117,7 +3118,7 @@ func (m *QueryWithdrawsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryWithdrawRequest) Size() (n int) {
+func (m *QueryWithdrawRequestRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3132,7 +3133,7 @@ func (m *QueryWithdrawRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryWithdrawResponse) Size() (n int) {
+func (m *QueryWithdrawRequestResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3143,7 +3144,7 @@ func (m *QueryWithdrawResponse) Size() (n int) {
 	return n
 }
 
-func (m *QuerySwapsRequest) Size() (n int) {
+func (m *QuerySwapRequestsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3158,7 +3159,7 @@ func (m *QuerySwapsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QuerySwapsResponse) Size() (n int) {
+func (m *QuerySwapRequestsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3177,7 +3178,7 @@ func (m *QuerySwapsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QuerySwapRequest) Size() (n int) {
+func (m *QuerySwapRequestRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3192,7 +3193,7 @@ func (m *QuerySwapRequest) Size() (n int) {
 	return n
 }
 
-func (m *QuerySwapResponse) Size() (n int) {
+func (m *QuerySwapRequestResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4419,7 +4420,7 @@ func (m *QueryPairResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryDepositsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryDepositRequestsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4442,10 +4443,10 @@ func (m *QueryDepositsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryDepositsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDepositRequestsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryDepositsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDepositRequestsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4488,7 +4489,7 @@ func (m *QueryDepositsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryDepositsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryDepositRequestsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4511,10 +4512,10 @@ func (m *QueryDepositsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryDepositsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDepositRequestsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryDepositsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDepositRequestsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4608,7 +4609,7 @@ func (m *QueryDepositsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryDepositRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryDepositRequestRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4631,10 +4632,10 @@ func (m *QueryDepositRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryDepositRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDepositRequestRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryDepositRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDepositRequestRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4696,7 +4697,7 @@ func (m *QueryDepositRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryDepositResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryDepositRequestResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4719,10 +4720,10 @@ func (m *QueryDepositResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryDepositResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryDepositRequestResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryDepositRequestResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4779,7 +4780,7 @@ func (m *QueryDepositResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryWithdrawsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryWithdrawRequestsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4802,10 +4803,10 @@ func (m *QueryWithdrawsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryWithdrawsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryWithdrawRequestsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryWithdrawsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryWithdrawRequestsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4848,7 +4849,7 @@ func (m *QueryWithdrawsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryWithdrawsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryWithdrawRequestsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4871,10 +4872,10 @@ func (m *QueryWithdrawsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryWithdrawsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryWithdrawRequestsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryWithdrawsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryWithdrawRequestsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4968,7 +4969,7 @@ func (m *QueryWithdrawsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryWithdrawRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryWithdrawRequestRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4991,10 +4992,10 @@ func (m *QueryWithdrawRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryWithdrawRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryWithdrawRequestRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryWithdrawRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryWithdrawRequestRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5056,7 +5057,7 @@ func (m *QueryWithdrawRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryWithdrawResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryWithdrawRequestResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5079,10 +5080,10 @@ func (m *QueryWithdrawResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryWithdrawResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryWithdrawRequestResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryWithdrawResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryWithdrawRequestResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5139,7 +5140,7 @@ func (m *QueryWithdrawResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QuerySwapsRequest) Unmarshal(dAtA []byte) error {
+func (m *QuerySwapRequestsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5162,10 +5163,10 @@ func (m *QuerySwapsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QuerySwapsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySwapRequestsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QuerySwapsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySwapRequestsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5227,7 +5228,7 @@ func (m *QuerySwapsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QuerySwapsResponse) Unmarshal(dAtA []byte) error {
+func (m *QuerySwapRequestsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5250,10 +5251,10 @@ func (m *QuerySwapsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QuerySwapsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySwapRequestsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QuerySwapsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySwapRequestsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5347,7 +5348,7 @@ func (m *QuerySwapsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QuerySwapRequest) Unmarshal(dAtA []byte) error {
+func (m *QuerySwapRequestRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5370,10 +5371,10 @@ func (m *QuerySwapRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QuerySwapRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySwapRequestRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QuerySwapRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySwapRequestRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5435,7 +5436,7 @@ func (m *QuerySwapRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QuerySwapResponse) Unmarshal(dAtA []byte) error {
+func (m *QuerySwapRequestResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5458,10 +5459,10 @@ func (m *QuerySwapResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QuerySwapResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySwapRequestResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QuerySwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySwapRequestResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
