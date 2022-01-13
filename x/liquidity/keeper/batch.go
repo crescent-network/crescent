@@ -6,24 +6,8 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
-func (k Keeper) MarkDepositRequestToBeDeleted(ctx sdk.Context, req types.DepositRequest, succeeded bool) {
-	req.Succeeded = succeeded
-	req.ToBeDeleted = true
-	k.SetDepositRequest(ctx, req)
-}
-
-func (k Keeper) MarkWithdrawRequestToBeDeleted(ctx sdk.Context, req types.WithdrawRequest, succeeded bool) {
-	req.Succeeded = succeeded
-	req.ToBeDeleted = true
-	k.SetWithdrawRequest(ctx, req)
-}
-
 func (k Keeper) CancelSwapRequest(ctx sdk.Context, req types.SwapRequest) {
 	req.Canceled = true
-	k.SetSwapRequest(ctx, req)
-}
-
-func (k Keeper) MarkSwapRequestToBeDeleted(ctx sdk.Context, req types.SwapRequest) {
 	req.ToBeDeleted = true
 	k.SetSwapRequest(ctx, req)
 }
@@ -43,18 +27,11 @@ func (k Keeper) ExecuteCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRe
 	}
 
 	if swapReq.BatchId < req.BatchId {
-		k.CancelSwapRequest(ctx, swapReq)
+		if !swapReq.Canceled {
+			k.CancelSwapRequest(ctx, swapReq)
+		}
 		k.MarkCancelSwapRequestToBeDeleted(ctx, req, true)
 	}
-}
-
-// DeleteRequestsToBeDeleted deletes all requests that are marked as
-// to be deleted.
-func (k Keeper) DeleteRequestsToBeDeleted(ctx sdk.Context) {
-	k.DeleteDepositRequestsToBeDeleted(ctx)
-	k.DeleteWithdrawRequestsToBeDeleted(ctx)
-	k.DeleteSwapRequestsToBeDeleted(ctx)
-	k.DeleteCancelSwapRequestsToBeDeleted(ctx)
 }
 
 // ExecuteDepositRequest executes a deposit request.
@@ -69,15 +46,15 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 	ax, ay, pc := types.DepositToPool(poolInfo, req.XCoin.Amount, req.YCoin.Amount)
 
 	if pc.IsZero() {
-		k.MarkDepositRequestToBeDeleted(ctx, req, false)
+		req.Succeeded = false
+		req.ToBeDeleted = true
+		k.SetDepositRequest(ctx, req)
 		return nil
 	}
 
-	acceptedCoins := sdk.NewCoins(sdk.NewCoin(req.XCoin.Denom, ax), sdk.NewCoin(req.YCoin.Denom, ay))
-	refundedCoins := sdk.NewCoins(
-		sdk.NewCoin(req.XCoin.Denom, req.XCoin.Amount.Sub(ax)),
-		sdk.NewCoin(req.YCoin.Denom, req.YCoin.Amount.Sub(ay)),
-	)
+	req.AcceptedXCoin = sdk.NewCoin(req.XCoin.Denom, ax)
+	req.AcceptedYCoin = sdk.NewCoin(req.YCoin.Denom, ay)
+	acceptedCoins := sdk.NewCoins(req.AcceptedXCoin, req.AcceptedYCoin)
 	mintingCoins := sdk.NewCoins(sdk.NewCoin(pool.PoolCoinDenom, pc))
 
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintingCoins); err != nil {
@@ -86,15 +63,36 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 
 	bulkOp := types.NewBulkSendCoinsOperation()
 	bulkOp.SendCoins(types.GlobalEscrowAddr, pool.GetReserveAddress(), acceptedCoins)
-	bulkOp.SendCoins(types.GlobalEscrowAddr, req.GetDepositor(), refundedCoins)
 	bulkOp.SendCoins(k.accountKeeper.GetModuleAddress(types.ModuleName), req.GetDepositor(), mintingCoins)
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
 	}
 
-	k.MarkDepositRequestToBeDeleted(ctx, req, true)
+	req.Succeeded = true
+	req.ToBeDeleted = true
+	k.SetDepositRequest(ctx, req)
 	// TODO: emit an event?
 	return nil
+}
+
+func (k Keeper) RefundDepositRequest(ctx sdk.Context, req types.DepositRequest) error {
+	refundingCoins := sdk.NewCoins(req.XCoin.Sub(req.AcceptedXCoin), req.YCoin.Sub(req.AcceptedYCoin))
+	if !refundingCoins.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, types.GlobalEscrowAddr, req.GetDepositor(), refundingCoins); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) RefundAndDeleteDepositRequestsToBeDeleted(ctx sdk.Context) {
+	k.IterateDepositRequestsToBeDeleted(ctx, func(req types.DepositRequest) (stop bool) {
+		if err := k.RefundDepositRequest(ctx, req); err != nil {
+			panic(err)
+		}
+		k.DeleteDepositRequest(ctx, req.PoolId, req.Id)
+		return false
+	})
 }
 
 // ExecuteWithdrawRequest executes a withdraw request.
@@ -109,7 +107,9 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	params := k.GetParams(ctx)
 	x, y := types.WithdrawFromPool(poolInfo, req.PoolCoin.Amount, params.WithdrawFeeRate)
 
-	withdrawnCoins := sdk.NewCoins(sdk.NewCoin(pool.XCoinDenom, x), sdk.NewCoin(pool.YCoinDenom, y))
+	req.WithdrawnXCoin = sdk.NewCoin(pool.XCoinDenom, x)
+	req.WithdrawnYCoin = sdk.NewCoin(pool.YCoinDenom, y)
+	withdrawnCoins := sdk.NewCoins(req.WithdrawnXCoin, req.WithdrawnYCoin)
 	burningCoins := sdk.NewCoins(req.PoolCoin)
 
 	bulkOp := types.NewBulkSendCoinsOperation()
@@ -123,9 +123,19 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 		return err
 	}
 
-	k.MarkWithdrawRequestToBeDeleted(ctx, req, true)
+	req.Succeeded = true
+	req.ToBeDeleted = true
+	k.SetWithdrawRequest(ctx, req)
 	// TODO: emit an event?
 	return nil
+}
+
+func (k Keeper) RefundAndDeleteWithdrawRequestsToBeDeleted(ctx sdk.Context) {
+	k.IterateWithdrawRequestsToBeDeleted(ctx, func(req types.WithdrawRequest) (stop bool) {
+		// TODO: need a refund? maybe not
+		k.DeleteWithdrawRequest(ctx, req.PoolId, req.Id)
+		return false
+	})
 }
 
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
@@ -189,8 +199,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				case *types.UserOrder:
 					// TODO: optimize read/write (can there be only one write?)
 					req, _ := k.GetSwapRequest(ctx, pair.Id, order.RequestId)
-					req.RemainingAmount = order.RemainingAmount
-					req.ReceivedAmount = req.ReceivedAmount.Add(order.ReceivedAmount)
+					req.RemainingCoin.Amount = order.RemainingAmount
+					req.ReceivedCoin.Amount = req.ReceivedCoin.Amount.Add(order.ReceivedAmount)
+					req.Matched = true
 					k.SetSwapRequest(ctx, req)
 
 					var demandCoinDenom string
@@ -224,4 +235,32 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	// TODO: emit an event?
 	return nil
+}
+
+func (k Keeper) RefundSwapRequest(ctx sdk.Context, pair types.Pair, req types.SwapRequest) error {
+	if req.RemainingCoin.IsPositive() {
+		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), req.GetOrderer(), sdk.NewCoins(req.RemainingCoin)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) RefundAndDeleteSwapRequestsToBeDeleted(ctx sdk.Context) {
+	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
+		k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
+			if err := k.RefundSwapRequest(ctx, pair, req); err != nil {
+				panic(err)
+			}
+			return false
+		})
+		return false
+	})
+}
+
+func (k Keeper) DeleteCancelSwapRequestsToBeDeleted(ctx sdk.Context) {
+	k.IterateCancelSwapRequestsToBeDeleted(ctx, func(req types.CancelSwapRequest) (stop bool) {
+		k.DeleteCancelSwapRequest(ctx, req.PairId, req.Id)
+		return false
+	})
 }

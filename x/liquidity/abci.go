@@ -13,7 +13,10 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	k.DeleteRequestsToBeDeleted(ctx)
+	k.RefundAndDeleteDepositRequestsToBeDeleted(ctx)
+	k.RefundAndDeleteWithdrawRequestsToBeDeleted(ctx)
+	k.RefundAndDeleteSwapRequestsToBeDeleted(ctx)
+	k.DeleteCancelSwapRequestsToBeDeleted(ctx)
 }
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
@@ -33,7 +36,13 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			}
 			return false
 		})
-		// TODO: Cancel expired SwapRequests.
+		// Cancel expired SwapRequests.
+		k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool) {
+			if !req.CanceledAt.Before(ctx.BlockTime()) { // CanceledAt >= BlockTime
+				k.CancelSwapRequest(ctx, req)
+			}
+			return false
+		})
 		// Handle DepositRequests.
 		k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
 			if err := k.ExecuteDepositRequest(ctx, req); err != nil {

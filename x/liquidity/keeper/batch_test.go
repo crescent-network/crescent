@@ -66,7 +66,7 @@ func TestSwap(t *testing.T) {
 	err = crescentapp.FundAccount(app.BankKeeper, ctx, user2, sdk.NewCoins(sdk.NewInt64Coin("denom2", 1100)))
 	require.NoError(t, err)
 
-	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user1, "denom1", "denom2", sdk.NewInt64Coin("denom1", 1000), "denom2", sdk.MustNewDecFromStr("1.5"), 0))
+	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user1, "denom1", "denom2", sdk.NewInt64Coin("denom1", 500), "denom2", sdk.MustNewDecFromStr("1.5"), 0))
 	require.NoError(t, err)
 	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user2, "denom1", "denom2", sdk.NewInt64Coin("denom2", 1100), "denom1", sdk.MustNewDecFromStr("0.5"), 0))
 	require.NoError(t, err)
@@ -74,6 +74,12 @@ func TestSwap(t *testing.T) {
 	require.True(t, found)
 
 	liquidity.EndBlocker(ctx, app.LiquidityKeeper)
+
+	fmt.Println(app.BankKeeper.GetAllBalances(ctx, user1))
+	fmt.Println(app.BankKeeper.GetAllBalances(ctx, user2))
+	fmt.Println(app.BankKeeper.GetAllBalances(ctx, pair.GetEscrowAddress()))
+
+	liquidity.BeginBlocker(ctx, app.LiquidityKeeper)
 
 	fmt.Println(app.BankKeeper.GetAllBalances(ctx, user1))
 	fmt.Println(app.BankKeeper.GetAllBalances(ctx, user2))

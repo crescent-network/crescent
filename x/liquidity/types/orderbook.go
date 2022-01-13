@@ -102,8 +102,8 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 		Order: Order{
 			Direction:       req.Direction,
 			Price:           req.Price,
-			Amount:          req.RemainingAmount,
-			RemainingAmount: req.RemainingAmount,
+			Amount:          req.RemainingCoin.Amount,
+			RemainingAmount: req.RemainingCoin.Amount,
 			ReceivedAmount:  sdk.ZeroInt(),
 			Matched:         false,
 		},
