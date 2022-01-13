@@ -34,13 +34,13 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.GetXDenom() != "" {
+	if req.XDenom != "" {
 		if err := sdk.ValidateDenom(req.XDenom); err != nil {
 			return nil, err
 		}
 	}
 
-	if req.GetYDenom() != "" {
+	if req.YDenom != "" {
 		if err := sdk.ValidateDenom(req.YDenom); err != nil {
 			return nil, err
 		}
@@ -57,14 +57,14 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 			return false, err
 		}
 
-		if req.GetXDenom() != "" {
-			if pool.ReserveCoinDenoms[0] != req.GetXDenom() {
+		if req.XDenom != "" {
+			if pool.ReserveCoinDenoms[0] != req.XDenom {
 				return false, nil
 			}
 		}
 
-		if req.GetYDenom() != "" {
-			if pool.ReserveCoinDenoms[1] != req.GetYDenom() {
+		if req.YDenom != "" {
+			if pool.ReserveCoinDenoms[1] != req.YDenom {
 				return false, nil
 			}
 		}
@@ -89,19 +89,30 @@ func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.PairId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pair id cannot be 0")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
 	poolsStore := prefix.NewStore(store, types.GetPoolsByPairKey(req.PairId))
 
 	var pools []types.Pool
-	pageRes, err := query.Paginate(poolsStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.FilteredPaginate(poolsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		pool, err := types.UnmarshalPool(k.cdc, value)
 		if err != nil {
-			return err
+			return false, err
 		}
 
-		pools = append(pools, pool)
-		return nil
+		if pool.PairId != req.PairId {
+			return false, nil
+		}
+
+		if accumulate {
+			pools = append(pools, pool)
+		}
+
+		return true, nil
 	})
 
 	if err != nil {
@@ -145,7 +156,7 @@ func (k Querier) PoolByReserveAcc(c context.Context, req *types.QueryPoolByReser
 
 	reserveAcc, err := sdk.AccAddressFromBech32(req.ReserveAcc)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "the reserve account address %s is not valid", req.ReserveAcc)
+		return nil, status.Errorf(codes.InvalidArgument, "reserve account address %s is not valid", req.ReserveAcc)
 	}
 
 	pool, found := k.GetPoolByReserveAcc(ctx, reserveAcc)
@@ -169,7 +180,6 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 	ctx := sdk.UnwrapSDKContext(c)
 
 	poolId := types.ParsePoolCoinDenom(req.PoolCoinDenom)
-
 	pool, found := k.GetPool(ctx, poolId)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", poolId)
@@ -184,13 +194,13 @@ func (k Querier) Pairs(c context.Context, req *types.QueryPairsRequest) (*types.
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.GetXDenom() != "" {
+	if req.XDenom != "" {
 		if err := sdk.ValidateDenom(req.XDenom); err != nil {
 			return nil, err
 		}
 	}
 
-	if req.GetYDenom() != "" {
+	if req.YDenom != "" {
 		if err := sdk.ValidateDenom(req.YDenom); err != nil {
 			return nil, err
 		}
@@ -207,14 +217,14 @@ func (k Querier) Pairs(c context.Context, req *types.QueryPairsRequest) (*types.
 			return false, err
 		}
 
-		if req.GetXDenom() != "" {
-			if pair.XCoinDenom != req.GetXDenom() {
+		if req.XDenom != "" {
+			if pair.XCoinDenom != req.XDenom {
 				return false, nil
 			}
 		}
 
-		if req.GetYDenom() != "" {
-			if pair.YCoinDenom != req.GetYDenom() {
+		if req.YDenom != "" {
+			if pair.YCoinDenom != req.YDenom {
 				return false, nil
 			}
 		}
