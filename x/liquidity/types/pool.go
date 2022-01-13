@@ -45,8 +45,8 @@ func PoolCoinDenom(poolId uint64) string {
 	return fmt.Sprintf("pool%d", poolId)
 }
 
-// TrimPoolPrefix trims pool prefix from the pool coin denom and returns pool id.
-func TrimPoolPrefix(denom string) uint64 {
+// ParsePoolCoinDenom trims pool prefix from the pool coin denom and returns pool id.
+func ParsePoolCoinDenom(denom string) uint64 {
 	if !strings.HasPrefix(denom, "pool") {
 		return 0
 	}

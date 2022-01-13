@@ -34,7 +34,7 @@ func TestPoolCoinDenom(t *testing.T) {
 	} {
 		t.Run("", func(t *testing.T) {
 			poolCoinDenom := types.PoolCoinDenom(tc.poolId)
-			poolId := types.TrimPoolPrefix(poolCoinDenom)
+			poolId := types.ParsePoolCoinDenom(poolCoinDenom)
 			require.Equal(t, tc.expected, poolCoinDenom)
 			require.Equal(t, tc.poolId, poolId)
 		})
