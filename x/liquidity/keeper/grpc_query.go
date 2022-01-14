@@ -109,17 +109,16 @@ func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	poolsStore := prefix.NewStore(store, types.GetPoolsByPairIndexKeyPrefix(req.PairId))
+	keyPrefix := types.GetPoolsByPairIndexKeyPrefix(req.PairId)
+	poolsStore := prefix.NewStore(store, keyPrefix)
 
 	var poolsRes []types.PoolResponse
-	pageRes, err := query.FilteredPaginate(poolsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		pool, err := types.UnmarshalPool(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
+	pageRes, err := query.Paginate(poolsStore, req.Pagination, func(key, value []byte) error {
+		poolId := types.ParsePoolsByPairIndexKey(append(keyPrefix, key...))
 
-		if pool.PairId != req.PairId {
-			return false, nil
+		pool, found := k.GetPool(ctx, poolId)
+		if !found {
+			return nil
 		}
 
 		rx, ry := k.GetPoolBalance(ctx, pool)
@@ -136,11 +135,9 @@ func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairReque
 			LastWithdrawRequestId: pool.LastWithdrawRequestId,
 		}
 
-		if accumulate {
-			poolsRes = append(poolsRes, poolRes)
-		}
+		poolsRes = append(poolsRes, poolRes)
 
-		return true, nil
+		return nil
 	})
 
 	if err != nil {

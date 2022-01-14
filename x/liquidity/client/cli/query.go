@@ -111,19 +111,24 @@ $ %s query %s pools --x-denom=[denom] --y-denom=[denom]
 
 			var res *types.QueryPoolsResponse
 
-			foundArg := false
 			queryClient := types.NewQueryClient(clientCtx)
 
 			pairIdStr, _ := cmd.Flags().GetString(FlagPairId)
-			if pairIdStr != "" {
-				foundArg = true
+			xDenom, _ := cmd.Flags().GetString(FlagXCoinDenom)
+			yDenom, _ := cmd.Flags().GetString(FlagYCoinDenom)
+
+			if pairIdStr != "" && (xDenom != "" || yDenom != "") {
+				return fmt.Errorf("invalid request")
+			}
+
+			switch {
+			case pairIdStr != "":
 				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
 				if err != nil {
 					return err
 				}
 
 				if pairId != 0 {
-					foundArg = true
 					res, err = queryClient.PoolsByPair(
 						context.Background(),
 						&types.QueryPoolsByPairRequest{
@@ -133,17 +138,23 @@ $ %s query %s pools --x-denom=[denom] --y-denom=[denom]
 						return err
 					}
 				}
-			}
 
-			if !foundArg {
-				xDenom, _ := cmd.Flags().GetString(FlagXDenom)
-				yDenom, _ := cmd.Flags().GetString(FlagYDenom)
-
+			case xDenom != "" || yDenom != "":
 				res, err = queryClient.Pools(
 					context.Background(),
 					&types.QueryPoolsRequest{
 						XDenom:     xDenom,
 						YDenom:     yDenom,
+						Pagination: pageReq,
+					})
+				if err != nil {
+					return err
+				}
+
+			default:
+				res, err = queryClient.Pools(
+					context.Background(),
+					&types.QueryPoolsRequest{
 						Pagination: pageReq,
 					})
 				if err != nil {
@@ -164,7 +175,7 @@ $ %s query %s pools --x-denom=[denom] --y-denom=[denom]
 func QueryPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool [pool-id]",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Short: "Query details of the liquidity pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details of the liquidity pool
@@ -279,8 +290,8 @@ $ %s query %s pairs --x-denom=[denom] --y-denom=[denom]
 				return err
 			}
 
-			xDenom, _ := cmd.Flags().GetString(FlagXDenom)
-			yDenom, _ := cmd.Flags().GetString(FlagYDenom)
+			xDenom, _ := cmd.Flags().GetString(FlagXCoinDenom)
+			yDenom, _ := cmd.Flags().GetString(FlagYCoinDenom)
 
 			queryClient := types.NewQueryClient(clientCtx)
 

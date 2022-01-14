@@ -8,8 +8,8 @@ import (
 
 const (
 	FlagPairId        = "pair-id"
-	FlagXDenom        = "x-denom"
-	FlagYDenom        = "y-denom"
+	FlagXCoinDenom    = "x-coin-denom"
+	FlagYCoinDenom    = "y-coin-denom"
 	FlagPoolCoinDenom = "pool-coin-denom"
 	FlagReserveAcc    = "reserve-acc"
 )
@@ -17,8 +17,8 @@ const (
 func flagSetPools() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagXDenom, "", "The X coin denomination")
-	fs.String(FlagYDenom, "", "The Y coin denomination")
+	fs.String(FlagXCoinDenom, "", "The X coin denomination")
+	fs.String(FlagYCoinDenom, "", "The Y coin denomination")
 	fs.String(FlagPairId, "", "The pair id")
 
 	return fs
@@ -36,8 +36,8 @@ func flagSetPool() *flag.FlagSet {
 func flagSetPairs() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagXDenom, "", "The X coin denomination")
-	fs.String(FlagYDenom, "", "The Y coin denomination")
+	fs.String(FlagXCoinDenom, "", "The X coin denomination")
+	fs.String(FlagYCoinDenom, "", "The Y coin denomination")
 
 	return fs
 }

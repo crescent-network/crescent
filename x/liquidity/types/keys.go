@@ -31,7 +31,7 @@ var (
 
 	PoolKeyPrefix                  = []byte{0xab}
 	PoolByReserveAccIndexKeyPrefix = []byte{0xac}
-	PoolByPairIndexKeyPrefix       = []byte{0xad}
+	PoolsByPairIndexKeyPrefix      = []byte{0xad}
 
 	DepositRequestKeyPrefix    = []byte{0xb0}
 	WithdrawRequestKeyPrefix   = []byte{0xb1}
@@ -71,12 +71,12 @@ func GetPoolByReserveAccIndexKey(reserveAcc sdk.AccAddress) []byte {
 
 // GetPoolsByPairIndexKey returns the index key to retrieve pool id that is used to iterate pools.
 func GetPoolsByPairIndexKey(pairId, poolId uint64) []byte {
-	return append(append(PoolByPairIndexKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(poolId)...)
+	return append(append(PoolsByPairIndexKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(poolId)...)
 }
 
 // GetPoolsByPairIndexKeyPrefix returns the store key to retrieve pool id to iterate pools.
 func GetPoolsByPairIndexKeyPrefix(pairId uint64) []byte {
-	return append(PoolByPairIndexKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
+	return append(PoolsByPairIndexKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
 }
 
 // GetDepositRequestKey returns the store key to retrieve deposit request object from the pool id and request id.
@@ -121,7 +121,7 @@ func ParsePairByDenomIndexKey(key []byte) (denomB string, pairId uint64) {
 
 // ParsePoolsByPairIndexKey parses a pool id from the index key.
 func ParsePoolsByPairIndexKey(key []byte) (poolId uint64) {
-	if !bytes.HasPrefix(key, PoolByPairIndexKeyPrefix) {
+	if !bytes.HasPrefix(key, PoolsByPairIndexKeyPrefix) {
 		panic("key does not have proper prefix")
 	}
 
