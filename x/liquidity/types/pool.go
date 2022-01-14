@@ -54,6 +54,20 @@ func PoolCoinDenom(poolId uint64) string {
 	return fmt.Sprintf("pool%d", poolId)
 }
 
+// ParsePoolCoinDenom trims pool prefix from the pool coin denom and returns pool id.
+func ParsePoolCoinDenom(denom string) uint64 {
+	if !strings.HasPrefix(denom, "pool") {
+		return 0
+	}
+
+	poolId, err := strconv.ParseUint(strings.TrimPrefix(denom, "pool"), 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return poolId
+}
+
 type PoolI interface {
 	Balance() (rx, ry sdk.Int)
 	PoolCoinSupply() sdk.Int

@@ -308,7 +308,7 @@ var xxx_messageInfo_WithdrawRequest proto.InternalMessageInfo
 type SwapRequest struct {
 	// id specifies the id for the request
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// pool_id specifies the pool id
+	// pair_id specifies the pair id
 	PairId uint64 `protobuf:"varint,2,opt,name=pair_id,json=pairId,proto3" json:"pair_id,omitempty"`
 	// msg_height specifies the block height when the request is stored for the batch execution
 	MsgHeight int64 `protobuf:"varint,3,opt,name=msg_height,json=msgHeight,proto3" json:"msg_height,omitempty"`

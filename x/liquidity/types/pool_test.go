@@ -33,7 +33,10 @@ func TestPoolCoinDenom(t *testing.T) {
 		{10, "pool10"},
 	} {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, tc.expected, types.PoolCoinDenom(tc.poolId))
+			poolCoinDenom := types.PoolCoinDenom(tc.poolId)
+			poolId := types.ParsePoolCoinDenom(poolCoinDenom)
+			require.Equal(t, tc.expected, poolCoinDenom)
+			require.Equal(t, tc.poolId, poolId)
 		})
 	}
 }

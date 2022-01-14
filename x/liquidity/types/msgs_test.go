@@ -193,7 +193,6 @@ func TestMsgSwapBatch(t *testing.T) {
 				orderLifespan,
 			),
 		},
-		// TODO: write more test cases
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
 			types.NewMsgSwapBatch(
