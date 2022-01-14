@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -50,7 +52,17 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 	req := types.NewSwapRequest(msg, requestId, pair, canceledAt, ctx.BlockHeight())
 	k.SetSwapRequest(ctx, req)
 
-	// TODO: need to emit an event?
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeSwapBatch,
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
+			sdk.NewAttribute(types.AttributeKeySwapDirection, req.Direction.String()),
+			sdk.NewAttribute(types.AttributeKeyRemainingAmount, req.RemainingCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyReceivedAmount, req.ReceivedCoin.String()),
+		),
+	})
 
 	return nil
 }
@@ -74,6 +86,15 @@ func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) 
 	requestId := k.GetNextCancelSwapRequestIdWithUpdate(ctx, pair)
 	req := types.NewCancelSwapRequest(msg, requestId, pair, ctx.BlockHeight())
 	k.SetCancelSwapRequest(ctx, req)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCancelSwapBatch,
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(req.PairId, 10)),
+			sdk.NewAttribute(types.AttributeKeySwapRequestId, strconv.FormatUint(req.SwapRequestId, 10)),
+		),
+	})
 
 	return nil
 }
