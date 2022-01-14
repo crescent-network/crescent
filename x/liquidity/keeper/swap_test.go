@@ -17,7 +17,8 @@ func (suite *KeeperTestSuite) TestSwapBatch() {
 		XCoin:   sdk.NewInt64Coin(denom1, 100000000),
 		YCoin:   sdk.NewInt64Coin(denom2, 100000000),
 	}
-	suite.keeper.CreatePool(suite.ctx, createMsg)
+	err := suite.keeper.CreatePool(suite.ctx, createMsg)
+	suite.Require().NoError(err)
 
 	_, found := suite.keeper.GetPairByDenoms(suite.ctx, denom1, denom2)
 	suite.Require().True(found)
@@ -31,5 +32,7 @@ func (suite *KeeperTestSuite) TestSwapBatch() {
 		Price:           sdk.MustNewDecFromStr("1.0"),
 		OrderLifespan:   10 * time.Second,
 	}
-	suite.keeper.SwapBatch(suite.ctx, swapMsg)
+	err = suite.keeper.SwapBatch(suite.ctx, swapMsg)
+	suite.Require().NoError(err)
+
 }
