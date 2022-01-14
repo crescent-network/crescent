@@ -59,8 +59,8 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
 			sdk.NewAttribute(types.AttributeKeySwapDirection, req.Direction.String()),
-			sdk.NewAttribute(types.AttributeKeyRemainingAmount, req.RemainingAmount.String()),
-			sdk.NewAttribute(types.AttributeKeyReceivedAmount, req.ReceivedAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyRemainingAmount, req.RemainingCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyReceivedAmount, req.ReceivedCoin.String()),
 		),
 	})
 
