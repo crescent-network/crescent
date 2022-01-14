@@ -273,7 +273,7 @@ func (k Keeper) RefundSwapRequest(ctx sdk.Context, pair types.Pair, req types.Sw
 
 func (k Keeper) RefundAndDeleteSwapRequestsToBeDeleted(ctx sdk.Context) {
 	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
-		k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
+		k.IterateSwapRequestsToBeDeletedByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
 			if err := k.RefundSwapRequest(ctx, pair, req); err != nil {
 				panic(err)
 			}
