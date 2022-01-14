@@ -73,14 +73,14 @@ $ %s query %s params
 // GetCmdQueryLiquidValidators implements the query liquidValidators command.
 func GetCmdQueryLiquidValidators() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "liquidValidators",
+		Use:   "liquid-validators",
 		Args:  cobra.NoArgs,
-		Short: "Query all liquidValidators",
+		Short: "Query all liquid validators",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Queries all liquid validators.
 
 Example:
-$ %s query %s liquidValidators
+$ %s query %s liquid-validators
 `,
 				version.AppName, types.ModuleName,
 			),
