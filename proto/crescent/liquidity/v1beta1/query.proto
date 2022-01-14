@@ -3,6 +3,7 @@ package crescent.liquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/liquidity/v1beta1/liquidity.proto";
 
@@ -99,7 +100,7 @@ message QueryPoolsRequest {
 
 // QueryPoolsResponse is response type for the Query/Pools RPC method.
 message QueryPoolsResponse {
-  repeated Pool pools = 1 [(gogoproto.nullable) = false];
+  repeated PoolResponse pools = 1 [(gogoproto.nullable) = false];
 
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -118,7 +119,7 @@ message QueryPoolRequest {
 
 // QueryPoolResponse is response type for the Query/Pool RPC method.
 message QueryPoolResponse {
-  Pool pool = 1 [(gogoproto.nullable) = false];
+  PoolResponse pool = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryPoolByReserveAccRequest is request type for the Query/PoolByReserveAcc RPC method.
@@ -229,4 +230,31 @@ message QuerySwapRequestRequest {
 // QuerySwapRequestResponse is response type for the Query/SwapRequest RPC method.
 message QuerySwapRequestResponse {
   SwapRequest swap_request = 1 [(gogoproto.nullable) = false];
+}
+
+//
+// Custom response messages
+//
+
+// PoolResponse defines a custom pool response message.
+message PoolResponse {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  string x_coin_denom = 3;
+
+  string y_coin_denom = 4;
+
+  string reserve_address = 5;
+
+  string pool_coin_denom = 6;
+
+  cosmos.base.v1beta1.Coin x_coin = 7 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin y_coin = 8 [(gogoproto.nullable) = false];
+
+  uint64 last_deposit_request_id = 9;
+
+  uint64 last_withdraw_request_id = 10;
 }
