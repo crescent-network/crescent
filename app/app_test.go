@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v2/modules/core"
-	"github.com/crescent-network/crescent/x/liquidstaking"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/budget/x/budget"
@@ -38,6 +37,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/liquidity"
+	"github.com/crescent-network/crescent/x/liquidstaking"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -169,25 +170,25 @@ func TestRunMigrations(t *testing.T) {
 			_, err = app.mm.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), app.configurator,
 				module.VersionMap{
-					"bank":         1,
-					"auth":         auth.AppModule{}.ConsensusVersion(),
-					"authz":        authzmodule.AppModule{}.ConsensusVersion(),
-					"staking":      staking.AppModule{}.ConsensusVersion(),
-					"mint":         mint.AppModule{}.ConsensusVersion(),
-					"distribution": distribution.AppModule{}.ConsensusVersion(),
-					"slashing":     slashing.AppModule{}.ConsensusVersion(),
-					"gov":          gov.AppModule{}.ConsensusVersion(),
-					"params":       params.AppModule{}.ConsensusVersion(),
-					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
-					"vesting":      vesting.AppModule{}.ConsensusVersion(),
-					"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
-					"evidence":     evidence.AppModule{}.ConsensusVersion(),
-					"crisis":       crisis.AppModule{}.ConsensusVersion(),
-					"genutil":      genutil.AppModule{}.ConsensusVersion(),
-					"capability":   capability.AppModule{}.ConsensusVersion(),
-					"budget":       budget.AppModule{}.ConsensusVersion(),
-					"farming":      farming.AppModule{}.ConsensusVersion(),
-					//"liquidity":     liquidity.AppModule{}.ConsensusVersion(),
+					"bank":          1,
+					"auth":          auth.AppModule{}.ConsensusVersion(),
+					"authz":         authzmodule.AppModule{}.ConsensusVersion(),
+					"staking":       staking.AppModule{}.ConsensusVersion(),
+					"mint":          mint.AppModule{}.ConsensusVersion(),
+					"distribution":  distribution.AppModule{}.ConsensusVersion(),
+					"slashing":      slashing.AppModule{}.ConsensusVersion(),
+					"gov":           gov.AppModule{}.ConsensusVersion(),
+					"params":        params.AppModule{}.ConsensusVersion(),
+					"upgrade":       upgrade.AppModule{}.ConsensusVersion(),
+					"vesting":       vesting.AppModule{}.ConsensusVersion(),
+					"feegrant":      feegrantmodule.AppModule{}.ConsensusVersion(),
+					"evidence":      evidence.AppModule{}.ConsensusVersion(),
+					"crisis":        crisis.AppModule{}.ConsensusVersion(),
+					"genutil":       genutil.AppModule{}.ConsensusVersion(),
+					"capability":    capability.AppModule{}.ConsensusVersion(),
+					"budget":        budget.AppModule{}.ConsensusVersion(),
+					"farming":       farming.AppModule{}.ConsensusVersion(),
+					"liquidity":     liquidity.AppModule{}.ConsensusVersion(),
 					"liquidstaking": liquidstaking.AppModule{}.ConsensusVersion(),
 					"ibc":           ibc.AppModule{}.ConsensusVersion(),
 					"transfer":      transfer.AppModule{}.ConsensusVersion(),

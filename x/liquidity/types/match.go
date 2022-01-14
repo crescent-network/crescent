@@ -59,6 +59,7 @@ func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 		return sa
 	}
 
+	// TODO: lastPrice could be a price not fit in ticks.
 	currentPrice := lastPrice
 	for {
 		i := TickToIndex(currentPrice, engine.TickPrecision)
@@ -67,11 +68,11 @@ func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 		var found bool
 		switch dir {
 		case PriceIncreasing:
-			sa := sellAmountLTE(i + 1)
-			hba := buyAmountGTE(i + 2)
-			ba := buyAmountGTE(i)
-			lsa := sellAmountLTE(i - 1)
-			if TickFromIndex(i+1, engine.TickPrecision).MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(currentPrice.MulInt(lsa)) {
+			sa := sellAmountLTE(i)
+			hba := buyAmountGTE(i + 1)
+			ba := buyAmountGTE(i - 1)
+			lsa := sellAmountLTE(i - 2)
+			if currentPrice.MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(TickFromIndex(i-1, engine.TickPrecision).MulInt(lsa)) {
 				return currentPrice
 			}
 
@@ -81,11 +82,11 @@ func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 
 			nextPrice, found = tickSource.UpTick(currentPrice)
 		case PriceDecreasing:
-			sa := sellAmountLTE(i)
-			hba := buyAmountGTE(i + 1)
-			ba := buyAmountGTE(i - 1)
-			lsa := sellAmountLTE(i - 2)
-			if currentPrice.MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(TickFromIndex(i-1, engine.TickPrecision).MulInt(lsa)) {
+			sa := sellAmountLTE(i + 1)
+			hba := buyAmountGTE(i + 2)
+			ba := buyAmountGTE(i)
+			lsa := sellAmountLTE(i - 1)
+			if TickFromIndex(i+1, engine.TickPrecision).MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(currentPrice.MulInt(lsa)) {
 				return currentPrice
 			}
 
@@ -185,21 +186,23 @@ func MatchOrders(buyOrders, sellOrders Orders, price sdk.Dec) {
 	}
 
 	for _, order := range smallerOrders {
-		proportion := order.RemainingAmount.ToDec().QuoInt(smallerAmount)
-		order.RemainingAmount = sdk.ZeroInt()
+		proportion := order.GetRemainingAmount().ToDec().QuoInt(smallerAmount)
+		order.SetRemainingAmount(sdk.ZeroInt())
 		in := proportion.MulInt(smallerDemandAmount).TruncateInt()
-		order.ReceivedAmount = order.ReceivedAmount.Add(in)
+		order.SetReceivedAmount(order.GetReceivedAmount().Add(in))
+		order.SetMatched(true)
 	}
 
 	for _, order := range biggerOrders {
-		proportion := order.RemainingAmount.ToDec().QuoInt(biggerAmount)
+		proportion := order.GetRemainingAmount().ToDec().QuoInt(biggerAmount)
 		if matchAll {
-			order.RemainingAmount = sdk.ZeroInt()
+			order.SetRemainingAmount(sdk.ZeroInt())
 		} else {
 			out := proportion.MulInt(smallerDemandAmount).TruncateInt()
-			order.RemainingAmount = order.RemainingAmount.Sub(out)
+			order.SetRemainingAmount(order.GetRemainingAmount().Sub(out))
 		}
 		in := proportion.MulInt(smallerAmount).TruncateInt()
-		order.ReceivedAmount = order.ReceivedAmount.Add(in)
+		order.SetReceivedAmount(order.GetReceivedAmount().Add(in))
+		order.SetMatched(true)
 	}
 }

@@ -3,6 +3,8 @@ package crescent.liquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -29,6 +31,11 @@ message Params {
 
   string swap_fee_rate = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string withdraw_fee_rate = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  google.protobuf.Duration max_order_lifespan = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // Pool defines a basic liquidity pool with no min-price and max-price.
@@ -86,8 +93,18 @@ message DepositRequest {
   // x_coin specifies the deposit coin x
   cosmos.base.v1beta1.Coin x_coin = 5 [(gogoproto.nullable) = false];
 
+  cosmos.base.v1beta1.Coin accepted_x_coin = 6 [(gogoproto.nullable) = false];
+
   // y_coin specifies the deposit coin y
-  cosmos.base.v1beta1.Coin y_coin = 6 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin y_coin = 7 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin accepted_y_coin = 8 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin minted_pool_coin = 9 [(gogoproto.nullable) = false];
+
+  bool succeeded = 10;
+
+  bool to_be_deleted = 11;
 }
 
 // WithdrawRequest defines a withdraw request.
@@ -105,8 +122,15 @@ message WithdrawRequest {
   string withdrawer = 4;
 
   // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
-  cosmos.base.v1beta1.Coin pool_coin = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin pool_coin = 5 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin withdrawn_x_coin = 6 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin withdrawn_y_coin = 7 [(gogoproto.nullable) = false];
+
+  bool succeeded = 8;
+
+  bool to_be_deleted = 9;
 }
 
 // SwapRequest defines a swap request.
@@ -129,16 +153,22 @@ message SwapRequest {
   // price specifies the price that an orderer is willing to swap
   string price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // remaining_amount specifies the remaining amount after the swap
-  string remaining_amount = 7
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  // remaining_coin specifies the remaining coin after the swap
+  cosmos.base.v1beta1.Coin remaining_coin = 7 [(gogoproto.nullable) = false];
 
-  // received_amount specifies the received amount after the swap
-  string received_amount = 8
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  // received_coin specifies the received coin after the swap
+  cosmos.base.v1beta1.Coin received_coin = 8 [(gogoproto.nullable) = false];
 
   // batch_id specifies the pair's batch id when the request is stored
   uint64 batch_id = 9;
+
+  google.protobuf.Timestamp canceled_at = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+
+  bool matched = 11;
+
+  bool canceled = 12;
+
+  bool to_be_deleted = 13;
 }
 
 // CancelSwapRequest defines a request to cancel a swap request.
@@ -154,6 +184,10 @@ message CancelSwapRequest {
   uint64 swap_request_id = 5;
 
   uint64 batch_id = 6;
+
+  bool succeeded = 7;
+
+  bool to_be_deleted = 8;
 }
 
 // SwapDirection enumerates swap directions.
