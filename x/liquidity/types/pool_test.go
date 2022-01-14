@@ -231,14 +231,14 @@ func TestDepositToPool(t *testing.T) {
 		},
 		{
 			name: "zero minting amount",
-			rx: 10000,
-			ry: 10000,
-			ps: 999,
-			x: 10,
-			y: 10,
-			ax: 0,
-			ay: 0,
-			pc: 0,
+			rx:   10000,
+			ry:   10000,
+			ps:   999,
+			x:    10,
+			y:    10,
+			ax:   0,
+			ay:   0,
+			pc:   0,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
