@@ -13,7 +13,7 @@ option go_package = "github.com/crescent-network/crescent/x/liquidstaking/types"
 service Query {
   // Params returns parameters of the liquidstaking module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get                                           = "/gdex/liquidstaking/v1beta1/params";
+    option (google.api.http).get                                           = "/crescent/liquidstaking/v1beta1/params";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "Returns all parameters of the liquid staking module.";
   external_docs: {
@@ -26,7 +26,7 @@ service Query {
 }
 // LiquidValidators returns liquid validators of the liquidstaking module.
 rpc LiquidValidators(QueryLiquidValidatorsRequest) returns (QueryLiquidValidatorsResponse) {
-  option (google.api.http).get                                           = "/gdex/liquidstaking/v1beta1/validators";
+  option (google.api.http).get                                           = "/crescent/liquidstaking/v1beta1/validators";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns all liquid validators of the liquid staking module.";
 external_docs: {
