@@ -83,6 +83,8 @@ func (p Params) Validate() error {
 		{p.LiquidBondDenom, ValidateLiquidBondDenom},
 		{p.WhitelistedValidators, ValidateWhitelistedValidators},
 		{p.UnstakeFeeRate, validateUnstakeFeeRate},
+		{p.CommissionRate, validateCommissionRate},
+		{p.MinLiquidStakingAmount, validateMinLiquidStakingAmount},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
