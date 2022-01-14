@@ -117,7 +117,7 @@ $ %s query %s pools --x-denom=[denom] --y-denom=[denom]
 			xDenom, _ := cmd.Flags().GetString(FlagXCoinDenom)
 			yDenom, _ := cmd.Flags().GetString(FlagYCoinDenom)
 
-			if pairIdStr != "" && (xDenom != "" || yDenom != "") {
+			if excConditions(pairIdStr != "", xDenom != "" || yDenom != "") {
 				return fmt.Errorf("invalid request")
 			}
 
@@ -195,14 +195,35 @@ $ %s query %s pool --reserve-acc=[address]
 				return err
 			}
 
-			var res *types.QueryPoolResponse
-
-			foundArg := false
-			queryClient := types.NewQueryClient(clientCtx)
-
+			var poolId *uint64
+			if len(args) > 0 {
+				id, err := strconv.ParseUint(args[0], 10, 64)
+				if err != nil {
+					return fmt.Errorf("parse pool id: %w", err)
+				}
+				poolId = &id
+			}
 			poolCoinDenom, _ := cmd.Flags().GetString(FlagPoolCoinDenom)
-			if poolCoinDenom != "" {
-				foundArg = true
+			reserveAcc, _ := cmd.Flags().GetString(FlagReserveAcc)
+
+			if !excConditions(poolId != nil, poolCoinDenom != "", reserveAcc != "") {
+				return fmt.Errorf("invalid request")
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			var res *types.QueryPoolResponse
+			switch {
+			case poolId != nil:
+				res, err = queryClient.Pool(
+					context.Background(),
+					&types.QueryPoolRequest{
+						PoolId: *poolId,
+					},
+				)
+				if err != nil {
+					return err
+				}
+			case poolCoinDenom != "":
 				res, err = queryClient.PoolByPoolCoinDenom(
 					context.Background(),
 					&types.QueryPoolByPoolCoinDenomRequest{
@@ -211,11 +232,7 @@ $ %s query %s pool --reserve-acc=[address]
 				if err != nil {
 					return err
 				}
-			}
-
-			reserveAcc, _ := cmd.Flags().GetString(FlagReserveAcc)
-			if !foundArg && reserveAcc != "" {
-				foundArg = true
+			case reserveAcc != "":
 				res, err = queryClient.PoolByReserveAcc(
 					context.Background(),
 					&types.QueryPoolByReserveAccRequest{
@@ -224,30 +241,6 @@ $ %s query %s pool --reserve-acc=[address]
 				if err != nil {
 					return err
 				}
-			}
-
-			if !foundArg && len(args) > 0 {
-				poolID, err := strconv.ParseUint(args[0], 10, 64)
-				if err != nil {
-					return err
-				}
-
-				if poolID != 0 {
-					foundArg = true
-					res, err = queryClient.Pool(
-						context.Background(),
-						&types.QueryPoolRequest{
-							PoolId: poolID,
-						},
-					)
-					if err != nil {
-						return err
-					}
-				}
-			}
-
-			if !foundArg {
-				return fmt.Errorf("provide the pool-id argument or --%s or --%s flag", FlagPoolCoinDenom, FlagReserveAcc)
 			}
 
 			return clientCtx.PrintProto(res)
