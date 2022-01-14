@@ -10,9 +10,15 @@ import (
 // SwapBatch handles types.MsgSwapBatch and stores it.
 func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 	params := k.GetParams(ctx)
+
 	if price := types.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
 		return types.ErrInvalidPriceTick
 	}
+
+	if msg.OrderLifespan > params.MaxOrderLifespan {
+		return types.ErrTooLongOrderLifespan
+	}
+	canceledAt := ctx.BlockTime().Add(msg.OrderLifespan)
 
 	var pair types.Pair
 	pair, found := k.GetPairByDenoms(ctx, msg.XCoinDenom, msg.YCoinDenom)
@@ -41,18 +47,8 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 	}
 
 	requestId := k.GetNextSwapRequestIdWithUpdate(ctx, pair)
-	req := types.SwapRequest{
-		Id:              requestId,
-		PairId:          pair.Id,
-		MsgHeight:       ctx.BlockHeight(),
-		BatchId:         pair.CurrentBatchId,
-		Orderer:         msg.Orderer,
-		Direction:       msg.GetDirection(),
-		Price:           msg.Price,
-		RemainingAmount: msg.OfferCoin.Amount,
-		ReceivedAmount:  sdk.ZeroInt(),
-	}
-	k.SetSwapRequest(ctx, pair.Id, req)
+	req := types.NewSwapRequest(msg, requestId, pair, canceledAt, ctx.BlockHeight())
+	k.SetSwapRequest(ctx, req)
 
 	// TODO: need to emit an event?
 
@@ -76,15 +72,8 @@ func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) 
 	}
 
 	requestId := k.GetNextCancelSwapRequestIdWithUpdate(ctx, pair)
-	req := types.CancelSwapRequest{
-		Id:            requestId,
-		PairId:        msg.PairId,
-		MsgHeight:     ctx.BlockHeight(),
-		Orderer:       msg.Orderer,
-		SwapRequestId: msg.SwapRequestId,
-		BatchId:       pair.CurrentBatchId,
-	}
-	k.SetCancelSwapRequest(ctx, msg.PairId, req)
+	req := types.NewCancelSwapRequest(msg, requestId, pair, ctx.BlockHeight())
+	k.SetCancelSwapRequest(ctx, req)
 
 	return nil
 }

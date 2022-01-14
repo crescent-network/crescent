@@ -14,4 +14,5 @@ var (
 	ErrWrongPoolCoinDenom        = sdkerrors.Register(ModuleName, 5, "wrong pool coin denom")
 	ErrInvalidPriceTick          = sdkerrors.Register(ModuleName, 6, "price not fit into ticks")
 	ErrPriceOutOfRange           = sdkerrors.Register(ModuleName, 7, "price out of range limit")
+	ErrTooLongOrderLifespan      = sdkerrors.Register(ModuleName, 8, "order lifespan is too long")
 )

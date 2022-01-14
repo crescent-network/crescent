@@ -232,6 +232,17 @@ func TestDepositToPool(t *testing.T) {
 			ay:   100,
 			pc:   1,
 		},
+		{
+			name: "zero minting amount",
+			rx:   10000,
+			ry:   10000,
+			ps:   999,
+			x:    10,
+			y:    10,
+			ax:   0,
+			ay:   0,
+			pc:   0,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := types.NewPoolInfo(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))

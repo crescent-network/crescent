@@ -94,6 +94,12 @@ func GetSwapRequestKey(pairId, id uint64) []byte {
 	return append(append(SwapRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(id)...)
 }
 
+// GetSwapRequestsByPairKeyPrefix returns the store key to iterate swap requests
+// by pair.
+func GetSwapRequestsByPairKeyPrefix(pairId uint64) []byte {
+	return append(SwapRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
+}
+
 // GetCancelSwapRequestKey returns the store key to retrieve cancel swap request object from pair id and request id.
 func GetCancelSwapRequestKey(pairId, id uint64) []byte {
 	return append(append(CancelSwapRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(id)...)
