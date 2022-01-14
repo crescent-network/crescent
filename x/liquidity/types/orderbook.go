@@ -292,14 +292,24 @@ func (ticks OrderBookTicks) HighestTick() (tick sdk.Dec, found bool) {
 	if len(ticks.Ticks) == 0 {
 		return
 	}
-	return ticks.Ticks[0].Price, true
+	for i := range ticks.Ticks {
+		if ticks.Ticks[i].Orders.RemainingAmount().IsPositive() {
+			return ticks.Ticks[i].Price, true
+		}
+	}
+	return
 }
 
 func (ticks OrderBookTicks) LowestTick() (tick sdk.Dec, found bool) {
 	if len(ticks.Ticks) == 0 {
 		return
 	}
-	return ticks.Ticks[len(ticks.Ticks)-1].Price, true
+	for i := len(ticks.Ticks) - 1; i >= 0; i-- {
+		if ticks.Ticks[i].Orders.RemainingAmount().IsPositive() {
+			return ticks.Ticks[i].Price, true
+		}
+	}
+	return
 }
 
 type OrderBook struct {
