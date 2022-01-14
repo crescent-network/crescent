@@ -277,6 +277,7 @@ func (k Keeper) RefundAndDeleteSwapRequestsToBeDeleted(ctx sdk.Context) {
 			if err := k.RefundSwapRequest(ctx, pair, req); err != nil {
 				panic(err)
 			}
+			k.DeleteSwapRequest(ctx, req.PairId, req.Id)
 			return false
 		})
 		return false
