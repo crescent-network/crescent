@@ -38,7 +38,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		})
 		// Cancel expired SwapRequests.
 		k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool) {
-			if !req.CanceledAt.Before(ctx.BlockTime()) { // CanceledAt >= BlockTime
+			if !ctx.BlockTime().Before(req.CanceledAt) { // CanceledAt <= BlockTime
 				k.CancelSwapRequest(ctx, req)
 			}
 			return false
