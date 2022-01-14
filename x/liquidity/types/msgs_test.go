@@ -193,7 +193,6 @@ func TestMsgSwapBatch(t *testing.T) {
 				orderLifespan,
 			),
 		},
-		// TODO: write more test cases
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
 			types.NewMsgSwapBatch(
@@ -219,7 +218,7 @@ func TestMsgSwapBatch(t *testing.T) {
 			),
 		},
 		{
-			"invalid swap direction: invalid request",
+			"offer and demand coin denom pair doesn't match with x and y coin denom pair: invalid request",
 			types.NewMsgSwapBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				"denom1",
