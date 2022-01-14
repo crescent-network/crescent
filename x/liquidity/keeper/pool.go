@@ -38,7 +38,7 @@ func (k Keeper) GetNextWithdrawRequestIdWithUpdate(ctx sdk.Context, pool types.P
 func (k Keeper) GetPoolBalance(ctx sdk.Context, pool types.Pool) (rx sdk.Int, ry sdk.Int) {
 	reserveAddr := pool.GetReserveAddress()
 	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pool.XCoinDenom).Amount
-	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pool.YCoinDenom).Amount
+	ry = k.bankKeeper.GetBalance(ctx, reserveAddr, pool.YCoinDenom).Amount
 	return
 }
 
@@ -134,15 +134,8 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error 
 	}
 
 	requestId := k.GetNextDepositRequestIdWithUpdate(ctx, pool)
-	req := types.DepositRequest{
-		Id:        requestId,
-		PoolId:    pool.Id,
-		MsgHeight: ctx.BlockHeight(),
-		Depositor: msg.Depositor,
-		XCoin:     msg.XCoin,
-		YCoin:     msg.YCoin,
-	}
-	k.SetDepositRequest(ctx, pool.Id, req)
+	req := types.NewDepositRequest(msg, requestId, ctx.BlockHeight())
+	k.SetDepositRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -173,14 +166,8 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 	}
 
 	requestId := k.GetNextWithdrawRequestIdWithUpdate(ctx, pool)
-	req := types.WithdrawRequest{
-		Id:         requestId,
-		PoolId:     pool.Id,
-		MsgHeight:  ctx.BlockHeight(),
-		Withdrawer: msg.Withdrawer,
-		PoolCoin:   msg.PoolCoin,
-	}
-	k.SetWithdrawRequest(ctx, pool.Id, req)
+	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
+	k.SetWithdrawRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
