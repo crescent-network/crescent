@@ -68,11 +68,11 @@ func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 		var found bool
 		switch dir {
 		case PriceIncreasing:
-			sa := sellAmountLTE(i + 1)
-			hba := buyAmountGTE(i + 2)
-			ba := buyAmountGTE(i)
-			lsa := sellAmountLTE(i - 1)
-			if TickFromIndex(i+1, engine.TickPrecision).MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(currentPrice.MulInt(lsa)) {
+			sa := sellAmountLTE(i)
+			hba := buyAmountGTE(i + 1)
+			ba := buyAmountGTE(i - 1)
+			lsa := sellAmountLTE(i - 2)
+			if currentPrice.MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(TickFromIndex(i-1, engine.TickPrecision).MulInt(lsa)) {
 				return currentPrice
 			}
 
@@ -82,11 +82,11 @@ func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 
 			nextPrice, found = tickSource.UpTick(currentPrice)
 		case PriceDecreasing:
-			sa := sellAmountLTE(i)
-			hba := buyAmountGTE(i + 1)
-			ba := buyAmountGTE(i - 1)
-			lsa := sellAmountLTE(i - 2)
-			if currentPrice.MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(TickFromIndex(i-1, engine.TickPrecision).MulInt(lsa)) {
+			sa := sellAmountLTE(i + 1)
+			hba := buyAmountGTE(i + 2)
+			ba := buyAmountGTE(i)
+			lsa := sellAmountLTE(i - 1)
+			if TickFromIndex(i+1, engine.TickPrecision).MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(currentPrice.MulInt(lsa)) {
 				return currentPrice
 			}
 
