@@ -17,6 +17,7 @@ const (
 	AttributeKeyMintedPoolCoin  = "minted_pool_coin"
 	AttributeKeyPoolCoin        = "pool_coin"
 	AttributeKeyRequestId       = "request_id"
+	AttributeKeyPoolId          = "pool_id"
 	AttributeKeyPairId          = "pair_id"
 	AttributeKeyBatchId         = "batch_id"
 	AttributeKeySwapRequestId   = "swap_request_id"
