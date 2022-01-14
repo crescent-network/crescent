@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/crescent-network/crescent/x/liquidstaking/types";
 
@@ -25,6 +26,26 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+
+  // commission_rate specifies the ...
+  string commission_rate = 4 [
+    (gogoproto.moretags)   = "yaml:\"commission_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Minimum number of coins to be staked to the active liquid validators on liquid staking.
+  string min_liquid_staking_amount = 5 [
+    (gogoproto.moretags)   = "yaml:\"min_liquid_staking_amount\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false,
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      example: "\"1000000\"",
+      format: "sdk.Int"
+  }];
+
+
+
 }
 
 // ValidatorStatus enumerates the status of a liquid validator.
@@ -48,7 +69,7 @@ message WhitelistedValidator {
   // validator_address defines the bech32-encoded address that whitelisted validator
   string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
-  // weight specifies the ... TBD
+  // weight specifies the weight for liquid staking, unstaking amount
   string weight = 2 [
     (gogoproto.moretags)   = "yaml:\"weight\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -71,30 +92,10 @@ message LiquidValidator {
   string liquid_tokens = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
+  // weight specifies the weight for liquid staking, unstaking amount
   string weight = 4 [
     (gogoproto.moretags)   = "yaml:\"weight\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  //  // delegator_shares defines total shares issued to a validator's delegators.
-  //  string delegator_shares = 4 [
-  //    (gogoproto.moretags)   = "yaml:\"delegator_shares\"",
-  //    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-  //    (gogoproto.nullable)   = false
-  //  ];
-  //  // description defines the description terms for the validator.
-  //  Description description = 7 [(gogoproto.nullable) = false];
-  //  // unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
-  //  int64 unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
-  //  // unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
-  //  google.protobuf.Timestamp unbonding_time = 9
-  //  [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
-  //  // commission defines the commission parameters.
-  //  Commission commission = 10 [(gogoproto.nullable) = false];
-  //  // min_self_delegation is the validator's self declared minimum self delegation.
-  //  string min_self_delegation = 11 [
-  //    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
-  //    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-  //    (gogoproto.nullable)   = false
-  //  ];
 }

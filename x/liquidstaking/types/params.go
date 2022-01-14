@@ -13,18 +13,26 @@ import (
 
 // Parameter store keys
 var (
-	KeyLiquidBondDenom       = []byte("LiquidBondDenom")
-	KeyWhitelistedValidators = []byte("WhitelistedValidators")
-	KeyUnstakeFeeRate        = []byte("UnstakeFeeRate")
+	KeyLiquidBondDenom        = []byte("LiquidBondDenom")
+	KeyWhitelistedValidators  = []byte("WhitelistedValidators")
+	KeyUnstakeFeeRate         = []byte("UnstakeFeeRate")
+	KeyCommissionRate         = []byte("CommissionRate")
+	KeyMinLiquidStakingAmount = []byte("MinLiquidStakingAmount")
 
 	DefaultLiquidBondDenom = "bstake"
+
 	// DefaultUnstakeFeeRate is the default Unstake Fee Rate.
 	DefaultUnstakeFeeRate = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
-	// TODO: DefaultRebalancingThreshold
+
+	// DefaultCommissionRate is the default Commission Rate.
+	DefaultCommissionRate = sdk.NewDecWithPrec(5, 2) // "0.050000000000000000"
+
+	// MinLiquidStakingAmount is the default minimum liquid staking amount.
+	DefaultMinLiquidStakingAmount = sdk.NewInt(1000000)
 
 	// Const variables
-
-	MinimumStakingAmount = sdk.NewInt(1000000)
+	RebalancingTrigger = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
+	RewardTrigger      = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
 
 	//LiquidStakingProxyAcc = farmingtypes.DeriveAddress(farmingtypes.AddressType20Bytes, ModuleName, "LiquidStakingProxyAcc")
 	LiquidStakingProxyAcc = farmingtypes.DeriveAddress(farmingtypes.AddressType32Bytes, ModuleName, "LiquidStakingProxyAcc")
@@ -41,9 +49,11 @@ func ParamKeyTable() paramstypes.KeyTable {
 func DefaultParams() Params {
 	return Params{
 		// TODO: btoken denom immutable
-		LiquidBondDenom:       DefaultLiquidBondDenom,
-		WhitelistedValidators: []WhitelistedValidator{},
-		UnstakeFeeRate:        DefaultUnstakeFeeRate,
+		LiquidBondDenom:        DefaultLiquidBondDenom,
+		WhitelistedValidators:  []WhitelistedValidator{},
+		UnstakeFeeRate:         DefaultUnstakeFeeRate,
+		CommissionRate:         DefaultCommissionRate,
+		MinLiquidStakingAmount: DefaultMinLiquidStakingAmount,
 	}
 }
 
@@ -53,6 +63,8 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyLiquidBondDenom, &p.LiquidBondDenom, ValidateLiquidBondDenom),
 		paramstypes.NewParamSetPair(KeyWhitelistedValidators, &p.WhitelistedValidators, ValidateWhitelistedValidators),
 		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, validateUnstakeFeeRate),
+		paramstypes.NewParamSetPair(KeyCommissionRate, &p.CommissionRate, validateCommissionRate),
+		paramstypes.NewParamSetPair(KeyMinLiquidStakingAmount, &p.MinLiquidStakingAmount, validateMinLiquidStakingAmount),
 	}
 }
 
@@ -75,6 +87,22 @@ func (p Params) Validate() error {
 		if err := v.validator(v.value); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func ValidateLiquidBondDenom(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if strings.TrimSpace(v) == "" {
+		return fmt.Errorf("bond denom cannot be blank")
+	}
+
+	if err := sdk.ValidateDenom(v); err != nil {
+		return err
 	}
 	return nil
 }
@@ -123,18 +151,40 @@ func validateUnstakeFeeRate(i interface{}) error {
 	return nil
 }
 
-func ValidateLiquidBondDenom(i interface{}) error {
-	v, ok := i.(string)
+func validateCommissionRate(i interface{}) error {
+	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if strings.TrimSpace(v) == "" {
-		return fmt.Errorf("bond denom cannot be blank")
+	if v.IsNil() {
+		return fmt.Errorf("commission rate must not be nil")
 	}
 
-	if err := sdk.ValidateDenom(v); err != nil {
-		return err
+	if v.IsNegative() {
+		return fmt.Errorf("commission rate must not be negative: %s", v)
 	}
+
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("commission rate too large: %s", v)
+	}
+
+	return nil
+}
+
+func validateMinLiquidStakingAmount(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNil() {
+		return fmt.Errorf("min liquid staking amount must not be nil")
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("min liquid staking amount must not be negative: %s", v)
+	}
+
 	return nil
 }
