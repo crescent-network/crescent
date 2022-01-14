@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -106,6 +108,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) error {
 		sdk.NewEvent(
 			types.EventTypeCreatePool,
 			sdk.NewAttribute(types.AttributeKeyCreator, msg.Creator),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyXCoin, msg.XCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyYCoin, msg.YCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyMintedPoolCoin, poolCoin.String()),
@@ -135,7 +138,16 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error 
 	req := types.NewDepositRequest(msg, requestId, ctx.BlockHeight())
 	k.SetDepositRequest(ctx, req)
 
-	// TODO: need to emit an event?
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeDepositBatch,
+			sdk.NewAttribute(types.AttributeKeyDepositor, msg.Depositor),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyXCoin, msg.XCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyYCoin, msg.YCoin.String()),
+		),
+	})
 
 	return nil
 }
@@ -159,7 +171,15 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
 	k.SetWithdrawRequest(ctx, req)
 
-	// TODO: need to emit an event?
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeWithdrawBatch,
+			sdk.NewAttribute(types.AttributeKeyWithdrawer, msg.Withdrawer),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolCoin, msg.PoolCoin.String()),
+		),
+	})
 
 	return nil
 }
