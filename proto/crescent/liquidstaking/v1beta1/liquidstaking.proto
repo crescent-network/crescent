@@ -36,16 +36,11 @@ message Params {
 
   // Minimum number of coins to be staked to the active liquid validators on liquid staking.
   string min_liquid_staking_amount = 5 [
-    (gogoproto.moretags)   = "yaml:\"min_liquid_staking_amount\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false,
-    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
-      example: "\"1000000\"",
-      format: "sdk.Int"
-  }];
-
-
-
+    (gogoproto.moretags)                                        = "yaml:\"min_liquid_staking_amount\"",
+    (gogoproto.customtype)                                      = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)                                        = false,
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {example: "\"1000000\"", format: "sdk.Int"}
+  ];
 }
 
 // ValidatorStatus enumerates the status of a liquid validator.
