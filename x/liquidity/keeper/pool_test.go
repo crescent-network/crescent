@@ -171,3 +171,15 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 	_, err = k.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
+
+func (s *KeeperTestSuite) TestCreatePoolAfterDisabled() {
+	// Create a disabled pool.
+	poolCreator := s.addr(0)
+	pool := s.createPool(poolCreator, parseCoin("1000000denom1"), parseCoin("1000000denom2"), true)
+	s.withdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
+	s.nextBlock()
+
+	// Now a new pool can be created with same denom pair because
+	// all pools with same denom pair are disabled.
+	s.createPool(s.addr(1), parseCoin("1000000denom1"), parseCoin("1000000denom2"), true)
+}
