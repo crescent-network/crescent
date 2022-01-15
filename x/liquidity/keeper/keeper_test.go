@@ -1,8 +1,10 @@
 package keeper_test
 
 import (
+	"encoding/binary"
 	"testing"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,4 +80,52 @@ func (s *KeeperTestSuite) SetupTest() {
 			CurrentBatchId:          1,
 		},
 	}
+}
+
+func (s *KeeperTestSuite) getBalances(addr sdk.AccAddress) sdk.Coins {
+	return s.app.BankKeeper.GetAllBalances(s.ctx, addr)
+}
+
+func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
+	addr := make(sdk.AccAddress, 20)
+	binary.PutVarint(addr, int64(addrNum))
+	return addr
+}
+
+func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
+	err := s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amt)
+	s.Require().NoError(err)
+	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, addr, amt)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, xCoin, yCoin sdk.Coin) types.Pool {
+	k, ctx := s.keeper, s.ctx
+
+	params := k.GetParams(ctx)
+	depositCoins := sdk.NewCoins(xCoin, yCoin)
+	s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+	pool, err := k.CreatePool(ctx, types.NewMsgCreatePool(creator, xCoin, yCoin))
+	s.Require().NoError(err)
+	return pool
+}
+
+func parseCoin(s string) sdk.Coin {
+	coin, err := sdk.ParseCoinNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coin
+}
+
+func parseCoins(s string) sdk.Coins {
+	coins, err := sdk.ParseCoinsNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}
+
+func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
+	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
