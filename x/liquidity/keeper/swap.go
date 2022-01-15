@@ -10,15 +10,15 @@ import (
 )
 
 // SwapBatch handles types.MsgSwapBatch and stores it.
-func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
+func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
 	if price := types.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
-		return types.ErrInvalidPriceTick
+		return types.SwapRequest{}, types.ErrInvalidPriceTick
 	}
 
 	if msg.OrderLifespan > params.MaxOrderLifespan {
-		return types.ErrTooLongOrderLifespan
+		return types.SwapRequest{}, types.ErrTooLongOrderLifespan
 	}
 	canceledAt := ctx.BlockTime().Add(msg.OrderLifespan)
 
@@ -34,18 +34,18 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 		case msg.Price.GT(lastPrice):
 			priceLimit := msg.Price.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio))
 			if msg.Price.GT(priceLimit) {
-				return types.ErrPriceOutOfRange
+				return types.SwapRequest{}, types.ErrPriceOutOfRange
 			}
 		case msg.Price.LT(lastPrice):
 			priceLimit := msg.Price.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio))
 			if msg.Price.LT(priceLimit) {
-				return types.ErrPriceOutOfRange
+				return types.SwapRequest{}, types.ErrPriceOutOfRange
 			}
 		}
 	}
 
 	if err := k.bankKeeper.SendCoins(ctx, msg.GetOrderer(), pair.GetEscrowAddress(), sdk.NewCoins(msg.OfferCoin)); err != nil {
-		return err
+		return types.SwapRequest{}, err
 	}
 
 	requestId := k.GetNextSwapRequestIdWithUpdate(ctx, pair)
@@ -64,23 +64,23 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) error {
 		),
 	})
 
-	return nil
+	return req, nil
 }
 
 // CancelSwapBatch handles types.MsgCancelSwapBatch and stores it.
-func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) error {
+func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) (types.CancelSwapRequest, error) {
 	swapReq, found := k.GetSwapRequest(ctx, msg.PairId, msg.SwapRequestId)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "swap request with id %d in pair %d not found", msg.SwapRequestId, msg.PairId)
+		return types.CancelSwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "swap request with id %d in pair %d not found", msg.SwapRequestId, msg.PairId)
 	}
 
 	if msg.Orderer != swapReq.Orderer {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
+		return types.CancelSwapRequest{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
 	}
 
 	pair, found := k.GetPair(ctx, msg.PairId)
 	if !found { // TODO: will it ever happen?
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair with id %d not found", msg.PairId)
+		return types.CancelSwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair with id %d not found", msg.PairId)
 	}
 
 	requestId := k.GetNextCancelSwapRequestIdWithUpdate(ctx, pair)
@@ -96,7 +96,7 @@ func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) 
 		),
 	})
 
-	return nil
+	return req, nil
 }
 
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {

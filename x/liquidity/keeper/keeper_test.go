@@ -43,21 +43,18 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	suite.app = app
-	suite.ctx = ctx
-	suite.keeper = suite.app.LiquidityKeeper
-	suite.querier = keeper.Querier{Keeper: suite.keeper}
-	suite.srv = keeper.NewMsgServerImpl(suite.keeper)
-	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
-	for _, addr := range suite.addrs {
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
-		suite.Require().NoError(err)
+func (s *KeeperTestSuite) SetupTest() {
+	s.app = simapp.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.keeper = s.app.LiquidityKeeper
+	s.querier = keeper.Querier{Keeper: s.keeper}
+	s.srv = keeper.NewMsgServerImpl(s.keeper)
+	s.addrs = simapp.AddTestAddrs(s.app, s.ctx, 6, sdk.ZeroInt())
+	for _, addr := range s.addrs {
+		err := simapp.FundAccount(s.app.BankKeeper, s.ctx, addr, initialBalances)
+		s.Require().NoError(err)
 	}
-	suite.samplePools = []types.Pool{
+	s.samplePools = []types.Pool{
 		{
 			Id:                    1,
 			PairId:                1,
@@ -69,7 +66,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 			LastWithdrawRequestId: 0,
 		},
 	}
-	suite.samplePairs = []types.Pair{
+	s.samplePairs = []types.Pair{
 		{
 			Id:                      uint64(1),
 			XCoinDenom:              denom1,

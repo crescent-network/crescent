@@ -65,10 +65,10 @@ func (k Keeper) MarkWithdrawRequestToBeDeleted(ctx sdk.Context, req types.Withdr
 }
 
 // CreatePool handles types.MsgCreatePool and creates a pool.
-func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) error {
+func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Pool, error) {
 	params := k.GetParams(ctx)
 	if msg.XCoin.Amount.LT(params.MinInitialDepositAmount) || msg.YCoin.Amount.LT(params.MinInitialDepositAmount) {
-		return types.ErrInsufficientDepositAmount // TODO: more detail error?
+		return types.Pool{}, types.ErrInsufficientDepositAmount // TODO: more detail error?
 	}
 
 	pair, found := k.GetPairByDenoms(ctx, msg.XCoin.Denom, msg.YCoin.Denom)
@@ -90,7 +90,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) error {
 		return false
 	})
 	if found {
-		return types.ErrPoolAlreadyExists
+		return types.Pool{}, types.ErrPoolAlreadyExists
 	}
 
 	// Create and save the new pool object.
@@ -102,20 +102,20 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) error {
 	creator := msg.GetCreator()
 	depositCoins := sdk.NewCoins(msg.XCoin, msg.YCoin)
 	if err := k.bankKeeper.SendCoins(ctx, creator, pool.GetReserveAddress(), depositCoins); err != nil {
-		return err
+		return types.Pool{}, err
 	}
 	// Send the pool creation fee to the fee collector.
 	feeCollectorAddr, _ := sdk.AccAddressFromBech32(params.FeeCollectorAddress)
 	if err := k.bankKeeper.SendCoins(ctx, creator, feeCollectorAddr, params.PoolCreationFee); err != nil {
-		return sdkerrors.Wrap(err, "insufficient pool creation fee")
+		return types.Pool{}, sdkerrors.Wrap(err, "insufficient pool creation fee")
 	}
 	// Mint and send pool coin to the creator.
 	poolCoin := sdk.NewCoin(pool.PoolCoinDenom, params.InitialPoolCoinSupply)
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(poolCoin)); err != nil {
-		return err
+		return types.Pool{}, err
 	}
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, creator, sdk.NewCoins(poolCoin)); err != nil {
-		return err
+		return types.Pool{}, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -129,31 +129,31 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) error {
 		),
 	})
 
-	return nil
+	return pool, nil
 }
 
 // DepositBatch handles types.MsgDepositBatch and stores the request.
-func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error {
+func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) (types.DepositRequest, error) {
 	pool, found := k.GetPool(ctx, msg.PoolId)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
+		return types.DepositRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
 	}
 
 	if pool.Disabled {
-		return types.ErrDisabledPool
+		return types.DepositRequest{}, types.ErrDisabledPool
 	}
 
 	if msg.XCoin.Denom != pool.XCoinDenom || msg.YCoin.Denom != pool.YCoinDenom {
-		return types.ErrWrongPair
+		return types.DepositRequest{}, types.ErrWrongPair
 	}
 
 	depositCoins := sdk.NewCoins(msg.XCoin, msg.YCoin)
 	if err := k.bankKeeper.SendCoins(ctx, msg.GetDepositor(), types.GlobalEscrowAddr, depositCoins); err != nil {
-		return err
+		return types.DepositRequest{}, err
 	}
 
 	requestId := k.GetNextDepositRequestIdWithUpdate(ctx, pool)
-	req := types.NewDepositRequest(msg, requestId, ctx.BlockHeight())
+	req := types.NewDepositRequest(msg, pool, requestId, ctx.BlockHeight())
 	k.SetDepositRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -167,30 +167,30 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error 
 		),
 	})
 
-	return nil
+	return req, nil
 }
 
 // WithdrawBatch handles types.MsgWithdrawBatch and stores the request.
-func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) error {
+func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (types.WithdrawRequest, error) {
 	pool, found := k.GetPool(ctx, msg.PoolId)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
+		return types.WithdrawRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
 	}
 
 	if pool.Disabled {
-		return types.ErrDisabledPool
+		return types.WithdrawRequest{}, types.ErrDisabledPool
 	}
 
 	if msg.PoolCoin.Denom != pool.PoolCoinDenom {
-		return types.ErrWrongPoolCoinDenom
+		return types.WithdrawRequest{}, types.ErrWrongPoolCoinDenom
 	}
 
 	if err := k.bankKeeper.SendCoins(ctx, msg.GetWithdrawer(), types.GlobalEscrowAddr, sdk.NewCoins(msg.PoolCoin)); err != nil {
-		return err
+		return types.WithdrawRequest{}, err
 	}
 
 	requestId := k.GetNextWithdrawRequestIdWithUpdate(ctx, pool)
-	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
+	req := types.NewWithdrawRequest(msg, pool, requestId, ctx.BlockHeight())
 	k.SetWithdrawRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -203,7 +203,7 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 		),
 	})
 
-	return nil
+	return req, nil
 }
 
 // ExecuteDepositRequest executes a deposit request.
