@@ -10,7 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/crescent-network/crescent/app"
+	crescentapp "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/liquidity"
 	"github.com/crescent-network/crescent/x/liquidity/keeper"
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
@@ -31,11 +32,11 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app         *simapp.CrescentApp
+	app         *crescentapp.CrescentApp
 	ctx         sdk.Context
 	keeper      keeper.Keeper
 	querier     keeper.Querier
-	srv         types.MsgServer
+	msgServer   types.MsgServer
 	addrs       []sdk.AccAddress
 	samplePools []types.Pool
 	samplePairs []types.Pair
@@ -46,46 +47,33 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
+	s.app = crescentapp.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.keeper = s.app.LiquidityKeeper
 	s.querier = keeper.Querier{Keeper: s.keeper}
-	s.srv = keeper.NewMsgServerImpl(s.keeper)
-	s.addrs = simapp.AddTestAddrs(s.app, s.ctx, 6, sdk.ZeroInt())
-	for _, addr := range s.addrs {
-		err := simapp.FundAccount(s.app.BankKeeper, s.ctx, addr, initialBalances)
-		s.Require().NoError(err)
-	}
-	s.samplePools = []types.Pool{
-		{
-			Id:                    1,
-			PairId:                1,
-			XCoinDenom:            denom1,
-			YCoinDenom:            denom2,
-			ReserveAddress:        types.PoolReserveAcc(1).String(),
-			PoolCoinDenom:         types.PoolCoinDenom(1),
-			LastDepositRequestId:  0,
-			LastWithdrawRequestId: 0,
-		},
-	}
-	s.samplePairs = []types.Pair{
-		{
-			Id:                      uint64(1),
-			XCoinDenom:              denom1,
-			YCoinDenom:              denom2,
-			EscrowAddress:           types.PairEscrowAddr(1).String(),
-			LastSwapRequestId:       0,
-			LastCancelSwapRequestId: 0,
-			LastPrice:               nil,
-			CurrentBatchId:          1,
-		},
-	}
+	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
 }
 
+// Below are just shortcuts to frequently-used functions.
 func (s *KeeperTestSuite) getBalances(addr sdk.AccAddress) sdk.Coins {
 	return s.app.BankKeeper.GetAllBalances(s.ctx, addr)
 }
 
+func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin {
+	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
+}
+
+func (s *KeeperTestSuite) sendCoins(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
+	err := s.app.BankKeeper.SendCoins(s.ctx, fromAddr, toAddr, amt)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) nextBlock() {
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	liquidity.BeginBlocker(s.ctx, s.keeper)
+}
+
+// Below are useful helpers to write test code easily.
 func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 	addr := make(sdk.AccAddress, 20)
 	binary.PutVarint(addr, int64(addrNum))
@@ -99,16 +87,21 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, xCoin, yCoin sdk.Coin) types.Pool {
+func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, xCoin, yCoin sdk.Coin, fund bool) types.Pool {
 	params := s.keeper.GetParams(s.ctx)
-	depositCoins := sdk.NewCoins(xCoin, yCoin)
-	s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+	if fund {
+		depositCoins := sdk.NewCoins(xCoin, yCoin)
+		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+	}
 	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, xCoin, yCoin))
 	s.Require().NoError(err)
 	return pool
 }
 
-func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, xCoin, yCoin sdk.Coin) types.DepositRequest {
+func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, xCoin, yCoin sdk.Coin, fund bool) types.DepositRequest {
+	if fund {
+		s.fundAddr(depositor, sdk.NewCoins(xCoin, yCoin))
+	}
 	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, xCoin, yCoin))
 	s.Require().NoError(err)
 	return req
