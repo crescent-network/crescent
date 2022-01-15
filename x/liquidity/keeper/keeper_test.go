@@ -100,14 +100,24 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 }
 
 func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, xCoin, yCoin sdk.Coin) types.Pool {
-	k, ctx := s.keeper, s.ctx
-
-	params := k.GetParams(ctx)
+	params := s.keeper.GetParams(s.ctx)
 	depositCoins := sdk.NewCoins(xCoin, yCoin)
 	s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
-	pool, err := k.CreatePool(ctx, types.NewMsgCreatePool(creator, xCoin, yCoin))
+	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, xCoin, yCoin))
 	s.Require().NoError(err)
 	return pool
+}
+
+func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, xCoin, yCoin sdk.Coin) types.DepositRequest {
+	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, xCoin, yCoin))
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64, poolCoin sdk.Coin) types.WithdrawRequest {
+	req, err := s.keeper.WithdrawBatch(s.ctx, types.NewMsgWithdrawBatch(withdrawer, poolId, poolCoin))
+	s.Require().NoError(err)
+	return req
 }
 
 func parseCoin(s string) sdk.Coin {
