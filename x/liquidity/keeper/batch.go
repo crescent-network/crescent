@@ -190,7 +190,12 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	var poolBuySources, poolSellSources []types.OrderSource
 	k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
 		rx, ry := k.GetPoolBalance(ctx, pool)
-		poolInfo := types.NewPoolInfo(rx, ry, sdk.ZeroInt()) // Pool coin supply is not used when matching
+		ps := k.GetPoolCoinSupply(ctx, pool)
+		poolInfo := types.NewPoolInfo(rx, ry, ps) // Pool coin supply is not used when matching
+		if types.IsDepletedPool(poolInfo) {
+			k.MarkPoolAsDisabled(ctx, pool)
+			return false
+		}
 		pools = append(pools, poolInfo)
 
 		poolReserveAddr := pool.GetReserveAddress()
