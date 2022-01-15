@@ -55,28 +55,25 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) error {
 	}
 
 	pair, found := k.GetPairByDenoms(ctx, msg.XCoin.Denom, msg.YCoin.Denom)
-	if found {
-		// If there is a pair with given denoms, check if there is a pool with
-		// the pair.
-		// Current version disallows to create multiple pools with same pair,
-		// but later this can be changed(in v2).
-		found := false
-		k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
-			// TODO: check if pool isn't disabled
-			// if !pool.Disabled {
-			//     found = true
-			//     return true
-			// }
-			// return false
-			found = true
-			return true
-		})
-		if found {
-			return types.ErrPoolAlreadyExists
-		}
-	} else {
+	if !found {
 		// If there is no such pair, create one and store it to the variable.
 		pair = k.CreatePair(ctx, msg.XCoin.Denom, msg.YCoin.Denom)
+	}
+
+	// If there is a pair with given denoms, check if there is a pool with
+	// the pair.
+	// Current version disallows to create multiple pools with same pair,
+	// but later this can be changed(in v2).
+	found = false
+	k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
+		if !pool.Disabled {
+			found = true
+			return true
+		}
+		return false
+	})
+	if found {
+		return types.ErrPoolAlreadyExists
 	}
 
 	// Create and save the new pool object.
@@ -125,6 +122,10 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) error 
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
 	}
 
+	if pool.Disabled {
+		return types.ErrDisabledPool
+	}
+
 	if msg.XCoin.Denom != pool.XCoinDenom || msg.YCoin.Denom != pool.YCoinDenom {
 		return types.ErrWrongPair
 	}
@@ -157,6 +158,10 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 	pool, found := k.GetPool(ctx, msg.PoolId)
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
+	}
+
+	if pool.Disabled {
+		return types.ErrDisabledPool
 	}
 
 	if msg.PoolCoin.Denom != pool.PoolCoinDenom {
