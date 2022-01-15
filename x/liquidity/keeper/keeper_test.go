@@ -37,9 +37,6 @@ type KeeperTestSuite struct {
 	keeper      keeper.Keeper
 	querier     keeper.Querier
 	msgServer   types.MsgServer
-	addrs       []sdk.AccAddress
-	samplePools []types.Pool
-	samplePairs []types.Pair
 }
 
 func TestKeeperTestSuite(t *testing.T) {

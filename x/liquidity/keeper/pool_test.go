@@ -1,9 +1,88 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/crescent-network/crescent/x/liquidity"
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
+
+func (s *KeeperTestSuite) TestCreatePool() {
+	k, ctx := s.keeper, s.ctx
+
+	// Create a normal pool.
+	poolCreator := s.addr(0)
+	xCoin, yCoin := parseCoin("1000000denom1"), parseCoin("1000000denom2")
+	s.createPool(poolCreator, xCoin, yCoin, true)
+
+	// Check if our pool is set correctly.
+	pool, found := k.GetPool(ctx, 1)
+	s.Require().True(found)
+	s.Require().Equal("denom1", pool.XCoinDenom)
+	s.Require().Equal("denom2", pool.YCoinDenom)
+	s.Require().Equal(types.PoolCoinDenom(pool.Id), pool.PoolCoinDenom)
+	s.Require().True(pool.GetReserveAddress().Equals(types.PoolReserveAcc(pool.Id)))
+	s.Require().False(pool.Disabled)
+
+	// A new pair has been created automatically, too.
+	pair, found := k.GetPairByDenoms(ctx, "denom1", "denom2")
+	s.Require().True(found)
+	s.Require().Equal(pair.Id, pool.PairId)
+	s.Require().Equal("denom1", pair.XCoinDenom)
+	s.Require().Equal("denom2", pair.YCoinDenom)
+	s.Require().True(pair.GetEscrowAddress().Equals(types.PairEscrowAddr(pair.Id)))
+	s.Require().Equal(uint64(1), pair.CurrentBatchId)
+	s.Require().Nil(pair.LastPrice)
+}
+
+func (s *KeeperTestSuite) TestPoolCreationFee() {
+	k, ctx := s.keeper, s.ctx
+
+	poolCreator := s.addr(0)
+	xCoin, yCoin := parseCoin("1000000denom1"), parseCoin("1000000denom2")
+	s.fundAddr(poolCreator, sdk.NewCoins(xCoin, yCoin))
+
+	// The pool creator doesn't have enough balance to pay the pool creation fee.
+	_, err := k.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, xCoin, yCoin))
+	s.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+}
+
+func (s *KeeperTestSuite) TestCreatePoolWithInsufficientDepositAmount() {
+	k, ctx := s.keeper, s.ctx
+
+	// A user tries to create a pool with smaller amounts of coin
+	// than the minimum initial deposit amount.
+	// This should fail.
+	params := k.GetParams(ctx)
+	minDepositAmount := params.MinInitialDepositAmount
+	creator := s.addr(0)
+	xCoin := sdk.NewCoin("denom1", minDepositAmount.Sub(sdk.OneInt()))
+	yCoin := sdk.NewCoin("denom2", minDepositAmount)
+	s.fundAddr(creator, sdk.NewCoins(xCoin, yCoin).Add(params.PoolCreationFee...))
+	_, err := k.CreatePool(ctx, types.NewMsgCreatePool(creator, xCoin, yCoin))
+	s.Require().ErrorIs(err, types.ErrInsufficientDepositAmount)
+}
+
+func (s *KeeperTestSuite) TestCreateSamePool() {
+	k, ctx := s.keeper, s.ctx
+
+	// Create a pool with denom1 and denom2.
+	s.createPool(s.addr(0), parseCoin("1000000denom1"), parseCoin("1000000denom2"), true)
+
+	// A user tries to create a pool with same denom pair that already exists,
+	// this will fail.
+	poolCreator := s.addr(1)
+	xCoin, yCoin := parseCoin("1000000denom1"), parseCoin("1000000denom2")
+	params := k.GetParams(ctx)
+	s.fundAddr(poolCreator, sdk.NewCoins(xCoin, yCoin).Add(params.PoolCreationFee...))
+	_, err := k.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, xCoin, yCoin))
+	s.Require().ErrorIs(err, types.ErrPoolAlreadyExists)
+
+	// Since the order of denom pair is important, it's ok to create a pool
+	// with reversed denom pair:
+	s.createPool(poolCreator, parseCoin("1000000denom2"), parseCoin("1000000denom1"), true)
+}
 
 func (s *KeeperTestSuite) TestDisabledPool() {
 	k, ctx := s.keeper, s.ctx
@@ -66,7 +145,7 @@ func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 
 	// Now any deposits will result in an error.
 	_, err = k.DepositBatch(ctx, types.NewMsgDepositBatch(depositor, pool.Id, depositXCoin, depositYCoin))
-	s.Require().Error(err)
+	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
 
 func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
@@ -90,5 +169,5 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 
 	// Now any withdrawals will result in an error.
 	_, err = k.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
-	s.Require().Error(err)
+	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
