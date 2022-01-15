@@ -16,27 +16,14 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
-const (
-	denom1 = "denom1"
-	denom2 = "denom2"
-)
-
-var (
-	initialBalances = sdk.NewCoins(
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000_000_000),
-		sdk.NewInt64Coin(denom1, 100_000_000_000_000),
-		sdk.NewInt64Coin(denom2, 100_000_000_000_000),
-	)
-)
-
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app         *crescentapp.CrescentApp
-	ctx         sdk.Context
-	keeper      keeper.Keeper
-	querier     keeper.Querier
-	msgServer   types.MsgServer
+	app       *crescentapp.CrescentApp
+	ctx       sdk.Context
+	keeper    keeper.Keeper
+	querier   keeper.Querier
+	msgServer types.MsgServer
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -118,6 +105,7 @@ func parseCoin(s string) sdk.Coin {
 	return coin
 }
 
+//nolint
 func parseCoins(s string) sdk.Coins {
 	coins, err := sdk.ParseCoinsNormalized(s)
 	if err != nil {
@@ -126,6 +114,7 @@ func parseCoins(s string) sdk.Coins {
 	return coins
 }
 
+//nolint
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
