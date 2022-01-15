@@ -47,6 +47,23 @@ func (k Keeper) GetPoolCoinSupply(ctx sdk.Context, pool types.Pool) sdk.Int {
 	return k.bankKeeper.GetSupply(ctx, pool.PoolCoinDenom).Amount
 }
 
+func (k Keeper) MarkPoolAsDisabled(ctx sdk.Context, pool types.Pool) {
+	pool.Disabled = true
+	k.SetPool(ctx, pool)
+}
+
+func (k Keeper) MarkDepositRequestToBeDeleted(ctx sdk.Context, req types.DepositRequest, succeeded bool) {
+	req.Succeeded = succeeded
+	req.ToBeDeleted = true
+	k.SetDepositRequest(ctx, req)
+}
+
+func (k Keeper) MarkWithdrawRequestToBeDeleted(ctx sdk.Context, req types.WithdrawRequest, succeeded bool) {
+	req.Succeeded = succeeded
+	req.ToBeDeleted = true
+	k.SetWithdrawRequest(ctx, req)
+}
+
 // CreatePool handles types.MsgCreatePool and creates a pool.
 func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) error {
 	params := k.GetParams(ctx)
@@ -187,4 +204,129 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) erro
 	})
 
 	return nil
+}
+
+// ExecuteDepositRequest executes a deposit request.
+func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest) error {
+	pool, found := k.GetPool(ctx, req.PoolId)
+	if !found || pool.Disabled {
+		k.MarkDepositRequestToBeDeleted(ctx, req, false)
+		return nil
+	}
+
+	rx, ry := k.GetPoolBalance(ctx, pool)
+	ps := k.GetPoolCoinSupply(ctx, pool)
+	poolInfo := types.NewPoolInfo(rx, ry, ps)
+	if types.IsDepletedPool(poolInfo) {
+		k.MarkPoolAsDisabled(ctx, pool)
+		k.MarkDepositRequestToBeDeleted(ctx, req, false)
+		return nil
+	}
+
+	ax, ay, pc := types.DepositToPool(poolInfo, req.XCoin.Amount, req.YCoin.Amount)
+
+	if pc.IsZero() {
+		k.MarkDepositRequestToBeDeleted(ctx, req, false)
+		return nil
+	}
+
+	mintingCoins := sdk.NewCoins(sdk.NewCoin(pool.PoolCoinDenom, pc))
+
+	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintingCoins); err != nil {
+		return err
+	}
+
+	acceptedXCoin, acceptedYCoin := sdk.NewCoin(req.XCoin.Denom, ax), sdk.NewCoin(req.YCoin.Denom, ay)
+	acceptedCoins := sdk.NewCoins(acceptedXCoin, acceptedYCoin)
+	bulkOp := types.NewBulkSendCoinsOperation()
+	bulkOp.SendCoins(types.GlobalEscrowAddr, pool.GetReserveAddress(), acceptedCoins)
+	bulkOp.SendCoins(k.accountKeeper.GetModuleAddress(types.ModuleName), req.GetDepositor(), mintingCoins)
+	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
+		return err
+	}
+
+	req.AcceptedXCoin = acceptedXCoin
+	req.AcceptedYCoin = acceptedYCoin
+	req.Succeeded = true
+	req.ToBeDeleted = true
+	k.SetDepositRequest(ctx, req)
+	// TODO: emit an event?
+	return nil
+}
+
+func (k Keeper) RefundDepositRequest(ctx sdk.Context, req types.DepositRequest) error {
+	refundingCoins := sdk.NewCoins(req.XCoin.Sub(req.AcceptedXCoin), req.YCoin.Sub(req.AcceptedYCoin))
+	if !refundingCoins.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, types.GlobalEscrowAddr, req.GetDepositor(), refundingCoins); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) RefundAndDeleteDepositRequestsToBeDeleted(ctx sdk.Context) {
+	k.IterateDepositRequestsToBeDeleted(ctx, func(req types.DepositRequest) (stop bool) {
+		if err := k.RefundDepositRequest(ctx, req); err != nil {
+			panic(err)
+		}
+		k.DeleteDepositRequest(ctx, req.PoolId, req.Id)
+		return false
+	})
+}
+
+// ExecuteWithdrawRequest executes a withdraw request.
+func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) error {
+	pool, _ := k.GetPool(ctx, req.PoolId)
+	if pool.Disabled {
+		k.MarkWithdrawRequestToBeDeleted(ctx, req, false)
+		return nil
+	}
+
+	rx, ry := k.GetPoolBalance(ctx, pool)
+	ps := k.GetPoolCoinSupply(ctx, pool)
+	poolInfo := types.NewPoolInfo(rx, ry, ps)
+	if types.IsDepletedPool(poolInfo) {
+		k.MarkPoolAsDisabled(ctx, pool)
+		k.MarkWithdrawRequestToBeDeleted(ctx, req, false)
+		return nil
+	}
+
+	params := k.GetParams(ctx)
+	x, y := types.WithdrawFromPool(poolInfo, req.PoolCoin.Amount, params.WithdrawFeeRate)
+
+	withdrawnXCoin, withdrawnYCoin := sdk.NewCoin(pool.XCoinDenom, x), sdk.NewCoin(pool.YCoinDenom, y)
+	withdrawnCoins := sdk.NewCoins(withdrawnXCoin, withdrawnYCoin)
+	burningCoins := sdk.NewCoins(req.PoolCoin)
+
+	bulkOp := types.NewBulkSendCoinsOperation()
+	bulkOp.SendCoins(types.GlobalEscrowAddr, k.accountKeeper.GetModuleAddress(types.ModuleName), burningCoins)
+	bulkOp.SendCoins(pool.GetReserveAddress(), req.GetWithdrawer(), withdrawnCoins)
+	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
+		return err
+	}
+
+	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, burningCoins); err != nil {
+		return err
+	}
+
+	// If the pool coin supply becomes 0, disable the pool.
+	if req.PoolCoin.Amount.Equal(ps) {
+		k.MarkPoolAsDisabled(ctx, pool)
+	}
+
+	req.WithdrawnXCoin = withdrawnXCoin
+	req.WithdrawnYCoin = withdrawnYCoin
+	req.Succeeded = true
+	req.ToBeDeleted = true
+	k.SetWithdrawRequest(ctx, req)
+	// TODO: emit an event?
+	return nil
+}
+
+func (k Keeper) RefundAndDeleteWithdrawRequestsToBeDeleted(ctx sdk.Context) {
+	k.IterateWithdrawRequestsToBeDeleted(ctx, func(req types.WithdrawRequest) (stop bool) {
+		// TODO: need a refund? maybe not
+		k.DeleteWithdrawRequest(ctx, req.PoolId, req.Id)
+		return false
+	})
 }
