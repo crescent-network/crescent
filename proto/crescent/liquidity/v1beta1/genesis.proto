@@ -11,15 +11,19 @@ option (gogoproto.goproto_getters_all) = false;
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
 
-  repeated Pair pairs = 2 [(gogoproto.nullable) = false];
+  uint64 last_pair_id = 2;
 
-  repeated Pool pools = 3 [(gogoproto.nullable) = false];
+  uint64 last_pool_id = 3;
 
-  repeated DepositRequest deposit_requests = 4 [(gogoproto.nullable) = false];
+  repeated Pair pairs = 4 [(gogoproto.nullable) = false];
 
-  repeated WithdrawRequest withdraw_requests = 5 [(gogoproto.nullable) = false];
+  repeated Pool pools = 5 [(gogoproto.nullable) = false];
 
-  repeated SwapRequest swap_requests = 6 [(gogoproto.nullable) = false];
+  repeated DepositRequest deposit_requests = 6 [(gogoproto.nullable) = false];
 
-  repeated CancelSwapRequest cancel_swap_requests = 7 [(gogoproto.nullable) = false];
+  repeated WithdrawRequest withdraw_requests = 7 [(gogoproto.nullable) = false];
+
+  repeated SwapRequest swap_requests = 8 [(gogoproto.nullable) = false];
+
+  repeated CancelSwapRequest cancel_swap_requests = 9 [(gogoproto.nullable) = false];
 }
