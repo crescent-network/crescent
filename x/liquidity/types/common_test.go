@@ -18,3 +18,11 @@ func newSellOrder(price string, amount int64) *types.Order {
 func newDec(s string) sdk.Dec {
 	return sdk.MustNewDecFromStr(s)
 }
+
+func parseCoin(s string) sdk.Coin {
+	coin, err := sdk.ParseCoinNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coin
+}
