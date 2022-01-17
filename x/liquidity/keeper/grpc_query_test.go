@@ -87,7 +87,53 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 }
 
 func (s *KeeperTestSuite) TestGRPCPoolsByPair() {
+	creator := s.addr(0)
+	s.createPool(creator, parseCoin("1000000denom1"), parseCoin("1000000denom2"), true)
+	s.createPool(creator, parseCoin("5000000denom1"), parseCoin("5000000denom3"), true)
+	s.createPool(creator, parseCoin("3000000denom2"), parseCoin("3000000denom3"), true)
+	s.createPool(creator, parseCoin("3000000denom3"), parseCoin("3000000denom4"), true)
 
+	s.Require().Len(s.keeper.GetAllPairs(s.ctx), 4)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryPoolsByPairRequest
+		expectErr bool
+		postRun   func(*types.QueryPoolsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request all",
+			&types.QueryPoolsByPairRequest{},
+			true,
+			nil,
+		},
+		{
+			"query all pool with pair id",
+			&types.QueryPoolsByPairRequest{
+				PairId: 1,
+			},
+			false,
+			func(resp *types.QueryPoolsResponse) {
+				s.Require().Len(resp.Pools, 1)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.PoolsByPair(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGRPCPool() {
