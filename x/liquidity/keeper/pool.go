@@ -77,10 +77,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 		pair = k.CreatePair(ctx, msg.XCoin.Denom, msg.YCoin.Denom)
 	}
 
-	// If there is a pair with given denoms, check if there is a pool with
-	// the pair.
-	// Current version disallows to create multiple pools with same pair,
-	// but later this can be changed(in v2).
+	// Check to see if there is a pool with the pair. 
+	// Creating multiple pools with the same pair is disallowed, but it will be allowed in v2.
 	found = false
 	k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
 		if !pool.Disabled {
@@ -104,11 +102,13 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 	if err := k.bankKeeper.SendCoins(ctx, creator, pool.GetReserveAddress(), depositCoins); err != nil {
 		return types.Pool{}, err
 	}
+	
 	// Send the pool creation fee to the fee collector.
 	feeCollectorAddr, _ := sdk.AccAddressFromBech32(params.FeeCollectorAddress)
 	if err := k.bankKeeper.SendCoins(ctx, creator, feeCollectorAddr, params.PoolCreationFee); err != nil {
 		return types.Pool{}, sdkerrors.Wrap(err, "insufficient pool creation fee")
 	}
+	
 	// Mint and send pool coin to the creator.
 	poolCoin := sdk.NewCoin(pool.PoolCoinDenom, params.InitialPoolCoinSupply)
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(poolCoin)); err != nil {
