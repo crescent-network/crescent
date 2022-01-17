@@ -4,10 +4,10 @@ import (
 	"encoding/binary"
 	"testing"
 
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	crescentapp "github.com/crescent-network/crescent/app"

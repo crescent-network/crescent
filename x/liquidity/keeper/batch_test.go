@@ -5,53 +5,41 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	crescentapp "github.com/crescent-network/crescent/app"
 	"github.com/crescent-network/crescent/x/liquidity"
 	"github.com/crescent-network/crescent/x/liquidity/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
-func TestDepositWithdraw(t *testing.T) {
-	app := crescentapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	params := app.LiquidityKeeper.GetParams(ctx)
+func (s *KeeperTestSuite) TestDepositWithdraw() {
+	k, ctx := s.keeper, s.ctx
 
-	addrs := crescentapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
+	params := k.GetParams(ctx)
 
-	poolCreator := addrs[0]
-	depositor := addrs[1]
+	// Create a normal pool
+	creator := s.addr(0)
+	xCoin, yCoin := parseCoin("1000000denom1"), parseCoin("1000000denom2")
+	s.createPool(creator, xCoin, yCoin, true)
 
-	xCoin := sdk.NewCoin("denom1", sdk.NewInt(1000000))
-	yCoin := sdk.NewCoin("denom2", sdk.NewInt(1000000))
-	depositCoins := sdk.NewCoins(xCoin, yCoin)
-	err := crescentapp.FundAccount(app.BankKeeper, ctx, poolCreator, depositCoins.Add(params.PoolCreationFee...))
-	require.NoError(t, err)
+	pool, found := k.GetPool(ctx, 1)
+	s.Require().True(found)
+	s.Require().Equal(params.InitialPoolCoinSupply, s.getBalance(creator, pool.PoolCoinDenom).Amount)
 
-	_, err = app.LiquidityKeeper.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, xCoin, yCoin))
-	require.NoError(t, err)
-	pool, found := app.LiquidityKeeper.GetPool(ctx, 1)
-	require.True(t, found)
+	// A depositor makes a deposit
+	depositor := s.addr(1)
+	s.depositBatch(depositor, pool.Id, parseCoin("500000denom1"), parseCoin("500000denom2"), true)
+	s.nextBlock()
 
-	xCoin = sdk.NewCoin("denom1", sdk.NewInt(1000000))
-	yCoin = sdk.NewCoin("denom2", sdk.NewInt(1000000))
-	depositCoins = sdk.NewCoins(xCoin, yCoin)
-	err = crescentapp.FundAccount(app.BankKeeper, ctx, depositor, depositCoins)
-	require.NoError(t, err)
-
-	liquidity.BeginBlocker(ctx, app.LiquidityKeeper)
-	_, err = app.LiquidityKeeper.DepositBatch(ctx, types.NewMsgDepositBatch(depositor, pool.Id, xCoin, yCoin))
-	require.NoError(t, err)
-	liquidity.EndBlocker(ctx, app.LiquidityKeeper)
-
-	poolCoin := app.BankKeeper.GetBalance(ctx, depositor, pool.PoolCoinDenom)
-
-	liquidity.BeginBlocker(ctx, app.LiquidityKeeper)
-	_, err = app.LiquidityKeeper.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(depositor, pool.Id, poolCoin))
-	require.NoError(t, err)
-	liquidity.EndBlocker(ctx, app.LiquidityKeeper)
+	// The depositor withdraws pool coin
+	poolCoin := s.getBalance(depositor, pool.PoolCoinDenom)
+	s.withdrawBatch(depositor, pool.Id, poolCoin)
+	s.nextBlock()
 }
 
 func TestSwap(t *testing.T) {

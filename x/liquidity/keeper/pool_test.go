@@ -6,6 +6,8 @@ import (
 
 	"github.com/crescent-network/crescent/x/liquidity"
 	"github.com/crescent-network/crescent/x/liquidity/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (s *KeeperTestSuite) TestCreatePool() {

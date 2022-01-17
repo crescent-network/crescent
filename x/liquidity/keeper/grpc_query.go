@@ -130,7 +130,7 @@ func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairReque
 			ReserveAddress:        pool.ReserveAddress,
 			PoolCoinDenom:         pool.PoolCoinDenom,
 			XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-			YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+			YCoin:                 sdk.NewCoin(pool.YCoinDenom, ry),
 			LastDepositRequestId:  pool.LastDepositRequestId,
 			LastWithdrawRequestId: pool.LastWithdrawRequestId,
 		}
