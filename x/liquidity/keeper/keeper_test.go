@@ -106,6 +106,7 @@ func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64
 	return req
 }
 
+//nolint
 func parseCoin(s string) sdk.Coin {
 	coin, err := sdk.ParseCoinNormalized(s)
 	if err != nil {
@@ -114,7 +115,6 @@ func parseCoin(s string) sdk.Coin {
 	return coin
 }
 
-//nolint
 func parseCoins(s string) sdk.Coins {
 	coins, err := sdk.ParseCoinsNormalized(s)
 	if err != nil {

@@ -29,7 +29,6 @@ func (s *KeeperTestSuite) TestCreatePool() {
 func (s *KeeperTestSuite) TestPoolCreationFee() {
 	k, ctx := s.keeper, s.ctx
 
-
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	poolCreator := s.addr(1)
@@ -130,7 +129,7 @@ func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	// Create a disabled pool by sending the pool's balances to somewhere else.
-	pool := s.createPool(s.addr(1), pair.Id,  parseCoins("1000000denom1,1000000denom2"), true)
+	pool := s.createPool(s.addr(1), pair.Id, parseCoins("1000000denom1,1000000denom2"), true)
 	poolReserveAddr := pool.GetReserveAddress()
 	s.sendCoins(poolReserveAddr, s.addr(2), s.getBalances(poolReserveAddr))
 
