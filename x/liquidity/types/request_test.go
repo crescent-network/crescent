@@ -235,9 +235,75 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 }
 
 func TestSwapRequest_Validate(t *testing.T) {
-
+	// TODO: not implemented
 }
 
 func TestCancelSwapRequest_Validate(t *testing.T) {
-
+	for _, tc := range []struct{
+		name string
+		malleate func(req *types.CancelSwapRequest)
+		expectedErr string
+	}{
+		{
+			"happy case",
+			func(req *types.CancelSwapRequest) { },
+			"",
+		},
+		{
+			"zero id",
+			func(req *types.CancelSwapRequest) {
+				req.Id = 0
+			},
+			"id must not be 0",
+		},
+		{
+			"zero pair id",
+			func(req *types.CancelSwapRequest) {
+				req.PairId = 0
+			},
+			"pair id must not be 0",
+		},
+		{
+			"zero message height",
+			func(req *types.CancelSwapRequest) {
+				req.MsgHeight = 0
+			},
+			"message height must not be 0",
+		},
+		{
+			"invalid orderer addr",
+			func(req *types.CancelSwapRequest) {
+				req.Orderer = "invalidaddr"
+			},
+			"invalid orderer address invalidaddr: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"zero swap request id",
+			func(req *types.CancelSwapRequest) {
+				req.SwapRequestId = 0
+			},
+			"swap request id must not be 0",
+		},
+		{
+			"zero batch id",
+			func(req *types.CancelSwapRequest) {
+				req.BatchId = 0
+			},
+			"batch id must not be 0",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pair := types.NewPair(1,  "denom1", "denom2")
+			orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
+			msg := types.NewMsgCancelSwapBatch(orderer, pair.Id, 1)
+			req := types.NewCancelSwapRequest(msg, 1, pair, 1)
+			tc.malleate(&req)
+			err := req.Validate()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
 }

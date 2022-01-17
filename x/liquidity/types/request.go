@@ -206,6 +206,9 @@ func (req CancelSwapRequest) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(req.Orderer); err != nil {
 		return fmt.Errorf("invalid orderer address %s: %w", req.Orderer, err)
 	}
+	if req.SwapRequestId == 0 {
+		return fmt.Errorf("swap request id must not be 0")
+	}
 	if req.BatchId == 0 {
 		return fmt.Errorf("batch id must not be 0")
 	}
