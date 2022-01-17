@@ -11,14 +11,14 @@ import (
 )
 
 func TestDepositRequest_Validate(t *testing.T) {
-	for _, tc := range []struct{
-		name string
-		malleate func(req *types.DepositRequest)
+	for _, tc := range []struct {
+		name        string
+		malleate    func(req *types.DepositRequest)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(req *types.DepositRequest) { },
+			func(req *types.DepositRequest) {},
 			"",
 		},
 		{
@@ -137,14 +137,14 @@ func TestDepositRequest_Validate(t *testing.T) {
 }
 
 func TestWithdrawRequest_Validate(t *testing.T) {
-	for _, tc := range []struct{
-		name string
-		malleate func(req *types.WithdrawRequest)
+	for _, tc := range []struct {
+		name        string
+		malleate    func(req *types.WithdrawRequest)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(req *types.WithdrawRequest) { },
+			func(req *types.WithdrawRequest) {},
 			"",
 		},
 		{
@@ -239,14 +239,14 @@ func TestSwapRequest_Validate(t *testing.T) {
 }
 
 func TestCancelSwapRequest_Validate(t *testing.T) {
-	for _, tc := range []struct{
-		name string
-		malleate func(req *types.CancelSwapRequest)
+	for _, tc := range []struct {
+		name        string
+		malleate    func(req *types.CancelSwapRequest)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(req *types.CancelSwapRequest) { },
+			func(req *types.CancelSwapRequest) {},
 			"",
 		},
 		{
@@ -293,7 +293,7 @@ func TestCancelSwapRequest_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pair := types.NewPair(1,  "denom1", "denom2")
+			pair := types.NewPair(1, "denom1", "denom2")
 			orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
 			msg := types.NewMsgCancelSwapBatch(orderer, pair.Id, 1)
 			req := types.NewCancelSwapRequest(msg, 1, pair, 1)

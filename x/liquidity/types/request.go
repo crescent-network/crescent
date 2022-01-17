@@ -192,7 +192,6 @@ func NewCancelSwapRequest(
 	}
 }
 
-
 func (req CancelSwapRequest) Validate() error {
 	if req.Id == 0 {
 		return fmt.Errorf("id must not be 0")
