@@ -38,32 +38,13 @@ message Params {
   google.protobuf.Duration max_order_lifespan = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
-// Pool defines a basic liquidity pool with no min-price and max-price.
-message Pool {
-  uint64 id = 1;
-
-  uint64 pair_id = 2;
-
-  string x_coin_denom = 3;
-
-  string y_coin_denom = 4;
-
-  string reserve_address = 5;
-
-  string pool_coin_denom = 6;
-
-  uint64 last_deposit_request_id = 7;
-
-  uint64 last_withdraw_request_id = 8;
-}
-
 // Pair defines a coin pair.
 message Pair {
   uint64 id = 1;
 
-  string x_coin_denom = 2;
+  string quote_coin_denom = 2;
 
-  string y_coin_denom = 3;
+  string base_coin_denom = 3;
 
   string escrow_address = 4;
 
@@ -74,6 +55,21 @@ message Pair {
   string last_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
   uint64 current_batch_id = 8;
+}
+
+// Pool defines a basic liquidity pool with no min-price and max-price.
+message Pool {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  string reserve_address = 3;
+
+  string pool_coin_denom = 4;
+
+  uint64 last_deposit_request_id = 5;
+
+  uint64 last_withdraw_request_id = 6;
 }
 
 // DepositRequest defines a deposit request.
@@ -90,21 +86,19 @@ message DepositRequest {
   // depositor specifies the bech32-encoded address that makes a deposit to the pool
   string depositor = 4;
 
-  // x_coin specifies the deposit coin x
-  cosmos.base.v1beta1.Coin x_coin = 5 [(gogoproto.nullable) = false];
+  // deposit_coins specifies the amount of coins to deposit.
+  repeated cosmos.base.v1beta1.Coin deposit_coins = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin accepted_x_coin = 6 [(gogoproto.nullable) = false];
+  // accepted_coins specifies the amount of coins that are accepted.
+  repeated cosmos.base.v1beta1.Coin accepted_coins = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  // y_coin specifies the deposit coin y
-  cosmos.base.v1beta1.Coin y_coin = 7 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin minted_pool_coin = 7 [(gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin accepted_y_coin = 8 [(gogoproto.nullable) = false];
+  bool succeeded = 8;
 
-  cosmos.base.v1beta1.Coin minted_pool_coin = 9 [(gogoproto.nullable) = false];
-
-  bool succeeded = 10;
-
-  bool to_be_deleted = 11;
+  bool to_be_deleted = 9;
 }
 
 // WithdrawRequest defines a withdraw request.
@@ -124,13 +118,13 @@ message WithdrawRequest {
   // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
   cosmos.base.v1beta1.Coin pool_coin = 5 [(gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin withdrawn_x_coin = 6 [(gogoproto.nullable) = false];
+  // withdrawn_coins specifies the amount of coins that are withdrawn.
+  repeated cosmos.base.v1beta1.Coin withdrawn_coins = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin withdrawn_y_coin = 7 [(gogoproto.nullable) = false];
+  bool succeeded = 7;
 
-  bool succeeded = 8;
-
-  bool to_be_deleted = 9;
+  bool to_be_deleted = 8;
 }
 
 // SwapRequest defines a swap request.
