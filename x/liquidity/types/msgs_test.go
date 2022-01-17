@@ -20,50 +20,51 @@ func TestMsgCreatePool(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgCreatePool(
 				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				sdk.NewInt64Coin("denom1", 100_000_000),
-				sdk.NewInt64Coin("denom2", 100_000_000),
+				1,
+				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
 			),
 		},
 		{
 			"invalid creator address: empty address string is not allowed: invalid address",
 			types.NewMsgCreatePool(
 				sdk.AccAddress{},
-				sdk.NewInt64Coin("denom1", 100_000_000),
-				sdk.NewInt64Coin("denom2", 100_000_000),
+				1,
+				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
 			),
 		},
 		{
-			"deposit coins must be positive: invalid request",
+			"coin 0denom1 amount is not positive",
 			types.NewMsgCreatePool(
 				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				sdk.NewInt64Coin("denom1", 100_000),
-				sdk.NewInt64Coin("denom2", 0),
+				1,
+				sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)},
 			),
 		},
 		{
-			"deposit coins must be positive: invalid request",
+			"coin denom2 amount is not positive",
 			types.NewMsgCreatePool(
 				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				sdk.NewInt64Coin("denom1", 0),
-				sdk.NewInt64Coin("denom2", 100_000),
+				1,
+				sdk.Coins{sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 0)},
 			),
 		},
 	}
 
 	for _, tc := range testCases {
-		require.IsType(t, &types.MsgCreatePool{}, tc.msg)
-		require.Equal(t, types.TypeMsgCreatePool, tc.msg.Type())
-		require.Equal(t, types.RouterKey, tc.msg.Route())
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, types.TypeMsgCreatePool, tc.msg.Type())
+			require.Equal(t, types.RouterKey, tc.msg.Route())
 
-		err := tc.msg.ValidateBasic()
-		if tc.expErr == "" {
-			require.Nil(t, err)
-			signers := tc.msg.GetSigners()
-			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetCreator(), signers[0])
-		} else {
-			require.EqualError(t, err, tc.expErr)
-		}
+			err := tc.msg.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err)
+				signers := tc.msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, tc.msg.GetCreator(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expErr)
+			}
+		})
 	}
 }
 
@@ -76,56 +77,54 @@ func TestMsgDepositBatch(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgDepositBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				uint64(1),
-				sdk.NewInt64Coin("denom1", 100_000_000),
-				sdk.NewInt64Coin("denom2", 100_000_000),
+				1,
+				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
 			),
 		},
 		{
 			"invalid depositor address: empty address string is not allowed: invalid address",
 			types.NewMsgDepositBatch(
 				sdk.AccAddress{},
-				uint64(1),
-				sdk.NewInt64Coin("denom1", 100_000_000),
-				sdk.NewInt64Coin("denom2", 100_000_000),
+				1,
+				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
 			),
 		},
 		{
-			"deposit coins must be positive: invalid request",
+			"coin 0denom1 amount is not positive",
 			types.NewMsgDepositBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				uint64(1),
-				sdk.NewInt64Coin("denom1", 100_000),
-				sdk.NewInt64Coin("denom2", 0),
+				1,
+				sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)},
 			),
 		},
 		{
-			"deposit coins must be positive: invalid request",
+			"coin denom2 amount is not positive",
 			types.NewMsgDepositBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				uint64(1),
-				sdk.NewInt64Coin("denom1", 0),
-				sdk.NewInt64Coin("denom2", 100_000),
+				1,
+				sdk.Coins{sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 0)},
 			),
 		},
 	}
 
 	for _, tc := range testCases {
-		require.IsType(t, &types.MsgDepositBatch{}, tc.msg)
-		require.Equal(t, types.TypeMsgDepositBatch, tc.msg.Type())
-		require.Equal(t, types.RouterKey, tc.msg.Route())
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, types.TypeMsgDepositBatch, tc.msg.Type())
+			require.Equal(t, types.RouterKey, tc.msg.Route())
 
-		err := tc.msg.ValidateBasic()
-		if tc.expErr == "" {
-			require.Nil(t, err)
-			signers := tc.msg.GetSigners()
-			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetDepositor(), signers[0])
-		} else {
-			require.EqualError(t, err, tc.expErr)
-		}
+			err := tc.msg.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err)
+				signers := tc.msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, tc.msg.GetDepositor(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expErr)
+			}
+		})
 	}
 }
+
 func TestMsgWithdrawBatch(t *testing.T) {
 	testCases := []struct {
 		expErr string
@@ -135,7 +134,7 @@ func TestMsgWithdrawBatch(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgWithdrawBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Withdrawer"))),
-				uint64(1),
+				1,
 				sdk.NewInt64Coin("PoolCoinDenom", 500_000),
 			),
 		},
@@ -143,7 +142,7 @@ func TestMsgWithdrawBatch(t *testing.T) {
 			"invalid withdrawer address: empty address string is not allowed: invalid address",
 			types.NewMsgWithdrawBatch(
 				sdk.AccAddress{},
-				uint64(1),
+				1,
 				sdk.NewInt64Coin("PoolCoinDenom", 500_000),
 			),
 		},
@@ -151,20 +150,19 @@ func TestMsgWithdrawBatch(t *testing.T) {
 			"pool coin must be positive: invalid request",
 			types.NewMsgWithdrawBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Withdrawer"))),
-				uint64(1),
+				1,
 				sdk.NewInt64Coin("PoolCoinDenom", 0),
 			),
 		},
 	}
 
 	for _, tc := range testCases {
-		require.IsType(t, &types.MsgWithdrawBatch{}, tc.msg)
 		require.Equal(t, types.TypeMsgWithdrawBatch, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expErr == "" {
-			require.Nil(t, err)
+			require.NoError(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
 			require.Equal(t, tc.msg.GetWithdrawer(), signers[0])
@@ -232,13 +230,12 @@ func TestMsgSwapBatch(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		require.IsType(t, &types.MsgSwapBatch{}, tc.msg)
 		require.Equal(t, types.TypeMsgSwapBatch, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expErr == "" {
-			require.Nil(t, err)
+			require.NoError(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
 			require.Equal(t, tc.msg.GetOrderer(), signers[0])
@@ -257,28 +254,27 @@ func TestMsgCancelSwapBatch(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgCancelSwapBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
-				uint64(1),
-				uint64(1),
+				1,
+				1,
 			),
 		},
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
 			types.NewMsgCancelSwapBatch(
 				sdk.AccAddress{},
-				uint64(1),
-				uint64(1),
+				1,
+				1,
 			),
 		},
 	}
 
 	for _, tc := range testCases {
-		require.IsType(t, &types.MsgCancelSwapBatch{}, tc.msg)
 		require.Equal(t, types.TypeMsgCancelSwapBatch, tc.msg.Type())
 		require.Equal(t, types.RouterKey, tc.msg.Route())
 
 		err := tc.msg.ValidateBasic()
 		if tc.expErr == "" {
-			require.Nil(t, err)
+			require.NoError(t, err)
 			signers := tc.msg.GetSigners()
 			require.Len(t, signers, 1)
 			require.Equal(t, tc.msg.GetOrderer(), signers[0])

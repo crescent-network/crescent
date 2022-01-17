@@ -8,14 +8,14 @@ import (
 
 func NewDepositRequest(msg *MsgDepositBatch, id uint64, msgHeight int64) DepositRequest {
 	return DepositRequest{
-		Id:          id,
-		PoolId:      msg.PoolId,
-		MsgHeight:   msgHeight,
-		Depositor:   msg.Depositor,
-		XCoin:       msg.XCoin,
-		YCoin:       msg.YCoin,
-		Succeeded:   false,
-		ToBeDeleted: false,
+		Id:            id,
+		PoolId:        msg.PoolId,
+		MsgHeight:     msgHeight,
+		Depositor:     msg.Depositor,
+		DepositCoins:  msg.DepositCoins,
+		AcceptedCoins: sdk.Coins{},
+		Succeeded:     false,
+		ToBeDeleted:   false,
 	}
 }
 

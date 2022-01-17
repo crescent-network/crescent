@@ -27,13 +27,13 @@ const (
 // NewMsgCreatePool creates a new MsgCreatePool.
 func NewMsgCreatePool(
 	creator sdk.AccAddress,
-	xCoin sdk.Coin,
-	yCoin sdk.Coin,
+	pairId uint64,
+	depositCoins sdk.Coins,
 ) *MsgCreatePool {
 	return &MsgCreatePool{
 		Creator: creator.String(),
-		XCoin:   xCoin,
-		YCoin:   yCoin,
+		PairId: pairId,
+		DepositCoins: depositCoins,
 	}
 }
 
@@ -45,17 +45,14 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address: %v", err)
 	}
-	if err := msg.XCoin.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid deposit coin: %v", err)
+	if msg.PairId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
-	if err := msg.YCoin.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid deposit coin: %v", err)
+	if err := msg.DepositCoins.Validate(); err != nil {
+		return err
 	}
-	if !msg.XCoin.IsPositive() || !msg.YCoin.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "deposit coins must be positive")
-	}
-	if msg.XCoin.Denom == msg.YCoin.Denom {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "x coin denom and y coin denom must be different")
+	if len(msg.DepositCoins) != 2 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
 	}
 	return nil
 }
@@ -84,14 +81,12 @@ func (msg MsgCreatePool) GetCreator() sdk.AccAddress {
 func NewMsgDepositBatch(
 	depositor sdk.AccAddress,
 	poolId uint64,
-	xCoin sdk.Coin,
-	yCoin sdk.Coin,
+	depositCoins sdk.Coins,
 ) *MsgDepositBatch {
 	return &MsgDepositBatch{
 		Depositor: depositor.String(),
 		PoolId:    poolId,
-		XCoin:     xCoin,
-		YCoin:     yCoin,
+		DepositCoins: depositCoins,
 	}
 }
 
@@ -103,14 +98,14 @@ func (msg MsgDepositBatch) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid depositor address: %v", err)
 	}
-	if err := msg.XCoin.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid deposit coin: %v", err)
+	if msg.PoolId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool id must not be 0")
 	}
-	if err := msg.YCoin.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid deposit coin: %v", err)
+	if err := msg.DepositCoins.Validate(); err != nil {
+		return err
 	}
-	if !msg.XCoin.IsPositive() || !msg.YCoin.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "deposit coins must be positive")
+	if len(msg.DepositCoins) != 2 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
 	}
 	return nil
 }
@@ -155,6 +150,9 @@ func (msg MsgWithdrawBatch) Type() string { return TypeMsgWithdrawBatch }
 func (msg MsgWithdrawBatch) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Withdrawer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid withdrawer address: %v", err)
+	}
+	if msg.PoolId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool id must not be 0")
 	}
 	if err := msg.PoolCoin.Validate(); err != nil {
 		return err
