@@ -18,12 +18,10 @@ var (
 )
 
 // NewPool returns a new pool object.
-func NewPool(id, pairId uint64, xCoinDenom, yCoinDenom string) Pool {
+func NewPool(id, pairId uint64) Pool {
 	return Pool{
 		Id:                    id,
 		PairId:                pairId,
-		XCoinDenom:            xCoinDenom,
-		YCoinDenom:            yCoinDenom,
 		ReserveAddress:        PoolReserveAcc(id).String(),
 		PoolCoinDenom:         PoolCoinDenom(id),
 		LastDepositRequestId:  0,
@@ -46,12 +44,6 @@ func (pool Pool) Validate() error {
 	}
 	if pool.PairId == 0 {
 		return fmt.Errorf("pair id must not be 0")
-	}
-	if err := sdk.ValidateDenom(pool.XCoinDenom); err != nil {
-		return fmt.Errorf("invalid x coin denom: %w", err)
-	}
-	if err := sdk.ValidateDenom(pool.YCoinDenom); err != nil {
-		return fmt.Errorf("invalid y coin denom: %w", err)
 	}
 	if _, err := sdk.AccAddressFromBech32(pool.ReserveAddress); err != nil {
 		return fmt.Errorf("invalid reserve address %s: %w", pool.ReserveAddress, err)

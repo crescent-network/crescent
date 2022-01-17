@@ -57,28 +57,26 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 			return false, err
 		}
 
-		if req.XDenom != "" {
-			if pool.XCoinDenom != req.XDenom {
-				return false, nil
-			}
-		}
+		//if req.XDenom != "" {
+		//	if pool.XCoinDenom != req.XDenom {
+		//		return false, nil
+		//	}
+		//}
+		//
+		//if req.YDenom != "" {
+		//	if pool.YCoinDenom != req.YDenom {
+		//		return false, nil
+		//	}
+		//}
 
-		if req.YDenom != "" {
-			if pool.YCoinDenom != req.YDenom {
-				return false, nil
-			}
-		}
-
-		rx, ry := k.GetPoolBalance(ctx, pool)
+		pair, _ := k.GetPair(ctx, pool.PairId)
+		rx, ry := k.GetPoolBalance(ctx, pool, pair)
 		poolRes := types.PoolResponse{
 			Id:                    pool.Id,
 			PairId:                pool.PairId,
-			XCoinDenom:            pool.XCoinDenom,
-			YCoinDenom:            pool.YCoinDenom,
 			ReserveAddress:        pool.ReserveAddress,
 			PoolCoinDenom:         pool.PoolCoinDenom,
-			XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-			YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+			Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 			LastDepositRequestId:  pool.LastDepositRequestId,
 			LastWithdrawRequestId: pool.LastWithdrawRequestId,
 		}
@@ -121,16 +119,14 @@ func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairReque
 			return nil
 		}
 
-		rx, ry := k.GetPoolBalance(ctx, pool)
+		pair, _ := k.GetPair(ctx, pool.PairId)
+		rx, ry := k.GetPoolBalance(ctx, pool, pair)
 		poolRes := types.PoolResponse{
 			Id:                    pool.Id,
 			PairId:                pool.PairId,
-			XCoinDenom:            pool.XCoinDenom,
-			YCoinDenom:            pool.YCoinDenom,
 			ReserveAddress:        pool.ReserveAddress,
 			PoolCoinDenom:         pool.PoolCoinDenom,
-			XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-			YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+			Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 			LastDepositRequestId:  pool.LastDepositRequestId,
 			LastWithdrawRequestId: pool.LastWithdrawRequestId,
 		}
@@ -164,16 +160,15 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", req.PoolId)
 	}
 
-	rx, ry := k.GetPoolBalance(ctx, pool)
+	pair, _ := k.GetPair(ctx, pool.PairId)
+
+	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
-		XCoinDenom:            pool.XCoinDenom,
-		YCoinDenom:            pool.YCoinDenom,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -203,16 +198,15 @@ func (k Querier) PoolByReserveAcc(c context.Context, req *types.QueryPoolByReser
 		return nil, status.Errorf(codes.NotFound, "pool by %s doesn't exist", req.ReserveAcc)
 	}
 
-	rx, ry := k.GetPoolBalance(ctx, pool)
+	pair, _ := k.GetPair(ctx, pool.PairId)
+
+	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
-		XCoinDenom:            pool.XCoinDenom,
-		YCoinDenom:            pool.YCoinDenom,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -238,16 +232,15 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", poolId)
 	}
 
-	rx, ry := k.GetPoolBalance(ctx, pool)
+	pair, _ := k.GetPair(ctx, pool.PairId)
+
+	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
-		XCoinDenom:            pool.XCoinDenom,
-		YCoinDenom:            pool.YCoinDenom,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -284,17 +277,17 @@ func (k Querier) Pairs(c context.Context, req *types.QueryPairsRequest) (*types.
 			return false, err
 		}
 
-		if req.XDenom != "" {
-			if pair.XCoinDenom != req.XDenom {
-				return false, nil
-			}
-		}
-
-		if req.YDenom != "" {
-			if pair.YCoinDenom != req.YDenom {
-				return false, nil
-			}
-		}
+		//if req.XDenom != "" {
+		//	if pair.XCoinDenom != req.XDenom {
+		//		return false, nil
+		//	}
+		//}
+		//
+		//if req.YDenom != "" {
+		//	if pair.YCoinDenom != req.YDenom {
+		//		return false, nil
+		//	}
+		//}
 
 		if accumulate {
 			pairs = append(pairs, pair)

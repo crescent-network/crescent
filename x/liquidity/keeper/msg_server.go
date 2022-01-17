@@ -20,6 +20,17 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// CreatePair defines a method to create a pair.
+func (m msgServer) CreatePair(goCtx context.Context, msg *types.MsgCreatePair) (*types.MsgCreatePairResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.CreatePair(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreatePairResponse{}, nil
+}
+
 // CreatePool defines a method to create a liquidity pool.
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

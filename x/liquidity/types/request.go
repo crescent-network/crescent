@@ -13,10 +13,8 @@ func NewDepositRequest(msg *MsgDepositBatch, pool Pool, id uint64, msgHeight int
 		PoolId:         msg.PoolId,
 		MsgHeight:      msgHeight,
 		Depositor:      msg.Depositor,
-		XCoin:          msg.XCoin,
-		AcceptedXCoin:  sdk.NewCoin(msg.XCoin.Denom, sdk.ZeroInt()),
-		YCoin:          msg.YCoin,
-		AcceptedYCoin:  sdk.NewCoin(msg.YCoin.Denom, sdk.ZeroInt()),
+		DepositCoins:   msg.DepositCoins,
+		AcceptedCoins:  sdk.Coins{},
 		MintedPoolCoin: sdk.NewCoin(pool.PoolCoinDenom, sdk.ZeroInt()),
 		Succeeded:      false,
 		ToBeDeleted:    false,
@@ -44,23 +42,17 @@ func (req DepositRequest) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(req.Depositor); err != nil {
 		return fmt.Errorf("invalid depositor address %s: %w", req.Depositor, err)
 	}
-	if err := req.XCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid x coin %s: %w", req.XCoin, err)
+	if err := req.DepositCoins.Validate(); err != nil {
+		return fmt.Errorf("invalid deposit coins: %w", err)
 	}
-	if req.XCoin.IsZero() {
-		return fmt.Errorf("x coin must not be 0")
+	if len(req.DepositCoins) != 2 {
+		return fmt.Errorf("wrong number of deposit coins: %d", len(req.DepositCoins))
 	}
-	if err := req.AcceptedXCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid accepted x coin %s: %w", req.AcceptedXCoin, err)
+	if err := req.AcceptedCoins.Validate(); err != nil {
+		return fmt.Errorf("invalid accepted coins: %w", err)
 	}
-	if err := req.YCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid y coin %s: %w", req.YCoin, err)
-	}
-	if req.YCoin.IsZero() {
-		return fmt.Errorf("y coin must not be 0")
-	}
-	if err := req.AcceptedYCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid accepted y coin %s: %w", req.AcceptedYCoin, err)
+	if len(req.AcceptedCoins) != 0 && len(req.AcceptedCoins) != 2 {
+		return fmt.Errorf("wrong number of accepted coins: %d", len(req.AcceptedCoins))
 	}
 	if err := req.MintedPoolCoin.Validate(); err != nil {
 		return fmt.Errorf("invalid minted pool coin %s: %w", req.MintedPoolCoin, err)
@@ -75,8 +67,7 @@ func NewWithdrawRequest(msg *MsgWithdrawBatch, pool Pool, id uint64, msgHeight i
 		MsgHeight:      msgHeight,
 		Withdrawer:     msg.Withdrawer,
 		PoolCoin:       msg.PoolCoin,
-		WithdrawnXCoin: sdk.NewCoin(pool.XCoinDenom, sdk.ZeroInt()),
-		WithdrawnYCoin: sdk.NewCoin(pool.YCoinDenom, sdk.ZeroInt()),
+		WithdrawnCoins: sdk.Coins{},
 		Succeeded:      false,
 		ToBeDeleted:    false,
 	}
@@ -109,11 +100,11 @@ func (req WithdrawRequest) Validate() error {
 	if req.PoolCoin.IsZero() {
 		return fmt.Errorf("pool coin must not be 0")
 	}
-	if err := req.WithdrawnXCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid withdrawn x coin %s: %w", req.WithdrawnXCoin, err)
+	if err := req.WithdrawnCoins.Validate(); err != nil {
+		return fmt.Errorf("invalid withdrawn coins: %w", err)
 	}
-	if err := req.WithdrawnYCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid withdrawn y coin %s: %w", req.WithdrawnYCoin, err)
+	if len(req.WithdrawnCoins) != 0 && len(req.WithdrawnCoins) != 2 {
+		return fmt.Errorf("wrong number of withdrawn coins: %d", len(req.WithdrawnCoins))
 	}
 	return nil
 }

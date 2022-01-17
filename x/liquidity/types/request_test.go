@@ -50,60 +50,32 @@ func TestDepositRequest_Validate(t *testing.T) {
 			"invalid depositor address invalidaddr: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"invalid x coin",
+			"invalid deposit coins",
 			func(req *types.DepositRequest) {
-				req.XCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
+				req.DepositCoins = sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)}
 			},
-			"invalid x coin -1denom1: negative coin amount: -1",
+			"invalid deposit coins: coin 0denom1 amount is not positive",
 		},
 		{
-			"zero x coin",
+			"wrong number of deposit coins",
 			func(req *types.DepositRequest) {
-				req.XCoin = parseCoin("0denom1")
+				req.DepositCoins = sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000))
 			},
-			"x coin must not be 0",
+			"wrong number of deposit coins: 1",
 		},
 		{
-			"invalid accepted x coin",
+			"invalid accepted coins",
 			func(req *types.DepositRequest) {
-				req.AcceptedXCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
+				req.AcceptedCoins = sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)}
 			},
-			"invalid accepted x coin -1denom1: negative coin amount: -1",
+			"invalid accepted coins: coin 0denom1 amount is not positive",
 		},
 		{
-			"zero accepted x coin",
+			"wrong number of accepted coins",
 			func(req *types.DepositRequest) {
-				req.AcceptedXCoin = parseCoin("0denom1")
+				req.AcceptedCoins = sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000))
 			},
-			"",
-		},
-		{
-			"invalid y coin",
-			func(req *types.DepositRequest) {
-				req.YCoin = sdk.Coin{Denom: "denom2", Amount: sdk.NewInt(-1)}
-			},
-			"invalid y coin -1denom2: negative coin amount: -1",
-		},
-		{
-			"zero y coin",
-			func(req *types.DepositRequest) {
-				req.YCoin = parseCoin("0denom2")
-			},
-			"y coin must not be 0",
-		},
-		{
-			"invalid accepted y coin",
-			func(req *types.DepositRequest) {
-				req.AcceptedYCoin = sdk.Coin{Denom: "denom2", Amount: sdk.NewInt(-1)}
-			},
-			"invalid accepted y coin -1denom2: negative coin amount: -1",
-		},
-		{
-			"zero accepted y coin",
-			func(req *types.DepositRequest) {
-				req.AcceptedYCoin = parseCoin("0denom2")
-			},
-			"",
+			"wrong number of accepted coins: 1",
 		},
 		{
 			"invalid minted pool coin",
@@ -121,9 +93,9 @@ func TestDepositRequest_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.NewPool(1, 1, "denom1", "denom2")
+			pool := types.NewPool(1, 1)
 			depositor := sdk.AccAddress(crypto.AddressHash([]byte("depositor")))
-			msg := types.NewMsgDepositBatch(depositor, 1, parseCoin("1000000denom1"), parseCoin("1000000denom2"))
+			msg := types.NewMsgDepositBatch(depositor, 1, parseCoins("1000000denom1,1000000denom2"))
 			req := types.NewDepositRequest(msg, pool, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()
@@ -190,36 +162,22 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 			"pool coin must not be 0",
 		},
 		{
-			"invalid withdrawn x coin",
+			"invalid withdrawn coins",
 			func(req *types.WithdrawRequest) {
-				req.WithdrawnXCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
+				req.WithdrawnCoins = sdk.Coins{sdk.NewInt64Coin("denom1", 0)}
 			},
-			"invalid withdrawn x coin -1denom1: negative coin amount: -1",
+			"invalid withdrawn coins: coin 0denom1 amount is not positive",
 		},
 		{
-			"zero withdrawn x coin",
+			"wrong number of withdrawn coins",
 			func(req *types.WithdrawRequest) {
-				req.WithdrawnXCoin = parseCoin("0denom1")
+				req.WithdrawnCoins = sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000))
 			},
-			"",
-		},
-		{
-			"invalid withdrawn y coin",
-			func(req *types.WithdrawRequest) {
-				req.WithdrawnYCoin = sdk.Coin{Denom: "denom2", Amount: sdk.NewInt(-1)}
-			},
-			"invalid withdrawn y coin -1denom2: negative coin amount: -1",
-		},
-		{
-			"zero withdrawn y coin",
-			func(req *types.WithdrawRequest) {
-				req.WithdrawnYCoin = parseCoin("0denom2")
-			},
-			"",
+			"wrong number of withdrawn coins: 1",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.NewPool(1, 1, "denom1", "denom2")
+			pool := types.NewPool(1, 1)
 			withdrawer := sdk.AccAddress(crypto.AddressHash([]byte("withdrawer")))
 			msg := types.NewMsgWithdrawBatch(withdrawer, 1, parseCoin("1000pool1"))
 			req := types.NewWithdrawRequest(msg, pool, 1, 1)

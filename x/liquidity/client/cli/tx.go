@@ -40,13 +40,13 @@ func GetTxCmd() *cobra.Command {
 
 func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool [x-coin] [y-coin]",
+		Use:   "create-pool [pair-id] [deposit-coins]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Create liquidity pool",
+		Short: "Create a liquidity pool",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create liquidity pool with deposit coins of x and y.
+			fmt.Sprintf(`Create a liquidity pool with coins.
 Example:
-$ %s tx %s create-pool 1000000000uatom 50000000000ucsnt --from mykey
+$ %s tx %s create-pool 1 1000000000uatom,50000000000ucsnt --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -57,21 +57,17 @@ $ %s tx %s create-pool 1000000000uatom 50000000000ucsnt --from mykey
 				return err
 			}
 
-			xCoin, err := sdk.ParseCoinNormalized(args[0])
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return err
+				return fmt.Errorf("parse pair id: %w", err)
 			}
 
-			yCoin, err := sdk.ParseCoinNormalized(args[1])
+			depositCoins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid deposit coints: %w", err)
 			}
 
-			msg := types.NewMsgCreatePool(
-				clientCtx.GetFromAddress(),
-				xCoin,
-				yCoin,
-			)
+			msg := types.NewMsgCreatePool(clientCtx.GetFromAddress(), pairId, depositCoins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -84,13 +80,13 @@ $ %s tx %s create-pool 1000000000uatom 50000000000ucsnt --from mykey
 
 func NewDepositBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit [pool-id] [x-coin] [y-coin]",
-		Args:  cobra.ExactArgs(3),
-		Short: "Deposit x and y coins to the liquidity pool",
+		Use:   "deposit [pool-id] [deposit-coins]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Deposit coins to a liquidity pool",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Deposit x and y coins to the liquidity pool.
+			fmt.Sprintf(`Deposit coins to a liquidity pool.
 Example:
-$ %s tx %s deposit 1 1000000000uatom 50000000000ucsnt --from mykey
+$ %s tx %s deposit 1 1000000000uatom,50000000000ucsnt --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -103,25 +99,15 @@ $ %s tx %s deposit 1 1000000000uatom 50000000000ucsnt --from mykey
 
 			poolId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid pool id: %w", err)
 			}
 
-			xCoin, err := sdk.ParseCoinNormalized(args[1])
+			depositCoins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid deposit coins: %w", err)
 			}
 
-			yCoin, err := sdk.ParseCoinNormalized(args[2])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgDepositBatch(
-				clientCtx.GetFromAddress(),
-				poolId,
-				xCoin,
-				yCoin,
-			)
+			msg := types.NewMsgDepositBatch(clientCtx.GetFromAddress(), poolId, depositCoins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -136,9 +122,9 @@ func NewWithdrawBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw [pool-id] [pool-coin]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Withdraw pool coin from the specified liquidity pool",
+		Short: "Withdraw coins from the specified liquidity pool",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Withdraw pool coin from the specified liquidity pool.
+			fmt.Sprintf(`Withdraw coins from the specified liquidity pool.
 Example:
 $ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2DA6F0B75D17A6295 --from mykey
 `,
@@ -180,9 +166,9 @@ func NewSwapBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "swap [x-coin-denom] [y-coin-denom] [offer-coin] [demand-coin-denom] [order-price] [order-life-span]",
 		Args:  cobra.ExactArgs(6),
-		Short: "Swap x coin to y coin from the specified liquidity pool",
+		Short: "Swap coins within a pair",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Swap x coin to y coin from the specified liquidity pool.
+			fmt.Sprintf(`Swap coins within a pair.
 Example:
 $ %s tx %s swap ucsnt uatom 10000uatom ucsnt 1.0 10s --from mykey
 
@@ -255,9 +241,9 @@ func NewCancelSwapBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-swap [pair-id] [swap-request-id]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Cancel swap request",
+		Short: "Cancel a swap request",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Cancel swap request.
+			fmt.Sprintf(`Cancel a swap request.
 Example:
 $ %s tx %s cancel-swap 1 --from mykey
 `,

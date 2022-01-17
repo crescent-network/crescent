@@ -26,3 +26,11 @@ func parseCoin(s string) sdk.Coin {
 	}
 	return coin
 }
+
+func parseCoins(s string) sdk.Coins {
+	coins, err := sdk.ParseCoinsNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}

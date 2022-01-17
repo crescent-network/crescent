@@ -20,11 +20,11 @@ func (pair Pair) GetEscrowAddress() sdk.AccAddress {
 }
 
 // NewPair returns a new pair object.
-func NewPair(id uint64, xCoinDenom, yCoinDenom string) Pair {
+func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) Pair {
 	return Pair{
 		Id:                      id,
-		XCoinDenom:              xCoinDenom,
-		YCoinDenom:              yCoinDenom,
+		BaseCoinDenom:           baseCoinDenom,
+		QuoteCoinDenom:          quoteCoinDenom,
 		EscrowAddress:           PairEscrowAddr(id).String(),
 		LastSwapRequestId:       0,
 		LastCancelSwapRequestId: 0,
@@ -37,11 +37,11 @@ func (pair Pair) Validate() error {
 	if pair.Id == 0 {
 		return fmt.Errorf("pair id must not be 0")
 	}
-	if err := sdk.ValidateDenom(pair.XCoinDenom); err != nil {
-		return fmt.Errorf("invalid x coin denom: %w", err)
+	if err := sdk.ValidateDenom(pair.BaseCoinDenom); err != nil {
+		return fmt.Errorf("invalid base coin denom: %w", err)
 	}
-	if err := sdk.ValidateDenom(pair.YCoinDenom); err != nil {
-		return fmt.Errorf("invalid y coin denom: %w", err)
+	if err := sdk.ValidateDenom(pair.QuoteCoinDenom); err != nil {
+		return fmt.Errorf("invalid quote coin denom: %w", err)
 	}
 	if _, err := sdk.AccAddressFromBech32(pair.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address %s: %w", pair.EscrowAddress, err)
