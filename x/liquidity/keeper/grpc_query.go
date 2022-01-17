@@ -212,7 +212,7 @@ func (k Querier) PoolByReserveAcc(c context.Context, req *types.QueryPoolByReser
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
 		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+		YCoin:                 sdk.NewCoin(pool.YCoinDenom, ry),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -247,7 +247,7 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
 		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+		YCoin:                 sdk.NewCoin(pool.YCoinDenom, ry),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
