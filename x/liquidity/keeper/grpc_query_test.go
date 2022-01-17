@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestGRPCPoolsByPair() {
 			nil,
 		},
 		{
-			"invalid request all",
+			"invalid request",
 			&types.QueryPoolsByPairRequest{},
 			true,
 			nil,
@@ -137,7 +137,56 @@ func (s *KeeperTestSuite) TestGRPCPoolsByPair() {
 }
 
 func (s *KeeperTestSuite) TestGRPCPool() {
+	creator := s.addr(0)
+	s.createPool(creator, parseCoin("1000000denom1"), parseCoin("1000000denom2"), true)
 
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryPoolRequest
+		expectErr bool
+		postRun   func(*types.QueryPoolResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryPoolRequest{},
+			true,
+			nil,
+		},
+		{
+			"query all pool with pair id",
+			&types.QueryPoolRequest{
+				PoolId: 1,
+			},
+			false,
+			func(resp *types.QueryPoolResponse) {
+				s.Require().Equal(uint64(1), resp.Pool.Id)
+				s.Require().Equal("denom1", resp.Pool.XCoinDenom)
+				s.Require().Equal("denom2", resp.Pool.YCoinDenom)
+				s.Require().Equal(parseCoin("1000000denom1"), resp.Pool.XCoin)
+				s.Require().Equal(parseCoin("1000000denom2"), resp.Pool.YCoin)
+				s.Require().Equal(types.PoolCoinDenom(1), resp.Pool.PoolCoinDenom)
+				s.Require().Equal(types.PoolReserveAcc(1).String(), resp.Pool.ReserveAddress)
+				s.Require().Equal(uint64(0), resp.Pool.LastDepositRequestId)
+				s.Require().Equal(uint64(0), resp.Pool.LastWithdrawRequestId)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Pool(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
