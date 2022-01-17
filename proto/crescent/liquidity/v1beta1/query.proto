@@ -242,19 +242,14 @@ message PoolResponse {
 
   uint64 pair_id = 2;
 
-  string x_coin_denom = 3;
+  string reserve_address = 3;
 
-  string y_coin_denom = 4;
+  string pool_coin_denom = 4;
 
-  string reserve_address = 5;
+  repeated cosmos.base.v1beta1.Coin balances = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  string pool_coin_denom = 6;
+  uint64 last_deposit_request_id = 6;
 
-  cosmos.base.v1beta1.Coin x_coin = 7 [(gogoproto.nullable) = false];
-
-  cosmos.base.v1beta1.Coin y_coin = 8 [(gogoproto.nullable) = false];
-
-  uint64 last_deposit_request_id = 9;
-
-  uint64 last_withdraw_request_id = 10;
+  uint64 last_withdraw_request_id = 7;
 }

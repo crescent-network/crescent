@@ -6,16 +6,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewDepositRequest(msg *MsgDepositBatch, id uint64, msgHeight int64) DepositRequest {
+func NewDepositRequest(msg *MsgDepositBatch, pool Pool, id uint64, msgHeight int64) DepositRequest {
 	return DepositRequest{
-		Id:            id,
-		PoolId:        msg.PoolId,
-		MsgHeight:     msgHeight,
-		Depositor:     msg.Depositor,
-		DepositCoins:  msg.DepositCoins,
-		AcceptedCoins: sdk.Coins{},
-		Succeeded:     false,
-		ToBeDeleted:   false,
+		Id:             id,
+		PoolId:         msg.PoolId,
+		MsgHeight:      msgHeight,
+		Depositor:      msg.Depositor,
+		DepositCoins:   msg.DepositCoins,
+		AcceptedCoins:  sdk.Coins{},
+		MintedPoolCoin: sdk.NewCoin(pool.PoolCoinDenom, sdk.ZeroInt()),
+		Succeeded:      false,
+		ToBeDeleted:    false,
 	}
 }
 
@@ -27,15 +28,16 @@ func (req DepositRequest) GetDepositor() sdk.AccAddress {
 	return addr
 }
 
-func NewWithdrawRequest(msg *MsgWithdrawBatch, id uint64, msgHeight int64) WithdrawRequest {
+func NewWithdrawRequest(msg *MsgWithdrawBatch, pool Pool, id uint64, msgHeight int64) WithdrawRequest {
 	return WithdrawRequest{
-		Id:          id,
-		PoolId:      msg.PoolId,
-		MsgHeight:   msgHeight,
-		Withdrawer:  msg.Withdrawer,
-		PoolCoin:    msg.PoolCoin,
-		Succeeded:   false,
-		ToBeDeleted: false,
+		Id:             id,
+		PoolId:         msg.PoolId,
+		MsgHeight:      msgHeight,
+		Withdrawer:     msg.Withdrawer,
+		PoolCoin:       msg.PoolCoin,
+		WithdrawnCoins: sdk.Coins{},
+		Succeeded:      false,
+		ToBeDeleted:    false,
 	}
 }
 

@@ -10,6 +10,9 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the Msg service.
 service Msg {
+  // CreatePair defines a method for creating a pair
+  rpc CreatePair(MsgCreatePair) returns (MsgCreatePairResponse);
+
   // CreatePool defines a method for creating a pool
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
@@ -25,6 +28,20 @@ service Msg {
   // CancelSwapBatch defines a method for cancelling a swap request
   rpc CancelSwapBatch(MsgCancelSwapBatch) returns (MsgCancelSwapBatchResponse);
 }
+
+// MsgCreatePair defines an SDK message for creating a pair.
+message MsgCreatePair {
+  // creator specifies the bech32-encoded address that is the pair creator.
+  string creator = 1;
+
+  // base_coin_denom specifies the base coin denom of the pair.
+  string base_coin_denom = 2;
+
+  // quote_coin_denom specifies the quote coin denom of the pair.
+  string quote_coin_denom = 3;
+}
+
+message MsgCreatePairResponse {}
 
 // MsgCreatePool defines an SDK message for creating a pool.
 message MsgCreatePool {

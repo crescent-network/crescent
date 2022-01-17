@@ -11,6 +11,52 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
+func TestMsgCreatePair(t *testing.T) {
+	for _, tc := range []struct {
+		malleate    func(msg *types.MsgCreatePair)
+		expectedErr string
+	}{
+		{
+			func(msg *types.MsgCreatePair) {},
+			"",
+		},
+		{
+			func(msg *types.MsgCreatePair) {
+				msg.Creator = "invalidaddr"
+			},
+			"invalid creator address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			func(msg *types.MsgCreatePair) {
+				msg.BaseCoinDenom = "invaliddenom!"
+			},
+			"invalid denom: invaliddenom!: invalid request",
+		},
+		{
+			func(msg *types.MsgCreatePair) {
+				msg.QuoteCoinDenom = "invaliddenom!"
+			},
+			"invalid denom: invaliddenom!: invalid request",
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			msg := types.NewMsgCreatePair(sdk.AccAddress(crypto.AddressHash([]byte("creator"))), "denom1", "denom2")
+			tc.malleate(msg)
+			require.Equal(t, types.TypeMsgCreatePair, msg.Type())
+			require.Equal(t, types.RouterKey, msg.Route())
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				signers := msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, msg.GetCreator(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func TestMsgCreatePool(t *testing.T) {
 	testCases := []struct {
 		expErr string
@@ -157,18 +203,20 @@ func TestMsgWithdrawBatch(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		require.Equal(t, types.TypeMsgWithdrawBatch, tc.msg.Type())
-		require.Equal(t, types.RouterKey, tc.msg.Route())
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, types.TypeMsgWithdrawBatch, tc.msg.Type())
+			require.Equal(t, types.RouterKey, tc.msg.Route())
 
-		err := tc.msg.ValidateBasic()
-		if tc.expErr == "" {
-			require.NoError(t, err)
-			signers := tc.msg.GetSigners()
-			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetWithdrawer(), signers[0])
-		} else {
-			require.EqualError(t, err, tc.expErr)
-		}
+			err := tc.msg.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err)
+				signers := tc.msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, tc.msg.GetWithdrawer(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expErr)
+			}
+		})
 	}
 }
 
@@ -230,18 +278,20 @@ func TestMsgSwapBatch(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		require.Equal(t, types.TypeMsgSwapBatch, tc.msg.Type())
-		require.Equal(t, types.RouterKey, tc.msg.Route())
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, types.TypeMsgSwapBatch, tc.msg.Type())
+			require.Equal(t, types.RouterKey, tc.msg.Route())
 
-		err := tc.msg.ValidateBasic()
-		if tc.expErr == "" {
-			require.NoError(t, err)
-			signers := tc.msg.GetSigners()
-			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetOrderer(), signers[0])
-		} else {
-			require.EqualError(t, err, tc.expErr)
-		}
+			err := tc.msg.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err)
+				signers := tc.msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, tc.msg.GetOrderer(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expErr)
+			}
+		})
 	}
 }
 
@@ -269,17 +319,19 @@ func TestMsgCancelSwapBatch(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		require.Equal(t, types.TypeMsgCancelSwapBatch, tc.msg.Type())
-		require.Equal(t, types.RouterKey, tc.msg.Route())
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, types.TypeMsgCancelSwapBatch, tc.msg.Type())
+			require.Equal(t, types.RouterKey, tc.msg.Route())
 
-		err := tc.msg.ValidateBasic()
-		if tc.expErr == "" {
-			require.NoError(t, err)
-			signers := tc.msg.GetSigners()
-			require.Len(t, signers, 1)
-			require.Equal(t, tc.msg.GetOrderer(), signers[0])
-		} else {
-			require.EqualError(t, err, tc.expErr)
-		}
+			err := tc.msg.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err)
+				signers := tc.msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, tc.msg.GetOrderer(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expErr)
+			}
+		})
 	}
 }

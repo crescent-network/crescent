@@ -26,6 +26,7 @@ func NewPool(id, pairId uint64) Pool {
 		PoolCoinDenom:         PoolCoinDenom(id),
 		LastDepositRequestId:  0,
 		LastWithdrawRequestId: 0,
+		Disabled:              false,
 	}
 }
 

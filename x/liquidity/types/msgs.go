@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	_ sdk.Msg = (*MsgCreatePair)(nil)
 	_ sdk.Msg = (*MsgCreatePool)(nil)
 	_ sdk.Msg = (*MsgDepositBatch)(nil)
 	_ sdk.Msg = (*MsgWithdrawBatch)(nil)
@@ -17,12 +18,59 @@ var (
 
 // Message types for the liquidity module
 const (
+	TypeMsgCreatePair      = "create_pair"
 	TypeMsgCreatePool      = "create_pool"
 	TypeMsgDepositBatch    = "deposit_batch"
 	TypeMsgWithdrawBatch   = "withdraw_batch"
 	TypeMsgSwapBatch       = "swap_batch"
 	TypeMsgCancelSwapBatch = "cancel_swap_batch"
 )
+
+// NewMsgCreatePair returns a new MsgCreatePair.
+func NewMsgCreatePair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) *MsgCreatePair {
+	return &MsgCreatePair{
+		Creator:        creator.String(),
+		BaseCoinDenom:  baseCoinDenom,
+		QuoteCoinDenom: quoteCoinDenom,
+	}
+}
+
+func (msg MsgCreatePair) Route() string { return RouterKey }
+
+func (msg MsgCreatePair) Type() string { return TypeMsgCreatePair }
+
+func (msg MsgCreatePair) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address: %v", err)
+	}
+	if err := sdk.ValidateDenom(msg.BaseCoinDenom); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	if err := sdk.ValidateDenom(msg.QuoteCoinDenom); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	return nil
+}
+
+func (msg MsgCreatePair) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreatePair) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCreatePair) GetCreator() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
 
 // NewMsgCreatePool creates a new MsgCreatePool.
 func NewMsgCreatePool(
@@ -31,8 +79,8 @@ func NewMsgCreatePool(
 	depositCoins sdk.Coins,
 ) *MsgCreatePool {
 	return &MsgCreatePool{
-		Creator: creator.String(),
-		PairId: pairId,
+		Creator:      creator.String(),
+		PairId:       pairId,
 		DepositCoins: depositCoins,
 	}
 }
@@ -84,8 +132,8 @@ func NewMsgDepositBatch(
 	depositCoins sdk.Coins,
 ) *MsgDepositBatch {
 	return &MsgDepositBatch{
-		Depositor: depositor.String(),
-		PoolId:    poolId,
+		Depositor:    depositor.String(),
+		PoolId:       poolId,
 		DepositCoins: depositCoins,
 	}
 }
