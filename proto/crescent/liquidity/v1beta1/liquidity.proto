@@ -42,9 +42,9 @@ message Params {
 message Pair {
   uint64 id = 1;
 
-  string quote_coin_denom = 2;
+  string base_coin_denom = 2;
 
-  string base_coin_denom = 3;
+  string quote_coin_denom = 3;
 
   string escrow_address = 4;
 
