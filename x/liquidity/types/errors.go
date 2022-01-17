@@ -15,4 +15,5 @@ var (
 	ErrInvalidPriceTick          = sdkerrors.Register(ModuleName, 6, "price not fit into ticks")
 	ErrPriceOutOfRange           = sdkerrors.Register(ModuleName, 7, "price out of range limit")
 	ErrTooLongOrderLifespan      = sdkerrors.Register(ModuleName, 8, "order lifespan is too long")
+	ErrDisabledPool              = sdkerrors.Register(ModuleName, 9, "disabled pool")
 )
