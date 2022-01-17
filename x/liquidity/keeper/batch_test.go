@@ -30,7 +30,7 @@ func TestDepositWithdraw(t *testing.T) {
 	err := crescentapp.FundAccount(app.BankKeeper, ctx, poolCreator, depositCoins.Add(params.PoolCreationFee...))
 	require.NoError(t, err)
 
-	err = app.LiquidityKeeper.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, xCoin, yCoin))
+	_, err = app.LiquidityKeeper.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, xCoin, yCoin))
 	require.NoError(t, err)
 	pool, found := app.LiquidityKeeper.GetPool(ctx, 1)
 	require.True(t, found)
@@ -42,14 +42,14 @@ func TestDepositWithdraw(t *testing.T) {
 	require.NoError(t, err)
 
 	liquidity.BeginBlocker(ctx, app.LiquidityKeeper)
-	err = app.LiquidityKeeper.DepositBatch(ctx, types.NewMsgDepositBatch(depositor, pool.Id, xCoin, yCoin))
+	_, err = app.LiquidityKeeper.DepositBatch(ctx, types.NewMsgDepositBatch(depositor, pool.Id, xCoin, yCoin))
 	require.NoError(t, err)
 	liquidity.EndBlocker(ctx, app.LiquidityKeeper)
 
 	poolCoin := app.BankKeeper.GetBalance(ctx, depositor, pool.PoolCoinDenom)
 
 	liquidity.BeginBlocker(ctx, app.LiquidityKeeper)
-	err = app.LiquidityKeeper.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(depositor, pool.Id, poolCoin))
+	_, err = app.LiquidityKeeper.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(depositor, pool.Id, poolCoin))
 	require.NoError(t, err)
 	liquidity.EndBlocker(ctx, app.LiquidityKeeper)
 }
@@ -67,9 +67,9 @@ func TestSwap(t *testing.T) {
 	err = crescentapp.FundAccount(app.BankKeeper, ctx, user2, sdk.NewCoins(sdk.NewInt64Coin("denom2", 1100)))
 	require.NoError(t, err)
 
-	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user1, "denom1", "denom2", sdk.NewInt64Coin("denom1", 500), "denom2", sdk.MustNewDecFromStr("1.5"), 0))
+	_, err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user1, "denom1", "denom2", sdk.NewInt64Coin("denom1", 500), "denom2", sdk.MustNewDecFromStr("1.5"), 0))
 	require.NoError(t, err)
-	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user2, "denom1", "denom2", sdk.NewInt64Coin("denom2", 1100), "denom1", sdk.MustNewDecFromStr("0.5"), 0))
+	_, err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user2, "denom1", "denom2", sdk.NewInt64Coin("denom2", 1100), "denom1", sdk.MustNewDecFromStr("0.5"), 0))
 	require.NoError(t, err)
 	pair, found := app.LiquidityKeeper.GetPairByDenoms(ctx, "denom1", "denom2")
 	require.True(t, found)
@@ -101,7 +101,7 @@ func TestSwapWithPool(t *testing.T) {
 	depositCoins := sdk.NewCoins(depositXCoin, depositYCoin)
 	err := crescentapp.FundAccount(app.BankKeeper, ctx, poolCreator, depositCoins.Add(params.PoolCreationFee...))
 	require.NoError(t, err)
-	err = app.LiquidityKeeper.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, depositXCoin, depositYCoin))
+	_, err = app.LiquidityKeeper.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, depositXCoin, depositYCoin))
 	require.NoError(t, err)
 	pool, found := app.LiquidityKeeper.GetPool(ctx, 1)
 	require.True(t, found)
@@ -109,7 +109,7 @@ func TestSwapWithPool(t *testing.T) {
 	err = crescentapp.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)))
 	require.NoError(t, err)
 
-	err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user, "denom1", "denom2", sdk.NewInt64Coin("denom1", 1000000), "denom2", sdk.MustNewDecFromStr("1.1"), 0))
+	_, err = app.LiquidityKeeper.SwapBatch(ctx, types.NewMsgSwapBatch(user, "denom1", "denom2", sdk.NewInt64Coin("denom1", 1000000), "denom2", sdk.MustNewDecFromStr("1.1"), 0))
 	require.NoError(t, err)
 	pair, found := app.LiquidityKeeper.GetPairByDenoms(ctx, "denom1", "denom2")
 	require.True(t, found)

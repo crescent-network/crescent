@@ -24,7 +24,7 @@ var _ types.MsgServer = msgServer{}
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := m.Keeper.CreatePool(ctx, msg); err != nil {
+	if _, err := m.Keeper.CreatePool(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -35,7 +35,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 func (m msgServer) DepositBatch(goCtx context.Context, msg *types.MsgDepositBatch) (*types.MsgDepositBatchResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := m.Keeper.DepositBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.DepositBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -46,7 +46,7 @@ func (m msgServer) DepositBatch(goCtx context.Context, msg *types.MsgDepositBatc
 func (m msgServer) WithdrawBatch(goCtx context.Context, msg *types.MsgWithdrawBatch) (*types.MsgWithdrawBatchResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := m.Keeper.WithdrawBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.WithdrawBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func (m msgServer) WithdrawBatch(goCtx context.Context, msg *types.MsgWithdrawBa
 func (m msgServer) SwapBatch(goCtx context.Context, msg *types.MsgSwapBatch) (*types.MsgSwapBatchResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := m.Keeper.SwapBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.SwapBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -68,7 +68,7 @@ func (m msgServer) SwapBatch(goCtx context.Context, msg *types.MsgSwapBatch) (*t
 func (m msgServer) CancelSwapBatch(goCtx context.Context, msg *types.MsgCancelSwapBatch) (*types.MsgCancelSwapBatchResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := m.Keeper.CancelSwapBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.CancelSwapBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
