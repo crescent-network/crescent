@@ -42,7 +42,7 @@ func (k Keeper) CreatePair(ctx sdk.Context, msg *types.MsgCreatePair) (types.Pai
 
 	// Send the pair creation fee to the fee collector.
 	feeCollectorAddr, _ := sdk.AccAddressFromBech32(params.FeeCollectorAddress)
-	if err := k.bankKeeper.SendCoins(ctx, msg.GetCreator(), feeCollectorAddr, params.PoolCreationFee); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, msg.GetCreator(), feeCollectorAddr, params.PairCreationFee); err != nil {
 		return types.Pair{}, sdkerrors.Wrap(err, "insufficient pair creation fee")
 	}
 
