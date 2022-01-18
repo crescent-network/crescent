@@ -15,8 +15,7 @@ func NewDepositRequest(msg *MsgDepositBatch, pool Pool, id uint64, msgHeight int
 		DepositCoins:   msg.DepositCoins,
 		AcceptedCoins:  sdk.Coins{},
 		MintedPoolCoin: sdk.NewCoin(pool.PoolCoinDenom, sdk.ZeroInt()),
-		Succeeded:      false,
-		ToBeDeleted:    false,
+		Status:         RequestStatusNotExecuted,
 	}
 }
 
@@ -28,7 +27,7 @@ func (req DepositRequest) GetDepositor() sdk.AccAddress {
 	return addr
 }
 
-func NewWithdrawRequest(msg *MsgWithdrawBatch, pool Pool, id uint64, msgHeight int64) WithdrawRequest {
+func NewWithdrawRequest(msg *MsgWithdrawBatch, id uint64, msgHeight int64) WithdrawRequest {
 	return WithdrawRequest{
 		Id:             id,
 		PoolId:         msg.PoolId,
@@ -36,8 +35,7 @@ func NewWithdrawRequest(msg *MsgWithdrawBatch, pool Pool, id uint64, msgHeight i
 		Withdrawer:     msg.Withdrawer,
 		PoolCoin:       msg.PoolCoin,
 		WithdrawnCoins: sdk.Coins{},
-		Succeeded:      false,
-		ToBeDeleted:    false,
+		Status:         RequestStatusNotExecuted,
 	}
 }
 
@@ -62,8 +60,7 @@ func NewSwapRequest(msg *MsgSwapBatch, id uint64, pair Pair, canceledAt time.Tim
 		BatchId:       pair.CurrentBatchId,
 		CanceledAt:    canceledAt,
 		Matched:       false,
-		Canceled:      false,
-		ToBeDeleted:   false,
+		Status:        SwapRequestStatusNotExecuted,
 	}
 }
 
@@ -84,7 +81,22 @@ func NewCancelSwapRequest(
 		Orderer:       msg.Orderer,
 		SwapRequestId: msg.SwapRequestId,
 		BatchId:       pair.CurrentBatchId,
-		Succeeded:     false,
-		ToBeDeleted:   false,
+		Status:        RequestStatusNotExecuted,
 	}
+}
+
+func (status RequestStatus) ShouldBeDeleted() bool {
+	return status == RequestStatusSucceeded || status == RequestStatusFailed
+}
+
+func (status SwapRequestStatus) IsMatchable() bool {
+	return status == SwapRequestStatusNotExecuted || status == SwapRequestStatusExecuted
+}
+
+func (status SwapRequestStatus) IsCanceledOrExpired() bool {
+	return status == SwapRequestStatusCanceled || status == SwapRequestStatusExpired
+}
+
+func (status SwapRequestStatus) ShouldBeDeleted() bool {
+	return status.IsCanceledOrExpired()
 }

@@ -101,9 +101,7 @@ message DepositRequest {
 
   cosmos.base.v1beta1.Coin minted_pool_coin = 7 [(gogoproto.nullable) = false];
 
-  bool succeeded = 8;
-
-  bool to_be_deleted = 9;
+  RequestStatus status = 8;
 }
 
 // WithdrawRequest defines a withdraw request.
@@ -127,9 +125,7 @@ message WithdrawRequest {
   repeated cosmos.base.v1beta1.Coin withdrawn_coins = 6
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  bool succeeded = 7;
-
-  bool to_be_deleted = 8;
+  RequestStatus status = 7;
 }
 
 // SwapRequest defines a swap request.
@@ -165,9 +161,7 @@ message SwapRequest {
 
   bool matched = 11;
 
-  bool canceled = 12;
-
-  bool to_be_deleted = 13;
+  SwapRequestStatus status = 12;
 }
 
 // CancelSwapRequest defines a request to cancel a swap request.
@@ -184,9 +178,7 @@ message CancelSwapRequest {
 
   uint64 batch_id = 6;
 
-  bool succeeded = 7;
-
-  bool to_be_deleted = 8;
+  RequestStatus status = 7;
 }
 
 // SwapDirection enumerates swap directions.
@@ -196,9 +188,46 @@ enum SwapDirection {
   // SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
   SWAP_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapDirectionUnspecified"];
 
-  // SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
+  // SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
   SWAP_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "SwapDirectionBuy"];
 
-  // SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+  // SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
   SWAP_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "SwapDirectionSell"];
+}
+
+// RequestStatus enumerates request statuses.
+enum RequestStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+  REQUEST_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "RequestStatusUnspecified"];
+
+  // REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+  REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "RequestStatusNotExecuted"];
+
+  // REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+  REQUEST_STATUS_SUCCEEDED = 2 [(gogoproto.enumvalue_customname) = "RequestStatusSucceeded"];
+
+  // REQUEST_STATUS_FAILED indicates the request is failed
+  REQUEST_STATUS_FAILED = 3 [(gogoproto.enumvalue_customname) = "RequestStatusFailed"];
+}
+
+// SwapRequestStatus enumerates swap request statuses.
+enum SwapRequestStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+  SWAP_REQUEST_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapRequestStatusUnspecified"];
+
+  // SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+  SWAP_REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotExecuted"];
+
+  // SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+  SWAP_REQUEST_STATUS_EXECUTED = 2 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExecuted"];
+
+  // SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+  SWAP_REQUEST_STATUS_CANCELED = 3 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCanceled"];
+
+  // SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
+  SWAP_REQUEST_STATUS_EXPIRED = 4 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExpired"];
 }
