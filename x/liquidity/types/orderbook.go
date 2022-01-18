@@ -277,7 +277,12 @@ func (ticks OrderBookTicks) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found
 	if i == 0 {
 		return
 	}
-	return ticks.Ticks[i-1].Price, true
+	for i--; i >= 0; i-- {
+		if ticks.Ticks[i].Orders.RemainingAmount().IsPositive() {
+			return ticks.Ticks[i].Price, true
+		}
+	}
+	return
 }
 
 func (ticks OrderBookTicks) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, found bool) {
@@ -288,7 +293,12 @@ func (ticks OrderBookTicks) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, fou
 	if i >= len(ticks.Ticks)-1 {
 		return
 	}
-	return ticks.Ticks[i+1].Price, true
+	for i++; i < len(ticks.Ticks); i++ {
+		if ticks.Ticks[i].Orders.RemainingAmount().IsPositive() {
+			return ticks.Ticks[i].Price, true
+		}
+	}
+	return
 }
 
 func (ticks OrderBookTicks) HighestTick() (tick sdk.Dec, found bool) {
