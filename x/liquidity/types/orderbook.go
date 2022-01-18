@@ -28,11 +28,11 @@ type OrderI interface {
 	GetPrice() sdk.Dec
 	GetAmount() sdk.Int
 	GetRemainingAmount() sdk.Int
-	SetRemainingAmount(amount sdk.Int)
+	SetRemainingAmount(amount sdk.Int) OrderI
 	GetReceivedAmount() sdk.Int
-	SetReceivedAmount(amount sdk.Int)
+	SetReceivedAmount(amount sdk.Int) OrderI
 	IsMatched() bool
-	SetMatched(matched bool)
+	SetMatched(matched bool) OrderI
 }
 
 type Order struct {
@@ -71,24 +71,27 @@ func (order *Order) GetRemainingAmount() sdk.Int {
 	return order.RemainingAmount
 }
 
-func (order *Order) SetRemainingAmount(amount sdk.Int) {
+func (order *Order) SetRemainingAmount(amount sdk.Int) OrderI {
 	order.RemainingAmount = amount
+	return order
 }
 
 func (order *Order) GetReceivedAmount() sdk.Int {
 	return order.ReceivedAmount
 }
 
-func (order *Order) SetReceivedAmount(amount sdk.Int) {
+func (order *Order) SetReceivedAmount(amount sdk.Int) OrderI {
 	order.ReceivedAmount = amount
+	return order
 }
 
 func (order *Order) IsMatched() bool {
 	return order.Matched
 }
 
-func (order *Order) SetMatched(matched bool) {
+func (order *Order) SetMatched(matched bool) OrderI {
 	order.Matched = matched
+	return order
 }
 
 type UserOrder struct {
