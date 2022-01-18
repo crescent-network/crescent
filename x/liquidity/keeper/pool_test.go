@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 	err := k.ExecuteDepositRequest(ctx, req)
 	s.Require().NoError(err)
 	req, _ = k.GetDepositRequest(ctx, pool.Id, req.Id)
-	s.Require().False(req.Succeeded)
+	s.Require().Equal(types.RequestStatusFailed, req.Status)
 
 	// Delete the previous request and refund coins to the depositor.
 	liquidity.BeginBlocker(ctx, k)
@@ -167,7 +167,7 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 	err := k.ExecuteWithdrawRequest(ctx, req)
 	s.Require().NoError(err)
 	req, _ = k.GetWithdrawRequest(ctx, pool.Id, req.Id)
-	s.Require().False(req.Succeeded)
+	s.Require().Equal(types.RequestStatusFailed, req.Status)
 
 	// Delete the previous request and refund coins to the withdrawer.
 	liquidity.BeginBlocker(ctx, k)
