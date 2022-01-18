@@ -13,7 +13,6 @@ import (
 
 	simapp "github.com/crescent-network/crescent/app"
 	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 var (
@@ -39,7 +38,7 @@ type KeeperTestSuite struct {
 	valAddrs   []sdk.ValAddress
 	//sourceAddrs           []sdk.AccAddress
 	//destinationAddrs      []sdk.AccAddress
-	whitelistedValidators []types.WhitelistedValidator
+	//whitelistedValidators []types.WhitelistedValidator
 }
 
 //func testProposal(changes ...proposal.ParamChange) *proposal.ParameterChangeProposal {

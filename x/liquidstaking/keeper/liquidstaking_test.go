@@ -23,9 +23,8 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	stakingAmt := sdk.NewInt(50000)
 
 	// fail, no active validator
-	newShares, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	_, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	suite.Require().Error(err)
-	fmt.Println(err)
 
 	// add active validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
@@ -36,7 +35,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
-	newShares, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	newShares, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	suite.Require().NoError(err)
 	suite.Require().Equal(newShares, stakingAmt.ToDec())
 
