@@ -87,6 +87,7 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
 	"github.com/tendermint/budget/x/budget"
@@ -108,9 +109,6 @@ import (
 	"github.com/crescent-network/crescent/x/liquidstaking"
 	liquidstakingkeeper "github.com/crescent-network/crescent/x/liquidstaking/keeper"
 	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/crescent-network/crescent/client/docs/statik"
 )
 
 const appName = "CrescentApp"
@@ -218,6 +216,7 @@ type CrescentApp struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
+	transferModule transfer.AppModule
 	// the module manager
 	mm *module.Manager
 
@@ -465,7 +464,12 @@ func NewCrescentApp(
 		app.BankKeeper,
 		scopedTransferKeeper,
 	)
-	transferModule := transfer.NewAppModule(app.TransferKeeper)
+	app.transferModule = transfer.NewAppModule(app.TransferKeeper)
+
+	// create static IBC router, add transfer route, then set and seal it
+	ibcRouter := porttypes.NewRouter()
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, app.transferModule)
+	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -508,7 +512,7 @@ func NewCrescentApp(
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
-		transferModule,
+		app.transferModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -596,7 +600,7 @@ func NewCrescentApp(
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
+		app.transferModule,
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -606,24 +610,25 @@ func NewCrescentApp(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
-	app.SetInitChainer(app.InitChainer)
-	app.SetBeginBlocker(app.BeginBlocker)
-
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+	anteHandler, err := NewAnteHandler(
+		HandlerOptions{
+			HandlerOptions: ante.HandlerOptions{
+				AccountKeeper:   app.AccountKeeper,
+				BankKeeper:      app.BankKeeper,
+				FeegrantKeeper:  app.FeeGrantKeeper,
+				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			},
+			IBCChannelkeeper: app.IBCKeeper.ChannelKeeper,
 		},
 	)
-
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
 	}
 
 	app.SetAnteHandler(anteHandler)
+	app.SetInitChainer(app.InitChainer)
+	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
