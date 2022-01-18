@@ -58,29 +58,41 @@ func (k Keeper) Rebalancing(ctx sdk.Context, moduleAcc sdk.AccAddress, activeVal
 	return activeVals
 }
 
-// AddStakingTarget is
-//func AddStakingTargetMap(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, addStakingTokens sdk.Int) (targetMap map[string]sdk.Int) {
-//	totalLiquidTokens := activeVals.TotalLiquidTokens()
-//	totalWeight := activeVals.TotalWeight()
-//	ToBeTotalLiquidTokens := totalLiquidTokens.Add(addStakingTokens)
-//	lenActiveVals := activeVals.Len()
-//
-//	// TODO: quo by totalWeight
-//	//averageTokens := ToBeTotalLiquidTokens.QuoRaw(int64(lenActiveVals))
-//	//crumb := ToBeTotalLiquidTokens.Sub(averageTokens.MulRaw(int64(lenActiveVals)))
-//	weightedShare := ToBeTotalLiquidTokens.ToDec().QuoTruncate(totalWeight).TruncateInt()
-//	crumb := ToBeTotalLiquidTokens.Sub(weightedShare.ToDec().Mul(weightedShare))
-//
-//	for _, val := range activeVals {
-//		targetMap[val.OperatorAddress] = totalLiquidTokens.ToDec().MulTruncate(val.Weight).QuoTruncate(totalWeight).TruncateInt()
-//	}
-//	fmt.Println(targetMap)
-//
-//	return activeVals
-//}
+//AddStakingTarget is
+func AddStakingTargetMap(activeVals types.LiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
+	totalLiquidTokens := activeVals.TotalLiquidTokens()
+	totalWeight := activeVals.TotalWeight()
+	ToBeTotalLiquidTokens := totalLiquidTokens.Add(addStakingAmt)
+	targetMap := make(map[string]sdk.Int)
+	existOverWeightedVal := false
+
+	sharePerWeight := ToBeTotalLiquidTokens.Quo(totalWeight)
+	crumb := ToBeTotalLiquidTokens.Sub(sharePerWeight.Mul(totalWeight))
+	for _, val := range activeVals {
+		weightedShare := val.Weight.Mul(sharePerWeight)
+		if val.LiquidTokens.GT(weightedShare) {
+			existOverWeightedVal = true
+		} else {
+			targetMap[val.OperatorAddress] = weightedShare.Sub(val.LiquidTokens)
+		}
+	}
+	if !existOverWeightedVal {
+		if v, ok := targetMap[activeVals[0].OperatorAddress]; ok {
+			targetMap[activeVals[0].OperatorAddress] = v.Add(crumb)
+		} else {
+			targetMap[activeVals[0].OperatorAddress] = crumb
+		}
+		return targetMap
+	} else {
+		//panic("not implemented")
+		fmt.Println("not implemented", totalLiquidTokens, ToBeTotalLiquidTokens, totalWeight, sharePerWeight, crumb)
+		return targetMap
+	}
+	return targetMap
+}
 
 //// RecursiveRebalancing
-//func RecursiveRebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, addStakingTokens sdk.Int) (targetMap map[string]sdk.Int) {
+//func RecursiveRebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, addStakingAmt sdk.Int) (targetMap map[string]sdk.Int) {
 //	totalLiquidTokens := activeVals.TotalLiquidTokens()
 //	totalWeight := activeVals.TotalWeight()
 //	//lenActiveVals := activeVals.Len()
@@ -96,7 +108,7 @@ func (k Keeper) Rebalancing(ctx sdk.Context, moduleAcc sdk.AccAddress, activeVal
 func (k Keeper) ProcessStaking(moduleAcc sdk.AccAddress, activeVals types.LiquidValidators, addStakingTokens sdk.Int, unstakingTokens sdk.Int) (rebalancedLiquidVals types.LiquidValidators) {
 	// suppose that when unstaking process starts, the required amount of unstaking is transferred to (notBonded) moduleAcc
 	// and when the unstaking queue matures, finally the tokens are transferred to staker's address
-	// addStakingTokens : additional staking amount to be considered
+	// addStakingAmt : additional staking amount to be considered
 	// unstakingTokens : unstaking amount to be considered
 
 	type accountBalance struct {

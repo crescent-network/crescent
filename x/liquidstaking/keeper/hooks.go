@@ -38,7 +38,7 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 			// TODO: exchange rate for native token, netAmount function
 			if lTokenBalance.IsPositive() {
 				(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
-				// TODO: consider apply weighted dividedPower
+				// TODO: apply weighted dividedPower
 				dividedPower := lTokenBalance.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
 				for _, val := range liquidVals {
 					if existed, ok := (*otherVotes)[vote.Voter][val.OperatorAddress]; ok {
