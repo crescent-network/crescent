@@ -268,7 +268,6 @@ func TestAddStakingTargetMap(t *testing.T) {
 				"c": sdk.NewInt(5),
 			},
 		},
-		// TODO: panic, unimplemented
 		{
 			activeVals: types.LiquidValidators{
 				{
@@ -296,34 +295,115 @@ func TestAddStakingTargetMap(t *testing.T) {
 				"c": sdk.NewInt(7),
 			},
 		},
-		// TODO: panic, unimplemented
-		//{
-		//	activeVals: types.LiquidValidators{
-		//		{
-		//			OperatorAddress: "a",
-		//			Status:          types.ValidatorStatusActive,
-		//			LiquidTokens:    sdk.NewIntFromUint64(10),
-		//			Weight:          sdk.NewInt(1),
-		//		},
-		//		{
-		//			OperatorAddress: "b",
-		//			Status:          types.ValidatorStatusActive,
-		//			LiquidTokens:    sdk.NewIntFromUint64(3),
-		//			Weight:          sdk.NewInt(1),
-		//		},
-		//		{
-		//			OperatorAddress: "c",
-		//			Status:          types.ValidatorStatusActive,
-		//			LiquidTokens:    sdk.NewIntFromUint64(1),
-		//			Weight:          sdk.NewInt(1),
-		//		},
-		//	},
-		//	addStakingAmt: sdk.NewInt(10),
-		//	expectedMap: map[string]sdk.Int{
-		//		"b": sdk.NewInt(4),
-		//		"c": sdk.NewInt(6),
-		//	},
-		//},
+		{
+			activeVals: types.LiquidValidators{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(10),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(3),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt: sdk.NewInt(10),
+			expectedMap: map[string]sdk.Int{
+				"b": sdk.NewInt(4),
+				"c": sdk.NewInt(6),
+			},
+		},
+		{
+			activeVals: types.LiquidValidators{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(10),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(3),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt: sdk.NewInt(10),
+			expectedMap: map[string]sdk.Int{
+				"b": sdk.NewInt(5),
+				"c": sdk.NewInt(5),
+			},
+		},
+		{
+			activeVals: types.LiquidValidators{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(10),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(3),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt: sdk.NewInt(10),
+			expectedMap: map[string]sdk.Int{
+				"b": sdk.NewInt(6),
+				"c": sdk.NewInt(4),
+			},
+		},
+		{
+			activeVals: types.LiquidValidators{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(10000000),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2000000),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(3000001),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt: sdk.NewInt(10000000),
+			expectedMap: map[string]sdk.Int{
+				"b": sdk.NewInt(5500001),
+				"c": sdk.NewInt(4499999),
+			},
+		},
+		// TODO: add more cases
 	}
 
 	for _, tc := range testCases {

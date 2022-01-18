@@ -58,7 +58,7 @@ func (k Keeper) Rebalancing(ctx sdk.Context, moduleAcc sdk.AccAddress, activeVal
 	return activeVals
 }
 
-//AddStakingTarget is
+//AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively.
 func AddStakingTargetMap(activeVals types.LiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
 	totalLiquidTokens := activeVals.TotalLiquidTokens()
 	totalWeight := activeVals.TotalWeight()
@@ -68,14 +68,21 @@ func AddStakingTargetMap(activeVals types.LiquidValidators, addStakingAmt sdk.In
 
 	sharePerWeight := ToBeTotalLiquidTokens.Quo(totalWeight)
 	crumb := ToBeTotalLiquidTokens.Sub(sharePerWeight.Mul(totalWeight))
+
+	i := 0
 	for _, val := range activeVals {
 		weightedShare := val.Weight.Mul(sharePerWeight)
 		if val.LiquidTokens.GT(weightedShare) {
 			existOverWeightedVal = true
 		} else {
+			activeVals[i] = val
+			i++
 			targetMap[val.OperatorAddress] = weightedShare.Sub(val.LiquidTokens)
 		}
 	}
+	// remove overWeightedVals for recursive call
+	activeVals = activeVals[:i]
+
 	if !existOverWeightedVal {
 		if v, ok := targetMap[activeVals[0].OperatorAddress]; ok {
 			targetMap[activeVals[0].OperatorAddress] = v.Add(crumb)
@@ -84,26 +91,11 @@ func AddStakingTargetMap(activeVals types.LiquidValidators, addStakingAmt sdk.In
 		}
 		return targetMap
 	} else {
-		//panic("not implemented")
-		fmt.Println("not implemented", totalLiquidTokens, ToBeTotalLiquidTokens, totalWeight, sharePerWeight, crumb)
-		return targetMap
+		fmt.Println("[AddStakingTargetMap] recursive call for", activeVals, addStakingAmt, totalLiquidTokens, ToBeTotalLiquidTokens, totalWeight, sharePerWeight, crumb)
+		return AddStakingTargetMap(activeVals, addStakingAmt)
 	}
 	return targetMap
 }
-
-//// RecursiveRebalancing
-//func RecursiveRebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, addStakingAmt sdk.Int) (targetMap map[string]sdk.Int) {
-//	totalLiquidTokens := activeVals.TotalLiquidTokens()
-//	totalWeight := activeVals.TotalWeight()
-//	//lenActiveVals := activeVals.Len()
-//
-//	for _, val := range activeVals {
-//		targetMap[val.OperatorAddress] = totalLiquidTokens.ToDec().MulTruncate(val.Weight).QuoTruncate(totalWeight).TruncateInt()
-//	}
-//	fmt.Println(targetMap)
-//
-//	return activeVals
-//}
 
 func (k Keeper) ProcessStaking(moduleAcc sdk.AccAddress, activeVals types.LiquidValidators, addStakingTokens sdk.Int, unstakingTokens sdk.Int) (rebalancedLiquidVals types.LiquidValidators) {
 	// suppose that when unstaking process starts, the required amount of unstaking is transferred to (notBonded) moduleAcc
