@@ -45,18 +45,13 @@ func GetPairKey(pairId uint64) []byte {
 }
 
 // GetPairIndexKey returns the index key to get a pair by denoms.
-func GetPairIndexKey(denomX, denomY string) []byte {
-	return append(append(PairIndexKeyPrefix, LengthPrefixString(denomX)...), LengthPrefixString(denomY)...)
+func GetPairIndexKey(baseCoinDenom, quoteCoinDenom string) []byte {
+	return append(append(PairIndexKeyPrefix, LengthPrefixString(baseCoinDenom)...), LengthPrefixString(quoteCoinDenom)...)
 }
 
 // GetPairLookupIndexKey returns the index key to lookup pairs with given denoms.
 func GetPairLookupIndexKey(denomA, denomB string, pairId uint64) []byte {
 	return append(append(append(PairLookupIndexKeyPrefix, LengthPrefixString(denomA)...), LengthPrefixString(denomB)...), sdk.Uint64ToBigEndian(pairId)...)
-}
-
-// GetPairByDenomKeyPrefix returns the single denom index key.
-func GetPairByDenomKeyPrefix(denom string) []byte {
-	return append(PairIndexKeyPrefix, LengthPrefixString(denom)...)
 }
 
 // GetPoolKey returns the store key to retrieve pool object from the pool id.

@@ -49,9 +49,9 @@ func (k Keeper) GetPair(ctx sdk.Context, id uint64) (pair types.Pair, found bool
 }
 
 // GetPairByDenoms returns a types.Pair for given denoms.
-func (k Keeper) GetPairByDenoms(ctx sdk.Context, denomX, denomY string) (pair types.Pair, found bool) {
+func (k Keeper) GetPairByDenoms(ctx sdk.Context, baseCoinDenom, quoteCoinDenom string) (pair types.Pair, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetPairIndexKey(denomX, denomY))
+	bz := store.Get(types.GetPairIndexKey(baseCoinDenom, quoteCoinDenom))
 	if bz == nil {
 		return
 	}
@@ -77,16 +77,16 @@ func (k Keeper) SetPair(ctx sdk.Context, pair types.Pair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalPair(k.cdc, pair)
 	store.Set(types.GetPairKey(pair.Id), bz)
-	k.SetPairIndex(ctx, pair.XCoinDenom, pair.YCoinDenom, pair.Id)
-	k.SetPairLookupIndex(ctx, pair.XCoinDenom, pair.YCoinDenom, pair.Id)
-	k.SetPairLookupIndex(ctx, pair.YCoinDenom, pair.XCoinDenom, pair.Id)
+	k.SetPairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.QuoteCoinDenom, pair.BaseCoinDenom, pair.Id)
 }
 
 // SetPairIndex stores a pair index.
-func (k Keeper) SetPairIndex(ctx sdk.Context, denomX, denomY string, pairId uint64) {
+func (k Keeper) SetPairIndex(ctx sdk.Context, baseCoinDenom, quoteCoinDenom string, pairId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: pairId})
-	store.Set(types.GetPairIndexKey(denomX, denomY), bz)
+	store.Set(types.GetPairIndexKey(baseCoinDenom, quoteCoinDenom), bz)
 }
 
 // SetPairLookupIndex stores a pair lookup index for given denoms.
@@ -105,23 +105,6 @@ func (k Keeper) IterateAllPairs(ctx sdk.Context, cb func(pair types.Pair) (stop 
 
 	for ; iter.Valid(); iter.Next() {
 		pair := types.MustUnmarshalPair(k.cdc, iter.Value())
-		if cb(pair) {
-			break
-		}
-	}
-}
-
-// IteratePairsByDenom iterates over all the stored pairs by particular denomination and
-// performs a callback function. Stops iteration when callback returns true.
-func (k Keeper) IteratePairsByDenom(ctx sdk.Context, denom string, cb func(pair types.Pair) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-
-	iter := sdk.KVStorePrefixIterator(store, types.GetPairByDenomKeyPrefix(denom))
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		_, pairId := types.ParsePairByDenomIndexKey(iter.Key())
-		pair, _ := k.GetPair(ctx, pairId)
 		if cb(pair) {
 			break
 		}

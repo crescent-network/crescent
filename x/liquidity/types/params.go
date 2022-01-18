@@ -23,6 +23,7 @@ var (
 	KeyBatchSize               = []byte("BatchSize")
 	KeyTickPrecision           = []byte("TickPrecision")
 	KeyMinInitialDepositAmount = []byte("MinInitialDepositAmount")
+	KeyPairCreationFee         = []byte("PairCreationFee")
 	KeyPoolCreationFee         = []byte("PoolCreationFee")
 	KeyFeeCollectorAddress     = []byte("FeeCollectorAddress")
 	KeyMaxPriceLimitRatio      = []byte("MaxPriceLimitRatio")
@@ -36,7 +37,8 @@ var (
 	DefaultBatchSize               uint32 = 1
 	DefaultTickPrecision           uint32 = 3
 	DefaultMinInitialDepositAmount        = sdk.NewInt(1000000)
-	DefaultPoolCreationFee                = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
+	DefaultPairCreationFee                = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultPoolCreationFee                = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultFeeCollectorAddress            = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
 	DefaultMaxPriceLimitRatio             = sdk.NewDecWithPrec(1, 1) // 10%
 	DefaultSwapFeeRate                    = sdk.ZeroDec()
@@ -62,6 +64,7 @@ func DefaultParams() Params {
 		BatchSize:               DefaultBatchSize,
 		TickPrecision:           DefaultTickPrecision,
 		MinInitialDepositAmount: DefaultMinInitialDepositAmount,
+		PairCreationFee:         DefaultPairCreationFee,
 		PoolCreationFee:         DefaultPoolCreationFee,
 		FeeCollectorAddress:     DefaultFeeCollectorAddress.String(),
 		MaxPriceLimitRatio:      DefaultMaxPriceLimitRatio,
@@ -77,6 +80,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyBatchSize, &params.BatchSize, validateBatchSize),
 		paramstypes.NewParamSetPair(KeyTickPrecision, &params.TickPrecision, validateTickPrecision),
 		paramstypes.NewParamSetPair(KeyMinInitialDepositAmount, &params.MinInitialDepositAmount, validateMinInitialDepositAmount),
+		paramstypes.NewParamSetPair(KeyPairCreationFee, &params.PairCreationFee, validatePairCreationFee),
 		paramstypes.NewParamSetPair(KeyPoolCreationFee, &params.PoolCreationFee, validatePoolCreationFee),
 		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &params.FeeCollectorAddress, validateFeeCollectorAddress),
 		paramstypes.NewParamSetPair(KeyMaxPriceLimitRatio, &params.MaxPriceLimitRatio, validateMaxPriceLimitRatio),
@@ -95,6 +99,7 @@ func (params Params) Validate() error {
 		{params.BatchSize, validateBatchSize},
 		{params.TickPrecision, validateTickPrecision},
 		{params.MinInitialDepositAmount, validateMinInitialDepositAmount},
+		{params.PairCreationFee, validatePairCreationFee},
 		{params.PoolCreationFee, validatePoolCreationFee},
 		{params.FeeCollectorAddress, validateFeeCollectorAddress},
 		{params.MaxPriceLimitRatio, validateMaxPriceLimitRatio},
@@ -156,6 +161,19 @@ func validateMinInitialDepositAmount(i interface{}) error {
 
 	if v.IsNegative() {
 		return fmt.Errorf("minimum initial deposit amount must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validatePairCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid pair creation fee: %w", err)
 	}
 
 	return nil

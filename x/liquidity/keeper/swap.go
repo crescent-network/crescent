@@ -25,7 +25,7 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 	var pair types.Pair
 	pair, found := k.GetPairByDenoms(ctx, msg.XCoinDenom, msg.YCoinDenom)
 	if !found {
-		pair = k.CreatePair(ctx, msg.XCoinDenom, msg.YCoinDenom)
+		return types.SwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair not found")
 	}
 
 	if pair.LastPrice != nil {
@@ -112,7 +112,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	var pools []types.PoolI
 	var poolBuySources, poolSellSources []types.OrderSource
 	k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
-		rx, ry := k.GetPoolBalance(ctx, pool)
+		rx, ry := k.GetPoolBalance(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
 		poolInfo := types.NewPoolInfo(rx, ry, ps) // Pool coin supply is not used when matching
 		if types.IsDepletedPool(poolInfo) {
@@ -167,9 +167,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					var offerCoinDenom string
 					switch order.Direction {
 					case types.SwapDirectionBuy:
-						offerCoinDenom = pair.XCoinDenom
+						offerCoinDenom = pair.QuoteCoinDenom
 					case types.SwapDirectionSell:
-						offerCoinDenom = pair.YCoinDenom
+						offerCoinDenom = pair.BaseCoinDenom
 					}
 					offerCoin := sdk.NewCoin(offerCoinDenom, order.Amount.Sub(order.RemainingAmount))
 					bulkOp.SendCoins(order.ReserveAddress, pair.GetEscrowAddress(), sdk.NewCoins(offerCoin))
@@ -194,9 +194,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					var demandCoinDenom string
 					switch order.Direction {
 					case types.SwapDirectionBuy:
-						demandCoinDenom = pair.YCoinDenom
+						demandCoinDenom = pair.BaseCoinDenom
 					case types.SwapDirectionSell:
-						demandCoinDenom = pair.XCoinDenom
+						demandCoinDenom = pair.QuoteCoinDenom
 					}
 					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
 					bulkOp.SendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(demandCoin))
@@ -204,9 +204,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					var demandCoinDenom string
 					switch order.Direction {
 					case types.SwapDirectionBuy:
-						demandCoinDenom = pair.YCoinDenom
+						demandCoinDenom = pair.BaseCoinDenom
 					case types.SwapDirectionSell:
-						demandCoinDenom = pair.XCoinDenom
+						demandCoinDenom = pair.QuoteCoinDenom
 					}
 					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
 					bulkOp.SendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(demandCoin))

@@ -18,12 +18,10 @@ var (
 )
 
 // NewPool returns a new pool object.
-func NewPool(id, pairId uint64, xCoinDenom, yCoinDenom string) Pool {
+func NewPool(id, pairId uint64) Pool {
 	return Pool{
 		Id:                    id,
 		PairId:                pairId,
-		XCoinDenom:            xCoinDenom,
-		YCoinDenom:            yCoinDenom,
 		ReserveAddress:        PoolReserveAcc(id).String(),
 		PoolCoinDenom:         PoolCoinDenom(id),
 		LastDepositRequestId:  0,

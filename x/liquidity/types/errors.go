@@ -9,11 +9,12 @@ import (
 // x/liquidity module sentinel errors
 var (
 	ErrInsufficientDepositAmount = sdkerrors.Register(ModuleName, 2, "insufficient deposit amount")
-	ErrPoolAlreadyExists         = sdkerrors.Register(ModuleName, 3, "pool already exists")
-	ErrWrongPair                 = sdkerrors.Register(ModuleName, 4, "wrong coin denom pair")
+	ErrPairAlreadyExists         = sdkerrors.Register(ModuleName, 3, "pair already exists")
+	ErrPoolAlreadyExists         = sdkerrors.Register(ModuleName, 4, "pool already exists")
 	ErrWrongPoolCoinDenom        = sdkerrors.Register(ModuleName, 5, "wrong pool coin denom")
-	ErrInvalidPriceTick          = sdkerrors.Register(ModuleName, 6, "price not fit into ticks")
-	ErrPriceOutOfRange           = sdkerrors.Register(ModuleName, 7, "price out of range limit")
-	ErrTooLongOrderLifespan      = sdkerrors.Register(ModuleName, 8, "order lifespan is too long")
-	ErrDisabledPool              = sdkerrors.Register(ModuleName, 9, "disabled pool")
+	ErrInvalidCoinDenom          = sdkerrors.Register(ModuleName, 6, "invalid coin denom")
+	ErrInvalidPriceTick          = sdkerrors.Register(ModuleName, 7, "price not fit into ticks")
+	ErrPriceOutOfRange           = sdkerrors.Register(ModuleName, 8, "price out of range limit")
+	ErrTooLongOrderLifespan      = sdkerrors.Register(ModuleName, 9, "order lifespan is too long")
+	ErrDisabledPool              = sdkerrors.Register(ModuleName, 10, "disabled pool")
 )
