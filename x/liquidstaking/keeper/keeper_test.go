@@ -6,10 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/crescent-network/crescent/app"
@@ -87,12 +86,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	//err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, suite.sourceAddrs[3], smallBalances)
 	//suite.Require().NoError(err)
 
-	suite.whitelistedValidators = []types.WhitelistedValidator{
-		{
-			ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Weight:           sdk.MustNewDecFromStr("0.5"),
-		},
-	}
+	//suite.whitelistedValidators = []types.WhitelistedValidator{
+	//	{
+	//		ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
+	//		Weight:           sdk.MustNewDecFromStr("0.5"),
+	//	},
+	//}
 }
 
 //func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
@@ -108,19 +107,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 //}
 
 func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+	suite.app.BeginBlocker(suite.ctx, abci.RequestBeginBlock{})
 	num := len(powers)
 	addrs := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, num, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(num)
-	cdc := simapp.MakeTestEncodingConfig().Marshaler
-
-	suite.app.StakingKeeper = stakingkeeper.NewKeeper(
-		cdc,
-		suite.app.GetKey(stakingtypes.StoreKey),
-		suite.app.AccountKeeper,
-		suite.app.BankKeeper,
-		suite.app.GetSubspace(stakingtypes.ModuleName),
-	)
 
 	for i, power := range powers {
 		val, err := stakingtypes.NewValidator(valAddrs[i], pks[i], stakingtypes.Description{})
@@ -129,13 +120,12 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val)
 		suite.Require().NoError(err)
 		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
-		suite.app.DistrKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
-		suite.app.SlashingKeeper.Hooks().AfterValidatorCreated(suite.ctx, val.GetOperator())
+		suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, val.GetOperator())
 		newShares, err := suite.app.StakingKeeper.Delegate(suite.ctx, addrs[i], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
 		suite.Require().NoError(err)
 		suite.Require().Equal(newShares.TruncateInt(), sdk.NewInt(power))
 	}
 
-	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
+	suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{})
 	return addrs, valAddrs
 }
