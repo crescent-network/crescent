@@ -15,6 +15,9 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	// TODO: Unimplemented beginblock logic
+	// TODO: withdraw rewards and redelegation for active validator
+	//k.GetActiveLiquidValidators()
+	//k.stakingKeeper.IterateDelegations()
 	//if err != nil {
 	//	panic(err)
 	//}
