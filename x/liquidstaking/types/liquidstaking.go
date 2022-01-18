@@ -61,6 +61,26 @@ func (vs LiquidValidators) MinMaxGap(targetMap map[string]sdk.Int) (minGapVal Li
 	return minGapVal, maxGapVal, amountNeeded
 }
 
+func (vs LiquidValidators) Len() int {
+	return len(vs)
+}
+
+func (vs LiquidValidators) TotalWeight() sdk.Dec {
+	totalWeight := sdk.ZeroDec()
+	for _, val := range vs {
+		totalWeight = totalWeight.Add(val.Weight)
+	}
+	return totalWeight
+}
+
+func (vs LiquidValidators) TotalLiquidTokens() sdk.Int {
+	totalLiquidTokens := sdk.ZeroInt()
+	for _, val := range vs {
+		totalLiquidTokens = totalLiquidTokens.Add(val.LiquidTokens)
+	}
+	return totalLiquidTokens
+}
+
 func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {
 	return cdc.MustMarshal(val)
 }

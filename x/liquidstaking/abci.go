@@ -15,9 +15,12 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	// TODO: Unimplemented beginblock logic
-	// TODO: withdraw rewards and redelegation for active validator
+	// TODO: withdraw rewards and re-staking for active validator
+	//totalRewards := k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
+	// TODO: re-staking only the rewards or with balance
+	// TODO: re-staking with rebalancing?
 	//k.GetActiveLiquidValidators()
-	//k.stakingKeeper.IterateDelegations()
+	//k.stakingKeeper.
 	//if err != nil {
 	//	panic(err)
 	//}

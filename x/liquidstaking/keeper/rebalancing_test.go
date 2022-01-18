@@ -172,3 +172,60 @@ func (suite *KeeperTestSuite) TestRebalancingWithDelistingDiffWeight() {
 	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
 	suite.keeper.Rebalancing(suite.ctx, moduleAcc, lvs, sdk.NewDec(10000))
 }
+
+//
+//func (suite *KeeperTestSuite) TestProcessStaking() {
+//	lvs := types.LiquidValidators{
+//		{
+//			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
+//			Status:          1,
+//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
+//			Weight:          sdk.MustNewDecFromStr("1"),
+//		},
+//		{
+//			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
+//			Status:          1,
+//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
+//			Weight:          sdk.MustNewDecFromStr("1"),
+//		},
+//		{
+//			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
+//			Status:          1,
+//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
+//			Weight:          sdk.MustNewDecFromStr("1"),
+//		},
+//		{
+//			OperatorAddress: "cosmosvaloper1nmfag3hmkx3qyhpmq7jx5996k8uhgh87xhcqfq",
+//			Status:          1,
+//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
+//			Weight:          sdk.MustNewDecFromStr("1"),
+//		},
+//	}
+//	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
+//	suite.keeper.ProcessStaking(moduleAcc, lvs, sdk.NewInt(int64(10*1000000)), sdk.NewInt(int64(20*1000000)))
+//}
+//
+//func (suite *KeeperTestSuite) TestProcessStaking2() {
+//	lvs := types.LiquidValidators{
+//		{
+//			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
+//			Status:          1,
+//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
+//			Weight:          sdk.MustNewDecFromStr("1"),
+//		},
+//		{
+//			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
+//			Status:          1,
+//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
+//			Weight:          sdk.MustNewDecFromStr("1"),
+//		},
+//		{
+//			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
+//			Status:          1,
+//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
+//			Weight:          sdk.MustNewDecFromStr("1"),
+//		},
+//	}
+//	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
+//	suite.keeper.ProcessStaking(moduleAcc, lvs, sdk.NewInt(int64(20*1000000)), sdk.NewInt(int64(10*1000000)))
+//}
