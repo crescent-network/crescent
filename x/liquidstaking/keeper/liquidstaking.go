@@ -62,6 +62,12 @@ func (k Keeper) LiquidStaking(
 		)
 	}
 
+	activeVals, totalWeight := k.GetActiveLiquidValidators(ctx)
+	lenActiveVals := len(activeVals)
+	if lenActiveVals == 0 || !totalWeight.IsPositive() {
+		return sdk.ZeroDec(), fmt.Errorf("there's no active liquid validators")
+	}
+
 	netAmount := k.NetAmount(ctx)
 
 	// send staking coin to liquid staking proxy account to proxy delegation
@@ -90,8 +96,6 @@ func (k Keeper) LiquidStaking(
 		return sdk.ZeroDec(), err
 	}
 
-	activeVals, totalWeight := k.GetActiveLiquidValidators(ctx)
-	lenActiveVals := len(activeVals)
 	share := stakingAmt.QuoTruncate(totalWeight).TruncateInt()
 	totalNewShares := sdk.ZeroDec()
 	var weightedShare sdk.Int
@@ -133,6 +137,12 @@ func (k Keeper) LiquidUnstaking(
 		)
 	}
 
+	activeVals, totalWeight := k.GetActiveLiquidValidators(ctx)
+	lenActiveVals := len(activeVals)
+	if lenActiveVals == 0 || !totalWeight.IsPositive() {
+		return time.Time{}, []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
+	}
+
 	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate), review decimal truncation
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 	if !bTokenTotalSupply.IsPositive() {
@@ -151,8 +161,6 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	activeVals, totalWeight := k.GetActiveLiquidValidators(ctx)
-	lenActiveVals := len(activeVals)
 	share := unstakeAmount.QuoTruncate(totalWeight).TruncateInt()
 	leftAmount := unstakeAmount.TruncateInt()
 	var weightedShare sdk.Int
@@ -196,7 +204,7 @@ func (k Keeper) LiquidUnbond(
 	// transfer the validator tokens to the not bonded pool
 	if validator.IsBonded() {
 		coins := sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), returnAmount))
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, coins); err != nil {
+		if err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, coins); err != nil {
 			panic(err)
 		}
 	}

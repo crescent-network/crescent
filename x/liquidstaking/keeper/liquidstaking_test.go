@@ -16,19 +16,29 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	_, valOpers := suite.CreateValidators([]int64{1000000, 2000000, 3000000})
 	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	params := suite.keeper.GetParams(suite.ctx)
-	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.OneDec()},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.OneDec()},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.OneDec()},
-	}
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
 	stakingAmt := sdk.NewInt(50000)
+
+	// fail, no active validator
 	newShares, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
-	suite.Require().Equal(newShares, stakingAmt.ToDec())
+	suite.Require().Error(err)
+	fmt.Println(err)
+
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), Weight: sdk.OneDec()},
+		{ValidatorAddress: valOpers[1].String(), Weight: sdk.OneDec()},
+		{ValidatorAddress: valOpers[2].String(), Weight: sdk.OneDec()},
+	}
+	suite.keeper.SetParams(suite.ctx, params)
+	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+
+	newShares, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	suite.Require().NoError(err)
+	suite.Require().Equal(newShares, stakingAmt.ToDec())
 
 	_, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], valOpers[0])
 	suite.Require().False(found)
