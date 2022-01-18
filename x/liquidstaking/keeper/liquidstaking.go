@@ -50,34 +50,34 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	return balance.Amount.ToDec().Add(liquidPower).Add(totalRewards).Add(unbondingPower.ToDec())
 }
 
-func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals []types.LiquidValidator, totalWeight sdk.Dec, stakingAmt sdk.Dec) (newShares sdk.Dec, err error) {
-	lenActiveVals := len(activeVals)
-	share := stakingAmt.QuoTruncate(totalWeight).TruncateInt()
-	totalNewShares := sdk.ZeroDec()
-	var weightedShare sdk.Int
-	// TODO: liquid delegate with rebalancing
-	for i, val := range activeVals {
-		if i+1 == lenActiveVals {
-			// To minimize the decimal error, use the remaining amount for the last validator.
-			weightedShare = stakingAmt.Sub(totalNewShares).TruncateInt()
-		} else {
-			weightedShare = share.ToDec().Mul(val.Weight).TruncateInt()
-		}
-		// NOTE: source funds are always unbonded
-		validator, found := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
-		if !found {
-			panic("validator not founded")
-		}
-		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, weightedShare, stakingtypes.Unbonded, validator, true)
-		if err != nil {
-			return sdk.ZeroDec(), err
-		}
-		val.LiquidTokens = val.LiquidTokens.Add(weightedShare)
-		k.SetLiquidValidator(ctx, val)
-		totalNewShares = totalNewShares.Add(newShares)
-	}
-	return totalNewShares, nil
-}
+//func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals []types.LiquidValidator, totalWeight sdk.Int, stakingAmt sdk.Int) (newShares sdk.Dec, err error) {
+//	lenActiveVals := len(activeVals)
+//	share := stakingAmt.QuoTruncate(totalWeight).TruncateInt()
+//	totalNewShares := sdk.ZeroDec()
+//	var weightedShare sdk.Int
+//	// TODO: liquid delegate with rebalancing
+//	for i, val := range activeVals {
+//		if i+1 == lenActiveVals {
+//			// To minimize the decimal error, use the remaining amount for the last validator.
+//			weightedShare = stakingAmt.Sub(totalNewShares).TruncateInt()
+//		} else {
+//			weightedShare = share.ToDec().Mul(val.Weight).TruncateInt()
+//		}
+//		// NOTE: source funds are always unbonded
+//		validator, found := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
+//		if !found {
+//			panic("validator not founded")
+//		}
+//		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, weightedShare, stakingtypes.Unbonded, validator, true)
+//		if err != nil {
+//			return sdk.ZeroDec(), err
+//		}
+//		val.LiquidTokens = val.LiquidTokens.Add(weightedShare)
+//		k.SetLiquidValidator(ctx, val)
+//		totalNewShares = totalNewShares.Add(newShares)
+//	}
+//	return totalNewShares, nil
+//}
 
 // LiquidStaking ...
 func (k Keeper) LiquidStaking(
@@ -125,7 +125,7 @@ func (k Keeper) LiquidStaking(
 	}
 
 	// TODO: refactoring with LiquidDelegate
-	share := stakingAmt.QuoTruncate(totalWeight).TruncateInt()
+	share := stakingAmt.QuoInt(totalWeight).TruncateInt()
 	totalNewShares := sdk.ZeroDec()
 	var weightedShare sdk.Int
 	for i, val := range activeVals {
@@ -133,7 +133,7 @@ func (k Keeper) LiquidStaking(
 			// To minimize the decimal error, use the remaining amount for the last validator.
 			weightedShare = stakingAmt.Sub(totalNewShares).TruncateInt()
 		} else {
-			weightedShare = share.ToDec().Mul(val.Weight).TruncateInt()
+			weightedShare = share.Mul(val.Weight)
 		}
 		// NOTE: source funds are always unbonded
 		validator, found := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
@@ -189,7 +189,8 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	share := unstakeAmount.QuoTruncate(totalWeight).TruncateInt()
+	// TODO: first delisting?, no need to same weighted risk distribute
+	share := unstakeAmount.QuoInt(totalWeight).TruncateInt()
 	leftAmount := unstakeAmount.TruncateInt()
 	var weightedShare sdk.Int
 
@@ -200,7 +201,7 @@ func (k Keeper) LiquidUnstaking(
 			// To minimize the decimal error, use the remaining amount for the last validator.
 			weightedShare = leftAmount
 		} else {
-			weightedShare = share.ToDec().Mul(val.Weight).TruncateInt()
+			weightedShare = share.Mul(val.Weight)
 		}
 		var ubd stakingtypes.UnbondingDelegation
 		ubdTime, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare.ToDec())
@@ -298,11 +299,11 @@ func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals []types.LiquidVali
 
 // GetActiveLiquidValidators get the set of active liquid validators.
 // TODO: refactor []types.LiquidValidator for types.LiquidValidators for totalWeights and len and minMaxGap
-func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals []types.LiquidValidator, lenVals int, totalWeight sdk.Dec, err error) {
+func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals []types.LiquidValidator, lenVals int, totalWeight sdk.Int, err error) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
-	totalWeight = sdk.ZeroDec()
+	totalWeight = sdk.ZeroInt()
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

@@ -65,8 +65,8 @@ func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalWeight() sdk.Dec {
-	totalWeight := sdk.ZeroDec()
+func (vs LiquidValidators) TotalWeight() sdk.Int {
+	totalWeight := sdk.ZeroInt()
 	for _, val := range vs {
 		totalWeight = totalWeight.Add(val.Weight)
 	}

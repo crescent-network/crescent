@@ -19,7 +19,7 @@ func (k Keeper) UpdateLiquidValidators(ctx sdk.Context) {
 // activeVals containing ValidatorStatusActive which is containing just added on whitelist(power 0) and ValidatorStatusDelisting
 func (k Keeper) Rebalancing(ctx sdk.Context, moduleAcc sdk.AccAddress, activeVals types.LiquidValidators, threshold sdk.Dec) (rebalancedLiquidVals types.LiquidValidators) {
 	totalLiquidTokens := sdk.ZeroInt()
-	totalWeight := sdk.ZeroDec()
+	totalWeight := sdk.ZeroInt()
 	for _, val := range activeVals {
 		totalLiquidTokens = totalLiquidTokens.Add(val.LiquidTokens)
 		if val.Status == 1 {
@@ -27,15 +27,15 @@ func (k Keeper) Rebalancing(ctx sdk.Context, moduleAcc sdk.AccAddress, activeVal
 		}
 	}
 
-	var targetWeight sdk.Dec
+	var targetWeight sdk.Int
 	targetMap := map[string]sdk.Int{}
 	for _, val := range activeVals {
 		if val.Status == 1 {
 			targetWeight = val.Weight
 		} else {
-			targetWeight = sdk.ZeroDec()
+			targetWeight = sdk.ZeroInt()
 		}
-		targetMap[val.OperatorAddress] = totalLiquidTokens.ToDec().MulTruncate(targetWeight).QuoTruncate(totalWeight).TruncateInt()
+		targetMap[val.OperatorAddress] = totalLiquidTokens.Mul(targetWeight).Quo(totalWeight)
 	}
 	fmt.Println(targetMap)
 

@@ -28,9 +28,9 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 
 	// add active validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.OneDec()},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.OneDec()},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.OneDec()},
+		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel1.Shares)
 	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel2.Shares)
 	suite.Require().Equal(sdk.MustNewDecFromStr("13334.0"), proxyAccDel3.Shares)
-	// TODO: add cases for weight
+	// TODO: add cases for different weight
 }
 
 // test Liquid Staking gov power
@@ -112,10 +112,10 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	// v1, v2, v3, v4
 	vals, valOpers := suite.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.MustNewDecFromStr("0.25")},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.MustNewDecFromStr("0.25")},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.MustNewDecFromStr("0.25")},
-		{ValidatorAddress: valOpers[3].String(), Weight: sdk.MustNewDecFromStr("0.25")},
+		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[3].String(), Weight: sdk.NewInt(10)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 
 	vals, valOpers := suite.CreateValidators([]int64{10000000})
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.MustNewDecFromStr("0.25")},
+		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(10)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
