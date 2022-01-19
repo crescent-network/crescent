@@ -17,8 +17,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// Withdraw rewards of LiquidStakingProxyAcc and re-staking
 	totalRewards := k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
 	// TODO: consider re-staking with balance
-	newShares, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, k.GetActiveLiquidValidators(ctx), totalRewards)
-	fmt.Println("[re-LiquidDelegate]", totalRewards, newShares, err)
+	_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, k.GetActiveLiquidValidators(ctx), totalRewards)
 	if err != nil {
 		panic(err)
 	}
