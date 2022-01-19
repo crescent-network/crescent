@@ -114,13 +114,14 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 	pks := simapp.CreateTestPubKeys(num)
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 
-	suite.app.StakingKeeper = stakingkeeper.NewKeeper(
+	stakingKeeper := stakingkeeper.NewKeeper(
 		cdc,
 		suite.app.GetKey(stakingtypes.StoreKey),
 		suite.app.AccountKeeper,
 		suite.app.BankKeeper,
 		suite.app.GetSubspace(stakingtypes.ModuleName),
 	)
+	suite.app.StakingKeeper = &stakingKeeper
 
 	for i, power := range powers {
 		val, err := stakingtypes.NewValidator(valAddrs[i], pks[i], stakingtypes.Description{})
@@ -136,6 +137,6 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 		suite.Require().Equal(newShares.TruncateInt(), sdk.NewInt(power))
 	}
 
-	_ = staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
+	_ = staking.EndBlocker(suite.ctx, *suite.app.StakingKeeper)
 	return addrs, valAddrs
 }
