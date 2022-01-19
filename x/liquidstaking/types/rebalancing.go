@@ -45,5 +45,4 @@ func AddStakingTargetMap(activeVals LiquidValidators, addStakingAmt sdk.Int) map
 		fmt.Println("[AddStakingTargetMap] recursive call for", activeVals, addStakingAmt, totalLiquidTokens, ToBeTotalLiquidTokens, totalWeight, sharePerWeight, crumb)
 		return AddStakingTargetMap(activeVals, addStakingAmt)
 	}
-	return targetMap
 }
