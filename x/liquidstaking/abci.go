@@ -14,10 +14,13 @@ import (
 // BeginBlocker collects liquidStakings for the current block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	// TODO: Unimplemented beginblock logic
-	//if err != nil {
-	//	panic(err)
-	//}
+	// Withdraw rewards of LiquidStakingProxyAcc and re-staking
+	totalRewards := k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
+	// TODO: consider re-staking with balance
+	_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, k.GetActiveLiquidValidators(ctx), totalRewards)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {

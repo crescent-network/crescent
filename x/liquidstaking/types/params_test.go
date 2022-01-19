@@ -14,7 +14,7 @@ var (
 	whitelistedValidators = []types.WhitelistedValidator{
 		{
 			ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Weight:           sdk.OneDec(),
+			Weight:           sdk.NewInt(10),
 		},
 	}
 )
