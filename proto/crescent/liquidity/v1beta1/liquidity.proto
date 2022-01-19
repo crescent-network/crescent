@@ -157,7 +157,7 @@ message SwapRequest {
   // batch_id specifies the pair's batch id when the request is stored
   uint64 batch_id = 9;
 
-  google.protobuf.Timestamp canceled_at = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp expire_at = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
   bool matched = 11;
 

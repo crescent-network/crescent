@@ -22,10 +22,24 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 	}
 	canceledAt := ctx.BlockTime().Add(msg.OrderLifespan)
 
-	var pair types.Pair
-	pair, found := k.GetPairByDenoms(ctx, msg.XCoinDenom, msg.YCoinDenom)
+	pair, found := k.GetPair(ctx, msg.PairId)
 	if !found {
 		return types.SwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair not found")
+	}
+
+	switch msg.Direction {
+	case types.SwapDirectionBuy:
+		if msg.OfferCoin.Denom != pair.QuoteCoinDenom || msg.DemandCoinDenom != pair.BaseCoinDenom {
+			return types.SwapRequest{},
+				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+		}
+	case types.SwapDirectionSell:
+		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
+			return types.SwapRequest{},
+				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+					msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+		}
 	}
 
 	if pair.LastPrice != nil {

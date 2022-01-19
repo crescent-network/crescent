@@ -17,4 +17,5 @@ var (
 	ErrPriceOutOfRange           = sdkerrors.Register(ModuleName, 8, "price out of range limit")
 	ErrTooLongOrderLifespan      = sdkerrors.Register(ModuleName, 9, "order lifespan is too long")
 	ErrDisabledPool              = sdkerrors.Register(ModuleName, 10, "disabled pool")
+	ErrWrongPair                 = sdkerrors.Register(ModuleName, 11, "wrong denom pair")
 )

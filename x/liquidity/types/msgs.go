@@ -234,20 +234,22 @@ func (msg MsgWithdrawBatch) GetWithdrawer() sdk.AccAddress {
 // NewMsgSwapBatch creates a new MsgSwapBatch.
 func NewMsgSwapBatch(
 	orderer sdk.AccAddress,
-	xCoinDenom string,
-	yCoinDenom string,
+	pairId uint64,
+	dir SwapDirection,
 	offerCoin sdk.Coin,
 	demandCoinDenom string,
 	price sdk.Dec,
+	baseCoinAmount sdk.Int,
 	orderLifespan time.Duration,
 ) *MsgSwapBatch {
 	return &MsgSwapBatch{
 		Orderer:         orderer.String(),
-		XCoinDenom:      xCoinDenom,
-		YCoinDenom:      yCoinDenom,
+		PairId:          pairId,
+		Direction:       dir,
 		OfferCoin:       offerCoin,
 		DemandCoinDenom: demandCoinDenom,
 		Price:           price,
+		BaseCoinAmount:  baseCoinAmount,
 		OrderLifespan:   orderLifespan,
 	}
 }
@@ -260,23 +262,23 @@ func (msg MsgSwapBatch) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
 	}
-	if err := sdk.ValidateDenom(msg.XCoinDenom); err != nil {
-		return sdkerrors.Wrap(err, "invalid x coin denom")
+	if msg.PairId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
-	if err := sdk.ValidateDenom(msg.YCoinDenom); err != nil {
-		return sdkerrors.Wrap(err, "invalid y coin denom")
+	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unknown swap direction: %s", msg.Direction)
 	}
-	if msg.XCoinDenom == msg.YCoinDenom {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "x and y coin denoms must be different")
-	}
-	if err := msg.OfferCoin.Validate(); err != nil {
-		return sdkerrors.Wrap(err, "invalid offer coin")
+	if !msg.BaseCoinAmount.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "base coin amount must be positive: %s", msg.BaseCoinAmount)
 	}
 	if err := sdk.ValidateDenom(msg.DemandCoinDenom); err != nil {
 		return sdkerrors.Wrap(err, "invalid demand coin denom")
 	}
-	if msg.GetDirection() == SwapDirectionUnspecified {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer and demand coin denom pair doesn't match with x and y coin denom pair")
+	if !msg.Price.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "price must be positive")
+	}
+	if err := msg.OfferCoin.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "invalid offer coin")
 	}
 	if !msg.OfferCoin.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin must be positive")
@@ -284,8 +286,8 @@ func (msg MsgSwapBatch) ValidateBasic() error {
 	if !msg.OfferCoin.Amount.GTE(MinOfferCoinAmount) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin is less than minimum offer coin amount")
 	}
-	if !msg.Price.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "price must be positive")
+	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")
 	}
 	return nil
 }
@@ -308,17 +310,6 @@ func (msg MsgSwapBatch) GetOrderer() sdk.AccAddress {
 		panic(err)
 	}
 	return addr
-}
-
-func (msg MsgSwapBatch) GetDirection() SwapDirection {
-	switch {
-	case msg.OfferCoin.Denom == msg.XCoinDenom && msg.DemandCoinDenom == msg.YCoinDenom:
-		return SwapDirectionBuy
-	case msg.OfferCoin.Denom == msg.YCoinDenom && msg.DemandCoinDenom == msg.XCoinDenom:
-		return SwapDirectionSell
-	default:
-		return SwapDirectionUnspecified
-	}
 }
 
 // NewMsgCancelSwapBatch creates a new MsgCancelSwapBatch.

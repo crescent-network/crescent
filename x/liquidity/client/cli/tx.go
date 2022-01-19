@@ -164,19 +164,20 @@ $ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2D
 
 func NewSwapBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [x-coin-denom] [y-coin-denom] [offer-coin] [demand-coin-denom] [order-price] [order-life-span]",
-		Args:  cobra.ExactArgs(6),
+		Use:   "swap [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [base-coin-amount] [order-life-span]",
+		Args:  cobra.ExactArgs(7),
 		Short: "Swap coins within a pair",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Swap coins within a pair.
 Example:
-$ %s tx %s swap ucsnt uatom 10000uatom ucsnt 1.0 10s --from mykey
+$ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000ucsnt uatom 1.0 10000 10s --from mykey
 
-[x-coin-denom]: x coin denomination
-[y-coin-denom]: y coin denomination
-[offer-coin]: the amount of offer coin to swap 
+[pair-id]: pair id to swap with
+[direction]: swap direction (one of: SWAP_DIRECTION_BUY,SWAP_DIRECTION_SELL)
+[offer-coin]: the amount of offer coin to swap
 [demand-coin-denom]: the denom to exchange with the offer coin
-[order-price]: the limir order price for the swap; the exchange ratio is X/Y where X is the amount of first coin and Y is the amount of second coin
+[price]: the limit order price for the swap; the exchange ratio is X/Y where X is the amount of quote coin and Y is the amount of base coin
+[base-coin-amount]: the amount of base coin to buy or sell
 [order-life-span]: the time duration that the swap order request lives until it is executed; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
 				version.AppName, types.ModuleName,
@@ -188,43 +189,53 @@ $ %s tx %s swap ucsnt uatom 10000uatom ucsnt 1.0 10s --from mykey
 				return err
 			}
 
-			xCoinDenom := args[0]
-			if err := sdk.ValidateDenom(xCoinDenom); err != nil {
-				return err
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse pair id: %w", err)
 			}
 
-			yCoinDenom := args[1]
-			if err := sdk.ValidateDenom(yCoinDenom); err != nil {
-				return err
+			rawDir, ok := types.SwapDirection_value[args[1]]
+			if !ok {
+				return fmt.Errorf("unknown swap direction: %s", args[1])
+			}
+			dir := types.SwapDirection(rawDir)
+			if dir != types.SwapDirectionBuy && dir != types.SwapDirectionSell {
+				return fmt.Errorf("invalid swap direction: %s", dir)
 			}
 
 			offerCoin, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid offer coin: %w", err)
 			}
 
 			demandCoinDenom := args[3]
 			if err := sdk.ValidateDenom(demandCoinDenom); err != nil {
-				return err
+				return fmt.Errorf("invalid demand coin denom: %w", err)
 			}
 
-			orderPrice, err := sdk.NewDecFromStr(args[4])
+			price, err := sdk.NewDecFromStr(args[4])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid price: %w", err)
 			}
 
-			orderLifespan, err := time.ParseDuration(args[5])
+			baseCoinAmount, ok := sdk.NewIntFromString(args[5])
+			if !ok {
+				return fmt.Errorf("invalid base coin amount: %s", args[5])
+			}
+
+			orderLifespan, err := time.ParseDuration(args[6])
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid order lifespan: %w", err)
 			}
 
 			msg := types.NewMsgSwapBatch(
 				clientCtx.GetFromAddress(),
-				xCoinDenom,
-				yCoinDenom,
+				pairId,
+				dir,
 				offerCoin,
 				demandCoinDenom,
-				orderPrice,
+				price,
+				baseCoinAmount,
 				orderLifespan,
 			)
 

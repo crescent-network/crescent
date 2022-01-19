@@ -2604,7 +2604,7 @@ paths:
                       title: >-
                         batch_id specifies the pair's batch id when the request
                         is stored
-                    canceled_at:
+                    expire_at:
                       type: string
                       format: date-time
                     matched:
@@ -2834,7 +2834,7 @@ paths:
                     title: >-
                       batch_id specifies the pair's batch id when the request is
                       stored
-                  canceled_at:
+                  expire_at:
                     type: string
                     format: date-time
                   matched:
@@ -5986,7 +5986,7 @@ definitions:
             type: string
             format: uint64
             title: batch_id specifies the pair's batch id when the request is stored
-          canceled_at:
+          expire_at:
             type: string
             format: date-time
           matched:
@@ -6095,7 +6095,7 @@ definitions:
               title: >-
                 batch_id specifies the pair's batch id when the request is
                 stored
-            canceled_at:
+            expire_at:
               type: string
               format: date-time
             matched:
@@ -6433,7 +6433,7 @@ definitions:
         type: string
         format: uint64
         title: batch_id specifies the pair's batch id when the request is stored
-      canceled_at:
+      expire_at:
         type: string
         format: date-time
       matched:
