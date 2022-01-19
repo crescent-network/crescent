@@ -2557,8 +2557,8 @@ paths:
                         SwapDirection enumerates swap directions.
 
                          - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-                         - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
-                         - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+                         - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
+                         - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
                     price:
                       type: string
                       title: >-
@@ -2610,12 +2610,23 @@ paths:
                     matched:
                       type: boolean
                       format: boolean
-                    canceled:
-                      type: boolean
-                      format: boolean
-                    to_be_deleted:
-                      type: boolean
-                      format: boolean
+                    status:
+                      type: string
+                      enum:
+                        - SWAP_REQUEST_STATUS_UNSPECIFIED
+                        - SWAP_REQUEST_STATUS_NOT_EXECUTED
+                        - SWAP_REQUEST_STATUS_EXECUTED
+                        - SWAP_REQUEST_STATUS_CANCELED
+                        - SWAP_REQUEST_STATUS_EXPIRED
+                      default: SWAP_REQUEST_STATUS_UNSPECIFIED
+                      description: |-
+                        SwapRequestStatus enumerates swap request statuses.
+
+                         - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+                         - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                         - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                         - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+                         - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
                   description: SwapRequest defines a swap request.
               pagination:
                 type: object
@@ -2778,8 +2789,8 @@ paths:
                       SwapDirection enumerates swap directions.
 
                        - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-                       - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
-                       - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+                       - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
+                       - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
                   price:
                     type: string
                     title: >-
@@ -2829,12 +2840,23 @@ paths:
                   matched:
                     type: boolean
                     format: boolean
-                  canceled:
-                    type: boolean
-                    format: boolean
-                  to_be_deleted:
-                    type: boolean
-                    format: boolean
+                  status:
+                    type: string
+                    enum:
+                      - SWAP_REQUEST_STATUS_UNSPECIFIED
+                      - SWAP_REQUEST_STATUS_NOT_EXECUTED
+                      - SWAP_REQUEST_STATUS_EXECUTED
+                      - SWAP_REQUEST_STATUS_CANCELED
+                      - SWAP_REQUEST_STATUS_EXPIRED
+                    default: SWAP_REQUEST_STATUS_UNSPECIFIED
+                    description: |-
+                      SwapRequestStatus enumerates swap request statuses.
+
+                       - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+                       - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                       - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                       - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+                       - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
                 description: SwapRequest defines a swap request.
             description: >-
               QuerySwapRequestResponse is response type for the
@@ -3464,12 +3486,21 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                    succeeded:
-                      type: boolean
-                      format: boolean
-                    to_be_deleted:
-                      type: boolean
-                      format: boolean
+                    status:
+                      type: string
+                      enum:
+                        - REQUEST_STATUS_UNSPECIFIED
+                        - REQUEST_STATUS_NOT_EXECUTED
+                        - REQUEST_STATUS_SUCCEEDED
+                        - REQUEST_STATUS_FAILED
+                      default: REQUEST_STATUS_UNSPECIFIED
+                      description: |-
+                        RequestStatus enumerates request statuses.
+
+                         - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+                         - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                         - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+                         - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
                   description: DepositRequest defines a deposit request.
               pagination:
                 type: object
@@ -3673,12 +3704,21 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
-                  succeeded:
-                    type: boolean
-                    format: boolean
-                  to_be_deleted:
-                    type: boolean
-                    format: boolean
+                  status:
+                    type: string
+                    enum:
+                      - REQUEST_STATUS_UNSPECIFIED
+                      - REQUEST_STATUS_NOT_EXECUTED
+                      - REQUEST_STATUS_SUCCEEDED
+                      - REQUEST_STATUS_FAILED
+                    default: REQUEST_STATUS_UNSPECIFIED
+                    description: |-
+                      RequestStatus enumerates request statuses.
+
+                       - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+                       - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                       - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+                       - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
                 description: DepositRequest defines a deposit request.
             description: >-
               QueryDepositRequestResponse is response type for the
@@ -3791,12 +3831,21 @@ paths:
                       description: >-
                         withdrawn_coins specifies the amount of coins that are
                         withdrawn.
-                    succeeded:
-                      type: boolean
-                      format: boolean
-                    to_be_deleted:
-                      type: boolean
-                      format: boolean
+                    status:
+                      type: string
+                      enum:
+                        - REQUEST_STATUS_UNSPECIFIED
+                        - REQUEST_STATUS_NOT_EXECUTED
+                        - REQUEST_STATUS_SUCCEEDED
+                        - REQUEST_STATUS_FAILED
+                      default: REQUEST_STATUS_UNSPECIFIED
+                      description: |-
+                        RequestStatus enumerates request statuses.
+
+                         - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+                         - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                         - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+                         - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
                   description: WithdrawRequest defines a withdraw request.
               pagination:
                 type: object
@@ -3985,12 +4034,21 @@ paths:
                     description: >-
                       withdrawn_coins specifies the amount of coins that are
                       withdrawn.
-                  succeeded:
-                    type: boolean
-                    format: boolean
-                  to_be_deleted:
-                    type: boolean
-                    format: boolean
+                  status:
+                    type: string
+                    enum:
+                      - REQUEST_STATUS_UNSPECIFIED
+                      - REQUEST_STATUS_NOT_EXECUTED
+                      - REQUEST_STATUS_SUCCEEDED
+                      - REQUEST_STATUS_FAILED
+                    default: REQUEST_STATUS_UNSPECIFIED
+                    description: |-
+                      RequestStatus enumerates request statuses.
+
+                       - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+                       - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                       - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+                       - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
                 description: WithdrawRequest defines a withdraw request.
             description: >-
               QueryWithdrawRequestResponse is response type for the
@@ -5253,12 +5311,21 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      succeeded:
-        type: boolean
-        format: boolean
-      to_be_deleted:
-        type: boolean
-        format: boolean
+      status:
+        type: string
+        enum:
+          - REQUEST_STATUS_UNSPECIFIED
+          - REQUEST_STATUS_NOT_EXECUTED
+          - REQUEST_STATUS_SUCCEEDED
+          - REQUEST_STATUS_FAILED
+        default: REQUEST_STATUS_UNSPECIFIED
+        description: |-
+          RequestStatus enumerates request statuses.
+
+           - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+           - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+           - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+           - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
     description: DepositRequest defines a deposit request.
   crescent.liquidity.v1beta1.Pair:
     type: object
@@ -5446,12 +5513,21 @@ definitions:
               method
 
               signatures required by gogoproto.
-          succeeded:
-            type: boolean
-            format: boolean
-          to_be_deleted:
-            type: boolean
-            format: boolean
+          status:
+            type: string
+            enum:
+              - REQUEST_STATUS_UNSPECIFIED
+              - REQUEST_STATUS_NOT_EXECUTED
+              - REQUEST_STATUS_SUCCEEDED
+              - REQUEST_STATUS_FAILED
+            default: REQUEST_STATUS_UNSPECIFIED
+            description: |-
+              RequestStatus enumerates request statuses.
+
+               - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+               - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+               - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+               - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
         description: DepositRequest defines a deposit request.
     description: >-
       QueryDepositRequestResponse is response type for the Query/DepositRequest
@@ -5534,12 +5610,21 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-            succeeded:
-              type: boolean
-              format: boolean
-            to_be_deleted:
-              type: boolean
-              format: boolean
+            status:
+              type: string
+              enum:
+                - REQUEST_STATUS_UNSPECIFIED
+                - REQUEST_STATUS_NOT_EXECUTED
+                - REQUEST_STATUS_SUCCEEDED
+                - REQUEST_STATUS_FAILED
+              default: REQUEST_STATUS_UNSPECIFIED
+              description: |-
+                RequestStatus enumerates request statuses.
+
+                 - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+                 - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                 - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+                 - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
           description: DepositRequest defines a deposit request.
       pagination:
         type: object
@@ -5860,8 +5945,8 @@ definitions:
               SwapDirection enumerates swap directions.
 
                - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-               - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
-               - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+               - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
+               - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
           price:
             type: string
             title: price specifies the price that an orderer is willing to swap
@@ -5907,12 +5992,23 @@ definitions:
           matched:
             type: boolean
             format: boolean
-          canceled:
-            type: boolean
-            format: boolean
-          to_be_deleted:
-            type: boolean
-            format: boolean
+          status:
+            type: string
+            enum:
+              - SWAP_REQUEST_STATUS_UNSPECIFIED
+              - SWAP_REQUEST_STATUS_NOT_EXECUTED
+              - SWAP_REQUEST_STATUS_EXECUTED
+              - SWAP_REQUEST_STATUS_CANCELED
+              - SWAP_REQUEST_STATUS_EXPIRED
+            default: SWAP_REQUEST_STATUS_UNSPECIFIED
+            description: |-
+              SwapRequestStatus enumerates swap request statuses.
+
+               - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+               - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+               - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+               - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+               - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
         description: SwapRequest defines a swap request.
     description: >-
       QuerySwapRequestResponse is response type for the Query/SwapRequest RPC
@@ -5956,8 +6052,8 @@ definitions:
                 SwapDirection enumerates swap directions.
 
                  - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-                 - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
-                 - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+                 - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
+                 - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
             price:
               type: string
               title: price specifies the price that an orderer is willing to swap
@@ -6005,12 +6101,23 @@ definitions:
             matched:
               type: boolean
               format: boolean
-            canceled:
-              type: boolean
-              format: boolean
-            to_be_deleted:
-              type: boolean
-              format: boolean
+            status:
+              type: string
+              enum:
+                - SWAP_REQUEST_STATUS_UNSPECIFIED
+                - SWAP_REQUEST_STATUS_NOT_EXECUTED
+                - SWAP_REQUEST_STATUS_EXECUTED
+                - SWAP_REQUEST_STATUS_CANCELED
+                - SWAP_REQUEST_STATUS_EXPIRED
+              default: SWAP_REQUEST_STATUS_UNSPECIFIED
+              description: |-
+                SwapRequestStatus enumerates swap request statuses.
+
+                 - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+                 - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                 - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                 - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+                 - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
           description: SwapRequest defines a swap request.
       pagination:
         type: object
@@ -6101,12 +6208,21 @@ definitions:
 
                 signatures required by gogoproto.
             description: withdrawn_coins specifies the amount of coins that are withdrawn.
-          succeeded:
-            type: boolean
-            format: boolean
-          to_be_deleted:
-            type: boolean
-            format: boolean
+          status:
+            type: string
+            enum:
+              - REQUEST_STATUS_UNSPECIFIED
+              - REQUEST_STATUS_NOT_EXECUTED
+              - REQUEST_STATUS_SUCCEEDED
+              - REQUEST_STATUS_FAILED
+            default: REQUEST_STATUS_UNSPECIFIED
+            description: |-
+              RequestStatus enumerates request statuses.
+
+               - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+               - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+               - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+               - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
         description: WithdrawRequest defines a withdraw request.
     description: >-
       QueryWithdrawRequestResponse is response type for the
@@ -6176,12 +6292,21 @@ definitions:
               description: >-
                 withdrawn_coins specifies the amount of coins that are
                 withdrawn.
-            succeeded:
-              type: boolean
-              format: boolean
-            to_be_deleted:
-              type: boolean
-              format: boolean
+            status:
+              type: string
+              enum:
+                - REQUEST_STATUS_UNSPECIFIED
+                - REQUEST_STATUS_NOT_EXECUTED
+                - REQUEST_STATUS_SUCCEEDED
+                - REQUEST_STATUS_FAILED
+              default: REQUEST_STATUS_UNSPECIFIED
+              description: |-
+                RequestStatus enumerates request statuses.
+
+                 - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+                 - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+                 - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+                 - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
           description: WithdrawRequest defines a withdraw request.
       pagination:
         type: object
@@ -6211,6 +6336,21 @@ definitions:
     description: >-
       QueryWithdrawRequestsResponse is response type for the
       Query/WithdrawRequests RPC method.
+  crescent.liquidity.v1beta1.RequestStatus:
+    type: string
+    enum:
+      - REQUEST_STATUS_UNSPECIFIED
+      - REQUEST_STATUS_NOT_EXECUTED
+      - REQUEST_STATUS_SUCCEEDED
+      - REQUEST_STATUS_FAILED
+    default: REQUEST_STATUS_UNSPECIFIED
+    description: |-
+      RequestStatus enumerates request statuses.
+
+       - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+       - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+       - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+       - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
   crescent.liquidity.v1beta1.SwapDirection:
     type: string
     enum:
@@ -6222,8 +6362,8 @@ definitions:
       SwapDirection enumerates swap directions.
 
        - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-       - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
-       - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+       - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
+       - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
   crescent.liquidity.v1beta1.SwapRequest:
     type: object
     properties:
@@ -6258,8 +6398,8 @@ definitions:
           SwapDirection enumerates swap directions.
 
            - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-           - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
-           - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+           - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
+           - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
       price:
         type: string
         title: price specifies the price that an orderer is willing to swap
@@ -6299,13 +6439,41 @@ definitions:
       matched:
         type: boolean
         format: boolean
-      canceled:
-        type: boolean
-        format: boolean
-      to_be_deleted:
-        type: boolean
-        format: boolean
+      status:
+        type: string
+        enum:
+          - SWAP_REQUEST_STATUS_UNSPECIFIED
+          - SWAP_REQUEST_STATUS_NOT_EXECUTED
+          - SWAP_REQUEST_STATUS_EXECUTED
+          - SWAP_REQUEST_STATUS_CANCELED
+          - SWAP_REQUEST_STATUS_EXPIRED
+        default: SWAP_REQUEST_STATUS_UNSPECIFIED
+        description: |-
+          SwapRequestStatus enumerates swap request statuses.
+
+           - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+           - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+           - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+           - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+           - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
     description: SwapRequest defines a swap request.
+  crescent.liquidity.v1beta1.SwapRequestStatus:
+    type: string
+    enum:
+      - SWAP_REQUEST_STATUS_UNSPECIFIED
+      - SWAP_REQUEST_STATUS_NOT_EXECUTED
+      - SWAP_REQUEST_STATUS_EXECUTED
+      - SWAP_REQUEST_STATUS_CANCELED
+      - SWAP_REQUEST_STATUS_EXPIRED
+    default: SWAP_REQUEST_STATUS_UNSPECIFIED
+    description: |-
+      SwapRequestStatus enumerates swap request statuses.
+
+       - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+       - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+       - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+       - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+       - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
   crescent.liquidity.v1beta1.WithdrawRequest:
     type: object
     properties:
@@ -6358,12 +6526,21 @@ definitions:
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
         description: withdrawn_coins specifies the amount of coins that are withdrawn.
-      succeeded:
-        type: boolean
-        format: boolean
-      to_be_deleted:
-        type: boolean
-        format: boolean
+      status:
+        type: string
+        enum:
+          - REQUEST_STATUS_UNSPECIFIED
+          - REQUEST_STATUS_NOT_EXECUTED
+          - REQUEST_STATUS_SUCCEEDED
+          - REQUEST_STATUS_FAILED
+        default: REQUEST_STATUS_UNSPECIFIED
+        description: |-
+          RequestStatus enumerates request statuses.
+
+           - REQUEST_STATUS_UNSPECIFIED: REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+           - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+           - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+           - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
     description: WithdrawRequest defines a withdraw request.
   crescent.liquidstaking.v1beta1.LiquidValidator:
     type: object
