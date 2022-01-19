@@ -28,12 +28,46 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		NewCreatePairCmd(),
 		NewCreatePoolCmd(),
 		NewDepositBatchCmd(),
 		NewWithdrawBatchCmd(),
 		NewSwapBatchCmd(),
 		NewCancelSwapBatchCmd(),
 	)
+
+	return cmd
+}
+
+func NewCreatePairCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-pair [base-coin-denom] [quote-coin-denom]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Create a denom pair for an order book",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Create a denom pair for an order book.
+Example:
+$ %s tx %s create-pair uatom ucsnt --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			baseCoinDenom := args[0]
+			quoteCoinDenom := args[1]
+
+			msg := types.NewMsgCreatePair(clientCtx.GetFromAddress(), baseCoinDenom, quoteCoinDenom)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
