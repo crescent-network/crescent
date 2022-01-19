@@ -221,7 +221,8 @@ func (k Keeper) LiquidUnbond(
 	return completionTime, ubd, nil
 }
 
-func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (totalRewards sdk.Coins) {
+func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (totalRewards sdk.Int) {
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	k.stakingKeeper.IterateDelegations(
 		ctx, proxyAcc,
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
@@ -231,7 +232,7 @@ func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) 
 				// TODO: tmp panic for debugging
 				panic(err)
 			}
-			totalRewards = totalRewards.Add(reward...)
+			totalRewards = totalRewards.Add(reward.AmountOf(bondDenom))
 			return false
 		},
 	)

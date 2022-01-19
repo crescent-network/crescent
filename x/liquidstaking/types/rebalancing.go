@@ -8,10 +8,13 @@ import (
 
 //AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively.
 func AddStakingTargetMap(activeVals LiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
+	targetMap := make(map[string]sdk.Int)
+	if addStakingAmt.IsNil() || !addStakingAmt.IsPositive() || activeVals.Len() == 0 {
+		return targetMap
+	}
 	totalLiquidTokens := activeVals.TotalLiquidTokens()
 	totalWeight := activeVals.TotalWeight()
 	ToBeTotalLiquidTokens := totalLiquidTokens.Add(addStakingAmt)
-	targetMap := make(map[string]sdk.Int)
 	existOverWeightedVal := false
 
 	sharePerWeight := ToBeTotalLiquidTokens.Quo(totalWeight)
