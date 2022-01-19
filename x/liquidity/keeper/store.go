@@ -285,7 +285,7 @@ func (k Keeper) GetWithdrawRequest(ctx sdk.Context, poolId, id uint64) (state ty
 		return state, false
 	}
 
-	state = types.MustUnmarshaWithdrawRequest(k.cdc, value)
+	state = types.MustUnmarshalWithdrawRequest(k.cdc, value)
 	return state, true
 }
 
@@ -325,7 +325,7 @@ func (k Keeper) GetSwapRequest(ctx sdk.Context, pairId, id uint64) (state types.
 		return state, false
 	}
 
-	state = types.MustUnmarshaSwapRequest(k.cdc, value)
+	state = types.MustUnmarshalSwapRequest(k.cdc, value)
 	return state, true
 }
 
