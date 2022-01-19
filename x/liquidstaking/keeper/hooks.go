@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 // Wrapper struct
@@ -26,7 +27,7 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 	liquidVals := h.k.GetActiveLiquidValidators(ctx)
 	lenLiquidVals := liquidVals.Len()
 	liquidBondDenom := h.k.LiquidBondDenom(ctx)
-	totalSupply := h.k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount.ToDec()
+	totalSupply := h.k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount
 	if totalSupply.IsPositive() {
 		for _, vote := range *votes {
 			voter, err := sdk.AccAddressFromBech32(vote.Voter)
@@ -34,13 +35,17 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 				panic(err)
 				//continue
 			}
-			// lToken balance
-			lTokenBalance := h.k.bankKeeper.GetBalance(ctx, voter, liquidBondDenom).Amount.ToDec()
-			// TODO: exchange rate for native token, netAmount function
-			if lTokenBalance.IsPositive() {
+			// bToken balance
+			bTokenBalance := h.k.bankKeeper.GetBalance(ctx, voter, liquidBondDenom).Amount
+			nativeValue := sdk.ZeroDec()
+			// native token value = BTokenAmount * NetAmount / TotalSupply
+			if bTokenBalance.IsPositive() {
+				nativeValue = types.BTokenToNativeToken(bTokenBalance, totalSupply, h.k.NetAmount(ctx), sdk.ZeroDec())
+			}
+			if bTokenBalance.IsPositive() {
 				(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
 				// TODO: apply weighted dividedPower
-				dividedPower := lTokenBalance.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
+				dividedPower := nativeValue.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
 				for _, val := range liquidVals {
 					if existed, ok := (*otherVotes)[vote.Voter][val.OperatorAddress]; ok {
 						(*otherVotes)[vote.Voter][val.OperatorAddress] = existed.Add(dividedPower)

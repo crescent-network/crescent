@@ -109,7 +109,7 @@ func (k Keeper) LiquidStaking(
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 	btokenMintAmount = stakingCoin.Amount
 	if bTokenTotalSupply.IsPositive() {
-		btokenMintAmount = bTokenTotalSupply.Amount.ToDec().Mul(stakingCoin.Amount.ToDec()).QuoTruncate(netAmount).TruncateInt()
+		btokenMintAmount = types.NativeTokenToBToken(stakingCoin.Amount, bTokenTotalSupply.Amount, netAmount)
 	}
 
 	// mint on module acc and send
@@ -145,14 +145,13 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
 	}
 
-	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate), review decimal truncation
+	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 	if !bTokenTotalSupply.IsPositive() {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("DefaultLiquidBondDenom supply is not positive")
 	}
-	amountDec := amount.Amount.ToDec()
 	netAmount := k.NetAmount(ctx)
-	unbondingAmount := netAmount.Mul(amountDec.QuoTruncate(bTokenTotalSupply.Amount.ToDec())).Mul(sdk.OneDec().Sub(params.UnstakeFeeRate)).TruncateDec()
+	unbondingAmount := types.BTokenToNativeToken(amount.Amount, bTokenTotalSupply.Amount, netAmount, params.UnstakeFeeRate)
 
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, liquidStaker, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
