@@ -2210,14 +2210,13 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: x_denom
+        - name: denoms
           in: query
           required: false
-          type: string
-        - name: y_denom
-          in: query
-          required: false
-          type: string
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -2342,173 +2341,6 @@ paths:
           format: uint64
       tags:
         - Query
-  '/crescent/liquidity/v1beta1/pairs/{pair_id}/pools':
-    get:
-      summary: PoolsByPair returns all pools that correspond to the pair.
-      operationId: PoolsByPair
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              pools:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uint64
-                    pair_id:
-                      type: string
-                      format: uint64
-                    reserve_address:
-                      type: string
-                    pool_coin_denom:
-                      type: string
-                    balances:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    last_deposit_request_id:
-                      type: string
-                      format: uint64
-                    last_withdraw_request_id:
-                      type: string
-                      format: uint64
-                  description: PoolResponse defines a custom pool response message.
-              pagination:
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-            description: >-
-              QueryPoolsResponse is response type for the Query/Pools RPC
-              method.
-        default:
-          description: An unexpected error response
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type_url:
-                      type: string
-                    value:
-                      type: string
-                      format: byte
-      parameters:
-        - name: pair_id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-          format: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending
-
-            order.
-          in: query
-          required: false
-          type: boolean
-          format: boolean
-      tags:
-        - Query
   '/crescent/liquidity/v1beta1/pairs/{pair_id}/swap_requests':
     get:
       summary: SwapRequests returns all swap requests.
@@ -2565,24 +2397,9 @@ paths:
                         price specifies the price that an orderer is willing to
                         swap
                     remaining_coin:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                       title: >-
                         remaining_coin specifies the remaining coin after the
                         swap
-                    received_coin:
                       type: object
                       properties:
                         denom:
@@ -2597,7 +2414,22 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                    received_coin:
                       title: received_coin specifies the received coin after the swap
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
                     batch_id:
                       type: string
                       format: uint64
@@ -2797,22 +2629,7 @@ paths:
                       price specifies the price that an orderer is willing to
                       swap
                   remaining_coin:
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                     title: remaining_coin specifies the remaining coin after the swap
-                  received_coin:
                     type: object
                     properties:
                       denom:
@@ -2827,7 +2644,22 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
+                  received_coin:
                     title: received_coin specifies the received coin after the swap
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   batch_id:
                     type: string
                     format: uint64
@@ -3094,11 +2926,12 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: x_denom
+        - name: pair_id
           in: query
           required: false
           type: string
-        - name: y_denom
+          format: uint64
+        - name: disabled
           in: query
           required: false
           type: string
@@ -5951,22 +5784,7 @@ definitions:
             type: string
             title: price specifies the price that an orderer is willing to swap
           remaining_coin:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
             title: remaining_coin specifies the remaining coin after the swap
-          received_coin:
             type: object
             properties:
               denom:
@@ -5981,7 +5799,22 @@ definitions:
               method
 
               signatures required by gogoproto.
+          received_coin:
             title: received_coin specifies the received coin after the swap
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
           batch_id:
             type: string
             format: uint64
@@ -6058,22 +5891,7 @@ definitions:
               type: string
               title: price specifies the price that an orderer is willing to swap
             remaining_coin:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
               title: remaining_coin specifies the remaining coin after the swap
-            received_coin:
               type: object
               properties:
                 denom:
@@ -6088,7 +5906,22 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+            received_coin:
               title: received_coin specifies the received coin after the swap
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
             batch_id:
               type: string
               format: uint64
@@ -6404,19 +6237,7 @@ definitions:
         type: string
         title: price specifies the price that an orderer is willing to swap
       remaining_coin:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
         title: remaining_coin specifies the remaining coin after the swap
-      received_coin:
         type: object
         properties:
           denom:
@@ -6428,7 +6249,19 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+      received_coin:
         title: received_coin specifies the received coin after the swap
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
       batch_id:
         type: string
         format: uint64

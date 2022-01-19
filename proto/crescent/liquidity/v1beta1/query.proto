@@ -21,11 +21,6 @@ service Query {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools";
   }
 
-  // PoolsByPair returns all pools that correspond to the pair.
-  rpc PoolsByPair(QueryPoolsByPairRequest) returns (QueryPoolsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/pools";
-  }
-
   // Pool returns the specific liquidity pool.
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}";
@@ -92,8 +87,9 @@ message QueryParamsResponse {
 
 // QueryPoolsRequest is request type for the Query/Pools RPC method.
 message QueryPoolsRequest {
-  string x_denom = 1;
-  string y_denom = 2;
+  uint64 pair_id = 1;
+
+  string disabled = 2;
 
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
@@ -103,13 +99,6 @@ message QueryPoolsResponse {
   repeated PoolResponse pools = 1 [(gogoproto.nullable) = false];
 
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryPoolsByPairRequest is request type for the Query/PoolsByPair RPC method.
-message QueryPoolsByPairRequest {
-  uint64 pair_id = 1;
-
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryPoolRequest is request type for the Query/Pool RPC method.
@@ -134,10 +123,9 @@ message QueryPoolByPoolCoinDenomRequest {
 
 // QueryPairsRequest is request type for the Query/Pairs RPC method.
 message QueryPairsRequest {
-  string x_denom = 1;
-  string y_denom = 2;
+  repeated string denoms = 1;
 
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryPairsResponse is response type for the Query/Pairs RPC method.
