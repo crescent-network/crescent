@@ -81,19 +81,19 @@ func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeV
 
 // LiquidStaking ...
 func (k Keeper) LiquidStaking(
-	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin) (newShares sdk.Dec, err error) {
+	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin) (newShares sdk.Dec, btokenMintAmount sdk.Int, err error) {
 
 	// check bond denomination
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	if stakingCoin.Denom != bondDenom {
-		return sdk.ZeroDec(), sdkerrors.Wrapf(
+		return sdk.ZeroDec(), btokenMintAmount, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", stakingCoin.Denom, bondDenom,
 		)
 	}
 
 	activeVals := k.GetActiveLiquidValidators(ctx)
 	if activeVals.Len() == 0 || !activeVals.TotalWeight().IsPositive() {
-		return sdk.ZeroDec(), fmt.Errorf("there's no active liquid validators")
+		return sdk.ZeroDec(), btokenMintAmount, fmt.Errorf("there's no active liquid validators")
 	}
 
 	netAmount := k.NetAmount(ctx)
@@ -101,70 +101,70 @@ func (k Keeper) LiquidStaking(
 	// send staking coin to liquid staking proxy account to proxy delegation
 	err = k.bankKeeper.SendCoins(ctx, liquidStaker, proxyAcc, sdk.NewCoins(stakingCoin))
 	if err != nil {
-		return sdk.ZeroDec(), err
+		return sdk.ZeroDec(), btokenMintAmount, err
 	}
 
 	// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
-	mintAmt := stakingCoin.Amount
+	btokenMintAmount = stakingCoin.Amount
 	if bTokenTotalSupply.IsPositive() {
-		mintAmt = bTokenTotalSupply.Amount.ToDec().Mul(stakingCoin.Amount.ToDec()).QuoTruncate(netAmount).TruncateInt()
+		btokenMintAmount = bTokenTotalSupply.Amount.ToDec().Mul(stakingCoin.Amount.ToDec()).QuoTruncate(netAmount).TruncateInt()
 	}
 
 	// mint on module acc and send
-	mintCoin := sdk.NewCoins(sdk.NewCoin(liquidBondDenom, mintAmt))
+	mintCoin := sdk.NewCoins(sdk.NewCoin(liquidBondDenom, btokenMintAmount))
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoin)
 	if err != nil {
-		return sdk.ZeroDec(), err
+		return sdk.ZeroDec(), btokenMintAmount, err
 	}
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, liquidStaker, mintCoin)
 	if err != nil {
-		return sdk.ZeroDec(), err
+		return sdk.ZeroDec(), btokenMintAmount, err
 	}
-
-	return k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount)
+	newShares, err = k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount)
+	return newShares, btokenMintAmount, err
 }
 
 // LiquidUnstaking ...
 func (k Keeper) LiquidUnstaking(
 	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, amount sdk.Coin,
-) (time.Time, []stakingtypes.UnbondingDelegation, error) {
+) (time.Time, sdk.Dec, []stakingtypes.UnbondingDelegation, error) {
 
 	// check bond denomination
 	params := k.GetParams(ctx)
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 	if amount.Denom != liquidBondDenom {
-		return time.Time{}, []stakingtypes.UnbondingDelegation{}, sdkerrors.Wrapf(
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", amount.Denom, liquidBondDenom,
 		)
 	}
 
 	activeVals := k.GetActiveLiquidValidators(ctx)
 	if activeVals.Len() == 0 || !activeVals.TotalWeight().IsPositive() {
-		return time.Time{}, []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
 	}
 
 	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate), review decimal truncation
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 	if !bTokenTotalSupply.IsPositive() {
-		return time.Time{}, []stakingtypes.UnbondingDelegation{}, fmt.Errorf("DefaultLiquidBondDenom supply is not positive")
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("DefaultLiquidBondDenom supply is not positive")
 	}
 	amountDec := amount.Amount.ToDec()
 	netAmount := k.NetAmount(ctx)
-	unstakeAmount := netAmount.Mul(amountDec.QuoTruncate(bTokenTotalSupply.Amount.ToDec())).Mul(sdk.OneDec().Sub(params.UnstakeFeeRate)).TruncateDec()
+	unbondingAmount := netAmount.Mul(amountDec.QuoTruncate(bTokenTotalSupply.Amount.ToDec())).Mul(sdk.OneDec().Sub(params.UnstakeFeeRate)).TruncateDec()
 
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, liquidStaker, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
-		return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}
 	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(liquidBondDenom, amount.Amount)))
 	if err != nil {
-		return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	share := unstakeAmount.QuoInt(activeVals.TotalWeight()).TruncateInt()
-	leftAmount := unstakeAmount.TruncateInt()
+	share := unbondingAmount.QuoInt(activeVals.TotalWeight()).TruncateInt()
+	leftAmount := unbondingAmount.TruncateInt()
 	var weightedShare sdk.Int
 
 	var ubdTime time.Time
@@ -182,14 +182,14 @@ func (k Keeper) LiquidUnstaking(
 		fmt.Println("[liquid UBD]", weightedShare.String(), del.Shares.String(), found)
 		ubdTime, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, activeVals[i].GetOperator(), weightedShare.ToDec())
 		if err != nil {
-			return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
+			return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 		}
 		ubds = append(ubds, ubd)
 		activeVals[i].LiquidTokens = activeVals[i].LiquidTokens.Sub(weightedShare)
 		k.SetLiquidValidator(ctx, activeVals[i])
 		leftAmount = leftAmount.Sub(weightedShare)
 	}
-	return ubdTime, ubds, nil
+	return ubdTime, unbondingAmount, ubds, nil
 }
 
 // LiquidUnbond ...
