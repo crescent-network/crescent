@@ -194,86 +194,88 @@ func NewOrderBookTick(order Order) *OrderBookTick {
 }
 
 type PoolOrderSource struct {
-	ReserveAddress sdk.AccAddress
-	RX, RY         sdk.Int
-	PoolPrice      sdk.Dec
-	Direction      SwapDirection
-	TickPrecision  int
-	pxCache        map[string]sdk.Int // map(price => providableXOnTick)
-	pyCache        map[string]sdk.Int // map(price => providableYOnTick)
+	ReserveAddress  sdk.AccAddress
+	RX, RY          sdk.Int
+	PoolPrice       sdk.Dec
+	Direction       SwapDirection
+	TickPrecision   int
+	buyAmountCache  map[string]sdk.Int // map(price => buyAmountOnTick)
+	sellAmountCache map[string]sdk.Int // map(price => sellAmountOnTick)
 }
 
 func NewPoolOrderSource(pool PoolI, reserveAddr sdk.AccAddress, dir SwapDirection, prec int) OrderSource {
 	rx, ry := pool.Balance()
 	return &PoolOrderSource{
-		ReserveAddress: reserveAddr,
-		RX:             rx,
-		RY:             ry,
-		PoolPrice:      pool.Price(),
-		Direction:      dir,
-		TickPrecision:  prec,
-		pxCache:        map[string]sdk.Int{},
-		pyCache:        map[string]sdk.Int{},
+		ReserveAddress:  reserveAddr,
+		RX:              rx,
+		RY:              ry,
+		PoolPrice:       pool.Price(),
+		Direction:       dir,
+		TickPrecision:   prec,
+		sellAmountCache: map[string]sdk.Int{},
+		buyAmountCache:  map[string]sdk.Int{},
 	}
 }
 
-func (os PoolOrderSource) ProvidableX(price sdk.Dec) sdk.Int {
+func (os PoolOrderSource) BuyAmountOnTick(price sdk.Dec) sdk.Int {
 	if price.GTE(os.PoolPrice) {
 		return sdk.ZeroInt()
 	}
-	return os.RX.ToDec().Sub(price.MulInt(os.RY)).TruncateInt()
+	priceStr := price.String()
+	res, ok := os.buyAmountCache[priceStr]
+	if !ok {
+		upPrice := UpTick(price, os.TickPrecision)                             // P'
+		res = upPrice.Quo(price).Sub(sdk.OneDec()).MulInt(os.RY).TruncateInt() // (P'/P - 1) * RY
+		os.buyAmountCache[priceStr] = res
+	}
+	return res
 }
 
-func (os PoolOrderSource) ProvidableY(price sdk.Dec) sdk.Int {
+func (os PoolOrderSource) SellAmountOnTick(price sdk.Dec) sdk.Int {
 	if price.LTE(os.PoolPrice) {
 		return sdk.ZeroInt()
 	}
-	return price.MulInt(os.RY).Sub(os.RX.ToDec()).Quo(price).TruncateInt()
-}
-
-func (os PoolOrderSource) ProvidableXOnTick(price sdk.Dec) sdk.Int {
-	if price.GTE(os.PoolPrice) {
-		return sdk.ZeroInt()
-	}
-	s := price.String()
-	px, ok := os.pxCache[s]
+	priceStr := price.String()
+	res, ok := os.sellAmountCache[priceStr]
 	if !ok {
-		px = os.ProvidableX(price).Sub(os.ProvidableX(UpTick(price, os.TickPrecision)))
-		os.pxCache[s] = px
+		downPrice := DownTick(price, os.TickPrecision) // P'
+		rx := os.RX.ToDec()
+		res = rx.QuoTruncate(downPrice).Sub(rx.QuoTruncate(price)).TruncateInt() // RX/P' - RX/P
+		os.sellAmountCache[priceStr] = res
 	}
-	return px
-}
-
-func (os PoolOrderSource) ProvidableYOnTick(price sdk.Dec) sdk.Int {
-	if price.LTE(os.PoolPrice) {
-		return sdk.ZeroInt()
-	}
-	s := price.String()
-	py, ok := os.pyCache[s]
-	if !ok {
-		py = os.ProvidableY(price).Sub(os.ProvidableY(DownTick(price, os.TickPrecision)))
-		os.pyCache[s] = py
-	}
-	return py
+	return res
 }
 
 func (os PoolOrderSource) AmountGTE(price sdk.Dec) sdk.Int {
 	amount := sdk.ZeroInt()
+	var found bool
 	switch os.Direction {
 	case SwapDirectionBuy:
 		for price.LT(os.PoolPrice) {
-			px := os.ProvidableXOnTick(price)
-			amount = amount.Add(px)
-			price = UpTick(price, os.TickPrecision)
-		}
-	case SwapDirectionSell:
-		for price.GT(os.PoolPrice) {
-			py := os.ProvidableYOnTick(price)
-			if py.IsZero() {
+			ba := os.BuyAmountOnTick(price)
+			amount = amount.Add(ba)
+			price, found = os.UpTickWithOrders(price)
+			if !found {
 				break
 			}
-			amount = amount.Add(py)
-			price = UpTick(price, os.TickPrecision)
+		}
+	case SwapDirectionSell:
+		for {
+			// If price <= poolPrice, then sell amount at price would be 0,
+			// so it'll leave the result amount unchanged.
+			// After that, price would become one tick higher than poolPrice,
+			// and the calculation will be continued until there's no more
+			// ticks left.
+			// We could do an additional optimization that checks
+			// if price <= poolPrice, but SellAmountOnTick is cached anyway
+			// and doing such optimization doesn't have much benefit.
+			// Same applies to the buy side of AmountLTE.
+			sa := os.SellAmountOnTick(price)
+			amount = amount.Add(sa)
+			price, found = os.UpTickWithOrders(price)
+			if !found {
+				break
+			}
 		}
 	}
 	return amount
@@ -281,21 +283,25 @@ func (os PoolOrderSource) AmountGTE(price sdk.Dec) sdk.Int {
 
 func (os PoolOrderSource) AmountLTE(price sdk.Dec) sdk.Int {
 	amount := sdk.ZeroInt()
+	var found bool
 	switch os.Direction {
 	case SwapDirectionBuy:
-		for price.LT(os.PoolPrice) {
-			px := os.ProvidableXOnTick(price)
-			if px.IsZero() {
+		for {
+			ba := os.BuyAmountOnTick(price)
+			amount = amount.Add(ba)
+			price, found = os.DownTickWithOrders(price)
+			if !found {
 				break
 			}
-			amount = amount.Add(px)
-			price = DownTick(price, os.TickPrecision)
 		}
 	case SwapDirectionSell:
 		for price.GT(os.PoolPrice) {
-			py := os.ProvidableYOnTick(price)
-			amount = amount.Add(py)
-			price = DownTick(price, os.TickPrecision)
+			sa := os.SellAmountOnTick(price)
+			amount = amount.Add(sa)
+			price, found = os.DownTickWithOrders(price)
+			if !found {
+				break
+			}
 		}
 	}
 	return amount
@@ -304,9 +310,9 @@ func (os PoolOrderSource) AmountLTE(price sdk.Dec) sdk.Int {
 func (os PoolOrderSource) Orders(price sdk.Dec) Orders {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionBuy, price, os.ProvidableXOnTick(price))}
+		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionBuy, price, os.BuyAmountOnTick(price))}
 	case SwapDirectionSell:
-		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionSell, price, os.ProvidableYOnTick(price))}
+		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionSell, price, os.SellAmountOnTick(price))}
 	}
 	return nil
 }
@@ -315,20 +321,14 @@ func (os PoolOrderSource) UpTick(price sdk.Dec) (tick sdk.Dec, found bool) {
 	switch os.Direction {
 	case SwapDirectionBuy:
 		tick = UpTick(price, os.TickPrecision)
-		if tick.GTE(os.PoolPrice) {
-			return
-		}
-		found = true
+		found = tick.LT(os.PoolPrice)
 	case SwapDirectionSell:
 		tick = UpTick(price, os.TickPrecision)
-		if tick.LTE(os.PoolPrice) {
-			return
+		if tick.GT(os.PoolPrice) {
+			found = os.SellAmountOnTick(tick).IsPositive()
+		} else {
+			found = true
 		}
-		py := os.ProvidableYOnTick(price)
-		if py.IsZero() {
-			return
-		}
-		found = true
 	}
 	return
 }
@@ -337,20 +337,14 @@ func (os PoolOrderSource) DownTick(price sdk.Dec) (tick sdk.Dec, found bool) {
 	switch os.Direction {
 	case SwapDirectionBuy:
 		tick = DownTick(price, os.TickPrecision)
-		if tick.GTE(os.PoolPrice) {
-			return
+		if tick.LT(os.PoolPrice) {
+			found = os.BuyAmountOnTick(tick).IsPositive()
+		} else {
+			found = true
 		}
-		px := os.ProvidableXOnTick(price)
-		if px.IsZero() {
-			return
-		}
-		found = true
 	case SwapDirectionSell:
 		tick = DownTick(price, os.TickPrecision)
-		if tick.LTE(os.PoolPrice) {
-			return
-		}
-		found = true
+		found = tick.GT(os.PoolPrice)
 	}
 	return
 }
@@ -358,22 +352,26 @@ func (os PoolOrderSource) DownTick(price sdk.Dec) (tick sdk.Dec, found bool) {
 func (os PoolOrderSource) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found bool) {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		tick = UpTick(price, os.TickPrecision)
+		tick, found = os.UpTick(price)
+		if !found {
+			break
+		}
 		for tick.LT(os.PoolPrice) {
-			px := os.ProvidableXOnTick(price)
-			if px.IsPositive() {
+			ba := os.BuyAmountOnTick(tick)
+			if ba.IsPositive() {
 				found = true
 				break
 			}
-			tick = UpTick(tick, os.TickPrecision)
+			tick, found = os.UpTick(tick)
+			if !found {
+				break
+			}
 		}
 	case SwapDirectionSell:
-		tick = UpTick(price, os.TickPrecision)
-		if tick.LTE(os.PoolPrice) {
-			return
+		if price.LTE(os.PoolPrice) {
+			return os.UpTick(os.PoolPrice)
 		}
-		py := os.ProvidableYOnTick(price)
-		found = py.IsPositive()
+		return os.UpTick(price)
 	}
 	return
 }
@@ -381,21 +379,25 @@ func (os PoolOrderSource) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found b
 func (os PoolOrderSource) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, found bool) {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		tick = DownTick(price, os.TickPrecision)
-		if tick.GTE(os.PoolPrice) {
-			return
+		if price.GTE(os.PoolPrice) {
+			return os.DownTick(os.PoolPrice)
 		}
-		px := os.ProvidableXOnTick(price)
-		found = px.IsPositive()
+		return os.DownTick(price)
 	case SwapDirectionSell:
-		tick = DownTick(price, os.TickPrecision)
+		tick, found = os.DownTick(price)
+		if !found {
+			break
+		}
 		for tick.GT(os.PoolPrice) {
-			py := os.ProvidableYOnTick(tick)
-			if py.IsPositive() {
+			sa := os.SellAmountOnTick(tick)
+			if sa.IsPositive() {
 				found = true
 				break
 			}
-			tick = DownTick(price, os.TickPrecision)
+			tick, found = os.DownTick(tick)
+			if !found {
+				break
+			}
 		}
 	}
 	return
