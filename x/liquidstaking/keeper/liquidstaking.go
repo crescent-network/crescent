@@ -202,7 +202,7 @@ func (k Keeper) LiquidUnstaking(
 	for i, val := range activeVals {
 		weightedShare := unbondingShares[i]
 		var ubd stakingtypes.UnbondingDelegation
-		returnAmount := sdk.ZeroInt()
+		var returnAmount sdk.Int
 		del, found := k.stakingKeeper.GetDelegation(ctx, proxyAcc, val.GetOperator())
 		// TODO: test and verify
 		weightedShare, err = k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), weightedShare.TruncateInt())
