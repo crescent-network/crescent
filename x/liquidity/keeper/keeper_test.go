@@ -137,6 +137,7 @@ func (s *KeeperTestSuite) swapBatchBuy(
 		orderer, pairId, types.SwapDirectionBuy, offerCoin, price, baseCoinAmount, orderLifespan, fund)
 }
 
+//nolint
 func (s *KeeperTestSuite) swapBatchSell(
 	orderer sdk.AccAddress, pairId uint64, offerCoin sdk.Coin,
 	price sdk.Dec, baseCoinAmount sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {

@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	_ OrderI      = (*Order)(nil)
-	_ OrderI      = (*UserOrder)(nil)
-	_ OrderI      = (*PoolOrder)(nil)
+	_ Order       = (*BaseOrder)(nil)
+	_ Order       = (*UserOrder)(nil)
+	_ Order       = (*PoolOrder)(nil)
 	_ OrderSource = (*OrderBookTicks)(nil)
 	_ OrderSource = (*MergedOrderSources)(nil)
 )
@@ -23,19 +23,19 @@ const (
 	PriceDecreasing
 )
 
-type OrderI interface {
+type Order interface {
 	GetDirection() SwapDirection
 	GetPrice() sdk.Dec
 	GetAmount() sdk.Int
 	GetRemainingAmount() sdk.Int
-	SetRemainingAmount(amount sdk.Int) OrderI
+	SetRemainingAmount(amount sdk.Int) Order
 	GetReceivedAmount() sdk.Int
-	SetReceivedAmount(amount sdk.Int) OrderI
+	SetReceivedAmount(amount sdk.Int) Order
 	IsMatched() bool
-	SetMatched(matched bool) OrderI
+	SetMatched(matched bool) Order
 }
 
-type Order struct {
+type BaseOrder struct {
 	Direction       SwapDirection
 	Price           sdk.Dec
 	Amount          sdk.Int
@@ -44,8 +44,8 @@ type Order struct {
 	Matched         bool
 }
 
-func NewOrder(dir SwapDirection, price sdk.Dec, amount sdk.Int) *Order {
-	return &Order{
+func NewBaseOrder(dir SwapDirection, price sdk.Dec, amount sdk.Int) *BaseOrder {
+	return &BaseOrder{
 		Direction:       dir,
 		Price:           price,
 		Amount:          amount,
@@ -55,54 +55,54 @@ func NewOrder(dir SwapDirection, price sdk.Dec, amount sdk.Int) *Order {
 	}
 }
 
-func (order *Order) GetDirection() SwapDirection {
+func (order *BaseOrder) GetDirection() SwapDirection {
 	return order.Direction
 }
 
-func (order *Order) GetPrice() sdk.Dec {
+func (order *BaseOrder) GetPrice() sdk.Dec {
 	return order.Price
 }
 
-func (order *Order) GetAmount() sdk.Int {
+func (order *BaseOrder) GetAmount() sdk.Int {
 	return order.Amount
 }
 
-func (order *Order) GetRemainingAmount() sdk.Int {
+func (order *BaseOrder) GetRemainingAmount() sdk.Int {
 	return order.RemainingAmount
 }
 
-func (order *Order) SetRemainingAmount(amount sdk.Int) OrderI {
+func (order *BaseOrder) SetRemainingAmount(amount sdk.Int) Order {
 	order.RemainingAmount = amount
 	return order
 }
 
-func (order *Order) GetReceivedAmount() sdk.Int {
+func (order *BaseOrder) GetReceivedAmount() sdk.Int {
 	return order.ReceivedAmount
 }
 
-func (order *Order) SetReceivedAmount(amount sdk.Int) OrderI {
+func (order *BaseOrder) SetReceivedAmount(amount sdk.Int) Order {
 	order.ReceivedAmount = amount
 	return order
 }
 
-func (order *Order) IsMatched() bool {
+func (order *BaseOrder) IsMatched() bool {
 	return order.Matched
 }
 
-func (order *Order) SetMatched(matched bool) OrderI {
+func (order *BaseOrder) SetMatched(matched bool) Order {
 	order.Matched = matched
 	return order
 }
 
 type UserOrder struct {
-	Order
+	BaseOrder
 	RequestId uint64
 	Orderer   sdk.AccAddress
 }
 
 func NewUserOrder(req SwapRequest) *UserOrder {
 	return &UserOrder{
-		Order: Order{
+		BaseOrder: BaseOrder{
 			Direction:       req.Direction,
 			Price:           req.Price,
 			Amount:          req.RemainingCoin.Amount,
@@ -116,13 +116,13 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 }
 
 type PoolOrder struct {
-	Order
+	BaseOrder
 	ReserveAddress sdk.AccAddress
 }
 
 func NewPoolOrder(reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amount sdk.Int) *PoolOrder {
 	return &PoolOrder{
-		Order: Order{
+		BaseOrder: BaseOrder{
 			Direction:       dir,
 			Price:           price,
 			Amount:          amount,
@@ -148,7 +148,7 @@ type OrderSource interface {
 	LowestTick() (tick sdk.Dec, found bool)
 }
 
-type Orders []OrderI
+type Orders []Order
 
 func (orders Orders) RemainingAmount() sdk.Int {
 	amount := sdk.ZeroInt()
@@ -163,7 +163,7 @@ type OrderBookTick struct {
 	Orders Orders
 }
 
-func NewOrderBookTick(order OrderI) *OrderBookTick {
+func NewOrderBookTick(order Order) *OrderBookTick {
 	return &OrderBookTick{
 		Price:  order.GetPrice(),
 		Orders: Orders{order},
@@ -191,7 +191,7 @@ func (ticks *OrderBookTicks) FindPrice(price sdk.Dec) (i int, exact bool) {
 	return
 }
 
-func (ticks *OrderBookTicks) AddOrder(order OrderI) {
+func (ticks *OrderBookTicks) AddOrder(order Order) {
 	i, exact := ticks.FindPrice(order.GetPrice())
 	if exact {
 		ticks.Ticks[i].Orders = append(ticks.Ticks[i].Orders, order)
@@ -206,14 +206,14 @@ func (ticks *OrderBookTicks) AddOrder(order OrderI) {
 	}
 }
 
-func (ticks *OrderBookTicks) AddOrders(orders ...OrderI) {
+func (ticks *OrderBookTicks) AddOrders(orders ...Order) {
 	for _, order := range orders {
 		ticks.AddOrder(order)
 	}
 }
 
-func (ticks *OrderBookTicks) AllOrders() []OrderI {
-	var orders []OrderI
+func (ticks *OrderBookTicks) AllOrders() []Order {
+	var orders []Order
 	for _, tick := range ticks.Ticks {
 		orders = append(orders, tick.Orders...)
 	}
@@ -339,7 +339,7 @@ func NewOrderBook(prec int) *OrderBook {
 	}
 }
 
-func (ob *OrderBook) AddOrder(order OrderI) {
+func (ob *OrderBook) AddOrder(order Order) {
 	switch order.GetDirection() {
 	case SwapDirectionBuy:
 		ob.BuyTicks.AddOrder(order)
@@ -348,7 +348,7 @@ func (ob *OrderBook) AddOrder(order OrderI) {
 	}
 }
 
-func (ob *OrderBook) AddOrders(orders ...OrderI) {
+func (ob *OrderBook) AddOrders(orders ...Order) {
 	for _, order := range orders {
 		ob.AddOrder(order)
 	}
@@ -365,8 +365,8 @@ func (ob OrderBook) OrderSource(dir SwapDirection) OrderSource {
 	}
 }
 
-func (ob OrderBook) AllOrders() []OrderI {
-	var orders []OrderI
+func (ob OrderBook) AllOrders() []Order {
+	var orders []Order
 	for _, ticks := range []*OrderBookTicks{ob.BuyTicks, ob.SellTicks} {
 		orders = append(orders, ticks.AllOrders()...)
 	}
