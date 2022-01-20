@@ -92,6 +92,9 @@ type StakingKeeper interface {
 	BeginRedelegation(
 		ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 	) (completionTime time.Time, err error)
+	ValidateUnbondAmount(
+		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
+	) (shares sdk.Dec, err error)
 }
 
 // GovKeeper expected gov keeper (noalias)

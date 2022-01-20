@@ -7,13 +7,8 @@ import (
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
-func (k Keeper) UpdateLiquidValidators(ctx sdk.Context) {
-	//liquidVals := k.GetAllLiquidValidators()
-	// TODO: GET, SET, GETALL, Iterate LiquidValidators, indexing
-	//for _, val := range liquidVals {
-	//	if val.
-	//}
-	//k.stakingKeeper.GetLastTotalPower()
+func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (balance sdk.Int) {
+	return k.bankKeeper.GetBalance(ctx, proxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
 }
 
 // activeVals containing ValidatorStatusActive which is containing just added on whitelist(power 0) and ValidatorStatusDelisting

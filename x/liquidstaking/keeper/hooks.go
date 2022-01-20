@@ -43,6 +43,12 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 			}
 			if nativeValue.IsPositive() {
 				(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
+				// TODO: ValidateUnbondAmount, delegation shares * bonded / total shares
+				// TODO: votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
+				//sharesAmount, err := h.k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, valAddr, sharesAmount.TruncateInt())
+				//if err != nil {
+				//	return time.Time{}, stakingtypes.UnbondingDelegation{}, err
+				//}
 				dividedPowers, _ := types.DivideByCurrentWeightDec(liquidVals, nativeValue)
 				for i, val := range liquidVals {
 					if existed, ok := (*otherVotes)[vote.Voter][val.OperatorAddress]; ok {

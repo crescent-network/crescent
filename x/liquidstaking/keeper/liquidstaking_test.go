@@ -37,9 +37,11 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
+	activeVals := suite.keeper.GetActiveLiquidValidators(suite.ctx)
+	_, crumb := types.DivideByWeight(activeVals, stakingAmt)
 	newShares, bTokenMintAmt, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	suite.Require().NoError(err)
-	suite.Require().Equal(newShares, stakingAmt.ToDec())
+	suite.Require().Equal(newShares.Add(crumb.ToDec()), stakingAmt.ToDec())
 	suite.Require().Equal(bTokenMintAmt, stakingAmt)
 
 	_, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, suite.delAddrs[0], valOpers[0])
@@ -55,9 +57,8 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().True(found)
 	proxyAccDel3, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	suite.Require().True(found)
-	// TODO: rebalancing diff
-	//suite.Require().Equal(proxyAccDel1.Shares, stakingAmt.ToDec().QuoInt64(3).TruncateDec())
-	suite.Require().Equal(stakingAmt.ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
+	suite.Require().Equal(proxyAccDel1.Shares, stakingAmt.ToDec().QuoInt64(3).TruncateDec())
+	//suite.Require().Equal(stakingAmt.ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
 	balanceBeforeUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
 	suite.Require().Equal(balanceBeforeUBD.Amount, sdk.NewInt(999950000))
@@ -72,7 +73,9 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	ubdTime, unbondingAmt, ubds, err := suite.keeper.LiquidUnstaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], ubdAmt)
 	suite.Require().NoError(err)
 	suite.Require().Len(ubds, 3)
-	suite.Require().Equal(unbondingAmt, ubdAmt.Amount.ToDec())
+	// truncated shares
+	suite.Require().EqualValues(unbondingAmt, ubdAmt.Amount.QuoRaw(3).MulRaw(3).ToDec())
+	//suite.Require().Equal(unbondingAmt, ubdAmt.Amount.ToDec())
 	suite.Require().Equal(ubds[0].DelegatorAddress, suite.delAddrs[0].String())
 	suite.Require().Equal(ubdTime, types.MustParseRFC3339("2022-03-22T00:00:00Z"))
 	bTokenBalanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], liquidBondDenom)
@@ -87,13 +90,13 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().True(found)
 	proxyAccDel3, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	suite.Require().True(found)
-	suite.Require().Equal(stakingAmt.Sub(ubdAmt.Amount).ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
+	suite.Require().Equal(stakingAmt.Sub(unbondingAmt.TruncateInt()).Sub(crumb).ToDec(), proxyAccDel1.GetShares().Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
 	suite.ctx = suite.ctx.WithBlockHeight(200).WithBlockTime(ubdTime.Add(1))
 	updates := suite.app.StakingKeeper.BlockValidatorUpdates(suite.ctx) // EndBlock of staking keeper
 	suite.Require().Empty(updates)
 	balanceCompleteUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
-	suite.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(ubdAmt.Amount))
+	suite.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(unbondingAmt.TruncateInt()))
 
 	proxyAccDel1, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	suite.Require().True(found)
@@ -101,7 +104,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().True(found)
 	proxyAccDel3, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	suite.Require().True(found)
-	suite.Require().Equal(sdk.MustNewDecFromStr("13334.0"), proxyAccDel1.Shares)
+	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel1.Shares)
 	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel2.Shares)
 	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel3.Shares)
 	// TODO: add cases for different weight
