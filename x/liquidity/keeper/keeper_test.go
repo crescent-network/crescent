@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/binary"
 	"testing"
+	"time"
 
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
@@ -106,6 +107,43 @@ func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64
 	return req
 }
 
+func (s *KeeperTestSuite) swapBatch(
+	orderer sdk.AccAddress, pairId uint64, dir types.SwapDirection,
+	offerCoin sdk.Coin, price sdk.Dec,
+	baseCoinAmount sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	if fund {
+		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
+	}
+	pair, found := s.keeper.GetPair(s.ctx, pairId)
+	s.Require().True(found)
+	var demandCoinDenom string
+	if offerCoin.Denom == pair.BaseCoinDenom {
+		demandCoinDenom = pair.QuoteCoinDenom
+	} else {
+		demandCoinDenom = pair.BaseCoinDenom
+	}
+	msg := types.NewMsgSwapBatch(
+		orderer, pairId, dir, offerCoin, demandCoinDenom,
+		price, baseCoinAmount, orderLifespan)
+	req, err := s.keeper.SwapBatch(s.ctx, msg)
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) swapBatchBuy(
+	orderer sdk.AccAddress, pairId uint64, offerCoin sdk.Coin,
+	price sdk.Dec, baseCoinAmount sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	return s.swapBatch(
+		orderer, pairId, types.SwapDirectionBuy, offerCoin, price, baseCoinAmount, orderLifespan, fund)
+}
+
+func (s *KeeperTestSuite) swapBatchSell(
+	orderer sdk.AccAddress, pairId uint64, offerCoin sdk.Coin,
+	price sdk.Dec, baseCoinAmount sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	return s.swapBatch(
+		orderer, pairId, types.SwapDirectionSell, offerCoin, price, baseCoinAmount, orderLifespan, fund)
+}
+
 //nolint
 func parseCoin(s string) sdk.Coin {
 	coin, err := sdk.ParseCoinNormalized(s)
@@ -126,4 +164,8 @@ func parseCoins(s string) sdk.Coins {
 //nolint
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func parseDec(s string) sdk.Dec {
+	return sdk.MustNewDecFromStr(s)
 }

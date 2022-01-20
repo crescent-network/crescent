@@ -2607,15 +2607,14 @@ paths:
                     expire_at:
                       type: string
                       format: date-time
-                    matched:
-                      type: boolean
-                      format: boolean
                     status:
                       type: string
                       enum:
                         - SWAP_REQUEST_STATUS_UNSPECIFIED
                         - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                        - SWAP_REQUEST_STATUS_EXECUTED
+                        - SWAP_REQUEST_STATUS_NOT_MATCHED
+                        - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+                        - SWAP_REQUEST_STATUS_COMPLETED
                         - SWAP_REQUEST_STATUS_CANCELED
                         - SWAP_REQUEST_STATUS_EXPIRED
                       default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -2624,7 +2623,9 @@ paths:
 
                          - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                          - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                         - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                         - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+                         - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+                         - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                          - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                          - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
                   description: SwapRequest defines a swap request.
@@ -2837,15 +2838,14 @@ paths:
                   expire_at:
                     type: string
                     format: date-time
-                  matched:
-                    type: boolean
-                    format: boolean
                   status:
                     type: string
                     enum:
                       - SWAP_REQUEST_STATUS_UNSPECIFIED
                       - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                      - SWAP_REQUEST_STATUS_EXECUTED
+                      - SWAP_REQUEST_STATUS_NOT_MATCHED
+                      - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+                      - SWAP_REQUEST_STATUS_COMPLETED
                       - SWAP_REQUEST_STATUS_CANCELED
                       - SWAP_REQUEST_STATUS_EXPIRED
                     default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -2854,7 +2854,9 @@ paths:
 
                        - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                        - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                       - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                       - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+                       - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+                       - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                        - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                        - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
                 description: SwapRequest defines a swap request.
@@ -5989,15 +5991,14 @@ definitions:
           expire_at:
             type: string
             format: date-time
-          matched:
-            type: boolean
-            format: boolean
           status:
             type: string
             enum:
               - SWAP_REQUEST_STATUS_UNSPECIFIED
               - SWAP_REQUEST_STATUS_NOT_EXECUTED
-              - SWAP_REQUEST_STATUS_EXECUTED
+              - SWAP_REQUEST_STATUS_NOT_MATCHED
+              - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+              - SWAP_REQUEST_STATUS_COMPLETED
               - SWAP_REQUEST_STATUS_CANCELED
               - SWAP_REQUEST_STATUS_EXPIRED
             default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -6006,7 +6007,9 @@ definitions:
 
                - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-               - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+               - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+               - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+               - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
         description: SwapRequest defines a swap request.
@@ -6098,15 +6101,14 @@ definitions:
             expire_at:
               type: string
               format: date-time
-            matched:
-              type: boolean
-              format: boolean
             status:
               type: string
               enum:
                 - SWAP_REQUEST_STATUS_UNSPECIFIED
                 - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                - SWAP_REQUEST_STATUS_EXECUTED
+                - SWAP_REQUEST_STATUS_NOT_MATCHED
+                - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+                - SWAP_REQUEST_STATUS_COMPLETED
                 - SWAP_REQUEST_STATUS_CANCELED
                 - SWAP_REQUEST_STATUS_EXPIRED
               default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -6115,7 +6117,9 @@ definitions:
 
                  - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                  - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                 - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                 - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+                 - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+                 - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                  - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                  - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
           description: SwapRequest defines a swap request.
@@ -6436,15 +6440,14 @@ definitions:
       expire_at:
         type: string
         format: date-time
-      matched:
-        type: boolean
-        format: boolean
       status:
         type: string
         enum:
           - SWAP_REQUEST_STATUS_UNSPECIFIED
           - SWAP_REQUEST_STATUS_NOT_EXECUTED
-          - SWAP_REQUEST_STATUS_EXECUTED
+          - SWAP_REQUEST_STATUS_NOT_MATCHED
+          - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+          - SWAP_REQUEST_STATUS_COMPLETED
           - SWAP_REQUEST_STATUS_CANCELED
           - SWAP_REQUEST_STATUS_EXPIRED
         default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -6453,7 +6456,9 @@ definitions:
 
            - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
            - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-           - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+           - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+           - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+           - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
            - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
            - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
     description: SwapRequest defines a swap request.
@@ -6462,7 +6467,9 @@ definitions:
     enum:
       - SWAP_REQUEST_STATUS_UNSPECIFIED
       - SWAP_REQUEST_STATUS_NOT_EXECUTED
-      - SWAP_REQUEST_STATUS_EXECUTED
+      - SWAP_REQUEST_STATUS_NOT_MATCHED
+      - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+      - SWAP_REQUEST_STATUS_COMPLETED
       - SWAP_REQUEST_STATUS_CANCELED
       - SWAP_REQUEST_STATUS_EXPIRED
     default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -6471,7 +6478,9 @@ definitions:
 
        - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
        - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-       - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+       - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+       - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+       - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
        - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
        - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
   crescent.liquidity.v1beta1.WithdrawRequest:

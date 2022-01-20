@@ -30,7 +30,7 @@ func testOrderBookTicks() *types.OrderBookTicks {
 
 func TestOrderBookTicks_FindPrice(t *testing.T) {
 	// An empty order book ticks must return (0, false).
-	i, exact := types.NewOrderBookTicks(tickPrec).FindPrice(newDec("20.0"))
+	i, exact := types.NewOrderBookTicks(tickPrec).FindPrice(parseDec("20.0"))
 	require.False(t, exact)
 	require.Equal(t, 0, i)
 
@@ -41,14 +41,14 @@ func TestOrderBookTicks_FindPrice(t *testing.T) {
 		i     int
 		exact bool
 	}{
-		{newDec("20.0"), 0, true},
-		{newDec("19.99999999999999999"), 1, false},
-		{newDec("19.00000000000000001"), 1, false},
-		{newDec("19.0"), 1, true},
-		{newDec("18.99999999999999999"), 2, false},
-		{newDec("18.00000000000000001"), 2, false},
-		{newDec("18.0"), 2, true},
-		{newDec("9.999999999999999999"), 11, false},
+		{parseDec("20.0"), 0, true},
+		{parseDec("19.99999999999999999"), 1, false},
+		{parseDec("19.00000000000000001"), 1, false},
+		{parseDec("19.0"), 1, true},
+		{parseDec("18.99999999999999999"), 2, false},
+		{parseDec("18.00000000000000001"), 2, false},
+		{parseDec("18.0"), 2, true},
+		{parseDec("9.999999999999999999"), 11, false},
 	} {
 		t.Run("", func(t *testing.T) {
 			i, exact := ticks.FindPrice(tc.price)
@@ -97,7 +97,7 @@ func TestOrderBookTicks_AddOrder(t *testing.T) {
 
 func TestOrderBookTicks_AmountGTE(t *testing.T) {
 	// An empty order book ticks
-	require.True(sdk.IntEq(t, sdk.ZeroInt(), types.NewOrderBookTicks(tickPrec).AmountGTE(newDec("20.0"))))
+	require.True(sdk.IntEq(t, sdk.ZeroInt(), types.NewOrderBookTicks(tickPrec).AmountGTE(parseDec("20.0"))))
 
 	ticks := testOrderBookTicks()
 
@@ -105,12 +105,12 @@ func TestOrderBookTicks_AmountGTE(t *testing.T) {
 		price    sdk.Dec
 		expected sdk.Int
 	}{
-		{newDec("20.000000000000000001"), sdk.ZeroInt()},
-		{newDec("20.0"), sdk.NewInt(1000)},
-		{newDec("19.999999999999999999"), sdk.NewInt(1000)},
-		{newDec("19.000000000000000001"), sdk.NewInt(1000)},
-		{newDec("19.0"), sdk.NewInt(2000)},
-		{newDec("9.999999999999999999"), sdk.NewInt(9000)},
+		{parseDec("20.000000000000000001"), sdk.ZeroInt()},
+		{parseDec("20.0"), sdk.NewInt(1000)},
+		{parseDec("19.999999999999999999"), sdk.NewInt(1000)},
+		{parseDec("19.000000000000000001"), sdk.NewInt(1000)},
+		{parseDec("19.0"), sdk.NewInt(2000)},
+		{parseDec("9.999999999999999999"), sdk.NewInt(9000)},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.IntEq(t, tc.expected, ticks.AmountGTE(tc.price)))
@@ -120,7 +120,7 @@ func TestOrderBookTicks_AmountGTE(t *testing.T) {
 
 func TestOrderBookTicks_AmountLTE(t *testing.T) {
 	// An empty order book ticks
-	require.True(sdk.IntEq(t, sdk.ZeroInt(), types.OrderBookTicks{}.AmountLTE(newDec("20.0"))))
+	require.True(sdk.IntEq(t, sdk.ZeroInt(), types.OrderBookTicks{}.AmountLTE(parseDec("20.0"))))
 
 	ticks := testOrderBookTicks()
 
@@ -128,12 +128,12 @@ func TestOrderBookTicks_AmountLTE(t *testing.T) {
 		price    sdk.Dec
 		expected sdk.Int
 	}{
-		{newDec("20.000000000000000001"), sdk.NewInt(9000)},
-		{newDec("20.0"), sdk.NewInt(9000)},
-		{newDec("19.999999999999999999"), sdk.NewInt(8000)},
-		{newDec("19.000000000000000001"), sdk.NewInt(8000)},
-		{newDec("19.0"), sdk.NewInt(8000)},
-		{newDec("9.999999999999999999"), sdk.ZeroInt()},
+		{parseDec("20.000000000000000001"), sdk.NewInt(9000)},
+		{parseDec("20.0"), sdk.NewInt(9000)},
+		{parseDec("19.999999999999999999"), sdk.NewInt(8000)},
+		{parseDec("19.000000000000000001"), sdk.NewInt(8000)},
+		{parseDec("19.0"), sdk.NewInt(8000)},
+		{parseDec("9.999999999999999999"), sdk.ZeroInt()},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.IntEq(t, tc.expected, ticks.AmountLTE(tc.price)))
@@ -156,10 +156,10 @@ func TestOrderBookTicks_Orders(t *testing.T) {
 	}
 
 	// Price not found
-	require.Len(t, ticks.Orders(newDec("100.0")), 0)
+	require.Len(t, ticks.Orders(parseDec("100.0")), 0)
 
 	for price, orders := range orderMap {
-		orders2 := ticks.Orders(newDec(price))
+		orders2 := ticks.Orders(parseDec(price))
 		require.Len(t, orders2, len(orders))
 		for i := range orders {
 			ok := false
@@ -176,7 +176,7 @@ func TestOrderBookTicks_Orders(t *testing.T) {
 
 func TestOrderBookTicks_UpTickWithOrders(t *testing.T) {
 	// An empty order book ticks
-	_, found := types.NewOrderBookTicks(tickPrec).UpTick(newDec("0.1"))
+	_, found := types.NewOrderBookTicks(tickPrec).UpTick(parseDec("0.1"))
 	require.False(t, found)
 
 	ticks := testOrderBookTicks()
@@ -186,17 +186,17 @@ func TestOrderBookTicks_UpTickWithOrders(t *testing.T) {
 		tick  sdk.Dec
 		found bool
 	}{
-		{newDec("20.000000000000000001"), sdk.Dec{}, false},
-		{newDec("20.0"), sdk.Dec{}, false},
-		{newDec("19.999999999999999999"), newDec("20.0"), true},
-		{newDec("19.000000000000000001"), newDec("20.0"), true},
-		{newDec("19.0"), newDec("20.0"), true},
-		{newDec("18.999999999999999999"), newDec("19.0"), true},
-		{newDec("18.000000000000000001"), newDec("19.0"), true},
-		{newDec("18.0"), newDec("19.0"), true},
-		{newDec("14.999999999999999999"), newDec("16.0"), true},
-		{newDec("10.0"), newDec("11.0"), true},
-		{newDec("9.999999999999999999"), newDec("10.0"), true},
+		{parseDec("20.000000000000000001"), sdk.Dec{}, false},
+		{parseDec("20.0"), sdk.Dec{}, false},
+		{parseDec("19.999999999999999999"), parseDec("20.0"), true},
+		{parseDec("19.000000000000000001"), parseDec("20.0"), true},
+		{parseDec("19.0"), parseDec("20.0"), true},
+		{parseDec("18.999999999999999999"), parseDec("19.0"), true},
+		{parseDec("18.000000000000000001"), parseDec("19.0"), true},
+		{parseDec("18.0"), parseDec("19.0"), true},
+		{parseDec("14.999999999999999999"), parseDec("16.0"), true},
+		{parseDec("10.0"), parseDec("11.0"), true},
+		{parseDec("9.999999999999999999"), parseDec("10.0"), true},
 	} {
 		t.Run("", func(t *testing.T) {
 			tick, found := ticks.UpTickWithOrders(tc.price)
@@ -210,7 +210,7 @@ func TestOrderBookTicks_UpTickWithOrders(t *testing.T) {
 
 func TestOrderBookTicks_DownTickWithOrders(t *testing.T) {
 	// An empty order book ticks
-	_, found := types.NewOrderBookTicks(tickPrec).UpTick(newDec("0.1"))
+	_, found := types.NewOrderBookTicks(tickPrec).UpTick(parseDec("0.1"))
 	require.False(t, found)
 
 	ticks := testOrderBookTicks()
@@ -220,18 +220,18 @@ func TestOrderBookTicks_DownTickWithOrders(t *testing.T) {
 		tick  sdk.Dec
 		found bool
 	}{
-		{newDec("20.000000000000000001"), newDec("20.0"), true},
-		{newDec("20.0"), newDec("19.0"), true},
-		{newDec("19.999999999999999999"), newDec("19.0"), true},
-		{newDec("19.000000000000000001"), newDec("19.0"), true},
-		{newDec("19.0"), newDec("18.0"), true},
-		{newDec("18.999999999999999999"), newDec("18.0"), true},
-		{newDec("18.000000000000000001"), newDec("18.0"), true},
-		{newDec("18.0"), newDec("17.0"), true},
-		{newDec("15.000000000000000001"), newDec("14.0"), true},
-		{newDec("10.000000000000000001"), newDec("10.0"), true},
-		{newDec("10.0"), sdk.Dec{}, false},
-		{newDec("9.999999999999999999"), sdk.Dec{}, false},
+		{parseDec("20.000000000000000001"), parseDec("20.0"), true},
+		{parseDec("20.0"), parseDec("19.0"), true},
+		{parseDec("19.999999999999999999"), parseDec("19.0"), true},
+		{parseDec("19.000000000000000001"), parseDec("19.0"), true},
+		{parseDec("19.0"), parseDec("18.0"), true},
+		{parseDec("18.999999999999999999"), parseDec("18.0"), true},
+		{parseDec("18.000000000000000001"), parseDec("18.0"), true},
+		{parseDec("18.0"), parseDec("17.0"), true},
+		{parseDec("15.000000000000000001"), parseDec("14.0"), true},
+		{parseDec("10.000000000000000001"), parseDec("10.0"), true},
+		{parseDec("10.0"), sdk.Dec{}, false},
+		{parseDec("9.999999999999999999"), sdk.Dec{}, false},
 	} {
 		t.Run("", func(t *testing.T) {
 			tick, found := ticks.DownTickWithOrders(tc.price)
@@ -251,7 +251,7 @@ func TestOrderBookTicks_HighestTick(t *testing.T) {
 	ticks := testOrderBookTicks()
 	tick, found := ticks.HighestTick()
 	require.True(t, found)
-	require.True(sdk.DecEq(t, newDec("20.0"), tick))
+	require.True(sdk.DecEq(t, parseDec("20.0"), tick))
 
 	// Test with orders with zero remaining amount
 	ticks = types.NewOrderBookTicks(tickPrec)
@@ -263,7 +263,7 @@ func TestOrderBookTicks_HighestTick(t *testing.T) {
 
 	tick, found = ticks.HighestTick()
 	require.True(t, found)
-	require.True(sdk.DecEq(t, newDec("9.0"), tick))
+	require.True(sdk.DecEq(t, parseDec("9.0"), tick))
 }
 
 func TestOrderBookTicks_LowestTick(t *testing.T) {
@@ -274,7 +274,7 @@ func TestOrderBookTicks_LowestTick(t *testing.T) {
 	ticks := testOrderBookTicks()
 	tick, found := ticks.LowestTick()
 	require.True(t, found)
-	require.True(sdk.DecEq(t, newDec("10.0"), tick))
+	require.True(sdk.DecEq(t, parseDec("10.0"), tick))
 
 	// Test with orders with zero remaining amount
 	ticks = types.NewOrderBookTicks(tickPrec)
@@ -286,5 +286,5 @@ func TestOrderBookTicks_LowestTick(t *testing.T) {
 
 	tick, found = ticks.LowestTick()
 	require.True(t, found)
-	require.True(sdk.DecEq(t, newDec("9.0"), tick))
+	require.True(sdk.DecEq(t, parseDec("9.0"), tick))
 }

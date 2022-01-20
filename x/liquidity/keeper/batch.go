@@ -26,6 +26,10 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 			if err := k.RefundSwapRequestAndSetStatus(ctx, req, types.SwapRequestStatusExpired); err != nil {
 				panic(err)
 			}
+		} else if req.Status == types.SwapRequestStatusCompleted {
+			if err := k.RefundSwapRequest(ctx, req); err != nil {
+				panic(err)
+			}
 		}
 		return false
 	})
@@ -43,7 +47,7 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 	})
 }
 
-func (k Keeper) DeleteExecutedRequests(ctx sdk.Context) {
+func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
 	k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
 		if req.Status.ShouldBeDeleted() {
 			k.DeleteDepositRequest(ctx, req.PoolId, req.Id)

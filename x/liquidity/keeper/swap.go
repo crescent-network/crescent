@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -119,10 +120,21 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	ob := types.NewOrderBook(tickPrec)
 	k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
-		if req.Status.IsMatchable() {
+		switch req.Status {
+		case types.SwapRequestStatusNotExecuted,
+			types.SwapRequestStatusNotMatched,
+			types.SwapRequestStatusPartiallyMatched:
+			if !ctx.BlockTime().Before(req.ExpireAt) {
+				if err := k.RefundSwapRequestAndSetStatus(ctx, req, types.SwapRequestStatusExpired); err != nil {
+					panic(err)
+				}
+				return false
+			}
 			ob.AddOrder(types.NewUserOrder(req))
-			req.Status = types.SwapRequestStatusExecuted
+			req.Status = types.SwapRequestStatusNotMatched
 			k.SetSwapRequest(ctx, req)
+		default:
+			panic(fmt.Sprintf("invalid swap request status: %s", req.Status))
 		}
 		return false
 	})
@@ -206,7 +218,11 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					req, _ := k.GetSwapRequest(ctx, pair.Id, order.RequestId)
 					req.RemainingCoin.Amount = order.RemainingAmount
 					req.ReceivedCoin.Amount = req.ReceivedCoin.Amount.Add(order.ReceivedAmount)
-					req.Matched = true
+					if order.RemainingAmount.IsZero() {
+						req.Status = types.SwapRequestStatusCompleted
+					} else {
+						req.Status = types.SwapRequestStatusPartiallyMatched
+					}
 					k.SetSwapRequest(ctx, req)
 
 					var demandCoinDenom string
@@ -246,7 +262,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	return nil
 }
 
-func (k Keeper) RefundSwapRequestAndSetStatus(ctx sdk.Context, req types.SwapRequest, status types.SwapRequestStatus) error {
+func (k Keeper) RefundSwapRequest(ctx sdk.Context, req types.SwapRequest) error {
 	if req.Status.IsCanceledOrExpired() { // sanity check
 		return nil
 	}
@@ -255,6 +271,13 @@ func (k Keeper) RefundSwapRequestAndSetStatus(ctx sdk.Context, req types.SwapReq
 		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), req.GetOrderer(), sdk.NewCoins(req.RemainingCoin)); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (k Keeper) RefundSwapRequestAndSetStatus(ctx sdk.Context, req types.SwapRequest, status types.SwapRequestStatus) error {
+	if err := k.RefundSwapRequest(ctx, req); err != nil {
+		return err
 	}
 	req.Status = status
 	k.SetSwapRequest(ctx, req)

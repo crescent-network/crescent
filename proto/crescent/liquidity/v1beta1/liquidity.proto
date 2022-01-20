@@ -159,8 +159,6 @@ message SwapRequest {
 
   google.protobuf.Timestamp expire_at = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
-  bool matched = 11;
-
   SwapRequestStatus status = 12;
 }
 
@@ -222,12 +220,18 @@ enum SwapRequestStatus {
   // SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
   SWAP_REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotExecuted"];
 
-  // SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
-  SWAP_REQUEST_STATUS_EXECUTED = 2 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExecuted"];
+  // SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+  SWAP_REQUEST_STATUS_NOT_MATCHED = 2 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotMatched"];
+
+  // SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+  SWAP_REQUEST_STATUS_PARTIALLY_MATCHED = 3 [(gogoproto.enumvalue_customname) = "SwapRequestStatusPartiallyMatched"];
+
+  // SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
+  SWAP_REQUEST_STATUS_COMPLETED = 4 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCompleted"];
 
   // SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-  SWAP_REQUEST_STATUS_CANCELED = 3 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCanceled"];
+  SWAP_REQUEST_STATUS_CANCELED = 5 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCanceled"];
 
   // SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-  SWAP_REQUEST_STATUS_EXPIRED = 4 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExpired"];
+  SWAP_REQUEST_STATUS_EXPIRED = 6 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExpired"];
 }

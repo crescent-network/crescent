@@ -59,7 +59,6 @@ func NewSwapRequest(msg *MsgSwapBatch, id uint64, pair Pair, expireAt time.Time,
 		ReceivedCoin:  sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
 		BatchId:       pair.CurrentBatchId,
 		ExpireAt:      expireAt,
-		Matched:       false,
 		Status:        SwapRequestStatusNotExecuted,
 	}
 }
@@ -90,7 +89,9 @@ func (status RequestStatus) ShouldBeDeleted() bool {
 }
 
 func (status SwapRequestStatus) IsMatchable() bool {
-	return status == SwapRequestStatusNotExecuted || status == SwapRequestStatusExecuted
+	return status == SwapRequestStatusNotExecuted ||
+		status == SwapRequestStatusNotMatched ||
+		status == SwapRequestStatusPartiallyMatched
 }
 
 func (status SwapRequestStatus) IsCanceledOrExpired() bool {
@@ -98,5 +99,5 @@ func (status SwapRequestStatus) IsCanceledOrExpired() bool {
 }
 
 func (status SwapRequestStatus) ShouldBeDeleted() bool {
-	return status.IsCanceledOrExpired()
+	return status == SwapRequestStatusCompleted || status.IsCanceledOrExpired()
 }
