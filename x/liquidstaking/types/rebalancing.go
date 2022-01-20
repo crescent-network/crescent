@@ -6,7 +6,34 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb
+func DivideByCurrentWeight(vs LiquidValidators, input sdk.Int) (outputs []sdk.Int, crumb sdk.Int) {
+	totalLiquidTokens := vs.TotalLiquidTokens()
+	totalShares := sdk.ZeroInt()
+	sharePerWeight := input.ToDec().QuoTruncate(totalLiquidTokens.ToDec())
+	for _, val := range vs {
+		weightedShare := sharePerWeight.MulInt(val.LiquidTokens).TruncateInt()
+		totalShares = totalShares.Add(weightedShare)
+		outputs = append(outputs, weightedShare)
+	}
+	return outputs, input.Sub(totalShares)
+}
+
+// DivideByCurrentWeightDec divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb as decimal
+func DivideByCurrentWeightDec(vs LiquidValidators, input sdk.Dec) (outputs []sdk.Dec, crumb sdk.Dec) {
+	totalLiquidTokens := vs.TotalLiquidTokens()
+	totalShares := sdk.ZeroDec()
+	sharePerWeight := input.QuoTruncate(totalLiquidTokens.ToDec())
+	for _, val := range vs {
+		weightedShare := sharePerWeight.MulInt(val.LiquidTokens)
+		totalShares = totalShares.Add(weightedShare)
+		outputs = append(outputs, weightedShare)
+	}
+	return outputs, input.Sub(totalShares)
+}
+
 //AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively.
+// TODO: not using on this version for simplify
 func AddStakingTargetMap(activeVals LiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
 	targetMap := make(map[string]sdk.Int)
 	if addStakingAmt.IsNil() || !addStakingAmt.IsPositive() || activeVals.Len() == 0 {
