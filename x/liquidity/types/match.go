@@ -4,6 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type PriceDirection int
+
+const (
+	PriceIncreasing PriceDirection = iota + 1
+	PriceDecreasing
+)
+
 type MatchEngine struct {
 	BuyOrderSource  OrderSource
 	SellOrderSource OrderSource
