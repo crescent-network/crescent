@@ -25,7 +25,6 @@ func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64)         {
 // GetOtherVotes calculate the voting power of the person who participated in liquid staking.
 func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	liquidVals := h.k.GetActiveLiquidValidators(ctx)
-	lenLiquidVals := liquidVals.Len()
 	liquidBondDenom := h.k.LiquidBondDenom(ctx)
 	totalSupply := h.k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount
 	if totalSupply.IsPositive() {
@@ -42,15 +41,15 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 			if bTokenBalance.IsPositive() {
 				nativeValue = types.BTokenToNativeToken(bTokenBalance, totalSupply, h.k.NetAmount(ctx), sdk.ZeroDec())
 			}
-			if bTokenBalance.IsPositive() {
+			if nativeValue.IsPositive() {
 				(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
-				// TODO: apply weighted dividedPower
-				dividedPower := nativeValue.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
-				for _, val := range liquidVals {
+				// TODO: consider how to do with crumb and using decimal
+				dividedPowers, _ := types.DivideByCurrentWeight(liquidVals, nativeValue.TruncateInt())
+				for i, val := range liquidVals {
 					if existed, ok := (*otherVotes)[vote.Voter][val.OperatorAddress]; ok {
-						(*otherVotes)[vote.Voter][val.OperatorAddress] = existed.Add(dividedPower)
+						(*otherVotes)[vote.Voter][val.OperatorAddress] = existed.Add(dividedPowers[i].ToDec())
 					} else {
-						(*otherVotes)[vote.Voter][val.OperatorAddress] = dividedPower
+						(*otherVotes)[vote.Voter][val.OperatorAddress] = dividedPowers[i].ToDec()
 					}
 				}
 			}
