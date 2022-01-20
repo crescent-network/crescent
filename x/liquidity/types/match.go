@@ -42,7 +42,6 @@ func (engine *MatchEngine) EstimatedPriceDirection(lastPrice sdk.Dec) PriceDirec
 	return PriceDecreasing
 }
 
-// SwapPrice assumes that the last price is fit in tick.
 func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 	dir := engine.EstimatedPriceDirection(lastPrice)
 	tickSource := MergeOrderSources(engine.BuyOrderSource, engine.SellOrderSource) // temporary order source just for ticks
@@ -71,36 +70,22 @@ func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
 	for {
 		i := TickToIndex(currentPrice, engine.TickPrecision)
 
+		if buyAmountGTE(i+1).LTE(sellAmountLTE(i)) && buyAmountGTE(i).GTE(sellAmountLTE(i-1)) {
+			return currentPrice
+		}
+
 		var nextPrice sdk.Dec
 		var found bool
 		switch dir {
 		case PriceIncreasing:
-			sa := sellAmountLTE(i)
-			hba := buyAmountGTE(i + 1)
-			ba := buyAmountGTE(i - 1)
-			lsa := sellAmountLTE(i - 2)
-			if currentPrice.MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(TickFromIndex(i-1, engine.TickPrecision).MulInt(lsa)) {
-				return currentPrice
-			}
-
 			if buyAmountGTE(i + 1).IsZero() {
 				return currentPrice
 			}
-
 			nextPrice, found = tickSource.UpTick(currentPrice)
 		case PriceDecreasing:
-			sa := sellAmountLTE(i + 1)
-			hba := buyAmountGTE(i + 2)
-			ba := buyAmountGTE(i)
-			lsa := sellAmountLTE(i - 1)
-			if TickFromIndex(i+1, engine.TickPrecision).MulInt(sa).GTE(hba.ToDec()) && ba.ToDec().GTE(currentPrice.MulInt(lsa)) {
-				return currentPrice
-			}
-
 			if sellAmountLTE(i - 1).IsZero() {
 				return currentPrice
 			}
-
 			nextPrice, found = tickSource.DownTick(currentPrice)
 		}
 		if !found {
@@ -144,16 +129,16 @@ func (engine *MatchEngine) Match(lastPrice sdk.Dec) (orderBook *OrderBook, swapP
 			break
 		}
 
-		if buyOrders.RemainingAmount().IsZero() {
+		if buyOrders.OpenBaseCoinAmount().IsZero() {
 			var found bool
-			buyPrice, found = engine.BuyOrderSource.DownTick(buyPrice)
+			buyPrice, found = engine.BuyOrderSource.DownTickWithOrders(buyPrice)
 			if !found {
 				break
 			}
 		}
-		if sellOrders.RemainingAmount().IsZero() {
+		if sellOrders.OpenBaseCoinAmount().IsZero() {
 			var found bool
-			sellPrice, found = engine.SellOrderSource.UpTick(sellPrice)
+			sellPrice, found = engine.SellOrderSource.UpTickWithOrders(sellPrice)
 			if !found {
 				break
 			}
@@ -165,51 +150,45 @@ func (engine *MatchEngine) Match(lastPrice sdk.Dec) (orderBook *OrderBook, swapP
 
 // MatchOrders matches two order groups at given price.
 func MatchOrders(buyOrders, sellOrders Orders, price sdk.Dec) {
-	buyAmount := buyOrders.RemainingAmount()
-	sellAmount := sellOrders.RemainingAmount()
+	buyAmount := buyOrders.OpenBaseCoinAmount()
+	sellAmount := sellOrders.OpenBaseCoinAmount()
 
 	if buyAmount.IsZero() || sellAmount.IsZero() {
 		return
 	}
 
 	matchAll := false
-	sellDemandAmount := price.MulInt(sellAmount).TruncateInt()
-	if buyAmount.Equal(sellDemandAmount) {
+	if buyAmount.Equal(sellAmount) {
 		matchAll = true
 	}
-	buyDemandAmount := buyAmount.ToDec().QuoTruncate(price).TruncateInt()
 
 	var smallerOrders, biggerOrders Orders
 	var smallerAmount, biggerAmount sdk.Int
-	var smallerDemandAmount sdk.Int
-	if buyAmount.LTE(sellDemandAmount) { // Note that we use LTE here.
+	if buyAmount.LTE(sellAmount) { // Note that we use LTE here.
 		smallerOrders, biggerOrders = buyOrders, sellOrders
 		smallerAmount, biggerAmount = buyAmount, sellAmount
-		smallerDemandAmount = buyDemandAmount
 	} else {
 		smallerOrders, biggerOrders = sellOrders, buyOrders
 		smallerAmount, biggerAmount = sellAmount, buyAmount
-		smallerDemandAmount = sellDemandAmount
 	}
 
 	for _, order := range smallerOrders {
-		proportion := order.GetRemainingAmount().ToDec().QuoInt(smallerAmount)
-		order.SetRemainingAmount(sdk.ZeroInt())
-		in := proportion.MulInt(smallerDemandAmount).TruncateInt()
+		proportion := order.GetOpenBaseCoinAmount().ToDec().QuoInt(smallerAmount)
+		order.SetOpenBaseCoinAmount(sdk.ZeroInt())
+		out := proportion.MulInt(smallerAmount)
+		in := proportion.MulInt(biggerAmount).TruncateInt()
 		order.SetReceivedAmount(order.GetReceivedAmount().Add(in))
-		order.SetMatched(true)
 	}
 
 	for _, order := range biggerOrders {
-		proportion := order.GetRemainingAmount().ToDec().QuoInt(biggerAmount)
+		proportion := order.GetRemainingOfferCoinAmount().ToDec().QuoInt(biggerAmount)
 		if matchAll {
-			order.SetRemainingAmount(sdk.ZeroInt())
+			order.SetRemainingOfferCoinAmount(sdk.ZeroInt())
 		} else {
 			out := proportion.MulInt(smallerDemandAmount).TruncateInt()
-			order.SetRemainingAmount(order.GetRemainingAmount().Sub(out))
+			order.SetRemainingOfferCoinAmount(order.GetRemainingOfferCoinAmount().Sub(out))
 		}
 		in := proportion.MulInt(smallerAmount).TruncateInt()
 		order.SetReceivedAmount(order.GetReceivedAmount().Add(in))
-		order.SetMatched(true)
 	}
 }

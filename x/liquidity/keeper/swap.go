@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -70,12 +71,16 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeSwapBatch,
-			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
+			sdk.NewAttribute(types.AttributeKeySwapDirection, msg.Direction.String()),
+			sdk.NewAttribute(types.AttributeKeyOfferCoin, msg.OfferCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
+			sdk.NewAttribute(types.AttributeKeyPrice, msg.Price.String()),
+			sdk.NewAttribute(types.AttributeKeyBaseCoinAmount, msg.BaseCoinAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
-			sdk.NewAttribute(types.AttributeKeySwapDirection, req.Direction.String()),
-			sdk.NewAttribute(types.AttributeKeyRemainingAmount, req.RemainingCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyReceivedAmount, req.ReceivedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
 		),
 	})
 
@@ -105,6 +110,7 @@ func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCancelSwapBatch,
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(req.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeySwapRequestId, strconv.FormatUint(req.SwapRequestId, 10)),
@@ -201,7 +207,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					case types.SwapDirectionSell:
 						offerCoinDenom = pair.BaseCoinDenom
 					}
-					offerCoin := sdk.NewCoin(offerCoinDenom, order.Amount.Sub(order.RemainingAmount))
+					offerCoin := sdk.NewCoin(offerCoinDenom, order.RemainingOfferAmount.Sub(order.OpenBaseCoinAmount))
 					bulkOp.SendCoins(order.ReserveAddress, pair.GetEscrowAddress(), sdk.NewCoins(offerCoin))
 				}
 			}
@@ -216,9 +222,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				case *types.UserOrder:
 					// TODO: optimize read/write (can there be only one write?)
 					req, _ := k.GetSwapRequest(ctx, pair.Id, order.RequestId)
-					req.RemainingCoin.Amount = order.RemainingAmount
+					req.OpenAmount = order.OpenBaseCoinAmount
 					req.ReceivedCoin.Amount = req.ReceivedCoin.Amount.Add(order.ReceivedAmount)
-					if order.RemainingAmount.IsZero() {
+					if order.OpenBaseCoinAmount.IsZero() {
 						req.Status = types.SwapRequestStatusCompleted
 					} else {
 						req.Status = types.SwapRequestStatusPartiallyMatched

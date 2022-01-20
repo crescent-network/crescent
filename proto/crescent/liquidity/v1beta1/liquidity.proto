@@ -145,21 +145,29 @@ message SwapRequest {
   // direction specifies the swap direction; either buy or sell
   SwapDirection direction = 5;
 
-  // price specifies the price that an orderer is willing to swap
-  string price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin offer_coin = 6 [(gogoproto.nullable) = false];
 
-  // remaining_coin specifies the remaining coin after the swap
-  cosmos.base.v1beta1.Coin remaining_coin = 7 [(gogoproto.nullable) = false];
+  // remaining_offer_coin specifies the remaining offer coin
+  cosmos.base.v1beta1.Coin remaining_offer_coin = 7 [(gogoproto.nullable) = false];
 
   // received_coin specifies the received coin after the swap
   cosmos.base.v1beta1.Coin received_coin = 8 [(gogoproto.nullable) = false];
 
+  // price specifies the price that an orderer is willing to swap
+  string price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string base_coin_amount = 10
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  string open_base_coin_amount = 11
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
   // batch_id specifies the pair's batch id when the request is stored
-  uint64 batch_id = 9;
+  uint64 batch_id = 12;
 
-  google.protobuf.Timestamp expire_at = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp expire_at = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
-  SwapRequestStatus status = 12;
+  SwapRequestStatus status = 14;
 }
 
 // CancelSwapRequest defines a request to cancel a swap request.

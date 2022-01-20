@@ -2559,12 +2559,7 @@ paths:
                          - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                          - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                          - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-                    price:
-                      type: string
-                      title: >-
-                        price specifies the price that an orderer is willing to
-                        swap
-                    remaining_coin:
+                    offer_coin:
                       type: object
                       properties:
                         denom:
@@ -2579,9 +2574,22 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                      title: >-
-                        remaining_coin specifies the remaining coin after the
-                        swap
+                    remaining_offer_coin:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                      title: remaining_offer_coin specifies the remaining offer coin
                     received_coin:
                       type: object
                       properties:
@@ -2598,6 +2606,15 @@ paths:
 
                         signatures required by gogoproto.
                       title: received_coin specifies the received coin after the swap
+                    price:
+                      type: string
+                      title: >-
+                        price specifies the price that an orderer is willing to
+                        swap
+                    base_coin_amount:
+                      type: string
+                    open_base_coin_amount:
+                      type: string
                     batch_id:
                       type: string
                       format: uint64
@@ -2792,12 +2809,7 @@ paths:
                        - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                        - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                        - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-                  price:
-                    type: string
-                    title: >-
-                      price specifies the price that an orderer is willing to
-                      swap
-                  remaining_coin:
+                  offer_coin:
                     type: object
                     properties:
                       denom:
@@ -2812,7 +2824,22 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
-                    title: remaining_coin specifies the remaining coin after the swap
+                  remaining_offer_coin:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                    title: remaining_offer_coin specifies the remaining offer coin
                   received_coin:
                     type: object
                     properties:
@@ -2829,6 +2856,15 @@ paths:
 
                       signatures required by gogoproto.
                     title: received_coin specifies the received coin after the swap
+                  price:
+                    type: string
+                    title: >-
+                      price specifies the price that an orderer is willing to
+                      swap
+                  base_coin_amount:
+                    type: string
+                  open_base_coin_amount:
+                    type: string
                   batch_id:
                     type: string
                     format: uint64
@@ -5949,10 +5985,7 @@ definitions:
                - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-          price:
-            type: string
-            title: price specifies the price that an orderer is willing to swap
-          remaining_coin:
+          offer_coin:
             type: object
             properties:
               denom:
@@ -5967,7 +6000,22 @@ definitions:
               method
 
               signatures required by gogoproto.
-            title: remaining_coin specifies the remaining coin after the swap
+          remaining_offer_coin:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+            title: remaining_offer_coin specifies the remaining offer coin
           received_coin:
             type: object
             properties:
@@ -5984,6 +6032,13 @@ definitions:
 
               signatures required by gogoproto.
             title: received_coin specifies the received coin after the swap
+          price:
+            type: string
+            title: price specifies the price that an orderer is willing to swap
+          base_coin_amount:
+            type: string
+          open_base_coin_amount:
+            type: string
           batch_id:
             type: string
             format: uint64
@@ -6057,10 +6112,7 @@ definitions:
                  - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                  - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                  - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-            price:
-              type: string
-              title: price specifies the price that an orderer is willing to swap
-            remaining_coin:
+            offer_coin:
               type: object
               properties:
                 denom:
@@ -6075,7 +6127,22 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-              title: remaining_coin specifies the remaining coin after the swap
+            remaining_offer_coin:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+              title: remaining_offer_coin specifies the remaining offer coin
             received_coin:
               type: object
               properties:
@@ -6092,6 +6159,13 @@ definitions:
 
                 signatures required by gogoproto.
               title: received_coin specifies the received coin after the swap
+            price:
+              type: string
+              title: price specifies the price that an orderer is willing to swap
+            base_coin_amount:
+              type: string
+            open_base_coin_amount:
+              type: string
             batch_id:
               type: string
               format: uint64
@@ -6404,10 +6478,7 @@ definitions:
            - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
            - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
            - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-      price:
-        type: string
-        title: price specifies the price that an orderer is willing to swap
-      remaining_coin:
+      offer_coin:
         type: object
         properties:
           denom:
@@ -6419,7 +6490,19 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-        title: remaining_coin specifies the remaining coin after the swap
+      remaining_offer_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+        title: remaining_offer_coin specifies the remaining offer coin
       received_coin:
         type: object
         properties:
@@ -6433,6 +6516,13 @@ definitions:
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
         title: received_coin specifies the received coin after the swap
+      price:
+        type: string
+        title: price specifies the price that an orderer is willing to swap
+      base_coin_amount:
+        type: string
+      open_base_coin_amount:
+        type: string
       batch_id:
         type: string
         format: uint64

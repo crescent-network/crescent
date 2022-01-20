@@ -65,9 +65,9 @@ func (ob OrderBook) String() string {
 	for {
 		lines = append(lines,
 			fmt.Sprintf("| %12s | %24s | %-12s |",
-				ob.BuyTicks.Orders(price).RemainingAmount(),
+				ob.BuyTicks.Orders(price).OpenBaseCoinAmount(),
 				price.String(),
-				ob.SellTicks.Orders(price).RemainingAmount()))
+				ob.SellTicks.Orders(price).OpenBaseCoinAmount()))
 
 		price, found = os.DownTickWithOrders(price)
 		if !found {

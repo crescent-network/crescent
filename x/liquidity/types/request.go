@@ -50,17 +50,20 @@ func (req WithdrawRequest) GetWithdrawer() sdk.AccAddress {
 
 func NewSwapRequest(msg *MsgSwapBatch, id uint64, pair Pair, expireAt time.Time, msgHeight int64) SwapRequest {
 	return SwapRequest{
-		Id:            id,
-		PairId:        pair.Id,
-		MsgHeight:     msgHeight,
-		Orderer:       msg.Orderer,
-		Direction:     msg.Direction,
-		Price:         msg.Price,
-		RemainingCoin: msg.OfferCoin,
-		ReceivedCoin:  sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
-		BatchId:       pair.CurrentBatchId,
-		ExpireAt:      expireAt,
-		Status:        SwapRequestStatusNotExecuted,
+		Id:                 id,
+		PairId:             pair.Id,
+		MsgHeight:          msgHeight,
+		Orderer:            msg.Orderer,
+		Direction:          msg.Direction,
+		OfferCoin:          msg.OfferCoin,
+		RemainingOfferCoin: msg.OfferCoin,
+		ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
+		Price:              msg.Price,
+		BaseCoinAmount:     msg.BaseCoinAmount,
+		OpenAmount:         msg.BaseCoinAmount,
+		BatchId:            pair.CurrentBatchId,
+		ExpireAt:           expireAt,
+		Status:             SwapRequestStatusNotExecuted,
 	}
 }
 
