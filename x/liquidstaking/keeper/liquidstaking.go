@@ -180,7 +180,6 @@ func (k Keeper) LiquidUnstaking(
 	}
 	netAmount := k.NetAmount(ctx)
 	unbondingAmount := types.BTokenToNativeToken(amount.Amount, bTokenTotalSupply.Amount, netAmount, params.UnstakeFeeRate)
-	returnAmount := sdk.ZeroInt()
 	totalReturnAmount := sdk.ZeroInt()
 
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, liquidStaker, types.ModuleName, sdk.NewCoins(amount))
@@ -203,15 +202,18 @@ func (k Keeper) LiquidUnstaking(
 	for i, val := range activeVals {
 		weightedShare := unbondingShares[i]
 		var ubd stakingtypes.UnbondingDelegation
+		returnAmount := sdk.ZeroInt()
 		del, found := k.stakingKeeper.GetDelegation(ctx, proxyAcc, val.GetOperator())
 		// TODO: test and verify
 		weightedShare, err = k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), weightedShare.TruncateInt())
 		fmt.Println("[liquid UBD]", weightedShare.String(), del.Shares.String(), found, unbondingShares[i], activeVals.Len(), unbondingAmount.String())
 		if err != nil {
+			// TODO: add custom error
 			return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 		}
 		ubdTime, returnAmount, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare)
 		if err != nil {
+			// TODO: add custom error
 			return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 		}
 		ubds = append(ubds, ubd)

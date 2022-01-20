@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	proxyAccDel3, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	suite.Require().True(found)
 	suite.Require().Equal(proxyAccDel1.Shares, stakingAmt.ToDec().QuoInt64(3).TruncateDec())
-	//suite.Require().Equal(stakingAmt.ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
+	suite.Require().Equal(stakingAmt.QuoRaw(3).MulRaw(3).ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
 	balanceBeforeUBD := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], sdk.DefaultBondDenom)
 	suite.Require().Equal(balanceBeforeUBD.Amount, sdk.NewInt(999950000))
