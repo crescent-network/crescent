@@ -205,11 +205,7 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	//share := unbondingAmount.QuoInt(activeVals.TotalWeight()).TruncateInt()
-	//leftAmount := unbondingAmount.TruncateInt()
-	// TODO: DivideByCurrentWeight
-	// TODO: to be current weight, not param weight,
-	// TODO: crumb could small micro token, drop it
+	// crumb could small micro token, drop it
 	unbondingShares, _ := types.DivideByCurrentWeightDec(activeVals, unbondingAmount)
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
@@ -324,28 +320,18 @@ func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals types.LiquidValida
 }
 
 // GetActiveLiquidValidators get the set of active liquid validators.
-// TODO: refactor []types.LiquidValidator for types.LiquidValidators for totalWeights and len and minMaxGap
 func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
-	//totalWeight = sdk.ZeroInt()
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
 		if val.Status == types.ValidatorStatusActive {
 			vals = append(vals, val)
-			//totalWeight = totalWeight.Add(val.Weight)
 		}
 	}
-
-	////lenVals = len(vals)
-	//if lenVals == 0 || !totalWeight.IsPositive() {
-	//	// TODO: make a error type for this
-	//	err = fmt.Errorf("there's no active liquid validators")
-	//}
-
 	return vals
 }
 

@@ -9,7 +9,6 @@ import (
 
 // UpdateStatus updates the location of the shares within a liquid validator
 // to reflect the new status
-// TODO: refactor to liquidvalidator.go or val_status_change.go, etc.
 func (v LiquidValidator) UpdateStatus(newStatus ValidatorStatus) LiquidValidator {
 	v.Status = newStatus
 	return v

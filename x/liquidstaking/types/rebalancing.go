@@ -123,9 +123,6 @@ func Rebalancing(proxyAcc sdk.AccAddress, liquidVals LiquidValidators, rebalanci
 			break
 		}
 		// TODO: refactor using map
-		//maxVal.LiquidTokens = maxVal.LiquidTokens.Add(amountNeeded)
-		//minVal.LiquidTokens = minVal.LiquidTokens.Sub(amountNeeded)
-		//fmt.Println("[rebalancing]", minVal.OperatorAddress, "-->", maxVal.OperatorAddress, amountNeeded)
 		addedVal := 0
 		subtractedVal := 0
 		for idx := range liquidVals {

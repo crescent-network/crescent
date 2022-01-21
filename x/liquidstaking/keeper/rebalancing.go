@@ -26,15 +26,7 @@ func (k Keeper) TryRedelegations(ctx sdk.Context, proxyAcc sdk.AccAddress, redel
 			return time.Time{}, err
 		}
 		// TODO: Fix to use SetLiquidValidator not UpdateLiquidTokens
-		//fmt.Println(re.SrcValidator.String(), liquidValsMap[re.SrcValidator.String()].LiquidTokens, liquidValsMap[re.SrcValidator.String()].LiquidTokens.Sub(shares.TruncateInt()))
-		//fmt.Println(re.DstValidator.String(), liquidValsMap[re.DstValidator.String()].LiquidTokens, liquidValsMap[re.DstValidator.String()].LiquidTokens.Add(shares.TruncateInt()))
-		//liquidValsMap[re.SrcValidator.String()].LiquidTokens = liquidValsMap[re.SrcValidator.String()].LiquidTokens.Sub(shares.TruncateInt())
-		//liquidValsMap[re.DstValidator.String()].LiquidTokens = liquidValsMap[re.DstValidator.String()].LiquidTokens.Add(shares.TruncateInt())
-		// set liquid token, with also changed status
 	}
-	//k.stakingKeeper.GetDelegation(ctx, types.LiquidStakingProxyAcc, re.)
-	//k.SetLiquidValidator(ctx, *liquidValsMap[re.SrcValidator.String()])
-	//k.SetLiquidValidator(ctx, *liquidValsMap[re.DstValidator.String()])
 	k.UpdateLiquidTokens(cachedCtx, proxyAcc)
 	writeCache()
 	return completionTime, nil
