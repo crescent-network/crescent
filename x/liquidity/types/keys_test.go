@@ -61,10 +61,11 @@ func (s *keysTestSuite) TestPairLookupIndexKey() {
 	}
 
 	for _, tc := range testCases {
-		key := types.GetPairLookupIndexKey(tc.denomA, tc.denomB, tc.pairId)
+		key := types.GetPairsByDenomsIndexKey(tc.denomA, tc.denomB, tc.pairId)
 		s.Require().Equal(tc.expected, key)
 
-		denomB, pairId := types.ParsePairByDenomIndexKey(key)
+		denomA, denomB, pairId := types.ParsePairsByDenomsIndexKey(key)
+		s.Require().Equal(tc.denomA, denomA)
 		s.Require().Equal(tc.denomB, denomB)
 		s.Require().Equal(tc.pairId, pairId)
 	}
