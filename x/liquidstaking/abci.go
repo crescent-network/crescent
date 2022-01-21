@@ -59,7 +59,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		whitelistedValMap[wv.ValidatorAddress] = wv
 	}
 
-	// TODO: rebalancing based updated liquid validators status
+	// TODO: rebalancing based updated liquid validators status with threshold
 	// TODO: Set status
 
 	// TODO: rebalancing first or re-staking first

@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestRebalancing() {
 		},
 	}
 	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	suite.keeper.Rebalancing(suite.ctx, moduleAcc, lvs, sdk.NewDec(10000))
+	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
 }
 
 func (suite *KeeperTestSuite) TestRebalancingWithDelisting() {
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestRebalancingWithDelisting() {
 		},
 	}
 	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	suite.keeper.Rebalancing(suite.ctx, moduleAcc, lvs, sdk.NewDec(10000))
+	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
 }
 
 func (suite *KeeperTestSuite) TestRebalancingUnderThreshold() {
@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestRebalancingUnderThreshold() {
 		},
 	}
 	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	suite.keeper.Rebalancing(suite.ctx, moduleAcc, lvs, sdk.NewDec(1*1000000))
+	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(1*1000000))
 }
 
 func (suite *KeeperTestSuite) TestRebalancingDiffWeight() {
@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestRebalancingDiffWeight() {
 		},
 	}
 	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	suite.keeper.Rebalancing(suite.ctx, moduleAcc, lvs, sdk.NewDec(10000))
+	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
 }
 
 func (suite *KeeperTestSuite) TestRebalancingWithDelistingDiffWeight() {
@@ -170,7 +170,7 @@ func (suite *KeeperTestSuite) TestRebalancingWithDelistingDiffWeight() {
 		},
 	}
 	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	suite.keeper.Rebalancing(suite.ctx, moduleAcc, lvs, sdk.NewDec(10000))
+	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
 }
 
 //
