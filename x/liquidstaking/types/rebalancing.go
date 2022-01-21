@@ -101,13 +101,6 @@ func Rebalancing(proxyAcc sdk.AccAddress, liquidVals LiquidValidators, rebalanci
 	totalLiquidTokens := liquidVals.TotalLiquidTokens()
 	totalWeight := liquidVals.TotalWeight()
 	threshold := rebalancingTrigger.MulInt(totalLiquidTokens)
-	//liquidValsMap := liquidVals.Map()
-	//for _, val := range liquidVals {
-	//	totalLiquidTokens = totalLiquidTokens.Add(val.LiquidTokens)
-	//	if val.Status == types.ValidatorStatusActive {
-	//		totalWeight = totalWeight.Add(val.Weight)
-	//	}
-	//}
 
 	var targetWeight sdk.Int
 	targetMap := map[string]sdk.Int{}
@@ -133,6 +126,7 @@ func Rebalancing(proxyAcc sdk.AccAddress, liquidVals LiquidValidators, rebalanci
 		//maxVal.LiquidTokens = maxVal.LiquidTokens.Add(amountNeeded)
 		//minVal.LiquidTokens = minVal.LiquidTokens.Sub(amountNeeded)
 		//fmt.Println("[rebalancing]", minVal.OperatorAddress, "-->", maxVal.OperatorAddress, amountNeeded)
+		// TODO: refactor using map
 		addedVal := 0
 		subtractedVal := 0
 		for idx := range liquidVals {
@@ -155,8 +149,5 @@ func Rebalancing(proxyAcc sdk.AccAddress, liquidVals LiquidValidators, rebalanci
 	for _, r := range redelegations {
 		fmt.Println("[rebalancing]", r.Amount.String(), r.SrcValidator.String(), "->", r.DstValidator.String())
 	}
-	//fmt.Println("[rebalancing2]", liquidVals[subtractedVal].OperatorAddress, "-->", liquidVals[addedVal].OperatorAddress, amountNeeded)
-	fmt.Println(liquidVals)
-
 	return redelegations
 }
