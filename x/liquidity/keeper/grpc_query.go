@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,51 +35,68 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.XDenom != "" {
-		if err := sdk.ValidateDenom(req.XDenom); err != nil {
-			return nil, err
-		}
-	}
-
-	if req.YDenom != "" {
-		if err := sdk.ValidateDenom(req.YDenom); err != nil {
-			return nil, err
+	var disabled bool
+	if req.Disabled != "" {
+		var err error
+		disabled, err = strconv.ParseBool(req.Disabled)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	poolStore := prefix.NewStore(store, types.PoolKeyPrefix)
+
+	var keyPrefix []byte
+	var poolGetter func(key, value []byte) types.Pool
+	var pairGetter func(id uint64) types.Pair
+	pairMap := map[uint64]types.Pair{}
+	switch {
+	case req.PairId == 0:
+		keyPrefix = types.PoolKeyPrefix
+		poolGetter = func(_, value []byte) types.Pool {
+			return types.MustUnmarshalPool(k.cdc, value)
+		}
+		pairGetter = func(id uint64) types.Pair {
+			pair, ok := pairMap[id]
+			if !ok {
+				pair, _ = k.GetPair(ctx, id)
+				pairMap[id] = pair
+			}
+			return pair
+		}
+	default:
+		keyPrefix = types.GetPoolsByPairIndexKeyPrefix(req.PairId)
+		poolGetter = func(key, _ []byte) types.Pool {
+			poolId := types.ParsePoolsByPairIndexKey(append(keyPrefix, key...))
+			pool, _ := k.GetPool(ctx, poolId)
+			return pool
+		}
+		pair, _ := k.GetPair(ctx, req.PairId)
+		pairGetter = func(id uint64) types.Pair {
+			return pair
+		}
+	}
+
+	poolStore := prefix.NewStore(store, keyPrefix)
 
 	var poolsRes []types.PoolResponse
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		pool, err := types.UnmarshalPool(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
-
-		if req.XDenom != "" {
-			if pool.XCoinDenom != req.XDenom {
+		pool := poolGetter(key, value)
+		if req.Disabled != "" {
+			if pool.Disabled != disabled {
 				return false, nil
 			}
 		}
 
-		if req.YDenom != "" {
-			if pool.YCoinDenom != req.YDenom {
-				return false, nil
-			}
-		}
-
-		rx, ry := k.GetPoolBalance(ctx, pool)
+		pair := pairGetter(pool.PairId)
+		rx, ry := k.GetPoolBalance(ctx, pool, pair)
 		poolRes := types.PoolResponse{
 			Id:                    pool.Id,
 			PairId:                pool.PairId,
-			XCoinDenom:            pool.XCoinDenom,
-			YCoinDenom:            pool.YCoinDenom,
 			ReserveAddress:        pool.ReserveAddress,
 			PoolCoinDenom:         pool.PoolCoinDenom,
-			XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-			YCoin:                 sdk.NewCoin(pool.XCoinDenom, ry),
+			Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 			LastDepositRequestId:  pool.LastDepositRequestId,
 			LastWithdrawRequestId: pool.LastWithdrawRequestId,
 		}
@@ -88,56 +106,6 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 		}
 
 		return true, nil
-	})
-
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryPoolsResponse{Pools: poolsRes, Pagination: pageRes}, nil
-}
-
-// PoolsByPair queries all pools that correspond to the pair.
-func (k Querier) PoolsByPair(c context.Context, req *types.QueryPoolsByPairRequest) (*types.QueryPoolsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if req.PairId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pair id cannot be 0")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	keyPrefix := types.GetPoolsByPairIndexKeyPrefix(req.PairId)
-	poolsStore := prefix.NewStore(store, keyPrefix)
-
-	var poolsRes []types.PoolResponse
-	pageRes, err := query.Paginate(poolsStore, req.Pagination, func(key, value []byte) error {
-		poolId := types.ParsePoolsByPairIndexKey(append(keyPrefix, key...))
-
-		pool, found := k.GetPool(ctx, poolId)
-		if !found {
-			return nil
-		}
-
-		rx, ry := k.GetPoolBalance(ctx, pool)
-		poolRes := types.PoolResponse{
-			Id:                    pool.Id,
-			PairId:                pool.PairId,
-			XCoinDenom:            pool.XCoinDenom,
-			YCoinDenom:            pool.YCoinDenom,
-			ReserveAddress:        pool.ReserveAddress,
-			PoolCoinDenom:         pool.PoolCoinDenom,
-			XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-			YCoin:                 sdk.NewCoin(pool.YCoinDenom, ry),
-			LastDepositRequestId:  pool.LastDepositRequestId,
-			LastWithdrawRequestId: pool.LastWithdrawRequestId,
-		}
-
-		poolsRes = append(poolsRes, poolRes)
-
-		return nil
 	})
 
 	if err != nil {
@@ -164,16 +132,15 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", req.PoolId)
 	}
 
-	rx, ry := k.GetPoolBalance(ctx, pool)
+	pair, _ := k.GetPair(ctx, pool.PairId)
+
+	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
-		XCoinDenom:            pool.XCoinDenom,
-		YCoinDenom:            pool.YCoinDenom,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.YCoinDenom, ry),
+		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -203,16 +170,15 @@ func (k Querier) PoolByReserveAcc(c context.Context, req *types.QueryPoolByReser
 		return nil, status.Errorf(codes.NotFound, "pool by %s doesn't exist", req.ReserveAcc)
 	}
 
-	rx, ry := k.GetPoolBalance(ctx, pool)
+	pair, _ := k.GetPair(ctx, pool.PairId)
+
+	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
-		XCoinDenom:            pool.XCoinDenom,
-		YCoinDenom:            pool.YCoinDenom,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.YCoinDenom, ry),
+		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -238,16 +204,15 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", poolId)
 	}
 
-	rx, ry := k.GetPoolBalance(ctx, pool)
+	pair, _ := k.GetPair(ctx, pool.PairId)
+
+	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
-		XCoinDenom:            pool.XCoinDenom,
-		YCoinDenom:            pool.YCoinDenom,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		XCoin:                 sdk.NewCoin(pool.XCoinDenom, rx),
-		YCoin:                 sdk.NewCoin(pool.YCoinDenom, ry),
+		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -261,40 +226,47 @@ func (k Querier) Pairs(c context.Context, req *types.QueryPairsRequest) (*types.
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.XDenom != "" {
-		if err := sdk.ValidateDenom(req.XDenom); err != nil {
-			return nil, err
-		}
+	if len(req.Denoms) > 2 {
+		return nil, status.Errorf(codes.InvalidArgument, "too many denoms to query: %d", len(req.Denoms))
 	}
 
-	if req.YDenom != "" {
-		if err := sdk.ValidateDenom(req.YDenom); err != nil {
-			return nil, err
+	for _, denom := range req.Denoms {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	pairStore := prefix.NewStore(store, types.PairKeyPrefix)
+
+	var keyPrefix []byte
+	var pairGetter func(key, value []byte) types.Pair
+	switch len(req.Denoms) {
+	case 0:
+		keyPrefix = types.PairKeyPrefix
+		pairGetter = func(_, value []byte) types.Pair {
+			return types.MustUnmarshalPair(k.cdc, value)
+		}
+	case 1:
+		keyPrefix = types.GetPairsByDenomIndexKeyPrefix(req.Denoms[0])
+		pairGetter = func(key, _ []byte) types.Pair {
+			_, _, pairId := types.ParsePairsByDenomsIndexKey(append(keyPrefix, key...))
+			pair, _ := k.GetPair(ctx, pairId)
+			return pair
+		}
+	case 2:
+		keyPrefix = types.GetPairsByDenomsIndexKeyPrefix(req.Denoms[0], req.Denoms[1])
+		pairGetter = func(key, _ []byte) types.Pair {
+			_, _, pairId := types.ParsePairsByDenomsIndexKey(append(keyPrefix, key...))
+			pair, _ := k.GetPair(ctx, pairId)
+			return pair
+		}
+	}
+	pairStore := prefix.NewStore(store, keyPrefix)
 
 	var pairs []types.Pair
 	pageRes, err := query.FilteredPaginate(pairStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		pair, err := types.UnmarshalPair(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
-
-		if req.XDenom != "" {
-			if pair.XCoinDenom != req.XDenom {
-				return false, nil
-			}
-		}
-
-		if req.YDenom != "" {
-			if pair.YCoinDenom != req.YDenom {
-				return false, nil
-			}
-		}
+		pair := pairGetter(key, value)
 
 		if accumulate {
 			pairs = append(pairs, pair)

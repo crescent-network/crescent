@@ -71,22 +71,31 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, xCoin, yCoin sdk.Coin, fund bool) types.Pool {
+func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) types.Pair {
 	params := s.keeper.GetParams(s.ctx)
 	if fund {
-		depositCoins := sdk.NewCoins(xCoin, yCoin)
+		s.fundAddr(creator, params.PairCreationFee)
+	}
+	pair, err := s.keeper.CreatePair(s.ctx, types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+	s.Require().NoError(err)
+	return pair
+}
+
+func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) types.Pool {
+	params := s.keeper.GetParams(s.ctx)
+	if fund {
 		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
 	}
-	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, xCoin, yCoin))
+	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, pairId, depositCoins))
 	s.Require().NoError(err)
 	return pool
 }
 
-func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, xCoin, yCoin sdk.Coin, fund bool) types.DepositRequest {
+func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) types.DepositRequest {
 	if fund {
-		s.fundAddr(depositor, sdk.NewCoins(xCoin, yCoin))
+		s.fundAddr(depositor, depositCoins)
 	}
-	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, xCoin, yCoin))
+	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, depositCoins))
 	s.Require().NoError(err)
 	return req
 }
@@ -97,6 +106,7 @@ func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64
 	return req
 }
 
+//nolint
 func parseCoin(s string) sdk.Coin {
 	coin, err := sdk.ParseCoinNormalized(s)
 	if err != nil {
@@ -105,7 +115,6 @@ func parseCoin(s string) sdk.Coin {
 	return coin
 }
 
-//nolint
 func parseCoins(s string) sdk.Coins {
 	coins, err := sdk.ParseCoinsNormalized(s)
 	if err != nil {

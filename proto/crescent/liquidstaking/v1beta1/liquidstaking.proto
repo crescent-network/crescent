@@ -48,7 +48,7 @@ enum ValidatorStatus {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-  VALIDATOR_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ValidatorStatusNil"];
+  VALIDATOR_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ValidatorStatusUnspecified"];
   // VALIDATOR_STATUS_ACTIVE defines the ...
   VALIDATOR_STATUS_ACTIVE = 1 [(gogoproto.enumvalue_customname) = "ValidatorStatusActive"];
   // VALIDATOR_STATUS_DELISTING defines the ...
@@ -66,9 +66,10 @@ message WhitelistedValidator {
 
   // weight specifies the weight for liquid staking, unstaking amount
   string weight = 2 [
-    (gogoproto.moretags)   = "yaml:\"weight\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.moretags)                                        = "yaml:\"weight\"",
+    (gogoproto.customtype)                                      = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)                                        = false,
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {example: "\"10\"", format: "sdk.Int"}
   ];
 }
 
@@ -89,8 +90,9 @@ message LiquidValidator {
 
   // weight specifies the weight for liquid staking, unstaking amount
   string weight = 4 [
-    (gogoproto.moretags)   = "yaml:\"weight\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.moretags)                                        = "yaml:\"weight\"",
+    (gogoproto.customtype)                                      = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)                                        = false,
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {example: "\"10\"", format: "sdk.Int"}
   ];
 }

@@ -19,11 +19,11 @@ func (pair Pair) GetEscrowAddress() sdk.AccAddress {
 }
 
 // NewPair returns a new pair object.
-func NewPair(id uint64, xCoinDenom, yCoinDenom string) Pair {
+func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) Pair {
 	return Pair{
 		Id:                      id,
-		XCoinDenom:              xCoinDenom,
-		YCoinDenom:              yCoinDenom,
+		BaseCoinDenom:           baseCoinDenom,
+		QuoteCoinDenom:          quoteCoinDenom,
 		EscrowAddress:           PairEscrowAddr(id).String(),
 		LastSwapRequestId:       0,
 		LastCancelSwapRequestId: 0,

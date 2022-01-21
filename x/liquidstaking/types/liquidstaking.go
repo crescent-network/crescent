@@ -61,6 +61,37 @@ func (vs LiquidValidators) MinMaxGap(targetMap map[string]sdk.Int) (minGapVal Li
 	return minGapVal, maxGapVal, amountNeeded
 }
 
+func (vs LiquidValidators) Len() int {
+	return len(vs)
+}
+
+func (vs LiquidValidators) TotalWeight() sdk.Int {
+	totalWeight := sdk.ZeroInt()
+	for _, val := range vs {
+		totalWeight = totalWeight.Add(val.Weight)
+	}
+	return totalWeight
+}
+
+func (vs LiquidValidators) TotalLiquidTokens() sdk.Int {
+	totalLiquidTokens := sdk.ZeroInt()
+	for _, val := range vs {
+		totalLiquidTokens = totalLiquidTokens.Add(val.LiquidTokens)
+	}
+	return totalLiquidTokens
+}
+
+// TODO: add testcodes with consider netAmount.TruncateDec() or not
+// BTokenToNativeToken returns UnstakeAmount, NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
+func BTokenToNativeToken(btokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {
+	return netAmount.TruncateDec().Mul(btokenAmount.ToDec().QuoTruncate(bTokenTotalSupplyAmount.ToDec())).Mul(sdk.OneDec().Sub(feeRate)).TruncateDec()
+}
+
+// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
+func NativeTokenToBToken(nativeTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount sdk.Dec) (bTokenAmount sdk.Int) {
+	return bTokenTotalSupplyAmount.ToDec().Mul(nativeTokenAmount.ToDec()).QuoTruncate(netAmount.TruncateDec()).TruncateInt()
+}
+
 func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {
 	return cdc.MustMarshal(val)
 }

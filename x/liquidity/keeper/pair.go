@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
@@ -31,10 +32,32 @@ func (k Keeper) GetNextCancelSwapRequestIdWithUpdate(ctx sdk.Context, pair types
 	return id
 }
 
-// CreatePair creates a new pair.
-func (k Keeper) CreatePair(ctx sdk.Context, xCoinDenom, yCoinDenom string) types.Pair {
+// CreatePair handles types.MsgCreatePair and creates a pair.
+func (k Keeper) CreatePair(ctx sdk.Context, msg *types.MsgCreatePair) (types.Pair, error) {
+	params := k.GetParams(ctx)
+
+	if _, found := k.GetPairByDenoms(ctx, msg.BaseCoinDenom, msg.QuoteCoinDenom); found {
+		return types.Pair{}, types.ErrPairAlreadyExists
+	}
+
+	// Send the pair creation fee to the fee collector.
+	feeCollectorAddr, _ := sdk.AccAddressFromBech32(params.FeeCollectorAddress)
+	if err := k.bankKeeper.SendCoins(ctx, msg.GetCreator(), feeCollectorAddr, params.PairCreationFee); err != nil {
+		return types.Pair{}, sdkerrors.Wrap(err, "insufficient pair creation fee")
+	}
+
 	id := k.GetNextPairIdWithUpdate(ctx)
-	pair := types.NewPair(id, xCoinDenom, yCoinDenom)
+	pair := types.NewPair(id, msg.BaseCoinDenom, msg.QuoteCoinDenom)
 	k.SetPair(ctx, pair)
-	return pair
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreatePair,
+			sdk.NewAttribute(types.AttributeKeyCreator, msg.Creator),
+			sdk.NewAttribute(types.AttributeKeyBaseCoinDenom, msg.BaseCoinDenom),
+			sdk.NewAttribute(types.AttributeKeyQuoteCoinDenom, msg.QuoteCoinDenom),
+		),
+	})
+
+	return pair, nil
 }

@@ -18,12 +18,10 @@ var (
 )
 
 // NewPool returns a new pool object.
-func NewPool(id, pairId uint64, xCoinDenom, yCoinDenom string) Pool {
+func NewPool(id, pairId uint64) Pool {
 	return Pool{
 		Id:                    id,
 		PairId:                pairId,
-		XCoinDenom:            xCoinDenom,
-		YCoinDenom:            yCoinDenom,
 		ReserveAddress:        PoolReserveAcc(id).String(),
 		PoolCoinDenom:         PoolCoinDenom(id),
 		LastDepositRequestId:  0,
@@ -173,9 +171,6 @@ func (os PoolOrderSource) AmountGTE(price sdk.Dec) sdk.Int {
 	case SwapDirectionBuy:
 		for price.LT(os.PoolPrice) {
 			px := os.ProvidableXOnTick(price)
-			if px.IsZero() { // TODO: will it happen?
-				break
-			}
 			amount = amount.Add(px)
 			price = UpTick(price, os.TickPrecision)
 		}
@@ -207,9 +202,6 @@ func (os PoolOrderSource) AmountLTE(price sdk.Dec) sdk.Int {
 	case SwapDirectionSell:
 		for price.GT(os.PoolPrice) {
 			py := os.ProvidableYOnTick(price)
-			if py.IsZero() { // TODO: will it happen?
-				break
-			}
 			amount = amount.Add(py)
 			price = DownTick(price, os.TickPrecision)
 		}
@@ -274,25 +266,22 @@ func (os PoolOrderSource) DownTick(price sdk.Dec) (tick sdk.Dec, found bool) {
 func (os PoolOrderSource) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found bool) {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		price = UpTick(price, os.TickPrecision)
-		if price.GTE(os.PoolPrice) {
-			return
+		tick = UpTick(price, os.TickPrecision)
+		for tick.LT(os.PoolPrice) {
+			px := os.ProvidableXOnTick(price)
+			if px.IsPositive() {
+				found = true
+				break
+			}
+			tick = UpTick(tick, os.TickPrecision)
 		}
-		px := os.ProvidableXOnTick(price)
-		if px.IsZero() {
-			return
-		}
-		found = true
 	case SwapDirectionSell:
-		price = UpTick(price, os.TickPrecision)
-		if price.LTE(os.PoolPrice) {
+		tick = UpTick(price, os.TickPrecision)
+		if tick.LTE(os.PoolPrice) {
 			return
 		}
 		py := os.ProvidableYOnTick(price)
-		if py.IsZero() {
-			return
-		}
-		found = true
+		found = py.IsPositive()
 	}
 	return
 }
@@ -300,25 +289,22 @@ func (os PoolOrderSource) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found b
 func (os PoolOrderSource) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, found bool) {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		price = DownTick(price, os.TickPrecision)
-		if price.GTE(os.PoolPrice) {
+		tick = DownTick(price, os.TickPrecision)
+		if tick.GTE(os.PoolPrice) {
 			return
 		}
 		px := os.ProvidableXOnTick(price)
-		if px.IsZero() {
-			return
-		}
-		found = true
+		found = px.IsPositive()
 	case SwapDirectionSell:
-		price = DownTick(price, os.TickPrecision)
-		if price.LTE(os.PoolPrice) {
-			return
+		tick = DownTick(price, os.TickPrecision)
+		for tick.GT(os.PoolPrice) {
+			py := os.ProvidableYOnTick(tick)
+			if py.IsPositive() {
+				found = true
+				break
+			}
+			tick = DownTick(price, os.TickPrecision)
 		}
-		py := os.ProvidableYOnTick(price)
-		if py.IsZero() {
-			return
-		}
-		found = true
 	}
 	return
 }
@@ -408,7 +394,7 @@ func MustMarshalPool(cdc codec.BinaryCodec, pool Pool) []byte {
 	return cdc.MustMarshal(&pool)
 }
 
-// MustUnmarshalPool return the unmarshaled pool from bytes.
+// MustUnmarshalPool return the unmarshalled pool from bytes.
 // It throws panic if it fails.
 func MustUnmarshalPool(cdc codec.BinaryCodec, value []byte) Pool {
 	pool, err := UnmarshalPool(cdc, value)
@@ -430,7 +416,7 @@ func MustMarshalDepositRequest(cdc codec.BinaryCodec, msg DepositRequest) []byte
 	return cdc.MustMarshal(&msg)
 }
 
-// UnmarshalDepositMsgState returns the DepositRequest from bytes.
+// UnmarshalDepositRequest returns the DepositRequest from bytes.
 func UnmarshalDepositRequest(cdc codec.BinaryCodec, value []byte) (msg DepositRequest, err error) {
 	err = cdc.Unmarshal(value, &msg)
 	return msg, err
@@ -458,9 +444,9 @@ func UnmarshalWithdrawRequest(cdc codec.BinaryCodec, value []byte) (msg Withdraw
 	return msg, err
 }
 
-// MustUnmarshaWithdrawRequest returns the WithdrawRequest from bytes.
+// MustUnmarshalWithdrawRequest returns the WithdrawRequest from bytes.
 // It throws panic if it fails.
-func MustUnmarshaWithdrawRequest(cdc codec.BinaryCodec, value []byte) WithdrawRequest {
+func MustUnmarshalWithdrawRequest(cdc codec.BinaryCodec, value []byte) WithdrawRequest {
 	msg, err := UnmarshalWithdrawRequest(cdc, value)
 	if err != nil {
 		panic(err)
@@ -480,9 +466,9 @@ func UnmarshalSwapRequest(cdc codec.BinaryCodec, value []byte) (msg SwapRequest,
 	return msg, err
 }
 
-// MustUnmarshaSwapRequest returns the SwapRequest from bytes.
+// MustUnmarshalSwapRequest returns the SwapRequest from bytes.
 // It throws panic if it fails.
-func MustUnmarshaSwapRequest(cdc codec.BinaryCodec, value []byte) SwapRequest {
+func MustUnmarshalSwapRequest(cdc codec.BinaryCodec, value []byte) SwapRequest {
 	msg, err := UnmarshalSwapRequest(cdc, value)
 	if err != nil {
 		panic(err)

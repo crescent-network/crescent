@@ -49,9 +49,9 @@ func (k Keeper) GetPair(ctx sdk.Context, id uint64) (pair types.Pair, found bool
 }
 
 // GetPairByDenoms returns a types.Pair for given denoms.
-func (k Keeper) GetPairByDenoms(ctx sdk.Context, denomX, denomY string) (pair types.Pair, found bool) {
+func (k Keeper) GetPairByDenoms(ctx sdk.Context, baseCoinDenom, quoteCoinDenom string) (pair types.Pair, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetPairIndexKey(denomX, denomY))
+	bz := store.Get(types.GetPairIndexKey(baseCoinDenom, quoteCoinDenom))
 	if bz == nil {
 		return
 	}
@@ -77,22 +77,22 @@ func (k Keeper) SetPair(ctx sdk.Context, pair types.Pair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalPair(k.cdc, pair)
 	store.Set(types.GetPairKey(pair.Id), bz)
-	k.SetPairIndex(ctx, pair.XCoinDenom, pair.YCoinDenom, pair.Id)
-	k.SetPairLookupIndex(ctx, pair.XCoinDenom, pair.YCoinDenom, pair.Id)
-	k.SetPairLookupIndex(ctx, pair.YCoinDenom, pair.XCoinDenom, pair.Id)
+	k.SetPairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.QuoteCoinDenom, pair.BaseCoinDenom, pair.Id)
 }
 
 // SetPairIndex stores a pair index.
-func (k Keeper) SetPairIndex(ctx sdk.Context, denomX, denomY string, pairId uint64) {
+func (k Keeper) SetPairIndex(ctx sdk.Context, baseCoinDenom, quoteCoinDenom string, pairId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: pairId})
-	store.Set(types.GetPairIndexKey(denomX, denomY), bz)
+	store.Set(types.GetPairIndexKey(baseCoinDenom, quoteCoinDenom), bz)
 }
 
 // SetPairLookupIndex stores a pair lookup index for given denoms.
 func (k Keeper) SetPairLookupIndex(ctx sdk.Context, denomA string, denomB string, pairId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPairLookupIndexKey(denomA, denomB, pairId), []byte{})
+	store.Set(types.GetPairsByDenomsIndexKey(denomA, denomB, pairId), []byte{})
 }
 
 // IterateAllPairs iterates over all the stored pairs and performs a callback function.
@@ -105,23 +105,6 @@ func (k Keeper) IterateAllPairs(ctx sdk.Context, cb func(pair types.Pair) (stop 
 
 	for ; iter.Valid(); iter.Next() {
 		pair := types.MustUnmarshalPair(k.cdc, iter.Value())
-		if cb(pair) {
-			break
-		}
-	}
-}
-
-// IteratePairsByDenom iterates over all the stored pairs by particular denomination and
-// performs a callback function. Stops iteration when callback returns true.
-func (k Keeper) IteratePairsByDenom(ctx sdk.Context, denom string, cb func(pair types.Pair) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-
-	iter := sdk.KVStorePrefixIterator(store, types.GetPairByDenomKeyPrefix(denom))
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		_, pairId := types.ParsePairByDenomIndexKey(iter.Key())
-		pair, _ := k.GetPair(ctx, pairId)
 		if cb(pair) {
 			break
 		}
@@ -235,7 +218,7 @@ func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop 
 	}
 }
 
-// IterateAllPools iterates over all the stored pools by the pair and performs a callback function.
+// IteratePoolsByPair iterates over all the stored pools by the pair and performs a callback function.
 // Stops iteration when callback returns true.
 func (k Keeper) IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool types.Pool) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
@@ -292,21 +275,6 @@ func (k Keeper) IterateAllDepositRequests(ctx sdk.Context, cb func(req types.Dep
 	}
 }
 
-func (k Keeper) IterateDepositRequestsToBeDeleted(ctx sdk.Context, cb func(req types.DepositRequest) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.DepositRequestKeyPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var req types.DepositRequest
-		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if req.ToBeDeleted {
-			if cb(req) {
-				break
-			}
-		}
-	}
-}
-
 // GetWithdrawRequest returns the particular withdraw request.
 func (k Keeper) GetWithdrawRequest(ctx sdk.Context, poolId, id uint64) (state types.WithdrawRequest, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -317,7 +285,7 @@ func (k Keeper) GetWithdrawRequest(ctx sdk.Context, poolId, id uint64) (state ty
 		return state, false
 	}
 
-	state = types.MustUnmarshaWithdrawRequest(k.cdc, value)
+	state = types.MustUnmarshalWithdrawRequest(k.cdc, value)
 	return state, true
 }
 
@@ -347,21 +315,6 @@ func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.Wi
 	}
 }
 
-func (k Keeper) IterateWithdrawRequestsToBeDeleted(ctx sdk.Context, cb func(req types.WithdrawRequest) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.WithdrawRequestKeyPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var req types.WithdrawRequest
-		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if req.ToBeDeleted {
-			if cb(req) {
-				break
-			}
-		}
-	}
-}
-
 // GetSwapRequest returns the particular swap request.
 func (k Keeper) GetSwapRequest(ctx sdk.Context, pairId, id uint64) (state types.SwapRequest, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -372,7 +325,7 @@ func (k Keeper) GetSwapRequest(ctx sdk.Context, pairId, id uint64) (state types.
 		return state, false
 	}
 
-	state = types.MustUnmarshaSwapRequest(k.cdc, value)
+	state = types.MustUnmarshalSwapRequest(k.cdc, value)
 	return state, true
 }
 
@@ -415,19 +368,15 @@ func (k Keeper) IterateSwapRequestsByPair(ctx sdk.Context, pairId uint64, cb fun
 	}
 }
 
-func (k Keeper) IterateSwapRequestsToBeDeletedByPair(ctx sdk.Context, pairId uint64, cb func(req types.SwapRequest) (stop bool)) {
+// GetCancelSwapRequest returns a particular cancel swap request.
+func (k Keeper) GetCancelSwapRequest(ctx sdk.Context, pairId, id uint64) (req types.CancelSwapRequest, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetSwapRequestsByPairKeyPrefix(pairId))
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var req types.SwapRequest
-		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if req.ToBeDeleted {
-			if cb(req) {
-				break
-			}
-		}
+	bz := store.Get(types.GetCancelSwapRequestKey(pairId, id))
+	if bz == nil {
+		return
 	}
+	k.cdc.MustUnmarshal(bz, &req)
+	return req, true
 }
 
 // SetCancelSwapRequest stores types.CancelSwapRequest for the batch execution.
@@ -452,21 +401,6 @@ func (k Keeper) IterateAllCancelSwapRequests(ctx sdk.Context, cb func(req types.
 		k.cdc.MustUnmarshal(iter.Value(), &req)
 		if cb(req) {
 			break
-		}
-	}
-}
-
-func (k Keeper) IterateCancelSwapRequestsToBeDeleted(ctx sdk.Context, cb func(req types.CancelSwapRequest) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.CancelSwapRequestKeyPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var req types.CancelSwapRequest
-		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if req.ToBeDeleted {
-			if cb(req) {
-				break
-			}
 		}
 	}
 }

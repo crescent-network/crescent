@@ -18,8 +18,8 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	bankKeeper    types.BankKeeper
 	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	distrKeeper   types.Distrkeeper
 	govKeeper     types.GovKeeper

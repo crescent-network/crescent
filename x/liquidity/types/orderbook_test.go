@@ -18,9 +18,9 @@ func testOrderBookTicks() *types.OrderBookTicks {
 		newBuyOrder("18.0", 1000),
 		newBuyOrder("17.0", 1000),
 		newBuyOrder("16.0", 1000),
-		newBuyOrder("15.0", 1000),
+		newBuyOrder("15.0", 1000).SetRemainingAmount(sdk.ZeroInt()),
 		newBuyOrder("14.0", 1000),
-		newBuyOrder("13.0", 1000),
+		newBuyOrder("13.0", 1000).SetRemainingAmount(sdk.ZeroInt()),
 		newBuyOrder("12.0", 1000),
 		newBuyOrder("11.0", 1000),
 		newBuyOrder("10.0", 1000),
@@ -110,7 +110,7 @@ func TestOrderBookTicks_AmountGTE(t *testing.T) {
 		{newDec("19.999999999999999999"), sdk.NewInt(1000)},
 		{newDec("19.000000000000000001"), sdk.NewInt(1000)},
 		{newDec("19.0"), sdk.NewInt(2000)},
-		{newDec("9.999999999999999999"), sdk.NewInt(11000)},
+		{newDec("9.999999999999999999"), sdk.NewInt(9000)},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.IntEq(t, tc.expected, ticks.AmountGTE(tc.price)))
@@ -128,11 +128,11 @@ func TestOrderBookTicks_AmountLTE(t *testing.T) {
 		price    sdk.Dec
 		expected sdk.Int
 	}{
-		{newDec("20.000000000000000001"), sdk.NewInt(11000)},
-		{newDec("20.0"), sdk.NewInt(11000)},
-		{newDec("19.999999999999999999"), sdk.NewInt(10000)},
-		{newDec("19.000000000000000001"), sdk.NewInt(10000)},
-		{newDec("19.0"), sdk.NewInt(10000)},
+		{newDec("20.000000000000000001"), sdk.NewInt(9000)},
+		{newDec("20.0"), sdk.NewInt(9000)},
+		{newDec("19.999999999999999999"), sdk.NewInt(8000)},
+		{newDec("19.000000000000000001"), sdk.NewInt(8000)},
+		{newDec("19.0"), sdk.NewInt(8000)},
 		{newDec("9.999999999999999999"), sdk.ZeroInt()},
 	} {
 		t.Run("", func(t *testing.T) {
@@ -194,6 +194,7 @@ func TestOrderBookTicks_UpTickWithOrders(t *testing.T) {
 		{newDec("18.999999999999999999"), newDec("19.0"), true},
 		{newDec("18.000000000000000001"), newDec("19.0"), true},
 		{newDec("18.0"), newDec("19.0"), true},
+		{newDec("14.999999999999999999"), newDec("16.0"), true},
 		{newDec("10.0"), newDec("11.0"), true},
 		{newDec("9.999999999999999999"), newDec("10.0"), true},
 	} {
@@ -227,6 +228,7 @@ func TestOrderBookTicks_DownTickWithOrders(t *testing.T) {
 		{newDec("18.999999999999999999"), newDec("18.0"), true},
 		{newDec("18.000000000000000001"), newDec("18.0"), true},
 		{newDec("18.0"), newDec("17.0"), true},
+		{newDec("15.000000000000000001"), newDec("14.0"), true},
 		{newDec("10.000000000000000001"), newDec("10.0"), true},
 		{newDec("10.0"), sdk.Dec{}, false},
 		{newDec("9.999999999999999999"), sdk.Dec{}, false},
@@ -250,6 +252,18 @@ func TestOrderBookTicks_HighestTick(t *testing.T) {
 	tick, found := ticks.HighestTick()
 	require.True(t, found)
 	require.True(sdk.DecEq(t, newDec("20.0"), tick))
+
+	// Test with orders with zero remaining amount
+	ticks = types.NewOrderBookTicks(tickPrec)
+	ticks.AddOrders(
+		newBuyOrder("10.0", 1000).SetRemainingAmount(sdk.ZeroInt()),
+		newBuyOrder("9.0", 1000),
+		newBuyOrder("8.0", 1000),
+	)
+
+	tick, found = ticks.HighestTick()
+	require.True(t, found)
+	require.True(sdk.DecEq(t, newDec("9.0"), tick))
 }
 
 func TestOrderBookTicks_LowestTick(t *testing.T) {
@@ -261,4 +275,16 @@ func TestOrderBookTicks_LowestTick(t *testing.T) {
 	tick, found := ticks.LowestTick()
 	require.True(t, found)
 	require.True(sdk.DecEq(t, newDec("10.0"), tick))
+
+	// Test with orders with zero remaining amount
+	ticks = types.NewOrderBookTicks(tickPrec)
+	ticks.AddOrders(
+		newBuyOrder("10.0", 1000),
+		newBuyOrder("9.0", 1000),
+		newBuyOrder("8.0", 1000).SetRemainingAmount(sdk.ZeroInt()),
+	)
+
+	tick, found = ticks.LowestTick()
+	require.True(t, found)
+	require.True(sdk.DecEq(t, newDec("9.0"), tick))
 }

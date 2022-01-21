@@ -21,51 +21,33 @@ message Params {
   string min_initial_deposit_amount = 4
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 5
+  repeated cosmos.base.v1beta1.Coin pair_creation_fee = 5
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  string fee_collector_address = 6;
+  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  string max_price_limit_ratio = 7
+  string fee_collector_address = 7;
+
+  string max_price_limit_ratio = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string swap_fee_rate = 8
+  string swap_fee_rate = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string withdraw_fee_rate = 9
+  string withdraw_fee_rate = 10
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  google.protobuf.Duration max_order_lifespan = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
-}
-
-// Pool defines a basic liquidity pool with no min-price and max-price.
-message Pool {
-  uint64 id = 1;
-
-  uint64 pair_id = 2;
-
-  string x_coin_denom = 3;
-
-  string y_coin_denom = 4;
-
-  string reserve_address = 5;
-
-  string pool_coin_denom = 6;
-
-  uint64 last_deposit_request_id = 7;
-
-  uint64 last_withdraw_request_id = 8;
-
-  bool disabled = 9;
+  google.protobuf.Duration max_order_lifespan = 11 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // Pair defines a coin pair.
 message Pair {
   uint64 id = 1;
 
-  string x_coin_denom = 2;
+  string base_coin_denom = 2;
 
-  string y_coin_denom = 3;
+  string quote_coin_denom = 3;
 
   string escrow_address = 4;
 
@@ -76,6 +58,23 @@ message Pair {
   string last_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
   uint64 current_batch_id = 8;
+}
+
+// Pool defines a basic liquidity pool with no min-price and max-price.
+message Pool {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  string reserve_address = 3;
+
+  string pool_coin_denom = 4;
+
+  uint64 last_deposit_request_id = 5;
+
+  uint64 last_withdraw_request_id = 6;
+
+  bool disabled = 7;
 }
 
 // DepositRequest defines a deposit request.
@@ -92,21 +91,17 @@ message DepositRequest {
   // depositor specifies the bech32-encoded address that makes a deposit to the pool
   string depositor = 4;
 
-  // x_coin specifies the deposit coin x
-  cosmos.base.v1beta1.Coin x_coin = 5 [(gogoproto.nullable) = false];
+  // deposit_coins specifies the amount of coins to deposit.
+  repeated cosmos.base.v1beta1.Coin deposit_coins = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin accepted_x_coin = 6 [(gogoproto.nullable) = false];
+  // accepted_coins specifies the amount of coins that are accepted.
+  repeated cosmos.base.v1beta1.Coin accepted_coins = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  // y_coin specifies the deposit coin y
-  cosmos.base.v1beta1.Coin y_coin = 7 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin minted_pool_coin = 7 [(gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin accepted_y_coin = 8 [(gogoproto.nullable) = false];
-
-  cosmos.base.v1beta1.Coin minted_pool_coin = 9 [(gogoproto.nullable) = false];
-
-  bool succeeded = 10;
-
-  bool to_be_deleted = 11;
+  RequestStatus status = 8;
 }
 
 // WithdrawRequest defines a withdraw request.
@@ -126,13 +121,11 @@ message WithdrawRequest {
   // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
   cosmos.base.v1beta1.Coin pool_coin = 5 [(gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin withdrawn_x_coin = 6 [(gogoproto.nullable) = false];
+  // withdrawn_coins specifies the amount of coins that are withdrawn.
+  repeated cosmos.base.v1beta1.Coin withdrawn_coins = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  cosmos.base.v1beta1.Coin withdrawn_y_coin = 7 [(gogoproto.nullable) = false];
-
-  bool succeeded = 8;
-
-  bool to_be_deleted = 9;
+  RequestStatus status = 7;
 }
 
 // SwapRequest defines a swap request.
@@ -168,9 +161,7 @@ message SwapRequest {
 
   bool matched = 11;
 
-  bool canceled = 12;
-
-  bool to_be_deleted = 13;
+  SwapRequestStatus status = 12;
 }
 
 // CancelSwapRequest defines a request to cancel a swap request.
@@ -187,9 +178,7 @@ message CancelSwapRequest {
 
   uint64 batch_id = 6;
 
-  bool succeeded = 7;
-
-  bool to_be_deleted = 8;
+  RequestStatus status = 7;
 }
 
 // SwapDirection enumerates swap directions.
@@ -199,9 +188,46 @@ enum SwapDirection {
   // SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
   SWAP_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapDirectionUnspecified"];
 
-  // SWAP_DIRECTION_BUY specifies buy(swap x to y) swap direction
+  // SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
   SWAP_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "SwapDirectionBuy"];
 
-  // SWAP_DIRECTION_SELL specifies sell(swap y to x) swap direction
+  // SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
   SWAP_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "SwapDirectionSell"];
+}
+
+// RequestStatus enumerates request statuses.
+enum RequestStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+  REQUEST_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "RequestStatusUnspecified"];
+
+  // REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+  REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "RequestStatusNotExecuted"];
+
+  // REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+  REQUEST_STATUS_SUCCEEDED = 2 [(gogoproto.enumvalue_customname) = "RequestStatusSucceeded"];
+
+  // REQUEST_STATUS_FAILED indicates the request is failed
+  REQUEST_STATUS_FAILED = 3 [(gogoproto.enumvalue_customname) = "RequestStatusFailed"];
+}
+
+// SwapRequestStatus enumerates swap request statuses.
+enum SwapRequestStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
+  SWAP_REQUEST_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapRequestStatusUnspecified"];
+
+  // SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+  SWAP_REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotExecuted"];
+
+  // SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+  SWAP_REQUEST_STATUS_EXECUTED = 2 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExecuted"];
+
+  // SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
+  SWAP_REQUEST_STATUS_CANCELED = 3 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCanceled"];
+
+  // SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
+  SWAP_REQUEST_STATUS_EXPIRED = 4 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExpired"];
 }

@@ -92,6 +92,9 @@ type StakingKeeper interface {
 	BeginRedelegation(
 		ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 	) (completionTime time.Time, err error)
+	ValidateUnbondAmount(
+		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
+	) (shares sdk.Dec, err error)
 }
 
 // GovKeeper expected gov keeper (noalias)
@@ -116,4 +119,5 @@ type Distrkeeper interface {
 	//DelegationTotalRewards(c sdk.Context, req *types.QueryDelegationTotalRewardsRequest) (*distrtypes.QueryDelegationTotalRewardsResponse, error)
 	IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64
 	CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins)
+	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 }

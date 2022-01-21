@@ -25,7 +25,7 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 	var pair types.Pair
 	pair, found := k.GetPairByDenoms(ctx, msg.XCoinDenom, msg.YCoinDenom)
 	if !found {
-		pair = k.CreatePair(ctx, msg.XCoinDenom, msg.YCoinDenom)
+		return types.SwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair not found")
 	}
 
 	if pair.LastPrice != nil {
@@ -105,14 +105,18 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	ob := types.NewOrderBook(tickPrec)
 	k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
-		ob.AddOrder(types.NewUserOrder(req))
+		if req.Status.IsMatchable() {
+			ob.AddOrder(types.NewUserOrder(req))
+			req.Status = types.SwapRequestStatusExecuted
+			k.SetSwapRequest(ctx, req)
+		}
 		return false
 	})
 
 	var pools []types.PoolI
 	var poolBuySources, poolSellSources []types.OrderSource
 	k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
-		rx, ry := k.GetPoolBalance(ctx, pool)
+		rx, ry := k.GetPoolBalance(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
 		poolInfo := types.NewPoolInfo(rx, ry, ps) // Pool coin supply is not used when matching
 		if types.IsDepletedPool(poolInfo) {
@@ -167,9 +171,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					var offerCoinDenom string
 					switch order.Direction {
 					case types.SwapDirectionBuy:
-						offerCoinDenom = pair.XCoinDenom
+						offerCoinDenom = pair.QuoteCoinDenom
 					case types.SwapDirectionSell:
-						offerCoinDenom = pair.YCoinDenom
+						offerCoinDenom = pair.BaseCoinDenom
 					}
 					offerCoin := sdk.NewCoin(offerCoinDenom, order.Amount.Sub(order.RemainingAmount))
 					bulkOp.SendCoins(order.ReserveAddress, pair.GetEscrowAddress(), sdk.NewCoins(offerCoin))
@@ -194,9 +198,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					var demandCoinDenom string
 					switch order.Direction {
 					case types.SwapDirectionBuy:
-						demandCoinDenom = pair.YCoinDenom
+						demandCoinDenom = pair.BaseCoinDenom
 					case types.SwapDirectionSell:
-						demandCoinDenom = pair.XCoinDenom
+						demandCoinDenom = pair.QuoteCoinDenom
 					}
 					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
 					bulkOp.SendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(demandCoin))
@@ -204,9 +208,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					var demandCoinDenom string
 					switch order.Direction {
 					case types.SwapDirectionBuy:
-						demandCoinDenom = pair.YCoinDenom
+						demandCoinDenom = pair.BaseCoinDenom
 					case types.SwapDirectionSell:
-						demandCoinDenom = pair.XCoinDenom
+						demandCoinDenom = pair.QuoteCoinDenom
 					}
 					demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
 					bulkOp.SendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(demandCoin))
@@ -228,59 +232,43 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	return nil
 }
 
-func (k Keeper) RefundSwapRequest(ctx sdk.Context, pair types.Pair, req types.SwapRequest) error {
+func (k Keeper) RefundSwapRequestAndSetStatus(ctx sdk.Context, req types.SwapRequest, status types.SwapRequestStatus) error {
+	if req.Status.IsCanceledOrExpired() { // sanity check
+		return nil
+	}
 	if req.RemainingCoin.IsPositive() {
+		pair, _ := k.GetPair(ctx, req.PairId)
 		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), req.GetOrderer(), sdk.NewCoins(req.RemainingCoin)); err != nil {
 			return err
 		}
 	}
+	req.Status = status
+	k.SetSwapRequest(ctx, req)
 	return nil
 }
 
-func (k Keeper) RefundAndDeleteSwapRequestsToBeDeleted(ctx sdk.Context) {
-	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
-		k.IterateSwapRequestsToBeDeletedByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
-			if err := k.RefundSwapRequest(ctx, pair, req); err != nil {
-				panic(err)
-			}
-			k.DeleteSwapRequest(ctx, req.PairId, req.Id)
-			return false
-		})
-		return false
-	})
-}
-
-func (k Keeper) DeleteCancelSwapRequestsToBeDeleted(ctx sdk.Context) {
-	k.IterateCancelSwapRequestsToBeDeleted(ctx, func(req types.CancelSwapRequest) (stop bool) {
-		k.DeleteCancelSwapRequest(ctx, req.PairId, req.Id)
-		return false
-	})
-}
-
-func (k Keeper) CancelSwapRequest(ctx sdk.Context, req types.SwapRequest) {
-	req.Canceled = true
-	req.ToBeDeleted = true
-	k.SetSwapRequest(ctx, req)
-}
-
-func (k Keeper) MarkCancelSwapRequestToBeDeleted(ctx sdk.Context, req types.CancelSwapRequest, succeeded bool) {
-	req.Succeeded = succeeded
-	req.ToBeDeleted = true
-	k.SetCancelSwapRequest(ctx, req)
-}
-
-// ExecuteCancelSwapRequest cancels swap requests and deletes cancel swap requests.
-func (k Keeper) ExecuteCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRequest) {
+// ExecuteCancelSwapRequest cancels and refunds swap request.
+func (k Keeper) ExecuteCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRequest) error {
 	swapReq, found := k.GetSwapRequest(ctx, req.PairId, req.SwapRequestId)
 	if !found {
-		k.MarkCancelSwapRequestToBeDeleted(ctx, req, false)
-		return
+		req.Status = types.RequestStatusFailed
+		k.SetCancelSwapRequest(ctx, req)
+		return nil
 	}
 
 	if swapReq.BatchId < req.BatchId {
-		if !swapReq.Canceled {
-			k.CancelSwapRequest(ctx, swapReq)
+		if !swapReq.Status.IsCanceledOrExpired() {
+			if err := k.RefundSwapRequestAndSetStatus(ctx, swapReq, types.SwapRequestStatusCanceled); err != nil {
+				return err
+			}
+			req.Status = types.RequestStatusSucceeded
+		} else {
+			req.Status = types.RequestStatusFailed
 		}
-		k.MarkCancelSwapRequestToBeDeleted(ctx, req, true)
+		k.SetCancelSwapRequest(ctx, req)
 	}
+
+	// if swapReq.BatchId == req.BatchId, then do not change the cancel swap
+	// request's status and just wait for next batch.
+	return nil
 }

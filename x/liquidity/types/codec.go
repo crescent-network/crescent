@@ -13,6 +13,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
+		&MsgCreatePair{},
 		&MsgCreatePool{},
 		&MsgDepositBatch{},
 		&MsgWithdrawBatch{},

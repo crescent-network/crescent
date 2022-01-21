@@ -28,11 +28,11 @@ type OrderI interface {
 	GetPrice() sdk.Dec
 	GetAmount() sdk.Int
 	GetRemainingAmount() sdk.Int
-	SetRemainingAmount(amount sdk.Int)
+	SetRemainingAmount(amount sdk.Int) OrderI
 	GetReceivedAmount() sdk.Int
-	SetReceivedAmount(amount sdk.Int)
+	SetReceivedAmount(amount sdk.Int) OrderI
 	IsMatched() bool
-	SetMatched(matched bool)
+	SetMatched(matched bool) OrderI
 }
 
 type Order struct {
@@ -71,24 +71,27 @@ func (order *Order) GetRemainingAmount() sdk.Int {
 	return order.RemainingAmount
 }
 
-func (order *Order) SetRemainingAmount(amount sdk.Int) {
+func (order *Order) SetRemainingAmount(amount sdk.Int) OrderI {
 	order.RemainingAmount = amount
+	return order
 }
 
 func (order *Order) GetReceivedAmount() sdk.Int {
 	return order.ReceivedAmount
 }
 
-func (order *Order) SetReceivedAmount(amount sdk.Int) {
+func (order *Order) SetReceivedAmount(amount sdk.Int) OrderI {
 	order.ReceivedAmount = amount
+	return order
 }
 
 func (order *Order) IsMatched() bool {
 	return order.Matched
 }
 
-func (order *Order) SetMatched(matched bool) {
+func (order *Order) SetMatched(matched bool) OrderI {
 	order.Matched = matched
+	return order
 }
 
 type UserOrder struct {
@@ -274,7 +277,12 @@ func (ticks OrderBookTicks) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found
 	if i == 0 {
 		return
 	}
-	return ticks.Ticks[i-1].Price, true
+	for i--; i >= 0; i-- {
+		if ticks.Ticks[i].Orders.RemainingAmount().IsPositive() {
+			return ticks.Ticks[i].Price, true
+		}
+	}
+	return
 }
 
 func (ticks OrderBookTicks) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, found bool) {
@@ -285,7 +293,12 @@ func (ticks OrderBookTicks) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, fou
 	if i >= len(ticks.Ticks)-1 {
 		return
 	}
-	return ticks.Ticks[i+1].Price, true
+	for i++; i < len(ticks.Ticks); i++ {
+		if ticks.Ticks[i].Orders.RemainingAmount().IsPositive() {
+			return ticks.Ticks[i].Price, true
+		}
+	}
+	return
 }
 
 func (ticks OrderBookTicks) HighestTick() (tick sdk.Dec, found bool) {
