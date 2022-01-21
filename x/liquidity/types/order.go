@@ -1,6 +1,8 @@
 package types
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,6 +15,7 @@ var (
 type Order interface {
 	GetDirection() SwapDirection
 	GetPrice() sdk.Dec
+	GetBaseCoinAmount() sdk.Int
 	GetOpenBaseCoinAmount() sdk.Int
 	SetOpenBaseCoinAmount(amount sdk.Int) Order
 	GetRemainingOfferCoinAmount() sdk.Int
@@ -31,9 +34,35 @@ func (orders Orders) OpenBaseCoinAmount() sdk.Int {
 	return amount
 }
 
+func (orders Orders) Sort() {
+	sort.SliceStable(orders, func(i, j int) bool {
+		switch orderA := orders[i].(type) {
+		case *UserOrder:
+			switch orderB := orders[j].(type) {
+			case *UserOrder:
+				return orderA.RequestId > orderB.RequestId
+			case *PoolOrder:
+				return true
+			}
+		case *PoolOrder:
+			switch orderB := orders[j].(type) {
+			case *UserOrder:
+				return false
+			case *PoolOrder:
+				return orderA.PoolId > orderB.PoolId
+			}
+		}
+		return false // not reachable
+	})
+	sort.SliceStable(orders, func(i, j int) bool {
+		return orders[i].GetBaseCoinAmount().GT(orders[j].GetBaseCoinAmount())
+	})
+}
+
 type BaseOrder struct {
-	Direction          SwapDirection
-	Price              sdk.Dec
+	Direction                SwapDirection
+	Price                    sdk.Dec
+	BaseCoinAmount           sdk.Int
 	OpenBaseCoinAmount       sdk.Int
 	RemainingOfferCoinAmount sdk.Int
 	ReceivedAmount           sdk.Int
@@ -43,6 +72,7 @@ func NewBaseOrder(dir SwapDirection, price sdk.Dec, baseCoinAmt, offerCoinAmt sd
 	return &BaseOrder{
 		Direction:                dir,
 		Price:                    price,
+		BaseCoinAmount:           baseCoinAmt,
 		OpenBaseCoinAmount:       baseCoinAmt,
 		RemainingOfferCoinAmount: offerCoinAmt,
 		ReceivedAmount:           sdk.ZeroInt(),
@@ -55,6 +85,10 @@ func (order *BaseOrder) GetDirection() SwapDirection {
 
 func (order *BaseOrder) GetPrice() sdk.Dec {
 	return order.Price
+}
+
+func (order *BaseOrder) GetBaseCoinAmount() sdk.Int {
+	return order.BaseCoinAmount
 }
 
 func (order *BaseOrder) GetOpenBaseCoinAmount() sdk.Int {
@@ -121,11 +155,12 @@ func (order *UserOrder) SetReceivedAmount(amount sdk.Int) Order {
 
 type PoolOrder struct {
 	BaseOrder
-	OfferCoinAmount sdk.Int
+	PoolId          uint64
 	ReserveAddress  sdk.AccAddress
+	OfferCoinAmount sdk.Int
 }
 
-func NewPoolOrder(reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amount sdk.Int) *PoolOrder {
+func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amount sdk.Int) *PoolOrder {
 	return &PoolOrder{
 		BaseOrder: BaseOrder{
 			Direction:                dir,
@@ -134,8 +169,9 @@ func NewPoolOrder(reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, 
 			RemainingOfferCoinAmount: amount,
 			ReceivedAmount:           sdk.ZeroInt(),
 		},
-		OfferCoinAmount: amount,
+		PoolId:          poolId,
 		ReserveAddress:  reserveAddr,
+		OfferCoinAmount: amount,
 	}
 }
 

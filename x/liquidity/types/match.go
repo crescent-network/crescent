@@ -42,7 +42,7 @@ func (engine *MatchEngine) EstimatedPriceDirection(lastPrice sdk.Dec) PriceDirec
 	return PriceDecreasing
 }
 
-func (engine *MatchEngine) SwapPrice(lastPrice sdk.Dec) sdk.Dec {
+func (engine *MatchEngine) FindMatchPrice(lastPrice sdk.Dec) sdk.Dec {
 	dir := engine.EstimatedPriceDirection(lastPrice)
 	tickSource := MergeOrderSources(engine.BuyOrderSource, engine.SellOrderSource) // temporary order source just for ticks
 
@@ -100,7 +100,7 @@ func (engine *MatchEngine) Match(lastPrice sdk.Dec) (orderBook *OrderBook, swapP
 		return
 	}
 
-	swapPrice = engine.SwapPrice(lastPrice)
+	swapPrice = engine.FindMatchPrice(lastPrice)
 	buyPrice, _ := engine.BuyOrderSource.HighestTick()
 	sellPrice, _ := engine.SellOrderSource.LowestTick()
 
@@ -155,11 +155,6 @@ func MatchOrders(buyOrders, sellOrders Orders, price sdk.Dec) {
 
 	if buyAmount.IsZero() || sellAmount.IsZero() {
 		return
-	}
-
-	matchAll := false
-	if buyAmount.Equal(sellAmount) {
-		matchAll = true
 	}
 
 	var smallerOrders, biggerOrders Orders

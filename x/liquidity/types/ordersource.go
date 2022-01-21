@@ -194,6 +194,7 @@ func NewOrderBookTick(order Order) *OrderBookTick {
 }
 
 type PoolOrderSource struct {
+	PoolId          uint64
 	ReserveAddress  sdk.AccAddress
 	RX, RY          sdk.Int
 	PoolPrice       sdk.Dec
@@ -203,9 +204,10 @@ type PoolOrderSource struct {
 	sellAmountCache map[string]sdk.Int // map(price => sellAmountOnTick)
 }
 
-func NewPoolOrderSource(pool PoolI, reserveAddr sdk.AccAddress, dir SwapDirection, prec int) OrderSource {
+func NewPoolOrderSource(pool PoolI, poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, prec int) OrderSource {
 	rx, ry := pool.Balance()
 	return &PoolOrderSource{
+		PoolId:          poolId,
 		ReserveAddress:  reserveAddr,
 		RX:              rx,
 		RY:              ry,
@@ -310,9 +312,9 @@ func (os PoolOrderSource) AmountLTE(price sdk.Dec) sdk.Int {
 func (os PoolOrderSource) Orders(price sdk.Dec) Orders {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionBuy, price, os.BuyAmountOnTick(price))}
+		return Orders{NewPoolOrder(os.PoolId, os.ReserveAddress, SwapDirectionBuy, price, os.BuyAmountOnTick(price))}
 	case SwapDirectionSell:
-		return Orders{NewPoolOrder(os.ReserveAddress, SwapDirectionSell, price, os.SellAmountOnTick(price))}
+		return Orders{NewPoolOrder(os.PoolId, os.ReserveAddress, SwapDirectionSell, price, os.SellAmountOnTick(price))}
 	}
 	return nil
 }

@@ -158,8 +158,8 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		pools = append(pools, poolInfo)
 
 		poolReserveAddr := pool.GetReserveAddress()
-		poolBuySources = append(poolBuySources, types.NewPoolOrderSource(poolInfo, poolReserveAddr, types.SwapDirectionBuy, tickPrec))
-		poolSellSources = append(poolSellSources, types.NewPoolOrderSource(poolInfo, poolReserveAddr, types.SwapDirectionSell, tickPrec))
+		poolBuySources = append(poolBuySources, types.NewPoolOrderSource(poolInfo, pool.Id, poolReserveAddr, types.SwapDirectionBuy, tickPrec))
+		poolSellSources = append(poolSellSources, types.NewPoolOrderSource(poolInfo, pool.Id, poolReserveAddr, types.SwapDirectionSell, tickPrec))
 		return false
 	})
 
