@@ -11,7 +11,7 @@ func (s *KeeperTestSuite) TestDepositWithdraw() {
 
 	// Create a normal pool
 	creator := s.addr(0)
-	s.createPair(creator, "1000000denom1", "1000000denom2", true)
+	s.createPair(creator, "denom1", "denom2", true)
 	s.createPool(creator, 1, parseCoins("1000000denom1,1000000denom2"), true)
 
 	pool, found := k.GetPool(ctx, 1)

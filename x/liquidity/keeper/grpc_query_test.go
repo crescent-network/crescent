@@ -24,7 +24,9 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 	s.createPool(creator, 1, parseCoins("1000000denom1,1000000denom2"), true)
 	s.createPool(creator, 2, parseCoins("5000000denom1,5000000denom3"), true)
 	s.createPool(creator, 3, parseCoins("3000000denom2,3000000denom3"), true)
-	s.createPool(creator, 4, parseCoins("3000000denom3,3000000denom4"), true)
+	pair4 := s.createPool(creator, 4, parseCoins("3000000denom3,3000000denom4"), true)
+	pair4.Disabled = true
+	s.keeper.SetPool(s.ctx, pair4)
 
 	for _, tc := range []struct {
 		name      string
@@ -47,7 +49,7 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 			},
 		},
 		{
-			"query all with query string XDenom",
+			"query all with pair id",
 			&types.QueryPoolsRequest{
 				PairId: 1,
 			},
@@ -57,9 +59,19 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 			},
 		},
 		{
-			"query all with query string YDenom",
+			"query all with disabled",
 			&types.QueryPoolsRequest{
 				Disabled: "false",
+			},
+			false,
+			func(resp *types.QueryPoolsResponse) {
+				s.Require().Len(resp.Pools, 3)
+			},
+		},
+		{
+			"query all with disabled",
+			&types.QueryPoolsRequest{
+				Disabled: "true",
 			},
 			false,
 			func(resp *types.QueryPoolsResponse) {
@@ -67,10 +79,10 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 			},
 		},
 		{
-			"query all with query string XDenom and YDenom",
+			"query all with both pair id and disabled",
 			&types.QueryPoolsRequest{
-				PairId:   1,
-				Disabled: "false",
+				PairId:   4,
+				Disabled: "true",
 			},
 			false,
 			func(resp *types.QueryPoolsResponse) {
