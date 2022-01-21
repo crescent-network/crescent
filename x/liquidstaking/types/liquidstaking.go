@@ -81,6 +81,7 @@ func (vs LiquidValidators) TotalLiquidTokens() sdk.Int {
 	return totalLiquidTokens
 }
 
+// TODO: pointer map looks uncertainty, need to fix
 func (vs LiquidValidators) Map() map[string]*LiquidValidator {
 	valsMap := make(map[string]*LiquidValidator)
 	for _, val := range vs {

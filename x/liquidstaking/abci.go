@@ -20,6 +20,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	params := k.GetParams(ctx)
 	liquidValidators := k.GetAllLiquidValidators(ctx)
+	// TODO: pointer map looks uncertainty, need to fix
 	liquidValsMap := liquidValidators.Map()
 	valsMap := k.GetValidatorsMap(ctx)
 	whitelistedValMap := make(map[string]types.WhitelistedValidator)
