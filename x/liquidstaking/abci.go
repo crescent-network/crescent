@@ -1,7 +1,6 @@
 package liquidstaking
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -19,29 +18,49 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	params := k.GetParams(ctx)
-	liquidValsMap := k.GetAllLiquidValidatorsMap(ctx)
-
+	liquidValidators := k.GetAllLiquidValidators(ctx)
+	liquidValsMap := liquidValidators.Map()
+	valsMap := k.GetValidatorsMap(ctx)
 	whitelistedValMap := make(map[string]types.WhitelistedValidator)
+	// TODO: check delisting -> delisted for mature redelegation queue
+
+	////var whiteListToActiveQueue []types.WhitelistedValidator
+	//var delistingToActiveQueue []types.LiquidValidator
+	//var activeToDelistingQueue []types.LiquidValidator
+	//var delistedToActiveQueue []types.LiquidValidator
+
+	// active -> delisting
+	//activeLiquidValidators := k.GetActiveLiquidValidators(ctx)
+
+	liquidValidators.ActiveToDelisting(valsMap, whitelistedValMap, params.CommissionRate)
+
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
-		if _, ok := liquidValsMap[wv.ValidatorAddress]; !ok {
-			k.SetLiquidValidator(ctx, types.LiquidValidator{
+		if lv, ok := liquidValsMap[wv.ValidatorAddress]; !ok {
+			// TODO: added on whitelist -> active set active when rebalancing succeeded
+			// TODO: or it could be added without rebalancing
+			// TODO: consider add params.MaxActiveLiquidValidator
+			// whitelist -> active
+			lv = &types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 				Status:          types.ValidatorStatusActive,
 				LiquidTokens:    sdk.ZeroInt(),
 				Weight:          wv.Weight,
-			})
+			}
+			k.SetLiquidValidator(ctx, *lv)
+			liquidValsMap[lv.OperatorAddress] = lv
+		} else {
+			// TODO: delisted -> active
+			if lv.Status == types.ValidatorStatusDelisted {
+				// TODO: if not jailed, tombstoned, unbonded, rebalancing succeed
+				//lv.UpdateStatus(types.ValidatorStatusActive)
+			}
 		}
 		whitelistedValMap[wv.ValidatorAddress] = wv
 	}
-	// TODO: rebalancing and delisting logic
-	for _, lv := range k.GetAllLiquidValidators(ctx) {
-		if wv, ok := whitelistedValMap[lv.OperatorAddress]; !ok && lv.Status == types.ValidatorStatusActive {
-			lv.Status = types.ValidatorStatusDelisting
-			k.SetLiquidValidator(ctx, lv)
-			fmt.Println("[delisting liquid validator]", lv, wv)
-		}
-	}
+
+	// TODO: rebalancing based updated liquid validators status
+	// TODO: Set status
 
 	// TODO: rebalancing first or re-staking first
 	activeVals := k.GetActiveLiquidValidators(ctx)
@@ -49,7 +68,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if totalLiquidTokens.IsPositive() {
 		// Withdraw rewards of LiquidStakingProxyAcc and re-staking
 		totalRewards, _ := k.CheckRewardsAndLiquidPower(ctx, types.LiquidStakingProxyAcc)
-		// TODO: checking over types.RewardTrigger and execute GetRewards
+		// checking over types.RewardTrigger and execute GetRewards
+		// TODO: test triggering
 		balance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
 		rewardsThreshold := types.RewardTrigger.MulInt(totalLiquidTokens).TruncateInt()
 		if balance.Add(totalRewards.TruncateInt()).GTE(rewardsThreshold) {

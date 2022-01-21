@@ -81,6 +81,14 @@ func (vs LiquidValidators) TotalLiquidTokens() sdk.Int {
 	return totalLiquidTokens
 }
 
+func (vs LiquidValidators) Map() map[string]*LiquidValidator {
+	valsMap := make(map[string]*LiquidValidator)
+	for _, val := range vs {
+		valsMap[val.OperatorAddress] = &val
+	}
+	return valsMap
+}
+
 // TODO: add testcodes with consider netAmount.TruncateDec() or not
 // BTokenToNativeToken returns UnstakeAmount, NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
 func BTokenToNativeToken(btokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {

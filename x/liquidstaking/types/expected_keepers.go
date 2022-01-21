@@ -39,6 +39,8 @@ type StakingKeeper interface {
 	IterateValidators(sdk.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
 
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(sdk.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool))

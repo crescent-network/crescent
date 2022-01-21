@@ -537,9 +537,8 @@ func NewCrescentApp(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		liquiditytypes.ModuleName,
-		// TODO: fix ordering of liquidstaking module
-		liquidstakingtypes.ModuleName,
 		farmingtypes.ModuleName,
+		liquidstakingtypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
 	)

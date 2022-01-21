@@ -295,7 +295,7 @@ func (k Keeper) SetLiquidValidator(ctx sdk.Context, val types.LiquidValidator) {
 }
 
 // GetAllLiquidValidators get the set of all liquid validators with no limits, used during genesis dump
-func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals []types.LiquidValidator) {
+func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
@@ -335,19 +335,14 @@ func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals types.LiquidVal
 	return vals
 }
 
-// GetAllLiquidValidatorsMap get the set of all liquid validators as map with no limits
-func (k Keeper) GetAllLiquidValidatorsMap(ctx sdk.Context) map[string]types.LiquidValidator {
-	store := ctx.KVStore(k.storeKey)
-
-	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
-	defer iterator.Close()
-
-	valsMap := make(map[string]types.LiquidValidator)
-	for ; iterator.Valid(); iterator.Next() {
-		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
+// GetValidatorsMap get the set of all validators as map with no limits
+// TODO: it could optimize to containing only to be used validators
+func (k Keeper) GetValidatorsMap(ctx sdk.Context) map[string]stakingtypes.Validator {
+	valsMap := make(map[string]stakingtypes.Validator)
+	vals := k.stakingKeeper.GetAllValidators(ctx)
+	for _, val := range vals {
 		valsMap[val.OperatorAddress] = val
 	}
-
 	return valsMap
 }
 
