@@ -14,13 +14,6 @@ import (
 // BeginBlocker collects liquidStakings for the current block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	// Withdraw rewards of LiquidStakingProxyAcc and re-staking
-	totalRewards := k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
-	// TODO: consider re-staking with balance
-	_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, k.GetActiveLiquidValidators(ctx), totalRewards)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
@@ -47,6 +40,26 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			lv.Status = types.ValidatorStatusDelisting
 			k.SetLiquidValidator(ctx, lv)
 			fmt.Println("[delisting liquid validator]", lv, wv)
+		}
+	}
+
+	// TODO: rebalancing first or re-staking first
+	activeVals := k.GetActiveLiquidValidators(ctx)
+	totalLiquidTokens := activeVals.TotalLiquidTokens()
+	if totalLiquidTokens.IsPositive() {
+		// Withdraw rewards of LiquidStakingProxyAcc and re-staking
+		totalRewards, _ := k.CheckRewardsAndLiquidPower(ctx, types.LiquidStakingProxyAcc)
+		// TODO: checking over types.RewardTrigger and execute GetRewards
+		balance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
+		rewardsThreshold := types.RewardTrigger.MulInt(totalLiquidTokens).TruncateInt()
+		if balance.Add(totalRewards.TruncateInt()).GTE(rewardsThreshold) {
+			// re-staking with balance, due to auto-withdraw on add staking by f1
+			_ = k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
+			balance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
+			_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, k.GetActiveLiquidValidators(ctx), balance)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }

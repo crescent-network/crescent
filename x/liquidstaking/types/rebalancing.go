@@ -6,7 +6,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// DivideByWeight divide the input value by the ratio of the param weight of the liquid validator and return it with crumb
+func DivideByWeight(vs LiquidValidators, input sdk.Int) (outputs []sdk.Int, crumb sdk.Int) {
+	totalWeight := vs.TotalWeight()
+	totalShares := sdk.ZeroInt()
+	sharePerWeight := input.ToDec().QuoTruncate(totalWeight.ToDec())
+	for _, val := range vs {
+		weightedShare := sharePerWeight.MulInt(val.Weight).TruncateInt()
+		totalShares = totalShares.Add(weightedShare)
+		outputs = append(outputs, weightedShare)
+	}
+	return outputs, input.Sub(totalShares)
+}
+
 // DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb
+// TODO: consider deprecate DivideByCurrentWeight and use DivideByCurrentWeightDec
 func DivideByCurrentWeight(vs LiquidValidators, input sdk.Int) (outputs []sdk.Int, crumb sdk.Int) {
 	totalLiquidTokens := vs.TotalLiquidTokens()
 	totalShares := sdk.ZeroInt()

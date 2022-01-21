@@ -10,6 +10,109 @@ import (
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
+func TestDivideByWeight(t *testing.T) {
+	testCases := []struct {
+		activeVals      types.LiquidValidators
+		addStakingAmt   sdk.Int
+		expectedOutputs []sdk.Int
+		expectedCrumb   sdk.Int
+	}{
+		{
+			activeVals: types.LiquidValidators{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt:   sdk.NewInt(10 * 1000000),
+			expectedOutputs: []sdk.Int{sdk.NewInt(3333333), sdk.NewInt(3333333), sdk.NewInt(3333333)},
+			expectedCrumb:   sdk.NewInt(1),
+		},
+		{
+			activeVals: types.LiquidValidators{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+					Weight:          sdk.NewInt(2),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+					Weight:          sdk.NewInt(2),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt:   sdk.NewInt(10 * 1000000),
+			expectedOutputs: []sdk.Int{sdk.NewInt(4 * 1000000), sdk.NewInt(4 * 1000000), sdk.NewInt(2 * 1000000)},
+			expectedCrumb:   sdk.NewInt(0),
+		},
+		{
+			activeVals: types.LiquidValidators{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(3),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2),
+					Weight:          sdk.NewInt(1),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt:   sdk.NewInt(10),
+			expectedOutputs: []sdk.Int{sdk.NewInt(3), sdk.NewInt(3), sdk.NewInt(3)},
+			expectedCrumb:   sdk.NewInt(1),
+		},
+	}
+
+	for _, tc := range testCases {
+		fmt.Println("------")
+		require.IsType(t, types.LiquidValidators{}, tc.activeVals)
+		require.IsType(t, sdk.Int{}, tc.addStakingAmt)
+		require.IsType(t, sdk.Int{}, tc.expectedCrumb)
+		require.IsType(t, []sdk.Int{}, tc.expectedOutputs)
+
+		totalTargetAmt := sdk.ZeroInt()
+		outputs, crumb := types.DivideByWeight(tc.activeVals, tc.addStakingAmt)
+		for k, v := range outputs {
+			fmt.Println(k, v.String())
+			totalTargetAmt = totalTargetAmt.Add(v)
+		}
+		require.EqualValues(t, tc.expectedOutputs, outputs)
+		require.EqualValues(t, tc.addStakingAmt, totalTargetAmt.Add(crumb))
+		require.Equal(t, tc.expectedCrumb.String(), crumb.String())
+	}
+}
+
 func TestDivideByCurrentWeight(t *testing.T) {
 	testCases := []struct {
 		activeVals      types.LiquidValidators
