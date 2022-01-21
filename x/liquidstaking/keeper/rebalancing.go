@@ -11,7 +11,7 @@ func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (ba
 	return k.bankKeeper.GetBalance(ctx, proxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
 }
 
-func (k Keeper) TryRedelegations(ctx sdk.Context, proxyAcc sdk.AccAddress, redelegations []types.Redelegation, liquidValsMap map[string]*types.LiquidValidator) (completionTime time.Time, err error) {
+func (k Keeper) TryRedelegations(ctx sdk.Context, proxyAcc sdk.AccAddress, redelegations []types.Redelegation) (completionTime time.Time, err error) {
 	cachedCtx, writeCache := ctx.CacheContext()
 	for _, re := range redelegations {
 		// TODO: ValidateUnbondAmount check
@@ -25,9 +25,9 @@ func (k Keeper) TryRedelegations(ctx sdk.Context, proxyAcc sdk.AccAddress, redel
 		if err != nil {
 			return time.Time{}, err
 		}
-		// TODO: Fix to use SetLiquidValidator not UpdateLiquidTokens
 	}
-	k.UpdateLiquidTokens(cachedCtx, proxyAcc)
 	writeCache()
+	// TODO: bug on liquidValsMap pointer set, need to optimize UpdateLiquidTokens
+	k.UpdateLiquidTokens(ctx, proxyAcc)
 	return completionTime, nil
 }

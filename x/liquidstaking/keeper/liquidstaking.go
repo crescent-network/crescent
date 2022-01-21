@@ -39,14 +39,16 @@ func (k Keeper) CheckRewardsAndLiquidPower(ctx sdk.Context, proxyAcc sdk.AccAddr
 }
 
 func (k Keeper) UpdateLiquidTokens(ctx sdk.Context, proxyAcc sdk.AccAddress) {
-	liquidVals := k.GetAllLiquidValidators(ctx)
-	liquidMap := liquidVals.Map()
 	k.stakingKeeper.IterateDelegations(
 		ctx, proxyAcc,
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
-			liquidMap[valAddr.String()].LiquidTokens = del.GetShares().TruncateInt()
-			k.SetLiquidValidator(ctx, *liquidMap[valAddr.String()])
+			val, found := k.GetLiquidValidator(ctx, valAddr)
+			if !found {
+				panic("liquid validator not founded")
+			}
+			val.LiquidTokens = del.GetShares().TruncateInt()
+			k.SetLiquidValidator(ctx, val)
 			return false
 		},
 	)

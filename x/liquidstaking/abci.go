@@ -64,7 +64,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
 	redelegations := types.Rebalancing(types.LiquidStakingProxyAcc, liquidValidators, types.RebalancingTrigger)
-	_, err := k.TryRedelegations(ctx, types.LiquidStakingProxyAcc, redelegations, liquidValsMap)
+	_, err := k.TryRedelegations(ctx, types.LiquidStakingProxyAcc, redelegations)
 	if err != nil {
 		fmt.Println("[TryRedelegations] failed due to redelegation restriction", redelegations)
 	}
