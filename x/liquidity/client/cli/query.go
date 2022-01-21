@@ -86,8 +86,8 @@ func QueryPools() *cobra.Command {
 			fmt.Sprintf(`Query for all existing liquidity pools on a network.
 Example:
 $ %s query %s pools
-$ %s query %s pools --pair-id=[pair-id]
-$ %s query %s pools --disabled=[disabled]
+$ %s query %s pools --pair-id=1
+$ %s query %s pools --disabled=true
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -151,8 +151,8 @@ func QueryPool() *cobra.Command {
 			fmt.Sprintf(`Query details of the liquidity pool
 Example:
 $ %s query %s pool 1
-$ %s query %s pool --pool-coin-denom=[denom]
-$ %s query %s pool --reserve-acc=[address]
+$ %s query %s pool --pool-coin-denom=pool1
+$ %s query %s pool --reserve-acc=cosmos1...
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -232,8 +232,10 @@ func QueryPairs() *cobra.Command {
 			fmt.Sprintf(`Query for all existing pairs on a network.
 Example:
 $ %s query %s pairs
-$ %s query %s pairs --denoms=[denom1,denom2,...]
+$ %s query %s pairs --denoms=uatom
+$ %s query %s pairs --denoms=uatom,ucsnt
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
