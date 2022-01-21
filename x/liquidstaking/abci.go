@@ -23,6 +23,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	liquidValsMap := liquidValidators.Map()
 	valsMap := k.GetValidatorsMap(ctx)
 	whitelistedValMap := make(map[string]types.WhitelistedValidator)
+	for _, wv := range params.WhitelistedValidators {
+		whitelistedValMap[wv.ValidatorAddress] = wv
+	}
 
 	// delisting to delisted
 	liquidValidators.DelistingToDelisted(valsMap)
@@ -45,7 +48,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			}
 			k.SetLiquidValidator(ctx, *lv)
 			liquidValsMap[lv.OperatorAddress] = lv
+			liquidValidators = append(liquidValidators, *lv)
 		} else {
+			// TODO: weight change update
+
 			// delisted -> active
 			if lv.Status == types.ValidatorStatusDelisted {
 				// TODO: k.SetLiquidValidator(ctx, *lv) set on TryRedelegations if succeed
@@ -58,7 +64,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
 	redelegations := types.Rebalancing(types.LiquidStakingProxyAcc, liquidValidators, types.RebalancingTrigger)
-	_, err := k.TryRedelegations(ctx, redelegations, liquidValsMap)
+	_, err := k.TryRedelegations(ctx, types.LiquidStakingProxyAcc, redelegations, liquidValsMap)
 	if err != nil {
 		fmt.Println("[TryRedelegations] failed due to redelegation restriction", redelegations)
 	}

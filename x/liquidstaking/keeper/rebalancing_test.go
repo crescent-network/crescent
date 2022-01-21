@@ -2,230 +2,67 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/crescent-network/crescent/x/liquidstaking"
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
-func (suite *KeeperTestSuite) TestRebalancing() {
-	lvs := types.LiquidValidators{
-		{
-			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(200 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(300 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1nmfag3hmkx3qyhpmq7jx5996k8uhgh87xhcqfq",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(400 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-	}
-	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
-}
+func (suite *KeeperTestSuite) TestRebalancingCase1() {
+	_, valOpers := suite.CreateValidators([]int64{1000000, 1000000, 1000000, 1000000, 1000000})
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	params := suite.keeper.GetParams(suite.ctx)
+	params.UnstakeFeeRate = sdk.ZeroDec()
+	params.CommissionRate = sdk.ZeroDec()
+	suite.keeper.SetParams(suite.ctx, params)
+	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
-func (suite *KeeperTestSuite) TestRebalancingWithDelisting() {
-	lvs := types.LiquidValidators{
-		{
-			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(200 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(300 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper180d0fe0w0eqnn04mwhx8h66hnttgqw32fsr6jg",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(0 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1nmfag3hmkx3qyhpmq7jx5996k8uhgh87xhcqfq",
-			Status:          2,
-			LiquidTokens:    sdk.NewIntFromUint64(400 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
+	stakingAmt := sdk.NewInt(50000)
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
 	}
-	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
-}
+	suite.keeper.SetParams(suite.ctx, params)
+	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
-func (suite *KeeperTestSuite) TestRebalancingUnderThreshold() {
-	lvs := types.LiquidValidators{
-		{
-			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1nmfag3hmkx3qyhpmq7jx5996k8uhgh87xhcqfq",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(101 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
+	newShares, bTokenMintAmt, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	suite.Require().NoError(err)
+	suite.Require().Equal(newShares, sdk.MustNewDecFromStr("49998.0"))
+	suite.Require().Equal(bTokenMintAmt, stakingAmt)
+	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+
+	proxyAccDel1, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
+	suite.Require().True(found)
+	proxyAccDel2, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[1])
+	suite.Require().True(found)
+	proxyAccDel3, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
+	suite.Require().True(found)
+
+	suite.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(16666))
+	suite.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(16666))
+	suite.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(16666))
+
+	// update whitelist validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), Weight: sdk.NewInt(1)},
 	}
-	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(1*1000000))
-}
+	suite.keeper.SetParams(suite.ctx, params)
+	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
-func (suite *KeeperTestSuite) TestRebalancingDiffWeight() {
-	lvs := types.LiquidValidators{
-		{
-			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-			Weight:          sdk.NewInt(20),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(200 * 1000000),
-			Weight:          sdk.NewInt(20),
-		},
-		{
-			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(300 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1nmfag3hmkx3qyhpmq7jx5996k8uhgh87xhcqfq",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(400 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-	}
-	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
-}
+	proxyAccDel1, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
+	suite.Require().True(found)
+	proxyAccDel2, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[1])
+	suite.Require().True(found)
+	proxyAccDel3, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[2])
+	suite.Require().True(found)
+	proxyAccDel4, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[3])
+	suite.Require().True(found)
 
-func (suite *KeeperTestSuite) TestRebalancingWithDelistingDiffWeight() {
-	lvs := types.LiquidValidators{
-		{
-			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-			Weight:          sdk.NewInt(30),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(200 * 1000000),
-			Weight:          sdk.NewInt(20),
-		},
-		{
-			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(300 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper180d0fe0w0eqnn04mwhx8h66hnttgqw32fsr6jg",
-			Status:          1,
-			LiquidTokens:    sdk.NewIntFromUint64(0 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-		{
-			OperatorAddress: "cosmosvaloper1nmfag3hmkx3qyhpmq7jx5996k8uhgh87xhcqfq",
-			Status:          2,
-			LiquidTokens:    sdk.NewIntFromUint64(400 * 1000000),
-			Weight:          sdk.NewInt(10),
-		},
-	}
-	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-	types.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
+	suite.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(12499))
+	suite.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(12499))
+	suite.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(12501))
+	suite.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12499))
 }
-
-//
-//func (suite *KeeperTestSuite) TestProcessStaking() {
-//	lvs := types.LiquidValidators{
-//		{
-//			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-//			Status:          1,
-//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-//			Weight:          sdk.NewInt(10),
-//		},
-//		{
-//			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-//			Status:          1,
-//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-//			Weight:          sdk.NewInt(10),
-//		},
-//		{
-//			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-//			Status:          1,
-//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-//			Weight:          sdk.NewInt(10),
-//		},
-//		{
-//			OperatorAddress: "cosmosvaloper1nmfag3hmkx3qyhpmq7jx5996k8uhgh87xhcqfq",
-//			Status:          1,
-//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-//			Weight:          sdk.NewInt(10),
-//		},
-//	}
-//	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-//	suite.keeper.ProcessStaking(moduleAcc, lvs, sdk.NewInt(int64(10*1000000)), sdk.NewInt(int64(20*1000000)))
-//}
-//
-//func (suite *KeeperTestSuite) TestProcessStaking2() {
-//	lvs := types.LiquidValidators{
-//		{
-//			OperatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-//			Status:          1,
-//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-//			Weight:          sdk.NewInt(10),
-//		},
-//		{
-//			OperatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-//			Status:          1,
-//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-//			Weight:          sdk.NewInt(10),
-//		},
-//		{
-//			OperatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-//			Status:          1,
-//			LiquidTokens:    sdk.NewIntFromUint64(100 * 1000000),
-//			Weight:          sdk.NewInt(10),
-//		},
-//	}
-//	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
-//	suite.keeper.ProcessStaking(moduleAcc, lvs, sdk.NewInt(int64(20*1000000)), sdk.NewInt(int64(10*1000000)))
-//}

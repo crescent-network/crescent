@@ -38,6 +38,20 @@ func (k Keeper) CheckRewardsAndLiquidPower(ctx sdk.Context, proxyAcc sdk.AccAddr
 	return totalRewards, liquidPower
 }
 
+func (k Keeper) UpdateLiquidTokens(ctx sdk.Context, proxyAcc sdk.AccAddress) {
+	liquidVals := k.GetAllLiquidValidators(ctx)
+	liquidMap := liquidVals.Map()
+	k.stakingKeeper.IterateDelegations(
+		ctx, proxyAcc,
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+			valAddr := del.GetValidatorAddr()
+			liquidMap[valAddr.String()].LiquidTokens = del.GetShares().TruncateInt()
+			k.SetLiquidValidator(ctx, *liquidMap[valAddr.String()])
+			return false
+		},
+	)
+}
+
 func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	// delegation power, bondDenom balance, remaining reward, unbonding amount of types.LiquidStakingProxyAcc
 	bondDenom := k.stakingKeeper.BondDenom(ctx)

@@ -116,17 +116,16 @@ func Rebalancing(proxyAcc sdk.AccAddress, liquidVals LiquidValidators, rebalanci
 		}
 		targetMap[val.OperatorAddress] = totalLiquidTokens.Mul(targetWeight).Quo(totalWeight)
 	}
-	fmt.Println(targetMap)
 
 	for i := 0; i < len(liquidVals); i++ {
 		maxVal, minVal, amountNeeded := liquidVals.MinMaxGap(targetMap)
 		if amountNeeded.IsZero() || (i == 0 && amountNeeded.LT(threshold.TruncateInt())) {
 			break
 		}
+		// TODO: refactor using map
 		//maxVal.LiquidTokens = maxVal.LiquidTokens.Add(amountNeeded)
 		//minVal.LiquidTokens = minVal.LiquidTokens.Sub(amountNeeded)
 		//fmt.Println("[rebalancing]", minVal.OperatorAddress, "-->", maxVal.OperatorAddress, amountNeeded)
-		// TODO: refactor using map
 		addedVal := 0
 		subtractedVal := 0
 		for idx := range liquidVals {
