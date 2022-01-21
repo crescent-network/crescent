@@ -1,6 +1,7 @@
 package liquidstaking
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -57,7 +58,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
 	redelegations := types.Rebalancing(types.LiquidStakingProxyAcc, liquidValidators, types.RebalancingTrigger)
-	k.TryRedelegations(ctx, redelegations, liquidValsMap)
+	_, err := k.TryRedelegations(ctx, redelegations, liquidValsMap)
+	if err != nil {
+		fmt.Println("[TryRedelegations] failed due to redelegation restriction", redelegations)
+	}
 
 	// withdraw rewards and re-staing when over threshold
 	activeVals := k.GetActiveLiquidValidators(ctx)
