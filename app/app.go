@@ -343,15 +343,30 @@ func NewCrescentApp(
 		app.GetSubspace(stakingtypes.ModuleName),
 	)
 	app.StakingKeeper = &stakingKeeper
+
+	inflationSchedules := minttypes.InflationSchedules{
+		{
+			StartTime: liquidstakingtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+			EndTime:   liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(300000000000000),
+		},
+		{
+			StartTime: liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			EndTime:   liquidstakingtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(2000000000000000),
+		},
+	}
+
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		keys[minttypes.StoreKey],
 		app.GetSubspace(minttypes.ModuleName),
-		app.StakingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
+		inflationSchedules,
 		authtypes.FeeCollectorName,
 	)
+
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		keys[distrtypes.StoreKey],

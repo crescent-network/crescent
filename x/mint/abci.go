@@ -5,35 +5,25 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
 	"github.com/crescent-network/crescent/x/mint/keeper"
 	"github.com/crescent-network/crescent/x/mint/types"
 )
 
 // BeginBlocker mints new tokens for the previous block.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper, blockTime time.Duration) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// fetch stored params
 	params := k.GetParams(ctx)
 
-	// temporary hardcoded
-	inflations := []types.InflationPeriod{
-		{
-			StartTime: liquidstakingtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
-			EndTime:   liquidstakingtypes.MustParseRFC3339("2022-12-31T23:59:59Z"),
-			Amount:    sdk.NewInt(1000000000000),
-		},
-	}
-	// TODO: Get/Set LastBlockTime
-	tmpLastBlockTime := ctx.BlockTime()
+	schedules := k.GetInflationSchedules()
 	blockInflation := sdk.ZeroInt()
-	for _, period := range inflations {
-		if period.EndTime.After(ctx.BlockTime()) && period.StartTime.Before(ctx.BlockTime()) {
-			blockTime := params.BlockTimeThreshold
-			blockTimeDiff := ctx.BlockTime().Sub(tmpLastBlockTime)
-			if params.BlockTimeThreshold > blockTimeDiff {
-				blockTime = blockTimeDiff
+	for _, period := range schedules {
+		if !period.EndTime.Before(ctx.BlockTime()) && !period.StartTime.After(ctx.BlockTime()) {
+			// TODO: need to Get/Set LastBlockTime
+			//blockTime := ctx.BlockTime().Sub(k.GetLastBlockTime(ctx))
+			if blockTime > params.BlockTimeThreshold {
+				blockTime = params.BlockTimeThreshold
 			}
 			blockInflation = period.Amount.MulRaw(blockTime.Nanoseconds()).QuoRaw(period.EndTime.Sub(period.StartTime).Nanoseconds())
 			break
@@ -60,9 +50,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeMint,
-				//sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
 			),
 		)
 	}
-
 }

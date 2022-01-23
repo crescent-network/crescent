@@ -11,19 +11,18 @@ import (
 
 // Keeper of the mint store
 type Keeper struct {
-	cdc              codec.BinaryCodec
-	storeKey         sdk.StoreKey
-	paramSpace       paramtypes.Subspace
-	stakingKeeper    types.StakingKeeper
-	bankKeeper       types.BankKeeper
-	feeCollectorName string
+	cdc                codec.BinaryCodec
+	storeKey           sdk.StoreKey
+	paramSpace         paramtypes.Subspace
+	bankKeeper         types.BankKeeper
+	inflationSchedules types.InflationSchedules
+	feeCollectorName   string
 }
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	sk types.StakingKeeper, ak types.AccountKeeper, bk types.BankKeeper,
-	feeCollectorName string,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper,
+	inflationSchedules types.InflationSchedules, feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -36,12 +35,12 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:              cdc,
-		storeKey:         key,
-		paramSpace:       paramSpace,
-		stakingKeeper:    sk,
-		bankKeeper:       bk,
-		feeCollectorName: feeCollectorName,
+		cdc:                cdc,
+		storeKey:           key,
+		paramSpace:         paramSpace,
+		bankKeeper:         bk,
+		inflationSchedules: inflationSchedules,
+		feeCollectorName:   feeCollectorName,
 	}
 }
 
@@ -61,18 +60,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// StakingTokenSupply implements an alias call to the underlying staking keeper's
-// StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
-	return k.stakingKeeper.StakingTokenSupply(ctx)
-}
-
-// BondedRatio implements an alias call to the underlying staking keeper's
-// BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	return k.stakingKeeper.BondedRatio(ctx)
-}
-
 // MintCoins implements an alias call to the underlying supply keeper's
 // MintCoins to be used in BeginBlocker.
 func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
@@ -88,4 +75,9 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+}
+
+// GetInflationSchedules return inflation schedules set on app
+func (k Keeper) GetInflationSchedules() types.InflationSchedules {
+	return k.inflationSchedules
 }

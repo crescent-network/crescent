@@ -4,14 +4,22 @@ order: 2
 
 # State
 
-## Minter
+## InflationSchedules
 
-The minter is a space for holding current inflation information.
+```go
+type InflationSchedules []InflationPeriod
 
-- Minter: `0x00 -> ProtocolBuffer(minter)`
+type InflationPeriod struct {
+    StartTime time.Time
+    EndTime   time.Time
+    Amount    sdk.Int
+}
+```
+
+## LastBlockTime
 
 ## Params
 
 Minting params are held in the global params store.
 
-- Params: `mint/params -> legacy_amino(params)`
+- Params: `mint/params -> ProtocolBuffer(params)`
