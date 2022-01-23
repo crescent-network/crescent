@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/crescent-network/crescent/app"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -27,6 +29,10 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
+
+	db := tmdb.NewMemDB()
+	cfg := app.NewConfig(db)
+	s.cfg = cfg
 
 	genesisState := s.cfg.GenesisState
 
@@ -60,16 +66,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"mint_denom":"stake","inflation_rate_change":"0.130000000000000000","inflation_max":"1.000000000000000000","inflation_min":"1.000000000000000000","goal_bonded":"0.670000000000000000","blocks_per_year":"6311520"}`,
+			`{"mint_denom":"stake","block_time_threshold":"10s"}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`blocks_per_year: "6311520"
-goal_bonded: "0.670000000000000000"
-inflation_max: "1.000000000000000000"
-inflation_min: "1.000000000000000000"
-inflation_rate_change: "0.130000000000000000"
+			`block_time_threshold: 10s
 mint_denom: stake`,
 		},
 	}

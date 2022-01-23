@@ -3,13 +3,9 @@ package simulation
 // DONTCOVER
 
 import (
-	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/x/simulation"
-
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/crescent-network/crescent/x/mint/types"
 )
 
 const (
@@ -23,10 +19,10 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyBlockTimeThreshold,
-			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", GenBlockTimeThreshold(r))
-			},
-		),
+		//simulation.NewSimParamChange(types.ModuleName, keyBlockTimeThreshold,
+		//	func(r *rand.Rand) string {
+		//		return fmt.Sprintf("\"%s\"", GenBlockTimeThreshold(r))
+		//	},
+		//),
 	}
 }
