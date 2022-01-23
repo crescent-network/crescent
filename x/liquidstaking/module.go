@@ -82,8 +82,9 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaces implements InterfaceModule
-func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
+func (b AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(reg)
+}
 
 // AppModule implements an application module for the liquidstaking module.
 type AppModule struct {
@@ -92,19 +93,24 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+	distrKeeper   types.Distrkeeper
+	govKeeper     types.GovKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
-	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper,
+	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+	stakingKeeper types.StakingKeeper, distrKeeper types.Distrkeeper, govKeeper types.GovKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		// TODO: consider add other keepers for hook or simulation or dependencies
+		stakingKeeper:  stakingKeeper,
+		distrKeeper:    distrKeeper,
+		govKeeper:      govKeeper,
 	}
 }
 
@@ -119,7 +125,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 // Route returns the message routing key for the liquidstaking module.
 func (am AppModule) Route() sdk.Route {
 	// Modification of BiquidStakings of Params proceeds to governance proposition, not to Tx.
-	return sdk.NewRoute(types.RouterKey, nil)
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the liquidstaking module's querier route name.

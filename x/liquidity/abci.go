@@ -10,16 +10,17 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
+	k.DeleteExecutedRequests(ctx)
+}
+
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
-	// logger := k.Logger(ctx)
-
-	//params := k.GetParams(ctx)
-	//if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
-	// TODO: match orders
-
-	// TODO: find deposit requests and handle them
-	// TODO: find withdrawal requests and handle them
-	//}
+	params := k.GetParams(ctx)
+	if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
+		k.ExecuteRequests(ctx)
+	}
 }

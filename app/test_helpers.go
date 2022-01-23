@@ -11,6 +11,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simappparams "github.com/crescent-network/crescent/app/params"
 
 	"github.com/cosmos/cosmos-sdk/std"
@@ -478,4 +483,28 @@ func FundModuleAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, recipientM
 	}
 
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, recipientMod, amounts)
+}
+
+// NewConfig returns config that defines the necessary testing requirements
+// used to bootstrap and start an in-process local testing network.
+func NewConfig(dbm *dbm.MemDB) network.Config {
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	cfg := network.DefaultConfig()
+	cfg.AppConstructor = NewAppConstructor(encCfg, dbm)       // the ABCI application constructor
+	cfg.GenesisState = ModuleBasics.DefaultGenesis(cfg.Codec) // farming genesis state to provide
+	return cfg
+}
+
+// NewAppConstructor returns a new network AppConstructor.
+func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB) network.AppConstructor {
+	return func(val network.Validator) types.Application {
+		return NewCrescentApp(
+			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			MakeEncodingConfig(),
+			simapp.EmptyAppOptions{},
+			bam.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			bam.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+	}
 }

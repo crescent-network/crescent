@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/liquidstaking interfaces and concrete types
@@ -12,6 +13,11 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the x/liquidstaking interfaces types with the interface registry.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgLiquidStake{},
+		&MsgLiquidUnstake{},
+	)
 }
 
 var (

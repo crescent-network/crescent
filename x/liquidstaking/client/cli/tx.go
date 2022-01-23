@@ -39,14 +39,14 @@ func GetTxCmd() *cobra.Command {
 // NewLiquidStakeCmd implements the liquid stake coin command handler.
 func NewLiquidStakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "liquidstake [amount]",
+		Use:   "liquid-stake [amount]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Liquid-stake coin",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Liquid-stake coin. 
 			
 Example:
-$ %s tx %s liquidstake 1000stake --from mykey
+$ %s tx %s liquid-stake 1000stake --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -78,14 +78,14 @@ $ %s tx %s liquidstake 1000stake --from mykey
 // NewLiquidUnstakeCmd implements the liquid unstake coin command handler.
 func NewLiquidUnstakeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "liquidunstake [amount]",
+		Use:   "liquid-unstake [amount]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Liquid-unstake coin",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Liquid-unstake coin. 
 			
 Example:
-$ %s tx %s liquidunstake 500stake --from mykey
+$ %s tx %s liquid-unstake 500stake --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),

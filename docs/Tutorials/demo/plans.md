@@ -1,5 +1,6 @@
 # Farming Plans
 
+<!-- markdown-link-check-disable-next-line -->
 There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/crescent-network/crescent/blob/main/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
 
 In this documentation, some sample data in JSON are provided. They will be used to test out farming plan functionality.

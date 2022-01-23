@@ -7,7 +7,6 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
 	"github.com/crescent-network/crescent/app"
-	_ "github.com/crescent-network/crescent/client/docs/statik"
 	"github.com/crescent-network/crescent/cmd/crescentd/cmd"
 )
 

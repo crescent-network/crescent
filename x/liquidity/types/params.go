@@ -2,21 +2,54 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
+)
+
+const (
+	PoolReserveAccPrefix   = "PoolReserveAcc"
+	PairEscrowAddrPrefix   = "PairEscrowAddr"
+	ModuleAddrNameSplitter = "|"
+	AddressType            = farmingtypes.AddressType32Bytes
+)
+
+// TODO: sort keys
+var (
+	KeyInitialPoolCoinSupply   = []byte("InitialPoolCoinSupply")
+	KeyBatchSize               = []byte("BatchSize")
+	KeyTickPrecision           = []byte("TickPrecision")
+	KeyMinInitialDepositAmount = []byte("MinInitialDepositAmount")
+	KeyPairCreationFee         = []byte("PairCreationFee")
+	KeyPoolCreationFee         = []byte("PoolCreationFee")
+	KeyFeeCollectorAddress     = []byte("FeeCollectorAddress")
+	KeyMaxPriceLimitRatio      = []byte("MaxPriceLimitRatio")
+	KeySwapFeeRate             = []byte("SwapFeeRate")
+	KeyWithdrawFeeRate         = []byte("WithdrawFeeRate")
+	KeyMaxOrderLifespan        = []byte("MaxOrderLifespan")
 )
 
 var (
-	KeyInitialPoolCoinSupply = []byte("InitialPoolCoinSupply")
-	KeyBatchSize             = []byte("BatchSize")
-	KeyTickPrecision         = []byte("TickPrecision")
+	DefaultInitialPoolCoinSupply          = sdk.NewInt(1_000_000_000_000)
+	DefaultBatchSize               uint32 = 1
+	DefaultTickPrecision           uint32 = 3
+	DefaultMinInitialDepositAmount        = sdk.NewInt(1000000)
+	DefaultPairCreationFee                = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultPoolCreationFee                = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultFeeCollectorAddress            = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
+	DefaultMaxPriceLimitRatio             = sdk.NewDecWithPrec(1, 1) // 10%
+	DefaultSwapFeeRate                    = sdk.ZeroDec()
+	DefaultWithdrawFeeRate                = sdk.ZeroDec()
+	DefaultMaxOrderLifespan               = 24 * time.Hour
 )
 
 var (
-	DefaultInitialPoolCoinSupply        = sdk.NewInt(1_000_000_000_000)
-	DefaultBatchSize             uint32 = 1
-	DefaultTickPrecision         uint32 = 3
+	MinOfferCoinAmount = sdk.NewInt(100) // This value can be modified in the future
+
+	GlobalEscrowAddr = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -27,9 +60,17 @@ func ParamKeyTable() paramstypes.KeyTable {
 
 func DefaultParams() Params {
 	return Params{
-		InitialPoolCoinSupply: DefaultInitialPoolCoinSupply,
-		BatchSize:             DefaultBatchSize,
-		TickPrecision:         DefaultTickPrecision,
+		InitialPoolCoinSupply:   DefaultInitialPoolCoinSupply,
+		BatchSize:               DefaultBatchSize,
+		TickPrecision:           DefaultTickPrecision,
+		MinInitialDepositAmount: DefaultMinInitialDepositAmount,
+		PairCreationFee:         DefaultPairCreationFee,
+		PoolCreationFee:         DefaultPoolCreationFee,
+		FeeCollectorAddress:     DefaultFeeCollectorAddress.String(),
+		MaxPriceLimitRatio:      DefaultMaxPriceLimitRatio,
+		SwapFeeRate:             DefaultSwapFeeRate,
+		WithdrawFeeRate:         DefaultWithdrawFeeRate,
+		MaxOrderLifespan:        DefaultMaxOrderLifespan,
 	}
 }
 
@@ -38,6 +79,14 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyInitialPoolCoinSupply, &params.InitialPoolCoinSupply, validateInitialPoolCoinSupply),
 		paramstypes.NewParamSetPair(KeyBatchSize, &params.BatchSize, validateBatchSize),
 		paramstypes.NewParamSetPair(KeyTickPrecision, &params.TickPrecision, validateTickPrecision),
+		paramstypes.NewParamSetPair(KeyMinInitialDepositAmount, &params.MinInitialDepositAmount, validateMinInitialDepositAmount),
+		paramstypes.NewParamSetPair(KeyPairCreationFee, &params.PairCreationFee, validatePairCreationFee),
+		paramstypes.NewParamSetPair(KeyPoolCreationFee, &params.PoolCreationFee, validatePoolCreationFee),
+		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &params.FeeCollectorAddress, validateFeeCollectorAddress),
+		paramstypes.NewParamSetPair(KeyMaxPriceLimitRatio, &params.MaxPriceLimitRatio, validateMaxPriceLimitRatio),
+		paramstypes.NewParamSetPair(KeySwapFeeRate, &params.SwapFeeRate, validateSwapFeeRate),
+		paramstypes.NewParamSetPair(KeyWithdrawFeeRate, &params.WithdrawFeeRate, validateWithdrawFeeRate),
+		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 	}
 }
 
@@ -49,6 +98,14 @@ func (params Params) Validate() error {
 		{params.InitialPoolCoinSupply, validateInitialPoolCoinSupply},
 		{params.BatchSize, validateBatchSize},
 		{params.TickPrecision, validateTickPrecision},
+		{params.MinInitialDepositAmount, validateMinInitialDepositAmount},
+		{params.PairCreationFee, validatePairCreationFee},
+		{params.PoolCreationFee, validatePoolCreationFee},
+		{params.FeeCollectorAddress, validateFeeCollectorAddress},
+		{params.MaxPriceLimitRatio, validateMaxPriceLimitRatio},
+		{params.SwapFeeRate, validateSwapFeeRate},
+		{params.WithdrawFeeRate, validateWithdrawFeeRate},
+		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -88,13 +145,113 @@ func validateBatchSize(i interface{}) error {
 }
 
 func validateTickPrecision(i interface{}) error {
-	v, ok := i.(uint32)
+	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v == 0 {
-		return fmt.Errorf("tick precision must be positive: %d", v)
+	return nil
+}
+
+func validateMinInitialDepositAmount(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("minimum initial deposit amount must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validatePairCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid pair creation fee: %w", err)
+	}
+
+	return nil
+}
+
+func validatePoolCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid pool creation fee: %w", err)
+	}
+
+	return nil
+}
+
+func validateFeeCollectorAddress(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if _, err := sdk.AccAddressFromBech32(v); err != nil {
+		return fmt.Errorf("invalid fee collector address: %w", err)
+	}
+
+	return nil
+}
+
+func validateMaxPriceLimitRatio(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("max price limit ratio must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateSwapFeeRate(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("swap fee rate must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateWithdrawFeeRate(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("withdraw fee rate must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxOrderLifespan(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("max order lifespan must not be negative: %s", v)
 	}
 
 	return nil

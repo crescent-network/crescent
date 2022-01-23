@@ -35,9 +35,8 @@ func (k Querier) LiquidValidators(c context.Context, req *types.QueryLiquidValid
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)
+	validators := k.GetAllLiquidValidators(ctx)
 
-	var validators []types.LiquidValidator
-	// TODO: add get all liquid validators or iteration
-
+	// TODO: type casting check
 	return &types.QueryLiquidValidatorsResponse{LiquidValidators: validators}, nil
 }

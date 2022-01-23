@@ -3,33 +3,85 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
-var _ types.MsgServer = msgServer{}
-
 type msgServer struct {
 	Keeper
-}
-
-func (m msgServer) CreatePool(ctx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
-	panic("implement me")
-}
-
-func (m msgServer) DepositBatch(ctx context.Context, msg *types.MsgDepositBatch) (*types.MsgDepositBatchResponse, error) {
-	panic("implement me")
-}
-
-func (m msgServer) WithdrawBatch(ctx context.Context, msg *types.MsgWithdrawBatch) (*types.MsgWithdrawBatchResponse, error) {
-	panic("implement me")
-}
-
-func (m msgServer) SwapBatch(ctx context.Context, msg *types.MsgSwapBatch) (*types.MsgSwapBatchResponse, error) {
-	panic("implement me")
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
+}
+
+var _ types.MsgServer = msgServer{}
+
+// CreatePair defines a method to create a pair.
+func (m msgServer) CreatePair(goCtx context.Context, msg *types.MsgCreatePair) (*types.MsgCreatePairResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.CreatePair(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreatePairResponse{}, nil
+}
+
+// CreatePool defines a method to create a liquidity pool.
+func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.CreatePool(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreatePoolResponse{}, nil
+}
+
+// DepositBatch defines a method to deposit coins to the pool.
+func (m msgServer) DepositBatch(goCtx context.Context, msg *types.MsgDepositBatch) (*types.MsgDepositBatchResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.DepositBatch(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgDepositBatchResponse{}, nil
+}
+
+// WithdrawBatch defines a method to withdraw pool coin from the pool.
+func (m msgServer) WithdrawBatch(goCtx context.Context, msg *types.MsgWithdrawBatch) (*types.MsgWithdrawBatchResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.WithdrawBatch(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgWithdrawBatchResponse{}, nil
+}
+
+// SwapBatch defines a method to swap coin X to Y from the pool.
+func (m msgServer) SwapBatch(goCtx context.Context, msg *types.MsgSwapBatch) (*types.MsgSwapBatchResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.SwapBatch(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSwapBatchResponse{}, nil
+}
+
+// CancelSwapBatch defines a method to cancel the swap request.
+func (m msgServer) CancelSwapBatch(goCtx context.Context, msg *types.MsgCancelSwapBatch) (*types.MsgCancelSwapBatchResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.CancelSwapBatch(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelSwapBatchResponse{}, nil
 }
