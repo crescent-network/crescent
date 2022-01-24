@@ -100,7 +100,6 @@ func (engine *MatchEngine) Match(lastPrice sdk.Dec) (orderBook *OrderBook, match
 	if !engine.Matchable() {
 		return
 	}
-	matched = true
 
 	matchPrice = engine.FindMatchPrice(lastPrice)
 	buyPrice, _ := engine.BuyOrderSource.HighestTick()
@@ -132,59 +131,80 @@ func (engine *MatchEngine) Match(lastPrice sdk.Dec) (orderBook *OrderBook, match
 		}
 	}
 
-	quoteCoinDustAmt = MatchOrders(buyOrders, sellOrders, matchPrice)
+	quoteCoinDustAmt, matched = MatchOrders(buyOrders, sellOrders, matchPrice)
 
 	return
 }
 
-func MatchOrders(buyOrders, sellOrders Orders, price sdk.Dec) (quoteCoinDustAmt sdk.Int) {
+func FindLastMatchableOrders(orders1, orders2 Orders, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
+	sides := []*struct {
+		orders          Orders
+		totalAmt        sdk.Int
+		i               int
+		partialMatchAmt sdk.Int
+	}{
+		{orders1, orders1.OpenBaseCoinAmount(), len(orders1) - 1, sdk.Int{}},
+		{orders2, orders2.OpenBaseCoinAmount(), len(orders2) - 1, sdk.Int{}},
+	}
+	for {
+		ok := true
+		for _, side := range sides {
+			i := side.i
+			order := side.orders[i]
+			matchAmt := sdk.MinInt(sides[0].totalAmt, sides[1].totalAmt)
+			side.partialMatchAmt = matchAmt.Sub(side.totalAmt.Sub(order.GetOpenBaseCoinAmount()))
+			if side.totalAmt.Sub(order.GetOpenBaseCoinAmount()).GT(matchAmt) ||
+				matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero() {
+				if i == 0 {
+					return
+				}
+				side.totalAmt = side.totalAmt.Sub(order.GetOpenBaseCoinAmount())
+				side.i--
+				ok = false
+			}
+		}
+		if ok {
+			return sides[0].i, sides[1].i, sides[0].partialMatchAmt, sides[1].partialMatchAmt, true
+		}
+	}
+}
+
+func MatchOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (quoteCoinDustAmt sdk.Int, matched bool) {
 	buyOrders.Sort(DescendingPrice)
 	sellOrders.Sort(AscendingPrice)
 
-	bi, si := 0, 0
-	for bi < len(buyOrders) && si < len(sellOrders) {
-		buyOrder := buyOrders[bi]
-		sellOrder := sellOrders[si]
-
-		skip := false
-		if buyOrder.GetOpenBaseCoinAmount().IsZero() {
-			bi++
-			skip = true
-		}
-		if sellOrder.GetOpenBaseCoinAmount().IsZero() {
-			si++
-			skip = true
-		}
-		if skip {
-			continue
-		}
-
-		amt := sdk.MinInt(buyOrder.GetOpenBaseCoinAmount(), sellOrder.GetOpenBaseCoinAmount())
-		buyOrder.SetOpenBaseCoinAmount(buyOrder.GetOpenBaseCoinAmount().Sub(amt))
-		sellOrder.SetOpenBaseCoinAmount(sellOrder.GetOpenBaseCoinAmount().Sub(amt))
+	bi, si, pmb, pms, found := FindLastMatchableOrders(buyOrders, sellOrders, matchPrice)
+	if !found {
+		return
 	}
 
 	quoteCoinDustAmt = sdk.ZeroInt()
 
-	if bi < len(buyOrders) {
-		bi++
-	}
-	for i := 0; i < bi; i++ {
+	for i := 0; i <= bi; i++ {
 		buyOrder := buyOrders[i]
-		receivedBaseCoinAmt := buyOrder.GetBaseCoinAmount().Sub(buyOrder.GetOpenBaseCoinAmount())
-		paidQuoteCoinAmt := price.MulInt(receivedBaseCoinAmt).Ceil().TruncateInt()
+		var receivedBaseCoinAmt sdk.Int
+		if i < bi {
+			receivedBaseCoinAmt = buyOrder.GetOpenBaseCoinAmount()
+		} else {
+			receivedBaseCoinAmt = pmb
+		}
+		paidQuoteCoinAmt := matchPrice.MulInt(receivedBaseCoinAmt).Ceil().TruncateInt()
+		buyOrder.SetOpenBaseCoinAmount(buyOrder.GetOpenBaseCoinAmount().Sub(receivedBaseCoinAmt))
 		buyOrder.SetRemainingOfferCoinAmount(buyOrder.GetRemainingOfferCoinAmount().Sub(paidQuoteCoinAmt))
 		buyOrder.SetReceivedAmount(receivedBaseCoinAmt)
 		quoteCoinDustAmt = quoteCoinDustAmt.Add(paidQuoteCoinAmt)
 	}
 
-	if si < len(sellOrders) {
-		si++
-	}
-	for i := 0; i < si; i++ {
+	for i := 0; i <= si; i++ {
 		sellOrder := sellOrders[i]
-		paidBaseCoinAmt := sellOrder.GetBaseCoinAmount().Sub(sellOrder.GetOpenBaseCoinAmount())
-		receivedQuoteCoinAmt := price.MulInt(paidBaseCoinAmt).TruncateInt()
+		var paidBaseCoinAmt sdk.Int
+		if i < si {
+			paidBaseCoinAmt = sellOrder.GetOpenBaseCoinAmount()
+		} else {
+			paidBaseCoinAmt = pms
+		}
+		receivedQuoteCoinAmt := matchPrice.MulInt(paidBaseCoinAmt).TruncateInt()
+		sellOrder.SetOpenBaseCoinAmount(sellOrder.GetOpenBaseCoinAmount().Sub(paidBaseCoinAmt))
 		sellOrder.SetRemainingOfferCoinAmount(sellOrder.GetRemainingOfferCoinAmount().Sub(paidBaseCoinAmt))
 		sellOrder.SetReceivedAmount(receivedQuoteCoinAmt)
 		quoteCoinDustAmt = quoteCoinDustAmt.Sub(receivedQuoteCoinAmt)
