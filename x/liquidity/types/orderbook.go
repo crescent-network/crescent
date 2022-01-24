@@ -45,8 +45,8 @@ func (ob OrderBook) OrderSource(dir SwapDirection) OrderSource {
 	}
 }
 
-func (ob OrderBook) AllOrders() []Order {
-	var orders []Order
+func (ob OrderBook) AllOrders() Orders {
+	var orders Orders
 	for _, ticks := range []*OrderBookTicks{ob.BuyTicks, ob.SellTicks} {
 		orders = append(orders, ticks.AllOrders()...)
 	}

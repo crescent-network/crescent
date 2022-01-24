@@ -6,13 +6,17 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
-func newBuyOrder(price string, amount int64) *types.BaseOrder {
-	return types.NewBaseOrder(types.SwapDirectionBuy, parseDec(price), sdk.NewInt(amount))
+func newBuyOrder(price sdk.Dec, baseCoinAmt sdk.Int) *types.BaseOrder {
+	return types.NewBaseOrder(types.SwapDirectionBuy, price, baseCoinAmt, price.MulInt(baseCoinAmt).TruncateInt())
 }
 
 //nolint
-func newSellOrder(price string, amount int64) *types.BaseOrder {
-	return types.NewBaseOrder(types.SwapDirectionSell, parseDec(price), sdk.NewInt(amount))
+func newSellOrder(price sdk.Dec, baseCoinAmt sdk.Int) *types.BaseOrder {
+	return types.NewBaseOrder(types.SwapDirectionSell, price, baseCoinAmt, baseCoinAmt)
+}
+
+func newInt(i int64) sdk.Int {
+	return sdk.NewInt(i)
 }
 
 func parseDec(s string) sdk.Dec {

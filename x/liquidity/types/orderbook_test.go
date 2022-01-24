@@ -13,17 +13,17 @@ import (
 func testOrderBookTicks() *types.OrderBookTicks {
 	ticks := types.NewOrderBookTicks(tickPrec)
 	ticks.AddOrders(
-		newBuyOrder("20.0", 1000),
-		newBuyOrder("19.0", 1000),
-		newBuyOrder("18.0", 1000),
-		newBuyOrder("17.0", 1000),
-		newBuyOrder("16.0", 1000),
-		newBuyOrder("15.0", 1000).SetRemainingOfferCoinAmount(sdk.ZeroInt()),
-		newBuyOrder("14.0", 1000),
-		newBuyOrder("13.0", 1000).SetRemainingOfferCoinAmount(sdk.ZeroInt()),
-		newBuyOrder("12.0", 1000),
-		newBuyOrder("11.0", 1000),
-		newBuyOrder("10.0", 1000),
+		newBuyOrder(parseDec("20.0"), newInt(1000)),
+		newBuyOrder(parseDec("19.0"), newInt(1000)),
+		newBuyOrder(parseDec("18.0"), newInt(1000)),
+		newBuyOrder(parseDec("17.0"), newInt(1000)),
+		newBuyOrder(parseDec("16.0"), newInt(1000)),
+		newBuyOrder(parseDec("15.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("14.0"), newInt(1000)),
+		newBuyOrder(parseDec("13.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("12.0"), newInt(1000)),
+		newBuyOrder(parseDec("11.0"), newInt(1000)),
+		newBuyOrder(parseDec("10.0"), newInt(1000)),
 	)
 	return ticks
 }
@@ -70,27 +70,27 @@ func TestOrderBookTicks_AddOrder(t *testing.T) {
 	require.Len(t, ticks.Ticks, 11)
 
 	// Same price already exists
-	ticks.AddOrder(newBuyOrder("18.0", 1000))
+	ticks.AddOrder(newBuyOrder(parseDec("18.0"), newInt(1000)))
 	checkSorted(ticks)
 	require.Len(t, ticks.Ticks, 11)
 
 	// New price. We don't care about the tick precision here
-	ticks.AddOrder(newBuyOrder("18.000000000000000001", 1000))
+	ticks.AddOrder(newBuyOrder(parseDec("18.000000000000000001"), newInt(1000)))
 	checkSorted(ticks)
 	require.Len(t, ticks.Ticks, 12)
 
 	// Add an order with same price as above again
-	ticks.AddOrder(newBuyOrder("18.000000000000000001", 1000))
+	ticks.AddOrder(newBuyOrder(parseDec("18.000000000000000001"), newInt(1000)))
 	checkSorted(ticks)
 	require.Len(t, ticks.Ticks, 12)
 
 	// Add an order with higher price than the highest price in ticks.
-	ticks.AddOrder(newBuyOrder("21.0", 1000))
+	ticks.AddOrder(newBuyOrder(parseDec("21.0"), newInt(1000)))
 	checkSorted(ticks)
 	require.Len(t, ticks.Ticks, 13)
 
 	// Add an order with lower price than the lowest price in ticks.
-	ticks.AddOrder(newBuyOrder("9.0", 1000))
+	ticks.AddOrder(newBuyOrder(parseDec("9.0"), newInt(1000)))
 	checkSorted(ticks)
 	require.Len(t, ticks.Ticks, 14)
 }
@@ -145,10 +145,10 @@ func TestOrderBookTicks_Orders(t *testing.T) {
 	ticks := types.OrderBookTicks{}
 
 	orderMap := map[string]types.Orders{
-		"20.0": {newBuyOrder("20.0", 1000), newBuyOrder("20.0", 1000)},
-		"19.0": {newBuyOrder("19.0", 500), newBuyOrder("19.0", 1000)},
-		"18.0": {newBuyOrder("18.0", 1000)},
-		"17.0": {newBuyOrder("17.0", 1000), newBuyOrder("17.0", 2000)},
+		"20.0": {newBuyOrder(parseDec("20.0"), newInt(1000)), newBuyOrder(parseDec("20.0"), newInt(1000))},
+		"19.0": {newBuyOrder(parseDec("19.0"), newInt(500)), newBuyOrder(parseDec("19.0"), newInt(1000))},
+		"18.0": {newBuyOrder(parseDec("18.0"), newInt(1000))},
+		"17.0": {newBuyOrder(parseDec("17.0"), newInt(1000)), newBuyOrder(parseDec("17.0"), newInt(2000))},
 	}
 
 	for _, orders := range orderMap {
@@ -256,9 +256,9 @@ func TestOrderBookTicks_HighestTick(t *testing.T) {
 	// Test with orders with zero remaining amount
 	ticks = types.NewOrderBookTicks(tickPrec)
 	ticks.AddOrders(
-		newBuyOrder("10.0", 1000).SetRemainingOfferCoinAmount(sdk.ZeroInt()),
-		newBuyOrder("9.0", 1000),
-		newBuyOrder("8.0", 1000),
+		newBuyOrder(parseDec("10.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("9.0"), newInt(1000)),
+		newBuyOrder(parseDec("8.0"), newInt(1000)),
 	)
 
 	tick, found = ticks.HighestTick()
@@ -279,9 +279,9 @@ func TestOrderBookTicks_LowestTick(t *testing.T) {
 	// Test with orders with zero remaining amount
 	ticks = types.NewOrderBookTicks(tickPrec)
 	ticks.AddOrders(
-		newBuyOrder("10.0", 1000),
-		newBuyOrder("9.0", 1000),
-		newBuyOrder("8.0", 1000).SetRemainingOfferCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("10.0"), newInt(1000)),
+		newBuyOrder(parseDec("9.0"), newInt(1000)),
+		newBuyOrder(parseDec("8.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
 	)
 
 	tick, found = ticks.LowestTick()

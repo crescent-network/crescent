@@ -10,6 +10,13 @@ var (
 	_ Order = (*BaseOrder)(nil)
 	_ Order = (*UserOrder)(nil)
 	_ Order = (*PoolOrder)(nil)
+
+	DescendingPrice PriceComparator = func(a, b Order) bool {
+		return a.GetPrice().GT(b.GetPrice())
+	}
+	AscendingPrice PriceComparator = func(a, b Order) bool {
+		return a.GetPrice().LT(b.GetPrice())
+	}
 )
 
 type Order interface {
@@ -18,11 +25,14 @@ type Order interface {
 	GetBaseCoinAmount() sdk.Int
 	GetOpenBaseCoinAmount() sdk.Int
 	SetOpenBaseCoinAmount(amount sdk.Int) Order
+	GetOfferCoinAmount() sdk.Int
 	GetRemainingOfferCoinAmount() sdk.Int
 	SetRemainingOfferCoinAmount(amount sdk.Int) Order
 	GetReceivedAmount() sdk.Int
 	SetReceivedAmount(amount sdk.Int) Order
 }
+
+type PriceComparator func(a, b Order) bool
 
 type Orders []Order
 
@@ -34,7 +44,7 @@ func (orders Orders) OpenBaseCoinAmount() sdk.Int {
 	return amount
 }
 
-func (orders Orders) Sort() {
+func (orders Orders) Sort(cmp PriceComparator) {
 	sort.SliceStable(orders, func(i, j int) bool {
 		switch orderA := orders[i].(type) {
 		case *UserOrder:
@@ -57,6 +67,9 @@ func (orders Orders) Sort() {
 	sort.SliceStable(orders, func(i, j int) bool {
 		return orders[i].GetBaseCoinAmount().GT(orders[j].GetBaseCoinAmount())
 	})
+	sort.SliceStable(orders, func(i, j int) bool {
+		return cmp(orders[i], orders[j])
+	})
 }
 
 type BaseOrder struct {
@@ -64,6 +77,7 @@ type BaseOrder struct {
 	Price                    sdk.Dec
 	BaseCoinAmount           sdk.Int
 	OpenBaseCoinAmount       sdk.Int
+	OfferCoinAmount sdk.Int
 	RemainingOfferCoinAmount sdk.Int
 	ReceivedAmount           sdk.Int
 }
@@ -74,6 +88,7 @@ func NewBaseOrder(dir SwapDirection, price sdk.Dec, baseCoinAmt, offerCoinAmt sd
 		Price:                    price,
 		BaseCoinAmount:           baseCoinAmt,
 		OpenBaseCoinAmount:       baseCoinAmt,
+		OfferCoinAmount: offerCoinAmt,
 		RemainingOfferCoinAmount: offerCoinAmt,
 		ReceivedAmount:           sdk.ZeroInt(),
 	}
@@ -98,6 +113,10 @@ func (order *BaseOrder) GetOpenBaseCoinAmount() sdk.Int {
 func (order *BaseOrder) SetOpenBaseCoinAmount(amount sdk.Int) Order {
 	order.OpenBaseCoinAmount = amount
 	return order
+}
+
+func (order *BaseOrder) GetOfferCoinAmount() sdk.Int {
+	return order.OfferCoinAmount
 }
 
 func (order *BaseOrder) GetRemainingOfferCoinAmount() sdk.Int {
