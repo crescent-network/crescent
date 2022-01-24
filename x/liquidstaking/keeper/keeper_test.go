@@ -11,8 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	simapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app        *simapp.CrescentApp
+	app        *simapp.SquadApp
 	ctx        sdk.Context
 	keeper     keeper.Keeper
 	querier    keeper.Querier

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/crescent-network/crescent/app"
+	"github.com/cosmosquad-labs/squad/app"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/crescent-network/crescent/x/mint/client/cli"
-	minttypes "github.com/crescent-network/crescent/x/mint/types"
+	"github.com/cosmosquad-labs/squad/x/mint/client/cli"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 type IntegrationTestSuite struct {

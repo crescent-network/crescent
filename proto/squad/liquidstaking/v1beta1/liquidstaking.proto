@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package crescent.liquidstaking.v1beta1;
+package squad.liquidstaking.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/liquidstaking/types";
+option go_package = "github.com/cosmosquad-labs/squad/x/liquidstaking/types";
 
 // Params defines the set of params for the liquidstaking module.
 message Params {

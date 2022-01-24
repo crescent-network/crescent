@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	simappparams "github.com/crescent-network/crescent/app/params"
+	simappparams "github.com/cosmosquad-labs/squad/app/params"
 
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/stretchr/testify/require"
@@ -39,11 +39,11 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	minttypes "github.com/crescent-network/crescent/x/mint/types"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
-// CrescentApp testing.
+// SquadApp testing.
 var DefaultConsensusParams = &abci.ConsensusParams{
 	Block: &abci.BlockParams{
 		MaxBytes: 200000,
@@ -70,18 +70,18 @@ func MakeTestEncodingConfig() simappparams.EncodingConfig {
 	return encodingConfig
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*CrescentApp, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint) (*SquadApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewCrescentApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := NewSquadApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
 }
 
-// Setup initializes a new CrescentApp. A Nop logger is set in CrescentApp.
-func Setup(isCheckTx bool) *CrescentApp {
+// Setup initializes a new SquadApp. A Nop logger is set in SquadApp.
+func Setup(isCheckTx bool) *SquadApp {
 	app, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
@@ -103,11 +103,11 @@ func Setup(isCheckTx bool) *CrescentApp {
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new CrescentApp with a validator set and genesis accounts
+// SetupWithGenesisValSet initializes a new SquadApp with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
-// account. A Nop logger is set in CrescentApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *CrescentApp {
+// account. A Nop logger is set in SquadApp.
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SquadApp {
 	app, genesisState := setup(true, 5)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
@@ -184,9 +184,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
-// SetupWithGenesisAccounts initializes a new CrescentApp with the provided genesis
+// SetupWithGenesisAccounts initializes a new SquadApp with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *CrescentApp {
+func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SquadApp {
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -253,8 +253,8 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	return addresses
 }
 
-// AddTestAddrsFromPubKeys adds the addresses into the CrescentApp providing only the public keys.
-func AddTestAddrsFromPubKeys(app *CrescentApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
+// AddTestAddrsFromPubKeys adds the addresses into the SquadApp providing only the public keys.
+func AddTestAddrsFromPubKeys(app *SquadApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
 
 	for _, pk := range pubKeys {
@@ -264,17 +264,17 @@ func AddTestAddrsFromPubKeys(app *CrescentApp, ctx sdk.Context, pubKeys []crypto
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(app *CrescentApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrs(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *CrescentApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
-func addTestAddrs(app *CrescentApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
@@ -286,7 +286,7 @@ func addTestAddrs(app *CrescentApp, ctx sdk.Context, accNum int, accAmt sdk.Int,
 	return testAddrs
 }
 
-func initAccountWithCoins(app *CrescentApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func initAccountWithCoins(app *SquadApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		panic(err)
@@ -331,7 +331,7 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 }
 
 // CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *CrescentApp, addr sdk.AccAddress, balances sdk.Coins) {
+func CheckBalance(t *testing.T, app *SquadApp, addr sdk.AccAddress, balances sdk.Coins) {
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
@@ -499,7 +499,7 @@ func NewConfig(dbm *dbm.MemDB) network.Config {
 // NewAppConstructor returns a new network AppConstructor.
 func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB) network.AppConstructor {
 	return func(val network.Validator) types.Application {
-		return NewCrescentApp(
+		return NewSquadApp(
 			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},

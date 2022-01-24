@@ -8,8 +8,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	simapp "github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/x/mint/types"
+	simapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

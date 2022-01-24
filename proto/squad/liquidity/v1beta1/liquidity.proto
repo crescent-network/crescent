@@ -1,12 +1,12 @@
 syntax = "proto3";
-package crescent.liquidity.v1beta1;
+package squad.liquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
+option go_package                      = "github.com/cosmosquad-labs/squad/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // Params defines the parameters for the liquidity module.

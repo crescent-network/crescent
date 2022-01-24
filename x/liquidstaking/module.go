@@ -18,12 +18,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	//"github.com/crescent-network/crescent/x/liquidstaking/client/rest"
-	"github.com/crescent-network/crescent/x/liquidstaking/client/cli"
-	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	//"github.com/squad-network/squad/x/liquidstaking/client/rest"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
 
-	"github.com/crescent-network/crescent/x/liquidstaking/simulation"
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/simulation"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 var (

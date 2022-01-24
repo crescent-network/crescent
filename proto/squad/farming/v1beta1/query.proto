@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package crescent.farming.v1beta1;
+package squad.farming.v1beta1;
 
-import "crescent/farming/v1beta1/farming.proto";
+import "squad/farming/v1beta1/farming.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -11,18 +11,18 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/farming/types";
+option go_package = "github.com/cosmosquad-labs/squad/x/farming/types";
 
 // Query defines the gRPC query service for the farming module.
 service Query {
   // Params returns parameters of the farming module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get                                           = "/crescent/farming/v1beta1/params";
+    option (google.api.http).get                                           = "/squad/farming/v1beta1/params";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "Returns all parameters of the farming module.";
   external_docs: {
   url:
-    "https://github.com/crescent-network/crescent/blob/main/x/farming/spec/07_params.md";
+    "https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/07_params.md";
   description:
     "Find out more about the params";
   }
@@ -31,12 +31,12 @@ service Query {
 
 // Plans returns all plans.
 rpc Plans(QueryPlansRequest) returns (QueryPlansResponse) {
-  option (google.api.http).get                                           = "/crescent/farming/v1beta1/plans";
+  option (google.api.http).get                                           = "/squad/farming/v1beta1/plans";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns a list of all farming plans with pagination result.";
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#Plans";
+  "https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#Plans";
 description:
   "Find out more about the query and error codes";
 }
@@ -77,12 +77,12 @@ key:
 
 // Plan returns a specific plan.
 rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
-  option (google.api.http).get                                           = "/crescent/farming/v1beta1/plans/{plan_id}";
+  option (google.api.http).get                                           = "/squad/farming/v1beta1/plans/{plan_id}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns the farming plan that corresponds to the plan_id.";
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#plan";
+  "https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#plan";
 description:
   "Find out more about the query and error codes";
 }
@@ -123,12 +123,12 @@ key:
 
 // Stakings returns all stakings by a farmer.
 rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/stakings/{farmer}";
+  option (google.api.http).get                                           = "/squad/farming/v1beta1/stakings/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns all stakings (staked and queued coins) that corresponds to the farmer";
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#stakings";
+  "https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#stakings";
 description:
   "Find out more about the query and error codes";
 }
@@ -148,12 +148,12 @@ key:
 
 // TotalStakings returns total staking amount for a staking coin denom
 rpc TotalStakings(QueryTotalStakingsRequest) returns (QueryTotalStakingsResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}";
+  option (google.api.http).get = "/squad/farming/v1beta1/total_stakings/{staking_coin_denom}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns total stakings that corresponds to the staking_coin_denom";
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#totalstakings";
+  "https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#totalstakings";
 description:
   "Find out more about the query and error codes";
 }
@@ -173,12 +173,12 @@ key:
 
 // Rewards returns rewards for a farmer
 rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
-  option (google.api.http).get                                           = "/crescent/farming/v1beta1/rewards/{farmer}";
+  option (google.api.http).get                                           = "/squad/farming/v1beta1/rewards/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns all rewards coins that corresponds to the farmer";
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#rewards";
+  "https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#rewards";
 description:
   "Find out more about the query and error codes";
 }
@@ -198,12 +198,12 @@ key:
 
 // CurrentEpochDays returns current epoch days.
 rpc CurrentEpochDays(QueryCurrentEpochDaysRequest) returns (QueryCurrentEpochDaysResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/current_epoch_days";
+  option (google.api.http).get                                           = "/squad/farming/v1beta1/current_epoch_days";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns the current epoch days";
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#currentepochdays";
+  "https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#currentepochdays";
 description:
   "Find out more about the query and error codes";
 }

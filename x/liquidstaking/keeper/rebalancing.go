@@ -4,7 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (balance sdk.Int) {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // Simulation parameter constants.

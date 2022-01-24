@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 func TestRebalancing(t *testing.T) {

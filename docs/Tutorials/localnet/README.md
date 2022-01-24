@@ -1,13 +1,13 @@
 ---
 Title: Localnet
-Description: A tutorial of how to build `crescentd` and bootstrap local network.
+Description: A tutorial of how to build `squad` and bootstrap local network.
 ---
 
 ### Get the source code
 
 ```bash
-git clone https://github.com/crescent-network/crescent.git
-cd crescent
+git clone https://github.com/cosmosquad-labs/squad.git
+cd squad
 make install
 ```
 
@@ -17,8 +17,8 @@ The following script is prepared to bootstrap a single chain with a single valid
 
 ```bash
 # Configure variables
-export BINARY=crescentd
-export HOME_APP=$HOME/.crescentapp
+export BINARY=squad
+export HOME_APP=$HOME/.squadapp
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"

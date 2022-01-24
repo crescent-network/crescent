@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/crescent-network/crescent/x/mint/types"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 //// Simulation parameter constants

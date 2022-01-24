@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 // Keeper of the liquidstaking store
