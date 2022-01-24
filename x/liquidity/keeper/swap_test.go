@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/stretchr/testify/suite"
 
-	"github.com/crescent-network/crescent/x/liquidity"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestSingleOrderNoMatch() {

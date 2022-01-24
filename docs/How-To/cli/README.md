@@ -1,15 +1,15 @@
 ---
-Title: crescentd
+Title: squad
 Description: A high-level overview of how the command-line interfaces (CLI) work for the farming module.
 ---
 
-# crescentd
+# squad
 
 This document provides a high-level overview of how the command line (CLI) interface works for the farming module.
 
 ## Command Line Interfaces
 
-In order to test out the following command line interfaces, you must set up a local node to send transactions or queries. See the [localnet tutorial](../../Tutorials/localnet) for details on how to build the `crescentd` binary and bootstrap a local network in your local machine.
+In order to test out the following command line interfaces, you must set up a local node to send transactions or queries. See the [localnet tutorial](../../Tutorials/localnet) for details on how to build the `squad` binary and bootstrap a local network in your local machine.
 
 - [Transaction](#Transaction)
     * [MsgCreateFixedAmountPlan](#MsgCreateFixedAmountPlan)

@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // GetTxCmd returns the transaction commands for the module
@@ -28,12 +28,46 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		NewCreatePairCmd(),
 		NewCreatePoolCmd(),
 		NewDepositBatchCmd(),
 		NewWithdrawBatchCmd(),
 		NewSwapBatchCmd(),
 		NewCancelSwapBatchCmd(),
 	)
+
+	return cmd
+}
+
+func NewCreatePairCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-pair [base-coin-denom] [quote-coin-denom]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Create a denom pair for an order book",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Create a denom pair for an order book.
+Example:
+$ %s tx %s create-pair uatom usquad --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			baseCoinDenom := args[0]
+			quoteCoinDenom := args[1]
+
+			msg := types.NewMsgCreatePair(clientCtx.GetFromAddress(), baseCoinDenom, quoteCoinDenom)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -46,7 +80,7 @@ func NewCreatePoolCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a liquidity pool with coins.
 Example:
-$ %s tx %s create-pool 1 1000000000uatom,50000000000ucsnt --from mykey
+$ %s tx %s create-pool 1 1000000000uatom,50000000000usquad --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -86,7 +120,7 @@ func NewDepositBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Deposit coins to a liquidity pool.
 Example:
-$ %s tx %s deposit 1 1000000000uatom,50000000000ucsnt --from mykey
+$ %s tx %s deposit 1 1000000000uatom,50000000000usquad --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -170,7 +204,7 @@ func NewSwapBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Swap coins within a pair.
 Example:
-$ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000ucsnt uatom 1.0 10000 10s --from mykey
+$ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
 [direction]: swap direction (one of: SWAP_DIRECTION_BUY,SWAP_DIRECTION_SELL)

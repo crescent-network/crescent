@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // GetLastPairId returns the last pair id.
@@ -92,7 +92,7 @@ func (k Keeper) SetPairIndex(ctx sdk.Context, baseCoinDenom, quoteCoinDenom stri
 // SetPairLookupIndex stores a pair lookup index for given denoms.
 func (k Keeper) SetPairLookupIndex(ctx sdk.Context, denomA string, denomB string, pairId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPairLookupIndexKey(denomA, denomB, pairId), []byte{})
+	store.Set(types.GetPairsByDenomsIndexKey(denomA, denomB, pairId), []byte{})
 }
 
 // IterateAllPairs iterates over all the stored pairs and performs a callback function.

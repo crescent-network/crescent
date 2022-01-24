@@ -39,6 +39,8 @@ type StakingKeeper interface {
 	IterateValidators(sdk.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
 
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(sdk.Context,
 		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
@@ -92,6 +94,9 @@ type StakingKeeper interface {
 	BeginRedelegation(
 		ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 	) (completionTime time.Time, err error)
+	ValidateUnbondAmount(
+		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
+	) (shares sdk.Dec, err error)
 }
 
 // GovKeeper expected gov keeper (noalias)

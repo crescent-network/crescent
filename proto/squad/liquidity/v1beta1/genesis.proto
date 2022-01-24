@@ -1,0 +1,13 @@
+syntax = "proto3";
+package squad.liquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "squad/liquidity/v1beta1/liquidity.proto";
+
+option go_package                      = "github.com/cosmosquad-labs/squad/x/liquidity/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// GenesisState defines the liquidity module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

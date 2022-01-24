@@ -228,7 +228,7 @@ where `label = (praise|nitpick|suggestion|issue|question|thought|chore)`
 
 #### Commit Comments
 
-Commits comments will also follow a similar format as laid out following the standard defined by [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary). This commit convention SHOULD BE enforced as part of [pre-commit](https://pre-commit.com/) checks.
+Commits comments will also follow a similar format as laid out following the standard defined by [Conventional Commits](https://www.conventionalcommits.org). This commit convention SHOULD BE enforced as part of [pre-commit](https://pre-commit.com/) checks.
 
 ## Consequences
 
