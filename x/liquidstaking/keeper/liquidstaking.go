@@ -38,6 +38,22 @@ func (k Keeper) CheckRewardsAndLiquidPower(ctx sdk.Context, proxyAcc sdk.AccAddr
 	return totalRewards, liquidPower
 }
 
+func (k Keeper) UpdateLiquidTokens(ctx sdk.Context, proxyAcc sdk.AccAddress) {
+	k.stakingKeeper.IterateDelegations(
+		ctx, proxyAcc,
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+			valAddr := del.GetValidatorAddr()
+			val, found := k.GetLiquidValidator(ctx, valAddr)
+			if !found {
+				panic("liquid validator not founded")
+			}
+			val.LiquidTokens = del.GetShares().TruncateInt()
+			k.SetLiquidValidator(ctx, val)
+			return false
+		},
+	)
+}
+
 func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	// delegation power, bondDenom balance, remaining reward, unbonding amount of types.LiquidStakingProxyAcc
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
@@ -191,11 +207,7 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	//share := unbondingAmount.QuoInt(activeVals.TotalWeight()).TruncateInt()
-	//leftAmount := unbondingAmount.TruncateInt()
-	// TODO: DivideByCurrentWeight
-	// TODO: to be current weight, not param weight,
-	// TODO: crumb could small micro token, drop it
+	// crumb could small micro token, drop it
 	unbondingShares, _ := types.DivideByCurrentWeightDec(activeVals, unbondingAmount)
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
@@ -295,7 +307,7 @@ func (k Keeper) SetLiquidValidator(ctx sdk.Context, val types.LiquidValidator) {
 }
 
 // GetAllLiquidValidators get the set of all liquid validators with no limits, used during genesis dump
-func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals []types.LiquidValidator) {
+func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
@@ -310,44 +322,29 @@ func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals []types.LiquidVali
 }
 
 // GetActiveLiquidValidators get the set of active liquid validators.
-// TODO: refactor []types.LiquidValidator for types.LiquidValidators for totalWeights and len and minMaxGap
 func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
-	//totalWeight = sdk.ZeroInt()
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
 		if val.Status == types.ValidatorStatusActive {
 			vals = append(vals, val)
-			//totalWeight = totalWeight.Add(val.Weight)
 		}
 	}
-
-	////lenVals = len(vals)
-	//if lenVals == 0 || !totalWeight.IsPositive() {
-	//	// TODO: make a error type for this
-	//	err = fmt.Errorf("there's no active liquid validators")
-	//}
-
 	return vals
 }
 
-// GetAllLiquidValidatorsMap get the set of all liquid validators as map with no limits
-func (k Keeper) GetAllLiquidValidatorsMap(ctx sdk.Context) map[string]types.LiquidValidator {
-	store := ctx.KVStore(k.storeKey)
-
-	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
-	defer iterator.Close()
-
-	valsMap := make(map[string]types.LiquidValidator)
-	for ; iterator.Valid(); iterator.Next() {
-		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
+// GetValidatorsMap get the set of all validators as map with no limits
+// TODO: it could optimize to containing only to be used validators
+func (k Keeper) GetValidatorsMap(ctx sdk.Context) map[string]stakingtypes.Validator {
+	valsMap := make(map[string]stakingtypes.Validator)
+	vals := k.stakingKeeper.GetAllValidators(ctx)
+	for _, val := range vals {
 		valsMap[val.OperatorAddress] = val
 	}
-
 	return valsMap
 }
 

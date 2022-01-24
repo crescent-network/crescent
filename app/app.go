@@ -62,9 +62,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -90,6 +87,9 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+	"github.com/crescent-network/crescent/x/mint"
+	mintkeeper "github.com/crescent-network/crescent/x/mint/keeper"
+	minttypes "github.com/crescent-network/crescent/x/mint/types"
 	"github.com/tendermint/budget/x/budget"
 	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
@@ -343,15 +343,30 @@ func NewCrescentApp(
 		app.GetSubspace(stakingtypes.ModuleName),
 	)
 	app.StakingKeeper = &stakingKeeper
+
+	inflationSchedules := minttypes.InflationSchedules{
+		{
+			StartTime: liquidstakingtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+			EndTime:   liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(300000000000000),
+		},
+		{
+			StartTime: liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			EndTime:   liquidstakingtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(200000000000000),
+		},
+	}
+
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		keys[minttypes.StoreKey],
 		app.GetSubspace(minttypes.ModuleName),
-		app.StakingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
+		inflationSchedules,
 		authtypes.FeeCollectorName,
 	)
+
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		keys[distrtypes.StoreKey],
@@ -537,9 +552,8 @@ func NewCrescentApp(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		liquiditytypes.ModuleName,
-		// TODO: fix ordering of liquidstaking module
-		liquidstakingtypes.ModuleName,
 		farmingtypes.ModuleName,
+		liquidstakingtypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
 	)

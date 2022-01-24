@@ -129,7 +129,8 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
-	lValMap := suite.keeper.GetAllLiquidValidatorsMap(suite.ctx)
+	liquidValidators := suite.keeper.GetAllLiquidValidators(suite.ctx)
+	lValMap := liquidValidators.Map()
 	fmt.Println(lValMap)
 
 	//val1, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, valOpers[0])
