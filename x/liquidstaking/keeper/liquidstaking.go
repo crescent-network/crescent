@@ -50,6 +50,35 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	return balance.Amount.ToDec().Add(liquidPower).Add(totalRewards).Add(unbondingPower.ToDec())
 }
 
+func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, stakingAmt sdk.Int) (newShares sdk.Dec, err error) {
+	totalNewShares := sdk.ZeroDec()
+	targetMap := types.AddStakingTargetMap(activeVals, stakingAmt)
+	for valStr, amt := range targetMap {
+		val, err := sdk.ValAddressFromBech32(valStr)
+		if err != nil {
+			return sdk.ZeroDec(), err
+		}
+		validator, found := k.stakingKeeper.GetValidator(ctx, val)
+		if !found {
+			panic("validator not founded")
+		}
+		// TODO: consider checking active val
+		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, amt, stakingtypes.Unbonded, validator, true)
+		if err != nil {
+			return sdk.ZeroDec(), err
+		}
+		// TODO: consider kv optimize
+		liquidVal, found := k.GetLiquidValidator(ctx, val)
+		if !found {
+			panic("liquid validator not founded")
+		}
+		liquidVal.LiquidTokens = liquidVal.LiquidTokens.Add(amt)
+		k.SetLiquidValidator(ctx, liquidVal)
+		totalNewShares = totalNewShares.Add(newShares)
+	}
+	return totalNewShares, nil
+}
+
 // LiquidStaking ...
 func (k Keeper) LiquidStaking(
 	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin) (newShares sdk.Dec, err error) {
@@ -60,6 +89,11 @@ func (k Keeper) LiquidStaking(
 		return sdk.ZeroDec(), sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", stakingCoin.Denom, bondDenom,
 		)
+	}
+
+	activeVals := k.GetActiveLiquidValidators(ctx)
+	if activeVals.Len() == 0 || !activeVals.TotalWeight().IsPositive() {
+		return sdk.ZeroDec(), fmt.Errorf("there's no active liquid validators")
 	}
 
 	netAmount := k.NetAmount(ctx)
@@ -74,9 +108,8 @@ func (k Keeper) LiquidStaking(
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 	mintAmt := stakingCoin.Amount
-	stakingAmt := stakingCoin.Amount.ToDec()
 	if bTokenTotalSupply.IsPositive() {
-		mintAmt = bTokenTotalSupply.Amount.ToDec().Mul(stakingAmt).QuoTruncate(netAmount).TruncateInt()
+		mintAmt = bTokenTotalSupply.Amount.ToDec().Mul(stakingCoin.Amount.ToDec()).QuoTruncate(netAmount).TruncateInt()
 	}
 
 	// mint on module acc and send
@@ -90,33 +123,7 @@ func (k Keeper) LiquidStaking(
 		return sdk.ZeroDec(), err
 	}
 
-	activeVals, totalWeight := k.GetActiveLiquidValidators(ctx)
-	lenActiveVals := len(activeVals)
-	share := stakingAmt.QuoTruncate(totalWeight).TruncateInt()
-	totalNewShares := sdk.ZeroDec()
-	var weightedShare sdk.Int
-	for i, val := range activeVals {
-		if i+1 == lenActiveVals {
-			// To minimize the decimal error, use the remaining amount for the last validator.
-			weightedShare = stakingAmt.Sub(totalNewShares).TruncateInt()
-		} else {
-			weightedShare = share.ToDec().Mul(val.Weight).TruncateInt()
-		}
-		// NOTE: source funds are always unbonded
-		validator, found := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
-		if !found {
-			panic("validator not founded")
-		}
-		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, weightedShare, stakingtypes.Unbonded, validator, true)
-		if err != nil {
-			return sdk.ZeroDec(), err
-		}
-		val.LiquidTokens = val.LiquidTokens.Add(weightedShare)
-		k.SetLiquidValidator(ctx, val)
-		totalNewShares = totalNewShares.Add(newShares)
-	}
-
-	return totalNewShares, nil
+	return k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount)
 }
 
 // LiquidUnstaking ...
@@ -131,6 +138,11 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, []stakingtypes.UnbondingDelegation{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", amount.Denom, liquidBondDenom,
 		)
+	}
+
+	activeVals := k.GetActiveLiquidValidators(ctx)
+	if activeVals.Len() == 0 || !activeVals.TotalWeight().IsPositive() {
+		return time.Time{}, []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
 	}
 
 	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate), review decimal truncation
@@ -151,29 +163,30 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	activeVals, totalWeight := k.GetActiveLiquidValidators(ctx)
-	lenActiveVals := len(activeVals)
-	share := unstakeAmount.QuoTruncate(totalWeight).TruncateInt()
+	share := unstakeAmount.QuoInt(activeVals.TotalWeight()).TruncateInt()
 	leftAmount := unstakeAmount.TruncateInt()
 	var weightedShare sdk.Int
 
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
-	for i, val := range activeVals {
-		if i+1 == lenActiveVals {
+	lenActiveVals := activeVals.Len()
+	for i := lenActiveVals - 1; i >= 0; i-- {
+		if i == 0 {
 			// To minimize the decimal error, use the remaining amount for the last validator.
 			weightedShare = leftAmount
 		} else {
-			weightedShare = share.ToDec().Mul(val.Weight).TruncateInt()
+			weightedShare = share.Mul(activeVals[i].Weight)
 		}
 		var ubd stakingtypes.UnbondingDelegation
-		ubdTime, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare.ToDec())
+		del, found := k.stakingKeeper.GetDelegation(ctx, proxyAcc, activeVals[i].GetOperator())
+		fmt.Println("[liquid UBD]", weightedShare.String(), del.Shares.String(), found)
+		ubdTime, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, activeVals[i].GetOperator(), weightedShare.ToDec())
 		if err != nil {
 			return time.Time{}, []stakingtypes.UnbondingDelegation{}, err
 		}
 		ubds = append(ubds, ubd)
-		val.LiquidTokens = val.LiquidTokens.Sub(weightedShare)
-		k.SetLiquidValidator(ctx, val)
+		activeVals[i].LiquidTokens = activeVals[i].LiquidTokens.Sub(weightedShare)
+		k.SetLiquidValidator(ctx, activeVals[i])
 		leftAmount = leftAmount.Sub(weightedShare)
 	}
 	return ubdTime, ubds, nil
@@ -196,7 +209,7 @@ func (k Keeper) LiquidUnbond(
 	// transfer the validator tokens to the not bonded pool
 	if validator.IsBonded() {
 		coins := sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), returnAmount))
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, coins); err != nil {
+		if err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, coins); err != nil {
 			panic(err)
 		}
 	}
@@ -206,6 +219,24 @@ func (k Keeper) LiquidUnbond(
 	k.stakingKeeper.InsertUBDQueue(ctx, ubd, completionTime)
 
 	return completionTime, ubd, nil
+}
+
+func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (totalRewards sdk.Int) {
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
+	k.stakingKeeper.IterateDelegations(
+		ctx, proxyAcc,
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+			valAddr := del.GetValidatorAddr()
+			reward, err := k.distrKeeper.WithdrawDelegationRewards(ctx, proxyAcc, valAddr)
+			if err != nil {
+				// TODO: tmp panic for debugging
+				panic(err)
+			}
+			totalRewards = totalRewards.Add(reward.AmountOf(bondDenom))
+			return false
+		},
+	)
+	return totalRewards
 }
 
 // GetLiquidValidator get a single liquid validator
@@ -244,22 +275,29 @@ func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals []types.LiquidVali
 }
 
 // GetActiveLiquidValidators get the set of active liquid validators.
-func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals []types.LiquidValidator, totalWeight sdk.Dec) {
+// TODO: refactor []types.LiquidValidator for types.LiquidValidators for totalWeights and len and minMaxGap
+func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
-	totalWeight = sdk.ZeroDec()
+	//totalWeight = sdk.ZeroInt()
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
 		if val.Status == types.ValidatorStatusActive {
 			vals = append(vals, val)
-			totalWeight = totalWeight.Add(val.Weight)
+			//totalWeight = totalWeight.Add(val.Weight)
 		}
 	}
 
-	return vals, totalWeight
+	////lenVals = len(vals)
+	//if lenVals == 0 || !totalWeight.IsPositive() {
+	//	// TODO: make a error type for this
+	//	err = fmt.Errorf("there's no active liquid validators")
+	//}
+
+	return vals
 }
 
 // GetAllLiquidValidatorsMap get the set of all liquid validators as map with no limits
