@@ -23,6 +23,10 @@ type InflationSchedule struct {
 
 ## LastBlockTime
 
+LastBlockTime defines block time of the last block's header, It used to calculate inflation.
+
+- LastBlockTimeKey: `0x90 -> sdk.FormatTimeBytes(time.Time)`
+
 ## Params
 
 Minting params are held in the global params store.

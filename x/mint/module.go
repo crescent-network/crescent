@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -148,10 +147,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	// TODO: add calc logic for last blockTime
-	// set temporary hardcoded by 5s blockTime
-	tmpBlockTime := 5 * time.Second
-	BeginBlocker(ctx, am.keeper, tmpBlockTime)
+	BeginBlocker(ctx, am.keeper)
 }
 
 // EndBlock returns the end blocker for the mint module. It returns no validator
