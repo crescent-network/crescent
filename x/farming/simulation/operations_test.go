@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	minttypes "github.com/crescent-network/crescent/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -288,7 +288,6 @@ func createTestApp(isCheckTx bool) (*crescentapp.CrescentApp, sdk.Context) {
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 
 	return app, ctx
 }
