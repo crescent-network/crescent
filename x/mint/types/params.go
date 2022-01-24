@@ -18,7 +18,7 @@ var (
 	KeyBlockTimeThreshold = []byte("BlockTimeThreshold")
 )
 
-// ParamTable for minting module.
+// ParamTable for mint module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -33,7 +33,7 @@ func NewParams(
 	}
 }
 
-// default minting module parameters
+// default mint module parameters
 func DefaultParams() Params {
 	return Params{
 		MintDenom:          sdk.DefaultBondDenom,

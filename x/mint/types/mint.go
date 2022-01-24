@@ -1,3 +1,3 @@
 package types
 
-type InflationSchedules []InflationPeriod
+type InflationSchedules []InflationSchedule

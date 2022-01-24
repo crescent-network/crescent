@@ -6,7 +6,7 @@ order: 4
 
 The mint module contains the following parameters:
 
-| Key                 | Type          | Example |
-|---------------------|---------------|---------|
-| MintDenom           | string        | "uatom" |
-| BlocksPerYear       | time.duration | "10s"   |
+| Key                  | Type          | Example |
+|----------------------|---------------|---------|
+| MintDenom            | string        | "stake" |
+| block_time_threshold | time.duration | "10s"   |

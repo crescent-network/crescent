@@ -8,11 +8,11 @@ import (
 	"github.com/crescent-network/crescent/x/mint/types"
 )
 
-// GetQueryCmd returns the cli query commands for the minting module.
+// GetQueryCmd returns the cli query commands for the mint module.
 func GetQueryCmd() *cobra.Command {
 	mintingQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the minting module",
+		Short:                      "Querying commands for the mint module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

@@ -10,22 +10,23 @@ import (
 )
 
 // BeginBlocker mints new tokens for the previous block.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper, blockTime time.Duration) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper, lastBlockTime time.Duration) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// fetch stored params
 	params := k.GetParams(ctx)
 
-	schedules := k.GetInflationSchedules()
+	InflationSchedules := k.GetInflationSchedules()
 	blockInflation := sdk.ZeroInt()
-	for _, period := range schedules {
-		if !period.EndTime.Before(ctx.BlockTime()) && !period.StartTime.After(ctx.BlockTime()) {
+	for _, schedule := range InflationSchedules {
+		if !schedule.EndTime.Before(ctx.BlockTime()) && !schedule.StartTime.After(ctx.BlockTime()) {
 			// TODO: need to Get/Set LastBlockTime
-			//blockTime := ctx.BlockTime().Sub(k.GetLastBlockTime(ctx))
-			if blockTime > params.BlockTimeThreshold {
-				blockTime = params.BlockTimeThreshold
+			//lastBlockTime := ctx.BlockTime().Sub(k.GetLastBlockTime(ctx))
+			if lastBlockTime > params.BlockTimeThreshold {
+				lastBlockTime = params.BlockTimeThreshold
 			}
-			blockInflation = period.Amount.MulRaw(blockTime.Nanoseconds()).QuoRaw(period.EndTime.Sub(period.StartTime).Nanoseconds())
+			// blockInflation = InflationAmountThisPeriod * min(CurrentBlockTime-LastBlockTime,BlockTimeThreshold)/(InflationPeriodEndDate-InflationPeriodStartDate)
+			blockInflation = schedule.Amount.MulRaw(lastBlockTime.Nanoseconds()).QuoRaw(schedule.EndTime.Sub(schedule.StartTime).Nanoseconds())
 			break
 		}
 	}

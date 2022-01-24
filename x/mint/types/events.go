@@ -1,6 +1,6 @@
 package types
 
-// Minting module event types
+// Mint module event types
 const (
 	EventTypeMint = ModuleName
 

@@ -15,7 +15,7 @@ service Query {
   }
 
   //// Inflation returns the current minting inflation value.
-  //rpc Inflation(QueryInflationRequest) returns (QueryInflationResponse) {
+  // rpc Inflation(QueryInflationRequest) returns (QueryInflationResponse) {
   //  option (google.api.http).get = "/crescent/mint/v1beta1/inflation";
   //}
 }
@@ -30,11 +30,12 @@ message QueryParamsResponse {
 }
 
 //// QueryInflationRequest is the request type for the Query/Inflation RPC method.
-//message QueryInflationRequest {}
+// message QueryInflationRequest {}
 //
 //// QueryInflationResponse is the response type for the Query/Inflation RPC
 //// method.
-//message QueryInflationResponse {
+// message QueryInflationResponse {
 //  // inflation is the current minting inflation value.
-//  bytes inflation = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+//  bytes inflation = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) =
+//  false];
 //}
