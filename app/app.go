@@ -87,9 +87,9 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
-	"github.com/crescent-network/crescent/x/mint"
-	mintkeeper "github.com/crescent-network/crescent/x/mint/keeper"
-	minttypes "github.com/crescent-network/crescent/x/mint/types"
+	"github.com/cosmosquad-labs/squad/x/mint"
+	mintkeeper "github.com/cosmosquad-labs/squad/x/mint/keeper"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/tendermint/budget/x/budget"
 	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
@@ -98,20 +98,20 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	farmingparams "github.com/crescent-network/crescent/app/params"
-	"github.com/crescent-network/crescent/x/farming"
-	farmingclient "github.com/crescent-network/crescent/x/farming/client"
-	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
-	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
-	"github.com/crescent-network/crescent/x/liquidity"
-	liquiditykeeper "github.com/crescent-network/crescent/x/liquidity/keeper"
-	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
-	"github.com/crescent-network/crescent/x/liquidstaking"
-	liquidstakingkeeper "github.com/crescent-network/crescent/x/liquidstaking/keeper"
-	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
+	farmingparams "github.com/cosmosquad-labs/squad/app/params"
+	"github.com/cosmosquad-labs/squad/x/farming"
+	farmingclient "github.com/cosmosquad-labs/squad/x/farming/client"
+	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity"
+	liquiditykeeper "github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking"
+	liquidstakingkeeper "github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
+	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
-const appName = "CrescentApp"
+const appName = "SquadApp"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -171,14 +171,14 @@ var (
 
 // Verify app interface at compile time
 var (
-	_ simapp.App              = (*CrescentApp)(nil)
-	_ servertypes.Application = (*CrescentApp)(nil)
+	_ simapp.App              = (*SquadApp)(nil)
+	_ servertypes.Application = (*SquadApp)(nil)
 )
 
-// CrescentApp extends an ABCI application, but with most of its parameters exported.
+// SquadApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type CrescentApp struct {
+type SquadApp struct {
 	*baseapp.BaseApp
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -233,11 +233,11 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".crescentapp")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".squadapp")
 }
 
-// NewCrescentApp returns a reference to an initialized CrescentApp.
-func NewCrescentApp(
+// NewSquadApp returns a reference to an initialized SquadApp.
+func NewSquadApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -248,7 +248,7 @@ func NewCrescentApp(
 	encodingConfig farmingparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) *CrescentApp {
+) *SquadApp {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -282,7 +282,7 @@ func NewCrescentApp(
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	app := &CrescentApp{
+	app := &SquadApp{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
@@ -658,20 +658,20 @@ func NewCrescentApp(
 }
 
 // Name returns the name of the App.
-func (app *CrescentApp) Name() string { return app.BaseApp.Name() }
+func (app *SquadApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
-func (app *CrescentApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *SquadApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block.
-func (app *CrescentApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *SquadApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
 // InitChainer application update at chain initialization.
-func (app *CrescentApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *SquadApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -681,12 +681,12 @@ func (app *CrescentApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) 
 }
 
 // LoadHeight loads a particular height.
-func (app *CrescentApp) LoadHeight(height int64) error {
+func (app *SquadApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *CrescentApp) ModuleAccountAddrs() map[string]bool {
+func (app *SquadApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
@@ -700,64 +700,64 @@ func (app *CrescentApp) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// LegacyAmino returns CrescentApp's amino codec.
+// LegacyAmino returns SquadApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *CrescentApp) LegacyAmino() *codec.LegacyAmino {
+func (app *SquadApp) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 
-// AppCodec returns CrescentApp's app codec.
+// AppCodec returns SquadApp's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *CrescentApp) AppCodec() codec.Codec {
+func (app *SquadApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns CrescentApp's InterfaceRegistry
-func (app *CrescentApp) InterfaceRegistry() types.InterfaceRegistry {
+// InterfaceRegistry returns SquadApp's InterfaceRegistry
+func (app *SquadApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *CrescentApp) GetKey(storeKey string) *sdk.KVStoreKey {
+func (app *SquadApp) GetKey(storeKey string) *sdk.KVStoreKey {
 	return app.keys[storeKey]
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *CrescentApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
+func (app *SquadApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
 
 // GetMemKey returns the MemStoreKey for the provided mem key.
 //
 // NOTE: This is solely used for testing purposes.
-func (app *CrescentApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+func (app *SquadApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
 	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *CrescentApp) GetSubspace(moduleName string) paramstypes.Subspace {
+func (app *SquadApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *CrescentApp) SimulationManager() *module.SimulationManager {
+func (app *SquadApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *CrescentApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *SquadApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register legacy tx routes.
@@ -778,12 +778,12 @@ func (app *CrescentApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
-func (app *CrescentApp) RegisterTxService(clientCtx client.Context) {
+func (app *SquadApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *CrescentApp) RegisterTendermintService(clientCtx client.Context) {
+func (app *SquadApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 

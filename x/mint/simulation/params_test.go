@@ -6,7 +6,7 @@ package simulation_test
 //
 //	"github.com/stretchr/testify/require"
 //
-//	"github.com/crescent-network/crescent/x/mint/simulation"
+//	"github.com/squad-network/squad/x/mint/simulation"
 //)
 //
 //func TestParamChangest(t *testing.T) {

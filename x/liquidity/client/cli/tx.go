@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // GetTxCmd returns the transaction commands for the module
@@ -47,7 +47,7 @@ func NewCreatePairCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a denom pair for an order book.
 Example:
-$ %s tx %s create-pair uatom ucsnt --from mykey
+$ %s tx %s create-pair uatom usquad --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -80,7 +80,7 @@ func NewCreatePoolCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a liquidity pool with coins.
 Example:
-$ %s tx %s create-pool 1 1000000000uatom,50000000000ucsnt --from mykey
+$ %s tx %s create-pool 1 1000000000uatom,50000000000usquad --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -120,7 +120,7 @@ func NewDepositBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Deposit coins to a liquidity pool.
 Example:
-$ %s tx %s deposit 1 1000000000uatom,50000000000ucsnt --from mykey
+$ %s tx %s deposit 1 1000000000uatom,50000000000usquad --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -204,7 +204,7 @@ func NewSwapBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Swap coins within a pair.
 Example:
-$ %s tx %s swap ucsnt uatom 10000uatom ucsnt 1.0 10s --from mykey
+$ %s tx %s swap usquad uatom 10000uatom usquad 1.0 10s --from mykey
 
 [x-coin-denom]: x coin denomination
 [y-coin-denom]: y coin denomination

@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/cmd/crescentd/cmd"
+	"github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/cmd/squad/cmd"
 )
 
 func main() {

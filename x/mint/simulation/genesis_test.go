@@ -12,8 +12,8 @@ package simulation_test
 //	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 //	"github.com/cosmos/cosmos-sdk/types/module"
 //	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-//	"github.com/crescent-network/crescent/x/mint/simulation"
-//	"github.com/crescent-network/crescent/x/mint/types"
+//	"github.com/squad-network/squad/x/mint/simulation"
+//	"github.com/squad-network/squad/x/mint/types"
 //)
 //
 //// TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

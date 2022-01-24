@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -233,7 +233,7 @@ func QueryPairs() *cobra.Command {
 Example:
 $ %s query %s pairs
 $ %s query %s pairs --denoms=uatom
-$ %s query %s pairs --denoms=uatom,ucsnt
+$ %s query %s pairs --denoms=uatom,usquad
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,

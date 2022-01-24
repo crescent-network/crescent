@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/crescent-network/crescent/app"
+	"github.com/cosmosquad-labs/squad/app"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -16,9 +16,9 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
 
-	"github.com/crescent-network/crescent/x/farming/client/cli"
-	"github.com/crescent-network/crescent/x/farming/keeper"
-	"github.com/crescent-network/crescent/x/farming/types"
+	"github.com/cosmosquad-labs/squad/x/farming/client/cli"
+	"github.com/cosmosquad-labs/squad/x/farming/keeper"
+	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 type IntegrationTestSuite struct {

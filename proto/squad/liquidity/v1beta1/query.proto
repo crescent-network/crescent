@@ -1,79 +1,79 @@
 syntax = "proto3";
-package crescent.liquidity.v1beta1;
+package squad.liquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "crescent/liquidity/v1beta1/liquidity.proto";
+import "squad/liquidity/v1beta1/liquidity.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/liquidity/types";
+option go_package = "github.com/cosmosquad-labs/squad/x/liquidity/types";
 
 // Query defines the gRPC querier service.
 service Query {
   // Params returns parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/params";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/params";
   }
 
   // Pools returns all liquidity pools.
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools";
   }
 
   // Pool returns the specific liquidity pool.
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/{pool_id}";
   }
 
   // PoolByReserveAcc returns all pools that correspond to the reserve account.
   rpc PoolByReserveAcc(QueryPoolByReserveAccRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/reserve_acc/{reserve_acc}";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/reserve_acc/{reserve_acc}";
   }
 
   // PoolByPoolCoinDenom returns all pools that correspond to the pool coin denom.
   rpc PoolByPoolCoinDenom(QueryPoolByPoolCoinDenomRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}";
   }
 
   // Pairs returns all liquidity pairs.
   rpc Pairs(QueryPairsRequest) returns (QueryPairsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs";
   }
 
   // Pair returns the specific pair.
   rpc Pair(QueryPairRequest) returns (QueryPairResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs/{pair_id}";
   }
 
   // DepositRequests returns all deposit requests.
   rpc DepositRequests(QueryDepositRequestsRequest) returns (QueryDepositRequestsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/{pool_id}/deposit_requests";
   }
 
   // DepositRequest returns the specific deposit request.
   rpc DepositRequest(QueryDepositRequestRequest) returns (QueryDepositRequestResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}";
   }
 
   // WithdrawRequests returns all withdraw requests.
   rpc WithdrawRequests(QueryWithdrawRequestsRequest) returns (QueryWithdrawRequestsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/{pool_id}/withdraw_requests";
   }
 
   // WithdrawRequest returns the specific withdraw request.
   rpc WithdrawRequest(QueryWithdrawRequestRequest) returns (QueryWithdrawRequestResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}";
   }
 
   // SwapRequests returns all swap requests.
   rpc SwapRequests(QuerySwapRequestsRequest) returns (QuerySwapRequestsResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/swap_requests";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs/{pair_id}/swap_requests";
   }
 
   // SwapRequest returns the specific swap request.
   rpc SwapRequest(QuerySwapRequestRequest) returns (QuerySwapRequestResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/swap_requests/{id}";
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs/{pair_id}/swap_requests/{id}";
   }
 }
 

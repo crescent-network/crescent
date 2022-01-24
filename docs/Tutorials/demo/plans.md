@@ -1,7 +1,7 @@
 # Farming Plans
 
 <!-- markdown-link-check-disable-next-line -->
-There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/crescent-network/crescent/blob/main/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
+There are two different types of farming plans in the farming module. Whereas a public farming plan can only be created through governance proposal, a private farming plan can be created with any account or an entity. Read [spec](https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/01_concepts.md) documentation for more information about the plan types.
 
 In this documentation, some sample data in JSON are provided. They will be used to test out farming plan functionality.
 
@@ -22,13 +22,13 @@ In this documentation, some sample data in JSON are provided. They will be used 
 
 ```bash
 # Clone the project 
-git clone https://github.com/crescent-network/crescent.git
-cd crescent
+git clone https://github.com/cosmosquad-labs/squad.git
+cd squad
 make install
 
 # Configure variables
-export BINARY=crescentd
-export HOME_APP=$HOME/.crescentapp
+export BINARY=squad
+export HOME_APP=$HOME/.squadapp
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
