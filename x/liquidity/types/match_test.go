@@ -20,6 +20,6 @@ func TestMatchOrders(t *testing.T) {
 
 	for _, order := range ob.AllOrders() {
 		fmt.Printf("(%s, %s(%s), paid %s, received %s)\n",
-			order.GetDirection(), order.GetBaseCoinAmount(), order.GetOpenBaseCoinAmount(), order.GetOfferCoinAmount().Sub(order.GetRemainingOfferCoinAmount()), order.GetReceivedAmount())
+			order.GetDirection(), order.GetAmount(), order.GetOpenAmount(), order.GetOfferCoinAmount().Sub(order.GetRemainingOfferCoinAmount()), order.GetReceivedAmount())
 	}
 }

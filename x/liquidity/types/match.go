@@ -143,8 +143,8 @@ func FindLastMatchableOrders(orders1, orders2 Orders, matchPrice sdk.Dec) (idx1,
 		i               int
 		partialMatchAmt sdk.Int
 	}{
-		{orders1, orders1.OpenBaseCoinAmount(), len(orders1) - 1, sdk.Int{}},
-		{orders2, orders2.OpenBaseCoinAmount(), len(orders2) - 1, sdk.Int{}},
+		{orders1, orders1.OpenAmount(), len(orders1) - 1, sdk.Int{}},
+		{orders2, orders2.OpenAmount(), len(orders2) - 1, sdk.Int{}},
 	}
 	for {
 		ok := true
@@ -152,13 +152,13 @@ func FindLastMatchableOrders(orders1, orders2 Orders, matchPrice sdk.Dec) (idx1,
 			i := side.i
 			order := side.orders[i]
 			matchAmt := sdk.MinInt(sides[0].totalAmt, sides[1].totalAmt)
-			side.partialMatchAmt = matchAmt.Sub(side.totalAmt.Sub(order.GetOpenBaseCoinAmount()))
-			if side.totalAmt.Sub(order.GetOpenBaseCoinAmount()).GT(matchAmt) ||
+			side.partialMatchAmt = matchAmt.Sub(side.totalAmt.Sub(order.GetOpenAmount()))
+			if side.totalAmt.Sub(order.GetOpenAmount()).GT(matchAmt) ||
 				matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero() {
 				if i == 0 {
 					return
 				}
-				side.totalAmt = side.totalAmt.Sub(order.GetOpenBaseCoinAmount())
+				side.totalAmt = side.totalAmt.Sub(order.GetOpenAmount())
 				side.i--
 				ok = false
 			}
@@ -184,12 +184,12 @@ func MatchOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (quoteCoinDus
 		buyOrder := buyOrders[i]
 		var receivedBaseCoinAmt sdk.Int
 		if i < bi {
-			receivedBaseCoinAmt = buyOrder.GetOpenBaseCoinAmount()
+			receivedBaseCoinAmt = buyOrder.GetOpenAmount()
 		} else {
 			receivedBaseCoinAmt = pmb
 		}
 		paidQuoteCoinAmt := matchPrice.MulInt(receivedBaseCoinAmt).Ceil().TruncateInt()
-		buyOrder.SetOpenBaseCoinAmount(buyOrder.GetOpenBaseCoinAmount().Sub(receivedBaseCoinAmt))
+		buyOrder.SetOpenAmount(buyOrder.GetOpenAmount().Sub(receivedBaseCoinAmt))
 		buyOrder.SetRemainingOfferCoinAmount(buyOrder.GetRemainingOfferCoinAmount().Sub(paidQuoteCoinAmt))
 		buyOrder.SetReceivedAmount(receivedBaseCoinAmt)
 		quoteCoinDustAmt = quoteCoinDustAmt.Add(paidQuoteCoinAmt)
@@ -199,12 +199,12 @@ func MatchOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (quoteCoinDus
 		sellOrder := sellOrders[i]
 		var paidBaseCoinAmt sdk.Int
 		if i < si {
-			paidBaseCoinAmt = sellOrder.GetOpenBaseCoinAmount()
+			paidBaseCoinAmt = sellOrder.GetOpenAmount()
 		} else {
 			paidBaseCoinAmt = pms
 		}
 		receivedQuoteCoinAmt := matchPrice.MulInt(paidBaseCoinAmt).TruncateInt()
-		sellOrder.SetOpenBaseCoinAmount(sellOrder.GetOpenBaseCoinAmount().Sub(paidBaseCoinAmt))
+		sellOrder.SetOpenAmount(sellOrder.GetOpenAmount().Sub(paidBaseCoinAmt))
 		sellOrder.SetRemainingOfferCoinAmount(sellOrder.GetRemainingOfferCoinAmount().Sub(paidBaseCoinAmt))
 		sellOrder.SetReceivedAmount(receivedQuoteCoinAmt)
 		quoteCoinDustAmt = quoteCoinDustAmt.Sub(receivedQuoteCoinAmt)

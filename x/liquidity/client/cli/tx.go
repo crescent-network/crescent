@@ -218,9 +218,9 @@ $ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000ucsnt uatom 1.0 10000 10s --from mykey
 				return fmt.Errorf("invalid price: %w", err)
 			}
 
-			baseCoinAmount, ok := sdk.NewIntFromString(args[5])
+			amt, ok := sdk.NewIntFromString(args[5])
 			if !ok {
-				return fmt.Errorf("invalid base coin amount: %s", args[5])
+				return fmt.Errorf("invalid amount: %s", args[5])
 			}
 
 			orderLifespan, err := time.ParseDuration(args[6])
@@ -235,7 +235,7 @@ $ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000ucsnt uatom 1.0 10000 10s --from mykey
 				offerCoin,
 				demandCoinDenom,
 				price,
-				baseCoinAmount,
+				amt,
 				orderLifespan,
 			)
 

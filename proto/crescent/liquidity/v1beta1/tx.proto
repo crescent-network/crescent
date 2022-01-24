@@ -111,9 +111,8 @@ message MsgSwapBatch {
   // price specifies the order price
   string price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // base_coin_amount specifies the amount of base coin the orderer wants to buy or sell
-  string base_coin_amount = 7
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  // amount specifies the amount of base coin the orderer wants to buy or sell
+  string amount = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // order_lifespan specifies the order lifespan
   google.protobuf.Duration order_lifespan = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];

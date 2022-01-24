@@ -27,6 +27,6 @@ const (
 	AttributeKeyOfferCoin       = "offer_coin"
 	AttributeKeyDemandCoinDenom = "demand_coin_denom"
 	AttributeKeyPrice           = "price"
-	AttributeKeyBaseCoinAmount  = "base_coin_amount"
+	AttributeKeyAmount          = "amount"
 	AttributeKeyExpireAt        = "expire_at"
 )

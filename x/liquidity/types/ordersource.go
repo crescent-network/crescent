@@ -83,7 +83,7 @@ func (ticks *OrderBookTicks) AmountGTE(price sdk.Dec) sdk.Int {
 	}
 	amount := sdk.ZeroInt()
 	for ; i >= 0; i-- {
-		amount = amount.Add(ticks.Ticks[i].Orders.OpenBaseCoinAmount())
+		amount = amount.Add(ticks.Ticks[i].Orders.OpenAmount())
 	}
 	return amount
 }
@@ -92,7 +92,7 @@ func (ticks OrderBookTicks) AmountLTE(price sdk.Dec) sdk.Int {
 	i, _ := ticks.FindPrice(price)
 	amount := sdk.ZeroInt()
 	for ; i < len(ticks.Ticks); i++ {
-		amount = amount.Add(ticks.Ticks[i].Orders.OpenBaseCoinAmount())
+		amount = amount.Add(ticks.Ticks[i].Orders.OpenAmount())
 	}
 	return amount
 }
@@ -134,7 +134,7 @@ func (ticks OrderBookTicks) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found
 		return
 	}
 	for i--; i >= 0; i-- {
-		if ticks.Ticks[i].Orders.OpenBaseCoinAmount().IsPositive() {
+		if ticks.Ticks[i].Orders.OpenAmount().IsPositive() {
 			return ticks.Ticks[i].Price, true
 		}
 	}
@@ -150,7 +150,7 @@ func (ticks OrderBookTicks) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, fou
 		return
 	}
 	for i++; i < len(ticks.Ticks); i++ {
-		if ticks.Ticks[i].Orders.OpenBaseCoinAmount().IsPositive() {
+		if ticks.Ticks[i].Orders.OpenAmount().IsPositive() {
 			return ticks.Ticks[i].Price, true
 		}
 	}
@@ -162,7 +162,7 @@ func (ticks OrderBookTicks) HighestTick() (tick sdk.Dec, found bool) {
 		return
 	}
 	for i := range ticks.Ticks {
-		if ticks.Ticks[i].Orders.OpenBaseCoinAmount().IsPositive() {
+		if ticks.Ticks[i].Orders.OpenAmount().IsPositive() {
 			return ticks.Ticks[i].Price, true
 		}
 	}
@@ -174,7 +174,7 @@ func (ticks OrderBookTicks) LowestTick() (tick sdk.Dec, found bool) {
 		return
 	}
 	for i := len(ticks.Ticks) - 1; i >= 0; i-- {
-		if ticks.Ticks[i].Orders.OpenBaseCoinAmount().IsPositive() {
+		if ticks.Ticks[i].Orders.OpenAmount().IsPositive() {
 			return ticks.Ticks[i].Price, true
 		}
 	}

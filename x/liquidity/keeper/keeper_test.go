@@ -110,7 +110,7 @@ func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64
 func (s *KeeperTestSuite) swapBatch(
 	orderer sdk.AccAddress, pairId uint64, dir types.SwapDirection,
 	offerCoin sdk.Coin, price sdk.Dec,
-	baseCoinAmount sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
 	if fund {
 		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
@@ -124,7 +124,7 @@ func (s *KeeperTestSuite) swapBatch(
 	}
 	msg := types.NewMsgSwapBatch(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
-		price, baseCoinAmount, orderLifespan)
+		price, amt, orderLifespan)
 	req, err := s.keeper.SwapBatch(s.ctx, msg)
 	s.Require().NoError(err)
 	return req
@@ -132,17 +132,17 @@ func (s *KeeperTestSuite) swapBatch(
 
 func (s *KeeperTestSuite) swapBatchBuy(
 	orderer sdk.AccAddress, pairId uint64, offerCoin sdk.Coin,
-	price sdk.Dec, baseCoinAmount sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
 	return s.swapBatch(
-		orderer, pairId, types.SwapDirectionBuy, offerCoin, price, baseCoinAmount, orderLifespan, fund)
+		orderer, pairId, types.SwapDirectionBuy, offerCoin, price, amt, orderLifespan, fund)
 }
 
 //nolint
 func (s *KeeperTestSuite) swapBatchSell(
 	orderer sdk.AccAddress, pairId uint64, offerCoin sdk.Coin,
-	price sdk.Dec, baseCoinAmount sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
 	return s.swapBatch(
-		orderer, pairId, types.SwapDirectionSell, offerCoin, price, baseCoinAmount, orderLifespan, fund)
+		orderer, pairId, types.SwapDirectionSell, offerCoin, price, amt, orderLifespan, fund)
 }
 
 //nolint

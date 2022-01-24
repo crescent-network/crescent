@@ -78,7 +78,7 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 			sdk.NewAttribute(types.AttributeKeyOfferCoin, msg.OfferCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
 			sdk.NewAttribute(types.AttributeKeyPrice, msg.Price.String()),
-			sdk.NewAttribute(types.AttributeKeyBaseCoinAmount, msg.BaseCoinAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
 			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
 		),
@@ -219,10 +219,10 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 			case *types.UserOrder:
 				// TODO: optimize read/write (can there be only one write?)
 				req, _ := k.GetSwapRequest(ctx, pair.Id, order.RequestId)
-				req.OpenBaseCoinAmount = order.OpenBaseCoinAmount
+				req.OpenAmount = order.OpenAmount
 				//req.RemainingOfferCoin = order.RemainingOfferCoinAmount
 				req.ReceivedCoin.Amount = req.ReceivedCoin.Amount.Add(order.ReceivedAmount)
-				if order.OpenBaseCoinAmount.IsZero() {
+				if order.OpenAmount.IsZero() {
 					req.Status = types.SwapRequestStatusCompleted
 				} else {
 					req.Status = types.SwapRequestStatusPartiallyMatched

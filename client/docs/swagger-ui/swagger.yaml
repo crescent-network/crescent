@@ -2611,9 +2611,9 @@ paths:
                       title: >-
                         price specifies the price that an orderer is willing to
                         swap
-                    base_coin_amount:
+                    amount:
                       type: string
-                    open_base_coin_amount:
+                    open_amount:
                       type: string
                     batch_id:
                       type: string
@@ -2861,9 +2861,9 @@ paths:
                     title: >-
                       price specifies the price that an orderer is willing to
                       swap
-                  base_coin_amount:
+                  amount:
                     type: string
-                  open_base_coin_amount:
+                  open_amount:
                     type: string
                   batch_id:
                     type: string
@@ -6035,9 +6035,9 @@ definitions:
           price:
             type: string
             title: price specifies the price that an orderer is willing to swap
-          base_coin_amount:
+          amount:
             type: string
-          open_base_coin_amount:
+          open_amount:
             type: string
           batch_id:
             type: string
@@ -6162,9 +6162,9 @@ definitions:
             price:
               type: string
               title: price specifies the price that an orderer is willing to swap
-            base_coin_amount:
+            amount:
               type: string
-            open_base_coin_amount:
+            open_amount:
               type: string
             batch_id:
               type: string
@@ -6519,9 +6519,9 @@ definitions:
       price:
         type: string
         title: price specifies the price that an orderer is willing to swap
-      base_coin_amount:
+      amount:
         type: string
-      open_base_coin_amount:
+      open_amount:
         type: string
       batch_id:
         type: string

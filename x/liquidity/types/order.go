@@ -22,9 +22,9 @@ var (
 type Order interface {
 	GetDirection() SwapDirection
 	GetPrice() sdk.Dec
-	GetBaseCoinAmount() sdk.Int
-	GetOpenBaseCoinAmount() sdk.Int
-	SetOpenBaseCoinAmount(amount sdk.Int) Order
+	GetAmount() sdk.Int
+	GetOpenAmount() sdk.Int
+	SetOpenAmount(amount sdk.Int) Order
 	GetOfferCoinAmount() sdk.Int
 	GetRemainingOfferCoinAmount() sdk.Int
 	SetRemainingOfferCoinAmount(amount sdk.Int) Order
@@ -36,10 +36,10 @@ type PriceComparator func(a, b Order) bool
 
 type Orders []Order
 
-func (orders Orders) OpenBaseCoinAmount() sdk.Int {
+func (orders Orders) OpenAmount() sdk.Int {
 	amount := sdk.ZeroInt()
 	for _, order := range orders {
-		amount = amount.Add(order.GetOpenBaseCoinAmount())
+		amount = amount.Add(order.GetOpenAmount())
 	}
 	return amount
 }
@@ -65,7 +65,7 @@ func (orders Orders) Sort(cmp PriceComparator) {
 		return false // not reachable
 	})
 	sort.SliceStable(orders, func(i, j int) bool {
-		return orders[i].GetBaseCoinAmount().GT(orders[j].GetBaseCoinAmount())
+		return orders[i].GetAmount().GT(orders[j].GetAmount())
 	})
 	sort.SliceStable(orders, func(i, j int) bool {
 		return cmp(orders[i], orders[j])
@@ -75,20 +75,20 @@ func (orders Orders) Sort(cmp PriceComparator) {
 type BaseOrder struct {
 	Direction                SwapDirection
 	Price                    sdk.Dec
-	BaseCoinAmount           sdk.Int
-	OpenBaseCoinAmount       sdk.Int
-	OfferCoinAmount sdk.Int
+	Amount                   sdk.Int
+	OpenAmount               sdk.Int
+	OfferCoinAmount          sdk.Int
 	RemainingOfferCoinAmount sdk.Int
 	ReceivedAmount           sdk.Int
 }
 
-func NewBaseOrder(dir SwapDirection, price sdk.Dec, baseCoinAmt, offerCoinAmt sdk.Int) *BaseOrder {
+func NewBaseOrder(dir SwapDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *BaseOrder {
 	return &BaseOrder{
 		Direction:                dir,
 		Price:                    price,
-		BaseCoinAmount:           baseCoinAmt,
-		OpenBaseCoinAmount:       baseCoinAmt,
-		OfferCoinAmount: offerCoinAmt,
+		Amount:                   amt,
+		OpenAmount:               amt,
+		OfferCoinAmount:          offerCoinAmt,
 		RemainingOfferCoinAmount: offerCoinAmt,
 		ReceivedAmount:           sdk.ZeroInt(),
 	}
@@ -102,16 +102,16 @@ func (order *BaseOrder) GetPrice() sdk.Dec {
 	return order.Price
 }
 
-func (order *BaseOrder) GetBaseCoinAmount() sdk.Int {
-	return order.BaseCoinAmount
+func (order *BaseOrder) GetAmount() sdk.Int {
+	return order.Amount
 }
 
-func (order *BaseOrder) GetOpenBaseCoinAmount() sdk.Int {
-	return order.OpenBaseCoinAmount
+func (order *BaseOrder) GetOpenAmount() sdk.Int {
+	return order.OpenAmount
 }
 
-func (order *BaseOrder) SetOpenBaseCoinAmount(amount sdk.Int) Order {
-	order.OpenBaseCoinAmount = amount
+func (order *BaseOrder) SetOpenAmount(amount sdk.Int) Order {
+	order.OpenAmount = amount
 	return order
 }
 
@@ -148,7 +148,7 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 		BaseOrder: BaseOrder{
 			Direction:                req.Direction,
 			Price:                    req.Price,
-			OpenBaseCoinAmount:       req.OpenBaseCoinAmount,
+			OpenAmount:               req.OpenAmount,
 			RemainingOfferCoinAmount: req.RemainingOfferCoin.Amount,
 			ReceivedAmount:           sdk.ZeroInt(),
 		},
@@ -157,8 +157,8 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 	}
 }
 
-func (order *UserOrder) SetOpenBaseCoinAmount(amount sdk.Int) Order {
-	order.BaseOrder.SetOpenBaseCoinAmount(amount)
+func (order *UserOrder) SetOpenAmount(amount sdk.Int) Order {
+	order.BaseOrder.SetOpenAmount(amount)
 	return order
 }
 
@@ -179,23 +179,23 @@ type PoolOrder struct {
 	OfferCoinAmount sdk.Int
 }
 
-func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amount sdk.Int) *PoolOrder {
+func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
 	return &PoolOrder{
 		BaseOrder: BaseOrder{
 			Direction:                dir,
 			Price:                    price,
-			OpenBaseCoinAmount:       amount,
-			RemainingOfferCoinAmount: amount,
+			OpenAmount:               amt,
+			RemainingOfferCoinAmount: amt,
 			ReceivedAmount:           sdk.ZeroInt(),
 		},
 		PoolId:          poolId,
 		ReserveAddress:  reserveAddr,
-		OfferCoinAmount: amount,
+		OfferCoinAmount: amt,
 	}
 }
 
-func (order *PoolOrder) SetOpenBaseCoinAmount(amount sdk.Int) Order {
-	order.BaseOrder.SetOpenBaseCoinAmount(amount)
+func (order *PoolOrder) SetOpenAmount(amount sdk.Int) Order {
+	order.BaseOrder.SetOpenAmount(amount)
 	return order
 }
 

@@ -18,9 +18,9 @@ func testOrderBookTicks() *types.OrderBookTicks {
 		newBuyOrder(parseDec("18.0"), newInt(1000)),
 		newBuyOrder(parseDec("17.0"), newInt(1000)),
 		newBuyOrder(parseDec("16.0"), newInt(1000)),
-		newBuyOrder(parseDec("15.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("15.0"), newInt(1000)).SetOpenAmount(sdk.ZeroInt()),
 		newBuyOrder(parseDec("14.0"), newInt(1000)),
-		newBuyOrder(parseDec("13.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("13.0"), newInt(1000)).SetOpenAmount(sdk.ZeroInt()),
 		newBuyOrder(parseDec("12.0"), newInt(1000)),
 		newBuyOrder(parseDec("11.0"), newInt(1000)),
 		newBuyOrder(parseDec("10.0"), newInt(1000)),
@@ -256,7 +256,7 @@ func TestOrderBookTicks_HighestTick(t *testing.T) {
 	// Test with orders with zero remaining amount
 	ticks = types.NewOrderBookTicks(tickPrec)
 	ticks.AddOrders(
-		newBuyOrder(parseDec("10.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("10.0"), newInt(1000)).SetOpenAmount(sdk.ZeroInt()),
 		newBuyOrder(parseDec("9.0"), newInt(1000)),
 		newBuyOrder(parseDec("8.0"), newInt(1000)),
 	)
@@ -281,7 +281,7 @@ func TestOrderBookTicks_LowestTick(t *testing.T) {
 	ticks.AddOrders(
 		newBuyOrder(parseDec("10.0"), newInt(1000)),
 		newBuyOrder(parseDec("9.0"), newInt(1000)),
-		newBuyOrder(parseDec("8.0"), newInt(1000)).SetOpenBaseCoinAmount(sdk.ZeroInt()),
+		newBuyOrder(parseDec("8.0"), newInt(1000)).SetOpenAmount(sdk.ZeroInt()),
 	)
 
 	tick, found = ticks.LowestTick()

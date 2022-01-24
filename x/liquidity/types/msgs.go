@@ -239,7 +239,7 @@ func NewMsgSwapBatch(
 	offerCoin sdk.Coin,
 	demandCoinDenom string,
 	price sdk.Dec,
-	baseCoinAmount sdk.Int,
+	amt sdk.Int,
 	orderLifespan time.Duration,
 ) *MsgSwapBatch {
 	return &MsgSwapBatch{
@@ -249,7 +249,7 @@ func NewMsgSwapBatch(
 		OfferCoin:       offerCoin,
 		DemandCoinDenom: demandCoinDenom,
 		Price:           price,
-		BaseCoinAmount:  baseCoinAmount,
+		Amount:          amt,
 		OrderLifespan:   orderLifespan,
 	}
 }
@@ -268,8 +268,8 @@ func (msg MsgSwapBatch) ValidateBasic() error {
 	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unknown swap direction: %s", msg.Direction)
 	}
-	if !msg.BaseCoinAmount.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "base coin amount must be positive: %s", msg.BaseCoinAmount)
+	if !msg.Amount.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
 	}
 	if err := sdk.ValidateDenom(msg.DemandCoinDenom); err != nil {
 		return sdkerrors.Wrap(err, "invalid demand coin denom")
