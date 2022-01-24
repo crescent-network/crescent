@@ -233,7 +233,7 @@ func QueryPairs() *cobra.Command {
 Example:
 $ %s query %s pairs
 $ %s query %s pairs --denoms=uatom
-$ %s query %s pairs --denoms=uatom,ucsnt
+$ %s query %s pairs --denoms=uatom,usquad
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
