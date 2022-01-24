@@ -166,33 +166,8 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	buySource := types.MergeOrderSources(append(poolBuySources, ob.OrderSource(types.SwapDirectionBuy))...)
 	sellSource := types.MergeOrderSources(append(poolSellSources, ob.OrderSource(types.SwapDirectionSell))...)
 
-	var lastPrice sdk.Dec
-	if pair.LastPrice != nil {
-		lastPrice = *pair.LastPrice
-	} else {
-		// If there is a pool, then the last price is the pool's price.
-		// TODO: assuming there is only one active(not disabled) pool right now
-		//   Later, the algorithm to determine the initial last price should be changed
-		if len(pools) > 0 {
-			lastPrice = pools[0].Price()
-		} else {
-			highestBuyPrice, found := buySource.HighestTick()
-			if !found {
-				// There is no buy order.
-				return nil
-			}
-			lowestSellPrice, found := sellSource.LowestTick()
-			if !found {
-				// There is no sell order.
-				return nil
-			}
-			lastPrice = highestBuyPrice.Add(lowestSellPrice).QuoInt64(2)
-		}
-	}
-	lastPrice = types.PriceToTick(lastPrice, tickPrec) // TODO: remove this and make Match to handle this
-
 	engine := types.NewMatchEngine(buySource, sellSource, tickPrec)
-	ob, matchPrice, quoteCoinDustAmt, matched := engine.Match(lastPrice)
+	ob, matchPrice, quoteCoinDustAmt, matched := engine.Match()
 
 	if matched {
 		orders := ob.AllOrders()

@@ -42,8 +42,29 @@ func (engine *MatchEngine) EstimatedPriceDirection(lastPrice sdk.Dec) PriceDirec
 	return PriceDecreasing
 }
 
-func (engine *MatchEngine) FindMatchPrice(lastPrice sdk.Dec) sdk.Dec {
-	dir := engine.EstimatedPriceDirection(lastPrice)
+func (engine *MatchEngine) InitialMatchPrice() sdk.Dec {
+	highestBuyPrice, found := engine.BuyOrderSource.HighestTick()
+	if !found {
+		panic("there is no buy orders")
+	}
+	lowestSellPrice, found := engine.SellOrderSource.LowestTick()
+	if !found {
+		panic("there is no sell orders")
+	}
+	return highestBuyPrice.Add(lowestSellPrice).QuoInt64(2)
+}
+
+func (engine *MatchEngine) FindMatchPrice() sdk.Dec {
+	matchPrice := engine.InitialMatchPrice()
+	dir := engine.EstimatedPriceDirection(matchPrice)
+
+	matchPriceTick := PriceToTick(matchPrice, engine.TickPrecision)
+	if dir == PriceIncreasing && !matchPrice.Equal(matchPriceTick) {
+		matchPrice = UpTick(matchPriceTick, engine.TickPrecision)
+	} else {
+		matchPrice = matchPriceTick
+	}
+
 	tickSource := MergeOrderSources(engine.BuyOrderSource, engine.SellOrderSource) // temporary order source just for ticks
 
 	buysCache := map[int]sdk.Int{}
@@ -65,13 +86,11 @@ func (engine *MatchEngine) FindMatchPrice(lastPrice sdk.Dec) sdk.Dec {
 		return sa
 	}
 
-	// TODO: lastPrice could be a price not fit in ticks.
-	currentPrice := lastPrice
 	for {
-		i := TickToIndex(currentPrice, engine.TickPrecision)
+		i := TickToIndex(matchPrice, engine.TickPrecision)
 
 		if buyAmountGTE(i+1).LTE(sellAmountLTE(i)) && buyAmountGTE(i).GTE(sellAmountLTE(i-1)) {
-			return currentPrice
+			return matchPrice
 		}
 
 		var nextPrice sdk.Dec
@@ -79,29 +98,29 @@ func (engine *MatchEngine) FindMatchPrice(lastPrice sdk.Dec) sdk.Dec {
 		switch dir {
 		case PriceIncreasing:
 			if buyAmountGTE(i + 1).IsZero() {
-				return currentPrice
+				return matchPrice
 			}
-			nextPrice, found = tickSource.UpTick(currentPrice)
+			nextPrice, found = tickSource.UpTick(matchPrice)
 		case PriceDecreasing:
 			if sellAmountLTE(i - 1).IsZero() {
-				return currentPrice
+				return matchPrice
 			}
-			nextPrice, found = tickSource.DownTick(currentPrice)
+			nextPrice, found = tickSource.DownTick(matchPrice)
 		}
 		if !found {
-			return currentPrice
+			return matchPrice
 		}
-		currentPrice = nextPrice
+		matchPrice = nextPrice
 	}
 }
 
 // TODO: no need to return the order book
-func (engine *MatchEngine) Match(lastPrice sdk.Dec) (orderBook *OrderBook, matchPrice sdk.Dec, quoteCoinDustAmt sdk.Int, matched bool) {
+func (engine *MatchEngine) Match() (orderBook *OrderBook, matchPrice sdk.Dec, quoteCoinDustAmt sdk.Int, matched bool) {
 	if !engine.Matchable() {
 		return
 	}
 
-	matchPrice = engine.FindMatchPrice(lastPrice)
+	matchPrice = engine.FindMatchPrice()
 	buyPrice, _ := engine.BuyOrderSource.HighestTick()
 	sellPrice, _ := engine.SellOrderSource.LowestTick()
 
