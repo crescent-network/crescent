@@ -2,8 +2,8 @@ package mint
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/crescent-network/crescent/x/mint/keeper"
-	"github.com/crescent-network/crescent/x/mint/types"
+	"github.com/cosmosquad-labs/squad/x/mint/keeper"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 // InitGenesis new mint genesis

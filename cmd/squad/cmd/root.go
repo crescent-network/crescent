@@ -32,8 +32,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	crescentapp "github.com/crescent-network/crescent/app"
-	farmingparams "github.com/crescent-network/crescent/app/params"
+	squadapp "github.com/cosmosquad-labs/squad/app"
+	farmingparams "github.com/cosmosquad-labs/squad/app/params"
 )
 
 const (
@@ -42,7 +42,7 @@ const (
 	CoinType = uint32(118)
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = "crescent"
+	Bech32PrefixAccAddr = "squad"
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
 	Bech32PrefixAccPub = Bech32PrefixAccAddr + "pub"
 	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
@@ -56,7 +56,7 @@ const (
 )
 
 var (
-	// AddressVerifier crescent address verifier
+	// AddressVerifier squad address verifier
 	AddressVerifier = func(bz []byte) error {
 		if n := len(bz); n != 20 && n != 32 {
 			return fmt.Errorf("incorrect address length %d", n)
@@ -77,13 +77,13 @@ func GetConfig() *sdk.Config {
 	return sdkConfig
 }
 
-// NewRootCmd creates a new root command for crescentd. It is called once in the
+// NewRootCmd creates a new root command for squad. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 	sdkConfig := GetConfig()
 	sdkConfig.Seal()
 
-	encodingConfig := crescentapp.MakeEncodingConfig()
+	encodingConfig := squadapp.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -91,12 +91,12 @@ func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(crescentapp.DefaultNodeHome).
+		WithHomeDir(squadapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
-		Use:   "crescentd",
-		Short: "crescent app",
+		Use:   "squad",
+		Short: "squad app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -185,27 +185,27 @@ lru_size = 0`
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingConfig) {
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(crescentapp.ModuleBasics, crescentapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, crescentapp.DefaultNodeHome),
+		genutilcli.InitCmd(squadapp.ModuleBasics, squadapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, squadapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(crescentapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, crescentapp.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(crescentapp.ModuleBasics),
-		AddGenesisAccountCmd(crescentapp.DefaultNodeHome),
+		genutilcli.GenTxCmd(squadapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, squadapp.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(squadapp.ModuleBasics),
+		AddGenesisAccountCmd(squadapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(crescentapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(squadapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
 
 	a := appCreator{encodingConfig}
-	server.AddCommands(rootCmd, crescentapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, squadapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(crescentapp.DefaultNodeHome),
+		keys.Commands(squadapp.DefaultNodeHome),
 	)
 
 	// add rosetta
@@ -234,7 +234,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	crescentapp.ModuleBasics.AddQueryCommands(cmd)
+	squadapp.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -260,7 +260,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	crescentapp.ModuleBasics.AddTxCommands(cmd)
+	squadapp.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -298,7 +298,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
-	return crescentapp.NewCrescentApp(
+	return squadapp.NewSquadApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -324,20 +324,20 @@ func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
 
-	var farmingApp *crescentapp.CrescentApp
+	var farmingApp *squadapp.SquadApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
 	if height != -1 {
-		farmingApp = crescentapp.NewCrescentApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		farmingApp = squadapp.NewSquadApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 
 		if err := farmingApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		farmingApp = crescentapp.NewCrescentApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		farmingApp = squadapp.NewSquadApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 	}
 
 	return farmingApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

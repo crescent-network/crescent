@@ -42,9 +42,9 @@ One use case is to use the module to provide incentives for liquidity pool inves
 ### Step 1. Build from source
 
 ```bash
-# Clone the demo project and build `crescentd` for testing
-git clone https://github.com/crescent-network/crescent.git
-cd crescent
+# Clone the demo project and build `squad` for testing
+git clone https://github.com/cosmosquad-labs/squad.git
+cd squad
 make install-testing
 ```
 
@@ -55,8 +55,8 @@ make install-testing
 - Modify governance parameters to lower threshold and decrease time to reduce governance process
 
 ```bash
-export BINARY=crescentd
-export HOME_FARMINGAPP=$HOME/.crescentapp
+export BINARY=squad
+export HOME_FARMINGAPP=$HOME/.squadapp
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
@@ -315,7 +315,7 @@ $BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 
 ### Step 7. (Custom Message) Send AdvanceEpoch for Reward Distribution
 
-To simulate reward distribution for this demo, enable a custom transaction message `AdvanceEpoch` when you build the binary `crescentd` with the `make install-testing` command. 
+To simulate reward distribution for this demo, enable a custom transaction message `AdvanceEpoch` when you build the binary `squad` with the `make install-testing` command. 
 
 When you send the `AdvanceEpoch` message to the network, it increases epoch by day 1.
 

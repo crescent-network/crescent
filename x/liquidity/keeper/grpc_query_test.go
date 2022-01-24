@@ -3,7 +3,7 @@ package keeper_test
 // import (
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 	"github.com/crescent-network/crescent/x/liquidity/types"
+// 	"github.com/squad-network/squad/x/liquidity/types"
 // )
 
 //

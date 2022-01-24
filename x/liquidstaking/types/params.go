@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

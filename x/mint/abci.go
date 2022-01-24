@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/crescent-network/crescent/x/mint/keeper"
-	"github.com/crescent-network/crescent/x/mint/types"
+	"github.com/cosmosquad-labs/squad/x/mint/keeper"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 // BeginBlocker mints new tokens for the previous block.

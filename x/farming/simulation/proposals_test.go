@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/crescent-network/crescent/app/params"
-	"github.com/crescent-network/crescent/x/farming/simulation"
-	"github.com/crescent-network/crescent/x/farming/types"
+	"github.com/cosmosquad-labs/squad/app/params"
+	"github.com/cosmosquad-labs/squad/x/farming/simulation"
+	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 func TestProposalContents(t *testing.T) {

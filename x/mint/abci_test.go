@@ -5,17 +5,17 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
+	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/crescent-network/crescent/app"
-	simapp "github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/x/mint"
-	"github.com/crescent-network/crescent/x/mint/keeper"
+	"github.com/cosmosquad-labs/squad/app"
+	simapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/x/mint"
+	"github.com/cosmosquad-labs/squad/x/mint/keeper"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
 type ModuleTestSuite struct {
 	suite.Suite
 
-	app    *simapp.CrescentApp
+	app    *simapp.SquadApp
 	ctx    sdk.Context
 	keeper keeper.Keeper
 	addrs  []sdk.AccAddress

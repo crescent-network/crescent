@@ -4,25 +4,25 @@ import (
 	gocontext "context"
 	"testing"
 
-	crescentapp "github.com/crescent-network/crescent/app"
+	squadapp "github.com/cosmosquad-labs/squad/app"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/crescent-network/crescent/x/mint/types"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 type MintTestSuite struct {
 	suite.Suite
 
-	app         *crescentapp.CrescentApp
+	app         *squadapp.SquadApp
 	ctx         sdk.Context
 	queryClient types.QueryClient
 }
 
 func (suite *MintTestSuite) SetupTest() {
-	app := crescentapp.Setup(false)
+	app := squadapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
