@@ -93,23 +93,23 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 
-	// 317097919 / 5 * (365 * 24 * 60 * 60) / 2000000000000000 ~= 1
-	// 317097919 ~= 2000000000000000 / (365 * 24 * 60 * 60) * 5
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(317097919))
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(317097919))
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(317097919))
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(317097919))
+	// 317097919 / 5 * (365 * 24 * 60 * 60) / 200000000000000 ~= 1
+	// 317097919 ~= 200000000000000 / (365 * 24 * 60 * 60) * 5
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(31709791))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(31709791))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(31709791))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(31709791))
 
 	blockTime = 10 * time.Second
-	// 634195839 / 10 * (365 * 24 * 60 * 60) / 2000000000000000 ~= 1
-	// 634195839 ~= 2000000000000000 / (365 * 24 * 60 * 60) * 10
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(634195839))
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(634195839))
+	// 634195839 / 10 * (365 * 24 * 60 * 60) / 200000000000000 ~= 1
+	// 634195839 ~= 200000000000000 / (365 * 24 * 60 * 60) * 10
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
 
 	// over BlockTimeThreshold 10sec
 	blockTime = 20 * time.Second
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(634195839))
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(634195839))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
 
 	// no inflation
 	ctx = ctx.WithBlockHeight(300).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2030-01-01T01:00:00Z"))

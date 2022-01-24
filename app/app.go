@@ -353,7 +353,7 @@ func NewCrescentApp(
 		{
 			StartTime: liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
 			EndTime:   liquidstakingtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
-			Amount:    sdk.NewInt(2000000000000000),
+			Amount:    sdk.NewInt(200000000000000),
 		},
 	}
 
