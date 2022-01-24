@@ -1,8 +1,11 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmosquad-labs/squad/x/liquidity"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -11,7 +14,6 @@ import (
 func (s *KeeperTestSuite) TestGRPCParams() {
 	resp, err := s.querier.Params(sdk.WrapSDKContext(s.ctx), &types.QueryParamsRequest{})
 	s.Require().NoError(err)
-
 	s.Require().Equal(s.keeper.GetParams(s.ctx), resp.Params)
 }
 
@@ -104,8 +106,8 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 
 func (s *KeeperTestSuite) TestGRPCPool() {
 	creator := s.addr(0)
-	s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, 1, parseCoins("1000000denom1,1000000denom2"), true)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+	pool := s.createPool(creator, pair.Id, parseCoins("1000000denom1,1000000denom2"), true)
 
 	for _, tc := range []struct {
 		name      string
@@ -134,9 +136,9 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 			func(resp *types.QueryPoolResponse) {
 				s.Require().Equal(pool.Id, resp.Pool.Id)
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
-				s.Require().Equal(parseCoins("1000000denom1,1000000denom2"), resp.Pool.Balances)
-				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
+				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
+				s.Require().Equal(parseCoins("1000000denom1,1000000denom2"), resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
 			},
@@ -156,8 +158,8 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 
 func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
 	creator := s.addr(0)
-	s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, 1, parseCoins("1000000denom1,1000000denom2"), true)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+	pool := s.createPool(creator, pair.Id, parseCoins("2000000denom1,2000000denom2"), true)
 
 	for _, tc := range []struct {
 		name      string
@@ -186,9 +188,9 @@ func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
 			func(resp *types.QueryPoolResponse) {
 				s.Require().Equal(pool.Id, resp.Pool.Id)
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
-				s.Require().Equal(parseCoins("1000000denom1,1000000denom2"), resp.Pool.Balances)
-				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
+				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
+				s.Require().Equal(parseCoins("2000000denom1,2000000denom2"), resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
 			},
@@ -208,8 +210,8 @@ func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
 
 func (s *KeeperTestSuite) TestGRPCPoolByPoolCoinDenom() {
 	creator := s.addr(0)
-	s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, 1, parseCoins("5000000denom1,5000000denom2"), true)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
 	for _, tc := range []struct {
 		name      string
@@ -238,9 +240,9 @@ func (s *KeeperTestSuite) TestGRPCPoolByPoolCoinDenom() {
 			func(resp *types.QueryPoolResponse) {
 				s.Require().Equal(pool.Id, resp.Pool.Id)
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
-				s.Require().Equal(parseCoins("1000000denom1,1000000denom2"), resp.Pool.Balances)
-				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
+				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
+				s.Require().Equal(parseCoins("5000000denom1,5000000denom2"), resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
 			},
@@ -265,8 +267,6 @@ func (s *KeeperTestSuite) TestGRPCPairs() {
 	s.createPair(creator, "denom2", "denom3", true)
 	s.createPair(creator, "denom3", "denom4", true)
 
-	s.Require().Len(s.keeper.GetAllPairs(s.ctx), 4)
-
 	for _, tc := range []struct {
 		name      string
 		req       *types.QueryPairsRequest
@@ -288,7 +288,7 @@ func (s *KeeperTestSuite) TestGRPCPairs() {
 			},
 		},
 		{
-			"query all with query string XDenom",
+			"query all with a single denom",
 			&types.QueryPairsRequest{
 				Denoms: []string{"denom1"},
 			},
@@ -298,9 +298,19 @@ func (s *KeeperTestSuite) TestGRPCPairs() {
 			},
 		},
 		{
-			"query all with query string YDenom",
+			"query all with a single denom",
 			&types.QueryPairsRequest{
-				Denoms: []string{"denom2"},
+				Denoms: []string{"denom3"},
+			},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 3)
+			},
+		},
+		{
+			"query all with two denoms",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom3", "denom4"},
 			},
 			false,
 			func(resp *types.QueryPairsResponse) {
@@ -308,14 +318,12 @@ func (s *KeeperTestSuite) TestGRPCPairs() {
 			},
 		},
 		{
-			"query all with query strings XDenom and YDenom",
+			"query all with more than two denoms",
 			&types.QueryPairsRequest{
-				Denoms: []string{"denom1", "denom2"},
+				Denoms: []string{"denom1", "denom3", "denom4"},
 			},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 1)
-			},
+			true,
+			nil,
 		},
 	} {
 		s.Run(tc.name, func() {
@@ -332,8 +340,7 @@ func (s *KeeperTestSuite) TestGRPCPairs() {
 
 func (s *KeeperTestSuite) TestGRPCPair() {
 	creator := s.addr(0)
-	s.createPair(creator, "denom1", "denom2", true)
-	s.createPair(creator, "denom1", "denom3", true)
+	pair := s.createPair(creator, "denom1", "denom2", true)
 
 	for _, tc := range []struct {
 		name      string
@@ -360,13 +367,14 @@ func (s *KeeperTestSuite) TestGRPCPair() {
 			},
 			false,
 			func(resp *types.QueryPairResponse) {
-				// s.Require().Equal(pool.PairId, resp.Pair.Id)
-				// s.Require().Equal(pool.XCoinDenom, resp.Pair.XCoinDenom)
-				// s.Require().Equal(pool.YCoinDenom, resp.Pair.YCoinDenom)
-				// s.Require().Equal(types.PairEscrowAddr(resp.Pair.Id).String(), resp.Pair.EscrowAddress)
-				// s.Require().Equal(uint64(0), resp.Pair.LastSwapRequestId)
-				// s.Require().Equal(uint64(0), resp.Pair.LastCancelSwapRequestId)
-				// s.Require().Equal(uint64(1), resp.Pair.CurrentBatchId)
+				s.Require().Equal(pair.Id, resp.Pair.Id)
+				s.Require().Equal(pair.BaseCoinDenom, resp.Pair.BaseCoinDenom)
+				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
+				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
+				s.Require().Equal(pair.LastSwapRequestId, resp.Pair.LastSwapRequestId)
+				s.Require().Equal(pair.LastCancelSwapRequestId, resp.Pair.LastCancelSwapRequestId)
+				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
+				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
 			},
 		},
 	} {
@@ -383,41 +391,265 @@ func (s *KeeperTestSuite) TestGRPCPair() {
 }
 
 func (s *KeeperTestSuite) TestGRPCDepositRequests() {
-	// k, ctx := s.keeper, s.ctx
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
-	// params := k.GetParams(ctx)
+	depositor := s.addr(1)
+	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
 
-	// // Create a normal pool
-	// creator := s.addr(0)
-	// xCoin, yCoin := parseCoin("1000000denom1"), parseCoin("1000000denom2")
-	// s.createPool(creator, xCoin, yCoin, true)
-
-	// pool, found := k.GetPool(ctx, 1)
-	// s.Require().True(found)
-	// s.Require().Equal(params.InitialPoolCoinSupply, s.getBalance(creator, pool.PoolCoinDenom).Amount)
-
-	// // The creator withdraws pool coin
-	// poolCoin := s.getBalance(creator, pool.PoolCoinDenom)
-	// s.withdrawBatch(creator, pool.Id, poolCoin)
-	// s.nextBlock()
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryDepositRequestsRequest
+		expectErr bool
+		postRun   func(*types.QueryDepositRequestsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryDepositRequestsRequest{},
+			true,
+			nil,
+		},
+		{
+			"query all deposit requests",
+			&types.QueryDepositRequestsRequest{
+				PoolId: 1,
+			},
+			false,
+			func(resp *types.QueryDepositRequestsResponse) {
+				s.Require().Len(resp.DepositRequests, 4)
+			},
+		},
+		{
+			"query all deposit requests",
+			&types.QueryDepositRequestsRequest{
+				PoolId: 2,
+			},
+			false,
+			func(resp *types.QueryDepositRequestsResponse) {
+				s.Require().Len(resp.DepositRequests, 0)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.DepositRequests(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGRPCDepositRequest() {
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
+	depositor := s.addr(1)
+	req := s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryDepositRequestRequest
+		expectErr bool
+		postRun   func(*types.QueryDepositRequestResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryDepositRequestRequest{},
+			true,
+			nil,
+		},
+		{
+			"query deposit request with just pool id",
+			&types.QueryDepositRequestRequest{
+				PoolId: 1,
+			},
+			true,
+			nil,
+		},
+		{
+			"query deposit request with pool id",
+			&types.QueryDepositRequestRequest{
+				PoolId: 1,
+				Id:     1,
+			},
+			false,
+			func(resp *types.QueryDepositRequestResponse) {
+				s.Require().Equal(req.Id, resp.DepositRequest.Id)
+				s.Require().Equal(req.PoolId, resp.DepositRequest.PoolId)
+				s.Require().Equal(req.MsgHeight, resp.DepositRequest.MsgHeight)
+				s.Require().Equal(req.Depositor, resp.DepositRequest.Depositor)
+				s.Require().Equal(req.DepositCoins, resp.DepositRequest.DepositCoins)
+				s.Require().NotEqual(req.AcceptedCoins, resp.DepositRequest.AcceptedCoins)
+				s.Require().NotEqual(req.MintedPoolCoin, resp.DepositRequest.MintedPoolCoin)
+				s.Require().NotEqual(req.Status, resp.DepositRequest.Status)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.DepositRequest(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGRPCWithdrawRequests() {
-	// Create Pool
-	// Withdraw pool coin
+	params := s.keeper.GetParams(s.ctx)
+
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
+	poolCoinBalance := s.app.BankKeeper.GetBalance(s.ctx, creator, pool.PoolCoinDenom)
+	s.Require().Equal(params.InitialPoolCoinSupply, poolCoinBalance.Amount)
+
+	s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("1000%s", pool.PoolCoinDenom)))
+	s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("2500%s", pool.PoolCoinDenom)))
+	s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("5500%s", pool.PoolCoinDenom)))
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryWithdrawRequestsRequest
+		expectErr bool
+		postRun   func(*types.QueryWithdrawRequestsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryWithdrawRequestsRequest{},
+			true,
+			nil,
+		},
+		{
+			"query all withdraw requests",
+			&types.QueryWithdrawRequestsRequest{
+				PoolId: 1,
+			},
+			false,
+			func(resp *types.QueryWithdrawRequestsResponse) {
+				s.Require().Len(resp.WithdrawRequests, 3)
+			},
+		},
+		{
+			"query all withdraw requests",
+			&types.QueryWithdrawRequestsRequest{
+				PoolId: 2,
+			},
+			false,
+			func(resp *types.QueryWithdrawRequestsResponse) {
+				s.Require().Len(resp.WithdrawRequests, 0)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.WithdrawRequests(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
+	req := s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("500000%s", pool.PoolCoinDenom)))
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryWithdrawRequestRequest
+		expectErr bool
+		postRun   func(*types.QueryWithdrawRequestResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryWithdrawRequestRequest{},
+			true,
+			nil,
+		},
+		{
+			"query the withdraw request with only pool id",
+			&types.QueryWithdrawRequestRequest{
+				PoolId: 1,
+			},
+			true,
+			nil,
+		},
+		{
+			"query the withdraw request with only pool id",
+			&types.QueryWithdrawRequestRequest{
+				PoolId: 1,
+				Id:     1,
+			},
+			false,
+			func(resp *types.QueryWithdrawRequestResponse) {
+				s.Require().Equal(req.Id, resp.WithdrawRequest.Id)
+				s.Require().Equal(req.PoolId, resp.WithdrawRequest.PoolId)
+				s.Require().Equal(req.MsgHeight, resp.WithdrawRequest.MsgHeight)
+				s.Require().Equal(req.Withdrawer, resp.WithdrawRequest.Withdrawer)
+				s.Require().NotEqual(req.PoolCoin, resp.WithdrawRequest.PoolCoin)
+				s.Require().NotEqual(req.WithdrawnCoins, resp.WithdrawRequest.WithdrawnCoins)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.WithdrawRequest(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGRPCSwapRequests() {
-
+	// TODO: not implemented yet
 }
 func (s *KeeperTestSuite) TestGRPCSwapRequest() {
-
+	// TODO: not implemented yet
 }
