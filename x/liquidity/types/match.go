@@ -37,10 +37,10 @@ func (engine *MatchEngine) Matchable() bool {
 	return engine.SellOrderSource.AmountLTE(highestBuyPrice).IsPositive()
 }
 
-func (engine *MatchEngine) EstimatedPriceDirection(lastPrice sdk.Dec) PriceDirection {
-	buyAmount := engine.BuyOrderSource.AmountGTE(lastPrice)
-	sellAmount := engine.SellOrderSource.AmountLTE(lastPrice)
-	if buyAmount.ToDec().GTE(lastPrice.MulInt(sellAmount)) {
+func (engine *MatchEngine) EstimatedPriceDirection(midPrice sdk.Dec) PriceDirection {
+	buyAmount := engine.BuyOrderSource.AmountGTE(midPrice)
+	sellAmount := engine.SellOrderSource.AmountLTE(midPrice)
+	if buyAmount.GTE(sellAmount) {
 		return PriceIncreasing
 	}
 	return PriceDecreasing
