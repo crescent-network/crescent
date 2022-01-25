@@ -2,9 +2,9 @@ package types
 
 import (
 	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// TODO: move on x/utils
 
 // MustParseRFC3339 parses string time to time in RFC3339 format.
 func MustParseRFC3339(s string) time.Time {
@@ -19,8 +19,4 @@ func MustParseRFC3339(s string) time.Time {
 // End time is exclusive and start time is inclusive.
 func DateRangesOverlap(startTimeA, endTimeA, startTimeB, endTimeB time.Time) bool {
 	return startTimeA.Before(endTimeB) && endTimeA.After(startTimeB)
-}
-
-func GetShareValue(amount sdk.Int, ratio sdk.Dec) sdk.Int {
-	return amount.ToDec().MulTruncate(ratio).TruncateInt()
 }

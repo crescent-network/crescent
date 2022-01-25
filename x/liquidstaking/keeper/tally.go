@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	"github.com/cosmosquad-labs/squad/x/utils"
@@ -35,9 +36,11 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 	liquidVals := k.GetActiveLiquidValidators(ctx)
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 	totalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount
-	bTokenValueMap := make(map[string]sdk.Int)
+	bTokenValueMap := make(utils.StrIntMap)
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
+	bTokenSharePerPoolCoinMap := make(map[string]sdk.Dec)
+	//bTokenSharePerPoolCoinMap[liquidBondDenom] = sdk.OneDec()
 	if !totalSupply.IsPositive() {
 		return
 	}
@@ -47,17 +50,9 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 		// add balance of bToken value
 		if denom == liquidBondDenom {
 			for voter, balance := range balanceByVoter {
-				if _, ok := bTokenValueMap[voter]; !ok {
-					bTokenValueMap[voter] = balance
-				} else {
-					bTokenValueMap[voter] = bTokenValueMap[voter].Add(balance)
-				}
+				bTokenValueMap.AddOrInit(voter, balance)
 			}
 		}
-
-		// add Farming Staking Position of bToken
-
-		// add Farming Queued Staking of bToken
 
 		// add balance of PoolTokens including bToken value
 		if pool, found := k.liquidityKeeper.GetPool(ctx, liquiditytypes.ParsePoolCoinDenom(denom)); !found {
@@ -74,19 +69,38 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 				if !bTokenSharePerPoolCoin.IsPositive() {
 					continue
 				}
+				bTokenSharePerPoolCoinMap[denom] = bTokenSharePerPoolCoin
 				for voter, balance := range balanceByVoter {
-					if _, ok := bTokenValueMap[voter]; !ok {
-						bTokenValueMap[voter] = types.GetShareValue(balance, bTokenSharePerPoolCoin)
-					} else {
-						bTokenValueMap[voter] = bTokenValueMap[voter].Add(types.GetShareValue(balance, bTokenSharePerPoolCoin))
-					}
+					bTokenValueMap.AddOrInit(voter, utils.GetShareValue(balance, bTokenSharePerPoolCoin))
 				}
-				// add Farming Staking Position of PoolTokens including bToken
-
-				// add Farming Queued Staking of PoolTokens including bToken
 			}
 		}
+	}
 
+	for _, vote := range *votes {
+		voter, err := sdk.AccAddressFromBech32(vote.Voter)
+		if err != nil {
+			continue
+		}
+		// add Farming Staking Position of bToken and PoolTokens including bToken
+		k.farmingKeeper.IterateStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, staking farmingtypes.Staking) (stop bool) {
+			if stakingCoinDenom == liquidBondDenom {
+				bTokenValueMap.AddOrInit(vote.Voter, staking.Amount)
+			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
+				bTokenValueMap.AddOrInit(vote.Voter, utils.GetShareValue(staking.Amount, ratio))
+			}
+			return false
+		})
+
+		// add Farming Queued Staking of bToken and PoolTokens including bToken
+		k.farmingKeeper.IterateQueuedStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
+			if stakingCoinDenom == liquidBondDenom {
+				bTokenValueMap.AddOrInit(vote.Voter, queuedStaking.Amount)
+			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
+				bTokenValueMap.AddOrInit(vote.Voter, utils.GetShareValue(queuedStaking.Amount, ratio))
+			}
+			return false
+		})
 	}
 
 	for voter, btokenValue := range bTokenValueMap {
