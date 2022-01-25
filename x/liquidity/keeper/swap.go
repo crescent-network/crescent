@@ -137,8 +137,10 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				return false
 			}
 			ob.AddOrder(types.NewUserOrder(req))
-			req.Status = types.SwapRequestStatusNotMatched
-			k.SetSwapRequest(ctx, req)
+			if req.Status == types.SwapRequestStatusNotExecuted {
+				req.Status = types.SwapRequestStatusNotMatched
+				k.SetSwapRequest(ctx, req)
+			}
 		default:
 			panic(fmt.Sprintf("invalid swap request status: %s", req.Status))
 		}
@@ -192,10 +194,20 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		for _, order := range orders {
 			switch order := order.(type) {
 			case *types.UserOrder:
+				var offerCoinDenom, demandCoinDenom string
+				switch order.Direction {
+				case types.SwapDirectionBuy:
+					offerCoinDenom =  pair.QuoteCoinDenom
+					demandCoinDenom = pair.BaseCoinDenom
+				case types.SwapDirectionSell:
+					offerCoinDenom = pair.BaseCoinDenom
+					demandCoinDenom = pair.QuoteCoinDenom
+				}
+
 				// TODO: optimize read/write (can there be only one write?)
 				req, _ := k.GetSwapRequest(ctx, pair.Id, order.RequestId)
 				req.OpenAmount = order.OpenAmount
-				//req.RemainingOfferCoin = order.RemainingOfferCoinAmount
+				req.RemainingOfferCoin = sdk.NewCoin(offerCoinDenom, order.RemainingOfferCoinAmount)
 				req.ReceivedCoin.Amount = req.ReceivedCoin.Amount.Add(order.ReceivedAmount)
 				if order.OpenAmount.IsZero() {
 					req.Status = types.SwapRequestStatusCompleted
@@ -204,13 +216,6 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				}
 				k.SetSwapRequest(ctx, req)
 
-				var demandCoinDenom string
-				switch order.Direction {
-				case types.SwapDirectionBuy:
-					demandCoinDenom = pair.BaseCoinDenom
-				case types.SwapDirectionSell:
-					demandCoinDenom = pair.QuoteCoinDenom
-				}
 				demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
 				bulkOp.SendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(demandCoin))
 			case *types.PoolOrder:
