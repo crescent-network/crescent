@@ -1,7 +1,7 @@
 package types
 
-// MinterKey is the key to use for the keeper store.
-var MinterKey = []byte{0x00}
+// LastBlockTimeKey is the key to use for the keeper store.
+var LastBlockTimeKey = []byte{0x90}
 
 const (
 	// module name
@@ -10,11 +10,10 @@ const (
 	// StoreKey is the default store key for mint
 	StoreKey = ModuleName
 
-	// QuerierRoute is the querier route for the minting store.
+	// QuerierRoute is the querier route for the mint store.
 	QuerierRoute = StoreKey
 
-	// Query endpoints supported by the minting querier
+	// Query endpoints supported by the mint querier
 	QueryParameters = "parameters"
-	//QueryInflation        = "inflation"
-	//QueryAnnualProvisions = "annual_provisions"
+	//QueryInflationSchedules        = "inflation"
 )

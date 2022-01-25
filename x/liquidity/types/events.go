@@ -24,6 +24,9 @@ const (
 	AttributeKeyBatchId         = "batch_id"
 	AttributeKeySwapRequestId   = "swap_request_id"
 	AttributeKeySwapDirection   = "swap_direction"
-	AttributeKeyRemainingAmount = "remaining_amount"
-	AttributeKeyReceivedAmount  = "received_amount"
+	AttributeKeyOfferCoin       = "offer_coin"
+	AttributeKeyDemandCoinDenom = "demand_coin_denom"
+	AttributeKeyPrice           = "price"
+	AttributeKeyAmount          = "amount"
+	AttributeKeyExpireAt        = "expire_at"
 )

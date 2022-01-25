@@ -2391,63 +2391,79 @@ paths:
                          - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                          - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                          - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
+                    offer_coin:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    remaining_offer_coin:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                      title: remaining_offer_coin specifies the remaining offer coin
+                    received_coin:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                      title: received_coin specifies the received coin after the swap
                     price:
                       type: string
                       title: >-
                         price specifies the price that an orderer is willing to
                         swap
-                    remaining_coin:
-                      title: >-
-                        remaining_coin specifies the remaining coin after the
-                        swap
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                    received_coin:
-                      title: received_coin specifies the received coin after the swap
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
+                    amount:
+                      type: string
+                    open_amount:
+                      type: string
                     batch_id:
                       type: string
                       format: uint64
                       title: >-
                         batch_id specifies the pair's batch id when the request
                         is stored
-                    canceled_at:
+                    expire_at:
                       type: string
                       format: date-time
-                    matched:
-                      type: boolean
-                      format: boolean
                     status:
                       type: string
                       enum:
                         - SWAP_REQUEST_STATUS_UNSPECIFIED
                         - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                        - SWAP_REQUEST_STATUS_EXECUTED
+                        - SWAP_REQUEST_STATUS_NOT_MATCHED
+                        - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+                        - SWAP_REQUEST_STATUS_COMPLETED
                         - SWAP_REQUEST_STATUS_CANCELED
                         - SWAP_REQUEST_STATUS_EXPIRED
                       default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -2456,7 +2472,9 @@ paths:
 
                          - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                          - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                         - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                         - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+                         - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+                         - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                          - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                          - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
                   description: SwapRequest defines a swap request.
@@ -2623,61 +2641,79 @@ paths:
                        - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                        - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                        - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
+                  offer_coin:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  remaining_offer_coin:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                    title: remaining_offer_coin specifies the remaining offer coin
+                  received_coin:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                    title: received_coin specifies the received coin after the swap
                   price:
                     type: string
                     title: >-
                       price specifies the price that an orderer is willing to
                       swap
-                  remaining_coin:
-                    title: remaining_coin specifies the remaining coin after the swap
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
-                  received_coin:
-                    title: received_coin specifies the received coin after the swap
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
+                  amount:
+                    type: string
+                  open_amount:
+                    type: string
                   batch_id:
                     type: string
                     format: uint64
                     title: >-
                       batch_id specifies the pair's batch id when the request is
                       stored
-                  canceled_at:
+                  expire_at:
                     type: string
                     format: date-time
-                  matched:
-                    type: boolean
-                    format: boolean
                   status:
                     type: string
                     enum:
                       - SWAP_REQUEST_STATUS_UNSPECIFIED
                       - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                      - SWAP_REQUEST_STATUS_EXECUTED
+                      - SWAP_REQUEST_STATUS_NOT_MATCHED
+                      - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+                      - SWAP_REQUEST_STATUS_COMPLETED
                       - SWAP_REQUEST_STATUS_CANCELED
                       - SWAP_REQUEST_STATUS_EXPIRED
                     default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -2686,7 +2722,9 @@ paths:
 
                        - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                        - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                       - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                       - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+                       - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+                       - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                        - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                        - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
                 description: SwapRequest defines a swap request.
@@ -5780,57 +5818,75 @@ definitions:
                - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
+          offer_coin:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+          remaining_offer_coin:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+            title: remaining_offer_coin specifies the remaining offer coin
+          received_coin:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+            title: received_coin specifies the received coin after the swap
           price:
             type: string
             title: price specifies the price that an orderer is willing to swap
-          remaining_coin:
-            title: remaining_coin specifies the remaining coin after the swap
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-          received_coin:
-            title: received_coin specifies the received coin after the swap
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
+          amount:
+            type: string
+          open_amount:
+            type: string
           batch_id:
             type: string
             format: uint64
             title: batch_id specifies the pair's batch id when the request is stored
-          canceled_at:
+          expire_at:
             type: string
             format: date-time
-          matched:
-            type: boolean
-            format: boolean
           status:
             type: string
             enum:
               - SWAP_REQUEST_STATUS_UNSPECIFIED
               - SWAP_REQUEST_STATUS_NOT_EXECUTED
-              - SWAP_REQUEST_STATUS_EXECUTED
+              - SWAP_REQUEST_STATUS_NOT_MATCHED
+              - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+              - SWAP_REQUEST_STATUS_COMPLETED
               - SWAP_REQUEST_STATUS_CANCELED
               - SWAP_REQUEST_STATUS_EXPIRED
             default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -5839,7 +5895,9 @@ definitions:
 
                - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-               - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+               - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+               - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+               - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
         description: SwapRequest defines a swap request.
@@ -5887,59 +5945,77 @@ definitions:
                  - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
                  - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
                  - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
+            offer_coin:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            remaining_offer_coin:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+              title: remaining_offer_coin specifies the remaining offer coin
+            received_coin:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+              title: received_coin specifies the received coin after the swap
             price:
               type: string
               title: price specifies the price that an orderer is willing to swap
-            remaining_coin:
-              title: remaining_coin specifies the remaining coin after the swap
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-            received_coin:
-              title: received_coin specifies the received coin after the swap
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
+            amount:
+              type: string
+            open_amount:
+              type: string
             batch_id:
               type: string
               format: uint64
               title: >-
                 batch_id specifies the pair's batch id when the request is
                 stored
-            canceled_at:
+            expire_at:
               type: string
               format: date-time
-            matched:
-              type: boolean
-              format: boolean
             status:
               type: string
               enum:
                 - SWAP_REQUEST_STATUS_UNSPECIFIED
                 - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                - SWAP_REQUEST_STATUS_EXECUTED
+                - SWAP_REQUEST_STATUS_NOT_MATCHED
+                - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+                - SWAP_REQUEST_STATUS_COMPLETED
                 - SWAP_REQUEST_STATUS_CANCELED
                 - SWAP_REQUEST_STATUS_EXPIRED
               default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -5948,7 +6024,9 @@ definitions:
 
                  - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
                  - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                 - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+                 - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+                 - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+                 - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
                  - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
                  - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
           description: SwapRequest defines a swap request.
@@ -6233,51 +6311,66 @@ definitions:
            - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
            - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
            - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
+      offer_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      remaining_offer_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+        title: remaining_offer_coin specifies the remaining offer coin
+      received_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+        title: received_coin specifies the received coin after the swap
       price:
         type: string
         title: price specifies the price that an orderer is willing to swap
-      remaining_coin:
-        title: remaining_coin specifies the remaining coin after the swap
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-      received_coin:
-        title: received_coin specifies the received coin after the swap
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
+      amount:
+        type: string
+      open_amount:
+        type: string
       batch_id:
         type: string
         format: uint64
         title: batch_id specifies the pair's batch id when the request is stored
-      canceled_at:
+      expire_at:
         type: string
         format: date-time
-      matched:
-        type: boolean
-        format: boolean
       status:
         type: string
         enum:
           - SWAP_REQUEST_STATUS_UNSPECIFIED
           - SWAP_REQUEST_STATUS_NOT_EXECUTED
-          - SWAP_REQUEST_STATUS_EXECUTED
+          - SWAP_REQUEST_STATUS_NOT_MATCHED
+          - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+          - SWAP_REQUEST_STATUS_COMPLETED
           - SWAP_REQUEST_STATUS_CANCELED
           - SWAP_REQUEST_STATUS_EXPIRED
         default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -6286,7 +6379,9 @@ definitions:
 
            - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
            - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-           - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+           - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+           - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+           - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
            - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
            - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
     description: SwapRequest defines a swap request.
@@ -6295,7 +6390,9 @@ definitions:
     enum:
       - SWAP_REQUEST_STATUS_UNSPECIFIED
       - SWAP_REQUEST_STATUS_NOT_EXECUTED
-      - SWAP_REQUEST_STATUS_EXECUTED
+      - SWAP_REQUEST_STATUS_NOT_MATCHED
+      - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
+      - SWAP_REQUEST_STATUS_COMPLETED
       - SWAP_REQUEST_STATUS_CANCELED
       - SWAP_REQUEST_STATUS_EXPIRED
     default: SWAP_REQUEST_STATUS_UNSPECIFIED
@@ -6304,7 +6401,9 @@ definitions:
 
        - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
        - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-       - SWAP_REQUEST_STATUS_EXECUTED: SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
+       - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+       - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+       - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
        - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
        - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
   squad.liquidity.v1beta1.WithdrawRequest:

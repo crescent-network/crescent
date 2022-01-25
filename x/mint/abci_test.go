@@ -68,16 +68,17 @@ func TestConstantInflation(t *testing.T) {
 	advanceHeight := func() sdk.Int {
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(blockTime))
 		beforeBalance := app.BankKeeper.GetBalance(ctx, feeCollector, sdk.DefaultBondDenom)
-		mint.BeginBlocker(ctx, app.MintKeeper, blockTime)
+		mint.BeginBlocker(ctx, app.MintKeeper)
 		afterBalance := app.BankKeeper.GetBalance(ctx, feeCollector, sdk.DefaultBondDenom)
 		mintedAmt := afterBalance.Sub(beforeBalance)
 		require.False(t, mintedAmt.IsNegative())
 		return mintedAmt.Amount
 	}
 
-	ctx = ctx.WithBlockHeight(0).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2021-12-31T23:59:50Z"))
+	//ctx = ctx.WithBlockHeight(0).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2021-12-31T23:59:50Z"))
+	ctx = ctx.WithBlockHeight(0).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
 
-	// before 2022-01-01 00:00:00
+	// skip first block inflation, not set LastBlockTime
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(0))
 
 	// after 2022-01-01 00:00:00
@@ -90,7 +91,8 @@ func TestConstantInflation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(100).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2022-12-31T23:59:50Z"))
 
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
+	// applied 10sec(params.BlockTimeThreshold) block time due to block time diff is over params.BlockTimeThreshold
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(95129375))
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 
 	// 317097919 / 5 * (365 * 24 * 60 * 60) / 200000000000000 ~= 1
