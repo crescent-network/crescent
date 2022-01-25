@@ -108,18 +108,21 @@ func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64
 
 func (s *KeeperTestSuite) swapBatch(
 	orderer sdk.AccAddress, pairId uint64, dir types.SwapDirection,
-	offerCoin sdk.Coin, price sdk.Dec,
-	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
-	if fund {
-		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
-	}
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
 	pair, found := s.keeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
+	var offerCoin sdk.Coin
 	var demandCoinDenom string
-	if offerCoin.Denom == pair.BaseCoinDenom {
-		demandCoinDenom = pair.QuoteCoinDenom
-	} else {
+	switch dir {
+	case types.SwapDirectionBuy:
+		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).TruncateInt())
 		demandCoinDenom = pair.BaseCoinDenom
+	case types.SwapDirectionSell:
+		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+		demandCoinDenom = pair.QuoteCoinDenom
+	}
+	if fund {
+		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
 	msg := types.NewMsgSwapBatch(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
@@ -130,27 +133,17 @@ func (s *KeeperTestSuite) swapBatch(
 }
 
 func (s *KeeperTestSuite) swapBatchBuy(
-	orderer sdk.AccAddress, pairId uint64, offerCoin sdk.Coin,
-	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
 	return s.swapBatch(
-		orderer, pairId, types.SwapDirectionBuy, offerCoin, price, amt, orderLifespan, fund)
+		orderer, pairId, types.SwapDirectionBuy, price, amt, orderLifespan, fund)
 }
 
-//nolint
 func (s *KeeperTestSuite) swapBatchSell(
-	orderer sdk.AccAddress, pairId uint64, offerCoin sdk.Coin,
-	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
 	return s.swapBatch(
-		orderer, pairId, types.SwapDirectionSell, offerCoin, price, amt, orderLifespan, fund)
-}
-
-//nolint
-func parseCoin(s string) sdk.Coin {
-	coin, err := sdk.ParseCoinNormalized(s)
-	if err != nil {
-		panic(err)
-	}
-	return coin
+		orderer, pairId, types.SwapDirectionSell, price, amt, orderLifespan, fund)
 }
 
 func parseCoins(s string) sdk.Coins {
@@ -161,11 +154,18 @@ func parseCoins(s string) sdk.Coins {
 	return coins
 }
 
-//nolint
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
+func decEq(exp, got sdk.Dec) (bool, string, string, string) {
+	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
 func parseDec(s string) sdk.Dec {
 	return sdk.MustNewDecFromStr(s)
+}
+
+func newInt(i int64) sdk.Int {
+	return sdk.NewInt(i)
 }
