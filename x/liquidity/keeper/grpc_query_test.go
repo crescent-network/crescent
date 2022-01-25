@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -481,7 +481,7 @@ func (s *KeeperTestSuite) TestGRPCDepositRequest() {
 			nil,
 		},
 		{
-			"query deposit request with just pool id",
+			"query the deposit request with just pool id",
 			&types.QueryDepositRequestRequest{
 				PoolId: 1,
 			},
@@ -489,7 +489,7 @@ func (s *KeeperTestSuite) TestGRPCDepositRequest() {
 			nil,
 		},
 		{
-			"query deposit request with pool id",
+			"query the deposit request with pool id",
 			&types.QueryDepositRequestRequest{
 				PoolId: 1,
 				Id:     1,
@@ -528,9 +528,9 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequests() {
 	poolCoinBalance := s.app.BankKeeper.GetBalance(s.ctx, creator, pool.PoolCoinDenom)
 	s.Require().Equal(params.InitialPoolCoinSupply, poolCoinBalance.Amount)
 
-	s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("1000%s", pool.PoolCoinDenom)))
-	s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("2500%s", pool.PoolCoinDenom)))
-	s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("5500%s", pool.PoolCoinDenom)))
+	s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 1000))
+	s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 2500))
+	s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 6000))
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -589,7 +589,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 	pair := s.createPair(creator, "denom1", "denom2", true)
 	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
-	req := s.withdrawBatch(creator, pool.Id, parseCoin(fmt.Sprintf("500000%s", pool.PoolCoinDenom)))
+	req := s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 50000))
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -630,7 +630,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 				s.Require().Equal(req.PoolId, resp.WithdrawRequest.PoolId)
 				s.Require().Equal(req.MsgHeight, resp.WithdrawRequest.MsgHeight)
 				s.Require().Equal(req.Withdrawer, resp.WithdrawRequest.Withdrawer)
-				s.Require().NotEqual(req.PoolCoin, resp.WithdrawRequest.PoolCoin)
+				s.Require().Equal(req.PoolCoin, resp.WithdrawRequest.PoolCoin)
 				s.Require().NotEqual(req.WithdrawnCoins, resp.WithdrawRequest.WithdrawnCoins)
 			},
 		},
@@ -648,8 +648,114 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 }
 
 func (s *KeeperTestSuite) TestGRPCSwapRequests() {
-	// TODO: not implemented yet
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+
+	s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(5000000), 10*time.Second, true)
+	s.swapBatchSell(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
+	s.swapBatchSell(s.addr(2), pair.Id, parseDec("1.0"), newInt(700000), time.Hour, true)
+	s.swapBatchBuy(s.addr(2), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QuerySwapRequestsRequest
+		expectErr bool
+		postRun   func(*types.QuerySwapRequestsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QuerySwapRequestsRequest{},
+			true,
+			nil,
+		},
+		{
+			"query all swap requests",
+			&types.QuerySwapRequestsRequest{
+				PairId: 1,
+			},
+			false,
+			func(resp *types.QuerySwapRequestsResponse) {
+				s.Require().Len(resp.SwapRequests, 5)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.SwapRequests(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
 func (s *KeeperTestSuite) TestGRPCSwapRequest() {
-	// TODO: not implemented yet
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+
+	req := s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QuerySwapRequestRequest
+		expectErr bool
+		postRun   func(*types.QuerySwapRequestResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QuerySwapRequestRequest{},
+			true,
+			nil,
+		},
+		{
+			"query the swap request",
+			&types.QuerySwapRequestRequest{
+				PairId: 1,
+				Id:     1,
+			},
+			false,
+			func(resp *types.QuerySwapRequestResponse) {
+				s.Require().Equal(req.Id, resp.SwapRequest.Id)
+				s.Require().Equal(req.PairId, resp.SwapRequest.PairId)
+				s.Require().Equal(req.MsgHeight, resp.SwapRequest.MsgHeight)
+				s.Require().Equal(req.Orderer, resp.SwapRequest.Orderer)
+				s.Require().Equal(req.Direction, resp.SwapRequest.Direction)
+				s.Require().Equal(req.OfferCoin, resp.SwapRequest.OfferCoin)
+				s.Require().Equal(req.RemainingOfferCoin, resp.SwapRequest.RemainingOfferCoin)
+				s.Require().Equal(req.ReceivedCoin, resp.SwapRequest.ReceivedCoin)
+				s.Require().Equal(req.Price, resp.SwapRequest.Price)
+				s.Require().Equal(req.Amount, resp.SwapRequest.Amount)
+				s.Require().Equal(req.OpenAmount, resp.SwapRequest.OpenAmount)
+				s.Require().Equal(req.BatchId, resp.SwapRequest.BatchId)
+				s.Require().Equal(req.ExpireAt, resp.SwapRequest.ExpireAt)
+				s.Require().NotEqual(req.Status, resp.SwapRequest.Status)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.SwapRequest(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
 }
