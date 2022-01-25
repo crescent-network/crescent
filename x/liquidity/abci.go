@@ -13,7 +13,7 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	k.DeleteExecutedRequests(ctx)
+	k.DeleteOutdatedRequests(ctx)
 }
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {

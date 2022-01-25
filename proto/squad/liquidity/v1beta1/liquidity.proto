@@ -145,23 +145,28 @@ message SwapRequest {
   // direction specifies the swap direction; either buy or sell
   SwapDirection direction = 5;
 
-  // price specifies the price that an orderer is willing to swap
-  string price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin offer_coin = 6 [(gogoproto.nullable) = false];
 
-  // remaining_coin specifies the remaining coin after the swap
-  cosmos.base.v1beta1.Coin remaining_coin = 7 [(gogoproto.nullable) = false];
+  // remaining_offer_coin specifies the remaining offer coin
+  cosmos.base.v1beta1.Coin remaining_offer_coin = 7 [(gogoproto.nullable) = false];
 
   // received_coin specifies the received coin after the swap
   cosmos.base.v1beta1.Coin received_coin = 8 [(gogoproto.nullable) = false];
 
+  // price specifies the price that an orderer is willing to swap
+  string price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string amount = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  string open_amount = 11
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
   // batch_id specifies the pair's batch id when the request is stored
-  uint64 batch_id = 9;
+  uint64 batch_id = 12;
 
-  google.protobuf.Timestamp canceled_at = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp expire_at = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
-  bool matched = 11;
-
-  SwapRequestStatus status = 12;
+  SwapRequestStatus status = 14;
 }
 
 // CancelSwapRequest defines a request to cancel a swap request.
@@ -222,12 +227,18 @@ enum SwapRequestStatus {
   // SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
   SWAP_REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotExecuted"];
 
-  // SWAP_REQUEST_STATUS_EXECUTED indicates the request has been executed
-  SWAP_REQUEST_STATUS_EXECUTED = 2 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExecuted"];
+  // SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
+  SWAP_REQUEST_STATUS_NOT_MATCHED = 2 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotMatched"];
+
+  // SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
+  SWAP_REQUEST_STATUS_PARTIALLY_MATCHED = 3 [(gogoproto.enumvalue_customname) = "SwapRequestStatusPartiallyMatched"];
+
+  // SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
+  SWAP_REQUEST_STATUS_COMPLETED = 4 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCompleted"];
 
   // SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-  SWAP_REQUEST_STATUS_CANCELED = 3 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCanceled"];
+  SWAP_REQUEST_STATUS_CANCELED = 5 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCanceled"];
 
   // SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-  SWAP_REQUEST_STATUS_EXPIRED = 4 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExpired"];
+  SWAP_REQUEST_STATUS_EXPIRED = 6 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExpired"];
 }

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/binary"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -105,13 +106,44 @@ func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64
 	return req
 }
 
-//nolint
-func parseCoin(s string) sdk.Coin {
-	coin, err := sdk.ParseCoinNormalized(s)
-	if err != nil {
-		panic(err)
+func (s *KeeperTestSuite) swapBatch(
+	orderer sdk.AccAddress, pairId uint64, dir types.SwapDirection,
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	pair, found := s.keeper.GetPair(s.ctx, pairId)
+	s.Require().True(found)
+	var offerCoin sdk.Coin
+	var demandCoinDenom string
+	switch dir {
+	case types.SwapDirectionBuy:
+		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).TruncateInt())
+		demandCoinDenom = pair.BaseCoinDenom
+	case types.SwapDirectionSell:
+		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+		demandCoinDenom = pair.QuoteCoinDenom
 	}
-	return coin
+	if fund {
+		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
+	}
+	msg := types.NewMsgSwapBatch(
+		orderer, pairId, dir, offerCoin, demandCoinDenom,
+		price, amt, orderLifespan)
+	req, err := s.keeper.SwapBatch(s.ctx, msg)
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) swapBatchBuy(
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	return s.swapBatch(
+		orderer, pairId, types.SwapDirectionBuy, price, amt, orderLifespan, fund)
+}
+
+func (s *KeeperTestSuite) swapBatchSell(
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	return s.swapBatch(
+		orderer, pairId, types.SwapDirectionSell, price, amt, orderLifespan, fund)
 }
 
 func parseCoins(s string) sdk.Coins {
@@ -122,7 +154,18 @@ func parseCoins(s string) sdk.Coins {
 	return coins
 }
 
-//nolint
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func decEq(exp, got sdk.Dec) (bool, string, string, string) {
+	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func parseDec(s string) sdk.Dec {
+	return sdk.MustNewDecFromStr(s)
+}
+
+func newInt(i int64) sdk.Int {
+	return sdk.NewInt(i)
 }

@@ -4,6 +4,7 @@ package squad.liquidity.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/duration.proto";
+import "squad/liquidity/v1beta1/liquidity.proto";
 
 option go_package                      = "github.com/cosmosquad-labs/squad/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -95,24 +96,26 @@ message MsgSwapBatch {
   // orderer specifies the bech32-encoded address that makes an order to swap from the pool
   string orderer = 1;
 
-  // x_coin_denom specifies the x coin denom of a pair.
-  string x_coin_denom = 2;
+  // pair_id specifies the pair id
+  uint64 pair_id = 2;
 
-  // y_coin_denom specifies the y coin denom of a pair.
-  string y_coin_denom = 3;
+  // direction specifies the swap direction(buy or sell)
+  SwapDirection direction = 3;
 
-  // coin specifies the offer coin that the orderer offers to swap with
+  // offer_coin specifies the amount of coin the orderer offers
   cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
 
-  // demand_coin_denom specifies the coin denom that is exchanged during the swap request; it must match the denom in
-  // the pool
+  // demand_coin_denom specifies the demand coin denom
   string demand_coin_denom = 5;
 
-  // price specifies ...
+  // price specifies the order price
   string price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
+  // amount specifies the amount of base coin the orderer wants to buy or sell
+  string amount = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
   // order_lifespan specifies the order lifespan
-  google.protobuf.Duration order_lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration order_lifespan = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // MsgSwapBatchResponse defines the Msg/SwapBatch response type.
