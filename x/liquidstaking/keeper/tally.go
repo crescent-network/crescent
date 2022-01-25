@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	"github.com/cosmosquad-labs/squad/x/utils"
 )
@@ -42,6 +43,7 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 	}
 	// calculate btoken value of each voter
 	for denom, balanceByVoter := range voterBalanceByDenom {
+
 		// add balance of bToken value
 		if denom == liquidBondDenom {
 			for voter, balance := range balanceByVoter {
@@ -52,15 +54,39 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 				}
 			}
 		}
-		// add balance of PoolTokens including bToken value
-
-		// add Farming Staking Position of PoolTokens including bToken
-
-		// add Farming Queued Staking of PoolTokens including bToken
 
 		// add Farming Staking Position of bToken
 
 		// add Farming Queued Staking of bToken
+
+		// add balance of PoolTokens including bToken value
+		if pool, found := k.liquidityKeeper.GetPool(ctx, liquiditytypes.ParsePoolCoinDenom(denom)); !found {
+			if pair, found := k.liquidityKeeper.GetPair(ctx, pool.PairId); found {
+				rx, ry := k.liquidityKeeper.GetPoolBalance(ctx, pool, pair)
+				poolCoinSupply := k.liquidityKeeper.GetPoolCoinSupply(ctx, pool)
+				bTokenSharePerPoolCoin := sdk.ZeroDec()
+				if pair.QuoteCoinDenom == liquidBondDenom {
+					bTokenSharePerPoolCoin = rx.ToDec().Quo(poolCoinSupply.ToDec())
+				}
+				if pair.BaseCoinDenom == liquidBondDenom {
+					bTokenSharePerPoolCoin = ry.ToDec().Quo(poolCoinSupply.ToDec())
+				}
+				if !bTokenSharePerPoolCoin.IsPositive() {
+					continue
+				}
+				for voter, balance := range balanceByVoter {
+					if _, ok := bTokenValueMap[voter]; !ok {
+						bTokenValueMap[voter] = types.GetShareValue(balance, bTokenSharePerPoolCoin)
+					} else {
+						bTokenValueMap[voter] = bTokenValueMap[voter].Add(types.GetShareValue(balance, bTokenSharePerPoolCoin))
+					}
+				}
+				// add Farming Staking Position of PoolTokens including bToken
+
+				// add Farming Queued Staking of PoolTokens including bToken
+			}
+		}
+
 	}
 
 	for voter, btokenValue := range bTokenValueMap {
