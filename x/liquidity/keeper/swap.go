@@ -197,7 +197,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				var offerCoinDenom, demandCoinDenom string
 				switch order.Direction {
 				case types.SwapDirectionBuy:
-					offerCoinDenom =  pair.QuoteCoinDenom
+					offerCoinDenom = pair.QuoteCoinDenom
 					demandCoinDenom = pair.BaseCoinDenom
 				case types.SwapDirectionSell:
 					offerCoinDenom = pair.BaseCoinDenom
