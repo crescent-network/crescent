@@ -229,5 +229,7 @@ func MatchOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (quoteCoinDus
 		quoteCoinDustAmt = quoteCoinDustAmt.Sub(receivedQuoteCoinAmt)
 	}
 
+	matched = true
+
 	return
 }
