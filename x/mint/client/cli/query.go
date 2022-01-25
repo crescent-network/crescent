@@ -25,12 +25,12 @@ func GetQueryCmd() *cobra.Command {
 	return mintingQueryCmd
 }
 
-// GetCmdQueryParams implements a command to return the current minting
+// GetCmdQueryParams implements a command to return the current mint
 // parameters.
 func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
-		Short: "Query the current minting parameters",
+		Short: "Query the current mint parameters",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

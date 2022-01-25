@@ -37,7 +37,7 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		MintDenom:          sdk.DefaultBondDenom,
-		BlockTimeThreshold: time.Duration(10 * time.Second),
+		BlockTimeThreshold: 10 * time.Second,
 	}
 }
 

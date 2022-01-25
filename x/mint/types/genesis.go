@@ -1,16 +1,20 @@
 package types
 
+import "time"
+
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(params Params) *GenesisState {
+func NewGenesisState(params Params, lastBlockTime *time.Time) *GenesisState {
 	return &GenesisState{
-		Params: params,
+		LastBlockTime: lastBlockTime,
+		Params:        params,
 	}
 }
 
 // DefaultGenesisState creates a default GenesisState object
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Params: DefaultParams(),
+		LastBlockTime: nil,
+		Params:        DefaultParams(),
 	}
 }
 

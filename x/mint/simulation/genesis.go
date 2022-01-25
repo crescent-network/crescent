@@ -46,9 +46,7 @@ import (
 
 // RandomizedGenState generates a random GenesisState for mint
 func RandomizedGenState(simState *module.SimulationState) {
-	mintGenesis := types.GenesisState{
-		Params: types.DefaultParams(),
-	}
+	mintGenesis := types.DefaultGenesisState()
 
 	// minter
 	//var inflation sdk.Dec
@@ -73,6 +71,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&mintGenesis)
+	fmt.Printf("Selected randomly generated mint parameters:\n%s\n", bz)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(mintGenesis)
 }
