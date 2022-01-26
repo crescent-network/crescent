@@ -82,7 +82,7 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 		if err != nil {
 			continue
 		}
-		// add Farming Staking Position of bToken and PoolTokens including bToken
+		// add value of Farming Staking Position of bToken and PoolTokens including bToken
 		k.farmingKeeper.IterateStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, staking farmingtypes.Staking) (stop bool) {
 			if stakingCoinDenom == liquidBondDenom {
 				bTokenValueMap.AddOrInit(vote.Voter, staking.Amount)
@@ -92,7 +92,7 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 			return false
 		})
 
-		// add Farming Queued Staking of bToken and PoolTokens including bToken
+		// add value of Farming Queued Staking of bToken and PoolTokens including bToken
 		k.farmingKeeper.IterateQueuedStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
 			if stakingCoinDenom == liquidBondDenom {
 				bTokenValueMap.AddOrInit(vote.Voter, queuedStaking.Amount)
