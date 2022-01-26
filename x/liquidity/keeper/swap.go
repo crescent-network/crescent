@@ -11,8 +11,8 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
-// SwapBatch handles types.MsgSwapBatch and stores it.
-func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapRequest, error) {
+// LimitOrderBatch handles types.MsgLimitOrderBatch and stores it.
+func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrderBatch) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
 	if price := types.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
@@ -60,24 +60,107 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 		}
 	}
 
-	if err := k.bankKeeper.SendCoins(ctx, msg.GetOrderer(), pair.GetEscrowAddress(), sdk.NewCoins(msg.OfferCoin)); err != nil {
+	var offerCoin sdk.Coin
+	switch msg.Direction {
+	case types.SwapDirectionBuy:
+		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Price.MulInt(msg.Amount).Ceil().TruncateInt())
+	case types.SwapDirectionSell:
+		offerCoin = msg.OfferCoin
+	}
+	refundedCoin := msg.OfferCoin.Sub(offerCoin)
+	if msg.OfferCoin.IsLT(offerCoin) {
+		return types.SwapRequest{}, types.ErrInsufficientOfferCoin
+	}
+
+	if err := k.bankKeeper.SendCoins(ctx, msg.GetOrderer(), pair.GetEscrowAddress(), sdk.NewCoins(offerCoin)); err != nil {
 		return types.SwapRequest{}, err
 	}
 
 	requestId := k.GetNextSwapRequestIdWithUpdate(ctx, pair)
-	req := types.NewSwapRequest(msg, requestId, pair, canceledAt, ctx.BlockHeight())
+	req := types.NewSwapRequestForLimitOrder(msg, requestId, pair, offerCoin, canceledAt, ctx.BlockHeight())
 	k.SetSwapRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeSwapBatch,
+			types.EventTypeLimitOrderBatch,
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
+			sdk.NewAttribute(types.AttributeKeySwapDirection, msg.Direction.String()),
+			sdk.NewAttribute(types.AttributeKeyOfferCoin, offerCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
+			sdk.NewAttribute(types.AttributeKeyPrice, msg.Price.String()),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
+			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
+			sdk.NewAttribute(types.AttributeKeyRefundedCoin, refundedCoin.String()),
+		),
+	})
+
+	return req, nil
+}
+
+// MarketOrderBatch handles types.MsgMarketOrderBatch and stores it.
+func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrderBatch) (types.SwapRequest, error) {
+	params := k.GetParams(ctx)
+
+	if msg.OrderLifespan > params.MaxOrderLifespan {
+		return types.SwapRequest{}, types.ErrTooLongOrderLifespan
+	}
+	canceledAt := ctx.BlockTime().Add(msg.OrderLifespan)
+
+	pair, found := k.GetPair(ctx, msg.PairId)
+	if !found {
+		return types.SwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair not found")
+	}
+
+	if pair.LastPrice == nil {
+		return types.SwapRequest{}, types.ErrNoLastPrice
+	}
+	lastPrice := *pair.LastPrice
+
+	var price sdk.Dec
+	var offerCoin sdk.Coin
+	switch msg.Direction {
+	case types.SwapDirectionBuy:
+		if msg.OfferCoin.Denom != pair.QuoteCoinDenom || msg.DemandCoinDenom != pair.BaseCoinDenom {
+			return types.SwapRequest{},
+				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+		}
+		price = lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio))
+		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, price.MulInt(msg.Amount).Ceil().TruncateInt())
+	case types.SwapDirectionSell:
+		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
+			return types.SwapRequest{},
+				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+					msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+		}
+		price = lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio))
+		offerCoin = msg.OfferCoin
+	}
+	if msg.OfferCoin.IsLT(offerCoin) {
+		return types.SwapRequest{}, types.ErrInsufficientOfferCoin
+	}
+
+	if err := k.bankKeeper.SendCoins(ctx, msg.GetOrderer(), pair.GetEscrowAddress(), sdk.NewCoins(offerCoin)); err != nil {
+		return types.SwapRequest{}, err
+	}
+
+	requestId := k.GetNextSwapRequestIdWithUpdate(ctx, pair)
+	req := types.NewSwapRequestForMarketOrder(msg, requestId, pair, price, canceledAt, ctx.BlockHeight())
+	k.SetSwapRequest(ctx, req)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeMarketOrderBatch,
 			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeySwapDirection, msg.Direction.String()),
 			sdk.NewAttribute(types.AttributeKeyOfferCoin, msg.OfferCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
-			sdk.NewAttribute(types.AttributeKeyPrice, msg.Price.String()),
+			sdk.NewAttribute(types.AttributeKeyPrice, price.String()),
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
 			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
@@ -87,29 +170,29 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 	return req, nil
 }
 
-// CancelSwapBatch handles types.MsgCancelSwapBatch and stores it.
-func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) (types.CancelSwapRequest, error) {
+// CancelOrderBatch handles types.MsgCancelOrderBatch and stores it.
+func (k Keeper) CancelOrderBatch(ctx sdk.Context, msg *types.MsgCancelOrderBatch) (types.CancelOrderRequest, error) {
 	swapReq, found := k.GetSwapRequest(ctx, msg.PairId, msg.SwapRequestId)
 	if !found {
-		return types.CancelSwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "swap request with id %d in pair %d not found", msg.SwapRequestId, msg.PairId)
+		return types.CancelOrderRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "swap request with id %d in pair %d not found", msg.SwapRequestId, msg.PairId)
 	}
 
 	if msg.Orderer != swapReq.Orderer {
-		return types.CancelSwapRequest{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
+		return types.CancelOrderRequest{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
 	}
 
 	pair, found := k.GetPair(ctx, msg.PairId)
 	if !found { // TODO: will it ever happen?
-		return types.CancelSwapRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair with id %d not found", msg.PairId)
+		return types.CancelOrderRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair with id %d not found", msg.PairId)
 	}
 
-	requestId := k.GetNextCancelSwapRequestIdWithUpdate(ctx, pair)
-	req := types.NewCancelSwapRequest(msg, requestId, pair, ctx.BlockHeight())
-	k.SetCancelSwapRequest(ctx, req)
+	requestId := k.GetNextCancelOrderRequestIdWithUpdate(ctx, pair)
+	req := types.NewCancelOrderRequest(msg, requestId, pair, ctx.BlockHeight())
+	k.SetCancelOrderRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeCancelSwapBatch,
+			types.EventTypeCancelOrderBatch,
 			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(req.PairId, 10)),
@@ -197,7 +280,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				var offerCoinDenom, demandCoinDenom string
 				switch order.Direction {
 				case types.SwapDirectionBuy:
-					offerCoinDenom =  pair.QuoteCoinDenom
+					offerCoinDenom = pair.QuoteCoinDenom
 					demandCoinDenom = pair.BaseCoinDenom
 				case types.SwapDirectionSell:
 					offerCoinDenom = pair.BaseCoinDenom
@@ -268,12 +351,12 @@ func (k Keeper) RefundSwapRequestAndSetStatus(ctx sdk.Context, req types.SwapReq
 	return nil
 }
 
-// ExecuteCancelSwapRequest cancels and refunds swap request.
-func (k Keeper) ExecuteCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRequest) error {
+// ExecuteCancelOrderRequest cancels and refunds swap request.
+func (k Keeper) ExecuteCancelOrderRequest(ctx sdk.Context, req types.CancelOrderRequest) error {
 	swapReq, found := k.GetSwapRequest(ctx, req.PairId, req.SwapRequestId)
 	if !found {
 		req.Status = types.RequestStatusFailed
-		k.SetCancelSwapRequest(ctx, req)
+		k.SetCancelOrderRequest(ctx, req)
 		return nil
 	}
 
@@ -286,10 +369,10 @@ func (k Keeper) ExecuteCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRe
 		} else {
 			req.Status = types.RequestStatusFailed
 		}
-		k.SetCancelSwapRequest(ctx, req)
+		k.SetCancelOrderRequest(ctx, req)
 	}
 
-	// if swapReq.BatchId == req.BatchId, then do not change the cancel swap
-	// request's status and just wait for next batch.
+	// if swapReq.BatchId == req.BatchId, then do not change the
+	// cancel order request's status and just wait for next batch.
 	return nil
 }

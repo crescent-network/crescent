@@ -28,11 +28,14 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgWithdrawBatch:
 			res, err := msgServer.WithdrawBatch(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgSwapBatch:
-			res, err := msgServer.SwapBatch(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgLimitOrderBatch:
+			res, err := msgServer.LimitOrderBatch(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgCancelSwapBatch:
-			res, err := msgServer.CancelSwapBatch(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgMarketOrderBatch:
+			res, err := msgServer.MarketOrderBatch(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgCancelOrderBatch:
+			res, err := msgServer.CancelOrderBatch(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:

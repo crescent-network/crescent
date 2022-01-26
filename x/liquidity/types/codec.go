@@ -17,8 +17,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreatePool{},
 		&MsgDepositBatch{},
 		&MsgWithdrawBatch{},
-		&MsgSwapBatch{},
-		&MsgCancelSwapBatch{},
+		&MsgLimitOrderBatch{},
+		&MsgMarketOrderBatch{},
+		&MsgCancelOrderBatch{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

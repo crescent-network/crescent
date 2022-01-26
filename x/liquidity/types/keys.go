@@ -33,10 +33,10 @@ var (
 	PoolByReserveAccIndexKeyPrefix = []byte{0xac}
 	PoolsByPairIndexKeyPrefix      = []byte{0xad}
 
-	DepositRequestKeyPrefix    = []byte{0xb0}
-	WithdrawRequestKeyPrefix   = []byte{0xb1}
-	SwapRequestKeyPrefix       = []byte{0xb2}
-	CancelSwapRequestKeyPrefix = []byte{0xb3}
+	DepositRequestKeyPrefix     = []byte{0xb0}
+	WithdrawRequestKeyPrefix    = []byte{0xb1}
+	SwapRequestKeyPrefix        = []byte{0xb2}
+	CancelOrderRequestKeyPrefix = []byte{0xb3}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
@@ -105,9 +105,9 @@ func GetSwapRequestsByPairKeyPrefix(pairId uint64) []byte {
 	return append(SwapRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
 }
 
-// GetCancelSwapRequestKey returns the store key to retrieve cancel swap request object from pair id and request id.
-func GetCancelSwapRequestKey(pairId, id uint64) []byte {
-	return append(append(CancelSwapRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(id)...)
+// GetCancelOrderRequestKey returns the store key to retrieve cancel order request object from pair id and request id.
+func GetCancelOrderRequestKey(pairId, id uint64) []byte {
+	return append(append(CancelOrderRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(id)...)
 }
 
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.

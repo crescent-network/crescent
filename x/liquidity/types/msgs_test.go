@@ -220,61 +220,57 @@ func TestMsgWithdrawBatch(t *testing.T) {
 	}
 }
 
-func TestMsgSwapBatch(t *testing.T) {
+func TestMsgMarketOrderBatch(t *testing.T) {
 	orderLifespan := 20 * time.Second
 
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgSwapBatch
+		msg    *types.MsgMarketOrderBatch
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgSwapBatch(
+			types.NewMsgMarketOrderBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
 				sdk.NewInt64Coin("denom1", 100_000_000),
 				"denom2",
-				parseDec("1.0"),
 				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
 		},
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
-			types.NewMsgSwapBatch(
+			types.NewMsgMarketOrderBatch(
 				sdk.AccAddress{},
 				1,
 				types.SwapDirectionBuy,
 				sdk.NewInt64Coin("denom1", 100_000_000),
 				"denom2",
-				parseDec("1.0"),
 				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
 		},
 		{
 			"offer coin must be positive: invalid request",
-			types.NewMsgSwapBatch(
+			types.NewMsgMarketOrderBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
 				sdk.NewInt64Coin("denom1", 0),
 				"denom2",
-				parseDec("1.0"),
 				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
 		},
 		{
 			"offer coin denom and demand coin denom must not be same: invalid request",
-			types.NewMsgSwapBatch(
+			types.NewMsgMarketOrderBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
 				sdk.NewInt64Coin("denom1", 100_000_000),
 				"denom1",
-				parseDec("1.0"),
 				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
@@ -283,7 +279,7 @@ func TestMsgSwapBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgSwapBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgMarketOrderBatch, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()
@@ -299,14 +295,93 @@ func TestMsgSwapBatch(t *testing.T) {
 	}
 }
 
-func TestMsgCancelSwapBatch(t *testing.T) {
+func TestMsgLimitOrderBatch(t *testing.T) {
+	orderLifespan := 20 * time.Second
+
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgCancelSwapBatch
+		msg    *types.MsgLimitOrderBatch
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgCancelSwapBatch(
+			types.NewMsgLimitOrderBatch(
+				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 100_000_000),
+				"denom2",
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
+				orderLifespan,
+			),
+		},
+		{
+			"invalid orderer address: empty address string is not allowed: invalid address",
+			types.NewMsgLimitOrderBatch(
+				sdk.AccAddress{},
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 100_000_000),
+				"denom2",
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
+				orderLifespan,
+			),
+		},
+		{
+			"offer coin must be positive: invalid request",
+			types.NewMsgLimitOrderBatch(
+				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 0),
+				"denom2",
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
+				orderLifespan,
+			),
+		},
+		{
+			"offer coin denom and demand coin denom must not be same: invalid request",
+			types.NewMsgLimitOrderBatch(
+				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 100_000_000),
+				"denom1",
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
+				orderLifespan,
+			),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, types.TypeMsgLimitOrderBatch, tc.msg.Type())
+			require.Equal(t, types.RouterKey, tc.msg.Route())
+
+			err := tc.msg.ValidateBasic()
+			if tc.expErr == "" {
+				require.NoError(t, err)
+				signers := tc.msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, tc.msg.GetOrderer(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expErr)
+			}
+		})
+	}
+}
+
+func TestMsgCancelOrderBatch(t *testing.T) {
+	testCases := []struct {
+		expErr string
+		msg    *types.MsgCancelOrderBatch
+	}{
+		{
+			"", // empty means no error expected
+			types.NewMsgCancelOrderBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				1,
@@ -314,7 +389,7 @@ func TestMsgCancelSwapBatch(t *testing.T) {
 		},
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
-			types.NewMsgCancelSwapBatch(
+			types.NewMsgCancelOrderBatch(
 				sdk.AccAddress{},
 				1,
 				1,
@@ -324,7 +399,7 @@ func TestMsgCancelSwapBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgCancelSwapBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgCancelOrderBatch, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()

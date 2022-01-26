@@ -23,11 +23,11 @@ func (k Keeper) GetNextSwapRequestIdWithUpdate(ctx sdk.Context, pair types.Pair)
 	return id
 }
 
-// GetNextCancelSwapRequestIdWithUpdate increments the pair's last cancel
+// GetNextCancelOrderRequestIdWithUpdate increments the pair's last cancel
 // swap request id and returns it.
-func (k Keeper) GetNextCancelSwapRequestIdWithUpdate(ctx sdk.Context, pair types.Pair) uint64 {
-	id := pair.LastCancelSwapRequestId + 1
-	pair.LastCancelSwapRequestId = id
+func (k Keeper) GetNextCancelOrderRequestIdWithUpdate(ctx sdk.Context, pair types.Pair) uint64 {
+	id := pair.LastCancelOrderRequestId + 1
+	pair.LastCancelOrderRequestId = id
 	k.SetPair(ctx, pair)
 	return id
 }

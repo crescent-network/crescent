@@ -2,12 +2,13 @@ package types
 
 // Event types for the liquidity module.
 const (
-	EventTypeCreatePair      = "create_pair"
-	EventTypeCreatePool      = "create_pool"
-	EventTypeDepositBatch    = "deposit_batch"
-	EventTypeWithdrawBatch   = "withdraw_batch"
-	EventTypeSwapBatch       = "swap_batch"
-	EventTypeCancelSwapBatch = "cancel_swap_batch"
+	EventTypeCreatePair       = "create_pair"
+	EventTypeCreatePool       = "create_pool"
+	EventTypeDepositBatch     = "deposit_batch"
+	EventTypeWithdrawBatch    = "withdraw_batch"
+	EventTypeLimitOrderBatch  = "limit_order_batch"
+	EventTypeMarketOrderBatch = "market_order_batch"
+	EventTypeCancelOrderBatch = "cancel_order_batch"
 
 	AttributeKeyCreator         = "creator"
 	AttributeKeyDepositor       = "depositor"
@@ -18,6 +19,7 @@ const (
 	AttributeKeyDepositCoins    = "deposit_coins"
 	AttributeKeyMintedPoolCoin  = "minted_pool_coin"
 	AttributeKeyPoolCoin        = "pool_coin"
+	AttributeKeyRefundedCoin    = "refunded_coin"
 	AttributeKeyRequestId       = "request_id"
 	AttributeKeyPoolId          = "pool_id"
 	AttributeKeyPairId          = "pair_id"

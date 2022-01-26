@@ -15,7 +15,7 @@ func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req := s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	req := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	// Execute matching
 	liquidity.EndBlocker(ctx, k)
 
@@ -39,8 +39,8 @@ func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req1 := s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
-	req2 := s.swapBatchSell(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
+	req1 := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
+	req2 := s.sellLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
 	liquidity.EndBlocker(ctx, k)
 
 	req1, _ = k.GetSwapRequest(ctx, req1.PairId, req1.Id)
