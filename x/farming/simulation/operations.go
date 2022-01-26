@@ -10,10 +10,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	crescentappparams "github.com/crescent-network/crescent/app/params"
-	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
-	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
-	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
+	squadappparams "github.com/cosmosquad-labs/squad/app/params"
+	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // Simulation operation weights constants.
@@ -34,35 +34,35 @@ func WeightedOperations(
 	var weightMsgCreateFixedAmountPlan int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateFixedAmountPlan, &weightMsgCreateFixedAmountPlan, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateFixedAmountPlan = crescentappparams.DefaultWeightMsgCreateFixedAmountPlan
+			weightMsgCreateFixedAmountPlan = squadappparams.DefaultWeightMsgCreateFixedAmountPlan
 		},
 	)
 
 	var weightMsgCreateRatioPlan int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateRatioPlan, &weightMsgCreateRatioPlan, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateRatioPlan = crescentappparams.DefaultWeightMsgCreateRatioPlan
+			weightMsgCreateRatioPlan = squadappparams.DefaultWeightMsgCreateRatioPlan
 		},
 	)
 
 	var weightMsgStake int
 	appParams.GetOrGenerate(cdc, OpWeightMsgStake, &weightMsgStake, nil,
 		func(_ *rand.Rand) {
-			weightMsgStake = crescentappparams.DefaultWeightMsgStake
+			weightMsgStake = squadappparams.DefaultWeightMsgStake
 		},
 	)
 
 	var weightMsgUnstake int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnstake, &weightMsgUnstake, nil,
 		func(_ *rand.Rand) {
-			weightMsgUnstake = crescentappparams.DefaultWeightMsgUnstake
+			weightMsgUnstake = squadappparams.DefaultWeightMsgUnstake
 		},
 	)
 
 	var weightMsgHarvest int
 	appParams.GetOrGenerate(cdc, OpWeightMsgHarvest, &weightMsgHarvest, nil,
 		func(_ *rand.Rand) {
-			weightMsgHarvest = crescentappparams.DefaultWeightMsgHarvest
+			weightMsgHarvest = squadappparams.DefaultWeightMsgHarvest
 		},
 	)
 

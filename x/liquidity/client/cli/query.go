@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -86,13 +86,9 @@ func QueryPools() *cobra.Command {
 			fmt.Sprintf(`Query for all existing liquidity pools on a network.
 Example:
 $ %s query %s pools
-$ %s query %s pools --pair-id=[pair-id]
-$ %s query %s pools --x-denom=[denom]
-$ %s query %s pools --y-denom=[denom]
-$ %s query %s pools --x-denom=[denom] --y-denom=[denom]
+$ %s query %s pools --pair-id=1
+$ %s query %s pools --disabled=true
 `,
-				version.AppName, types.ModuleName,
-				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -109,57 +105,31 @@ $ %s query %s pools --x-denom=[denom] --y-denom=[denom]
 				return err
 			}
 
-			var res *types.QueryPoolsResponse
-
-			queryClient := types.NewQueryClient(clientCtx)
+			var pairId uint64
 
 			pairIdStr, _ := cmd.Flags().GetString(FlagPairId)
-			xDenom, _ := cmd.Flags().GetString(FlagXCoinDenom)
-			yDenom, _ := cmd.Flags().GetString(FlagYCoinDenom)
-
-			if excConditions(pairIdStr != "", xDenom != "" || yDenom != "") {
-				return fmt.Errorf("invalid request")
+			if pairIdStr != "" {
+				var err error
+				pairId, err = strconv.ParseUint(pairIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("parse pair id flag: %w", err)
+				}
+			}
+			disabledStr, _ := cmd.Flags().GetString(FlagDisabled)
+			if disabledStr != "" {
+				if _, err := strconv.ParseBool(disabledStr); err != nil {
+					return fmt.Errorf("parse disabled flag: %w", err)
+				}
 			}
 
-			switch {
-			case pairIdStr != "":
-				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
-				if err != nil {
-					return err
-				}
-
-				if pairId != 0 {
-					res, err = queryClient.PoolsByPair(
-						context.Background(),
-						&types.QueryPoolsByPairRequest{
-							PairId: pairId,
-						})
-					if err != nil {
-						return err
-					}
-				}
-
-			case xDenom != "" || yDenom != "":
-				res, err = queryClient.Pools(
-					context.Background(),
-					&types.QueryPoolsRequest{
-						XDenom:     xDenom,
-						YDenom:     yDenom,
-						Pagination: pageReq,
-					})
-				if err != nil {
-					return err
-				}
-
-			default:
-				res, err = queryClient.Pools(
-					context.Background(),
-					&types.QueryPoolsRequest{
-						Pagination: pageReq,
-					})
-				if err != nil {
-					return err
-				}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Pools(cmd.Context(), &types.QueryPoolsRequest{
+				PairId:     pairId,
+				Disabled:   disabledStr,
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
 			}
 
 			return clientCtx.PrintProto(res)
@@ -181,8 +151,8 @@ func QueryPool() *cobra.Command {
 			fmt.Sprintf(`Query details of the liquidity pool
 Example:
 $ %s query %s pool 1
-$ %s query %s pool --pool-coin-denom=[denom]
-$ %s query %s pool --reserve-acc=[address]
+$ %s query %s pool --pool-coin-denom=pool1
+$ %s query %s pool --reserve-acc=cosmos1...
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -262,11 +232,9 @@ func QueryPairs() *cobra.Command {
 			fmt.Sprintf(`Query for all existing pairs on a network.
 Example:
 $ %s query %s pairs
-$ %s query %s pairs --x-denom=[denom]
-$ %s query %s pairs --y-denom=[denom]
-$ %s query %s pairs --x-denom=[denom] --y-denom=[denom]
+$ %s query %s pairs --denoms=uatom
+$ %s query %s pairs --denoms=uatom,usquad
 `,
-				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -283,16 +251,13 @@ $ %s query %s pairs --x-denom=[denom] --y-denom=[denom]
 				return err
 			}
 
-			xDenom, _ := cmd.Flags().GetString(FlagXCoinDenom)
-			yDenom, _ := cmd.Flags().GetString(FlagYCoinDenom)
+			denoms, _ := cmd.Flags().GetStringSlice(FlagDenoms)
 
 			queryClient := types.NewQueryClient(clientCtx)
-
 			res, err := queryClient.Pairs(
 				context.Background(),
 				&types.QueryPairsRequest{
-					XDenom:     xDenom,
-					YDenom:     yDenom,
+					Denoms:     denoms,
 					Pagination: pageReq,
 				})
 			if err != nil {
@@ -317,14 +282,8 @@ func QueryPair() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details of the pair.
 Example:
-$ %s query %s pairs
-$ %s query %s pairs --x-denom=[denom]
-$ %s query %s pairs --y-denom=[denom]
-$ %s query %s pairs --x-denom=[denom] --y-denom=[denom]
+$ %s query %s pair 1
 `,
-				version.AppName, types.ModuleName,
-				version.AppName, types.ModuleName,
-				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -567,7 +526,7 @@ func QuerySwapRequests() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all swap requests.
 Example:
-$ %s query %s swap-requests
+$ %s query %s swap-requests 1
 `,
 				version.AppName, types.ModuleName,
 			),

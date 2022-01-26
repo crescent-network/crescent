@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // GetNextPoolIdWithUpdate increments pool id by one and set it.
@@ -51,18 +51,6 @@ func (k Keeper) GetPoolCoinSupply(ctx sdk.Context, pool types.Pool) sdk.Int {
 func (k Keeper) MarkPoolAsDisabled(ctx sdk.Context, pool types.Pool) {
 	pool.Disabled = true
 	k.SetPool(ctx, pool)
-}
-
-func (k Keeper) MarkDepositRequestToBeDeleted(ctx sdk.Context, req types.DepositRequest, succeeded bool) {
-	req.Succeeded = succeeded
-	req.ToBeDeleted = true
-	k.SetDepositRequest(ctx, req)
-}
-
-func (k Keeper) MarkWithdrawRequestToBeDeleted(ctx sdk.Context, req types.WithdrawRequest, succeeded bool) {
-	req.Succeeded = succeeded
-	req.ToBeDeleted = true
-	k.SetWithdrawRequest(ctx, req)
 }
 
 // CreatePool handles types.MsgCreatePool and creates a pool.
@@ -127,8 +115,10 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 		sdk.NewEvent(
 			types.EventTypeCreatePool,
 			sdk.NewAttribute(types.AttributeKeyCreator, msg.Creator),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeyDepositCoins, msg.DepositCoins.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyReserveAddress, pool.ReserveAddress),
 			sdk.NewAttribute(types.AttributeKeyMintedPoolCoin, poolCoin.String()),
 		),
 	})
@@ -167,8 +157,8 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) (types
 			types.EventTypeDepositBatch,
 			sdk.NewAttribute(types.AttributeKeyDepositor, msg.Depositor),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyDepositCoins, msg.DepositCoins.String()),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 		),
 	})
 
@@ -195,7 +185,7 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (typ
 	}
 
 	requestId := k.GetNextWithdrawRequestIdWithUpdate(ctx, pool)
-	req := types.NewWithdrawRequest(msg, pool, requestId, ctx.BlockHeight())
+	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
 	k.SetWithdrawRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -203,8 +193,8 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (typ
 			types.EventTypeWithdrawBatch,
 			sdk.NewAttribute(types.AttributeKeyWithdrawer, msg.Withdrawer),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolCoin, msg.PoolCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 		),
 	})
 
@@ -215,7 +205,9 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (typ
 func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest) error {
 	pool, _ := k.GetPool(ctx, req.PoolId)
 	if pool.Disabled {
-		k.MarkDepositRequestToBeDeleted(ctx, req, false)
+		if err := k.RefundDepositRequestAndSetStatus(ctx, req, types.RequestStatusFailed); err != nil {
+			return fmt.Errorf("refund deposit request: %w", err)
+		}
 		return nil
 	}
 
@@ -226,14 +218,18 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 	poolInfo := types.NewPoolInfo(rx, ry, ps)
 	if types.IsDepletedPool(poolInfo) {
 		k.MarkPoolAsDisabled(ctx, pool)
-		k.MarkDepositRequestToBeDeleted(ctx, req, false)
+		if err := k.RefundDepositRequestAndSetStatus(ctx, req, types.RequestStatusFailed); err != nil {
+			return fmt.Errorf("refund deposit request: %w", err)
+		}
 		return nil
 	}
 
 	ax, ay, pc := types.DepositToPool(poolInfo, req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
 
 	if pc.IsZero() {
-		k.MarkDepositRequestToBeDeleted(ctx, req, false)
+		if err := k.RefundDepositRequestAndSetStatus(ctx, req, types.RequestStatusFailed); err != nil {
+			return fmt.Errorf("refund deposit request: %w", err)
+		}
 		return nil
 	}
 
@@ -254,14 +250,13 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 
 	req.AcceptedCoins = acceptedCoins
 	req.MintedPoolCoin = mintedPoolCoin
-	req.Succeeded = true
-	req.ToBeDeleted = true
+	req.Status = types.RequestStatusSucceeded
 	k.SetDepositRequest(ctx, req)
 	// TODO: emit an event?
 	return nil
 }
 
-func (k Keeper) RefundDepositRequest(ctx sdk.Context, req types.DepositRequest) error {
+func (k Keeper) RefundDepositRequestAndSetStatus(ctx sdk.Context, req types.DepositRequest, status types.RequestStatus) error {
 	refundingCoins, hasNeg := req.DepositCoins.SafeSub(req.AcceptedCoins)
 	if hasNeg {
 		return fmt.Errorf("refunding coins amount is negative")
@@ -271,24 +266,16 @@ func (k Keeper) RefundDepositRequest(ctx sdk.Context, req types.DepositRequest) 
 			return err
 		}
 	}
+	req.Status = status
+	k.SetDepositRequest(ctx, req)
 	return nil
-}
-
-func (k Keeper) RefundAndDeleteDepositRequestsToBeDeleted(ctx sdk.Context) {
-	k.IterateDepositRequestsToBeDeleted(ctx, func(req types.DepositRequest) (stop bool) {
-		if err := k.RefundDepositRequest(ctx, req); err != nil {
-			panic(err)
-		}
-		k.DeleteDepositRequest(ctx, req.PoolId, req.Id)
-		return false
-	})
 }
 
 // ExecuteWithdrawRequest executes a withdraw request.
 func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) error {
 	pool, _ := k.GetPool(ctx, req.PoolId)
 	if pool.Disabled {
-		k.MarkWithdrawRequestToBeDeleted(ctx, req, false)
+		k.SetWithdrawRequestStatus(ctx, req, types.RequestStatusFailed)
 		return nil
 	}
 
@@ -299,7 +286,7 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	poolInfo := types.NewPoolInfo(rx, ry, ps)
 	if types.IsDepletedPool(poolInfo) {
 		k.MarkPoolAsDisabled(ctx, pool)
-		k.MarkWithdrawRequestToBeDeleted(ctx, req, false)
+		k.SetWithdrawRequestStatus(ctx, req, types.RequestStatusFailed)
 		return nil
 	}
 
@@ -326,17 +313,13 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	}
 
 	req.WithdrawnCoins = withdrawnCoins
-	req.Succeeded = true
-	req.ToBeDeleted = true
+	req.Status = types.RequestStatusSucceeded
 	k.SetWithdrawRequest(ctx, req)
 	// TODO: emit an event?
 	return nil
 }
 
-func (k Keeper) RefundAndDeleteWithdrawRequestsToBeDeleted(ctx sdk.Context) {
-	k.IterateWithdrawRequestsToBeDeleted(ctx, func(req types.WithdrawRequest) (stop bool) {
-		// TODO: need a refund? maybe not
-		k.DeleteWithdrawRequest(ctx, req.PoolId, req.Id)
-		return false
-	})
+func (k Keeper) SetWithdrawRequestStatus(ctx sdk.Context, req types.WithdrawRequest, status types.RequestStatus) {
+	req.Status = status
+	k.SetWithdrawRequest(ctx, req)
 }

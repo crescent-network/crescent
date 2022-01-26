@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 func TestMsgCreatePair(t *testing.T) {
@@ -231,11 +231,12 @@ func TestMsgSwapBatch(t *testing.T) {
 			"", // empty means no error expected
 			types.NewMsgSwapBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
-				"denom1",
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 100_000_000),
 				"denom2",
-				sdk.NewInt64Coin("denom2", 100_000_000),
-				"denom1",
-				sdk.MustNewDecFromStr("1.0"),
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
 		},
@@ -243,11 +244,12 @@ func TestMsgSwapBatch(t *testing.T) {
 			"invalid orderer address: empty address string is not allowed: invalid address",
 			types.NewMsgSwapBatch(
 				sdk.AccAddress{},
-				"denom1",
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 100_000_000),
 				"denom2",
-				sdk.NewInt64Coin("denom2", 100_000_000),
-				"denom1",
-				sdk.MustNewDecFromStr("1.0"),
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
 		},
@@ -255,23 +257,25 @@ func TestMsgSwapBatch(t *testing.T) {
 			"offer coin must be positive: invalid request",
 			types.NewMsgSwapBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
-				"denom1",
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 0),
 				"denom2",
-				sdk.NewInt64Coin("denom2", 0),
-				"denom1",
-				sdk.MustNewDecFromStr("1.0"),
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
 		},
 		{
-			"offer and demand coin denom pair doesn't match with x and y coin denom pair: invalid request",
+			"offer coin denom and demand coin denom must not be same: invalid request",
 			types.NewMsgSwapBatch(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
+				1,
+				types.SwapDirectionBuy,
+				sdk.NewInt64Coin("denom1", 100_000_000),
 				"denom1",
-				"denom2",
-				sdk.NewInt64Coin("denom2", 100_000_000),
-				"denom2",
-				sdk.MustNewDecFromStr("1.0"),
+				parseDec("1.0"),
+				sdk.NewInt(100_000_000),
 				orderLifespan,
 			),
 		},

@@ -14,7 +14,7 @@ type LiquidValidator struct {
    
    // liquid tokens define the liquid staked tokens
    LiquidTokens sdk.Int    
-   Weight       sdk.Dec
+   Weight       sdk.Int
 }
 ```
 

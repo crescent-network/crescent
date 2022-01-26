@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 // Keeper of the liquidstaking store
@@ -18,8 +18,8 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	bankKeeper    types.BankKeeper
 	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	distrKeeper   types.Distrkeeper
 	govKeeper     types.GovKeeper

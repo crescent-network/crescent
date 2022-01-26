@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/x/farming/types"
+	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 func TestPlanI(t *testing.T) {

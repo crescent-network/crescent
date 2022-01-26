@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 func TestDepositRequest_Validate(t *testing.T) {
@@ -177,10 +177,9 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.NewPool(1, 1)
 			withdrawer := sdk.AccAddress(crypto.AddressHash([]byte("withdrawer")))
 			msg := types.NewMsgWithdrawBatch(withdrawer, 1, parseCoin("1000pool1"))
-			req := types.NewWithdrawRequest(msg, pool, 1, 1)
+			req := types.NewWithdrawRequest(msg, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()
 			if tc.expectedErr == "" {

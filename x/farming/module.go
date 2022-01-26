@@ -18,11 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	//"github.com/crescent-network/crescent/x/farming/client/rest"
-	"github.com/crescent-network/crescent/x/farming/client/cli"
-	"github.com/crescent-network/crescent/x/farming/keeper"
-	"github.com/crescent-network/crescent/x/farming/simulation"
-	"github.com/crescent-network/crescent/x/farming/types"
+	//"github.com/squad-network/squad/x/farming/client/rest"
+	"github.com/cosmosquad-labs/squad/x/farming/client/cli"
+	"github.com/cosmosquad-labs/squad/x/farming/keeper"
+	"github.com/cosmosquad-labs/squad/x/farming/simulation"
+	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 var (

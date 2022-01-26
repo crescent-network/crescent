@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // GetNextPairIdWithUpdate increments pair id by one and set it.
@@ -56,6 +58,8 @@ func (k Keeper) CreatePair(ctx sdk.Context, msg *types.MsgCreatePair) (types.Pai
 			sdk.NewAttribute(types.AttributeKeyCreator, msg.Creator),
 			sdk.NewAttribute(types.AttributeKeyBaseCoinDenom, msg.BaseCoinDenom),
 			sdk.NewAttribute(types.AttributeKeyQuoteCoinDenom, msg.QuoteCoinDenom),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(pair.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyEscrowAddress, pair.EscrowAddress),
 		),
 	})
 

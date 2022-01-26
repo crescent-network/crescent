@@ -18,12 +18,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	//"github.com/crescent-network/crescent/x/liquidstaking/client/rest"
-	"github.com/crescent-network/crescent/x/liquidstaking/client/cli"
-	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	//"github.com/squad-network/squad/x/liquidstaking/client/rest"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
 
-	"github.com/crescent-network/crescent/x/liquidstaking/simulation"
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/simulation"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 var (
@@ -93,19 +93,24 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+	distrKeeper   types.Distrkeeper
+	govKeeper     types.GovKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
-	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper,
+	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+	stakingKeeper types.StakingKeeper, distrKeeper types.Distrkeeper, govKeeper types.GovKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		// TODO: consider add other keepers for hook or simulation or dependencies
+		stakingKeeper:  stakingKeeper,
+		distrKeeper:    distrKeeper,
+		govKeeper:      govKeeper,
 	}
 }
 
