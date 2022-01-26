@@ -27,12 +27,12 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.withdrawBatch(s.addr(1), pool.Id, poolCoin)
 	s.nextBlock()
 
-	s.swapBatchBuy(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), 0, true)
+	s.buyLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), 0, true)
 	s.nextBlock()
 
 	depositReq := s.depositBatch(s.addr(3), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
 	withdrawReq := s.withdrawBatch(s.addr(1), pool.Id, poolCoin)
-	swapReq := s.swapBatchSell(s.addr(3), pair.Id, parseDec("1.0"), newInt(1000), 0, true)
+	swapReq := s.sellLimitOrderBatch(s.addr(3), pair.Id, parseDec("1.0"), newInt(1000), 0, true)
 
 	genState := k.ExportGenesis(ctx)
 

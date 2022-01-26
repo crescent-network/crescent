@@ -30,8 +30,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	for _, req := range genState.SwapRequests {
 		k.SetSwapRequest(ctx, req)
 	}
-	for _, req := range genState.CancelSwapRequests {
-		k.SetCancelSwapRequest(ctx, req)
+	for _, req := range genState.CancelOrderRequests {
+		k.SetCancelOrderRequest(ctx, req)
 	}
 }
 
@@ -62,20 +62,20 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		swapReqs = append(swapReqs, req)
 		return false
 	})
-	var cancelSwapReqs []types.CancelSwapRequest
-	k.IterateAllCancelSwapRequests(ctx, func(req types.CancelSwapRequest) (stop bool) {
-		cancelSwapReqs = append(cancelSwapReqs, req)
+	var cancelOrderReqs []types.CancelOrderRequest
+	k.IterateAllCancelOrderRequests(ctx, func(req types.CancelOrderRequest) (stop bool) {
+		cancelOrderReqs = append(cancelOrderReqs, req)
 		return false
 	})
 	return &types.GenesisState{
-		Params:             k.GetParams(ctx),
-		LastPairId:         k.GetLastPairId(ctx),
-		LastPoolId:         k.GetLastPoolId(ctx),
-		Pairs:              pairs,
-		Pools:              pools,
-		DepositRequests:    depositReqs,
-		WithdrawRequests:   withdrawReqs,
-		SwapRequests:       swapReqs,
-		CancelSwapRequests: cancelSwapReqs,
+		Params:              k.GetParams(ctx),
+		LastPairId:          k.GetLastPairId(ctx),
+		LastPoolId:          k.GetLastPoolId(ctx),
+		Pairs:               pairs,
+		Pools:               pools,
+		DepositRequests:     depositReqs,
+		WithdrawRequests:    withdrawReqs,
+		SwapRequests:        swapReqs,
+		CancelOrderRequests: cancelOrderReqs,
 	}
 }

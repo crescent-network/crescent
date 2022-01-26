@@ -22,14 +22,14 @@ func (pair Pair) GetEscrowAddress() sdk.AccAddress {
 // NewPair returns a new pair object.
 func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) Pair {
 	return Pair{
-		Id:                      id,
-		BaseCoinDenom:           baseCoinDenom,
-		QuoteCoinDenom:          quoteCoinDenom,
-		EscrowAddress:           PairEscrowAddr(id).String(),
-		LastSwapRequestId:       0,
-		LastCancelSwapRequestId: 0,
-		LastPrice:               nil,
-		CurrentBatchId:          1,
+		Id:                       id,
+		BaseCoinDenom:            baseCoinDenom,
+		QuoteCoinDenom:           quoteCoinDenom,
+		EscrowAddress:            PairEscrowAddr(id).String(),
+		LastSwapRequestId:        0,
+		LastCancelOrderRequestId: 0,
+		LastPrice:                nil,
+		CurrentBatchId:           1,
 	}
 }
 

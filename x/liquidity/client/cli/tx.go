@@ -32,8 +32,9 @@ func GetTxCmd() *cobra.Command {
 		NewCreatePoolCmd(),
 		NewDepositBatchCmd(),
 		NewWithdrawBatchCmd(),
-		NewSwapBatchCmd(),
-		NewCancelSwapBatchCmd(),
+		NewLimitOrderBatchCmd(),
+		NewMarketOrderBatchCmd(),
+		NewCancelOrderBatchCmd(),
 	)
 
 	return cmd
@@ -160,7 +161,7 @@ func NewWithdrawBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Withdraw coins from the specified liquidity pool.
 Example:
-$ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2DA6F0B75D17A6295 --from mykey
+$ %s tx %s withdraw 1 10000pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -196,15 +197,15 @@ $ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2D
 	return cmd
 }
 
-func NewSwapBatchCmd() *cobra.Command {
+func NewLimitOrderBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [base-coin-amount] [order-life-span]",
+		Use:   "limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [base-coin-amount] [order-lifespan]",
 		Args:  cobra.ExactArgs(7),
-		Short: "Swap coins within a pair",
+		Short: "Make a limit order",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Swap coins within a pair.
+			fmt.Sprintf(`Make a limit order.
 Example:
-$ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from mykey
+$ %s tx %s limit-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
 [direction]: swap direction (one of: SWAP_DIRECTION_BUY,SWAP_DIRECTION_SELL)
@@ -212,7 +213,7 @@ $ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from myke
 [demand-coin-denom]: the denom to exchange with the offer coin
 [price]: the limit order price for the swap; the exchange ratio is X/Y where X is the amount of quote coin and Y is the amount of base coin
 [base-coin-amount]: the amount of base coin to buy or sell
-[order-life-span]: the time duration that the swap order request lives until it is executed; valid time units are "ns", "us", "ms", "s", "m", and "h" 
+[order-lifespan]: the time duration that the swap order request lives until it is executed; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -262,7 +263,7 @@ $ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from myke
 				return fmt.Errorf("invalid order lifespan: %w", err)
 			}
 
-			msg := types.NewMsgSwapBatch(
+			msg := types.NewMsgLimitOrderBatch(
 				clientCtx.GetFromAddress(),
 				pairId,
 				dir,
@@ -282,15 +283,100 @@ $ %s tx %s swap 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from myke
 	return cmd
 }
 
-func NewCancelSwapBatchCmd() *cobra.Command {
+func NewMarketOrderBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-swap [pair-id] [swap-request-id]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Cancel a swap request",
+		Use:   "market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [base-coin-amount] [order-lifespan]",
+		Args:  cobra.ExactArgs(7),
+		Short: "Make a market order",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Cancel a swap request.
+			fmt.Sprintf(`Make a market order.
 Example:
-$ %s tx %s cancel-swap 1 --from mykey
+$ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from mykey
+
+[pair-id]: pair id to swap with
+[direction]: swap direction (one of: SWAP_DIRECTION_BUY,SWAP_DIRECTION_SELL)
+[offer-coin]: the amount of offer coin to swap
+[demand-coin-denom]: the denom to exchange with the offer coin
+[base-coin-amount]: the amount of base coin to buy or sell
+[order-lifespan]: the time duration that the swap order request lives until it is executed; valid time units are "ns", "us", "ms", "s", "m", and "h" 
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse pair id: %w", err)
+			}
+
+			rawDir, ok := types.SwapDirection_value[args[1]]
+			if !ok {
+				return fmt.Errorf("unknown swap direction: %s", args[1])
+			}
+			dir := types.SwapDirection(rawDir)
+			if dir != types.SwapDirectionBuy && dir != types.SwapDirectionSell {
+				return fmt.Errorf("invalid swap direction: %s", dir)
+			}
+
+			offerCoin, err := sdk.ParseCoinNormalized(args[2])
+			if err != nil {
+				return fmt.Errorf("invalid offer coin: %w", err)
+			}
+
+			demandCoinDenom := args[3]
+			if err := sdk.ValidateDenom(demandCoinDenom); err != nil {
+				return fmt.Errorf("invalid demand coin denom: %w", err)
+			}
+
+			price, err := sdk.NewDecFromStr(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid price: %w", err)
+			}
+
+			amt, ok := sdk.NewIntFromString(args[5])
+			if !ok {
+				return fmt.Errorf("invalid amount: %s", args[5])
+			}
+
+			orderLifespan, err := time.ParseDuration(args[6])
+			if err != nil {
+				return fmt.Errorf("invalid order lifespan: %w", err)
+			}
+
+			msg := types.NewMsgLimitOrderBatch(
+				clientCtx.GetFromAddress(),
+				pairId,
+				dir,
+				offerCoin,
+				demandCoinDenom,
+				price,
+				amt,
+				orderLifespan,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCancelOrderBatchCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-order [pair-id] [swap-request-id]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Cancel an order",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Cancel an order.
+Example:
+$ %s tx %s cancel-order 1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -311,7 +397,7 @@ $ %s tx %s cancel-swap 1 --from mykey
 				return err
 			}
 
-			msg := types.NewMsgCancelSwapBatch(
+			msg := types.NewMsgCancelOrderBatch(
 				clientCtx.GetFromAddress(),
 				pairId,
 				swapRequestId,

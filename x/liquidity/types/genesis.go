@@ -101,7 +101,7 @@ func (genState GenesisState) Validate() error {
 		}
 		// TODO: check denoms
 	}
-	for i, req := range genState.CancelSwapRequests {
+	for i, req := range genState.CancelOrderRequests {
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("invalid cancel swap request at index %d: %w", i, err)
 		}

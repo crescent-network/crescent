@@ -25,5 +25,5 @@ message GenesisState {
 
   repeated SwapRequest swap_requests = 8 [(gogoproto.nullable) = false];
 
-  repeated CancelSwapRequest cancel_swap_requests = 9 [(gogoproto.nullable) = false];
+  repeated CancelOrderRequest cancel_order_requests = 9 [(gogoproto.nullable) = false];
 }

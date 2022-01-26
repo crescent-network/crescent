@@ -2148,7 +2148,7 @@ paths:
                     last_swap_request_id:
                       type: string
                       format: uint64
-                    last_cancel_swap_request_id:
+                    last_cancel_order_request_id:
                       type: string
                       format: uint64
                     last_price:
@@ -2301,7 +2301,7 @@ paths:
                   last_swap_request_id:
                     type: string
                     format: uint64
-                  last_cancel_swap_request_id:
+                  last_cancel_order_request_id:
                     type: string
                     format: uint64
                   last_price:
@@ -5213,7 +5213,7 @@ definitions:
       last_swap_request_id:
         type: string
         format: uint64
-      last_cancel_swap_request_id:
+      last_cancel_order_request_id:
         type: string
         format: uint64
       last_price:
@@ -5543,7 +5543,7 @@ definitions:
           last_swap_request_id:
             type: string
             format: uint64
-          last_cancel_swap_request_id:
+          last_cancel_order_request_id:
             type: string
             format: uint64
           last_price:
@@ -5573,7 +5573,7 @@ definitions:
             last_swap_request_id:
               type: string
               format: uint64
-            last_cancel_swap_request_id:
+            last_cancel_order_request_id:
               type: string
               format: uint64
             last_price:
