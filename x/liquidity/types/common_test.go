@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
@@ -36,4 +38,12 @@ func parseCoins(s string) sdk.Coins {
 		panic(err)
 	}
 	return coins
+}
+
+func parseTime(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
 }
