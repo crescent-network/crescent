@@ -156,7 +156,7 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
+func (s *KeeperTestSuite) TestGRPCPoolByReserveAddress() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 	pool := s.createPool(creator, pair.Id, parseCoins("2000000denom1,2000000denom2"), true)
@@ -631,7 +631,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 				s.Require().Equal(req.MsgHeight, resp.WithdrawRequest.MsgHeight)
 				s.Require().Equal(req.Withdrawer, resp.WithdrawRequest.Withdrawer)
 				s.Require().Equal(req.PoolCoin, resp.WithdrawRequest.PoolCoin)
-				s.Require().NotEqual(req.WithdrawnCoins, resp.WithdrawRequest.WithdrawnCoins)
+				s.Require().Equal(req.WithdrawnCoins, resp.WithdrawRequest.WithdrawnCoins)
 			},
 		},
 	} {

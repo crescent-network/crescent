@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -30,6 +31,30 @@ func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) Pair {
 		LastPrice:                nil,
 		CurrentBatchId:           1,
 	}
+}
+
+func (pair Pair) Validate() error {
+	if pair.Id == 0 {
+		return fmt.Errorf("pair id must not be 0")
+	}
+	if err := sdk.ValidateDenom(pair.BaseCoinDenom); err != nil {
+		return fmt.Errorf("invalid base coin denom: %w", err)
+	}
+	if err := sdk.ValidateDenom(pair.QuoteCoinDenom); err != nil {
+		return fmt.Errorf("invalid quote coin denom: %w", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(pair.EscrowAddress); err != nil {
+		return fmt.Errorf("invalid escrow address %s: %w", pair.EscrowAddress, err)
+	}
+	if pair.LastPrice != nil {
+		if !pair.LastPrice.IsPositive() {
+			return fmt.Errorf("last price must be positive: %s", pair.LastPrice)
+		}
+	}
+	if pair.CurrentBatchId == 0 {
+		return fmt.Errorf("current batch id must not be 0")
+	}
+	return nil
 }
 
 // PairEscrowAddr returns a unique address of the pair's escrow.

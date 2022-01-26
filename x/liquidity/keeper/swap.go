@@ -181,10 +181,7 @@ func (k Keeper) CancelOrderBatch(ctx sdk.Context, msg *types.MsgCancelOrderBatch
 		return types.CancelOrderRequest{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
 	}
 
-	pair, found := k.GetPair(ctx, msg.PairId)
-	if !found { // TODO: will it ever happen?
-		return types.CancelOrderRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair with id %d not found", msg.PairId)
-	}
+	pair, _ := k.GetPair(ctx, msg.PairId)
 
 	requestId := k.GetNextCancelOrderRequestIdWithUpdate(ctx, pair)
 	req := types.NewCancelOrderRequest(msg, requestId, pair, ctx.BlockHeight())
