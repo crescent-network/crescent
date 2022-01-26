@@ -47,7 +47,7 @@ var (
 )
 
 var (
-	MinOfferCoinAmount = sdk.NewInt(100) // This value can be modified in the future
+	MinCoinAmount = sdk.NewInt(100) // minimum coin amount of offer coin and base coin
 
 	GlobalEscrowAddr = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
 )

@@ -283,8 +283,11 @@ func (msg MsgSwapBatch) ValidateBasic() error {
 	if !msg.OfferCoin.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin must be positive")
 	}
-	if !msg.OfferCoin.Amount.GTE(MinOfferCoinAmount) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin is less than minimum offer coin amount")
+	if msg.OfferCoin.Amount.LT(MinCoinAmount) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin is less than minimum coin amount")
+	}
+	if msg.Amount.LT(MinCoinAmount) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "base coin is less than minimum coin amount")
 	}
 	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")
