@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	FlagPairId        = "pair-id"
-	FlagDisabled      = "disabled"
-	FlagPoolCoinDenom = "pool-coin-denom"
-	FlagReserveAcc    = "reserve-acc"
-	FlagDenoms        = "denoms"
+	FlagPairId         = "pair-id"
+	FlagDisabled       = "disabled"
+	FlagPoolCoinDenom  = "pool-coin-denom"
+	FlagReserveAddress = "reserve-address"
+	FlagDenoms         = "denoms"
 )
 
 func flagSetPools() *flag.FlagSet {
@@ -27,7 +27,7 @@ func flagSetPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagPoolCoinDenom, "", "The denomination of the pool coin")
-	fs.String(FlagReserveAcc, "", "The bech-32 encoded address of the reserve account")
+	fs.String(FlagReserveAddress, "", "The bech-32 encoded address of the reserve account")
 
 	return fs
 }
