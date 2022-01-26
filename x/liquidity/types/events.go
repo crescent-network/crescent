@@ -18,6 +18,8 @@ const (
 	AttributeKeyDepositCoins    = "deposit_coins"
 	AttributeKeyMintedPoolCoin  = "minted_pool_coin"
 	AttributeKeyPoolCoin        = "pool_coin"
+	AttributeKeyReserveAddress  = "reserve_address"
+	AttributeKeyEscrowAddress   = "escrow_address"
 	AttributeKeyRequestId       = "request_id"
 	AttributeKeyPoolId          = "pool_id"
 	AttributeKeyPairId          = "pair_id"

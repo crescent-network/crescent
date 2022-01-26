@@ -113,8 +113,10 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 		sdk.NewEvent(
 			types.EventTypeCreatePool,
 			sdk.NewAttribute(types.AttributeKeyCreator, msg.Creator),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeyDepositCoins, msg.DepositCoins.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyReserveAddress, pool.ReserveAddress),
 			sdk.NewAttribute(types.AttributeKeyMintedPoolCoin, poolCoin.String()),
 		),
 	})
@@ -151,10 +153,10 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) (types
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeDepositBatch,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyDepositor, msg.Depositor),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyDepositCoins, msg.DepositCoins.String()),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 		),
 	})
 
@@ -187,10 +189,10 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (typ
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeWithdrawBatch,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyWithdrawer, msg.Withdrawer),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolCoin, msg.PoolCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 		),
 	})
 

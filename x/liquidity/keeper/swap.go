@@ -71,7 +71,6 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeSwapBatch,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeySwapDirection, msg.Direction.String()),
@@ -79,6 +78,7 @@ func (k Keeper) SwapBatch(ctx sdk.Context, msg *types.MsgSwapBatch) (types.SwapR
 			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
 			sdk.NewAttribute(types.AttributeKeyPrice, msg.Price.String()),
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
 			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
 		),
@@ -110,10 +110,10 @@ func (k Keeper) CancelSwapBatch(ctx sdk.Context, msg *types.MsgCancelSwapBatch) 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCancelSwapBatch,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(req.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeySwapRequestId, strconv.FormatUint(req.SwapRequestId, 10)),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 		),
 	})
 
