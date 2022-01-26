@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	PoolReserveAccPrefix   = "PoolReserveAcc"
-	PairEscrowAddrPrefix   = "PairEscrowAddr"
-	ModuleAddrNameSplitter = "|"
-	AddressType            = farmingtypes.AddressType32Bytes
+	PoolReserveAddressPrefix  = "PoolReserveAddress"
+	PairEscrowAddressPrefix   = "PairEscrowAddress"
+	ModuleAddressNameSplitter = "|"
+	AddressType               = farmingtypes.AddressType32Bytes
 )
 
 // TODO: sort keys
@@ -49,7 +49,7 @@ var (
 var (
 	MinCoinAmount = sdk.NewInt(100) // minimum coin amount of offer coin and base coin
 
-	GlobalEscrowAddr = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
+	GlobalEscrowAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)

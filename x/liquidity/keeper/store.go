@@ -151,10 +151,10 @@ func (k Keeper) GetPool(ctx sdk.Context, id uint64) (pool types.Pool, found bool
 	return pool, true
 }
 
-// GetPoolByReserveAcc returns pool object for the givern reserve account address.
-func (k Keeper) GetPoolByReserveAcc(ctx sdk.Context, reserveAcc sdk.AccAddress) (pool types.Pool, found bool) {
+// GetPoolByReserveAddress returns pool object for the given reserve account address.
+func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddress) (pool types.Pool, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetPoolByReserveAccIndexKey(reserveAcc)
+	key := types.GetPoolByReserveAddressIndexKey(reserveAddr)
 
 	value := store.Get(key)
 	if value == nil {
@@ -193,7 +193,7 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 func (k Keeper) SetPoolByReserveIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: pool.Id})
-	store.Set(types.GetPoolByReserveAccIndexKey(pool.GetReserveAddress()), bz)
+	store.Set(types.GetPoolByReserveAddressIndexKey(pool.GetReserveAddress()), bz)
 }
 
 // SetPoolsByPairIndex stores a pool by pair index key.

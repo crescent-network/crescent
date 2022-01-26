@@ -152,7 +152,7 @@ func QueryPool() *cobra.Command {
 Example:
 $ %s query %s pool 1
 $ %s query %s pool --pool-coin-denom=pool1
-$ %s query %s pool --reserve-acc=cosmos1...
+$ %s query %s pool --reserve-address=cosmos1...
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -174,9 +174,9 @@ $ %s query %s pool --reserve-acc=cosmos1...
 				poolId = &id
 			}
 			poolCoinDenom, _ := cmd.Flags().GetString(FlagPoolCoinDenom)
-			reserveAcc, _ := cmd.Flags().GetString(FlagReserveAcc)
+			reserveAddr, _ := cmd.Flags().GetString(FlagReserveAddress)
 
-			if !excConditions(poolId != nil, poolCoinDenom != "", reserveAcc != "") {
+			if !excConditions(poolId != nil, poolCoinDenom != "", reserveAddr != "") {
 				return fmt.Errorf("invalid request")
 			}
 
@@ -202,11 +202,11 @@ $ %s query %s pool --reserve-acc=cosmos1...
 				if err != nil {
 					return err
 				}
-			case reserveAcc != "":
-				res, err = queryClient.PoolByReserveAcc(
+			case reserveAddr != "":
+				res, err = queryClient.PoolByReserveAddress(
 					context.Background(),
-					&types.QueryPoolByReserveAccRequest{
-						ReserveAcc: reserveAcc,
+					&types.QueryPoolByReserveAddressRequest{
+						ReserveAddress: reserveAddr,
 					})
 				if err != nil {
 					return err

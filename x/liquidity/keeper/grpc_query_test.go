@@ -156,14 +156,14 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
+func (s *KeeperTestSuite) TestGRPCPoolByReserveAddress() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 	pool := s.createPool(creator, pair.Id, parseCoins("2000000denom1,2000000denom2"), true)
 
 	for _, tc := range []struct {
 		name      string
-		req       *types.QueryPoolByReserveAccRequest
+		req       *types.QueryPoolByReserveAddressRequest
 		expectErr bool
 		postRun   func(*types.QueryPoolResponse)
 	}{
@@ -175,14 +175,14 @@ func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
 		},
 		{
 			"invalid request",
-			&types.QueryPoolByReserveAccRequest{},
+			&types.QueryPoolByReserveAddressRequest{},
 			true,
 			nil,
 		},
 		{
 			"query specific pool with the reserve account",
-			&types.QueryPoolByReserveAccRequest{
-				ReserveAcc: pool.ReserveAddress,
+			&types.QueryPoolByReserveAddressRequest{
+				ReserveAddress: pool.ReserveAddress,
 			},
 			false,
 			func(resp *types.QueryPoolResponse) {
@@ -197,7 +197,7 @@ func (s *KeeperTestSuite) TestGRPCPoolByReserveAcc() {
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.PoolByReserveAcc(sdk.WrapSDKContext(s.ctx), tc.req)
+			resp, err := s.querier.PoolByReserveAddress(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

@@ -37,7 +37,7 @@ func PairEscrowAddr(pairId uint64) sdk.AccAddress {
 	return farmingtypes.DeriveAddress(
 		AddressType,
 		ModuleName,
-		strings.Join([]string{PairEscrowAddrPrefix, strconv.FormatUint(pairId, 10)}, ModuleAddrNameSplitter))
+		strings.Join([]string{PairEscrowAddressPrefix, strconv.FormatUint(pairId, 10)}, ModuleAddressNameSplitter))
 }
 
 // MustMarshalPair returns the pair bytes.

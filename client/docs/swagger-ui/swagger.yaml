@@ -3111,12 +3111,12 @@ paths:
           type: string
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/reserve_acc/{reserve_acc}':
+  '/squad/liquidity/v1beta1/pools/reserve_address/{reserve_address}':
     get:
       summary: >-
-        PoolByReserveAcc returns all pools that correspond to the reserve
+        PoolByReserveAddress returns all pools that correspond to the reserve
         account.
-      operationId: PoolByReserveAcc
+      operationId: PoolByReserveAddress
       responses:
         '200':
           description: A successful response.
@@ -3184,7 +3184,7 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: reserve_acc
+        - name: reserve_address
           in: path
           required: true
           type: string
