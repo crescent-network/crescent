@@ -21,7 +21,7 @@ func NewPool(id, pairId uint64) Pool {
 	return Pool{
 		Id:                    id,
 		PairId:                pairId,
-		ReserveAddress:        PoolReserveAcc(id).String(),
+		ReserveAddress:        PoolReserveAddress(id).String(),
 		PoolCoinDenom:         PoolCoinDenom(id),
 		LastDepositRequestId:  0,
 		LastWithdrawRequestId: 0,
@@ -53,13 +53,12 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
-// PoolReserveAcc returns a unique pool reserve account address for each pool.
-// TODO: rename to PoolReserveAddr
-func PoolReserveAcc(poolId uint64) sdk.AccAddress {
+// PoolReserveAddress returns a unique pool reserve account address for each pool.
+func PoolReserveAddress(poolId uint64) sdk.AccAddress {
 	return farmingtypes.DeriveAddress(
 		AddressType,
 		ModuleName,
-		strings.Join([]string{PoolReserveAccPrefix, strconv.FormatUint(poolId, 10)}, ModuleAddrNameSplitter),
+		strings.Join([]string{PoolReserveAddressPrefix, strconv.FormatUint(poolId, 10)}, ModuleAddressNameSplitter),
 	)
 }
 

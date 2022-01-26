@@ -6,6 +6,8 @@ import (
 
 	"github.com/cosmosquad-labs/squad/x/liquidity"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (s *KeeperTestSuite) TestCreatePool() {
@@ -22,7 +24,7 @@ func (s *KeeperTestSuite) TestCreatePool() {
 	pool, found := k.GetPool(ctx, 1)
 	s.Require().True(found)
 	s.Require().Equal(types.PoolCoinDenom(pool.Id), pool.PoolCoinDenom)
-	s.Require().True(pool.GetReserveAddress().Equals(types.PoolReserveAcc(pool.Id)))
+	s.Require().True(pool.GetReserveAddress().Equals(types.PoolReserveAddress(pool.Id)))
 	s.Require().False(pool.Disabled)
 }
 
