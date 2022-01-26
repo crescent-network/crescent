@@ -148,26 +148,26 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 	return &types.QueryPoolResponse{Pool: poolRes}, nil
 }
 
-// PoolByReserveAcc queries the specific pool by the reserve account address.
-func (k Querier) PoolByReserveAcc(c context.Context, req *types.QueryPoolByReserveAccRequest) (*types.QueryPoolResponse, error) {
+// PoolByReserveAddress queries the specific pool by the reserve account address.
+func (k Querier) PoolByReserveAddress(c context.Context, req *types.QueryPoolByReserveAddressRequest) (*types.QueryPoolResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.ReserveAcc == "" {
+	if req.ReserveAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty reserve account address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	reserveAcc, err := sdk.AccAddressFromBech32(req.ReserveAcc)
+	reserveAddr, err := sdk.AccAddressFromBech32(req.ReserveAddress)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "reserve account address %s is not valid", req.ReserveAcc)
+		return nil, status.Errorf(codes.InvalidArgument, "reserve account address %s is not valid", req.ReserveAddress)
 	}
 
-	pool, found := k.GetPoolByReserveAcc(ctx, reserveAcc)
+	pool, found := k.GetPoolByReserveAddress(ctx, reserveAddr)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "pool by %s doesn't exist", req.ReserveAcc)
+		return nil, status.Errorf(codes.NotFound, "pool by %s doesn't exist", req.ReserveAddress)
 	}
 
 	pair, _ := k.GetPair(ctx, pool.PairId)

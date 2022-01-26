@@ -142,7 +142,7 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) (types
 		}
 	}
 
-	if err := k.bankKeeper.SendCoins(ctx, msg.GetDepositor(), types.GlobalEscrowAddr, msg.DepositCoins); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, msg.GetDepositor(), types.GlobalEscrowAddress, msg.DepositCoins); err != nil {
 		return types.DepositRequest{}, err
 	}
 
@@ -178,7 +178,7 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (typ
 		return types.WithdrawRequest{}, types.ErrWrongPoolCoinDenom
 	}
 
-	if err := k.bankKeeper.SendCoins(ctx, msg.GetWithdrawer(), types.GlobalEscrowAddr, sdk.NewCoins(msg.PoolCoin)); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, msg.GetWithdrawer(), types.GlobalEscrowAddress, sdk.NewCoins(msg.PoolCoin)); err != nil {
 		return types.WithdrawRequest{}, err
 	}
 
@@ -240,7 +240,7 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 
 	acceptedCoins := sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, ax), sdk.NewCoin(pair.BaseCoinDenom, ay))
 	bulkOp := types.NewBulkSendCoinsOperation()
-	bulkOp.SendCoins(types.GlobalEscrowAddr, pool.GetReserveAddress(), acceptedCoins)
+	bulkOp.SendCoins(types.GlobalEscrowAddress, pool.GetReserveAddress(), acceptedCoins)
 	bulkOp.SendCoins(k.accountKeeper.GetModuleAddress(types.ModuleName), req.GetDepositor(), mintingCoins)
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
@@ -260,7 +260,7 @@ func (k Keeper) RefundDepositRequestAndSetStatus(ctx sdk.Context, req types.Depo
 		return fmt.Errorf("refunding coins amount is negative")
 	}
 	if !refundingCoins.IsZero() {
-		if err := k.bankKeeper.SendCoins(ctx, types.GlobalEscrowAddr, req.GetDepositor(), refundingCoins); err != nil {
+		if err := k.bankKeeper.SendCoins(ctx, types.GlobalEscrowAddress, req.GetDepositor(), refundingCoins); err != nil {
 			return err
 		}
 	}
@@ -295,7 +295,7 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	burningCoins := sdk.NewCoins(req.PoolCoin)
 
 	bulkOp := types.NewBulkSendCoinsOperation()
-	bulkOp.SendCoins(types.GlobalEscrowAddr, k.accountKeeper.GetModuleAddress(types.ModuleName), burningCoins)
+	bulkOp.SendCoins(types.GlobalEscrowAddress, k.accountKeeper.GetModuleAddress(types.ModuleName), burningCoins)
 	bulkOp.SendCoins(pool.GetReserveAddress(), req.GetWithdrawer(), withdrawnCoins)
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err

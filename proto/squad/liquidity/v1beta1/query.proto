@@ -26,9 +26,9 @@ service Query {
     option (google.api.http).get = "/squad/liquidity/v1beta1/pools/{pool_id}";
   }
 
-  // PoolByReserveAcc returns all pools that correspond to the reserve account.
-  rpc PoolByReserveAcc(QueryPoolByReserveAccRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/reserve_acc/{reserve_acc}";
+  // PoolByReserveAddress returns all pools that correspond to the reserve account.
+  rpc PoolByReserveAddress(QueryPoolByReserveAddressRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pools/reserve_address/{reserve_address}";
   }
 
   // PoolByPoolCoinDenom returns all pools that correspond to the pool coin denom.
@@ -111,9 +111,9 @@ message QueryPoolResponse {
   PoolResponse pool = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryPoolByReserveAccRequest is request type for the Query/PoolByReserveAcc RPC method.
-message QueryPoolByReserveAccRequest {
-  string reserve_acc = 1;
+// QueryPoolByReserveAddressRequest is request type for the Query/PoolByReserveAddress RPC method.
+message QueryPoolByReserveAddressRequest {
+  string reserve_address = 1;
 }
 
 // QueryPoolByPoolCoinDenomRequest is request type for the Query/PoolByPoolCoinDenom RPC method.
