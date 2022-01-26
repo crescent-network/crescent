@@ -161,7 +161,7 @@ func NewWithdrawBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Withdraw coins from the specified liquidity pool.
 Example:
-$ %s tx %s withdraw 1 10000pool96EF6EA6E5AC828ED87E8D07E7AE2A8180570ADD212117B2DA6F0B75D17A6295 --from mykey
+$ %s tx %s withdraw 1 10000pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -285,7 +285,7 @@ $ %s tx %s limit-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --fr
 
 func NewMarketOrderBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "marker-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [base-coin-amount] [order-lifespan]",
+		Use:   "market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [base-coin-amount] [order-lifespan]",
 		Args:  cobra.ExactArgs(7),
 		Short: "Make a market order",
 		Long: strings.TrimSpace(
