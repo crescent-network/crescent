@@ -631,7 +631,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 				s.Require().Equal(req.MsgHeight, resp.WithdrawRequest.MsgHeight)
 				s.Require().Equal(req.Withdrawer, resp.WithdrawRequest.Withdrawer)
 				s.Require().Equal(req.PoolCoin, resp.WithdrawRequest.PoolCoin)
-				s.Require().NotEqual(req.WithdrawnCoins, resp.WithdrawRequest.WithdrawnCoins)
+				s.Require().Equal(req.WithdrawnCoins, resp.WithdrawRequest.WithdrawnCoins)
 			},
 		},
 	} {

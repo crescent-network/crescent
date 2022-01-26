@@ -169,3 +169,11 @@ func parseDec(s string) sdk.Dec {
 func newInt(i int64) sdk.Int {
 	return sdk.NewInt(i)
 }
+
+func parseTime(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}

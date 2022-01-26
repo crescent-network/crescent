@@ -21,3 +21,19 @@ func newInt(i int64) sdk.Int {
 func parseDec(s string) sdk.Dec {
 	return sdk.MustNewDecFromStr(s)
 }
+
+func parseCoin(s string) sdk.Coin {
+	coin, err := sdk.ParseCoinNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coin
+}
+
+func parseCoins(s string) sdk.Coins {
+	coins, err := sdk.ParseCoinsNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}

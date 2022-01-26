@@ -37,8 +37,23 @@ func (pool Pool) GetReserveAddress() sdk.AccAddress {
 	return addr
 }
 
+func (pool Pool) Validate() error {
+	if pool.Id == 0 {
+		return fmt.Errorf("pool id must not be 0")
+	}
+	if pool.PairId == 0 {
+		return fmt.Errorf("pair id must not be 0")
+	}
+	if _, err := sdk.AccAddressFromBech32(pool.ReserveAddress); err != nil {
+		return fmt.Errorf("invalid reserve address %s: %w", pool.ReserveAddress, err)
+	}
+	if err := sdk.ValidateDenom(pool.PoolCoinDenom); err != nil {
+		return fmt.Errorf("invalid pool coin denom: %w", err)
+	}
+	return nil
+}
+
 // PoolReserveAddress returns a unique pool reserve account address for each pool.
-// TODO: rename to PoolReserveAddr
 func PoolReserveAddress(poolId uint64) sdk.AccAddress {
 	return farmingtypes.DeriveAddress(
 		AddressType,
