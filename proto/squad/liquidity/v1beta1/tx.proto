@@ -23,11 +23,14 @@ service Msg {
   // WithdrawBatch defines a method for withdrawing pool coin from the pool
   rpc WithdrawBatch(MsgWithdrawBatch) returns (MsgWithdrawBatchResponse);
 
-  // SwapBatch defines a method for swapping X coin to Y coin from the pool
-  rpc SwapBatch(MsgSwapBatch) returns (MsgSwapBatchResponse);
+  // LimitOrderBatch defines a method for making a limit order
+  rpc LimitOrderBatch(MsgLimitOrderBatch) returns (MsgLimitOrderBatchResponse);
 
-  // CancelSwapBatch defines a method for cancelling a swap request
-  rpc CancelSwapBatch(MsgCancelSwapBatch) returns (MsgCancelSwapBatchResponse);
+  // MarketOrderBatch defines a method for making a market order
+  rpc MarketOrderBatch(MsgMarketOrderBatch) returns (MsgMarketOrderBatchResponse);
+
+  // CancelOrderBatch defines a method for cancelling an order
+  rpc CancelOrderBatch(MsgCancelOrderBatch) returns (MsgCancelOrderBatchResponse);
 }
 
 // MsgCreatePair defines an SDK message for creating a pair.
@@ -91,9 +94,9 @@ message MsgWithdrawBatch {
 // MsgWithdrawBatchResponse defines the Msg/WithdrawBatch response type.
 message MsgWithdrawBatchResponse {}
 
-// MsgSwapBatch defines an SDK message for swapping X coin to Y coin from the pool
-message MsgSwapBatch {
-  // orderer specifies the bech32-encoded address that makes an order to swap from the pool
+// MsgLimitOrderBatch defines an SDK message for making a limit order
+message MsgLimitOrderBatch {
+  // orderer specifies the bech32-encoded address that makes an order
   string orderer = 1;
 
   // pair_id specifies the pair id
@@ -118,12 +121,39 @@ message MsgSwapBatch {
   google.protobuf.Duration order_lifespan = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
-// MsgSwapBatchResponse defines the Msg/SwapBatch response type.
-message MsgSwapBatchResponse {}
+// MsgLimitOrderBatchResponse defines the Msg/LimitOrderBatch response type.
+message MsgLimitOrderBatchResponse {}
 
-// MsgCancelSwapBatch defines an SDK message for cancelling a swap request
-message MsgCancelSwapBatch {
-  // orderer specifies the bech32-encoded address that makes an order to swap from the pool
+// MsgMarketOrderBatch defines an SDK message for making a market order
+message MsgMarketOrderBatch {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_id specifies the pair id
+  uint64 pair_id = 2;
+
+  // direction specifies the swap direction(buy or sell)
+  SwapDirection direction = 3;
+
+  // offer_coin specifies the amount of coin the orderer offers
+  cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
+
+  // demand_coin_denom specifies the demand coin denom
+  string demand_coin_denom = 5;
+
+  // amount specifies the amount of base coin the orderer wants to buy or sell
+  string amount = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // order_lifespan specifies the order lifespan
+  google.protobuf.Duration order_lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+// MsgMarketOrderBatchResponse defines the Msg/MarketOrderBatch response type.
+message MsgMarketOrderBatchResponse {}
+
+// MsgCancelOrderBatch defines an SDK message for cancelling an order
+message MsgCancelOrderBatch {
+  // orderer specifies the bech32-encoded address that makes an order
   string orderer = 1;
 
   // pair_id specifies the pair id
@@ -133,5 +163,5 @@ message MsgCancelSwapBatch {
   uint64 swap_request_id = 3;
 }
 
-// MsgCancelSwapBatchResponse defines the Msg/CancelSwapBatch response type.
-message MsgCancelSwapBatchResponse {}
+// MsgCancelOrderBatchResponse defines the Msg/CancelOrderBatch response type.
+message MsgCancelOrderBatchResponse {}

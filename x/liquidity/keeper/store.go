@@ -368,10 +368,10 @@ func (k Keeper) IterateSwapRequestsByPair(ctx sdk.Context, pairId uint64, cb fun
 	}
 }
 
-// GetCancelSwapRequest returns a particular cancel swap request.
-func (k Keeper) GetCancelSwapRequest(ctx sdk.Context, pairId, id uint64) (req types.CancelSwapRequest, found bool) {
+// GetCancelOrderRequest returns a particular cancel order request.
+func (k Keeper) GetCancelOrderRequest(ctx sdk.Context, pairId, id uint64) (req types.CancelOrderRequest, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetCancelSwapRequestKey(pairId, id))
+	bz := store.Get(types.GetCancelOrderRequestKey(pairId, id))
 	if bz == nil {
 		return
 	}
@@ -379,25 +379,25 @@ func (k Keeper) GetCancelSwapRequest(ctx sdk.Context, pairId, id uint64) (req ty
 	return req, true
 }
 
-// SetCancelSwapRequest stores types.CancelSwapRequest for the batch execution.
-func (k Keeper) SetCancelSwapRequest(ctx sdk.Context, req types.CancelSwapRequest) {
+// SetCancelOrderRequest stores types.CancelOrderRequest for the batch execution.
+func (k Keeper) SetCancelOrderRequest(ctx sdk.Context, req types.CancelOrderRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&req)
-	store.Set(types.GetCancelSwapRequestKey(req.PairId, req.Id), bz)
+	store.Set(types.GetCancelOrderRequestKey(req.PairId, req.Id), bz)
 }
 
-// DeleteCancelSwapRequest deletes a cancel swap request.
-func (k Keeper) DeleteCancelSwapRequest(ctx sdk.Context, pairId, id uint64) {
+// DeleteCancelOrderRequest deletes a cancel order request.
+func (k Keeper) DeleteCancelOrderRequest(ctx sdk.Context, pairId, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetCancelSwapRequestKey(pairId, id))
+	store.Delete(types.GetCancelOrderRequestKey(pairId, id))
 }
 
-func (k Keeper) IterateAllCancelSwapRequests(ctx sdk.Context, cb func(req types.CancelSwapRequest) (stop bool)) {
+func (k Keeper) IterateAllCancelOrderRequests(ctx sdk.Context, cb func(req types.CancelOrderRequest) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.CancelSwapRequestKeyPrefix)
+	iter := sdk.KVStorePrefixIterator(store, types.CancelOrderRequestKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var req types.CancelSwapRequest
+		var req types.CancelOrderRequest
 		k.cdc.MustUnmarshal(iter.Value(), &req)
 		if cb(req) {
 			break

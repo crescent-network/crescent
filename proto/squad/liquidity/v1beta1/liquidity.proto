@@ -53,7 +53,7 @@ message Pair {
 
   uint64 last_swap_request_id = 5;
 
-  uint64 last_cancel_swap_request_id = 6;
+  uint64 last_cancel_order_request_id = 6;
 
   string last_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
@@ -169,8 +169,8 @@ message SwapRequest {
   SwapRequestStatus status = 14;
 }
 
-// CancelSwapRequest defines a request to cancel a swap request.
-message CancelSwapRequest {
+// CancelOrderRequest defines a request to cancel an order.
+message CancelOrderRequest {
   uint64 id = 1;
 
   uint64 pair_id = 2;

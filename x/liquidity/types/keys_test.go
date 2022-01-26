@@ -152,9 +152,9 @@ func (s *keysTestSuite) TestGetSwapRequestsByPairKeyPrefix() {
 	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8}, types.GetSwapRequestsByPairKeyPrefix(1000))
 }
 
-func (s *keysTestSuite) TestGetCancelSwapRequestKey() {
+func (s *keysTestSuite) TestGetCancelOrderRequestKey() {
 	s.Require().Equal([]byte{0xb3, 0, 0, 0, 0, 0, 0, 0, 0x1, 0, 0,
-		0, 0, 0, 0, 0, 0x1}, types.GetCancelSwapRequestKey(1, 1))
+		0, 0, 0, 0, 0, 0x1}, types.GetCancelOrderRequestKey(1, 1))
 	s.Require().Equal([]byte{0xb3, 0, 0, 0, 0, 0, 0, 0x3, 0xe8, 0,
-		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetCancelSwapRequestKey(1000, 1001))
+		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetCancelOrderRequestKey(1000, 1001))
 }

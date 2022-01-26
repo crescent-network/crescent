@@ -7,9 +7,9 @@ import (
 )
 
 func (k Keeper) ExecuteRequests(ctx sdk.Context) {
-	k.IterateAllCancelSwapRequests(ctx, func(req types.CancelSwapRequest) (stop bool) {
+	k.IterateAllCancelOrderRequests(ctx, func(req types.CancelOrderRequest) (stop bool) {
 		if req.Status == types.RequestStatusNotExecuted {
-			if err := k.ExecuteCancelSwapRequest(ctx, req); err != nil {
+			if err := k.ExecuteCancelOrderRequest(ctx, req); err != nil {
 				panic(err)
 			}
 		}
@@ -66,9 +66,9 @@ func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
 		}
 		return false
 	})
-	k.IterateAllCancelSwapRequests(ctx, func(req types.CancelSwapRequest) (stop bool) {
+	k.IterateAllCancelOrderRequests(ctx, func(req types.CancelOrderRequest) (stop bool) {
 		if req.Status.ShouldBeDeleted() {
-			k.DeleteCancelSwapRequest(ctx, req.PairId, req.Id)
+			k.DeleteCancelOrderRequest(ctx, req.PairId, req.Id)
 		}
 		return false
 	})

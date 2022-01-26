@@ -48,7 +48,26 @@ func (req WithdrawRequest) GetWithdrawer() sdk.AccAddress {
 	return addr
 }
 
-func NewSwapRequest(msg *MsgSwapBatch, id uint64, pair Pair, expireAt time.Time, msgHeight int64) SwapRequest {
+func NewSwapRequestForLimitOrder(msg *MsgLimitOrderBatch, id uint64, pair Pair, offerCoin sdk.Coin, expireAt time.Time, msgHeight int64) SwapRequest {
+	return SwapRequest{
+		Id:                 id,
+		PairId:             pair.Id,
+		MsgHeight:          msgHeight,
+		Orderer:            msg.Orderer,
+		Direction:          msg.Direction,
+		OfferCoin:          offerCoin,
+		RemainingOfferCoin: offerCoin,
+		ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
+		Price:              msg.Price,
+		Amount:             msg.Amount,
+		OpenAmount:         msg.Amount,
+		BatchId:            pair.CurrentBatchId,
+		ExpireAt:           expireAt,
+		Status:             SwapRequestStatusNotExecuted,
+	}
+}
+
+func NewSwapRequestForMarketOrder(msg *MsgMarketOrderBatch, id uint64, pair Pair, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
 	return SwapRequest{
 		Id:                 id,
 		PairId:             pair.Id,
@@ -58,7 +77,7 @@ func NewSwapRequest(msg *MsgSwapBatch, id uint64, pair Pair, expireAt time.Time,
 		OfferCoin:          msg.OfferCoin,
 		RemainingOfferCoin: msg.OfferCoin,
 		ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
-		Price:              msg.Price,
+		Price:              price,
 		Amount:             msg.Amount,
 		OpenAmount:         msg.Amount,
 		BatchId:            pair.CurrentBatchId,
@@ -75,9 +94,9 @@ func (req SwapRequest) GetOrderer() sdk.AccAddress {
 	return addr
 }
 
-func NewCancelSwapRequest(
-	msg *MsgCancelSwapBatch, id uint64, pair Pair, msgHeight int64) CancelSwapRequest {
-	return CancelSwapRequest{
+func NewCancelOrderRequest(
+	msg *MsgCancelOrderBatch, id uint64, pair Pair, msgHeight int64) CancelOrderRequest {
+	return CancelOrderRequest{
 		Id:            id,
 		PairId:        pair.Id,
 		MsgHeight:     msgHeight,

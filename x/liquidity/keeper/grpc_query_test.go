@@ -372,7 +372,7 @@ func (s *KeeperTestSuite) TestGRPCPair() {
 				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
 				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
 				s.Require().Equal(pair.LastSwapRequestId, resp.Pair.LastSwapRequestId)
-				s.Require().Equal(pair.LastCancelSwapRequestId, resp.Pair.LastCancelSwapRequestId)
+				s.Require().Equal(pair.LastCancelOrderRequestId, resp.Pair.LastCancelOrderRequestId)
 				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
 				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
 			},
@@ -651,11 +651,11 @@ func (s *KeeperTestSuite) TestGRPCSwapRequests() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
-	s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(5000000), 10*time.Second, true)
-	s.swapBatchSell(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
-	s.swapBatchSell(s.addr(2), pair.Id, parseDec("1.0"), newInt(700000), time.Hour, true)
-	s.swapBatchBuy(s.addr(2), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(5000000), 10*time.Second, true)
+	s.sellLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
+	s.sellLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(700000), time.Hour, true)
+	s.buyLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -702,7 +702,7 @@ func (s *KeeperTestSuite) TestGRPCSwapRequest() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	req := s.swapBatchBuy(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	req := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
