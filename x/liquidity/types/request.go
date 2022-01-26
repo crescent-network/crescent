@@ -15,7 +15,7 @@ func NewDepositRequest(msg *MsgDepositBatch, pool Pool, id uint64, msgHeight int
 		MsgHeight:      msgHeight,
 		Depositor:      msg.Depositor,
 		DepositCoins:   msg.DepositCoins,
-		AcceptedCoins:  sdk.Coins{},
+		AcceptedCoins:  nil,
 		MintedPoolCoin: sdk.NewCoin(pool.PoolCoinDenom, sdk.ZeroInt()),
 		Status:         RequestStatusNotExecuted,
 	}
@@ -70,7 +70,7 @@ func NewWithdrawRequest(msg *MsgWithdrawBatch, id uint64, msgHeight int64) Withd
 		MsgHeight:      msgHeight,
 		Withdrawer:     msg.Withdrawer,
 		PoolCoin:       msg.PoolCoin,
-		WithdrawnCoins: sdk.Coins{},
+		WithdrawnCoins: nil,
 		Status:         RequestStatusNotExecuted,
 	}
 }
