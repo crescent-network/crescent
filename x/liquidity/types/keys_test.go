@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -17,18 +18,17 @@ func TestKeysTestSuite(t *testing.T) {
 }
 
 func (s *keysTestSuite) TestGetPairKey() {
-	s.Require().Equal([]byte{0xa5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, types.GetPairKey(0))
-	s.Require().Equal([]byte{0xa5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x9}, types.GetPairKey(9))
-	s.Require().Equal([]byte{0xa5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa}, types.GetPairKey(10))
+	s.Require().Equal([]byte{0xa5, 0, 0, 0, 0, 0, 0, 0, 0}, types.GetPairKey(0))
+	s.Require().Equal([]byte{0xa5, 0, 0, 0, 0, 0, 0, 0, 0x9}, types.GetPairKey(9))
+	s.Require().Equal([]byte{0xa5, 0, 0, 0, 0, 0, 0, 0, 0xa}, types.GetPairKey(10))
 }
 
-func (s *keysTestSuite) TestGetPoolKey() {
-	s.Require().Equal([]byte{0xab, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1}, types.GetPoolKey(1))
-	s.Require().Equal([]byte{0xab, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x5}, types.GetPoolKey(5))
-	s.Require().Equal([]byte{0xab, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa}, types.GetPoolKey(10))
+func (s *keysTestSuite) TestGetPairIndexKey() {
+	s.Require().Equal([]byte{0xa6, 0x6, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x31, 0x6, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x32}, types.GetPairIndexKey("denom1", "denom2"))
+	s.Require().Equal([]byte{0xa6, 0x6, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x33, 0x6, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x34}, types.GetPairIndexKey("denom3", "denom4"))
 }
 
-func (s *keysTestSuite) TestPairLookupIndexKey() {
+func (s *keysTestSuite) TestPairsByDenomsIndexKey() {
 	testCases := []struct {
 		denomA   string
 		denomB   string
@@ -38,29 +38,31 @@ func (s *keysTestSuite) TestPairLookupIndexKey() {
 		{
 			"denomA",
 			"denomB",
-			uint64(1),
+			1,
 			[]byte{0xa7, 0x6, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x6, 0x64,
-				0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1},
+				0x65, 0x6e, 0x6f, 0x6d, 0x42, 0, 0, 0, 0, 0, 0, 0, 0x1},
 		},
 		{
 			"denomC",
 			"denomD",
-			uint64(20),
+			20,
 			[]byte{0xa7, 0x6, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x43, 0x6, 0x64,
-				0x65, 0x6e, 0x6f, 0x6d, 0x44, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x14},
+				0x65, 0x6e, 0x6f, 0x6d, 0x44, 0, 0, 0, 0, 0, 0, 0, 0x14},
 		},
 		{
 			"denomE",
 			"denomF",
-			uint64(13),
+			13,
 			[]byte{0xa7, 0x6, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x45, 0x6, 0x64,
-				0x65, 0x6e, 0x6f, 0x6d, 0x46, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xd},
+				0x65, 0x6e, 0x6f, 0x6d, 0x46, 0, 0, 0, 0, 0, 0, 0, 0xd},
 		},
 	}
 
 	for _, tc := range testCases {
 		key := types.GetPairsByDenomsIndexKey(tc.denomA, tc.denomB, tc.pairId)
 		s.Require().Equal(tc.expected, key)
+
+		s.Require().True(bytes.HasPrefix(key, types.GetPairsByDenomsIndexKeyPrefix(tc.denomA, tc.denomB)))
 
 		denomA, denomB, pairId := types.ParsePairsByDenomsIndexKey(key)
 		s.Require().Equal(tc.denomA, denomA)
@@ -69,7 +71,13 @@ func (s *keysTestSuite) TestPairLookupIndexKey() {
 	}
 }
 
-func (s *keysTestSuite) TestPoolByReserveAddressIndexKey() {
+func (s *keysTestSuite) TestGetPoolKey() {
+	s.Require().Equal([]byte{0xab, 0, 0, 0, 0, 0, 0, 0, 0x1}, types.GetPoolKey(1))
+	s.Require().Equal([]byte{0xab, 0, 0, 0, 0, 0, 0, 0, 0x5}, types.GetPoolKey(5))
+	s.Require().Equal([]byte{0xab, 0, 0, 0, 0, 0, 0, 0, 0xa}, types.GetPoolKey(10))
+}
+
+func (s *keysTestSuite) TestGetPoolByReserveAddressIndexKey() {
 	reserveAddr1 := types.PoolReserveAddress(1)
 	reserveAddr2 := types.PoolReserveAddress(2)
 	reserveAddr3 := types.PoolReserveAddress(3)
@@ -91,19 +99,19 @@ func (s *keysTestSuite) TestPoolsByPairIndexKey() {
 		expected []byte
 	}{
 		{
-			uint64(5),
-			uint64(10),
-			[]byte{0xad, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa},
+			5,
+			10,
+			[]byte{0xad, 0, 0, 0, 0, 0, 0, 0, 0x5, 0, 0, 0, 0, 0, 0, 0, 0xa},
 		},
 		{
-			uint64(2),
-			uint64(7),
-			[]byte{0xad, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7},
+			2,
+			7,
+			[]byte{0xad, 0, 0, 0, 0, 0, 0, 0, 0x2, 0, 0, 0, 0, 0, 0, 0, 0x7},
 		},
 		{
-			uint64(3),
-			uint64(5),
-			[]byte{0xad, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x5},
+			3,
+			5,
+			[]byte{0xad, 0, 0, 0, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0, 0, 0, 0x5},
 		},
 	}
 
@@ -111,19 +119,42 @@ func (s *keysTestSuite) TestPoolsByPairIndexKey() {
 		key := types.GetPoolsByPairIndexKey(tc.pairId, tc.poolId)
 		s.Require().Equal(tc.expected, key)
 
+		s.Require().True(bytes.HasPrefix(key, types.GetPoolsByPairIndexKeyPrefix(tc.pairId)))
+
 		poolId := types.ParsePoolsByPairIndexKey(key)
 		s.Require().Equal(tc.poolId, poolId)
 	}
 }
 
-func (s *keysTestSuite) TestDepositRequestKey() {
-	// TODO: not implemented yet
+func (s *keysTestSuite) TestGetDepositRequestKey() {
+	s.Require().Equal([]byte{0xb0, 0, 0, 0, 0, 0, 0, 0, 0x1, 0, 0,
+		0, 0, 0, 0, 0, 0x1}, types.GetDepositRequestKey(1, 1))
+	s.Require().Equal([]byte{0xb0, 0, 0, 0, 0, 0, 0, 0x3, 0xe8, 0,
+		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetDepositRequestKey(1000, 1001))
 }
 
-func (s *keysTestSuite) TestWithdrawRequestKey() {
-	// TODO: not implemented yet
+func (s *keysTestSuite) TestGetWithdrawRequestKey() {
+	s.Require().Equal([]byte{0xb1, 0, 0, 0, 0, 0, 0, 0, 0x1, 0, 0,
+		0, 0, 0, 0, 0, 0x1}, types.GetWithdrawRequestKey(1, 1))
+	s.Require().Equal([]byte{0xb1, 0, 0, 0, 0, 0, 0, 0x3, 0xe8, 0,
+		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetWithdrawRequestKey(1000, 1001))
 }
 
-func (s *keysTestSuite) TestSwapRequestKey() {
-	// TODO: not implemented yet
+func (s *keysTestSuite) TestGetSwapRequestKey() {
+	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0, 0x1, 0, 0,
+		0, 0, 0, 0, 0, 0x1}, types.GetSwapRequestKey(1, 1))
+	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8, 0,
+		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetSwapRequestKey(1000, 1001))
+}
+
+func (s *keysTestSuite) TestGetSwapRequestsByPairKeyPrefix() {
+	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0, 0x1}, types.GetSwapRequestsByPairKeyPrefix(1))
+	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8}, types.GetSwapRequestsByPairKeyPrefix(1000))
+}
+
+func (s *keysTestSuite) TestGetCancelSwapRequestKey() {
+	s.Require().Equal([]byte{0xb3, 0, 0, 0, 0, 0, 0, 0, 0x1, 0, 0,
+		0, 0, 0, 0, 0, 0x1}, types.GetCancelSwapRequestKey(1, 1))
+	s.Require().Equal([]byte{0xb3, 0, 0, 0, 0, 0, 0, 0x3, 0xe8, 0,
+		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetCancelSwapRequestKey(1000, 1001))
 }
