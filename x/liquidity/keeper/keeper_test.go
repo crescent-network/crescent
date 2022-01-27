@@ -146,6 +146,18 @@ func (s *KeeperTestSuite) sellLimitOrderBatch(
 		orderer, pairId, types.SwapDirectionSell, price, amt, orderLifespan, fund)
 }
 
+//nolint
+func (s *KeeperTestSuite) cancelOrder(orderer sdk.AccAddress, pairId, swapReqId uint64) {
+	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(orderer, pairId, swapReqId))
+	s.Require().NoError(err)
+}
+
+//nolint
+func (s *KeeperTestSuite) cancelAllOrders(orderer sdk.AccAddress, pairIds []uint64) {
+	err := s.keeper.CancelAllOrders(s.ctx, types.NewMsgCancelAllOrders(orderer, pairIds))
+	s.Require().NoError(err)
+}
+
 func parseCoins(s string) sdk.Coins {
 	coins, err := sdk.ParseCoinsNormalized(s)
 	if err != nil {

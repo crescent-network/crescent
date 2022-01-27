@@ -269,6 +269,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				req.Status = types.SwapRequestStatusNotMatched
 				k.SetSwapRequest(ctx, req)
 			}
+		case types.SwapRequestStatusCanceled:
 		default:
 			return false, fmt.Errorf("invalid swap request status: %s", req.Status)
 		}

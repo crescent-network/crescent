@@ -393,7 +393,7 @@ $ %s tx %s cancel-order 1 1 --from mykey
 				return err
 			}
 
-			swapRequestId, err := strconv.ParseUint(args[1], 10, 64)
+			swapReqId, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -401,7 +401,7 @@ $ %s tx %s cancel-order 1 1 --from mykey
 			msg := types.NewMsgCancelOrder(
 				clientCtx.GetFromAddress(),
 				pairId,
-				swapRequestId,
+				swapReqId,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

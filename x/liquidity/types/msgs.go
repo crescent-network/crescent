@@ -402,10 +402,10 @@ func (msg MsgMarketOrderBatch) GetOrderer() sdk.AccAddress {
 func NewMsgCancelOrder(
 	orderer sdk.AccAddress,
 	pairId uint64,
-	swapRequestId uint64,
+	swapReqId uint64,
 ) *MsgCancelOrder {
 	return &MsgCancelOrder{
-		SwapRequestId: swapRequestId,
+		SwapRequestId: swapReqId,
 		PairId:        pairId,
 		Orderer:       orderer.String(),
 	}
