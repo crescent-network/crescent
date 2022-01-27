@@ -50,7 +50,6 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	// TODO: add hooking for stakingkeeper
 	suite.app = simapp.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)

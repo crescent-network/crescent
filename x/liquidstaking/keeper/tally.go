@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	types2 "github.com/cosmosquad-labs/squad/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
@@ -27,7 +27,7 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 			}
 		}
 	}
-	types2.PP(denomAddrBalanceMap)
+	squadtypes.PP(denomAddrBalanceMap)
 	return denomAddrBalanceMap
 }
 
@@ -36,7 +36,7 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 	liquidVals := k.GetActiveLiquidValidators(ctx)
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 	totalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount
-	bTokenValueMap := make(types2.StrIntMap)
+	bTokenValueMap := make(squadtypes.StrIntMap)
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
 	bTokenSharePerPoolCoinMap := make(map[string]sdk.Dec)
@@ -71,7 +71,7 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 				}
 				bTokenSharePerPoolCoinMap[denom] = bTokenSharePerPoolCoin
 				for voter, balance := range balanceByVoter {
-					bTokenValueMap.AddOrSet(voter, types2.GetShareValue(balance, bTokenSharePerPoolCoin))
+					bTokenValueMap.AddOrSet(voter, squadtypes.GetShareValue(balance, bTokenSharePerPoolCoin))
 				}
 			}
 		}
@@ -87,7 +87,7 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 			if stakingCoinDenom == liquidBondDenom {
 				bTokenValueMap.AddOrSet(vote.Voter, staking.Amount)
 			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-				bTokenValueMap.AddOrSet(vote.Voter, types2.GetShareValue(staking.Amount, ratio))
+				bTokenValueMap.AddOrSet(vote.Voter, squadtypes.GetShareValue(staking.Amount, ratio))
 			}
 			return false
 		})
@@ -97,7 +97,7 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 			if stakingCoinDenom == liquidBondDenom {
 				bTokenValueMap.AddOrSet(vote.Voter, queuedStaking.Amount)
 			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-				bTokenValueMap.AddOrSet(vote.Voter, types2.GetShareValue(queuedStaking.Amount, ratio))
+				bTokenValueMap.AddOrSet(vote.Voter, squadtypes.GetShareValue(queuedStaking.Amount, ratio))
 			}
 			return false
 		})
