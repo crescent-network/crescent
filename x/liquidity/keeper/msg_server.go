@@ -96,3 +96,14 @@ func (m msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 
 	return &types.MsgCancelOrderResponse{}, nil
 }
+
+// CancelAllOrders defines a method to cancel all orders.
+func (m msgServer) CancelAllOrders(goCtx context.Context, msg *types.MsgCancelAllOrders) (*types.MsgCancelAllOrdersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := m.Keeper.CancelAllOrders(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelAllOrdersResponse{}, nil
+}

@@ -170,7 +170,7 @@ func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrderBatch
 	return req, nil
 }
 
-// CancelOrder handles types.MsgCancelOrder and stores it.
+// CancelOrder handles types.MsgCancelOrder and cancels an order.
 func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 	swapReq, found := k.GetSwapRequest(ctx, msg.PairId, msg.SwapRequestId)
 	if !found {
@@ -206,21 +206,63 @@ func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 	return nil
 }
 
+// CancelAllOrders handles types.MsgCancelAllOrders and cancels all orders.
+func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) error {
+	cb := func(pair types.Pair, req types.SwapRequest) (stop bool, err error) {
+		if req.Orderer == msg.Orderer && req.Status != types.SwapRequestStatusCanceled && req.BatchId < pair.CurrentBatchId {
+			if err := k.RefundSwapRequestAndSetStatus(ctx, req, types.SwapRequestStatusCanceled); err != nil {
+				return false, err
+			}
+		}
+		return false, nil
+	}
+
+	if len(msg.PairIds) == 0 {
+		pairMap := map[uint64]types.Pair{}
+		if err := k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
+			pair, ok := pairMap[req.PairId]
+			if !ok {
+				pair, _ = k.GetPair(ctx, req.PairId)
+				pairMap[req.PairId] = pair
+			}
+			return cb(pair, req)
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	for _, pairId := range msg.PairIds {
+		pair, found := k.GetPair(ctx, pairId)
+		if !found {
+			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
+		}
+		if err := k.IterateSwapRequestsByPair(ctx, pairId, func(req types.SwapRequest) (stop bool, err error) {
+			return cb(pair, req)
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	params := k.GetParams(ctx)
 	tickPrec := int(params.TickPrecision)
 
 	ob := types.NewOrderBook(tickPrec)
-	k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool) {
+	if err := k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool, err error) {
 		switch req.Status {
 		case types.SwapRequestStatusNotExecuted,
 			types.SwapRequestStatusNotMatched,
 			types.SwapRequestStatusPartiallyMatched:
 			if !ctx.BlockTime().Before(req.ExpireAt) {
 				if err := k.RefundSwapRequestAndSetStatus(ctx, req, types.SwapRequestStatusExpired); err != nil {
-					panic(err)
+					return false, err
 				}
-				return false
+				return false, nil
 			}
 			ob.AddOrder(types.NewUserOrder(req))
 			if req.Status == types.SwapRequestStatusNotExecuted {
@@ -228,27 +270,29 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				k.SetSwapRequest(ctx, req)
 			}
 		default:
-			panic(fmt.Sprintf("invalid swap request status: %s", req.Status))
+			return false, fmt.Errorf("invalid swap request status: %s", req.Status)
 		}
-		return false
-	})
+		return false, nil
+	}); err != nil {
+		return err
+	}
 
 	var pools []types.PoolI
 	var poolBuySources, poolSellSources []types.OrderSource
-	k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool) {
+	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 		rx, ry := k.GetPoolBalance(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
 		poolInfo := types.NewPoolInfo(rx, ry, ps) // Pool coin supply is not used when matching
 		if types.IsDepletedPool(poolInfo) {
 			k.MarkPoolAsDisabled(ctx, pool)
-			return false
+			return false, nil
 		}
 		pools = append(pools, poolInfo)
 
 		poolReserveAddr := pool.GetReserveAddress()
 		poolBuySources = append(poolBuySources, types.NewPoolOrderSource(poolInfo, pool.Id, poolReserveAddr, types.SwapDirectionBuy, tickPrec))
 		poolSellSources = append(poolSellSources, types.NewPoolOrderSource(poolInfo, pool.Id, poolReserveAddr, types.SwapDirectionSell, tickPrec))
-		return false
+		return false, nil
 	})
 
 	buySource := types.MergeOrderSources(append(poolBuySources, ob.OrderSource(types.SwapDirectionBuy))...)

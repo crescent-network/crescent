@@ -64,9 +64,9 @@ func (k Keeper) GetPairByDenoms(ctx sdk.Context, baseCoinDenom, quoteCoinDenom s
 
 // GetAllPairs returns all pairs in the store.
 func (k Keeper) GetAllPairs(ctx sdk.Context) (pairs []types.Pair) {
-	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
+	_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
 		pairs = append(pairs, pair)
-		return false
+		return false, nil
 	})
 
 	return pairs
@@ -97,7 +97,7 @@ func (k Keeper) SetPairLookupIndex(ctx sdk.Context, denomA string, denomB string
 
 // IterateAllPairs iterates over all the stored pairs and performs a callback function.
 // Stops iteration when callback returns true.
-func (k Keeper) IterateAllPairs(ctx sdk.Context, cb func(pair types.Pair) (stop bool)) {
+func (k Keeper) IterateAllPairs(ctx sdk.Context, cb func(pair types.Pair) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 
 	iter := sdk.KVStorePrefixIterator(store, types.PairKeyPrefix)
@@ -105,10 +105,15 @@ func (k Keeper) IterateAllPairs(ctx sdk.Context, cb func(pair types.Pair) (stop 
 
 	for ; iter.Valid(); iter.Next() {
 		pair := types.MustUnmarshalPair(k.cdc, iter.Value())
-		if cb(pair) {
+		stop, err := cb(pair)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
+	return nil
 }
 
 // GetLastPoolId returns the last pool id.
@@ -172,12 +177,11 @@ func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddr
 
 // GetAllPools returns all pairs in the store.
 func (k Keeper) GetAllPools(ctx sdk.Context) (pools []types.Pool) {
-	k.IterateAllPools(ctx, func(pool types.Pool) (stop bool) {
+	_ = k.IterateAllPools(ctx, func(pool types.Pool) (stop bool, err error) {
 		pools = append(pools, pool)
-		return false
+		return false, nil
 	})
-
-	return pools
+	return
 }
 
 // SetPool stores the particular pool.
@@ -204,7 +208,7 @@ func (k Keeper) SetPoolsByPairIndex(ctx sdk.Context, pool types.Pool) {
 
 // IterateAllPools iterates over all the stored pools and performs a callback function.
 // Stops iteration when callback returns true.
-func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop bool)) {
+func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 
 	iter := sdk.KVStorePrefixIterator(store, types.PoolKeyPrefix)
@@ -212,15 +216,20 @@ func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop 
 
 	for ; iter.Valid(); iter.Next() {
 		pool := types.MustUnmarshalPool(k.cdc, iter.Value())
-		if cb(pool) {
+		stop, err := cb(pool)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
+	return nil
 }
 
 // IteratePoolsByPair iterates over all the stored pools by the pair and performs a callback function.
 // Stops iteration when callback returns true.
-func (k Keeper) IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool types.Pool) (stop bool)) {
+func (k Keeper) IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool types.Pool) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 
 	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByPairIndexKeyPrefix(pairId))
@@ -229,10 +238,15 @@ func (k Keeper) IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool 
 	for ; iter.Valid(); iter.Next() {
 		poolId := types.ParsePoolsByPairIndexKey(iter.Key())
 		pool, _ := k.GetPool(ctx, poolId)
-		if cb(pool) {
+		stop, err := cb(pool)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
+	return nil
 }
 
 // GetDepositRequest returns the particular deposit request.
@@ -262,17 +276,30 @@ func (k Keeper) DeleteDepositRequest(ctx sdk.Context, poolId, id uint64) {
 	store.Delete(types.GetDepositRequestKey(poolId, id))
 }
 
-func (k Keeper) IterateAllDepositRequests(ctx sdk.Context, cb func(req types.DepositRequest) (stop bool)) {
+func (k Keeper) GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequest) {
+	_ = k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool, err error) {
+		reqs = append(reqs, req)
+		return false, nil
+	})
+	return
+}
+
+func (k Keeper) IterateAllDepositRequests(ctx sdk.Context, cb func(req types.DepositRequest) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.DepositRequestKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var req types.DepositRequest
 		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if cb(req) {
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
+	return nil
 }
 
 // GetWithdrawRequest returns the particular withdraw request.
@@ -302,17 +329,30 @@ func (k Keeper) DeleteWithdrawRequest(ctx sdk.Context, poolId, id uint64) {
 	store.Delete(types.GetWithdrawRequestKey(poolId, id))
 }
 
-func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.WithdrawRequest) (stop bool)) {
+func (k Keeper) GetAllWithdrawRequests(ctx sdk.Context) (reqs []types.WithdrawRequest) {
+	_ = k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool, err error) {
+		reqs = append(reqs, req)
+		return false, nil
+	})
+	return
+}
+
+func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.WithdrawRequest) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.WithdrawRequestKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var req types.WithdrawRequest
 		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if cb(req) {
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
+	return nil
 }
 
 // GetSwapRequest returns the particular swap request.
@@ -342,28 +382,46 @@ func (k Keeper) DeleteSwapRequest(ctx sdk.Context, pairId, id uint64) {
 	store.Delete(types.GetSwapRequestKey(pairId, id))
 }
 
-func (k Keeper) IterateAllSwapRequests(ctx sdk.Context, cb func(req types.SwapRequest) (stop bool)) {
+func (k Keeper) GetAllSwapRequests(ctx sdk.Context) (reqs []types.SwapRequest) {
+	_ = k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
+		reqs = append(reqs, req)
+		return false, nil
+	})
+	return
+}
+
+func (k Keeper) IterateAllSwapRequests(ctx sdk.Context, cb func(req types.SwapRequest) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.SwapRequestKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var req types.SwapRequest
 		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if cb(req) {
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
+	return nil
 }
 
-func (k Keeper) IterateSwapRequestsByPair(ctx sdk.Context, pairId uint64, cb func(req types.SwapRequest) (stop bool)) {
+func (k Keeper) IterateSwapRequestsByPair(ctx sdk.Context, pairId uint64, cb func(req types.SwapRequest) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.GetSwapRequestsByPairKeyPrefix(pairId))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var req types.SwapRequest
 		k.cdc.MustUnmarshal(iter.Value(), &req)
-		if cb(req) {
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
+	return nil
 }

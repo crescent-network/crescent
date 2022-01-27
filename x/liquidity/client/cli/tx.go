@@ -35,6 +35,7 @@ func GetTxCmd() *cobra.Command {
 		NewLimitOrderBatchCmd(),
 		NewMarketOrderBatchCmd(),
 		NewCancelOrderCmd(),
+		NewCancelAllOrdersCmd(),
 	)
 
 	return cmd
@@ -376,7 +377,7 @@ func NewCancelOrderCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Cancel an order.
 Example:
-$ %s tx %s cancel-order 1 --from mykey
+$ %s tx %s cancel-order 1 1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -402,6 +403,47 @@ $ %s tx %s cancel-order 1 --from mykey
 				pairId,
 				swapRequestId,
 			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCancelAllOrdersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-all-orders [pair-ids]",
+		Args:  cobra.MaximumNArgs(1),
+		Short: "Cancel all orders",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Cancel all orders.
+Example:
+$ %s tx %s cancel-all-orders --from mykey
+$ %s tx %s cancel-all-orders 1,3 --from mykey
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var pairIds []uint64
+			for _, pairIdStr := range strings.Split(args[0], ",") {
+				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("parse pair id: %w", err)
+				}
+				pairIds = append(pairIds, pairId)
+			}
+
+			msg := types.NewMsgCancelAllOrders(clientCtx.GetFromAddress(), pairIds)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

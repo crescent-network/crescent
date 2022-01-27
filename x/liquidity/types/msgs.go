@@ -15,6 +15,7 @@ var (
 	_ sdk.Msg = (*MsgLimitOrderBatch)(nil)
 	_ sdk.Msg = (*MsgMarketOrderBatch)(nil)
 	_ sdk.Msg = (*MsgCancelOrder)(nil)
+	_ sdk.Msg = (*MsgCancelAllOrders)(nil)
 )
 
 // Message types for the liquidity module
@@ -26,6 +27,7 @@ const (
 	TypeMsgLimitOrderBatch  = "limit_order_batch"
 	TypeMsgMarketOrderBatch = "market_order_batch"
 	TypeMsgCancelOrder      = "cancel_order"
+	TypeMsgCancelAllOrders  = "cancel_all_orders"
 )
 
 // NewMsgCreatePair returns a new MsgCreatePair.
@@ -417,6 +419,12 @@ func (msg MsgCancelOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
 	}
+	if msg.PairId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
+	}
+	if msg.SwapRequestId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "swap request id must not be 0")
+	}
 	return nil
 }
 
@@ -433,6 +441,58 @@ func (msg MsgCancelOrder) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgCancelOrder) GetOrderer() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+// NewMsgCancelAllOrders creates a new MsgCancelAllOrders.
+func NewMsgCancelAllOrders(
+	orderer sdk.AccAddress,
+	pairIds []uint64,
+) *MsgCancelAllOrders {
+	return &MsgCancelAllOrders{
+		Orderer: orderer.String(),
+		PairIds: pairIds,
+	}
+}
+
+func (msg MsgCancelAllOrders) Route() string { return RouterKey }
+
+func (msg MsgCancelAllOrders) Type() string { return TypeMsgCancelAllOrders }
+
+func (msg MsgCancelAllOrders) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
+	}
+	pairIdSet := map[uint64]struct{}{}
+	for _, pairId := range msg.PairIds {
+		if pairId == 0 {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
+		}
+		if _, ok := pairIdSet[pairId]; ok {
+			return ErrDuplicatePairId
+		}
+		pairIdSet[pairId] = struct{}{}
+	}
+	return nil
+}
+
+func (msg MsgCancelAllOrders) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCancelAllOrders) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCancelAllOrders) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)

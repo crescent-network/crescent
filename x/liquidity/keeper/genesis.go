@@ -34,39 +34,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	var pairs []types.Pair
-	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
-		pairs = append(pairs, pair)
-		return false
-	})
-	var pools []types.Pool
-	k.IterateAllPools(ctx, func(pool types.Pool) (stop bool) {
-		pools = append(pools, pool)
-		return false
-	})
-	var depositReqs []types.DepositRequest
-	k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
-		depositReqs = append(depositReqs, req)
-		return false
-	})
-	var withdrawReqs []types.WithdrawRequest
-	k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool) {
-		withdrawReqs = append(withdrawReqs, req)
-		return false
-	})
-	var swapReqs []types.SwapRequest
-	k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool) {
-		swapReqs = append(swapReqs, req)
-		return false
-	})
 	return &types.GenesisState{
 		Params:           k.GetParams(ctx),
 		LastPairId:       k.GetLastPairId(ctx),
 		LastPoolId:       k.GetLastPoolId(ctx),
-		Pairs:            pairs,
-		Pools:            pools,
-		DepositRequests:  depositReqs,
-		WithdrawRequests: withdrawReqs,
-		SwapRequests:     swapReqs,
+		Pairs:            k.GetAllPairs(ctx),
+		Pools:            k.GetAllPools(ctx),
+		DepositRequests:  k.GetAllDepositRequests(ctx),
+		WithdrawRequests: k.GetAllWithdrawRequests(ctx),
+		SwapRequests:     k.GetAllSwapRequests(ctx),
 	}
 }
