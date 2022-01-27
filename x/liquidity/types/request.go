@@ -209,44 +209,6 @@ func (req SwapRequest) Validate() error {
 	return nil
 }
 
-func NewCancelOrderRequest(
-	msg *MsgCancelOrderBatch, id uint64, pair Pair, msgHeight int64) CancelOrderRequest {
-	return CancelOrderRequest{
-		Id:            id,
-		PairId:        pair.Id,
-		MsgHeight:     msgHeight,
-		Orderer:       msg.Orderer,
-		SwapRequestId: msg.SwapRequestId,
-		BatchId:       pair.CurrentBatchId,
-		Status:        RequestStatusNotExecuted,
-	}
-}
-
-func (req CancelOrderRequest) Validate() error {
-	if req.Id == 0 {
-		return fmt.Errorf("id must not be 0")
-	}
-	if req.PairId == 0 {
-		return fmt.Errorf("pair id must not be 0")
-	}
-	if req.MsgHeight == 0 { // TODO: is this check correct?
-		return fmt.Errorf("message height must not be 0")
-	}
-	if _, err := sdk.AccAddressFromBech32(req.Orderer); err != nil {
-		return fmt.Errorf("invalid orderer address %s: %w", req.Orderer, err)
-	}
-	if req.SwapRequestId == 0 {
-		return fmt.Errorf("swap request id must not be 0")
-	}
-	if req.BatchId == 0 {
-		return fmt.Errorf("batch id must not be 0")
-	}
-	if !req.Status.IsValid() {
-		return fmt.Errorf("invalid status: %s", req.Status)
-	}
-	return nil
-}
-
 func (status RequestStatus) IsValid() bool {
 	return status == RequestStatusNotExecuted || status == RequestStatusSucceeded || status == RequestStatusFailed
 }

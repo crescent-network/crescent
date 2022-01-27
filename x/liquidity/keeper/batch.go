@@ -7,69 +7,63 @@ import (
 )
 
 func (k Keeper) ExecuteRequests(ctx sdk.Context) {
-	k.IterateAllCancelOrderRequests(ctx, func(req types.CancelOrderRequest) (stop bool) {
-		if req.Status == types.RequestStatusNotExecuted {
-			if err := k.ExecuteCancelOrderRequest(ctx, req); err != nil {
-				panic(err)
-			}
-		}
-		return false
-	})
-	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
+	if err := k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
 		if err := k.ExecuteMatching(ctx, pair); err != nil {
-			panic(err)
+			return false, err
 		}
-		return false
-	})
-	k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool) {
+		return false, nil
+	}); err != nil {
+		panic(err)
+	}
+	if err := k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
 		if !req.Status.IsCanceledOrExpired() && !ctx.BlockTime().Before(req.ExpireAt) { // ExpireAt <= BlockTime
 			if err := k.RefundSwapRequestAndSetStatus(ctx, req, types.SwapRequestStatusExpired); err != nil {
-				panic(err)
+				return false, err
 			}
 		} else if req.Status == types.SwapRequestStatusCompleted {
 			if err := k.RefundSwapRequest(ctx, req); err != nil {
-				panic(err)
+				return false, err
 			}
 		}
-		return false
-	})
-	k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
+		return false, nil
+	}); err != nil {
+		panic(err)
+	}
+	if err := k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool, err error) {
 		if err := k.ExecuteDepositRequest(ctx, req); err != nil {
-			panic(err)
+			return false, err
 		}
-		return false
-	})
-	k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool) {
+		return false, nil
+	}); err != nil {
+		panic(err)
+	}
+	if err := k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool, err error) {
 		if err := k.ExecuteWithdrawRequest(ctx, req); err != nil {
-			panic(err)
+			return false, err
 		}
-		return false
-	})
+		return false, nil
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
-	k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool) {
+	_ = k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool, err error) {
 		if req.Status.ShouldBeDeleted() {
 			k.DeleteDepositRequest(ctx, req.PoolId, req.Id)
 		}
-		return false
+		return false, nil
 	})
-	k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool) {
+	_ = k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool, err error) {
 		if req.Status.ShouldBeDeleted() {
 			k.DeleteWithdrawRequest(ctx, req.PoolId, req.Id)
 		}
-		return false
+		return false, nil
 	})
-	k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool) {
+	_ = k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
 		if req.Status.ShouldBeDeleted() {
 			k.DeleteSwapRequest(ctx, req.PairId, req.Id)
 		}
-		return false
-	})
-	k.IterateAllCancelOrderRequests(ctx, func(req types.CancelOrderRequest) (stop bool) {
-		if req.Status.ShouldBeDeleted() {
-			k.DeleteCancelOrderRequest(ctx, req.PairId, req.Id)
-		}
-		return false
+		return false, nil
 	})
 }
