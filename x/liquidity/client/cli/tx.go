@@ -34,7 +34,8 @@ func GetTxCmd() *cobra.Command {
 		NewWithdrawBatchCmd(),
 		NewLimitOrderBatchCmd(),
 		NewMarketOrderBatchCmd(),
-		NewCancelOrderBatchCmd(),
+		NewCancelOrderCmd(),
+		NewCancelAllOrdersCmd(),
 	)
 
 	return cmd
@@ -368,7 +369,7 @@ $ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from 
 	return cmd
 }
 
-func NewCancelOrderBatchCmd() *cobra.Command {
+func NewCancelOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-order [pair-id] [swap-request-id]",
 		Args:  cobra.ExactArgs(2),
@@ -376,7 +377,7 @@ func NewCancelOrderBatchCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Cancel an order.
 Example:
-$ %s tx %s cancel-order 1 --from mykey
+$ %s tx %s cancel-order 1 1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -392,16 +393,57 @@ $ %s tx %s cancel-order 1 --from mykey
 				return err
 			}
 
-			swapRequestId, err := strconv.ParseUint(args[1], 10, 64)
+			swapReqId, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCancelOrderBatch(
+			msg := types.NewMsgCancelOrder(
 				clientCtx.GetFromAddress(),
 				pairId,
-				swapRequestId,
+				swapReqId,
 			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCancelAllOrdersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-all-orders [pair-ids]",
+		Args:  cobra.MaximumNArgs(1),
+		Short: "Cancel all orders",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Cancel all orders.
+Example:
+$ %s tx %s cancel-all-orders --from mykey
+$ %s tx %s cancel-all-orders 1,3 --from mykey
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var pairIds []uint64
+			for _, pairIdStr := range strings.Split(args[0], ",") {
+				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("parse pair id: %w", err)
+				}
+				pairIds = append(pairIds, pairId)
+			}
+
+			msg := types.NewMsgCancelAllOrders(clientCtx.GetFromAddress(), pairIds)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

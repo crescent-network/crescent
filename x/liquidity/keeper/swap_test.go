@@ -55,3 +55,34 @@ func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
 	s.Require().NotNil(pair.LastPrice)
 	s.Require().True(decEq(parseDec("1.0"), *pair.LastPrice))
 }
+
+func (s *KeeperTestSuite) TestCancelOrder() {
+	k, ctx := s.keeper, s.ctx
+
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	req := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
+
+	// Cannot cancel an order within a same batch
+	err := k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), req.PairId, req.Id))
+	s.Require().ErrorIs(err, types.ErrSameBatch)
+
+	s.nextBlock()
+
+	// Now an order can be canceled
+	err = k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), req.PairId, req.Id))
+	s.Require().NoError(err)
+
+	req, found := k.GetSwapRequest(ctx, req.PairId, req.Id)
+	s.Require().True(found)
+	s.Require().Equal(types.SwapRequestStatusCanceled, req.Status)
+
+	// Coins are refunded
+	s.Require().True(coinsEq(parseCoins("10000denom2"), s.getBalances(s.addr(1))))
+
+	s.nextBlock()
+
+	// Swap request is deleted
+	_, found = k.GetSwapRequest(ctx, req.PairId, req.Id)
+	s.Require().False(found)
+}

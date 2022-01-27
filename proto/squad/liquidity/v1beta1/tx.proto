@@ -29,8 +29,11 @@ service Msg {
   // MarketOrderBatch defines a method for making a market order
   rpc MarketOrderBatch(MsgMarketOrderBatch) returns (MsgMarketOrderBatchResponse);
 
-  // CancelOrderBatch defines a method for cancelling an order
-  rpc CancelOrderBatch(MsgCancelOrderBatch) returns (MsgCancelOrderBatchResponse);
+  // CancelOrder defines a method for cancelling an order
+  rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+
+  // CancelAllOrders defines a method for cancelling all orders
+  rpc CancelAllOrders(MsgCancelAllOrders) returns (MsgCancelAllOrdersResponse);
 }
 
 // MsgCreatePair defines an SDK message for creating a pair.
@@ -151,8 +154,8 @@ message MsgMarketOrderBatch {
 // MsgMarketOrderBatchResponse defines the Msg/MarketOrderBatch response type.
 message MsgMarketOrderBatchResponse {}
 
-// MsgCancelOrderBatch defines an SDK message for cancelling an order
-message MsgCancelOrderBatch {
+// MsgCancelOrder defines an SDK message for cancelling an order
+message MsgCancelOrder {
   // orderer specifies the bech32-encoded address that makes an order
   string orderer = 1;
 
@@ -163,5 +166,17 @@ message MsgCancelOrderBatch {
   uint64 swap_request_id = 3;
 }
 
-// MsgCancelOrderBatchResponse defines the Msg/CancelOrderBatch response type.
-message MsgCancelOrderBatchResponse {}
+// MsgCancelOrderResponse defines the Msg/CancelOrder response type.
+message MsgCancelOrderResponse {}
+
+// MsgCancelAllOrders defines an SDK message for cancelling all orders
+message MsgCancelAllOrders {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_ids specifies pair ids to cancel orders
+  repeated uint64 pair_ids = 2;
+}
+
+// MsgCancelAllOrdersResponse defines the Msg/CancelAllOrders response type.
+message MsgCancelAllOrdersResponse {}

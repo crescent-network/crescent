@@ -367,14 +367,14 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 	}
 }
 
-func TestMsgCancelOrderBatch(t *testing.T) {
+func TestMsgCancelOrder(t *testing.T) {
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgCancelOrderBatch
+		msg    *types.MsgCancelOrder
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgCancelOrderBatch(
+			types.NewMsgCancelOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				1,
@@ -382,7 +382,7 @@ func TestMsgCancelOrderBatch(t *testing.T) {
 		},
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
-			types.NewMsgCancelOrderBatch(
+			types.NewMsgCancelOrder(
 				sdk.AccAddress{},
 				1,
 				1,
@@ -392,7 +392,7 @@ func TestMsgCancelOrderBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgCancelOrderBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgCancelOrder, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()
@@ -403,6 +403,52 @@ func TestMsgCancelOrderBatch(t *testing.T) {
 				require.Equal(t, tc.msg.GetOrderer(), signers[0])
 			} else {
 				require.EqualError(t, err, tc.expErr)
+			}
+		})
+	}
+}
+
+func TestMsgCancelAllOrders(t *testing.T) {
+	for _, tc := range []struct {
+		malleate    func(msg *types.MsgCancelAllOrders)
+		expectedErr string
+	}{
+		{
+			func(msg *types.MsgCancelAllOrders) {},
+			"",
+		},
+		{
+			func(msg *types.MsgCancelAllOrders) {
+				msg.Orderer = "invalidaddr"
+			},
+			"invalid orderer address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			func(msg *types.MsgCancelAllOrders) {
+				msg.PairIds = []uint64{0}
+			},
+			"pair id must not be 0: invalid request",
+		},
+		{
+			func(msg *types.MsgCancelAllOrders) {
+				msg.PairIds = []uint64{1, 1}
+			},
+			"duplicate pair id presents in the pair id list",
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			msg := types.NewMsgCancelAllOrders(sdk.AccAddress(crypto.AddressHash([]byte("orderer"))), []uint64{1, 2, 3})
+			tc.malleate(msg)
+			require.Equal(t, types.TypeMsgCancelAllOrders, msg.Type())
+			require.Equal(t, types.RouterKey, msg.Route())
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				signers := msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, msg.GetOrderer(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
 			}
 		})
 	}

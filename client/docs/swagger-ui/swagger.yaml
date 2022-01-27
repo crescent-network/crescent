@@ -2148,9 +2148,6 @@ paths:
                     last_swap_request_id:
                       type: string
                       format: uint64
-                    last_cancel_order_request_id:
-                      type: string
-                      format: uint64
                     last_price:
                       type: string
                     current_batch_id:
@@ -2299,9 +2296,6 @@ paths:
                   escrow_address:
                     type: string
                   last_swap_request_id:
-                    type: string
-                    format: uint64
-                  last_cancel_order_request_id:
                     type: string
                     format: uint64
                   last_price:
@@ -5213,9 +5207,6 @@ definitions:
       last_swap_request_id:
         type: string
         format: uint64
-      last_cancel_order_request_id:
-        type: string
-        format: uint64
       last_price:
         type: string
       current_batch_id:
@@ -5543,9 +5534,6 @@ definitions:
           last_swap_request_id:
             type: string
             format: uint64
-          last_cancel_order_request_id:
-            type: string
-            format: uint64
           last_price:
             type: string
           current_batch_id:
@@ -5571,9 +5559,6 @@ definitions:
             escrow_address:
               type: string
             last_swap_request_id:
-              type: string
-              format: uint64
-            last_cancel_order_request_id:
               type: string
               format: uint64
             last_price:
