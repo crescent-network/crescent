@@ -78,6 +78,9 @@ func (engine *MatchEngine) InitialMatchPrice() (price sdk.Dec, dir PriceDirectio
 
 func (engine *MatchEngine) FindMatchPrice() sdk.Dec {
 	matchPrice, dir := engine.InitialMatchPrice()
+	if dir == PriceStaying { // TODO: is this correct?
+		return matchPrice
+	}
 
 	tickSource := MergeOrderSources(engine.BuyOrderSource, engine.SellOrderSource) // temporary order source just for ticks
 
