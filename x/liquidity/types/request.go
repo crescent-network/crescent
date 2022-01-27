@@ -180,7 +180,7 @@ func (req SwapRequest) Validate() error {
 		return fmt.Errorf("invalid offer coin %s: %w", req.OfferCoin, err)
 	}
 	if req.OfferCoin.IsZero() {
-		return fmt.Errorf("offer coin must not be zero")
+		return fmt.Errorf("offer coin must not be 0")
 	}
 	if err := req.RemainingOfferCoin.Validate(); err != nil {
 		return fmt.Errorf("invalid remaining offer coin %s: %w", req.RemainingOfferCoin, err)

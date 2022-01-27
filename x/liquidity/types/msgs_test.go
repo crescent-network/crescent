@@ -58,57 +58,52 @@ func TestMsgCreatePair(t *testing.T) {
 }
 
 func TestMsgCreatePool(t *testing.T) {
-	testCases := []struct {
-		expErr string
-		msg    *types.MsgCreatePool
+	for _, tc := range []struct {
+		malleate    func(msg *types.MsgCreatePool)
+		expectedErr string
 	}{
 		{
+			func(msg *types.MsgCreatePool) {},
 			"", // empty means no error expected
-			types.NewMsgCreatePool(
-				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				1,
-				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
-			),
 		},
 		{
-			"invalid creator address: empty address string is not allowed: invalid address",
-			types.NewMsgCreatePool(
-				sdk.AccAddress{},
-				1,
-				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
-			),
+			func(msg *types.MsgCreatePool) {
+				msg.PairId = 0
+			},
+			"pair id must not be 0: invalid request",
 		},
 		{
+			func(msg *types.MsgCreatePool) {
+				msg.Creator = "invalidaddr"
+			},
+			"invalid creator address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			func(msg *types.MsgCreatePool) {
+				msg.DepositCoins = sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)}
+			},
 			"coin 0denom1 amount is not positive",
-			types.NewMsgCreatePool(
-				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				1,
-				sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)},
-			),
 		},
 		{
+			func(msg *types.MsgCreatePool) {
+				msg.DepositCoins = sdk.Coins{sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 0)}
+			},
 			"coin denom2 amount is not positive",
-			types.NewMsgCreatePool(
-				sdk.AccAddress(crypto.AddressHash([]byte("Creator"))),
-				1,
-				sdk.Coins{sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 0)},
-			),
 		},
-	}
-
-	for _, tc := range testCases {
+	} {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgCreatePool, tc.msg.Type())
-			require.Equal(t, types.RouterKey, tc.msg.Route())
-
-			err := tc.msg.ValidateBasic()
-			if tc.expErr == "" {
+			msg := types.NewMsgCreatePool(testAddr, 1, parseCoins("1000000denom1,1000000denom2"))
+			tc.malleate(msg)
+			require.Equal(t, types.TypeMsgCreatePool, msg.Type())
+			require.Equal(t, types.RouterKey, msg.Route())
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
 				require.NoError(t, err)
-				signers := tc.msg.GetSigners()
+				signers := msg.GetSigners()
 				require.Len(t, signers, 1)
-				require.Equal(t, tc.msg.GetCreator(), signers[0])
+				require.Equal(t, msg.GetCreator(), signers[0])
 			} else {
-				require.EqualError(t, err, tc.expErr)
+				require.EqualError(t, err, tc.expectedErr)
 			}
 		})
 	}
@@ -116,56 +111,54 @@ func TestMsgCreatePool(t *testing.T) {
 
 func TestMsgDepositBatch(t *testing.T) {
 	testCases := []struct {
-		expErr string
-		msg    *types.MsgDepositBatch
+		malleate    func(msg *types.MsgDepositBatch)
+		expectedErr string
 	}{
 		{
+			func(msg *types.MsgDepositBatch) {},
 			"", // empty means no error expected
-			types.NewMsgDepositBatch(
-				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				1,
-				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
-			),
 		},
 		{
-			"invalid depositor address: empty address string is not allowed: invalid address",
-			types.NewMsgDepositBatch(
-				sdk.AccAddress{},
-				1,
-				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
-			),
+			func(msg *types.MsgDepositBatch) {
+				msg.Depositor = "invalidaddr"
+			},
+			"invalid depositor address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
+			func(msg *types.MsgDepositBatch) {
+				msg.PoolId = 0
+			},
+			"pool id must not be 0: invalid request",
+		},
+		{
+			func(msg *types.MsgDepositBatch) {
+				msg.DepositCoins = sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)}
+			},
 			"coin 0denom1 amount is not positive",
-			types.NewMsgDepositBatch(
-				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				1,
-				sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)},
-			),
 		},
 		{
+			func(msg *types.MsgDepositBatch) {
+				msg.DepositCoins = sdk.Coins{sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 0)}
+			},
 			"coin denom2 amount is not positive",
-			types.NewMsgDepositBatch(
-				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
-				1,
-				sdk.Coins{sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 0)},
-			),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgDepositBatch, tc.msg.Type())
-			require.Equal(t, types.RouterKey, tc.msg.Route())
+			msg := types.NewMsgDepositBatch(testAddr, 1, parseCoins("1000000denom1,1000000denom2"))
+			tc.malleate(msg)
+			require.Equal(t, types.TypeMsgDepositBatch, msg.Type())
+			require.Equal(t, types.RouterKey, msg.Route())
 
-			err := tc.msg.ValidateBasic()
-			if tc.expErr == "" {
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
 				require.NoError(t, err)
-				signers := tc.msg.GetSigners()
+				signers := msg.GetSigners()
 				require.Len(t, signers, 1)
-				require.Equal(t, tc.msg.GetDepositor(), signers[0])
+				require.Equal(t, msg.GetDepositor(), signers[0])
 			} else {
-				require.EqualError(t, err, tc.expErr)
+				require.EqualError(t, err, tc.expectedErr)
 			}
 		})
 	}

@@ -4,9 +4,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
+
+var testAddr = sdk.AccAddress(crypto.AddressHash([]byte("test")))
 
 func newBuyOrder(price sdk.Dec, amt sdk.Int) *types.BaseOrder {
 	return types.NewBaseOrder(types.SwapDirectionBuy, price, amt, price.MulInt(amt).TruncateInt())

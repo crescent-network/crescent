@@ -264,7 +264,7 @@ func TestSwapRequest_Validate(t *testing.T) {
 			func(req *types.SwapRequest) {
 				req.OfferCoin = parseCoin("0denom1")
 			},
-			"offer coin must not be zero",
+			"offer coin must not be 0",
 		},
 		{
 			"invalid remaining offer coin",
