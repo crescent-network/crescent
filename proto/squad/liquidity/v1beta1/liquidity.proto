@@ -53,11 +53,9 @@ message Pair {
 
   uint64 last_swap_request_id = 5;
 
-  uint64 last_cancel_order_request_id = 6;
+  string last_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  string last_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-
-  uint64 current_batch_id = 8;
+  uint64 current_batch_id = 7;
 }
 
 // Pool defines a basic liquidity pool with no min-price and max-price.
@@ -167,23 +165,6 @@ message SwapRequest {
   google.protobuf.Timestamp expire_at = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
   SwapRequestStatus status = 14;
-}
-
-// CancelOrderRequest defines a request to cancel an order.
-message CancelOrderRequest {
-  uint64 id = 1;
-
-  uint64 pair_id = 2;
-
-  int64 msg_height = 3;
-
-  string orderer = 4;
-
-  uint64 swap_request_id = 5;
-
-  uint64 batch_id = 6;
-
-  RequestStatus status = 7;
 }
 
 // SwapDirection enumerates swap directions.

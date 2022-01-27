@@ -7,14 +7,6 @@ import (
 )
 
 func (k Keeper) ExecuteRequests(ctx sdk.Context) {
-	k.IterateAllCancelOrderRequests(ctx, func(req types.CancelOrderRequest) (stop bool) {
-		if req.Status == types.RequestStatusNotExecuted {
-			if err := k.ExecuteCancelOrderRequest(ctx, req); err != nil {
-				panic(err)
-			}
-		}
-		return false
-	})
 	k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool) {
 		if err := k.ExecuteMatching(ctx, pair); err != nil {
 			panic(err)
@@ -63,12 +55,6 @@ func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
 	k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool) {
 		if req.Status.ShouldBeDeleted() {
 			k.DeleteSwapRequest(ctx, req.PairId, req.Id)
-		}
-		return false
-	})
-	k.IterateAllCancelOrderRequests(ctx, func(req types.CancelOrderRequest) (stop bool) {
-		if req.Status.ShouldBeDeleted() {
-			k.DeleteCancelOrderRequest(ctx, req.PairId, req.Id)
 		}
 		return false
 	})

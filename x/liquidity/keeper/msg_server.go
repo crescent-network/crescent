@@ -86,13 +86,13 @@ func (m msgServer) MarketOrderBatch(goCtx context.Context, msg *types.MsgMarketO
 	return &types.MsgMarketOrderBatchResponse{}, nil
 }
 
-// CancelOrderBatch defines a method to cancel an order.
-func (m msgServer) CancelOrderBatch(goCtx context.Context, msg *types.MsgCancelOrderBatch) (*types.MsgCancelOrderBatchResponse, error) {
+// CancelOrder defines a method to cancel an order.
+func (m msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.CancelOrderBatch(ctx, msg); err != nil {
+	if err := m.Keeper.CancelOrder(ctx, msg); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgCancelOrderBatchResponse{}, nil
+	return &types.MsgCancelOrderResponse{}, nil
 }

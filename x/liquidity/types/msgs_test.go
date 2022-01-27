@@ -374,14 +374,14 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 	}
 }
 
-func TestMsgCancelOrderBatch(t *testing.T) {
+func TestMsgCancelOrder(t *testing.T) {
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgCancelOrderBatch
+		msg    *types.MsgCancelOrder
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgCancelOrderBatch(
+			types.NewMsgCancelOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				1,
@@ -389,7 +389,7 @@ func TestMsgCancelOrderBatch(t *testing.T) {
 		},
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
-			types.NewMsgCancelOrderBatch(
+			types.NewMsgCancelOrder(
 				sdk.AccAddress{},
 				1,
 				1,
@@ -399,7 +399,7 @@ func TestMsgCancelOrderBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgCancelOrderBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgCancelOrder, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()

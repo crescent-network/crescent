@@ -372,7 +372,6 @@ func (s *KeeperTestSuite) TestGRPCPair() {
 				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
 				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
 				s.Require().Equal(pair.LastSwapRequestId, resp.Pair.LastSwapRequestId)
-				s.Require().Equal(pair.LastCancelOrderRequestId, resp.Pair.LastCancelOrderRequestId)
 				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
 				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
 			},

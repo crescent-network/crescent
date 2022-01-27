@@ -170,34 +170,40 @@ func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrderBatch
 	return req, nil
 }
 
-// CancelOrderBatch handles types.MsgCancelOrderBatch and stores it.
-func (k Keeper) CancelOrderBatch(ctx sdk.Context, msg *types.MsgCancelOrderBatch) (types.CancelOrderRequest, error) {
+// CancelOrder handles types.MsgCancelOrder and stores it.
+func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 	swapReq, found := k.GetSwapRequest(ctx, msg.PairId, msg.SwapRequestId)
 	if !found {
-		return types.CancelOrderRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "swap request with id %d in pair %d not found", msg.SwapRequestId, msg.PairId)
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "swap request with id %d in pair %d not found", msg.SwapRequestId, msg.PairId)
 	}
 
 	if msg.Orderer != swapReq.Orderer {
-		return types.CancelOrderRequest{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
+	}
+
+	if swapReq.Status == types.SwapRequestStatusCanceled {
+		return types.ErrAlreadyCanceled
 	}
 
 	pair, _ := k.GetPair(ctx, msg.PairId)
+	if swapReq.BatchId == pair.CurrentBatchId {
+		return types.ErrSameBatch
+	}
 
-	requestId := k.GetNextCancelOrderRequestIdWithUpdate(ctx, pair)
-	req := types.NewCancelOrderRequest(msg, requestId, pair, ctx.BlockHeight())
-	k.SetCancelOrderRequest(ctx, req)
+	if err := k.RefundSwapRequestAndSetStatus(ctx, swapReq, types.SwapRequestStatusCanceled); err != nil {
+		return err
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeCancelOrderBatch,
+			types.EventTypeCancelOrder,
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
-			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(req.PairId, 10)),
-			sdk.NewAttribute(types.AttributeKeySwapRequestId, strconv.FormatUint(req.SwapRequestId, 10)),
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
+			sdk.NewAttribute(types.AttributeKeySwapRequestId, strconv.FormatUint(msg.SwapRequestId, 10)),
 		),
 	})
 
-	return req, nil
+	return nil
 }
 
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
@@ -345,31 +351,5 @@ func (k Keeper) RefundSwapRequestAndSetStatus(ctx sdk.Context, req types.SwapReq
 	}
 	req.Status = status
 	k.SetSwapRequest(ctx, req)
-	return nil
-}
-
-// ExecuteCancelOrderRequest cancels and refunds swap request.
-func (k Keeper) ExecuteCancelOrderRequest(ctx sdk.Context, req types.CancelOrderRequest) error {
-	swapReq, found := k.GetSwapRequest(ctx, req.PairId, req.SwapRequestId)
-	if !found {
-		req.Status = types.RequestStatusFailed
-		k.SetCancelOrderRequest(ctx, req)
-		return nil
-	}
-
-	if swapReq.BatchId < req.BatchId {
-		if !swapReq.Status.IsCanceledOrExpired() {
-			if err := k.RefundSwapRequestAndSetStatus(ctx, swapReq, types.SwapRequestStatusCanceled); err != nil {
-				return err
-			}
-			req.Status = types.RequestStatusSucceeded
-		} else {
-			req.Status = types.RequestStatusFailed
-		}
-		k.SetCancelOrderRequest(ctx, req)
-	}
-
-	// if swapReq.BatchId == req.BatchId, then do not change the
-	// cancel order request's status and just wait for next batch.
 	return nil
 }

@@ -101,17 +101,5 @@ func (genState GenesisState) Validate() error {
 		}
 		// TODO: check denoms
 	}
-	for i, req := range genState.CancelOrderRequests {
-		if err := req.Validate(); err != nil {
-			return fmt.Errorf("invalid cancel swap request at index %d: %w", i, err)
-		}
-		pair, ok := pairMap[req.PairId]
-		if !ok {
-			return fmt.Errorf("cancel swap request at index %d has unknown pair id: %d", i, req.PairId)
-		}
-		if req.BatchId > pair.CurrentBatchId {
-			return fmt.Errorf("cancel swap request at index %d has a batch id greater than its pair's current batch id: %d", i, req.BatchId)
-		}
-	}
 	return nil
 }

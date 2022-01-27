@@ -8,7 +8,7 @@ const (
 	EventTypeWithdrawBatch    = "withdraw_batch"
 	EventTypeLimitOrderBatch  = "limit_order_batch"
 	EventTypeMarketOrderBatch = "market_order_batch"
-	EventTypeCancelOrderBatch = "cancel_order_batch"
+	EventTypeCancelOrder      = "cancel_order"
 
 	AttributeKeyCreator         = "creator"
 	AttributeKeyDepositor       = "depositor"

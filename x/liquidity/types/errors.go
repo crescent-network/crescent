@@ -20,4 +20,6 @@ var (
 	ErrTooLongOrderLifespan      = sdkerrors.Register(ModuleName, 11, "order lifespan is too long")
 	ErrDisabledPool              = sdkerrors.Register(ModuleName, 12, "disabled pool")
 	ErrWrongPair                 = sdkerrors.Register(ModuleName, 13, "wrong denom pair")
+	ErrSameBatch                 = sdkerrors.Register(ModuleName, 14, "cannot cancel an order within the same batch")
+	ErrAlreadyCanceled           = sdkerrors.Register(ModuleName, 15, "the order is already canceled")
 )

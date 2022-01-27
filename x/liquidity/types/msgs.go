@@ -14,7 +14,7 @@ var (
 	_ sdk.Msg = (*MsgWithdrawBatch)(nil)
 	_ sdk.Msg = (*MsgLimitOrderBatch)(nil)
 	_ sdk.Msg = (*MsgMarketOrderBatch)(nil)
-	_ sdk.Msg = (*MsgCancelOrderBatch)(nil)
+	_ sdk.Msg = (*MsgCancelOrder)(nil)
 )
 
 // Message types for the liquidity module
@@ -25,7 +25,7 @@ const (
 	TypeMsgWithdrawBatch    = "withdraw_batch"
 	TypeMsgLimitOrderBatch  = "limit_order_batch"
 	TypeMsgMarketOrderBatch = "market_order_batch"
-	TypeMsgCancelOrderBatch = "cancel_order_batch"
+	TypeMsgCancelOrder      = "cancel_order"
 )
 
 // NewMsgCreatePair returns a new MsgCreatePair.
@@ -396,35 +396,35 @@ func (msg MsgMarketOrderBatch) GetOrderer() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgCancelOrderBatch creates a new MsgCancelOrderBatch.
-func NewMsgCancelOrderBatch(
+// NewMsgCancelOrder creates a new MsgCancelOrder.
+func NewMsgCancelOrder(
 	orderer sdk.AccAddress,
 	pairId uint64,
 	swapRequestId uint64,
-) *MsgCancelOrderBatch {
-	return &MsgCancelOrderBatch{
+) *MsgCancelOrder {
+	return &MsgCancelOrder{
 		SwapRequestId: swapRequestId,
 		PairId:        pairId,
 		Orderer:       orderer.String(),
 	}
 }
 
-func (msg MsgCancelOrderBatch) Route() string { return RouterKey }
+func (msg MsgCancelOrder) Route() string { return RouterKey }
 
-func (msg MsgCancelOrderBatch) Type() string { return TypeMsgCancelOrderBatch }
+func (msg MsgCancelOrder) Type() string { return TypeMsgCancelOrder }
 
-func (msg MsgCancelOrderBatch) ValidateBasic() error {
+func (msg MsgCancelOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
 	}
 	return nil
 }
 
-func (msg MsgCancelOrderBatch) GetSignBytes() []byte {
+func (msg MsgCancelOrder) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgCancelOrderBatch) GetSigners() []sdk.AccAddress {
+func (msg MsgCancelOrder) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)
@@ -432,7 +432,7 @@ func (msg MsgCancelOrderBatch) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgCancelOrderBatch) GetOrderer() sdk.AccAddress {
+func (msg MsgCancelOrder) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)

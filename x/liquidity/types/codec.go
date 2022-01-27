@@ -19,7 +19,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgWithdrawBatch{},
 		&MsgLimitOrderBatch{},
 		&MsgMarketOrderBatch{},
-		&MsgCancelOrderBatch{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

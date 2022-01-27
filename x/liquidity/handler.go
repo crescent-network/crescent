@@ -34,10 +34,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgMarketOrderBatch:
 			res, err := msgServer.MarketOrderBatch(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgCancelOrderBatch:
-			res, err := msgServer.CancelOrderBatch(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}

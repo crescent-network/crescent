@@ -34,7 +34,7 @@ func GetTxCmd() *cobra.Command {
 		NewWithdrawBatchCmd(),
 		NewLimitOrderBatchCmd(),
 		NewMarketOrderBatchCmd(),
-		NewCancelOrderBatchCmd(),
+		NewCancelOrderCmd(),
 	)
 
 	return cmd
@@ -368,7 +368,7 @@ $ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from 
 	return cmd
 }
 
-func NewCancelOrderBatchCmd() *cobra.Command {
+func NewCancelOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-order [pair-id] [swap-request-id]",
 		Args:  cobra.ExactArgs(2),
@@ -397,7 +397,7 @@ $ %s tx %s cancel-order 1 --from mykey
 				return err
 			}
 
-			msg := types.NewMsgCancelOrderBatch(
+			msg := types.NewMsgCancelOrder(
 				clientCtx.GetFromAddress(),
 				pairId,
 				swapRequestId,
