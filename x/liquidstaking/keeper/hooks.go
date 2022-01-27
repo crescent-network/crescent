@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 // Wrapper struct
@@ -23,10 +24,9 @@ func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64)         {
 
 // GetOtherVotes calculate the voting power of the person who participated in liquid staking.
 func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
-	liquidVals, _ := h.k.GetActiveLiquidValidators(ctx)
-	lenLiquidVals := len(liquidVals)
+	liquidVals := h.k.GetActiveLiquidValidators(ctx)
 	liquidBondDenom := h.k.LiquidBondDenom(ctx)
-	totalSupply := h.k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount.ToDec()
+	totalSupply := h.k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount
 	if totalSupply.IsPositive() {
 		for _, vote := range *votes {
 			voter, err := sdk.AccAddressFromBech32(vote.Voter)
@@ -34,46 +34,31 @@ func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes 
 				panic(err)
 				//continue
 			}
-			// lToken balance
-			lTokenBalance := h.k.bankKeeper.GetBalance(ctx, voter, liquidBondDenom).Amount.ToDec()
-			// TODO: exchange rate for native token, netAmount function
-			if lTokenBalance.IsPositive() {
+			// bToken balance
+			bTokenBalance := h.k.bankKeeper.GetBalance(ctx, voter, liquidBondDenom).Amount
+			nativeValue := sdk.ZeroDec()
+			// native token value = BTokenAmount * NetAmount / TotalSupply
+			if bTokenBalance.IsPositive() {
+				nativeValue = types.BTokenToNativeToken(bTokenBalance, totalSupply, h.k.NetAmount(ctx), sdk.ZeroDec())
+			}
+			if nativeValue.IsPositive() {
 				(*otherVotes)[vote.Voter] = map[string]sdk.Dec{}
-				dividedPower := lTokenBalance.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
-				for _, val := range liquidVals {
+				// TODO: ValidateUnbondAmount, delegation shares * bonded / total shares
+				// TODO: votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
+				//sharesAmount, err := h.k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, valAddr, sharesAmount.TruncateInt())
+				//if err != nil {
+				//	return time.Time{}, stakingtypes.UnbondingDelegation{}, err
+				//}
+				dividedPowers, _ := types.DivideByCurrentWeightDec(liquidVals, nativeValue)
+				for i, val := range liquidVals {
 					if existed, ok := (*otherVotes)[vote.Voter][val.OperatorAddress]; ok {
-						(*otherVotes)[vote.Voter][val.OperatorAddress] = existed.Add(dividedPower)
+						(*otherVotes)[vote.Voter][val.OperatorAddress] = existed.Add(dividedPowers[i])
 					} else {
-						(*otherVotes)[vote.Voter][val.OperatorAddress] = dividedPower
+						(*otherVotes)[vote.Voter][val.OperatorAddress] = dividedPowers[i]
 					}
 				}
 			}
 			// TODO: farming staking position, liquidity pool
 		}
 	}
-	//// TODO: remove debug logging
-	//for _, vote := range *votes {
-	//	pp.Print("[GetOtherVotes on liquid-staking votes]", vote.Voter)
-	//	for _, option := range vote.Options {
-	//		pp.Println(option.Option, option.Weight.String(), option.Option)
-	//	}
-	//}
-	//for voter, voteMap := range *otherVotes {
-	//	pp.Println("[GetOtherVotes on liquid-staking otherVotes]", voter)
-	//	for vali, option := range voteMap {
-	//		pp.Println(vali, option.String())
-	//	}
-	//}
-	////if totalSupply.IsPositive() && totalVotingPower.IsPositive() {
-	//if totalSupply.IsPositive() {
-	//	//powerRate := sdk.OneDec()
-	//	//powerRate := totalVotingPower.QuoTruncate(totalSupply)
-	//	//pp.Println(powerRate.String(), totalVotingPower.String(), totalSupply.String())
-	//	for voter, vals := range *otherVotes {
-	//		for val, power := range vals {
-	//			// TODO: decimal correction
-	//			//(*otherVotes)[voter][val] = power.MulTruncate(powerRate).QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
-	//			(*otherVotes)[voter][val] = power.QuoTruncate(sdk.NewDec(int64(lenLiquidVals)))
-	//		}
-	//	}
 }

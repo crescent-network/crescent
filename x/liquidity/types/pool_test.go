@@ -7,19 +7,19 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
-func TestPoolReserveAcc(t *testing.T) {
+func TestPoolReserveAddress(t *testing.T) {
 	for _, tc := range []struct {
 		poolId   uint64
 		expected string
 	}{
-		{1, "cosmos13zr89pc7yem32x9vufeynd8ecvg26433dmgylxsftnc7twfpk8usxeszlr"},
-		{2, "cosmos1tnckpch7u5p2znwr7trct9w5yt5vmggr3kvq6vx2ry65jmr8tswq43uxqh"},
+		{1, "cosmos1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfns20gpwy"},
+		{2, "cosmos1a8a5ktagpr35z3s3nkrkyjvjje5ktsyuh4qssf9jymej6nh58dwq9wng4g"},
 	} {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, tc.expected, types.PoolReserveAcc(tc.poolId).String())
+			require.Equal(t, tc.expected, types.PoolReserveAddress(tc.poolId).String())
 		})
 	}
 }

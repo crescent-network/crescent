@@ -62,9 +62,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -87,8 +84,12 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+	"github.com/cosmosquad-labs/squad/x/mint"
+	mintkeeper "github.com/cosmosquad-labs/squad/x/mint/keeper"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/tendermint/budget/x/budget"
 	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
@@ -97,23 +98,20 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	farmingparams "github.com/crescent-network/crescent/app/params"
-	"github.com/crescent-network/crescent/x/farming"
-	farmingclient "github.com/crescent-network/crescent/x/farming/client"
-	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
-	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
-	"github.com/crescent-network/crescent/x/liquidity"
-	liquiditykeeper "github.com/crescent-network/crescent/x/liquidity/keeper"
-	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
-	"github.com/crescent-network/crescent/x/liquidstaking"
-	liquidstakingkeeper "github.com/crescent-network/crescent/x/liquidstaking/keeper"
-	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/crescent-network/crescent/client/docs/statik"
+	farmingparams "github.com/cosmosquad-labs/squad/app/params"
+	"github.com/cosmosquad-labs/squad/x/farming"
+	farmingclient "github.com/cosmosquad-labs/squad/x/farming/client"
+	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity"
+	liquiditykeeper "github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking"
+	liquidstakingkeeper "github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
+	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
-const appName = "CrescentApp"
+const appName = "SquadApp"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -173,14 +171,14 @@ var (
 
 // Verify app interface at compile time
 var (
-	_ simapp.App              = (*CrescentApp)(nil)
-	_ servertypes.Application = (*CrescentApp)(nil)
+	_ simapp.App              = (*SquadApp)(nil)
+	_ servertypes.Application = (*SquadApp)(nil)
 )
 
-// CrescentApp extends an ABCI application, but with most of its parameters exported.
+// SquadApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type CrescentApp struct {
+type SquadApp struct {
 	*baseapp.BaseApp
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -197,7 +195,7 @@ type CrescentApp struct {
 	AccountKeeper       authkeeper.AccountKeeper
 	BankKeeper          bankkeeper.Keeper
 	CapabilityKeeper    *capabilitykeeper.Keeper
-	StakingKeeper       stakingkeeper.Keeper
+	StakingKeeper       *stakingkeeper.Keeper
 	SlashingKeeper      slashingkeeper.Keeper
 	MintKeeper          mintkeeper.Keeper
 	DistrKeeper         distrkeeper.Keeper
@@ -218,6 +216,7 @@ type CrescentApp struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
+	transferModule transfer.AppModule
 	// the module manager
 	mm *module.Manager
 
@@ -234,11 +233,11 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".crescentapp")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".squadapp")
 }
 
-// NewCrescentApp returns a reference to an initialized CrescentApp.
-func NewCrescentApp(
+// NewSquadApp returns a reference to an initialized SquadApp.
+func NewSquadApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -249,7 +248,7 @@ func NewCrescentApp(
 	encodingConfig farmingparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) *CrescentApp {
+) *SquadApp {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -283,7 +282,7 @@ func NewCrescentApp(
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	app := &CrescentApp{
+	app := &SquadApp{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
@@ -343,29 +342,45 @@ func NewCrescentApp(
 		app.BankKeeper,
 		app.GetSubspace(stakingtypes.ModuleName),
 	)
+	app.StakingKeeper = &stakingKeeper
+
+	inflationSchedules := minttypes.InflationSchedules{
+		{
+			StartTime: liquidstakingtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+			EndTime:   liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(300000000000000),
+		},
+		{
+			StartTime: liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			EndTime:   liquidstakingtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(200000000000000),
+		},
+	}
+
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		keys[minttypes.StoreKey],
 		app.GetSubspace(minttypes.ModuleName),
-		&stakingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
+		inflationSchedules,
 		authtypes.FeeCollectorName,
 	)
+
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		keys[distrtypes.StoreKey],
 		app.GetSubspace(distrtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		&stakingKeeper,
+		app.StakingKeeper,
 		authtypes.FeeCollectorName,
 		app.ModuleAccountAddrs(),
 	)
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		keys[slashingtypes.StoreKey],
-		&stakingKeeper,
+		app.StakingKeeper,
 		app.GetSubspace(slashingtypes.ModuleName),
 	)
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
@@ -384,10 +399,9 @@ func NewCrescentApp(
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
+	app.StakingKeeper = app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
-
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		keys[ibchost.StoreKey],
@@ -396,7 +410,6 @@ func NewCrescentApp(
 		app.UpgradeKeeper,
 		scopedIBCKeeper,
 	)
-
 	app.BudgetKeeper = budgetkeeper.NewKeeper(
 		appCodec,
 		keys[budgettypes.StoreKey],
@@ -419,7 +432,6 @@ func NewCrescentApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
-
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
 		appCodec,
 		keys[liquidstakingtypes.StoreKey],
@@ -447,7 +459,7 @@ func NewCrescentApp(
 		app.GetSubspace(govtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		&stakingKeeper,
+		app.StakingKeeper,
 		govRouter,
 	)
 
@@ -467,13 +479,18 @@ func NewCrescentApp(
 		app.BankKeeper,
 		scopedTransferKeeper,
 	)
-	transferModule := transfer.NewAppModule(app.TransferKeeper)
+	app.transferModule = transfer.NewAppModule(app.TransferKeeper)
+
+	// create static IBC router, add transfer route, then set and seal it
+	ibcRouter := porttypes.NewRouter()
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, app.transferModule)
+	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
 		keys[evidencetypes.StoreKey],
-		&app.StakingKeeper,
+		app.StakingKeeper,
 		app.SlashingKeeper,
 	)
 
@@ -497,10 +514,10 @@ func NewCrescentApp(
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		budget.NewAppModule(appCodec, app.BudgetKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
@@ -509,8 +526,8 @@ func NewCrescentApp(
 		params.NewAppModule(app.ParamsKeeper),
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
-		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
-		transferModule,
+		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GovKeeper),
+		app.transferModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -535,9 +552,8 @@ func NewCrescentApp(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		liquiditytypes.ModuleName,
-		// TODO: fix ordering of liquidstaking module
-		liquidstakingtypes.ModuleName,
 		farmingtypes.ModuleName,
+		liquidstakingtypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
 	)
@@ -590,15 +606,15 @@ func NewCrescentApp(
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		budget.NewAppModule(appCodec, app.BudgetKeeper, app.AccountKeeper, app.BankKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
-		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper),
+		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GovKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
+		app.transferModule,
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -608,24 +624,25 @@ func NewCrescentApp(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
-	app.SetInitChainer(app.InitChainer)
-	app.SetBeginBlocker(app.BeginBlocker)
-
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+	anteHandler, err := NewAnteHandler(
+		HandlerOptions{
+			HandlerOptions: ante.HandlerOptions{
+				AccountKeeper:   app.AccountKeeper,
+				BankKeeper:      app.BankKeeper,
+				FeegrantKeeper:  app.FeeGrantKeeper,
+				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			},
+			IBCChannelkeeper: app.IBCKeeper.ChannelKeeper,
 		},
 	)
-
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
 	}
 
 	app.SetAnteHandler(anteHandler)
+	app.SetInitChainer(app.InitChainer)
+	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -641,20 +658,20 @@ func NewCrescentApp(
 }
 
 // Name returns the name of the App.
-func (app *CrescentApp) Name() string { return app.BaseApp.Name() }
+func (app *SquadApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
-func (app *CrescentApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *SquadApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block.
-func (app *CrescentApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *SquadApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
 // InitChainer application update at chain initialization.
-func (app *CrescentApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *SquadApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -664,12 +681,12 @@ func (app *CrescentApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) 
 }
 
 // LoadHeight loads a particular height.
-func (app *CrescentApp) LoadHeight(height int64) error {
+func (app *SquadApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *CrescentApp) ModuleAccountAddrs() map[string]bool {
+func (app *SquadApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
@@ -677,69 +694,70 @@ func (app *CrescentApp) ModuleAccountAddrs() map[string]bool {
 
 	// add farming, liquidstaking proxy account
 	modAccAddrs[farmingtypes.RewardsReserveAcc.String()] = true
-	modAccAddrs[liquidstakingtypes.LiquidStakingProxyAcc.String()] = true
+	// TODO: temporary removed for withdraw rewards
+	//modAccAddrs[liquidstakingtypes.LiquidStakingProxyAcc.String()] = true
 
 	return modAccAddrs
 }
 
-// LegacyAmino returns CrescentApp's amino codec.
+// LegacyAmino returns SquadApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *CrescentApp) LegacyAmino() *codec.LegacyAmino {
+func (app *SquadApp) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 
-// AppCodec returns CrescentApp's app codec.
+// AppCodec returns SquadApp's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *CrescentApp) AppCodec() codec.Codec {
+func (app *SquadApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns CrescentApp's InterfaceRegistry
-func (app *CrescentApp) InterfaceRegistry() types.InterfaceRegistry {
+// InterfaceRegistry returns SquadApp's InterfaceRegistry
+func (app *SquadApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *CrescentApp) GetKey(storeKey string) *sdk.KVStoreKey {
+func (app *SquadApp) GetKey(storeKey string) *sdk.KVStoreKey {
 	return app.keys[storeKey]
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *CrescentApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
+func (app *SquadApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
 
 // GetMemKey returns the MemStoreKey for the provided mem key.
 //
 // NOTE: This is solely used for testing purposes.
-func (app *CrescentApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+func (app *SquadApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
 	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *CrescentApp) GetSubspace(moduleName string) paramstypes.Subspace {
+func (app *SquadApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *CrescentApp) SimulationManager() *module.SimulationManager {
+func (app *SquadApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *CrescentApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *SquadApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register legacy tx routes.
@@ -760,12 +778,12 @@ func (app *CrescentApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
-func (app *CrescentApp) RegisterTxService(clientCtx client.Context) {
+func (app *SquadApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *CrescentApp) RegisterTendermintService(clientCtx client.Context) {
+func (app *SquadApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 type msgServer struct {
@@ -19,6 +19,17 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 var _ types.MsgServer = msgServer{}
+
+// CreatePair defines a method to create a pair.
+func (m msgServer) CreatePair(goCtx context.Context, msg *types.MsgCreatePair) (*types.MsgCreatePairResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.CreatePair(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreatePairResponse{}, nil
+}
 
 // CreatePool defines a method to create a liquidity pool.
 func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
@@ -53,24 +64,46 @@ func (m msgServer) WithdrawBatch(goCtx context.Context, msg *types.MsgWithdrawBa
 	return &types.MsgWithdrawBatchResponse{}, nil
 }
 
-// SwapBatch defines a method to swap coin X to Y from the pool.
-func (m msgServer) SwapBatch(goCtx context.Context, msg *types.MsgSwapBatch) (*types.MsgSwapBatchResponse, error) {
+// LimitOrderBatch defines a method to making a limit order.
+func (m msgServer) LimitOrderBatch(goCtx context.Context, msg *types.MsgLimitOrderBatch) (*types.MsgLimitOrderBatchResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.SwapBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.LimitOrderBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSwapBatchResponse{}, nil
+	return &types.MsgLimitOrderBatchResponse{}, nil
 }
 
-// CancelSwapBatch defines a method to cancel the swap request.
-func (m msgServer) CancelSwapBatch(goCtx context.Context, msg *types.MsgCancelSwapBatch) (*types.MsgCancelSwapBatchResponse, error) {
+// MarketOrderBatch defines a method to making a market order.
+func (m msgServer) MarketOrderBatch(goCtx context.Context, msg *types.MsgMarketOrderBatch) (*types.MsgMarketOrderBatchResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.CancelSwapBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.MarketOrderBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgCancelSwapBatchResponse{}, nil
+	return &types.MsgMarketOrderBatchResponse{}, nil
+}
+
+// CancelOrder defines a method to cancel an order.
+func (m msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := m.Keeper.CancelOrder(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelOrderResponse{}, nil
+}
+
+// CancelAllOrders defines a method to cancel all orders.
+func (m msgServer) CancelAllOrders(goCtx context.Context, msg *types.MsgCancelAllOrders) (*types.MsgCancelAllOrdersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := m.Keeper.CancelAllOrders(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelAllOrdersResponse{}, nil
 }

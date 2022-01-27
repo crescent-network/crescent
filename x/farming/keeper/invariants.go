@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/x/farming/types"
+	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 // RegisterInvariants registers all farming invariants.

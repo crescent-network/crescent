@@ -3,23 +3,23 @@ package keeper_test
 import (
 	"encoding/binary"
 	"testing"
+	"time"
 
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	crescentapp "github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/x/liquidity"
-	"github.com/crescent-network/crescent/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	squadapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/x/liquidity"
+	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app       *crescentapp.CrescentApp
+	app       *squadapp.SquadApp
 	ctx       sdk.Context
 	keeper    keeper.Keeper
 	querier   keeper.Querier
@@ -31,7 +31,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.app = crescentapp.Setup(false)
+	s.app = squadapp.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.keeper = s.app.LiquidityKeeper
 	s.querier = keeper.Querier{Keeper: s.keeper}
@@ -65,28 +65,37 @@ func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
-	err := s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amt)
+	err := s.app.BankKeeper.MintCoins(s.ctx, types.ModuleName, amt)
 	s.Require().NoError(err)
-	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, addr, amt)
+	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.ModuleName, addr, amt)
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, xCoin, yCoin sdk.Coin, fund bool) types.Pool {
+func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) types.Pair {
 	params := s.keeper.GetParams(s.ctx)
 	if fund {
-		depositCoins := sdk.NewCoins(xCoin, yCoin)
+		s.fundAddr(creator, params.PairCreationFee)
+	}
+	pair, err := s.keeper.CreatePair(s.ctx, types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+	s.Require().NoError(err)
+	return pair
+}
+
+func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) types.Pool {
+	params := s.keeper.GetParams(s.ctx)
+	if fund {
 		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
 	}
-	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, xCoin, yCoin))
+	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, pairId, depositCoins))
 	s.Require().NoError(err)
 	return pool
 }
 
-func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, xCoin, yCoin sdk.Coin, fund bool) types.DepositRequest {
+func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) types.DepositRequest {
 	if fund {
-		s.fundAddr(depositor, sdk.NewCoins(xCoin, yCoin))
+		s.fundAddr(depositor, depositCoins)
 	}
-	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, xCoin, yCoin))
+	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, depositCoins))
 	s.Require().NoError(err)
 	return req
 }
@@ -97,15 +106,58 @@ func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64
 	return req
 }
 
-func parseCoin(s string) sdk.Coin {
-	coin, err := sdk.ParseCoinNormalized(s)
-	if err != nil {
-		panic(err)
+func (s *KeeperTestSuite) limitOrderBatch(
+	orderer sdk.AccAddress, pairId uint64, dir types.SwapDirection,
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	pair, found := s.keeper.GetPair(s.ctx, pairId)
+	s.Require().True(found)
+	var offerCoin sdk.Coin
+	var demandCoinDenom string
+	switch dir {
+	case types.SwapDirectionBuy:
+		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).TruncateInt())
+		demandCoinDenom = pair.BaseCoinDenom
+	case types.SwapDirectionSell:
+		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+		demandCoinDenom = pair.QuoteCoinDenom
 	}
-	return coin
+	if fund {
+		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
+	}
+	msg := types.NewMsgLimitOrderBatch(
+		orderer, pairId, dir, offerCoin, demandCoinDenom,
+		price, amt, orderLifespan)
+	req, err := s.keeper.LimitOrderBatch(s.ctx, msg)
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) buyLimitOrderBatch(
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	return s.limitOrderBatch(
+		orderer, pairId, types.SwapDirectionBuy, price, amt, orderLifespan, fund)
+}
+
+func (s *KeeperTestSuite) sellLimitOrderBatch(
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	return s.limitOrderBatch(
+		orderer, pairId, types.SwapDirectionSell, price, amt, orderLifespan, fund)
 }
 
 //nolint
+func (s *KeeperTestSuite) cancelOrder(orderer sdk.AccAddress, pairId, swapReqId uint64) {
+	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(orderer, pairId, swapReqId))
+	s.Require().NoError(err)
+}
+
+//nolint
+func (s *KeeperTestSuite) cancelAllOrders(orderer sdk.AccAddress, pairIds []uint64) {
+	err := s.keeper.CancelAllOrders(s.ctx, types.NewMsgCancelAllOrders(orderer, pairIds))
+	s.Require().NoError(err)
+}
+
 func parseCoins(s string) sdk.Coins {
 	coins, err := sdk.ParseCoinsNormalized(s)
 	if err != nil {
@@ -114,7 +166,26 @@ func parseCoins(s string) sdk.Coins {
 	return coins
 }
 
-//nolint
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func decEq(exp, got sdk.Dec) (bool, string, string, string) {
+	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func parseDec(s string) sdk.Dec {
+	return sdk.MustNewDecFromStr(s)
+}
+
+func newInt(i int64) sdk.Int {
+	return sdk.NewInt(i)
+}
+
+func parseTime(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
 }

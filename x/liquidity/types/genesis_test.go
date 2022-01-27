@@ -5,32 +5,29 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {
 	for _, tc := range []struct {
-		desc     string
-		genState *types.GenesisState
-		valid    bool
+		name        string
+		malleate    func(genState *types.GenesisState)
+		expectedErr string
 	}{
 		{
-			desc:     "default is valid",
-			genState: types.DefaultGenesis(),
-			valid:    true,
-		},
-		{
-			desc:     "valid genesis state",
-			genState: &types.GenesisState{},
-			valid:    true,
+			"default is valid",
+			func(genState *types.GenesisState) {},
+			"",
 		},
 	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			err := tc.genState.Validate()
-			if tc.valid {
+		t.Run(tc.name, func(t *testing.T) {
+			genState := types.DefaultGenesis()
+			tc.malleate(genState)
+			err := genState.Validate()
+			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {
-				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedErr)
 			}
 		})
 	}

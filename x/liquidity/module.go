@@ -18,10 +18,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/crescent-network/crescent/x/liquidity/client/cli"
-	"github.com/crescent-network/crescent/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/x/liquidity/simulation"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/client/cli"
+	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	"github.com/cosmosquad-labs/squad/x/liquidity/simulation"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 var (
@@ -147,15 +147,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
-
-	InitGenesis(ctx, am.keeper, genState)
-
+	am.keeper.InitGenesis(ctx, genState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the capability module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	genState := ExportGenesis(ctx, am.keeper)
+	genState := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
 }
 

@@ -7,19 +7,18 @@ import (
 )
 
 const (
-	FlagPairId        = "pair-id"
-	FlagXCoinDenom    = "x-coin-denom"
-	FlagYCoinDenom    = "y-coin-denom"
-	FlagPoolCoinDenom = "pool-coin-denom"
-	FlagReserveAcc    = "reserve-acc"
+	FlagPairId         = "pair-id"
+	FlagDisabled       = "disabled"
+	FlagPoolCoinDenom  = "pool-coin-denom"
+	FlagReserveAddress = "reserve-address"
+	FlagDenoms         = "denoms"
 )
 
 func flagSetPools() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagXCoinDenom, "", "The X coin denomination")
-	fs.String(FlagYCoinDenom, "", "The Y coin denomination")
 	fs.String(FlagPairId, "", "The pair id")
+	fs.String(FlagDisabled, "", "Whether the pool is disabled or not")
 
 	return fs
 }
@@ -28,7 +27,7 @@ func flagSetPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagPoolCoinDenom, "", "The denomination of the pool coin")
-	fs.String(FlagReserveAcc, "", "The Bech32 address of the reserve account")
+	fs.String(FlagReserveAddress, "", "The bech-32 encoded address of the reserve account")
 
 	return fs
 }
@@ -36,8 +35,7 @@ func flagSetPool() *flag.FlagSet {
 func flagSetPairs() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagXCoinDenom, "", "The X coin denomination")
-	fs.String(FlagYCoinDenom, "", "The Y coin denomination")
+	fs.StringSlice(FlagDenoms, []string{}, "Coin denominations to query")
 
 	return fs
 }

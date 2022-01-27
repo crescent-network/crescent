@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/crescent-network/crescent/x/farming/types"
+	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 // GetStaking returns a staking for given staking denom and farmer.

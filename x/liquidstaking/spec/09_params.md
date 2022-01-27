@@ -19,7 +19,7 @@ type WhitelistedValidator struct {
    // validator_address defines the bech32-encoded address that whitelisted validator
    ValidatorAddress
    // weight specifies the weight for liquid staking, unstaking amount
-   Weight github_com_cosmos_cosmos_sdk_types.Dec
+   Weight github_com_cosmos_cosmos_sdk_types.Int
 }
 ```
 
