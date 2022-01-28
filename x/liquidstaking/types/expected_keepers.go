@@ -8,6 +8,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	farmintypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // BankKeeper defines the expected bank send keeper
@@ -106,6 +108,28 @@ type GovKeeper interface {
 	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govtypes.Vote, found bool)
 }
 
+// DistrKeeper expected distribution keeper (noalias)
+type DistrKeeper interface {
+	//DelegationTotalRewards(c sdk.Context, req *types.QueryDelegationTotalRewardsRequest) (*distrtypes.QueryDelegationTotalRewardsResponse, error)
+	IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64
+	CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins)
+	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
+}
+
+// Liquidity expected liquidity keeper (noalias)
+type LiquidityKeeper interface {
+	GetPair(ctx sdk.Context, id uint64) (pair liquiditytypes.Pair, found bool)
+	GetPool(ctx sdk.Context, id uint64) (pool liquiditytypes.Pool, found bool)
+	GetPoolBalance(ctx sdk.Context, pool liquiditytypes.Pool, pair liquiditytypes.Pair) (rx sdk.Int, ry sdk.Int)
+	GetPoolCoinSupply(ctx sdk.Context, pool liquiditytypes.Pool) sdk.Int
+}
+
+// FarmingKeeper expected farming keeper (noalias)
+type FarmingKeeper interface {
+	IterateStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, staking farmintypes.Staking) (stop bool))
+	IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, queuedStaking farmintypes.QueuedStaking) (stop bool))
+}
+
 // StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)                           // Must be called when a validator is created
@@ -115,11 +139,4 @@ type StakingHooks interface {
 	BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) // Must be called when a delegation's shares are modified
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress)
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec)
-}
-
-type Distrkeeper interface {
-	//DelegationTotalRewards(c sdk.Context, req *types.QueryDelegationTotalRewardsRequest) (*distrtypes.QueryDelegationTotalRewardsResponse, error)
-	IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64
-	CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins)
-	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 }

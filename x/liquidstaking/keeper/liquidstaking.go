@@ -125,19 +125,19 @@ func (k Keeper) LiquidStakingWithBalancing(ctx sdk.Context, proxyAcc sdk.AccAddr
 
 // LiquidStaking ...
 func (k Keeper) LiquidStaking(
-	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin) (newShares sdk.Dec, btokenMintAmount sdk.Int, err error) {
+	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin) (newShares sdk.Dec, bTokenMintAmount sdk.Int, err error) {
 
 	// check bond denomination
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	if stakingCoin.Denom != bondDenom {
-		return sdk.ZeroDec(), btokenMintAmount, sdkerrors.Wrapf(
+		return sdk.ZeroDec(), bTokenMintAmount, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", stakingCoin.Denom, bondDenom,
 		)
 	}
 
 	activeVals := k.GetActiveLiquidValidators(ctx)
 	if activeVals.Len() == 0 || !activeVals.TotalWeight().IsPositive() {
-		return sdk.ZeroDec(), btokenMintAmount, fmt.Errorf("there's no active liquid validators")
+		return sdk.ZeroDec(), bTokenMintAmount, fmt.Errorf("there's no active liquid validators")
 	}
 
 	netAmount := k.NetAmount(ctx)
@@ -145,29 +145,29 @@ func (k Keeper) LiquidStaking(
 	// send staking coin to liquid staking proxy account to proxy delegation
 	err = k.bankKeeper.SendCoins(ctx, liquidStaker, proxyAcc, sdk.NewCoins(stakingCoin))
 	if err != nil {
-		return sdk.ZeroDec(), btokenMintAmount, err
+		return sdk.ZeroDec(), bTokenMintAmount, err
 	}
 
 	// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
-	btokenMintAmount = stakingCoin.Amount
+	bTokenMintAmount = stakingCoin.Amount
 	if bTokenTotalSupply.IsPositive() {
-		btokenMintAmount = types.NativeTokenToBToken(stakingCoin.Amount, bTokenTotalSupply.Amount, netAmount)
+		bTokenMintAmount = types.NativeTokenToBToken(stakingCoin.Amount, bTokenTotalSupply.Amount, netAmount)
 	}
 
 	// mint on module acc and send
-	mintCoin := sdk.NewCoins(sdk.NewCoin(liquidBondDenom, btokenMintAmount))
+	mintCoin := sdk.NewCoins(sdk.NewCoin(liquidBondDenom, bTokenMintAmount))
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoin)
 	if err != nil {
-		return sdk.ZeroDec(), btokenMintAmount, err
+		return sdk.ZeroDec(), bTokenMintAmount, err
 	}
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, liquidStaker, mintCoin)
 	if err != nil {
-		return sdk.ZeroDec(), btokenMintAmount, err
+		return sdk.ZeroDec(), bTokenMintAmount, err
 	}
 	newShares, err = k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount)
-	return newShares, btokenMintAmount, err
+	return newShares, bTokenMintAmount, err
 }
 
 // LiquidUnstaking ...

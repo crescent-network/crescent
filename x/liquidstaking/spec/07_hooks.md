@@ -10,7 +10,7 @@ Calculate the voting power of the person who participated in liquid staking.
   - balance of bToken
   - Farming Staking Position of bToken
   - Farming Queued Staking of bToken
-- PoolTokens based bToken
+- PoolTokens including bToken
   - balance of PoolTokens including bToken
   - Farming Staking Position of PoolTokens including bToken
   - Farming Queued Staking of PoolTokens including bToken
