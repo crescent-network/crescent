@@ -287,7 +287,7 @@ $ %s tx %s limit-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --fr
 func NewMarketOrderBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [base-coin-amount] [order-lifespan]",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(6),
 		Short: "Make a market order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a market order.
