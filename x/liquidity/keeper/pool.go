@@ -205,7 +205,7 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (typ
 func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest) error {
 	pool, _ := k.GetPool(ctx, req.PoolId)
 	if pool.Disabled {
-		if err := k.FailAndRefundDepositRequest(ctx, req); err != nil {
+		if err := k.RefundDepositRequestAndSetStatus(ctx, req, types.RequestStatusFailed); err != nil {
 			return fmt.Errorf("refund deposit request: %w", err)
 		}
 		return nil
@@ -218,7 +218,7 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 	poolInfo := types.NewPoolInfo(rx, ry, ps)
 	if types.IsDepletedPool(poolInfo) {
 		k.MarkPoolAsDisabled(ctx, pool)
-		if err := k.FailAndRefundDepositRequest(ctx, req); err != nil {
+		if err := k.RefundDepositRequestAndSetStatus(ctx, req, types.RequestStatusFailed); err != nil {
 			return fmt.Errorf("refund deposit request: %w", err)
 		}
 		return nil
@@ -227,7 +227,7 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 	ax, ay, pc := types.DepositToPool(poolInfo, req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
 
 	if pc.IsZero() {
-		if err := k.FailAndRefundDepositRequest(ctx, req); err != nil {
+		if err := k.RefundDepositRequestAndSetStatus(ctx, req, types.RequestStatusFailed); err != nil {
 			return fmt.Errorf("refund deposit request: %w", err)
 		}
 		return nil
@@ -250,17 +250,21 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 
 	req.AcceptedCoins = acceptedCoins
 	req.MintedPoolCoin = mintedPoolCoin
-	req.Status = types.RequestStatusSucceeded
-	k.SetDepositRequest(ctx, req)
+	if err := k.RefundDepositRequestAndSetStatus(ctx, req, types.RequestStatusSucceeded); err != nil {
+		return err
+	}
 	// TODO: emit an event?
 	return nil
 }
 
-func (k Keeper) FailAndRefundDepositRequest(ctx sdk.Context, req types.DepositRequest) error {
-	if err := k.bankKeeper.SendCoins(ctx, types.GlobalEscrowAddress, req.GetDepositor(), req.DepositCoins); err != nil {
-		return err
+func (k Keeper) RefundDepositRequestAndSetStatus(ctx sdk.Context, req types.DepositRequest, status types.RequestStatus) error {
+	refundingCoins := req.DepositCoins.Sub(req.AcceptedCoins)
+	if !refundingCoins.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, types.GlobalEscrowAddress, req.GetDepositor(), refundingCoins); err != nil {
+			return err
+		}
 	}
-	req.Status = types.RequestStatusFailed
+	req.Status = status
 	k.SetDepositRequest(ctx, req)
 	return nil
 }
