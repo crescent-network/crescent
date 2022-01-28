@@ -13,19 +13,16 @@ import (
 
 // Parameter store keys
 var (
-	KeyLiquidBondDenom        = []byte("LiquidBondDenom")
+	KeyBondedBondDenom        = []byte("BondedBondDenom")
 	KeyWhitelistedValidators  = []byte("WhitelistedValidators")
 	KeyUnstakeFeeRate         = []byte("UnstakeFeeRate")
 	KeyCommissionRate         = []byte("CommissionRate")
 	KeyMinLiquidStakingAmount = []byte("MinLiquidStakingAmount")
 
-	DefaultLiquidBondDenom = "bstake"
+	DefaultBondedBondDenom = "bstake"
 
 	// DefaultUnstakeFeeRate is the default Unstake Fee Rate.
 	DefaultUnstakeFeeRate = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
-
-	// DefaultCommissionRate is the default Commission Rate.
-	DefaultCommissionRate = sdk.NewDecWithPrec(5, 2) // "0.050000000000000000"
 
 	// MinLiquidStakingAmount is the default minimum liquid staking amount.
 	DefaultMinLiquidStakingAmount = sdk.NewInt(1000000)
@@ -49,10 +46,9 @@ func ParamKeyTable() paramstypes.KeyTable {
 func DefaultParams() Params {
 	return Params{
 		// TODO: btoken denom immutable
-		LiquidBondDenom:        DefaultLiquidBondDenom,
+		BondedBondDenom:        DefaultBondedBondDenom,
 		WhitelistedValidators:  []WhitelistedValidator{},
 		UnstakeFeeRate:         DefaultUnstakeFeeRate,
-		CommissionRate:         DefaultCommissionRate,
 		MinLiquidStakingAmount: DefaultMinLiquidStakingAmount,
 	}
 }
@@ -60,10 +56,9 @@ func DefaultParams() Params {
 // ParamSetPairs implements paramstypes.ParamSet.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyLiquidBondDenom, &p.LiquidBondDenom, ValidateLiquidBondDenom),
+		paramstypes.NewParamSetPair(KeyBondedBondDenom, &p.BondedBondDenom, ValidateBondedBondDenom),
 		paramstypes.NewParamSetPair(KeyWhitelistedValidators, &p.WhitelistedValidators, ValidateWhitelistedValidators),
 		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, validateUnstakeFeeRate),
-		paramstypes.NewParamSetPair(KeyCommissionRate, &p.CommissionRate, validateCommissionRate),
 		paramstypes.NewParamSetPair(KeyMinLiquidStakingAmount, &p.MinLiquidStakingAmount, validateMinLiquidStakingAmount),
 	}
 }
@@ -80,10 +75,9 @@ func (p Params) Validate() error {
 		value     interface{}
 		validator func(interface{}) error
 	}{
-		{p.LiquidBondDenom, ValidateLiquidBondDenom},
+		{p.BondedBondDenom, ValidateBondedBondDenom},
 		{p.WhitelistedValidators, ValidateWhitelistedValidators},
 		{p.UnstakeFeeRate, validateUnstakeFeeRate},
-		{p.CommissionRate, validateCommissionRate},
 		{p.MinLiquidStakingAmount, validateMinLiquidStakingAmount},
 	} {
 		if err := v.validator(v.value); err != nil {
@@ -93,7 +87,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func ValidateLiquidBondDenom(i interface{}) error {
+func ValidateBondedBondDenom(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -122,12 +116,12 @@ func ValidateWhitelistedValidators(i interface{}) error {
 			return valErr
 		}
 
-		if wv.Weight.IsNil() {
-			return fmt.Errorf("liquidstaking validator weight must not be nil")
+		if wv.TargetWeight.IsNil() {
+			return fmt.Errorf("liquidstaking validator target weight must not be nil")
 		}
 
-		if !wv.Weight.IsPositive() {
-			return fmt.Errorf("liquidstaking validator weight must be positive: %s", wv.Weight)
+		if !wv.TargetWeight.IsPositive() {
+			return fmt.Errorf("liquidstaking validator target weight must be positive: %s", wv.TargetWeight)
 		}
 
 		if _, ok := valMap[wv.ValidatorAddress]; ok {
@@ -154,27 +148,6 @@ func validateUnstakeFeeRate(i interface{}) error {
 
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("unstake fee rate too large: %s", v)
-	}
-
-	return nil
-}
-
-func validateCommissionRate(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNil() {
-		return fmt.Errorf("commission rate must not be nil")
-	}
-
-	if v.IsNegative() {
-		return fmt.Errorf("commission rate must not be negative: %s", v)
-	}
-
-	if v.GT(sdk.OneDec()) {
-		return fmt.Errorf("commission rate too large: %s", v)
 	}
 
 	return nil

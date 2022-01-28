@@ -16,16 +16,15 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	params := suite.keeper.GetParams(suite.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
-	params.CommissionRate = sdk.ZeroDec()
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
 	stakingAmt := sdk.NewInt(50000)
 	// add active validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
@@ -54,10 +53,10 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[3].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
@@ -92,11 +91,11 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[3].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[4].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)

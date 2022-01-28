@@ -10,8 +10,8 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
-func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {
-	k.paramSpace.Get(ctx, types.KeyLiquidBondDenom, &res)
+func (k Keeper) BondedBondDenom(ctx sdk.Context) (res string) {
+	k.paramSpace.Get(ctx, types.KeyBondedBondDenom, &res)
 	return
 }
 
@@ -149,15 +149,15 @@ func (k Keeper) LiquidStaking(
 	}
 
 	// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
-	liquidBondDenom := k.LiquidBondDenom(ctx)
-	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
+	bondedBondDenom := k.BondedBondDenom(ctx)
+	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom)
 	bTokenMintAmount = stakingCoin.Amount
 	if bTokenTotalSupply.IsPositive() {
 		bTokenMintAmount = types.NativeTokenToBToken(stakingCoin.Amount, bTokenTotalSupply.Amount, netAmount)
 	}
 
 	// mint on module acc and send
-	mintCoin := sdk.NewCoins(sdk.NewCoin(liquidBondDenom, bTokenMintAmount))
+	mintCoin := sdk.NewCoins(sdk.NewCoin(bondedBondDenom, bTokenMintAmount))
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoin)
 	if err != nil {
 		return sdk.ZeroDec(), bTokenMintAmount, err
@@ -177,10 +177,10 @@ func (k Keeper) LiquidUnstaking(
 
 	// check bond denomination
 	params := k.GetParams(ctx)
-	liquidBondDenom := k.LiquidBondDenom(ctx)
-	if amount.Denom != liquidBondDenom {
+	bondedBondDenom := k.BondedBondDenom(ctx)
+	if amount.Denom != bondedBondDenom {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", amount.Denom, liquidBondDenom,
+			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", amount.Denom, bondedBondDenom,
 		)
 	}
 
@@ -190,9 +190,9 @@ func (k Keeper) LiquidUnstaking(
 	}
 
 	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
-	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
+	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom)
 	if !bTokenTotalSupply.IsPositive() {
-		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("DefaultLiquidBondDenom supply is not positive")
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("DefaultBondedBondDenom supply is not positive")
 	}
 	netAmount := k.NetAmount(ctx)
 	unbondingAmount := types.BTokenToNativeToken(amount.Amount, bTokenTotalSupply.Amount, netAmount, params.UnstakeFeeRate)
@@ -202,7 +202,7 @@ func (k Keeper) LiquidUnstaking(
 	if err != nil {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}
-	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(liquidBondDenom, amount.Amount)))
+	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondedBondDenom, amount.Amount)))
 	if err != nil {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}

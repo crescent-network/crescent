@@ -32,7 +32,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	liquidValidators.DelistingToDelisted(valsMap)
 
 	// active -> delisting
-	liquidValidators.ActiveToDelisting(valsMap, whitelistedValMap, params.CommissionRate)
+	liquidValidators.ActiveToDelisting(valsMap, whitelistedValMap)
 
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
@@ -44,7 +44,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 				OperatorAddress: wv.ValidatorAddress,
 				Status:          types.ValidatorStatusActive,
 				LiquidTokens:    sdk.ZeroInt(),
-				Weight:          wv.Weight,
+				Weight:          wv.TargetWeight,
 			}
 			k.SetLiquidValidator(ctx, *lv)
 			liquidValsMap[lv.OperatorAddress] = lv

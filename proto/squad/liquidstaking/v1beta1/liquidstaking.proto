@@ -15,7 +15,7 @@ message Params {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string liquid_bond_denom = 1 [(gogoproto.moretags) = "yaml:\"liquid_bond_denom\""];
+  string bonded_bond_denom = 1 [(gogoproto.moretags) = "yaml:\"bonded_bond_denom\""];
 
   repeated WhitelistedValidator whitelisted_validators = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"whitelisted_validators\""];
@@ -23,13 +23,6 @@ message Params {
   // unstake_fee_rate specifies the ...
   string unstake_fee_rate = 3 [
     (gogoproto.moretags)   = "yaml:\"unstake_fee_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-
-  // commission_rate specifies the ...
-  string commission_rate = 4 [
-    (gogoproto.moretags)   = "yaml:\"commission_rate\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -43,6 +36,7 @@ message Params {
   ];
 }
 
+// TODO: simplify
 // ValidatorStatus enumerates the status of a liquid validator.
 enum ValidatorStatus {
   option (gogoproto.goproto_enum_prefix) = false;
@@ -64,9 +58,9 @@ message WhitelistedValidator {
   // validator_address defines the bech32-encoded address that whitelisted validator
   string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
-  // weight specifies the weight for liquid staking, unstaking amount
-  string weight = 2 [
-    (gogoproto.moretags)                                        = "yaml:\"weight\"",
+  // target_weight specifies the target weight for liquid staking, unstaking amount
+  string target_weight = 2 [
+    (gogoproto.moretags)                                        = "yaml:\"target_weight\"",
     (gogoproto.customtype)                                      = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)                                        = false,
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {example: "\"10\"", format: "sdk.Int"}
@@ -84,6 +78,7 @@ message LiquidValidator {
   // status is the liquid validator status
   ValidatorStatus status = 2;
 
+  // TODO: simplify
   // liquid tokens define the liquid staked tokens
   string liquid_tokens = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];

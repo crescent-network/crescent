@@ -34,8 +34,8 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	// TODO: active or with delisting
 	liquidVals := k.GetActiveLiquidValidators(ctx)
-	liquidBondDenom := k.LiquidBondDenom(ctx)
-	totalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount
+	bondedBondDenom := k.BondedBondDenom(ctx)
+	totalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom).Amount
 	bTokenValueMap := make(squadtypes.StrIntMap)
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
@@ -47,7 +47,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 	for denom, balanceByVoter := range voterBalanceByDenom {
 
 		// add balance of bToken value
-		if denom == liquidBondDenom {
+		if denom == bondedBondDenom {
 			for voter, balance := range balanceByVoter {
 				bTokenValueMap.AddOrSet(voter, balance)
 			}
@@ -59,10 +59,10 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 				rx, ry := k.liquidityKeeper.GetPoolBalance(ctx, pool, pair)
 				poolCoinSupply := k.liquidityKeeper.GetPoolCoinSupply(ctx, pool)
 				bTokenSharePerPoolCoin := sdk.ZeroDec()
-				if pair.QuoteCoinDenom == liquidBondDenom {
+				if pair.QuoteCoinDenom == bondedBondDenom {
 					bTokenSharePerPoolCoin = rx.ToDec().Quo(poolCoinSupply.ToDec())
 				}
-				if pair.BaseCoinDenom == liquidBondDenom {
+				if pair.BaseCoinDenom == bondedBondDenom {
 					bTokenSharePerPoolCoin = ry.ToDec().Quo(poolCoinSupply.ToDec())
 				}
 				if !bTokenSharePerPoolCoin.IsPositive() {
@@ -83,7 +83,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		}
 		// add value of Farming Staking Position of bToken and PoolTokens including bToken
 		k.farmingKeeper.IterateStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, staking farmingtypes.Staking) (stop bool) {
-			if stakingCoinDenom == liquidBondDenom {
+			if stakingCoinDenom == bondedBondDenom {
 				bTokenValueMap.AddOrSet(vote.Voter, staking.Amount)
 			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
 				bTokenValueMap.AddOrSet(vote.Voter, squadtypes.GetShareValue(staking.Amount, ratio))
@@ -93,7 +93,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 
 		// add value of Farming Queued Staking of bToken and PoolTokens including bToken
 		k.farmingKeeper.IterateQueuedStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
-			if stakingCoinDenom == liquidBondDenom {
+			if stakingCoinDenom == bondedBondDenom {
 				bTokenValueMap.AddOrSet(vote.Voter, queuedStaking.Amount)
 			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
 				bTokenValueMap.AddOrSet(vote.Voter, squadtypes.GetShareValue(queuedStaking.Amount, ratio))

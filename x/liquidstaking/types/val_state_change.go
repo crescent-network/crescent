@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -22,7 +21,7 @@ func (v LiquidValidator) UpdateStatus(newStatus ValidatorStatus) LiquidValidator
 //- downtime slashing
 //- double signing slashing ( tombstoned, infinite jail )
 //- self-delegation condition failed (SelfDelegationBelowMinSelfDelegation)
-func (activeLiquidValidators LiquidValidators) ActiveToDelisting(valsMap map[string]stakingtypes.Validator, whitelistedValMap map[string]WhitelistedValidator, commissionRate sdk.Dec) {
+func (activeLiquidValidators LiquidValidators) ActiveToDelisting(valsMap map[string]stakingtypes.Validator, whitelistedValMap map[string]WhitelistedValidator) {
 	for _, lv := range activeLiquidValidators {
 		valStr := lv.GetOperator().String()
 		if lv.Status != ValidatorStatusActive {
@@ -30,7 +29,7 @@ func (activeLiquidValidators LiquidValidators) ActiveToDelisting(valsMap map[str
 		}
 		_, whitelisted := whitelistedValMap[lv.OperatorAddress]
 		// not whitelisted or jailed, unbonding, unbonded due to downtime, double-sign slashing, SelfDelegationBelowMinSelfDelegation
-		if !lv.ActiveCondition(valsMap[valStr], whitelisted, commissionRate) {
+		if !lv.ActiveCondition(valsMap[valStr], whitelisted) {
 			lv.UpdateStatus(ValidatorStatusDelisting)
 			fmt.Println("[delisting liquid validator]", valStr)
 		}
@@ -57,7 +56,7 @@ func (vs LiquidValidators) DelistingToDelisted(valsMap map[string]stakingtypes.V
 //- not downtime slashing
 //- not double signing slashing ( tombstoned, infinite jail )
 //- not self-delegation condition failed (SelfDelegationBelowMinSelfDelegation)
-func (lv LiquidValidator) ActiveCondition(validator stakingtypes.Validator, whitelisted bool, commissionRate sdk.Dec) bool {
+func (lv LiquidValidator) ActiveCondition(validator stakingtypes.Validator, whitelisted bool) bool {
 	// whitelisted and not jailed, not unbonding, not unbonded due to downtime, double-sign slashing, match commissionRate
 	return whitelisted &&
 		!validator.IsJailed() &&
