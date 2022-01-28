@@ -17,7 +17,6 @@ func (v LiquidValidator) UpdateStatus(newStatus ValidatorStatus) LiquidValidator
 // ActiveToDelisting change active liquid validator status to delisting on below cases
 // active -> delisting conditions
 //- excluded from the whitelist
-//- commission rate unmatched
 //- with low power, kicked out of the Top MaxValidators list.
 //- jailed(unbonding, unbonded)
 //- downtime slashing
@@ -35,7 +34,6 @@ func (activeLiquidValidators LiquidValidators) ActiveToDelisting(valsMap map[str
 			lv.UpdateStatus(ValidatorStatusDelisting)
 			fmt.Println("[delisting liquid validator]", valStr)
 		}
-		// TODO: consider add params.MinSelfDelegation condition
 	}
 }
 
@@ -54,7 +52,6 @@ func (vs LiquidValidators) DelistingToDelisted(valsMap map[string]stakingtypes.V
 // ActiveCondition checks the liquid validator could be active by below cases
 // active conditions
 //- included on whitelist
-//- commission rate matched
 //- included on the Top MaxValidators list.
 //- not jailed(unbonding, unbonded)
 //- not downtime slashing
@@ -65,8 +62,5 @@ func (lv LiquidValidator) ActiveCondition(validator stakingtypes.Validator, whit
 	return whitelisted &&
 		!validator.IsJailed() &&
 		!validator.IsUnbonding() &&
-		!validator.IsUnbonded() && // TODO: already unbonded case
-		// TODO: whether to allow only the exact value or the lower value.
-		// commission rate unmatched
-		!validator.Commission.Rate.GT(commissionRate)
+		!validator.IsUnbonded() // TODO: already unbonded case
 }

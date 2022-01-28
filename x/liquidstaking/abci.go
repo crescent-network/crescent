@@ -39,7 +39,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		if lv, ok := liquidValsMap[wv.ValidatorAddress]; !ok {
 			// whitelist -> active
 			// added on whitelist -> active set
-			// TODO: consider add params.MaxActiveLiquidValidator
 			// TODO: k.SetLiquidValidator(ctx, *lv) set on TryRedelegations if succeed or pre-active without rebalancing
 			lv = &types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,7 +13,7 @@ import (
 
 func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	_, valOpers := suite.CreateValidators([]int64{1000000, 1000000, 1000000, 1000000, 1000000})
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	params := suite.keeper.GetParams(suite.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	params.CommissionRate = sdk.ZeroDec()

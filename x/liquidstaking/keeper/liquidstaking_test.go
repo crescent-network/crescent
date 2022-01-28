@@ -15,7 +15,7 @@ import (
 // tests LiquidStaking, LiquidUnstaking
 func (suite *KeeperTestSuite) TestLiquidStaking() {
 	_, valOpers := suite.CreateValidators([]int64{1000000, 2000000, 3000000})
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	params := suite.keeper.GetParams(suite.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	suite.keeper.SetParams(suite.ctx, params)
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().EqualValues(unbondingAmt, ubdAmt.Amount.QuoRaw(3).MulRaw(3).ToDec())
 	//suite.Require().Equal(unbondingAmt, ubdAmt.Amount.ToDec())
 	suite.Require().Equal(ubds[0].DelegatorAddress, suite.delAddrs[0].String())
-	suite.Require().Equal(ubdTime, types.MustParseRFC3339("2022-03-22T00:00:00Z"))
+	suite.Require().Equal(ubdTime, squadtypes.MustParseRFC3339("2022-03-22T00:00:00Z"))
 	bTokenBalanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, suite.delAddrs[0], liquidBondDenom)
 	suite.Require().Equal(bTokenBalanceAfter, sdk.NewCoin(liquidBondDenom, sdk.NewInt(40000)))
 
@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 		{ValidatorAddress: valOpers[3].String(), Weight: sdk.NewInt(10)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
 	liquidValidators := suite.keeper.GetAllLiquidValidators(suite.ctx)
@@ -300,7 +300,7 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(10)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
 
 	val1, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, valOpers[0])
