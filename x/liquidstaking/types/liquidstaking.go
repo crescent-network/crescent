@@ -92,8 +92,8 @@ func (vs LiquidValidators) Map() map[string]*LiquidValidator {
 
 // TODO: add testcodes with consider netAmount.TruncateDec() or not
 // BTokenToNativeToken returns UnstakeAmount, NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
-func BTokenToNativeToken(btokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {
-	return netAmount.TruncateDec().Mul(btokenAmount.ToDec().QuoTruncate(bTokenTotalSupplyAmount.ToDec())).Mul(sdk.OneDec().Sub(feeRate)).TruncateDec()
+func BTokenToNativeToken(bTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {
+	return netAmount.TruncateDec().Mul(bTokenAmount.ToDec().QuoTruncate(bTokenTotalSupplyAmount.ToDec())).Mul(sdk.OneDec().Sub(feeRate)).TruncateDec()
 }
 
 // mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount

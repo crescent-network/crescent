@@ -31,7 +31,7 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 	return denomAddrBalanceMap
 }
 
-func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
+func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	// TODO: active or with delisting
 	liquidVals := k.GetActiveLiquidValidators(ctx)
 	liquidBondDenom := k.LiquidBondDenom(ctx)
@@ -40,7 +40,6 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
 	bTokenSharePerPoolCoinMap := make(map[string]sdk.Dec)
-	//bTokenSharePerPoolCoinMap[liquidBondDenom] = sdk.OneDec()
 	if !totalSupply.IsPositive() {
 		return
 	}
@@ -103,10 +102,10 @@ func (k Keeper) LiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *go
 		})
 	}
 
-	for voter, btokenValue := range bTokenValueMap {
+	for voter, bTokenValue := range bTokenValueMap {
 		nativeValue := sdk.ZeroDec()
-		if btokenValue.IsPositive() {
-			nativeValue = types.BTokenToNativeToken(btokenValue, totalSupply, k.NetAmount(ctx), sdk.ZeroDec())
+		if bTokenValue.IsPositive() {
+			nativeValue = types.BTokenToNativeToken(bTokenValue, totalSupply, k.NetAmount(ctx), sdk.ZeroDec())
 		}
 		if nativeValue.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}

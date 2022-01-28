@@ -23,5 +23,5 @@ func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64)         {
 
 // GetOtherVotes calculate the voting power of the person who participated in liquid staking.
 func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
-	h.k.LiquidGov(ctx, votes, otherVotes)
+	h.k.TallyLiquidGov(ctx, votes, otherVotes)
 }

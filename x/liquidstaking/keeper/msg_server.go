@@ -34,7 +34,7 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 		return nil, types.ErrLessThanMinLiquidStakingAmount
 	}
 
-	newShares, btokenMintAmount, err := k.LiquidStaking(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
+	newShares, bTokenMintAmount, err := k.LiquidStaking(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 			types.EventTypeMsgLiquidStake,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
-			sdk.NewAttribute(types.AttributeKeyBTokenMintedAmount, btokenMintAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyBTokenMintedAmount, bTokenMintAmount.String()),
 		),
 	})
 	return &types.MsgLiquidStakeResponse{}, nil
