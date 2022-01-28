@@ -22,7 +22,7 @@ func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrderBatch) 
 	if msg.OrderLifespan > params.MaxOrderLifespan {
 		return types.SwapRequest{}, types.ErrTooLongOrderLifespan
 	}
-	canceledAt := ctx.BlockTime().Add(msg.OrderLifespan)
+	expireAt := ctx.BlockTime().Add(msg.OrderLifespan)
 
 	pair, found := k.GetPair(ctx, msg.PairId)
 	if !found {
@@ -77,7 +77,7 @@ func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrderBatch) 
 	}
 
 	requestId := k.GetNextSwapRequestIdWithUpdate(ctx, pair)
-	req := types.NewSwapRequestForLimitOrder(msg, requestId, pair, offerCoin, canceledAt, ctx.BlockHeight())
+	req := types.NewSwapRequestForLimitOrder(msg, requestId, pair, offerCoin, expireAt, ctx.BlockHeight())
 	k.SetSwapRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
