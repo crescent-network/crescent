@@ -65,13 +65,13 @@ func (engine *MatchEngine) InitialMatchPrice() (price sdk.Dec, dir PriceDirectio
 	case PriceStaying:
 		price = RoundPrice(midPrice, engine.TickPrecision)
 	case PriceIncreasing:
+		price = midPriceTick
+	case PriceDecreasing:
 		if !midPrice.Equal(midPriceTick) {
 			price = UpTick(midPriceTick, engine.TickPrecision)
 		} else {
 			price = midPriceTick
 		}
-	case PriceDecreasing:
-		price = midPriceTick
 	}
 	return
 }
