@@ -224,28 +224,68 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	assertTallyResult(240000000, 100000000, 20000000, 120000000)
 
 	// Test TallyLiquidGov
-	cachedCtx, _ := suite.ctx.CacheContext()
-	votes := suite.app.GovKeeper.GetVotes(cachedCtx, proposal.ProposalId)
 	otherVotes := make(govtypes.OtherVotes)
-	suite.keeper.TallyLiquidGov(cachedCtx, &votes, &otherVotes)
-	squadtypes.PP(votes)
-	squadtypes.PP(otherVotes)
-
 	testOtherVotes := func(voter sdk.AccAddress, bTokenValue sdk.Int) {
 		suite.Require().Len(otherVotes[voter.String()], liquidValidators.Len())
 		for _, v := range liquidValidators {
 			suite.Require().EqualValues(otherVotes[voter.String()][v.OperatorAddress], bTokenValue.ToDec().QuoInt64(int64(liquidValidators.Len())))
 		}
 	}
+	tallyLiquidGov := func() {
+		cachedCtx, _ := suite.ctx.CacheContext()
+		otherVotes = make(govtypes.OtherVotes)
+		votes := suite.app.GovKeeper.GetVotes(cachedCtx, proposal.ProposalId)
+		suite.keeper.TallyLiquidGov(cachedCtx, &votes, &otherVotes)
+		squadtypes.PP(otherVotes)
 
-	suite.Require().Len(otherVotes, 5)
-	testOtherVotes(delB, delBbToken)
-	testOtherVotes(delC, delCbToken)
-	testOtherVotes(delD, delDbToken)
-	testOtherVotes(delE, delEbToken)
-	testOtherVotes(delF, delFbToken)
+		suite.Require().Len(otherVotes, 5)
+		testOtherVotes(delB, delBbToken)
+		testOtherVotes(delC, delCbToken)
+		testOtherVotes(delD, delDbToken)
+		testOtherVotes(delE, delEbToken)
+		testOtherVotes(delF, delFbToken)
+	}
 
-	// TODO: add voter, btoken, farming of btoken, pool, farming of pool
+	tallyLiquidGov()
+
+	// Test balance of PoolTokens including bToken
+	pair1 := suite.createPair(delB, params.LiquidBondDenom, sdk.DefaultBondDenom, false)
+	pool1 := suite.createPool(delB, pair1.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
+	tallyLiquidGov()
+	pair2 := suite.createPair(delC, sdk.DefaultBondDenom, params.LiquidBondDenom, false)
+	pool2 := suite.createPool(delC, pair2.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
+	balance := suite.app.BankKeeper.GetBalance(suite.ctx, delC, pool2.PoolCoinDenom)
+	fmt.Println(balance)
+	tallyLiquidGov()
+
+	// Test Farming Queued Staking of bToken
+	suite.CreateFixedAmountPlan(suite.addrs[0], map[string]string{params.LiquidBondDenom: "0.4", pool1.PoolCoinDenom: "0.3", pool2.PoolCoinDenom: "0.3"}, map[string]int64{"testdenom": 1})
+	suite.Stake(delD, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(10000000))))
+	queuedStaking, found := suite.app.FarmingKeeper.GetQueuedStaking(suite.ctx, params.LiquidBondDenom, delD)
+	suite.True(found)
+	suite.Equal(queuedStaking.Amount, sdk.NewInt(10000000))
+	tallyLiquidGov()
+
+	// Test Farming Staking Position Staking of bToken
+	suite.AdvanceEpoch()
+	staking, found := suite.app.FarmingKeeper.GetStaking(suite.ctx, params.LiquidBondDenom, delD)
+	suite.True(found)
+	suite.Equal(staking.Amount, sdk.NewInt(10000000))
+	tallyLiquidGov()
+
+	// Test Farming Queued Staking of PoolTokens including bToken
+	suite.Stake(delC, sdk.NewCoins(sdk.NewCoin(pool2.PoolCoinDenom, sdk.NewInt(10000000))))
+	queuedStaking, found = suite.app.FarmingKeeper.GetQueuedStaking(suite.ctx, pool2.PoolCoinDenom, delC)
+	suite.True(found)
+	suite.Equal(queuedStaking.Amount, sdk.NewInt(10000000))
+	tallyLiquidGov()
+
+	// Test Farming Staking Position of PoolTokens including bToken
+	suite.AdvanceEpoch()
+	staking, found = suite.app.FarmingKeeper.GetStaking(suite.ctx, pool2.PoolCoinDenom, delC)
+	suite.True(found)
+	suite.Equal(staking.Amount, sdk.NewInt(10000000))
+	tallyLiquidGov()
 }
 
 // test Liquid Staking gov power

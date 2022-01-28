@@ -54,7 +54,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		}
 
 		// add balance of PoolTokens including bToken value
-		if pool, found := k.liquidityKeeper.GetPool(ctx, liquiditytypes.ParsePoolCoinDenom(denom)); !found {
+		if pool, found := k.liquidityKeeper.GetPool(ctx, liquiditytypes.ParsePoolCoinDenom(denom)); found {
 			if pair, found := k.liquidityKeeper.GetPair(ctx, pool.PairId); found {
 				rx, ry := k.liquidityKeeper.GetPoolBalance(ctx, pool, pair)
 				poolCoinSupply := k.liquidityKeeper.GetPoolCoinSupply(ctx, pool)
@@ -125,4 +125,5 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 			}
 		}
 	}
+	// TODO: consider return bTokenValueMap, bTokenSharePerPoolCoinMap for assertion and query
 }
