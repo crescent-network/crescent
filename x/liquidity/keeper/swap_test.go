@@ -10,6 +10,158 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
+func (s *KeeperTestSuite) TestLimitOrder() {
+	// Create a denom1/denom2 pair and set last price to 1.0
+	pair1 := s.createPair(s.addr(0), "denom1", "denom2", true)
+	lastPrice := parseDec("1.0")
+	pair1.LastPrice = &lastPrice
+	s.keeper.SetPair(s.ctx, pair1)
+
+	// denom2/denom1 pair doesn't have last price
+	pair2 := s.createPair(s.addr(0), "denom2", "denom1", true)
+
+	orderer := s.addr(1)
+	s.fundAddr(orderer, parseCoins("1000000000denom1,1000000000denom2"))
+
+	for _, tc := range []struct {
+		name        string
+		msg         *types.MsgLimitOrderBatch
+		expectedErr string
+	}{
+		{
+			"happy case",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
+				parseDec("1.0"), newInt(1000000), 0),
+			"",
+		},
+		{
+			"wrong offer coin and demand coin denom",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
+				parseDec("1.0"), newInt(1000000), 0),
+			"denom pair (denom2, denom1) != (denom1, denom2): wrong denom pair",
+		},
+		{
+			"correct offer coin and demand coin denom",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair2.Id, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
+				parseDec("1.0"), newInt(1000000), 0),
+			"",
+		},
+		{
+			"price not fit in ticks",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair1.Id, types.SwapDirectionSell, parseCoin("1000000denom1"), "denom2",
+				parseDec("1.0005"), newInt(1000000), 0),
+			"price not fit into ticks",
+		},
+		{
+			"too long order lifespan",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair1.Id, types.SwapDirectionSell, parseCoin("1000000denom1"), "denom2",
+				parseDec("1.0"), newInt(1000000), 48*time.Hour),
+			"order lifespan is too long",
+		},
+		{
+			"pair not found",
+			types.NewMsgLimitOrderBatch(
+				orderer, 3, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
+				parseDec("1.0"), newInt(1000000), 0),
+			"pair not found: not found",
+		},
+		{
+			"price out of lower limit",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
+				parseDec("0.8"), newInt(1000000), 0),
+			"price out of range limit",
+		},
+		{
+			"price out of upper limit",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("2000000denom2"), "denom1",
+				parseDec("1.2"), newInt(1000000), 0),
+			"price out of range limit",
+		},
+		{
+			"no price limit without last price",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair2.Id, types.SwapDirectionSell, parseCoin("1000000denom2"), "denom1",
+				parseDec("100.0"), newInt(1000000), 0),
+			"",
+		},
+		{
+
+			"insufficient offer coin",
+			types.NewMsgLimitOrderBatch(
+				orderer, pair2.Id, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
+				parseDec("10.0"), newInt(1000000), 0),
+			"insufficient offer coin",
+		},
+	} {
+		s.Run(tc.name, func() {
+			// The msg is valid, but may cause an error when it's being handled in the msg server.
+			s.Require().NoError(tc.msg.ValidateBasic())
+			_, err := s.keeper.LimitOrderBatch(s.ctx, tc.msg)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestLimitOrderRefund() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	orderer := s.addr(1)
+	s.fundAddr(orderer, parseCoins("1000000000denom1,1000000000denom2"))
+
+	for _, tc := range []struct {
+		msg          *types.MsgLimitOrderBatch
+		refundedCoin sdk.Coin
+	}{
+		{
+			types.NewMsgLimitOrderBatch(
+				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
+				parseDec("1.0"), newInt(1000000), 0),
+			parseCoin("0denom2"),
+		},
+		{
+			types.NewMsgLimitOrderBatch(
+				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
+				parseDec("1.0"), newInt(10000), 0),
+			parseCoin("990000denom2"),
+		},
+		{
+			types.NewMsgLimitOrderBatch(
+				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000denom2"), "denom1",
+				parseDec("0.9999"), newInt(1000), 0),
+			parseCoin("0denom2"),
+		},
+		{
+			types.NewMsgLimitOrderBatch(
+				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("102denom2"), "denom1",
+				parseDec("1.001"), newInt(100), 0),
+			parseCoin("1denom2"),
+		},
+	} {
+		s.Run("", func() {
+			s.Require().NoError(tc.msg.ValidateBasic())
+
+			balanceBefore := s.getBalance(orderer, tc.msg.OfferCoin.Denom)
+			_, err := s.keeper.LimitOrderBatch(s.ctx, tc.msg)
+			s.Require().NoError(err)
+
+			balanceAfter := s.getBalance(orderer, tc.msg.OfferCoin.Denom)
+
+			refundedCoin := balanceAfter.Sub(balanceBefore.Sub(tc.msg.OfferCoin))
+			s.Require().True(coinEq(tc.refundedCoin, refundedCoin))
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
 	k, ctx := s.keeper, s.ctx
 

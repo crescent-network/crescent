@@ -112,3 +112,17 @@ func TickFromIndex(i, prec int) sdk.Dec {
 	}
 	return sdk.NewDecFromBigIntWithPrec(t, sdk.Precision)
 }
+
+// RoundTickIndex returns rounded tick index using banker's rounding.
+func RoundTickIndex(i int) int {
+	return (i + 1) / 2 * 2
+}
+
+// RoundPrice returns rounded price using banker's rounding.
+func RoundPrice(price sdk.Dec, prec int) sdk.Dec {
+	tick := PriceToTick(price, prec)
+	if price.Equal(tick) {
+		return price
+	}
+	return TickFromIndex(RoundTickIndex(TickToIndex(price, prec)), prec)
+}

@@ -148,6 +148,7 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 		BaseOrder: BaseOrder{
 			Direction:                req.Direction,
 			Price:                    req.Price,
+			Amount:                   req.OpenAmount,
 			OpenAmount:               req.OpenAmount,
 			RemainingOfferCoinAmount: req.RemainingOfferCoin.Amount,
 			ReceivedAmount:           sdk.ZeroInt(),
@@ -184,6 +185,7 @@ func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, 
 		BaseOrder: BaseOrder{
 			Direction:                dir,
 			Price:                    price,
+			Amount:                   amt,
 			OpenAmount:               amt,
 			RemainingOfferCoinAmount: amt,
 			ReceivedAmount:           sdk.ZeroInt(),

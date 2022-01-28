@@ -7,7 +7,8 @@ import (
 type PriceDirection int
 
 const (
-	PriceIncreasing PriceDirection = iota + 1
+	PriceStaying PriceDirection = iota + 1
+	PriceIncreasing
 	PriceDecreasing
 )
 
@@ -40,13 +41,17 @@ func (engine *MatchEngine) Matchable() bool {
 func (engine *MatchEngine) EstimatedPriceDirection(midPrice sdk.Dec) PriceDirection {
 	buyAmount := engine.BuyOrderSource.AmountGTE(midPrice)
 	sellAmount := engine.SellOrderSource.AmountLTE(midPrice)
-	if buyAmount.GTE(sellAmount) {
+	switch {
+	case buyAmount.GT(sellAmount):
 		return PriceIncreasing
+	case sellAmount.GT(buyAmount):
+		return PriceDecreasing
+	default:
+		return PriceStaying
 	}
-	return PriceDecreasing
 }
 
-func (engine *MatchEngine) InitialMatchPrice() sdk.Dec {
+func (engine *MatchEngine) InitialMatchPrice() (price sdk.Dec, dir PriceDirection) {
 	highestBuyPrice, found := engine.BuyOrderSource.HighestTick()
 	if !found {
 		panic("there is no buy orders")
@@ -55,18 +60,30 @@ func (engine *MatchEngine) InitialMatchPrice() sdk.Dec {
 	if !found {
 		panic("there is no sell orders")
 	}
-	return highestBuyPrice.Add(lowestSellPrice).QuoInt64(2)
+	midPrice := highestBuyPrice.Add(lowestSellPrice).QuoInt64(2)
+	midPriceTick := PriceToTick(midPrice, engine.TickPrecision)
+
+	dir = engine.EstimatedPriceDirection(midPrice)
+
+	switch dir {
+	case PriceStaying:
+		price = RoundPrice(midPrice, engine.TickPrecision)
+	case PriceIncreasing:
+		price = midPriceTick
+	case PriceDecreasing:
+		if !midPrice.Equal(midPriceTick) {
+			price = UpTick(midPriceTick, engine.TickPrecision)
+		} else {
+			price = midPriceTick
+		}
+	}
+	return
 }
 
 func (engine *MatchEngine) FindMatchPrice() sdk.Dec {
-	matchPrice := engine.InitialMatchPrice()
-	dir := engine.EstimatedPriceDirection(matchPrice)
-
-	matchPriceTick := PriceToTick(matchPrice, engine.TickPrecision)
-	if dir == PriceIncreasing && !matchPrice.Equal(matchPriceTick) {
-		matchPrice = UpTick(matchPriceTick, engine.TickPrecision)
-	} else {
-		matchPrice = matchPriceTick
+	matchPrice, dir := engine.InitialMatchPrice()
+	if dir == PriceStaying { // TODO: is this correct?
+		return matchPrice
 	}
 
 	tickSource := MergeOrderSources(engine.BuyOrderSource, engine.SellOrderSource) // temporary order source just for ticks

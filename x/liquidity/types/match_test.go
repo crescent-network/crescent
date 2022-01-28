@@ -115,13 +115,13 @@ func TestMatchEngine_EstimatedPriceDirection(t *testing.T) {
 			types.PriceDecreasing,
 		},
 		{
-			"staying - reported as increasing",
+			"staying",
 			[]types.Order{
 				newBuyOrder(parseDec("1.5"), newInt(100)),
 				newSellOrder(parseDec("0.5"), newInt(100)),
 			},
 			parseDec("1.0"),
-			types.PriceIncreasing,
+			types.PriceStaying,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

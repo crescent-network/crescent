@@ -258,7 +258,7 @@ func AddTestAddrsFromPubKeys(app *SquadApp, ctx sdk.Context, pubKeys []cryptotyp
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
 
 	for _, pk := range pubKeys {
-		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
+		InitAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
 	}
 }
 
@@ -280,13 +280,13 @@ func addTestAddrs(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int, st
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
 
 	for _, addr := range testAddrs {
-		initAccountWithCoins(app, ctx, addr, initCoins)
+		InitAccountWithCoins(app, ctx, addr, initCoins)
 	}
 
 	return testAddrs
 }
 
-func initAccountWithCoins(app *SquadApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func InitAccountWithCoins(app *SquadApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		panic(err)
