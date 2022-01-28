@@ -136,8 +136,8 @@ func (s *KeeperTestSuite) TestLimitOrderRefund() {
 		},
 		{
 			types.NewMsgLimitOrderBatch(
-				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("10000denom2"), "denom1",
-				parseDec("0.9999"), newInt(10000), 0),
+				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000denom2"), "denom1",
+				parseDec("0.9999"), newInt(1000), 0),
 			parseCoin("0denom2"),
 		},
 		{
