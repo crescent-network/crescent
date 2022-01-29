@@ -17,11 +17,7 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 	}
 	if err := k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
 		if !req.Status.IsCanceledOrExpired() && !ctx.BlockTime().Before(req.ExpireAt) { // ExpireAt <= BlockTime
-			if err := k.RefundSwapRequestAndSetStatus(ctx, req, types.SwapRequestStatusExpired); err != nil {
-				return false, err
-			}
-		} else if req.Status == types.SwapRequestStatusCompleted {
-			if err := k.RefundSwapRequest(ctx, req); err != nil {
+			if err := k.FinishSwapRequest(ctx, req, types.SwapRequestStatusExpired); err != nil {
 				return false, err
 			}
 		}
