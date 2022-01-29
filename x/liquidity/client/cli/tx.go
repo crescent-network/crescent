@@ -334,28 +334,22 @@ $ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from 
 				return fmt.Errorf("invalid demand coin denom: %w", err)
 			}
 
-			price, err := sdk.NewDecFromStr(args[4])
-			if err != nil {
-				return fmt.Errorf("invalid price: %w", err)
-			}
-
-			amt, ok := sdk.NewIntFromString(args[5])
+			amt, ok := sdk.NewIntFromString(args[4])
 			if !ok {
-				return fmt.Errorf("invalid amount: %s", args[5])
+				return fmt.Errorf("invalid amount: %s", args[4])
 			}
 
-			orderLifespan, err := time.ParseDuration(args[6])
+			orderLifespan, err := time.ParseDuration(args[5])
 			if err != nil {
 				return fmt.Errorf("invalid order lifespan: %w", err)
 			}
 
-			msg := types.NewMsgLimitOrderBatch(
+			msg := types.NewMsgMarketOrderBatch(
 				clientCtx.GetFromAddress(),
 				pairId,
 				dir,
 				offerCoin,
 				demandCoinDenom,
-				price,
 				amt,
 				orderLifespan,
 			)
