@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
