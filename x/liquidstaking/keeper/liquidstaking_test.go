@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.keeper.EndBlocker(suite.ctx)
 
 	activeVals := suite.keeper.GetActiveLiquidValidators(suite.ctx)
-	_, crumb := types.DivideByWeight(activeVals, stakingAmt)
+	_, crumb := types.DivideByWeight(activeVals, stakingAmt, params.WhitelistedValMap())
 	newShares, bTokenMintAmt, err = suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	suite.Require().NoError(err)
 	suite.Require().Equal(newShares.Add(crumb.ToDec()), stakingAmt.ToDec())

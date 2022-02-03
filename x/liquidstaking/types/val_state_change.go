@@ -40,6 +40,7 @@ func (activeLiquidValidators LiquidValidators) ActiveToDelisting(valsMap map[str
 func (vs LiquidValidators) DelistingToDelisted(valsMap map[string]stakingtypes.Validator) {
 	for _, lv := range vs {
 		valStr := lv.GetOperator().String()
+		// TODO: only check for unbonding
 		if lv.Status == ValidatorStatusDelisting && valsMap[valStr].IsUnbonded() {
 			lv.UpdateStatus(ValidatorStatusDelisted)
 			// TODO: consider conditions and set immediately

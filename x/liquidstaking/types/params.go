@@ -69,6 +69,10 @@ func (p Params) String() string {
 	return string(out)
 }
 
+func (p Params) WhitelistedValMap() WhitelistedValMap {
+	return GetWhitelistedValMap(p.WhitelistedValidators)
+}
+
 // Validate validates parameters.
 func (p Params) Validate() error {
 	for _, v := range []struct {

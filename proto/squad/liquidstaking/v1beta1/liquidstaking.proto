@@ -75,14 +75,31 @@ message LiquidValidator {
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
   string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
 
+  // TODO: consider stateless
   // status is the liquid validator status
   ValidatorStatus status = 2;
+}
+
+// LiquidValidatorState defines a ... TBD
+message LiquidValidatorState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // operator_address defines the address of the validator's operator; bech encoded in JSON.
+  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
 
   // weight specifies the weight for liquid staking, unstaking amount
-  string weight = 3 [
+  string weight = 2 [
     (gogoproto.moretags)                                        = "yaml:\"weight\"",
     (gogoproto.customtype)                                      = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)                                        = false,
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {example: "\"10\"", format: "sdk.Int"}
   ];
+
+  // status is the liquid validator status
+  ValidatorStatus status = 3;
+
+  // del shares define the delegation shares of the validator
+  string del_shares = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }

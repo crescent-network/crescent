@@ -1,11 +1,19 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+type WhitelistedValMap map[string]WhitelistedValidator
+
+func GetWhitelistedValMap(whitelistedValidators []WhitelistedValidator) WhitelistedValMap {
+	whitelistedValMap := make(WhitelistedValMap)
+	for _, wv := range whitelistedValidators {
+		whitelistedValMap[wv.ValidatorAddress] = wv
+	}
+	return whitelistedValMap
+}
 
 // Validate validates LiquidValidator.
 func (v LiquidValidator) Validate() error {
@@ -14,13 +22,14 @@ func (v LiquidValidator) Validate() error {
 		return valErr
 	}
 
-	if v.Weight.IsNil() {
-		return fmt.Errorf("liquidstaking validator weight must not be nil")
-	}
-
-	if v.Weight.IsNegative() {
-		return fmt.Errorf("liquidstaking validator weight must not be negative: %s", v.Weight)
-	}
+	// TODO: validated on params or LiquidValidators
+	//if v.Weight.IsNil() {
+	//	return fmt.Errorf("liquidstaking validator weight must not be nil")
+	//}
+	//
+	//if v.Weight.IsNegative() {
+	//	return fmt.Errorf("liquidstaking validator weight must not be negative: %s", v.Weight)
+	//}
 
 	// TODO: add validation for LiquidTokens, Status
 	return nil
@@ -44,6 +53,15 @@ func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int
 		return sdk.ZeroInt()
 	}
 	return del.GetShares().TruncateInt()
+}
+
+// TODO: add status dependency
+func (v LiquidValidator) GetWeight(valMap WhitelistedValMap) sdk.Int {
+	if wv, ok := valMap[v.OperatorAddress]; ok {
+		return wv.TargetWeight
+	} else {
+		return sdk.ZeroInt()
+	}
 }
 
 // LiquidValidators is a collection of LiquidValidator
@@ -74,10 +92,10 @@ func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalWeight() sdk.Int {
+func (vs LiquidValidators) TotalWeight(valMap WhitelistedValMap) sdk.Int {
 	totalWeight := sdk.ZeroInt()
 	for _, val := range vs {
-		totalWeight = totalWeight.Add(val.Weight)
+		totalWeight = totalWeight.Add(val.GetWeight(valMap))
 	}
 	return totalWeight
 }

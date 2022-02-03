@@ -4047,7 +4047,9 @@ paths:
                         operator_address defines the address of the validator's
                         operator; bech encoded in JSON.
                     status:
-                      title: status is the liquid validator status
+                      title: |-
+                        TODO: consider stateless
+                        status is the liquid validator status
                       type: string
                       enum:
                         - VALIDATOR_STATUS_UNSPECIFIED
@@ -4065,11 +4067,6 @@ paths:
                          - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
                          - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
                          - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
-                    weight:
-                      type: string
-                      title: >-
-                        weight specifies the weight for liquid staking,
-                        unstaking amount
                   title: LiquidValidator defines a ... TBD
               pagination:
                 description: pagination defines the pagination in the response.
@@ -6464,7 +6461,9 @@ definitions:
           operator_address defines the address of the validator's operator; bech
           encoded in JSON.
       status:
-        title: status is the liquid validator status
+        title: |-
+          TODO: consider stateless
+          status is the liquid validator status
         type: string
         enum:
           - VALIDATOR_STATUS_UNSPECIFIED
@@ -6480,9 +6479,6 @@ definitions:
            - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
            - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
            - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
-      weight:
-        type: string
-        title: 'weight specifies the weight for liquid staking, unstaking amount'
     title: LiquidValidator defines a ... TBD
   squad.liquidstaking.v1beta1.Params:
     type: object
@@ -6528,7 +6524,9 @@ definitions:
                 operator_address defines the address of the validator's
                 operator; bech encoded in JSON.
             status:
-              title: status is the liquid validator status
+              title: |-
+                TODO: consider stateless
+                status is the liquid validator status
               type: string
               enum:
                 - VALIDATOR_STATUS_UNSPECIFIED
@@ -6544,9 +6542,6 @@ definitions:
                  - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
                  - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
                  - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
-            weight:
-              type: string
-              title: 'weight specifies the weight for liquid staking, unstaking amount'
           title: LiquidValidator defines a ... TBD
       pagination:
         description: pagination defines the pagination in the response.

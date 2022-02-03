@@ -75,10 +75,10 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	return balance.Amount.ToDec().Add(totalDelShares).Add(totalRewards).Add(unbondingPower.ToDec())
 }
 
-func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, stakingAmt sdk.Int) (newShares sdk.Dec, err error) {
+func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, stakingAmt sdk.Int, whitelistedValMap types.WhitelistedValMap) (newShares sdk.Dec, err error) {
 	totalNewShares := sdk.ZeroDec()
 	// crumb would be small micro token, drop it
-	weightedShares, _ := types.DivideByWeight(activeVals, stakingAmt)
+	weightedShares, _ := types.DivideByWeight(activeVals, stakingAmt, whitelistedValMap)
 	for i, val := range activeVals {
 		validator, found := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
 		if !found {
@@ -137,8 +137,10 @@ func (k Keeper) LiquidStaking(
 		)
 	}
 
+	params := k.GetParams(ctx)
+	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 	activeVals := k.GetActiveLiquidValidators(ctx)
-	if activeVals.Len() == 0 || !activeVals.TotalWeight().IsPositive() {
+	if activeVals.Len() == 0 || !activeVals.TotalWeight(whitelistedValMap).IsPositive() {
 		return sdk.ZeroDec(), bTokenMintAmount, fmt.Errorf("there's no active liquid validators")
 	}
 
@@ -168,7 +170,7 @@ func (k Keeper) LiquidStaking(
 	if err != nil {
 		return sdk.ZeroDec(), bTokenMintAmount, err
 	}
-	newShares, err = k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount)
+	newShares, err = k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount, whitelistedValMap)
 	return newShares, bTokenMintAmount, err
 }
 
@@ -186,8 +188,9 @@ func (k Keeper) LiquidUnstaking(
 		)
 	}
 
+	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 	activeVals := k.GetActiveLiquidValidators(ctx)
-	if activeVals.Len() == 0 || !activeVals.TotalWeight().IsPositive() {
+	if activeVals.Len() == 0 || !activeVals.TotalWeight(whitelistedValMap).IsPositive() {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
 	}
 
