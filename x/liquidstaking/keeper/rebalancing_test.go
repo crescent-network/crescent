@@ -46,7 +46,7 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(16666))
 
 	for _, v := range suite.keeper.GetAllLiquidValidators(suite.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper), v.Status)
+		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper))
 	}
 	fmt.Println("-----------")
 
@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12499))
 
 	for _, v := range suite.keeper.GetAllLiquidValidators(suite.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper), v.Status)
+		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper))
 	}
 	fmt.Println("-----------")
 
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.Require().True(found)
 
 	for _, v := range suite.keeper.GetAllLiquidValidators(suite.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper), v.Status)
+		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper))
 	}
 	suite.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(9999))
 	suite.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(9999))

@@ -3,9 +3,18 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type WhitelistedValMap map[string]WhitelistedValidator
+
+func (whitelistedValMap WhitelistedValMap) IsListed(operatorAddr string) bool {
+	if _, ok := whitelistedValMap[operatorAddr]; ok {
+		return true
+	} else {
+		return false
+	}
+}
 
 func GetWhitelistedValMap(whitelistedValidators []WhitelistedValidator) WhitelistedValMap {
 	whitelistedValMap := make(WhitelistedValMap)
@@ -46,7 +55,7 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
-// TODO: consider changing to decimal
+// TODO: consider changing to decimal, refactor to LiquidDelShares
 func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
 	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
 	if !found {
@@ -61,6 +70,17 @@ func (v LiquidValidator) GetWeight(valMap WhitelistedValMap) sdk.Int {
 		return wv.TargetWeight
 	} else {
 		return sdk.ZeroInt()
+	}
+}
+
+// TODO: refactor
+func (v LiquidValidator) GetStatus(validator stakingtypes.Validator, whitelisted bool) ValidatorStatus {
+	active := v.ActiveCondition(validator, whitelisted)
+	if active {
+		return ValidatorStatusActive
+	} else {
+		// TODO: consider delisting, delisted
+		return ValidatorStatusUnspecified
 	}
 }
 
@@ -110,11 +130,11 @@ func (vs LiquidValidators) TotalDelShares(ctx sdk.Context, sk StakingKeeper) sdk
 
 // TODO: pointer map looks uncertainty, need to fix
 func (vs LiquidValidators) Map() map[string]*LiquidValidator {
-	valsMap := make(map[string]*LiquidValidator)
+	valMap := make(map[string]*LiquidValidator)
 	for _, val := range vs {
-		valsMap[val.OperatorAddress] = &val
+		valMap[val.OperatorAddress] = &val
 	}
-	return valsMap
+	return valMap
 }
 
 // TODO: add testcodes with consider netAmount.TruncateDec() or not

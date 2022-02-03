@@ -8,12 +8,6 @@
 type LiquidValidator struct {
    // operator_address defines the address of the validator's operator; bech encoded in JSON.
    OperatorAddress string 
-   
-   // status is the liquid validator status
-   Status ValidatorStatus
-
-   // weight specifies the weight for liquid staking, unstaking amount
-   Weight       sdk.Int
 }
 ```
 
@@ -22,15 +16,12 @@ LiquidValidators: `0xc0 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuf
 LiquidValidators can have one of two statuses
 
 - `Active` : When some validators in the active set are elected to whiltelist by governance, liquid staker's delegating amount of native tokens are distributed to these vaidators. They can be slashed for misbehavior. They can be delisted. Liquid stakers who unbond their delegation must wait the duration of the UnStakingTime, a chain-specific param, during which time they are still slashable for offences of the active validators if those offences were committed during the period of time that the tokens were bonded.
-- `Delisting` : When a validator expelled from Active by slashing, jailing, tombstoning or poll by governance, all amount of their liquid staking tokens will be redelegated to other validators in active.
-- `Delisted` : Jailed, Tombstoned validators
+- `Unspecified` : not existed or invalid validator on staking module
 
 ```go
 const (
-  ValidatorStatusNil ValidatorStatus = 0
+  ValidatorStatusUnspecified ValidatorStatus = 0
   ValidatorStatusActive ValidatorStatus = 1
-  ValidatorStatusDelisting ValidatorStatus = 2
-  ValidatorStatusDelisted ValidatorStatus = 3
 )
 ```
 

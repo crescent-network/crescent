@@ -45,9 +45,9 @@ enum ValidatorStatus {
   VALIDATOR_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ValidatorStatusUnspecified"];
   // VALIDATOR_STATUS_ACTIVE defines the ...
   VALIDATOR_STATUS_ACTIVE = 1 [(gogoproto.enumvalue_customname) = "ValidatorStatusActive"];
-  // VALIDATOR_STATUS_DELISTING defines the ...
+  // Deprecated: VALIDATOR_STATUS_DELISTING defines the ...
   VALIDATOR_STATUS_DELISTING = 2 [(gogoproto.enumvalue_customname) = "ValidatorStatusDelisting"];
-  // VALIDATOR_STATUS_DELISTED defines the ...
+  // Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
   VALIDATOR_STATUS_DELISTED = 3 [(gogoproto.enumvalue_customname) = "ValidatorStatusDelisted"];
 }
 
@@ -74,10 +74,6 @@ message LiquidValidator {
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
   string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
-
-  // TODO: consider stateless
-  // status is the liquid validator status
-  ValidatorStatus status = 2;
 }
 
 // LiquidValidatorState defines a ... TBD

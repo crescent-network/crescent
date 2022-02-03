@@ -4046,27 +4046,6 @@ paths:
                       description: >-
                         operator_address defines the address of the validator's
                         operator; bech encoded in JSON.
-                    status:
-                      title: |-
-                        TODO: consider stateless
-                        status is the liquid validator status
-                      type: string
-                      enum:
-                        - VALIDATOR_STATUS_UNSPECIFIED
-                        - VALIDATOR_STATUS_ACTIVE
-                        - VALIDATOR_STATUS_DELISTING
-                        - VALIDATOR_STATUS_DELISTED
-                      default: VALIDATOR_STATUS_UNSPECIFIED
-                      description: >-
-                        TODO: simplify
-
-                        ValidatorStatus enumerates the status of a liquid
-                        validator.
-
-                         - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-                         - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-                         - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-                         - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
                   title: LiquidValidator defines a ... TBD
               pagination:
                 description: pagination defines the pagination in the response.
@@ -6460,25 +6439,6 @@ definitions:
         description: >-
           operator_address defines the address of the validator's operator; bech
           encoded in JSON.
-      status:
-        title: |-
-          TODO: consider stateless
-          status is the liquid validator status
-        type: string
-        enum:
-          - VALIDATOR_STATUS_UNSPECIFIED
-          - VALIDATOR_STATUS_ACTIVE
-          - VALIDATOR_STATUS_DELISTING
-          - VALIDATOR_STATUS_DELISTED
-        default: VALIDATOR_STATUS_UNSPECIFIED
-        description: |-
-          TODO: simplify
-          ValidatorStatus enumerates the status of a liquid validator.
-
-           - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-           - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-           - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-           - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
     title: LiquidValidator defines a ... TBD
   squad.liquidstaking.v1beta1.Params:
     type: object
@@ -6523,25 +6483,6 @@ definitions:
               description: >-
                 operator_address defines the address of the validator's
                 operator; bech encoded in JSON.
-            status:
-              title: |-
-                TODO: consider stateless
-                status is the liquid validator status
-              type: string
-              enum:
-                - VALIDATOR_STATUS_UNSPECIFIED
-                - VALIDATOR_STATUS_ACTIVE
-                - VALIDATOR_STATUS_DELISTING
-                - VALIDATOR_STATUS_DELISTED
-              default: VALIDATOR_STATUS_UNSPECIFIED
-              description: |-
-                TODO: simplify
-                ValidatorStatus enumerates the status of a liquid validator.
-
-                 - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-                 - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-                 - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-                 - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
           title: LiquidValidator defines a ... TBD
       pagination:
         description: pagination defines the pagination in the response.
@@ -6598,22 +6539,6 @@ definitions:
               validators on liquid staking.
         description: Params defines the set of params for the liquidstaking module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  squad.liquidstaking.v1beta1.ValidatorStatus:
-    type: string
-    enum:
-      - VALIDATOR_STATUS_UNSPECIFIED
-      - VALIDATOR_STATUS_ACTIVE
-      - VALIDATOR_STATUS_DELISTING
-      - VALIDATOR_STATUS_DELISTED
-    default: VALIDATOR_STATUS_UNSPECIFIED
-    description: |-
-      TODO: simplify
-      ValidatorStatus enumerates the status of a liquid validator.
-
-       - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-       - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-       - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-       - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
   squad.liquidstaking.v1beta1.WhitelistedValidator:
     type: object
     properties:

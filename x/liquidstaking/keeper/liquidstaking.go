@@ -139,7 +139,8 @@ func (k Keeper) LiquidStaking(
 
 	params := k.GetParams(ctx)
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	activeVals := k.GetActiveLiquidValidators(ctx)
+	valMap := k.GetValidatorsMap(ctx)
+	activeVals := k.GetActiveLiquidValidators(ctx, valMap, whitelistedValMap)
 	if activeVals.Len() == 0 || !activeVals.TotalWeight(whitelistedValMap).IsPositive() {
 		return sdk.ZeroDec(), bTokenMintAmount, fmt.Errorf("there's no active liquid validators")
 	}
@@ -189,7 +190,8 @@ func (k Keeper) LiquidUnstaking(
 	}
 
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	activeVals := k.GetActiveLiquidValidators(ctx)
+	valMap := k.GetValidatorsMap(ctx)
+	activeVals := k.GetActiveLiquidValidators(ctx, valMap, whitelistedValMap)
 	if activeVals.Len() == 0 || !activeVals.TotalWeight(whitelistedValMap).IsPositive() {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
 	}
@@ -327,17 +329,20 @@ func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals types.LiquidValida
 }
 
 // GetActiveLiquidValidators get the set of active liquid validators.
-func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
+func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
-
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
-		if val.Status == types.ValidatorStatusActive {
+		if val.ActiveCondition(valMap[val.OperatorAddress], whitelistedValMap.IsListed(val.OperatorAddress)) {
 			vals = append(vals, val)
 		}
+		//if _, ok := whitelistedValMap[val.OperatorAddress]; ok &&
+		//	val.ActiveCondition(valMap[val.OperatorAddress], ok) {
+		//	vals = append(vals, val)
+		//}
 	}
 	return vals
 }
@@ -345,12 +350,12 @@ func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context) (vals types.LiquidVal
 // GetValidatorsMap get the set of all validators as map with no limits
 // TODO: it could optimize to containing only to be used validators
 func (k Keeper) GetValidatorsMap(ctx sdk.Context) map[string]stakingtypes.Validator {
-	valsMap := make(map[string]stakingtypes.Validator)
+	valMap := make(map[string]stakingtypes.Validator)
 	vals := k.stakingKeeper.GetAllValidators(ctx)
 	for _, val := range vals {
-		valsMap[val.OperatorAddress] = val
+		valMap[val.OperatorAddress] = val
 	}
-	return valsMap
+	return valMap
 }
 
 //// CollectBiquidStakings collects all the valid liquidStakings registered in params.BiquidStakings and
