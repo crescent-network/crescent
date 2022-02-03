@@ -15,9 +15,9 @@ func (k Keeper) BondedBondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
-func (k Keeper) CheckRewardsAndLiquidPower(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec) {
+func (k Keeper) CheckRewardsAndDelShares(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec) {
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
-	liquidPower := sdk.ZeroDec()
+	totalDelShares := sdk.ZeroDec()
 	totalRewards := sdk.ZeroDec()
 
 	// Cache ctx for calculate rewards
@@ -29,30 +29,31 @@ func (k Keeper) CheckRewardsAndLiquidPower(ctx sdk.Context, proxyAcc sdk.AccAddr
 			val := k.stakingKeeper.Validator(cachedCtx, valAddr)
 			endingPeriod := k.distrKeeper.IncrementValidatorPeriod(cachedCtx, val)
 			delReward := k.distrKeeper.CalculateDelegationRewards(cachedCtx, val, del, endingPeriod)
-			liquidPower = liquidPower.Add(del.GetShares())
+			totalDelShares = totalDelShares.Add(del.GetShares())
 			totalRewards = totalRewards.Add(delReward.AmountOf(bondDenom))
 			return false
 		},
 	)
 
-	return totalRewards, liquidPower
+	return totalRewards, totalDelShares
 }
 
-func (k Keeper) UpdateLiquidTokens(ctx sdk.Context, proxyAcc sdk.AccAddress) {
-	k.stakingKeeper.IterateDelegations(
-		ctx, proxyAcc,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
-			valAddr := del.GetValidatorAddr()
-			val, found := k.GetLiquidValidator(ctx, valAddr)
-			if !found {
-				panic("liquid validator not founded")
-			}
-			val.LiquidTokens = del.GetShares().TruncateInt()
-			k.SetLiquidValidator(ctx, val)
-			return false
-		},
-	)
-}
+// TODO: deprecated
+//func (k Keeper) UpdateLiquidTokens(ctx sdk.Context, proxyAcc sdk.AccAddress) {
+//	k.stakingKeeper.IterateDelegations(
+//		ctx, proxyAcc,
+//		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+//			valAddr := del.GetValidatorAddr()
+//			val, found := k.GetLiquidValidator(ctx, valAddr)
+//			if !found {
+//				panic("liquid validator not founded")
+//			}
+//			val.LiquidTokens = del.GetShares().TruncateInt()
+//			k.SetLiquidValidator(ctx, val)
+//			return false
+//		},
+//	)
+//}
 
 func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	// delegation power, bondDenom balance, remaining reward, unbonding amount of types.LiquidStakingProxyAcc
@@ -60,7 +61,8 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, bondDenom)
 	ubds := k.stakingKeeper.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
 	unbondingPower := sdk.ZeroInt()
-	totalRewards, liquidPower := k.CheckRewardsAndLiquidPower(ctx, types.LiquidStakingProxyAcc)
+	// TODO: check equal liquid token with del shares
+	totalRewards, totalDelShares := k.CheckRewardsAndDelShares(ctx, types.LiquidStakingProxyAcc)
 
 	for _, ubd := range ubds {
 		for _, entry := range ubd.Entries {
@@ -69,8 +71,8 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 		}
 	}
 
-	fmt.Println("[balance, liquidPower, totalRewards, unbondingPower]", balance, liquidPower, totalRewards, unbondingPower)
-	return balance.Amount.ToDec().Add(liquidPower).Add(totalRewards).Add(unbondingPower.ToDec())
+	fmt.Println("[balance, totalDelShares, totalRewards, unbondingPower]", balance, totalDelShares, totalRewards, unbondingPower)
+	return balance.Amount.ToDec().Add(totalDelShares).Add(totalRewards).Add(unbondingPower.ToDec())
 }
 
 func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, stakingAmt sdk.Int) (newShares sdk.Dec, err error) {
@@ -86,8 +88,8 @@ func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeV
 		if err != nil {
 			return sdk.ZeroDec(), err
 		}
-		val.LiquidTokens = val.LiquidTokens.Add(weightedShares[i])
-		k.SetLiquidValidator(ctx, val)
+		//val.LiquidTokens = val.GetDelShares(ctx, k.stakingKeeper).Add(weightedShares[i])
+		//k.SetLiquidValidator(ctx, val)
 		totalNewShares = totalNewShares.Add(newShares)
 	}
 	return totalNewShares, nil
@@ -96,7 +98,7 @@ func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeV
 // TODO: for using simple weight distribution, not rebalancing
 func (k Keeper) LiquidStakingWithBalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, stakingAmt sdk.Int) (newShares sdk.Dec, err error) {
 	totalNewShares := sdk.ZeroDec()
-	targetMap := types.AddStakingTargetMap(activeVals, stakingAmt)
+	targetMap := k.AddStakingTargetMap(ctx, activeVals, stakingAmt)
 	for valStr, amt := range targetMap {
 		val, err := sdk.ValAddressFromBech32(valStr)
 		if err != nil {
@@ -112,12 +114,12 @@ func (k Keeper) LiquidStakingWithBalancing(ctx sdk.Context, proxyAcc sdk.AccAddr
 			return sdk.ZeroDec(), err
 		}
 		// TODO: consider kv optimize
-		liquidVal, found := k.GetLiquidValidator(ctx, val)
-		if !found {
-			panic("liquid validator not founded")
-		}
-		liquidVal.LiquidTokens = liquidVal.LiquidTokens.Add(amt)
-		k.SetLiquidValidator(ctx, liquidVal)
+		//liquidVal, found := k.GetLiquidValidator(ctx, val)
+		//if !found {
+		//	panic("liquid validator not founded")
+		//}
+		////liquidVal.LiquidTokens = liquidVal.GetDelShares(ctx, k.stakingKeeper).Add(amt)
+		//k.SetLiquidValidator(ctx, liquidVal)
 		totalNewShares = totalNewShares.Add(newShares)
 	}
 	return totalNewShares, nil
@@ -208,7 +210,7 @@ func (k Keeper) LiquidUnstaking(
 	}
 
 	// crumb could small micro token, drop it
-	unbondingShares, _ := types.DivideByCurrentWeightDec(activeVals, unbondingAmount)
+	unbondingShares, _ := k.DivideByCurrentWeightDec(ctx, activeVals, unbondingAmount)
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
 	for i, val := range activeVals {
@@ -231,7 +233,7 @@ func (k Keeper) LiquidUnstaking(
 		ubds = append(ubds, ubd)
 		// TODO: consider using DivideByCurrentWeight for sync LiquidTokens with actual unbonding tokens
 		//val.LiquidTokens = val.LiquidTokens.Sub(weightedShare.TruncateInt())
-		val.LiquidTokens = val.LiquidTokens.Sub(returnAmount)
+		//val.LiquidTokens = val.GetDelShares(ctx, k.stakingKeeper).Sub(returnAmount)
 		totalReturnAmount = totalReturnAmount.Add(returnAmount)
 		k.SetLiquidValidator(ctx, val)
 	}

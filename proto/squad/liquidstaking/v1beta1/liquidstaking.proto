@@ -78,13 +78,8 @@ message LiquidValidator {
   // status is the liquid validator status
   ValidatorStatus status = 2;
 
-  // TODO: simplify
-  // liquid tokens define the liquid staked tokens
-  string liquid_tokens = 3
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-
   // weight specifies the weight for liquid staking, unstaking amount
-  string weight = 4 [
+  string weight = 3 [
     (gogoproto.moretags)                                        = "yaml:\"weight\"",
     (gogoproto.customtype)                                      = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)                                        = false,

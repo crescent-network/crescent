@@ -10,10 +10,9 @@ type LiquidValidator struct {
    OperatorAddress string 
    
    // status is the liquid validator status
-   Status ValidatorStatus 
-   
-   // liquid tokens define the liquid staked tokens
-   LiquidTokens sdk.Int    
+   Status ValidatorStatus
+
+   // weight specifies the weight for liquid staking, unstaking amount
    Weight       sdk.Int
 }
 ```

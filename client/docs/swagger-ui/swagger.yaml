@@ -4065,11 +4065,6 @@ paths:
                          - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
                          - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
                          - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
-                    liquid_tokens:
-                      type: string
-                      title: |-
-                        TODO: simplify
-                        liquid tokens define the liquid staked tokens
                     weight:
                       type: string
                       title: >-
@@ -6485,11 +6480,6 @@ definitions:
            - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
            - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
            - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
-      liquid_tokens:
-        type: string
-        title: |-
-          TODO: simplify
-          liquid tokens define the liquid staked tokens
       weight:
         type: string
         title: 'weight specifies the weight for liquid staking, unstaking amount'
@@ -6554,11 +6544,6 @@ definitions:
                  - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
                  - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
                  - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
-            liquid_tokens:
-              type: string
-              title: |-
-                TODO: simplify
-                liquid tokens define the liquid staked tokens
             weight:
               type: string
               title: 'weight specifies the weight for liquid staking, unstaking amount'

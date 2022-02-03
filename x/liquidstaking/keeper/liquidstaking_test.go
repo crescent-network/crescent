@@ -7,7 +7,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	"github.com/k0kubun/pp"
 )
@@ -19,7 +18,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	params := suite.keeper.GetParams(suite.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	suite.keeper.SetParams(suite.ctx, params)
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	stakingAmt := sdk.NewInt(50000)
 
@@ -36,7 +35,7 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	activeVals := suite.keeper.GetActiveLiquidValidators(suite.ctx)
 	_, crumb := types.DivideByWeight(activeVals, stakingAmt)
@@ -128,7 +127,7 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	liquidValidators := suite.keeper.GetAllLiquidValidators(suite.ctx)
 	lValMap := liquidValidators.Map()
@@ -301,7 +300,7 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
 	}
 	suite.keeper.SetParams(suite.ctx, params)
 	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	val1, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, valOpers[0])
 

@@ -60,5 +60,5 @@ Due to the events like slashing, tombstoning and policy related to serial redele
 
 ## Auto-Withdraw-Re-Stake
 
-- If the sum of the withdrawn rewards(balance) and the upcoming rewards(all delegations rewards) of `LiquidStakingProxyAcc` exceeds `RewardTrigger` of the `LiquidTokens`, the reward is automatically withdrawn and re-stake.
+- If the sum of the withdrawn rewards(balance) and the upcoming rewards(all delegations rewards) of `LiquidStakingProxyAcc` exceeds `RewardTrigger` of the `DelShares`, the reward is automatically withdrawn and re-stake.
 

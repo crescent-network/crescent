@@ -37,22 +37,31 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
+// TODO: consider changing to decimal
+func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
+	if !found {
+		return sdk.ZeroInt()
+	}
+	return del.GetShares().TruncateInt()
+}
+
 // LiquidValidators is a collection of LiquidValidator
 type LiquidValidators []LiquidValidator
 
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
-func (vs LiquidValidators) MinMaxGap(targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
+func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
 	maxGap := sdk.ZeroInt()
 	minGap := sdk.ZeroInt()
 
 	for _, val := range vs {
 		target := targetMap[val.OperatorAddress]
-		if val.LiquidTokens.Sub(target).GT(maxGap) {
-			maxGap = val.LiquidTokens.Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target).GT(maxGap) {
+			maxGap = val.GetDelShares(ctx, sk).Sub(target)
 			maxGapVal = val
 		}
-		if val.LiquidTokens.Sub(target).LT(minGap) {
-			minGap = val.LiquidTokens.Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target).LT(minGap) {
+			minGap = val.GetDelShares(ctx, sk).Sub(target)
 			minGapVal = val
 		}
 	}
@@ -73,12 +82,12 @@ func (vs LiquidValidators) TotalWeight() sdk.Int {
 	return totalWeight
 }
 
-func (vs LiquidValidators) TotalLiquidTokens() sdk.Int {
-	totalLiquidTokens := sdk.ZeroInt()
+func (vs LiquidValidators) TotalDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+	totalDelShares := sdk.ZeroInt()
 	for _, val := range vs {
-		totalLiquidTokens = totalLiquidTokens.Add(val.LiquidTokens)
+		totalDelShares = totalDelShares.Add(val.GetDelShares(ctx, sk))
 	}
-	return totalLiquidTokens
+	return totalDelShares
 }
 
 // TODO: pointer map looks uncertainty, need to fix

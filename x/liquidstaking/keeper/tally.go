@@ -103,19 +103,14 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 	}
 
 	for voter, bTokenValue := range bTokenValueMap {
-		nativeValue := sdk.ZeroDec()
+		delShares := sdk.ZeroDec()
 		if bTokenValue.IsPositive() {
-			nativeValue = types.BTokenToNativeToken(bTokenValue, totalSupply, k.NetAmount(ctx), sdk.ZeroDec())
+			delShares = types.BTokenToNativeToken(bTokenValue, totalSupply, k.NetAmount(ctx), sdk.ZeroDec())
 		}
-		if nativeValue.IsPositive() {
+		if delShares.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			// TODO: ValidateUnbondAmount, delegation shares * bonded / total shares
-			// TODO: votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
-			//sharesAmount, err := k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, valAddr, sharesAmount.TruncateInt())
-			//if err != nil {
-			//	return time.Time{}, stakingtypes.UnbondingDelegation{}, err
-			//}
-			dividedPowers, _ := types.DivideByCurrentWeightDec(liquidVals, nativeValue)
+			// TODO: upgrade enhanced sdk for voting power
+			dividedPowers, _ := k.DivideByCurrentWeightDec(ctx, liquidVals, delShares)
 			for i, val := range liquidVals {
 				if existed, ok := (*otherVotes)[voter][val.OperatorAddress]; ok {
 					(*otherVotes)[voter][val.OperatorAddress] = existed.Add(dividedPowers[i])
