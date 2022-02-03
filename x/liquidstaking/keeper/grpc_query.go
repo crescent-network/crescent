@@ -38,5 +38,6 @@ func (k Querier) LiquidValidators(c context.Context, req *types.QueryLiquidValid
 	validators := k.GetAllLiquidValidators(ctx)
 
 	// TODO: type casting check
+	// TODO: using types.LiquidValidatorState for response
 	return &types.QueryLiquidValidatorsResponse{LiquidValidators: validators}, nil
 }
