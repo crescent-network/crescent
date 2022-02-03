@@ -270,7 +270,7 @@ func (msg MsgLimitOrderBatch) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
 	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unknown swap direction: %s", msg.Direction)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid swap direction: %s", msg.Direction)
 	}
 	if !msg.Amount.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
@@ -295,6 +295,9 @@ func (msg MsgLimitOrderBatch) ValidateBasic() error {
 	}
 	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")
+	}
+	if msg.OrderLifespan < 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order lifespan must not be negative: %s", msg.OrderLifespan)
 	}
 	return nil
 }
@@ -352,7 +355,7 @@ func (msg MsgMarketOrderBatch) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
 	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unknown swap direction: %s", msg.Direction)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid swap direction: %s", msg.Direction)
 	}
 	if !msg.Amount.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
@@ -374,6 +377,9 @@ func (msg MsgMarketOrderBatch) ValidateBasic() error {
 	}
 	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")
+	}
+	if msg.OrderLifespan < 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order lifespan must not be negative: %s", msg.OrderLifespan)
 	}
 	return nil
 }
