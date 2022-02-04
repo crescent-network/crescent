@@ -31,13 +31,13 @@ This message is expected to fail if:
 - the delegator doesn't have bTokens
 - the active validator doesn't exist
 - the amount of bTokens is less than the minimum allowed unstaking
-- the `Amount` has a denomination different than one defined by `params.LiquidBondDenom`
+- the `Amount` has a denomination different than one defined by `params.BondedBondDenom`
 
 When this message is processed the following actions occur:
 
 - calcuate the amount of native tokens for bTokens to unstake
 - burn the bTokens
-- `LiquidStakingProxyAcc` unbond the active validator's LiquidTokens by calculated native token worth of bTokens divided by number of active validators
+- `LiquidStakingProxyAcc` unbond the active validator's DelShares by calculated native token worth of bTokens divided by number of active validators
     - the `DelegatorAddress` of the `UnbondingDelegation` would be `MsgLiquidStake.DelegatorAddress` not `LiquidStakingProxyAcc`
 
 ```go

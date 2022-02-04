@@ -143,7 +143,7 @@ $ %s tx %s deposit 1 1000000000uatom,50000000000usquad --from mykey
 				return fmt.Errorf("invalid deposit coins: %w", err)
 			}
 
-			msg := types.NewMsgDepositBatch(clientCtx.GetFromAddress(), poolId, depositCoins)
+			msg := types.NewMsgDeposit(clientCtx.GetFromAddress(), poolId, depositCoins)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -183,7 +183,7 @@ $ %s tx %s withdraw 1 10000pool1 --from mykey
 				return err
 			}
 
-			msg := types.NewMsgWithdrawBatch(
+			msg := types.NewMsgWithdraw(
 				clientCtx.GetFromAddress(),
 				poolId,
 				poolCoin,
@@ -264,7 +264,7 @@ $ %s tx %s limit-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --fr
 				return fmt.Errorf("invalid order lifespan: %w", err)
 			}
 
-			msg := types.NewMsgLimitOrderBatch(
+			msg := types.NewMsgLimitOrder(
 				clientCtx.GetFromAddress(),
 				pairId,
 				dir,
@@ -334,28 +334,22 @@ $ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from 
 				return fmt.Errorf("invalid demand coin denom: %w", err)
 			}
 
-			price, err := sdk.NewDecFromStr(args[4])
-			if err != nil {
-				return fmt.Errorf("invalid price: %w", err)
-			}
-
-			amt, ok := sdk.NewIntFromString(args[5])
+			amt, ok := sdk.NewIntFromString(args[4])
 			if !ok {
-				return fmt.Errorf("invalid amount: %s", args[5])
+				return fmt.Errorf("invalid amount: %s", args[4])
 			}
 
-			orderLifespan, err := time.ParseDuration(args[6])
+			orderLifespan, err := time.ParseDuration(args[5])
 			if err != nil {
 				return fmt.Errorf("invalid order lifespan: %w", err)
 			}
 
-			msg := types.NewMsgLimitOrderBatch(
+			msg := types.NewMsgMarketOrder(
 				clientCtx.GetFromAddress(),
 				pairId,
 				dir,
 				offerCoin,
 				demandCoinDenom,
-				price,
 				amt,
 				orderLifespan,
 			)

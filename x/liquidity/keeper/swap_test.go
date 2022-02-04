@@ -25,68 +25,68 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 
 	for _, tc := range []struct {
 		name        string
-		msg         *types.MsgLimitOrderBatch
+		msg         *types.MsgLimitOrder
 		expectedErr string
 	}{
 		{
 			"happy case",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
 				parseDec("1.0"), newInt(1000000), 0),
 			"",
 		},
 		{
 			"wrong offer coin and demand coin denom",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
 				parseDec("1.0"), newInt(1000000), 0),
 			"denom pair (denom2, denom1) != (denom1, denom2): wrong denom pair",
 		},
 		{
 			"correct offer coin and demand coin denom",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair2.Id, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
 				parseDec("1.0"), newInt(1000000), 0),
 			"",
 		},
 		{
 			"price not fit in ticks",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionSell, parseCoin("1000000denom1"), "denom2",
 				parseDec("1.0005"), newInt(1000000), 0),
 			"price not fit into ticks",
 		},
 		{
 			"too long order lifespan",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionSell, parseCoin("1000000denom1"), "denom2",
 				parseDec("1.0"), newInt(1000000), 48*time.Hour),
 			"order lifespan is too long",
 		},
 		{
 			"pair not found",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, 3, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
 				parseDec("1.0"), newInt(1000000), 0),
 			"pair not found: not found",
 		},
 		{
 			"price out of lower limit",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
 				parseDec("0.8"), newInt(1000000), 0),
 			"price out of range limit",
 		},
 		{
 			"price out of upper limit",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionBuy, parseCoin("2000000denom2"), "denom1",
 				parseDec("1.2"), newInt(1000000), 0),
 			"price out of range limit",
 		},
 		{
 			"no price limit without last price",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair2.Id, types.SwapDirectionSell, parseCoin("1000000denom2"), "denom1",
 				parseDec("100.0"), newInt(1000000), 0),
 			"",
@@ -94,7 +94,7 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 		{
 
 			"insufficient offer coin",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair2.Id, types.SwapDirectionBuy, parseCoin("1000000denom1"), "denom2",
 				parseDec("10.0"), newInt(1000000), 0),
 			"insufficient offer coin",
@@ -119,29 +119,29 @@ func (s *KeeperTestSuite) TestLimitOrderRefund() {
 	s.fundAddr(orderer, parseCoins("1000000000denom1,1000000000denom2"))
 
 	for _, tc := range []struct {
-		msg          *types.MsgLimitOrderBatch
+		msg          *types.MsgLimitOrder
 		refundedCoin sdk.Coin
 	}{
 		{
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
 				parseDec("1.0"), newInt(1000000), 0),
 			parseCoin("0denom2"),
 		},
 		{
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"), "denom1",
 				parseDec("1.0"), newInt(10000), 0),
 			parseCoin("990000denom2"),
 		},
 		{
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000denom2"), "denom1",
 				parseDec("0.9999"), newInt(1000), 0),
 			parseCoin("0denom2"),
 		},
 		{
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("102denom2"), "denom1",
 				parseDec("1.001"), newInt(100), 0),
 			parseCoin("1denom2"),

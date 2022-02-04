@@ -149,7 +149,7 @@ func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 	liquidity.BeginBlocker(ctx, k)
 
 	// Now any deposits will result in an error.
-	_, err = k.DepositBatch(ctx, types.NewMsgDepositBatch(depositor, pool.Id, depositCoins))
+	_, err = k.DepositBatch(ctx, types.NewMsgDeposit(depositor, pool.Id, depositCoins))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
 
@@ -175,7 +175,7 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 	liquidity.BeginBlocker(ctx, k)
 
 	// Now any withdrawals will result in an error.
-	_, err = k.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
+	_, err = k.WithdrawBatch(ctx, types.NewMsgWithdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
 

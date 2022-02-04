@@ -17,17 +17,17 @@ service Msg {
   // CreatePool defines a method for creating a pool
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
-  // DepositBatch defines a method for depositing coins to the pool
-  rpc DepositBatch(MsgDepositBatch) returns (MsgDepositBatchResponse);
+  // Deposit defines a method for depositing coins to the pool
+  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
 
-  // WithdrawBatch defines a method for withdrawing pool coin from the pool
-  rpc WithdrawBatch(MsgWithdrawBatch) returns (MsgWithdrawBatchResponse);
+  // Withdraw defines a method for withdrawing pool coin from the pool
+  rpc Withdraw(MsgWithdraw) returns (MsgWithdrawResponse);
 
-  // LimitOrderBatch defines a method for making a limit order
-  rpc LimitOrderBatch(MsgLimitOrderBatch) returns (MsgLimitOrderBatchResponse);
+  // LimitOrder defines a method for making a limit order
+  rpc LimitOrder(MsgLimitOrder) returns (MsgLimitOrderResponse);
 
-  // MarketOrderBatch defines a method for making a market order
-  rpc MarketOrderBatch(MsgMarketOrderBatch) returns (MsgMarketOrderBatchResponse);
+  // MarketOrder defines a method for making a market order
+  rpc MarketOrder(MsgMarketOrder) returns (MsgMarketOrderResponse);
 
   // CancelOrder defines a method for cancelling an order
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
@@ -66,8 +66,8 @@ message MsgCreatePool {
 // MsgCreatePoolResponse defines the Msg/CreatePool response type.
 message MsgCreatePoolResponse {}
 
-// MsgDepositBatch defines an SDK message for depositing coins to the pool
-message MsgDepositBatch {
+// MsgDeposit defines an SDK message for depositing coins to the pool
+message MsgDeposit {
   // depositor specifies the bech32-encoded address that makes a deposit to the pool
   string depositor = 1;
 
@@ -79,11 +79,11 @@ message MsgDepositBatch {
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-// MsgDepositBatchResponse defines the Msg/DepositBatch response type.
-message MsgDepositBatchResponse {}
+// MsgDepositResponse defines the Msg/Deposit response type.
+message MsgDepositResponse {}
 
-// MsgWithdrawBatch defines an SDK message for withdrawing pool coin from the pool
-message MsgWithdrawBatch {
+// MsgWithdraw defines an SDK message for withdrawing pool coin from the pool
+message MsgWithdraw {
   // withdrawer specifies the bech32-encoded address that withdraws pool coin from the pool
   string withdrawer = 1;
 
@@ -94,11 +94,11 @@ message MsgWithdrawBatch {
   cosmos.base.v1beta1.Coin pool_coin = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgWithdrawBatchResponse defines the Msg/WithdrawBatch response type.
-message MsgWithdrawBatchResponse {}
+// MsgWithdrawResponse defines the Msg/Withdraw response type.
+message MsgWithdrawResponse {}
 
-// MsgLimitOrderBatch defines an SDK message for making a limit order
-message MsgLimitOrderBatch {
+// MsgLimitOrder defines an SDK message for making a limit order
+message MsgLimitOrder {
   // orderer specifies the bech32-encoded address that makes an order
   string orderer = 1;
 
@@ -124,11 +124,11 @@ message MsgLimitOrderBatch {
   google.protobuf.Duration order_lifespan = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
-// MsgLimitOrderBatchResponse defines the Msg/LimitOrderBatch response type.
-message MsgLimitOrderBatchResponse {}
+// MsgLimitOrderResponse defines the Msg/LimitOrder response type.
+message MsgLimitOrderResponse {}
 
-// MsgMarketOrderBatch defines an SDK message for making a market order
-message MsgMarketOrderBatch {
+// MsgMarketOrder defines an SDK message for making a market order
+message MsgMarketOrder {
   // orderer specifies the bech32-encoded address that makes an order
   string orderer = 1;
 
@@ -151,8 +151,8 @@ message MsgMarketOrderBatch {
   google.protobuf.Duration order_lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
-// MsgMarketOrderBatchResponse defines the Msg/MarketOrderBatch response type.
-message MsgMarketOrderBatchResponse {}
+// MsgMarketOrderResponse defines the Msg/MarketOrder response type.
+message MsgMarketOrderResponse {}
 
 // MsgCancelOrder defines an SDK message for cancelling an order
 message MsgCancelOrder {

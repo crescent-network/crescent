@@ -127,48 +127,48 @@ func TestMsgCreatePool(t *testing.T) {
 	}
 }
 
-func TestMsgDepositBatch(t *testing.T) {
+func TestMsgDeposit(t *testing.T) {
 	testCases := []struct {
 		name        string
-		malleate    func(msg *types.MsgDepositBatch)
+		malleate    func(msg *types.MsgDeposit)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(msg *types.MsgDepositBatch) {},
+			func(msg *types.MsgDeposit) {},
 			"", // empty means no error expected
 		},
 		{
 			"invalid depositor",
-			func(msg *types.MsgDepositBatch) {
+			func(msg *types.MsgDeposit) {
 				msg.Depositor = "invalidaddr"
 			},
 			"invalid depositor address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
 			"invalid pool id",
-			func(msg *types.MsgDepositBatch) {
+			func(msg *types.MsgDeposit) {
 				msg.PoolId = 0
 			},
 			"pool id must not be 0: invalid request",
 		},
 		{
 			"invalid deposit coins",
-			func(msg *types.MsgDepositBatch) {
+			func(msg *types.MsgDeposit) {
 				msg.DepositCoins = sdk.Coins{parseCoin("0denom1"), parseCoin("1000000denom2")}
 			},
 			"coin 0denom1 amount is not positive",
 		},
 		{
 			"invalid deposit coins",
-			func(msg *types.MsgDepositBatch) {
+			func(msg *types.MsgDeposit) {
 				msg.DepositCoins = sdk.Coins{parseCoin("1000000denom1"), parseCoin("0denom2")}
 			},
 			"coin denom2 amount is not positive",
 		},
 		{
 			"invalid deposit coins",
-			func(msg *types.MsgDepositBatch) {
+			func(msg *types.MsgDeposit) {
 				msg.DepositCoins = parseCoins("1000000denom1,1000000denom2,1000000denom3")
 			},
 			"wrong number of deposit coins: 3: invalid request",
@@ -177,9 +177,9 @@ func TestMsgDepositBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgDepositBatch(testAddr, 1, parseCoins("1000000denom1,1000000denom2"))
+			msg := types.NewMsgDeposit(testAddr, 1, parseCoins("1000000denom1,1000000denom2"))
 			tc.malleate(msg)
-			require.Equal(t, types.TypeMsgDepositBatch, msg.Type())
+			require.Equal(t, types.TypeMsgDeposit, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {
@@ -194,43 +194,43 @@ func TestMsgDepositBatch(t *testing.T) {
 	}
 }
 
-func TestMsgWithdrawBatch(t *testing.T) {
+func TestMsgWithdraw(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		malleate    func(msg *types.MsgWithdrawBatch)
+		malleate    func(msg *types.MsgWithdraw)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(msg *types.MsgWithdrawBatch) {},
+			func(msg *types.MsgWithdraw) {},
 			"", // empty means no error expected
 		},
 		{
 			"invalid withdrawer",
-			func(msg *types.MsgWithdrawBatch) {
+			func(msg *types.MsgWithdraw) {
 				msg.Withdrawer = "invalidaddr"
 			},
 			"invalid withdrawer address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
 			"invalid pool id",
-			func(msg *types.MsgWithdrawBatch) {
+			func(msg *types.MsgWithdraw) {
 				msg.PoolId = 0
 			},
 			"pool id must not be 0: invalid request",
 		},
 		{
 			"invalid pool coin",
-			func(msg *types.MsgWithdrawBatch) {
+			func(msg *types.MsgWithdraw) {
 				msg.PoolCoin = parseCoin("0pool1")
 			},
 			"pool coin must be positive: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgWithdrawBatch(testAddr, 1, parseCoin("1000000pool1"))
+			msg := types.NewMsgWithdraw(testAddr, 1, parseCoin("1000000pool1"))
 			tc.malleate(msg)
-			require.Equal(t, types.TypeMsgWithdrawBatch, msg.Type())
+			require.Equal(t, types.TypeMsgWithdraw, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {
@@ -245,63 +245,63 @@ func TestMsgWithdrawBatch(t *testing.T) {
 	}
 }
 
-func TestMsgLimitOrderBatch(t *testing.T) {
+func TestMsgLimitOrder(t *testing.T) {
 	orderLifespan := 20 * time.Second
 	for _, tc := range []struct {
 		name        string
-		malleate    func(msg *types.MsgLimitOrderBatch)
+		malleate    func(msg *types.MsgLimitOrder)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(msg *types.MsgLimitOrderBatch) {},
+			func(msg *types.MsgLimitOrder) {},
 			"", // empty means no error expected
 		},
 		{
 			"invalid orderer",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.Orderer = "invalidaddr"
 			},
 			"invalid orderer address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
 			"invalid pair id",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.PairId = 0
 			},
 			"pair id must not be 0: invalid request",
 		},
 		{
 			"invalid direction",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.Direction = 0
 			},
 			"invalid swap direction: SWAP_DIRECTION_UNSPECIFIED: invalid request",
 		},
 		{
 			"invalid offer coin",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.OfferCoin = parseCoin("0denom1")
 			},
 			"offer coin must be positive: invalid request",
 		},
 		{
 			"insufficient offer coin amount",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.OfferCoin = parseCoin("10denom1")
 			},
 			"offer coin is less than minimum coin amount: invalid request",
 		},
 		{
 			"invalid demand coin denom",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.DemandCoinDenom = "invaliddenom!"
 			},
 			"invalid demand coin denom: invalid denom: invaliddenom!",
 		},
 		{
 			"same offer coin denom and demand coin denom",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.OfferCoin = parseCoin("1000000denom1")
 				msg.DemandCoinDenom = "denom1"
 			},
@@ -309,39 +309,39 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 		},
 		{
 			"invalid price",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.Price = parseDec("0")
 			},
 			"price must be positive: invalid request",
 		},
 		{
 			"invalid amount",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.Amount = sdk.ZeroInt()
 			},
 			"amount must be positive: 0: invalid request",
 		},
 		{
 			"insufficient amount",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.Amount = newInt(10)
 			},
 			"base coin is less than minimum coin amount: invalid request",
 		},
 		{
 			"invalid order lifespan",
-			func(msg *types.MsgLimitOrderBatch) {
+			func(msg *types.MsgLimitOrder) {
 				msg.OrderLifespan = -1
 			},
 			"order lifespan must not be negative: -1ns: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgLimitOrderBatch(
+			msg := types.NewMsgLimitOrder(
 				testAddr, 1, types.SwapDirectionSell, parseCoin("1000000denom2"),
 				"denom1", parseDec("1.0"), newInt(1000000), orderLifespan)
 			tc.malleate(msg)
-			require.Equal(t, types.TypeMsgLimitOrderBatch, msg.Type())
+			require.Equal(t, types.TypeMsgLimitOrder, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {
@@ -356,63 +356,63 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 	}
 }
 
-func TestMsgMarketOrderBatch(t *testing.T) {
+func TestMsgMarketOrder(t *testing.T) {
 	orderLifespan := 20 * time.Second
 	for _, tc := range []struct {
 		name        string
-		malleate    func(msg *types.MsgMarketOrderBatch)
+		malleate    func(msg *types.MsgMarketOrder)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(msg *types.MsgMarketOrderBatch) {},
+			func(msg *types.MsgMarketOrder) {},
 			"", // empty means no error expected
 		},
 		{
 			"invalid orderer",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.Orderer = "invalidaddr"
 			},
 			"invalid orderer address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
 			"invalid pair id",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.PairId = 0
 			},
 			"pair id must not be 0: invalid request",
 		},
 		{
 			"invalid direction",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.Direction = 0
 			},
 			"invalid swap direction: SWAP_DIRECTION_UNSPECIFIED: invalid request",
 		},
 		{
 			"invalid offer coin",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.OfferCoin = parseCoin("0denom1")
 			},
 			"offer coin must be positive: invalid request",
 		},
 		{
 			"insufficient offer coin amount",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.OfferCoin = parseCoin("10denom1")
 			},
 			"offer coin is less than minimum coin amount: invalid request",
 		},
 		{
 			"invalid demand coin denom",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.DemandCoinDenom = "invaliddenom!"
 			},
 			"invalid demand coin denom: invalid denom: invaliddenom!",
 		},
 		{
 			"same offer coin denom and demand coin denom",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.OfferCoin = parseCoin("1000000denom1")
 				msg.DemandCoinDenom = "denom1"
 			},
@@ -420,32 +420,32 @@ func TestMsgMarketOrderBatch(t *testing.T) {
 		},
 		{
 			"invalid amount",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.Amount = sdk.ZeroInt()
 			},
 			"amount must be positive: 0: invalid request",
 		},
 		{
 			"insufficient amount",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.Amount = newInt(10)
 			},
 			"base coin is less than minimum coin amount: invalid request",
 		},
 		{
 			"invalid order lifespan",
-			func(msg *types.MsgMarketOrderBatch) {
+			func(msg *types.MsgMarketOrder) {
 				msg.OrderLifespan = -1
 			},
 			"order lifespan must not be negative: -1ns: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgMarketOrderBatch(
+			msg := types.NewMsgMarketOrder(
 				testAddr, 1, types.SwapDirectionBuy, parseCoin("1000000denom1"),
 				"denom2", newInt(1000000), orderLifespan)
 			tc.malleate(msg)
-			require.Equal(t, types.TypeMsgMarketOrderBatch, msg.Type())
+			require.Equal(t, types.TypeMsgMarketOrder, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {

@@ -11,7 +11,7 @@
   The following transition occurs when a validator elected to whiltelist by governance.
 
   - set `LiquidValidator.Status` to `Active`
-  - redelegate certain amount from all the existing Active validator's `LiquidValidator.LiquidTokens` to newly elected validator so that every Active validators have the same amount of staked tokens
+  - redelegate certain amount from all the existing Active validator's `LiquidValidator.GetDelShares()` to newly elected validator so that every Active validators have the same amount of staked tokens
   - update the `LiquidValidator` object for this validator
   - if it exists, delete any `ValidatorQueue` record for this validator
 
@@ -19,7 +19,7 @@
 
   The following transition occurs when a validator expelled from Active
 
-  - redelegate all `LiquidValidator.LiquidTokens` to the remaining Active validators
+  - redelegate all `LiquidValidator.GetDelShares()` to the remaining Active validators
   - set `LiquidValidator.Status` to `Delisting`
   - update the `LiquidValidator` object for this validator
 
@@ -39,7 +39,7 @@ As a part of the Complete Unstaking state transitions Begin Unstaking will be ca
 
 - determine the amount of native tokens based on amount of bTokens, mint rate and unstake fee rate
 - burn the bTokens
-- `LiquidStakingProxyAcc` unbond the active validator's LiquidTokens by calculated native token worth of bTokens divided by number of active validators
+- `LiquidStakingProxyAcc` unbond the active validator's DelShares by calculated native token worth of bTokens divided by number of active validators
   - the `DelegatorAddress` of the `UnbondingDelegation` would be `MsgLiquidStake.DelegatorAddress` not `LiquidStakingProxyAcc`
 
 ## Complete Unstaking
