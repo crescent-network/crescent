@@ -37,6 +37,22 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.keeper.SetParams(suite.ctx, params)
 	suite.keeper.EndBlocker(suite.ctx)
 
+	res := suite.keeper.GetLiquidValidatorStates(suite.ctx)
+	suite.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
+	suite.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
+	suite.Require().Equal(types.ValidatorStatusActive, res[0].Status)
+	suite.Require().Equal(sdk.ZeroInt(), res[0].DelShares)
+
+	suite.Require().Equal(params.WhitelistedValidators[1].ValidatorAddress, res[1].OperatorAddress)
+	suite.Require().Equal(params.WhitelistedValidators[1].TargetWeight, res[1].Weight)
+	suite.Require().Equal(types.ValidatorStatusActive, res[1].Status)
+	suite.Require().Equal(sdk.ZeroInt(), res[1].DelShares)
+
+	suite.Require().Equal(params.WhitelistedValidators[2].ValidatorAddress, res[2].OperatorAddress)
+	suite.Require().Equal(params.WhitelistedValidators[2].TargetWeight, res[2].Weight)
+	suite.Require().Equal(types.ValidatorStatusActive, res[2].Status)
+	suite.Require().Equal(sdk.ZeroInt(), res[2].DelShares)
+
 	valMap := suite.keeper.GetValidatorsMap(suite.ctx)
 	activeVals := suite.keeper.GetActiveLiquidValidators(suite.ctx, valMap, params.WhitelistedValMap())
 	_, crumb := types.DivideByWeight(activeVals, stakingAmt, params.WhitelistedValMap())
@@ -108,6 +124,23 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel1.Shares)
 	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel2.Shares)
 	suite.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel3.Shares)
+
+	res = suite.keeper.GetLiquidValidatorStates(suite.ctx)
+	suite.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
+	suite.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
+	suite.Require().Equal(types.ValidatorStatusActive, res[0].Status)
+	suite.Require().Equal(sdk.NewInt(13333), res[0].DelShares)
+
+	suite.Require().Equal(params.WhitelistedValidators[1].ValidatorAddress, res[1].OperatorAddress)
+	suite.Require().Equal(params.WhitelistedValidators[1].TargetWeight, res[1].Weight)
+	suite.Require().Equal(types.ValidatorStatusActive, res[1].Status)
+	suite.Require().Equal(sdk.NewInt(13333), res[1].DelShares)
+
+	suite.Require().Equal(params.WhitelistedValidators[2].ValidatorAddress, res[2].OperatorAddress)
+	suite.Require().Equal(params.WhitelistedValidators[2].TargetWeight, res[2].Weight)
+	suite.Require().Equal(types.ValidatorStatusActive, res[2].Status)
+	suite.Require().Equal(sdk.NewInt(13333), res[2].DelShares)
+
 	// TODO: add cases for different weight
 }
 

@@ -329,6 +329,25 @@ func (k Keeper) GetValidatorsMap(ctx sdk.Context) map[string]stakingtypes.Valida
 	return valMap
 }
 
+func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates []types.LiquidValidatorState) {
+	lvs := k.GetAllLiquidValidators(ctx)
+	valMap := k.GetValidatorsMap(ctx)
+	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
+	for _, lv := range lvs {
+		lvState := types.LiquidValidatorState{
+			OperatorAddress: lv.OperatorAddress,
+			Weight:          lv.GetWeight(whitelistedValMap),
+			Status:          lv.GetStatus(valMap[lv.OperatorAddress], whitelistedValMap.IsListed(lv.OperatorAddress)),
+			DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
+		}
+		lvState.OperatorAddress = lv.OperatorAddress
+		lvState.Weight = lv.GetWeight(whitelistedValMap)
+		lvState.Weight = lv.GetWeight(whitelistedValMap)
+		liquidValidatorStates = append(liquidValidatorStates, lvState)
+	}
+	return
+}
+
 //// CollectBiquidStakings collects all the valid liquidStakings registered in params.BiquidStakings and
 //// distributes the total collected coins to destination address.
 //func (k Keeper) CollectBiquidStakings(ctx sdk.Context) error {

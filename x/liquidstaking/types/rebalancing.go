@@ -12,12 +12,12 @@ type Redelegation struct {
 }
 
 // DivideByWeight divide the input value by the ratio of the param weight of the liquid validator and return it with crumb
-func DivideByWeight(vs LiquidValidators, input sdk.Int, valMap WhitelistedValMap) (outputs []sdk.Int, crumb sdk.Int) {
-	totalWeight := vs.TotalWeight(valMap)
+func DivideByWeight(vs LiquidValidators, input sdk.Int, whitelistedValMap WhitelistedValMap) (outputs []sdk.Int, crumb sdk.Int) {
+	totalWeight := vs.TotalWeight(whitelistedValMap)
 	totalShares := sdk.ZeroInt()
 	sharePerWeight := input.ToDec().QuoTruncate(totalWeight.ToDec())
 	for _, val := range vs {
-		weightedShare := sharePerWeight.MulInt(val.GetWeight(valMap)).TruncateInt()
+		weightedShare := sharePerWeight.MulInt(val.GetWeight(whitelistedValMap)).TruncateInt()
 		totalShares = totalShares.Add(weightedShare)
 		outputs = append(outputs, weightedShare)
 	}

@@ -165,6 +165,7 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 		vals[0].Address.String(),
 		testutil.WriteToNewTempFile(s.T(), string(paramChangeProp)).Name(),
 	)
+	fmt.Println(res, err)
 	s.Require().NoError(err)
 	_, err = MsgVote(vals[0].ClientCtx, vals[0].Address.String(), "1", "yes")
 	s.Require().NoError(err)
@@ -197,6 +198,9 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 	fmt.Println(out, err)
 
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), []string{vals[0].Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	fmt.Println(out, err)
+
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryLiquidValidators(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	fmt.Println(out, err)
 
 	// TODO: fix timed out waiting for tx to be included in a block

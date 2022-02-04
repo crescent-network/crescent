@@ -4046,7 +4046,34 @@ paths:
                       description: >-
                         operator_address defines the address of the validator's
                         operator; bech encoded in JSON.
-                  title: LiquidValidator defines a ... TBD
+                    weight:
+                      type: string
+                      title: >-
+                        weight specifies the weight for liquid staking,
+                        unstaking amount
+                    status:
+                      title: status is the liquid validator status
+                      type: string
+                      enum:
+                        - VALIDATOR_STATUS_UNSPECIFIED
+                        - VALIDATOR_STATUS_ACTIVE
+                        - VALIDATOR_STATUS_DELISTING
+                        - VALIDATOR_STATUS_DELISTED
+                      default: VALIDATOR_STATUS_UNSPECIFIED
+                      description: >-
+                        TODO: simplify
+
+                        ValidatorStatus enumerates the status of a liquid
+                        validator.
+
+                         - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
+                         - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
+                         - VALIDATOR_STATUS_DELISTING: Deprecated: VALIDATOR_STATUS_DELISTING defines the ...
+                         - VALIDATOR_STATUS_DELISTED: Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
+                    del_shares:
+                      type: string
+                      title: del shares define the delegation shares of the validator
+                  title: LiquidValidatorState defines a ... TBD
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -6431,7 +6458,7 @@ definitions:
            - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
            - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
     description: WithdrawRequest defines a withdraw request.
-  squad.liquidstaking.v1beta1.LiquidValidator:
+  squad.liquidstaking.v1beta1.LiquidValidatorState:
     type: object
     properties:
       operator_address:
@@ -6439,7 +6466,30 @@ definitions:
         description: >-
           operator_address defines the address of the validator's operator; bech
           encoded in JSON.
-    title: LiquidValidator defines a ... TBD
+      weight:
+        type: string
+        title: 'weight specifies the weight for liquid staking, unstaking amount'
+      status:
+        title: status is the liquid validator status
+        type: string
+        enum:
+          - VALIDATOR_STATUS_UNSPECIFIED
+          - VALIDATOR_STATUS_ACTIVE
+          - VALIDATOR_STATUS_DELISTING
+          - VALIDATOR_STATUS_DELISTED
+        default: VALIDATOR_STATUS_UNSPECIFIED
+        description: |-
+          TODO: simplify
+          ValidatorStatus enumerates the status of a liquid validator.
+
+           - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
+           - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
+           - VALIDATOR_STATUS_DELISTING: Deprecated: VALIDATOR_STATUS_DELISTING defines the ...
+           - VALIDATOR_STATUS_DELISTED: Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
+      del_shares:
+        type: string
+        title: del shares define the delegation shares of the validator
+    title: LiquidValidatorState defines a ... TBD
   squad.liquidstaking.v1beta1.Params:
     type: object
     properties:
@@ -6483,7 +6533,30 @@ definitions:
               description: >-
                 operator_address defines the address of the validator's
                 operator; bech encoded in JSON.
-          title: LiquidValidator defines a ... TBD
+            weight:
+              type: string
+              title: 'weight specifies the weight for liquid staking, unstaking amount'
+            status:
+              title: status is the liquid validator status
+              type: string
+              enum:
+                - VALIDATOR_STATUS_UNSPECIFIED
+                - VALIDATOR_STATUS_ACTIVE
+                - VALIDATOR_STATUS_DELISTING
+                - VALIDATOR_STATUS_DELISTED
+              default: VALIDATOR_STATUS_UNSPECIFIED
+              description: |-
+                TODO: simplify
+                ValidatorStatus enumerates the status of a liquid validator.
+
+                 - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
+                 - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
+                 - VALIDATOR_STATUS_DELISTING: Deprecated: VALIDATOR_STATUS_DELISTING defines the ...
+                 - VALIDATOR_STATUS_DELISTED: Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
+            del_shares:
+              type: string
+              title: del shares define the delegation shares of the validator
+          title: LiquidValidatorState defines a ... TBD
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -6539,6 +6612,22 @@ definitions:
               validators on liquid staking.
         description: Params defines the set of params for the liquidstaking module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  squad.liquidstaking.v1beta1.ValidatorStatus:
+    type: string
+    enum:
+      - VALIDATOR_STATUS_UNSPECIFIED
+      - VALIDATOR_STATUS_ACTIVE
+      - VALIDATOR_STATUS_DELISTING
+      - VALIDATOR_STATUS_DELISTED
+    default: VALIDATOR_STATUS_UNSPECIFIED
+    description: |-
+      TODO: simplify
+      ValidatorStatus enumerates the status of a liquid validator.
+
+       - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
+       - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
+       - VALIDATOR_STATUS_DELISTING: Deprecated: VALIDATOR_STATUS_DELISTING defines the ...
+       - VALIDATOR_STATUS_DELISTED: Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
   squad.liquidstaking.v1beta1.WhitelistedValidator:
     type: object
     properties:

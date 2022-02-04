@@ -65,8 +65,8 @@ func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int
 }
 
 // TODO: add status dependency
-func (v LiquidValidator) GetWeight(valMap WhitelistedValMap) sdk.Int {
-	if wv, ok := valMap[v.OperatorAddress]; ok {
+func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
+	if wv, ok := whitelistedValMap[v.OperatorAddress]; ok {
 		return wv.TargetWeight
 	} else {
 		return sdk.ZeroInt()
@@ -112,10 +112,10 @@ func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalWeight(valMap WhitelistedValMap) sdk.Int {
+func (vs LiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
 	totalWeight := sdk.ZeroInt()
 	for _, val := range vs {
-		totalWeight = totalWeight.Add(val.GetWeight(valMap))
+		totalWeight = totalWeight.Add(val.GetWeight(whitelistedValMap))
 	}
 	return totalWeight
 }
