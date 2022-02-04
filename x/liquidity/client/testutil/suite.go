@@ -84,6 +84,7 @@ func (s *IntegrationTestSuite) createPair(baseCoinDenom, quoteCoinDenom string) 
 	s.Require().NoError(err)
 }
 
+//nolint
 func (s *IntegrationTestSuite) createPool(pairId uint64, depositCoins sdk.Coins) {
 	_, err := MsgCreatePool(s.clientCtx, s.val.Address.String(), pairId, depositCoins)
 	s.Require().NoError(err)
