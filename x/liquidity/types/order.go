@@ -150,6 +150,7 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 			Price:                    req.Price,
 			Amount:                   req.OpenAmount,
 			OpenAmount:               req.OpenAmount,
+			OfferCoinAmount:          req.RemainingOfferCoin.Amount,
 			RemainingOfferCoinAmount: req.RemainingOfferCoin.Amount,
 			ReceivedAmount:           sdk.ZeroInt(),
 		},
@@ -181,13 +182,21 @@ type PoolOrder struct {
 }
 
 func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
+	var offerCoinAmt sdk.Int
+	switch dir {
+	case SwapDirectionBuy:
+		offerCoinAmt = price.MulInt(amt).Ceil().TruncateInt()
+	case SwapDirectionSell:
+		offerCoinAmt = amt
+	}
 	return &PoolOrder{
 		BaseOrder: BaseOrder{
 			Direction:                dir,
 			Price:                    price,
 			Amount:                   amt,
 			OpenAmount:               amt,
-			RemainingOfferCoinAmount: amt,
+			OfferCoinAmount:          offerCoinAmt,
+			RemainingOfferCoinAmount: offerCoinAmt,
 			ReceivedAmount:           sdk.ZeroInt(),
 		},
 		PoolId:          poolId,
