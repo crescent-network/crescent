@@ -126,8 +126,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 	return pool, nil
 }
 
-// DepositBatch handles types.MsgDepositBatch and stores the request.
-func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) (types.DepositRequest, error) {
+// DepositBatch handles types.MsgDeposit and stores the request.
+func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDeposit) (types.DepositRequest, error) {
 	pool, found := k.GetPool(ctx, msg.PoolId)
 	if !found {
 		return types.DepositRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
@@ -154,7 +154,7 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) (types
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeDepositBatch,
+			types.EventTypeDeposit,
 			sdk.NewAttribute(types.AttributeKeyDepositor, msg.Depositor),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyDepositCoins, msg.DepositCoins.String()),
@@ -165,8 +165,8 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDepositBatch) (types
 	return req, nil
 }
 
-// WithdrawBatch handles types.MsgWithdrawBatch and stores the request.
-func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (types.WithdrawRequest, error) {
+// WithdrawBatch handles types.MsgWithdraw and stores the request.
+func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdraw) (types.WithdrawRequest, error) {
 	pool, found := k.GetPool(ctx, msg.PoolId)
 	if !found {
 		return types.WithdrawRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
@@ -190,7 +190,7 @@ func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdrawBatch) (typ
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeWithdrawBatch,
+			types.EventTypeWithdraw,
 			sdk.NewAttribute(types.AttributeKeyWithdrawer, msg.Withdrawer),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(pool.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolCoin, msg.PoolCoin.String()),

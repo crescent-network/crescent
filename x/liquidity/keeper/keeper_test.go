@@ -95,13 +95,13 @@ func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, 
 	if fund {
 		s.fundAddr(depositor, depositCoins)
 	}
-	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, depositCoins))
+	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDeposit(depositor, poolId, depositCoins))
 	s.Require().NoError(err)
 	return req
 }
 
 func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64, poolCoin sdk.Coin) types.WithdrawRequest {
-	req, err := s.keeper.WithdrawBatch(s.ctx, types.NewMsgWithdrawBatch(withdrawer, poolId, poolCoin))
+	req, err := s.keeper.WithdrawBatch(s.ctx, types.NewMsgWithdraw(withdrawer, poolId, poolCoin))
 	s.Require().NoError(err)
 	return req
 }
@@ -124,7 +124,7 @@ func (s *KeeperTestSuite) limitOrderBatch(
 	if fund {
 		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
-	msg := types.NewMsgLimitOrderBatch(
+	msg := types.NewMsgLimitOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		price, amt, orderLifespan)
 	req, err := s.keeper.LimitOrderBatch(s.ctx, msg)

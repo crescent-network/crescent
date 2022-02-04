@@ -114,14 +114,14 @@ func TestMsgCreatePool(t *testing.T) {
 	}
 }
 
-func TestMsgDepositBatch(t *testing.T) {
+func TestMsgDeposit(t *testing.T) {
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgDepositBatch
+		msg    *types.MsgDeposit
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgDepositBatch(
+			types.NewMsgDeposit(
 				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
 				1,
 				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
@@ -129,7 +129,7 @@ func TestMsgDepositBatch(t *testing.T) {
 		},
 		{
 			"invalid depositor address: empty address string is not allowed: invalid address",
-			types.NewMsgDepositBatch(
+			types.NewMsgDeposit(
 				sdk.AccAddress{},
 				1,
 				sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 1000000)),
@@ -137,7 +137,7 @@ func TestMsgDepositBatch(t *testing.T) {
 		},
 		{
 			"coin 0denom1 amount is not positive",
-			types.NewMsgDepositBatch(
+			types.NewMsgDeposit(
 				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
 				1,
 				sdk.Coins{sdk.NewInt64Coin("denom1", 0), sdk.NewInt64Coin("denom2", 1000000)},
@@ -145,7 +145,7 @@ func TestMsgDepositBatch(t *testing.T) {
 		},
 		{
 			"coin denom2 amount is not positive",
-			types.NewMsgDepositBatch(
+			types.NewMsgDeposit(
 				sdk.AccAddress(crypto.AddressHash([]byte("Depositor"))),
 				1,
 				sdk.Coins{sdk.NewInt64Coin("denom1", 1000000), sdk.NewInt64Coin("denom2", 0)},
@@ -155,7 +155,7 @@ func TestMsgDepositBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgDepositBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgDeposit, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()
@@ -171,14 +171,14 @@ func TestMsgDepositBatch(t *testing.T) {
 	}
 }
 
-func TestMsgWithdrawBatch(t *testing.T) {
+func TestMsgWithdraw(t *testing.T) {
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgWithdrawBatch
+		msg    *types.MsgWithdraw
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgWithdrawBatch(
+			types.NewMsgWithdraw(
 				sdk.AccAddress(crypto.AddressHash([]byte("Withdrawer"))),
 				1,
 				sdk.NewInt64Coin("PoolCoinDenom", 500_000),
@@ -186,7 +186,7 @@ func TestMsgWithdrawBatch(t *testing.T) {
 		},
 		{
 			"invalid withdrawer address: empty address string is not allowed: invalid address",
-			types.NewMsgWithdrawBatch(
+			types.NewMsgWithdraw(
 				sdk.AccAddress{},
 				1,
 				sdk.NewInt64Coin("PoolCoinDenom", 500_000),
@@ -194,7 +194,7 @@ func TestMsgWithdrawBatch(t *testing.T) {
 		},
 		{
 			"pool coin must be positive: invalid request",
-			types.NewMsgWithdrawBatch(
+			types.NewMsgWithdraw(
 				sdk.AccAddress(crypto.AddressHash([]byte("Withdrawer"))),
 				1,
 				sdk.NewInt64Coin("PoolCoinDenom", 0),
@@ -204,7 +204,7 @@ func TestMsgWithdrawBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgWithdrawBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgWithdraw, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()
@@ -220,16 +220,16 @@ func TestMsgWithdrawBatch(t *testing.T) {
 	}
 }
 
-func TestMsgMarketOrderBatch(t *testing.T) {
+func TestMsgMarketOrder(t *testing.T) {
 	orderLifespan := 20 * time.Second
 
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgMarketOrderBatch
+		msg    *types.MsgMarketOrder
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgMarketOrderBatch(
+			types.NewMsgMarketOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
@@ -241,7 +241,7 @@ func TestMsgMarketOrderBatch(t *testing.T) {
 		},
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
-			types.NewMsgMarketOrderBatch(
+			types.NewMsgMarketOrder(
 				sdk.AccAddress{},
 				1,
 				types.SwapDirectionBuy,
@@ -253,7 +253,7 @@ func TestMsgMarketOrderBatch(t *testing.T) {
 		},
 		{
 			"offer coin must be positive: invalid request",
-			types.NewMsgMarketOrderBatch(
+			types.NewMsgMarketOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
@@ -265,7 +265,7 @@ func TestMsgMarketOrderBatch(t *testing.T) {
 		},
 		{
 			"offer coin denom and demand coin denom must not be same: invalid request",
-			types.NewMsgMarketOrderBatch(
+			types.NewMsgMarketOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
@@ -279,7 +279,7 @@ func TestMsgMarketOrderBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgMarketOrderBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgMarketOrder, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()
@@ -295,16 +295,16 @@ func TestMsgMarketOrderBatch(t *testing.T) {
 	}
 }
 
-func TestMsgLimitOrderBatch(t *testing.T) {
+func TestMsgLimitOrder(t *testing.T) {
 	orderLifespan := 20 * time.Second
 
 	testCases := []struct {
 		expErr string
-		msg    *types.MsgLimitOrderBatch
+		msg    *types.MsgLimitOrder
 	}{
 		{
 			"", // empty means no error expected
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
@@ -317,7 +317,7 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 		},
 		{
 			"invalid orderer address: empty address string is not allowed: invalid address",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				sdk.AccAddress{},
 				1,
 				types.SwapDirectionBuy,
@@ -330,7 +330,7 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 		},
 		{
 			"offer coin must be positive: invalid request",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
@@ -343,7 +343,7 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 		},
 		{
 			"offer coin denom and demand coin denom must not be same: invalid request",
-			types.NewMsgLimitOrderBatch(
+			types.NewMsgLimitOrder(
 				sdk.AccAddress(crypto.AddressHash([]byte("Orderer"))),
 				1,
 				types.SwapDirectionBuy,
@@ -358,7 +358,7 @@ func TestMsgLimitOrderBatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, types.TypeMsgLimitOrderBatch, tc.msg.Type())
+			require.Equal(t, types.TypeMsgLimitOrder, tc.msg.Type())
 			require.Equal(t, types.RouterKey, tc.msg.Route())
 
 			err := tc.msg.ValidateBasic()

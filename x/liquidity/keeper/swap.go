@@ -11,8 +11,8 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
-// LimitOrderBatch handles types.MsgLimitOrderBatch and stores it.
-func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrderBatch) (types.SwapRequest, error) {
+// LimitOrderBatch handles types.MsgLimitOrder and stores it.
+func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrder) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
 	if price := types.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
@@ -82,7 +82,7 @@ func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrderBatch) 
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeLimitOrderBatch,
+			types.EventTypeLimitOrder,
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeySwapDirection, msg.Direction.String()),
@@ -100,8 +100,8 @@ func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrderBatch) 
 	return req, nil
 }
 
-// MarketOrderBatch handles types.MsgMarketOrderBatch and stores it.
-func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrderBatch) (types.SwapRequest, error) {
+// MarketOrderBatch handles types.MsgMarketOrder and stores it.
+func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrder) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
 	if msg.OrderLifespan > params.MaxOrderLifespan {
@@ -154,7 +154,7 @@ func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrderBatch
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeMarketOrderBatch,
+			types.EventTypeMarketOrder,
 			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
