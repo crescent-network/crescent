@@ -1,11 +1,28 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+type WhitelistedValMap map[string]WhitelistedValidator
+
+func (whitelistedValMap WhitelistedValMap) IsListed(operatorAddr string) bool {
+	if _, ok := whitelistedValMap[operatorAddr]; ok {
+		return true
+	} else {
+		return false
+	}
+}
+
+func GetWhitelistedValMap(whitelistedValidators []WhitelistedValidator) WhitelistedValMap {
+	whitelistedValMap := make(WhitelistedValMap)
+	for _, wv := range whitelistedValidators {
+		whitelistedValMap[wv.ValidatorAddress] = wv
+	}
+	return whitelistedValMap
+}
 
 // Validate validates LiquidValidator.
 func (v LiquidValidator) Validate() error {
@@ -14,13 +31,14 @@ func (v LiquidValidator) Validate() error {
 		return valErr
 	}
 
-	if v.Weight.IsNil() {
-		return fmt.Errorf("liquidstaking validator weight must not be nil")
-	}
-
-	if v.Weight.IsNegative() {
-		return fmt.Errorf("liquidstaking validator weight must not be negative: %s", v.Weight)
-	}
+	// TODO: validated on params or LiquidValidators
+	//if v.Weight.IsNil() {
+	//	return fmt.Errorf("liquidstaking validator weight must not be nil")
+	//}
+	//
+	//if v.Weight.IsNegative() {
+	//	return fmt.Errorf("liquidstaking validator weight must not be negative: %s", v.Weight)
+	//}
 
 	// TODO: add validation for LiquidTokens, Status
 	return nil
@@ -37,22 +55,51 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
+// TODO: consider changing to decimal, refactor to LiquidDelShares
+func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
+	if !found {
+		return sdk.ZeroInt()
+	}
+	return del.GetShares().TruncateInt()
+}
+
+// TODO: add status dependency
+func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
+	if wv, ok := whitelistedValMap[v.OperatorAddress]; ok {
+		return wv.TargetWeight
+	} else {
+		return sdk.ZeroInt()
+	}
+}
+
+// TODO: refactor
+func (v LiquidValidator) GetStatus(validator stakingtypes.Validator, whitelisted bool) ValidatorStatus {
+	active := v.ActiveCondition(validator, whitelisted)
+	if active {
+		return ValidatorStatusActive
+	} else {
+		// TODO: consider delisting, delisted
+		return ValidatorStatusUnspecified
+	}
+}
+
 // LiquidValidators is a collection of LiquidValidator
 type LiquidValidators []LiquidValidator
 
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
-func (vs LiquidValidators) MinMaxGap(targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
+func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
 	maxGap := sdk.ZeroInt()
 	minGap := sdk.ZeroInt()
 
 	for _, val := range vs {
 		target := targetMap[val.OperatorAddress]
-		if val.LiquidTokens.Sub(target).GT(maxGap) {
-			maxGap = val.LiquidTokens.Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target).GT(maxGap) {
+			maxGap = val.GetDelShares(ctx, sk).Sub(target)
 			maxGapVal = val
 		}
-		if val.LiquidTokens.Sub(target).LT(minGap) {
-			minGap = val.LiquidTokens.Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target).LT(minGap) {
+			minGap = val.GetDelShares(ctx, sk).Sub(target)
 			minGapVal = val
 		}
 	}
@@ -65,29 +112,29 @@ func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalWeight() sdk.Int {
+func (vs LiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
 	totalWeight := sdk.ZeroInt()
 	for _, val := range vs {
-		totalWeight = totalWeight.Add(val.Weight)
+		totalWeight = totalWeight.Add(val.GetWeight(whitelistedValMap))
 	}
 	return totalWeight
 }
 
-func (vs LiquidValidators) TotalLiquidTokens() sdk.Int {
-	totalLiquidTokens := sdk.ZeroInt()
+func (vs LiquidValidators) TotalDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+	totalDelShares := sdk.ZeroInt()
 	for _, val := range vs {
-		totalLiquidTokens = totalLiquidTokens.Add(val.LiquidTokens)
+		totalDelShares = totalDelShares.Add(val.GetDelShares(ctx, sk))
 	}
-	return totalLiquidTokens
+	return totalDelShares
 }
 
 // TODO: pointer map looks uncertainty, need to fix
 func (vs LiquidValidators) Map() map[string]*LiquidValidator {
-	valsMap := make(map[string]*LiquidValidator)
+	valMap := make(map[string]*LiquidValidator)
 	for _, val := range vs {
-		valsMap[val.OperatorAddress] = &val
+		valMap[val.OperatorAddress] = &val
 	}
-	return valsMap
+	return valMap
 }
 
 // TODO: add testcodes with consider netAmount.TruncateDec() or not

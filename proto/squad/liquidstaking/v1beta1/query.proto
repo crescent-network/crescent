@@ -55,7 +55,7 @@ message QueryLiquidValidatorsRequest {
 
 // QueryLiquidValidatorsResponse is the response type for the Query/LiquidValidators RPC method.
 message QueryLiquidValidatorsResponse {
-  repeated LiquidValidator liquid_validators = 1 [(gogoproto.nullable) = false];
+  repeated LiquidValidatorState liquid_validators = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

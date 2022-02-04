@@ -91,10 +91,6 @@ $ %s query %s liquid-validators
 				return err
 			}
 
-			//name, _ := cmd.Flags().GetString(FlagName)
-			//sourceAddr, _ := cmd.Flags().GetString(FlagSourceAddress)
-			//destinationAddr, _ := cmd.Flags().GetString(FlagDestinationAddress)
-
 			queryClient := types.NewQueryClient(clientCtx)
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
@@ -104,10 +100,7 @@ $ %s query %s liquid-validators
 			res, err := queryClient.LiquidValidators(
 				context.Background(),
 				&types.QueryLiquidValidatorsRequest{
-					// TODO: add status
-					//Name:               name,
-					//SourceAddress:      sourceAddr,
-					//DestinationAddress: destinationAddr,
+					// TODO: consider add status
 					Pagination: pageReq,
 				},
 			)

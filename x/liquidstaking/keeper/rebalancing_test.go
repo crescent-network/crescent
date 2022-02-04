@@ -5,35 +5,34 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	_, valOpers := suite.CreateValidators([]int64{1000000, 1000000, 1000000, 1000000, 1000000})
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(types.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	params := suite.keeper.GetParams(suite.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
-	params.CommissionRate = sdk.ZeroDec()
 	suite.keeper.SetParams(suite.ctx, params)
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	stakingAmt := sdk.NewInt(50000)
 	// add active validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	newShares, bTokenMintAmt, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, suite.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	suite.Require().NoError(err)
 	suite.Require().Equal(newShares, sdk.MustNewDecFromStr("49998.0"))
 	suite.Require().Equal(bTokenMintAmt, stakingAmt)
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	proxyAccDel1, found := suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	suite.Require().True(found)
@@ -47,19 +46,19 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(16666))
 
 	for _, v := range suite.keeper.GetAllLiquidValidators(suite.ctx) {
-		fmt.Println(v.OperatorAddress, v.LiquidTokens, v.Status)
+		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper))
 	}
 	fmt.Println("-----------")
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[3].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	proxyAccDel1, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	suite.Require().True(found)
@@ -76,7 +75,7 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12499))
 
 	for _, v := range suite.keeper.GetAllLiquidValidators(suite.ctx) {
-		fmt.Println(v.OperatorAddress, v.LiquidTokens, v.Status)
+		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper))
 	}
 	fmt.Println("-----------")
 
@@ -91,14 +90,14 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
-		{ValidatorAddress: valOpers[0].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[1].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[2].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[3].String(), Weight: sdk.NewInt(1)},
-		{ValidatorAddress: valOpers[4].String(), Weight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	liquidstaking.EndBlocker(suite.ctx, suite.keeper)
+	suite.keeper.EndBlocker(suite.ctx)
 
 	proxyAccDel1, found = suite.app.StakingKeeper.GetDelegation(suite.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	suite.Require().True(found)
@@ -112,7 +111,7 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.Require().True(found)
 
 	for _, v := range suite.keeper.GetAllLiquidValidators(suite.ctx) {
-		fmt.Println(v.OperatorAddress, v.LiquidTokens, v.Status)
+		fmt.Println(v.OperatorAddress, v.GetDelShares(suite.ctx, suite.app.StakingKeeper))
 	}
 	suite.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(9999))
 	suite.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(9999))
