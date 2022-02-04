@@ -26,6 +26,10 @@ func NewMatchEngine(buys, sells OrderSource, prec int) *MatchEngine {
 	}
 }
 
+func NewMatchEngineFromOrderBook(ob *OrderBook) *MatchEngine {
+	return NewMatchEngine(ob.OrderSource(SwapDirectionBuy), ob.OrderSource(SwapDirectionSell), ob.TickPrecision)
+}
+
 func (engine *MatchEngine) Matchable() bool {
 	highestBuyPrice, found := engine.BuyOrderSource.HighestTick()
 	if !found {

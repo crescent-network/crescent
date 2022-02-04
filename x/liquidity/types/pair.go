@@ -25,7 +25,7 @@ func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) Pair {
 		Id:                id,
 		BaseCoinDenom:     baseCoinDenom,
 		QuoteCoinDenom:    quoteCoinDenom,
-		EscrowAddress:     PairEscrowAddr(id).String(),
+		EscrowAddress:     PairEscrowAddress(id).String(),
 		LastSwapRequestId: 0,
 		LastPrice:         nil,
 		CurrentBatchId:    1,
@@ -56,8 +56,8 @@ func (pair Pair) Validate() error {
 	return nil
 }
 
-// PairEscrowAddr returns a unique address of the pair's escrow.
-func PairEscrowAddr(pairId uint64) sdk.AccAddress {
+// PairEscrowAddress returns a unique address of the pair's escrow.
+func PairEscrowAddress(pairId uint64) sdk.AccAddress {
 	return farmingtypes.DeriveAddress(
 		AddressType,
 		ModuleName,
