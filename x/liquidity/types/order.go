@@ -50,7 +50,7 @@ func (orders Orders) Sort(cmp PriceComparator) {
 		case *UserOrder:
 			switch orderB := orders[j].(type) {
 			case *UserOrder:
-				return orderA.RequestId > orderB.RequestId
+				return orderA.RequestId < orderB.RequestId
 			case *PoolOrder:
 				return true
 			}
@@ -59,7 +59,7 @@ func (orders Orders) Sort(cmp PriceComparator) {
 			case *UserOrder:
 				return false
 			case *PoolOrder:
-				return orderA.PoolId > orderB.PoolId
+				return orderA.PoolId < orderB.PoolId
 			}
 		}
 		return false // not reachable
@@ -176,9 +176,8 @@ func (order *UserOrder) SetReceivedAmount(amount sdk.Int) Order {
 
 type PoolOrder struct {
 	BaseOrder
-	PoolId          uint64
-	ReserveAddress  sdk.AccAddress
-	OfferCoinAmount sdk.Int
+	PoolId         uint64
+	ReserveAddress sdk.AccAddress
 }
 
 func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
@@ -199,9 +198,8 @@ func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, 
 			RemainingOfferCoinAmount: offerCoinAmt,
 			ReceivedAmount:           sdk.ZeroInt(),
 		},
-		PoolId:          poolId,
-		ReserveAddress:  reserveAddr,
-		OfferCoinAmount: amt,
+		PoolId:         poolId,
+		ReserveAddress: reserveAddr,
 	}
 }
 
