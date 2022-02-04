@@ -95,7 +95,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := types.NewPool(1, 1)
 			depositor := sdk.AccAddress(crypto.AddressHash([]byte("depositor")))
-			msg := types.NewMsgDepositBatch(depositor, 1, parseCoins("1000000denom1,1000000denom2"))
+			msg := types.NewMsgDeposit(depositor, 1, parseCoins("1000000denom1,1000000denom2"))
 			req := types.NewDepositRequest(msg, pool, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()
@@ -178,7 +178,7 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			withdrawer := sdk.AccAddress(crypto.AddressHash([]byte("withdrawer")))
-			msg := types.NewMsgWithdrawBatch(withdrawer, 1, parseCoin("1000pool1"))
+			msg := types.NewMsgWithdraw(withdrawer, 1, parseCoin("1000pool1"))
 			req := types.NewWithdrawRequest(msg, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()

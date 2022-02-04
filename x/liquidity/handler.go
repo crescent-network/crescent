@@ -22,17 +22,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgCreatePool:
 			res, err := msgServer.CreatePool(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgDepositBatch:
-			res, err := msgServer.DepositBatch(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgDeposit:
+			res, err := msgServer.Deposit(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgWithdrawBatch:
-			res, err := msgServer.WithdrawBatch(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgWithdraw:
+			res, err := msgServer.Withdraw(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgLimitOrderBatch:
-			res, err := msgServer.LimitOrderBatch(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgLimitOrder:
+			res, err := msgServer.LimitOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgMarketOrderBatch:
-			res, err := msgServer.MarketOrderBatch(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgMarketOrder:
+			res, err := msgServer.MarketOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgCancelOrder:
 			res, err := msgServer.CancelOrder(sdk.WrapSDKContext(ctx), msg)
