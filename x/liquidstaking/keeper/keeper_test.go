@@ -41,14 +41,7 @@ type KeeperTestSuite struct {
 	addrs      []sdk.AccAddress
 	delAddrs   []sdk.AccAddress
 	valAddrs   []sdk.ValAddress
-	//sourceAddrs           []sdk.AccAddress
-	//destinationAddrs      []sdk.AccAddress
-	//whitelistedValidators []liquiditytypes.WhitelistedValidator
 }
-
-//func testProposal(changes ...proposal.ParamChange) *proposal.ParameterChangeProposal {
-//	return proposal.NewParameterChangeProposal("title", "description", changes)
-//}
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))

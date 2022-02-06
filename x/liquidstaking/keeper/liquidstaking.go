@@ -334,9 +334,6 @@ func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates
 			Status:          lv.GetStatus(valMap[lv.OperatorAddress], whitelistedValMap.IsListed(lv.OperatorAddress)),
 			DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
 		}
-		lvState.OperatorAddress = lv.OperatorAddress
-		lvState.Weight = lv.GetWeight(whitelistedValMap)
-		lvState.Weight = lv.GetWeight(whitelistedValMap)
 		liquidValidatorStates = append(liquidValidatorStates, lvState)
 	}
 	return

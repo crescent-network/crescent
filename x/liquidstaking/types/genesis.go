@@ -14,7 +14,7 @@ func NewGenesisState(params Params, liquidValidators []LiquidValidator) *Genesis
 func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(
 		DefaultParams(),
-		[]LiquidValidator{},
+		nil,
 	)
 }
 
@@ -26,7 +26,7 @@ func ValidateGenesis(data GenesisState) error {
 	for _, lv := range data.LiquidValidators {
 		if err := lv.Validate(); err != nil {
 			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidCoins,
+				sdkerrors.ErrInvalidAddress,
 				"invalid liquid validator %s: %v", lv, err)
 		}
 	}
