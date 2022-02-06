@@ -110,8 +110,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		}
 		if delShares.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			// TODO: upgrade enhanced sdk for voting power
-			dividedPowers, _ := k.DivideByCurrentWeightDec(ctx, liquidVals, delShares)
+			dividedPowers, _ := k.DivideByCurrentWeight(ctx, liquidVals, delShares)
 			for i, val := range liquidVals {
 				if existed, ok := (*otherVotes)[voter][val.OperatorAddress]; ok {
 					(*otherVotes)[voter][val.OperatorAddress] = existed.Add(dividedPowers[i])

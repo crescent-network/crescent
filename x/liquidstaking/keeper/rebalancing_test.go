@@ -119,3 +119,36 @@ func (suite *KeeperTestSuite) TestRebalancingCase1() {
 	suite.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(10002))
 	suite.Require().EqualValues(proxyAccDel5.Shares.TruncateInt(), sdk.NewInt(9999))
 }
+
+func (suite *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
+	_, valOpers := suite.CreateValidators([]int64{1000000, 1000000, 1000000})
+	params := suite.keeper.GetParams(suite.ctx)
+
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+	}
+	suite.keeper.SetParams(suite.ctx, params)
+	suite.keeper.EndBlocker(suite.ctx)
+
+	stakingAmt := sdk.NewInt(100000000)
+	suite.liquidStaking(suite.delAddrs[0], stakingAmt)
+
+	// no rewards
+	totalRewards, totalDelShares := suite.keeper.CheckRewardsAndDelShares(suite.ctx, types.LiquidStakingProxyAcc)
+	suite.EqualValues(totalRewards, sdk.ZeroDec())
+	suite.EqualValues(totalDelShares, stakingAmt.ToDec())
+
+	// allocate rewards
+	suite.advanceHeight(100, false)
+	totalRewards, totalDelShares = suite.keeper.CheckRewardsAndDelShares(suite.ctx, types.LiquidStakingProxyAcc)
+	suite.NotEqualValues(totalRewards, sdk.ZeroDec())
+
+	// withdraw rewards and re-staking
+	valMap := suite.keeper.GetValidatorsMap(suite.ctx)
+	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
+	suite.keeper.WithdrawRewardsAndReStaking(suite.ctx, valMap, whitelistedValMap)
+	totalRewardsAfter, totalDelSharesAfter := suite.keeper.CheckRewardsAndDelShares(suite.ctx, types.LiquidStakingProxyAcc)
+	suite.EqualValues(totalRewardsAfter, sdk.ZeroDec())
+	suite.EqualValues(totalDelSharesAfter, totalRewards.TruncateDec().Add(totalDelShares))
+}

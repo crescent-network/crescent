@@ -12,6 +12,7 @@ type Redelegation struct {
 }
 
 // DivideByWeight divide the input value by the ratio of the param weight of the liquid validator and return it with crumb
+// which is may occur while dividing according to the weight of liquid validators by decimal error.
 func DivideByWeight(vs LiquidValidators, input sdk.Int, whitelistedValMap WhitelistedValMap) (outputs []sdk.Int, crumb sdk.Int) {
 	totalWeight := vs.TotalWeight(whitelistedValMap)
 	totalShares := sdk.ZeroInt()

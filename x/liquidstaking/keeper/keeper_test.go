@@ -3,13 +3,21 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/mint"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -19,13 +27,7 @@ import (
 )
 
 var (
-	//initialBalances = sdk.NewCoins(
-	//	sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000),
-	//	sdk.NewInt64Coin(denom1, 1_000_000_000),
-	//	sdk.NewInt64Coin(denom2, 1_000_000_000),
-	//	sdk.NewInt64Coin(denom3, 1_000_000_000))
-	//smallBalances = mustParseCoinsNormalized("1denom1,2denom2,3denom3,1000000000stake")
-	PKs = simapp.CreateTestPubKeys(500)
+	BlockTime = 10 * time.Second
 )
 
 type KeeperTestSuite struct {
@@ -66,46 +68,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 10, sdk.NewInt(1_000_000_000))
 	suite.delAddrs = simapp.AddTestAddrs(suite.app, suite.ctx, 10, sdk.NewInt(1_000_000_000))
 	suite.valAddrs = simapp.ConvertAddrsToValAddrs(suite.delAddrs)
-	//dAddr1 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "destinationAddr1")
-	//dAddr2 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "destinationAddr2")
-	//dAddr3 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "destinationAddr3")
-	//dAddr4 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "destinationAddr4")
-	//dAddr5 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "destinationAddr5")
-	//dAddr6 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, "farming", "GravityDEXFarmingWhitelistedValidator")
-	//sAddr1 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "sourceAddr1")
-	//sAddr2 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "sourceAddr2")
-	//sAddr3 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "sourceAddr3")
-	//sAddr4 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "sourceAddr4")
-	//sAddr5 := liquiditytypes.DeriveAddress(liquiditytypes.AddressType32Bytes, liquiditytypes.ModuleName, "sourceAddr5")
-	//sAddr6 := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, authtypes.FeeCollectorName).GetAddress()
-	//suite.destinationAddrs = []sdk.AccAddress{dAddr1, dAddr2, dAddr3, dAddr4, dAddr5, dAddr6}
-	//suite.sourceAddrs = []sdk.AccAddress{sAddr1, sAddr2, sAddr3, sAddr4, sAddr5, sAddr6}
-	//for _, addr := range append(suite.addrs, suite.sourceAddrs[:3]...) {
-	//	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
-	//	suite.Require().NoError(err)
-	//}
-	//err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, suite.sourceAddrs[3], smallBalances)
-	//suite.Require().NoError(err)
 
-	//suite.whitelistedValidators = []liquiditytypes.WhitelistedValidator{
-	//	{
-	//		ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-	//		Weight:           sdk.MustNewDecFromStr("0.5"),
-	//	},
-	//}
+	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	params := suite.keeper.GetParams(suite.ctx)
+	params.UnstakeFeeRate = sdk.ZeroDec()
+	suite.keeper.SetParams(suite.ctx, params)
+	suite.keeper.EndBlocker(suite.ctx)
+	// call mint.BeginBlocker for init k.SetLastBlockTime(ctx, ctx.BlockTime())
+	mint.BeginBlocker(suite.ctx, suite.app.MintKeeper)
 }
-
-//func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
-//	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-//}
-//
-//func mustParseCoinsNormalized(coinStr string) (coins sdk.Coins) {
-//	coins, err := sdk.ParseCoinsNormalized(coinStr)
-//	if err != nil {
-//		panic(err)
-//	}
-//	return coins
-//}
 
 func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	suite.app.BeginBlocker(suite.ctx, abci.RequestBeginBlock{})
@@ -129,6 +100,55 @@ func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress
 
 	suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{})
 	return addrs, valAddrs
+}
+
+func (suite *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) {
+	params := suite.keeper.GetParams(suite.ctx)
+	btokenBalanceBefore := suite.app.BankKeeper.GetBalance(suite.ctx, liquidStaker, params.BondedBondDenom).Amount
+	newShares, bTokenMintAmt, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	btokenBalanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, liquidStaker, params.BondedBondDenom).Amount
+	suite.Require().NoError(err)
+	suite.NotEqualValues(newShares, sdk.ZeroDec())
+	suite.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
+}
+
+func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
+	feeCollector := s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	for i := 0; i < height; i++ {
+		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(s.ctx.BlockTime().Add(BlockTime))
+		mint.BeginBlocker(s.ctx, s.app.MintKeeper)
+		feeCollectorBalance := s.app.BankKeeper.GetAllBalances(s.ctx, feeCollector)
+		rewardsToBeDistributed := feeCollectorBalance.AmountOf(sdk.DefaultBondDenom)
+
+		// mimic AllocateTokens, get rewards from feeCollector, AllocateTokensToValidator, add remaining to feePool
+		err := s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, authtypes.FeeCollectorName, distrtypes.ModuleName, feeCollectorBalance)
+		s.Require().NoError(err)
+		totalRewards := sdk.ZeroDec()
+		totalPower := int64(0)
+		s.app.StakingKeeper.IterateBondedValidatorsByPower(s.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+			consPower := validator.GetConsensusPower(s.app.StakingKeeper.PowerReduction(s.ctx))
+			totalPower = totalPower + consPower
+			return false
+		})
+		s.app.StakingKeeper.IterateBondedValidatorsByPower(s.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+			consPower := validator.GetConsensusPower(s.app.StakingKeeper.PowerReduction(s.ctx))
+			powerFraction := sdk.NewDec(consPower).QuoTruncate(sdk.NewDec(totalPower))
+			reward := rewardsToBeDistributed.ToDec().MulTruncate(powerFraction)
+			s.app.DistrKeeper.AllocateTokensToValidator(s.ctx, validator, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: reward}})
+			totalRewards = totalRewards.Add(reward)
+			return false
+		})
+		remaining := rewardsToBeDistributed.ToDec().Sub(totalRewards)
+		s.Require().False(remaining.GT(sdk.NewDec(1)))
+		feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: remaining}}...)
+		s.app.DistrKeeper.SetFeePool(s.ctx, feePool)
+		staking.BeginBlocker(s.ctx, *s.app.StakingKeeper)
+		staking.EndBlocker(s.ctx, *s.app.StakingKeeper)
+		if withEndBlock {
+			liquidstaking.EndBlocker(s.ctx, s.app.LiquidStakingKeeper)
+		}
+	}
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
