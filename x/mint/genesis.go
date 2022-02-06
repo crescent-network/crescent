@@ -8,6 +8,9 @@ import (
 
 // InitGenesis new mint genesis
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, data *types.GenesisState) {
+	if err := types.ValidateGenesis(*data); err != nil {
+		panic(err)
+	}
 	keeper.SetParams(ctx, data.Params)
 	if data.LastBlockTime != nil {
 		keeper.SetLastBlockTime(ctx, *data.LastBlockTime)
@@ -19,5 +22,5 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, 
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	lastBlockTime := keeper.GetLastBlockTime(ctx)
 	params := keeper.GetParams(ctx)
-	return types.NewGenesisState(params, &lastBlockTime)
+	return types.NewGenesisState(params, lastBlockTime)
 }

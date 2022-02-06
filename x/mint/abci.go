@@ -22,10 +22,10 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		if !schedule.EndTime.Before(ctx.BlockTime()) && !schedule.StartTime.After(ctx.BlockTime()) {
 			lastBlockTime := k.GetLastBlockTime(ctx)
 			// if not set LastBlockTime(e.g. fist block), skip minting inflation
-			if lastBlockTime.Equal(time.Time{}) {
+			if lastBlockTime == nil {
 				break
 			}
-			lastBlockTimeDiff := ctx.BlockTime().Sub(lastBlockTime)
+			lastBlockTimeDiff := ctx.BlockTime().Sub(*lastBlockTime)
 			if lastBlockTimeDiff > params.BlockTimeThreshold {
 				lastBlockTimeDiff = params.BlockTimeThreshold
 			}
