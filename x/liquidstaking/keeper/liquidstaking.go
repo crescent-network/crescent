@@ -172,6 +172,7 @@ func (k Keeper) LiquidUnstaking(
 	if !bTokenTotalSupply.IsPositive() {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("DefaultBondedBondDenom supply is not positive")
 	}
+	// TODO: last unstaking if bTokenTotalSupply == amount {}
 	netAmount := k.NetAmount(ctx)
 	unbondingAmount := types.BTokenToNativeToken(amount.Amount, bTokenTotalSupply.Amount, netAmount, params.UnstakeFeeRate)
 	totalReturnAmount := sdk.ZeroInt()
@@ -207,7 +208,6 @@ func (k Keeper) LiquidUnstaking(
 		totalReturnAmount = totalReturnAmount.Add(returnAmount)
 		k.SetLiquidValidator(ctx, val)
 	}
-	//return ubdTime, unbondingAmount, ubds, nil
 	return ubdTime, totalReturnAmount.ToDec(), ubds, nil
 }
 

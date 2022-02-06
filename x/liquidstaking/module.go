@@ -120,7 +120,9 @@ func (AppModule) Name() string {
 }
 
 // RegisterInvariants registers the liquidstaking module invariants.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, am.keeper)
+}
 
 // Route returns the message routing key for the liquidstaking module.
 func (am AppModule) Route() sdk.Route {
