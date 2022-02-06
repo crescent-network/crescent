@@ -521,7 +521,7 @@ func TestDivideByWeight(t *testing.T) {
 //		require.IsType(t, []sdk.Dec{}, tc.expectedOutputs)
 //
 //		totalTargetAmt := sdk.ZeroDec()
-//		outputs, crumb := keeper.DivideByCurrentWeightDec(tc.whitelistedVals, tc.addStakingAmt)
+//		outputs, crumb := keeper.DivideByCurrentWeight(tc.whitelistedVals, tc.addStakingAmt)
 //		for k, v := range outputs {
 //			fmt.Println(k, v.String())
 //			totalTargetAmt = totalTargetAmt.Add(v)

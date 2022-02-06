@@ -60,19 +60,14 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 
 func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, stakingAmt sdk.Int, whitelistedValMap types.WhitelistedValMap) (newShares sdk.Dec, err error) {
 	totalNewShares := sdk.ZeroDec()
-	// crumb would be small micro token, drop it
+	// crumb may occur due to a decimal point error in dividing the staking amount into the weight of liquid validators, which is also accumulated in the netAmount value
 	weightedShares, _ := types.DivideByWeight(activeVals, stakingAmt, whitelistedValMap)
 	for i, val := range activeVals {
-		validator, found := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
-		if !found {
-			panic("validator not founded")
-		}
+		validator, _ := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
 		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, weightedShares[i], stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			return sdk.ZeroDec(), err
 		}
-		//val.LiquidTokens = val.GetDelShares(ctx, k.stakingKeeper).Add(weightedShares[i])
-		//k.SetLiquidValidator(ctx, val)
 		totalNewShares = totalNewShares.Add(newShares)
 	}
 	return totalNewShares, nil
@@ -146,6 +141,7 @@ func (k Keeper) LiquidStaking(
 	if err != nil {
 		return sdk.ZeroDec(), bTokenMintAmount, err
 	}
+	// TODO: need to re-calc mintAmount for actual delegation amount using sum of divided with truncation
 	newShares, err = k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount, whitelistedValMap)
 	return newShares, bTokenMintAmount, err
 }
@@ -189,8 +185,8 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	// crumb could small micro token, drop it
-	unbondingShares, _ := k.DivideByCurrentWeightDec(ctx, activeVals, unbondingAmount)
+	// crumb may occur due to a decimal error in dividing the amount into the weight of liquid validators, which is also accumulated in the netAmount value
+	unbondingShares, _ := k.DivideByCurrentWeight(ctx, activeVals, unbondingAmount)
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
 	for i, val := range activeVals {
@@ -201,12 +197,10 @@ func (k Keeper) LiquidUnstaking(
 		weightedShare, err = k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), weightedShare.TruncateInt())
 		fmt.Println("[liquid UBD]", weightedShare.String(), del.Shares.String(), found, unbondingShares[i], activeVals.Len(), unbondingAmount.String())
 		if err != nil {
-			// TODO: add custom error
 			return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 		}
 		ubdTime, returnAmount, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare)
 		if err != nil {
-			// TODO: add custom error
 			return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 		}
 		ubds = append(ubds, ubd)
@@ -246,7 +240,8 @@ func (k Keeper) LiquidUnbond(
 	return completionTime, returnAmount, ubd, nil
 }
 
-func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (totalRewards sdk.Int) {
+func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) sdk.Int {
+	totalRewards := sdk.ZeroInt()
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	k.stakingKeeper.IterateDelegations(
 		ctx, proxyAcc,
@@ -254,7 +249,6 @@ func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) 
 			valAddr := del.GetValidatorAddr()
 			reward, err := k.distrKeeper.WithdrawDelegationRewards(ctx, proxyAcc, valAddr)
 			if err != nil {
-				// TODO: tmp panic for debugging
 				panic(err)
 			}
 			totalRewards = totalRewards.Add(reward.AmountOf(bondDenom))

@@ -30,7 +30,6 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	params := k.GetParams(ctx)
 	if msg.Amount.Amount.LT(params.MinLiquidStakingAmount) {
-		// TODO: consider newShares on MsgLiquidStakeResponse
 		return nil, types.ErrLessThanMinLiquidStakingAmount
 	}
 
@@ -52,6 +51,7 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 			sdk.NewAttribute(types.AttributeKeyBTokenMintedAmount, bTokenMintAmount.String()),
 		),
 	})
+	// TODO: consider newShares on MsgLiquidStakeResponse
 	return &types.MsgLiquidStakeResponse{}, nil
 }
 

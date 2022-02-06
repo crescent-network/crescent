@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
@@ -14,10 +15,7 @@ import (
 // tests LiquidStaking, LiquidUnstaking
 func (suite *KeeperTestSuite) TestLiquidStaking() {
 	_, valOpers := suite.CreateValidators([]int64{1000000, 2000000, 3000000})
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	params := suite.keeper.GetParams(suite.ctx)
-	params.UnstakeFeeRate = sdk.ZeroDec()
-	suite.keeper.SetParams(suite.ctx, params)
 	suite.keeper.EndBlocker(suite.ctx)
 
 	stakingAmt := sdk.NewInt(50000)
@@ -141,14 +139,16 @@ func (suite *KeeperTestSuite) TestLiquidStaking() {
 	suite.Require().Equal(types.ValidatorStatusActive, res[2].Status)
 	suite.Require().Equal(sdk.NewInt(13333), res[2].DelShares)
 
+	// test withdraw liquid reward and re-staking
+	suite.advanceHeight(100, true)
+	// invariant check
+	crisis.EndBlocker(suite.ctx, suite.app.CrisisKeeper)
 	// TODO: add cases for different weight
 }
 
 // test Liquid Staking gov power
 func (suite *KeeperTestSuite) TestLiquidStakingGov() {
-	suite.SetupTest()
 	params := types.DefaultParams()
-	params.UnstakeFeeRate = sdk.ZeroDec()
 	bondedBondDenom := suite.keeper.BondedBondDenom(suite.ctx)
 
 	// v1, v2, v3, v4
@@ -160,7 +160,6 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(10)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	suite.keeper.EndBlocker(suite.ctx)
 
 	liquidValidators := suite.keeper.GetAllLiquidValidators(suite.ctx)
@@ -323,17 +322,13 @@ func (suite *KeeperTestSuite) TestLiquidStakingGov() {
 
 // test Liquid Staking gov power
 func (suite *KeeperTestSuite) TestLiquidStakingGov2() {
-	suite.SetupTest()
 	params := types.DefaultParams()
-	params.UnstakeFeeRate = sdk.ZeroDec()
-	suite.keeper.SetParams(suite.ctx, params)
 
 	vals, valOpers := suite.CreateValidators([]int64{10000000})
 	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 	}
 	suite.keeper.SetParams(suite.ctx, params)
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	suite.keeper.EndBlocker(suite.ctx)
 
 	val1, _ := suite.app.StakingKeeper.GetValidator(suite.ctx, valOpers[0])

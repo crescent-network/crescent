@@ -14,7 +14,7 @@ The active validator set is updated during this process by state transitions tha
   
 ### Active Validator Conditions
 - included on whitelist
-  existed valid validator on staking module ( existed, not nil del shares and tokens, valid exchange rate)
+- existed valid validator on staking module ( existed, not nil del shares and tokens, valid exchange rate)
 
 ### Active -> Delisting
 - when out of `Active Validator Conditions`
