@@ -43,7 +43,8 @@ func BTokenSupplyWithTotalDelSharesInvariant(k Keeper) sdk.Invariant {
 			msg = "found btoken supply with non-positive totalDelShares"
 			broken = true
 		}
-		if !bTokenTotalSupply.IsPositive() && totalDelShares.IsPositive() {
+		UBDs := k.GetLiquidUnbonding(ctx, types.LiquidStakingProxyAcc)
+		if !bTokenTotalSupply.IsPositive() && totalDelShares.IsPositive() && len(UBDs) == 0 {
 			msg = "found totalDelShares with non-positive btoken supply"
 			broken = true
 		}

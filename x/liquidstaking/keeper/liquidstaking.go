@@ -339,6 +339,10 @@ func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates
 	return
 }
 
+func (k Keeper) GetLiquidUnbonding(ctx sdk.Context, proxyAcc sdk.AccAddress) []stakingtypes.UnbondingDelegation {
+	return k.stakingKeeper.GetAllUnbondingDelegations(ctx, proxyAcc)
+}
+
 //// CollectBiquidStakings collects all the valid liquidStakings registered in params.BiquidStakings and
 //// distributes the total collected coins to destination address.
 //func (k Keeper) CollectBiquidStakings(ctx sdk.Context) error {

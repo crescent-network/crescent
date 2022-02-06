@@ -47,62 +47,62 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.app = simapp.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
-	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
+func (s *KeeperTestSuite) SetupTest() {
+	s.app = simapp.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.govHandler = params.NewParamChangeProposalHandler(s.app.ParamsKeeper)
 	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.MaxEntries = 200
 	stakingParams.MaxValidators = 30
-	suite.app.StakingKeeper.SetParams(suite.ctx, stakingParams)
+	s.app.StakingKeeper.SetParams(s.ctx, stakingParams)
 
-	suite.keeper = suite.app.LiquidStakingKeeper
-	suite.querier = keeper.Querier{Keeper: suite.keeper}
-	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 10, sdk.NewInt(1_000_000_000))
-	suite.delAddrs = simapp.AddTestAddrs(suite.app, suite.ctx, 10, sdk.NewInt(1_000_000_000))
-	suite.valAddrs = simapp.ConvertAddrsToValAddrs(suite.delAddrs)
+	s.keeper = s.app.LiquidStakingKeeper
+	s.querier = keeper.Querier{Keeper: s.keeper}
+	s.addrs = simapp.AddTestAddrs(s.app, s.ctx, 10, sdk.NewInt(1_000_000_000))
+	s.delAddrs = simapp.AddTestAddrs(s.app, s.ctx, 10, sdk.NewInt(1_000_000_000))
+	s.valAddrs = simapp.ConvertAddrsToValAddrs(s.delAddrs)
 
-	suite.ctx = suite.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
-	params := suite.keeper.GetParams(suite.ctx)
+	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
-	suite.keeper.SetParams(suite.ctx, params)
-	suite.keeper.EndBlocker(suite.ctx)
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.EndBlocker(s.ctx)
 	// call mint.BeginBlocker for init k.SetLastBlockTime(ctx, ctx.BlockTime())
-	mint.BeginBlocker(suite.ctx, suite.app.MintKeeper)
+	mint.BeginBlocker(s.ctx, s.app.MintKeeper)
 }
 
-func (suite *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	suite.app.BeginBlocker(suite.ctx, abci.RequestBeginBlock{})
+func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{})
 	num := len(powers)
-	addrs := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, num, sdk.NewInt(1000000000))
+	addrs := simapp.AddTestAddrsIncremental(s.app, s.ctx, num, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(num)
 
 	for i, power := range powers {
 		val, err := stakingtypes.NewValidator(valAddrs[i], pks[i], stakingtypes.Description{})
-		suite.Require().NoError(err)
-		suite.app.StakingKeeper.SetValidator(suite.ctx, val)
-		err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, val)
-		suite.Require().NoError(err)
-		suite.app.StakingKeeper.SetNewValidatorByPowerIndex(suite.ctx, val)
-		suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, val.GetOperator())
-		newShares, err := suite.app.StakingKeeper.Delegate(suite.ctx, addrs[i], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
-		suite.Require().NoError(err)
-		suite.Require().Equal(newShares.TruncateInt(), sdk.NewInt(power))
+		s.Require().NoError(err)
+		s.app.StakingKeeper.SetValidator(s.ctx, val)
+		err = s.app.StakingKeeper.SetValidatorByConsAddr(s.ctx, val)
+		s.Require().NoError(err)
+		s.app.StakingKeeper.SetNewValidatorByPowerIndex(s.ctx, val)
+		s.app.StakingKeeper.AfterValidatorCreated(s.ctx, val.GetOperator())
+		newShares, err := s.app.StakingKeeper.Delegate(s.ctx, addrs[i], sdk.NewInt(power), stakingtypes.Unbonded, val, true)
+		s.Require().NoError(err)
+		s.Require().Equal(newShares.TruncateInt(), sdk.NewInt(power))
 	}
 
-	suite.app.EndBlocker(suite.ctx, abci.RequestEndBlock{})
+	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{})
 	return addrs, valAddrs
 }
 
-func (suite *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) {
-	params := suite.keeper.GetParams(suite.ctx)
-	btokenBalanceBefore := suite.app.BankKeeper.GetBalance(suite.ctx, liquidStaker, params.BondedBondDenom).Amount
-	newShares, bTokenMintAmt, err := suite.keeper.LiquidStaking(suite.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
-	btokenBalanceAfter := suite.app.BankKeeper.GetBalance(suite.ctx, liquidStaker, params.BondedBondDenom).Amount
-	suite.Require().NoError(err)
-	suite.NotEqualValues(newShares, sdk.ZeroDec())
-	suite.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
+func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) {
+	params := s.keeper.GetParams(s.ctx)
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	s.Require().NoError(err)
+	s.NotEqualValues(newShares, sdk.ZeroDec())
+	s.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
 }
 
 func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {

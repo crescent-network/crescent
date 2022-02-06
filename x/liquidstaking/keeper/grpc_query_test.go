@@ -8,10 +8,10 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
-func (suite *KeeperTestSuite) TestGRPCParams() {
-	resp, err := suite.querier.Params(sdk.WrapSDKContext(suite.ctx), &types.QueryParamsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(suite.keeper.GetParams(suite.ctx), resp.Params)
+func (s *KeeperTestSuite) TestGRPCParams() {
+	resp, err := s.querier.Params(sdk.WrapSDKContext(s.ctx), &types.QueryParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(s.keeper.GetParams(s.ctx), resp.Params)
 }
 
 //func (suite *KeeperTestSuite) TestGRPCLiquidValidators() {
