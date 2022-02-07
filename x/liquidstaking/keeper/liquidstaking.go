@@ -15,9 +15,10 @@ func (k Keeper) BondedBondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
-func (k Keeper) CheckRewardsAndDelShares(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec) {
+func (k Keeper) CheckTotalRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec, sdk.Dec) {
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	totalDelShares := sdk.ZeroDec()
+	totalLiquidTokens := sdk.ZeroDec()
 	totalRewards := sdk.ZeroDec()
 
 	// Cache ctx for calculate rewards
@@ -29,13 +30,18 @@ func (k Keeper) CheckRewardsAndDelShares(ctx sdk.Context, proxyAcc sdk.AccAddres
 			val := k.stakingKeeper.Validator(cachedCtx, valAddr)
 			endingPeriod := k.distrKeeper.IncrementValidatorPeriod(cachedCtx, val)
 			delReward := k.distrKeeper.CalculateDelegationRewards(cachedCtx, val, del, endingPeriod)
-			totalDelShares = totalDelShares.Add(del.GetShares())
-			totalRewards = totalRewards.Add(delReward.AmountOf(bondDenom))
+			delShares := del.GetShares()
+			if delShares.IsPositive() {
+				totalDelShares = totalDelShares.Add(delShares)
+				liquidTokens := val.TokensFromShares(delShares)
+				totalLiquidTokens = totalLiquidTokens.Add(liquidTokens)
+				totalRewards = totalRewards.Add(delReward.AmountOf(bondDenom))
+			}
 			return false
 		},
 	)
 
-	return totalRewards, totalDelShares
+	return totalRewards, totalDelShares, totalLiquidTokens
 }
 
 func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
@@ -44,8 +50,8 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, bondDenom)
 	ubds := k.stakingKeeper.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
 	unbondingPower := sdk.ZeroInt()
-	// TODO: Add invariant checking for equal CheckRewardsAndDelShares with sum of GetDelShares
-	totalRewards, totalDelShares := k.CheckRewardsAndDelShares(ctx, types.LiquidStakingProxyAcc)
+	// TODO: Add invariant checking for equal CheckTotalRewards with sum of GetDelShares and TotalDelSharesAndLiquidTokens
+	totalRewards, _, totalLiquidTokens := k.CheckTotalRewards(ctx, types.LiquidStakingProxyAcc)
 
 	for _, ubd := range ubds {
 		for _, entry := range ubd.Entries {
@@ -54,8 +60,8 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 		}
 	}
 
-	fmt.Println("[balance, totalDelShares, totalRewards, unbondingPower]", balance, totalDelShares, totalRewards, unbondingPower)
-	return balance.Amount.ToDec().Add(totalDelShares).Add(totalRewards).Add(unbondingPower.ToDec())
+	fmt.Println("[balance, totalLiquidTokens, totalRewards, unbondingPower]", balance, totalLiquidTokens, totalRewards, unbondingPower)
+	return balance.Amount.ToDec().Add(totalLiquidTokens).Add(totalRewards).Add(unbondingPower.ToDec())
 }
 
 func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.LiquidValidators, stakingAmt sdk.Int, whitelistedValMap types.WhitelistedValMap) (newShares sdk.Dec, err error) {
@@ -333,6 +339,7 @@ func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates
 			Weight:          lv.GetWeight(whitelistedValMap),
 			Status:          lv.GetStatus(valMap[lv.OperatorAddress], whitelistedValMap.IsListed(lv.OperatorAddress)),
 			DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
+			LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper),
 		}
 		liquidValidatorStates = append(liquidValidatorStates, lvState)
 	}
@@ -342,114 +349,3 @@ func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates
 func (k Keeper) GetLiquidUnbonding(ctx sdk.Context, proxyAcc sdk.AccAddress) []stakingtypes.UnbondingDelegation {
 	return k.stakingKeeper.GetAllUnbondingDelegations(ctx, proxyAcc)
 }
-
-//// CollectBiquidStakings collects all the valid liquidStakings registered in params.BiquidStakings and
-//// distributes the total collected coins to destination address.
-//func (k Keeper) CollectBiquidStakings(ctx sdk.Context) error {
-//	params := k.GetParams(ctx)
-//	var liquidStakings []types.BiquidStaking
-//	if params.EpochBlocks > 0 && ctx.BlockHeight()%int64(params.EpochBlocks) == 0 {
-//		liquidStakings = types.CollectibleBiquidStakings(params.BiquidStakings, ctx.BlockTime())
-//	}
-//	if len(liquidStakings) == 0 {
-//		return nil
-//	}
-//
-//	// Get a map GetBiquidStakingsBySourceMap that has a list of liquidStakings and their total rate, which
-//	// contain the same SourceAddress
-//	liquidStakingsBySourceMap := types.GetBiquidStakingsBySourceMap(liquidStakings)
-//	for source, liquidStakingsBySource := range liquidStakingsBySourceMap {
-//		sourceAcc, err := sdk.AccAddressFromBech32(source)
-//		if err != nil {
-//			return err
-//		}
-//		sourceBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, sourceAcc)...)
-//		if sourceBalances.IsZero() {
-//			continue
-//		}
-//
-//		var inputs []banktypes.Input
-//		var outputs []banktypes.Output
-//		liquidStakingsBySource.CollectionCoins = make([]sdk.Coins, len(liquidStakingsBySource.BiquidStakings))
-//		for i, liquidStaking := range liquidStakingsBySource.BiquidStakings {
-//			destinationAcc, err := sdk.AccAddressFromBech32(liquidStaking.DestinationAddress)
-//			if err != nil {
-//				return err
-//			}
-//
-//			collectionCoins, _ := sourceBalances.MulDecTruncate(liquidStaking.Rate).TruncateDecimal()
-//			if collectionCoins.Empty() || !collectionCoins.IsValid() {
-//				continue
-//			}
-//
-//			inputs = append(inputs, banktypes.NewInput(sourceAcc, collectionCoins))
-//			outputs = append(outputs, banktypes.NewOutput(destinationAcc, collectionCoins))
-//			liquidStakingsBySource.CollectionCoins[i] = collectionCoins
-//		}
-//
-//		if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
-//			return err
-//		}
-//
-//		for i, liquidStaking := range liquidStakingsBySource.BiquidStakings {
-//			k.AddTotalCollectedCoins(ctx, liquidStaking.Name, liquidStakingsBySource.CollectionCoins[i])
-//			ctx.EventManager().EmitEvents(sdk.Events{
-//				sdk.NewEvent(
-//					types.EventTypeBiquidStakingCollected,
-//					sdk.NewAttribute(types.AttributeValueName, liquidStaking.Name),
-//					sdk.NewAttribute(types.AttributeValueDestinationAddress, liquidStaking.DestinationAddress),
-//					sdk.NewAttribute(types.AttributeValueSourceAddress, liquidStaking.SourceAddress),
-//					sdk.NewAttribute(types.AttributeValueRate, liquidStaking.Rate.String()),
-//					sdk.NewAttribute(types.AttributeValueAmount, liquidStakingsBySource.CollectionCoins[i].String()),
-//				),
-//			})
-//		}
-//	}
-//	return nil
-//}
-//
-//// GetTotalCollectedCoins returns total collected coins for a liquidstaking.
-//func (k Keeper) GetTotalCollectedCoins(ctx sdk.Context, liquidStakingName string) sdk.Coins {
-//	store := ctx.KVStore(k.storeKey)
-//	bz := store.Get(types.GetTotalCollectedCoinsKey(liquidStakingName))
-//	if bz == nil {
-//		return nil
-//	}
-//	var collectedCoins types.TotalCollectedCoins
-//	k.cdc.MustUnmarshal(bz, &collectedCoins)
-//	return collectedCoins.TotalCollectedCoins
-//}
-//
-//// IterateAllTotalCollectedCoins iterates over all the stored TotalCollectedCoins and performs a callback function.
-//// Stops iteration when callback returns true.
-//func (k Keeper) IterateAllTotalCollectedCoins(ctx sdk.Context, cb func(record types.BiquidStakingRecord) (stop bool)) {
-//	store := ctx.KVStore(k.storeKey)
-//	iterator := sdk.KVStorePrefixIterator(store, types.TotalCollectedCoinsKeyPrefix)
-//
-//	defer iterator.Close()
-//	for ; iterator.Valid(); iterator.Next() {
-//		var record types.BiquidStakingRecord
-//		var collectedCoins types.TotalCollectedCoins
-//		k.cdc.MustUnmarshal(iterator.Value(), &collectedCoins)
-//		record.Name = types.ParseTotalCollectedCoinsKey(iterator.Key())
-//		record.TotalCollectedCoins = collectedCoins.TotalCollectedCoins
-//		if cb(record) {
-//			break
-//		}
-//	}
-//}
-//
-//// SetTotalCollectedCoins sets total collected coins for a liquidstaking.
-//func (k Keeper) SetTotalCollectedCoins(ctx sdk.Context, liquidStakingName string, amount sdk.Coins) {
-//	store := ctx.KVStore(k.storeKey)
-//	collectedCoins := types.TotalCollectedCoins{TotalCollectedCoins: amount}
-//	bz := k.cdc.MustMarshal(&collectedCoins)
-//	store.Set(types.GetTotalCollectedCoinsKey(liquidStakingName), bz)
-//}
-//
-//// AddTotalCollectedCoins increases total collected coins for a liquidstaking.
-//func (k Keeper) AddTotalCollectedCoins(ctx sdk.Context, liquidStakingName string, amount sdk.Coins) {
-//	collectedCoins := k.GetTotalCollectedCoins(ctx, liquidStakingName)
-//	collectedCoins = collectedCoins.Add(amount...)
-//	k.SetTotalCollectedCoins(ctx, liquidStakingName, collectedCoins)
-//}

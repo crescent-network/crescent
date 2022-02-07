@@ -135,20 +135,21 @@ func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
 	s.liquidStaking(s.delAddrs[0], stakingAmt)
 
 	// no rewards
-	totalRewards, totalDelShares := s.keeper.CheckRewardsAndDelShares(s.ctx, types.LiquidStakingProxyAcc)
+	totalRewards, totalDelShares, totalLiquidTokens := s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
 	s.EqualValues(totalRewards, sdk.ZeroDec())
-	s.EqualValues(totalDelShares, stakingAmt.ToDec())
+	s.EqualValues(totalDelShares, stakingAmt.ToDec(), totalLiquidTokens)
 
 	// allocate rewards
 	s.advanceHeight(100, false)
-	totalRewards, totalDelShares = s.keeper.CheckRewardsAndDelShares(s.ctx, types.LiquidStakingProxyAcc)
+	totalRewards, totalDelShares, totalLiquidTokens = s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
 	s.NotEqualValues(totalRewards, sdk.ZeroDec())
+	s.NotEqualValues(totalLiquidTokens, sdk.ZeroDec())
 
 	// withdraw rewards and re-staking
 	valMap := s.keeper.GetValidatorsMap(s.ctx)
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 	s.keeper.WithdrawRewardsAndReStaking(s.ctx, valMap, whitelistedValMap)
-	totalRewardsAfter, totalDelSharesAfter := s.keeper.CheckRewardsAndDelShares(s.ctx, types.LiquidStakingProxyAcc)
+	totalRewardsAfter, totalDelSharesAfter, totalLiquidTokensAfter := s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
 	s.EqualValues(totalRewardsAfter, sdk.ZeroDec())
-	s.EqualValues(totalDelSharesAfter, totalRewards.TruncateDec().Add(totalDelShares))
+	s.EqualValues(totalDelSharesAfter, totalRewards.TruncateDec().Add(totalDelShares), totalLiquidTokensAfter)
 }

@@ -32,9 +32,9 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 // DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb
 // which is may occur while dividing according to the weight of liquid validators by decimal error.
 func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, vs types.LiquidValidators, input sdk.Dec) (outputs []sdk.Dec, crumb sdk.Dec) {
-	totalDelShares := vs.TotalDelShares(ctx, k.stakingKeeper)
+	_, totalLiquidTokens := vs.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
 	totalShares := sdk.ZeroDec()
-	sharePerWeight := input.QuoTruncate(totalDelShares)
+	sharePerWeight := input.QuoTruncate(totalLiquidTokens)
 	for _, val := range vs {
 		weightedShare := sharePerWeight.Mul(val.GetDelShares(ctx, k.stakingKeeper))
 		totalShares = totalShares.Add(weightedShare)
@@ -45,9 +45,9 @@ func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, vs types.LiquidValidators
 
 // activeVals containing ValidatorStatusActive which is containing just added on whitelist(power 0) and ValidatorStatusDelisting
 func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, rebalancingTrigger sdk.Dec, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) (redelegations []types.Redelegation) {
-	totalDelShares := liquidVals.TotalDelShares(ctx, k.stakingKeeper)
+	_, totalLiquidTokens := liquidVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
 	totalWeight := liquidVals.TotalWeight(whitelistedValMap)
-	threshold := rebalancingTrigger.Mul(totalDelShares)
+	threshold := rebalancingTrigger.Mul(totalLiquidTokens)
 
 	var targetWeight sdk.Int
 	targetMap := map[string]sdk.Int{}
@@ -57,7 +57,7 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 		} else {
 			targetWeight = sdk.ZeroInt()
 		}
-		targetMap[val.OperatorAddress] = totalDelShares.MulInt(targetWeight).QuoInt(totalWeight).TruncateInt()
+		targetMap[val.OperatorAddress] = totalLiquidTokens.MulInt(targetWeight).QuoInt(totalWeight).TruncateInt()
 	}
 
 	for i := 0; i < len(liquidVals); i++ {
@@ -98,13 +98,13 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 // WithdrawRewardsAndReStaking withdraw rewards and re-staking when over threshold
 func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) {
 	activeVals := k.GetActiveLiquidValidators(ctx, valMap, whitelistedValMap)
-	totalDelShares := activeVals.TotalDelShares(ctx, k.stakingKeeper)
-	if totalDelShares.IsPositive() {
+	_, totalLiquidTokens := activeVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
+	if totalLiquidTokens.IsPositive() {
 		// Withdraw rewards of LiquidStakingProxyAcc and re-staking
-		totalRewards, _ := k.CheckRewardsAndDelShares(ctx, types.LiquidStakingProxyAcc)
+		totalRewards, _, _ := k.CheckTotalRewards(ctx, types.LiquidStakingProxyAcc)
 		// checking over types.RewardTrigger and execute GetRewards
 		balance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
-		rewardsThreshold := types.RewardTrigger.Mul(totalDelShares).TruncateInt()
+		rewardsThreshold := types.RewardTrigger.Mul(totalLiquidTokens).TruncateInt()
 		if balance.Add(totalRewards.TruncateInt()).GTE(rewardsThreshold) {
 			// re-staking with balance, due to auto-withdraw on add staking by f1
 			k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
@@ -152,9 +152,9 @@ func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.LiquidVali
 	}
 	params := k.GetParams(ctx)
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	totalDelShares := activeVals.TotalDelShares(ctx, k.stakingKeeper)
+	_, totalLiquidTokens := activeVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
 	totalWeight := activeVals.TotalWeight(whitelistedValMap)
-	ToBeTotalDelShares := totalDelShares.TruncateInt().Add(addStakingAmt)
+	ToBeTotalDelShares := totalLiquidTokens.TruncateInt().Add(addStakingAmt)
 	existOverWeightedVal := false
 
 	sharePerWeight := ToBeTotalDelShares.Quo(totalWeight)

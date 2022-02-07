@@ -4072,7 +4072,13 @@ paths:
                          - VALIDATOR_STATUS_DELISTED: Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
                     del_shares:
                       type: string
-                      title: del shares define the delegation shares of the validator
+                      title: del_shares define the delegation shares of the validator
+                    liquid_tokens:
+                      type: string
+                      title: >-
+                        liquid_tokens define the token amount worth of
+                        delegation shares of the validator (slashing applied
+                        amount)
                   title: LiquidValidatorState defines a ... TBD
               pagination:
                 description: pagination defines the pagination in the response.
@@ -6488,7 +6494,12 @@ definitions:
            - VALIDATOR_STATUS_DELISTED: Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
       del_shares:
         type: string
-        title: del shares define the delegation shares of the validator
+        title: del_shares define the delegation shares of the validator
+      liquid_tokens:
+        type: string
+        title: >-
+          liquid_tokens define the token amount worth of delegation shares of
+          the validator (slashing applied amount)
     title: LiquidValidatorState defines a ... TBD
   squad.liquidstaking.v1beta1.Params:
     type: object
@@ -6555,7 +6566,12 @@ definitions:
                  - VALIDATOR_STATUS_DELISTED: Deprecated: VALIDATOR_STATUS_DELISTED defines the ...
             del_shares:
               type: string
-              title: del shares define the delegation shares of the validator
+              title: del_shares define the delegation shares of the validator
+            liquid_tokens:
+              type: string
+              title: >-
+                liquid_tokens define the token amount worth of delegation shares
+                of the validator (slashing applied amount)
           title: LiquidValidatorState defines a ... TBD
       pagination:
         description: pagination defines the pagination in the response.

@@ -95,7 +95,11 @@ message LiquidValidatorState {
   // status is the liquid validator status
   ValidatorStatus status = 3;
 
-  // del shares define the delegation shares of the validator
+  // del_shares define the delegation shares of the validator
   string del_shares = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // liquid_tokens define the token amount worth of delegation shares of the validator (slashing applied amount)
+  string liquid_tokens = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

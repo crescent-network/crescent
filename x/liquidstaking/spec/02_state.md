@@ -31,7 +31,7 @@ const (
 - bTokens
 
   Liquid stakers receive bTokens in return for their liquid staking position. The amount of bTokens are minted is based on mint rate, calculated as follows from the total supply of bTokens and net amount of native tokens.
-
+    - `NetAmount = balance + delegation amount(slashing applied) + unbonding amount(slashing applied) + reward amount of LiquidStakingProxyAcc`
     - `MintRate = TotalSupply / NetAmount`
     - `MintAmount = MintRate * StakeAmount`
 
