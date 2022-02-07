@@ -60,7 +60,6 @@ func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.
 	}
 
 	val := sk.Validator(ctx, v.GetOperator())
-	// TODO: divide by zero checking
 	return val.TokensFromShares(delShares)
 }
 
@@ -73,15 +72,27 @@ func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap) sdk.Int 
 	}
 }
 
-// TODO: refactor
 func (v LiquidValidator) GetStatus(validator stakingtypes.Validator, whitelisted bool) ValidatorStatus {
-	active := v.ActiveCondition(validator, whitelisted)
-	if active {
+	active := ActiveCondition(validator, whitelisted)
+	if v.OperatorAddress == validator.OperatorAddress && active {
 		return ValidatorStatusActive
 	} else {
-		// TODO: consider delisting, delisted
+		// TODO: consider split delisting, delisted
 		return ValidatorStatusUnspecified
 	}
+}
+
+// ActiveCondition checks the liquid validator could be active by below cases
+// active conditions
+//- included on whitelist
+//- existed valid validator on staking module ( existed, not nil del shares and tokens, valid exchange rate)
+func ActiveCondition(validator stakingtypes.Validator, whitelisted bool) bool {
+	return whitelisted &&
+		// TODO: consider !validator.IsUnbonded(), explicit state checking not Unspecified
+		validator.GetStatus() != stakingtypes.Unspecified &&
+		!validator.GetTokens().IsNil() &&
+		!validator.GetDelegatorShares().IsNil() &&
+		!validator.InvalidExRate()
 }
 
 // LiquidValidators is a collection of LiquidValidator

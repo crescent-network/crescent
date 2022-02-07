@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	"github.com/stretchr/testify/require"
 )
@@ -58,6 +59,94 @@ func TestBTokenToNativeToken(t *testing.T) {
 		require.IsType(t, sdk.Dec{}, tc.expectedOutput)
 
 		output := types.BTokenToNativeToken(tc.bTokenAmount, tc.bTokenTotalSupplyAmount, tc.netAmount, tc.feeRate)
+		require.EqualValues(t, tc.expectedOutput, output)
+	}
+}
+
+func TestActiveCondition(t *testing.T) {
+	testCases := []struct {
+		validator stakingtypes.Validator
+		//whitelist      []types.WhitelistedValidator
+		whitelisted    bool
+		expectedOutput bool
+	}{
+		// active case 1
+		{
+			validator: stakingtypes.Validator{
+				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
+				Jailed:          false,
+				Status:          stakingtypes.Bonded,
+				Tokens:          sdk.NewInt(100000000),
+				DelegatorShares: sdk.NewDec(100000000),
+			},
+			whitelisted:    true,
+			expectedOutput: true,
+		},
+		// active case 2
+		{
+			validator: stakingtypes.Validator{
+				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
+				Jailed:          true,
+				Status:          stakingtypes.Bonded,
+				Tokens:          sdk.NewInt(100000000),
+				DelegatorShares: sdk.NewDec(100000000),
+			},
+			whitelisted:    true,
+			expectedOutput: true,
+		},
+		// inactive case 1
+		{
+			validator: stakingtypes.Validator{
+				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
+				Jailed:          false,
+				Status:          stakingtypes.Bonded,
+				Tokens:          sdk.NewInt(100000000),
+				DelegatorShares: sdk.NewDec(100000000),
+			},
+			whitelisted:    false,
+			expectedOutput: false,
+		},
+		// inactive case 1
+		{
+			validator: stakingtypes.Validator{
+				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
+				Jailed:          false,
+				Status:          stakingtypes.Bonded,
+				Tokens:          sdk.Int{},
+				DelegatorShares: sdk.Dec{},
+			},
+			whitelisted:    true,
+			expectedOutput: false,
+		},
+		// inactive case 2
+		{
+			validator: stakingtypes.Validator{
+				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
+				Jailed:          false,
+				Status:          stakingtypes.Bonded,
+				Tokens:          sdk.NewInt(0),
+				DelegatorShares: sdk.NewDec(100000000),
+			},
+			whitelisted:    true,
+			expectedOutput: false,
+		},
+		// inactive case 3
+		{
+			validator: stakingtypes.Validator{
+				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
+				Jailed:          false,
+				Status:          stakingtypes.Unspecified,
+				Tokens:          sdk.NewInt(100000000),
+				DelegatorShares: sdk.NewDec(100000000),
+			},
+			whitelisted:    true,
+			expectedOutput: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		require.IsType(t, stakingtypes.Validator{}, tc.validator)
+		output := types.ActiveCondition(tc.validator, tc.whitelisted)
 		require.EqualValues(t, tc.expectedOutput, output)
 	}
 }

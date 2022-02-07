@@ -44,7 +44,7 @@ func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, vs types.LiquidValidators
 }
 
 // activeVals containing ValidatorStatusActive which is containing just added on whitelist(power 0) and ValidatorStatusDelisting
-func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, rebalancingTrigger sdk.Dec, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) (redelegations []types.Redelegation) {
+func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, rebalancingTrigger sdk.Dec, whitelistedValMap types.WhitelistedValMap) (redelegations []types.Redelegation) {
 	_, totalLiquidTokens := liquidVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
 	totalWeight := liquidVals.TotalWeight(whitelistedValMap)
 	threshold := rebalancingTrigger.Mul(totalLiquidTokens)
@@ -52,7 +52,7 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 	var targetWeight sdk.Int
 	targetMap := map[string]sdk.Int{}
 	for _, val := range liquidVals {
-		if val.ActiveCondition(valMap[val.OperatorAddress], whitelistedValMap.IsListed(val.OperatorAddress)) {
+		if k.ActiveCondition(ctx, val, whitelistedValMap) {
 			targetWeight = val.GetWeight(whitelistedValMap)
 		} else {
 			targetWeight = sdk.ZeroInt()
@@ -130,7 +130,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 			lv := &types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 			}
-			if lv.ActiveCondition(valMap[lv.OperatorAddress], true) {
+			if types.ActiveCondition(valMap[lv.OperatorAddress], true) {
 				k.SetLiquidValidator(ctx, *lv)
 				liquidValidators = append(liquidValidators, *lv)
 			}
@@ -138,7 +138,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	}
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
-	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, types.RebalancingTrigger, valMap, whitelistedValMap)
+	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, types.RebalancingTrigger, whitelistedValMap)
 
 	// withdraw rewards and re-staking when over threshold
 	k.WithdrawRewardsAndReStaking(ctx, valMap, whitelistedValMap)

@@ -307,13 +307,9 @@ func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, valMap map[string]sta
 
 	for ; iterator.Valid(); iterator.Next() {
 		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
-		if val.ActiveCondition(valMap[val.OperatorAddress], whitelistedValMap.IsListed(val.OperatorAddress)) {
+		if k.ActiveCondition(ctx, val, whitelistedValMap) {
 			vals = append(vals, val)
 		}
-		//if _, ok := whitelistedValMap[val.OperatorAddress]; ok &&
-		//	val.ActiveCondition(valMap[val.OperatorAddress], ok) {
-		//	vals = append(vals, val)
-		//}
 	}
 	return vals
 }
@@ -348,4 +344,12 @@ func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates
 
 func (k Keeper) GetLiquidUnbonding(ctx sdk.Context, proxyAcc sdk.AccAddress) []stakingtypes.UnbondingDelegation {
 	return k.stakingKeeper.GetAllUnbondingDelegations(ctx, proxyAcc)
+}
+
+func (k Keeper) ActiveCondition(ctx sdk.Context, v types.LiquidValidator, whitelistedValMap types.WhitelistedValMap) bool {
+	val, found := k.stakingKeeper.GetValidator(ctx, v.GetOperator())
+	if !found {
+		return false
+	}
+	return types.ActiveCondition(val, whitelistedValMap.IsListed(val.OperatorAddress))
 }
