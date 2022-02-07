@@ -55,13 +55,12 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
-// TODO: consider changing to decimal, refactor to LiquidDelShares
-func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
 	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
 	if !found {
-		return sdk.ZeroInt()
+		return sdk.ZeroDec()
 	}
-	return del.GetShares().TruncateInt()
+	return del.GetShares()
 }
 
 // TODO: add status dependency
@@ -89,21 +88,21 @@ type LiquidValidators []LiquidValidator
 
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
 func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
-	maxGap := sdk.ZeroInt()
-	minGap := sdk.ZeroInt()
+	maxGap := sdk.ZeroDec()
+	minGap := sdk.ZeroDec()
 
 	for _, val := range vs {
 		target := targetMap[val.OperatorAddress]
-		if val.GetDelShares(ctx, sk).Sub(target).GT(maxGap) {
-			maxGap = val.GetDelShares(ctx, sk).Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target.ToDec()).GT(maxGap) {
+			maxGap = val.GetDelShares(ctx, sk).Sub(target.ToDec())
 			maxGapVal = val
 		}
-		if val.GetDelShares(ctx, sk).Sub(target).LT(minGap) {
-			minGap = val.GetDelShares(ctx, sk).Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target.ToDec()).LT(minGap) {
+			minGap = val.GetDelShares(ctx, sk).Sub(target.ToDec())
 			minGapVal = val
 		}
 	}
-	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
+	amountNeeded = sdk.MinInt(maxGap.TruncateInt(), minGap.TruncateInt().Abs())
 
 	return minGapVal, maxGapVal, amountNeeded
 }
@@ -120,8 +119,8 @@ func (vs LiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMap) sdk.
 	return totalWeight
 }
 
-func (vs LiquidValidators) TotalDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
-	totalDelShares := sdk.ZeroInt()
+func (vs LiquidValidators) TotalDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
+	totalDelShares := sdk.ZeroDec()
 	for _, val := range vs {
 		totalDelShares = totalDelShares.Add(val.GetDelShares(ctx, sk))
 	}

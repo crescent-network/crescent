@@ -97,5 +97,5 @@ message LiquidValidatorState {
 
   // del shares define the delegation shares of the validator
   string del_shares = 4
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

@@ -34,9 +34,9 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, vs types.LiquidValidators, input sdk.Dec) (outputs []sdk.Dec, crumb sdk.Dec) {
 	totalDelShares := vs.TotalDelShares(ctx, k.stakingKeeper)
 	totalShares := sdk.ZeroDec()
-	sharePerWeight := input.QuoTruncate(totalDelShares.ToDec())
+	sharePerWeight := input.QuoTruncate(totalDelShares)
 	for _, val := range vs {
-		weightedShare := sharePerWeight.MulInt(val.GetDelShares(ctx, k.stakingKeeper))
+		weightedShare := sharePerWeight.Mul(val.GetDelShares(ctx, k.stakingKeeper))
 		totalShares = totalShares.Add(weightedShare)
 		outputs = append(outputs, weightedShare)
 	}
@@ -47,7 +47,7 @@ func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, vs types.LiquidValidators
 func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, rebalancingTrigger sdk.Dec, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) (redelegations []types.Redelegation) {
 	totalDelShares := liquidVals.TotalDelShares(ctx, k.stakingKeeper)
 	totalWeight := liquidVals.TotalWeight(whitelistedValMap)
-	threshold := rebalancingTrigger.MulInt(totalDelShares)
+	threshold := rebalancingTrigger.Mul(totalDelShares)
 
 	var targetWeight sdk.Int
 	targetMap := map[string]sdk.Int{}
@@ -57,7 +57,7 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 		} else {
 			targetWeight = sdk.ZeroInt()
 		}
-		targetMap[val.OperatorAddress] = totalDelShares.Mul(targetWeight).Quo(totalWeight)
+		targetMap[val.OperatorAddress] = totalDelShares.MulInt(targetWeight).QuoInt(totalWeight).TruncateInt()
 	}
 
 	for i := 0; i < len(liquidVals); i++ {
@@ -104,7 +104,7 @@ func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, valMap map[string]s
 		totalRewards, _ := k.CheckRewardsAndDelShares(ctx, types.LiquidStakingProxyAcc)
 		// checking over types.RewardTrigger and execute GetRewards
 		balance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
-		rewardsThreshold := types.RewardTrigger.MulInt(totalDelShares).TruncateInt()
+		rewardsThreshold := types.RewardTrigger.Mul(totalDelShares).TruncateInt()
 		if balance.Add(totalRewards.TruncateInt()).GTE(rewardsThreshold) {
 			// re-staking with balance, due to auto-withdraw on add staking by f1
 			k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
@@ -154,7 +154,7 @@ func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.LiquidVali
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 	totalDelShares := activeVals.TotalDelShares(ctx, k.stakingKeeper)
 	totalWeight := activeVals.TotalWeight(whitelistedValMap)
-	ToBeTotalDelShares := totalDelShares.Add(addStakingAmt)
+	ToBeTotalDelShares := totalDelShares.TruncateInt().Add(addStakingAmt)
 	existOverWeightedVal := false
 
 	sharePerWeight := ToBeTotalDelShares.Quo(totalWeight)
@@ -163,12 +163,12 @@ func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.LiquidVali
 	i := 0
 	for _, val := range activeVals {
 		weightedShare := val.GetWeight(whitelistedValMap).Mul(sharePerWeight)
-		if val.GetDelShares(ctx, k.stakingKeeper).GT(weightedShare) {
+		if val.GetDelShares(ctx, k.stakingKeeper).TruncateInt().GT(weightedShare) {
 			existOverWeightedVal = true
 		} else {
 			activeVals[i] = val
 			i++
-			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetDelShares(ctx, k.stakingKeeper))
+			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetDelShares(ctx, k.stakingKeeper).TruncateInt())
 		}
 	}
 	// remove overWeightedVals for recursive call

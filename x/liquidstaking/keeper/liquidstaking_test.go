@@ -39,17 +39,17 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[0].Status)
-	s.Require().Equal(sdk.ZeroInt(), res[0].DelShares)
+	s.Require().Equal(sdk.ZeroDec(), res[0].DelShares)
 
 	s.Require().Equal(params.WhitelistedValidators[1].ValidatorAddress, res[1].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[1].TargetWeight, res[1].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[1].Status)
-	s.Require().Equal(sdk.ZeroInt(), res[1].DelShares)
+	s.Require().Equal(sdk.ZeroDec(), res[1].DelShares)
 
 	s.Require().Equal(params.WhitelistedValidators[2].ValidatorAddress, res[2].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[2].TargetWeight, res[2].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[2].Status)
-	s.Require().Equal(sdk.ZeroInt(), res[2].DelShares)
+	s.Require().Equal(sdk.ZeroDec(), res[2].DelShares)
 
 	valMap := s.keeper.GetValidatorsMap(s.ctx)
 	activeVals := s.keeper.GetActiveLiquidValidators(s.ctx, valMap, params.WhitelistedValMap())
@@ -127,17 +127,17 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[0].Status)
-	s.Require().Equal(sdk.NewInt(13333), res[0].DelShares)
+	s.Require().Equal(sdk.NewDec(13333), res[0].DelShares)
 
 	s.Require().Equal(params.WhitelistedValidators[1].ValidatorAddress, res[1].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[1].TargetWeight, res[1].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[1].Status)
-	s.Require().Equal(sdk.NewInt(13333), res[1].DelShares)
+	s.Require().Equal(sdk.NewDec(13333), res[1].DelShares)
 
 	s.Require().Equal(params.WhitelistedValidators[2].ValidatorAddress, res[2].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[2].TargetWeight, res[2].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[2].Status)
-	s.Require().Equal(sdk.NewInt(13333), res[2].DelShares)
+	s.Require().Equal(sdk.NewDec(13333), res[2].DelShares)
 
 	// test withdraw liquid reward and re-staking
 	s.advanceHeight(100, true)
