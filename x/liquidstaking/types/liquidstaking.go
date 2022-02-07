@@ -77,8 +77,7 @@ func (v LiquidValidator) GetStatus(validator stakingtypes.Validator, whitelisted
 	if v.OperatorAddress == validator.OperatorAddress && active {
 		return ValidatorStatusActive
 	} else {
-		// TODO: consider split delisting, delisted
-		return ValidatorStatusUnspecified
+		return ValidatorStatusInActive
 	}
 }
 
