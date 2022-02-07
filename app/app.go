@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -88,9 +87,6 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
-	"github.com/cosmosquad-labs/squad/x/mint"
-	mintkeeper "github.com/cosmosquad-labs/squad/x/mint/keeper"
-	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/tendermint/budget/x/budget"
 	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
@@ -100,6 +96,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	farmingparams "github.com/cosmosquad-labs/squad/app/params"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/farming"
 	farmingclient "github.com/cosmosquad-labs/squad/x/farming/client"
 	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
@@ -110,6 +107,9 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidstaking"
 	liquidstakingkeeper "github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
 	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/mint"
+	mintkeeper "github.com/cosmosquad-labs/squad/x/mint/keeper"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 const appName = "SquadApp"
@@ -527,7 +527,7 @@ func NewSquadApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
-		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
+		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GovKeeper),
 		app.transferModule,
@@ -614,7 +614,7 @@ func NewSquadApp(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
-		liquidity.NewAppModule(appCodec, app.LiquidityKeeper),
+		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GovKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		app.transferModule,

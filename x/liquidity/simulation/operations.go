@@ -1,9 +1,343 @@
 package simulation
 
 import (
+	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	squadappparams "github.com/cosmosquad-labs/squad/app/params"
+	liquiditykeeper "github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
-func WeightedOperations() simulation.WeightedOperations {
-	return nil
+// Simulation operation weights constants.
+const (
+	OpWeightMsgCreatePair      = "op_weight_msg_create_pair"
+	OpWeightMsgCreatePool      = "op_weight_msg_create_pool"
+	OpWeightMsgDeposit         = "op_weight_msg_deposit"
+	OpWeightMsgWithdraw        = "op_weight_msg_withdraw"
+	OpWeightMsgLimitOrder      = "op_weight_msg_limit_order"
+	OpWeightMsgMarketOrder     = "op_weight_msg_market_order"
+	OpWeightMsgCancelOrder     = "op_weight_msg_cancel_order"
+	OpWeightMsgCancelAllOrders = "op_weight_msg_cancel_all_orders"
+)
+
+// WeightedOperations returns all the operations from the module with their respective weights.
+func WeightedOperations(
+	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
+	bk types.BankKeeper, k liquiditykeeper.Keeper,
+) simulation.WeightedOperations {
+	var weightMsgCreatePair int
+	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePair, &weightMsgCreatePair, nil, func(_ *rand.Rand) {
+		weightMsgCreatePair = squadappparams.DefaultWeightMsgCreatePair
+	})
+
+	var weightMsgCreatePool int
+	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePool, &weightMsgCreatePool, nil, func(_ *rand.Rand) {
+		weightMsgCreatePool = squadappparams.DefaultWeightMsgCreatePool
+	})
+
+	var weightMsgDeposit int
+	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil, func(_ *rand.Rand) {
+		weightMsgCreatePool = squadappparams.DefaultWeightMsgCreatePool
+	})
+
+	var weightMsgWithdraw int
+	appParams.GetOrGenerate(cdc, OpWeightMsgWithdraw, &weightMsgWithdraw, nil, func(_ *rand.Rand) {
+		weightMsgCreatePool = squadappparams.DefaultWeightMsgWithdraw
+	})
+
+	var weightMsgLimitOrder int
+	appParams.GetOrGenerate(cdc, OpWeightMsgLimitOrder, &weightMsgLimitOrder, nil, func(_ *rand.Rand) {
+		weightMsgCreatePool = squadappparams.DefaultWeightMsgLimitOrder
+	})
+
+	var weightMsgMarketOrder int
+	appParams.GetOrGenerate(cdc, OpWeightMsgMarketOrder, &weightMsgMarketOrder, nil, func(_ *rand.Rand) {
+		weightMsgCreatePool = squadappparams.DefaultWeightMsgMarketOrder
+	})
+
+	var weightMsgCancelOrder int
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelOrder, &weightMsgCancelOrder, nil, func(_ *rand.Rand) {
+		weightMsgCreatePool = squadappparams.DefaultWeightMsgCancelOrder
+	})
+
+	var weightMsgCancelAllOrders int
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelAllOrders, &weightMsgCancelAllOrders, nil, func(_ *rand.Rand) {
+		weightMsgCreatePool = squadappparams.DefaultWeightMsgCancelAllOrders
+	})
+
+	return simulation.WeightedOperations{
+		simulation.NewWeightedOperation(
+			weightMsgCreatePair,
+			SimulateMsgCreatePair(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCreatePool,
+			SimulateMsgCreatePool(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgDeposit,
+			SimulateMsgDeposit(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgWithdraw,
+			SimulateMsgWithdraw(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgLimitOrder,
+			SimulateMsgLimitOrder(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgMarketOrder,
+			SimulateMsgMarketOrder(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelOrder,
+			SimulateMsgCancelOrder(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelAllOrders,
+			SimulateMsgCancelAllOrders(ak, bk, k),
+		),
+	}
+}
+
+func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		params := k.GetParams(ctx)
+
+		spendable := bk.SpendableCoins(ctx, simAccount.Address)
+		if !spendable.IsAllGTE(params.PairCreationFee) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "insufficient balance for pair creation fee"), nil, nil
+		}
+
+		// Find a non-existing denom pair from total supplies.
+		var denoms []string
+		bk.IterateTotalSupply(ctx, func(coin sdk.Coin) bool {
+			denoms = append(denoms, coin.Denom)
+			return false
+		})
+		var denomA, denomB string
+		skip := true
+	loop:
+		for _, denomA = range denoms {
+			for _, denomB = range denoms {
+				if denomA != denomB {
+					if _, found := k.GetPairByDenoms(ctx, denomA, denomB); !found {
+						skip = false
+						break loop
+					}
+				}
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "all pairs have already been created"), nil, nil
+		}
+
+		msg := types.NewMsgCreatePair(simAccount.Address, denomA, denomB)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, ""), nil, nil
+		//
+		//txCtx := simulation.OperationInput{
+		//	R:               r,
+		//	App:             app,
+		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	Cdc:             nil,
+		//	Msg:             msg,
+		//	MsgType:         msg.Type(),
+		//	Context:         ctx,
+		//	SimAccount:      simAccount,
+		//	AccountKeeper:   ak,
+		//	Bankkeeper:      bk,
+		//	ModuleName:      types.ModuleName,
+		//	CoinsSpentInMsg: spendable,
+		//}
+		//
+		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, ""), nil, nil
+		//txCtx := simulation.OperationInput{
+		//	R:               r,
+		//	App:             app,
+		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	Cdc:             nil,
+		//	Msg:             msg,
+		//	MsgType:         msg.Type(),
+		//	Context:         ctx,
+		//	SimAccount:      simAccount,
+		//	AccountKeeper:   ak,
+		//	Bankkeeper:      bk,
+		//	ModuleName:      types.ModuleName,
+		//	CoinsSpentInMsg: spendable,
+		//}
+		//
+		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdraw, ""), nil, nil
+		//txCtx := simulation.OperationInput{
+		//	R:               r,
+		//	App:             app,
+		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	Cdc:             nil,
+		//	Msg:             msg,
+		//	MsgType:         msg.Type(),
+		//	Context:         ctx,
+		//	SimAccount:      simAccount,
+		//	AccountKeeper:   ak,
+		//	Bankkeeper:      bk,
+		//	ModuleName:      types.ModuleName,
+		//	CoinsSpentInMsg: spendable,
+		//}
+		//
+		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, ""), nil, nil
+		//txCtx := simulation.OperationInput{
+		//	R:               r,
+		//	App:             app,
+		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	Cdc:             nil,
+		//	Msg:             msg,
+		//	MsgType:         msg.Type(),
+		//	Context:         ctx,
+		//	SimAccount:      simAccount,
+		//	AccountKeeper:   ak,
+		//	Bankkeeper:      bk,
+		//	ModuleName:      types.ModuleName,
+		//	CoinsSpentInMsg: spendable,
+		//}
+		//
+		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, ""), nil, nil
+		//txCtx := simulation.OperationInput{
+		//	R:               r,
+		//	App:             app,
+		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	Cdc:             nil,
+		//	Msg:             msg,
+		//	MsgType:         msg.Type(),
+		//	Context:         ctx,
+		//	SimAccount:      simAccount,
+		//	AccountKeeper:   ak,
+		//	Bankkeeper:      bk,
+		//	ModuleName:      types.ModuleName,
+		//	CoinsSpentInMsg: spendable,
+		//}
+		//
+		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelOrder, ""), nil, nil
+		//txCtx := simulation.OperationInput{
+		//	R:               r,
+		//	App:             app,
+		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	Cdc:             nil,
+		//	Msg:             msg,
+		//	MsgType:         msg.Type(),
+		//	Context:         ctx,
+		//	SimAccount:      simAccount,
+		//	AccountKeeper:   ak,
+		//	Bankkeeper:      bk,
+		//	ModuleName:      types.ModuleName,
+		//	CoinsSpentInMsg: spendable,
+		//}
+		//
+		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelAllOrders, ""), nil, nil
+		//txCtx := simulation.OperationInput{
+		//	R:               r,
+		//	App:             app,
+		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	Cdc:             nil,
+		//	Msg:             msg,
+		//	MsgType:         msg.Type(),
+		//	Context:         ctx,
+		//	SimAccount:      simAccount,
+		//	AccountKeeper:   ak,
+		//	Bankkeeper:      bk,
+		//	ModuleName:      types.ModuleName,
+		//	CoinsSpentInMsg: spendable,
+		//}
+		//
+		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
 }
