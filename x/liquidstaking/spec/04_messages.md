@@ -37,7 +37,7 @@ When this message is processed the following actions occur:
 
 - calcuate the amount of native tokens for bTokens to unstake
 - burn the bTokens
-- `LiquidStakingProxyAcc` unbond the active validator's DelShares by calculated native token worth of bTokens divided by number of active validators
+- `LiquidStakingProxyAcc` unbond the active validator's DelShares by calculated native token worth of bTokens divided by current weight of active validators
     - the `DelegatorAddress` of the `UnbondingDelegation` would be `MsgLiquidStake.DelegatorAddress` not `LiquidStakingProxyAcc`
 
 ```go

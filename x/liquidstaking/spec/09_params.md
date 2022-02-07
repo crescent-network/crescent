@@ -24,7 +24,7 @@ type WhitelistedValidator struct {
 
 ### UnstakeFeeRate
 
-When liquid unstake is requested, unbonded by subtracting the UnstakeFeeRate from unbondingAmount, which remains the delShares of proxyAcc, increasing the value of netAmount and bToken.
+When liquid unstake is requested, unbonded by subtracting the UnstakeFeeRate from unbondingAmount, which remains the delShares of LiquidStakingProxyAcc, increasing the value of netAmount and bToken.
 Even if the UnstakeFeeRate is zero, a small loss may occur due to a decimal error in the process of dividing the staking/unstaking amount into weight of liquid validators, which is also accumulated in the netAmount value like fee.
 
 ### MinLiquidStakingAmount

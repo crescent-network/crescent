@@ -8,17 +8,17 @@ import (
 )
 
 // GetLastBlockTime returns the last block time.
-func (k Keeper) GetLastBlockTime(ctx sdk.Context) time.Time {
+func (k Keeper) GetLastBlockTime(ctx sdk.Context) *time.Time {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastBlockTimeKey)
 	if bz == nil {
-		return time.Time{}
+		return nil
 	} else {
 		ts, err := sdk.ParseTimeBytes(bz)
 		if err != nil {
 			panic(err)
 		}
-		return ts
+		return &ts
 	}
 }
 

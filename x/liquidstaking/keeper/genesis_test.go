@@ -1,32 +1,50 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	_ "github.com/stretchr/testify/suite"
 )
 
-//func (suite *KeeperTestSuite) TestInitGenesis() {
-//	suite.SetupTest()
-//	params := suite.keeper.GetParams(suite.ctx)
-//	//params.WhitelistedValidators =
-//	suite.keeper.SetParams(suite.ctx, params)
-//
-//	emptyGenState := suite.keeper.ExportGenesis(suite.ctx)
-//	suite.Require().NotPanics(func() {
-//		suite.keeper.InitGenesis(suite.ctx, *emptyGenState)
-//	})
-//	suite.Require().Equal(emptyGenState, suite.keeper.ExportGenesis(suite.ctx))
-//	suite.Require().Nil(emptyGenState.LiquidValidators)
-//
-//	var genState *types.GenesisState
-//	suite.Require().NotPanics(func() {
-//		genState = suite.keeper.ExportGenesis(suite.ctx)
-//	})
-//	err := types.ValidateGenesis(*genState)
-//	suite.Require().NoError(err)
-//
-//	suite.Require().NotNil(genState.LiquidValidators)
-//	suite.Require().NotPanics(func() {
-//		suite.keeper.InitGenesis(suite.ctx, *genState)
-//	})
-//	suite.Require().Equal(genState, suite.keeper.ExportGenesis(suite.ctx))
-//}
+func (s *KeeperTestSuite) TestInitGenesis() {
+	genState := *types.DefaultGenesisState()
+	s.keeper.InitGenesis(s.ctx, genState)
+	got := s.keeper.ExportGenesis(s.ctx)
+	s.Require().Equal(genState, *got)
+}
+
+func (s *KeeperTestSuite) TestImportExportGenesis() {
+	k, ctx := s.keeper, s.ctx
+	_, valOpers := s.CreateValidators([]int64{1000000, 1000000, 1000000})
+	params := k.GetParams(ctx)
+
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+	}
+	k.SetParams(ctx, params)
+	k.EndBlocker(ctx)
+
+	stakingAmt := sdk.NewInt(100000000)
+	s.liquidStaking(s.delAddrs[0], stakingAmt)
+	lvs := k.GetAllLiquidValidators(ctx)
+	s.Require().Len(lvs, 2)
+
+	lvStates := k.GetLiquidValidatorStates(ctx)
+	genState := k.ExportGenesis(ctx)
+
+	bz := s.app.AppCodec().MustMarshalJSON(genState)
+
+	var genState2 types.GenesisState
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
+	k.InitGenesis(ctx, genState2)
+	genState3 := k.ExportGenesis(ctx)
+
+	s.Require().Equal(*genState, genState2, *genState3)
+
+	lvs = k.GetAllLiquidValidators(ctx)
+	s.Require().Len(lvs, 2)
+
+	lvStates3 := k.GetLiquidValidatorStates(ctx)
+	s.Require().EqualValues(lvStates, lvStates3)
+}

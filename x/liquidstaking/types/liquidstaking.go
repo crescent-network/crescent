@@ -30,17 +30,7 @@ func (v LiquidValidator) Validate() error {
 	if valErr != nil {
 		return valErr
 	}
-
-	// TODO: validated on params or LiquidValidators
-	//if v.Weight.IsNil() {
-	//	return fmt.Errorf("liquidstaking validator weight must not be nil")
-	//}
-	//
-	//if v.Weight.IsNegative() {
-	//	return fmt.Errorf("liquidstaking validator weight must not be negative: %s", v.Weight)
-	//}
-
-	// TODO: add validation for LiquidTokens, Status
+	// TODO: add state level validate
 	return nil
 }
 
@@ -55,13 +45,23 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
-// TODO: consider changing to decimal, refactor to LiquidDelShares
-func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
 	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
 	if !found {
-		return sdk.ZeroInt()
+		return sdk.ZeroDec()
 	}
-	return del.GetShares().TruncateInt()
+	return del.GetShares()
+}
+
+func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
+	delShares := v.GetDelShares(ctx, sk)
+	if !delShares.IsPositive() {
+		return sdk.ZeroDec()
+	}
+
+	val := sk.Validator(ctx, v.GetOperator())
+	// TODO: divide by zero checking
+	return val.TokensFromShares(delShares)
 }
 
 // TODO: add status dependency
@@ -89,21 +89,21 @@ type LiquidValidators []LiquidValidator
 
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
 func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
-	maxGap := sdk.ZeroInt()
-	minGap := sdk.ZeroInt()
+	maxGap := sdk.ZeroDec()
+	minGap := sdk.ZeroDec()
 
 	for _, val := range vs {
 		target := targetMap[val.OperatorAddress]
-		if val.GetDelShares(ctx, sk).Sub(target).GT(maxGap) {
-			maxGap = val.GetDelShares(ctx, sk).Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target.ToDec()).GT(maxGap) {
+			maxGap = val.GetDelShares(ctx, sk).Sub(target.ToDec())
 			maxGapVal = val
 		}
-		if val.GetDelShares(ctx, sk).Sub(target).LT(minGap) {
-			minGap = val.GetDelShares(ctx, sk).Sub(target)
+		if val.GetDelShares(ctx, sk).Sub(target.ToDec()).LT(minGap) {
+			minGap = val.GetDelShares(ctx, sk).Sub(target.ToDec())
 			minGapVal = val
 		}
 	}
-	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
+	amountNeeded = sdk.MinInt(maxGap.TruncateInt(), minGap.TruncateInt().Abs())
 
 	return minGapVal, maxGapVal, amountNeeded
 }
@@ -120,15 +120,19 @@ func (vs LiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMap) sdk.
 	return totalWeight
 }
 
-func (vs LiquidValidators) TotalDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Int {
-	totalDelShares := sdk.ZeroInt()
-	for _, val := range vs {
-		totalDelShares = totalDelShares.Add(val.GetDelShares(ctx, sk))
+func (vs LiquidValidators) TotalDelSharesAndLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Dec, sdk.Dec) {
+	totalDelShares := sdk.ZeroDec()
+	totalLiquidTokens := sdk.ZeroDec()
+	for _, lv := range vs {
+		delShares := lv.GetDelShares(ctx, sk)
+		totalDelShares = totalDelShares.Add(delShares)
+		// TODO: kv optimizing
+		liquidTokens := lv.GetLiquidTokens(ctx, sk)
+		totalLiquidTokens = totalLiquidTokens.Add(liquidTokens)
 	}
-	return totalDelShares
+	return totalDelShares, totalLiquidTokens
 }
 
-// TODO: pointer map looks uncertainty, need to fix
 func (vs LiquidValidators) Map() map[string]*LiquidValidator {
 	valMap := make(map[string]*LiquidValidator)
 	for _, val := range vs {
@@ -137,15 +141,14 @@ func (vs LiquidValidators) Map() map[string]*LiquidValidator {
 	return valMap
 }
 
-// TODO: add testcodes with consider netAmount.TruncateDec() or not
 // BTokenToNativeToken returns UnstakeAmount, NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
 func BTokenToNativeToken(bTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {
-	return netAmount.TruncateDec().Mul(bTokenAmount.ToDec().QuoTruncate(bTokenTotalSupplyAmount.ToDec())).Mul(sdk.OneDec().Sub(feeRate)).TruncateDec()
+	return netAmount.MulTruncate(bTokenAmount.ToDec().QuoTruncate(bTokenTotalSupplyAmount.ToDec())).MulTruncate(sdk.OneDec().Sub(feeRate)).TruncateDec()
 }
 
 // mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
 func NativeTokenToBToken(nativeTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount sdk.Dec) (bTokenAmount sdk.Int) {
-	return bTokenTotalSupplyAmount.ToDec().Mul(nativeTokenAmount.ToDec()).QuoTruncate(netAmount.TruncateDec()).TruncateInt()
+	return bTokenTotalSupplyAmount.ToDec().MulTruncate(nativeTokenAmount.ToDec()).QuoTruncate(netAmount.TruncateDec()).TruncateInt()
 }
 
 func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {

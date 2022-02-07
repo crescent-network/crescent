@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
@@ -49,6 +50,36 @@ func (suite *ModuleTestSuite) SetupTest() {
 		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
 		suite.Require().NoError(err)
 	}
+}
+
+func (s *ModuleTestSuite) TestInitGenesis() {
+	genState := types.DefaultGenesisState()
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
+	got := mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().Equal(*genState, *got)
+}
+
+func (s *ModuleTestSuite) TestImportExportGenesis() {
+	k, ctx := s.keeper, s.ctx
+	genState := mint.ExportGenesis(ctx, k)
+	bz := s.app.AppCodec().MustMarshalJSON(genState)
+
+	var genState2, genState5 types.GenesisState
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
+	mint.InitGenesis(ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState2)
+
+	genState3 := mint.ExportGenesis(ctx, k)
+	s.Require().Equal(*genState, genState2, *genState3)
+
+	ctx = ctx.WithBlockTime(squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	mint.BeginBlocker(ctx, k)
+	genState4 := mint.ExportGenesis(ctx, k)
+	bz = s.app.AppCodec().MustMarshalJSON(genState4)
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState5)
+	s.Require().Equal(*genState5.LastBlockTime, squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState5)
+	genState6 := mint.ExportGenesis(ctx, k)
+	s.Require().Equal(*genState4, genState5, genState6)
 }
 
 func TestConstantInflation(t *testing.T) {

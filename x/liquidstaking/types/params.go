@@ -47,7 +47,6 @@ func DefaultParams() Params {
 	return Params{
 		// TODO: btoken denom immutable
 		BondedBondDenom:        DefaultBondedBondDenom,
-		WhitelistedValidators:  []WhitelistedValidator{},
 		UnstakeFeeRate:         DefaultUnstakeFeeRate,
 		MinLiquidStakingAmount: DefaultMinLiquidStakingAmount,
 	}

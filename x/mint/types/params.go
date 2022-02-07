@@ -91,7 +91,7 @@ func validateBlockTimeThreshold(i interface{}) error {
 	}
 
 	if v <= 0 {
-		return fmt.Errorf("unbonding time must be positive: %d", v)
+		return fmt.Errorf("block time threshold must be positive: %d", v)
 	}
 
 	return nil
