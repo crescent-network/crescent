@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"sync"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -44,32 +45,32 @@ func WeightedOperations(
 
 	var weightMsgDeposit int
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil, func(_ *rand.Rand) {
-		weightMsgCreatePool = squadappparams.DefaultWeightMsgCreatePool
+		weightMsgDeposit = squadappparams.DefaultWeightMsgDeposit
 	})
 
 	var weightMsgWithdraw int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdraw, &weightMsgWithdraw, nil, func(_ *rand.Rand) {
-		weightMsgCreatePool = squadappparams.DefaultWeightMsgWithdraw
+		weightMsgWithdraw = squadappparams.DefaultWeightMsgWithdraw
 	})
 
 	var weightMsgLimitOrder int
 	appParams.GetOrGenerate(cdc, OpWeightMsgLimitOrder, &weightMsgLimitOrder, nil, func(_ *rand.Rand) {
-		weightMsgCreatePool = squadappparams.DefaultWeightMsgLimitOrder
+		weightMsgLimitOrder = squadappparams.DefaultWeightMsgLimitOrder
 	})
 
 	var weightMsgMarketOrder int
 	appParams.GetOrGenerate(cdc, OpWeightMsgMarketOrder, &weightMsgMarketOrder, nil, func(_ *rand.Rand) {
-		weightMsgCreatePool = squadappparams.DefaultWeightMsgMarketOrder
+		weightMsgMarketOrder = squadappparams.DefaultWeightMsgMarketOrder
 	})
 
 	var weightMsgCancelOrder int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelOrder, &weightMsgCancelOrder, nil, func(_ *rand.Rand) {
-		weightMsgCreatePool = squadappparams.DefaultWeightMsgCancelOrder
+		weightMsgCancelOrder = squadappparams.DefaultWeightMsgCancelOrder
 	})
 
 	var weightMsgCancelAllOrders int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelAllOrders, &weightMsgCancelAllOrders, nil, func(_ *rand.Rand) {
-		weightMsgCreatePool = squadappparams.DefaultWeightMsgCancelAllOrders
+		weightMsgCancelAllOrders = squadappparams.DefaultWeightMsgCancelAllOrders
 	})
 
 	return simulation.WeightedOperations{
@@ -113,6 +114,8 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		params := k.GetParams(ctx)
@@ -174,6 +177,8 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		params := k.GetParams(ctx)
@@ -220,11 +225,11 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 		depositCoins := sdk.NewCoins(
 			sdk.NewCoin(
 				pair.BaseCoinDenom,
-				minDepositAmt.Add(simtypes.RandomAmount(r, spendable.AmountOf(pair.BaseCoinDenom).Sub(minDepositAmt))),
+				randomAmount(r, minDepositAmt, spendable.AmountOf(pair.BaseCoinDenom).Sub(params.PoolCreationFee.AmountOf(pair.BaseCoinDenom))),
 			),
 			sdk.NewCoin(
 				pair.QuoteCoinDenom,
-				minDepositAmt.Add(simtypes.RandomAmount(r, spendable.AmountOf(pair.QuoteCoinDenom).Sub(minDepositAmt))),
+				randomAmount(r, minDepositAmt, spendable.AmountOf(pair.QuoteCoinDenom).Sub(params.PoolCreationFee.AmountOf(pair.QuoteCoinDenom))),
 			),
 		)
 
@@ -254,23 +259,54 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k liquidity
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, ""), nil, nil
-		//txCtx := simulation.OperationInput{
-		//	R:               r,
-		//	App:             app,
-		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Cdc:             nil,
-		//	Msg:             msg,
-		//	MsgType:         msg.Type(),
-		//	Context:         ctx,
-		//	SimAccount:      simAccount,
-		//	AccountKeeper:   ak,
-		//	Bankkeeper:      bk,
-		//	ModuleName:      types.ModuleName,
-		//	CoinsSpentInMsg: spendable,
-		//}
-		//
-		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		fundAccountsOnce(r, ctx, bk, accs)
+
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		spendable := bk.SpendableCoins(ctx, simAccount.Address)
+
+		var pair types.Pair
+		var poolId uint64
+		var depositCoins sdk.Coins
+		skip := true
+		_ = k.IterateAllPools(ctx, func(pool types.Pool) (stop bool, err error) {
+			if pool.Disabled {
+				return false, nil
+			}
+			pair, _ = k.GetPair(ctx, pool.PairId)
+			poolId = pool.Id
+			depositCoins = sdk.NewCoins(
+				sdk.NewCoin(pair.BaseCoinDenom, randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.BaseCoinDenom))),
+				sdk.NewCoin(pair.QuoteCoinDenom, randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.QuoteCoinDenom))),
+			)
+			if spendable.IsAllGTE(depositCoins) {
+				skip = false
+				return true, nil
+			}
+			return false, nil
+		})
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, "no pool to deposit"), nil, nil
+		}
+
+		msg := types.NewMsgDeposit(simAccount.Address, poolId, depositCoins)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -279,6 +315,8 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k liquidit
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
 		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdraw, ""), nil, nil
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
@@ -304,6 +342,8 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
 		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, ""), nil, nil
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
@@ -329,6 +369,8 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k liqui
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
 		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, ""), nil, nil
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
@@ -354,6 +396,8 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k liqui
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
 		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelOrder, ""), nil, nil
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
@@ -379,6 +423,8 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k l
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
 		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelAllOrders, ""), nil, nil
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
@@ -397,4 +443,30 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k l
 		//
 		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
+}
+
+// randomAmount returns an integer within a range [min, max].
+func randomAmount(r *rand.Rand, min, max sdk.Int) sdk.Int {
+	return sdk.MaxInt(min, min.Add(simtypes.RandomAmount(r, max.Sub(min))))
+}
+
+var once sync.Once
+
+func fundAccountsOnce(r *rand.Rand, ctx sdk.Context, bk types.BankKeeper, accs []simtypes.Account) {
+	once.Do(func() {
+		denoms := []string{"denom1", "denom2", "denom3", "denom4", "denom5"}
+		maxAmt := sdk.NewInt(1_000_000_000_000)
+		for _, acc := range accs {
+			var coins sdk.Coins
+			for _, denom := range denoms {
+				coins = coins.Add(sdk.NewCoin(denom, simtypes.RandomAmount(r, maxAmt)))
+			}
+			if err := bk.MintCoins(ctx, types.ModuleName, coins); err != nil {
+				panic(err)
+			}
+			if err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc.Address, coins); err != nil {
+				panic(err)
+			}
+		}
+	})
 }

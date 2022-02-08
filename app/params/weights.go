@@ -8,10 +8,10 @@ const (
 	DefaultWeightMsgUnstake               int = 30
 	DefaultWeightMsgHarvest               int = 30
 
-	DefaultWeightMsgCreatePair      int = 5
-	DefaultWeightMsgCreatePool      int = 10
-	DefaultWeightMsgDeposit         int = 15
-	DefaultWeightMsgWithdraw        int = 15
+	DefaultWeightMsgCreatePair      int = 20
+	DefaultWeightMsgCreatePool      int = 20
+	DefaultWeightMsgDeposit         int = 20
+	DefaultWeightMsgWithdraw        int = 20
 	DefaultWeightMsgLimitOrder      int = 80
 	DefaultWeightMsgMarketOrder     int = 60
 	DefaultWeightMsgCancelOrder     int = 20
