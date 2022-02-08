@@ -60,7 +60,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of deposit coins",
 			func(req *types.DepositRequest) {
-				req.DepositCoins = sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000))
+				req.DepositCoins = parseCoins("1000000denom1")
 			},
 			"wrong number of deposit coins: 1",
 		},
@@ -74,7 +74,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of accepted coins",
 			func(req *types.DepositRequest) {
-				req.AcceptedCoins = sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000))
+				req.AcceptedCoins = parseCoins("1000000denom1")
 			},
 			"wrong number of accepted coins: 1",
 		},
@@ -177,11 +177,18 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 			"invalid withdrawn coins: coin 0denom1 amount is not positive",
 		},
 		{
+			"valid withdrawn coins",
+			func(req *types.WithdrawRequest) {
+				req.WithdrawnCoins = parseCoins("1000000denom1")
+			},
+			"",
+		},
+		{
 			"wrong number of withdrawn coins",
 			func(req *types.WithdrawRequest) {
-				req.WithdrawnCoins = sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000))
+				req.WithdrawnCoins = parseCoins("100000denom1,1000000denom2,1000000denom3")
 			},
-			"wrong number of withdrawn coins: 1",
+			"wrong number of withdrawn coins: 3",
 		},
 		{
 			"invalid status",

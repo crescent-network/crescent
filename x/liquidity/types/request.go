@@ -105,7 +105,7 @@ func (req WithdrawRequest) Validate() error {
 	if err := req.WithdrawnCoins.Validate(); err != nil {
 		return fmt.Errorf("invalid withdrawn coins: %w", err)
 	}
-	if len(req.WithdrawnCoins) != 0 && len(req.WithdrawnCoins) != 2 {
+	if len(req.WithdrawnCoins) > 2 {
 		return fmt.Errorf("wrong number of withdrawn coins: %d", len(req.WithdrawnCoins))
 	}
 	if !req.Status.IsValid() {
