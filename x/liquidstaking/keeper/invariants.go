@@ -36,7 +36,7 @@ func BTokenSupplyWithLiquidTokensInvariant(k Keeper) sdk.Invariant {
 		if lvs.Len() == 0 {
 			return msg, broken
 		}
-		_, totalLiquidTokens := lvs.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
+		totalLiquidTokens := lvs.TotalLiquidTokens(ctx, k.stakingKeeper)
 		bondedBondDenom := k.BondedBondDenom(ctx)
 		bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom)
 		if bTokenTotalSupply.IsPositive() && !totalLiquidTokens.IsPositive() {

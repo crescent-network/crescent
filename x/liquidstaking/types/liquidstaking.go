@@ -45,6 +45,7 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
+// TODO: could be deprecated or reduce duplicated sk
 func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
 	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
 	if !found {
@@ -58,14 +59,12 @@ func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.
 	if !delShares.IsPositive() {
 		return sdk.ZeroDec()
 	}
-
 	val := sk.Validator(ctx, v.GetOperator())
-	return val.TokensFromShares(delShares)
+	return val.TokensFromSharesTruncated(delShares)
 }
 
-// TODO: add status dependency
-func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
-	if wv, ok := whitelistedValMap[v.OperatorAddress]; ok {
+func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap, active bool) sdk.Int {
+	if wv, ok := whitelistedValMap[v.OperatorAddress]; ok && active {
 		return wv.TargetWeight
 	} else {
 		return sdk.ZeroInt()
@@ -97,6 +96,7 @@ func ActiveCondition(validator stakingtypes.Validator, whitelisted bool, tombsto
 
 // LiquidValidators is a collection of LiquidValidator
 type LiquidValidators []LiquidValidator
+type ActiveLiquidValidators LiquidValidators
 
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
 func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
@@ -123,34 +123,38 @@ func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
-	totalWeight := sdk.ZeroInt()
-	for _, val := range vs {
-		totalWeight = totalWeight.Add(val.GetWeight(whitelistedValMap))
-	}
-	return totalWeight
-}
-
-func (vs LiquidValidators) TotalDelSharesAndLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Dec, sdk.Dec) {
-	totalDelShares := sdk.ZeroDec()
+func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
 	totalLiquidTokens := sdk.ZeroDec()
 	for _, lv := range vs {
-		delShares := lv.GetDelShares(ctx, sk)
-		totalDelShares = totalDelShares.Add(delShares)
-		// TODO: kv optimizing
 		liquidTokens := lv.GetLiquidTokens(ctx, sk)
 		totalLiquidTokens = totalLiquidTokens.Add(liquidTokens)
 	}
-	return totalDelShares, totalLiquidTokens
+	return totalLiquidTokens
 }
 
-// TODO: refactor to bool Map
-func (vs LiquidValidators) Map() map[string]*LiquidValidator {
-	valMap := make(map[string]*LiquidValidator)
+func (vs LiquidValidators) Map() map[string]bool {
+	valMap := make(map[string]bool)
 	for _, val := range vs {
-		valMap[val.OperatorAddress] = &val
+		valMap[val.OperatorAddress] = true
 	}
 	return valMap
+}
+
+func (avs ActiveLiquidValidators) Len() int {
+	return LiquidValidators(avs).Len()
+}
+
+func (avs ActiveLiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
+	return LiquidValidators(avs).TotalLiquidTokens(ctx, sk)
+}
+
+// TotalWeight for active liquid validator
+func (avs ActiveLiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
+	totalWeight := sdk.ZeroInt()
+	for _, val := range avs {
+		totalWeight = totalWeight.Add(val.GetWeight(whitelistedValMap, true))
+	}
+	return totalWeight
 }
 
 // BTokenToNativeToken returns UnstakeAmount, NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)

@@ -33,7 +33,7 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 
 func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	params := k.GetParams(ctx)
-	liquidVals := k.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
+	activeVals := k.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
 	bondedBondDenom := k.BondedBondDenom(ctx)
 	totalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom).Amount
 	bTokenValueMap := make(squadtypes.StrIntMap)
@@ -109,8 +109,8 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		}
 		if delShares.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			dividedPowers, _ := k.DivideByCurrentWeight(ctx, liquidVals, delShares)
-			for i, val := range liquidVals {
+			dividedPowers, _ := k.DivideByCurrentWeight(ctx, activeVals, delShares)
+			for i, val := range activeVals {
 				if existed, ok := (*otherVotes)[voter][val.OperatorAddress]; ok {
 					(*otherVotes)[voter][val.OperatorAddress] = existed.Add(dividedPowers[i])
 				} else {
