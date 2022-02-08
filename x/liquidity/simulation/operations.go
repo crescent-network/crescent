@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"sort"
 	"sync"
 	"time"
 
@@ -499,22 +500,51 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelOrder, ""), nil, nil
-		//txCtx := simulation.OperationInput{
-		//	R:               r,
-		//	App:             app,
-		//	TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
-		//	Msg:             msg,
-		//	MsgType:         msg.Type(),
-		//	Context:         ctx,
-		//	SimAccount:      simAccount,
-		//	AccountKeeper:   ak,
-		//	Bankkeeper:      bk,
-		//	ModuleName:      types.ModuleName,
-		//	CoinsSpentInMsg: spendable,
-		//}
-		//
-		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var swapReqs []types.SwapRequest
+		skip := true
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+
+			found := false
+			_ = k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
+				pair, _ := k.GetPair(ctx, req.PairId)
+				if req.Status != types.SwapRequestStatusCanceled && req.GetOrderer().Equals(simAccount.Address) && req.BatchId < pair.CurrentBatchId {
+					swapReqs = append(swapReqs, req)
+					found = true
+					return true, nil
+				}
+				return false, nil
+			})
+			if found {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelOrder, "no account to cancel an order"), nil, nil
+		}
+
+		swapReq := swapReqs[r.Intn(len(swapReqs))]
+
+		msg := types.NewMsgCancelOrder(simAccount.Address, swapReq.PairId, swapReq.Id)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -525,22 +555,61 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k k
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelAllOrders, ""), nil, nil
-		//txCtx := simulation.OperationInput{
-		//	R:               r,
-		//	App:             app,
-		//	TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
-		//	Msg:             msg,
-		//	MsgType:         msg.Type(),
-		//	Context:         ctx,
-		//	SimAccount:      simAccount,
-		//	AccountKeeper:   ak,
-		//	Bankkeeper:      bk,
-		//	ModuleName:      types.ModuleName,
-		//	CoinsSpentInMsg: spendable,
-		//}
-		//
-		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		pairIds := map[uint64]struct{}{}
+		skip := true
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+
+			found := false
+			_ = k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
+				pair, _ := k.GetPair(ctx, req.PairId)
+				if req.GetOrderer().Equals(simAccount.Address) && req.BatchId < pair.CurrentBatchId {
+					pairIds[req.PairId] = struct{}{}
+					found = true
+				}
+				return false, nil
+			})
+			if found {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelOrder, "no account to cancel an order"), nil, nil
+		}
+
+		var selectedPairIds []uint64
+		for pairId := range pairIds {
+			selectedPairIds = append(selectedPairIds, pairId)
+		}
+		// Sort pair ids since the order of keys in a map is not deterministic.
+		sort.SliceStable(selectedPairIds, func(i, j int) bool {
+			return selectedPairIds[i] < selectedPairIds[j]
+		})
+		r.Shuffle(len(selectedPairIds), func(i, j int) {
+			selectedPairIds[i], selectedPairIds[j] = selectedPairIds[j], selectedPairIds[i]
+		})
+		selectedPairIds = selectedPairIds[:r.Intn(len(selectedPairIds))]
+
+		msg := types.NewMsgCancelAllOrders(simAccount.Address, selectedPairIds)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
