@@ -114,8 +114,8 @@ func TestLowestTick(t *testing.T) {
 
 func TestPriceToUpTick(t *testing.T) {
 	for _, tc := range []struct {
-		price sdk.Dec
-		prec int
+		price    sdk.Dec
+		prec     int
 		expected sdk.Dec
 	}{
 		{parseDec("1.0015"), tickPrec, parseDec("1.002")},
