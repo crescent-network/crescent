@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -145,7 +144,7 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -206,7 +205,7 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -272,7 +271,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -321,7 +320,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -404,7 +403,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -430,7 +429,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
 		//	App:             app,
-		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 		//	Msg:             msg,
 		//	MsgType:         msg.Type(),
 		//	Context:         ctx,
@@ -456,7 +455,7 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
 		//	App:             app,
-		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 		//	Msg:             msg,
 		//	MsgType:         msg.Type(),
 		//	Context:         ctx,
@@ -482,7 +481,7 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k k
 		//txCtx := simulation.OperationInput{
 		//	R:               r,
 		//	App:             app,
-		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		//	TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
 		//	Msg:             msg,
 		//	MsgType:         msg.Type(),
 		//	Context:         ctx,
