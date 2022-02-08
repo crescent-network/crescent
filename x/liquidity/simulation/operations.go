@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	squadappparams "github.com/cosmosquad-labs/squad/app/params"
-	keeper "github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -130,7 +131,7 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		skip := true
 		for _, simAccount = range accs {
 			spendable = bk.SpendableCoins(ctx, simAccount.Address)
-			if spendable.IsAllGTE(params.PairCreationFee) {
+			if params.PairCreationFee.IsAllLTE(spendable) {
 				skip = false
 				break
 			}
@@ -192,11 +193,11 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		depositCoins := sdk.NewCoins(
 			sdk.NewCoin(
 				pair.BaseCoinDenom,
-				randomAmount(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.BaseCoinDenom)),
+				randomInt(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.BaseCoinDenom)),
 			),
 			sdk.NewCoin(
 				pair.QuoteCoinDenom,
-				randomAmount(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.QuoteCoinDenom)),
+				randomInt(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.QuoteCoinDenom)),
 			),
 		)
 
@@ -247,12 +248,12 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 				depositCoins = sdk.NewCoins(
 					sdk.NewCoin(
 						pair.BaseCoinDenom,
-						randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.BaseCoinDenom))),
+						randomInt(r, sdk.OneInt(), spendable.AmountOf(pair.BaseCoinDenom))),
 					sdk.NewCoin(
 						pair.QuoteCoinDenom,
-						randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.QuoteCoinDenom))),
+						randomInt(r, sdk.OneInt(), spendable.AmountOf(pair.QuoteCoinDenom))),
 				)
-				if spendable.IsAllGTE(depositCoins) {
+				if depositCoins.IsAllLTE(spendable) {
 					skip = false
 					return true, nil
 				}
@@ -314,7 +315,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		}
 
 		pool, _ := k.GetPool(ctx, poolId)
-		poolCoin := sdk.NewCoin(pool.PoolCoinDenom, randomAmount(r, sdk.OneInt(), spendable.AmountOf(pool.PoolCoinDenom)))
+		poolCoin := sdk.NewCoin(pool.PoolCoinDenom, randomInt(r, sdk.OneInt(), spendable.AmountOf(pool.PoolCoinDenom)))
 		msg := types.NewMsgWithdraw(simAccount.Address, poolId, poolCoin)
 
 		txCtx := simulation.OperationInput{
@@ -342,22 +343,79 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, ""), nil, nil
-		//txCtx := simulation.OperationInput{
-		//	R:               r,
-		//	App:             app,
-		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Msg:             msg,
-		//	MsgType:         msg.Type(),
-		//	Context:         ctx,
-		//	SimAccount:      simAccount,
-		//	AccountKeeper:   ak,
-		//	Bankkeeper:      bk,
-		//	ModuleName:      types.ModuleName,
-		//	CoinsSpentInMsg: spendable,
-		//}
-		//
-		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		params := k.GetParams(ctx)
+
+		accs = shuffleAccs(accs)
+
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var pair types.Pair
+		var pool types.Pool
+		var dir types.SwapDirection
+		skip := true
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+
+			var found bool
+			pair, pool, dir, found = findPairToMakeOrder(r, k, ctx, spendable)
+			if found {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "no account to make a limit order"), nil, nil
+		}
+
+		var minPrice, maxPrice sdk.Dec
+		if pair.LastPrice != nil {
+			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
+		} else {
+			rx, ry := k.GetPoolBalance(ctx, pool, pair)
+			poolInfo := types.NewPoolInfo(rx, ry, sdk.Int{})
+			minPrice, maxPrice = minMaxPrice(k, ctx, poolInfo.Price())
+		}
+		price := types.PriceToTick(randomDec(r, minPrice, maxPrice), int(params.TickPrecision))
+
+		amt := randomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
+
+		var offerCoin sdk.Coin
+		var demandCoinDenom string
+		switch dir {
+		case types.SwapDirectionBuy:
+			offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).Ceil().TruncateInt())
+			demandCoinDenom = pair.BaseCoinDenom
+		case types.SwapDirectionSell:
+			offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+			demandCoinDenom = pair.QuoteCoinDenom
+		}
+		if offerCoin.Amount.LT(types.MinCoinAmount) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "too small offer coin amount"), nil, nil
+		}
+		if !sdk.NewCoins(offerCoin).IsAllLTE(spendable) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "insufficient funds"), nil, nil
+		}
+
+		lifespan := time.Duration(r.Int63n(int64(params.MaxOrderLifespan)))
+
+		msg := types.NewMsgLimitOrder(
+			simAccount.Address, pair.Id, dir, offerCoin, demandCoinDenom, price, amt, lifespan)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -439,9 +497,14 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k k
 	}
 }
 
-// randomAmount returns an integer within a range [min, max].
-func randomAmount(r *rand.Rand, min, max sdk.Int) sdk.Int {
+// randomInt returns an integer within a range [min, max].
+func randomInt(r *rand.Rand, min, max sdk.Int) sdk.Int {
 	return sdk.MaxInt(min, min.Add(simtypes.RandomAmount(r, max.Sub(min))))
+}
+
+// randomDec returns a decimal within a range [min, max].
+func randomDec(r *rand.Rand, min, max sdk.Dec) sdk.Dec {
+	return sdk.MaxDec(min, min.Add(simtypes.RandomDecAmount(r, max.Sub(min))))
 }
 
 var once sync.Once
@@ -523,10 +586,70 @@ func findPairToCreatePool(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, spenda
 			sdk.NewCoin(pair.BaseCoinDenom, params.MinInitialDepositAmount),
 			sdk.NewCoin(pair.QuoteCoinDenom, params.MinInitialDepositAmount),
 		)
-		if spendable.IsAllGTE(minDepositCoins.Add(params.PoolCreationFee...)) {
+		if minDepositCoins.Add(params.PoolCreationFee...).IsAllLTE(spendable) {
 			return pair, true
 		}
 	}
 
 	return types.Pair{}, false
+}
+
+func findPairToMakeOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, spendable sdk.Coins) (types.Pair, types.Pool, types.SwapDirection, bool) {
+	var pairs []types.Pair
+	_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
+		pairs = append(pairs, pair)
+		return false, nil
+	})
+	r.Shuffle(len(pairs), func(i, j int) {
+		pairs[i], pairs[j] = pairs[j], pairs[i]
+	})
+
+	for _, pair := range pairs {
+		var resPool types.Pool
+		found := false // Found a non-disabled pool?
+		_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
+			if !pool.Disabled {
+				resPool = pool
+				found = true
+				return true, nil
+			}
+			return false, nil
+		})
+		if !found {
+			continue
+		}
+
+		dirs := []types.SwapDirection{types.SwapDirectionBuy, types.SwapDirectionSell}
+		r.Shuffle(len(dirs), func(i, j int) {
+			dirs[i], dirs[j] = dirs[j], dirs[i]
+		})
+
+		for _, dir := range dirs {
+			var minOfferCoinAmt sdk.Coin
+			switch dir {
+			case types.SwapDirectionBuy:
+				minOfferCoinAmt = sdk.NewCoin(pair.QuoteCoinDenom, types.MinCoinAmount)
+			case types.SwapDirectionSell:
+				minOfferCoinAmt = sdk.NewCoin(pair.BaseCoinDenom, types.MinCoinAmount)
+			}
+
+			if sdk.NewCoins(minOfferCoinAmt).IsAllLTE(spendable) {
+				return pair, resPool, dir, true
+			}
+		}
+	}
+
+	return types.Pair{}, types.Pool{}, 0, false
+}
+
+func minMaxPrice(k keeper.Keeper, ctx sdk.Context, lastPrice sdk.Dec) (sdk.Dec, sdk.Dec) {
+	params := k.GetParams(ctx)
+	tickPrec := int(params.TickPrecision)
+	minPrice := lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio))
+	minPriceTick := types.PriceToTick(minPrice, tickPrec)
+	if !minPriceTick.Equal(minPrice) {
+		minPrice = types.UpTick(minPriceTick, tickPrec)
+	}
+	maxPrice := types.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), tickPrec)
+	return minPrice, maxPrice
 }

@@ -107,7 +107,7 @@ func (s *KeeperTestSuite) TestDisabledPool() {
 	s.Require().False(pool.Disabled)
 
 	// A depositor tries to deposit to the pool.
-	s.depositBatch(s.addr(3), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
+	s.deposit(s.addr(3), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
 	s.nextBlock()
 
 	// Now, the pool is disabled.
@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) TestDisabledPool() {
 	// Here's the second example.
 	// This time, the pool creator withdraws all his coins.
 	pool = s.createPool(poolCreator, pair2.Id, parseCoins("1000000denom3,1000000denom4"), true)
-	s.withdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
+	s.withdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
 	s.nextBlock()
 
 	// The pool is disabled again.
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 	// is treated as disabled.
 	depositor := s.addr(3)
 	depositCoins := parseCoins("1000000denom1,1000000denom2")
-	req := s.depositBatch(depositor, pool.Id, depositCoins, true)
+	req := s.deposit(depositor, pool.Id, depositCoins, true)
 	err := k.ExecuteDepositRequest(ctx, req)
 	s.Require().NoError(err)
 	req, _ = k.GetDepositRequest(ctx, pool.Id, req.Id)
@@ -149,7 +149,7 @@ func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 	liquidity.BeginBlocker(ctx, k)
 
 	// Now any deposits will result in an error.
-	_, err = k.DepositBatch(ctx, types.NewMsgDeposit(depositor, pool.Id, depositCoins))
+	_, err = k.Deposit(ctx, types.NewMsgDeposit(depositor, pool.Id, depositCoins))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
 
@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 	s.sendCoins(poolReserveAddr, s.addr(1), s.getBalances(poolReserveAddr))
 
 	// The pool creator tries to withdraw his coins, but this will fail.
-	req := s.withdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
+	req := s.withdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
 	err := k.ExecuteWithdrawRequest(ctx, req)
 	s.Require().NoError(err)
 	req, _ = k.GetWithdrawRequest(ctx, pool.Id, req.Id)
@@ -175,7 +175,7 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 	liquidity.BeginBlocker(ctx, k)
 
 	// Now any withdrawals will result in an error.
-	_, err = k.WithdrawBatch(ctx, types.NewMsgWithdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
+	_, err = k.Withdraw(ctx, types.NewMsgWithdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
 
@@ -185,7 +185,7 @@ func (s *KeeperTestSuite) TestCreatePoolAfterDisabled() {
 	// Create a disabled pool.
 	poolCreator := s.addr(1)
 	pool := s.createPool(poolCreator, pair.Id, parseCoins("1000000denom1,1000000denom2"), true)
-	s.withdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
+	s.withdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
 	s.nextBlock()
 
 	// Now a new pool can be created with same denom pair because
@@ -201,7 +201,7 @@ func (s *KeeperTestSuite) TestDepositRefund() {
 	depositor := s.addr(1)
 	depositCoins := parseCoins("20000denom1,15000denom2")
 	s.fundAddr(depositor, depositCoins)
-	req := s.depositBatch(depositor, pool.Id, depositCoins, false)
+	req := s.deposit(depositor, pool.Id, depositCoins, false)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
 	s.Require().Equal(types.RequestStatusSucceeded, req.Status)
@@ -216,7 +216,7 @@ func (s *KeeperTestSuite) TestDepositRefund() {
 	depositor = s.addr(2)
 	depositCoins = parseCoins("1denom1,1denom2")
 	s.fundAddr(depositor, depositCoins)
-	req = s.depositBatch(depositor, pool.Id, depositCoins, false)
+	req = s.deposit(depositor, pool.Id, depositCoins, false)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
 	s.Require().Equal(types.RequestStatusFailed, req.Status)

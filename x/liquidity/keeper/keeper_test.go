@@ -91,22 +91,22 @@ func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depo
 	return pool
 }
 
-func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) types.DepositRequest {
+func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) types.DepositRequest {
 	if fund {
 		s.fundAddr(depositor, depositCoins)
 	}
-	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDeposit(depositor, poolId, depositCoins))
+	req, err := s.keeper.Deposit(s.ctx, types.NewMsgDeposit(depositor, poolId, depositCoins))
 	s.Require().NoError(err)
 	return req
 }
 
-func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64, poolCoin sdk.Coin) types.WithdrawRequest {
-	req, err := s.keeper.WithdrawBatch(s.ctx, types.NewMsgWithdraw(withdrawer, poolId, poolCoin))
+func (s *KeeperTestSuite) withdraw(withdrawer sdk.AccAddress, poolId uint64, poolCoin sdk.Coin) types.WithdrawRequest {
+	req, err := s.keeper.Withdraw(s.ctx, types.NewMsgWithdraw(withdrawer, poolId, poolCoin))
 	s.Require().NoError(err)
 	return req
 }
 
-func (s *KeeperTestSuite) limitOrderBatch(
+func (s *KeeperTestSuite) limitOrder(
 	orderer sdk.AccAddress, pairId uint64, dir types.SwapDirection,
 	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
 	pair, found := s.keeper.GetPair(s.ctx, pairId)
@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) limitOrderBatch(
 	var demandCoinDenom string
 	switch dir {
 	case types.SwapDirectionBuy:
-		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).TruncateInt())
+		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).Ceil().TruncateInt())
 		demandCoinDenom = pair.BaseCoinDenom
 	case types.SwapDirectionSell:
 		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
@@ -127,22 +127,22 @@ func (s *KeeperTestSuite) limitOrderBatch(
 	msg := types.NewMsgLimitOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		price, amt, orderLifespan)
-	req, err := s.keeper.LimitOrderBatch(s.ctx, msg)
+	req, err := s.keeper.LimitOrder(s.ctx, msg)
 	s.Require().NoError(err)
 	return req
 }
 
-func (s *KeeperTestSuite) buyLimitOrderBatch(
+func (s *KeeperTestSuite) buyLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
-	return s.limitOrderBatch(
+	return s.limitOrder(
 		orderer, pairId, types.SwapDirectionBuy, price, amt, orderLifespan, fund)
 }
 
-func (s *KeeperTestSuite) sellLimitOrderBatch(
+func (s *KeeperTestSuite) sellLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
-	return s.limitOrderBatch(
+	return s.limitOrder(
 		orderer, pairId, types.SwapDirectionSell, price, amt, orderLifespan, fund)
 }
 

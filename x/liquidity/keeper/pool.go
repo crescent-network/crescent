@@ -126,8 +126,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 	return pool, nil
 }
 
-// DepositBatch handles types.MsgDeposit and stores the request.
-func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDeposit) (types.DepositRequest, error) {
+// Deposit handles types.MsgDeposit and stores the request.
+func (k Keeper) Deposit(ctx sdk.Context, msg *types.MsgDeposit) (types.DepositRequest, error) {
 	pool, found := k.GetPool(ctx, msg.PoolId)
 	if !found {
 		return types.DepositRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)
@@ -165,8 +165,8 @@ func (k Keeper) DepositBatch(ctx sdk.Context, msg *types.MsgDeposit) (types.Depo
 	return req, nil
 }
 
-// WithdrawBatch handles types.MsgWithdraw and stores the request.
-func (k Keeper) WithdrawBatch(ctx sdk.Context, msg *types.MsgWithdraw) (types.WithdrawRequest, error) {
+// Withdraw handles types.MsgWithdraw and stores the request.
+func (k Keeper) Withdraw(ctx sdk.Context, msg *types.MsgWithdraw) (types.WithdrawRequest, error) {
 	pool, found := k.GetPool(ctx, msg.PoolId)
 	if !found {
 		return types.WithdrawRequest{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool with id %d not found", msg.PoolId)

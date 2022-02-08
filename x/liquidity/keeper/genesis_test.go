@@ -19,20 +19,20 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, parseCoins("1000000denom1,1000000denom2"), true)
 
-	s.depositBatch(s.addr(1), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
+	s.deposit(s.addr(1), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
 	s.nextBlock()
 
 	poolCoin := s.getBalance(s.addr(1), pool.PoolCoinDenom)
 	poolCoin.Amount = poolCoin.Amount.QuoRaw(2)
-	s.withdrawBatch(s.addr(1), pool.Id, poolCoin)
+	s.withdraw(s.addr(1), pool.Id, poolCoin)
 	s.nextBlock()
 
-	s.buyLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), 0, true)
+	s.buyLimitOrder(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), 0, true)
 	s.nextBlock()
 
-	depositReq := s.depositBatch(s.addr(3), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
-	withdrawReq := s.withdrawBatch(s.addr(1), pool.Id, poolCoin)
-	swapReq := s.sellLimitOrderBatch(s.addr(3), pair.Id, parseDec("1.0"), newInt(1000), 0, true)
+	depositReq := s.deposit(s.addr(3), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
+	withdrawReq := s.withdraw(s.addr(1), pool.Id, poolCoin)
+	swapReq := s.sellLimitOrder(s.addr(3), pair.Id, parseDec("1.0"), newInt(1000), 0, true)
 
 	genState := k.ExportGenesis(ctx)
 

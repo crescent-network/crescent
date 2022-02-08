@@ -46,7 +46,7 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 func (m msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.DepositBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.Deposit(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func (m msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 func (m msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdraw) (*types.MsgWithdrawResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.WithdrawBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.Withdraw(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -68,7 +68,7 @@ func (m msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdraw) (*typ
 func (m msgServer) LimitOrder(goCtx context.Context, msg *types.MsgLimitOrder) (*types.MsgLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.LimitOrderBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.LimitOrder(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -79,7 +79,7 @@ func (m msgServer) LimitOrder(goCtx context.Context, msg *types.MsgLimitOrder) (
 func (m msgServer) MarketOrder(goCtx context.Context, msg *types.MsgMarketOrder) (*types.MsgMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.MarketOrderBatch(ctx, msg); err != nil {
+	if _, err := m.Keeper.MarketOrder(ctx, msg); err != nil {
 		return nil, err
 	}
 

@@ -20,11 +20,11 @@ func (s *KeeperTestSuite) TestDepositWithdraw() {
 
 	// A depositor makes a deposit
 	depositor := s.addr(1)
-	s.depositBatch(depositor, pool.Id, parseCoins("500000denom1,500000denom2"), true)
+	s.deposit(depositor, pool.Id, parseCoins("500000denom1,500000denom2"), true)
 	s.nextBlock()
 
 	// The depositor withdraws pool coin
 	poolCoin := s.getBalance(depositor, pool.PoolCoinDenom)
-	s.withdrawBatch(depositor, pool.Id, poolCoin)
+	s.withdraw(depositor, pool.Id, poolCoin)
 	s.nextBlock()
 }

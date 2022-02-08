@@ -30,10 +30,10 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewCreatePairCmd(),
 		NewCreatePoolCmd(),
-		NewDepositBatchCmd(),
-		NewWithdrawBatchCmd(),
-		NewLimitOrderBatchCmd(),
-		NewMarketOrderBatchCmd(),
+		NewDepositCmd(),
+		NewWithdrawCmd(),
+		NewLimitOrderCmd(),
+		NewMarketOrderCmd(),
 		NewCancelOrderCmd(),
 		NewCancelAllOrdersCmd(),
 	)
@@ -114,7 +114,7 @@ $ %s tx %s create-pool 1 1000000000uatom,50000000000usquad --from mykey
 	return cmd
 }
 
-func NewDepositBatchCmd() *cobra.Command {
+func NewDepositCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit [pool-id] [deposit-coins]",
 		Args:  cobra.ExactArgs(2),
@@ -154,7 +154,7 @@ $ %s tx %s deposit 1 1000000000uatom,50000000000usquad --from mykey
 	return cmd
 }
 
-func NewWithdrawBatchCmd() *cobra.Command {
+func NewWithdrawCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw [pool-id] [pool-coin]",
 		Args:  cobra.ExactArgs(2),
@@ -198,7 +198,7 @@ $ %s tx %s withdraw 1 10000pool1 --from mykey
 	return cmd
 }
 
-func NewLimitOrderBatchCmd() *cobra.Command {
+func NewLimitOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [base-coin-amount] [order-lifespan]",
 		Args:  cobra.ExactArgs(7),
@@ -284,7 +284,7 @@ $ %s tx %s limit-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --fr
 	return cmd
 }
 
-func NewMarketOrderBatchCmd() *cobra.Command {
+func NewMarketOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [base-coin-amount] [order-lifespan]",
 		Args:  cobra.ExactArgs(6),
