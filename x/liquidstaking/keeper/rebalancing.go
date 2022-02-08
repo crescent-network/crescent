@@ -65,24 +65,12 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 		if amountNeeded.IsZero() || (i == 0 && amountNeeded.LT(threshold.TruncateInt())) {
 			break
 		}
-		// TODO: refactor using map
-		addedVal := 0
-		subtractedVal := 0
-		for idx := range liquidVals {
-			if liquidVals[idx].OperatorAddress == maxVal.OperatorAddress {
-				addedVal = idx
-			}
-			if liquidVals[idx].OperatorAddress == minVal.OperatorAddress {
-				subtractedVal = idx
-			}
-		}
 		redelegation := types.Redelegation{
 			Delegator:    proxyAcc,
-			SrcValidator: liquidVals[subtractedVal].GetOperator(),
-			DstValidator: liquidVals[addedVal].GetOperator(),
+			SrcValidator: minVal.GetOperator(),
+			DstValidator: maxVal.GetOperator(),
 			Amount:       amountNeeded,
 		}
-		// TODO: deprecate return redelegations
 		redelegations = append(redelegations, redelegation)
 		_, err := k.TryRedelegation(ctx, redelegation)
 		if err != nil {
