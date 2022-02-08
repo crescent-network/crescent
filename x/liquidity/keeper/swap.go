@@ -131,7 +131,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.S
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio))
+		price = types.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, price.MulInt(msg.Amount).Ceil().TruncateInt())
 	case types.SwapDirectionSell:
 		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
@@ -139,7 +139,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.S
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio))
+		price = types.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = msg.OfferCoin
 	}
 	if msg.OfferCoin.IsLT(offerCoin) {
