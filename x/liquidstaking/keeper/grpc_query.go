@@ -33,5 +33,5 @@ func (k Querier) LiquidValidators(c context.Context, req *types.QueryLiquidValid
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	return &types.QueryLiquidValidatorsResponse{LiquidValidators: k.GetLiquidValidatorStates(ctx)}, nil
+	return &types.QueryLiquidValidatorsResponse{LiquidValidators: k.GetAllLiquidValidatorStates(ctx)}, nil
 }

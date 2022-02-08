@@ -12,6 +12,8 @@ import (
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
+// TODO: tidy unused functions
+
 // BankKeeper defines the expected bank send keeper
 type BankKeeper interface {
 	InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
@@ -110,7 +112,6 @@ type GovKeeper interface {
 
 // DistrKeeper expected distribution keeper (noalias)
 type DistrKeeper interface {
-	//DelegationTotalRewards(c sdk.Context, req *types.QueryDelegationTotalRewardsRequest) (*distrtypes.QueryDelegationTotalRewardsResponse, error)
 	IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.ValidatorI) uint64
 	CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins)
 	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
@@ -128,6 +129,11 @@ type LiquidityKeeper interface {
 type FarmingKeeper interface {
 	IterateStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, staking farmintypes.Staking) (stop bool))
 	IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, queuedStaking farmintypes.QueuedStaking) (stop bool))
+}
+
+// SlashingKeeper expected slashing keeper (noalias)
+type SlashingKeeper interface {
+	IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

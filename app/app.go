@@ -444,6 +444,7 @@ func NewSquadApp(
 		app.GovKeeper,
 		app.LiquidityKeeper,
 		app.FarmingKeeper,
+		app.SlashingKeeper,
 	)
 
 	// register the proposal types

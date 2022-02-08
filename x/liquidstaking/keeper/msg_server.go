@@ -51,7 +51,6 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 			sdk.NewAttribute(types.AttributeKeyBTokenMintedAmount, bTokenMintAmount.String()),
 		),
 	})
-	// TODO: consider newShares on MsgLiquidStakeResponse
 	return &types.MsgLiquidStakeResponse{}, nil
 }
 
@@ -59,7 +58,6 @@ func (k msgServer) LiquidUnstake(goCtx context.Context, msg *types.MsgLiquidUnst
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	completionTime, unbondingAmount, _, err := k.LiquidUnstaking(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
-	// TODO: add custom error
 	if err != nil {
 		return nil, err
 	}
