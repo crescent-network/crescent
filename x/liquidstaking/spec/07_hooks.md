@@ -2,7 +2,7 @@
 
 # Hooks
 
-## GetOtherVotes
+## TallyLiquidGov
 
 Calculate the voting power of the person who participated in liquid staking.
 
