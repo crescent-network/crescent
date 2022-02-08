@@ -15,7 +15,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {
 	k, ctx := s.keeper, s.ctx
-	_, valOpers := s.CreateValidators([]int64{1000000, 1000000, 1000000})
+	_, valOpers, _ := s.CreateValidators([]int64{1000000, 1000000, 1000000})
 	params := k.GetParams(ctx)
 
 	params.WhitelistedValidators = []types.WhitelistedValidator{
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	lvs := k.GetAllLiquidValidators(ctx)
 	s.Require().Len(lvs, 2)
 
-	lvStates := k.GetLiquidValidatorStates(ctx)
+	lvStates := k.GetAllLiquidValidatorStates(ctx)
 	genState := k.ExportGenesis(ctx)
 
 	bz := s.app.AppCodec().MustMarshalJSON(genState)
@@ -45,6 +45,6 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	lvs = k.GetAllLiquidValidators(ctx)
 	s.Require().Len(lvs, 2)
 
-	lvStates3 := k.GetLiquidValidatorStates(ctx)
+	lvStates3 := k.GetAllLiquidValidatorStates(ctx)
 	s.Require().EqualValues(lvStates, lvStates3)
 }

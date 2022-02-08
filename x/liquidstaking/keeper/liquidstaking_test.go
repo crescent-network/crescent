@@ -13,7 +13,7 @@ import (
 
 // tests LiquidStaking, LiquidUnstaking
 func (s *KeeperTestSuite) TestLiquidStaking() {
-	_, valOpers := s.CreateValidators([]int64{1000000, 2000000, 3000000})
+	_, valOpers, _ := s.CreateValidators([]int64{1000000, 2000000, 3000000})
 	params := s.keeper.GetParams(s.ctx)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.keeper.SetParams(s.ctx, params)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
-	res := s.keeper.GetLiquidValidatorStates(s.ctx)
+	res := s.keeper.GetAllLiquidValidatorStates(s.ctx)
 	s.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[0].Status)
@@ -126,7 +126,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(sdk.NewDec(13333), proxyAccDel2.Shares)
 	s.Require().Equal(sdk.NewDec(13333), proxyAccDel3.Shares)
 
-	res = s.keeper.GetLiquidValidatorStates(s.ctx)
+	res = s.keeper.GetAllLiquidValidatorStates(s.ctx)
 	s.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[0].Status)
@@ -153,7 +153,7 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 	bondedBondDenom := s.keeper.BondedBondDenom(s.ctx)
 
 	// v1, v2, v3, v4
-	vals, valOpers := s.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
+	vals, valOpers, _ := s.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
 	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
@@ -323,7 +323,7 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 func (s *KeeperTestSuite) TestLiquidStakingGov2() {
 	params := types.DefaultParams()
 
-	vals, valOpers := s.CreateValidators([]int64{10000000})
+	vals, valOpers, _ := s.CreateValidators([]int64{10000000})
 	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 	}

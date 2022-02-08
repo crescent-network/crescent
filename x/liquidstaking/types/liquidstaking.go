@@ -47,6 +47,18 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
+func (v LiquidValidator) IsTombstoned(ctx sdk.Context, stakingKeeper StakingKeeper, slashingKeeper SlashingKeeper) bool {
+	val, found := stakingKeeper.GetValidator(ctx, v.GetOperator())
+	if !found {
+		return false
+	}
+	consPk, err := val.ConsPubKey()
+	if err != nil {
+		return false
+	}
+	return slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(consPk.Address()))
+}
+
 func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
 	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
 	if !found {
@@ -72,7 +84,7 @@ func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap, active b
 	}
 }
 
-// TODO: unused receiver refactor
+// TODO: refactor unused receiver
 func (v LiquidValidator) GetStatus(activeCondition bool) ValidatorStatus {
 	if activeCondition {
 		return ValidatorStatusActive

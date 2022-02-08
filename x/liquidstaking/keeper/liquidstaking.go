@@ -296,7 +296,7 @@ func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, whitelistedValMap typ
 	return vals
 }
 
-func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates []types.LiquidValidatorState) {
+func (k Keeper) GetAllLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates []types.LiquidValidatorState) {
 	lvs := k.GetAllLiquidValidators(ctx)
 	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
 	for _, lv := range lvs {
@@ -314,27 +314,35 @@ func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates
 	return
 }
 
+func (k Keeper) GetLiquidValidatorState(ctx sdk.Context, addr sdk.ValAddress) (liquidValidatorState types.LiquidValidatorState, found bool) {
+	lv, found := k.GetLiquidValidator(ctx, addr)
+	if !found {
+		return types.LiquidValidatorState{
+			OperatorAddress: addr.String(),
+			Weight:          sdk.ZeroInt(),
+			Status:          types.ValidatorStatusUnspecified,
+			DelShares:       sdk.ZeroDec(),
+			LiquidTokens:    sdk.ZeroDec(),
+		}, false
+	}
+	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
+	active := k.ActiveCondition(ctx, lv, whitelistedValMap.IsListed(lv.OperatorAddress))
+	return types.LiquidValidatorState{
+		OperatorAddress: lv.OperatorAddress,
+		Weight:          lv.GetWeight(whitelistedValMap, active),
+		Status:          lv.GetStatus(active),
+		// TODO: could be deprecated or reduce duplicated sk
+		DelShares:    lv.GetDelShares(ctx, k.stakingKeeper),
+		LiquidTokens: lv.GetLiquidTokens(ctx, k.stakingKeeper),
+	}, true
+}
+
 func (k Keeper) ActiveCondition(ctx sdk.Context, v types.LiquidValidator, whitelisted bool) bool {
 	val, found := k.stakingKeeper.GetValidator(ctx, v.GetOperator())
 	if !found {
 		return false
 	}
-	tombstoned := false
-	if val.Jailed {
-		consPk, err := val.ConsPubKey()
-		if err != nil {
-			tombstoned = false
-		} else {
-			tombstonedByValOper := k.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.GetOperator()))
-			tombstonedByValCons := k.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(consPk.Address()))
-			tombstoned = tombstonedByValCons
-			// TODO: WIP check ConsAddress, not operator, consensus Pubkey address
-			//if !sdk.ConsAddress(consPk.Address()).Equals(sdk.ConsAddress(val.GetOperator())) {
-			if tombstonedByValOper != tombstonedByValCons {
-				panic("need to debug for tombstone checking with valCons or valOper")
-			}
-		}
-	}
+	tombstoned := v.IsTombstoned(ctx, k.stakingKeeper, k.slashingKeeper)
 	return types.ActiveCondition(val, whitelisted, tombstoned)
 }
 

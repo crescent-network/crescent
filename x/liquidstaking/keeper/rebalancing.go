@@ -119,8 +119,6 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	liquidValsMap := liquidValidators.Map()
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 
-	// TODO: add tombstone handling, remove if power 0 when tomestoned
-
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
 		if _, ok := liquidValsMap[wv.ValidatorAddress]; !ok {
@@ -135,6 +133,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	}
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
+	// tombstone status also handled on Rebalancing
 	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValMap, types.RebalancingTrigger)
 
 	// remove inactive with zero liquidToken liquidvalidator

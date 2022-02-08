@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 func (s *KeeperTestSuite) TestRebalancingCase1() {
-	_, valOpers := s.CreateValidators([]int64{1000000, 1000000, 1000000, 1000000, 1000000})
+	_, valOpers, pks := s.CreateValidators([]int64{1000000, 1000000, 1000000, 1000000, 1000000})
 	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
@@ -175,11 +176,49 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	}
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(25000))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(24998))
+
+	// advance block time and height for complete redelegations
+	s.completeRedelegationUnbonding()
+
+	// check derive consAddr
+	consAddr := sdk.ConsAddress(pks[1].Address())
+	info, found := s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
+	s.Require().True(found)
+	s.Require().Equal(info.Address, consAddr.String())
+
+	// tombstone
+	s.app.SlashingKeeper.Jail(s.ctx, consAddr)
+	s.app.SlashingKeeper.JailUntil(s.ctx, consAddr, evidencetypes.DoubleSignJailEndTime)
+	s.app.SlashingKeeper.Tombstone(s.ctx, consAddr)
+
+	// check tombstoned
+	info, found = s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
+	s.Require().True(found)
+	s.Require().True(info.Tombstoned)
+
+	liquidValidator2, found := s.keeper.GetLiquidValidator(s.ctx, proxyAccDel2.GetValidatorAddr())
+	s.Require().True(found)
+	s.Require().True(liquidValidator2.IsTombstoned(s.ctx, s.app.StakingKeeper, s.app.SlashingKeeper))
+
+	lvState, found := s.keeper.GetLiquidValidatorState(s.ctx, proxyAccDel2.GetValidatorAddr())
+	s.Require().True(found)
+	s.Require().Equal(lvState.Status, types.ValidatorStatusInActive)
+	s.Require().Equal(lvState.Weight, sdk.ZeroInt())
+	s.Require().NotEqualValues(lvState.DelShares, sdk.ZeroDec())
+	s.Require().NotEqualValues(lvState.LiquidTokens, sdk.ZeroDec())
+
+	// rebalancing, remove liquid validator
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	lvState, found = s.keeper.GetLiquidValidatorState(s.ctx, proxyAccDel2.GetValidatorAddr())
+	s.Require().False(found)
+	s.Require().Equal(lvState.OperatorAddress, proxyAccDel2.ValidatorAddress)
+	s.Require().EqualValues(lvState.DelShares, sdk.ZeroDec())
+	s.Require().EqualValues(lvState.LiquidTokens, sdk.ZeroDec())
 	// TODO: add more edge cases
 }
 
 func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
-	_, valOpers := s.CreateValidators([]int64{1000000, 1000000, 1000000})
+	_, valOpers, _ := s.CreateValidators([]int64{1000000, 1000000, 1000000})
 	params := s.keeper.GetParams(s.ctx)
 
 	params.WhitelistedValidators = []types.WhitelistedValidator{

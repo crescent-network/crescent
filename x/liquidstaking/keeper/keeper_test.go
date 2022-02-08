@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -77,7 +78,7 @@ func (s *KeeperTestSuite) TearDownTest() {
 	crisis.EndBlocker(s.ctx, s.app.CrisisKeeper)
 }
 
-func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []cryptotypes.PubKey) {
 	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{})
 	num := len(powers)
 	addrs := simapp.AddTestAddrsIncremental(s.app, s.ctx, num, sdk.NewInt(1000000000))
@@ -98,7 +99,7 @@ func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []
 	}
 
 	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{})
-	return addrs, valAddrs
+	return addrs, valAddrs, pks
 }
 
 func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) {
