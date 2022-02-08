@@ -157,7 +157,6 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -225,11 +224,11 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 		depositCoins := sdk.NewCoins(
 			sdk.NewCoin(
 				pair.BaseCoinDenom,
-				randomAmount(r, minDepositAmt, spendable.AmountOf(pair.BaseCoinDenom).Sub(params.PoolCreationFee.AmountOf(pair.BaseCoinDenom))),
+				randomAmount(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.BaseCoinDenom)),
 			),
 			sdk.NewCoin(
 				pair.QuoteCoinDenom,
-				randomAmount(r, minDepositAmt, spendable.AmountOf(pair.QuoteCoinDenom).Sub(params.PoolCreationFee.AmountOf(pair.QuoteCoinDenom))),
+				randomAmount(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.QuoteCoinDenom)),
 			),
 		)
 
@@ -239,7 +238,6 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -295,7 +293,6 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k liquidity
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -317,23 +314,44 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k liquidit
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdraw, ""), nil, nil
-		//txCtx := simulation.OperationInput{
-		//	R:               r,
-		//	App:             app,
-		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Cdc:             nil,
-		//	Msg:             msg,
-		//	MsgType:         msg.Type(),
-		//	Context:         ctx,
-		//	SimAccount:      simAccount,
-		//	AccountKeeper:   ak,
-		//	Bankkeeper:      bk,
-		//	ModuleName:      types.ModuleName,
-		//	CoinsSpentInMsg: spendable,
-		//}
-		//
-		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var poolId uint64
+		skip := true
+	loop:
+		for _, acc := range accs {
+			simAccount = acc
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+			for _, coin := range spendable {
+				if poolId = types.ParsePoolCoinDenom(coin.Denom); poolId != 0 {
+					skip = false
+					break loop
+				}
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdraw, "cannot withdraw from pool"), nil, nil
+		}
+
+		pool, _ := k.GetPool(ctx, poolId)
+		poolCoin := sdk.NewCoin(pool.PoolCoinDenom, randomAmount(r, sdk.OneInt(), spendable.AmountOf(pool.PoolCoinDenom)))
+		msg := types.NewMsgWithdraw(simAccount.Address, poolId, poolCoin)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -349,7 +367,6 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 		//	R:               r,
 		//	App:             app,
 		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Cdc:             nil,
 		//	Msg:             msg,
 		//	MsgType:         msg.Type(),
 		//	Context:         ctx,
@@ -376,7 +393,6 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k liqui
 		//	R:               r,
 		//	App:             app,
 		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Cdc:             nil,
 		//	Msg:             msg,
 		//	MsgType:         msg.Type(),
 		//	Context:         ctx,
@@ -403,7 +419,6 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k liqui
 		//	R:               r,
 		//	App:             app,
 		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Cdc:             nil,
 		//	Msg:             msg,
 		//	MsgType:         msg.Type(),
 		//	Context:         ctx,
@@ -430,7 +445,6 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k l
 		//	R:               r,
 		//	App:             app,
 		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Cdc:             nil,
 		//	Msg:             msg,
 		//	MsgType:         msg.Type(),
 		//	Context:         ctx,
