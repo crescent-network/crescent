@@ -23,7 +23,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 	}
 	k.SetParams(ctx, params)
-	k.EndBlocker(ctx)
+	k.UpdateLiquidValidatorSet(ctx)
 
 	stakingAmt := sdk.NewInt(100000000)
 	s.liquidStaking(s.delAddrs[0], stakingAmt)

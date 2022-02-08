@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	stakingAmt := sdk.NewInt(50000)
 	// add active validator
@@ -26,13 +26,13 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().NoError(err)
 	s.Require().Equal(newShares, sdk.MustNewDecFromStr("49998.0"))
 	s.Require().Equal(bTokenMintAmt, stakingAmt)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	proxyAccDel1, found := s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	s.Require().True(found)
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(16666))
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetDelShares(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
 	}
 	fmt.Println("-----------")
 
@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	s.Require().True(found)
@@ -75,7 +75,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12499))
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetDelShares(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
 	}
 	fmt.Println("-----------")
 
@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	s.Require().True(found)
@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().True(found)
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetDelShares(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
 	}
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(9999))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(9999))
@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 	}
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	stakingAmt := sdk.NewInt(100000000)
 	s.liquidStaking(s.delAddrs[0], stakingAmt)

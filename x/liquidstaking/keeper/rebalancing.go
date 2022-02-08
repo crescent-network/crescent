@@ -35,7 +35,7 @@ func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, vs types.LiquidValidators
 	totalShares := sdk.ZeroDec()
 	sharePerWeight := input.QuoTruncate(totalLiquidTokens)
 	for _, val := range vs {
-		weightedShare := sharePerWeight.Mul(val.GetDelShares(ctx, k.stakingKeeper))
+		weightedShare := sharePerWeight.MulTruncate(val.GetLiquidTokens(ctx, k.stakingKeeper))
 		totalShares = totalShares.Add(weightedShare)
 		outputs = append(outputs, weightedShare)
 	}
@@ -51,6 +51,7 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 	var targetWeight sdk.Int
 	targetMap := map[string]sdk.Int{}
 	for _, val := range liquidVals {
+		// TODO: duplicated targetWeight calc
 		if k.ActiveCondition(ctx, val, whitelistedValMap) {
 			targetWeight = val.GetWeight(whitelistedValMap)
 		} else {
@@ -104,11 +105,14 @@ func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap t
 	}
 }
 
-func (k Keeper) EndBlocker(ctx sdk.Context) {
+func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	params := k.GetParams(ctx)
 	liquidValidators := k.GetAllLiquidValidators(ctx)
 	liquidValsMap := liquidValidators.Map()
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
+
+	// TODO: add tombstone handling
+	// TODO: remove inactive with zero liquidToken liquidvalidator
 
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
@@ -150,12 +154,12 @@ func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.LiquidVali
 	i := 0
 	for _, val := range activeVals {
 		weightedShare := val.GetWeight(whitelistedValMap).Mul(sharePerWeight)
-		if val.GetDelShares(ctx, k.stakingKeeper).TruncateInt().GT(weightedShare) {
+		if val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt().GT(weightedShare) {
 			existOverWeightedVal = true
 		} else {
 			activeVals[i] = val
 			i++
-			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetDelShares(ctx, k.stakingKeeper).TruncateInt())
+			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt())
 		}
 	}
 	// remove overWeightedVals for recursive call

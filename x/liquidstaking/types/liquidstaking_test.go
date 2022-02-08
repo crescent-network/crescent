@@ -68,6 +68,7 @@ func TestActiveCondition(t *testing.T) {
 		validator stakingtypes.Validator
 		//whitelist      []types.WhitelistedValidator
 		whitelisted    bool
+		tombstoned     bool
 		expectedOutput bool
 	}{
 		// active case 1
@@ -80,6 +81,7 @@ func TestActiveCondition(t *testing.T) {
 				DelegatorShares: sdk.NewDec(100000000),
 			},
 			whitelisted:    true,
+			tombstoned:     false,
 			expectedOutput: true,
 		},
 		// active case 2
@@ -92,9 +94,10 @@ func TestActiveCondition(t *testing.T) {
 				DelegatorShares: sdk.NewDec(100000000),
 			},
 			whitelisted:    true,
+			tombstoned:     false,
 			expectedOutput: true,
 		},
-		// inactive case 1
+		// inactive case 1 (not whitelisted)
 		{
 			validator: stakingtypes.Validator{
 				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
@@ -104,9 +107,10 @@ func TestActiveCondition(t *testing.T) {
 				DelegatorShares: sdk.NewDec(100000000),
 			},
 			whitelisted:    false,
+			tombstoned:     false,
 			expectedOutput: false,
 		},
-		// inactive case 1
+		// inactive case 2 (invalid tokens, delShares)
 		{
 			validator: stakingtypes.Validator{
 				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
@@ -116,9 +120,10 @@ func TestActiveCondition(t *testing.T) {
 				DelegatorShares: sdk.Dec{},
 			},
 			whitelisted:    true,
+			tombstoned:     false,
 			expectedOutput: false,
 		},
-		// inactive case 2
+		// inactive case 3 (zero tokens)
 		{
 			validator: stakingtypes.Validator{
 				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
@@ -128,9 +133,10 @@ func TestActiveCondition(t *testing.T) {
 				DelegatorShares: sdk.NewDec(100000000),
 			},
 			whitelisted:    true,
+			tombstoned:     false,
 			expectedOutput: false,
 		},
-		// inactive case 3
+		// inactive case 4 (invalid status)
 		{
 			validator: stakingtypes.Validator{
 				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
@@ -140,13 +146,27 @@ func TestActiveCondition(t *testing.T) {
 				DelegatorShares: sdk.NewDec(100000000),
 			},
 			whitelisted:    true,
+			tombstoned:     false,
+			expectedOutput: false,
+		},
+		// inactive case 5 (tombstoned)
+		{
+			validator: stakingtypes.Validator{
+				OperatorAddress: whitelistedValidators[0].ValidatorAddress,
+				Jailed:          false,
+				Status:          stakingtypes.Unbonding,
+				Tokens:          sdk.NewInt(100000000),
+				DelegatorShares: sdk.NewDec(100000000),
+			},
+			whitelisted:    true,
+			tombstoned:     true,
 			expectedOutput: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		require.IsType(t, stakingtypes.Validator{}, tc.validator)
-		output := types.ActiveCondition(tc.validator, tc.whitelisted)
+		output := types.ActiveCondition(tc.validator, tc.whitelisted, tc.tombstoned)
 		require.EqualValues(t, tc.expectedOutput, output)
 	}
 }

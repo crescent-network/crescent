@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 	// call mint.BeginBlocker for init k.SetLastBlockTime(ctx, ctx.BlockTime())
 	mint.BeginBlocker(s.ctx, s.app.MintKeeper)
 }

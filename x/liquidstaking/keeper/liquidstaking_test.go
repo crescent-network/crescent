@@ -16,7 +16,7 @@ import (
 func (s *KeeperTestSuite) TestLiquidStaking() {
 	_, valOpers := s.CreateValidators([]int64{1000000, 2000000, 3000000})
 	params := s.keeper.GetParams(s.ctx)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	stakingAmt := sdk.NewInt(50000)
 
@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
 	}
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	res := s.keeper.GetLiquidValidatorStates(s.ctx)
 	s.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(10)},
 	}
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	liquidValidators := s.keeper.GetAllLiquidValidators(s.ctx)
 
@@ -329,7 +329,7 @@ func (s *KeeperTestSuite) TestLiquidStakingGov2() {
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 	}
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	val1, _ := s.app.StakingKeeper.GetValidator(s.ctx, valOpers[0])
 

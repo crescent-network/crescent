@@ -72,13 +72,9 @@ func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap) sdk.Int 
 	}
 }
 
-func (v LiquidValidator) GetStatus(ctx sdk.Context, sk StakingKeeper, whitelisted bool) ValidatorStatus {
-	validator, found := sk.GetValidator(ctx, v.GetOperator())
-	if !found {
-		return ValidatorStatusInActive
-	}
-	active := ActiveCondition(validator, whitelisted)
-	if v.OperatorAddress == validator.OperatorAddress && active {
+// TODO: unused receiver refactor
+func (v LiquidValidator) GetStatus(activeCondition bool) ValidatorStatus {
+	if activeCondition {
 		return ValidatorStatusActive
 	} else {
 		return ValidatorStatusInActive
@@ -88,9 +84,10 @@ func (v LiquidValidator) GetStatus(ctx sdk.Context, sk StakingKeeper, whiteliste
 // ActiveCondition checks the liquid validator could be active by below cases
 // active conditions
 //- included on whitelist
-//- existed valid validator on staking module ( existed, not nil del shares and tokens, valid exchange rate)
-func ActiveCondition(validator stakingtypes.Validator, whitelisted bool) bool {
+//- existed valid validator on staking module ( existed, not nil del shares and tokens, valid exchange rate, not tombstoned)
+func ActiveCondition(validator stakingtypes.Validator, whitelisted bool, tombstoned bool) bool {
 	return whitelisted &&
+		!tombstoned &&
 		// TODO: consider !validator.IsUnbonded(), explicit state checking not Unspecified
 		validator.GetStatus() != stakingtypes.Unspecified &&
 		!validator.GetTokens().IsNil() &&
@@ -108,12 +105,12 @@ func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMa
 
 	for _, val := range vs {
 		target := targetMap[val.OperatorAddress]
-		if val.GetDelShares(ctx, sk).Sub(target.ToDec()).GT(maxGap) {
-			maxGap = val.GetDelShares(ctx, sk).Sub(target.ToDec())
+		if val.GetLiquidTokens(ctx, sk).Sub(target.ToDec()).GT(maxGap) {
+			maxGap = val.GetLiquidTokens(ctx, sk).Sub(target.ToDec())
 			maxGapVal = val
 		}
-		if val.GetDelShares(ctx, sk).Sub(target.ToDec()).LT(minGap) {
-			minGap = val.GetDelShares(ctx, sk).Sub(target.ToDec())
+		if val.GetLiquidTokens(ctx, sk).Sub(target.ToDec()).LT(minGap) {
+			minGap = val.GetLiquidTokens(ctx, sk).Sub(target.ToDec())
 			minGapVal = val
 		}
 	}

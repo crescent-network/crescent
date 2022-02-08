@@ -326,10 +326,11 @@ func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates
 	lvs := k.GetAllLiquidValidators(ctx)
 	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
 	for _, lv := range lvs {
+		active := k.ActiveCondition(ctx, lv, whitelistedValMap)
 		lvState := types.LiquidValidatorState{
 			OperatorAddress: lv.OperatorAddress,
 			Weight:          lv.GetWeight(whitelistedValMap),
-			Status:          lv.GetStatus(ctx, k.stakingKeeper, whitelistedValMap.IsListed(lv.OperatorAddress)),
+			Status:          lv.GetStatus(active),
 			DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
 			LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper),
 		}
@@ -347,5 +348,19 @@ func (k Keeper) ActiveCondition(ctx sdk.Context, v types.LiquidValidator, whitel
 	if !found {
 		return false
 	}
-	return types.ActiveCondition(val, whitelistedValMap.IsListed(val.OperatorAddress))
+	tombstoned := false
+	if val.Jailed {
+		consPk, err := val.ConsPubKey()
+		if err != nil {
+			tombstoned = false
+		} else {
+			// TODO: WIP check ConsAddress, not operator, consensus Pubkey address
+			if !sdk.ConsAddress(consPk.Address()).Equals(sdk.ConsAddress(val.GetOperator())) {
+				panic("debug")
+			}
+			//k.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.GetOperator()))
+			tombstoned = k.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(consPk.Address()))
+		}
+	}
+	return types.ActiveCondition(val, whitelistedValMap.IsListed(val.OperatorAddress), tombstoned)
 }
