@@ -83,6 +83,16 @@ func LowestTick(prec int) sdk.Dec {
 	return sdk.NewDecWithPrec(1, int64(sdk.Precision-prec))
 }
 
+// PriceToUpTick returns the lowest price tick greater or equal than
+// the price.
+func PriceToUpTick(price sdk.Dec, prec int) sdk.Dec {
+	tick := PriceToTick(price, prec)
+	if !tick.Equal(price) {
+		return UpTick(tick, prec)
+	}
+	return tick
+}
+
 // TickToIndex returns a tick index for given price.
 // Tick index 0 means the lowest possible price fit in ticks.
 func TickToIndex(price sdk.Dec, prec int) int {
