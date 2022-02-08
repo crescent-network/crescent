@@ -128,6 +128,9 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 			denoms = append(denoms, coin.Denom)
 			return false
 		})
+		r.Shuffle(len(denoms), func(i, j int) {
+			denoms[i], denoms[j] = denoms[j], denoms[i]
+		})
 		var denomA, denomB string
 		skip := true
 	loop:
@@ -171,24 +174,78 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, ""), nil, nil
-		//
-		//txCtx := simulation.OperationInput{
-		//	R:               r,
-		//	App:             app,
-		//	TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-		//	Cdc:             nil,
-		//	Msg:             msg,
-		//	MsgType:         msg.Type(),
-		//	Context:         ctx,
-		//	SimAccount:      simAccount,
-		//	AccountKeeper:   ak,
-		//	Bankkeeper:      bk,
-		//	ModuleName:      types.ModuleName,
-		//	CoinsSpentInMsg: spendable,
-		//}
-		//
-		//return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		params := k.GetParams(ctx)
+		minDepositAmt := params.MinInitialDepositAmount
+
+		spendable := bk.SpendableCoins(ctx, simAccount.Address)
+		if !spendable.IsAllGTE(params.PoolCreationFee) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "insufficient balance for pool creation fee"), nil, nil
+		}
+
+		// Select a random pair id.
+		var pairs []types.Pair
+		_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
+			pairs = append(pairs, pair)
+			return false, nil
+		})
+		r.Shuffle(len(pairs), func(i, j int) {
+			pairs[i], pairs[j] = pairs[j], pairs[i]
+		})
+		var pair types.Pair
+		skip := true
+		for _, pair = range pairs {
+			found := false
+			_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
+				if !pool.Disabled {
+					found = true
+					return true, nil
+				}
+				return false, nil
+			})
+			minDepositCoins := sdk.NewCoins(
+				sdk.NewCoin(pair.BaseCoinDenom, minDepositAmt),
+				sdk.NewCoin(pair.QuoteCoinDenom, minDepositAmt),
+			)
+			if !found && spendable.IsAllGTE(minDepositCoins.Add(params.PoolCreationFee...)) {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "all possible pools have been created"), nil, nil
+		}
+
+		depositCoins := sdk.NewCoins(
+			sdk.NewCoin(
+				pair.BaseCoinDenom,
+				minDepositAmt.Add(simtypes.RandomAmount(r, spendable.AmountOf(pair.BaseCoinDenom).Sub(minDepositAmt))),
+			),
+			sdk.NewCoin(
+				pair.QuoteCoinDenom,
+				minDepositAmt.Add(simtypes.RandomAmount(r, spendable.AmountOf(pair.QuoteCoinDenom).Sub(minDepositAmt))),
+			),
+		)
+
+		msg := types.NewMsgCreatePool(simAccount.Address, pair.Id, depositCoins)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
