@@ -146,9 +146,8 @@ func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
 	s.NotEqualValues(totalLiquidTokens, sdk.ZeroDec())
 
 	// withdraw rewards and re-staking
-	valMap := s.keeper.GetValidatorsMap(s.ctx)
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	s.keeper.WithdrawRewardsAndReStaking(s.ctx, valMap, whitelistedValMap)
+	s.keeper.WithdrawRewardsAndReStaking(s.ctx, whitelistedValMap)
 	totalRewardsAfter, totalDelSharesAfter, totalLiquidTokensAfter := s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
 	s.EqualValues(totalRewardsAfter, sdk.ZeroDec())
 	s.EqualValues(totalDelSharesAfter, totalRewards.TruncateDec().Add(totalDelShares), totalLiquidTokensAfter)

@@ -25,3 +25,5 @@ func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64)         {
 func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	h.k.TallyLiquidGov(ctx, votes, otherVotes)
 }
+
+// TODO: tombstone hook

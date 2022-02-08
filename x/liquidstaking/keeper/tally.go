@@ -33,8 +33,7 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 
 func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	params := k.GetParams(ctx)
-	valMap := k.GetValidatorsMap(ctx)
-	liquidVals := k.GetActiveLiquidValidators(ctx, valMap, params.WhitelistedValMap())
+	liquidVals := k.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
 	bondedBondDenom := k.BondedBondDenom(ctx)
 	totalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom).Amount
 	bTokenValueMap := make(squadtypes.StrIntMap)

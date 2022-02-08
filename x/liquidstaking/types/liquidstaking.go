@@ -72,7 +72,11 @@ func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap) sdk.Int 
 	}
 }
 
-func (v LiquidValidator) GetStatus(validator stakingtypes.Validator, whitelisted bool) ValidatorStatus {
+func (v LiquidValidator) GetStatus(ctx sdk.Context, sk StakingKeeper, whitelisted bool) ValidatorStatus {
+	validator, found := sk.GetValidator(ctx, v.GetOperator())
+	if !found {
+		return ValidatorStatusInActive
+	}
 	active := ActiveCondition(validator, whitelisted)
 	if v.OperatorAddress == validator.OperatorAddress && active {
 		return ValidatorStatusActive
@@ -143,6 +147,7 @@ func (vs LiquidValidators) TotalDelSharesAndLiquidTokens(ctx sdk.Context, sk Sta
 	return totalDelShares, totalLiquidTokens
 }
 
+// TODO: refactor to bool Map
 func (vs LiquidValidators) Map() map[string]*LiquidValidator {
 	valMap := make(map[string]*LiquidValidator)
 	for _, val := range vs {

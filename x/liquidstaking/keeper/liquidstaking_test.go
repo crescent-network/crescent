@@ -54,8 +54,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(sdk.ZeroDec(), res[2].DelShares)
 	s.Require().Equal(sdk.ZeroDec(), res[2].LiquidTokens)
 
-	valMap := s.keeper.GetValidatorsMap(s.ctx)
-	activeVals := s.keeper.GetActiveLiquidValidators(s.ctx, valMap, params.WhitelistedValMap())
+	activeVals := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
 	_, crumb := types.DivideByWeight(activeVals, stakingAmt, params.WhitelistedValMap())
 	newShares, bTokenMintAmt, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().NoError(err)
@@ -166,8 +165,6 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 	s.keeper.EndBlocker(s.ctx)
 
 	liquidValidators := s.keeper.GetAllLiquidValidators(s.ctx)
-	lValMap := liquidValidators.Map()
-	fmt.Println(lValMap)
 
 	val4, _ := s.app.StakingKeeper.GetValidator(s.ctx, valOpers[3])
 

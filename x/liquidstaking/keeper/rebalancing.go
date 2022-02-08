@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -84,8 +83,8 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 }
 
 // WithdrawRewardsAndReStaking withdraw rewards and re-staking when over threshold
-func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) {
-	activeVals := k.GetActiveLiquidValidators(ctx, valMap, whitelistedValMap)
+func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap types.WhitelistedValMap) {
+	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValMap)
 	_, totalLiquidTokens := activeVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
 	if totalLiquidTokens.IsPositive() {
 		// Withdraw rewards of LiquidStakingProxyAcc and re-staking
@@ -109,18 +108,18 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	params := k.GetParams(ctx)
 	liquidValidators := k.GetAllLiquidValidators(ctx)
 	liquidValsMap := liquidValidators.Map()
-	valMap := k.GetValidatorsMap(ctx)
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
 		if _, ok := liquidValsMap[wv.ValidatorAddress]; !ok {
-			lv := &types.LiquidValidator{
+			lv := types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 			}
-			if types.ActiveCondition(valMap[lv.OperatorAddress], true) {
-				k.SetLiquidValidator(ctx, *lv)
-				liquidValidators = append(liquidValidators, *lv)
+			// TODO: refactor duplicated whitelist checking on ActiveCondition
+			if k.ActiveCondition(ctx, lv, whitelistedValMap) {
+				k.SetLiquidValidator(ctx, lv)
+				liquidValidators = append(liquidValidators, lv)
 			}
 		}
 	}
@@ -129,7 +128,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, types.RebalancingTrigger, whitelistedValMap)
 
 	// withdraw rewards and re-staking when over threshold
-	k.WithdrawRewardsAndReStaking(ctx, valMap, whitelistedValMap)
+	k.WithdrawRewardsAndReStaking(ctx, whitelistedValMap)
 }
 
 // Deprecated: AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively, not using on this version for simplify.
