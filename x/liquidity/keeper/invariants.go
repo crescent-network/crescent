@@ -12,7 +12,7 @@ import (
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "deposit-coins-escrow", DepositCoinsEscrowInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "pool-coin-escrow", PoolCoinEscrowInvariant(k))
-	ir.RegisterRoute(types.ModuleName, "offer-coin-escrow", OfferCoinEscrowInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "remaining-offer-coin-escrow", RemainingOfferCoinEscrowInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "pool-status", PoolStatusInvariant(k))
 }
 
@@ -22,7 +22,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 		for _, inv := range []func(Keeper) sdk.Invariant{
 			DepositCoinsEscrowInvariant,
 			PoolCoinEscrowInvariant,
-			OfferCoinEscrowInvariant,
+			RemainingOfferCoinEscrowInvariant,
 			PoolStatusInvariant,
 		} {
 			res, stop := inv(k)(ctx)
@@ -76,10 +76,10 @@ func PoolCoinEscrowInvariant(k Keeper) sdk.Invariant {
 	}
 }
 
-// OfferCoinEscrowInvariant checks that the amount of coins in each pair's
+// RemainingOfferCoinEscrowInvariant checks that the amount of coins in each pair's
 // escrow address is greater or equal than remaining offer coins in the pair's
 // swap requests.
-func OfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
+func RemainingOfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var (
 			count int
@@ -102,7 +102,7 @@ func OfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
 		})
 		broken := count != 0
 		return sdk.FormatInvariant(
-			types.ModuleName, "offer-coin-escrow",
+			types.ModuleName, "remaining-offer-coin-escrow",
 			fmt.Sprintf("%d pair(s) with insufficient escrow amount found\n%s", count, msg),
 		), broken
 	}
