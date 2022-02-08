@@ -62,11 +62,16 @@ func (ValidatorStatus) EnumDescriptor() ([]byte, []int) {
 
 // Params defines the set of params for the liquidstaking module.
 type Params struct {
-	BondedBondDenom       string                 `protobuf:"bytes,1,opt,name=bonded_bond_denom,json=bondedBondDenom,proto3" json:"bonded_bond_denom,omitempty" yaml:"bonded_bond_denom"`
+	// BondedBondDenom specifies the denomination of the token receiving after LiquidStaking, The value is calculated
+	// through NetAmount.
+	BondedBondDenom string `protobuf:"bytes,1,opt,name=bonded_bond_denom,json=bondedBondDenom,proto3" json:"bonded_bond_denom,omitempty" yaml:"bonded_bond_denom"`
+	// WhitelistedValidators specifies the validators elected to become Active Liquid Validators.
 	WhitelistedValidators []WhitelistedValidator `protobuf:"bytes,2,rep,name=whitelisted_validators,json=whitelistedValidators,proto3" json:"whitelisted_validators" yaml:"whitelisted_validators"`
-	// unstake_fee_rate specifies the ...
+	// UnstakeFeeRate specifies the fee rate when liquid unstake is requested, unbonded by subtracting it from
+	// unbondingAmount
 	UnstakeFeeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=unstake_fee_rate,json=unstakeFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"unstake_fee_rate" yaml:"unstake_fee_rate"`
-	// Minimum number of coins to be staked to the active liquid validators on liquid staking.
+	// MinLiquidStakingAmount specifies the minimum number of coins to be staked to the active liquid validators on liquid
+	// staking to minimize decimal loss and consider gas efficiency.
 	MinLiquidStakingAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=min_liquid_staking_amount,json=minLiquidStakingAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_liquid_staking_amount" yaml:"min_liquid_staking_amount"`
 }
 
@@ -102,11 +107,14 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
-// WhitelistedValidator defines a ... TBD
+// WhitelistedValidator consists of the validator operator address and the target weight, which is a value for
+// calculating the real weight to be derived according to the active status. In the case of inactive, it is calculated
+// as zero.
 type WhitelistedValidator struct {
 	// validator_address defines the bech32-encoded address that whitelisted validator
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
-	// target_weight specifies the target weight for liquid staking, unstaking amount
+	// target_weight specifies the target weight for liquid staking, unstaking amount, which is a value for calculating
+	// the real weight to be derived according to the active status
 	TargetWeight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=target_weight,json=targetWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"target_weight" yaml:"target_weight"`
 }
 
@@ -143,7 +151,8 @@ func (m *WhitelistedValidator) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_WhitelistedValidator proto.InternalMessageInfo
 
-// LiquidValidator defines a ... TBD
+// LiquidValidator defines a Validator that can be the target of LiquidStaking and LiquidUnstaking, Active, Weight, etc.
+// fields are derived as functions to deal with by maintaining consistency with the state of the staking module.
 type LiquidValidator struct {
 	// operator_address defines the address of the validator's operator; bech encoded in JSON.
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty" yaml:"operator_address"`
@@ -182,7 +191,7 @@ func (m *LiquidValidator) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LiquidValidator proto.InternalMessageInfo
 
-// LiquidValidatorState defines a ... TBD
+// LiquidValidatorState is type LiquidValidator with state added to return to query results.
 type LiquidValidatorState struct {
 	// operator_address defines the address of the validator's operator; bech encoded in JSON.
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty" yaml:"operator_address"`

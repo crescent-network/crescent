@@ -115,7 +115,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 
 // QueryLiquidValidatorsRequest is the request type for the Query/LiquidValidators RPC method.
 type QueryLiquidValidatorsRequest struct {
-	// TODO: status, etc query strings
+	// pagination defines the pagination in the response.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -280,7 +280,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns parameters of the liquidstaking module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// LiquidValidators returns liquid validators of the liquidstaking module.
+	// LiquidValidators returns liquid validators with states of the liquidstaking module.
 	LiquidValidators(ctx context.Context, in *QueryLiquidValidatorsRequest, opts ...grpc.CallOption) (*QueryLiquidValidatorsResponse, error)
 }
 
@@ -314,7 +314,7 @@ func (c *queryClient) LiquidValidators(ctx context.Context, in *QueryLiquidValid
 type QueryServer interface {
 	// Params returns parameters of the liquidstaking module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// LiquidValidators returns liquid validators of the liquidstaking module.
+	// LiquidValidators returns liquid validators with states of the liquidstaking module.
 	LiquidValidators(context.Context, *QueryLiquidValidatorsRequest) (*QueryLiquidValidatorsResponse, error)
 }
 

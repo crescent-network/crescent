@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -69,6 +70,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 	// call mint.BeginBlocker for init k.SetLastBlockTime(ctx, ctx.BlockTime())
 	mint.BeginBlocker(s.ctx, s.app.MintKeeper)
+}
+
+func (s *KeeperTestSuite) TearDownTest() {
+	// invariant check
+	crisis.EndBlocker(s.ctx, s.app.CrisisKeeper)
 }
 
 func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {

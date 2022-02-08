@@ -47,7 +47,6 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
-// TODO: could be deprecated or reduce duplicated sk
 func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
 	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
 	if !found {
@@ -83,13 +82,13 @@ func (v LiquidValidator) GetStatus(activeCondition bool) ValidatorStatus {
 }
 
 // ActiveCondition checks the liquid validator could be active by below cases
-// active conditions
 //- included on whitelist
-//- existed valid validator on staking module ( existed, not nil del shares and tokens, valid exchange rate, not tombstoned)
+//- existed valid validator on staking module ( existed, not nil del shares and tokens, valid exchange rate)
+//- not tombstoned
 func ActiveCondition(validator stakingtypes.Validator, whitelisted bool, tombstoned bool) bool {
 	return whitelisted &&
 		!tombstoned &&
-		// TODO: consider !validator.IsUnbonded(), explicit state checking not Unspecified
+		// !Unspecified ==> Bonded, Unbonding, Unbonded
 		validator.GetStatus() != stakingtypes.Unspecified &&
 		!validator.GetTokens().IsNil() &&
 		!validator.GetDelegatorShares().IsNil() &&
@@ -107,9 +106,7 @@ func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMa
 
 	for _, val := range vs {
 		// TODO: liquidTokens or DelShares
-		// TODO: 차이가 우선순위가아니라 0로 만드는게 우선순위로
 		gap := val.GetLiquidTokens(ctx, sk).TruncateInt().Sub(targetMap[val.OperatorAddress])
-		//gap := target.Sub(val.GetLiquidTokens(ctx, sk).TruncateInt())
 		if gap.GT(maxGap) {
 			maxGap = gap
 			maxGapVal = val
@@ -118,31 +115,17 @@ func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMa
 			minGap = gap
 			minGapVal = val
 		}
+		// TODO: consider when equal
 	}
-	// TODO: consider when equal
-	fmt.Println("-------")
 	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
+	// when last redelegation for target weight zero, max has priority
 	lastRedelegation := amountNeeded.IsPositive() && maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive()
 	if lastRedelegation {
 		// TODO: verify edge case
-		fmt.Println("[@@@@ lastRedelegation]", threshold, maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive(), maxGap)
+		fmt.Println("[---LastRedelegation]", threshold, maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive(), maxGap)
 		amountNeeded = maxGap
 	}
 
-	//if amountNeeded.IsPositive() {
-	//	fmt.Println("[MINMAX EXCEPT]", maxGap.Sub(minGap.Abs()), maxGap.Sub(minGap.Abs()).LT(minGap.Abs()), maxGap)
-	//	fmt.Println("[MINMAX EXCEPT2]", maxGap.Sub(minGap.Abs()).LT(minGap.Abs()) && targetMap[maxGapVal.OperatorAddress].IsZero(), maxGap)
-	//	fmt.Println("[MINMAX EXCEPT3]", maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive(), maxGap)
-	//}
-
-	//origin := sdk.MinInt(maxGap, minGap.Abs())
-	//except := sdk.MinInt(maxGap, minGap).Abs()
-	//if !sdk.MinInt(maxGap, minGap.Abs()).Equal(sdk.MinInt(maxGap, minGap).Abs()) {
-	//	//amountNeeded = sdk.MinInt(maxGap, minGap)
-	//	amountNeeded = maxGap
-	//	fmt.Println("[MINMAX EXCEPT]", origin, except, amountNeeded)
-	//}
-	//amountNeeded = sdk.MaxInt(maxGap, minGap).Abs()
 	fmt.Println("[MinMaxGap]", amountNeeded, minGapVal.OperatorAddress, minGap, minGapVal.GetLiquidTokens(ctx, sk), maxGapVal.OperatorAddress, maxGap, maxGapVal.GetLiquidTokens(ctx, sk))
 	return minGapVal, maxGapVal, amountNeeded
 }
@@ -185,14 +168,14 @@ func (avs ActiveLiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMa
 	return totalWeight
 }
 
-// BTokenToNativeToken returns UnstakeAmount, NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
-func BTokenToNativeToken(bTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {
-	return netAmount.MulTruncate(bTokenAmount.ToDec().QuoTruncate(bTokenTotalSupplyAmount.ToDec())).MulTruncate(sdk.OneDec().Sub(feeRate)).TruncateDec()
-}
-
-// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
+// NativeTokenToBToken returns nativeTokenAmount * bTokenTotalSupply / netAmount
 func NativeTokenToBToken(nativeTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount sdk.Dec) (bTokenAmount sdk.Int) {
 	return bTokenTotalSupplyAmount.ToDec().MulTruncate(nativeTokenAmount.ToDec()).QuoTruncate(netAmount.TruncateDec()).TruncateInt()
+}
+
+// BTokenToNativeToken returns bTokenAmount * netAmount / bTokenTotalSupply * (1-UnstakeFeeRate) with truncations
+func BTokenToNativeToken(bTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {
+	return bTokenAmount.ToDec().MulTruncate(netAmount).QuoTruncate(bTokenTotalSupplyAmount.ToDec()).MulTruncate(sdk.OneDec().Sub(feeRate)).TruncateDec()
 }
 
 func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {

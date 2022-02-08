@@ -24,7 +24,7 @@ service Query {
   }
   };
 }
-// LiquidValidators returns liquid validators of the liquidstaking module.
+// LiquidValidators returns liquid validators with states of the liquidstaking module.
 rpc LiquidValidators(QueryLiquidValidatorsRequest) returns (QueryLiquidValidatorsResponse) {
   option (google.api.http).get                                           = "/squad/liquidstaking/v1beta1/validators";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -49,7 +49,7 @@ message QueryParamsResponse {
 
 // QueryLiquidValidatorsRequest is the request type for the Query/LiquidValidators RPC method.
 message QueryLiquidValidatorsRequest {
-  // TODO: status, etc query strings
+  // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 

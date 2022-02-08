@@ -3969,6 +3969,11 @@ paths:
                 properties:
                   bonded_bond_denom:
                     type: string
+                    description: >-
+                      BondedBondDenom specifies the denomination of the token
+                      receiving after LiquidStaking, The value is calculated
+
+                      through NetAmount.
                   whitelisted_validators:
                     type: array
                     items:
@@ -3983,16 +3988,39 @@ paths:
                           type: string
                           title: >-
                             target_weight specifies the target weight for liquid
-                            staking, unstaking amount
-                      title: WhitelistedValidator defines a ... TBD
+                            staking, unstaking amount, which is a value for
+                            calculating
+
+                            the real weight to be derived according to the
+                            active status
+                      description: >-
+                        WhitelistedValidator consists of the validator operator
+                        address and the target weight, which is a value for
+
+                        calculating the real weight to be derived according to
+                        the active status. In the case of inactive, it is
+                        calculated
+
+                        as zero.
+                    description: >-
+                      WhitelistedValidators specifies the validators elected to
+                      become Active Liquid Validators.
                   unstake_fee_rate:
                     type: string
-                    description: unstake_fee_rate specifies the ...
+                    title: >-
+                      UnstakeFeeRate specifies the fee rate when liquid unstake
+                      is requested, unbonded by subtracting it from
+
+                      unbondingAmount
                   min_liquid_staking_amount:
                     type: string
                     description: >-
-                      Minimum number of coins to be staked to the active liquid
-                      validators on liquid staking.
+                      MinLiquidStakingAmount specifies the minimum number of
+                      coins to be staked to the active liquid validators on
+                      liquid
+
+                      staking to minimize decimal loss and consider gas
+                      efficiency.
                 description: Params defines the set of params for the liquidstaking module.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
@@ -4027,7 +4055,9 @@ paths:
           https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md
   /squad/liquidstaking/v1beta1/validators:
     get:
-      summary: LiquidValidators returns liquid validators of the liquidstaking module.
+      summary: >-
+        LiquidValidators returns liquid validators with states of the
+        liquidstaking module.
       description: Returns all liquid validators of the liquid staking module.
       operationId: LiquidValidators
       responses:
@@ -4075,7 +4105,9 @@ paths:
                         liquid_tokens define the token amount worth of
                         delegation shares of the validator (slashing applied
                         amount)
-                  title: LiquidValidatorState defines a ... TBD
+                  description: >-
+                    LiquidValidatorState is type LiquidValidator with state
+                    added to return to query results.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -6493,12 +6525,19 @@ definitions:
         title: >-
           liquid_tokens define the token amount worth of delegation shares of
           the validator (slashing applied amount)
-    title: LiquidValidatorState defines a ... TBD
+    description: >-
+      LiquidValidatorState is type LiquidValidator with state added to return to
+      query results.
   squad.liquidstaking.v1beta1.Params:
     type: object
     properties:
       bonded_bond_denom:
         type: string
+        description: >-
+          BondedBondDenom specifies the denomination of the token receiving
+          after LiquidStaking, The value is calculated
+
+          through NetAmount.
       whitelisted_validators:
         type: array
         items:
@@ -6513,16 +6552,34 @@ definitions:
               type: string
               title: >-
                 target_weight specifies the target weight for liquid staking,
-                unstaking amount
-          title: WhitelistedValidator defines a ... TBD
+                unstaking amount, which is a value for calculating
+
+                the real weight to be derived according to the active status
+          description: >-
+            WhitelistedValidator consists of the validator operator address and
+            the target weight, which is a value for
+
+            calculating the real weight to be derived according to the active
+            status. In the case of inactive, it is calculated
+
+            as zero.
+        description: >-
+          WhitelistedValidators specifies the validators elected to become
+          Active Liquid Validators.
       unstake_fee_rate:
         type: string
-        description: unstake_fee_rate specifies the ...
+        title: >-
+          UnstakeFeeRate specifies the fee rate when liquid unstake is
+          requested, unbonded by subtracting it from
+
+          unbondingAmount
       min_liquid_staking_amount:
         type: string
         description: >-
-          Minimum number of coins to be staked to the active liquid validators
-          on liquid staking.
+          MinLiquidStakingAmount specifies the minimum number of coins to be
+          staked to the active liquid validators on liquid
+
+          staking to minimize decimal loss and consider gas efficiency.
     description: Params defines the set of params for the liquidstaking module.
   squad.liquidstaking.v1beta1.QueryLiquidValidatorsResponse:
     type: object
@@ -6562,7 +6619,9 @@ definitions:
               title: >-
                 liquid_tokens define the token amount worth of delegation shares
                 of the validator (slashing applied amount)
-          title: LiquidValidatorState defines a ... TBD
+          description: >-
+            LiquidValidatorState is type LiquidValidator with state added to
+            return to query results.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -6592,6 +6651,11 @@ definitions:
         properties:
           bonded_bond_denom:
             type: string
+            description: >-
+              BondedBondDenom specifies the denomination of the token receiving
+              after LiquidStaking, The value is calculated
+
+              through NetAmount.
           whitelisted_validators:
             type: array
             items:
@@ -6606,16 +6670,34 @@ definitions:
                   type: string
                   title: >-
                     target_weight specifies the target weight for liquid
-                    staking, unstaking amount
-              title: WhitelistedValidator defines a ... TBD
+                    staking, unstaking amount, which is a value for calculating
+
+                    the real weight to be derived according to the active status
+              description: >-
+                WhitelistedValidator consists of the validator operator address
+                and the target weight, which is a value for
+
+                calculating the real weight to be derived according to the
+                active status. In the case of inactive, it is calculated
+
+                as zero.
+            description: >-
+              WhitelistedValidators specifies the validators elected to become
+              Active Liquid Validators.
           unstake_fee_rate:
             type: string
-            description: unstake_fee_rate specifies the ...
+            title: >-
+              UnstakeFeeRate specifies the fee rate when liquid unstake is
+              requested, unbonded by subtracting it from
+
+              unbondingAmount
           min_liquid_staking_amount:
             type: string
             description: >-
-              Minimum number of coins to be staked to the active liquid
-              validators on liquid staking.
+              MinLiquidStakingAmount specifies the minimum number of coins to be
+              staked to the active liquid validators on liquid
+
+              staking to minimize decimal loss and consider gas efficiency.
         description: Params defines the set of params for the liquidstaking module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   squad.liquidstaking.v1beta1.ValidatorStatus:
@@ -6643,5 +6725,14 @@ definitions:
         type: string
         title: >-
           target_weight specifies the target weight for liquid staking,
-          unstaking amount
-    title: WhitelistedValidator defines a ... TBD
+          unstaking amount, which is a value for calculating
+
+          the real weight to be derived according to the active status
+    description: >-
+      WhitelistedValidator consists of the validator operator address and the
+      target weight, which is a value for
+
+      calculating the real weight to be derived according to the active status.
+      In the case of inactive, it is calculated
+
+      as zero.

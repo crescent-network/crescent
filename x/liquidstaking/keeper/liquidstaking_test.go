@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
@@ -145,8 +144,6 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 
 	// test withdraw liquid reward and re-staking
 	s.advanceHeight(100, true)
-	// invariant check
-	crisis.EndBlocker(s.ctx, s.app.CrisisKeeper)
 	// TODO: add cases for different weight
 }
 

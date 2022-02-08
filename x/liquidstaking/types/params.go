@@ -28,10 +28,14 @@ var (
 	DefaultMinLiquidStakingAmount = sdk.NewInt(1000000)
 
 	// Const variables
-	RebalancingTrigger = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
-	RewardTrigger      = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
 
-	//LiquidStakingProxyAcc = farmingtypes.DeriveAddress(farmingtypes.AddressType20Bytes, ModuleName, "LiquidStakingProxyAcc")
+	// RebalancingTrigger if the maximum difference and needed each redelegation amount exceeds it, asset rebalacing will be executed.
+	RebalancingTrigger = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
+
+	// RewardTrigger If the sum of balance and the upcoming rewards of LiquidStakingProxyAcc exceeds it, the reward is automatically withdrawn and re-stake according to the weights.
+	RewardTrigger = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
+
+	// LiquidStakingProxyAcc is a proxy reserve account for delegation and undelegation.
 	LiquidStakingProxyAcc = farmingtypes.DeriveAddress(farmingtypes.AddressType32Bytes, ModuleName, "LiquidStakingProxyAcc")
 )
 
@@ -45,7 +49,6 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default liquidstaking module parameters.
 func DefaultParams() Params {
 	return Params{
-		// TODO: btoken denom immutable
 		BondedBondDenom:        DefaultBondedBondDenom,
 		UnstakeFeeRate:         DefaultUnstakeFeeRate,
 		MinLiquidStakingAmount: DefaultMinLiquidStakingAmount,
@@ -91,6 +94,7 @@ func (p Params) Validate() error {
 }
 
 func ValidateBondedBondDenom(i interface{}) error {
+	// TODO: btoken denom must be immutable
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

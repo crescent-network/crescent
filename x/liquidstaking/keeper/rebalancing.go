@@ -15,11 +15,10 @@ func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (ba
 
 func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (completionTime time.Time, err error) {
 	cachedCtx, writeCache := ctx.CacheContext()
-	// TODO: IT make crumb
+	// TODO: check small left delShares for zero targetWeight
 	shares, err := k.stakingKeeper.ValidateUnbondAmount(
 		cachedCtx, re.Delegator, re.SrcValidator, re.Amount,
 	)
-	fmt.Println("ValidateUnbondAmount", re.Amount, shares)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -35,13 +34,10 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 // DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb
 // which is may occur while dividing according to the weight of liquid validators by decimal error.
 func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, avs types.ActiveLiquidValidators, input sdk.Dec) (outputs []sdk.Dec, crumb sdk.Dec) {
-	// TODO: check crumb and to 1st val
-	// TODO: GetLiquidTokens or GetDelShares, vote tally need to get shares
 	totalLiquidTokens := avs.TotalLiquidTokens(ctx, k.stakingKeeper)
 	totalOutput := sdk.ZeroDec()
 	unitInput := input.QuoTruncate(totalLiquidTokens)
 	for _, val := range avs {
-		// TODO: GetLiquidTokens or GetDelShares, vote tally need to get shares
 		output := unitInput.MulTruncate(val.GetLiquidTokens(ctx, k.stakingKeeper))
 		totalOutput = totalOutput.Add(output)
 		outputs = append(outputs, output)
@@ -56,12 +52,16 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 		return []types.Redelegation{}
 	}
 	weightMap, totalWeight := k.GetWeightMap(ctx, liquidVals, whitelistedValMap)
+	if !totalWeight.IsPositive() {
+		// TODO: no active liquid validators, make policy for this case
+		return []types.Redelegation{}
+	}
 	threshold := rebalancingTrigger.Mul(totalLiquidTokens).TruncateInt()
 	totalLiquidTokensInt := totalLiquidTokens.TruncateInt()
 
-	// TODO: solve crumb, tokens, delShares decimal error
 	targetMap := map[string]sdk.Int{}
 	for _, val := range liquidVals {
+		// TODO: check decimal loss occurred
 		targetMap[val.OperatorAddress] = totalLiquidTokensInt.Mul(weightMap[val.OperatorAddress]).Quo(totalWeight)
 	}
 	squadtypes.PP(targetMap)
@@ -69,7 +69,7 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 
 	lenLiquidVals := liquidVals.Len()
 	for i := 0; i < lenLiquidVals; i++ {
-		// TODO: amountNeeded leaves crumb, need to solve all
+		// TODO: check small left delShares for zero targetWeight
 		minVal, maxVal, amountNeeded := liquidVals.MinMaxGap(ctx, k.stakingKeeper, targetMap, threshold)
 		// TODO: consider threshold policy apply every redelegatoin or maxGap
 		if amountNeeded.IsZero() || amountNeeded.LT(threshold) {
@@ -88,9 +88,6 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 			fmt.Println("[TryRedelegations] failed due to redelegation restriction", redelegations)
 		}
 	}
-	//for _, r := range redelegations {
-	//	fmt.Println("[rebalancing]", r.Amount.String(), r.SrcValidator.String(), "->", r.DstValidator.String())
-	//}
 	return redelegations
 }
 
@@ -122,7 +119,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	liquidValsMap := liquidValidators.Map()
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 
-	// TODO: add tombstone handling
+	// TODO: add tombstone handling, remove if power 0 when tomestoned
 
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
@@ -130,8 +127,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 			lv := types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 			}
-			// TODO: refactor duplicated whitelist checking on ActiveCondition
-			if k.ActiveCondition(ctx, lv, whitelistedValMap) {
+			if k.ActiveCondition(ctx, lv, true) {
 				k.SetLiquidValidator(ctx, lv)
 				liquidValidators = append(liquidValidators, lv)
 			}
@@ -141,10 +137,10 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
 	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValMap, types.RebalancingTrigger)
 
-	// TODO: crumb fix
-	// TODO: test remove inactive with zero liquidToken liquidvalidator
+	// remove inactive with zero liquidToken liquidvalidator
 	for _, lv := range liquidValidators {
-		if !k.ActiveCondition(ctx, lv, whitelistedValMap) && !lv.GetLiquidTokens(ctx, k.stakingKeeper).IsPositive() {
+		// TODO: GetLiquidTokens or GetDelShares
+		if !k.ActiveCondition(ctx, lv, whitelistedValMap.IsListed(lv.OperatorAddress)) && !lv.GetDelShares(ctx, k.stakingKeeper).IsPositive() {
 			k.RemoveLiquidValidator(ctx, lv)
 		}
 	}
