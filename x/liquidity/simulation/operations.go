@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	squadappparams "github.com/cosmosquad-labs/squad/app/params"
-	liquiditykeeper "github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	keeper "github.com/cosmosquad-labs/squad/x/liquidity/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -31,7 +31,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
-	bk types.BankKeeper, k liquiditykeeper.Keeper,
+	bk types.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgCreatePair int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePair, &weightMsgCreatePair, nil, func(_ *rand.Rand) {
@@ -109,46 +109,34 @@ func WeightedOperations(
 	}
 }
 
-func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-
 		params := k.GetParams(ctx)
 
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-		if !spendable.IsAllGTE(params.PairCreationFee) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "insufficient balance for pair creation fee"), nil, nil
+		denomA, denomB, found := findNonExistingPair(r, bk, k, ctx)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "all pairs have already been created"), nil, nil
 		}
 
-		// Find a non-existing denom pair from total supplies.
-		var denoms []string
-		bk.IterateTotalSupply(ctx, func(coin sdk.Coin) bool {
-			denoms = append(denoms, coin.Denom)
-			return false
-		})
-		r.Shuffle(len(denoms), func(i, j int) {
-			denoms[i], denoms[j] = denoms[j], denoms[i]
-		})
-		var denomA, denomB string
+		accs = shuffleAccs(accs)
+
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
 		skip := true
-	loop:
-		for _, denomA = range denoms {
-			for _, denomB = range denoms {
-				if denomA != denomB {
-					if _, found := k.GetPairByDenoms(ctx, denomA, denomB); !found {
-						skip = false
-						break loop
-					}
-				}
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+			if spendable.IsAllGTE(params.PairCreationFee) {
+				skip = false
+				break
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "all pairs have already been created"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "no account to create a pair"), nil, nil
 		}
 
 		msg := types.NewMsgCreatePair(simAccount.Address, denomA, denomB)
@@ -171,54 +159,34 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 	}
 }
 
-func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-
 		params := k.GetParams(ctx)
 		minDepositAmt := params.MinInitialDepositAmount
 
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-		if !spendable.IsAllGTE(params.PoolCreationFee) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "insufficient balance for pool creation fee"), nil, nil
-		}
+		accs = shuffleAccs(accs)
 
-		// Select a random pair id.
-		var pairs []types.Pair
-		_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
-			pairs = append(pairs, pair)
-			return false, nil
-		})
-		r.Shuffle(len(pairs), func(i, j int) {
-			pairs[i], pairs[j] = pairs[j], pairs[i]
-		})
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
 		var pair types.Pair
 		skip := true
-		for _, pair = range pairs {
-			found := false
-			_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
-				if !pool.Disabled {
-					found = true
-					return true, nil
-				}
-				return false, nil
-			})
-			minDepositCoins := sdk.NewCoins(
-				sdk.NewCoin(pair.BaseCoinDenom, minDepositAmt),
-				sdk.NewCoin(pair.QuoteCoinDenom, minDepositAmt),
-			)
-			if !found && spendable.IsAllGTE(minDepositCoins.Add(params.PoolCreationFee...)) {
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+
+			var found bool
+			pair, found = findPairToCreatePool(r, k, ctx, spendable)
+			if found {
 				skip = false
 				break
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "all possible pools have been created"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "no account to create a pool"), nil, nil
 		}
 
 		depositCoins := sdk.NewCoins(
@@ -252,39 +220,50 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 	}
 }
 
-func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		simAccount, _ := simtypes.RandomAcc(r, accs)
+		accs = shuffleAccs(accs)
 
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
 		var pair types.Pair
 		var poolId uint64
 		var depositCoins sdk.Coins
 		skip := true
-		_ = k.IterateAllPools(ctx, func(pool types.Pool) (stop bool, err error) {
-			if pool.Disabled {
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+
+			_ = k.IterateAllPools(ctx, func(pool types.Pool) (stop bool, err error) {
+				if pool.Disabled {
+					return false, nil
+				}
+				pair, _ = k.GetPair(ctx, pool.PairId)
+				poolId = pool.Id
+				depositCoins = sdk.NewCoins(
+					sdk.NewCoin(
+						pair.BaseCoinDenom,
+						randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.BaseCoinDenom))),
+					sdk.NewCoin(
+						pair.QuoteCoinDenom,
+						randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.QuoteCoinDenom))),
+				)
+				if spendable.IsAllGTE(depositCoins) {
+					skip = false
+					return true, nil
+				}
 				return false, nil
+			})
+			if !skip {
+				break
 			}
-			pair, _ = k.GetPair(ctx, pool.PairId)
-			poolId = pool.Id
-			depositCoins = sdk.NewCoins(
-				sdk.NewCoin(pair.BaseCoinDenom, randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.BaseCoinDenom))),
-				sdk.NewCoin(pair.QuoteCoinDenom, randomAmount(r, sdk.OneInt(), spendable.AmountOf(pair.QuoteCoinDenom))),
-			)
-			if spendable.IsAllGTE(depositCoins) {
-				skip = false
-				return true, nil
-			}
-			return false, nil
-		})
+		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, "no pool to deposit"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeposit, "no account to deposit to pool"), nil, nil
 		}
 
 		msg := types.NewMsgDeposit(simAccount.Address, poolId, depositCoins)
@@ -307,20 +286,21 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k liquidity
 	}
 }
 
-func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
+		accs = shuffleAccs(accs)
+
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
 		var poolId uint64
 		skip := true
 	loop:
-		for _, acc := range accs {
-			simAccount = acc
+		for _, simAccount = range accs {
 			spendable = bk.SpendableCoins(ctx, simAccount.Address)
 			for _, coin := range spendable {
 				if poolId = types.ParsePoolCoinDenom(coin.Denom); poolId != 0 {
@@ -330,7 +310,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k liquidit
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdraw, "cannot withdraw from pool"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdraw, "no account to withdraw from pool"), nil, nil
 		}
 
 		pool, _ := k.GetPool(ctx, poolId)
@@ -355,7 +335,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k liquidit
 	}
 }
 
-func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -381,7 +361,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquid
 	}
 }
 
-func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -407,7 +387,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k liqui
 	}
 }
 
-func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -433,7 +413,7 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k liqui
 	}
 }
 
-func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k liquiditykeeper.Keeper) simtypes.Operation {
+func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -468,8 +448,8 @@ var once sync.Once
 
 func fundAccountsOnce(r *rand.Rand, ctx sdk.Context, bk types.BankKeeper, accs []simtypes.Account) {
 	once.Do(func() {
-		denoms := []string{"denom1", "denom2", "denom3", "denom4", "denom5"}
-		maxAmt := sdk.NewInt(1_000_000_000_000)
+		denoms := []string{"denom1", "denom2", "denom3"}
+		maxAmt := sdk.NewInt(1_000_000_000_000_000)
 		for _, acc := range accs {
 			var coins sdk.Coins
 			for _, denom := range denoms {
@@ -483,4 +463,70 @@ func fundAccountsOnce(r *rand.Rand, ctx sdk.Context, bk types.BankKeeper, accs [
 			}
 		}
 	})
+}
+
+func shuffleAccs(accs []simtypes.Account) []simtypes.Account {
+	accs2 := make([]simtypes.Account, len(accs))
+	copy(accs2, accs)
+	return accs2
+}
+
+func findNonExistingPair(r *rand.Rand, bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (string, string, bool) {
+	var denoms []string
+	bk.IterateTotalSupply(ctx, func(coin sdk.Coin) bool {
+		denoms = append(denoms, coin.Denom)
+		return false
+	})
+	r.Shuffle(len(denoms), func(i, j int) {
+		denoms[i], denoms[j] = denoms[j], denoms[i]
+	})
+
+	for _, denomA := range denoms {
+		for _, denomB := range denoms {
+			if denomA != denomB {
+				if _, found := k.GetPairByDenoms(ctx, denomA, denomB); !found {
+					return denomA, denomB, true
+				}
+			}
+		}
+	}
+
+	return "", "", false
+}
+
+func findPairToCreatePool(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, spendable sdk.Coins) (types.Pair, bool) {
+	params := k.GetParams(ctx)
+
+	var pairs []types.Pair
+	_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
+		pairs = append(pairs, pair)
+		return false, nil
+	})
+	r.Shuffle(len(pairs), func(i, j int) {
+		pairs[i], pairs[j] = pairs[j], pairs[i]
+	})
+
+	for _, pair := range pairs {
+		found := false // Found a non-disabled pool?
+		_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
+			if !pool.Disabled {
+				found = true
+				return true, nil
+			}
+			return false, nil
+		})
+		if found {
+			continue
+		}
+
+		minDepositCoins := sdk.NewCoins(
+			sdk.NewCoin(pair.BaseCoinDenom, params.MinInitialDepositAmount),
+			sdk.NewCoin(pair.QuoteCoinDenom, params.MinInitialDepositAmount),
+		)
+		if spendable.IsAllGTE(minDepositCoins.Add(params.PoolCreationFee...)) {
+			return pair, true
+		}
+	}
+
+	return types.Pair{}, false
 }
