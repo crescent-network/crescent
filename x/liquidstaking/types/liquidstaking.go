@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -99,23 +101,49 @@ type LiquidValidators []LiquidValidator
 type ActiveLiquidValidators LiquidValidators
 
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
-func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
-	maxGap := sdk.ZeroDec()
-	minGap := sdk.ZeroDec()
+func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int, threshold sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
+	maxGap := sdk.ZeroInt()
+	minGap := sdk.ZeroInt()
 
 	for _, val := range vs {
-		target := targetMap[val.OperatorAddress]
-		if val.GetLiquidTokens(ctx, sk).Sub(target.ToDec()).GT(maxGap) {
-			maxGap = val.GetLiquidTokens(ctx, sk).Sub(target.ToDec())
+		// TODO: liquidTokens or DelShares
+		// TODO: 차이가 우선순위가아니라 0로 만드는게 우선순위로
+		gap := val.GetLiquidTokens(ctx, sk).TruncateInt().Sub(targetMap[val.OperatorAddress])
+		//gap := target.Sub(val.GetLiquidTokens(ctx, sk).TruncateInt())
+		if gap.GT(maxGap) {
+			maxGap = gap
 			maxGapVal = val
 		}
-		if val.GetLiquidTokens(ctx, sk).Sub(target.ToDec()).LT(minGap) {
-			minGap = val.GetLiquidTokens(ctx, sk).Sub(target.ToDec())
+		if gap.LT(minGap) {
+			minGap = gap
 			minGapVal = val
 		}
 	}
-	amountNeeded = sdk.MinInt(maxGap.TruncateInt(), minGap.TruncateInt().Abs())
+	// TODO: consider when equal
+	fmt.Println("-------")
+	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
+	lastRedelegation := amountNeeded.IsPositive() && maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive()
+	if lastRedelegation {
+		// TODO: verify edge case
+		fmt.Println("[@@@@ lastRedelegation]", threshold, maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive(), maxGap)
+		amountNeeded = maxGap
+	}
 
+	//if amountNeeded.IsPositive() {
+	//	fmt.Println("[MINMAX EXCEPT]", maxGap.Sub(minGap.Abs()), maxGap.Sub(minGap.Abs()).LT(minGap.Abs()), maxGap)
+	//	fmt.Println("[MINMAX EXCEPT2]", maxGap.Sub(minGap.Abs()).LT(minGap.Abs()) && targetMap[maxGapVal.OperatorAddress].IsZero(), maxGap)
+	//	fmt.Println("[MINMAX EXCEPT3]", maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive(), maxGap)
+	//}
+
+	//origin := sdk.MinInt(maxGap, minGap.Abs())
+	//except := sdk.MinInt(maxGap, minGap).Abs()
+	//if !sdk.MinInt(maxGap, minGap.Abs()).Equal(sdk.MinInt(maxGap, minGap).Abs()) {
+	//	//amountNeeded = sdk.MinInt(maxGap, minGap)
+	//	amountNeeded = maxGap
+	//	fmt.Println("[MINMAX EXCEPT]", origin, except, amountNeeded)
+	//}
+	//amountNeeded = sdk.MaxInt(maxGap, minGap).Abs()
+	fmt.Println("[MinMaxGap]", amountNeeded, minGapVal.OperatorAddress, minGap, minGapVal.GetLiquidTokens(ctx, sk), maxGapVal.OperatorAddress, maxGap, maxGapVal.GetLiquidTokens(ctx, sk))
 	return minGapVal, maxGapVal, amountNeeded
 }
 

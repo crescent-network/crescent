@@ -66,6 +66,7 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 
 func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.ActiveLiquidValidators, stakingAmt sdk.Int, whitelistedValMap types.WhitelistedValMap) (newShares sdk.Dec, err error) {
 	totalNewShares := sdk.ZeroDec()
+	// TODO: crumb to 1st vali
 	// crumb may occur due to a decimal point error in dividing the staking amount into the weight of liquid validators, which is also accumulated in the netAmount value
 	weightedShares, _ := types.DivideByWeight(activeVals, stakingAmt, whitelistedValMap)
 	for i, val := range activeVals {
@@ -190,17 +191,17 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
+	// TODO: crumb to [0] active val
 	// crumb may occur due to a decimal error in dividing the amount into the weight of liquid validators, which is also accumulated in the netAmount value
-	unbondingShares, _ := k.DivideByCurrentWeight(ctx, activeVals, unbondingAmount)
+	unbondingAmounts, _ := k.DivideByCurrentWeight(ctx, activeVals, unbondingAmount)
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
 	for i, val := range activeVals {
-		weightedShare := unbondingShares[i]
 		var ubd stakingtypes.UnbondingDelegation
 		var returnAmount sdk.Int
 		del, found := k.stakingKeeper.GetDelegation(ctx, proxyAcc, val.GetOperator())
-		weightedShare, err = k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), weightedShare.TruncateInt())
-		fmt.Println("[liquid UBD]", weightedShare.String(), del.Shares.String(), found, unbondingShares[i], activeVals.Len(), unbondingAmount.String())
+		weightedShare, err := k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), unbondingAmounts[i].TruncateInt())
+		fmt.Println("[liquid UBD]", weightedShare.String(), del.Shares.String(), found, unbondingAmounts[i], activeVals.Len(), unbondingAmount.String())
 		if err != nil {
 			return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, err
 		}
@@ -217,14 +218,14 @@ func (k Keeper) LiquidUnstaking(
 
 // LiquidUnbond ...
 func (k Keeper) LiquidUnbond(
-	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
+	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 ) (time.Time, sdk.Int, stakingtypes.UnbondingDelegation, error) {
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
 	if !found {
 		return time.Time{}, sdk.ZeroInt(), stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoDelegatorForAddress
 	}
 
-	returnAmount, err := k.stakingKeeper.Unbond(ctx, proxyAcc, valAddr, sharesAmount)
+	returnAmount, err := k.stakingKeeper.Unbond(ctx, proxyAcc, valAddr, shares)
 	if err != nil {
 		return time.Time{}, sdk.ZeroInt(), stakingtypes.UnbondingDelegation{}, err
 	}
@@ -282,6 +283,12 @@ func (k Keeper) SetLiquidValidator(ctx sdk.Context, val types.LiquidValidator) {
 	store.Set(types.GetLiquidValidatorKey(val.GetOperator()), bz)
 }
 
+// RemoveLiquidValidator remove a liquid validator on kv store
+func (k Keeper) RemoveLiquidValidator(ctx sdk.Context, val types.LiquidValidator) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetLiquidValidatorKey(val.GetOperator()))
+}
+
 // GetAllLiquidValidators get the set of all liquid validators with no limits, used during genesis dump
 func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
@@ -311,16 +318,6 @@ func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, whitelistedValMap typ
 	}
 	return vals
 }
-
-//// Deprecated: GetValidatorsMap get the set of all validators as map with no limits
-//func (k Keeper) GetValidatorsMap(ctx sdk.Context) map[string]stakingtypes.Validator {
-//	valMap := make(map[string]stakingtypes.Validator)
-//	vals := k.stakingKeeper.GetAllValidators(ctx)
-//	for _, val := range vals {
-//		valMap[val.OperatorAddress] = val
-//	}
-//	return valMap
-//}
 
 func (k Keeper) GetLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates []types.LiquidValidatorState) {
 	lvs := k.GetAllLiquidValidators(ctx)
@@ -378,3 +375,13 @@ func (k Keeper) GetWeightMap(ctx sdk.Context, liquidVals types.LiquidValidators,
 	}
 	return weightMap, totalWeight
 }
+
+//// Deprecated: GetValidatorsMap get the set of all validators as map with no limits
+//func (k Keeper) GetValidatorsMap(ctx sdk.Context) map[string]stakingtypes.Validator {
+//	valMap := make(map[string]stakingtypes.Validator)
+//	vals := k.stakingKeeper.GetAllValidators(ctx)
+//	for _, val := range vals {
+//		valMap[val.OperatorAddress] = val
+//	}
+//	return valMap
+//}

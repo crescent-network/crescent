@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -14,9 +15,11 @@ func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (ba
 
 func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (completionTime time.Time, err error) {
 	cachedCtx, writeCache := ctx.CacheContext()
+	// TODO: IT make crumb
 	shares, err := k.stakingKeeper.ValidateUnbondAmount(
 		cachedCtx, re.Delegator, re.SrcValidator, re.Amount,
 	)
+	fmt.Println("ValidateUnbondAmount", re.Amount, shares)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -25,44 +28,58 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 		return time.Time{}, err
 	}
 	writeCache()
+	fmt.Println("[rebalancing]", re.Amount.String(), re.SrcValidator.String(), "->", re.DstValidator.String())
 	return completionTime, nil
 }
 
 // DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb
 // which is may occur while dividing according to the weight of liquid validators by decimal error.
 func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, avs types.ActiveLiquidValidators, input sdk.Dec) (outputs []sdk.Dec, crumb sdk.Dec) {
+	// TODO: check crumb and to 1st val
+	// TODO: GetLiquidTokens or GetDelShares, vote tally need to get shares
 	totalLiquidTokens := avs.TotalLiquidTokens(ctx, k.stakingKeeper)
-	totalShares := sdk.ZeroDec()
-	sharePerWeight := input.QuoTruncate(totalLiquidTokens)
+	totalOutput := sdk.ZeroDec()
+	unitInput := input.QuoTruncate(totalLiquidTokens)
 	for _, val := range avs {
-		weightedShare := sharePerWeight.MulTruncate(val.GetLiquidTokens(ctx, k.stakingKeeper))
-		totalShares = totalShares.Add(weightedShare)
-		outputs = append(outputs, weightedShare)
+		// TODO: GetLiquidTokens or GetDelShares, vote tally need to get shares
+		output := unitInput.MulTruncate(val.GetLiquidTokens(ctx, k.stakingKeeper))
+		totalOutput = totalOutput.Add(output)
+		outputs = append(outputs, output)
 	}
-	return outputs, input.Sub(totalShares)
+	return outputs, input.Sub(totalOutput)
 }
 
 // Rebalancing argument liquidVals containing ValidatorStatusActive which is containing just added on whitelist(liquidToken 0) and ValidatorStatusInActive to delist
 func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, whitelistedValMap types.WhitelistedValMap, rebalancingTrigger sdk.Dec) (redelegations []types.Redelegation) {
 	totalLiquidTokens := liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+	if !totalLiquidTokens.IsPositive() {
+		return []types.Redelegation{}
+	}
 	weightMap, totalWeight := k.GetWeightMap(ctx, liquidVals, whitelistedValMap)
 	threshold := rebalancingTrigger.Mul(totalLiquidTokens).TruncateInt()
 	totalLiquidTokensInt := totalLiquidTokens.TruncateInt()
 
+	// TODO: solve crumb, tokens, delShares decimal error
 	targetMap := map[string]sdk.Int{}
 	for _, val := range liquidVals {
 		targetMap[val.OperatorAddress] = totalLiquidTokensInt.Mul(weightMap[val.OperatorAddress]).Quo(totalWeight)
 	}
+	squadtypes.PP(targetMap)
+	squadtypes.PP(weightMap)
 
-	for i := 0; i < len(liquidVals); i++ {
-		maxVal, minVal, amountNeeded := liquidVals.MinMaxGap(ctx, k.stakingKeeper, targetMap)
-		if amountNeeded.IsZero() || (i == 0 && amountNeeded.LT(threshold)) {
+	lenLiquidVals := liquidVals.Len()
+	for i := 0; i < lenLiquidVals; i++ {
+		// TODO: amountNeeded leaves crumb, need to solve all
+		minVal, maxVal, amountNeeded := liquidVals.MinMaxGap(ctx, k.stakingKeeper, targetMap, threshold)
+		// TODO: consider threshold policy apply every redelegatoin or maxGap
+		if amountNeeded.IsZero() || amountNeeded.LT(threshold) {
+			//if amountNeeded.IsZero() || (i == 0 && amountNeeded.LT(threshold)) {
 			break
 		}
 		redelegation := types.Redelegation{
 			Delegator:    proxyAcc,
-			SrcValidator: minVal.GetOperator(),
-			DstValidator: maxVal.GetOperator(),
+			SrcValidator: maxVal.GetOperator(),
+			DstValidator: minVal.GetOperator(),
 			Amount:       amountNeeded,
 		}
 		redelegations = append(redelegations, redelegation)
@@ -71,9 +88,9 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 			fmt.Println("[TryRedelegations] failed due to redelegation restriction", redelegations)
 		}
 	}
-	for _, r := range redelegations {
-		fmt.Println("[rebalancing]", r.Amount.String(), r.SrcValidator.String(), "->", r.DstValidator.String())
-	}
+	//for _, r := range redelegations {
+	//	fmt.Println("[rebalancing]", r.Amount.String(), r.SrcValidator.String(), "->", r.DstValidator.String())
+	//}
 	return redelegations
 }
 
@@ -106,7 +123,6 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 
 	// TODO: add tombstone handling
-	// TODO: remove inactive with zero liquidToken liquidvalidator
 
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
@@ -124,6 +140,14 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
 	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValMap, types.RebalancingTrigger)
+
+	// TODO: crumb fix
+	// TODO: test remove inactive with zero liquidToken liquidvalidator
+	for _, lv := range liquidValidators {
+		if !k.ActiveCondition(ctx, lv, whitelistedValMap) && !lv.GetLiquidTokens(ctx, k.stakingKeeper).IsPositive() {
+			k.RemoveLiquidValidator(ctx, lv)
+		}
+	}
 
 	// withdraw rewards and re-staking when over threshold
 	k.WithdrawRewardsAndReStaking(ctx, whitelistedValMap)

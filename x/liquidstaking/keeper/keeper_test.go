@@ -105,6 +105,16 @@ func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt 
 	s.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
 }
 
+// advance block time and height for complete redelegations and unbondings
+func (s *KeeperTestSuite) completeRedelegationUnbonding() {
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))
+	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{})
+	reds := s.app.StakingKeeper.GetRedelegations(s.ctx, types.LiquidStakingProxyAcc, 100)
+	s.Require().Len(reds, 0)
+	ubds := s.app.StakingKeeper.GetUnbondingDelegations(s.ctx, types.LiquidStakingProxyAcc, 100)
+	s.Require().Len(ubds, 0)
+}
+
 func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
 	feeCollector := s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	for i := 0; i < height; i++ {

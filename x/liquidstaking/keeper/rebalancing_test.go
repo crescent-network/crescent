@@ -4,10 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *KeeperTestSuite) TestRebalancingCase1() {
@@ -83,10 +81,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().Len(reds, 3)
 
 	// advance block time and height for complete redelegations
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))
-	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{})
-	reds = s.app.StakingKeeper.GetRedelegations(s.ctx, types.LiquidStakingProxyAcc, 20)
-	s.Require().Len(reds, 0)
+	s.completeRedelegationUnbonding()
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
@@ -118,6 +113,69 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(9999))
 	s.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(10002))
 	s.Require().EqualValues(proxyAccDel5.Shares.TruncateInt(), sdk.NewInt(9999))
+
+	// advance block time and height for complete redelegations
+	s.completeRedelegationUnbonding()
+
+	// remove whitelist validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
+	}
+
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
+	s.Require().True(found)
+	proxyAccDel2, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[1])
+	s.Require().True(found)
+	proxyAccDel3, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[2])
+	s.Require().True(found)
+	proxyAccDel4, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[3])
+	s.Require().True(found)
+	proxyAccDel5, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[4])
+	s.Require().False(found)
+
+	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
+	}
+	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(12499))
+	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(12499))
+	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(12499))
+	s.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12501))
+
+	// advance block time and height for complete redelegations
+	s.completeRedelegationUnbonding()
+
+	// remove whitelist validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+	}
+
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
+	s.Require().True(found)
+	proxyAccDel2, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[1])
+	s.Require().True(found)
+	proxyAccDel3, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[2])
+	s.Require().False(found)
+	proxyAccDel4, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[3])
+	s.Require().False(found)
+	proxyAccDel5, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[4])
+	s.Require().False(found)
+
+	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
+	}
+	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(25000))
+	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(24998))
+	// TODO: add more edge cases
 }
 
 func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {

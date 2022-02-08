@@ -103,13 +103,13 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 	}
 
 	for voter, bTokenValue := range bTokenValueMap {
-		delShares := sdk.ZeroDec()
+		votingPower := sdk.ZeroDec()
 		if bTokenValue.IsPositive() {
-			delShares = types.BTokenToNativeToken(bTokenValue, totalSupply, k.NetAmount(ctx), sdk.ZeroDec())
+			votingPower = types.BTokenToNativeToken(bTokenValue, totalSupply, k.NetAmount(ctx), sdk.ZeroDec())
 		}
-		if delShares.IsPositive() {
+		if votingPower.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			dividedPowers, _ := k.DivideByCurrentWeight(ctx, activeVals, delShares)
+			dividedPowers, _ := k.DivideByCurrentWeight(ctx, activeVals, votingPower)
 			for i, val := range activeVals {
 				if existed, ok := (*otherVotes)[voter][val.OperatorAddress]; ok {
 					(*otherVotes)[voter][val.OperatorAddress] = existed.Add(dividedPowers[i])
