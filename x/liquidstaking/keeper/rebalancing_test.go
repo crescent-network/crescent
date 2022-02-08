@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.keeper.SetParams(s.ctx, params)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
-	stakingAmt := sdk.NewInt(50000)
+	stakingAmt := sdk.NewInt(49998)
 	// add active validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
@@ -28,7 +28,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 
 	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().NoError(err)
-	s.Require().Equal(newShares, sdk.MustNewDecFromStr("49998.0"))
+	s.Require().Equal(newShares, stakingAmt.ToDec())
 	s.Require().Equal(bTokenMintAmt, stakingAmt)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 

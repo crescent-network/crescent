@@ -54,11 +54,11 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(sdk.ZeroDec(), res[2].DelShares)
 	s.Require().Equal(sdk.ZeroDec(), res[2].LiquidTokens)
 
-	activeVals := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
-	_, crumb := types.DivideByWeight(activeVals, stakingAmt, params.WhitelistedValMap())
+	//activeVals := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
+	//_, crumb := types.DivideByWeight(activeVals, stakingAmt, params.WhitelistedValMap())
 	newShares, bTokenMintAmt, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().NoError(err)
-	s.Require().Equal(newShares.Add(crumb.ToDec()), stakingAmt.ToDec())
+	s.Require().Equal(newShares, stakingAmt.ToDec())
 	s.Require().Equal(bTokenMintAmt, stakingAmt)
 
 	_, found := s.app.StakingKeeper.GetDelegation(s.ctx, s.delAddrs[0], valOpers[0])
@@ -74,8 +74,10 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().True(found)
 	proxyAccDel3, found := s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	s.Require().True(found)
-	s.Require().Equal(proxyAccDel1.Shares, stakingAmt.ToDec().QuoInt64(3).TruncateDec())
-	s.Require().Equal(stakingAmt.QuoRaw(3).MulRaw(3).ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
+	s.Require().Equal(proxyAccDel1.Shares, sdk.NewDec(16668)) // 16666 + add crumb 2 to 1st active validator
+	s.Require().Equal(proxyAccDel2.Shares, sdk.NewDec(16666))
+	s.Require().Equal(proxyAccDel2.Shares, sdk.NewDec(16666))
+	s.Require().Equal(stakingAmt.ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
 	balanceBeforeUBD := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], sdk.DefaultBondDenom)
 	s.Require().Equal(balanceBeforeUBD.Amount, sdk.NewInt(999950000))
@@ -107,7 +109,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().True(found)
 	proxyAccDel3, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	s.Require().True(found)
-	s.Require().Equal(stakingAmt.Sub(unbondingAmt.TruncateInt()).Sub(crumb).ToDec(), proxyAccDel1.GetShares().Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
+	s.Require().Equal(stakingAmt.Sub(unbondingAmt.TruncateInt()).ToDec(), proxyAccDel1.GetShares().Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
 	s.ctx = s.ctx.WithBlockHeight(200).WithBlockTime(ubdTime.Add(1))
 	updates := s.app.StakingKeeper.BlockValidatorUpdates(s.ctx) // EndBlock of staking keeper
@@ -121,15 +123,15 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().True(found)
 	proxyAccDel3, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	s.Require().True(found)
-	s.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel1.Shares)
-	s.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel2.Shares)
-	s.Require().Equal(sdk.MustNewDecFromStr("13333.0"), proxyAccDel3.Shares)
+	s.Require().Equal(sdk.NewDec(13335), proxyAccDel1.Shares)
+	s.Require().Equal(sdk.NewDec(13333), proxyAccDel2.Shares)
+	s.Require().Equal(sdk.NewDec(13333), proxyAccDel3.Shares)
 
 	res = s.keeper.GetLiquidValidatorStates(s.ctx)
 	s.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[0].Status)
-	s.Require().Equal(sdk.NewDec(13333), res[0].DelShares)
+	s.Require().Equal(sdk.NewDec(13335), res[0].DelShares)
 
 	s.Require().Equal(params.WhitelistedValidators[1].ValidatorAddress, res[1].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[1].TargetWeight, res[1].Weight)

@@ -153,44 +153,44 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	k.WithdrawRewardsAndReStaking(ctx, whitelistedValMap)
 }
 
-// Deprecated: AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively, not using on this version for simplify.
-func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.ActiveLiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
-	targetMap := make(map[string]sdk.Int)
-	if addStakingAmt.IsNil() || !addStakingAmt.IsPositive() || activeVals.Len() == 0 {
-		return targetMap
-	}
-	params := k.GetParams(ctx)
-	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	totalLiquidTokens := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
-	totalWeight := activeVals.TotalWeight(whitelistedValMap)
-	ToBeTotalDelShares := totalLiquidTokens.TruncateInt().Add(addStakingAmt)
-	existOverWeightedVal := false
-
-	sharePerWeight := ToBeTotalDelShares.Quo(totalWeight)
-	crumb := ToBeTotalDelShares.Sub(sharePerWeight.Mul(totalWeight))
-
-	i := 0
-	for _, val := range activeVals {
-		weightedShare := val.GetWeight(whitelistedValMap, true).Mul(sharePerWeight)
-		if val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt().GT(weightedShare) {
-			existOverWeightedVal = true
-		} else {
-			activeVals[i] = val
-			i++
-			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt())
-		}
-	}
-	// remove overWeightedVals for recursive call
-	activeVals = activeVals[:i]
-
-	if !existOverWeightedVal {
-		if v, ok := targetMap[activeVals[0].OperatorAddress]; ok {
-			targetMap[activeVals[0].OperatorAddress] = v.Add(crumb)
-		} else {
-			targetMap[activeVals[0].OperatorAddress] = crumb
-		}
-		return targetMap
-	} else {
-		return k.AddStakingTargetMap(ctx, activeVals, addStakingAmt)
-	}
-}
+//// Deprecated: AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively, not using on this version for simplify.
+//func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.ActiveLiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
+//	targetMap := make(map[string]sdk.Int)
+//	if addStakingAmt.IsNil() || !addStakingAmt.IsPositive() || activeVals.Len() == 0 {
+//		return targetMap
+//	}
+//	params := k.GetParams(ctx)
+//	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
+//	totalLiquidTokens := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+//	totalWeight := activeVals.TotalWeight(whitelistedValMap)
+//	ToBeTotalDelShares := totalLiquidTokens.TruncateInt().Add(addStakingAmt)
+//	existOverWeightedVal := false
+//
+//	sharePerWeight := ToBeTotalDelShares.Quo(totalWeight)
+//	crumb := ToBeTotalDelShares.Sub(sharePerWeight.Mul(totalWeight))
+//
+//	i := 0
+//	for _, val := range activeVals {
+//		weightedShare := val.GetWeight(whitelistedValMap, true).Mul(sharePerWeight)
+//		if val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt().GT(weightedShare) {
+//			existOverWeightedVal = true
+//		} else {
+//			activeVals[i] = val
+//			i++
+//			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt())
+//		}
+//	}
+//	// remove overWeightedVals for recursive call
+//	activeVals = activeVals[:i]
+//
+//	if !existOverWeightedVal {
+//		if v, ok := targetMap[activeVals[0].OperatorAddress]; ok {
+//			targetMap[activeVals[0].OperatorAddress] = v.Add(crumb)
+//		} else {
+//			targetMap[activeVals[0].OperatorAddress] = crumb
+//		}
+//		return targetMap
+//	} else {
+//		return k.AddStakingTargetMap(ctx, activeVals, addStakingAmt)
+//	}
+//}
