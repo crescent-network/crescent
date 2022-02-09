@@ -29,6 +29,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	// TODO: not implemented yet
 	return nil
 }
 

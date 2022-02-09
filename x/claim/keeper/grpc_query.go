@@ -6,6 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
@@ -15,8 +17,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	// ctx := sdk.UnwrapSDKContext(c)
+	ctx := sdk.UnwrapSDKContext(c)
 
-	// return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
-	return &types.QueryParamsResponse{}, nil
+	return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
 }
