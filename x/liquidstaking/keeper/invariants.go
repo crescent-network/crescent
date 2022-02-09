@@ -53,7 +53,6 @@ func NetAmountInvariant(k Keeper) sdk.Invariant {
 			msg = "found positive btoken supply with non-positive net amount"
 			broken = true
 		}
-		// TODO: need to check netAmount include unbongding
 		if !bTokenTotalSupply.IsPositive() && NetAmountExceptBalance.IsPositive() {
 			msg = "found positive net amount with non-positive btoken supply"
 			broken = true

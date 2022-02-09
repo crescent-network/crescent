@@ -18,10 +18,11 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	accountKeeper   types.AccountKeeper
-	bankKeeper      types.BankKeeper
-	stakingKeeper   types.StakingKeeper
-	distrKeeper     types.DistrKeeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+	distrKeeper   types.DistrKeeper
+	// Could be deprecated, govKeeper when govHook cover all cases
 	govKeeper       types.GovKeeper
 	liquidityKeeper types.LiquidityKeeper
 	farmingKeeper   types.FarmingKeeper
