@@ -2,7 +2,12 @@ syntax = "proto3";
 package squad.claim.v1beta1;
 
 import "squad/claim/v1beta1/genesis.proto";
+import "squad/claim/v1beta1/claim.proto";
 
 option go_package                      = "github.com/cosmosquad-labs/squad/x/claim/types";
-option (gogoproto.goproto_getters_all) = false;
 
+// GenesisState defines the claim module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+
+}

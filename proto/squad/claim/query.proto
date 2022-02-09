@@ -1,8 +1,28 @@
 syntax = "proto3";
 package squad.claim.v1beta1;
 
-import "squad/claim/v1beta1/query.proto";
+import "squad/claim/v1beta1/claim.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package                      = "github.com/cosmosquad-labs/squad/x/claim/types";
 option (gogoproto.goproto_getters_all) = false;
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params returns parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/squad/claim/v1beta1/params";
+  }
+
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
 
