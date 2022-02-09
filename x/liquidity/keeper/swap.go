@@ -265,7 +265,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		case types.SwapRequestStatusNotExecuted,
 			types.SwapRequestStatusNotMatched,
 			types.SwapRequestStatusPartiallyMatched:
-			if !ctx.BlockTime().Before(req.ExpireAt) {
+			if req.Status != types.SwapRequestStatusNotExecuted && !ctx.BlockTime().Before(req.ExpireAt) {
 				if err := k.FinishSwapRequest(ctx, req, types.SwapRequestStatusExpired); err != nil {
 					return false, err
 				}
@@ -376,6 +376,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				bulkOp.SendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(demandCoin))
 			}
 		}
+		bulkOp.SendCoins(pair.GetEscrowAddress(), types.DustCollectorAddress, sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDustAmt)))
 		if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 			return err
 		}
@@ -388,7 +389,6 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	// TODO: emit an event?
 	_ = matchPrice
-	_ = quoteCoinDustAmt
 	return nil
 }
 
