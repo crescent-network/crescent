@@ -1,7 +1,32 @@
 syntax = "proto3";
 package squad.claim.v1beta1;
 
-option go_package = "github.com/cosmosquad-labs/squad/x/claim/types";
+import "gogoproto/gogo.proto";
+
+option go_package                      = "github.com/cosmosquad-labs/squad/x/claim/types";
+option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+  rpc Claim(MsgClaim) returns (MsgClaimResponse);
+}
+
+message MsgClaim {
+  string claimant = 1;
+
+  ActionType action_type = 2;
+}
+
+message MsgClaimResponse {}
+
+enum ActionType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  ACTION_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ActionTypeUnspecified"];
+
+  ACTION_TYPE_SWAP = 1 [(gogoproto.enumvalue_customname) = "ActionTypeSwap"];
+
+  ACTION_TYPE_DEPOSIT = 2 [(gogoproto.enumvalue_customname) = "ActionTypeDeposit"];
+
+  ACTION_TYPE_FARMING = 3 [(gogoproto.enumvalue_customname) = "ActionTypeFarming"];
+}

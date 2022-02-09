@@ -1,5 +1,10 @@
 package types
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "claim"
@@ -12,11 +17,13 @@ const (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
-
-	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_claim"
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
+var (
+	ClaimRecordKeyPrefix = []byte{0xc0}
+)
+
+// GetClaimRecordKey returns the store key to retrieve ClaimRecord.
+func GetClaimRecordKey(claimant sdk.AccAddress) []byte {
+	return append(ClaimRecordKeyPrefix, address.MustLengthPrefix(claimant)...)
 }
