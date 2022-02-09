@@ -80,13 +80,6 @@ func (genState GenesisState) Validate() error {
 		if req.PoolCoin.Denom != pool.PoolCoinDenom {
 			return fmt.Errorf("withdraw request at index %d has wrong pool coin: %s", i, req.PoolCoin)
 		}
-		pair := pairMap[pool.PairId]
-		if !req.WithdrawnCoins.IsZero() {
-			if req.WithdrawnCoins.AmountOf(pair.BaseCoinDenom).IsZero() ||
-				req.WithdrawnCoins.AmountOf(pair.QuoteCoinDenom).IsZero() {
-				return fmt.Errorf("withdraw request at index %d has wrong withdrawn coins: %s", i, req.WithdrawnCoins)
-			}
-		}
 	}
 	for i, req := range genState.SwapRequests {
 		if err := req.Validate(); err != nil {

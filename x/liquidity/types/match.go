@@ -61,7 +61,6 @@ func (engine *MatchEngine) InitialMatchPrice() (price sdk.Dec, dir PriceDirectio
 		panic("there is no sell orders")
 	}
 	midPrice := highestBuyPrice.Add(lowestSellPrice).QuoInt64(2)
-	midPriceTick := PriceToTick(midPrice, engine.TickPrecision)
 
 	dir = engine.EstimatedPriceDirection(midPrice)
 
@@ -69,13 +68,9 @@ func (engine *MatchEngine) InitialMatchPrice() (price sdk.Dec, dir PriceDirectio
 	case PriceStaying:
 		price = RoundPrice(midPrice, engine.TickPrecision)
 	case PriceIncreasing:
-		price = midPriceTick
+		price = PriceToTick(midPrice, engine.TickPrecision) // TODO: use lower tick?
 	case PriceDecreasing:
-		if !midPrice.Equal(midPriceTick) {
-			price = UpTick(midPriceTick, engine.TickPrecision)
-		} else {
-			price = midPriceTick
-		}
+		price = PriceToUpTick(midPrice, engine.TickPrecision) // TODO: use higher tick?
 	}
 	return
 }

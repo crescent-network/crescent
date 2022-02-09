@@ -308,6 +308,16 @@ func TestWithdrawFromPool(t *testing.T) {
 			x:       0,
 			y:       0,
 		},
+		{
+			name:    "advantageous for pool",
+			rx:      10000,
+			ry:      100,
+			ps:      10000,
+			pc:      99,
+			feeRate: sdk.ZeroDec(),
+			x:       99,
+			y:       0,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := types.NewPoolInfo(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))

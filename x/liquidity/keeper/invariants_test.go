@@ -8,7 +8,7 @@ func (s *KeeperTestSuite) TestDepositCoinsEscrowInvariant() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, parseCoins("1000000denom1,1000000denom2"), true)
 
-	req := s.depositBatch(s.addr(1), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
+	req := s.deposit(s.addr(1), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
 	_, broken := keeper.DepositCoinsEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().False(broken)
 
@@ -29,10 +29,10 @@ func (s *KeeperTestSuite) TestPoolCoinEscrowInvariant() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, parseCoins("1000000denom1,1000000denom2"), true)
 
-	s.depositBatch(s.addr(1), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
+	s.deposit(s.addr(1), pool.Id, parseCoins("1000000denom1,1000000denom2"), true)
 	s.nextBlock()
 
-	req := s.withdrawBatch(s.addr(1), pool.Id, parseCoin("1000000pool1"))
+	req := s.withdraw(s.addr(1), pool.Id, parseCoin("1000000pool1"))
 	_, broken := keeper.PoolCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().False(broken)
 
@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestPoolCoinEscrowInvariant() {
 func (s *KeeperTestSuite) TestRemainingOfferCoinEscrowInvariant() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), newInt(1000000), 0, true)
+	req := s.buyLimitOrder(s.addr(1), pair.Id, parseDec("1.0"), newInt(1000000), 0, true)
 	_, broken := keeper.RemainingOfferCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().False(broken)
 
@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestPoolStatusInvariant() {
 	_, broken := keeper.PoolStatusInvariant(s.keeper)(s.ctx)
 	s.Require().False(broken)
 
-	s.withdrawBatch(s.addr(0), pool.Id, s.getBalance(s.addr(0), pool.PoolCoinDenom))
+	s.withdraw(s.addr(0), pool.Id, s.getBalance(s.addr(0), pool.PoolCoinDenom))
 	s.nextBlock()
 
 	_, broken = keeper.PoolStatusInvariant(s.keeper)(s.ctx)

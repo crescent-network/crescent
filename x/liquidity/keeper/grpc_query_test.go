@@ -395,10 +395,10 @@ func (s *KeeperTestSuite) TestGRPCDepositRequests() {
 	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
 	depositor := s.addr(1)
-	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
-	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
-	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
-	s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -458,7 +458,7 @@ func (s *KeeperTestSuite) TestGRPCDepositRequest() {
 	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
 	depositor := s.addr(1)
-	req := s.depositBatch(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
+	req := s.deposit(depositor, pool.Id, parseCoins("250000denom1,250000denom2"), true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -527,9 +527,9 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequests() {
 	poolCoinBalance := s.app.BankKeeper.GetBalance(s.ctx, creator, pool.PoolCoinDenom)
 	s.Require().Equal(params.InitialPoolCoinSupply, poolCoinBalance.Amount)
 
-	s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 1000))
-	s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 2500))
-	s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 6000))
+	s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 1000))
+	s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 2500))
+	s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 6000))
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -588,7 +588,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 	pair := s.createPair(creator, "denom1", "denom2", true)
 	pool := s.createPool(creator, pair.Id, parseCoins("5000000denom1,5000000denom2"), true)
 
-	req := s.withdrawBatch(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 50000))
+	req := s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 50000))
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -650,11 +650,11 @@ func (s *KeeperTestSuite) TestGRPCSwapRequests() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
-	s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(5000000), 10*time.Second, true)
-	s.sellLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
-	s.sellLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(700000), time.Hour, true)
-	s.buyLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(5000000), 10*time.Second, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, parseDec("1.0"), newInt(700000), time.Hour, true)
+	s.buyLimitOrder(s.addr(2), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -701,7 +701,7 @@ func (s *KeeperTestSuite) TestGRPCSwapRequest() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	req := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	req := s.buyLimitOrder(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {

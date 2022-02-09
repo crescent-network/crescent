@@ -11,8 +11,8 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
-// LimitOrderBatch handles types.MsgLimitOrder and stores it.
-func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrder) (types.SwapRequest, error) {
+// LimitOrder handles types.MsgLimitOrder and stores it.
+func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
 	if price := types.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
@@ -70,6 +70,9 @@ func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrder) (type
 	if msg.OfferCoin.IsLT(offerCoin) {
 		return types.SwapRequest{}, types.ErrInsufficientOfferCoin
 	}
+	if offerCoin.Amount.LT(types.MinCoinAmount) {
+		return types.SwapRequest{}, types.ErrTooSmallOfferCoin
+	}
 	refundedCoin := msg.OfferCoin.Sub(offerCoin)
 
 	if err := k.bankKeeper.SendCoins(ctx, msg.GetOrderer(), pair.GetEscrowAddress(), sdk.NewCoins(offerCoin)); err != nil {
@@ -100,8 +103,8 @@ func (k Keeper) LimitOrderBatch(ctx sdk.Context, msg *types.MsgLimitOrder) (type
 	return req, nil
 }
 
-// MarketOrderBatch handles types.MsgMarketOrder and stores it.
-func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrder) (types.SwapRequest, error) {
+// MarketOrder handles types.MsgMarketOrder and stores it.
+func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
 	if msg.OrderLifespan > params.MaxOrderLifespan {
@@ -128,7 +131,7 @@ func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrder) (ty
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio))
+		price = types.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, price.MulInt(msg.Amount).Ceil().TruncateInt())
 	case types.SwapDirectionSell:
 		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
@@ -136,7 +139,7 @@ func (k Keeper) MarketOrderBatch(ctx sdk.Context, msg *types.MsgMarketOrder) (ty
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio))
+		price = types.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = msg.OfferCoin
 	}
 	if msg.OfferCoin.IsLT(offerCoin) {

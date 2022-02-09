@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 		s.Run(tc.name, func() {
 			// The msg is valid, but may cause an error when it's being handled in the msg server.
 			s.Require().NoError(tc.msg.ValidateBasic())
-			_, err := s.keeper.LimitOrderBatch(s.ctx, tc.msg)
+			_, err := s.keeper.LimitOrder(s.ctx, tc.msg)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 			} else {
@@ -151,7 +151,7 @@ func (s *KeeperTestSuite) TestLimitOrderRefund() {
 			s.Require().NoError(tc.msg.ValidateBasic())
 
 			balanceBefore := s.getBalance(orderer, tc.msg.OfferCoin.Denom)
-			_, err := s.keeper.LimitOrderBatch(s.ctx, tc.msg)
+			_, err := s.keeper.LimitOrder(s.ctx, tc.msg)
 			s.Require().NoError(err)
 
 			balanceAfter := s.getBalance(orderer, tc.msg.OfferCoin.Denom)
@@ -167,7 +167,7 @@ func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	req := s.buyLimitOrder(s.addr(1), pair.Id, parseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	// Execute matching
 	liquidity.EndBlocker(ctx, k)
 
@@ -191,8 +191,8 @@ func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req1 := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
-	req2 := s.sellLimitOrderBatch(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
+	req1 := s.buyLimitOrder(s.addr(1), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
+	req2 := s.sellLimitOrder(s.addr(2), pair.Id, parseDec("1.0"), newInt(10000), time.Hour, true)
 	liquidity.EndBlocker(ctx, k)
 
 	req1, _ = k.GetSwapRequest(ctx, req1.PairId, req1.Id)
@@ -213,7 +213,7 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req := s.buyLimitOrderBatch(s.addr(1), pair.Id, parseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
+	req := s.buyLimitOrder(s.addr(1), pair.Id, parseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
 
 	// Cannot cancel an order within a same batch
 	err := k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), req.PairId, req.Id))
