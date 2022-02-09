@@ -1,13 +1,11 @@
 syntax = "proto3";
 package squad.claim.v1beta1;
 
-import "squad/claim/v1beta1/claim.proto";
+import "gogoproto/gogo.proto";
 
-option go_package                      = "github.com/cosmosquad-labs/squad/x/claim/types";
-option (gogoproto.goproto_getters_all) = false;
+option go_package = "github.com/cosmosquad-labs/squad/x/claim/types";
 
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
- 
 }
