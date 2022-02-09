@@ -4,8 +4,9 @@ package squad.claim.v1beta1;
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmosquad-labs/squad/x/claim/types";
+option (gogoproto.goproto_getters_all) = false;
 
 // Params defines the parameters for the module.
 message Params {
-  option (gogoproto.goproto_stringer) = false;
+  
 }

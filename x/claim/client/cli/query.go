@@ -53,12 +53,12 @@ $ %s query %s params
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			resp, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(&resp.Params)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
