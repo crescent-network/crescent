@@ -171,25 +171,28 @@ func (engine *MatchEngine) Match() (orderBook *OrderBook, matchPrice sdk.Dec, qu
 	return
 }
 
-func FindLastMatchableOrders(orders1, orders2 Orders, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
-	sides := []*struct {
+func FindLastMatchableOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
+	type Side struct {
 		orders          Orders
 		totalAmt        sdk.Int
 		i               int
 		partialMatchAmt sdk.Int
-	}{
-		{orders1, orders1.OpenAmount(), len(orders1) - 1, sdk.Int{}},
-		{orders2, orders2.OpenAmount(), len(orders2) - 1, sdk.Int{}},
+	}
+	buySide := &Side{buyOrders, buyOrders.OpenAmount(), len(buyOrders) - 1, sdk.Int{}}
+	sellSide := &Side{sellOrders, sellOrders.OpenAmount(), len(sellOrders) - 1, sdk.Int{}}
+	sides := map[SwapDirection]*Side{
+		SwapDirectionBuy:  buySide,
+		SwapDirectionSell: sellSide,
 	}
 	for {
 		ok := true
-		for _, side := range sides {
+		for dir, side := range sides {
 			i := side.i
 			order := side.orders[i]
-			matchAmt := sdk.MinInt(sides[0].totalAmt, sides[1].totalAmt)
+			matchAmt := sdk.MinInt(buySide.totalAmt, sellSide.totalAmt)
 			side.partialMatchAmt = matchAmt.Sub(side.totalAmt.Sub(order.GetOpenAmount()))
 			if side.totalAmt.Sub(order.GetOpenAmount()).GT(matchAmt) ||
-				matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero() {
+				(dir == SwapDirectionSell && matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero()) {
 				if i == 0 {
 					return
 				}
@@ -199,7 +202,7 @@ func FindLastMatchableOrders(orders1, orders2 Orders, matchPrice sdk.Dec) (idx1,
 			}
 		}
 		if ok {
-			return sides[0].i, sides[1].i, sides[0].partialMatchAmt, sides[1].partialMatchAmt, true
+			return buySide.i, sellSide.i, buySide.partialMatchAmt, sellSide.partialMatchAmt, true
 		}
 	}
 }
