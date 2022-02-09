@@ -126,8 +126,10 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
 	}
 
+	squadtypes.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
 	s.keeper.SetParams(s.ctx, params)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	squadtypes.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
 
 	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	s.Require().True(found)
@@ -212,6 +214,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	lvState, found = s.keeper.GetLiquidValidatorState(s.ctx, proxyAccDel2.GetValidatorAddr())
 	s.Require().False(found)
 	s.Require().Equal(lvState.OperatorAddress, proxyAccDel2.ValidatorAddress)
+	s.Require().Equal(lvState.Status, types.ValidatorStatusUnspecified)
 	s.Require().EqualValues(lvState.DelShares, sdk.ZeroDec())
 	s.Require().EqualValues(lvState.LiquidTokens, sdk.ZeroDec())
 	// TODO: add more edge cases

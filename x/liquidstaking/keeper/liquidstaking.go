@@ -32,7 +32,7 @@ func (k Keeper) LiquidStaking(
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	if stakingCoin.Denom != bondDenom {
 		return sdk.ZeroDec(), bTokenMintAmount, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", stakingCoin.Denom, bondDenom,
+			types.ErrInvalidBondDenom, "invalid coin denomination: got %s, expected %s", stakingCoin.Denom, bondDenom,
 		)
 	}
 
@@ -40,7 +40,7 @@ func (k Keeper) LiquidStaking(
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValMap)
 	if activeVals.Len() == 0 {
-		return sdk.ZeroDec(), bTokenMintAmount, fmt.Errorf("there's no active liquid validators")
+		return sdk.ZeroDec(), bTokenMintAmount, types.ErrActiveLiquidValidatorsNotExists
 	}
 
 	netAmount := k.NetAmount(ctx)
@@ -100,14 +100,14 @@ func (k Keeper) LiquidUnstaking(
 	bondedBondDenom := k.BondedBondDenom(ctx)
 	if unstakingBtoken.Denom != bondedBondDenom {
 		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", unstakingBtoken.Denom, bondedBondDenom,
+			types.ErrInvalidBondedBondDenom, "invalid coin denomination: got %s, expected %s", unstakingBtoken.Denom, bondedBondDenom,
 		)
 	}
 
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValMap)
 	if activeVals.Len() == 0 {
-		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("there's no active liquid validators")
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, types.ErrActiveLiquidValidatorsNotExists
 	}
 
 	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
@@ -115,7 +115,7 @@ func (k Keeper) LiquidUnstaking(
 	unstakingAll := false
 	//if !bTokenTotalSupply.IsPositive() {
 	if unstakingBtoken.Amount.GT(bTokenTotalSupply.Amount) {
-		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, fmt.Errorf("unstakingAll supply is not positive")
+		return time.Time{}, sdk.ZeroDec(), []stakingtypes.UnbondingDelegation{}, types.ErrInvalidBTokenSupply
 	} else if unstakingBtoken.Amount.Equal(bTokenTotalSupply.Amount) {
 		// TODO: verify with netAmount for rewards, balance
 		unstakingAll = true
