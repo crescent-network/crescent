@@ -18,7 +18,7 @@ service Query {
       description: "Returns all parameters of the liquid staking module.";
   external_docs: {
   url:
-    "https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md";
+    "https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/08_params.md";
   description:
     "Find out more about the params";
   }
