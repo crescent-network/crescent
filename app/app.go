@@ -97,6 +97,9 @@ import (
 
 	farmingparams "github.com/cosmosquad-labs/squad/app/params"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
+	"github.com/cosmosquad-labs/squad/x/claim"
+	claimkeeper "github.com/cosmosquad-labs/squad/x/claim/keeper"
+	claimtypes "github.com/cosmosquad-labs/squad/x/claim/types"
 	"github.com/cosmosquad-labs/squad/x/farming"
 	farmingclient "github.com/cosmosquad-labs/squad/x/farming/client"
 	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
@@ -152,6 +155,7 @@ var (
 		farming.AppModuleBasic{},
 		liquidity.AppModuleBasic{},
 		liquidstaking.AppModuleBasic{},
+		claim.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -166,6 +170,7 @@ var (
 		farmingtypes.ModuleName:        nil,
 		liquiditytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
 		liquidstakingtypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		claimtypes.ModuleName:          nil,
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	}
 )
@@ -213,6 +218,7 @@ type SquadApp struct {
 	FarmingKeeper       farmingkeeper.Keeper
 	LiquidityKeeper     liquiditykeeper.Keeper
 	LiquidStakingKeeper liquidstakingkeeper.Keeper
+	ClaimKeeper         claimkeeper.Keeper
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -279,6 +285,7 @@ func NewSquadApp(
 		farmingtypes.StoreKey,
 		liquiditytypes.StoreKey,
 		liquidstakingtypes.StoreKey,
+		claimtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -444,6 +451,13 @@ func NewSquadApp(
 		app.GovKeeper,
 		app.LiquidityKeeper,
 		app.FarmingKeeper,
+		app.SlashingKeeper,
+	)
+	app.ClaimKeeper = *claimkeeper.NewKeeper(
+		appCodec,
+		keys[claimtypes.StoreKey],
+		keys[claimtypes.MemStoreKey],
+		app.GetSubspace(claimtypes.ModuleName),
 	)
 
 	// register the proposal types
@@ -530,6 +544,7 @@ func NewSquadApp(
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GovKeeper),
+		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper),
 		app.transferModule,
 	)
 
@@ -586,6 +601,7 @@ func NewSquadApp(
 		farmingtypes.ModuleName,
 		liquiditytypes.ModuleName,
 		liquidstakingtypes.ModuleName,
+		claimtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

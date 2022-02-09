@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -15,6 +15,7 @@ func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (ba
 
 func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (completionTime time.Time, err error) {
 	cachedCtx, writeCache := ctx.CacheContext()
+	// TODO: check small left delShares for zero targetWeight
 	shares, err := k.stakingKeeper.ValidateUnbondAmount(
 		cachedCtx, re.Delegator, re.SrcValidator, re.Amount,
 	)
@@ -26,79 +27,73 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 		return time.Time{}, err
 	}
 	writeCache()
+	fmt.Println("[rebalancing]", re.Amount.String(), re.SrcValidator.String(), "->", re.DstValidator.String())
 	return completionTime, nil
 }
 
 // DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb
 // which is may occur while dividing according to the weight of liquid validators by decimal error.
-func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, vs types.LiquidValidators, input sdk.Dec) (outputs []sdk.Dec, crumb sdk.Dec) {
-	_, totalLiquidTokens := vs.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
-	totalShares := sdk.ZeroDec()
-	sharePerWeight := input.QuoTruncate(totalLiquidTokens)
-	for _, val := range vs {
-		weightedShare := sharePerWeight.Mul(val.GetDelShares(ctx, k.stakingKeeper))
-		totalShares = totalShares.Add(weightedShare)
-		outputs = append(outputs, weightedShare)
+func (k Keeper) DivideByCurrentWeight(ctx sdk.Context, avs types.ActiveLiquidValidators, input sdk.Dec) (outputs []sdk.Dec, crumb sdk.Dec) {
+	totalLiquidTokens := avs.TotalLiquidTokens(ctx, k.stakingKeeper)
+	totalOutput := sdk.ZeroDec()
+	unitInput := input.QuoTruncate(totalLiquidTokens)
+	for _, val := range avs {
+		output := unitInput.MulTruncate(val.GetLiquidTokens(ctx, k.stakingKeeper))
+		totalOutput = totalOutput.Add(output)
+		outputs = append(outputs, output)
 	}
-	return outputs, input.Sub(totalShares)
+	return outputs, input.Sub(totalOutput)
 }
 
-// activeVals containing ValidatorStatusActive which is containing just added on whitelist(power 0) and ValidatorStatusDelisting
-func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, rebalancingTrigger sdk.Dec, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) (redelegations []types.Redelegation) {
-	_, totalLiquidTokens := liquidVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
-	totalWeight := liquidVals.TotalWeight(whitelistedValMap)
-	threshold := rebalancingTrigger.Mul(totalLiquidTokens)
+// Rebalancing argument liquidVals containing ValidatorStatusActive which is containing just added on whitelist(liquidToken 0) and ValidatorStatusInActive to delist
+func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, whitelistedValMap types.WhitelistedValMap, rebalancingTrigger sdk.Dec) (redelegations []types.Redelegation) {
+	totalLiquidTokens := liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+	if !totalLiquidTokens.IsPositive() {
+		return []types.Redelegation{}
+	}
+	weightMap, totalWeight := k.GetWeightMap(ctx, liquidVals, whitelistedValMap)
+	if !totalWeight.IsPositive() {
+		// TODO: no active liquid validators, make policy for this case
+		return []types.Redelegation{}
+	}
+	threshold := rebalancingTrigger.Mul(totalLiquidTokens).TruncateInt()
+	totalLiquidTokensInt := totalLiquidTokens.TruncateInt()
 
-	var targetWeight sdk.Int
 	targetMap := map[string]sdk.Int{}
 	for _, val := range liquidVals {
-		if val.ActiveCondition(valMap[val.OperatorAddress], whitelistedValMap.IsListed(val.OperatorAddress)) {
-			targetWeight = val.GetWeight(whitelistedValMap)
-		} else {
-			targetWeight = sdk.ZeroInt()
-		}
-		targetMap[val.OperatorAddress] = totalLiquidTokens.MulInt(targetWeight).QuoInt(totalWeight).TruncateInt()
+		// TODO: check decimal loss occurred
+		targetMap[val.OperatorAddress] = totalLiquidTokensInt.Mul(weightMap[val.OperatorAddress]).Quo(totalWeight)
 	}
+	squadtypes.PP(targetMap)
+	squadtypes.PP(weightMap)
 
-	for i := 0; i < len(liquidVals); i++ {
-		maxVal, minVal, amountNeeded := liquidVals.MinMaxGap(ctx, k.stakingKeeper, targetMap)
-		if amountNeeded.IsZero() || (i == 0 && amountNeeded.LT(threshold.TruncateInt())) {
+	lenLiquidVals := liquidVals.Len()
+	for i := 0; i < lenLiquidVals; i++ {
+		minVal, maxVal, amountNeeded := liquidVals.MinMaxGap(ctx, k.stakingKeeper, targetMap, threshold)
+		// TODO: consider threshold policy apply every redelegatoin or maxGap
+		if amountNeeded.IsZero() || amountNeeded.LT(threshold) {
+			//if amountNeeded.IsZero() || (i == 0 && amountNeeded.LT(threshold)) {
 			break
-		}
-		// TODO: refactor using map
-		addedVal := 0
-		subtractedVal := 0
-		for idx := range liquidVals {
-			if liquidVals[idx].OperatorAddress == maxVal.OperatorAddress {
-				addedVal = idx
-			}
-			if liquidVals[idx].OperatorAddress == minVal.OperatorAddress {
-				subtractedVal = idx
-			}
 		}
 		redelegation := types.Redelegation{
 			Delegator:    proxyAcc,
-			SrcValidator: liquidVals[subtractedVal].GetOperator(),
-			DstValidator: liquidVals[addedVal].GetOperator(),
+			SrcValidator: maxVal.GetOperator(),
+			DstValidator: minVal.GetOperator(),
 			Amount:       amountNeeded,
 		}
-		// TODO: deprecate return redelegations
 		redelegations = append(redelegations, redelegation)
 		_, err := k.TryRedelegation(ctx, redelegation)
 		if err != nil {
 			fmt.Println("[TryRedelegations] failed due to redelegation restriction", redelegations)
 		}
 	}
-	for _, r := range redelegations {
-		fmt.Println("[rebalancing]", r.Amount.String(), r.SrcValidator.String(), "->", r.DstValidator.String())
-	}
 	return redelegations
 }
 
 // WithdrawRewardsAndReStaking withdraw rewards and re-staking when over threshold
-func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, valMap map[string]stakingtypes.Validator, whitelistedValMap types.WhitelistedValMap) {
-	activeVals := k.GetActiveLiquidValidators(ctx, valMap, whitelistedValMap)
-	_, totalLiquidTokens := activeVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
+func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap types.WhitelistedValMap) {
+	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValMap)
+	totalLiquidTokens := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
 	if totalLiquidTokens.IsPositive() {
 		// Withdraw rewards of LiquidStakingProxyAcc and re-staking
 		totalRewards, _, _ := k.CheckTotalRewards(ctx, types.LiquidStakingProxyAcc)
@@ -117,71 +112,79 @@ func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, valMap map[string]s
 	}
 }
 
-func (k Keeper) EndBlocker(ctx sdk.Context) {
+func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) {
 	params := k.GetParams(ctx)
 	liquidValidators := k.GetAllLiquidValidators(ctx)
 	liquidValsMap := liquidValidators.Map()
-	valMap := k.GetValidatorsMap(ctx)
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
 		if _, ok := liquidValsMap[wv.ValidatorAddress]; !ok {
-			lv := &types.LiquidValidator{
+			lv := types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 			}
-			if lv.ActiveCondition(valMap[lv.OperatorAddress], true) {
-				k.SetLiquidValidator(ctx, *lv)
-				liquidValidators = append(liquidValidators, *lv)
+			if k.ActiveCondition(ctx, lv, true) {
+				k.SetLiquidValidator(ctx, lv)
+				liquidValidators = append(liquidValidators, lv)
 			}
 		}
 	}
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
-	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, types.RebalancingTrigger, valMap, whitelistedValMap)
+	// tombstone status also handled on Rebalancing
+	k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValMap, types.RebalancingTrigger)
+
+	// remove inactive with zero liquidToken liquidvalidator
+	for _, lv := range liquidValidators {
+		// TODO: GetLiquidTokens or GetDelShares
+		if !k.ActiveCondition(ctx, lv, whitelistedValMap.IsListed(lv.OperatorAddress)) && !lv.GetDelShares(ctx, k.stakingKeeper).IsPositive() {
+			k.RemoveLiquidValidator(ctx, lv)
+		}
+	}
 
 	// withdraw rewards and re-staking when over threshold
-	k.WithdrawRewardsAndReStaking(ctx, valMap, whitelistedValMap)
+	k.WithdrawRewardsAndReStaking(ctx, whitelistedValMap)
 }
 
-// Deprecated: AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively, not using on this version for simplify.
-func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.LiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
-	targetMap := make(map[string]sdk.Int)
-	if addStakingAmt.IsNil() || !addStakingAmt.IsPositive() || activeVals.Len() == 0 {
-		return targetMap
-	}
-	params := k.GetParams(ctx)
-	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	_, totalLiquidTokens := activeVals.TotalDelSharesAndLiquidTokens(ctx, k.stakingKeeper)
-	totalWeight := activeVals.TotalWeight(whitelistedValMap)
-	ToBeTotalDelShares := totalLiquidTokens.TruncateInt().Add(addStakingAmt)
-	existOverWeightedVal := false
-
-	sharePerWeight := ToBeTotalDelShares.Quo(totalWeight)
-	crumb := ToBeTotalDelShares.Sub(sharePerWeight.Mul(totalWeight))
-
-	i := 0
-	for _, val := range activeVals {
-		weightedShare := val.GetWeight(whitelistedValMap).Mul(sharePerWeight)
-		if val.GetDelShares(ctx, k.stakingKeeper).TruncateInt().GT(weightedShare) {
-			existOverWeightedVal = true
-		} else {
-			activeVals[i] = val
-			i++
-			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetDelShares(ctx, k.stakingKeeper).TruncateInt())
-		}
-	}
-	// remove overWeightedVals for recursive call
-	activeVals = activeVals[:i]
-
-	if !existOverWeightedVal {
-		if v, ok := targetMap[activeVals[0].OperatorAddress]; ok {
-			targetMap[activeVals[0].OperatorAddress] = v.Add(crumb)
-		} else {
-			targetMap[activeVals[0].OperatorAddress] = crumb
-		}
-		return targetMap
-	} else {
-		return k.AddStakingTargetMap(ctx, activeVals, addStakingAmt)
-	}
-}
+//// Deprecated: AddStakingTargetMap is make add staking target map for one-way rebalancing, it can be called recursively, not using on this version for simplify.
+//func (k Keeper) AddStakingTargetMap(ctx sdk.Context, activeVals types.ActiveLiquidValidators, addStakingAmt sdk.Int) map[string]sdk.Int {
+//	targetMap := make(map[string]sdk.Int)
+//	if addStakingAmt.IsNil() || !addStakingAmt.IsPositive() || activeVals.Len() == 0 {
+//		return targetMap
+//	}
+//	params := k.GetParams(ctx)
+//	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
+//	totalLiquidTokens := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+//	totalWeight := activeVals.TotalWeight(whitelistedValMap)
+//	ToBeTotalDelShares := totalLiquidTokens.TruncateInt().Add(addStakingAmt)
+//	existOverWeightedVal := false
+//
+//	sharePerWeight := ToBeTotalDelShares.Quo(totalWeight)
+//	crumb := ToBeTotalDelShares.Sub(sharePerWeight.Mul(totalWeight))
+//
+//	i := 0
+//	for _, val := range activeVals {
+//		weightedShare := val.GetWeight(whitelistedValMap, true).Mul(sharePerWeight)
+//		if val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt().GT(weightedShare) {
+//			existOverWeightedVal = true
+//		} else {
+//			activeVals[i] = val
+//			i++
+//			targetMap[val.OperatorAddress] = weightedShare.Sub(val.GetLiquidTokens(ctx, k.stakingKeeper).TruncateInt())
+//		}
+//	}
+//	// remove overWeightedVals for recursive call
+//	activeVals = activeVals[:i]
+//
+//	if !existOverWeightedVal {
+//		if v, ok := targetMap[activeVals[0].OperatorAddress]; ok {
+//			targetMap[activeVals[0].OperatorAddress] = v.Add(crumb)
+//		} else {
+//			targetMap[activeVals[0].OperatorAddress] = crumb
+//		}
+//		return targetMap
+//	} else {
+//		return k.AddStakingTargetMap(ctx, activeVals, addStakingAmt)
+//	}
+//}

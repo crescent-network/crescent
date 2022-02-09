@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -66,12 +68,17 @@ func (s *KeeperTestSuite) SetupTest() {
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	s.keeper.SetParams(s.ctx, params)
-	s.keeper.EndBlocker(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 	// call mint.BeginBlocker for init k.SetLastBlockTime(ctx, ctx.BlockTime())
 	mint.BeginBlocker(s.ctx, s.app.MintKeeper)
 }
 
-func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+func (s *KeeperTestSuite) TearDownTest() {
+	// invariant check
+	crisis.EndBlocker(s.ctx, s.app.CrisisKeeper)
+}
+
+func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []cryptotypes.PubKey) {
 	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{})
 	num := len(powers)
 	addrs := simapp.AddTestAddrsIncremental(s.app, s.ctx, num, sdk.NewInt(1000000000))
@@ -92,7 +99,7 @@ func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []
 	}
 
 	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{})
-	return addrs, valAddrs
+	return addrs, valAddrs, pks
 }
 
 func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) {
@@ -103,6 +110,16 @@ func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt 
 	s.Require().NoError(err)
 	s.NotEqualValues(newShares, sdk.ZeroDec())
 	s.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
+}
+
+// advance block time and height for complete redelegations and unbondings
+func (s *KeeperTestSuite) completeRedelegationUnbonding() {
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))
+	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{})
+	reds := s.app.StakingKeeper.GetRedelegations(s.ctx, types.LiquidStakingProxyAcc, 100)
+	s.Require().Len(reds, 0)
+	ubds := s.app.StakingKeeper.GetUnbondingDelegations(s.ctx, types.LiquidStakingProxyAcc, 100)
+	s.Require().Len(ubds, 0)
 }
 
 func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {

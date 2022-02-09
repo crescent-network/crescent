@@ -18,13 +18,15 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	accountKeeper   types.AccountKeeper
-	bankKeeper      types.BankKeeper
-	stakingKeeper   types.StakingKeeper
-	distrKeeper     types.DistrKeeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+	distrKeeper   types.DistrKeeper
+	// Could be deprecated, govKeeper when govHook cover all cases
 	govKeeper       types.GovKeeper
 	liquidityKeeper types.LiquidityKeeper
 	farmingKeeper   types.FarmingKeeper
+	slashingKeeper  types.SlashingKeeper
 }
 
 // NewKeeper returns a liquidstaking keeper. It handles:
@@ -34,7 +36,7 @@ type Keeper struct {
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
 	distrKeeper types.DistrKeeper, govKeeper types.GovKeeper, liquidityKeeper types.LiquidityKeeper,
-	farmingKeeper types.FarmingKeeper,
+	farmingKeeper types.FarmingKeeper, slashingKeeper types.SlashingKeeper,
 ) Keeper {
 	// ensure liquidstaking module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -57,6 +59,7 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 		govKeeper:       govKeeper,
 		liquidityKeeper: liquidityKeeper,
 		farmingKeeper:   farmingKeeper,
+		slashingKeeper:  slashingKeeper,
 	}
 }
 
