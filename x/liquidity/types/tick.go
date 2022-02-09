@@ -78,6 +78,12 @@ func DownTick(price sdk.Dec, prec int) sdk.Dec {
 	return price.Sub(d)
 }
 
+// HighestTick returns the highest possible price tick.
+func HighestTick(prec int) sdk.Dec {
+	i := new(big.Int).SetBits([]big.Word{0, 0, 0, 0, 0x1000000000000000})
+	return PriceToTick(sdk.NewDecFromBigIntWithPrec(i, sdk.Precision), prec)
+}
+
 // LowestTick returns the lowest possible price tick.
 func LowestTick(prec int) sdk.Dec {
 	return sdk.NewDecWithPrec(1, int64(sdk.Precision-prec))
