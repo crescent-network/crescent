@@ -50,6 +50,13 @@ func TestParams_Validate(t *testing.T) {
 			"minimum initial deposit amount must not be negative: -1",
 		},
 		{
+			"invalid PairCreationFee",
+			func(params *types.Params) {
+				params.PairCreationFee = sdk.Coins{sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.ZeroInt()}}
+			},
+			"invalid pair creation fee: coin 0stake amount is not positive",
+		},
+		{
 			"invalid PoolCreationFee",
 			func(params *types.Params) {
 				params.PoolCreationFee = sdk.Coins{sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.ZeroInt()}}
@@ -76,6 +83,20 @@ func TestParams_Validate(t *testing.T) {
 				params.SwapFeeRate = sdk.NewDec(-1)
 			},
 			"swap fee rate must not be negative: -1.000000000000000000",
+		},
+		{
+			"negative WithdrawFeeRate",
+			func(params *types.Params) {
+				params.WithdrawFeeRate = sdk.NewDec(-1)
+			},
+			"withdraw fee rate must not be negative: -1.000000000000000000",
+		},
+		{
+			"negative MaxOrderLifespan",
+			func(params *types.Params) {
+				params.MaxOrderLifespan = -1
+			},
+			"max order lifespan must not be negative: -1ns",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

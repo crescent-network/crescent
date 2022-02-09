@@ -149,7 +149,7 @@ func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 	liquidity.BeginBlocker(ctx, k)
 
 	// Now any deposits will result in an error.
-	_, err = k.DepositBatch(ctx, types.NewMsgDepositBatch(depositor, pool.Id, depositCoins))
+	_, err = k.DepositBatch(ctx, types.NewMsgDeposit(depositor, pool.Id, depositCoins))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
 
@@ -175,7 +175,7 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 	liquidity.BeginBlocker(ctx, k)
 
 	// Now any withdrawals will result in an error.
-	_, err = k.WithdrawBatch(ctx, types.NewMsgWithdrawBatch(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
+	_, err = k.WithdrawBatch(ctx, types.NewMsgWithdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
 }
 
@@ -191,4 +191,35 @@ func (s *KeeperTestSuite) TestCreatePoolAfterDisabled() {
 	// Now a new pool can be created with same denom pair because
 	// all pools with same denom pair are disabled.
 	s.createPool(s.addr(2), pair.Id, parseCoins("1000000denom1,1000000denom2"), true)
+}
+
+func (s *KeeperTestSuite) TestDepositRefund() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	pool := s.createPool(s.addr(0), pair.Id, parseCoins("1000000denom1,1500000denom2"), true)
+
+	depositor := s.addr(1)
+	depositCoins := parseCoins("20000denom1,15000denom2")
+	s.fundAddr(depositor, depositCoins)
+	req := s.depositBatch(depositor, pool.Id, depositCoins, false)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
+	s.Require().Equal(types.RequestStatusSucceeded, req.Status)
+
+	s.Require().True(coinEq(parseCoin("10000denom1"), s.getBalance(depositor, "denom1")))
+	s.Require().True(coinEq(parseCoin("0denom2"), s.getBalance(depositor, "denom2")))
+	liquidity.BeginBlocker(s.ctx, s.keeper)
+
+	pair = s.createPair(s.addr(0), "denom2", "denom1", true)
+	pool = s.createPool(s.addr(0), pair.Id, parseCoins("1000000000denom2,1000000000000000denom1"), true)
+
+	depositor = s.addr(2)
+	depositCoins = parseCoins("1denom1,1denom2")
+	s.fundAddr(depositor, depositCoins)
+	req = s.depositBatch(depositor, pool.Id, depositCoins, false)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
+	s.Require().Equal(types.RequestStatusFailed, req.Status)
+
+	s.Require().True(coinsEq(depositCoins, s.getBalances(depositor)))
 }

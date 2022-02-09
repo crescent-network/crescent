@@ -42,48 +42,48 @@ func (m msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
-// DepositBatch defines a method to deposit coins to the pool.
-func (m msgServer) DepositBatch(goCtx context.Context, msg *types.MsgDepositBatch) (*types.MsgDepositBatchResponse, error) {
+// Deposit defines a method to deposit coins to the pool.
+func (m msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if _, err := m.Keeper.DepositBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgDepositBatchResponse{}, nil
+	return &types.MsgDepositResponse{}, nil
 }
 
-// WithdrawBatch defines a method to withdraw pool coin from the pool.
-func (m msgServer) WithdrawBatch(goCtx context.Context, msg *types.MsgWithdrawBatch) (*types.MsgWithdrawBatchResponse, error) {
+// Withdraw defines a method to withdraw pool coin from the pool.
+func (m msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdraw) (*types.MsgWithdrawResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if _, err := m.Keeper.WithdrawBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgWithdrawBatchResponse{}, nil
+	return &types.MsgWithdrawResponse{}, nil
 }
 
-// LimitOrderBatch defines a method to making a limit order.
-func (m msgServer) LimitOrderBatch(goCtx context.Context, msg *types.MsgLimitOrderBatch) (*types.MsgLimitOrderBatchResponse, error) {
+// LimitOrder defines a method to making a limit order.
+func (m msgServer) LimitOrder(goCtx context.Context, msg *types.MsgLimitOrder) (*types.MsgLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if _, err := m.Keeper.LimitOrderBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgLimitOrderBatchResponse{}, nil
+	return &types.MsgLimitOrderResponse{}, nil
 }
 
-// MarketOrderBatch defines a method to making a market order.
-func (m msgServer) MarketOrderBatch(goCtx context.Context, msg *types.MsgMarketOrderBatch) (*types.MsgMarketOrderBatchResponse, error) {
+// MarketOrder defines a method to making a market order.
+func (m msgServer) MarketOrder(goCtx context.Context, msg *types.MsgMarketOrder) (*types.MsgMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if _, err := m.Keeper.MarketOrderBatch(ctx, msg); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgMarketOrderBatchResponse{}, nil
+	return &types.MsgMarketOrderResponse{}, nil
 }
 
 // CancelOrder defines a method to cancel an order.

@@ -14,19 +14,19 @@ var (
 	whitelistedValidators = []types.WhitelistedValidator{
 		{
 			ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
-			Weight:           sdk.NewInt(10),
+			TargetWeight:     sdk.NewInt(10),
 		},
 		{
 			ValidatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-			Weight:           sdk.NewInt(1),
+			TargetWeight:     sdk.NewInt(1),
 		},
 		{
 			ValidatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
-			Weight:           sdk.NewInt(-1),
+			TargetWeight:     sdk.NewInt(-1),
 		},
 		{
 			ValidatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
-			Weight:           sdk.NewInt(0),
+			TargetWeight:     sdk.NewInt(0),
 		},
 	}
 )
@@ -36,10 +36,9 @@ func TestParams(t *testing.T) {
 
 	defaultParams := types.DefaultParams()
 
-	paramsStr := `liquid_bond_denom: bstake
+	paramsStr := `bonded_bond_denom: bstake
 whitelisted_validators: []
 unstake_fee_rate: "0.001000000000000000"
-commission_rate: "0.050000000000000000"
 min_liquid_staking_amount: "1000000"
 `
 	require.Equal(t, paramsStr, defaultParams.String())

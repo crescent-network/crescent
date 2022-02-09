@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewDepositRequest(msg *MsgDepositBatch, pool Pool, id uint64, msgHeight int64) DepositRequest {
+func NewDepositRequest(msg *MsgDeposit, pool Pool, id uint64, msgHeight int64) DepositRequest {
 	return DepositRequest{
 		Id:             id,
 		PoolId:         msg.PoolId,
@@ -63,7 +63,7 @@ func (req DepositRequest) Validate() error {
 	return nil
 }
 
-func NewWithdrawRequest(msg *MsgWithdrawBatch, id uint64, msgHeight int64) WithdrawRequest {
+func NewWithdrawRequest(msg *MsgWithdraw, id uint64, msgHeight int64) WithdrawRequest {
 	return WithdrawRequest{
 		Id:             id,
 		PoolId:         msg.PoolId,
@@ -114,7 +114,7 @@ func (req WithdrawRequest) Validate() error {
 	return nil
 }
 
-func NewSwapRequestForLimitOrder(msg *MsgLimitOrderBatch, id uint64, pair Pair, offerCoin sdk.Coin, expireAt time.Time, msgHeight int64) SwapRequest {
+func NewSwapRequestForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, expireAt time.Time, msgHeight int64) SwapRequest {
 	return SwapRequest{
 		Id:                 id,
 		PairId:             pair.Id,
@@ -133,7 +133,7 @@ func NewSwapRequestForLimitOrder(msg *MsgLimitOrderBatch, id uint64, pair Pair, 
 	}
 }
 
-func NewSwapRequestForMarketOrder(msg *MsgMarketOrderBatch, id uint64, pair Pair, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
+func NewSwapRequestForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
 	return SwapRequest{
 		Id:                 id,
 		PairId:             pair.Id,
@@ -180,7 +180,7 @@ func (req SwapRequest) Validate() error {
 		return fmt.Errorf("invalid offer coin %s: %w", req.OfferCoin, err)
 	}
 	if req.OfferCoin.IsZero() {
-		return fmt.Errorf("offer coin must not be zero")
+		return fmt.Errorf("offer coin must not be 0")
 	}
 	if err := req.RemainingOfferCoin.Validate(); err != nil {
 		return fmt.Errorf("invalid remaining offer coin %s: %w", req.RemainingOfferCoin, err)

@@ -3967,8 +3967,13 @@ paths:
               params:
                 type: object
                 properties:
-                  liquid_bond_denom:
+                  bonded_bond_denom:
                     type: string
+                    description: >-
+                      BondedBondDenom specifies the denomination of the token
+                      receiving after LiquidStaking, The value is calculated
+
+                      through NetAmount.
                   whitelisted_validators:
                     type: array
                     items:
@@ -3979,23 +3984,43 @@ paths:
                           title: >-
                             validator_address defines the bech32-encoded address
                             that whitelisted validator
-                        weight:
+                        target_weight:
                           type: string
                           title: >-
-                            weight specifies the weight for liquid staking,
-                            unstaking amount
-                      title: WhitelistedValidator defines a ... TBD
+                            target_weight specifies the target weight for liquid
+                            staking, unstaking amount, which is a value for
+                            calculating
+
+                            the real weight to be derived according to the
+                            active status
+                      description: >-
+                        WhitelistedValidator consists of the validator operator
+                        address and the target weight, which is a value for
+
+                        calculating the real weight to be derived according to
+                        the active status. In the case of inactive, it is
+                        calculated
+
+                        as zero.
+                    description: >-
+                      WhitelistedValidators specifies the validators elected to
+                      become Active Liquid Validators.
                   unstake_fee_rate:
                     type: string
-                    description: unstake_fee_rate specifies the ...
-                  commission_rate:
-                    type: string
-                    description: commission_rate specifies the ...
+                    title: >-
+                      UnstakeFeeRate specifies the fee rate when liquid unstake
+                      is requested, unbonded by subtracting it from
+
+                      unbondingAmount
                   min_liquid_staking_amount:
                     type: string
                     description: >-
-                      Minimum number of coins to be staked to the active liquid
-                      validators on liquid staking.
+                      MinLiquidStakingAmount specifies the minimum number of
+                      coins to be staked to the active liquid validators on
+                      liquid
+
+                      staking to minimize decimal loss and consider gas
+                      efficiency.
                 description: Params defines the set of params for the liquidstaking module.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
@@ -4030,7 +4055,9 @@ paths:
           https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md
   /squad/liquidstaking/v1beta1/validators:
     get:
-      summary: LiquidValidators returns liquid validators of the liquidstaking module.
+      summary: >-
+        LiquidValidators returns liquid validators with states of the
+        liquidstaking module.
       description: Returns all liquid validators of the liquid staking module.
       operationId: LiquidValidators
       responses:
@@ -4049,32 +4076,38 @@ paths:
                       description: >-
                         operator_address defines the address of the validator's
                         operator; bech encoded in JSON.
+                    weight:
+                      type: string
+                      title: >-
+                        weight specifies the weight for liquid staking,
+                        unstaking amount
                     status:
                       title: status is the liquid validator status
                       type: string
                       enum:
                         - VALIDATOR_STATUS_UNSPECIFIED
                         - VALIDATOR_STATUS_ACTIVE
-                        - VALIDATOR_STATUS_DELISTING
-                        - VALIDATOR_STATUS_DELISTED
+                        - VALIDATOR_STATUS_INACTIVE
                       default: VALIDATOR_STATUS_UNSPECIFIED
                       description: >-
                         ValidatorStatus enumerates the status of a liquid
                         validator.
 
-                         - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-                         - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-                         - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-                         - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
+                         - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the unspecified invalid status.
+                         - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the active, valid status
+                         - VALIDATOR_STATUS_INACTIVE: VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
+                    del_shares:
+                      type: string
+                      title: del_shares define the delegation shares of the validator
                     liquid_tokens:
                       type: string
-                      title: liquid tokens define the liquid staked tokens
-                    weight:
-                      type: string
                       title: >-
-                        weight specifies the weight for liquid staking,
-                        unstaking amount
-                  title: LiquidValidator defines a ... TBD
+                        liquid_tokens define the token amount worth of
+                        delegation shares of the validator (slashing applied
+                        amount)
+                  description: >-
+                    LiquidValidatorState is type LiquidValidator with state
+                    added to return to query results.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -6459,7 +6492,7 @@ definitions:
            - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
            - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
     description: WithdrawRequest defines a withdraw request.
-  squad.liquidstaking.v1beta1.LiquidValidator:
+  squad.liquidstaking.v1beta1.LiquidValidatorState:
     type: object
     properties:
       operator_address:
@@ -6467,34 +6500,44 @@ definitions:
         description: >-
           operator_address defines the address of the validator's operator; bech
           encoded in JSON.
+      weight:
+        type: string
+        title: 'weight specifies the weight for liquid staking, unstaking amount'
       status:
         title: status is the liquid validator status
         type: string
         enum:
           - VALIDATOR_STATUS_UNSPECIFIED
           - VALIDATOR_STATUS_ACTIVE
-          - VALIDATOR_STATUS_DELISTING
-          - VALIDATOR_STATUS_DELISTED
+          - VALIDATOR_STATUS_INACTIVE
         default: VALIDATOR_STATUS_UNSPECIFIED
         description: |-
           ValidatorStatus enumerates the status of a liquid validator.
 
-           - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-           - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-           - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-           - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
+           - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the unspecified invalid status.
+           - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the active, valid status
+           - VALIDATOR_STATUS_INACTIVE: VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
+      del_shares:
+        type: string
+        title: del_shares define the delegation shares of the validator
       liquid_tokens:
         type: string
-        title: liquid tokens define the liquid staked tokens
-      weight:
-        type: string
-        title: 'weight specifies the weight for liquid staking, unstaking amount'
-    title: LiquidValidator defines a ... TBD
+        title: >-
+          liquid_tokens define the token amount worth of delegation shares of
+          the validator (slashing applied amount)
+    description: >-
+      LiquidValidatorState is type LiquidValidator with state added to return to
+      query results.
   squad.liquidstaking.v1beta1.Params:
     type: object
     properties:
-      liquid_bond_denom:
+      bonded_bond_denom:
         type: string
+        description: >-
+          BondedBondDenom specifies the denomination of the token receiving
+          after LiquidStaking, The value is calculated
+
+          through NetAmount.
       whitelisted_validators:
         type: array
         items:
@@ -6505,21 +6548,38 @@ definitions:
               title: >-
                 validator_address defines the bech32-encoded address that
                 whitelisted validator
-            weight:
+            target_weight:
               type: string
-              title: 'weight specifies the weight for liquid staking, unstaking amount'
-          title: WhitelistedValidator defines a ... TBD
+              title: >-
+                target_weight specifies the target weight for liquid staking,
+                unstaking amount, which is a value for calculating
+
+                the real weight to be derived according to the active status
+          description: >-
+            WhitelistedValidator consists of the validator operator address and
+            the target weight, which is a value for
+
+            calculating the real weight to be derived according to the active
+            status. In the case of inactive, it is calculated
+
+            as zero.
+        description: >-
+          WhitelistedValidators specifies the validators elected to become
+          Active Liquid Validators.
       unstake_fee_rate:
         type: string
-        description: unstake_fee_rate specifies the ...
-      commission_rate:
-        type: string
-        description: commission_rate specifies the ...
+        title: >-
+          UnstakeFeeRate specifies the fee rate when liquid unstake is
+          requested, unbonded by subtracting it from
+
+          unbondingAmount
       min_liquid_staking_amount:
         type: string
         description: >-
-          Minimum number of coins to be staked to the active liquid validators
-          on liquid staking.
+          MinLiquidStakingAmount specifies the minimum number of coins to be
+          staked to the active liquid validators on liquid
+
+          staking to minimize decimal loss and consider gas efficiency.
     description: Params defines the set of params for the liquidstaking module.
   squad.liquidstaking.v1beta1.QueryLiquidValidatorsResponse:
     type: object
@@ -6534,29 +6594,34 @@ definitions:
               description: >-
                 operator_address defines the address of the validator's
                 operator; bech encoded in JSON.
+            weight:
+              type: string
+              title: 'weight specifies the weight for liquid staking, unstaking amount'
             status:
               title: status is the liquid validator status
               type: string
               enum:
                 - VALIDATOR_STATUS_UNSPECIFIED
                 - VALIDATOR_STATUS_ACTIVE
-                - VALIDATOR_STATUS_DELISTING
-                - VALIDATOR_STATUS_DELISTED
+                - VALIDATOR_STATUS_INACTIVE
               default: VALIDATOR_STATUS_UNSPECIFIED
               description: |-
                 ValidatorStatus enumerates the status of a liquid validator.
 
-                 - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-                 - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-                 - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-                 - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
+                 - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the unspecified invalid status.
+                 - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the active, valid status
+                 - VALIDATOR_STATUS_INACTIVE: VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
+            del_shares:
+              type: string
+              title: del_shares define the delegation shares of the validator
             liquid_tokens:
               type: string
-              title: liquid tokens define the liquid staked tokens
-            weight:
-              type: string
-              title: 'weight specifies the weight for liquid staking, unstaking amount'
-          title: LiquidValidator defines a ... TBD
+              title: >-
+                liquid_tokens define the token amount worth of delegation shares
+                of the validator (slashing applied amount)
+          description: >-
+            LiquidValidatorState is type LiquidValidator with state added to
+            return to query results.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -6584,8 +6649,13 @@ definitions:
       params:
         type: object
         properties:
-          liquid_bond_denom:
+          bonded_bond_denom:
             type: string
+            description: >-
+              BondedBondDenom specifies the denomination of the token receiving
+              after LiquidStaking, The value is calculated
+
+              through NetAmount.
           whitelisted_validators:
             type: array
             items:
@@ -6596,23 +6666,38 @@ definitions:
                   title: >-
                     validator_address defines the bech32-encoded address that
                     whitelisted validator
-                weight:
+                target_weight:
                   type: string
                   title: >-
-                    weight specifies the weight for liquid staking, unstaking
-                    amount
-              title: WhitelistedValidator defines a ... TBD
+                    target_weight specifies the target weight for liquid
+                    staking, unstaking amount, which is a value for calculating
+
+                    the real weight to be derived according to the active status
+              description: >-
+                WhitelistedValidator consists of the validator operator address
+                and the target weight, which is a value for
+
+                calculating the real weight to be derived according to the
+                active status. In the case of inactive, it is calculated
+
+                as zero.
+            description: >-
+              WhitelistedValidators specifies the validators elected to become
+              Active Liquid Validators.
           unstake_fee_rate:
             type: string
-            description: unstake_fee_rate specifies the ...
-          commission_rate:
-            type: string
-            description: commission_rate specifies the ...
+            title: >-
+              UnstakeFeeRate specifies the fee rate when liquid unstake is
+              requested, unbonded by subtracting it from
+
+              unbondingAmount
           min_liquid_staking_amount:
             type: string
             description: >-
-              Minimum number of coins to be staked to the active liquid
-              validators on liquid staking.
+              MinLiquidStakingAmount specifies the minimum number of coins to be
+              staked to the active liquid validators on liquid
+
+              staking to minimize decimal loss and consider gas efficiency.
         description: Params defines the set of params for the liquidstaking module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   squad.liquidstaking.v1beta1.ValidatorStatus:
@@ -6620,16 +6705,14 @@ definitions:
     enum:
       - VALIDATOR_STATUS_UNSPECIFIED
       - VALIDATOR_STATUS_ACTIVE
-      - VALIDATOR_STATUS_DELISTING
-      - VALIDATOR_STATUS_DELISTED
+      - VALIDATOR_STATUS_INACTIVE
     default: VALIDATOR_STATUS_UNSPECIFIED
     description: |-
       ValidatorStatus enumerates the status of a liquid validator.
 
-       - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the default status.
-       - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the ...
-       - VALIDATOR_STATUS_DELISTING: VALIDATOR_STATUS_DELISTING defines the ...
-       - VALIDATOR_STATUS_DELISTED: VALIDATOR_STATUS_DELISTED defines the ...
+       - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the unspecified invalid status.
+       - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the active, valid status
+       - VALIDATOR_STATUS_INACTIVE: VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
   squad.liquidstaking.v1beta1.WhitelistedValidator:
     type: object
     properties:
@@ -6638,7 +6721,18 @@ definitions:
         title: >-
           validator_address defines the bech32-encoded address that whitelisted
           validator
-      weight:
+      target_weight:
         type: string
-        title: 'weight specifies the weight for liquid staking, unstaking amount'
-    title: WhitelistedValidator defines a ... TBD
+        title: >-
+          target_weight specifies the target weight for liquid staking,
+          unstaking amount, which is a value for calculating
+
+          the real weight to be derived according to the active status
+    description: >-
+      WhitelistedValidator consists of the validator operator address and the
+      target weight, which is a value for
+
+      calculating the real weight to be derived according to the active status.
+      In the case of inactive, it is calculated
+
+      as zero.

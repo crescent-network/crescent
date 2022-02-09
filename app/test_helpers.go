@@ -11,14 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	simappparams "github.com/cosmosquad-labs/squad/app/params"
-
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -32,13 +24,21 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/std"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	simappparams "github.com/cosmosquad-labs/squad/app/params"
 	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
@@ -258,7 +258,7 @@ func AddTestAddrsFromPubKeys(app *SquadApp, ctx sdk.Context, pubKeys []cryptotyp
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
 
 	for _, pk := range pubKeys {
-		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
+		InitAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
 	}
 }
 
@@ -280,13 +280,13 @@ func addTestAddrs(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int, st
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
 
 	for _, addr := range testAddrs {
-		initAccountWithCoins(app, ctx, addr, initCoins)
+		InitAccountWithCoins(app, ctx, addr, initCoins)
 	}
 
 	return testAddrs
 }
 
-func initAccountWithCoins(app *SquadApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func InitAccountWithCoins(app *SquadApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		panic(err)

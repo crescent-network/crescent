@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -346,13 +347,13 @@ func NewSquadApp(
 
 	inflationSchedules := minttypes.InflationSchedules{
 		{
-			StartTime: liquidstakingtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
-			EndTime:   liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			StartTime: squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+			EndTime:   squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
 			Amount:    sdk.NewInt(300000000000000),
 		},
 		{
-			StartTime: liquidstakingtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
-			EndTime:   liquidstakingtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
+			StartTime: squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			EndTime:   squadtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
 			Amount:    sdk.NewInt(200000000000000),
 		},
 	}
@@ -441,6 +442,9 @@ func NewSquadApp(
 		app.StakingKeeper,
 		app.DistrKeeper,
 		app.GovKeeper,
+		app.LiquidityKeeper,
+		app.FarmingKeeper,
+		app.SlashingKeeper,
 	)
 
 	// register the proposal types

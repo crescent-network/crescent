@@ -5,7 +5,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
@@ -51,6 +52,36 @@ func (suite *ModuleTestSuite) SetupTest() {
 	}
 }
 
+func (s *ModuleTestSuite) TestInitGenesis() {
+	genState := types.DefaultGenesisState()
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
+	got := mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().Equal(*genState, *got)
+}
+
+func (s *ModuleTestSuite) TestImportExportGenesis() {
+	k, ctx := s.keeper, s.ctx
+	genState := mint.ExportGenesis(ctx, k)
+	bz := s.app.AppCodec().MustMarshalJSON(genState)
+
+	var genState2, genState5 types.GenesisState
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
+	mint.InitGenesis(ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState2)
+
+	genState3 := mint.ExportGenesis(ctx, k)
+	s.Require().Equal(*genState, genState2, *genState3)
+
+	ctx = ctx.WithBlockTime(squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	mint.BeginBlocker(ctx, k)
+	genState4 := mint.ExportGenesis(ctx, k)
+	bz = s.app.AppCodec().MustMarshalJSON(genState4)
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState5)
+	s.Require().Equal(*genState5.LastBlockTime, squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState5)
+	genState6 := mint.ExportGenesis(ctx, k)
+	s.Require().Equal(*genState4, genState5, genState6)
+}
+
 func TestConstantInflation(t *testing.T) {
 	app := app.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -76,7 +107,7 @@ func TestConstantInflation(t *testing.T) {
 	}
 
 	//ctx = ctx.WithBlockHeight(0).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2021-12-31T23:59:50Z"))
-	ctx = ctx.WithBlockHeight(0).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	ctx = ctx.WithBlockHeight(0).WithBlockTime(squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
 
 	// skip first block inflation, not set LastBlockTime
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(0))
@@ -89,7 +120,7 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 
-	ctx = ctx.WithBlockHeight(100).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2022-12-31T23:59:50Z"))
+	ctx = ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-12-31T23:59:50Z"))
 
 	// applied 10sec(params.BlockTimeThreshold) block time due to block time diff is over params.BlockTimeThreshold
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(95129375))
@@ -114,7 +145,7 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
 
 	// no inflation
-	ctx = ctx.WithBlockHeight(300).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2030-01-01T01:00:00Z"))
+	ctx = ctx.WithBlockHeight(300).WithBlockTime(squadtypes.MustParseRFC3339("2030-01-01T01:00:00Z"))
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())

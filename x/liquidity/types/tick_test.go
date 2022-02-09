@@ -111,3 +111,50 @@ func TestLowestTick(t *testing.T) {
 		})
 	}
 }
+
+func TestRoundTickIndex(t *testing.T) {
+	for _, tc := range []struct {
+		i        int
+		expected int
+	}{
+		{0, 0},
+		{1, 2},
+		{2, 2},
+		{3, 4},
+		{4, 4},
+		{5, 6},
+		{6, 6},
+		{7, 8},
+		{8, 8},
+		{9, 10},
+		{10, 10},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, tc.expected, types.RoundTickIndex(tc.i))
+		})
+	}
+}
+
+func TestRoundPrice(t *testing.T) {
+	for _, tc := range []struct {
+		price    sdk.Dec
+		prec     int
+		expected sdk.Dec
+	}{
+		{parseDec("0.000000000000001000"), tickPrec, parseDec("0.000000000000001000")},
+		{parseDec("0.000000000000010000"), tickPrec, parseDec("0.000000000000010000")},
+		{parseDec("0.000000000000010005"), tickPrec, parseDec("0.000000000000010000")},
+		{parseDec("0.000000000000010015"), tickPrec, parseDec("0.000000000000010020")},
+		{parseDec("0.000000000000010025"), tickPrec, parseDec("0.000000000000010020")},
+		{parseDec("0.000000000000010035"), tickPrec, parseDec("0.000000000000010040")},
+		{parseDec("0.000000000000010045"), tickPrec, parseDec("0.000000000000010040")},
+		{parseDec("1.0005"), tickPrec, parseDec("1.0")},
+		{parseDec("1.0015"), tickPrec, parseDec("1.002")},
+		{parseDec("1.0025"), tickPrec, parseDec("1.002")},
+		{parseDec("1.0035"), tickPrec, parseDec("1.004")},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.True(sdk.DecEq(t, tc.expected, types.RoundPrice(tc.price, tc.prec)))
+		})
+	}
+}

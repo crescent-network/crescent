@@ -94,14 +94,14 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	distrKeeper   types.Distrkeeper
+	distrKeeper   types.DistrKeeper
 	govKeeper     types.GovKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
-	stakingKeeper types.StakingKeeper, distrKeeper types.Distrkeeper, govKeeper types.GovKeeper,
+	stakingKeeper types.StakingKeeper, distrKeeper types.DistrKeeper, govKeeper types.GovKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -120,7 +120,9 @@ func (AppModule) Name() string {
 }
 
 // RegisterInvariants registers the liquidstaking module invariants.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, am.keeper)
+}
 
 // Route returns the message routing key for the liquidstaking module.
 func (am AppModule) Route() sdk.Route {
@@ -172,7 +174,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
-
 }
 
 // AppModuleSimulation functions

@@ -31,12 +31,7 @@ func (k Querier) LiquidValidators(c context.Context, req *types.QueryLiquidValid
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-
 	ctx := sdk.UnwrapSDKContext(c)
-	var params types.Params
-	k.paramSpace.GetParamSet(ctx, &params)
-	validators := k.GetAllLiquidValidators(ctx)
 
-	// TODO: type casting check
-	return &types.QueryLiquidValidatorsResponse{LiquidValidators: validators}, nil
+	return &types.QueryLiquidValidatorsResponse{LiquidValidators: k.GetAllLiquidValidatorStates(ctx)}, nil
 }

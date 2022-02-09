@@ -18,11 +18,14 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	stakingKeeper types.StakingKeeper
-	distrKeeper   types.Distrkeeper
-	govKeeper     types.GovKeeper
+	accountKeeper   types.AccountKeeper
+	bankKeeper      types.BankKeeper
+	stakingKeeper   types.StakingKeeper
+	distrKeeper     types.DistrKeeper
+	govKeeper       types.GovKeeper
+	liquidityKeeper types.LiquidityKeeper
+	farmingKeeper   types.FarmingKeeper
+	slashingKeeper  types.SlashingKeeper
 }
 
 // NewKeeper returns a liquidstaking keeper. It handles:
@@ -30,7 +33,9 @@ type Keeper struct {
 // - sending to and from ModuleAccounts
 // - minting, burning PoolCoins
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, distrKeeper types.Distrkeeper, govKeeper types.GovKeeper,
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
+	distrKeeper types.DistrKeeper, govKeeper types.GovKeeper, liquidityKeeper types.LiquidityKeeper,
+	farmingKeeper types.FarmingKeeper, slashingKeeper types.SlashingKeeper,
 ) Keeper {
 	// ensure liquidstaking module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -43,14 +48,17 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 	}
 
 	return Keeper{
-		storeKey:      key,
-		cdc:           cdc,
-		paramSpace:    paramSpace,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		stakingKeeper: stakingKeeper,
-		distrKeeper:   distrKeeper,
-		govKeeper:     govKeeper,
+		storeKey:        key,
+		cdc:             cdc,
+		paramSpace:      paramSpace,
+		accountKeeper:   accountKeeper,
+		bankKeeper:      bankKeeper,
+		stakingKeeper:   stakingKeeper,
+		distrKeeper:     distrKeeper,
+		govKeeper:       govKeeper,
+		liquidityKeeper: liquidityKeeper,
+		farmingKeeper:   farmingKeeper,
+		slashingKeeper:  slashingKeeper,
 	}
 }
 

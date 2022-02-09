@@ -10,24 +10,24 @@ import (
 var (
 	_ sdk.Msg = (*MsgCreatePair)(nil)
 	_ sdk.Msg = (*MsgCreatePool)(nil)
-	_ sdk.Msg = (*MsgDepositBatch)(nil)
-	_ sdk.Msg = (*MsgWithdrawBatch)(nil)
-	_ sdk.Msg = (*MsgLimitOrderBatch)(nil)
-	_ sdk.Msg = (*MsgMarketOrderBatch)(nil)
+	_ sdk.Msg = (*MsgDeposit)(nil)
+	_ sdk.Msg = (*MsgWithdraw)(nil)
+	_ sdk.Msg = (*MsgLimitOrder)(nil)
+	_ sdk.Msg = (*MsgMarketOrder)(nil)
 	_ sdk.Msg = (*MsgCancelOrder)(nil)
 	_ sdk.Msg = (*MsgCancelAllOrders)(nil)
 )
 
 // Message types for the liquidity module
 const (
-	TypeMsgCreatePair       = "create_pair"
-	TypeMsgCreatePool       = "create_pool"
-	TypeMsgDepositBatch     = "deposit_batch"
-	TypeMsgWithdrawBatch    = "withdraw_batch"
-	TypeMsgLimitOrderBatch  = "limit_order_batch"
-	TypeMsgMarketOrderBatch = "market_order_batch"
-	TypeMsgCancelOrder      = "cancel_order"
-	TypeMsgCancelAllOrders  = "cancel_all_orders"
+	TypeMsgCreatePair      = "create_pair"
+	TypeMsgCreatePool      = "create_pool"
+	TypeMsgDeposit         = "deposit"
+	TypeMsgWithdraw        = "withdraw"
+	TypeMsgLimitOrder      = "limit_order"
+	TypeMsgMarketOrder     = "market_order"
+	TypeMsgCancelOrder     = "cancel_order"
+	TypeMsgCancelAllOrders = "cancel_all_orders"
 )
 
 // NewMsgCreatePair returns a new MsgCreatePair.
@@ -129,24 +129,24 @@ func (msg MsgCreatePool) GetCreator() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgDepositBatch creates a new MsgDepositBatch.
-func NewMsgDepositBatch(
+// NewMsgDeposit creates a new MsgDeposit.
+func NewMsgDeposit(
 	depositor sdk.AccAddress,
 	poolId uint64,
 	depositCoins sdk.Coins,
-) *MsgDepositBatch {
-	return &MsgDepositBatch{
+) *MsgDeposit {
+	return &MsgDeposit{
 		Depositor:    depositor.String(),
 		PoolId:       poolId,
 		DepositCoins: depositCoins,
 	}
 }
 
-func (msg MsgDepositBatch) Route() string { return RouterKey }
+func (msg MsgDeposit) Route() string { return RouterKey }
 
-func (msg MsgDepositBatch) Type() string { return TypeMsgDepositBatch }
+func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
 
-func (msg MsgDepositBatch) ValidateBasic() error {
+func (msg MsgDeposit) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid depositor address: %v", err)
 	}
@@ -162,11 +162,11 @@ func (msg MsgDepositBatch) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgDepositBatch) GetSignBytes() []byte {
+func (msg MsgDeposit) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgDepositBatch) GetSigners() []sdk.AccAddress {
+func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Depositor)
 	if err != nil {
 		panic(err)
@@ -174,7 +174,7 @@ func (msg MsgDepositBatch) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgDepositBatch) GetDepositor() sdk.AccAddress {
+func (msg MsgDeposit) GetDepositor() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Depositor)
 	if err != nil {
 		panic(err)
@@ -182,24 +182,24 @@ func (msg MsgDepositBatch) GetDepositor() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgWithdrawBatch creates a new MsgWithdrawBatch.
-func NewMsgWithdrawBatch(
+// NewMsgWithdraw creates a new MsgWithdraw.
+func NewMsgWithdraw(
 	withdrawer sdk.AccAddress,
 	poolId uint64,
 	poolCoin sdk.Coin,
-) *MsgWithdrawBatch {
-	return &MsgWithdrawBatch{
+) *MsgWithdraw {
+	return &MsgWithdraw{
 		Withdrawer: withdrawer.String(),
 		PoolId:     poolId,
 		PoolCoin:   poolCoin,
 	}
 }
 
-func (msg MsgWithdrawBatch) Route() string { return RouterKey }
+func (msg MsgWithdraw) Route() string { return RouterKey }
 
-func (msg MsgWithdrawBatch) Type() string { return TypeMsgWithdrawBatch }
+func (msg MsgWithdraw) Type() string { return TypeMsgWithdraw }
 
-func (msg MsgWithdrawBatch) ValidateBasic() error {
+func (msg MsgWithdraw) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Withdrawer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid withdrawer address: %v", err)
 	}
@@ -215,11 +215,11 @@ func (msg MsgWithdrawBatch) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgWithdrawBatch) GetSignBytes() []byte {
+func (msg MsgWithdraw) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgWithdrawBatch) GetSigners() []sdk.AccAddress {
+func (msg MsgWithdraw) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Withdrawer)
 	if err != nil {
 		panic(err)
@@ -227,7 +227,7 @@ func (msg MsgWithdrawBatch) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgWithdrawBatch) GetWithdrawer() sdk.AccAddress {
+func (msg MsgWithdraw) GetWithdrawer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Withdrawer)
 	if err != nil {
 		panic(err)
@@ -235,8 +235,8 @@ func (msg MsgWithdrawBatch) GetWithdrawer() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgLimitOrderBatch creates a new MsgLimitOrderBatch.
-func NewMsgLimitOrderBatch(
+// NewMsgLimitOrder creates a new MsgLimitOrder.
+func NewMsgLimitOrder(
 	orderer sdk.AccAddress,
 	pairId uint64,
 	dir SwapDirection,
@@ -245,8 +245,8 @@ func NewMsgLimitOrderBatch(
 	price sdk.Dec,
 	amt sdk.Int,
 	orderLifespan time.Duration,
-) *MsgLimitOrderBatch {
-	return &MsgLimitOrderBatch{
+) *MsgLimitOrder {
+	return &MsgLimitOrder{
 		Orderer:         orderer.String(),
 		PairId:          pairId,
 		Direction:       dir,
@@ -258,11 +258,11 @@ func NewMsgLimitOrderBatch(
 	}
 }
 
-func (msg MsgLimitOrderBatch) Route() string { return RouterKey }
+func (msg MsgLimitOrder) Route() string { return RouterKey }
 
-func (msg MsgLimitOrderBatch) Type() string { return TypeMsgLimitOrderBatch }
+func (msg MsgLimitOrder) Type() string { return TypeMsgLimitOrder }
 
-func (msg MsgLimitOrderBatch) ValidateBasic() error {
+func (msg MsgLimitOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
 	}
@@ -270,7 +270,7 @@ func (msg MsgLimitOrderBatch) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
 	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unknown swap direction: %s", msg.Direction)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid swap direction: %s", msg.Direction)
 	}
 	if !msg.Amount.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
@@ -296,14 +296,17 @@ func (msg MsgLimitOrderBatch) ValidateBasic() error {
 	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")
 	}
+	if msg.OrderLifespan < 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order lifespan must not be negative: %s", msg.OrderLifespan)
+	}
 	return nil
 }
 
-func (msg MsgLimitOrderBatch) GetSignBytes() []byte {
+func (msg MsgLimitOrder) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgLimitOrderBatch) GetSigners() []sdk.AccAddress {
+func (msg MsgLimitOrder) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)
@@ -311,7 +314,7 @@ func (msg MsgLimitOrderBatch) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgLimitOrderBatch) GetOrderer() sdk.AccAddress {
+func (msg MsgLimitOrder) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)
@@ -319,8 +322,8 @@ func (msg MsgLimitOrderBatch) GetOrderer() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgMarketOrderBatch creates a new MsgMarketOrderBatch.
-func NewMsgMarketOrderBatch(
+// NewMsgMarketOrder creates a new MsgMarketOrder.
+func NewMsgMarketOrder(
 	orderer sdk.AccAddress,
 	pairId uint64,
 	dir SwapDirection,
@@ -328,8 +331,8 @@ func NewMsgMarketOrderBatch(
 	demandCoinDenom string,
 	amt sdk.Int,
 	orderLifespan time.Duration,
-) *MsgMarketOrderBatch {
-	return &MsgMarketOrderBatch{
+) *MsgMarketOrder {
+	return &MsgMarketOrder{
 		Orderer:         orderer.String(),
 		PairId:          pairId,
 		Direction:       dir,
@@ -340,11 +343,11 @@ func NewMsgMarketOrderBatch(
 	}
 }
 
-func (msg MsgMarketOrderBatch) Route() string { return RouterKey }
+func (msg MsgMarketOrder) Route() string { return RouterKey }
 
-func (msg MsgMarketOrderBatch) Type() string { return TypeMsgMarketOrderBatch }
+func (msg MsgMarketOrder) Type() string { return TypeMsgMarketOrder }
 
-func (msg MsgMarketOrderBatch) ValidateBasic() error {
+func (msg MsgMarketOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
 	}
@@ -352,7 +355,7 @@ func (msg MsgMarketOrderBatch) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
 	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unknown swap direction: %s", msg.Direction)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid swap direction: %s", msg.Direction)
 	}
 	if !msg.Amount.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
@@ -375,14 +378,17 @@ func (msg MsgMarketOrderBatch) ValidateBasic() error {
 	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")
 	}
+	if msg.OrderLifespan < 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order lifespan must not be negative: %s", msg.OrderLifespan)
+	}
 	return nil
 }
 
-func (msg MsgMarketOrderBatch) GetSignBytes() []byte {
+func (msg MsgMarketOrder) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgMarketOrderBatch) GetSigners() []sdk.AccAddress {
+func (msg MsgMarketOrder) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)
@@ -390,7 +396,7 @@ func (msg MsgMarketOrderBatch) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgMarketOrderBatch) GetOrderer() sdk.AccAddress {
+func (msg MsgMarketOrder) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)

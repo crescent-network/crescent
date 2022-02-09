@@ -95,13 +95,13 @@ func (s *KeeperTestSuite) depositBatch(depositor sdk.AccAddress, poolId uint64, 
 	if fund {
 		s.fundAddr(depositor, depositCoins)
 	}
-	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDepositBatch(depositor, poolId, depositCoins))
+	req, err := s.keeper.DepositBatch(s.ctx, types.NewMsgDeposit(depositor, poolId, depositCoins))
 	s.Require().NoError(err)
 	return req
 }
 
 func (s *KeeperTestSuite) withdrawBatch(withdrawer sdk.AccAddress, poolId uint64, poolCoin sdk.Coin) types.WithdrawRequest {
-	req, err := s.keeper.WithdrawBatch(s.ctx, types.NewMsgWithdrawBatch(withdrawer, poolId, poolCoin))
+	req, err := s.keeper.WithdrawBatch(s.ctx, types.NewMsgWithdraw(withdrawer, poolId, poolCoin))
 	s.Require().NoError(err)
 	return req
 }
@@ -124,7 +124,7 @@ func (s *KeeperTestSuite) limitOrderBatch(
 	if fund {
 		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
-	msg := types.NewMsgLimitOrderBatch(
+	msg := types.NewMsgLimitOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		price, amt, orderLifespan)
 	req, err := s.keeper.LimitOrderBatch(s.ctx, msg)
@@ -158,12 +158,24 @@ func (s *KeeperTestSuite) cancelAllOrders(orderer sdk.AccAddress, pairIds []uint
 	s.Require().NoError(err)
 }
 
+func parseCoin(s string) sdk.Coin {
+	coin, err := sdk.ParseCoinNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coin
+}
+
 func parseCoins(s string) sdk.Coins {
 	coins, err := sdk.ParseCoinsNormalized(s)
 	if err != nil {
 		panic(err)
 	}
 	return coins
+}
+
+func coinEq(exp, got sdk.Coin) (bool, string, string, string) {
+	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
