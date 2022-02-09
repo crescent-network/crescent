@@ -130,7 +130,7 @@ func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMa
 		// TODO: consider when equal
 	}
 	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
-	// when last redelegation for target weight zero, max has priority
+	// when last redelegation for target weight zero, maxGap has priority, if not small left delShares for zero targetWeight
 	lastRedelegation := amountNeeded.IsPositive() && maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive()
 	if lastRedelegation {
 		// TODO: verify edge case

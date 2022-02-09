@@ -69,7 +69,6 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 
 	lenLiquidVals := liquidVals.Len()
 	for i := 0; i < lenLiquidVals; i++ {
-		// TODO: check small left delShares for zero targetWeight
 		minVal, maxVal, amountNeeded := liquidVals.MinMaxGap(ctx, k.stakingKeeper, targetMap, threshold)
 		// TODO: consider threshold policy apply every redelegatoin or maxGap
 		if amountNeeded.IsZero() || amountNeeded.LT(threshold) {

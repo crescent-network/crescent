@@ -144,7 +144,6 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 
 	// test withdraw liquid reward and re-staking
 	s.advanceHeight(100, true)
-	// TODO: add cases for different weight
 }
 
 // test Liquid Staking gov power
