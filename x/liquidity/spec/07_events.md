@@ -38,7 +38,7 @@ The `liquidity` module emits the following events:
 
 | Type      | Attribute Key | Attribute Value |
 |-----------|---------------|-----------------|
-| deposit   | depositor     | {creator}       |
+| deposit   | depositor     | {depositor}     |
 | deposit   | pool_id       | {poolId}        |
 | deposit   | deposit_coins | {depositCoins}  |
 | deposit   | request_id    | {reqId}         |
@@ -105,3 +105,40 @@ The `liquidity` module emits the following events:
 | message      | module           | liquidity       |
 | message      | action           | cancel_order    |
 | message      | sender           | {senderAddress} |
+
+## EndBlocker
+
+### Batch Result for MsgDeposit
+
+| Type           | Attribute Key    | Attribute Value  |
+|----------------|------------------|------------------|
+| deposit_result | request_id       | {reqId}          |
+| deposit_result | depositor        | {depositor}      |
+| deposit_result | pool_id          | {poolId}         |
+| deposit_result | deposit_coins    | {depositCoins}   |
+| deposit_result | accepted_coins   | {acceptedCoins}  |
+| deposit_result | minted_pool_coin | {mintedPoolCoin} |
+| deposit_result | status           | {status}         |
+
+### Batch Result for MsgWithdraw
+
+| Type              | Attribute Key    | Attribute Value  |
+|-------------------|------------------|------------------|
+| withdrawal_result | request_id       | {reqId}          |
+| withdrawal_result | withdrawer       | {withdrawer}     |
+| withdrawal_result | pool_id          | {poolId}         |
+| withdrawal_result | pool_coin        | {poolCoin}       |
+| withdrawal_result | withdrawn_coins  | {withdrawnCoins} |
+| withdrawal_result | status           | {status}         |
+
+### Batch Result for MsgLimitOrder, MsgMarketOrder
+
+| Type         | Attribute Key        | Attribute Value      |
+|--------------|----------------------|----------------------|
+| order_result | request_id           | {reqId}              |
+| order_result | orderer              | {orderer}            |
+| order_result | pair_id              | {pairId}             |
+| order_result | swap_direction       | {direction}          |
+| order_result | remaining_offer_coin | {remainingOfferCoin} |
+| order_result | received_coin        | {receivedCoin}       |
+| order_result | status               | {status}             |

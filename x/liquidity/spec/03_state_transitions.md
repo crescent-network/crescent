@@ -9,6 +9,21 @@ These messages in the liquidity module trigger state transitions.
 ### MsgCreatePair
 Add a coin pair to the liquidity module so that users can create a pool for that coin pair or request a swap order.
 
+## Pool creation
+
+### MsgCreatePool
+Create pool of existing pair to the liquidity module so that users can deposit reserve coins or withdraw pool coin.
+
+## Cancel Swap Order
+
+### MsgCancelOrder
+
+Cancel a swap request already stored in the store. It is impossible to cancel a swap order message submitted in the same batch because it can be canceled only by specifying swap request id. 
+
+### MsgCancelAllOrder
+
+Cancel all user's orders for specific pairs or for all pairs in the liquidity module.
+
 ## Coin Escrow for Liquidity Module Messages
 
 Transaction confirmation causes state transition on the Bank module. Some messages on the liquidity module require coin escrow before confirmation.
@@ -82,8 +97,8 @@ After a successful withdraw transaction, escrowed pool coins are burned and a co
     - amount : large amount → small amount
     - orderbook : order from user → order from pool
     - id : small number id → large number id (pool id, order id)
-- Matching : buy orders with price greater than or equal to matching price and sell orders with price less than or equal to matching price are sorted by above priority, respectively. 
-Then match each other based on the shorter side. Orders at the end of the longer side may be partially matched.
+- Matching : line up buy orders with price greater than or equal to matching price and sell orders with price less than or equal to matching price both are sorted by above priority, respectively. 
+Then match each other based on the shorter side. Orders at the end of each side may be partially matched.
 
 ## Change states of swap requests with expired lifespan
 
