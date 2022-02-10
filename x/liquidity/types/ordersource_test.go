@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"math/rand"
 	"sort"
 	"testing"
@@ -290,120 +291,67 @@ func TestOrderBookTicks_LowestTick(t *testing.T) {
 	require.True(sdk.DecEq(t, parseDec("9.0"), tick))
 }
 
-func TestPoolOrderSource_HighestTick(t *testing.T) {
-	poolInfo := types.NewPoolInfo(newInt(1000000), newInt(1000000), sdk.Int{})
-	ss := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-	bs := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
-
-	h, found := ss.HighestTick()
-	require.True(t, found)
-	require.True(t, ss.SellAmountOnTick(h).IsPositive())
-	require.True(t, ss.SellAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
-	h, found = bs.HighestTick()
-	require.True(t, found)
-	require.True(t, bs.BuyAmountOnTick(h).IsPositive())
-	require.True(t, bs.BuyAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
-
-	poolInfo = types.NewPoolInfo(newInt(5000), newInt(5000), sdk.Int{})
-	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-	bs = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
-
-	h, found = ss.HighestTick()
-	require.True(t, found)
-	require.True(t, ss.SellAmountOnTick(h).IsPositive())
-	require.True(t, ss.SellAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
-	_, found = bs.HighestTick()
-	require.False(t, found)
-
-	poolInfo = types.NewPoolInfo(newInt(500), newInt(500), sdk.Int{})
-	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-
-	_, found = ss.HighestTick()
-	require.False(t, found)
-}
-
-func TestPoolOrderSource_FuzzHighestTick(t *testing.T) {
+func TestPoolOrderSource_Fuzz(t *testing.T) {
 	r := rand.New(rand.NewSource(0))
-	for i := 0; i < 10000; i++ {
-		rx := 1 + r.Int63n(1000000)
-		ry := 1 + r.Int63n(1000000)
-		poolInfo := types.NewPoolInfo(newInt(rx), newInt(ry), sdk.Int{})
-		bs := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
-		ss := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-		h, found := bs.HighestTick()
-		if found {
-			require.True(t, h.LT(poolInfo.Price()))
-			require.True(t, bs.BuyAmountOnTick(h).IsPositive())
-			require.True(t, bs.BuyAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
-		} else {
-			require.True(t, bs.BuyAmountOnTick(types.DownTick(poolInfo.Price(), tickPrec)).IsZero())
-		}
-		h, found = ss.HighestTick()
-		if found {
-			require.True(t, h.GT(poolInfo.Price()))
-			require.True(t, ss.SellAmountOnTick(h).IsPositive())
-			require.True(t, ss.SellAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
-		} else {
-			require.True(t, ss.SellAmountOnTick(types.UpTick(poolInfo.Price(), tickPrec)).IsZero())
+	for _, dir := range []types.SwapDirection{types.SwapDirectionBuy, types.SwapDirectionSell} {
+		for i := 0; i < 100; i++ {
+			rx := newInt(1 + r.Int63n(100000))
+			ry := newInt(1 + r.Int63n(100000))
+
+			poolInfo := types.NewPoolInfo(rx, ry, sdk.Int{})
+			os := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, dir, tickPrec)
+			var fn func(sdk.Dec) sdk.Int
+			switch dir {
+			case types.SwapDirectionBuy:
+				fn = os.BuyAmountOnTick
+			case types.SwapDirectionSell:
+				fn = os.SellAmountOnTick
+			}
+
+			highest, foundHighest := os.HighestTick()
+			if foundHighest {
+				lowest, foundLowest := os.LowestTick()
+				require.True(t, foundLowest)
+
+				require.True(t, fn(highest).IsPositive())
+				require.True(t, fn(lowest).IsPositive())
+			} else {
+				_, foundLowest := os.LowestTick()
+				require.False(t, foundLowest)
+			}
 		}
 	}
 }
 
-func TestPoolOrderSource_LowestTick(t *testing.T) {
-	poolInfo := types.NewPoolInfo(newInt(1000000), newInt(1000000), sdk.Int{})
-	bs := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
-	ss := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-
-	l, found := bs.LowestTick()
-	require.True(t, found)
-	require.True(t, bs.BuyAmountOnTick(l).IsPositive())
-	require.True(t, bs.BuyAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
-	l, found = ss.LowestTick()
-	require.True(t, found)
-	require.True(t, ss.SellAmountOnTick(l).IsPositive())
-	require.True(t, ss.SellAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
-
-	poolInfo = types.NewPoolInfo(newInt(5000), newInt(5000), sdk.Int{})
-	bs = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
-	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-
-	_, found = bs.LowestTick()
-	require.False(t, found)
-	l, found = ss.LowestTick()
-	require.True(t, found)
-	require.True(t, ss.SellAmountOnTick(l).IsPositive())
-	require.True(t, ss.SellAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
-
-	poolInfo = types.NewPoolInfo(newInt(500), newInt(500), sdk.Int{})
-	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-
-	_, found = ss.LowestTick()
-	require.False(t, found)
-}
-
-func TestPoolOrderSource_FuzzLowestTick(t *testing.T) {
-	r := rand.New(rand.NewSource(0))
-	for i := 0; i < 10000; i++ {
-		rx := 1 + r.Int63n(1000000)
-		ry := 1 + r.Int63n(1000000)
-		poolInfo := types.NewPoolInfo(newInt(rx), newInt(ry), sdk.Int{})
-		bs := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
-		ss := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
-		l, found := bs.LowestTick()
-		if found {
-			require.True(t, l.LT(poolInfo.Price()))
-			require.True(t, bs.BuyAmountOnTick(l).IsPositive())
-			require.True(t, bs.BuyAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
-		} else {
-			require.True(t, bs.BuyAmountOnTick(types.DownTick(poolInfo.Price(), tickPrec)).IsZero())
-		}
-		l, found = ss.LowestTick()
-		if found {
-			require.True(t, l.GT(poolInfo.Price()))
-			require.True(t, ss.SellAmountOnTick(l).IsPositive())
-			require.True(t, ss.SellAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
-		} else {
-			require.True(t, ss.SellAmountOnTick(types.UpTick(poolInfo.Price(), tickPrec)).IsZero())
+func BenchmarkPoolOrderSource_HighestTick(b *testing.B) {
+	for _, price := range []sdk.Dec{parseDec("10000"), parseDec("1"), parseDec("0.0001")} {
+		for _, ry := range []sdk.Int{newInt(10000), newInt(1000000), newInt(1000000000)} {
+			for _, dir := range []types.SwapDirection{types.SwapDirectionBuy, types.SwapDirectionSell} {
+				b.Run(fmt.Sprintf("%s/%s/%s", dir, ry, price), func(b *testing.B) {
+					rx := price.MulInt(ry).TruncateInt()
+					b.ResetTimer()
+					for i := 0; i < b.N; i++ {
+						poolInfo := types.NewPoolInfo(rx, ry, sdk.Int{})
+						os := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, dir, tickPrec)
+						l, f := os.LowestTick()
+						if f {
+							h, f := os.HighestTick()
+							if !f {
+								panic("?")
+							}
+							for t := l; ; {
+								t, f = os.UpTickWithOrders(t)
+								if !f {
+									break
+								}
+								if t.GT(h) {
+									panic("!")
+								}
+							}
+						}
+					}
+				})
+			}
 		}
 	}
 }
