@@ -197,3 +197,44 @@ func TestRoundPrice(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkUpTick(b *testing.B) {
+	b.Run("price fit in ticks", func(b *testing.B) {
+		price := parseDec("0.9999")
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			types.UpTick(price, tickPrec)
+		}
+	})
+	b.Run("price not fit in ticks", func(b *testing.B) {
+		price := parseDec("0.99995")
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			types.UpTick(price, tickPrec)
+		}
+	})
+}
+
+func BenchmarkDownTick(b *testing.B) {
+	b.Run("price fit in ticks", func(b *testing.B) {
+		price := parseDec("0.9999")
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			types.DownTick(price, tickPrec)
+		}
+	})
+	b.Run("price not fit in ticks", func(b *testing.B) {
+		price := parseDec("0.99995")
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			types.DownTick(price, tickPrec)
+		}
+	})
+	b.Run("price at edge", func(b *testing.B) {
+		price := parseDec("1")
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			types.DownTick(price, tickPrec)
+		}
+	})
+}

@@ -58,24 +58,31 @@ func PriceToTick(price sdk.Dec, prec int) sdk.Dec {
 }
 
 // UpTick returns the next lowest price tick above the price.
-// UpTick guarantees that the price is already fit in ticks.
 func UpTick(price sdk.Dec, prec int) sdk.Dec {
-	l := char(price)
-	return price.Add(pow10(l - prec))
+	tick := PriceToTick(price, prec)
+	if tick.Equal(price) {
+		l := char(price)
+		return price.Add(pow10(l - prec))
+	}
+	l := char(tick)
+	return tick.Add(pow10(l - prec))
 }
 
 // DownTick returns the next highest price tick under the price.
-// DownTick guarantees that the price is already fit in ticks.
 // DownTick doesn't check if the price is the lowest price tick.
 func DownTick(price sdk.Dec, prec int) sdk.Dec {
-	l := char(price)
-	var d sdk.Dec
-	if isPow10(price) {
-		d = pow10(l - prec - 1)
-	} else {
-		d = pow10(l - prec)
+	tick := PriceToTick(price, prec)
+	if tick.Equal(price) {
+		l := char(price)
+		var d sdk.Dec
+		if isPow10(price) {
+			d = pow10(l - prec - 1)
+		} else {
+			d = pow10(l - prec)
+		}
+		return price.Sub(d)
 	}
-	return price.Sub(d)
+	return tick
 }
 
 // HighestTick returns the highest possible price tick.
