@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -94,6 +95,27 @@ func TestDownTick(t *testing.T) {
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, types.DownTick(tc.price, tc.prec)))
+		})
+	}
+}
+
+func TestHighestTick(t *testing.T) {
+	for _, tc := range []struct {
+		prec     int
+		expected string
+	}{
+		{tickPrec, "133400000000000000000000000000000000000000000000000000000000000000000000000000"},
+		{0, "100000000000000000000000000000000000000000000000000000000000000000000000000000"},
+		{1, "130000000000000000000000000000000000000000000000000000000000000000000000000000"},
+	} {
+		t.Run("", func(t *testing.T) {
+			i, ok := new(big.Int).SetString(tc.expected, 10)
+			require.True(t, ok)
+			tick := types.HighestTick(tc.prec)
+			require.True(sdk.DecEq(t, sdk.NewDecFromBigInt(i), tick))
+			require.Panics(t, func() {
+				types.UpTick(tick, tc.prec)
+			})
 		})
 	}
 }
