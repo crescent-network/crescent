@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -102,31 +105,41 @@ func (engine *MatchEngine) FindMatchPrice() sdk.Dec {
 		return sa
 	}
 
-	for {
-		i := TickToIndex(matchPrice, engine.TickPrecision)
-
-		if buyAmountGTE(i+1).LTE(sellAmountLTE(i)) && buyAmountGTE(i).GTE(sellAmountLTE(i-1)) {
-			return matchPrice
+	switch dir {
+	case PriceIncreasing:
+		start := TickToIndex(matchPrice, engine.TickPrecision)
+		highest, found := tickSource.HighestTick()
+		if !found { // TODO: remove this sanity check
+			panic("this will never happen")
 		}
-
-		var nextPrice sdk.Dec
-		var found bool
-		switch dir {
-		case PriceIncreasing:
-			if buyAmountGTE(i + 1).IsZero() {
-				return matchPrice
-			}
-			nextPrice, found = tickSource.UpTick(matchPrice)
-		case PriceDecreasing:
-			if sellAmountLTE(i - 1).IsZero() {
-				return matchPrice
-			}
-			nextPrice, found = tickSource.DownTick(matchPrice)
+		end := TickToIndex(highest, engine.TickPrecision)
+		i := start + sort.Search(end-start+1, func(i int) bool {
+			i += start
+			bg := buyAmountGTE(i + 1)
+			return bg.LTE(sellAmountLTE(i)) && buyAmountGTE(i).GT(sellAmountLTE(i-1)) || bg.IsZero()
+		})
+		if i > end {
+			i = end
 		}
-		if !found {
-			return matchPrice
+		return TickFromIndex(i, engine.TickPrecision)
+	case PriceDecreasing:
+		start := TickToIndex(matchPrice, engine.TickPrecision)
+		lowest, found := tickSource.LowestTick()
+		if !found { // TODO: remove this sanity check
+			panic("this will never happen")
 		}
-		matchPrice = nextPrice
+		end := TickToIndex(lowest, engine.TickPrecision)
+		i := start - sort.Search(start-end+1, func(i int) bool {
+			i = start - i
+			sl := sellAmountLTE(i - 1)
+			return buyAmountGTE(i+1).LTE(sellAmountLTE(i)) && buyAmountGTE(i).GTE(sl) || sl.IsZero()
+		})
+		if i < end {
+			i = end
+		}
+		return TickFromIndex(i, engine.TickPrecision)
+	default: // never happens
+		panic(fmt.Sprintf("invalid price direction: %d", dir))
 	}
 }
 

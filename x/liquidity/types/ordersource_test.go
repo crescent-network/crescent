@@ -323,6 +323,16 @@ func TestPoolOrderSource_Fuzz(t *testing.T) {
 	}
 }
 
+func BenchmarkPoolOrderSource_AmountGTE(b *testing.B) {
+	rx, ry := newInt(1000000), newInt(1000000)
+	poolInfo := types.NewPoolInfo(rx, ry, sdk.Int{})
+	bs := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		bs.AmountGTE(parseDec("0.00001"))
+	}
+}
+
 func BenchmarkPoolOrderSource_HighestTick(b *testing.B) {
 	for _, price := range []sdk.Dec{parseDec("10000"), parseDec("1"), parseDec("0.0001")} {
 		for _, ry := range []sdk.Int{newInt(10000), newInt(1000000), newInt(1000000000)} {
