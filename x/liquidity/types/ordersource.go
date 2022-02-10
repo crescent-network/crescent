@@ -381,7 +381,6 @@ func (os *PoolOrderSource) UpTickWithOrders(price sdk.Dec) (tick sdk.Dec, found 
 			tick, _ = os.UpTick(price)
 		}
 		found = os.SellAmountOnTick(tick).IsPositive()
-		return
 	}
 	return
 }
@@ -394,7 +393,6 @@ func (os *PoolOrderSource) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, foun
 		} else {
 			tick, _ = os.DownTick(price)
 		}
-
 	case SwapDirectionSell:
 		tick, found = os.DownTick(price)
 		if !found {
@@ -418,8 +416,20 @@ func (os *PoolOrderSource) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, foun
 func (os *PoolOrderSource) HighestTick() (tick sdk.Dec, found bool) {
 	switch os.Direction {
 	case SwapDirectionBuy:
-		tick = DownTick(os.PoolPrice, os.TickPrecision)
-		found = os.BuyAmountOnTick(tick).IsPositive()
+		lowest, found := os.LowestTick()
+		if !found {
+			return sdk.Dec{}, false
+		}
+		// We use reversed binary search here.
+		start := TickToIndex(DownTick(os.PoolPrice, os.TickPrecision), os.TickPrecision)
+		end := TickToIndex(lowest, os.TickPrecision)
+		i := start - sort.Search(start-end+1, func(i int) bool {
+			return os.BuyAmountOnTick(TickFromIndex(start-i, os.TickPrecision)).IsPositive()
+		})
+		if i == end - 1 {
+			return sdk.Dec{}, false
+		}
+		return TickFromIndex(i, os.TickPrecision), true
 	case SwapDirectionSell:
 		start := TickToIndex(UpTick(os.PoolPrice, os.TickPrecision), os.TickPrecision)
 		end := TickToIndex(HighestTick(os.TickPrecision), os.TickPrecision)
@@ -437,8 +447,7 @@ func (os *PoolOrderSource) HighestTick() (tick sdk.Dec, found bool) {
 			if i > end {
 				i = end
 			}
-			tick = TickFromIndex(i, os.TickPrecision)
-			found = true
+			return TickFromIndex(i, os.TickPrecision), true
 		}
 	}
 	return
@@ -451,7 +460,7 @@ func (os *PoolOrderSource) LowestTick() (tick sdk.Dec, found bool) {
 		start := 0
 		end := TickToIndex(DownTick(os.PoolPrice, os.TickPrecision), os.TickPrecision)
 		i := start + sort.Search(end-start+1, func(i int) bool {
-			return os.XAmountOnTick(TickFromIndex(start+i, os.TickPrecision)).IsPositive()
+			return os.BuyAmountOnTick(TickFromIndex(start+i, os.TickPrecision)).IsPositive()
 		})
 		if i <= end {
 			tick = TickFromIndex(i, os.TickPrecision)
