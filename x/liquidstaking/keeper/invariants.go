@@ -69,9 +69,8 @@ func TotalLiquidTokensInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		lvs := k.GetAllLiquidValidators(ctx)
 		_, _, totalLiquidTokensOfProxyAcc := k.CheckTotalRewards(ctx, types.LiquidStakingProxyAcc)
-		totalLiquidTokensOfLiquidValidators := lvs.TotalLiquidTokens(ctx, k.stakingKeeper)
+		totalLiquidTokensOfLiquidValidators, _ := lvs.TotalLiquidTokens(ctx, k.stakingKeeper)
 
-		// TODO: check delShares to tokens convert decimal error, consider to check TotalDelShares
 		broken := !totalLiquidTokensOfProxyAcc.Equal(totalLiquidTokensOfLiquidValidators)
 		return sdk.FormatInvariant(
 			types.ModuleName, "total liquid tokens invariant broken",

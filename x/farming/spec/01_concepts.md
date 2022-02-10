@@ -57,7 +57,7 @@ The farming module takes references from [F1 Fee Distribution](https://github.co
 ### Base Algorithm 
 
 `HistoricalRewards` for each staking coin for every epoch can be calculated as the following algorithm:
-
+<!-- markdown-link-check-disable -->
 - ![](https://latex.codecogs.com/svg.latex?\Large&space;\sum_{i=0}^{now}\frac{TR_i}{TS_i})
     - ![](https://latex.codecogs.com/svg.latex?\Large&space;i) : each epoch
     - ![](https://latex.codecogs.com/svg.latex?\Large&space;now) : `CurrentEpoch`

@@ -105,7 +105,135 @@ func TestDivideByWeight(t *testing.T) {
 	}
 }
 
-// TODO: refactor to keeper level
+func TestDivideByCurrentWeight(t *testing.T) {
+	testCases := []struct {
+		liquidValidators []types.LiquidValidatorState
+		addStakingAmt    sdk.Dec
+		expectedOutputs  []sdk.Dec
+		expectedCrumb    sdk.Dec
+	}{
+		{
+			liquidValidators: []types.LiquidValidatorState{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+				},
+			},
+			addStakingAmt:   sdk.NewDec(10 * 1000000),
+			expectedOutputs: []sdk.Dec{sdk.NewDec(4 * 1000000), sdk.NewDec(4 * 1000000), sdk.NewDec(2 * 1000000)},
+			expectedCrumb:   sdk.NewDec(0),
+		},
+		{
+			liquidValidators: []types.LiquidValidatorState{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+					Weight:          sdk.NewInt(2),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+					Weight:          sdk.NewInt(2),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
+					Weight:          sdk.NewInt(1),
+				},
+			},
+			addStakingAmt:   sdk.NewDec(10 * 1000000),
+			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("3333333.333333333333000000"), sdk.MustNewDecFromStr("3333333.333333333333000000"), sdk.MustNewDecFromStr("3333333.333333333333000000")},
+			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000001000000"),
+		},
+		{
+			liquidValidators: []types.LiquidValidatorState{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(3),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(1),
+				},
+			},
+			addStakingAmt:   sdk.NewDec(10),
+			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("4.999999999999999998"), sdk.MustNewDecFromStr("3.333333333333333332"), sdk.MustNewDecFromStr("1.666666666666666666")},
+			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000000000004"),
+		},
+		{
+			liquidValidators: []types.LiquidValidatorState{
+				{
+					OperatorAddress: "a",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(10000000),
+				},
+				{
+					OperatorAddress: "b",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(2000000),
+				},
+				{
+					OperatorAddress: "c",
+					Status:          types.ValidatorStatusActive,
+					LiquidTokens:    sdk.NewIntFromUint64(3000001),
+				},
+			},
+			addStakingAmt:   sdk.NewDec(10000000),
+			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("6666666.222222251850000000"), sdk.MustNewDecFromStr("1333333.244444450370000000"), sdk.MustNewDecFromStr("2000000.533333297777225185")},
+			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000002774815"),
+		},
+	}
+
+	for _, tc := range testCases {
+		fmt.Println("------")
+		require.IsType(t, []types.LiquidValidatorState{}, tc.liquidValidators)
+		require.IsType(t, sdk.Dec{}, tc.addStakingAmt)
+		require.IsType(t, sdk.Dec{}, tc.expectedCrumb)
+		require.IsType(t, []sdk.Dec{}, tc.expectedOutputs)
+
+		totalTargetAmt := sdk.ZeroDec()
+		totalLiquidTokens := sdk.ZeroInt()
+		liquidTokenMap := make(map[string]sdk.Int)
+		var alvs types.ActiveLiquidValidators
+		for _, v := range tc.liquidValidators {
+			totalLiquidTokens = totalLiquidTokens.Add(v.LiquidTokens)
+			liquidTokenMap[v.OperatorAddress] = v.LiquidTokens
+			alvs = append(alvs, types.LiquidValidator{
+				OperatorAddress: v.OperatorAddress})
+		}
+		outputs, crumb := types.DivideByCurrentWeight(alvs, tc.addStakingAmt, totalLiquidTokens, liquidTokenMap)
+		for k, v := range outputs {
+			fmt.Println(k, v.String())
+			totalTargetAmt = totalTargetAmt.Add(v)
+		}
+		require.EqualValues(t, tc.expectedOutputs, outputs)
+		require.EqualValues(t, tc.addStakingAmt, totalTargetAmt.Add(crumb))
+		require.Equal(t, tc.expectedCrumb.String(), crumb.String())
+	}
+}
+
+//// TODO: refactor to keeper level
 //func TestRebalancing(t *testing.T) {
 //	lvs := types.LiquidValidators{
 //		{
@@ -272,272 +400,16 @@ func TestDivideByWeight(t *testing.T) {
 //	moduleAcc := sdk.AccAddress(crypto.AddressHash([]byte("rebalancing")))
 //	keeper.Rebalancing(moduleAcc, lvs, sdk.NewDec(10000))
 //}
-//
-//
-//func TestDivideByCurrentWeight(t *testing.T) {
-//	testCases := []struct {
-//		whitelistedVals      types.LiquidValidators
-//		addStakingAmt   sdk.Int
-//		expectedOutputs []sdk.Int
-//		expectedCrumb   sdk.Int
-//	}{
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewInt(10 * 1000000),
-//			expectedOutputs: []sdk.Int{sdk.NewInt(4 * 1000000), sdk.NewInt(4 * 1000000), sdk.NewInt(2 * 1000000)},
-//			expectedCrumb:   sdk.NewInt(0),
-//		},
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(2),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(2),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewInt(10 * 1000000),
-//			expectedOutputs: []sdk.Int{sdk.NewInt(3333333), sdk.NewInt(3333333), sdk.NewInt(3333333)},
-//			expectedCrumb:   sdk.NewInt(1),
-//		},
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(3),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewInt(10),
-//			expectedOutputs: []sdk.Int{sdk.NewInt(4), sdk.NewInt(3), sdk.NewInt(1)},
-//			expectedCrumb:   sdk.NewInt(2),
-//		},
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(10000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(3000001),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewInt(10000000),
-//			expectedOutputs: []sdk.Int{sdk.NewInt(6666666), sdk.NewInt(1333333), sdk.NewInt(2000000)},
-//			expectedCrumb:   sdk.NewInt(1),
-//		},
-//	}
-//
-//	for _, tc := range testCases {
-//		fmt.Println("------")
-//		require.IsType(t, types.LiquidValidators{}, tc.whitelistedVals)
-//		require.IsType(t, sdk.Int{}, tc.addStakingAmt)
-//		require.IsType(t, sdk.Int{}, tc.expectedCrumb)
-//		require.IsType(t, []sdk.Int{}, tc.expectedOutputs)
-//
-//		totalTargetAmt := sdk.ZeroInt()
-//		outputs, crumb := keeper.DivideByCurrentWeight(tc.whitelistedVals, tc.addStakingAmt)
-//		for k, v := range outputs {
-//			fmt.Println(k, v.String())
-//			totalTargetAmt = totalTargetAmt.Add(v)
-//		}
-//		require.EqualValues(t, tc.expectedOutputs, outputs)
-//		require.EqualValues(t, tc.addStakingAmt, totalTargetAmt.Add(crumb))
-//		require.Equal(t, tc.expectedCrumb.String(), crumb.String())
-//	}
-//}
-//
-//func TestDivideByCurrentWeightDec(t *testing.T) {
-//	testCases := []struct {
-//		whitelistedVals      types.LiquidValidators
-//		addStakingAmt   sdk.Dec
-//		expectedOutputs []sdk.Dec
-//		expectedCrumb   sdk.Dec
-//	}{
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewDec(10 * 1000000),
-//			expectedOutputs: []sdk.Dec{sdk.NewDec(4 * 1000000), sdk.NewDec(4 * 1000000), sdk.NewDec(2 * 1000000)},
-//			expectedCrumb:   sdk.NewDec(0),
-//		},
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(2),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(2),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1 * 1000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewDec(10 * 1000000),
-//			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("3333333.333333333333000000"), sdk.MustNewDecFromStr("3333333.333333333333000000"), sdk.MustNewDecFromStr("3333333.333333333333000000")},
-//			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000001000000"),
-//		},
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(3),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(1),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewDec(10),
-//			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("4.999999999999999998"), sdk.MustNewDecFromStr("3.333333333333333332"), sdk.MustNewDecFromStr("1.666666666666666666")},
-//			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000000000004"),
-//		},
-//		{
-//			whitelistedVals: types.LiquidValidators{
-//				{
-//					OperatorAddress: "a",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(10000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "b",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(2000000),
-//					Weight:          sdk.NewInt(1),
-//				},
-//				{
-//					OperatorAddress: "c",
-//					Status:          types.ValidatorStatusActive,
-//					LiquidTokens:    sdk.NewIntFromUint64(3000001),
-//					Weight:          sdk.NewInt(1),
-//				},
-//			},
-//			addStakingAmt:   sdk.NewDec(10000000),
-//			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("6666666.222222251850000000"), sdk.MustNewDecFromStr("1333333.244444450370000000"), sdk.MustNewDecFromStr("2000000.533333297777225185")},
-//			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000002774815"),
-//		},
-//	}
-//
-//	for _, tc := range testCases {
-//		fmt.Println("------")
-//		require.IsType(t, types.LiquidValidators{}, tc.whitelistedVals)
-//		require.IsType(t, sdk.Dec{}, tc.addStakingAmt)
-//		require.IsType(t, sdk.Dec{}, tc.expectedCrumb)
-//		require.IsType(t, []sdk.Dec{}, tc.expectedOutputs)
-//
-//		totalTargetAmt := sdk.ZeroDec()
-//		outputs, crumb := keeper.DivideByCurrentWeight(tc.whitelistedVals, tc.addStakingAmt)
-//		for k, v := range outputs {
-//			fmt.Println(k, v.String())
-//			totalTargetAmt = totalTargetAmt.Add(v)
-//		}
-//		require.EqualValues(t, tc.expectedOutputs, outputs)
-//		require.EqualValues(t, tc.addStakingAmt, totalTargetAmt.Add(crumb))
-//		require.Equal(t, tc.expectedCrumb.String(), crumb.String())
-//	}
-//}
-//
+
+// deprecated
 //func TestAddStakingTargetMap(t *testing.T) {
 //	testCases := []struct {
-//		whitelistedVals    types.LiquidValidators
+//		liquidValidators    types.LiquidValidators
 //		addStakingAmt sdk.Int
 //		expectedMap   map[string]sdk.Int
 //	}{
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -565,7 +437,7 @@ func TestDivideByWeight(t *testing.T) {
 //			},
 //		},
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -593,7 +465,7 @@ func TestDivideByWeight(t *testing.T) {
 //			},
 //		},
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -621,7 +493,7 @@ func TestDivideByWeight(t *testing.T) {
 //			},
 //		},
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -648,7 +520,7 @@ func TestDivideByWeight(t *testing.T) {
 //			},
 //		},
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -675,7 +547,7 @@ func TestDivideByWeight(t *testing.T) {
 //			},
 //		},
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -702,7 +574,7 @@ func TestDivideByWeight(t *testing.T) {
 //			},
 //		},
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -729,7 +601,7 @@ func TestDivideByWeight(t *testing.T) {
 //			},
 //		},
 //		{
-//			whitelistedVals: types.LiquidValidators{
+//			liquidValidators: types.LiquidValidators{
 //				{
 //					OperatorAddress: "a",
 //					Status:          types.ValidatorStatusActive,
@@ -759,12 +631,12 @@ func TestDivideByWeight(t *testing.T) {
 //
 //	for _, tc := range testCases {
 //		fmt.Println("------")
-//		require.IsType(t, types.LiquidValidators{}, tc.whitelistedVals)
+//		require.IsType(t, types.LiquidValidators{}, tc.liquidValidators)
 //		require.IsType(t, sdk.Int{}, tc.addStakingAmt)
 //		require.IsType(t, map[string]sdk.Int{}, tc.expectedMap)
 //
 //		totalTargetAmt := sdk.ZeroInt()
-//		resMap := keeper.AddStakingTargetMap(tc.whitelistedVals, tc.addStakingAmt)
+//		resMap := keeper.AddStakingTargetMap(tc.liquidValidators, tc.addStakingAmt)
 //		for k, v := range resMap {
 //			fmt.Println(k, v.String())
 //			totalTargetAmt = totalTargetAmt.Add(v)
