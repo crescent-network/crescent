@@ -194,12 +194,16 @@ func NewOrderBookTick(order Order) *OrderBookTick {
 }
 
 type PoolOrderSource struct {
-	PoolId         uint64
-	ReserveAddress sdk.AccAddress
-	RX, RY         sdk.Int
-	PoolPrice      sdk.Dec
-	Direction      SwapDirection
-	TickPrecision  int
+	PoolId           uint64
+	ReserveAddress   sdk.AccAddress
+	RX, RY           sdk.Int
+	PoolPrice        sdk.Dec
+	Direction        SwapDirection
+	TickPrecision    int
+	highestTick      sdk.Dec
+	foundHighestTick *bool
+	lowestTick       sdk.Dec
+	foundLowestTick  *bool
 }
 
 func NewPoolOrderSource(pool PoolI, poolId uint64, reserveAddr sdk.AccAddress, dir SwapDirection, prec int) *PoolOrderSource {
@@ -332,7 +336,11 @@ func (os *PoolOrderSource) UpTick(price sdk.Dec) (tick sdk.Dec, found bool) {
 	case SwapDirectionSell:
 		tick = UpTick(price, os.TickPrecision)
 		if tick.GT(os.PoolPrice) {
-			found = os.SellAmountOnTick(tick).IsPositive()
+			highest, foundHighest := os.HighestTick()
+			if !foundHighest {
+				break
+			}
+			found = tick.LTE(highest)
 		} else {
 			found = true
 		}
@@ -345,7 +353,11 @@ func (os *PoolOrderSource) DownTick(price sdk.Dec) (tick sdk.Dec, found bool) {
 	case SwapDirectionBuy:
 		tick = DownTick(price, os.TickPrecision)
 		if tick.LT(os.PoolPrice) {
-			found = os.BuyAmountOnTick(tick).IsPositive()
+			lowest, foundLowest := os.LowestTick()
+			if !foundLowest {
+				break
+			}
+			found = tick.GTE(lowest)
 		} else {
 			found = true
 		}
@@ -414,11 +426,14 @@ func (os *PoolOrderSource) DownTickWithOrders(price sdk.Dec) (tick sdk.Dec, foun
 }
 
 func (os *PoolOrderSource) HighestTick() (tick sdk.Dec, found bool) {
+	if os.foundHighestTick != nil {
+		return os.highestTick, *os.foundHighestTick
+	}
 	switch os.Direction {
 	case SwapDirectionBuy:
-		lowest, found := os.LowestTick()
-		if !found {
-			return sdk.Dec{}, false
+		lowest, foundLowest := os.LowestTick()
+		if !foundLowest {
+			break
 		}
 		// We use reversed binary search here.
 		start := TickToIndex(DownTick(os.PoolPrice, os.TickPrecision), os.TickPrecision)
@@ -426,10 +441,11 @@ func (os *PoolOrderSource) HighestTick() (tick sdk.Dec, found bool) {
 		i := start - sort.Search(start-end+1, func(i int) bool {
 			return os.BuyAmountOnTick(TickFromIndex(start-i, os.TickPrecision)).IsPositive()
 		})
-		if i == end - 1 {
-			return sdk.Dec{}, false
+		if i == end-1 {
+			break
 		}
-		return TickFromIndex(i, os.TickPrecision), true
+		tick = TickFromIndex(i, os.TickPrecision)
+		found = true
 	case SwapDirectionSell:
 		start := TickToIndex(UpTick(os.PoolPrice, os.TickPrecision), os.TickPrecision)
 		end := TickToIndex(HighestTick(os.TickPrecision), os.TickPrecision)
@@ -447,13 +463,19 @@ func (os *PoolOrderSource) HighestTick() (tick sdk.Dec, found bool) {
 			if i > end {
 				i = end
 			}
-			return TickFromIndex(i, os.TickPrecision), true
+			tick = TickFromIndex(i, os.TickPrecision)
+			found = true
 		}
 	}
+	os.highestTick = tick
+	os.foundHighestTick = &found
 	return
 }
 
 func (os *PoolOrderSource) LowestTick() (tick sdk.Dec, found bool) {
+	if os.foundLowestTick != nil {
+		return os.lowestTick, *os.foundLowestTick
+	}
 	switch os.Direction {
 	case SwapDirectionBuy:
 		// Run binary search to find the lowest possible tick with orders.
@@ -470,6 +492,8 @@ func (os *PoolOrderSource) LowestTick() (tick sdk.Dec, found bool) {
 		tick = UpTick(os.PoolPrice, os.TickPrecision)
 		found = os.SellAmountOnTick(tick).IsPositive()
 	}
+	os.lowestTick = tick
+	os.foundLowestTick = &found
 	return
 }
 
