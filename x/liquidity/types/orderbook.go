@@ -34,7 +34,7 @@ func (ob *OrderBook) AddOrders(orders ...Order) {
 	}
 }
 
-func (ob OrderBook) OrderSource(dir SwapDirection) OrderSource {
+func (ob OrderBook) OrderSource(dir SwapDirection) *OrderBookTicks {
 	switch dir {
 	case SwapDirectionBuy:
 		return ob.BuyTicks

@@ -120,7 +120,7 @@ func TestOrderBookTicks_AmountGTE(t *testing.T) {
 
 func TestOrderBookTicks_AmountLTE(t *testing.T) {
 	// An empty order book ticks
-	require.True(sdk.IntEq(t, sdk.ZeroInt(), types.OrderBookTicks{}.AmountLTE(parseDec("20.0"))))
+	require.True(sdk.IntEq(t, sdk.ZeroInt(), types.NewOrderBookTicks(tickPrec).AmountLTE(parseDec("20.0"))))
 
 	ticks := testOrderBookTicks()
 
@@ -245,7 +245,7 @@ func TestOrderBookTicks_DownTickWithOrders(t *testing.T) {
 
 func TestOrderBookTicks_HighestTick(t *testing.T) {
 	// An empty order book ticks
-	_, found := types.OrderBookTicks{}.HighestTick()
+	_, found := types.NewOrderBookTicks(tickPrec).HighestTick()
 	require.False(t, found)
 
 	ticks := testOrderBookTicks()
@@ -268,7 +268,7 @@ func TestOrderBookTicks_HighestTick(t *testing.T) {
 
 func TestOrderBookTicks_LowestTick(t *testing.T) {
 	// An empty order book ticks
-	_, found := types.OrderBookTicks{}.LowestTick()
+	_, found := types.NewOrderBookTicks(tickPrec).LowestTick()
 	require.False(t, found)
 
 	ticks := testOrderBookTicks()
@@ -287,4 +287,68 @@ func TestOrderBookTicks_LowestTick(t *testing.T) {
 	tick, found = ticks.LowestTick()
 	require.True(t, found)
 	require.True(sdk.DecEq(t, parseDec("9.0"), tick))
+}
+
+func TestPoolOrderSource_LowestTick(t *testing.T) {
+	poolInfo := types.NewPoolInfo(newInt(1000000), newInt(1000000), sdk.Int{})
+	bs := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
+	ss := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
+
+	l, found := bs.LowestTick()
+	require.True(t, found)
+	require.True(t, bs.BuyAmountOnTick(l).IsPositive())
+	require.True(t, bs.BuyAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
+	l, found = ss.LowestTick()
+	require.True(t, found)
+	require.True(t, ss.SellAmountOnTick(l).IsPositive())
+	require.True(t, ss.SellAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
+
+	poolInfo = types.NewPoolInfo(newInt(5000), newInt(5000), sdk.Int{})
+	bs = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
+	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
+
+	_, found = bs.LowestTick()
+	require.False(t, found)
+	l, found = ss.LowestTick()
+	require.True(t, found)
+	require.True(t, ss.SellAmountOnTick(l).IsPositive())
+	require.True(t, ss.SellAmountOnTick(types.DownTick(l, tickPrec)).IsZero())
+
+	poolInfo = types.NewPoolInfo(newInt(500), newInt(500), sdk.Int{})
+	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
+
+	_, found = ss.LowestTick()
+	require.False(t, found)
+}
+
+func TestPoolOrderSource_HighestTick(t *testing.T) {
+	poolInfo := types.NewPoolInfo(newInt(1000000), newInt(1000000), sdk.Int{})
+	ss := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
+	bs := types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
+
+	h, found := ss.HighestTick()
+	require.True(t, found)
+	require.True(t, ss.SellAmountOnTick(h).IsPositive())
+	require.True(t, ss.SellAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
+	h, found = bs.HighestTick()
+	require.True(t, found)
+	require.True(t, bs.BuyAmountOnTick(h).IsPositive())
+	require.True(t, bs.BuyAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
+
+	poolInfo = types.NewPoolInfo(newInt(5000), newInt(5000), sdk.Int{})
+	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
+	bs = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionBuy, tickPrec)
+
+	h, found = ss.HighestTick()
+	require.True(t, found)
+	require.True(t, ss.SellAmountOnTick(h).IsPositive())
+	require.True(t, ss.SellAmountOnTick(types.UpTick(h, tickPrec)).IsZero())
+	_, found = bs.HighestTick()
+	require.False(t, found)
+
+	poolInfo = types.NewPoolInfo(newInt(500), newInt(500), sdk.Int{})
+	ss = types.NewPoolOrderSource(poolInfo, 1, sdk.AccAddress{}, types.SwapDirectionSell, tickPrec)
+
+	_, found = ss.HighestTick()
+	require.False(t, found)
 }
