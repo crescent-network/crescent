@@ -150,18 +150,22 @@ func (k Keeper) LiquidUnstaking(
 		del, found := k.stakingKeeper.GetDelegation(ctx, proxyAcc, val.GetOperator())
 		if unstakingAll && found && del.Shares.IsPositive() {
 			weightedShare = del.Shares
-		} else {
-			// crumb to first sufficient active validator
-			if crumb.IsPositive() && val.GetLiquidTokens(ctx, k.stakingKeeper).GT(unbondingAmounts[i].Add(crumb).RoundInt()) {
-				unbondingAmounts[i] = unbondingAmounts[i].Add(crumb)
+		} else if crumb.IsPositive() {
+			// crumb to first sufficient active liquid validator
+			weightedShareCrumbAdded, err := k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), unbondingAmounts[i].Add(crumb).TruncateInt())
+			if err == nil {
 				crumb = sdk.ZeroDec()
+				weightedShare = weightedShareCrumbAdded
 			}
+		}
+		if weightedShare.IsNil() {
 			// calculate delShares from tokens with validation
 			weightedShare, err = k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), unbondingAmounts[i].TruncateInt())
 			if err != nil {
 				return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
 			}
 		}
+		// unbond with weightedShare
 		ubdTime, returnAmount, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare)
 		if err != nil {
 			return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
