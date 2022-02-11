@@ -25,9 +25,9 @@ var _ types.MsgServer = msgServer{}
 func (m msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.MsgClaimResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	claimant := msg.GetClaimant()
+	recipient := msg.GetRecipient()
 
-	record, found := m.Keeper.GetClaimRecord(ctx, claimant)
+	record, found := m.Keeper.GetClaimRecord(ctx, recipient)
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
 	}

@@ -6,10 +6,10 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-// GetClaimRecord returns the types.ClaimRecord for given claimant.
-func (k Keeper) GetClaimRecord(ctx sdk.Context, claimant sdk.AccAddress) (record types.ClaimRecord, found bool) {
+// GetClaimRecord returns the types.ClaimRecord for given recipient.
+func (k Keeper) GetClaimRecord(ctx sdk.Context, recipient sdk.AccAddress) (record types.ClaimRecord, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetClaimRecordKey(claimant))
+	bz := store.Get(types.GetClaimRecordKey(recipient))
 	if bz == nil {
 		return
 	}
@@ -48,7 +48,7 @@ func (k Keeper) IterateAllClaimRecords(ctx sdk.Context, cb func(record types.Cla
 }
 
 // DeleteClaimRecord deletes a types.ClaimRecord.
-func (k Keeper) DeleteClaimRecord(ctx sdk.Context, claimant sdk.AccAddress) {
+func (k Keeper) DeleteClaimRecord(ctx sdk.Context, recipient sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetClaimRecordKey(claimant))
+	store.Delete(types.GetClaimRecordKey(recipient))
 }
