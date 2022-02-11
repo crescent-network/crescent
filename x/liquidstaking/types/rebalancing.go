@@ -14,14 +14,14 @@ type Redelegation struct {
 
 // DivideByWeight divide the input value by the ratio of the param weight of the liquid validator and return it with crumb
 // which is may occur while dividing according to the weight of active liquid validators by decimal error.
-func DivideByWeight(activeVals ActiveLiquidValidators, input sdk.Int, whitelistedValMap WhitelistedValMap) (outputs []sdk.Int, crumb sdk.Int) {
-	totalWeight := activeVals.TotalWeight(whitelistedValMap)
+func DivideByWeight(avs ActiveLiquidValidators, input sdk.Int, whitelistedValMap WhitelistedValMap) (outputs []sdk.Int, crumb sdk.Int) {
+	totalWeight := avs.TotalWeight(whitelistedValMap)
 	if !totalWeight.IsPositive() {
 		return []sdk.Int{}, sdk.ZeroInt()
 	}
 	totalShares := sdk.ZeroInt()
 	sharePerWeight := input.ToDec().QuoTruncate(totalWeight.ToDec())
-	for _, val := range activeVals {
+	for _, val := range avs {
 		weightedShare := sharePerWeight.MulInt(val.GetWeight(whitelistedValMap, true)).TruncateInt()
 		totalShares = totalShares.Add(weightedShare)
 		outputs = append(outputs, weightedShare)
@@ -30,7 +30,7 @@ func DivideByWeight(activeVals ActiveLiquidValidators, input sdk.Int, whiteliste
 }
 
 // DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb
-// which is may occur while dividing according to the weight of liquid validators by decimal error.
+// which is may occur while dividing according to the weight of liquid validators by decimal error, outputs is truncated decimal.
 func DivideByCurrentWeight(avs ActiveLiquidValidators, input sdk.Dec, totalLiquidTokens sdk.Int, liquidTokenMap map[string]sdk.Int) (outputs []sdk.Dec, crumb sdk.Dec) {
 	if !totalLiquidTokens.IsPositive() {
 		return []sdk.Dec{}, sdk.ZeroDec()

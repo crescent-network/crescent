@@ -130,6 +130,9 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 			}
 			dividedPowers[0] = dividedPowers[0].Add(crumb)
 			for i, val := range activeVals {
+				if !dividedPowers[i].IsPositive() {
+					continue
+				}
 				if existed, ok := (*otherVotes)[voter][val.OperatorAddress]; ok {
 					(*otherVotes)[voter][val.OperatorAddress] = existed.Add(dividedPowers[i])
 				} else {

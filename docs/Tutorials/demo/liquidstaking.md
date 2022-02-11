@@ -365,7 +365,6 @@ $BINARY tx gov vote $PROPOSAL no \
 --yes \
 --output json | jq
 
-
 # Query Tally with TallyLiquidGov calculation, voting power is worth of btoken balance of the user
 $BINARY q gov tally $PROPOSAL --output json | jq
 
@@ -385,6 +384,10 @@ $BINARY tx gov vote $PROPOSAL yes \
 --yes \
 --output json | jq
 
+# Query Tally before calculated TallyLiquidGov 
+$BINARY q gov tally $PROPOSAL --output json | jq
+
+
 {
   "yes": "49999999999999557",
   "abstain": "0",
@@ -392,8 +395,6 @@ $BINARY tx gov vote $PROPOSAL yes \
   "no_with_veto": "0"
 }
 
-# Query Tally before calculated TallyLiquidGov 
-$BINARY q gov tally $PROPOSAL --output json | jq
 
 # Query the proposal again to check the status PROPOSAL_STATUS_PASSED
 $BINARY q gov proposals $PROPOSAL --output json | jq

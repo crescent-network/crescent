@@ -76,14 +76,17 @@ func (k Keeper) LiquidStaking(
 func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.ActiveLiquidValidators, stakingAmt sdk.Int, whitelistedValMap types.WhitelistedValMap) (newShares sdk.Dec, err error) {
 	totalNewShares := sdk.ZeroDec()
 	// crumb may occur due to a decimal point error in dividing the staking amount into the weight of liquid validators, It added on first active liquid validator
-	weightedShares, crumb := types.DivideByWeight(activeVals, stakingAmt, whitelistedValMap)
-	if len(weightedShares) == 0 {
+	weightedAmt, crumb := types.DivideByWeight(activeVals, stakingAmt, whitelistedValMap)
+	if len(weightedAmt) == 0 {
 		return sdk.ZeroDec(), types.ErrInvalidActiveLiquidValidators
 	}
-	weightedShares[0] = weightedShares[0].Add(crumb)
+	weightedAmt[0] = weightedAmt[0].Add(crumb)
 	for i, val := range activeVals {
+		if !weightedAmt[i].IsPositive() {
+			continue
+		}
 		validator, _ := k.stakingKeeper.GetValidator(ctx, val.GetOperator())
-		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, weightedShares[i], stakingtypes.Unbonded, validator, true)
+		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, weightedAmt[i], stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			return sdk.ZeroDec(), err
 		}
@@ -165,6 +168,9 @@ func (k Keeper) LiquidUnstaking(
 				return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
 			}
 		}
+		if !weightedShare.IsPositive() {
+			continue
+		}
 		// unbond with weightedShare
 		ubdTime, returnAmount, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare)
 		if err != nil {
@@ -172,7 +178,6 @@ func (k Keeper) LiquidUnstaking(
 		}
 		ubds = append(ubds, ubd)
 		totalReturnAmount = totalReturnAmount.Add(returnAmount)
-		k.SetLiquidValidator(ctx, val)
 	}
 	return ubdTime, totalReturnAmount, ubds, nil
 }
