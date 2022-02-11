@@ -156,8 +156,8 @@ func TestDivideByCurrentWeight(t *testing.T) {
 				},
 			},
 			addStakingAmt:   sdk.NewDec(10 * 1000000),
-			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("3333333.333333333333000000"), sdk.MustNewDecFromStr("3333333.333333333333000000"), sdk.MustNewDecFromStr("3333333.333333333333000000")},
-			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000001000000"),
+			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("3333333.000000000000000000"), sdk.MustNewDecFromStr("3333333.000000000000000000"), sdk.MustNewDecFromStr("3333333.000000000000000000")},
+			expectedCrumb:   sdk.MustNewDecFromStr("1.000000000000000000"),
 		},
 		{
 			liquidValidators: []types.LiquidValidatorState{
@@ -178,8 +178,8 @@ func TestDivideByCurrentWeight(t *testing.T) {
 				},
 			},
 			addStakingAmt:   sdk.NewDec(10),
-			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("4.999999999999999998"), sdk.MustNewDecFromStr("3.333333333333333332"), sdk.MustNewDecFromStr("1.666666666666666666")},
-			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000000000004"),
+			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("4.000000000000000000"), sdk.MustNewDecFromStr("3.000000000000000000"), sdk.MustNewDecFromStr("1.000000000000000000")},
+			expectedCrumb:   sdk.MustNewDecFromStr("2.000000000000000000"),
 		},
 		{
 			liquidValidators: []types.LiquidValidatorState{
@@ -200,8 +200,8 @@ func TestDivideByCurrentWeight(t *testing.T) {
 				},
 			},
 			addStakingAmt:   sdk.NewDec(10000000),
-			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("6666666.222222251850000000"), sdk.MustNewDecFromStr("1333333.244444450370000000"), sdk.MustNewDecFromStr("2000000.533333297777225185")},
-			expectedCrumb:   sdk.MustNewDecFromStr("0.000000000002774815"),
+			expectedOutputs: []sdk.Dec{sdk.MustNewDecFromStr("6666666.000000000000000000"), sdk.MustNewDecFromStr("1333333.000000000000000000"), sdk.MustNewDecFromStr("2000000.000000000000000000")},
+			expectedCrumb:   sdk.MustNewDecFromStr("1.000000000000000000"),
 		},
 	}
 
