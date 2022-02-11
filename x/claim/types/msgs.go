@@ -31,7 +31,7 @@ func (msg MsgClaim) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %v", err)
 	}
 	switch msg.ActionType {
-	case ActionTypeSwap, ActionTypeDeposit, ActionTypeFarming:
+	case ActionTypeDeposit, ActionTypeSwap, ActionTypeFarming:
 	default:
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action type: %s", msg.ActionType)
 	}
