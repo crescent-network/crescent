@@ -38,7 +38,7 @@ func DivideByCurrentWeight(avs ActiveLiquidValidators, input sdk.Dec, totalLiqui
 	totalOutput := sdk.ZeroDec()
 	unitInput := input.QuoTruncate(totalLiquidTokens.ToDec())
 	for _, val := range avs {
-		output := unitInput.MulTruncate(liquidTokenMap[val.OperatorAddress].ToDec())
+		output := unitInput.MulTruncate(liquidTokenMap[val.OperatorAddress].ToDec()).TruncateDec()
 		totalOutput = totalOutput.Add(output)
 		outputs = append(outputs, output)
 	}

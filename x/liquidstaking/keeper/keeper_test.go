@@ -113,6 +113,33 @@ func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt 
 	s.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
 }
 
+func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBTokenAmt sdk.Int, ubdComplete bool) {
+	params := s.keeper.GetParams(s.ctx)
+	alv := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
+	balanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, sdk.DefaultBondDenom)
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.BondedBondDenom, ubdBTokenAmt))
+	s.Require().NoError(err)
+	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	s.Require().EqualValues(ubdBTokenAmt, btokenBalanceBefore.Sub(btokenBalanceAfter))
+	s.Require().Len(ubds, len(alv))
+	for _, v := range alv {
+		_, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, liquidStaker, v.GetOperator())
+		s.Require().True(found)
+	}
+
+	if ubdComplete {
+		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 200).WithBlockTime(ubdTime.Add(1))
+		s.app.StakingKeeper.BlockValidatorUpdates(s.ctx) // EndBlock of staking keeper, mature UBD
+		balanceCompleteUBD := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, sdk.DefaultBondDenom)
+		for _, v := range alv {
+			_, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, liquidStaker, v.GetOperator())
+			s.Require().False(found)
+		}
+		s.Require().EqualValues(balanceCompleteUBD.Amount, balanceBefore.Amount.Add(unbondingAmt))
+	}
+}
+
 // advance block time and height for complete redelegations and unbondings
 func (s *KeeperTestSuite) completeRedelegationUnbonding() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))
@@ -123,7 +150,7 @@ func (s *KeeperTestSuite) completeRedelegationUnbonding() {
 	s.Require().Len(ubds, 0)
 }
 
-func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
+func (s *KeeperTestSuite) advanceHeight(height int, withBeginBlock bool) {
 	feeCollector := s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	for i := 0; i < height; i++ {
 		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(s.ctx.BlockTime().Add(BlockTime))
@@ -131,7 +158,7 @@ func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
 		feeCollectorBalance := s.app.BankKeeper.GetAllBalances(s.ctx, feeCollector)
 		rewardsToBeDistributed := feeCollectorBalance.AmountOf(sdk.DefaultBondDenom)
 
-		// mimic AllocateTokens, get rewards from feeCollector, AllocateTokensToValidator, add remaining to feePool
+		// mimic distribution.BeginBlock (AllocateTokens, get rewards from feeCollector, AllocateTokensToValidator, add remaining to feePool)
 		err := s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, authtypes.FeeCollectorName, distrtypes.ModuleName, feeCollectorBalance)
 		s.Require().NoError(err)
 		totalRewards := sdk.ZeroDec()
@@ -156,11 +183,11 @@ func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
 		feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
 		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: remaining}}...)
 		s.app.DistrKeeper.SetFeePool(s.ctx, feePool)
-		staking.BeginBlocker(s.ctx, *s.app.StakingKeeper)
-		staking.EndBlocker(s.ctx, *s.app.StakingKeeper)
-		if withEndBlock {
-			liquidstaking.EndBlocker(s.ctx, s.app.LiquidStakingKeeper)
+		if withBeginBlock {
+			// liquid validator set update, rebalancing, withdraw rewards, re-stake
+			liquidstaking.BeginBlocker(s.ctx, s.app.LiquidStakingKeeper)
 		}
+		staking.EndBlocker(s.ctx, *s.app.StakingKeeper)
 	}
 }
 

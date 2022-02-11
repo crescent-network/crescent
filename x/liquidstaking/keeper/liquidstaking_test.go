@@ -53,8 +53,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(sdk.ZeroDec(), res[2].DelShares)
 	s.Require().Equal(sdk.ZeroInt(), res[2].LiquidTokens)
 
-	//activeVals := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
-	//_, crumb := types.DivideByWeight(activeVals, stakingAmt, params.WhitelistedValMap())
+	// liquid staking
 	newShares, bTokenMintAmt, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().NoError(err)
 	s.Require().Equal(newShares, stakingAmt.ToDec())
@@ -78,22 +77,22 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(proxyAccDel2.Shares, sdk.NewDec(16666))
 	s.Require().Equal(stakingAmt.ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
+	bondedBondDenom := s.keeper.BondedBondDenom(s.ctx)
 	balanceBeforeUBD := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], sdk.DefaultBondDenom)
 	s.Require().Equal(balanceBeforeUBD.Amount, sdk.NewInt(999950000))
-
-	bondedBondDenom := s.keeper.BondedBondDenom(s.ctx)
-	ubdAmt := sdk.NewCoin(bondedBondDenom, sdk.NewInt(10000))
+	ubdBToken := sdk.NewCoin(bondedBondDenom, sdk.NewInt(10000))
 	bTokenBalance := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], bondedBondDenom)
 	bTokenTotalSupply := s.app.BankKeeper.GetSupply(s.ctx, bondedBondDenom)
 	s.Require().Equal(bTokenBalance, sdk.NewCoin(bondedBondDenom, sdk.NewInt(50000)))
 	s.Require().Equal(bTokenBalance, bTokenTotalSupply)
 
-	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], ubdAmt)
+	// liquid unstaking
+	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], ubdBToken)
 	s.Require().NoError(err)
 	s.Require().Len(ubds, 3)
-	// truncated shares
-	s.Require().EqualValues(unbondingAmt, ubdAmt.Amount.QuoRaw(3).MulRaw(3).ToDec())
-	//s.Require().Equal(unbondingAmt, ubdAmt.Amount.ToDec())
+
+	// Equal as NetAmount ( no rewards, balance )
+	s.Require().EqualValues(unbondingAmt, ubdBToken.Amount)
 	s.Require().Equal(ubds[0].DelegatorAddress, s.delAddrs[0].String())
 	s.Require().Equal(ubdTime, squadtypes.MustParseRFC3339("2022-03-22T00:00:00Z"))
 	bTokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], bondedBondDenom)
@@ -108,13 +107,14 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().True(found)
 	proxyAccDel3, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	s.Require().True(found)
-	s.Require().Equal(stakingAmt.Sub(unbondingAmt.TruncateInt()).ToDec(), proxyAccDel1.GetShares().Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
+	s.Require().Equal(stakingAmt.Sub(unbondingAmt).ToDec(), proxyAccDel1.GetShares().Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
+	// complete unbonding
 	s.ctx = s.ctx.WithBlockHeight(200).WithBlockTime(ubdTime.Add(1))
-	updates := s.app.StakingKeeper.BlockValidatorUpdates(s.ctx) // EndBlock of staking keeper
+	updates := s.app.StakingKeeper.BlockValidatorUpdates(s.ctx) // EndBlock of staking keeper, mature UBD
 	s.Require().Empty(updates)
 	balanceCompleteUBD := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], sdk.DefaultBondDenom)
-	s.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(unbondingAmt.TruncateInt()))
+	s.Require().Equal(balanceCompleteUBD.Amount, balanceBeforeUBD.Amount.Add(unbondingAmt))
 
 	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	s.Require().True(found)
@@ -122,7 +122,8 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().True(found)
 	proxyAccDel3, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[2])
 	s.Require().True(found)
-	s.Require().Equal(sdk.NewDec(13335), proxyAccDel1.Shares)
+	// crumb added to first valid active liquid validator
+	s.Require().Equal(sdk.NewDec(13334), proxyAccDel1.Shares)
 	s.Require().Equal(sdk.NewDec(13333), proxyAccDel2.Shares)
 	s.Require().Equal(sdk.NewDec(13333), proxyAccDel3.Shares)
 
@@ -130,7 +131,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(params.WhitelistedValidators[0].ValidatorAddress, res[0].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[0].TargetWeight, res[0].Weight)
 	s.Require().Equal(types.ValidatorStatusActive, res[0].Status)
-	s.Require().Equal(sdk.NewDec(13335), res[0].DelShares)
+	s.Require().Equal(sdk.NewDec(13334), res[0].DelShares)
 
 	s.Require().Equal(params.WhitelistedValidators[1].ValidatorAddress, res[1].OperatorAddress)
 	s.Require().Equal(params.WhitelistedValidators[1].TargetWeight, res[1].Weight)
@@ -142,8 +143,35 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(types.ValidatorStatusActive, res[2].Status)
 	s.Require().Equal(sdk.NewDec(13333), res[2].DelShares)
 
-	// test withdraw liquid reward and re-staking
-	s.advanceHeight(100, true)
+	// stack and withdraw liquid rewards and re-staking
+	s.advanceHeight(10, true)
+
+	// stack rewards on net amount
+	s.advanceHeight(1, false)
+	rewards, _, _ := s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
+	s.Require().NotEqualValues(rewards, sdk.ZeroDec())
+
+	// last unstaking, unbond all
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], params.BondedBondDenom).Amount
+	s.liquidUnstaking(s.delAddrs[0], btokenBalanceBefore, true)
+
+	// still active liquid validator after unbond all
+	alv := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
+	s.Require().True(len(alv) != 0)
+
+	// no btoken supply after unbond all
+	bTokenTotalSupply = s.app.BankKeeper.GetSupply(s.ctx, bondedBondDenom)
+	s.Require().EqualValues(bTokenTotalSupply.Amount, sdk.ZeroInt())
+
+	// TODO: make policy when last unstaking, unbond all, apply netAmount reward, balance policy, active
+	proxyBalance := s.app.BankKeeper.GetBalance(s.ctx, types.LiquidStakingProxyAcc, s.app.StakingKeeper.BondDenom(s.ctx)).Amount
+	rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
+	s.Require().Equal(rewards, sdk.ZeroDec())
+	s.Require().Equal(totalDelShares, sdk.ZeroDec())
+	s.Require().Equal(totalLiquidTokens, sdk.ZeroInt())
+	s.Require().NotEqualValues(proxyBalance, sdk.ZeroInt())
+	//s.Require().Equal(proxyBalance, rewards.TruncateInt())
+
 }
 
 // test Liquid Staking gov power
