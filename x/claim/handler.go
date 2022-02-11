@@ -10,7 +10,7 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-// NewHandler ...
+// NewHandler creates an sdk.Handler for all the claim type messages.
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	msgServer := keeper.NewMsgServerImpl(k)
 
