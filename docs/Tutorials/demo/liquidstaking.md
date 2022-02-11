@@ -191,12 +191,15 @@ $BINARY tx liquidstaking liquid-unstake 500000000bstake \
 $BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
 
-# Query liquid validators, you can find del_shares, liquid_tokens 500000000.000000000000000000 + withdrawn and re-staked rewards
+# Query liquid validators, you can find del_shares, liquid_tokens 500000000.000000000000000000 + withdrawn and re-staked rewards + UnstakeFee (0.001)
 $BINARY q liquidstaking liquid-validators --output json | jq
 
 # Query delegations and rewards of liquidstaking proxy module account cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk
 $BINARY q staking delegations cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
 $BINARY q distribution rewards cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
+
+# Query unbonding, 499500000(UnstakeFee(0.001) deducted) + rewards
+$BINARY q staking unbonding-delegations cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
 
 # Query balance of liquidstaking proxy module account
 $BINARY q bank balances cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk \
@@ -262,7 +265,7 @@ $BINARY q gov tally $PROPOSAL --output json | jq
 
 
 # Vote of user2
-$BINARY tx gov vote $PROPOSAL yes \
+$BINARY tx gov vote $PROPOSAL no \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -274,6 +277,12 @@ $BINARY tx gov vote $PROPOSAL yes \
 # Query TallyLiquidGov 
 $BINARY q gov tally $PROPOSAL --output json | jq
 
+{
+  "yes": "49999999999999576",
+  "abstain": "0",
+  "no": "500500352",
+  "no_with_veto": "0"
+}
 
 # Query the proposal again to check the status PROPOSAL_STATUS_PASSED
 $BINARY q gov proposals $PROPOSAL --output json | jq
@@ -281,8 +290,6 @@ $BINARY q gov proposals $PROPOSAL --output json | jq
 # Query the empty whitelist and inactivated liquid-validators
 $BINARY q liquidstaking params --output json | jq
 $BINARY q liquidstaking liquid-validators --output json | jq
-
-
 ```
 
 # Add the whitelist validator again
@@ -313,35 +320,8 @@ $BINARY tx gov vote $PROPOSAL yes \
 --output json | jq
 
 
-# Query Tally before calculated TallyLiquidGov 
-$BINARY q gov tally $PROPOSAL --output json | jq
-
-{
-  "yes": "50000000500499928",
-  "abstain": "0",
-  "no": "0",
-  "no_with_veto": "0"
-}
-
-# Vote of user2
-$BINARY tx gov vote $PROPOSAL no \
---chain-id localnet \
---from user2 \
---keyring-backend test \
---broadcast-mode block \
---yes \
---output json | jq
-
-
 # Query Tally with TallyLiquidGov calculation, voting power is worth of btoken balance of the user  
 $BINARY q gov tally $PROPOSAL --output json | jq
-
-{
-  "yes": "49999999999999576",
-  "abstain": "0",
-  "no": "500500352",
-  "no_with_veto": "0"
-}
 
 $BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 --output json | jq
@@ -352,7 +332,6 @@ $BINARY q gov proposals $PROPOSAL --output json | jq
 # Query the empty whitelist and inactivated liquid-validators
 $BINARY q liquidstaking params --output json | jq
 $BINARY q liquidstaking liquid-validators --output json | jq
-
 ```
 
 
