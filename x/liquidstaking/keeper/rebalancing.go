@@ -72,14 +72,14 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 
 	lenLiquidVals := liquidVals.Len()
 	var liquidTokenMap map[string]sdk.Int
-	rebalancingThreshold := rebalancingTrigger.Mul(totalLiquidTokens.ToDec()).TruncateInt()
+	rebalancingThresholdAmt := rebalancingTrigger.Mul(totalLiquidTokens.ToDec()).TruncateInt()
 	for i := 0; i < lenLiquidVals; i++ {
 		// sync totalLiquidTokens, liquidTokenMap applied rebalancing
 		totalLiquidTokens, liquidTokenMap = liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper)
 
 		// get min, max of liquid token gap
-		minVal, maxVal, amountNeeded, last := liquidVals.MinMaxGap(targetMap, liquidTokenMap, rebalancingThreshold)
-		if amountNeeded.IsZero() || amountNeeded.LT(rebalancingThreshold) {
+		minVal, maxVal, amountNeeded, last := liquidVals.MinMaxGap(targetMap, liquidTokenMap, rebalancingThresholdAmt)
+		if amountNeeded.IsZero() || (i == 0 && amountNeeded.LT(rebalancingThresholdAmt)) {
 			break
 		}
 

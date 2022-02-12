@@ -173,7 +173,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 
 	s.keeper.SetParams(s.ctx, params)
 	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
-	s.Require().Len(reds, 2)
+	s.Require().Len(reds, 3)
 
 	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
 	s.Require().True(found)
@@ -189,8 +189,8 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
 		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
 	}
-	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(25000))
-	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(24998))
+	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(24999))
+	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(24999))
 	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
 

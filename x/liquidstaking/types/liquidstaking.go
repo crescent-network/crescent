@@ -125,15 +125,12 @@ func (vs LiquidValidators) MinMaxGap(targetMap, liquidTokenMap map[string]sdk.In
 			minGapVal = val
 		}
 	}
-	minGap = minGap.Abs()
-	amountNeeded = sdk.MinInt(maxGap, minGap)
-	// when last redelegation for target weight zero, maxGap has priority, if not small left delShares for zero targetWeight
+	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
+	// lastRedelegation when maxGap validator's liquid token == amountNeeded for redelegation all delShares
 	lastRedelegation = amountNeeded.IsPositive() &&
 		!targetMap[maxGapVal.OperatorAddress].IsPositive() &&
-		maxGap.Sub(minGap).Abs().LT(threshold)
-	if lastRedelegation {
-		amountNeeded = maxGap
-	}
+		liquidTokenMap[maxGapVal.OperatorAddress].Equal(amountNeeded)
+
 	return minGapVal, maxGapVal, amountNeeded, lastRedelegation
 }
 
