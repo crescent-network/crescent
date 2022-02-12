@@ -53,3 +53,30 @@ func DateRangesOverlap(startTimeA, endTimeA, startTimeB, endTimeB time.Time) boo
 func ParseDec(s string) sdk.Dec {
 	return sdk.MustNewDecFromStr(s)
 }
+
+// ParseCoin parses and returns sdk.Coin.
+func ParseCoin(s string) sdk.Coin {
+	coin, err := sdk.ParseCoinNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coin
+}
+
+// ParseCoins parses and returns sdk.Coins.
+func ParseCoins(s string) sdk.Coins {
+	coins, err := sdk.ParseCoinsNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}
+
+// ParseTime parses and returns time.Time in time.RFC3339 format.
+func ParseTime(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
