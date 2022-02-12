@@ -238,3 +238,17 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 	_, found = k.GetSwapRequest(ctx, req.PairId, req.Id)
 	s.Require().False(found)
 }
+
+func (s *KeeperTestSuite) TestDustCollector() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	s.buyLimitOrder(s.addr(1), pair.Id, parseDec("0.9005"), newInt(1000), 0, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, parseDec("0.9005"), newInt(1000), 0, true)
+	s.nextBlock()
+
+	s.Require().True(coinsEq(parseCoins("1000denom1"), s.getBalances(s.addr(1))))
+	s.Require().True(coinsEq(parseCoins("900denom2"), s.getBalances(s.addr(2))))
+
+	s.Require().True(s.getBalances(pair.GetEscrowAddress()).IsZero())
+	s.Require().True(coinsEq(parseCoins("1denom2"), s.getBalances(types.DustCollectorAddress)))
+}

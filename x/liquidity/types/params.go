@@ -49,7 +49,8 @@ var (
 var (
 	MinCoinAmount = sdk.NewInt(100) // minimum coin amount of offer coin and base coin
 
-	GlobalEscrowAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
+	GlobalEscrowAddress  = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
+	DustCollectorAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "DustCollector")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
