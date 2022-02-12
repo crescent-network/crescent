@@ -25,13 +25,21 @@ func (k Keeper) GetNextSwapRequestIdWithUpdate(ctx sdk.Context, pair types.Pair)
 	return id
 }
 
+// ValidateMsgCreatePair validates types.MsgCreatePair.
+func (k Keeper) ValidateMsgCreatePair(ctx sdk.Context, msg *types.MsgCreatePair) error {
+	if _, found := k.GetPairByDenoms(ctx, msg.BaseCoinDenom, msg.QuoteCoinDenom); found {
+		return types.ErrPairAlreadyExists
+	}
+	return nil
+}
+
 // CreatePair handles types.MsgCreatePair and creates a pair.
 func (k Keeper) CreatePair(ctx sdk.Context, msg *types.MsgCreatePair) (types.Pair, error) {
-	params := k.GetParams(ctx)
-
-	if _, found := k.GetPairByDenoms(ctx, msg.BaseCoinDenom, msg.QuoteCoinDenom); found {
-		return types.Pair{}, types.ErrPairAlreadyExists
+	if err := k.ValidateMsgCreatePair(ctx, msg); err != nil {
+		return types.Pair{}, err
 	}
+
+	params := k.GetParams(ctx)
 
 	// Send the pair creation fee to the fee collector.
 	feeCollectorAddr, _ := sdk.AccAddressFromBech32(params.FeeCollectorAddress)

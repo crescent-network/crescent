@@ -62,14 +62,14 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionSell, squad.ParseCoin("1000000denom1"), "denom2",
 				squad.ParseDec("1.0"), newInt(1000000), 48*time.Hour),
-			"order lifespan is too long",
+			"48h0m0s is longer than 24h0m0s: order lifespan is too long",
 		},
 		{
 			"pair not found",
 			types.NewMsgLimitOrder(
 				orderer, 3, types.SwapDirectionBuy, squad.ParseCoin("1000000denom1"), "denom2",
 				squad.ParseDec("1.0"), newInt(1000000), 0),
-			"pair not found: not found",
+			"pair 3 not found: not found",
 		},
 		{
 			"price out of lower limit",
@@ -91,14 +91,6 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 				orderer, pair2.Id, types.SwapDirectionSell, squad.ParseCoin("1000000denom2"), "denom1",
 				squad.ParseDec("100.0"), newInt(1000000), 0),
 			"",
-		},
-		{
-
-			"insufficient offer coin",
-			types.NewMsgLimitOrder(
-				orderer, pair2.Id, types.SwapDirectionBuy, squad.ParseCoin("1000000denom1"), "denom2",
-				squad.ParseDec("10.0"), newInt(1000000), 0),
-			"insufficient offer coin",
 		},
 	} {
 		s.Run(tc.name, func() {
