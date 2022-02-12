@@ -32,6 +32,17 @@ func (ob *OrderBook) Add(orders ...Order) {
 	}
 }
 
+func (ob *OrderBook) AllOrders() []Order {
+	var orders []Order
+	for _, tick := range ob.buys {
+		orders = append(orders, tick.orders...)
+	}
+	for _, tick := range ob.sells {
+		orders = append(orders, tick.orders...)
+	}
+	return orders
+}
+
 func (ob *OrderBook) HighestBuyPrice() (sdk.Dec, bool) {
 	return ob.buys.highestPrice()
 }
@@ -108,19 +119,45 @@ func (ticks *orderBookTicks) lowestPrice() (sdk.Dec, bool) {
 }
 
 func (ticks *orderBookTicks) amountOver(price sdk.Dec) sdk.Int {
-	panic("not implemented")
+	i, exact := ticks.findPrice(price)
+	if !exact {
+		i--
+	}
+	amt := sdk.ZeroInt()
+	for ; i >= 0; i-- {
+		amt = amt.Add((*ticks)[i].totalOpenAmount())
+	}
+	return amt
 }
 
 func (ticks *orderBookTicks) amountUnder(price sdk.Dec) sdk.Int {
-	panic("not implemented")
+	i, _ := ticks.findPrice(price)
+	amt := sdk.ZeroInt()
+	for ; i < len(*ticks); i++ {
+		amt = amt.Add((*ticks)[i].totalOpenAmount())
+	}
+	return amt
 }
 
 func (ticks *orderBookTicks) ordersOver(price sdk.Dec) []Order {
-	panic("not implemented")
+	i, exact := ticks.findPrice(price)
+	if !exact {
+		i--
+	}
+	var orders []Order
+	for ; i >= 0; i-- {
+		orders = append(orders, (*ticks)[i].orders...)
+	}
+	return orders
 }
 
 func (ticks *orderBookTicks) ordersUnder(price sdk.Dec) []Order {
-	panic("not implemented")
+	i, _ := ticks.findPrice(price)
+	var orders []Order
+	for ; i < len(*ticks); i++ {
+		orders = append(orders, (*ticks)[i].orders...)
+	}
+	return orders
 }
 
 type orderBookTick struct {
