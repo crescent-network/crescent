@@ -1,14 +1,39 @@
 package amm_test
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
+
+func TestBasicPool(t *testing.T) {
+	r := rand.New(rand.NewSource(0))
+	for i := 0; i < 1000; i++ {
+		rx, ry := sdk.NewInt(1+r.Int63n(100000000)), sdk.NewInt(1+r.Int63n(100000000))
+		pool := amm.NewBasicPool(rx, ry, sdk.ZeroInt())
+
+		highest, found := pool.HighestBuyPrice()
+		require.True(t, found)
+		require.True(sdk.DecEq(t, pool.Price(), highest))
+		lowest, found := pool.LowestSellPrice()
+		require.True(t, found)
+		require.True(sdk.DecEq(t, pool.Price(), lowest))
+
+		lowest = amm.LowestTick(defTickPrec)
+		buyAmt := pool.BuyAmountOver(lowest)
+		expected := rx.ToDec().QuoRoundUp(lowest)
+		require.True(t, squad.DecApproxEqual(expected, buyAmt.ToDec()))
+		highest = amm.HighestTick(defTickPrec)
+		sellAmt := pool.SellAmountUnder(highest)
+		require.True(t, ry.Sub(sellAmt).LTE(sdk.OneInt()))
+	}
+}
 
 func TestBasicPool_Price(t *testing.T) {
 	for _, tc := range []struct {

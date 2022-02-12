@@ -80,3 +80,12 @@ func ParseTime(s string) time.Time {
 	}
 	return t
 }
+
+// DecApproxEqual returns true if a and b are approximately equal,
+// which means the diff ratio is equal or less than 0.1%.
+func DecApproxEqual(a, b sdk.Dec) bool {
+	if b.GT(a) {
+		a, b = b, a
+	}
+	return a.Sub(b).Quo(a).LTE(sdk.NewDecWithPrec(1, 3))
+}
