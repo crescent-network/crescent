@@ -55,8 +55,8 @@ type BaseOrder struct {
 	ReceivedDemandCoinAmount sdk.Int
 }
 
-func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) BaseOrder {
-	return BaseOrder{
+func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *BaseOrder {
+	return &BaseOrder{
 		Direction:                dir,
 		Price:                    price,
 		Amount:                   amt,

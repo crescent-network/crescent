@@ -52,7 +52,7 @@ func SortOrders(orders []amm.Order, cmp PriceComparator) {
 }
 
 type UserOrder struct {
-	amm.BaseOrder
+	*amm.BaseOrder
 	RequestId uint64
 	Orderer   sdk.AccAddress
 }
@@ -88,7 +88,7 @@ func (order *UserOrder) SetReceivedDemandCoinAmount(amt sdk.Int) amm.Order {
 }
 
 type PoolOrder struct {
-	amm.BaseOrder
+	*amm.BaseOrder
 	PoolId          uint64
 	ReserveAddress  sdk.AccAddress
 	OfferCoinAmount sdk.Int
