@@ -108,21 +108,21 @@ func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap t
 	}
 
 	// skip when invalid totalLiquidTokens or totalWeight
-	totalLiquidTokens, _ := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+	totalLiquidTokens, _ := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
 	if !totalLiquidTokens.IsPositive() || !activeVals.TotalWeight(whitelistedValMap).IsPositive() {
 		return
 	}
 
 	// Withdraw rewards of LiquidStakingProxyAcc and re-staking
-	totalRewards, _, _ := k.CheckTotalRewards(ctx, types.LiquidStakingProxyAcc)
+	totalRemainingRewards, _, _ := k.CheckRemainingRewards(ctx, types.LiquidStakingProxyAcc)
 	// checking over types.RewardTrigger and execute GetRewards
-	balance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
+	proxyAccBalance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
 	rewardsThreshold := types.RewardTrigger.Mul(totalLiquidTokens.ToDec())
-	if balance.ToDec().Add(totalRewards).GTE(rewardsThreshold) {
-		// re-staking with balance, due to auto-withdraw on add staking by f1
+	if proxyAccBalance.ToDec().Add(totalRemainingRewards).GTE(rewardsThreshold) {
+		// re-staking with proxyAccBalance, due to auto-withdraw on add staking by f1
 		k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
-		balance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
-		_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, activeVals, balance, whitelistedValMap)
+		proxyAccBalance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
+		_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, activeVals, proxyAccBalance, whitelistedValMap)
 		if err != nil {
 			panic(err)
 		}
@@ -172,7 +172,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 //	}
 //	params := k.GetParams(ctx)
 //	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-//	totalLiquidTokens := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+//	totalLiquidTokens := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
 //	totalWeight := activeVals.TotalWeight(whitelistedValMap)
 //	ToBeTotalDelShares := totalLiquidTokens.TruncateInt().Add(addStakingAmt)
 //	existOverWeightedVal := false

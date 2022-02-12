@@ -68,7 +68,7 @@ func NetAmountInvariant(k Keeper) sdk.Invariant {
 func TotalLiquidTokensInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		lvs := k.GetAllLiquidValidators(ctx)
-		_, _, totalLiquidTokensOfProxyAcc := k.CheckTotalRewards(ctx, types.LiquidStakingProxyAcc)
+		_, _, totalLiquidTokensOfProxyAcc := k.CheckRemainingRewards(ctx, types.LiquidStakingProxyAcc)
 		totalLiquidTokensOfLiquidValidators, _ := lvs.TotalLiquidTokens(ctx, k.stakingKeeper)
 
 		broken := !totalLiquidTokensOfProxyAcc.Equal(totalLiquidTokensOfLiquidValidators)

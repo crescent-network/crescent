@@ -45,7 +45,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 	if len(activeVals) == 0 {
 		return
 	}
-	totalLiquidTokens, liquidTokenMap := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
 	if !totalLiquidTokens.IsPositive() {
 		return
 	}
@@ -124,11 +124,12 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		}
 		if votingPower.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			dividedPowers, crumb := types.DivideByCurrentWeight(activeVals, votingPower, totalLiquidTokens, liquidTokenMap)
+			// TODO: consider using BondedTokens for currentWeight when Tally
+			// drop crumb for defensive policy about delShares decimal errors
+			dividedPowers, _ := types.DivideByCurrentWeight(activeVals, votingPower, totalLiquidTokens, liquidTokenMap)
 			if len(dividedPowers) == 0 {
 				continue
 			}
-			dividedPowers[0] = dividedPowers[0].Add(crumb)
 			for i, val := range activeVals {
 				if !dividedPowers[i].IsPositive() {
 					continue

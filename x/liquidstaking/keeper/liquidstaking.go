@@ -18,7 +18,7 @@ func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {
 // During Liquid Unstacking, btoken immediately burns and the unbonding queue belongs to the requester, so the the unbonding values are excluded on netAmount.
 func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
-	totalRewards, _, totalLiquidTokens := k.CheckTotalRewards(ctx, types.LiquidStakingProxyAcc)
+	totalRewards, _, totalLiquidTokens := k.CheckRemainingRewards(ctx, types.LiquidStakingProxyAcc)
 	return balance.ToDec().Add(totalLiquidTokens.ToDec()).Add(totalRewards)
 }
 
@@ -117,12 +117,8 @@ func (k Keeper) LiquidUnstaking(
 
 	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
 	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
-	unstakingAll := false
 	if unstakingBtoken.Amount.GT(bTokenTotalSupply.Amount) {
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, types.ErrInvalidBTokenSupply
-	} else if unstakingBtoken.Amount.Equal(bTokenTotalSupply.Amount) {
-		// TODO: need to policy for last liquid unstaking for remaining rewards, balance
-		unstakingAll = true
 	}
 	netAmount := k.NetAmount(ctx)
 
@@ -140,9 +136,9 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	totalLiquidTokens, liquidTokenMap := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
-	// crumb may occur due to a decimal error in dividing the unstaking bToken into the weight of liquid validators, add it to first sufficient active validator
-	unbondingAmounts, crumb := types.DivideByCurrentWeight(activeVals, unbondingAmount, totalLiquidTokens, liquidTokenMap)
+	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
+	// crumb may occur due to a decimal error in dividing the unstaking bToken into the weight of liquid validators, it will remain in the NetAmount
+	unbondingAmounts, _ := types.DivideByCurrentWeight(activeVals, unbondingAmount, totalLiquidTokens, liquidTokenMap)
 	if len(unbondingAmounts) == 0 {
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, types.ErrInvalidActiveLiquidValidators
 	}
@@ -152,24 +148,10 @@ func (k Keeper) LiquidUnstaking(
 		var ubd stakingtypes.UnbondingDelegation
 		var returnAmount sdk.Int
 		var weightedShare sdk.Dec
-		// unstaking all when last unstaking request(unstakingBtoken == bTokenTotalSupply)
-		del, found := k.stakingKeeper.GetDelegation(ctx, proxyAcc, val.GetOperator())
-		if unstakingAll && found && del.Shares.IsPositive() {
-			weightedShare = del.Shares
-		} else if crumb.IsPositive() {
-			// crumb to first sufficient active liquid validator
-			weightedShareCrumbAdded, err := k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), unbondingAmounts[i].Add(crumb).TruncateInt())
-			if err == nil {
-				crumb = sdk.ZeroDec()
-				weightedShare = weightedShareCrumbAdded
-			}
-		}
-		if weightedShare.IsNil() {
-			// calculate delShares from tokens with validation
-			weightedShare, err = k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), unbondingAmounts[i].TruncateInt())
-			if err != nil {
-				return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
-			}
+		// calculate delShares from tokens with validation
+		weightedShare, err = k.stakingKeeper.ValidateUnbondAmount(ctx, proxyAcc, val.GetOperator(), unbondingAmounts[i].TruncateInt())
+		if err != nil {
+			return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
 		}
 		if !weightedShare.IsPositive() {
 			continue
@@ -214,7 +196,7 @@ func (k Keeper) LiquidUnbond(
 	return completionTime, returnAmount, ubd, nil
 }
 
-func (k Keeper) CheckTotalRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec, sdk.Int) {
+func (k Keeper) CheckRemainingRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec, sdk.Int) {
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	totalDelShares := sdk.ZeroDec()
 	totalLiquidTokens := sdk.ZeroInt()

@@ -103,41 +103,52 @@ func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []
 	return addrs, valAddrs, pks
 }
 
-func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) {
-	params := s.keeper.GetParams(s.ctx)
-	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
-	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
-	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
+func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) error {
+	ctx, writeCache := s.ctx.CacheContext()
+	params := s.keeper.GetParams(ctx)
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
+	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	if err != nil {
+		return err
+	}
+	btokenBalanceAfter := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
 	s.Require().NoError(err)
 	s.NotEqualValues(newShares, sdk.ZeroDec())
 	s.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
+	writeCache()
+	return nil
 }
 
-func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBTokenAmt sdk.Int, ubdComplete bool) {
-	params := s.keeper.GetParams(s.ctx)
-	alv := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
-	balanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, sdk.DefaultBondDenom)
-	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
-	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.LiquidBondDenom, ubdBTokenAmt))
-	s.Require().NoError(err)
-	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
+func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBTokenAmt sdk.Int, ubdComplete bool) error {
+	ctx, writeCache := s.ctx.CacheContext()
+	params := s.keeper.GetParams(ctx)
+	alv := s.keeper.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
+	balanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, sdk.DefaultBondDenom)
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
+	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.LiquidBondDenom, ubdBTokenAmt))
+	if err != nil {
+		return err
+	}
+	btokenBalanceAfter := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
 	s.Require().EqualValues(ubdBTokenAmt, btokenBalanceBefore.Sub(btokenBalanceAfter))
 	s.Require().Len(ubds, len(alv))
 	for _, v := range alv {
-		_, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, liquidStaker, v.GetOperator())
+		_, found := s.app.StakingKeeper.GetUnbondingDelegation(ctx, liquidStaker, v.GetOperator())
 		s.Require().True(found)
 	}
 
 	if ubdComplete {
-		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 200).WithBlockTime(ubdTime.Add(1))
-		s.app.StakingKeeper.BlockValidatorUpdates(s.ctx) // EndBlock of staking keeper, mature UBD
-		balanceCompleteUBD := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, sdk.DefaultBondDenom)
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 200).WithBlockTime(ubdTime.Add(1))
+		s.app.StakingKeeper.BlockValidatorUpdates(ctx) // EndBlock of staking keeper, mature UBD
+		balanceCompleteUBD := s.app.BankKeeper.GetBalance(ctx, liquidStaker, sdk.DefaultBondDenom)
 		for _, v := range alv {
-			_, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, liquidStaker, v.GetOperator())
+			_, found := s.app.StakingKeeper.GetUnbondingDelegation(ctx, liquidStaker, v.GetOperator())
 			s.Require().False(found)
 		}
 		s.Require().EqualValues(balanceCompleteUBD.Amount, balanceBefore.Amount.Add(unbondingAmt))
 	}
+	writeCache()
+	return nil
 }
 
 // advance block time and height for complete redelegations and unbondings
@@ -245,12 +256,12 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	//fmt.Println(liquidTokens, expectedSlashedLiquidTokens, liquidTokensAfterSlashed)
 	//
 	//// TODO: 24998 * 0.95 + 25000 == 48748, but 48778, maybe reward 30
-	//rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
+	//rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
 	//fmt.Println(rewards, totalDelShares, totalLiquidTokens)
 	//slashedStakingAmt := stakingAmt.ToDec().MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
 	//fmt.Println(slashedStakingAmt)
-	//fmt.Println(s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
-	//s.Require().EqualValues(slashedStakingAmt, s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
+	//fmt.Println(s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
+	//s.Require().EqualValues(slashedStakingAmt, s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
 
 }
 
