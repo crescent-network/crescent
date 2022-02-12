@@ -66,13 +66,13 @@ func (pool *BasicPool) Withdraw(pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
 	return
 }
 
-func (pool *BasicPool) HighestBuyPrice() (sdk.Dec, bool) {
+func (pool *BasicPool) HighestBuyPrice() (price sdk.Dec, found bool) {
 	// The highest buy price is actually a bit lower than pool price,
 	// but it's not important for our matching logic.
 	return pool.Price(), true
 }
 
-func (pool *BasicPool) LowestSellPrice() (sdk.Dec, bool) {
+func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 	// The lowest sell price is actually a bit higher than the pool price,
 	// but it's not important for our matching logic.
 	return pool.Price(), true
