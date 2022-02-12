@@ -96,9 +96,10 @@ type PoolOrder struct {
 
 func NewPoolOrder(pool Pool, dir amm.OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *PoolOrder {
 	return &PoolOrder{
-		BaseOrder:      amm.NewBaseOrder(dir, price, amt, offerCoinAmt),
-		PoolId:         pool.Id,
-		ReserveAddress: pool.GetReserveAddress(),
+		BaseOrder:       amm.NewBaseOrder(dir, price, amt, offerCoinAmt),
+		PoolId:          pool.Id,
+		ReserveAddress:  pool.GetReserveAddress(),
+		OfferCoinAmount: offerCoinAmt,
 	}
 }
 
