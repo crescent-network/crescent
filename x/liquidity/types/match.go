@@ -1,10 +1,11 @@
 package types
 
 import (
-	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
 type PriceDirection int
@@ -15,198 +16,128 @@ const (
 	PriceDecreasing
 )
 
-type MatchEngine struct {
-	BuyOrderSource  OrderSource
-	SellOrderSource OrderSource
-	TickPrecision   int // price tick precision
-}
-
-func NewMatchEngine(buys, sells OrderSource, prec int) *MatchEngine {
-	return &MatchEngine{
-		BuyOrderSource:  buys,
-		SellOrderSource: sells,
-		TickPrecision:   prec,
-	}
-}
-
-func NewMatchEngineFromOrderBook(ob *OrderBook) *MatchEngine {
-	return NewMatchEngine(ob.OrderSource(SwapDirectionBuy), ob.OrderSource(SwapDirectionSell), ob.TickPrecision)
-}
-
-func (engine *MatchEngine) Matchable() bool {
-	highestBuyPrice, found := engine.BuyOrderSource.HighestTick()
+func InitialMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, dir PriceDirection, matchable bool) {
+	highest, found := os.HighestBuyPrice()
 	if !found {
-		return false
+		return sdk.Dec{}, 0, false
 	}
-	return engine.SellOrderSource.AmountLTE(highestBuyPrice).IsPositive()
-}
+	lowest, found := os.LowestSellPrice()
+	if !found {
+		return sdk.Dec{}, 0, false
+	}
+	if highest.LT(lowest) {
+		return sdk.Dec{}, 0, false
+	}
 
-func (engine *MatchEngine) EstimatedPriceDirection(midPrice sdk.Dec) PriceDirection {
-	buyAmount := engine.BuyOrderSource.AmountGTE(midPrice)
-	sellAmount := engine.SellOrderSource.AmountLTE(midPrice)
+	midPrice := highest.Add(lowest).QuoInt64(2)
+	buyAmt := os.BuyAmountOver(midPrice)
+	sellAmt := os.SellAmountUnder(midPrice)
 	switch {
-	case buyAmount.GT(sellAmount):
-		return PriceIncreasing
-	case sellAmount.GT(buyAmount):
-		return PriceDecreasing
+	case buyAmt.GT(sellAmt):
+		dir = PriceIncreasing
+	case sellAmt.GT(buyAmt):
+		dir = PriceDecreasing
 	default:
-		return PriceStaying
+		dir = PriceStaying
 	}
-}
-
-func (engine *MatchEngine) InitialMatchPrice() (price sdk.Dec, dir PriceDirection) {
-	highestBuyPrice, found := engine.BuyOrderSource.HighestTick()
-	if !found {
-		panic("there is no buy orders")
-	}
-	lowestSellPrice, found := engine.SellOrderSource.LowestTick()
-	if !found {
-		panic("there is no sell orders")
-	}
-	midPrice := highestBuyPrice.Add(lowestSellPrice).QuoInt64(2)
-
-	dir = engine.EstimatedPriceDirection(midPrice)
 
 	switch dir {
 	case PriceStaying:
-		price = RoundPrice(midPrice, engine.TickPrecision)
+		matchPrice = amm.RoundPrice(midPrice, tickPrec)
 	case PriceIncreasing:
-		price = PriceToTick(midPrice, engine.TickPrecision) // TODO: use lower tick?
+		matchPrice = amm.DownTick(midPrice, tickPrec)
 	case PriceDecreasing:
-		price = PriceToUpTick(midPrice, engine.TickPrecision) // TODO: use higher tick?
+		matchPrice = amm.UpTick(midPrice, tickPrec)
 	}
-	return
+
+	return matchPrice, dir, true
 }
 
-func (engine *MatchEngine) FindMatchPrice() sdk.Dec {
-	matchPrice, dir := engine.InitialMatchPrice()
-	if dir == PriceStaying { // TODO: is this correct?
-		return matchPrice
+func FindMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
+	initialMatchPrice, dir, matchable := InitialMatchPrice(os, tickPrec)
+	if !matchable {
+		return sdk.Dec{}, false
+	}
+	if dir == PriceStaying {
+		return initialMatchPrice, true
 	}
 
-	tickSource := MergeOrderSources(engine.BuyOrderSource, engine.SellOrderSource) // temporary order source just for ticks
-
-	buysCache := map[int]sdk.Int{}
-	buyAmountGTE := func(i int) sdk.Int {
-		ba, ok := buysCache[i]
-		if !ok {
-			ba = engine.BuyOrderSource.AmountGTE(TickFromIndex(i, engine.TickPrecision))
-			buysCache[i] = ba
-		}
-		return ba
+	buyAmtOver := func(i int) sdk.Int {
+		return os.BuyAmountOver(amm.TickFromIndex(i, tickPrec))
 	}
-	sellsCache := map[int]sdk.Int{}
-	sellAmountLTE := func(i int) sdk.Int {
-		sa, ok := sellsCache[i]
-		if !ok {
-			sa = engine.SellOrderSource.AmountLTE(TickFromIndex(i, engine.TickPrecision))
-			sellsCache[i] = sa
-		}
-		return sa
+	sellAmtUnder := func(i int) sdk.Int {
+		return os.SellAmountUnder(amm.TickFromIndex(i, tickPrec))
 	}
 
 	switch dir {
 	case PriceIncreasing:
-		start := TickToIndex(matchPrice, engine.TickPrecision)
-		highest, found := tickSource.HighestTick()
-		if !found { // TODO: remove this sanity check
-			panic("this will never happen")
-		}
-		end := TickToIndex(highest, engine.TickPrecision)
+		start := amm.TickToIndex(initialMatchPrice, tickPrec)
+		end := amm.TickToIndex(amm.HighestTick(tickPrec), tickPrec)
 		i := start + sort.Search(end-start+1, func(i int) bool {
 			i += start
-			bg := buyAmountGTE(i + 1)
-			return bg.LTE(sellAmountLTE(i)) && buyAmountGTE(i).GT(sellAmountLTE(i-1)) || bg.IsZero()
+			bg := buyAmtOver(i + 1)
+			return bg.IsZero() || (bg.LTE(sellAmtUnder(i)) && buyAmtOver(i).GT(sellAmtUnder(i-1)))
 		})
 		if i > end {
 			i = end
 		}
-		return TickFromIndex(i, engine.TickPrecision)
-	case PriceDecreasing:
-		start := TickToIndex(matchPrice, engine.TickPrecision)
-		lowest, found := tickSource.LowestTick()
-		if !found { // TODO: remove this sanity check
-			panic("this will never happen")
-		}
-		end := TickToIndex(lowest, engine.TickPrecision)
+		return amm.TickFromIndex(i, tickPrec), true
+	default: // PriceDecreasing
+		start := amm.TickToIndex(initialMatchPrice, tickPrec)
+		end := amm.TickToIndex(amm.LowestTick(tickPrec), tickPrec)
 		i := start - sort.Search(start-end+1, func(i int) bool {
 			i = start - i
-			sl := sellAmountLTE(i - 1)
-			return buyAmountGTE(i+1).LTE(sellAmountLTE(i)) && buyAmountGTE(i).GTE(sl) || sl.IsZero()
+			sl := sellAmtUnder(i - 1)
+			return sl.IsZero() || (buyAmtOver(i+1).LTE(sellAmtUnder(i)) && buyAmtOver(i).GTE(sl))
 		})
 		if i < end {
 			i = end
 		}
-		return TickFromIndex(i, engine.TickPrecision)
-	default: // never happens
-		panic(fmt.Sprintf("invalid price direction: %d", dir))
+		return amm.TickFromIndex(i, tickPrec), true
 	}
 }
 
-// TODO: no need to return the order book
-func (engine *MatchEngine) Match() (orderBook *OrderBook, matchPrice sdk.Dec, quoteCoinDustAmt sdk.Int, matched bool) {
-	if !engine.Matchable() {
-		return
+func Match(os amm.OrderSource, tickPrec int) (orders []amm.Order, matchPrice sdk.Dec, quoteCoinDust sdk.Int, matched bool) {
+	var found bool
+	matchPrice, found = FindMatchPrice(os, tickPrec)
+	if !found {
+		return nil, sdk.Dec{}, sdk.Int{}, false
 	}
 
-	matchPrice = engine.FindMatchPrice()
-	buyPrice, _ := engine.BuyOrderSource.HighestTick()
-	sellPrice, _ := engine.SellOrderSource.LowestTick()
+	buyOrders := os.BuyOrdersOver(matchPrice)
+	sellOrders := os.SellOrdersUnder(matchPrice)
 
-	var buyOrders, sellOrders Orders
-
-	orderBook = NewOrderBook(engine.TickPrecision)
-
-	for buyPrice.GTE(matchPrice) {
-		orders := engine.BuyOrderSource.Orders(buyPrice)
-		orderBook.AddOrders(orders...)
-		buyOrders = append(buyOrders, orders...)
-		var found bool
-		buyPrice, found = engine.BuyOrderSource.DownTickWithOrders(buyPrice)
-		if !found {
-			break
-		}
+	quoteCoinDust, matched = MatchOrders(buyOrders, sellOrders, matchPrice)
+	if !matched {
+		return nil, sdk.Dec{}, sdk.Int{}, false
 	}
 
-	for sellPrice.LTE(matchPrice) {
-		orders := engine.SellOrderSource.Orders(sellPrice)
-		orderBook.AddOrders(orders...)
-		sellOrders = append(sellOrders, orders...)
-		var found bool
-		sellPrice, found = engine.SellOrderSource.UpTickWithOrders(sellPrice)
-		if !found {
-			break
-		}
-	}
-
-	quoteCoinDustAmt, matched = MatchOrders(buyOrders, sellOrders, matchPrice)
-
-	return
+	return append(buyOrders, sellOrders...), matchPrice, quoteCoinDust, true
 }
 
-func FindLastMatchableOrders(orders1, orders2 Orders, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
+func FindLastMatchableOrders(orders1, orders2 []amm.Order, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
 	sides := []*struct {
-		orders          Orders
-		totalAmt        sdk.Int
+		orders          []amm.Order
+		totalOpenAmt    sdk.Int
 		i               int
 		partialMatchAmt sdk.Int
 	}{
-		{orders1, orders1.OpenAmount(), len(orders1) - 1, sdk.Int{}},
-		{orders2, orders2.OpenAmount(), len(orders2) - 1, sdk.Int{}},
+		{orders1, amm.TotalOpenAmount(orders1), len(orders1) - 1, sdk.Int{}},
+		{orders2, amm.TotalOpenAmount(orders2), len(orders2) - 1, sdk.Int{}},
 	}
 	for {
 		ok := true
 		for _, side := range sides {
 			i := side.i
 			order := side.orders[i]
-			matchAmt := sdk.MinInt(sides[0].totalAmt, sides[1].totalAmt)
-			side.partialMatchAmt = matchAmt.Sub(side.totalAmt.Sub(order.GetOpenAmount()))
-			if side.totalAmt.Sub(order.GetOpenAmount()).GT(matchAmt) ||
+			matchAmt := sdk.MinInt(sides[0].totalOpenAmt, sides[1].totalOpenAmt)
+			side.partialMatchAmt = matchAmt.Sub(side.totalOpenAmt.Sub(order.GetOpenAmount()))
+			if side.totalOpenAmt.Sub(order.GetOpenAmount()).GT(matchAmt) ||
 				matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero() {
 				if i == 0 {
 					return
 				}
-				side.totalAmt = side.totalAmt.Sub(order.GetOpenAmount())
+				side.totalOpenAmt = side.totalOpenAmt.Sub(order.GetOpenAmount())
 				side.i--
 				ok = false
 			}
@@ -217,16 +148,16 @@ func FindLastMatchableOrders(orders1, orders2 Orders, matchPrice sdk.Dec) (idx1,
 	}
 }
 
-func MatchOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (quoteCoinDustAmt sdk.Int, matched bool) {
-	buyOrders.Sort(DescendingPrice)
-	sellOrders.Sort(AscendingPrice)
+func MatchOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (quoteCoinDust sdk.Int, matched bool) {
+	SortOrders(buyOrders, DescendingPrice)
+	SortOrders(sellOrders, AscendingPrice)
 
 	bi, si, pmb, pms, found := FindLastMatchableOrders(buyOrders, sellOrders, matchPrice)
 	if !found {
-		return
+		return sdk.Int{}, false
 	}
 
-	quoteCoinDustAmt = sdk.ZeroInt()
+	quoteCoinDust = sdk.ZeroInt()
 
 	for i := 0; i <= bi; i++ {
 		buyOrder := buyOrders[i]
@@ -239,8 +170,8 @@ func MatchOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (quoteCoinDus
 		paidQuoteCoinAmt := matchPrice.MulInt(receivedBaseCoinAmt).Ceil().TruncateInt()
 		buyOrder.SetOpenAmount(buyOrder.GetOpenAmount().Sub(receivedBaseCoinAmt))
 		buyOrder.SetRemainingOfferCoinAmount(buyOrder.GetRemainingOfferCoinAmount().Sub(paidQuoteCoinAmt))
-		buyOrder.SetReceivedAmount(receivedBaseCoinAmt)
-		quoteCoinDustAmt = quoteCoinDustAmt.Add(paidQuoteCoinAmt)
+		buyOrder.SetReceivedDemandCoinAmount(receivedBaseCoinAmt)
+		quoteCoinDust = quoteCoinDust.Add(paidQuoteCoinAmt)
 	}
 
 	for i := 0; i <= si; i++ {
@@ -254,11 +185,9 @@ func MatchOrders(buyOrders, sellOrders Orders, matchPrice sdk.Dec) (quoteCoinDus
 		receivedQuoteCoinAmt := matchPrice.MulInt(paidBaseCoinAmt).TruncateInt()
 		sellOrder.SetOpenAmount(sellOrder.GetOpenAmount().Sub(paidBaseCoinAmt))
 		sellOrder.SetRemainingOfferCoinAmount(sellOrder.GetRemainingOfferCoinAmount().Sub(paidBaseCoinAmt))
-		sellOrder.SetReceivedAmount(receivedQuoteCoinAmt)
-		quoteCoinDustAmt = quoteCoinDustAmt.Sub(receivedQuoteCoinAmt)
+		sellOrder.SetReceivedDemandCoinAmount(receivedQuoteCoinAmt)
+		quoteCoinDust = quoteCoinDust.Sub(receivedQuoteCoinAmt)
 	}
 
-	matched = true
-
-	return
+	return quoteCoinDust, true
 }

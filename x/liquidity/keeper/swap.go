@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -15,7 +16,7 @@ import (
 func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
-	if price := types.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
+	if price := amm.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
 		return types.SwapRequest{}, types.ErrInvalidPriceTick
 	}
 
@@ -96,7 +97,7 @@ func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.Swa
 			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
 			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
-			sdk.NewAttribute(types.AttributeKeyRefundedCoin, refundedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyRefundedCoins, refundedCoin.String()),
 		),
 	})
 
@@ -131,7 +132,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.S
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = types.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
+		price = amm.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, price.MulInt(msg.Amount).Ceil().TruncateInt())
 	case types.SwapDirectionSell:
 		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
@@ -139,7 +140,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.S
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = types.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), int(params.TickPrecision))
+		price = amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = msg.OfferCoin
 	}
 	if msg.OfferCoin.IsLT(offerCoin) {
@@ -168,7 +169,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.S
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
 			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
-			sdk.NewAttribute(types.AttributeKeyRefundedCoin, refundedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyRefundedCoins, refundedCoin.String()),
 		),
 	})
 
@@ -254,12 +255,8 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) 
 }
 
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
-	params := k.GetParams(ctx)
-	tickPrec := int(params.TickPrecision)
-
+	ob := amm.NewOrderBook()
 	skip := true // Whether to skip the matching since there is no orders.
-
-	ob := types.NewOrderBook(tickPrec)
 	if err := k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool, err error) {
 		switch req.Status {
 		case types.SwapRequestStatusNotExecuted,
@@ -271,7 +268,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				}
 				return false, nil
 			}
-			ob.AddOrder(types.NewUserOrder(req))
+			ob.Add(types.NewUserOrder(req))
 			if req.Status == types.SwapRequestStatusNotExecuted {
 				req.Status = types.SwapRequestStatusNotMatched
 				k.SetSwapRequest(ctx, req)
@@ -290,40 +287,32 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return nil
 	}
 
-	var pools []types.PoolI
-	var poolBuySources, poolSellSources []types.OrderSource
+	var poolOrderSources []amm.OrderSource
 	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 		rx, ry := k.GetPoolBalance(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
-		poolInfo := types.NewPoolInfo(rx, ry, ps) // Pool coin supply is not used when matching
-		if types.IsDepletedPool(poolInfo) {
+		ammPool := amm.NewBasicPool(rx, ry, ps)
+		if ammPool.IsDepleted() {
 			k.MarkPoolAsDisabled(ctx, pool)
 			return false, nil
 		}
-		pools = append(pools, poolInfo)
-
-		poolReserveAddr := pool.GetReserveAddress()
-		poolBuySources = append(poolBuySources, types.NewPoolOrderSource(poolInfo, pool.Id, poolReserveAddr, types.SwapDirectionBuy, tickPrec))
-		poolSellSources = append(poolSellSources, types.NewPoolOrderSource(poolInfo, pool.Id, poolReserveAddr, types.SwapDirectionSell, tickPrec))
+		poolOrderSources = append(poolOrderSources, types.NewBasicPoolOrderSource(pool, rx, ry, ps))
 		return false, nil
 	})
 
-	buySource := types.MergeOrderSources(append(poolBuySources, ob.OrderSource(types.SwapDirectionBuy))...)
-	sellSource := types.MergeOrderSources(append(poolSellSources, ob.OrderSource(types.SwapDirectionSell))...)
+	os := amm.MergeOrderSources(append(poolOrderSources, ob)...)
 
-	engine := types.NewMatchEngine(buySource, sellSource, tickPrec)
-	ob, matchPrice, quoteCoinDustAmt, matched := engine.Match()
-
+	params := k.GetParams(ctx)
+	orders, matchPrice, quoteCoinDust, matched := types.Match(os, int(params.TickPrecision))
 	if matched {
-		orders := ob.AllOrders()
 		bulkOp := types.NewBulkSendCoinsOperation()
 		for _, order := range orders {
 			if order, ok := order.(*types.PoolOrder); ok {
 				var offerCoinDenom string
 				switch order.Direction {
-				case types.SwapDirectionBuy:
+				case amm.Buy:
 					offerCoinDenom = pair.QuoteCoinDenom
-				case types.SwapDirectionSell:
+				case amm.Sell:
 					offerCoinDenom = pair.BaseCoinDenom
 				}
 				paidCoin := sdk.NewCoin(offerCoinDenom, order.OfferCoinAmount.Sub(order.RemainingOfferCoinAmount))
@@ -339,10 +328,10 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 			case *types.UserOrder:
 				var offerCoinDenom, demandCoinDenom string
 				switch order.Direction {
-				case types.SwapDirectionBuy:
+				case amm.Buy:
 					offerCoinDenom = pair.QuoteCoinDenom
 					demandCoinDenom = pair.BaseCoinDenom
-				case types.SwapDirectionSell:
+				case amm.Sell:
 					offerCoinDenom = pair.BaseCoinDenom
 					demandCoinDenom = pair.QuoteCoinDenom
 				}
@@ -351,7 +340,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				req, _ := k.GetSwapRequest(ctx, pair.Id, order.RequestId)
 				req.OpenAmount = order.OpenAmount
 				req.RemainingOfferCoin = sdk.NewCoin(offerCoinDenom, order.RemainingOfferCoinAmount)
-				req.ReceivedCoin.Amount = req.ReceivedCoin.Amount.Add(order.ReceivedAmount)
+				req.ReceivedCoin.Amount = req.ReceivedCoin.Amount.Add(order.ReceivedDemandCoinAmount)
 				if order.OpenAmount.IsZero() {
 					if err := k.FinishSwapRequest(ctx, req, types.SwapRequestStatusCompleted); err != nil {
 						return err
@@ -362,17 +351,17 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 					// TODO: emit an event?
 				}
 
-				demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
+				demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedDemandCoinAmount)
 				bulkOp.SendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(demandCoin))
 			case *types.PoolOrder:
 				var demandCoinDenom string
 				switch order.Direction {
-				case types.SwapDirectionBuy:
+				case amm.Buy:
 					demandCoinDenom = pair.BaseCoinDenom
-				case types.SwapDirectionSell:
+				case amm.Sell:
 					demandCoinDenom = pair.QuoteCoinDenom
 				}
-				demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedAmount)
+				demandCoin := sdk.NewCoin(demandCoinDenom, order.ReceivedDemandCoinAmount)
 				bulkOp.SendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(demandCoin))
 			}
 		}
@@ -388,7 +377,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	// TODO: emit an event?
 	_ = matchPrice
-	_ = quoteCoinDustAmt
+	_ = quoteCoinDust
 	return nil
 }
 

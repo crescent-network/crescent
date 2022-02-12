@@ -38,6 +38,14 @@ type Order interface {
 	SetReceivedDemandCoinAmount(amt sdk.Int) Order
 }
 
+func TotalOpenAmount(orders []Order) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, order := range orders {
+		amt = amt.Add(order.GetOpenAmount())
+	}
+	return amt
+}
+
 type BaseOrder struct {
 	Direction                OrderDirection
 	Price                    sdk.Dec

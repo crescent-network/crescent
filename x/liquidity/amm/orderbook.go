@@ -13,7 +13,7 @@ type OrderBook struct {
 	buys, sells orderBookTicks
 }
 
-func NewOrderBook(tickPrec int, orders ...Order) *OrderBook {
+func NewOrderBook(orders ...Order) *OrderBook {
 	ob := &OrderBook{}
 	for _, order := range orders {
 		ob.Add(order)
@@ -99,7 +99,7 @@ func (ticks *orderBookTicks) highestPrice() (sdk.Dec, bool) {
 		return sdk.Dec{}, false
 	}
 	for _, tick := range *ticks {
-		if tick.totalOpenAmount().IsPositive() {
+		if TotalOpenAmount(tick.orders).IsPositive() {
 			return tick.price, true
 		}
 	}
@@ -111,7 +111,7 @@ func (ticks *orderBookTicks) lowestPrice() (sdk.Dec, bool) {
 		return sdk.Dec{}, false
 	}
 	for i := len(*ticks) - 1; i >= 0; i-- {
-		if (*ticks)[i].totalOpenAmount().IsPositive() {
+		if TotalOpenAmount((*ticks)[i].orders).IsPositive() {
 			return (*ticks)[i].price, true
 		}
 	}
@@ -125,7 +125,7 @@ func (ticks *orderBookTicks) amountOver(price sdk.Dec) sdk.Int {
 	}
 	amt := sdk.ZeroInt()
 	for ; i >= 0; i-- {
-		amt = amt.Add((*ticks)[i].totalOpenAmount())
+		amt = amt.Add(TotalOpenAmount((*ticks)[i].orders))
 	}
 	return amt
 }
@@ -134,7 +134,7 @@ func (ticks *orderBookTicks) amountUnder(price sdk.Dec) sdk.Int {
 	i, _ := ticks.findPrice(price)
 	amt := sdk.ZeroInt()
 	for ; i < len(*ticks); i++ {
-		amt = amt.Add((*ticks)[i].totalOpenAmount())
+		amt = amt.Add(TotalOpenAmount((*ticks)[i].orders))
 	}
 	return amt
 }
@@ -173,19 +173,11 @@ func newOrderBookTick(order Order) *orderBookTick {
 }
 
 func (tick *orderBookTick) add(order Order) {
-	if order.GetPrice().Equal(tick.price) {
+	if !order.GetPrice().Equal(tick.price) {
 		panic(fmt.Sprintf("order price %q != tick price %q", order.GetPrice(), tick.price))
 	}
 	if first := tick.orders[0]; first.GetDirection() != order.GetDirection() {
 		panic(fmt.Sprintf("order direction %q != tick direction %q", order.GetDirection(), first.GetDirection()))
 	}
 	tick.orders = append(tick.orders, order)
-}
-
-func (tick *orderBookTick) totalOpenAmount() sdk.Int {
-	amt := sdk.ZeroInt()
-	for _, order := range tick.orders {
-		amt = amt.Add(order.GetOpenAmount())
-	}
-	return amt
 }

@@ -48,3 +48,8 @@ func MustParseRFC3339(s string) time.Time {
 func DateRangesOverlap(startTimeA, endTimeA, startTimeB, endTimeB time.Time) bool {
 	return startTimeA.Before(endTimeB) && endTimeA.After(startTimeB)
 }
+
+// ParseDec is a shortcut for sdk.MustNewDecFromStr.
+func ParseDec(s string) sdk.Dec {
+	return sdk.MustNewDecFromStr(s)
+}

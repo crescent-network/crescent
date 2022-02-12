@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	squadappparams "github.com/cosmosquad-labs/squad/app/params"
+	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
@@ -372,10 +373,10 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
 		} else {
 			rx, ry := k.GetPoolBalance(ctx, pool, pair)
-			poolInfo := types.NewPoolInfo(rx, ry, sdk.Int{})
-			minPrice, maxPrice = minMaxPrice(k, ctx, poolInfo.Price())
+			ammPool := amm.NewBasicPool(rx, ry, sdk.Int{})
+			minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
 		}
-		price := types.PriceToTick(randomDec(r, minPrice, maxPrice), int(params.TickPrecision))
+		price := amm.PriceToTick(randomDec(r, minPrice, maxPrice), int(params.TickPrecision))
 
 		amt := randomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
 
@@ -799,7 +800,7 @@ func findPairToMakeMarketOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, s
 func minMaxPrice(k keeper.Keeper, ctx sdk.Context, lastPrice sdk.Dec) (sdk.Dec, sdk.Dec) {
 	params := k.GetParams(ctx)
 	tickPrec := int(params.TickPrecision)
-	maxPrice := types.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), tickPrec)
-	minPrice := types.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), tickPrec)
+	maxPrice := amm.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), tickPrec)
+	minPrice := amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), tickPrec)
 	return minPrice, maxPrice
 }

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -215,20 +216,20 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 
 	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	poolInfo := types.NewPoolInfo(rx, ry, ps)
-	if types.IsDepletedPool(poolInfo) {
+	ammPool := amm.NewBasicPool(rx, ry, ps)
+	if ammPool.IsDepleted() {
 		k.MarkPoolAsDisabled(ctx, pool)
 		if err := k.FinishDepositRequest(ctx, req, types.RequestStatusFailed); err != nil {
-			return fmt.Errorf("refund deposit request: %w", err)
+			return err
 		}
 		return nil
 	}
 
-	ax, ay, pc := types.DepositToPool(poolInfo, req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
+	ax, ay, pc := ammPool.Deposit(req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
 
 	if pc.IsZero() {
 		if err := k.FinishDepositRequest(ctx, req, types.RequestStatusFailed); err != nil {
-			return fmt.Errorf("refund deposit request: %w", err)
+			return err
 		}
 		return nil
 	}
@@ -278,6 +279,7 @@ func (k Keeper) FinishDepositRequest(ctx sdk.Context, req types.DepositRequest, 
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(req.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeKeyDepositCoins, req.DepositCoins.String()),
 			sdk.NewAttribute(types.AttributeKeyAcceptedCoins, req.AcceptedCoins.String()),
+			sdk.NewAttribute(types.AttributeKeyRefundedCoins, refundingCoins.String()),
 			sdk.NewAttribute(types.AttributeKeyMintedPoolCoin, req.MintedPoolCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyStatus, req.Status.String()),
 		),
@@ -290,7 +292,9 @@ func (k Keeper) FinishDepositRequest(ctx sdk.Context, req types.DepositRequest, 
 func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) error {
 	pool, _ := k.GetPool(ctx, req.PoolId)
 	if pool.Disabled {
-		k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed)
+		if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed); err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -298,15 +302,23 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 
 	rx, ry := k.GetPoolBalance(ctx, pool, pair)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	poolInfo := types.NewPoolInfo(rx, ry, ps)
-	if types.IsDepletedPool(poolInfo) {
+	ammPool := amm.NewBasicPool(rx, ry, ps)
+	if ammPool.IsDepleted() {
 		k.MarkPoolAsDisabled(ctx, pool)
-		k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed)
+		if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed); err != nil {
+			return err
+		}
 		return nil
 	}
 
 	params := k.GetParams(ctx)
-	x, y := types.WithdrawFromPool(poolInfo, req.PoolCoin.Amount, params.WithdrawFeeRate)
+	x, y := ammPool.Withdraw(req.PoolCoin.Amount, params.WithdrawFeeRate)
+	if x.IsZero() && y.IsZero() {
+		if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed); err != nil {
+			return err
+		}
+		return nil
+	}
 
 	withdrawnCoins := sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, x), sdk.NewCoin(pair.BaseCoinDenom, y))
 	burningCoins := sdk.NewCoins(req.PoolCoin)
@@ -328,11 +340,24 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	}
 
 	req.WithdrawnCoins = withdrawnCoins
-	k.FinishWithdrawRequest(ctx, req, types.RequestStatusSucceeded)
+	if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusSucceeded); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (k Keeper) FinishWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest, status types.RequestStatus) {
+func (k Keeper) FinishWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest, status types.RequestStatus) error {
+	if req.Status != types.RequestStatusNotExecuted { // sanity check
+		return nil
+	}
+
+	var refundingCoins sdk.Coins
+	if status == types.RequestStatusFailed {
+		refundingCoins = sdk.NewCoins(req.PoolCoin)
+		if err := k.bankKeeper.SendCoins(ctx, types.GlobalEscrowAddress, req.GetWithdrawer(), refundingCoins); err != nil {
+			return err
+		}
+	}
 	req.Status = status
 	k.SetWithdrawRequest(ctx, req)
 
@@ -343,8 +368,11 @@ func (k Keeper) FinishWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest
 			sdk.NewAttribute(types.AttributeKeyWithdrawer, req.Withdrawer),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(req.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolCoin, req.PoolCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyRefundedCoins, refundingCoins.String()),
 			sdk.NewAttribute(types.AttributeKeyWithdrawnCoins, req.WithdrawnCoins.String()),
 			sdk.NewAttribute(types.AttributeKeyStatus, req.Status.String()),
 		),
 	})
+
+	return nil
 }
