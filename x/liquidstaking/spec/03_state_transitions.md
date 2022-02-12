@@ -5,7 +5,7 @@
 ## LiquidValidators
 
 - State transitions in liquid validators are performed on every `BeginBlock` in order to check for changes in the active liquid validator set.
-- A validator can be `Active` or `InActive`. A validator can move directly between the states.
+- A validator can be `Active` or `Inactive`. A validator can move directly between the states.
 - into Active
 
   The following transition occurs when a validator elected to whiltelist by governance and meet the Active Conditions.

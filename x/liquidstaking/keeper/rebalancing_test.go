@@ -203,7 +203,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	// check inactive with zero weight after tombstoned
 	lvState, found := s.keeper.GetLiquidValidatorState(s.ctx, proxyAccDel2.GetValidatorAddr())
 	s.Require().True(found)
-	s.Require().Equal(lvState.Status, types.ValidatorStatusInActive)
+	s.Require().Equal(lvState.Status, types.ValidatorStatusInactive)
 	s.Require().Equal(lvState.Weight, sdk.ZeroInt())
 	s.Require().NotEqualValues(lvState.DelShares, sdk.ZeroDec())
 	s.Require().NotEqualValues(lvState.LiquidTokens, sdk.ZeroInt())

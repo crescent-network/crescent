@@ -86,7 +86,7 @@ func (v LiquidValidator) GetStatus(activeCondition bool) ValidatorStatus {
 	if activeCondition {
 		return ValidatorStatusActive
 	} else {
-		return ValidatorStatusInActive
+		return ValidatorStatusInactive
 	}
 }
 

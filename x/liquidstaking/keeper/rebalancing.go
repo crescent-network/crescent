@@ -36,7 +36,7 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation, last boo
 	return completionTime, nil
 }
 
-// Rebalancing argument liquidVals containing ValidatorStatusActive which is containing just added on whitelist(liquidToken 0) and ValidatorStatusInActive to delist
+// Rebalancing argument liquidVals containing ValidatorStatusActive which is containing just added on whitelist(liquidToken 0) and ValidatorStatusInactive to delist
 func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, whitelistedValMap types.WhitelistedValMap, rebalancingTrigger sdk.Dec) (redelegations []types.Redelegation) {
 	logger := k.Logger(ctx)
 	totalLiquidTokens, _ := liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper)

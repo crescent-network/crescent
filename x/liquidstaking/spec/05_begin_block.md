@@ -17,23 +17,23 @@ The active liquid validator set is updated during this process by state transiti
 - existed valid validator on staking module ( existed, not nil DelShares and tokens, valid exchange rate)
 - not tombstoned
 
-### Active -> InActive
+### Active -> Inactive
 - when out of the `Active Conditions`
 
-When active liquid validator is kicked out of the list, it begins the delisting process along with all its liquid staking amounts begin redelegating. At this point the validator is said to be an "InActive liquid validator", whereby it will mature to be removed the LiquidValidator object after the redelegation/unbonding period has passed and no DelShares
+When active liquid validator is kicked out of the list, it begins the delisting process along with all its liquid staking amounts begin redelegating. At this point the validator is said to be an "Inactive liquid validator", whereby it will mature to be removed the LiquidValidator object after the redelegation/unbonding period has passed and no DelShares
 
 ### Whitelisted -> Active
 - when meet the `Active Conditions`
 
-### InActive -> Active
+### Inactive -> Active
 - when meet again the `Active Conditions` before removed
 
-### InActive -> Removed
+### Inactive -> Removed
 - no DelShares(redelegation completed) and out of the `Active Conditions`
 
 ## Auto-Redelegation
 
-Due to the events like slashing, tombstoning, become InActive and policy related to serial redelegation, the actual current weights of the delegated amount of the active liquid validators can be slightly different from what was target weight intended. Therefore, rebalancing of delegated assets is needed, and it is triggered by difference of power from the intended
+Due to the events like slashing, tombstoning, become Inactive and policy related to serial redelegation, the actual current weights of the delegated amount of the active liquid validators can be slightly different from what was target weight intended. Therefore, rebalancing of delegated assets is needed, and it is triggered by difference of power from the intended
 
 - calculate the current weight of each active liquid validator and the difference between it and target weight
 - if the maximum difference and needed each redelegation amount exceeds `RebalancingTrigger`, asset rebalacing will be executed

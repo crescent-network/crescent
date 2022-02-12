@@ -18,13 +18,13 @@ LiquidValidators: `0xc0 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuf
 LiquidValidators can have one of two statuses
 
 - `Active` : When some validators in the active set are elected to whitelist by governance, liquid staker's delegating amount of native tokens are distributed to these vaidators. They can be slashed for misbehavior. They can be delisted. Liquid stakers who unbond their delegation must wait the duration of the UnStakingTime, a chain-specific param, during which time they are still slashable for offences of the active liquid validators if those offences were committed during the period of time that the tokens were bonded.
-- `InActive` : Not meet Active Condition, but has delegation shares of LiquidStakingProxyAcc, **InActive liquid validator's TargetWeight Would be zero**
+- `Inactive` : Not meet Active Condition, but has delegation shares of LiquidStakingProxyAcc, **Inactive liquid validator's TargetWeight Would be zero**
 
 ```go
 const (
   ValidatorStatusUnspecified ValidatorStatus = 0
   ValidatorStatusActive ValidatorStatus = 1
-  ValidatorStatusInActive ValidatorStatus = 2
+  ValidatorStatusInactive ValidatorStatus = 2
 )
 ```
 

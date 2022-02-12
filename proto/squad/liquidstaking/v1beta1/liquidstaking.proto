@@ -50,7 +50,7 @@ enum ValidatorStatus {
   // VALIDATOR_STATUS_ACTIVE defines the active, valid status
   VALIDATOR_STATUS_ACTIVE = 1 [(gogoproto.enumvalue_customname) = "ValidatorStatusActive"];
   // VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
-  VALIDATOR_STATUS_INACTIVE = 2 [(gogoproto.enumvalue_customname) = "ValidatorStatusInActive"];
+  VALIDATOR_STATUS_INACTIVE = 2 [(gogoproto.enumvalue_customname) = "ValidatorStatusInactive"];
 }
 
 // WhitelistedValidator consists of the validator operator address and the target weight, which is a value for
