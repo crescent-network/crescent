@@ -15,9 +15,9 @@ message Params {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  // BondedBondDenom specifies the denomination of the token receiving after LiquidStaking, The value is calculated
+  // LiquidBondDenom specifies the denomination of the token receiving after LiquidStaking, The value is calculated
   // through NetAmount.
-  string bonded_bond_denom = 1 [(gogoproto.moretags) = "yaml:\"bonded_bond_denom\""];
+  string liquid_bond_denom = 1 [(gogoproto.moretags) = "yaml:\"liquid_bond_denom\""];
 
   // WhitelistedValidators specifies the validators elected to become Active Liquid Validators.
   repeated WhitelistedValidator whitelisted_validators = 2

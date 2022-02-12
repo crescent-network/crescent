@@ -47,8 +47,8 @@ func NetAmountInvariant(k Keeper) sdk.Invariant {
 		NetAmount := k.NetAmount(ctx)
 		balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
 		NetAmountExceptBalance := NetAmount.Sub(balance.ToDec())
-		bondedBondDenom := k.BondedBondDenom(ctx)
-		bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom)
+		liquidBondDenom := k.LiquidBondDenom(ctx)
+		bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 		if bTokenTotalSupply.IsPositive() && !NetAmountExceptBalance.IsPositive() {
 			msg = "found positive btoken supply with non-positive net amount"
 			broken = true

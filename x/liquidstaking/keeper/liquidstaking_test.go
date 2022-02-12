@@ -77,13 +77,13 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(proxyAccDel2.Shares, sdk.NewDec(16666))
 	s.Require().Equal(stakingAmt.ToDec(), proxyAccDel1.Shares.Add(proxyAccDel2.Shares).Add(proxyAccDel3.Shares))
 
-	bondedBondDenom := s.keeper.BondedBondDenom(s.ctx)
+	liquidBondDenom := s.keeper.LiquidBondDenom(s.ctx)
 	balanceBeforeUBD := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], sdk.DefaultBondDenom)
 	s.Require().Equal(balanceBeforeUBD.Amount, sdk.NewInt(999950000))
-	ubdBToken := sdk.NewCoin(bondedBondDenom, sdk.NewInt(10000))
-	bTokenBalance := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], bondedBondDenom)
-	bTokenTotalSupply := s.app.BankKeeper.GetSupply(s.ctx, bondedBondDenom)
-	s.Require().Equal(bTokenBalance, sdk.NewCoin(bondedBondDenom, sdk.NewInt(50000)))
+	ubdBToken := sdk.NewCoin(liquidBondDenom, sdk.NewInt(10000))
+	bTokenBalance := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], liquidBondDenom)
+	bTokenTotalSupply := s.app.BankKeeper.GetSupply(s.ctx, liquidBondDenom)
+	s.Require().Equal(bTokenBalance, sdk.NewCoin(liquidBondDenom, sdk.NewInt(50000)))
 	s.Require().Equal(bTokenBalance, bTokenTotalSupply)
 
 	// liquid unstaking
@@ -95,8 +95,8 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().EqualValues(unbondingAmt, ubdBToken.Amount)
 	s.Require().Equal(ubds[0].DelegatorAddress, s.delAddrs[0].String())
 	s.Require().Equal(ubdTime, squadtypes.MustParseRFC3339("2022-03-22T00:00:00Z"))
-	bTokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], bondedBondDenom)
-	s.Require().Equal(bTokenBalanceAfter, sdk.NewCoin(bondedBondDenom, sdk.NewInt(40000)))
+	bTokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], liquidBondDenom)
+	s.Require().Equal(bTokenBalanceAfter, sdk.NewCoin(liquidBondDenom, sdk.NewInt(40000)))
 
 	balanceBeginUBD := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], sdk.DefaultBondDenom)
 	s.Require().Equal(balanceBeginUBD.Amount, balanceBeforeUBD.Amount)
@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().NotEqualValues(rewards, sdk.ZeroDec())
 
 	// last unstaking, unbond all
-	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], params.BondedBondDenom).Amount
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], params.LiquidBondDenom).Amount
 	s.liquidUnstaking(s.delAddrs[0], btokenBalanceBefore, true)
 
 	// still active liquid validator after unbond all
@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().True(len(alv) != 0)
 
 	// no btoken supply after unbond all
-	bTokenTotalSupply = s.app.BankKeeper.GetSupply(s.ctx, bondedBondDenom)
+	bTokenTotalSupply = s.app.BankKeeper.GetSupply(s.ctx, liquidBondDenom)
 	s.Require().EqualValues(bTokenTotalSupply.Amount, sdk.ZeroInt())
 
 	// TODO: make policy when last unstaking, unbond all, apply netAmount reward, balance policy, active
@@ -177,7 +177,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 // test Liquid Staking gov power
 func (s *KeeperTestSuite) TestLiquidStakingGov() {
 	params := types.DefaultParams()
-	bondedBondDenom := s.keeper.BondedBondDenom(s.ctx)
+	liquidBondDenom := s.keeper.LiquidBondDenom(s.ctx)
 
 	// v1, v2, v3, v4
 	vals, valOpers, _ := s.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
@@ -248,27 +248,27 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 	delFbToken := sdk.NewInt(120000000)
 	newShares, bToken, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, delA, sdk.NewCoin(sdk.DefaultBondDenom, delAbToken))
 	s.Require().NoError(err)
-	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delA, bondedBondDenom).Amount, delAbToken)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delA, liquidBondDenom).Amount, delAbToken)
 
 	newShares, bToken, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, delBbToken))
 	s.Require().NoError(err)
-	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delB, bondedBondDenom).Amount, delBbToken)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delB, liquidBondDenom).Amount, delBbToken)
 
 	newShares, bToken, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, delC, sdk.NewCoin(sdk.DefaultBondDenom, delCbToken))
 	s.Require().NoError(err)
-	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delC, bondedBondDenom).Amount, delCbToken)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delC, liquidBondDenom).Amount, delCbToken)
 
 	newShares, bToken, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, delD, sdk.NewCoin(sdk.DefaultBondDenom, delDbToken))
 	s.Require().NoError(err)
-	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delD, bondedBondDenom).Amount, delDbToken)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delD, liquidBondDenom).Amount, delDbToken)
 
 	newShares, bToken, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, delE, sdk.NewCoin(sdk.DefaultBondDenom, delEbToken))
 	s.Require().NoError(err)
-	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delE, bondedBondDenom).Amount, delEbToken)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delE, liquidBondDenom).Amount, delEbToken)
 
 	newShares, bToken, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, delF, sdk.NewCoin(sdk.DefaultBondDenom, delFbToken))
 	s.Require().NoError(err)
-	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delF, bondedBondDenom).Amount, delFbToken)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delF, liquidBondDenom).Amount, delFbToken)
 
 	totalPower := sdk.ZeroInt()
 	totalShare := sdk.ZeroDec()
@@ -307,26 +307,26 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 	tallyLiquidGov()
 
 	// Test balance of PoolTokens including bToken
-	pair1 := s.createPair(delB, params.BondedBondDenom, sdk.DefaultBondDenom, false)
-	pool1 := s.createPool(delB, pair1.Id, sdk.NewCoins(sdk.NewCoin(params.BondedBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
+	pair1 := s.createPair(delB, params.LiquidBondDenom, sdk.DefaultBondDenom, false)
+	pool1 := s.createPool(delB, pair1.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
 	tallyLiquidGov()
-	pair2 := s.createPair(delC, sdk.DefaultBondDenom, params.BondedBondDenom, false)
-	pool2 := s.createPool(delC, pair2.Id, sdk.NewCoins(sdk.NewCoin(params.BondedBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
+	pair2 := s.createPair(delC, sdk.DefaultBondDenom, params.LiquidBondDenom, false)
+	pool2 := s.createPool(delC, pair2.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
 	balance := s.app.BankKeeper.GetBalance(s.ctx, delC, pool2.PoolCoinDenom)
 	fmt.Println(balance)
 	tallyLiquidGov()
 
 	// Test Farming Queued Staking of bToken
-	s.CreateFixedAmountPlan(s.addrs[0], map[string]string{params.BondedBondDenom: "0.4", pool1.PoolCoinDenom: "0.3", pool2.PoolCoinDenom: "0.3"}, map[string]int64{"testdenom": 1})
-	s.Stake(delD, sdk.NewCoins(sdk.NewCoin(params.BondedBondDenom, sdk.NewInt(10000000))))
-	queuedStaking, found := s.app.FarmingKeeper.GetQueuedStaking(s.ctx, params.BondedBondDenom, delD)
+	s.CreateFixedAmountPlan(s.addrs[0], map[string]string{params.LiquidBondDenom: "0.4", pool1.PoolCoinDenom: "0.3", pool2.PoolCoinDenom: "0.3"}, map[string]int64{"testdenom": 1})
+	s.Stake(delD, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(10000000))))
+	queuedStaking, found := s.app.FarmingKeeper.GetQueuedStaking(s.ctx, params.LiquidBondDenom, delD)
 	s.True(found)
 	s.Equal(queuedStaking.Amount, sdk.NewInt(10000000))
 	tallyLiquidGov()
 
 	// Test Farming Staking Position Staking of bToken
 	s.AdvanceEpoch()
-	staking, found := s.app.FarmingKeeper.GetStaking(s.ctx, params.BondedBondDenom, delD)
+	staking, found := s.app.FarmingKeeper.GetStaking(s.ctx, params.LiquidBondDenom, delD)
 	s.True(found)
 	s.Equal(staking.Amount, sdk.NewInt(10000000))
 	tallyLiquidGov()
@@ -391,7 +391,7 @@ func (s *KeeperTestSuite) TestLiquidStakingGov2() {
 
 	newShares, bToken, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50000000)))
 	s.Require().NoError(err)
-	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delB, params.BondedBondDenom).Amount, sdk.NewInt(50000000))
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delB, params.LiquidBondDenom).Amount, sdk.NewInt(50000000))
 
 	cachedCtx, _ = s.ctx.CacheContext()
 	_, _, result = s.app.GovKeeper.Tally(cachedCtx, proposal)

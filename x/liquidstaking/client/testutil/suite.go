@@ -207,7 +207,7 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 	//res, err = MsgLiquidUnstakeExec(
 	//	vals[0].ClientCtx,
 	//	vals[0].Address.String(),
-	//	sdk.NewCoin(types.DefaultBondedBondDenom, sdk.NewInt(100000000)).String(),
+	//	sdk.NewCoin(types.DefaultLiquidBondDenom, sdk.NewInt(100000000)).String(),
 	//)
 	//fmt.Println(res, err)
 	//s.Require().NoError(err)

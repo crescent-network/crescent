@@ -105,9 +105,9 @@ func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []
 
 func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt sdk.Int) {
 	params := s.keeper.GetParams(s.ctx)
-	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
 	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
-	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
 	s.Require().NoError(err)
 	s.NotEqualValues(newShares, sdk.ZeroDec())
 	s.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
@@ -117,10 +117,10 @@ func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBToken
 	params := s.keeper.GetParams(s.ctx)
 	alv := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
 	balanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, sdk.DefaultBondDenom)
-	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
-	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.BondedBondDenom, ubdBTokenAmt))
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
+	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.LiquidBondDenom, ubdBTokenAmt))
 	s.Require().NoError(err)
-	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.LiquidBondDenom).Amount
 	s.Require().EqualValues(ubdBTokenAmt, btokenBalanceBefore.Sub(btokenBalanceAfter))
 	s.Require().Len(ubds, len(alv))
 	for _, v := range alv {

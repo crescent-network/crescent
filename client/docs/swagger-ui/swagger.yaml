@@ -3967,10 +3967,10 @@ paths:
               params:
                 type: object
                 properties:
-                  bonded_bond_denom:
+                  liquid_bond_denom:
                     type: string
                     description: >-
-                      BondedBondDenom specifies the denomination of the token
+                      LiquidBondDenom specifies the denomination of the token
                       receiving after LiquidStaking, The value is calculated
 
                       through NetAmount.
@@ -6531,10 +6531,10 @@ definitions:
   squad.liquidstaking.v1beta1.Params:
     type: object
     properties:
-      bonded_bond_denom:
+      liquid_bond_denom:
         type: string
         description: >-
-          BondedBondDenom specifies the denomination of the token receiving
+          LiquidBondDenom specifies the denomination of the token receiving
           after LiquidStaking, The value is calculated
 
           through NetAmount.
@@ -6649,10 +6649,10 @@ definitions:
       params:
         type: object
         properties:
-          bonded_bond_denom:
+          liquid_bond_denom:
             type: string
             description: >-
-              BondedBondDenom specifies the denomination of the token receiving
+              LiquidBondDenom specifies the denomination of the token receiving
               after LiquidStaking, The value is calculated
 
               through NetAmount.
