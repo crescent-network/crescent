@@ -32,17 +32,6 @@ func (ob *OrderBook) Add(orders ...Order) {
 	}
 }
 
-func (ob *OrderBook) AllOrders() []Order {
-	var orders []Order
-	for _, tick := range ob.buys {
-		orders = append(orders, tick.orders...)
-	}
-	for _, tick := range ob.sells {
-		orders = append(orders, tick.orders...)
-	}
-	return orders
-}
-
 func (ob *OrderBook) HighestBuyPrice() (sdk.Dec, bool) {
 	return ob.buys.highestPrice()
 }
