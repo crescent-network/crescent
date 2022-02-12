@@ -28,7 +28,7 @@ func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 }
 
 func (pool *BasicPool) Price() sdk.Dec {
-	if pool.IsDepleted() {
+	if pool.rx.IsZero() || pool.ry.IsZero() {
 		panic("pool price is not defined for a depleted pool")
 	}
 	return pool.rx.Quo(pool.ry)
