@@ -376,7 +376,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			ammPool := amm.NewBasicPool(rx, ry, sdk.ZeroInt())
 			minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
 		}
-		price := amm.PriceToTick(randomDec(r, minPrice, maxPrice), int(params.TickPrecision))
+		price := amm.PriceToDownTick(randomDec(r, minPrice, maxPrice), int(params.TickPrecision))
 
 		amt := randomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
 
@@ -800,7 +800,7 @@ func findPairToMakeMarketOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, s
 func minMaxPrice(k keeper.Keeper, ctx sdk.Context, lastPrice sdk.Dec) (sdk.Dec, sdk.Dec) {
 	params := k.GetParams(ctx)
 	tickPrec := int(params.TickPrecision)
-	maxPrice := amm.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), tickPrec)
+	maxPrice := amm.PriceToDownTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), tickPrec)
 	minPrice := amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), tickPrec)
 	return minPrice, maxPrice
 }

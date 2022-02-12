@@ -26,7 +26,7 @@ func TestPriceToTick(t *testing.T) {
 		{squad.ParseDec("10019"), squad.ParseDec("10010")},
 		{squad.ParseDec("1000100005"), squad.ParseDec("1000000000")},
 	} {
-		require.True(sdk.DecEq(t, tc.expected, amm.PriceToTick(tc.price, defTickPrec)))
+		require.True(sdk.DecEq(t, tc.expected, amm.PriceToDownTick(tc.price, defTickPrec)))
 	}
 }
 

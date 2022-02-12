@@ -16,7 +16,7 @@ import (
 func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.SwapRequest, error) {
 	params := k.GetParams(ctx)
 
-	if price := amm.PriceToTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
+	if price := amm.PriceToDownTick(msg.Price, int(params.TickPrecision)); !msg.Price.Equal(price) {
 		return types.SwapRequest{}, types.ErrInvalidPriceTick
 	}
 
@@ -132,7 +132,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.S
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = amm.PriceToTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
+		price = amm.PriceToDownTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, price.MulInt(msg.Amount).Ceil().TruncateInt())
 	case types.SwapDirectionSell:
 		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {

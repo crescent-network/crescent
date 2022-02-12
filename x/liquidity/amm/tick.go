@@ -44,8 +44,8 @@ func isPow10(x sdk.Dec) bool {
 	return b.Cmp(big.NewInt(1)) == 0
 }
 
-// PriceToTick returns the highest price tick under(or equal to) the price.
-func PriceToTick(price sdk.Dec, prec int) sdk.Dec {
+// PriceToDownTick returns the highest price tick under(or equal to) the price.
+func PriceToDownTick(price sdk.Dec, prec int) sdk.Dec {
 	b := price.BigInt()
 	l := char(price)
 	d := int64(l - prec)
@@ -57,9 +57,19 @@ func PriceToTick(price sdk.Dec, prec int) sdk.Dec {
 	return sdk.NewDecFromBigIntWithPrec(b, sdk.Precision)
 }
 
+// PriceToUpTick returns the lowest price tick greater or equal than
+// the price.
+func PriceToUpTick(price sdk.Dec, prec int) sdk.Dec {
+	tick := PriceToDownTick(price, prec)
+	if !tick.Equal(price) {
+		return UpTick(tick, prec)
+	}
+	return tick
+}
+
 // UpTick returns the next lowest price tick above the price.
 func UpTick(price sdk.Dec, prec int) sdk.Dec {
-	tick := PriceToTick(price, prec)
+	tick := PriceToDownTick(price, prec)
 	if tick.Equal(price) {
 		l := char(price)
 		return price.Add(pow10(l - prec))
@@ -71,7 +81,7 @@ func UpTick(price sdk.Dec, prec int) sdk.Dec {
 // DownTick returns the next highest price tick under the price.
 // DownTick doesn't check if the price is the lowest price tick.
 func DownTick(price sdk.Dec, prec int) sdk.Dec {
-	tick := PriceToTick(price, prec)
+	tick := PriceToDownTick(price, prec)
 	if tick.Equal(price) {
 		l := char(price)
 		var d sdk.Dec
@@ -88,22 +98,12 @@ func DownTick(price sdk.Dec, prec int) sdk.Dec {
 // HighestTick returns the highest possible price tick.
 func HighestTick(prec int) sdk.Dec {
 	i := new(big.Int).SetBits([]big.Word{0, 0, 0, 0, 0x1000000000000000})
-	return PriceToTick(sdk.NewDecFromBigIntWithPrec(i, sdk.Precision), prec)
+	return PriceToDownTick(sdk.NewDecFromBigIntWithPrec(i, sdk.Precision), prec)
 }
 
 // LowestTick returns the lowest possible price tick.
 func LowestTick(prec int) sdk.Dec {
 	return sdk.NewDecWithPrec(1, int64(sdk.Precision-prec))
-}
-
-// PriceToUpTick returns the lowest price tick greater or equal than
-// the price.
-func PriceToUpTick(price sdk.Dec, prec int) sdk.Dec {
-	tick := PriceToTick(price, prec)
-	if !tick.Equal(price) {
-		return UpTick(tick, prec)
-	}
-	return tick
 }
 
 // TickToIndex returns a tick index for given price.
@@ -143,7 +143,7 @@ func RoundTickIndex(i int) int {
 
 // RoundPrice returns rounded price using banker's rounding.
 func RoundPrice(price sdk.Dec, prec int) sdk.Dec {
-	tick := PriceToTick(price, prec)
+	tick := PriceToDownTick(price, prec)
 	if price.Equal(tick) {
 		return price
 	}
