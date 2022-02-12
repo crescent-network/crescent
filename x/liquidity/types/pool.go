@@ -94,12 +94,18 @@ func NewBasicPoolOrderSource(pool Pool, rx, ry, ps sdk.Int) *BasicPoolOrderSourc
 func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
 	// TODO: use providable x amount?
 	amt := os.BuyAmountOver(price)
+	if amt.IsZero() {
+		return nil
+	}
 	offerCoinAmt := price.MulInt(amt).Ceil().TruncateInt()
 	return []amm.Order{NewPoolOrder(os.Pool, amm.Buy, price, amt, offerCoinAmt)}
 }
 
 func (os *BasicPoolOrderSource) SellOrdersUnder(price sdk.Dec) []amm.Order {
 	amt := os.SellAmountUnder(price)
+	if amt.IsZero() {
+		return nil
+	}
 	return []amm.Order{NewPoolOrder(os.Pool, amm.Sell, price, amt, amt)}
 }
 
