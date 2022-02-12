@@ -24,7 +24,7 @@ const (
 	AttributeKeyMintedPoolCoin     = "minted_pool_coin"
 	AttributeKeyPoolCoin           = "pool_coin"
 	AttributeKeyWithdrawnCoins     = "withdrawn_coins"
-	AttributeKeyRefundedCoin       = "refunded_coin"
+	AttributeKeyRefundedCoins      = "refunded_coins"
 	AttributeKeyReserveAddress     = "reserve_address"
 	AttributeKeyEscrowAddress      = "escrow_address"
 	AttributeKeyRequestId          = "request_id"

@@ -48,3 +48,44 @@ func MustParseRFC3339(s string) time.Time {
 func DateRangesOverlap(startTimeA, endTimeA, startTimeB, endTimeB time.Time) bool {
 	return startTimeA.Before(endTimeB) && endTimeA.After(startTimeB)
 }
+
+// ParseDec is a shortcut for sdk.MustNewDecFromStr.
+func ParseDec(s string) sdk.Dec {
+	return sdk.MustNewDecFromStr(s)
+}
+
+// ParseCoin parses and returns sdk.Coin.
+func ParseCoin(s string) sdk.Coin {
+	coin, err := sdk.ParseCoinNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coin
+}
+
+// ParseCoins parses and returns sdk.Coins.
+func ParseCoins(s string) sdk.Coins {
+	coins, err := sdk.ParseCoinsNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}
+
+// ParseTime parses and returns time.Time in time.RFC3339 format.
+func ParseTime(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+// DecApproxEqual returns true if a and b are approximately equal,
+// which means the diff ratio is equal or less than 0.1%.
+func DecApproxEqual(a, b sdk.Dec) bool {
+	if b.GT(a) {
+		a, b = b, a
+	}
+	return a.Sub(b).Quo(a).LTE(sdk.NewDecWithPrec(1, 3))
+}

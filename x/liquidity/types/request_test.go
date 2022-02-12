@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -60,7 +61,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of deposit coins",
 			func(req *types.DepositRequest) {
-				req.DepositCoins = parseCoins("1000000denom1")
+				req.DepositCoins = squad.ParseCoins("1000000denom1")
 			},
 			"wrong number of deposit coins: 1",
 		},
@@ -74,7 +75,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of accepted coins",
 			func(req *types.DepositRequest) {
-				req.AcceptedCoins = parseCoins("1000000denom1")
+				req.AcceptedCoins = squad.ParseCoins("1000000denom1")
 			},
 			"wrong number of accepted coins: 1",
 		},
@@ -88,7 +89,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"zero minted pool coin",
 			func(req *types.DepositRequest) {
-				req.MintedPoolCoin = parseCoin("0pool1")
+				req.MintedPoolCoin = squad.ParseCoin("0pool1")
 			},
 			"",
 		},
@@ -103,7 +104,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := types.NewPool(1, 1)
 			depositor := sdk.AccAddress(crypto.AddressHash([]byte("depositor")))
-			msg := types.NewMsgDeposit(depositor, 1, parseCoins("1000000denom1,1000000denom2"))
+			msg := types.NewMsgDeposit(depositor, 1, squad.ParseCoins("1000000denom1,1000000denom2"))
 			req := types.NewDepositRequest(msg, pool, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()
@@ -165,7 +166,7 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 		{
 			"zero pool coin",
 			func(req *types.WithdrawRequest) {
-				req.PoolCoin = parseCoin("0pool1")
+				req.PoolCoin = squad.ParseCoin("0pool1")
 			},
 			"pool coin must not be 0",
 		},
@@ -179,14 +180,14 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 		{
 			"valid withdrawn coins",
 			func(req *types.WithdrawRequest) {
-				req.WithdrawnCoins = parseCoins("1000000denom1")
+				req.WithdrawnCoins = squad.ParseCoins("1000000denom1")
 			},
 			"",
 		},
 		{
 			"wrong number of withdrawn coins",
 			func(req *types.WithdrawRequest) {
-				req.WithdrawnCoins = parseCoins("100000denom1,1000000denom2,1000000denom3")
+				req.WithdrawnCoins = squad.ParseCoins("100000denom1,1000000denom2,1000000denom3")
 			},
 			"wrong number of withdrawn coins: 3",
 		},
@@ -200,7 +201,7 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			withdrawer := sdk.AccAddress(crypto.AddressHash([]byte("withdrawer")))
-			msg := types.NewMsgWithdraw(withdrawer, 1, parseCoin("1000pool1"))
+			msg := types.NewMsgWithdraw(withdrawer, 1, squad.ParseCoin("1000pool1"))
 			req := types.NewWithdrawRequest(msg, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()
@@ -269,7 +270,7 @@ func TestSwapRequest_Validate(t *testing.T) {
 		{
 			"zero offer coin",
 			func(req *types.SwapRequest) {
-				req.OfferCoin = parseCoin("0denom1")
+				req.OfferCoin = squad.ParseCoin("0denom1")
 			},
 			"offer coin must not be 0",
 		},
@@ -283,7 +284,7 @@ func TestSwapRequest_Validate(t *testing.T) {
 		{
 			"zero remaining offer coin",
 			func(req *types.SwapRequest) {
-				req.RemainingOfferCoin = parseCoin("0denom1")
+				req.RemainingOfferCoin = squad.ParseCoin("0denom1")
 			},
 			"",
 		},
@@ -297,7 +298,7 @@ func TestSwapRequest_Validate(t *testing.T) {
 		{
 			"zero received coin",
 			func(req *types.SwapRequest) {
-				req.ReceivedCoin = parseCoin("0denom1")
+				req.ReceivedCoin = squad.ParseCoin("0denom1")
 			},
 			"",
 		},
@@ -348,10 +349,10 @@ func TestSwapRequest_Validate(t *testing.T) {
 			pair := types.NewPair(1, "denom1", "denom2")
 			orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
 			msg := types.NewMsgLimitOrder(
-				orderer, pair.Id, types.SwapDirectionBuy, parseCoin("1000000denom2"),
-				"denom1", parseDec("1.0"), newInt(1000000), types.DefaultMaxOrderLifespan)
-			expireAt := parseTime("2022-01-01T00:00:00Z")
-			req := types.NewSwapRequestForLimitOrder(msg, 1, pair, parseCoin("1000000denom2"), msg.Price, expireAt, 1)
+				orderer, pair.Id, types.SwapDirectionBuy, squad.ParseCoin("1000000denom2"),
+				"denom1", squad.ParseDec("1.0"), newInt(1000000), types.DefaultMaxOrderLifespan)
+			expireAt := squad.ParseTime("2022-01-01T00:00:00Z")
+			req := types.NewSwapRequestForLimitOrder(msg, 1, pair, squad.ParseCoin("1000000denom2"), msg.Price, expireAt, 1)
 			tc.malleate(&req)
 			err := req.Validate()
 			if tc.expectedErr == "" {
