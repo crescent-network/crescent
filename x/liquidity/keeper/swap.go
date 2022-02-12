@@ -382,7 +382,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 }
 
 func (k Keeper) FinishSwapRequest(ctx sdk.Context, req types.SwapRequest, status types.SwapRequestStatus) error {
-	if req.Status.IsCanceledOrExpired() { // sanity check
+	if req.Status == types.SwapRequestStatusCompleted || req.Status.IsCanceledOrExpired() { // sanity check
 		return nil
 	}
 
