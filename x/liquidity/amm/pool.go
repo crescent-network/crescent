@@ -4,7 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Pool = (*BasicPool)(nil)
+var (
+	_ Pool        = (*BasicPool)(nil)
+	_ OrderSource = (*MockPoolOrderSource)(nil)
+)
 
 type Pool interface {
 	OrderView
@@ -93,4 +96,36 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
 		return sdk.ZeroInt()
 	}
 	return pool.ry.Sub(pool.rx.QuoRoundUp(price)).TruncateInt()
+}
+
+// MockPoolOrderSource demonstrates how to implement a pool OrderSource.
+type MockPoolOrderSource struct {
+	Pool
+	baseCoinDenom, quoteCoinDenom string
+}
+
+func NewMockPoolOrderSource(pool Pool, baseCoinDenom, quoteCoinDenom string) *MockPoolOrderSource {
+	return &MockPoolOrderSource{
+		Pool:           pool,
+		baseCoinDenom:  baseCoinDenom,
+		quoteCoinDenom: quoteCoinDenom,
+	}
+}
+
+func (os *MockPoolOrderSource) BuyOrdersOver(price sdk.Dec) []Order {
+	amt := os.BuyAmountOver(price)
+	if amt.IsZero() {
+		return nil
+	}
+	quoteCoin := sdk.NewCoin(os.quoteCoinDenom, OfferCoinAmount(Buy, price, amt))
+	return []Order{NewBaseOrder(Buy, price, amt, quoteCoin, os.baseCoinDenom)}
+}
+
+func (os *MockPoolOrderSource) SellOrdersUnder(price sdk.Dec) []Order {
+	amt := os.SellAmountUnder(price)
+	if amt.IsZero() {
+		return nil
+	}
+	baseCoin := sdk.NewCoin(os.baseCoinDenom, amt)
+	return []Order{NewBaseOrder(Sell, price, amt, baseCoin, os.quoteCoinDenom)}
 }
