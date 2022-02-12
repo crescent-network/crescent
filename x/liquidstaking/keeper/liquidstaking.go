@@ -125,7 +125,10 @@ func (k Keeper) LiquidUnstaking(
 		unstakingAll = true
 	}
 	netAmount := k.NetAmount(ctx)
-	unbondingAmount := types.BTokenToNativeToken(unstakingBtoken.Amount, bTokenTotalSupply.Amount, netAmount, params.UnstakeFeeRate)
+
+	unbondingAmount := types.BTokenToNativeToken(unstakingBtoken.Amount, bTokenTotalSupply.Amount, netAmount)
+	unbondingAmount = types.DeductFeeRate(unbondingAmount, params.UnstakeFeeRate)
+
 	totalReturnAmount := sdk.ZeroInt()
 
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, liquidStaker, types.ModuleName, sdk.NewCoins(unstakingBtoken))

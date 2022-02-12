@@ -179,9 +179,14 @@ func NativeTokenToBToken(nativeTokenAmount, bTokenTotalSupplyAmount sdk.Int, net
 	return bTokenTotalSupplyAmount.ToDec().MulTruncate(nativeTokenAmount.ToDec()).QuoTruncate(netAmount.TruncateDec()).TruncateInt()
 }
 
-// BTokenToNativeToken returns bTokenAmount * netAmount / bTokenTotalSupply * (1-UnstakeFeeRate) with truncations
-func BTokenToNativeToken(bTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount, feeRate sdk.Dec) (nativeTokenAmount sdk.Dec) {
-	return bTokenAmount.ToDec().MulTruncate(netAmount).QuoTruncate(bTokenTotalSupplyAmount.ToDec()).MulTruncate(sdk.OneDec().Sub(feeRate)).TruncateDec()
+// BTokenToNativeToken returns bTokenAmount * netAmount / bTokenTotalSupply with truncations
+func BTokenToNativeToken(bTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount sdk.Dec) (nativeTokenAmount sdk.Dec) {
+	return bTokenAmount.ToDec().MulTruncate(netAmount).QuoTruncate(bTokenTotalSupplyAmount.ToDec()).TruncateDec()
+}
+
+// DeductFeeRate returns Input * (1-FeeRate) with truncations
+func DeductFeeRate(input sdk.Dec, feeRate sdk.Dec) (feeDeductedOutput sdk.Dec) {
+	return input.MulTruncate(sdk.OneDec().Sub(feeRate)).TruncateDec()
 }
 
 func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {
