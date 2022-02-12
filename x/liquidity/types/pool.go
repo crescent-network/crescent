@@ -9,12 +9,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
-var (
-	_ PoolI = (*PoolInfo)(nil)
-	// TODO: add RangedPoolInfo for v2
-)
+var _ amm.OrderSource = (*BasicPoolOrderSource)(nil)
+
+// PoolReserveAddress returns a unique pool reserve account address for each pool.
+func PoolReserveAddress(poolId uint64) sdk.AccAddress {
+	return farmingtypes.DeriveAddress(
+		AddressType,
+		ModuleName,
+		strings.Join([]string{PoolReserveAddressPrefix, strconv.FormatUint(poolId, 10)}, ModuleAddressNameSplitter),
+	)
+}
 
 // NewPool returns a new pool object.
 func NewPool(id, pairId uint64) Pool {
@@ -27,6 +34,25 @@ func NewPool(id, pairId uint64) Pool {
 		LastWithdrawRequestId: 0,
 		Disabled:              false,
 	}
+}
+
+// PoolCoinDenom returns a unique pool coin denom for a pool.
+func PoolCoinDenom(poolId uint64) string {
+	return fmt.Sprintf("pool%d", poolId)
+}
+
+// ParsePoolCoinDenom trims pool prefix from the pool coin denom and returns pool id.
+func ParsePoolCoinDenom(denom string) uint64 {
+	if !strings.HasPrefix(denom, "pool") {
+		return 0
+	}
+
+	poolId, err := strconv.ParseUint(strings.TrimPrefix(denom, "pool"), 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return poolId
 }
 
 func (pool Pool) GetReserveAddress() sdk.AccAddress {
@@ -53,118 +79,41 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
-// PoolReserveAddress returns a unique pool reserve account address for each pool.
-func PoolReserveAddress(poolId uint64) sdk.AccAddress {
-	return farmingtypes.DeriveAddress(
-		AddressType,
-		ModuleName,
-		strings.Join([]string{PoolReserveAddressPrefix, strconv.FormatUint(poolId, 10)}, ModuleAddressNameSplitter),
-	)
+type BasicPoolOrderSource struct {
+	amm.Pool
+	PoolId                        uint64
+	PoolReserveAddress            sdk.AccAddress
+	BaseCoinDenom, QuoteCoinDenom string
 }
 
-// PoolCoinDenom returns a unique pool coin denom for a pool.
-func PoolCoinDenom(poolId uint64) string {
-	return fmt.Sprintf("pool%d", poolId)
-}
-
-// ParsePoolCoinDenom trims pool prefix from the pool coin denom and returns pool id.
-func ParsePoolCoinDenom(denom string) uint64 {
-	if !strings.HasPrefix(denom, "pool") {
-		return 0
-	}
-
-	poolId, err := strconv.ParseUint(strings.TrimPrefix(denom, "pool"), 10, 64)
-	if err != nil {
-		return 0
-	}
-
-	return poolId
-}
-
-type PoolI interface {
-	Balance() (rx, ry sdk.Int)
-	PoolCoinSupply() sdk.Int
-	Price() sdk.Dec
-}
-
-type PoolInfo struct {
-	RX, RY sdk.Int
-	PS     sdk.Int
-}
-
-func NewPoolInfo(rx, ry, ps sdk.Int) PoolInfo {
-	return PoolInfo{
-		RX: rx,
-		RY: ry,
-		PS: ps,
+func NewPoolOrderSource(
+	pool amm.Pool, poolId uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) *BasicPoolOrderSource {
+	return &BasicPoolOrderSource{
+		Pool:               pool,
+		PoolId:             poolId,
+		PoolReserveAddress: reserveAddr,
+		BaseCoinDenom:      baseCoinDenom,
+		QuoteCoinDenom:     quoteCoinDenom,
 	}
 }
 
-func (info PoolInfo) Balance() (rx, ry sdk.Int) {
-	return info.RX, info.RY
-}
-
-func (info PoolInfo) PoolCoinSupply() sdk.Int {
-	return info.PS
-}
-
-func (info PoolInfo) Price() sdk.Dec {
-	if info.RX.IsZero() || info.RY.IsZero() {
-		panic("pool price is not defined for a depleted pool")
+func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
+	// TODO: use providable x amount?
+	amt := os.BuyAmountOver(price)
+	if amt.IsZero() {
+		return nil
 	}
-	return info.RX.ToDec().Quo(info.RY.ToDec())
+	quoteCoin := sdk.NewCoin(os.QuoteCoinDenom, amm.OfferCoinAmount(amm.Buy, price, amt))
+	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Buy, price, amt, quoteCoin, os.BaseCoinDenom)}
 }
 
-func IsDepletedPool(pool PoolI) bool {
-	ps := pool.PoolCoinSupply()
-	if ps.IsZero() {
-		return true
+func (os *BasicPoolOrderSource) SellOrdersUnder(price sdk.Dec) []amm.Order {
+	amt := os.SellAmountUnder(price)
+	if amt.IsZero() {
+		return nil
 	}
-	rx, ry := pool.Balance()
-	if rx.IsZero() || ry.IsZero() {
-		return true
-	}
-	return false
-}
-
-// DepositToPool returns accepted x amount, accepted y amount and
-// minted pool coin amount.
-func DepositToPool(pool PoolI, x, y sdk.Int) (ax, ay, pc sdk.Int) {
-	// Calculate accepted amount and minting amount.
-	// Note that we take as many coins as possible(by ceiling numbers)
-	// from depositor and mint as little coins as possible.
-	rx, ry := pool.Balance()
-	ps := pool.PoolCoinSupply().ToDec()
-	// pc = min(ps * (x / rx), ps * (y / ry))
-	pc = sdk.MinDec(
-		ps.MulTruncate(x.ToDec().QuoTruncate(rx.ToDec())),
-		ps.MulTruncate(y.ToDec().QuoTruncate(ry.ToDec())),
-	).TruncateInt()
-
-	mintProportion := pc.ToDec().Quo(ps)                     // pc / ps
-	ax = rx.ToDec().Mul(mintProportion).Ceil().TruncateInt() // rx * mintProportion
-	ay = ry.ToDec().Mul(mintProportion).Ceil().TruncateInt() // ry * mintProportion
-
-	return
-}
-
-func WithdrawFromPool(pool PoolI, pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
-	rx, ry := pool.Balance()
-	ps := pool.PoolCoinSupply()
-
-	// Redeeming the last pool coin
-	if pc.Equal(ps) {
-		x = rx
-		y = ry
-		return
-	}
-
-	proportion := pc.ToDec().QuoTruncate(ps.ToDec())                             // pc / ps
-	multiplier := sdk.OneDec().Sub(feeRate)                                      // 1 - feeRate
-	x = rx.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // rx * proportion * multiplier
-	y = ry.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // ry * proportion * multiplier
-
-	return
+	baseCoin := sdk.NewCoin(os.BaseCoinDenom, amt)
+	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Sell, price, amt, baseCoin, os.QuoteCoinDenom)}
 }
 
 // MustMarshalPool returns the pool bytes.
