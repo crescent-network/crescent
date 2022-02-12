@@ -15,11 +15,19 @@ func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {
 }
 
 // NetAmount calculates the sum of bondedDenom balance, delegation power(slash applied LiquidTokens), the remaining reward of types.LiquidStakingProxyAcc
-// During Liquid Unstacking, btoken immediately burns and the unbonding queue belongs to the requester, so the the unbonding values are excluded on netAmount.
+// During Liquid Unstacking, btoken immediately burns and the unbonding queue belongs to the requester, so the liquid staker's unbonding values are excluded on netAmount.
 func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
 	totalRewards, _, totalLiquidTokens := k.CheckRemainingRewards(ctx, types.LiquidStakingProxyAcc)
-	return balance.ToDec().Add(totalLiquidTokens.ToDec()).Add(totalRewards)
+	unbondingPower := sdk.ZeroInt()
+	ubds := k.stakingKeeper.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
+	for _, ubd := range ubds {
+		for _, entry := range ubd.Entries {
+			// use Balance(slashing applied) not InitialBalance(without slashing)
+			unbondingPower = unbondingPower.Add(entry.Balance)
+		}
+	}
+	return balance.ToDec().Add(totalLiquidTokens.ToDec()).Add(totalRewards).Add(unbondingPower.ToDec())
 }
 
 // LiquidStaking mints bToken worth of staking coin value according to NetAmount and performs LiquidDelegate.
@@ -198,9 +206,9 @@ func (k Keeper) LiquidUnbond(
 
 func (k Keeper) CheckRemainingRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec, sdk.Int) {
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
+	totalRewards := sdk.ZeroDec()
 	totalDelShares := sdk.ZeroDec()
 	totalLiquidTokens := sdk.ZeroInt()
-	totalRewards := sdk.ZeroDec()
 
 	// Cache ctx for calculate rewards
 	cachedCtx, _ := ctx.CacheContext()
