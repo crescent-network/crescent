@@ -115,7 +115,10 @@ func Match(os amm.OrderSource, tickPrec int) (orders []amm.Order, matchPrice sdk
 	return append(buyOrders, sellOrders...), matchPrice, quoteCoinDust, true
 }
 
-func FindLastMatchableOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
+func FindLastMatchableOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (lastBuyIdx, lastSellIdx int, lastBuyPartialMatchAmt, lastSellPartialMatchAmt sdk.Int, found bool) {
+	if len(buyOrders) == 0 || len(sellOrders) == 0 {
+		return 0, 0, sdk.Int{}, sdk.Int{}, false
+	}
 	type Side struct {
 		orders          []amm.Order
 		totalOpenAmt    sdk.Int
