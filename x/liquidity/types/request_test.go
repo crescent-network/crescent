@@ -352,7 +352,7 @@ func TestSwapRequest_Validate(t *testing.T) {
 				orderer, pair.Id, types.SwapDirectionBuy, squad.ParseCoin("1000000denom2"),
 				"denom1", squad.ParseDec("1.0"), newInt(1000000), types.DefaultMaxOrderLifespan)
 			expireAt := squad.ParseTime("2022-01-01T00:00:00Z")
-			req := types.NewSwapRequestForLimitOrder(msg, 1, pair, squad.ParseCoin("1000000denom2"), expireAt, 1)
+			req := types.NewSwapRequestForLimitOrder(msg, 1, pair, squad.ParseCoin("1000000denom2"), msg.Price, expireAt, 1)
 			tc.malleate(&req)
 			err := req.Validate()
 			if tc.expectedErr == "" {

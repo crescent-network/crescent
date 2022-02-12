@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionSell, squad.ParseCoin("1000000denom1"), "denom2",
 				squad.ParseDec("1.0005"), newInt(1000000), 0),
-			"price not fit into ticks",
+			"",
 		},
 		{
 			"too long order lifespan",
@@ -76,14 +76,14 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionBuy, squad.ParseCoin("1000000denom2"), "denom1",
 				squad.ParseDec("0.8"), newInt(1000000), 0),
-			"price out of range limit",
+			"0.800000000000000000 is lower than 0.900000000000000000: price out of range limit",
 		},
 		{
 			"price out of upper limit",
 			types.NewMsgLimitOrder(
 				orderer, pair1.Id, types.SwapDirectionBuy, squad.ParseCoin("2000000denom2"), "denom1",
 				squad.ParseDec("1.2"), newInt(1000000), 0),
-			"price out of range limit",
+			"1.200000000000000000 is higher than 1.100000000000000000: price out of range limit",
 		},
 		{
 			"no price limit without last price",
@@ -104,9 +104,15 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 		s.Run(tc.name, func() {
 			// The msg is valid, but may cause an error when it's being handled in the msg server.
 			s.Require().NoError(tc.msg.ValidateBasic())
-			_, err := s.keeper.LimitOrder(s.ctx, tc.msg)
+			req, err := s.keeper.LimitOrder(s.ctx, tc.msg)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
+				switch tc.msg.Direction {
+				case types.SwapDirectionBuy:
+					s.Require().True(req.Price.LTE(tc.msg.Price))
+				case types.SwapDirectionSell:
+					s.Require().True(req.Price.GTE(tc.msg.Price))
+				}
 			} else {
 				s.Require().EqualError(err, tc.expectedErr)
 			}
@@ -252,4 +258,95 @@ func (s *KeeperTestSuite) TestDustCollector() {
 
 	s.Require().True(s.getBalances(pair.GetEscrowAddress()).IsZero())
 	s.Require().True(coinsEq(squad.ParseCoins("1denom2"), s.getBalances(types.DustCollectorAddress)))
+}
+
+func (s *KeeperTestSuite) TestFitPrice() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	lastPrice := squad.ParseDec("1")
+	pair.LastPrice = &lastPrice
+	s.keeper.SetPair(s.ctx, pair)
+
+	for _, tc := range []struct {
+		name        string
+		price       sdk.Dec
+		dir         types.SwapDirection
+		expectedErr string
+	}{
+		{
+			"",
+			squad.ParseDec("1"),
+			types.SwapDirectionBuy,
+			"",
+		},
+		{
+			"",
+			squad.ParseDec("1"),
+			types.SwapDirectionSell,
+			"",
+		},
+		{
+			"",
+			squad.ParseDec("1.1"),
+			types.SwapDirectionBuy,
+			"",
+		},
+		{
+			"",
+			squad.ParseDec("0.9"),
+			types.SwapDirectionSell,
+			"",
+		},
+		{
+			"",
+			squad.ParseDec("1.099999999"),
+			types.SwapDirectionBuy,
+			"",
+		},
+		{
+			"",
+			squad.ParseDec("0.900000001"),
+			types.SwapDirectionSell,
+			"",
+		},
+		{
+			"",
+			squad.ParseDec("1.10000001"),
+			types.SwapDirectionBuy,
+			"1.100000010000000000 is higher than 1.100000000000000000: price out of range limit",
+		},
+		{
+			"",
+			squad.ParseDec("0.8999999"),
+			types.SwapDirectionSell,
+			"0.899999900000000000 is lower than 0.900000000000000000: price out of range limit",
+		},
+	} {
+		s.Run(tc.name, func() {
+			amt := newInt(10000)
+			var offerCoin sdk.Coin
+			var demandCoinDenom string
+			switch tc.dir {
+			case types.SwapDirectionBuy:
+				offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, tc.price.MulInt(amt).Ceil().TruncateInt())
+				demandCoinDenom = pair.BaseCoinDenom
+			case types.SwapDirectionSell:
+				offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+				demandCoinDenom = pair.QuoteCoinDenom
+			}
+			s.fundAddr(s.addr(1), sdk.NewCoins(offerCoin))
+			msg := types.NewMsgLimitOrder(s.addr(1), pair.Id, tc.dir, offerCoin, demandCoinDenom, tc.price, amt, 0)
+			req, err := s.keeper.LimitOrder(s.ctx, msg)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				switch tc.dir {
+				case types.SwapDirectionBuy:
+					s.Require().True(req.Price.LTE(tc.price))
+				case types.SwapDirectionSell:
+					s.Require().True(req.Price.GTE(tc.price))
+				}
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
 }

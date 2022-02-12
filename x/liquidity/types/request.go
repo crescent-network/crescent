@@ -114,7 +114,7 @@ func (req WithdrawRequest) Validate() error {
 	return nil
 }
 
-func NewSwapRequestForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, expireAt time.Time, msgHeight int64) SwapRequest {
+func NewSwapRequestForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
 	return SwapRequest{
 		Id:                 id,
 		PairId:             pair.Id,
@@ -124,7 +124,7 @@ func NewSwapRequestForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offer
 		OfferCoin:          offerCoin,
 		RemainingOfferCoin: offerCoin,
 		ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
-		Price:              msg.Price,
+		Price:              price,
 		Amount:             msg.Amount,
 		OpenAmount:         msg.Amount,
 		BatchId:            pair.CurrentBatchId,
@@ -133,15 +133,15 @@ func NewSwapRequestForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offer
 	}
 }
 
-func NewSwapRequestForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
+func NewSwapRequestForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
 	return SwapRequest{
 		Id:                 id,
 		PairId:             pair.Id,
 		MsgHeight:          msgHeight,
 		Orderer:            msg.Orderer,
 		Direction:          msg.Direction,
-		OfferCoin:          msg.OfferCoin,
-		RemainingOfferCoin: msg.OfferCoin,
+		OfferCoin:          offerCoin,
+		RemainingOfferCoin: offerCoin,
 		ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
 		Price:              price,
 		Amount:             msg.Amount,
