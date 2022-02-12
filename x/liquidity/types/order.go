@@ -87,6 +87,11 @@ func (order *UserOrder) SetReceivedDemandCoinAmount(amt sdk.Int) amm.Order {
 	return order
 }
 
+func (order *UserOrder) SetMatched(matched bool) amm.Order {
+	order.BaseOrder.SetMatched(matched)
+	return order
+}
+
 type PoolOrder struct {
 	*amm.BaseOrder
 	PoolId          uint64
@@ -94,11 +99,11 @@ type PoolOrder struct {
 	OfferCoinAmount sdk.Int
 }
 
-func NewPoolOrder(pool Pool, dir amm.OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *PoolOrder {
+func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir amm.OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *PoolOrder {
 	return &PoolOrder{
 		BaseOrder:       amm.NewBaseOrder(dir, price, amt, offerCoinAmt),
-		PoolId:          pool.Id,
-		ReserveAddress:  pool.GetReserveAddress(),
+		PoolId:          poolId,
+		ReserveAddress:  reserveAddr,
 		OfferCoinAmount: offerCoinAmt,
 	}
 }
@@ -115,5 +120,10 @@ func (order *PoolOrder) SetRemainingOfferCoinAmount(amt sdk.Int) amm.Order {
 
 func (order *PoolOrder) SetReceivedDemandCoinAmount(amt sdk.Int) amm.Order {
 	order.BaseOrder.SetReceivedDemandCoinAmount(amt)
+	return order
+}
+
+func (order *PoolOrder) SetMatched(matched bool) amm.Order {
+	order.BaseOrder.SetMatched(matched)
 	return order
 }

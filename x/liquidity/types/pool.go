@@ -80,14 +80,16 @@ func (pool Pool) Validate() error {
 }
 
 type BasicPoolOrderSource struct {
-	Pool
-	*amm.BasicPool
+	amm.Pool
+	PoolId             uint64
+	PoolReserveAddress sdk.AccAddress
 }
 
-func NewBasicPoolOrderSource(pool Pool, rx, ry, ps sdk.Int) *BasicPoolOrderSource {
+func NewPoolOrderSource(pool amm.Pool, poolId uint64, reserveAddr sdk.AccAddress) *BasicPoolOrderSource {
 	return &BasicPoolOrderSource{
-		Pool:      pool,
-		BasicPool: amm.NewBasicPool(rx, ry, ps),
+		Pool:               pool,
+		PoolId:             poolId,
+		PoolReserveAddress: reserveAddr,
 	}
 }
 
@@ -98,7 +100,7 @@ func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
 		return nil
 	}
 	offerCoinAmt := price.MulInt(amt).Ceil().TruncateInt()
-	return []amm.Order{NewPoolOrder(os.Pool, amm.Buy, price, amt, offerCoinAmt)}
+	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Buy, price, amt, offerCoinAmt)}
 }
 
 func (os *BasicPoolOrderSource) SellOrdersUnder(price sdk.Dec) []amm.Order {
@@ -106,7 +108,7 @@ func (os *BasicPoolOrderSource) SellOrdersUnder(price sdk.Dec) []amm.Order {
 	if amt.IsZero() {
 		return nil
 	}
-	return []amm.Order{NewPoolOrder(os.Pool, amm.Sell, price, amt, amt)}
+	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Sell, price, amt, amt)}
 }
 
 // MustMarshalPool returns the pool bytes.

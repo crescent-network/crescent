@@ -1,11 +1,9 @@
-package types
+package amm
 
 import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
 type PriceDirection int
@@ -16,7 +14,7 @@ const (
 	PriceDecreasing
 )
 
-func InitialMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, dir PriceDirection, matchable bool) {
+func InitialMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, dir PriceDirection, matchable bool) {
 	highest, found := os.HighestBuyPrice()
 	if !found {
 		return sdk.Dec{}, 0, false
@@ -43,17 +41,17 @@ func InitialMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, di
 
 	switch dir {
 	case PriceStaying:
-		matchPrice = amm.RoundPrice(midPrice, tickPrec)
+		matchPrice = RoundPrice(midPrice, tickPrec)
 	case PriceIncreasing:
-		matchPrice = amm.DownTick(midPrice, tickPrec)
+		matchPrice = DownTick(midPrice, tickPrec)
 	case PriceDecreasing:
-		matchPrice = amm.UpTick(midPrice, tickPrec)
+		matchPrice = UpTick(midPrice, tickPrec)
 	}
 
 	return matchPrice, dir, true
 }
 
-func FindMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
+func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
 	initialMatchPrice, dir, matchable := InitialMatchPrice(os, tickPrec)
 	if !matchable {
 		return sdk.Dec{}, false
@@ -63,16 +61,16 @@ func FindMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, found
 	}
 
 	buyAmtOver := func(i int) sdk.Int {
-		return os.BuyAmountOver(amm.TickFromIndex(i, tickPrec))
+		return os.BuyAmountOver(TickFromIndex(i, tickPrec))
 	}
 	sellAmtUnder := func(i int) sdk.Int {
-		return os.SellAmountUnder(amm.TickFromIndex(i, tickPrec))
+		return os.SellAmountUnder(TickFromIndex(i, tickPrec))
 	}
 
 	switch dir {
 	case PriceIncreasing:
-		start := amm.TickToIndex(initialMatchPrice, tickPrec)
-		end := amm.TickToIndex(amm.HighestTick(tickPrec), tickPrec)
+		start := TickToIndex(initialMatchPrice, tickPrec)
+		end := TickToIndex(HighestTick(tickPrec), tickPrec)
 		i := start + sort.Search(end-start+1, func(i int) bool {
 			i += start
 			bg := buyAmtOver(i + 1)
@@ -81,10 +79,10 @@ func FindMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, found
 		if i > end {
 			i = end
 		}
-		return amm.TickFromIndex(i, tickPrec), true
+		return TickFromIndex(i, tickPrec), true
 	default: // PriceDecreasing
-		start := amm.TickToIndex(initialMatchPrice, tickPrec)
-		end := amm.TickToIndex(amm.LowestTick(tickPrec), tickPrec)
+		start := TickToIndex(initialMatchPrice, tickPrec)
+		end := TickToIndex(LowestTick(tickPrec), tickPrec)
 		i := start - sort.Search(start-end+1, func(i int) bool {
 			i = start - i
 			sl := sellAmtUnder(i - 1)
@@ -93,43 +91,25 @@ func FindMatchPrice(os amm.OrderSource, tickPrec int) (matchPrice sdk.Dec, found
 		if i < end {
 			i = end
 		}
-		return amm.TickFromIndex(i, tickPrec), true
+		return TickFromIndex(i, tickPrec), true
 	}
 }
 
-func Match(os amm.OrderSource, tickPrec int) (orders []amm.Order, matchPrice sdk.Dec, quoteCoinDust sdk.Int, matched bool) {
-	var found bool
-	matchPrice, found = FindMatchPrice(os, tickPrec)
-	if !found {
-		return nil, sdk.Dec{}, sdk.Int{}, false
-	}
-
-	buyOrders := os.BuyOrdersOver(matchPrice)
-	sellOrders := os.SellOrdersUnder(matchPrice)
-
-	quoteCoinDust, matched = MatchOrders(buyOrders, sellOrders, matchPrice)
-	if !matched {
-		return nil, sdk.Dec{}, sdk.Int{}, false
-	}
-
-	return append(buyOrders, sellOrders...), matchPrice, quoteCoinDust, true
-}
-
-func FindLastMatchableOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (lastBuyIdx, lastSellIdx int, lastBuyPartialMatchAmt, lastSellPartialMatchAmt sdk.Int, found bool) {
+func FindLastMatchableOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (lastBuyIdx, lastSellIdx int, lastBuyPartialMatchAmt, lastSellPartialMatchAmt sdk.Int, found bool) {
 	if len(buyOrders) == 0 || len(sellOrders) == 0 {
 		return 0, 0, sdk.Int{}, sdk.Int{}, false
 	}
 	type Side struct {
-		orders          []amm.Order
+		orders          []Order
 		totalOpenAmt    sdk.Int
 		i               int
 		partialMatchAmt sdk.Int
 	}
-	buySide := &Side{buyOrders, amm.TotalOpenAmount(buyOrders), len(buyOrders) - 1, sdk.Int{}}
-	sellSide := &Side{sellOrders, amm.TotalOpenAmount(sellOrders), len(sellOrders) - 1, sdk.Int{}}
-	sides := map[SwapDirection]*Side{
-		SwapDirectionBuy:  buySide,
-		SwapDirectionSell: sellSide,
+	buySide := &Side{buyOrders, TotalOpenAmount(buyOrders), len(buyOrders) - 1, sdk.Int{}}
+	sellSide := &Side{sellOrders, TotalOpenAmount(sellOrders), len(sellOrders) - 1, sdk.Int{}}
+	sides := map[OrderDirection]*Side{
+		Buy:  buySide,
+		Sell: sellSide,
 	}
 	for {
 		ok := true
@@ -139,7 +119,7 @@ func FindLastMatchableOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.D
 			matchAmt := sdk.MinInt(buySide.totalOpenAmt, sellSide.totalOpenAmt)
 			side.partialMatchAmt = matchAmt.Sub(side.totalOpenAmt.Sub(order.GetOpenAmount()))
 			if side.totalOpenAmt.Sub(order.GetOpenAmount()).GT(matchAmt) ||
-				(dir == SwapDirectionSell && matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero()) {
+				(dir == Sell && matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero()) {
 				if i == 0 {
 					return
 				}
@@ -154,10 +134,7 @@ func FindLastMatchableOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.D
 	}
 }
 
-func MatchOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (quoteCoinDust sdk.Int, matched bool) {
-	SortOrders(buyOrders, DescendingPrice)
-	SortOrders(sellOrders, AscendingPrice)
-
+func MatchOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (quoteCoinDust sdk.Int, matched bool) {
 	bi, si, pmb, pms, found := FindLastMatchableOrders(buyOrders, sellOrders, matchPrice)
 	if !found {
 		return sdk.Int{}, false
@@ -177,6 +154,7 @@ func MatchOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (quoteCo
 		buyOrder.SetOpenAmount(buyOrder.GetOpenAmount().Sub(receivedBaseCoinAmt))
 		buyOrder.SetRemainingOfferCoinAmount(buyOrder.GetRemainingOfferCoinAmount().Sub(paidQuoteCoinAmt))
 		buyOrder.SetReceivedDemandCoinAmount(receivedBaseCoinAmt)
+		buyOrder.SetMatched(true)
 		quoteCoinDust = quoteCoinDust.Add(paidQuoteCoinAmt)
 	}
 
@@ -192,6 +170,7 @@ func MatchOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (quoteCo
 		sellOrder.SetOpenAmount(sellOrder.GetOpenAmount().Sub(paidBaseCoinAmt))
 		sellOrder.SetRemainingOfferCoinAmount(sellOrder.GetRemainingOfferCoinAmount().Sub(paidBaseCoinAmt))
 		sellOrder.SetReceivedDemandCoinAmount(receivedQuoteCoinAmt)
+		sellOrder.SetMatched(true)
 		quoteCoinDust = quoteCoinDust.Sub(receivedQuoteCoinAmt)
 	}
 

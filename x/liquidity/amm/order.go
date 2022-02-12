@@ -36,6 +36,8 @@ type Order interface {
 	SetRemainingOfferCoinAmount(amt sdk.Int) Order
 	GetReceivedDemandCoinAmount() sdk.Int
 	SetReceivedDemandCoinAmount(amt sdk.Int) Order
+	IsMatched() bool
+	SetMatched(matched bool) Order
 }
 
 func TotalOpenAmount(orders []Order) sdk.Int {
@@ -53,6 +55,7 @@ type BaseOrder struct {
 	OpenAmount               sdk.Int
 	RemainingOfferCoinAmount sdk.Int
 	ReceivedDemandCoinAmount sdk.Int
+	Matched                  bool
 }
 
 func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *BaseOrder {
@@ -102,5 +105,14 @@ func (order *BaseOrder) GetReceivedDemandCoinAmount() sdk.Int {
 
 func (order *BaseOrder) SetReceivedDemandCoinAmount(amt sdk.Int) Order {
 	order.ReceivedDemandCoinAmount = amt
+	return order
+}
+
+func (order *BaseOrder) IsMatched() bool {
+	return order.Matched
+}
+
+func (order *BaseOrder) SetMatched(matched bool) Order {
+	order.Matched = matched
 	return order
 }
