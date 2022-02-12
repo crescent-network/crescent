@@ -66,7 +66,7 @@ func NewUserOrder(req SwapRequest) *UserOrder {
 		dir = amm.Sell
 	}
 	return &UserOrder{
-		BaseOrder: amm.NewBaseOrder(dir, req.Price, req.OpenAmount, req.RemainingOfferCoin.Amount),
+		BaseOrder: amm.NewBaseOrder(dir, req.Price, req.OpenAmount, req.RemainingOfferCoin, req.ReceivedCoin.Denom),
 		RequestId: req.Id,
 		Orderer:   req.GetOrderer(),
 	}
@@ -77,13 +77,13 @@ func (order *UserOrder) SetOpenAmount(amt sdk.Int) amm.Order {
 	return order
 }
 
-func (order *UserOrder) SetRemainingOfferCoinAmount(amt sdk.Int) amm.Order {
-	order.BaseOrder.SetRemainingOfferCoinAmount(amt)
+func (order *UserOrder) DecrRemainingOfferCoin(amt sdk.Int) amm.Order {
+	order.BaseOrder.DecrRemainingOfferCoin(amt)
 	return order
 }
 
-func (order *UserOrder) SetReceivedDemandCoinAmount(amt sdk.Int) amm.Order {
-	order.BaseOrder.SetReceivedDemandCoinAmount(amt)
+func (order *UserOrder) IncrReceivedDemandCoin(amt sdk.Int) amm.Order {
+	order.BaseOrder.IncrReceivedDemandCoin(amt)
 	return order
 }
 
@@ -94,17 +94,19 @@ func (order *UserOrder) SetMatched(matched bool) amm.Order {
 
 type PoolOrder struct {
 	*amm.BaseOrder
-	PoolId          uint64
-	ReserveAddress  sdk.AccAddress
-	OfferCoinAmount sdk.Int
+	PoolId         uint64
+	ReserveAddress sdk.AccAddress
+	OfferCoin      sdk.Coin
 }
 
-func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir amm.OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *PoolOrder {
+func NewPoolOrder(
+	poolId uint64, reserveAddr sdk.AccAddress, dir amm.OrderDirection, price sdk.Dec, amt sdk.Int,
+	offerCoin sdk.Coin, demandCoinDenom string) *PoolOrder {
 	return &PoolOrder{
-		BaseOrder:       amm.NewBaseOrder(dir, price, amt, offerCoinAmt),
-		PoolId:          poolId,
-		ReserveAddress:  reserveAddr,
-		OfferCoinAmount: offerCoinAmt,
+		BaseOrder:      amm.NewBaseOrder(dir, price, amt, offerCoin, demandCoinDenom),
+		PoolId:         poolId,
+		ReserveAddress: reserveAddr,
+		OfferCoin:      offerCoin,
 	}
 }
 
@@ -113,13 +115,13 @@ func (order *PoolOrder) SetOpenAmount(amt sdk.Int) amm.Order {
 	return order
 }
 
-func (order *PoolOrder) SetRemainingOfferCoinAmount(amt sdk.Int) amm.Order {
-	order.BaseOrder.SetRemainingOfferCoinAmount(amt)
+func (order *PoolOrder) DecrRemainingOfferCoin(amt sdk.Int) amm.Order {
+	order.BaseOrder.DecrRemainingOfferCoin(amt)
 	return order
 }
 
-func (order *PoolOrder) SetReceivedDemandCoinAmount(amt sdk.Int) amm.Order {
-	order.BaseOrder.SetReceivedDemandCoinAmount(amt)
+func (order *PoolOrder) IncrReceivedDemandCoin(amt sdk.Int) amm.Order {
+	order.BaseOrder.IncrReceivedDemandCoin(amt)
 	return order
 }
 

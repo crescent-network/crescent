@@ -32,10 +32,10 @@ type Order interface {
 	GetAmount() sdk.Int
 	GetOpenAmount() sdk.Int
 	SetOpenAmount(amt sdk.Int) Order
-	GetRemainingOfferCoinAmount() sdk.Int
-	SetRemainingOfferCoinAmount(amt sdk.Int) Order
-	GetReceivedDemandCoinAmount() sdk.Int
-	SetReceivedDemandCoinAmount(amt sdk.Int) Order
+	GetRemainingOfferCoin() sdk.Coin
+	DecrRemainingOfferCoin(amt sdk.Int) Order // Decrement remaining offer coin amount
+	GetReceivedDemandCoin() sdk.Coin
+	IncrReceivedDemandCoin(amt sdk.Int) Order // Increment received demand coin amount
 	IsMatched() bool
 	SetMatched(matched bool) Order
 }
@@ -49,23 +49,23 @@ func TotalOpenAmount(orders []Order) sdk.Int {
 }
 
 type BaseOrder struct {
-	Direction                OrderDirection
-	Price                    sdk.Dec
-	Amount                   sdk.Int
-	OpenAmount               sdk.Int
-	RemainingOfferCoinAmount sdk.Int
-	ReceivedDemandCoinAmount sdk.Int
-	Matched                  bool
+	Direction          OrderDirection
+	Price              sdk.Dec
+	Amount             sdk.Int
+	OpenAmount         sdk.Int
+	RemainingOfferCoin sdk.Coin
+	ReceivedDemandCoin sdk.Coin
+	Matched            bool
 }
 
-func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *BaseOrder {
+func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int, offerCoin sdk.Coin, demandCoinDenom string) *BaseOrder {
 	return &BaseOrder{
-		Direction:                dir,
-		Price:                    price,
-		Amount:                   amt,
-		OpenAmount:               amt,
-		RemainingOfferCoinAmount: offerCoinAmt,
-		ReceivedDemandCoinAmount: sdk.ZeroInt(),
+		Direction:          dir,
+		Price:              price,
+		Amount:             amt,
+		OpenAmount:         amt,
+		RemainingOfferCoin: offerCoin,
+		ReceivedDemandCoin: sdk.NewCoin(demandCoinDenom, sdk.ZeroInt()),
 	}
 }
 
@@ -90,21 +90,21 @@ func (order *BaseOrder) SetOpenAmount(amt sdk.Int) Order {
 	return order
 }
 
-func (order *BaseOrder) GetRemainingOfferCoinAmount() sdk.Int {
-	return order.RemainingOfferCoinAmount
+func (order *BaseOrder) GetRemainingOfferCoin() sdk.Coin {
+	return order.RemainingOfferCoin
 }
 
-func (order *BaseOrder) SetRemainingOfferCoinAmount(amount sdk.Int) Order {
-	order.RemainingOfferCoinAmount = amount
+func (order *BaseOrder) DecrRemainingOfferCoin(amt sdk.Int) Order {
+	order.RemainingOfferCoin = order.RemainingOfferCoin.SubAmount(amt)
 	return order
 }
 
-func (order *BaseOrder) GetReceivedDemandCoinAmount() sdk.Int {
-	return order.ReceivedDemandCoinAmount
+func (order *BaseOrder) GetReceivedDemandCoin() sdk.Coin {
+	return order.ReceivedDemandCoin
 }
 
-func (order *BaseOrder) SetReceivedDemandCoinAmount(amt sdk.Int) Order {
-	order.ReceivedDemandCoinAmount = amt
+func (order *BaseOrder) IncrReceivedDemandCoin(amt sdk.Int) Order {
+	order.ReceivedDemandCoin = order.ReceivedDemandCoin.AddAmount(amt)
 	return order
 }
 

@@ -9,14 +9,14 @@ var _ OrderSource = (*mergedOrderSource)(nil)
 type OrderView interface {
 	HighestBuyPrice() (price sdk.Dec, found bool)
 	LowestSellPrice() (price sdk.Dec, found bool)
-	BuyAmountOver(price sdk.Dec) sdk.Int
-	SellAmountUnder(price sdk.Dec) sdk.Int
+	BuyAmountOver(price sdk.Dec) sdk.Int   // Includes the price
+	SellAmountUnder(price sdk.Dec) sdk.Int // Includes the price
 }
 
 type OrderSource interface {
 	OrderView
-	BuyOrdersOver(price sdk.Dec) []Order
-	SellOrdersUnder(price sdk.Dec) []Order
+	BuyOrdersOver(price sdk.Dec) []Order   // Includes the price
+	SellOrdersUnder(price sdk.Dec) []Order // Includes the price
 }
 
 type mergedOrderSource struct {

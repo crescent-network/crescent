@@ -152,8 +152,8 @@ func MatchOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (quoteCoinDu
 		}
 		paidQuoteCoinAmt := matchPrice.MulInt(receivedBaseCoinAmt).Ceil().TruncateInt()
 		buyOrder.SetOpenAmount(buyOrder.GetOpenAmount().Sub(receivedBaseCoinAmt))
-		buyOrder.SetRemainingOfferCoinAmount(buyOrder.GetRemainingOfferCoinAmount().Sub(paidQuoteCoinAmt))
-		buyOrder.SetReceivedDemandCoinAmount(receivedBaseCoinAmt)
+		buyOrder.DecrRemainingOfferCoin(paidQuoteCoinAmt)
+		buyOrder.IncrReceivedDemandCoin(receivedBaseCoinAmt)
 		buyOrder.SetMatched(true)
 		quoteCoinDust = quoteCoinDust.Add(paidQuoteCoinAmt)
 	}
@@ -168,8 +168,8 @@ func MatchOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (quoteCoinDu
 		}
 		receivedQuoteCoinAmt := matchPrice.MulInt(paidBaseCoinAmt).TruncateInt()
 		sellOrder.SetOpenAmount(sellOrder.GetOpenAmount().Sub(paidBaseCoinAmt))
-		sellOrder.SetRemainingOfferCoinAmount(sellOrder.GetRemainingOfferCoinAmount().Sub(paidBaseCoinAmt))
-		sellOrder.SetReceivedDemandCoinAmount(receivedQuoteCoinAmt)
+		sellOrder.DecrRemainingOfferCoin(paidBaseCoinAmt)
+		sellOrder.IncrReceivedDemandCoin(receivedQuoteCoinAmt)
 		sellOrder.SetMatched(true)
 		quoteCoinDust = quoteCoinDust.Sub(receivedQuoteCoinAmt)
 	}
