@@ -294,6 +294,15 @@ func TestMsgLimitOrder(t *testing.T) {
 			"offer coin is less than minimum coin amount: invalid request",
 		},
 		{
+			"insufficient offer coin amount",
+			func(msg *types.MsgLimitOrder) {
+				msg.OfferCoin = squad.ParseCoin("1000000denom2")
+				msg.Price = squad.ParseDec("10")
+				msg.Amount = newInt(1000000)
+			},
+			"1000000denom2 is smaller than 10000000denom2: insufficient offer coin",
+		},
+		{
 			"invalid demand coin denom",
 			func(msg *types.MsgLimitOrder) {
 				msg.DemandCoinDenom = "invaliddenom!"
@@ -339,7 +348,7 @@ func TestMsgLimitOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgLimitOrder(
-				testAddr, 1, types.SwapDirectionSell, squad.ParseCoin("1000000denom2"),
+				testAddr, 1, types.SwapDirectionBuy, squad.ParseCoin("1000000denom2"),
 				"denom1", squad.ParseDec("1.0"), newInt(1000000), orderLifespan)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgLimitOrder, msg.Type())

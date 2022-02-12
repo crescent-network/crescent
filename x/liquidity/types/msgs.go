@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
 var (
@@ -289,6 +291,16 @@ func (msg MsgLimitOrder) ValidateBasic() error {
 	}
 	if msg.OfferCoin.Amount.LT(MinCoinAmount) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin is less than minimum coin amount")
+	}
+	var minOfferCoin sdk.Coin
+	switch msg.Direction {
+	case SwapDirectionBuy:
+		minOfferCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, msg.Price, msg.Amount))
+	case SwapDirectionSell:
+		minOfferCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount)
+	}
+	if msg.OfferCoin.IsLT(minOfferCoin) {
+		return sdkerrors.Wrapf(ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, minOfferCoin)
 	}
 	if msg.Amount.LT(MinCoinAmount) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "base coin is less than minimum coin amount")
