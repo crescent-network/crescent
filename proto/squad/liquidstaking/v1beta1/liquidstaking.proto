@@ -107,5 +107,5 @@ message LiquidValidatorState {
 
   // liquid_tokens define the token amount worth of delegation shares of the validator (slashing applied amount)
   string liquid_tokens = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }

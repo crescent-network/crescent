@@ -115,25 +115,28 @@ func Match(os amm.OrderSource, tickPrec int) (orders []amm.Order, matchPrice sdk
 	return append(buyOrders, sellOrders...), matchPrice, quoteCoinDust, true
 }
 
-func FindLastMatchableOrders(orders1, orders2 []amm.Order, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
-	sides := []*struct {
+func FindLastMatchableOrders(buyOrders, sellOrders []amm.Order, matchPrice sdk.Dec) (idx1, idx2 int, partialMatchAmt1, partialMatchAmt2 sdk.Int, found bool) {
+	type Side struct {
 		orders          []amm.Order
 		totalOpenAmt    sdk.Int
 		i               int
 		partialMatchAmt sdk.Int
-	}{
-		{orders1, amm.TotalOpenAmount(orders1), len(orders1) - 1, sdk.Int{}},
-		{orders2, amm.TotalOpenAmount(orders2), len(orders2) - 1, sdk.Int{}},
+	}
+	buySide := &Side{buyOrders, amm.TotalOpenAmount(buyOrders), len(buyOrders) - 1, sdk.Int{}}
+	sellSide := &Side{sellOrders, amm.TotalOpenAmount(sellOrders), len(sellOrders) - 1, sdk.Int{}}
+	sides := map[SwapDirection]*Side{
+		SwapDirectionBuy:  buySide,
+		SwapDirectionSell: sellSide,
 	}
 	for {
 		ok := true
-		for _, side := range sides {
+		for dir, side := range sides {
 			i := side.i
 			order := side.orders[i]
-			matchAmt := sdk.MinInt(sides[0].totalOpenAmt, sides[1].totalOpenAmt)
+			matchAmt := sdk.MinInt(buySide.totalOpenAmt, sellSide.totalOpenAmt)
 			side.partialMatchAmt = matchAmt.Sub(side.totalOpenAmt.Sub(order.GetOpenAmount()))
 			if side.totalOpenAmt.Sub(order.GetOpenAmount()).GT(matchAmt) ||
-				matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero() {
+				(dir == SwapDirectionSell && matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero()) {
 				if i == 0 {
 					return
 				}
@@ -143,7 +146,7 @@ func FindLastMatchableOrders(orders1, orders2 []amm.Order, matchPrice sdk.Dec) (
 			}
 		}
 		if ok {
-			return sides[0].i, sides[1].i, sides[0].partialMatchAmt, sides[1].partialMatchAmt, true
+			return buySide.i, sellSide.i, buySide.partialMatchAmt, sellSide.partialMatchAmt, true
 		}
 	}
 }

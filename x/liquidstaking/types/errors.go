@@ -11,4 +11,5 @@ var (
 	ErrNotImplementedYet               = sdkerrors.Register(ModuleName, 6, "not implemented yet")
 	ErrLessThanMinLiquidStakingAmount  = sdkerrors.Register(ModuleName, 7, "staking amount should be over params.min_liquid_staking_amount")
 	ErrInvalidBTokenSupply             = sdkerrors.Register(ModuleName, 8, "invalid bonded bon denom supply")
+	ErrInvalidActiveLiquidValidators   = sdkerrors.Register(ModuleName, 9, "invalid active liquid validators")
 )

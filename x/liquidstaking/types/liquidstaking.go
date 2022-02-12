@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -32,7 +30,6 @@ func (v LiquidValidator) Validate() error {
 	if valErr != nil {
 		return valErr
 	}
-	// TODO: add state level validate
 	return nil
 }
 
@@ -67,13 +64,13 @@ func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec
 	return del.GetShares()
 }
 
-func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
+func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Int {
 	delShares := v.GetDelShares(ctx, sk)
 	if !delShares.IsPositive() {
-		return sdk.ZeroDec()
+		return sdk.ZeroInt()
 	}
 	val := sk.Validator(ctx, v.GetOperator())
-	return val.TokensFromSharesTruncated(delShares)
+	return val.TokensFromSharesTruncated(delShares).TruncateInt()
 }
 
 func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap, active bool) sdk.Int {
@@ -111,14 +108,14 @@ func ActiveCondition(validator stakingtypes.Validator, whitelisted bool, tombsto
 type LiquidValidators []LiquidValidator
 type ActiveLiquidValidators LiquidValidators
 
+// TODO: add test code
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
-func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMap map[string]sdk.Int, threshold sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int) {
+func (vs LiquidValidators) MinMaxGap(targetMap, liquidTokenMap map[string]sdk.Int, threshold sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int, lastRedelegation bool) {
 	maxGap := sdk.ZeroInt()
 	minGap := sdk.ZeroInt()
 
 	for _, val := range vs {
-		// TODO: liquidTokens or DelShares
-		gap := val.GetLiquidTokens(ctx, sk).TruncateInt().Sub(targetMap[val.OperatorAddress])
+		gap := liquidTokenMap[val.OperatorAddress].Sub(targetMap[val.OperatorAddress])
 		if gap.GT(maxGap) {
 			maxGap = gap
 			maxGapVal = val
@@ -127,32 +124,32 @@ func (vs LiquidValidators) MinMaxGap(ctx sdk.Context, sk StakingKeeper, targetMa
 			minGap = gap
 			minGapVal = val
 		}
-		// TODO: consider when equal
 	}
-	amountNeeded = sdk.MinInt(maxGap, minGap.Abs())
+	minGap = minGap.Abs()
+	amountNeeded = sdk.MinInt(maxGap, minGap)
 	// when last redelegation for target weight zero, maxGap has priority, if not small left delShares for zero targetWeight
-	lastRedelegation := amountNeeded.IsPositive() && maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive()
+	lastRedelegation = amountNeeded.IsPositive() &&
+		!targetMap[maxGapVal.OperatorAddress].IsPositive() &&
+		maxGap.Sub(minGap).Abs().LT(threshold)
 	if lastRedelegation {
-		// TODO: verify edge case
-		fmt.Println("[---LastRedelegation]", threshold, maxGap.Sub(minGap.Abs()).LT(threshold) && !targetMap[maxGapVal.OperatorAddress].IsPositive(), maxGap)
 		amountNeeded = maxGap
 	}
-
-	fmt.Println("[MinMaxGap]", amountNeeded, minGapVal.OperatorAddress, minGap, minGapVal.GetLiquidTokens(ctx, sk), maxGapVal.OperatorAddress, maxGap, maxGapVal.GetLiquidTokens(ctx, sk))
-	return minGapVal, maxGapVal, amountNeeded
+	return minGapVal, maxGapVal, amountNeeded, lastRedelegation
 }
 
 func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
-	totalLiquidTokens := sdk.ZeroDec()
+func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Int, map[string]sdk.Int) {
+	totalLiquidTokens := sdk.ZeroInt()
+	liquidTokenMap := make(map[string]sdk.Int)
 	for _, lv := range vs {
 		liquidTokens := lv.GetLiquidTokens(ctx, sk)
+		liquidTokenMap[lv.OperatorAddress] = liquidTokens
 		totalLiquidTokens = totalLiquidTokens.Add(liquidTokens)
 	}
-	return totalLiquidTokens
+	return totalLiquidTokens, liquidTokenMap
 }
 
 func (vs LiquidValidators) Map() map[string]bool {
@@ -167,7 +164,7 @@ func (avs ActiveLiquidValidators) Len() int {
 	return LiquidValidators(avs).Len()
 }
 
-func (avs ActiveLiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
+func (avs ActiveLiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Int, map[string]sdk.Int) {
 	return LiquidValidators(avs).TotalLiquidTokens(ctx, sk)
 }
 

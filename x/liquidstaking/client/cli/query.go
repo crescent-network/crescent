@@ -100,7 +100,6 @@ $ %s query %s liquid-validators
 			res, err := queryClient.LiquidValidators(
 				context.Background(),
 				&types.QueryLiquidValidatorsRequest{
-					// TODO: consider add status
 					Pagination: pageReq,
 				},
 			)

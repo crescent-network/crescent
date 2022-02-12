@@ -10,6 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -112,6 +113,33 @@ func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt 
 	s.Require().EqualValues(bTokenMintAmt, btokenBalanceAfter.Sub(btokenBalanceBefore))
 }
 
+func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBTokenAmt sdk.Int, ubdComplete bool) {
+	params := s.keeper.GetParams(s.ctx)
+	alv := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
+	balanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, sdk.DefaultBondDenom)
+	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.BondedBondDenom, ubdBTokenAmt))
+	s.Require().NoError(err)
+	btokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, params.BondedBondDenom).Amount
+	s.Require().EqualValues(ubdBTokenAmt, btokenBalanceBefore.Sub(btokenBalanceAfter))
+	s.Require().Len(ubds, len(alv))
+	for _, v := range alv {
+		_, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, liquidStaker, v.GetOperator())
+		s.Require().True(found)
+	}
+
+	if ubdComplete {
+		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 200).WithBlockTime(ubdTime.Add(1))
+		s.app.StakingKeeper.BlockValidatorUpdates(s.ctx) // EndBlock of staking keeper, mature UBD
+		balanceCompleteUBD := s.app.BankKeeper.GetBalance(s.ctx, liquidStaker, sdk.DefaultBondDenom)
+		for _, v := range alv {
+			_, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, liquidStaker, v.GetOperator())
+			s.Require().False(found)
+		}
+		s.Require().EqualValues(balanceCompleteUBD.Amount, balanceBefore.Amount.Add(unbondingAmt))
+	}
+}
+
 // advance block time and height for complete redelegations and unbondings
 func (s *KeeperTestSuite) completeRedelegationUnbonding() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))
@@ -122,7 +150,7 @@ func (s *KeeperTestSuite) completeRedelegationUnbonding() {
 	s.Require().Len(ubds, 0)
 }
 
-func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
+func (s *KeeperTestSuite) advanceHeight(height int, withBeginBlock bool) {
 	feeCollector := s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	for i := 0; i < height; i++ {
 		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(s.ctx.BlockTime().Add(BlockTime))
@@ -130,7 +158,7 @@ func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
 		feeCollectorBalance := s.app.BankKeeper.GetAllBalances(s.ctx, feeCollector)
 		rewardsToBeDistributed := feeCollectorBalance.AmountOf(sdk.DefaultBondDenom)
 
-		// mimic AllocateTokens, get rewards from feeCollector, AllocateTokensToValidator, add remaining to feePool
+		// mimic distribution.BeginBlock (AllocateTokens, get rewards from feeCollector, AllocateTokensToValidator, add remaining to feePool)
 		err := s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, authtypes.FeeCollectorName, distrtypes.ModuleName, feeCollectorBalance)
 		s.Require().NoError(err)
 		totalRewards := sdk.ZeroDec()
@@ -140,25 +168,90 @@ func (s *KeeperTestSuite) advanceHeight(height int, withEndBlock bool) {
 			totalPower = totalPower + consPower
 			return false
 		})
-		s.app.StakingKeeper.IterateBondedValidatorsByPower(s.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-			consPower := validator.GetConsensusPower(s.app.StakingKeeper.PowerReduction(s.ctx))
-			powerFraction := sdk.NewDec(consPower).QuoTruncate(sdk.NewDec(totalPower))
-			reward := rewardsToBeDistributed.ToDec().MulTruncate(powerFraction)
-			s.app.DistrKeeper.AllocateTokensToValidator(s.ctx, validator, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: reward}})
-			totalRewards = totalRewards.Add(reward)
-			return false
-		})
+		if totalPower != 0 {
+			s.app.StakingKeeper.IterateBondedValidatorsByPower(s.ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+				consPower := validator.GetConsensusPower(s.app.StakingKeeper.PowerReduction(s.ctx))
+				powerFraction := sdk.NewDec(consPower).QuoTruncate(sdk.NewDec(totalPower))
+				reward := rewardsToBeDistributed.ToDec().MulTruncate(powerFraction)
+				s.app.DistrKeeper.AllocateTokensToValidator(s.ctx, validator, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: reward}})
+				totalRewards = totalRewards.Add(reward)
+				return false
+			})
+		}
 		remaining := rewardsToBeDistributed.ToDec().Sub(totalRewards)
 		s.Require().False(remaining.GT(sdk.NewDec(1)))
 		feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
 		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: remaining}}...)
 		s.app.DistrKeeper.SetFeePool(s.ctx, feePool)
-		staking.BeginBlocker(s.ctx, *s.app.StakingKeeper)
-		staking.EndBlocker(s.ctx, *s.app.StakingKeeper)
-		if withEndBlock {
-			liquidstaking.EndBlocker(s.ctx, s.app.LiquidStakingKeeper)
+		if withBeginBlock {
+			// liquid validator set update, rebalancing, withdraw rewards, re-stake
+			liquidstaking.BeginBlocker(s.ctx, s.app.LiquidStakingKeeper)
 		}
+		staking.EndBlocker(s.ctx, *s.app.StakingKeeper)
 	}
+}
+
+// doubleSign, tombstone, slash, jail
+func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAddress) {
+	liquidValidator, found := s.keeper.GetLiquidValidator(s.ctx, valOper)
+	s.Require().True(found)
+	val, found := s.app.StakingKeeper.GetValidator(s.ctx, valOper)
+	s.Require().True(found)
+	tokens := val.Tokens
+	liquidTokens := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
+
+	// check sign info
+	info, found := s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
+	s.Require().True(found)
+	s.Require().Equal(info.Address, consAddr.String())
+
+	// make evidence
+	evidence := &evidencetypes.Equivocation{
+		//Height: 0,
+		//Time:   time.Unix(0, 0),
+		Height:           s.ctx.BlockHeight(),
+		Time:             s.ctx.BlockTime(),
+		Power:            s.app.StakingKeeper.TokensToConsensusPower(s.ctx, tokens),
+		ConsensusAddress: consAddr.String(),
+	}
+
+	// Double sign
+	s.app.EvidenceKeeper.HandleEquivocationEvidence(s.ctx, evidence)
+	// HandleEquivocationEvidence call below functions
+	//s.app.SlashingKeeper.Slash()
+	//s.app.SlashingKeeper.Jail(s.ctx, consAddr)
+	//s.app.SlashingKeeper.JailUntil(s.ctx, consAddr, evidencetypes.DoubleSignJailEndTime)
+	//s.app.SlashingKeeper.Tombstone(s.ctx, consAddr)
+
+	// should be jailed and tombstoned
+	s.Require().True(s.app.StakingKeeper.Validator(s.ctx, liquidValidator.GetOperator()).IsJailed())
+	s.Require().True(s.app.SlashingKeeper.IsTombstoned(s.ctx, consAddr))
+
+	// check tombstoned on sign info
+	info, found = s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
+	s.Require().True(found)
+	s.Require().True(info.Tombstoned)
+	s.Require().True(liquidValidator.IsTombstoned(s.ctx, s.app.StakingKeeper, s.app.SlashingKeeper))
+	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
+	liquidTokensSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
+	tokensSlashed := val.Tokens
+	s.Require().True(tokensSlashed.LT(tokens))
+	s.Require().True(liquidTokensSlashed.LT(liquidTokens))
+
+	//// check slashed
+	//doubleSignFraction := s.app.SlashingKeeper.SlashFractionDoubleSign(s.ctx)
+	//liquidTokensAfterSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
+	//expectedSlashedLiquidTokens := liquidTokens.MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
+	//fmt.Println(liquidTokens, expectedSlashedLiquidTokens, liquidTokensAfterSlashed)
+	//
+	//// TODO: 24998 * 0.95 + 25000 == 48748, but 48778, maybe reward 30
+	//rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckTotalRewards(s.ctx, types.LiquidStakingProxyAcc)
+	//fmt.Println(rewards, totalDelShares, totalLiquidTokens)
+	//slashedStakingAmt := stakingAmt.ToDec().MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
+	//fmt.Println(slashedStakingAmt)
+	//fmt.Println(s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
+	//s.Require().EqualValues(slashedStakingAmt, s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
+
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
