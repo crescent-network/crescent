@@ -14,7 +14,7 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-// GetTxCmd returns the transaction commands for the module
+// GetTxCmd returns the transaction commands for the module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -31,20 +31,21 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewClaimCmd implements the claim command handler.
 func NewClaimCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claim [action-type]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Claim action",
+		Short: "Claim the claimable amount with the action",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Stake coins. 
-			
-To get farming rewards, you must stake coins that are defined in available plans on a network. 
+			fmt.Sprintf(`Claim the claimable amount with the action. 
 
 Example:
-$ %s tx %s claim  --from mykey
+$ %s tx %s claim deposit --from mykey
+$ %s tx %s claim swap --from mykey
+$ %s tx %s claim farming --from mykey
 `,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -54,14 +55,12 @@ $ %s tx %s claim  --from mykey
 				return err
 			}
 
-			farmer := clientCtx.GetFromAddress()
-
-			stakingCoins, err := sdk.ParseCoinsNormalized(args[0])
-			if err != nil {
-				return err
+			actionTyp := NormalizeActionType(args[0])
+			if actionTyp == types.ActionTypeUnspecified {
+				return fmt.Errorf("unknown action type %s", args[0])
 			}
 
-			msg := types.NewMsgStake(farmer, stakingCoins)
+			msg := types.NewMsgClaim(clientCtx.GetFromAddress(), actionTyp)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
