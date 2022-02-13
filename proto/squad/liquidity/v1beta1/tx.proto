@@ -105,8 +105,8 @@ message MsgLimitOrder {
   // pair_id specifies the pair id
   uint64 pair_id = 2;
 
-  // direction specifies the swap direction(buy or sell)
-  SwapDirection direction = 3;
+  // direction specifies the order direction(buy or sell)
+  OrderDirection direction = 3;
 
   // offer_coin specifies the amount of coin the orderer offers
   cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
@@ -135,8 +135,8 @@ message MsgMarketOrder {
   // pair_id specifies the pair id
   uint64 pair_id = 2;
 
-  // direction specifies the swap direction(buy or sell)
-  SwapDirection direction = 3;
+  // direction specifies the order direction(buy or sell)
+  OrderDirection direction = 3;
 
   // offer_coin specifies the amount of coin the orderer offers
   cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
@@ -162,8 +162,8 @@ message MsgCancelOrder {
   // pair_id specifies the pair id
   uint64 pair_id = 2;
 
-  // swap_request_id specifies the swap request id
-  uint64 swap_request_id = 3;
+  // order_id specifies the order id
+  uint64 order_id = 3;
 }
 
 // MsgCancelOrderResponse defines the Msg/CancelOrder response type.

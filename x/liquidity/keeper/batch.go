@@ -15,9 +15,9 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 	}); err != nil {
 		panic(err)
 	}
-	if err := k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
-		if req.Status != types.SwapRequestStatusCompleted && !req.Status.IsCanceledOrExpired() && !ctx.BlockTime().Before(req.ExpireAt) { // ExpireAt <= BlockTime
-			if err := k.FinishSwapRequest(ctx, req, types.SwapRequestStatusExpired); err != nil {
+	if err := k.IterateAllOrders(ctx, func(req types.Order) (stop bool, err error) {
+		if req.Status != types.OrderStatusCompleted && !req.Status.IsCanceledOrExpired() && !ctx.BlockTime().Before(req.ExpireAt) { // ExpireAt <= BlockTime
+			if err := k.FinishOrder(ctx, req, types.OrderStatusExpired); err != nil {
 				return false, err
 			}
 		}
@@ -60,9 +60,9 @@ func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
 		}
 		return false, nil
 	})
-	_ = k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
+	_ = k.IterateAllOrders(ctx, func(req types.Order) (stop bool, err error) {
 		if req.Status.ShouldBeDeleted() {
-			k.DeleteSwapRequest(ctx, req.PairId, req.Id)
+			k.DeleteOrder(ctx, req.PairId, req.Id)
 		}
 		return false, nil
 	})

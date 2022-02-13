@@ -23,5 +23,5 @@ message GenesisState {
 
   repeated WithdrawRequest withdraw_requests = 7 [(gogoproto.nullable) = false];
 
-  repeated SwapRequest swap_requests = 8 [(gogoproto.nullable) = false];
+  repeated Order orders = 8 [(gogoproto.nullable) = false];
 }

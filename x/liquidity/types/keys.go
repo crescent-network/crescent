@@ -35,7 +35,7 @@ var (
 
 	DepositRequestKeyPrefix  = []byte{0xb0}
 	WithdrawRequestKeyPrefix = []byte{0xb1}
-	SwapRequestKeyPrefix     = []byte{0xb2}
+	OrderKeyPrefix           = []byte{0xb2}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
@@ -93,15 +93,14 @@ func GetWithdrawRequestKey(poolId, id uint64) []byte {
 	return append(append(WithdrawRequestKeyPrefix, sdk.Uint64ToBigEndian(poolId)...), sdk.Uint64ToBigEndian(id)...)
 }
 
-// GetSwapRequestKey returns the store key to retrieve swap request object from the pair id and request id.
-func GetSwapRequestKey(pairId, id uint64) []byte {
-	return append(append(SwapRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(id)...)
+// GetOrderKey returns the store key to retrieve order object from the pair id and request id.
+func GetOrderKey(pairId, id uint64) []byte {
+	return append(append(OrderKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(id)...)
 }
 
-// GetSwapRequestsByPairKeyPrefix returns the store key to iterate swap requests
-// by pair.
-func GetSwapRequestsByPairKeyPrefix(pairId uint64) []byte {
-	return append(SwapRequestKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
+// GetOrdersByPairKeyPrefix returns the store key to iterate orders by pair.
+func GetOrdersByPairKeyPrefix(pairId uint64) []byte {
+	return append(OrderKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
 }
 
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.

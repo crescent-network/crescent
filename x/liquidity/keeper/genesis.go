@@ -27,8 +27,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	for _, req := range genState.WithdrawRequests {
 		k.SetWithdrawRequest(ctx, req)
 	}
-	for _, req := range genState.SwapRequests {
-		k.SetSwapRequest(ctx, req)
+	for _, req := range genState.Orders {
+		k.SetOrder(ctx, req)
 	}
 }
 
@@ -42,6 +42,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		Pools:            k.GetAllPools(ctx),
 		DepositRequests:  k.GetAllDepositRequests(ctx),
 		WithdrawRequests: k.GetAllWithdrawRequests(ctx),
-		SwapRequests:     k.GetAllSwapRequests(ctx),
+		Orders:           k.GetAllOrders(ctx),
 	}
 }

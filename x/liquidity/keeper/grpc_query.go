@@ -428,8 +428,8 @@ func (k Querier) WithdrawRequest(c context.Context, req *types.QueryWithdrawRequ
 	return &types.QueryWithdrawRequestResponse{WithdrawRequest: wq}, nil
 }
 
-// SwapRequests queries all swap requests.
-func (k Querier) SwapRequests(c context.Context, req *types.QuerySwapRequestsRequest) (*types.QuerySwapRequestsResponse, error) {
+// Orders queries all orders.
+func (k Querier) Orders(c context.Context, req *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -440,21 +440,21 @@ func (k Querier) SwapRequests(c context.Context, req *types.QuerySwapRequestsReq
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	drsStore := prefix.NewStore(store, types.SwapRequestKeyPrefix)
+	drsStore := prefix.NewStore(store, types.OrderKeyPrefix)
 
-	var srs []types.SwapRequest
+	var orders []types.Order
 	pageRes, err := query.FilteredPaginate(drsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		sr, err := types.UnmarshalSwapRequest(k.cdc, value)
+		order, err := types.UnmarshalOrder(k.cdc, value)
 		if err != nil {
 			return false, err
 		}
 
-		if sr.PairId != req.PairId {
+		if order.PairId != req.PairId {
 			return false, nil
 		}
 
 		if accumulate {
-			srs = append(srs, sr)
+			orders = append(orders, order)
 		}
 
 		return true, nil
@@ -464,11 +464,11 @@ func (k Querier) SwapRequests(c context.Context, req *types.QuerySwapRequestsReq
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QuerySwapRequestsResponse{SwapRequests: srs, Pagination: pageRes}, nil
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
 
-// SwapRequest queries the specific swap request.
-func (k Querier) SwapRequest(c context.Context, req *types.QuerySwapRequestRequest) (*types.QuerySwapRequestResponse, error) {
+// Order queries the specific order.
+func (k Querier) Order(c context.Context, req *types.QueryOrderRequest) (*types.QueryOrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -483,10 +483,10 @@ func (k Querier) SwapRequest(c context.Context, req *types.QuerySwapRequestReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	sq, found := k.GetSwapRequest(ctx, req.PairId, req.Id)
+	order, found := k.GetOrder(ctx, req.PairId, req.Id)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "swap request of pair id %d and request id %d doesn't exist or deleted", req.PairId, req.Id)
+		return nil, status.Errorf(codes.NotFound, "order %d in pair %d not found", req.PairId, req.Id)
 	}
 
-	return &types.QuerySwapRequestResponse{SwapRequest: sq}, nil
+	return &types.QueryOrderResponse{Order: order}, nil
 }

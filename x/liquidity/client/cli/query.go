@@ -35,8 +35,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		QueryDepositRequest(),
 		QueryWithdrawRequests(),
 		QueryWithdrawRequest(),
-		QuerySwapRequests(),
-		QuerySwapRequest(),
+		QueryOrders(),
+		QueryOrder(),
 	)
 
 	return cmd
@@ -518,15 +518,15 @@ $ %s query %s withdraw-requests 1 1
 	return cmd
 }
 
-func QuerySwapRequests() *cobra.Command {
+func QueryOrders() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap-requests [pair-id]",
+		Use:   "orders [pair-id]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query for all swap requests",
+		Short: "Query for all orders",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for all swap requests.
+			fmt.Sprintf(`Query for all orders.
 Example:
-$ %s query %s swap-requests 1
+$ %s query %s orders 1
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -549,9 +549,9 @@ $ %s query %s swap-requests 1
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.SwapRequests(
+			res, err := queryClient.Orders(
 				context.Background(),
-				&types.QuerySwapRequestsRequest{
+				&types.QueryOrdersRequest{
 					PairId:     pairId,
 					Pagination: pageReq,
 				})
@@ -568,15 +568,15 @@ $ %s query %s swap-requests 1
 	return cmd
 }
 
-func QuerySwapRequest() *cobra.Command {
+func QueryOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap-request [pair-id] [id]",
+		Use:   "order [pair-id] [id]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Query details of the specific swap request",
+		Short: "Query details of the specific order",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query details of the specific swap request.
+			fmt.Sprintf(`Query details of the specific order.
 Example:
-$ %s query %s swap-requests 1 1
+$ %s query %s order 1 1
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -599,9 +599,9 @@ $ %s query %s swap-requests 1 1
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.SwapRequest(
+			res, err := queryClient.Order(
 				context.Background(),
-				&types.QuerySwapRequestRequest{
+				&types.QueryOrderRequest{
 					PairId: pairId,
 					Id:     id,
 				})
