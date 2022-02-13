@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestGetVoterBalanceByDenom() {
 
 	simapp.InitAccountWithCoins(s.app, s.ctx, voter1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))))
 	simapp.InitAccountWithCoins(s.app, s.ctx, voter2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))))
-	simapp.InitAccountWithCoins(s.app, s.ctx, voter2, sdk.NewCoins(sdk.NewCoin(types.DefaultBondedBondDenom, sdk.NewInt(500000))))
+	simapp.InitAccountWithCoins(s.app, s.ctx, voter2, sdk.NewCoins(sdk.NewCoin(types.DefaultLiquidBondDenom, sdk.NewInt(500000))))
 
 	tp := govtypes.NewTextProposal("Test", "description")
 	proposal, err := s.app.GovKeeper.SubmitProposal(s.ctx, tp)
@@ -35,9 +35,9 @@ func (s *KeeperTestSuite) TestGetVoterBalanceByDenom() {
 
 	s.Require().Len(voterBalanceByDenom, 2)
 	s.Require().Len(voterBalanceByDenom[sdk.DefaultBondDenom], 2)
-	s.Require().Len(voterBalanceByDenom[types.DefaultBondedBondDenom], 1)
+	s.Require().Len(voterBalanceByDenom[types.DefaultLiquidBondDenom], 1)
 
 	s.Require().EqualValues(voterBalanceByDenom[sdk.DefaultBondDenom][voter1.String()], sdk.NewInt(1000000))
 	s.Require().EqualValues(voterBalanceByDenom[sdk.DefaultBondDenom][voter2.String()], sdk.NewInt(1000000))
-	s.Require().EqualValues(voterBalanceByDenom[types.DefaultBondedBondDenom][voter2.String()], sdk.NewInt(500000))
+	s.Require().EqualValues(voterBalanceByDenom[types.DefaultLiquidBondDenom][voter2.String()], sdk.NewInt(500000))
 }

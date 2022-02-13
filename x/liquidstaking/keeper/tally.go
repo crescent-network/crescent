@@ -32,10 +32,10 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 
 func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	params := k.GetParams(ctx)
-	bondedBondDenom := k.BondedBondDenom(ctx)
+	liquidBondDenom := k.LiquidBondDenom(ctx)
 
-	// skip when no bonded token supply
-	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, bondedBondDenom).Amount
+	// skip when no liquid bond token supply
+	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom).Amount
 	if !bTokenTotalSupply.IsPositive() {
 		return
 	}
@@ -45,7 +45,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 	if len(activeVals) == 0 {
 		return
 	}
-	totalLiquidTokens, liquidTokenMap := activeVals.TotalLiquidTokens(ctx, k.stakingKeeper)
+	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
 	if !totalLiquidTokens.IsPositive() {
 		return
 	}
@@ -59,7 +59,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 	for denom, balanceByVoter := range voterBalanceByDenom {
 
 		// add balance of bToken value
-		if denom == bondedBondDenom {
+		if denom == liquidBondDenom {
 			for voter, balance := range balanceByVoter {
 				bTokenValueMap.AddOrSet(voter, balance)
 			}
@@ -74,10 +74,10 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 					continue
 				}
 				bTokenSharePerPoolCoin := sdk.ZeroDec()
-				if pair.QuoteCoinDenom == bondedBondDenom {
+				if pair.QuoteCoinDenom == liquidBondDenom {
 					bTokenSharePerPoolCoin = rx.ToDec().Quo(poolCoinSupply.ToDec())
 				}
-				if pair.BaseCoinDenom == bondedBondDenom {
+				if pair.BaseCoinDenom == liquidBondDenom {
 					bTokenSharePerPoolCoin = ry.ToDec().Quo(poolCoinSupply.ToDec())
 				}
 				if !bTokenSharePerPoolCoin.IsPositive() {
@@ -98,7 +98,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		}
 		// add value of Farming Staking Position of bToken and PoolTokens including bToken
 		k.farmingKeeper.IterateStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, staking farmingtypes.Staking) (stop bool) {
-			if stakingCoinDenom == bondedBondDenom {
+			if stakingCoinDenom == liquidBondDenom {
 				bTokenValueMap.AddOrSet(vote.Voter, staking.Amount)
 			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
 				bTokenValueMap.AddOrSet(vote.Voter, squadtypes.GetShareValue(staking.Amount, ratio))
@@ -108,7 +108,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 
 		// add value of Farming Queued Staking of bToken and PoolTokens including bToken
 		k.farmingKeeper.IterateQueuedStakingsByFarmer(ctx, voter, func(stakingCoinDenom string, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
-			if stakingCoinDenom == bondedBondDenom {
+			if stakingCoinDenom == liquidBondDenom {
 				bTokenValueMap.AddOrSet(vote.Voter, queuedStaking.Amount)
 			} else if ratio, ok := bTokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
 				bTokenValueMap.AddOrSet(vote.Voter, squadtypes.GetShareValue(queuedStaking.Amount, ratio))
@@ -120,15 +120,16 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 	for voter, bTokenValue := range bTokenValueMap {
 		votingPower := sdk.ZeroDec()
 		if bTokenValue.IsPositive() {
-			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, k.NetAmount(ctx), sdk.ZeroDec())
+			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, k.NetAmount(ctx))
 		}
 		if votingPower.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			dividedPowers, crumb := types.DivideByCurrentWeight(activeVals, votingPower, totalLiquidTokens, liquidTokenMap)
+			// TODO: consider using BondedTokens for currentWeight when Tally
+			// drop crumb for defensive policy about delShares decimal errors
+			dividedPowers, _ := types.DivideByCurrentWeight(activeVals, votingPower, totalLiquidTokens, liquidTokenMap)
 			if len(dividedPowers) == 0 {
 				continue
 			}
-			dividedPowers[0] = dividedPowers[0].Add(crumb)
 			for i, val := range activeVals {
 				if !dividedPowers[i].IsPositive() {
 					continue

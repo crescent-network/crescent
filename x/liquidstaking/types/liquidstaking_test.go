@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBTokenToNativeToken(t *testing.T) {
+func TestBTokenToNativeTokenWithFee(t *testing.T) {
 	testCases := []struct {
 		bTokenAmount            sdk.Int
 		bTokenTotalSupplyAmount sdk.Int
@@ -58,15 +58,17 @@ func TestBTokenToNativeToken(t *testing.T) {
 		require.IsType(t, sdk.Dec{}, tc.feeRate)
 		require.IsType(t, sdk.Dec{}, tc.expectedOutput)
 
-		output := types.BTokenToNativeToken(tc.bTokenAmount, tc.bTokenTotalSupplyAmount, tc.netAmount, tc.feeRate)
+		output := types.BTokenToNativeToken(tc.bTokenAmount, tc.bTokenTotalSupplyAmount, tc.netAmount)
+		if tc.feeRate.IsPositive() {
+			output = types.DeductFeeRate(output, tc.feeRate)
+		}
 		require.EqualValues(t, tc.expectedOutput, output)
 	}
 }
 
 func TestActiveCondition(t *testing.T) {
 	testCases := []struct {
-		validator stakingtypes.Validator
-		//whitelist      []types.WhitelistedValidator
+		validator      stakingtypes.Validator
 		whitelisted    bool
 		tombstoned     bool
 		expectedOutput bool

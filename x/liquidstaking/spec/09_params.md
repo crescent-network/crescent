@@ -6,12 +6,12 @@ The liquid-staking module contains the following parameters:
 
 | Key                    | Type                   | Example                |
 |------------------------| ---------------------- | ---------------------- |
-| BondedBondDenom        | string                 | “bstake”               |
+| LiquidBondDenom        | string                 | “bstake”               |
 | WhitelistedValidators  | []WhitelistedValidator |                        |
 | UnstakeFeeRate         | string (sdk.Dec)       | "0.001000000000000000" |
 | MinLiquidStakingAmount | string (sdk.Int)       | "1000000"              |
 
-### BondedBondDenom
+### LiquidBondDenom
 
 Denomination of the token receiving after LiquidStaking, The value is calculated through NetAmount.
 

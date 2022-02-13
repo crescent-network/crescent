@@ -36,7 +36,7 @@ func TestParams(t *testing.T) {
 
 	defaultParams := types.DefaultParams()
 
-	paramsStr := `bonded_bond_denom: bstake
+	paramsStr := `liquid_bond_denom: bstake
 whitelisted_validators: []
 unstake_fee_rate: "0.001000000000000000"
 min_liquid_staking_amount: "1000000"

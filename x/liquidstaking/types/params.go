@@ -13,13 +13,13 @@ import (
 
 // Parameter store keys
 var (
-	KeyBondedBondDenom        = []byte("BondedBondDenom")
+	KeyLiquidBondDenom        = []byte("LiquidBondDenom")
 	KeyWhitelistedValidators  = []byte("WhitelistedValidators")
 	KeyUnstakeFeeRate         = []byte("UnstakeFeeRate")
 	KeyCommissionRate         = []byte("CommissionRate")
 	KeyMinLiquidStakingAmount = []byte("MinLiquidStakingAmount")
 
-	DefaultBondedBondDenom = "bstake"
+	DefaultLiquidBondDenom = "bstake"
 
 	// DefaultUnstakeFeeRate is the default Unstake Fee Rate.
 	DefaultUnstakeFeeRate = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
@@ -49,7 +49,7 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default liquidstaking module parameters.
 func DefaultParams() Params {
 	return Params{
-		BondedBondDenom:        DefaultBondedBondDenom,
+		LiquidBondDenom:        DefaultLiquidBondDenom,
 		UnstakeFeeRate:         DefaultUnstakeFeeRate,
 		MinLiquidStakingAmount: DefaultMinLiquidStakingAmount,
 	}
@@ -58,7 +58,7 @@ func DefaultParams() Params {
 // ParamSetPairs implements paramstypes.ParamSet.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyBondedBondDenom, &p.BondedBondDenom, ValidateBondedBondDenom),
+		paramstypes.NewParamSetPair(KeyLiquidBondDenom, &p.LiquidBondDenom, ValidateLiquidBondDenom),
 		paramstypes.NewParamSetPair(KeyWhitelistedValidators, &p.WhitelistedValidators, ValidateWhitelistedValidators),
 		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, validateUnstakeFeeRate),
 		paramstypes.NewParamSetPair(KeyMinLiquidStakingAmount, &p.MinLiquidStakingAmount, validateMinLiquidStakingAmount),
@@ -81,7 +81,7 @@ func (p Params) Validate() error {
 		value     interface{}
 		validator func(interface{}) error
 	}{
-		{p.BondedBondDenom, ValidateBondedBondDenom},
+		{p.LiquidBondDenom, ValidateLiquidBondDenom},
 		{p.WhitelistedValidators, ValidateWhitelistedValidators},
 		{p.UnstakeFeeRate, validateUnstakeFeeRate},
 		{p.MinLiquidStakingAmount, validateMinLiquidStakingAmount},
@@ -93,7 +93,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func ValidateBondedBondDenom(i interface{}) error {
+func ValidateLiquidBondDenom(i interface{}) error {
 	// TODO: btoken denom must be immutable
 	v, ok := i.(string)
 	if !ok {

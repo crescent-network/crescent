@@ -31,7 +31,7 @@ This message is expected to fail if:
 - the delegator doesn't have sufficient bTokens
 - the active liquid validator doesn't exist
 - the amount of bTokens is less than the minimum allowed unstaking
-- the `Amount` has a denomination different than one defined by `params.BondedBondDenom`
+- the `Amount` has a denomination different than one defined by `params.LiquidBondDenom`
 
 When this message is processed the following actions occur:
 

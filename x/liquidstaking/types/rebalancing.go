@@ -19,14 +19,14 @@ func DivideByWeight(avs ActiveLiquidValidators, input sdk.Int, whitelistedValMap
 	if !totalWeight.IsPositive() {
 		return []sdk.Int{}, sdk.ZeroInt()
 	}
-	totalShares := sdk.ZeroInt()
-	sharePerWeight := input.ToDec().QuoTruncate(totalWeight.ToDec())
+	totalOutput := sdk.ZeroInt()
+	unitInput := input.ToDec().QuoTruncate(totalWeight.ToDec())
 	for _, val := range avs {
-		weightedShare := sharePerWeight.MulInt(val.GetWeight(whitelistedValMap, true)).TruncateInt()
-		totalShares = totalShares.Add(weightedShare)
-		outputs = append(outputs, weightedShare)
+		output := unitInput.MulInt(val.GetWeight(whitelistedValMap, true)).TruncateInt()
+		totalOutput = totalOutput.Add(output)
+		outputs = append(outputs, output)
 	}
-	return outputs, input.Sub(totalShares)
+	return outputs, input.Sub(totalOutput)
 }
 
 // DivideByCurrentWeight divide the input value by the ratio of the weight of the liquid validator's liquid token and return it with crumb

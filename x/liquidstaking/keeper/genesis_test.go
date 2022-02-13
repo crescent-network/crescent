@@ -26,7 +26,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	k.UpdateLiquidValidatorSet(ctx)
 
 	stakingAmt := sdk.NewInt(100000000)
-	s.liquidStaking(s.delAddrs[0], stakingAmt)
+	s.Require().NoError(s.liquidStaking(s.delAddrs[0], stakingAmt))
 	lvs := k.GetAllLiquidValidators(ctx)
 	s.Require().Len(lvs, 2)
 
