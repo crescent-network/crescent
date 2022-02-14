@@ -12,6 +12,7 @@ The `claim` module emits the following events:
 | ------- | ----------------------- | ----------------------- |
 | claim   | recipient               | {recipientAddress}      |
 | claim   | initial_claimable_coins | {initialClaimableCoins} |
+| claim   | claimable_coins         | {claimableCoins} |
 | claim   | deposit_action_claimed  | {depositActionClaimed}  |
 | claim   | swap_action_claimed     | {swapActionClaimed}     |
 | claim   | farming_action_claimed  | {farmingActionClaimed}  |

@@ -30,12 +30,9 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 
 	// The recipient completed all the actions
 	if notClaimedActions == 0 {
-		// TODO: emit an event or throw an error?
-		return types.ClaimRecord{}, nil
+		// TODO: emit an event?
+		return types.ClaimRecord{}, nil // return nil due to better client handling
 	}
-
-	divisor := sdk.NewDec(notClaimedActions)
-	amt, _ := sdk.NewDecCoinsFromCoins(record.InitialClaimableCoins...).QuoDecTruncate(divisor).TruncateDecimal()
 
 	skip := true
 	switch msg.ActionType {
@@ -56,21 +53,28 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		}
 	}
 	if skip {
-		return types.ClaimRecord{}, nil
+		return types.ClaimRecord{}, nil // return nil due to better client handling
 	}
 
-	// TODO: send coins
-	_ = amt
+	divisor := sdk.NewDec(notClaimedActions)
+	amt, _ := sdk.NewDecCoinsFromCoins(record.ClaimableCoins...).QuoDecTruncate(divisor).TruncateDecimal()
+	record.ClaimableCoins = record.ClaimableCoins.Sub(amt)
+	k.SetClaimRecord(ctx, record)
+
+	// Send claimable amounts to the recipient
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msg.GetRecipient(), amt); err != nil {
+		return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to send coins from module account to the recipient")
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeClaim,
 			sdk.NewAttribute(types.AttributeKeyRecipient, record.Address),
 			sdk.NewAttribute(types.AttributeKeyInitialClaimableCoins, record.InitialClaimableCoins.String()),
+			sdk.NewAttribute(types.AttributeKeyClaimableCoins, record.ClaimableCoins.String()),
 			sdk.NewAttribute(types.AttributeKeyDepositActionClaimed, fmt.Sprint(record.DepositActionClaimed)),
 			sdk.NewAttribute(types.AttributeKeySwapActionClaimed, fmt.Sprint(record.SwapActionClaimed)),
 			sdk.NewAttribute(types.AttributeKeyFarmingActionClaimed, fmt.Sprint(record.FarmingActionClaimed)),
-			// TODO: emit unclaimed coins?
 		),
 	})
 
