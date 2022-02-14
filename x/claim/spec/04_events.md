@@ -8,6 +8,12 @@ The `claim` module emits the following events:
 
 ### MsgClaim
 
-| Type                       | Attribute Key         | Attribute Value      |
-| -------------------------- | --------------------- | -------------------- |
-| message                    | module                | claim                |
+| Type    | Attribute Key           | Attribute Value         |
+| ------- | ----------------------- | ----------------------- |
+| claim   | recipient               | {recipientAddress}      |
+| claim   | initial_claimable_coins | {initialClaimableCoins} |
+| claim   | deposit_action_claimed  | {depositActionClaimed}  |
+| claim   | swap_action_claimed     | {swapActionClaimed}     |
+| claim   | farming_action_claimed  | {farmingActionClaimed}  |
+| message | module                  | claim                   |
+|         |                         |                         |
