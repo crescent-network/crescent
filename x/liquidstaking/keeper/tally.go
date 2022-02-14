@@ -31,7 +31,6 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 }
 
 func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
-	params := k.GetParams(ctx)
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 
 	// skip when no liquid bond token supply
@@ -40,14 +39,14 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		return
 	}
 
-	// TODO: fix target to all bonded liquid validators, with bonded liquidTokens
 	// skip when no active validators, liquid tokens
-	activeVals := k.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
-	if len(activeVals) == 0 {
+	liquidVals := k.GetAllLiquidValidators(ctx)
+	if len(liquidVals) == 0 {
 		return
 	}
-	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
-	if !totalLiquidTokens.IsPositive() {
+	// using only liquid tokens of bonded liquid validators to ensure voting power doesn't exceed delegation shares on x/gov tally
+	totalBondedLiquidTokens, bondedLiquidTokenMap := liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper, true)
+	if !totalBondedLiquidTokens.IsPositive() {
 		return
 	}
 
@@ -118,21 +117,19 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		})
 	}
 
-	netAmountState := k.NetAmountState(ctx)
 	for voter, bTokenValue := range bTokenValueMap {
 		votingPower := sdk.ZeroDec()
 		if bTokenValue.IsPositive() {
-			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, netAmountState.NetAmount)
+			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, totalBondedLiquidTokens.ToDec())
 		}
 		if votingPower.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			// TODO: using only BondedTokens for currentWeight when Tally
 			// drop crumb for defensive policy about delShares decimal errors
-			dividedPowers, _ := types.DivideByCurrentWeight(activeVals, votingPower, totalLiquidTokens, liquidTokenMap)
+			dividedPowers, _ := types.DivideByCurrentWeight((types.ActiveLiquidValidators)(liquidVals), votingPower, totalBondedLiquidTokens, bondedLiquidTokenMap)
 			if len(dividedPowers) == 0 {
 				continue
 			}
-			for i, val := range activeVals {
+			for i, val := range liquidVals {
 				if !dividedPowers[i].IsPositive() {
 					continue
 				}

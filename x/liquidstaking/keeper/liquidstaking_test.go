@@ -415,3 +415,5 @@ func (s *KeeperTestSuite) TestLiquidStakingGov2() {
 	s.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
 	s.Require().Equal(sdk.NewInt(50000000), result.Abstain)
 }
+
+// TODO: tally bonded validator case

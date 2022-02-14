@@ -170,7 +170,7 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
+	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper, false)
 	// crumb may occur due to a decimal error in dividing the unstaking bToken into the weight of liquid validators, it will remain in the NetAmount
 	unbondingAmounts, _ := types.DivideByCurrentWeight(activeVals, unbondingAmount, totalLiquidTokens, liquidTokenMap)
 	if len(unbondingAmounts) == 0 {
@@ -344,7 +344,7 @@ func (k Keeper) GetAllLiquidValidatorStates(ctx sdk.Context) (liquidValidatorSta
 			Weight:          lv.GetWeight(whitelistedValMap, active),
 			Status:          lv.GetStatus(active),
 			DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
-			LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper),
+			LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper, false),
 		}
 		liquidValidatorStates = append(liquidValidatorStates, lvState)
 	}
@@ -369,7 +369,7 @@ func (k Keeper) GetLiquidValidatorState(ctx sdk.Context, addr sdk.ValAddress) (l
 		Weight:          lv.GetWeight(whitelistedValMap, active),
 		Status:          lv.GetStatus(active),
 		DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
-		LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper),
+		LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper, false),
 	}, true
 }
 
