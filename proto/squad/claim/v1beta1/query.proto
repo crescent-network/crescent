@@ -14,6 +14,7 @@ service Query {
     option (google.api.http).get = "/squad/claim/v1beta1/params";
   }
 
+  // ClaimRecord returns the claim record for the recipient address.
   rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
     option (google.api.http).get = "/squad/claim/v1beta1/claim_record/{address}";
   }
@@ -27,10 +28,12 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryClaimRecordRequest is request type for the Query/ClaimRecord RPC method.
 message QueryClaimRecordRequest {
   string address = 1;
 }
 
+// QueryClaimRecordResponse is response type for the Query/ClaimRecord RPC method.
 message QueryClaimRecordResponse {
   ClaimRecord claim_record = 1 [(gogoproto.nullable) = false];
 }

@@ -11,22 +11,30 @@ service Msg {
   rpc Claim(MsgClaim) returns (MsgClaimResponse);
 }
 
+// MsgClaim defines a SDK message for claiming claimable amount.
 message MsgClaim {
-  string claimant = 1;
+  // recipient specifies the bech32-encoded address that is eligible to claim airdrop
+  string recipient = 1;
 
+  // action_type specifies the action type
   ActionType action_type = 2;
 }
 
 message MsgClaimResponse {}
 
+// ActionType defines the type of action that a recipient must execute in order to receive a claimable amount.
 enum ActionType {
   option (gogoproto.goproto_enum_prefix) = false;
 
+  // ACTION_TYPE_UNSPECIFIED specifies an unknown action type
   ACTION_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ActionTypeUnspecified"];
 
-  ACTION_TYPE_SWAP = 1 [(gogoproto.enumvalue_customname) = "ActionTypeSwap"];
+  // ACTION_TYPE_DEPOSIT specifies deposit action type
+  ACTION_TYPE_DEPOSIT = 1 [(gogoproto.enumvalue_customname) = "ActionTypeDeposit"];
 
-  ACTION_TYPE_DEPOSIT = 2 [(gogoproto.enumvalue_customname) = "ActionTypeDeposit"];
+  // ACTION_TYPE_SWAP specifies swap action type
+  ACTION_TYPE_SWAP = 2 [(gogoproto.enumvalue_customname) = "ActionTypeSwap"];
 
+  // ACTION_TYPE_FARMING specifies farming (stake) action type
   ACTION_TYPE_FARMING = 3 [(gogoproto.enumvalue_customname) = "ActionTypeFarming"];
 }

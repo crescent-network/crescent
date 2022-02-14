@@ -111,6 +111,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryClaimRecordRequest is request type for the Query/ClaimRecord RPC method.
 type QueryClaimRecordRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
@@ -155,6 +156,7 @@ func (m *QueryClaimRecordRequest) GetAddress() string {
 	return ""
 }
 
+// QueryClaimRecordResponse is response type for the Query/ClaimRecord RPC method.
 type QueryClaimRecordResponse struct {
 	ClaimRecord ClaimRecord `protobuf:"bytes,1,opt,name=claim_record,json=claimRecord,proto3" json:"claim_record"`
 }
@@ -251,6 +253,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// ClaimRecord returns the claim record for the recipient address.
 	ClaimRecord(ctx context.Context, in *QueryClaimRecordRequest, opts ...grpc.CallOption) (*QueryClaimRecordResponse, error)
 }
 
@@ -284,6 +287,7 @@ func (c *queryClient) ClaimRecord(ctx context.Context, in *QueryClaimRecordReque
 type QueryServer interface {
 	// Params returns parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// ClaimRecord returns the claim record for the recipient address.
 	ClaimRecord(context.Context, *QueryClaimRecordRequest) (*QueryClaimRecordResponse, error)
 }
 

@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,4 +90,14 @@ func DecApproxEqual(a, b sdk.Dec) bool {
 		a, b = b, a
 	}
 	return a.Sub(b).Quo(a).LTE(sdk.NewDecWithPrec(1, 3))
+}
+
+// RandomInt returns a random integer in the half-open interval [min, max).
+func RandomInt(r *rand.Rand, min, max sdk.Int) sdk.Int {
+	return min.Add(sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.Sub(min).BigInt())))
+}
+
+// RandomDec returns a random decimal in the half-open interval [min, max).
+func RandomDec(r *rand.Rand, min, max sdk.Dec) sdk.Dec {
+	return min.Add(sdk.NewDecFromBigIntWithPrec(new(big.Int).Rand(r, max.Sub(min).BigInt()), sdk.Precision))
 }
