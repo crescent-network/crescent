@@ -81,16 +81,16 @@ func (genState GenesisState) Validate() error {
 			return fmt.Errorf("withdraw request at index %d has wrong pool coin: %s", i, req.PoolCoin)
 		}
 	}
-	for i, req := range genState.SwapRequests {
-		if err := req.Validate(); err != nil {
-			return fmt.Errorf("invalid swap request at index %d: %w", i, err)
+	for i, order := range genState.Orders {
+		if err := order.Validate(); err != nil {
+			return fmt.Errorf("invalid order at index %d: %w", i, err)
 		}
-		pair, ok := pairMap[req.PairId]
+		pair, ok := pairMap[order.PairId]
 		if !ok {
-			return fmt.Errorf("swap request at index %d has unknown pair id: %d", i, req.PairId)
+			return fmt.Errorf("order at index %d has unknown pair id: %d", i, order.PairId)
 		}
-		if req.BatchId > pair.CurrentBatchId {
-			return fmt.Errorf("swap request at index %d has a batch id greater than its pair's current batch id: %d", i, req.BatchId)
+		if order.BatchId > pair.CurrentBatchId {
+			return fmt.Errorf("order at index %d has a batch id greater than its pair's current batch id: %d", i, order.BatchId)
 		}
 		// TODO: check denoms
 	}

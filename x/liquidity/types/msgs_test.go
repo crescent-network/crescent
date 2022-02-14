@@ -277,7 +277,7 @@ func TestMsgLimitOrder(t *testing.T) {
 			func(msg *types.MsgLimitOrder) {
 				msg.Direction = 0
 			},
-			"invalid swap direction: SWAP_DIRECTION_UNSPECIFIED: invalid request",
+			"invalid order direction: ORDER_DIRECTION_UNSPECIFIED: invalid request",
 		},
 		{
 			"invalid offer coin",
@@ -348,7 +348,7 @@ func TestMsgLimitOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgLimitOrder(
-				testAddr, 1, types.SwapDirectionBuy, squad.ParseCoin("1000000denom2"),
+				testAddr, 1, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"),
 				"denom1", squad.ParseDec("1.0"), newInt(1000000), orderLifespan)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgLimitOrder, msg.Type())
@@ -397,7 +397,7 @@ func TestMsgMarketOrder(t *testing.T) {
 			func(msg *types.MsgMarketOrder) {
 				msg.Direction = 0
 			},
-			"invalid swap direction: SWAP_DIRECTION_UNSPECIFIED: invalid request",
+			"invalid order direction: ORDER_DIRECTION_UNSPECIFIED: invalid request",
 		},
 		{
 			"invalid offer coin",
@@ -452,7 +452,7 @@ func TestMsgMarketOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgMarketOrder(
-				testAddr, 1, types.SwapDirectionBuy, squad.ParseCoin("1000000denom1"),
+				testAddr, 1, types.OrderDirectionBuy, squad.ParseCoin("1000000denom1"),
 				"denom2", newInt(1000000), orderLifespan)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgMarketOrder, msg.Type())
@@ -496,11 +496,11 @@ func TestMsgCancelOrder(t *testing.T) {
 			"pair id must not be 0: invalid request",
 		},
 		{
-			"invalid swap request id",
+			"invalid order id",
 			func(msg *types.MsgCancelOrder) {
-				msg.SwapRequestId = 0
+				msg.OrderId = 0
 			},
-			"swap request id must not be 0: invalid request",
+			"order id must not be 0: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

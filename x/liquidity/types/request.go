@@ -114,8 +114,8 @@ func (req WithdrawRequest) Validate() error {
 	return nil
 }
 
-func NewSwapRequestForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
-	return SwapRequest{
+func NewOrderForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
+	return Order{
 		Id:                 id,
 		PairId:             pair.Id,
 		MsgHeight:          msgHeight,
@@ -129,12 +129,12 @@ func NewSwapRequestForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offer
 		OpenAmount:         msg.Amount,
 		BatchId:            pair.CurrentBatchId,
 		ExpireAt:           expireAt,
-		Status:             SwapRequestStatusNotExecuted,
+		Status:             OrderStatusNotExecuted,
 	}
 }
 
-func NewSwapRequestForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) SwapRequest {
-	return SwapRequest{
+func NewOrderForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
+	return Order{
 		Id:                 id,
 		PairId:             pair.Id,
 		MsgHeight:          msgHeight,
@@ -148,63 +148,63 @@ func NewSwapRequestForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, off
 		OpenAmount:         msg.Amount,
 		BatchId:            pair.CurrentBatchId,
 		ExpireAt:           expireAt,
-		Status:             SwapRequestStatusNotExecuted,
+		Status:             OrderStatusNotExecuted,
 	}
 }
 
-func (req SwapRequest) GetOrderer() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(req.Orderer)
+func (order Order) GetOrderer() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(order.Orderer)
 	if err != nil {
 		panic(err)
 	}
 	return addr
 }
 
-func (req SwapRequest) Validate() error {
-	if req.Id == 0 {
+func (order Order) Validate() error {
+	if order.Id == 0 {
 		return fmt.Errorf("id must not be 0")
 	}
-	if req.PairId == 0 {
+	if order.PairId == 0 {
 		return fmt.Errorf("pair id must not be 0")
 	}
-	if req.MsgHeight == 0 { // TODO: is this check correct?
+	if order.MsgHeight == 0 { // TODO: is this check correct?
 		return fmt.Errorf("message height must not be 0")
 	}
-	if _, err := sdk.AccAddressFromBech32(req.Orderer); err != nil {
-		return fmt.Errorf("invalid orderer address %s: %w", req.Orderer, err)
+	if _, err := sdk.AccAddressFromBech32(order.Orderer); err != nil {
+		return fmt.Errorf("invalid orderer address %s: %w", order.Orderer, err)
 	}
-	if req.Direction != SwapDirectionBuy && req.Direction != SwapDirectionSell {
-		return fmt.Errorf("invalid direction: %s", req.Direction)
+	if order.Direction != OrderDirectionBuy && order.Direction != OrderDirectionSell {
+		return fmt.Errorf("invalid direction: %s", order.Direction)
 	}
-	if err := req.OfferCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid offer coin %s: %w", req.OfferCoin, err)
+	if err := order.OfferCoin.Validate(); err != nil {
+		return fmt.Errorf("invalid offer coin %s: %w", order.OfferCoin, err)
 	}
-	if req.OfferCoin.IsZero() {
+	if order.OfferCoin.IsZero() {
 		return fmt.Errorf("offer coin must not be 0")
 	}
-	if err := req.RemainingOfferCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid remaining offer coin %s: %w", req.RemainingOfferCoin, err)
+	if err := order.RemainingOfferCoin.Validate(); err != nil {
+		return fmt.Errorf("invalid remaining offer coin %s: %w", order.RemainingOfferCoin, err)
 	}
-	if err := req.ReceivedCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid received coin %s: %w", req.ReceivedCoin, err)
+	if err := order.ReceivedCoin.Validate(); err != nil {
+		return fmt.Errorf("invalid received coin %s: %w", order.ReceivedCoin, err)
 	}
-	if !req.Price.IsPositive() {
-		return fmt.Errorf("price must be positive: %s", req.Price)
+	if !order.Price.IsPositive() {
+		return fmt.Errorf("price must be positive: %s", order.Price)
 	}
-	if !req.Amount.IsPositive() {
-		return fmt.Errorf("amount must be positive: %s", req.Amount)
+	if !order.Amount.IsPositive() {
+		return fmt.Errorf("amount must be positive: %s", order.Amount)
 	}
-	if req.OpenAmount.IsNegative() {
-		return fmt.Errorf("open amount must not be negative: %s", req.OpenAmount)
+	if order.OpenAmount.IsNegative() {
+		return fmt.Errorf("open amount must not be negative: %s", order.OpenAmount)
 	}
-	if req.BatchId == 0 {
+	if order.BatchId == 0 {
 		return fmt.Errorf("batch id must not be 0")
 	}
-	if req.ExpireAt.IsZero() {
+	if order.ExpireAt.IsZero() {
 		return fmt.Errorf("no expiration info")
 	}
-	if !req.Status.IsValid() {
-		return fmt.Errorf("invalid status: %s", req.Status)
+	if !order.Status.IsValid() {
+		return fmt.Errorf("invalid status: %s", order.Status)
 	}
 	return nil
 }
@@ -217,24 +217,24 @@ func (status RequestStatus) ShouldBeDeleted() bool {
 	return status == RequestStatusSucceeded || status == RequestStatusFailed
 }
 
-func (status SwapRequestStatus) IsValid() bool {
-	return status == SwapRequestStatusNotExecuted || status == SwapRequestStatusNotMatched ||
-		status == SwapRequestStatusPartiallyMatched || status == SwapRequestStatusCompleted ||
-		status == SwapRequestStatusCanceled || status == SwapRequestStatusExpired
+func (status OrderStatus) IsValid() bool {
+	return status == OrderStatusNotExecuted || status == OrderStatusNotMatched ||
+		status == OrderStatusPartiallyMatched || status == OrderStatusCompleted ||
+		status == OrderStatusCanceled || status == OrderStatusExpired
 }
 
-func (status SwapRequestStatus) IsMatchable() bool {
-	return status == SwapRequestStatusNotExecuted ||
-		status == SwapRequestStatusNotMatched ||
-		status == SwapRequestStatusPartiallyMatched
+func (status OrderStatus) IsMatchable() bool {
+	return status == OrderStatusNotExecuted ||
+		status == OrderStatusNotMatched ||
+		status == OrderStatusPartiallyMatched
 }
 
-func (status SwapRequestStatus) IsCanceledOrExpired() bool {
-	return status == SwapRequestStatusCanceled || status == SwapRequestStatusExpired
+func (status OrderStatus) IsCanceledOrExpired() bool {
+	return status == OrderStatusCanceled || status == OrderStatusExpired
 }
 
-func (status SwapRequestStatus) ShouldBeDeleted() bool {
-	return status == SwapRequestStatusCompleted || status.IsCanceledOrExpired()
+func (status OrderStatus) ShouldBeDeleted() bool {
+	return status == OrderStatusCompleted || status.IsCanceledOrExpired()
 }
 
 // MustMarshalDepositRequest returns the DepositRequest bytes. Panics if fails.
@@ -280,22 +280,22 @@ func MustUnmarshalWithdrawRequest(cdc codec.BinaryCodec, value []byte) WithdrawR
 	return msg
 }
 
-// MustMarshaSwapRequest returns the SwapRequest bytes.
+// MustMarshaOrder returns the Order bytes.
 // It throws panic if it fails.
-func MustMarshaSwapRequest(cdc codec.BinaryCodec, msg SwapRequest) []byte {
-	return cdc.MustMarshal(&msg)
+func MustMarshaOrder(cdc codec.BinaryCodec, order Order) []byte {
+	return cdc.MustMarshal(&order)
 }
 
-// UnmarshalSwapRequest returns the SwapRequest from bytes.
-func UnmarshalSwapRequest(cdc codec.BinaryCodec, value []byte) (msg SwapRequest, err error) {
-	err = cdc.Unmarshal(value, &msg)
-	return msg, err
+// UnmarshalOrder returns the Order from bytes.
+func UnmarshalOrder(cdc codec.BinaryCodec, value []byte) (order Order, err error) {
+	err = cdc.Unmarshal(value, &order)
+	return order, err
 }
 
-// MustUnmarshalSwapRequest returns the SwapRequest from bytes.
+// MustUnmarshalOrder returns the Order from bytes.
 // It throws panic if it fails.
-func MustUnmarshalSwapRequest(cdc codec.BinaryCodec, value []byte) SwapRequest {
-	msg, err := UnmarshalSwapRequest(cdc, value)
+func MustUnmarshalOrder(cdc codec.BinaryCodec, value []byte) Order {
+	msg, err := UnmarshalOrder(cdc, value)
 	if err != nil {
 		panic(err)
 	}

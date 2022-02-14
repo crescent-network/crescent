@@ -206,15 +206,15 @@ func NewLimitOrderCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a limit order.
 Example:
-$ %s tx %s limit-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from mykey
+$ %s tx %s limit-order 1 ORDER_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
-[direction]: swap direction (one of: SWAP_DIRECTION_BUY,SWAP_DIRECTION_SELL)
+[direction]: order direction (one of: ORDER_DIRECTION_BUY,ORDER_DIRECTION_SELL)
 [offer-coin]: the amount of offer coin to swap
 [demand-coin-denom]: the denom to exchange with the offer coin
 [price]: the limit order price for the swap; the exchange ratio is X/Y where X is the amount of quote coin and Y is the amount of base coin
 [base-coin-amount]: the amount of base coin to buy or sell
-[order-lifespan]: the time duration that the swap order request lives until it is executed; valid time units are "ns", "us", "ms", "s", "m", and "h" 
+[order-lifespan]: the time duration that the order lives until it is expired; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -230,13 +230,13 @@ $ %s tx %s limit-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --fr
 				return fmt.Errorf("parse pair id: %w", err)
 			}
 
-			rawDir, ok := types.SwapDirection_value[args[1]]
+			rawDir, ok := types.OrderDirection_value[args[1]]
 			if !ok {
-				return fmt.Errorf("unknown swap direction: %s", args[1])
+				return fmt.Errorf("unknown order direction: %s", args[1])
 			}
-			dir := types.SwapDirection(rawDir)
-			if dir != types.SwapDirectionBuy && dir != types.SwapDirectionSell {
-				return fmt.Errorf("invalid swap direction: %s", dir)
+			dir := types.OrderDirection(rawDir)
+			if dir != types.OrderDirectionBuy && dir != types.OrderDirectionSell {
+				return fmt.Errorf("invalid order direction: %s", dir)
 			}
 
 			offerCoin, err := sdk.ParseCoinNormalized(args[2])
@@ -292,14 +292,14 @@ func NewMarketOrderCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a market order.
 Example:
-$ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from mykey
+$ %s tx %s market-order 1 ORDER_DIRECTION_BUY 10000usquad uatom 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
-[direction]: swap direction (one of: SWAP_DIRECTION_BUY,SWAP_DIRECTION_SELL)
+[direction]: order direction (one of: ORDER_DIRECTION_BUY,ORDER_DIRECTION_SELL)
 [offer-coin]: the amount of offer coin to swap
 [demand-coin-denom]: the denom to exchange with the offer coin
 [base-coin-amount]: the amount of base coin to buy or sell
-[order-lifespan]: the time duration that the swap order request lives until it is executed; valid time units are "ns", "us", "ms", "s", "m", and "h" 
+[order-lifespan]: the time duration that the order lives until it is expired; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -315,13 +315,13 @@ $ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from 
 				return fmt.Errorf("parse pair id: %w", err)
 			}
 
-			rawDir, ok := types.SwapDirection_value[args[1]]
+			rawDir, ok := types.OrderDirection_value[args[1]]
 			if !ok {
-				return fmt.Errorf("unknown swap direction: %s", args[1])
+				return fmt.Errorf("unknown order direction: %s", args[1])
 			}
-			dir := types.SwapDirection(rawDir)
-			if dir != types.SwapDirectionBuy && dir != types.SwapDirectionSell {
-				return fmt.Errorf("invalid swap direction: %s", dir)
+			dir := types.OrderDirection(rawDir)
+			if dir != types.OrderDirectionBuy && dir != types.OrderDirectionSell {
+				return fmt.Errorf("invalid order direction: %s", dir)
 			}
 
 			offerCoin, err := sdk.ParseCoinNormalized(args[2])
@@ -365,7 +365,7 @@ $ %s tx %s market-order 1 SWAP_DIRECTION_BUY 10000usquad uatom 10000 10s --from 
 
 func NewCancelOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-order [pair-id] [swap-request-id]",
+		Use:   "cancel-order [pair-id] [order-id]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Cancel an order",
 		Long: strings.TrimSpace(
@@ -387,7 +387,7 @@ $ %s tx %s cancel-order 1 1 --from mykey
 				return err
 			}
 
-			swapReqId, err := strconv.ParseUint(args[1], 10, 64)
+			orderId, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -395,7 +395,7 @@ $ %s tx %s cancel-order 1 1 --from mykey
 			msg := types.NewMsgCancelOrder(
 				clientCtx.GetFromAddress(),
 				pairId,
-				swapReqId,
+				orderId,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

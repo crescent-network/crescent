@@ -241,7 +241,7 @@ func (msg MsgWithdraw) GetWithdrawer() sdk.AccAddress {
 func NewMsgLimitOrder(
 	orderer sdk.AccAddress,
 	pairId uint64,
-	dir SwapDirection,
+	dir OrderDirection,
 	offerCoin sdk.Coin,
 	demandCoinDenom string,
 	price sdk.Dec,
@@ -271,8 +271,8 @@ func (msg MsgLimitOrder) ValidateBasic() error {
 	if msg.PairId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
-	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid swap direction: %s", msg.Direction)
+	if msg.Direction != OrderDirectionBuy && msg.Direction != OrderDirectionSell {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid order direction: %s", msg.Direction)
 	}
 	if !msg.Amount.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
@@ -294,9 +294,9 @@ func (msg MsgLimitOrder) ValidateBasic() error {
 	}
 	var minOfferCoin sdk.Coin
 	switch msg.Direction {
-	case SwapDirectionBuy:
+	case OrderDirectionBuy:
 		minOfferCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, msg.Price, msg.Amount))
-	case SwapDirectionSell:
+	case OrderDirectionSell:
 		minOfferCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount)
 	}
 	if msg.OfferCoin.IsLT(minOfferCoin) {
@@ -338,7 +338,7 @@ func (msg MsgLimitOrder) GetOrderer() sdk.AccAddress {
 func NewMsgMarketOrder(
 	orderer sdk.AccAddress,
 	pairId uint64,
-	dir SwapDirection,
+	dir OrderDirection,
 	offerCoin sdk.Coin,
 	demandCoinDenom string,
 	amt sdk.Int,
@@ -366,8 +366,8 @@ func (msg MsgMarketOrder) ValidateBasic() error {
 	if msg.PairId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
-	if msg.Direction != SwapDirectionBuy && msg.Direction != SwapDirectionSell {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid swap direction: %s", msg.Direction)
+	if msg.Direction != OrderDirectionBuy && msg.Direction != OrderDirectionSell {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid order direction: %s", msg.Direction)
 	}
 	if !msg.Amount.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
@@ -420,12 +420,12 @@ func (msg MsgMarketOrder) GetOrderer() sdk.AccAddress {
 func NewMsgCancelOrder(
 	orderer sdk.AccAddress,
 	pairId uint64,
-	swapReqId uint64,
+	orderId uint64,
 ) *MsgCancelOrder {
 	return &MsgCancelOrder{
-		SwapRequestId: swapReqId,
-		PairId:        pairId,
-		Orderer:       orderer.String(),
+		OrderId: orderId,
+		PairId:  pairId,
+		Orderer: orderer.String(),
 	}
 }
 
@@ -440,8 +440,8 @@ func (msg MsgCancelOrder) ValidateBasic() error {
 	if msg.PairId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
 	}
-	if msg.SwapRequestId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "swap request id must not be 0")
+	if msg.OrderId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "order id must not be 0")
 	}
 	return nil
 }

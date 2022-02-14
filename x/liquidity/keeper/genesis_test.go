@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 
 	depositReq := s.deposit(s.addr(3), pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
 	withdrawReq := s.withdraw(s.addr(1), pool.Id, poolCoin)
-	swapReq := s.sellLimitOrder(s.addr(3), pair.Id, squad.ParseDec("1.0"), newInt(1000), 0, true)
+	order := s.sellLimitOrder(s.addr(3), pair.Id, squad.ParseDec("1.0"), newInt(1000), 0, true)
 
 	genState := k.ExportGenesis(ctx)
 
@@ -56,7 +56,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	withdrawReq2, found := k.GetWithdrawRequest(ctx, withdrawReq.PoolId, withdrawReq.Id)
 	s.Require().True(found)
 	s.Require().Equal(withdrawReq, withdrawReq2)
-	swapReq2, found := k.GetSwapRequest(ctx, swapReq.PairId, swapReq.Id)
+	order2, found := k.GetOrder(ctx, order.PairId, order.Id)
 	s.Require().True(found)
-	s.Require().Equal(swapReq, swapReq2)
+	s.Require().Equal(order, order2)
 }

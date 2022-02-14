@@ -372,7 +372,7 @@ func (s *KeeperTestSuite) TestGRPCPair() {
 				s.Require().Equal(pair.BaseCoinDenom, resp.Pair.BaseCoinDenom)
 				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
 				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
-				s.Require().Equal(pair.LastSwapRequestId, resp.Pair.LastSwapRequestId)
+				s.Require().Equal(pair.LastOrderId, resp.Pair.LastOrderId)
 				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
 				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
 			},
@@ -647,7 +647,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGRPCSwapRequests() {
+func (s *KeeperTestSuite) TestGRPCOrders() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
@@ -660,9 +660,9 @@ func (s *KeeperTestSuite) TestGRPCSwapRequests() {
 
 	for _, tc := range []struct {
 		name      string
-		req       *types.QuerySwapRequestsRequest
+		req       *types.QueryOrdersRequest
 		expectErr bool
-		postRun   func(*types.QuerySwapRequestsResponse)
+		postRun   func(*types.QueryOrdersResponse)
 	}{
 		{
 			"nil request",
@@ -672,23 +672,23 @@ func (s *KeeperTestSuite) TestGRPCSwapRequests() {
 		},
 		{
 			"invalid request",
-			&types.QuerySwapRequestsRequest{},
+			&types.QueryOrdersRequest{},
 			true,
 			nil,
 		},
 		{
-			"query all swap requests",
-			&types.QuerySwapRequestsRequest{
+			"query all orders",
+			&types.QueryOrdersRequest{
 				PairId: 1,
 			},
 			false,
-			func(resp *types.QuerySwapRequestsResponse) {
-				s.Require().Len(resp.SwapRequests, 5)
+			func(resp *types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 5)
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.SwapRequests(sdk.WrapSDKContext(s.ctx), tc.req)
+			resp, err := s.querier.Orders(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -698,7 +698,7 @@ func (s *KeeperTestSuite) TestGRPCSwapRequests() {
 		})
 	}
 }
-func (s *KeeperTestSuite) TestGRPCSwapRequest() {
+func (s *KeeperTestSuite) TestGRPCOrder() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
@@ -707,9 +707,9 @@ func (s *KeeperTestSuite) TestGRPCSwapRequest() {
 
 	for _, tc := range []struct {
 		name      string
-		req       *types.QuerySwapRequestRequest
+		req       *types.QueryOrderRequest
 		expectErr bool
-		postRun   func(*types.QuerySwapRequestResponse)
+		postRun   func(*types.QueryOrderResponse)
 	}{
 		{
 			"nil request",
@@ -719,37 +719,37 @@ func (s *KeeperTestSuite) TestGRPCSwapRequest() {
 		},
 		{
 			"invalid request",
-			&types.QuerySwapRequestRequest{},
+			&types.QueryOrderRequest{},
 			true,
 			nil,
 		},
 		{
-			"query the swap request",
-			&types.QuerySwapRequestRequest{
+			"query the order",
+			&types.QueryOrderRequest{
 				PairId: 1,
 				Id:     1,
 			},
 			false,
-			func(resp *types.QuerySwapRequestResponse) {
-				s.Require().Equal(req.Id, resp.SwapRequest.Id)
-				s.Require().Equal(req.PairId, resp.SwapRequest.PairId)
-				s.Require().Equal(req.MsgHeight, resp.SwapRequest.MsgHeight)
-				s.Require().Equal(req.Orderer, resp.SwapRequest.Orderer)
-				s.Require().Equal(req.Direction, resp.SwapRequest.Direction)
-				s.Require().Equal(req.OfferCoin, resp.SwapRequest.OfferCoin)
-				s.Require().Equal(req.RemainingOfferCoin, resp.SwapRequest.RemainingOfferCoin)
-				s.Require().Equal(req.ReceivedCoin, resp.SwapRequest.ReceivedCoin)
-				s.Require().Equal(req.Price, resp.SwapRequest.Price)
-				s.Require().Equal(req.Amount, resp.SwapRequest.Amount)
-				s.Require().Equal(req.OpenAmount, resp.SwapRequest.OpenAmount)
-				s.Require().Equal(req.BatchId, resp.SwapRequest.BatchId)
-				s.Require().Equal(req.ExpireAt, resp.SwapRequest.ExpireAt)
-				s.Require().NotEqual(req.Status, resp.SwapRequest.Status)
+			func(resp *types.QueryOrderResponse) {
+				s.Require().Equal(req.Id, resp.Order.Id)
+				s.Require().Equal(req.PairId, resp.Order.PairId)
+				s.Require().Equal(req.MsgHeight, resp.Order.MsgHeight)
+				s.Require().Equal(req.Orderer, resp.Order.Orderer)
+				s.Require().Equal(req.Direction, resp.Order.Direction)
+				s.Require().Equal(req.OfferCoin, resp.Order.OfferCoin)
+				s.Require().Equal(req.RemainingOfferCoin, resp.Order.RemainingOfferCoin)
+				s.Require().Equal(req.ReceivedCoin, resp.Order.ReceivedCoin)
+				s.Require().Equal(req.Price, resp.Order.Price)
+				s.Require().Equal(req.Amount, resp.Order.Amount)
+				s.Require().Equal(req.OpenAmount, resp.Order.OpenAmount)
+				s.Require().Equal(req.BatchId, resp.Order.BatchId)
+				s.Require().Equal(req.ExpireAt, resp.Order.ExpireAt)
+				s.Require().NotEqual(req.Status, resp.Order.Status)
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.SwapRequest(sdk.WrapSDKContext(s.ctx), tc.req)
+			resp, err := s.querier.Order(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

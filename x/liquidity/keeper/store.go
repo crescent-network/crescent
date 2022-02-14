@@ -355,47 +355,47 @@ func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.Wi
 	return nil
 }
 
-// GetSwapRequest returns the particular swap request.
-func (k Keeper) GetSwapRequest(ctx sdk.Context, pairId, id uint64) (state types.SwapRequest, found bool) {
+// GetOrder returns the particular order.
+func (k Keeper) GetOrder(ctx sdk.Context, pairId, id uint64) (order types.Order, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetSwapRequestKey(pairId, id)
+	key := types.GetOrderKey(pairId, id)
 
 	value := store.Get(key)
 	if value == nil {
-		return state, false
+		return order, false
 	}
 
-	state = types.MustUnmarshalSwapRequest(k.cdc, value)
-	return state, true
+	order = types.MustUnmarshalOrder(k.cdc, value)
+	return order, true
 }
 
-// SetSwapRequest stores swap request for the batch execution.
-func (k Keeper) SetSwapRequest(ctx sdk.Context, req types.SwapRequest) {
+// SetOrder stores an order for the batch execution.
+func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshaSwapRequest(k.cdc, req)
-	store.Set(types.GetSwapRequestKey(req.PairId, req.Id), bz)
+	bz := types.MustMarshaOrder(k.cdc, order)
+	store.Set(types.GetOrderKey(order.PairId, order.Id), bz)
 }
 
-// DeleteSwapRequest deletes a swap request.
-func (k Keeper) DeleteSwapRequest(ctx sdk.Context, pairId, id uint64) {
+// DeleteOrder deletes an order.
+func (k Keeper) DeleteOrder(ctx sdk.Context, pairId, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetSwapRequestKey(pairId, id))
+	store.Delete(types.GetOrderKey(pairId, id))
 }
 
-func (k Keeper) GetAllSwapRequests(ctx sdk.Context) (reqs []types.SwapRequest) {
-	_ = k.IterateAllSwapRequests(ctx, func(req types.SwapRequest) (stop bool, err error) {
-		reqs = append(reqs, req)
+func (k Keeper) GetAllOrders(ctx sdk.Context) (reqs []types.Order) {
+	_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
+		reqs = append(reqs, order)
 		return false, nil
 	})
 	return
 }
 
-func (k Keeper) IterateAllSwapRequests(ctx sdk.Context, cb func(req types.SwapRequest) (stop bool, err error)) error {
+func (k Keeper) IterateAllOrders(ctx sdk.Context, cb func(order types.Order) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.SwapRequestKeyPrefix)
+	iter := sdk.KVStorePrefixIterator(store, types.OrderKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var req types.SwapRequest
+		var req types.Order
 		k.cdc.MustUnmarshal(iter.Value(), &req)
 		stop, err := cb(req)
 		if err != nil {
@@ -408,12 +408,12 @@ func (k Keeper) IterateAllSwapRequests(ctx sdk.Context, cb func(req types.SwapRe
 	return nil
 }
 
-func (k Keeper) IterateSwapRequestsByPair(ctx sdk.Context, pairId uint64, cb func(req types.SwapRequest) (stop bool, err error)) error {
+func (k Keeper) IterateOrdersByPair(ctx sdk.Context, pairId uint64, cb func(req types.Order) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetSwapRequestsByPairKeyPrefix(pairId))
+	iter := sdk.KVStorePrefixIterator(store, types.GetOrdersByPairKeyPrefix(pairId))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var req types.SwapRequest
+		var req types.Order
 		k.cdc.MustUnmarshal(iter.Value(), &req)
 		stop, err := cb(req)
 		if err != nil {

@@ -51,7 +51,7 @@ message Pair {
 
   string escrow_address = 4;
 
-  uint64 last_swap_request_id = 5;
+  uint64 last_order_id = 5;
 
   string last_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
@@ -126,8 +126,8 @@ message WithdrawRequest {
   RequestStatus status = 7;
 }
 
-// SwapRequest defines a swap request.
-message SwapRequest {
+// Order defines an order.
+message Order {
   // id specifies the id for the request
   uint64 id = 1;
 
@@ -137,11 +137,11 @@ message SwapRequest {
   // msg_height specifies the block height when the request is stored for the batch execution
   int64 msg_height = 3;
 
-  // orderer specifies the bech32-encoded address that makes an order to swap from the pool
+  // orderer specifies the bech32-encoded address that makes an order
   string orderer = 4;
 
-  // direction specifies the swap direction; either buy or sell
-  SwapDirection direction = 5;
+  // direction specifies the order direction; either buy or sell
+  OrderDirection direction = 5;
 
   cosmos.base.v1beta1.Coin offer_coin = 6 [(gogoproto.nullable) = false];
 
@@ -164,21 +164,21 @@ message SwapRequest {
 
   google.protobuf.Timestamp expire_at = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
-  SwapRequestStatus status = 14;
+  OrderStatus status = 14;
 }
 
-// SwapDirection enumerates swap directions.
-enum SwapDirection {
+// OrderDirection enumerates order directions.
+enum OrderDirection {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  // SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-  SWAP_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapDirectionUnspecified"];
+  // ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+  ORDER_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OrderDirectionUnspecified"];
 
-  // SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
-  SWAP_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "SwapDirectionBuy"];
+  // ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+  ORDER_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "OrderDirectionBuy"];
 
-  // SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-  SWAP_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "SwapDirectionSell"];
+  // ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
+  ORDER_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "OrderDirectionSell"];
 }
 
 // RequestStatus enumerates request statuses.
@@ -198,28 +198,28 @@ enum RequestStatus {
   REQUEST_STATUS_FAILED = 3 [(gogoproto.enumvalue_customname) = "RequestStatusFailed"];
 }
 
-// SwapRequestStatus enumerates swap request statuses.
-enum SwapRequestStatus {
+// OrderStatus enumerates order statuses.
+enum OrderStatus {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  // SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
-  SWAP_REQUEST_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SwapRequestStatusUnspecified"];
+  // ORDER_STATUS_UNSPECIFIED specifies unknown order status
+  ORDER_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OrderStatusUnspecified"];
 
-  // SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-  SWAP_REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotExecuted"];
+  // ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+  ORDER_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "OrderStatusNotExecuted"];
 
-  // SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
-  SWAP_REQUEST_STATUS_NOT_MATCHED = 2 [(gogoproto.enumvalue_customname) = "SwapRequestStatusNotMatched"];
+  // ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+  ORDER_STATUS_NOT_MATCHED = 2 [(gogoproto.enumvalue_customname) = "OrderStatusNotMatched"];
 
-  // SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
-  SWAP_REQUEST_STATUS_PARTIALLY_MATCHED = 3 [(gogoproto.enumvalue_customname) = "SwapRequestStatusPartiallyMatched"];
+  // ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+  ORDER_STATUS_PARTIALLY_MATCHED = 3 [(gogoproto.enumvalue_customname) = "OrderStatusPartiallyMatched"];
 
-  // SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
-  SWAP_REQUEST_STATUS_COMPLETED = 4 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCompleted"];
+  // ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+  ORDER_STATUS_COMPLETED = 4 [(gogoproto.enumvalue_customname) = "OrderStatusCompleted"];
 
-  // SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-  SWAP_REQUEST_STATUS_CANCELED = 5 [(gogoproto.enumvalue_customname) = "SwapRequestStatusCanceled"];
+  // ORDER_STATUS_CANCELED indicates the order has been canceled
+  ORDER_STATUS_CANCELED = 5 [(gogoproto.enumvalue_customname) = "OrderStatusCanceled"];
 
-  // SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-  SWAP_REQUEST_STATUS_EXPIRED = 6 [(gogoproto.enumvalue_customname) = "SwapRequestStatusExpired"];
+  // ORDER_STATUS_EXPIRED indicates the order has been expired
+  ORDER_STATUS_EXPIRED = 6 [(gogoproto.enumvalue_customname) = "OrderStatusExpired"];
 }

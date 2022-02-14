@@ -66,14 +66,14 @@ service Query {
     option (google.api.http).get = "/squad/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}";
   }
 
-  // SwapRequests returns all swap requests.
-  rpc SwapRequests(QuerySwapRequestsRequest) returns (QuerySwapRequestsResponse) {
-    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs/{pair_id}/swap_requests";
+  // Orders returns all orders.
+  rpc Orders(QueryOrdersRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs/{pair_id}/orders";
   }
 
-  // SwapRequest returns the specific swap request.
-  rpc SwapRequest(QuerySwapRequestRequest) returns (QuerySwapRequestResponse) {
-    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs/{pair_id}/swap_requests/{id}";
+  // Order returns the specific order.
+  rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
+    option (google.api.http).get = "/squad/liquidity/v1beta1/pairs/{pair_id}/orders/{id}";
   }
 }
 
@@ -195,29 +195,29 @@ message QueryWithdrawRequestResponse {
   WithdrawRequest withdraw_request = 1 [(gogoproto.nullable) = false];
 }
 
-// QuerySwapRequestsRequest is request type for the Query/SwapRequests RPC method.
-message QuerySwapRequestsRequest {
+// QueryOrdersRequest is request type for the Query/Orders RPC method.
+message QueryOrdersRequest {
   uint64 pair_id = 1;
 
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QuerySwapRequestsResponse is response type for the Query/SwapRequests RPC method.
-message QuerySwapRequestsResponse {
-  repeated SwapRequest swap_requests = 1 [(gogoproto.nullable) = false];
+// QueryOrdersResponse is response type for the Query/Orders RPC method.
+message QueryOrdersResponse {
+  repeated Order orders = 1 [(gogoproto.nullable) = false];
 
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QuerySwapRequestRequest is request type for the Query/SwapRequest RPC method.
-message QuerySwapRequestRequest {
+// QueryOrderRequest is request type for the Query/Order RPC method.
+message QueryOrderRequest {
   uint64 pair_id = 1;
   uint64 id      = 2;
 }
 
-// QuerySwapRequestResponse is response type for the Query/SwapRequest RPC method.
-message QuerySwapRequestResponse {
-  SwapRequest swap_request = 1 [(gogoproto.nullable) = false];
+// QueryOrderResponse is response type for the Query/Order RPC method.
+message QueryOrderResponse {
+  Order order = 1 [(gogoproto.nullable) = false];
 }
 
 //
