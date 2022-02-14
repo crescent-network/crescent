@@ -74,7 +74,7 @@ func QueryClaimRecord() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claim-record [address]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query the claim record for an account.",
+		Short: "Query the claim record for an account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the claim record for an account.
 This contains an address' initial claimable amounts and its completed actions.

@@ -33,7 +33,7 @@ func (msg MsgClaim) ValidateBasic() error {
 	switch msg.ActionType {
 	case ActionTypeDeposit, ActionTypeSwap, ActionTypeFarming:
 	default:
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action type: %s", msg.ActionType)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action type: %s", msg.ActionType.String())
 	}
 	return nil
 }

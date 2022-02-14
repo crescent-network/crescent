@@ -15,14 +15,14 @@ func (s *KeeperTestSuite) TestGRPCParams() {
 }
 
 func (s *KeeperTestSuite) TestGRPCClaimRecord() {
-	r := types.ClaimRecord{
+	cr := types.ClaimRecord{
 		Address:               s.addr(0).String(),
 		InitialClaimableCoins: parseCoins("10000000denom1"),
 		DepositActionClaimed:  true,
 		SwapActionClaimed:     false,
 		FarmingActionClaimed:  false,
 	}
-	s.keeper.SetClaimRecord(s.ctx, r)
+	s.keeper.SetClaimRecord(s.ctx, cr)
 
 	for _, tc := range []struct {
 		name      string

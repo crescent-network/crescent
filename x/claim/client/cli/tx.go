@@ -35,9 +35,10 @@ func NewClaimCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claim [action-type]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Claim the claimable amount with the action",
+		Short: "Claim the claimable amount with an action type",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Claim the claimable amount with the action. 
+			fmt.Sprintf(`Claim the claimable amount with an action type. 
+There are 3 different types of action type. Reference the examples below.
 
 Example:
 $ %s tx %s claim deposit --from mykey
