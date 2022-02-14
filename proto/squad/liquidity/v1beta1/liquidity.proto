@@ -11,34 +11,36 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Params defines the parameters for the liquidity module.
 message Params {
-  string initial_pool_coin_supply = 1
+  uint32 batch_size = 1;
+
+  uint32 tick_precision = 2;
+
+  string fee_collector_address = 3;
+
+  string dust_collector_address = 4;
+
+  string initial_pool_coin_supply = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  uint32 batch_size = 2;
+  repeated cosmos.base.v1beta1.Coin pair_creation_fee = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  uint32 tick_precision = 3;
+  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 7
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  string min_initial_deposit_amount = 4
+  string min_initial_deposit_amount = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  repeated cosmos.base.v1beta1.Coin pair_creation_fee = 5
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-
-  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 6
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-
-  string fee_collector_address = 7;
-
-  string max_price_limit_ratio = 8
+  string max_price_limit_ratio = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string swap_fee_rate = 9
+  google.protobuf.Duration max_order_lifespan = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+
+  string swap_fee_rate = 11
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string withdraw_fee_rate = 10
+  string withdraw_fee_rate = 12
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-
-  google.protobuf.Duration max_order_lifespan = 11 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 // Pair defines a coin pair.

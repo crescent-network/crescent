@@ -2775,15 +2775,14 @@ paths:
               params:
                 type: object
                 properties:
-                  initial_pool_coin_supply:
-                    type: string
                   batch_size:
                     type: integer
                     format: int64
-                  tick_precision:
-                    type: integer
-                    format: int64
-                  min_initial_deposit_amount:
+                  fee_collector_address:
+                    type: string
+                  dust_collector_address:
+                    type: string
+                  initial_pool_coin_supply:
                     type: string
                   pair_creation_fee:
                     type: array
@@ -2819,15 +2818,18 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                  fee_collector_address:
+                  min_initial_deposit_amount:
                     type: string
+                  tick_precision:
+                    type: integer
+                    format: int64
                   max_price_limit_ratio:
+                    type: string
+                  max_order_lifespan:
                     type: string
                   swap_fee_rate:
                     type: string
                   withdraw_fee_rate:
-                    type: string
-                  max_order_lifespan:
                     type: string
                 description: Params defines the parameters for the liquidity module.
             description: >-
@@ -5393,15 +5395,14 @@ definitions:
   squad.liquidity.v1beta1.Params:
     type: object
     properties:
-      initial_pool_coin_supply:
-        type: string
       batch_size:
         type: integer
         format: int64
-      tick_precision:
-        type: integer
-        format: int64
-      min_initial_deposit_amount:
+      fee_collector_address:
+        type: string
+      dust_collector_address:
+        type: string
+      initial_pool_coin_supply:
         type: string
       pair_creation_fee:
         type: array
@@ -5431,15 +5432,18 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-      fee_collector_address:
+      min_initial_deposit_amount:
         type: string
+      tick_precision:
+        type: integer
+        format: int64
       max_price_limit_ratio:
+        type: string
+      max_order_lifespan:
         type: string
       swap_fee_rate:
         type: string
       withdraw_fee_rate:
-        type: string
-      max_order_lifespan:
         type: string
     description: Params defines the parameters for the liquidity module.
   squad.liquidity.v1beta1.PoolResponse:
@@ -6047,15 +6051,14 @@ definitions:
       params:
         type: object
         properties:
-          initial_pool_coin_supply:
-            type: string
           batch_size:
             type: integer
             format: int64
-          tick_precision:
-            type: integer
-            format: int64
-          min_initial_deposit_amount:
+          fee_collector_address:
+            type: string
+          dust_collector_address:
+            type: string
+          initial_pool_coin_supply:
             type: string
           pair_creation_fee:
             type: array
@@ -6091,15 +6094,18 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-          fee_collector_address:
+          min_initial_deposit_amount:
             type: string
+          tick_precision:
+            type: integer
+            format: int64
           max_price_limit_ratio:
+            type: string
+          max_order_lifespan:
             type: string
           swap_fee_rate:
             type: string
           withdraw_fee_rate:
-            type: string
-          max_order_lifespan:
             type: string
         description: Params defines the parameters for the liquidity module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
