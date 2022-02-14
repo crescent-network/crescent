@@ -11,21 +11,26 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-var _ types.QueryServer = Keeper{}
-
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-
-	return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
+// Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper.
+type Querier struct {
+	Keeper
 }
 
-func (k Keeper) ClaimRecord(c context.Context, req *types.QueryClaimRecordRequest) (*types.QueryClaimRecordResponse, error) {
+var _ types.QueryServer = Querier{}
+
+// Params queries the parameters of the liquidity module.
+func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	var params types.Params
+	k.Keeper.paramSpace.GetParamSet(ctx, &params)
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
+func (k Querier) ClaimRecord(c context.Context, req *types.QueryClaimRecordRequest) (*types.QueryClaimRecordResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)

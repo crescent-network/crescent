@@ -13,14 +13,23 @@ message Params {
 }
 
 message ClaimRecord {
+  // address specifies the bech32-encoded address that is eligible to claim airdrop
   string address = 1;
 
+  // initial_claimable_coins specifies the initial claimable coins
   repeated cosmos.base.v1beta1.Coin initial_claimable_coins = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  bool swap_action_claimed = 3;
+  // claimable_coins specifies the unclaimed claimable coins
+  repeated cosmos.base.v1beta1.Coin claimable_coins = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
+  // deposit_action_claimed specifies the liquidity/deposit action
   bool deposit_action_claimed = 4;
 
-  bool farming_action_claimed = 5;
+  // swap_action_claimed specifies the liquidity/swap action
+  bool swap_action_claimed = 5;
+
+  // farming_action_claimed specifies the farming/stake action
+  bool farming_action_claimed = 6;
 }

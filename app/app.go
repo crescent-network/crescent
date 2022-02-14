@@ -456,6 +456,8 @@ func NewSquadApp(
 	app.ClaimKeeper = *claimkeeper.NewKeeper(
 		appCodec,
 		keys[claimtypes.StoreKey],
+		app.AccountKeeper,
+		app.BankKeeper,
 		app.GetSubspace(claimtypes.ModuleName),
 	)
 

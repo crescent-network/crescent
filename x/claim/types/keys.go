@@ -24,6 +24,6 @@ var (
 )
 
 // GetClaimRecordKey returns the store key to retrieve ClaimRecord.
-func GetClaimRecordKey(claimant sdk.AccAddress) []byte {
-	return append(ClaimRecordKeyPrefix, address.MustLengthPrefix(claimant)...)
+func GetClaimRecordKey(recipient sdk.AccAddress) []byte {
+	return append(ClaimRecordKeyPrefix, address.MustLengthPrefix(recipient)...)
 }
