@@ -9,23 +9,10 @@ option go_package = "github.com/cosmosquad-labs/squad/x/claim/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Params returns parameters of the module.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/squad/claim/v1beta1/params";
-  }
-
   // ClaimRecord returns the claim record for the recipient address.
   rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
     option (google.api.http).get = "/squad/claim/v1beta1/claim_record/{address}";
   }
-}
-
-// QueryParamsRequest is request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryClaimRecordRequest is request type for the Query/ClaimRecord RPC method.

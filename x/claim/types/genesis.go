@@ -9,7 +9,6 @@ import (
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ModuleAccountBalance: sdk.NewCoin(stakingtypes.DefaultParams().BondDenom, sdk.ZeroInt()),
-		Params:               DefaultParams(),
 		ClaimRecords:         []ClaimRecord{},
 	}
 }
@@ -18,5 +17,5 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	// TODO: not implemented yet
-	return gs.Params.Validate()
+	return nil
 }

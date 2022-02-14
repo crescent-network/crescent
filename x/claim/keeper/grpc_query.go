@@ -18,14 +18,6 @@ type Querier struct {
 
 var _ types.QueryServer = Querier{}
 
-// Params queries the parameters of the liquidity module.
-func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	var params types.Params
-	k.Keeper.paramSpace.GetParamSet(ctx, &params)
-	return &types.QueryParamsResponse{Params: params}, nil
-}
-
 func (k Querier) ClaimRecord(c context.Context, req *types.QueryClaimRecordRequest) (*types.QueryClaimRecordResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

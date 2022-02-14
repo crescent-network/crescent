@@ -8,12 +8,6 @@ import (
 	_ "github.com/stretchr/testify/suite"
 )
 
-func (s *KeeperTestSuite) TestGRPCParams() {
-	resp, err := s.querier.Params(sdk.WrapSDKContext(s.ctx), &types.QueryParamsRequest{})
-	s.Require().NoError(err)
-	s.Require().Equal(s.keeper.GetParams(s.ctx), resp.Params)
-}
-
 func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 	cr := types.ClaimRecord{
 		Address:               s.addr(0).String(),

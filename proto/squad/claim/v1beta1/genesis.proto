@@ -12,9 +12,6 @@ message GenesisState {
   // module_account_balance specifies the claim module account's balance
   cosmos.base.v1beta1.Coin module_account_balance = 1 [(gogoproto.nullable) = false];
 
-  // params specifies all the parameters of the module
-  Params params = 2 [(gogoproto.nullable) = false];
-
   // claim_records specifies a list of claim records
-  repeated ClaimRecord claim_records = 3 [(gogoproto.nullable) = false];
+  repeated ClaimRecord claim_records = 2 [(gogoproto.nullable) = false];
 }

@@ -15,7 +15,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
 	}
 
-	// TODO: params.ExpiredDuration to block claim?
+	// TODO: ExpiredDuration to block claim?
 
 	notClaimedActions := int64(0)
 	for _, action := range []bool{

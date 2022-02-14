@@ -138,7 +138,6 @@ type GenesisParams struct {
 	GovParams           govtypes.Params
 	LiquidityParams     liqtypes.Params
 	LiquidStakingParams liqstakingtypes.Params
-	ClaimParams         claimtypes.Params
 
 	ClaimGenesisState claimtypes.GenesisState
 }
@@ -148,7 +147,6 @@ func TestnetGenesisParams() *GenesisParams {
 	genParams.GenesisTime = time.Now()
 
 	// Set claim records
-	genParams.ClaimParams = claimtypes.DefaultParams()
 	genParams.ClaimGenesisState.ClaimRecords = []claimtypes.ClaimRecord{
 		{
 			Address:               "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v", // validator

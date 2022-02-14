@@ -10,6 +10,5 @@ TODO: Describe the module
 
 1. **[Concepts](01_concepts.md)**
 2. **[State](02_state.md)**
-4. **[Messages](03_messages.md)**
-6. **[Events](04_events.md)**
-7. **[Parameters](05_params.md)**
+3. **[Messages](03_messages.md)**
+4. **[Events](04_events.md)**

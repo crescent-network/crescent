@@ -458,7 +458,6 @@ func NewSquadApp(
 		keys[claimtypes.StoreKey],
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(claimtypes.ModuleName),
 	)
 
 	// register the proposal types
