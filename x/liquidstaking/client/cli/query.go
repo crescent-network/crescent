@@ -26,6 +26,7 @@ func GetQueryCmd() *cobra.Command {
 	liquidValidatorQueryCmd.AddCommand(
 		GetCmdQueryParams(),
 		GetCmdQueryLiquidValidators(),
+		GetCmdQueryStates(),
 	)
 
 	return liquidValidatorQueryCmd
@@ -102,6 +103,47 @@ $ %s query %s liquid-validators
 				&types.QueryLiquidValidatorsRequest{
 					Pagination: pageReq,
 				},
+			)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	//cmd.Flags().AddFlagSet(flagSetLiquidValidators())
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryStates implements the query states command.
+func GetCmdQueryStates() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "states",
+		Args:  cobra.NoArgs,
+		Short: "Query states",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Queries states about net amount, mint rate.
+
+Example:
+$ %s query %s states
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.States(
+				context.Background(),
+				&types.QueryStatesRequest{},
 			)
 			if err != nil {
 				return err

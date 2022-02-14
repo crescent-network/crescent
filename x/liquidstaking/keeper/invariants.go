@@ -44,9 +44,9 @@ func NetAmountInvariant(k Keeper) sdk.Invariant {
 		if lvs.Len() == 0 {
 			return msg, broken
 		}
-		NetAmount := k.NetAmount(ctx)
+		nas := k.NetAmountState(ctx)
 		balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
-		NetAmountExceptBalance := NetAmount.Sub(balance.ToDec())
+		NetAmountExceptBalance := nas.NetAmount.Sub(balance.ToDec())
 		liquidBondDenom := k.LiquidBondDenom(ctx)
 		bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 		if bTokenTotalSupply.IsPositive() && !NetAmountExceptBalance.IsPositive() {
@@ -71,18 +71,16 @@ func TotalLiquidTokensInvariant(k Keeper) sdk.Invariant {
 		if lvs.Len() == 0 {
 			return "", false
 		}
-		params := k.GetParams(ctx)
-		alvs := k.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
-		_, _, totalLiquidTokensOfProxyAcc := k.CheckRemainingRewards(ctx, types.LiquidStakingProxyAcc)
-		totalLiquidTokensOfLiquidValidators, _ := lvs.TotalLiquidTokens(ctx, k.stakingKeeper)
-		totalActiveLiquidTokens, _ := alvs.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
 
-		broken := !(totalLiquidTokensOfProxyAcc.Equal(totalLiquidTokensOfLiquidValidators) &&
-			totalActiveLiquidTokens.Equal(totalLiquidTokensOfLiquidValidators))
+		// TODO: Separate Active and InActive LiquidTokens and process them.
+		_, _, totalDelegationTokensOfProxyAcc := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
+		totalLiquidTokensOfLiquidValidators, _ := lvs.TotalLiquidTokens(ctx, k.stakingKeeper)
+
+		broken := !totalDelegationTokensOfProxyAcc.Equal(totalLiquidTokensOfLiquidValidators)
 		return sdk.FormatInvariant(
 			types.ModuleName, "total liquid tokens invariant broken",
-			fmt.Sprintf("found unmatched total liquid tokens of proxy account %s with total liquid tokens of active, inactive liquid validators %s\n",
-				totalLiquidTokensOfProxyAcc.String(), totalLiquidTokensOfLiquidValidators.String()),
+			fmt.Sprintf("found unmatched total delegation tokens of proxy account %s with total liquid tokens of all liquid validators %s\n",
+				totalDelegationTokensOfProxyAcc.String(), totalLiquidTokensOfLiquidValidators.String()),
 		), broken
 	}
 }

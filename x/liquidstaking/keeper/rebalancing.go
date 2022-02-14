@@ -101,31 +101,33 @@ func (k Keeper) Rebalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals
 
 // WithdrawRewardsAndReStaking withdraw rewards and re-staking when over threshold
 func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap types.WhitelistedValMap) {
+	totalRemainingRewards, _, totalLiquidTokens := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
+
+	// checking over types.RewardTrigger and execute GetRewards
+	proxyAccBalance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
+	rewardsThreshold := types.RewardTrigger.Mul(totalLiquidTokens.ToDec())
+
+	// skip If it doesn't exceed the rewards threshold
+	if !proxyAccBalance.ToDec().Add(totalRemainingRewards).GTE(rewardsThreshold) {
+		return
+	}
+
+	// Withdraw rewards of LiquidStakingProxyAcc and re-staking
+	k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
+
+	// re-staking with proxyAccBalance, due to auto-withdraw on add staking by f1
+	proxyAccBalance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
+
 	// skip when no active liquid validator
 	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValMap)
 	if len(activeVals) == 0 {
 		return
 	}
 
-	// skip when invalid totalLiquidTokens or totalWeight
-	totalLiquidTokens, _ := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
-	if !totalLiquidTokens.IsPositive() || !activeVals.TotalWeight(whitelistedValMap).IsPositive() {
-		return
-	}
-
-	// Withdraw rewards of LiquidStakingProxyAcc and re-staking
-	totalRemainingRewards, _, _ := k.CheckRemainingRewards(ctx, types.LiquidStakingProxyAcc)
-	// checking over types.RewardTrigger and execute GetRewards
-	proxyAccBalance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
-	rewardsThreshold := types.RewardTrigger.Mul(totalLiquidTokens.ToDec())
-	if proxyAccBalance.ToDec().Add(totalRemainingRewards).GTE(rewardsThreshold) {
-		// re-staking with proxyAccBalance, due to auto-withdraw on add staking by f1
-		k.WithdrawLiquidRewards(ctx, types.LiquidStakingProxyAcc)
-		proxyAccBalance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
-		_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, activeVals, proxyAccBalance, whitelistedValMap)
-		if err != nil {
-			panic(err)
-		}
+	// re-staking
+	_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, activeVals, proxyAccBalance, whitelistedValMap)
+	if err != nil {
+		panic(err)
 	}
 }
 

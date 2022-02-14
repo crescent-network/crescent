@@ -16,7 +16,6 @@ var (
 	KeyLiquidBondDenom        = []byte("LiquidBondDenom")
 	KeyWhitelistedValidators  = []byte("WhitelistedValidators")
 	KeyUnstakeFeeRate         = []byte("UnstakeFeeRate")
-	KeyCommissionRate         = []byte("CommissionRate")
 	KeyMinLiquidStakingAmount = []byte("MinLiquidStakingAmount")
 
 	DefaultLiquidBondDenom = "bstake"

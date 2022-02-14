@@ -2778,6 +2778,9 @@ paths:
                   batch_size:
                     type: integer
                     format: int64
+                  tick_precision:
+                    type: integer
+                    format: int64
                   fee_collector_address:
                     type: string
                   dust_collector_address:
@@ -2820,9 +2823,6 @@ paths:
                         signatures required by gogoproto.
                   min_initial_deposit_amount:
                     type: string
-                  tick_precision:
-                    type: integer
-                    format: int64
                   max_price_limit_ratio:
                     type: string
                   max_order_lifespan:
@@ -4057,6 +4057,101 @@ paths:
         description: Find out more about the params
         url: >-
           https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md
+  /squad/liquidstaking/v1beta1/states:
+    get:
+      summary: States returns states of the liquidstaking module.
+      description: Returns states of the liquid staking module.
+      operationId: States
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              net_amount_state:
+                type: object
+                properties:
+                  mint_rate:
+                    type: string
+                    title: mint_rate is bTokenTotalSupply / NetAmount
+                  btoken_total_supply:
+                    type: string
+                    title: >-
+                      btoken_total_supply returns the total supply of
+                      btoken(liquid_bond_denom)
+                  net_amount:
+                    type: string
+                    title: >-
+                      net_amount is proxy account's native token balance + total
+                      liquid tokens + total remaining rewards + total
+
+                      unbonding balance
+                  total_del_shares:
+                    type: string
+                    title: >-
+                      total_del_shares define the delegation shares of all
+                      liquid validators
+                  total_liquid_tokens:
+                    type: string
+                    title: >-
+                      total_liquid_tokens define the token amount worth of
+                      delegation shares of all liquid validator (slashing
+                      applied
+
+                      amount)
+                  total_remaining_rewards:
+                    type: string
+                    title: >-
+                      total_remaining_rewards define the sum of remaining
+                      rewards of proxy account by all liquid validators
+                  total_unbonding_balance:
+                    type: string
+                    title: >-
+                      total_unbonding_balance define the unbonding balance of
+                      proxy account by all liquid validator (slashing applied
+
+                      amount)
+                  proxy_acc_balance:
+                    type: string
+                    title: >-
+                      proxy_acc_balance define the balance of proxy account for
+                      the native token
+                description: >-
+                  NetAmountState is type for net amount raw data and mint rate,
+                  This is a value that depends on the several module
+
+                  state every time, so it is used only for calculation and query
+                  and is not stored in kv.
+            description: >-
+              QueryStatesResponse is the response type for the Query/States RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the liquid staking
+        url: 'https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec'
   /squad/liquidstaking/v1beta1/validators:
     get:
       summary: >-
@@ -5398,6 +5493,9 @@ definitions:
       batch_size:
         type: integer
         format: int64
+      tick_precision:
+        type: integer
+        format: int64
       fee_collector_address:
         type: string
       dust_collector_address:
@@ -5434,9 +5532,6 @@ definitions:
             signatures required by gogoproto.
       min_initial_deposit_amount:
         type: string
-      tick_precision:
-        type: integer
-        format: int64
       max_price_limit_ratio:
         type: string
       max_order_lifespan:
@@ -6054,6 +6149,9 @@ definitions:
           batch_size:
             type: integer
             format: int64
+          tick_precision:
+            type: integer
+            format: int64
           fee_collector_address:
             type: string
           dust_collector_address:
@@ -6096,9 +6194,6 @@ definitions:
                 signatures required by gogoproto.
           min_initial_deposit_amount:
             type: string
-          tick_precision:
-            type: integer
-            format: int64
           max_price_limit_ratio:
             type: string
           max_order_lifespan:
@@ -6526,6 +6621,57 @@ definitions:
     description: >-
       LiquidValidatorState is type LiquidValidator with state added to return to
       query results.
+  squad.liquidstaking.v1beta1.NetAmountState:
+    type: object
+    properties:
+      mint_rate:
+        type: string
+        title: mint_rate is bTokenTotalSupply / NetAmount
+      btoken_total_supply:
+        type: string
+        title: >-
+          btoken_total_supply returns the total supply of
+          btoken(liquid_bond_denom)
+      net_amount:
+        type: string
+        title: >-
+          net_amount is proxy account's native token balance + total liquid
+          tokens + total remaining rewards + total
+
+          unbonding balance
+      total_del_shares:
+        type: string
+        title: total_del_shares define the delegation shares of all liquid validators
+      total_liquid_tokens:
+        type: string
+        title: >-
+          total_liquid_tokens define the token amount worth of delegation shares
+          of all liquid validator (slashing applied
+
+          amount)
+      total_remaining_rewards:
+        type: string
+        title: >-
+          total_remaining_rewards define the sum of remaining rewards of proxy
+          account by all liquid validators
+      total_unbonding_balance:
+        type: string
+        title: >-
+          total_unbonding_balance define the unbonding balance of proxy account
+          by all liquid validator (slashing applied
+
+          amount)
+      proxy_acc_balance:
+        type: string
+        title: >-
+          proxy_acc_balance define the balance of proxy account for the native
+          token
+    description: >-
+      NetAmountState is type for net amount raw data and mint rate, This is a
+      value that depends on the several module
+
+      state every time, so it is used only for calculation and query and is not
+      stored in kv.
   squad.liquidstaking.v1beta1.Params:
     type: object
     properties:
@@ -6698,6 +6844,63 @@ definitions:
               staking to minimize decimal loss and consider gas efficiency.
         description: Params defines the set of params for the liquidstaking module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  squad.liquidstaking.v1beta1.QueryStatesResponse:
+    type: object
+    properties:
+      net_amount_state:
+        type: object
+        properties:
+          mint_rate:
+            type: string
+            title: mint_rate is bTokenTotalSupply / NetAmount
+          btoken_total_supply:
+            type: string
+            title: >-
+              btoken_total_supply returns the total supply of
+              btoken(liquid_bond_denom)
+          net_amount:
+            type: string
+            title: >-
+              net_amount is proxy account's native token balance + total liquid
+              tokens + total remaining rewards + total
+
+              unbonding balance
+          total_del_shares:
+            type: string
+            title: >-
+              total_del_shares define the delegation shares of all liquid
+              validators
+          total_liquid_tokens:
+            type: string
+            title: >-
+              total_liquid_tokens define the token amount worth of delegation
+              shares of all liquid validator (slashing applied
+
+              amount)
+          total_remaining_rewards:
+            type: string
+            title: >-
+              total_remaining_rewards define the sum of remaining rewards of
+              proxy account by all liquid validators
+          total_unbonding_balance:
+            type: string
+            title: >-
+              total_unbonding_balance define the unbonding balance of proxy
+              account by all liquid validator (slashing applied
+
+              amount)
+          proxy_acc_balance:
+            type: string
+            title: >-
+              proxy_acc_balance define the balance of proxy account for the
+              native token
+        description: >-
+          NetAmountState is type for net amount raw data and mint rate, This is
+          a value that depends on the several module
+
+          state every time, so it is used only for calculation and query and is
+          not stored in kv.
+    description: QueryStatesResponse is the response type for the Query/States RPC method.
   squad.liquidstaking.v1beta1.ValidatorStatus:
     type: string
     enum:
