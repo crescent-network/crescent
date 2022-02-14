@@ -29,7 +29,7 @@ const (
 ```
 
 ## NetAmount
- NetAmount = `LiquidStakingProxyAcc's native token balance + total liquid tokens(slashing applied delegation shares) + remaining rewards + unbonding amount`
+ NetAmount = `LiquidStakingProxyAcc's native token balance + total liquid tokens(delegation tokens slashing applied) + total remaining rewards + total unbonding balance`
   - `MintRate = bTokenTotalSupply / NetAmount`
   - NativeTokenToBToken : `nativeTokenAmount * bTokenTotalSupply / netAmount` with truncations
   - BTokenToNativeToken : `bTokenAmount * netAmount / bTokenTotalSupply * (1-UnstakeFeeRate)` with truncations

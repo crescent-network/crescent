@@ -40,6 +40,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		return
 	}
 
+	// TODO: fix target to all bonded liquid validators, with bonded liquidTokens
 	// skip when no active validators, liquid tokens
 	activeVals := k.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
 	if len(activeVals) == 0 {
@@ -117,14 +118,15 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		})
 	}
 
+	netAmountState := k.NetAmountState(ctx)
 	for voter, bTokenValue := range bTokenValueMap {
 		votingPower := sdk.ZeroDec()
 		if bTokenValue.IsPositive() {
-			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, k.NetAmount(ctx))
+			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, netAmountState.NetAmount)
 		}
 		if votingPower.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
-			// TODO: consider using BondedTokens for currentWeight when Tally
+			// TODO: using only BondedTokens for currentWeight when Tally
 			// drop crumb for defensive policy about delShares decimal errors
 			dividedPowers, _ := types.DivideByCurrentWeight(activeVals, votingPower, totalLiquidTokens, liquidTokenMap)
 			if len(dividedPowers) == 0 {

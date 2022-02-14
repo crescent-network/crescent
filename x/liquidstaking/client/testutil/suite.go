@@ -183,6 +183,8 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 	fmt.Println(out, err)
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryParams(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	fmt.Println(out, err)
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryStates(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	fmt.Println(out, err)
 
 	res, err = MsgLiquidStakeExec(
 		vals[0].ClientCtx,
@@ -201,6 +203,9 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 	fmt.Println(out, err)
 
 	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryLiquidValidators(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	fmt.Println(out, err)
+
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryStates(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	fmt.Println(out, err)
 
 	// TODO: fix timed out waiting for tx to be included in a block
