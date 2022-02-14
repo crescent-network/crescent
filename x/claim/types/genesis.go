@@ -1,9 +1,16 @@
 package types
 
-// DefaultGenesis returns the default Capability genesis state
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+)
+
+// DefaultGenesis returns the default genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params: DefaultParams(),
+		ModuleAccountBalance: sdk.NewCoin(stakingtypes.DefaultParams().BondDenom, sdk.ZeroInt()),
+		Params:               DefaultParams(),
+		ClaimRecords:         []ClaimRecord{},
 	}
 }
 
