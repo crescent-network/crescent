@@ -386,7 +386,9 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			bulkOp.SendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(order.ReceivedDemandCoin))
 		}
 	}
-	bulkOp.SendCoins(pair.GetEscrowAddress(), types.DustCollectorAddress, sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDust)))
+	params := k.GetParams(ctx)
+	dustCollectorAddr, _ := sdk.AccAddressFromBech32(params.DustCollectorAddress)
+	bulkOp.SendCoins(pair.GetEscrowAddress(), dustCollectorAddr, sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDust)))
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
 	}

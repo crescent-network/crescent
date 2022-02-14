@@ -22,6 +22,27 @@ func TestParams_Validate(t *testing.T) {
 			"",
 		},
 		{
+			"zero BatchSize",
+			func(params *types.Params) {
+				params.BatchSize = 0
+			},
+			"batch size must be positive: 0",
+		},
+		{
+			"invalid FeeCollectorAddress",
+			func(params *types.Params) {
+				params.FeeCollectorAddress = "invalidaddr"
+			},
+			"invalid fee collector address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"invalid DustCollectorAddress",
+			func(params *types.Params) {
+				params.DustCollectorAddress = "invalidaddr"
+			},
+			"invalid dust collector address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
 			"negative InitialPoolCoinSupply",
 			func(params *types.Params) {
 				params.InitialPoolCoinSupply = sdk.NewInt(-1)
@@ -34,20 +55,6 @@ func TestParams_Validate(t *testing.T) {
 				params.InitialPoolCoinSupply = sdk.ZeroInt()
 			},
 			"initial pool coin supply must be positive: 0",
-		},
-		{
-			"zero BatchSize",
-			func(params *types.Params) {
-				params.BatchSize = 0
-			},
-			"batch size must be positive: 0",
-		},
-		{
-			"negative MinInitialDepositAmount",
-			func(params *types.Params) {
-				params.MinInitialDepositAmount = sdk.NewInt(-1)
-			},
-			"minimum initial deposit amount must not be negative: -1",
 		},
 		{
 			"invalid PairCreationFee",
@@ -64,11 +71,11 @@ func TestParams_Validate(t *testing.T) {
 			"invalid pool creation fee: coin 0stake amount is not positive",
 		},
 		{
-			"invalid FeeCollectorAddress",
+			"negative MinInitialDepositAmount",
 			func(params *types.Params) {
-				params.FeeCollectorAddress = "invalidaddr"
+				params.MinInitialDepositAmount = sdk.NewInt(-1)
 			},
-			"invalid fee collector address: decoding bech32 failed: invalid separator index -1",
+			"minimum initial deposit amount must not be negative: -1",
 		},
 		{
 			"negative MaxPriceLimitRatio",
@@ -76,6 +83,13 @@ func TestParams_Validate(t *testing.T) {
 				params.MaxPriceLimitRatio = sdk.NewDec(-1)
 			},
 			"max price limit ratio must not be negative: -1.000000000000000000",
+		},
+		{
+			"negative MaxOrderLifespan",
+			func(params *types.Params) {
+				params.MaxOrderLifespan = -1
+			},
+			"max order lifespan must not be negative: -1ns",
 		},
 		{
 			"negative SwapFeeRate",
@@ -90,13 +104,6 @@ func TestParams_Validate(t *testing.T) {
 				params.WithdrawFeeRate = sdk.NewDec(-1)
 			},
 			"withdraw fee rate must not be negative: -1.000000000000000000",
-		},
-		{
-			"negative MaxOrderLifespan",
-			func(params *types.Params) {
-				params.MaxOrderLifespan = -1
-			},
-			"max order lifespan must not be negative: -1ns",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
