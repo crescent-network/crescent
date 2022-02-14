@@ -47,14 +47,14 @@ func (m msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.Msg
 
 	skip := true
 	switch msg.ActionType {
-	case types.ActionTypeSwap:
-		if !record.SwapActionClaimed {
-			record.SwapActionClaimed = true
-			skip = false
-		}
 	case types.ActionTypeDeposit:
 		if !record.DepositActionClaimed {
 			record.DepositActionClaimed = true
+			skip = false
+		}
+	case types.ActionTypeSwap:
+		if !record.SwapActionClaimed {
+			record.SwapActionClaimed = true
 			skip = false
 		}
 	case types.ActionTypeFarming:
