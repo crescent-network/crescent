@@ -42,9 +42,9 @@ func NewClaimCmd() *cobra.Command {
 There are 3 different types of action type. Reference the examples below.
 
 Example:
-$ %s tx %s 1 claim deposit --from mykey
-$ %s tx %s 1 claim swap --from mykey
-$ %s tx %s 1 claim farming --from mykey
+$ %s tx %s claim 1 deposit --from mykey
+$ %s tx %s claim 1 swap --from mykey
+$ %s tx %s claim 1 farming --from mykey
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,

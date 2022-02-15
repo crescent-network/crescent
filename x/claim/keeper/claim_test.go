@@ -9,33 +9,20 @@ import (
 	_ "github.com/stretchr/testify/suite"
 )
 
-func (s *KeeperTestSuite) TestGetAllAirdrops() {
-	// TODO: not implemented yet
-}
-
-func (s *KeeperTestSuite) TestGetAllClaimRecords() {
-	// TODO: not implemented yet
-}
-
-func (s *KeeperTestSuite) TestDistributeByDivisor() {
+func (s *KeeperTestSuite) TestClaim() {
 	airdrop := s.createAirdrop(
 		1,
 		parseCoins("1000000000denom1"),
-		s.ctx.BlockTime(),
-		squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+		squadtypes.MustParseRFC3339("2022-02-01T00:00:00Z"),
+		squadtypes.MustParseRFC3339("2022-06-01T00:00:00Z"),
 		true,
 	)
 
-	record := s.createClaimRecord(
-		airdrop.AirdropId,
-		s.addr(0),
-		parseCoins("100000000denom1"),
-		parseCoins("100000000denom1"),
+	record := s.createClaimRecord(airdrop.AirdropId, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
 		[]types.Action{
 			{ActionType: types.ActionTypeDeposit, Claimed: false},
 			{ActionType: types.ActionTypeSwap, Claimed: false},
-			{ActionType: types.ActionTypeFarming, Claimed: false},
-		},
+			{ActionType: types.ActionTypeFarming, Claimed: false}},
 	)
 
 	// Claim deposit action
@@ -66,8 +53,42 @@ func (s *KeeperTestSuite) TestDistributeByDivisor() {
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.AirdropId, record.GetRecipient())
 	s.Require().True(found)
 	s.Require().True(r.ClaimableCoins.IsZero())
-	s.Require().True(r.InitialClaimableCoins.IsEqual(sdk.NewCoins(s.getBalance(record.GetRecipient(), "denom1"))))
-	for _, action := range r.Actions {
-		s.Require().True(action.Claimed)
-	}
+	s.Require().True(coinsEq(r.InitialClaimableCoins, sdk.NewCoins(s.getBalance(record.GetRecipient(), "denom1"))))
+	s.Require().True(r.Actions[0].Claimed)
+	s.Require().True(r.Actions[1].Claimed)
+	s.Require().True(r.Actions[2].Claimed)
+}
+
+func (s *KeeperTestSuite) TestClaimExecuteSameAction() {
+	airdrop := s.createAirdrop(
+		1,
+		parseCoins("1000000000denom1"),
+		squadtypes.MustParseRFC3339("2022-02-01T00:00:00Z"),
+		squadtypes.MustParseRFC3339("2022-06-01T00:00:00Z"),
+		true,
+	)
+
+	record := s.createClaimRecord(airdrop.AirdropId, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
+		[]types.Action{
+			{ActionType: types.ActionTypeDeposit, Claimed: false},
+			{ActionType: types.ActionTypeSwap, Claimed: false},
+			{ActionType: types.ActionTypeFarming, Claimed: false}},
+	)
+
+	// Claim deposit action
+	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
+		AirdropId:  airdrop.AirdropId,
+		Recipient:  record.Recipient,
+		ActionType: types.ActionTypeDeposit,
+	})
+	s.Require().NoError(err)
+
+	// Claim the same deposit action
+	// Return value must be nil
+	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
+		AirdropId:  airdrop.AirdropId,
+		Recipient:  record.Recipient,
+		ActionType: types.ActionTypeDeposit,
+	})
+	s.Require().Nil(err)
 }

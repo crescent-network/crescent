@@ -36,10 +36,18 @@ func (k Keeper) SetAirdropId(ctx sdk.Context, id uint64) {
 }
 
 // GetStartTime returns the start time for the airdrop.
-func (k Keeper) GetStartTime(ctx sdk.Context, airdropId uint64) (time.Time, error) {
+func (k Keeper) GetStartTime(ctx sdk.Context, airdropId uint64) *time.Time {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetStartTimeKey(airdropId))
-	return sdk.ParseTimeBytes(bz)
+	if bz == nil {
+		return nil
+	} else {
+		ts, err := sdk.ParseTimeBytes(bz)
+		if err != nil {
+			panic(err)
+		}
+		return &ts
+	}
 }
 
 // SetStartTime stores the start time for the airdrop with start time key
@@ -50,10 +58,18 @@ func (k Keeper) SetStartTime(ctx sdk.Context, airdropId uint64, startTime time.T
 }
 
 // GetEndTime returns the end time for the airdrop.
-func (k Keeper) GetEndTime(ctx sdk.Context, airdropId uint64) (time.Time, error) {
+func (k Keeper) GetEndTime(ctx sdk.Context, airdropId uint64) *time.Time {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetEndTimeKey(airdropId))
-	return sdk.ParseTimeBytes(bz)
+	if bz == nil {
+		return nil
+	} else {
+		ts, err := sdk.ParseTimeBytes(bz)
+		if err != nil {
+			panic(err)
+		}
+		return &ts
+	}
 }
 
 // SetEndTime stores the end time for the airdrop with end time key.
@@ -78,21 +94,11 @@ func (k Keeper) GetAirdrop(ctx sdk.Context, airdropId uint64) (airdrop types.Air
 func (k Keeper) SetAirdrop(ctx sdk.Context, airdrop types.Airdrop) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&airdrop)
+	k.SetAirdropId(ctx, airdrop.AirdropId)
 	k.SetStartTime(ctx, airdrop.AirdropId, airdrop.StartTime)
 	k.SetEndTime(ctx, airdrop.AirdropId, airdrop.EndTime)
 	store.Set(types.GetAirdropKey(airdrop.AirdropId), bz)
 }
-
-// GetClaimRecord returns the claim record for the given airdrop id.
-// func (k Keeper) GetClaimRecord(ctx sdk.Context, airdropId uint64) (record types.ClaimRecord, found bool) {
-// 	store := ctx.KVStore(k.storeKey)
-// 	bz := store.Get(types.GetClaimRecordKey(airdropId))
-// 	if bz == nil {
-// 		return
-// 	}
-// 	k.cdc.MustUnmarshal(bz, &record)
-// 	return record, true
-// }
 
 // GetClaimRecordByRecipient returns the claim record for the given airdrop id and the recipient address.
 func (k Keeper) GetClaimRecordByRecipient(ctx sdk.Context, airdropId uint64, recipient sdk.AccAddress) (record types.ClaimRecord, found bool) {
@@ -109,7 +115,6 @@ func (k Keeper) GetClaimRecordByRecipient(ctx sdk.Context, airdropId uint64, rec
 func (k Keeper) SetClaimRecord(ctx sdk.Context, record types.ClaimRecord) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&record)
-	store.Set(types.GetClaimRecordKey(record.AirdropId), bz)
 	store.Set(types.GetClaimRecordByRecipientKey(record.AirdropId, record.GetRecipient()), bz)
 }
 
@@ -117,6 +122,15 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, record types.ClaimRecord) {
 func (k Keeper) GetAllAirdrops(ctx sdk.Context) (airdrops []types.Airdrop) {
 	k.IterateAllAirdrops(ctx, func(airdrop types.Airdrop) (stop bool) {
 		airdrops = append(airdrops, airdrop)
+		return false
+	})
+	return
+}
+
+// GetAllClaimRecordsByAirdropId returns all types.ClaimRecord stored.
+func (k Keeper) GetAllClaimRecordsByAirdropId(ctx sdk.Context, airdropId uint64) (records []types.ClaimRecord) {
+	k.IterateAllClaimRecordsByAirdropId(ctx, airdropId, func(record types.ClaimRecord) (stop bool) {
+		records = append(records, record)
 		return false
 	})
 	return
@@ -133,15 +147,6 @@ func (k Keeper) IterateAllAirdrops(ctx sdk.Context, cb func(airdrop types.Airdro
 			break
 		}
 	}
-}
-
-// GetAllClaimRecords returns all types.ClaimRecord stored.
-func (k Keeper) GetAllClaimRecords(ctx sdk.Context, airdropId uint64) (records []types.ClaimRecord) {
-	k.IterateAllClaimRecordsByAirdropId(ctx, airdropId, func(record types.ClaimRecord) (stop bool) {
-		records = append(records, record)
-		return false
-	})
-	return
 }
 
 // IterateAllClaimRecordsByAirdropId iterates over all types.ClaimRecord stored.

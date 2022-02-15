@@ -23,11 +23,10 @@ const (
 var (
 	LastAirdropIdKey = []byte{0xd0} // key for the latest airdrop id
 
-	StartTimeKeyPrefix              = []byte{0xd5}
-	EndTimeKeyPrefix                = []byte{0xd6}
-	AirdropKeyPrefix                = []byte{0xd7}
-	ClaimRecordKeyPrefix            = []byte{0xd8}
-	ClaimRecordByRecipientKeyPrefix = []byte{0xd9}
+	StartTimeKeyPrefix   = []byte{0xd5}
+	EndTimeKeyPrefix     = []byte{0xd6}
+	AirdropKeyPrefix     = []byte{0xd7}
+	ClaimRecordKeyPrefix = []byte{0xd8}
 )
 
 // GetStartTimeKey returns the store key to retrieve the start time for the airdrop.
@@ -52,5 +51,5 @@ func GetClaimRecordKey(airdropId uint64) []byte {
 
 // GetClaimRecordByRecipientKey returns the tore key to retrieve the claim record by the airdrop id and the recipient address.
 func GetClaimRecordByRecipientKey(airdropId uint64, recipient sdk.AccAddress) []byte {
-	return append(append(ClaimRecordByRecipientKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...), address.MustLengthPrefix(recipient)...)
+	return append(append(ClaimRecordKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...), address.MustLengthPrefix(recipient)...)
 }

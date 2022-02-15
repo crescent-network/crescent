@@ -6,6 +6,7 @@ The `claim` module distributes claimable amount of all airdrop recipients when t
 
 ## Claimable Amount Calculation
 
+<!-- markdown-link-check-disable-next-line -->
 Claimable amount for each user is calculated by [this airdrop-calculator program](https://github.com/cosmosquad-labs/airdrop-calculator). The program uses the following formulas to calculate the claimable score and amount.
 
 ```

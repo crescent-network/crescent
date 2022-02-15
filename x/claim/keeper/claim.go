@@ -20,11 +20,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
 	}
 
-	endTime, err := k.GetEndTime(ctx, airdrop.AirdropId)
-	if err != nil {
-		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "end time not found") // TODO: better way to handle this?
-	}
-
+	endTime := k.GetEndTime(ctx, airdrop.AirdropId)
 	if !endTime.After(ctx.BlockTime()) {
 		return types.ClaimRecord{}, types.ErrTerminatedAirdrop
 	}
@@ -46,19 +42,12 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 				record.Actions[i].Claimed = true
 			}
 		}
-
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				types.EventTypeClaim,
-				sdk.NewAttribute(types.AttributeKeyActionType, action.ActionType.String()),
-				sdk.NewAttribute(types.AttributeKeyClaimed, fmt.Sprint(action.Claimed)),
-			),
-		})
 	}
 
 	// The recipient completed all the actions and it returns nil on purpose
 	// for better client handling; it prevents from multiple txs getting failed
 	if unclaimedActions == 0 {
+		// TODO: consider emitting events since it returns nil?
 		return types.ClaimRecord{}, nil
 	}
 
@@ -69,9 +58,12 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "action type not found")
 	}
 	if claimed {
+		// TODO: consider emitting events since it returns nil?
 		return types.ClaimRecord{}, nil
 	}
 
+	// Use divisor to send a proportional amount of the claimable amount to the recipient
+	// Send all the remaining amount to the recipient when unclaimedActions is 1
 	switch unclaimedActions {
 	case 2, 3:
 		divisor := sdk.NewDec(unclaimedActions)
@@ -81,7 +73,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), amt); err != nil {
 			return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to send coins to the recipient")
 		}
-	default: // Send all the remaining coins to the recipient
+	default:
 		amt := record.ClaimableCoins
 		record.ClaimableCoins = record.ClaimableCoins.Sub(amt)
 
@@ -95,9 +87,11 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeClaim,
+			sdk.NewAttribute(types.AttributeKeyAirdropId, fmt.Sprint(record.AirdropId)),
 			sdk.NewAttribute(types.AttributeKeyRecipient, record.Recipient),
 			sdk.NewAttribute(types.AttributeKeyInitialClaimableCoins, record.InitialClaimableCoins.String()),
 			sdk.NewAttribute(types.AttributeKeyClaimableCoins, record.ClaimableCoins.String()),
+			sdk.NewAttribute(types.AttributeKeyActionType, msg.ActionType.String()),
 		),
 	})
 

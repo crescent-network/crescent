@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
@@ -22,6 +23,14 @@ func (a Airdrop) GetSourceAddress() sdk.AccAddress {
 
 func (a Airdrop) GetTerminationAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(a.TerminationAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func (r ClaimRecord) GetRecipient() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(r.Recipient)
 	if err != nil {
 		panic(err)
 	}

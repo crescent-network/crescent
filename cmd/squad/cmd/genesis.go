@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -64,7 +66,7 @@ The genesis output file is at $HOME/.squadapp/config/genesis.json
 
 			// Parse genesis params depending on the network type
 			networkType := args[0]
-			genParams := ParseGenesisParams(networkType)
+			genParams := parseGenesisParams(networkType)
 			if genParams == nil {
 				return fmt.Errorf("you must choose between mainnet (m) or testnet (t): %s", args[0])
 			}
@@ -117,8 +119,8 @@ func PrepareGenesis(
 
 	// Bank module app state
 	bankGenState := banktypes.DefaultGenesisState()
-	// bankGenState.DenomMetadata = genParams.BankMetadatas
-	bankGenState.Balances = genParams.BankBalances
+	bankGenState.Balances = genParams.BankGenesisStates.Balances
+	bankGenState.Supply = genParams.BankGenesisStates.Supply
 	bankGenStateBz := cdc.MustMarshalJSON(bankGenState)
 	appState[banktypes.ModuleName] = bankGenStateBz
 
@@ -139,14 +141,12 @@ type GenesisParams struct {
 	ChainId         string
 	ConsensusParams *tmproto.ConsensusParams
 
-	// BankMetadatas []banktypes.Metadata
-	BankBalances []banktypes.Balance
-
 	StakingParams       stakingtypes.Params
 	GovParams           govtypes.Params
 	LiquidityParams     liqtypes.Params
 	LiquidStakingParams liqstakingtypes.Params
 
+	BankGenesisStates banktypes.GenesisState
 	ClaimGenesisState claimtypes.GenesisState
 }
 
@@ -155,13 +155,14 @@ func TestnetGenesisParams() *GenesisParams {
 	genParams.GenesisTime = time.Now()
 	genParams.AirdropSupply = sdk.NewCoin("airdrop", sdk.NewInt(15_000_000_000_000)) // 15 milion
 
-	// Set source address balance
-	genParams.BankBalances = []banktypes.Balance{
+	// Set source address balance and add total supply
+	genParams.BankGenesisStates.Balances = []banktypes.Balance{
 		{
 			Address: claimtypes.SourceAddress(1).String(),
 			Coins:   sdk.NewCoins(genParams.AirdropSupply),
 		},
 	}
+	genParams.BankGenesisStates.Supply = sdk.NewCoins(genParams.AirdropSupply)
 
 	// Set airdrop
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
@@ -244,17 +245,58 @@ func TestnetGenesisParams() *GenesisParams {
 
 func MainnetGenesisParams() *GenesisParams {
 	genParams := &GenesisParams{}
+	genParams.GenesisTime = time.Now()
+	genParams.AirdropSupply = sdk.NewCoin("usquad", sdk.NewInt(15_000_000_000_000)) // 15 milion
 
-	// TODO: not implemented yet
-	// 1. Read csv file
-	// 2. Add genesis balances
-	// 3. Set Airdrop and ClaimRecords
+	// TODO: setup genesis values for mainnet
+
+	// Set source address balance
+	genParams.BankGenesisStates.Balances = []banktypes.Balance{
+		{
+			Address: claimtypes.SourceAddress(1).String(),
+			Coins:   sdk.NewCoins(genParams.AirdropSupply),
+		},
+	}
+	genParams.BankGenesisStates.Supply = sdk.NewCoins(genParams.AirdropSupply)
+
+	// Set airdrop
+	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
+		{
+			AirdropId:          1,
+			SourceAddress:      claimtypes.SourceAddress(1).String(),
+			SourceCoins:        sdk.NewCoins(genParams.AirdropSupply),
+			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
+			StartTime:          genParams.GenesisTime,
+			EndTime:            farmingtypes.ParseTime("2022-05-01T00:00:00Z"),
+		},
+	}
+
+	filePath := ""
+	results, err := readCSVFile(filePath)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read %s", filePath))
+	}
+
+	records := []claimtypes.ClaimRecord{}
+	for _, r := range results {
+		recipient := r[0]
+		claimableAmtStr := r[1]
+		claimableAmt, _ := sdk.NewIntFromString(claimableAmtStr)
+
+		records = append(records, types.ClaimRecord{
+			AirdropId:             1,
+			Recipient:             recipient,
+			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, claimableAmt)),
+			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, claimableAmt)),
+		})
+	}
+	genParams.ClaimGenesisState.ClaimRecords = records
 
 	return genParams
 }
 
-// ParseGenesisParams return GenesisParams based on the network type.
-func ParseGenesisParams(networkType string) *GenesisParams {
+// parseGenesisParams returns GenesisParams based on the network type.
+func parseGenesisParams(networkType string) *GenesisParams {
 	switch strings.ToLower(networkType) {
 	case "t", "testnet":
 		return TestnetGenesisParams()
@@ -263,4 +305,20 @@ func ParseGenesisParams(networkType string) *GenesisParams {
 	default:
 		return nil
 	}
+}
+
+// readCSVFile reads csv file and returns all the records.
+func readCSVFile(filePath string) ([][]string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	records, err := r.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	return records, nil
 }

@@ -37,9 +37,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	airdrops := k.GetAllAirdrops(ctx)
 
+	// TODO: verify this with test case
 	records := []types.ClaimRecord{}
-	for _, a := range airdrops {
-		records = append(records, k.GetAllClaimRecords(ctx, a.AirdropId)...)
+	for _, airdrop := range airdrops {
+		records = append(records, k.GetAllClaimRecordsByAirdropId(ctx, airdrop.AirdropId)...)
 	}
 
 	return &types.GenesisState{

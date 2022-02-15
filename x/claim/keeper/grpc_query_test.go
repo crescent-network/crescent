@@ -53,7 +53,8 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 		{
 			"query by address",
 			&types.QueryClaimRecordRequest{
-				Address: s.addr(0).String(),
+				AirdropId: airdrop.AirdropId,
+				Address:   s.addr(0).String(),
 			},
 			false,
 			func(resp *types.QueryClaimRecordResponse) {
