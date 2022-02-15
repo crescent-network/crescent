@@ -107,17 +107,17 @@ func (s *KeeperTestSuite) withdraw(withdrawer sdk.AccAddress, poolId uint64, poo
 }
 
 func (s *KeeperTestSuite) limitOrder(
-	orderer sdk.AccAddress, pairId uint64, dir types.SwapDirection,
-	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	orderer sdk.AccAddress, pairId uint64, dir types.OrderDirection,
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
 	pair, found := s.keeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
 	var offerCoin sdk.Coin
 	var demandCoinDenom string
 	switch dir {
-	case types.SwapDirectionBuy:
+	case types.OrderDirectionBuy:
 		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).Ceil().TruncateInt())
 		demandCoinDenom = pair.BaseCoinDenom
-	case types.SwapDirectionSell:
+	case types.OrderDirectionSell:
 		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
 		demandCoinDenom = pair.QuoteCoinDenom
 	}
@@ -134,21 +134,21 @@ func (s *KeeperTestSuite) limitOrder(
 
 func (s *KeeperTestSuite) buyLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
-	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
 	return s.limitOrder(
-		orderer, pairId, types.SwapDirectionBuy, price, amt, orderLifespan, fund)
+		orderer, pairId, types.OrderDirectionBuy, price, amt, orderLifespan, fund)
 }
 
 func (s *KeeperTestSuite) sellLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
-	amt sdk.Int, orderLifespan time.Duration, fund bool) types.SwapRequest {
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
 	return s.limitOrder(
-		orderer, pairId, types.SwapDirectionSell, price, amt, orderLifespan, fund)
+		orderer, pairId, types.OrderDirectionSell, price, amt, orderLifespan, fund)
 }
 
 //nolint
-func (s *KeeperTestSuite) cancelOrder(orderer sdk.AccAddress, pairId, swapReqId uint64) {
-	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(orderer, pairId, swapReqId))
+func (s *KeeperTestSuite) cancelOrder(orderer sdk.AccAddress, pairId, orderId uint64) {
+	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(orderer, pairId, orderId))
 	s.Require().NoError(err)
 }
 

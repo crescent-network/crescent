@@ -146,12 +146,12 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 
 	// stack and withdraw liquid rewards and re-staking
 	s.advanceHeight(10, true)
-	rewards, _, _ := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
+	rewards, _, _ := s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	s.Require().EqualValues(rewards, sdk.ZeroDec())
 
 	// stack rewards on net amount
 	s.advanceHeight(1, false)
-	rewards, _, _ = s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
+	rewards, _, _ = s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	s.Require().NotEqualValues(rewards, sdk.ZeroDec())
 
 	// failed requesting liquid unstaking bTokenTotalSupply when existing remaining rewards
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 
 	// all remaining rewards re-staked, request last unstaking, unbond all
 	s.advanceHeight(1, true)
-	rewards, _, _ = s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
+	rewards, _, _ = s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	s.Require().EqualValues(rewards, sdk.ZeroDec())
 	s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], btokenBalanceBefore, true))
 
@@ -171,18 +171,13 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().True(len(alv) != 0)
 
 	// no btoken supply and netAmount after unbond all
-	bTokenTotalSupply = s.app.BankKeeper.GetSupply(s.ctx, liquidBondDenom)
-	s.Require().EqualValues(bTokenTotalSupply.Amount, sdk.ZeroInt())
-
-	proxyBalance := s.app.BankKeeper.GetBalance(s.ctx, types.LiquidStakingProxyAcc, s.app.StakingKeeper.BondDenom(s.ctx)).Amount
-	rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
-	netAmount := s.keeper.NetAmount(s.ctx)
-	s.Require().Equal(rewards, sdk.ZeroDec())
-	s.Require().Equal(totalDelShares, sdk.ZeroDec())
-	s.Require().Equal(totalLiquidTokens, sdk.ZeroInt())
-	s.Require().Equal(proxyBalance, sdk.ZeroInt())
-	s.Require().Equal(netAmount, sdk.ZeroDec())
-
+	nas := s.keeper.NetAmountState(s.ctx)
+	s.Require().EqualValues(nas.BtokenTotalSupply, sdk.ZeroInt())
+	s.Require().Equal(nas.TotalRemainingRewards, sdk.ZeroDec())
+	s.Require().Equal(nas.TotalDelShares, sdk.ZeroDec())
+	s.Require().Equal(nas.TotalLiquidTokens, sdk.ZeroInt())
+	s.Require().Equal(nas.ProxyAccBalance, sdk.ZeroInt())
+	s.Require().Equal(nas.NetAmount, sdk.ZeroDec())
 }
 
 // test Liquid Staking gov power
@@ -296,9 +291,14 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 	otherVotes := make(govtypes.OtherVotes)
 	testOtherVotes := func(voter sdk.AccAddress, bTokenValue sdk.Int) {
 		s.Require().Len(otherVotes[voter.String()], liquidValidators.Len())
+		totalVotingPower := sdk.ZeroDec()
 		for _, v := range liquidValidators {
-			s.Require().EqualValues(otherVotes[voter.String()][v.OperatorAddress], bTokenValue.ToDec().QuoInt64(int64(liquidValidators.Len())))
+			votingPower := otherVotes[voter.String()][v.OperatorAddress]
+			totalVotingPower = totalVotingPower.Add(votingPower)
+			// equal when all liquid validator has same currentWeight
+			s.Require().EqualValues(votingPower, bTokenValue.ToDec().QuoInt64(int64(liquidValidators.Len())))
 		}
+		s.Require().EqualValues(totalVotingPower.TruncateInt(), s.keeper.CalcLiquidVotingPower(s.ctx, voter))
 	}
 	tallyLiquidGov := func() {
 		cachedCtx, _ := s.ctx.CacheContext()
@@ -420,3 +420,5 @@ func (s *KeeperTestSuite) TestLiquidStakingGov2() {
 	s.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
 	s.Require().Equal(sdk.NewInt(50000000), result.Abstain)
 }
+
+// TODO: tally bonded validator case

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -44,11 +45,11 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(16666))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(16666))
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(16666))
-	totalLiquidTokens, _ := s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper)
+	totalLiquidTokens, _ := s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
 	}
 	fmt.Println("-----------")
 
@@ -76,11 +77,11 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(12499))
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(12499))
 	s.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12499))
-	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper)
+	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
 	}
 	fmt.Println("-----------")
 
@@ -114,14 +115,14 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().True(found)
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
 	}
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(10002))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(9999))
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(9999))
 	s.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(9999))
 	s.Require().EqualValues(proxyAccDel5.Shares.TruncateInt(), sdk.NewInt(9999))
-	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper)
+	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
 
 	// advance block time and height for complete redelegations
@@ -153,13 +154,13 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().False(found)
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
 	}
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(12501))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(12499))
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(12499))
 	s.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12499))
-	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper)
+	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
 
 	// advance block time and height for complete redelegations
@@ -187,11 +188,11 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().False(found)
 
 	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper))
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
 	}
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(24999))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(24999))
-	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper)
+	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
 
 	// advance block time and height for complete redelegations
@@ -224,9 +225,39 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(lvState.DelShares, sdk.ZeroDec())
 	s.Require().EqualValues(lvState.LiquidTokens, sdk.ZeroInt())
 
-	// TODO: slashed amount checking
+	// jail last liquid validator, undelegate all liquid tokens to proxy acc
+	s.doubleSign(valOpers[0], sdk.ConsAddress(pks[0].Address()))
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
 
-	// TODO: add more edge cases
+	// no delegation of proxy acc
+	proxyAccDel1, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[0])
+	s.Require().False(found)
+	val1, found := s.app.StakingKeeper.GetValidator(s.ctx, valOpers[0])
+	s.Require().True(found)
+	s.Require().Equal(val1.Status, stakingtypes.Unbonding)
+
+	// check unbonding delegation to proxy acc
+	ubd, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, types.LiquidStakingProxyAcc, val1.GetOperator())
+	s.Require().True(found)
+
+	// complete unbonding
+	s.completeRedelegationUnbonding()
+
+	// check validator Unbonded
+	val1, found = s.app.StakingKeeper.GetValidator(s.ctx, valOpers[0])
+	s.Require().True(found)
+	s.Require().Equal(val1.Status, stakingtypes.Unbonded)
+
+	// no rewards, delShares, liquid tokens
+	nas := s.keeper.NetAmountState(s.ctx)
+	s.Require().EqualValues(nas.TotalRemainingRewards, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalDelShares, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalLiquidTokens, sdk.ZeroInt())
+
+	// unbonded to balance, equal with netAmount
+	s.Require().EqualValues(ubd.Entries[0].Balance, nas.ProxyAccBalance)
+	s.Require().EqualValues(nas.NetAmount.TruncateInt(), nas.ProxyAccBalance)
 }
 
 func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
@@ -244,20 +275,20 @@ func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
 	s.Require().NoError(s.liquidStaking(s.delAddrs[0], stakingAmt))
 
 	// no rewards
-	totalRewards, totalDelShares, totalLiquidTokens := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
+	totalRewards, totalDelShares, totalLiquidTokens := s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	s.EqualValues(totalRewards, sdk.ZeroDec())
 	s.EqualValues(totalDelShares, stakingAmt.ToDec(), totalLiquidTokens)
 
 	// allocate rewards
 	s.advanceHeight(100, false)
-	totalRewards, totalDelShares, totalLiquidTokens = s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
+	totalRewards, totalDelShares, totalLiquidTokens = s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	s.NotEqualValues(totalRewards, sdk.ZeroDec())
 	s.NotEqualValues(totalLiquidTokens, sdk.ZeroDec())
 
 	// withdraw rewards and re-staking
 	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
 	s.keeper.WithdrawRewardsAndReStaking(s.ctx, whitelistedValMap)
-	totalRewardsAfter, totalDelSharesAfter, totalLiquidTokensAfter := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
+	totalRewardsAfter, totalDelSharesAfter, totalLiquidTokensAfter := s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	s.EqualValues(totalRewardsAfter, sdk.ZeroDec())
 	s.EqualValues(totalDelSharesAfter, totalRewards.TruncateDec().Add(totalDelShares), totalLiquidTokensAfter)
 }
@@ -278,14 +309,12 @@ func (s *KeeperTestSuite) TestRemoveAllLiquidValidator() {
 
 	// allocate rewards
 	s.advanceHeight(1, false)
-	totalRewardsBefore, totalDelSharesBefore, totalLiquidTokensBefore := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
-	proxyBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, types.LiquidStakingProxyAcc, s.app.StakingKeeper.BondDenom(s.ctx)).Amount
-	netAmountBefore := s.keeper.NetAmount(s.ctx)
-	s.Require().NotEqualValues(totalRewardsBefore, sdk.ZeroDec())
-	s.Require().NotEqualValues(totalDelSharesBefore, sdk.ZeroDec())
-	s.Require().NotEqualValues(netAmountBefore, sdk.ZeroDec())
-	s.Require().NotEqualValues(totalLiquidTokensBefore, sdk.ZeroInt())
-	s.Require().EqualValues(proxyBalanceBefore, sdk.ZeroInt())
+	nasBefore := s.keeper.NetAmountState(s.ctx)
+	s.Require().NotEqualValues(nasBefore.TotalRemainingRewards, sdk.ZeroDec())
+	s.Require().NotEqualValues(nasBefore.TotalDelShares, sdk.ZeroDec())
+	s.Require().NotEqualValues(nasBefore.NetAmount, sdk.ZeroDec())
+	s.Require().NotEqualValues(nasBefore.TotalLiquidTokens, sdk.ZeroInt())
+	s.Require().EqualValues(nasBefore.ProxyAccBalance, sdk.ZeroInt())
 
 	// remove all whitelist
 	params.WhitelistedValidators = []types.WhitelistedValidator{}
@@ -296,18 +325,15 @@ func (s *KeeperTestSuite) TestRemoveAllLiquidValidator() {
 	lvs := s.keeper.GetAllLiquidValidators(s.ctx)
 	s.Require().Len(lvs, 0)
 
-	totalRewardsAfter, totalDelSharesAfter, totalLiquidTokensAfter := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
-	proxyBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, types.LiquidStakingProxyAcc, s.app.StakingKeeper.BondDenom(s.ctx)).Amount
-	netAmountAfter := s.keeper.NetAmount(s.ctx)
-	s.Require().EqualValues(totalRewardsAfter, sdk.ZeroDec())
-	s.Require().EqualValues(proxyBalanceAfter, totalRewardsBefore.TruncateInt())
-	s.Require().EqualValues(totalDelSharesAfter, sdk.ZeroDec())
-	s.Require().EqualValues(totalLiquidTokensAfter, sdk.ZeroInt())
-	s.Require().EqualValues(netAmountBefore.TruncateInt(), netAmountAfter.TruncateInt())
+	nasAfter := s.keeper.NetAmountState(s.ctx)
+	s.Require().EqualValues(nasAfter.TotalRemainingRewards, sdk.ZeroDec())
+	s.Require().EqualValues(nasAfter.ProxyAccBalance, nasBefore.TotalRemainingRewards.TruncateInt())
+	s.Require().EqualValues(nasAfter.TotalDelShares, sdk.ZeroDec())
+	s.Require().EqualValues(nasAfter.TotalLiquidTokens, sdk.ZeroInt())
+	s.Require().EqualValues(nasBefore.NetAmount.TruncateInt(), nasAfter.NetAmount.TruncateInt())
 
 	s.completeRedelegationUnbonding()
-	proxyBalanceAfter2 := s.app.BankKeeper.GetBalance(s.ctx, types.LiquidStakingProxyAcc, s.app.StakingKeeper.BondDenom(s.ctx)).Amount
-	netAmountAfter2 := s.keeper.NetAmount(s.ctx)
-	s.Require().EqualValues(proxyBalanceAfter2, proxyBalanceAfter.Add(totalLiquidTokensBefore))
-	s.Require().EqualValues(netAmountAfter2.TruncateInt(), netAmountBefore.TruncateInt())
+	nasAfter2 := s.keeper.NetAmountState(s.ctx)
+	s.Require().EqualValues(nasAfter2.ProxyAccBalance, nasAfter.ProxyAccBalance.Add(nasBefore.TotalLiquidTokens))
+	s.Require().EqualValues(nasAfter2.NetAmount.TruncateInt(), nasBefore.NetAmount.TruncateInt())
 }

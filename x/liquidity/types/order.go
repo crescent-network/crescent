@@ -57,18 +57,18 @@ type UserOrder struct {
 	Orderer   sdk.AccAddress
 }
 
-func NewUserOrder(req SwapRequest) *UserOrder {
+func NewUserOrder(order Order) *UserOrder {
 	var dir amm.OrderDirection
-	switch req.Direction {
-	case SwapDirectionBuy:
+	switch order.Direction {
+	case OrderDirectionBuy:
 		dir = amm.Buy
-	case SwapDirectionSell:
+	case OrderDirectionSell:
 		dir = amm.Sell
 	}
 	return &UserOrder{
-		BaseOrder: amm.NewBaseOrder(dir, req.Price, req.OpenAmount, req.RemainingOfferCoin, req.ReceivedCoin.Denom),
-		RequestId: req.Id,
-		Orderer:   req.GetOrderer(),
+		BaseOrder: amm.NewBaseOrder(dir, order.Price, order.OpenAmount, order.RemainingOfferCoin, order.ReceivedCoin.Denom),
+		RequestId: order.Id,
+		Orderer:   order.GetOrderer(),
 	}
 }
 

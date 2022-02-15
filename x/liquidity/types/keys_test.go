@@ -140,14 +140,14 @@ func (s *keysTestSuite) TestGetWithdrawRequestKey() {
 		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetWithdrawRequestKey(1000, 1001))
 }
 
-func (s *keysTestSuite) TestGetSwapRequestKey() {
+func (s *keysTestSuite) TestGetOrderKey() {
 	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0, 0x1, 0, 0,
-		0, 0, 0, 0, 0, 0x1}, types.GetSwapRequestKey(1, 1))
+		0, 0, 0, 0, 0, 0x1}, types.GetOrderKey(1, 1))
 	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8, 0,
-		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetSwapRequestKey(1000, 1001))
+		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetOrderKey(1000, 1001))
 }
 
-func (s *keysTestSuite) TestGetSwapRequestsByPairKeyPrefix() {
-	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0, 0x1}, types.GetSwapRequestsByPairKeyPrefix(1))
-	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8}, types.GetSwapRequestsByPairKeyPrefix(1000))
+func (s *keysTestSuite) TestGetOrdersByPairKeyPrefix() {
+	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0, 0x1}, types.GetOrdersByPairKeyPrefix(1))
+	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8}, types.GetOrdersByPairKeyPrefix(1000))
 }

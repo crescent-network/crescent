@@ -1,63 +1,23 @@
 package amm
 
 import (
+	"math"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type PriceDirection int
-
-const (
-	PriceStaying PriceDirection = iota + 1
-	PriceIncreasing
-	PriceDecreasing
-)
-
-func InitialMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, dir PriceDirection, matchable bool) {
-	highest, found := os.HighestBuyPrice()
-	if !found {
-		return sdk.Dec{}, 0, false
-	}
-	lowest, found := os.LowestSellPrice()
-	if !found {
-		return sdk.Dec{}, 0, false
-	}
-	if highest.LT(lowest) {
-		return sdk.Dec{}, 0, false
-	}
-
-	midPrice := highest.Add(lowest).QuoInt64(2)
-	buyAmt := os.BuyAmountOver(midPrice)
-	sellAmt := os.SellAmountUnder(midPrice)
-	switch {
-	case buyAmt.GT(sellAmt):
-		dir = PriceIncreasing
-	case sellAmt.GT(buyAmt):
-		dir = PriceDecreasing
-	default:
-		dir = PriceStaying
-	}
-
-	switch dir {
-	case PriceStaying:
-		matchPrice = RoundPrice(midPrice, tickPrec)
-	case PriceIncreasing:
-		matchPrice = DownTick(midPrice, tickPrec)
-	case PriceDecreasing:
-		matchPrice = UpTick(midPrice, tickPrec)
-	}
-
-	return matchPrice, dir, true
-}
-
 func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
-	initialMatchPrice, dir, matchable := InitialMatchPrice(os, tickPrec)
-	if !matchable {
+	highestBuyPrice, found := os.HighestBuyPrice()
+	if !found {
 		return sdk.Dec{}, false
 	}
-	if dir == PriceStaying {
-		return initialMatchPrice, true
+	lowestSellPrice, found := os.LowestSellPrice()
+	if !found {
+		return sdk.Dec{}, false
+	}
+	if highestBuyPrice.LT(lowestSellPrice) {
+		return sdk.Dec{}, false
 	}
 
 	buyAmtOver := func(i int) sdk.Int {
@@ -67,31 +27,42 @@ func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found boo
 		return os.SellAmountUnder(TickFromIndex(i, tickPrec))
 	}
 
-	switch dir {
-	case PriceIncreasing:
-		start := TickToIndex(initialMatchPrice, tickPrec)
-		end := TickToIndex(HighestTick(tickPrec), tickPrec)
+	lowestTickIdx := TickToIndex(LowestTick(tickPrec), tickPrec)
+	highestTickIdx := TickToIndex(HighestTick(tickPrec), tickPrec)
+	i, found := findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
+		return buyAmtOver(i + 1).LTE(sellAmtUnder(i))
+	})
+	if !found {
+		panic("impossible case")
+	}
+	j, found := findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
+		return buyAmtOver(i).GTE(sellAmtUnder(i - 1))
+	})
+	if !found {
+		panic("impossible case")
+	}
+
+	if i == j {
+		return TickFromIndex(i, tickPrec), true
+	} else {
+		if int(math.Abs(float64(i-j))) > 1 { // sanity check
+			panic("impossible case")
+		}
+		return TickFromIndex(RoundTickIndex(i), tickPrec), true
+	}
+}
+
+func findFirstTrueCondition(start, end int, cb func(i int) bool) (int, bool) {
+	if start < end {
 		i := start + sort.Search(end-start+1, func(i int) bool {
-			i += start
-			bg := buyAmtOver(i + 1)
-			return bg.IsZero() || (bg.LTE(sellAmtUnder(i)) && buyAmtOver(i).GT(sellAmtUnder(i-1)))
+			return cb(start + i)
 		})
-		if i > end {
-			i = end
-		}
-		return TickFromIndex(i, tickPrec), true
-	default: // PriceDecreasing
-		start := TickToIndex(initialMatchPrice, tickPrec)
-		end := TickToIndex(LowestTick(tickPrec), tickPrec)
+		return i, i <= end
+	} else {
 		i := start - sort.Search(start-end+1, func(i int) bool {
-			i = start - i
-			sl := sellAmtUnder(i - 1)
-			return sl.IsZero() || (buyAmtOver(i+1).LTE(sellAmtUnder(i)) && buyAmtOver(i).GTE(sl))
+			return cb(start - i)
 		})
-		if i < end {
-			i = end
-		}
-		return TickFromIndex(i, tickPrec), true
+		return i, i >= end
 	}
 }
 

@@ -64,12 +64,15 @@ func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec
 	return del.GetShares()
 }
 
-func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) sdk.Int {
 	delShares := v.GetDelShares(ctx, sk)
 	if !delShares.IsPositive() {
 		return sdk.ZeroInt()
 	}
 	val := sk.Validator(ctx, v.GetOperator())
+	if onlyBonded && !val.IsBonded() {
+		return sdk.ZeroInt()
+	}
 	return val.TokensFromSharesTruncated(delShares).TruncateInt()
 }
 
@@ -81,7 +84,6 @@ func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap, active b
 	}
 }
 
-// TODO: refactor unused receiver
 func (v LiquidValidator) GetStatus(activeCondition bool) ValidatorStatus {
 	if activeCondition {
 		return ValidatorStatusActive
@@ -138,11 +140,11 @@ func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Int, map[string]sdk.Int) {
+func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) (sdk.Int, map[string]sdk.Int) {
 	totalLiquidTokens := sdk.ZeroInt()
 	liquidTokenMap := make(map[string]sdk.Int)
 	for _, lv := range vs {
-		liquidTokens := lv.GetLiquidTokens(ctx, sk)
+		liquidTokens := lv.GetLiquidTokens(ctx, sk, onlyBonded)
 		liquidTokenMap[lv.OperatorAddress] = liquidTokens
 		totalLiquidTokens = totalLiquidTokens.Add(liquidTokens)
 	}
@@ -161,9 +163,8 @@ func (avs ActiveLiquidValidators) Len() int {
 	return LiquidValidators(avs).Len()
 }
 
-// TODO: assert ActiveLiquidValidators == TotalLiquidTokens, need to handle no liquid tokens of inactive liquid validator
-func (avs ActiveLiquidValidators) TotalActiveLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Int, map[string]sdk.Int) {
-	return LiquidValidators(avs).TotalLiquidTokens(ctx, sk)
+func (avs ActiveLiquidValidators) TotalActiveLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) (sdk.Int, map[string]sdk.Int) {
+	return LiquidValidators(avs).TotalLiquidTokens(ctx, sk, onlyBonded)
 }
 
 // TotalWeight for active liquid validator
@@ -182,13 +183,33 @@ func NativeTokenToBToken(nativeTokenAmount, bTokenTotalSupplyAmount sdk.Int, net
 
 // BTokenToNativeToken returns bTokenAmount * netAmount / bTokenTotalSupply with truncations
 func BTokenToNativeToken(bTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount sdk.Dec) (nativeTokenAmount sdk.Dec) {
-	return bTokenAmount.ToDec().MulTruncate(netAmount).QuoTruncate(bTokenTotalSupplyAmount.ToDec()).TruncateDec()
+	return bTokenAmount.ToDec().MulTruncate(netAmount).Quo(bTokenTotalSupplyAmount.ToDec()).TruncateDec()
 }
 
 // DeductFeeRate returns Input * (1-FeeRate) with truncations
 func DeductFeeRate(input sdk.Dec, feeRate sdk.Dec) (feeDeductedOutput sdk.Dec) {
 	return input.MulTruncate(sdk.OneDec().Sub(feeRate)).TruncateDec()
 }
+
+func (nas NetAmountState) CalcNetAmount() sdk.Dec {
+	return nas.ProxyAccBalance.Add(nas.TotalLiquidTokens).Add(nas.TotalUnbondingBalance).ToDec().Add(nas.TotalRemainingRewards)
+}
+
+func (nas NetAmountState) CalcMintRate() sdk.Dec {
+	if nas.NetAmount.IsNil() || !nas.NetAmount.IsPositive() {
+		return sdk.ZeroDec()
+	}
+	return nas.BtokenTotalSupply.ToDec().QuoTruncate(nas.NetAmount)
+}
+
+// WIP: add state
+//type State struct {
+//	NetAmountState        NetAmountState
+//	LiquidValidatorStates LiquidValidatorStates
+//	// ValidatorMap  map[string]stakingtypes.Validator
+//}
+
+type LiquidValidatorStates []LiquidValidatorState
 
 func MustMarshalLiquidValidator(cdc codec.BinaryCodec, val *LiquidValidator) []byte {
 	return cdc.MustMarshal(val)

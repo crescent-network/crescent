@@ -2145,7 +2145,7 @@ paths:
                       type: string
                     escrow_address:
                       type: string
-                    last_swap_request_id:
+                    last_order_id:
                       type: string
                       format: uint64
                     last_price:
@@ -2295,7 +2295,7 @@ paths:
                     type: string
                   escrow_address:
                     type: string
-                  last_swap_request_id:
+                  last_order_id:
                     type: string
                     format: uint64
                   last_price:
@@ -2335,17 +2335,17 @@ paths:
           format: uint64
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pairs/{pair_id}/swap_requests':
+  '/squad/liquidity/v1beta1/pairs/{pair_id}/orders':
     get:
-      summary: SwapRequests returns all swap requests.
-      operationId: SwapRequests
+      summary: Orders returns all orders.
+      operationId: Orders
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              swap_requests:
+              orders:
                 type: array
                 items:
                   type: object
@@ -2368,23 +2368,23 @@ paths:
                       type: string
                       title: >-
                         orderer specifies the bech32-encoded address that makes
-                        an order to swap from the pool
+                        an order
                     direction:
                       title: >-
-                        direction specifies the swap direction; either buy or
+                        direction specifies the order direction; either buy or
                         sell
                       type: string
                       enum:
-                        - SWAP_DIRECTION_UNSPECIFIED
-                        - SWAP_DIRECTION_BUY
-                        - SWAP_DIRECTION_SELL
-                      default: SWAP_DIRECTION_UNSPECIFIED
+                        - ORDER_DIRECTION_UNSPECIFIED
+                        - ORDER_DIRECTION_BUY
+                        - ORDER_DIRECTION_SELL
+                      default: ORDER_DIRECTION_UNSPECIFIED
                       description: |-
-                        SwapDirection enumerates swap directions.
+                        OrderDirection enumerates order directions.
 
-                         - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-                         - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
-                         - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
+                         - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+                         - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+                         - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
                     offer_coin:
                       type: object
                       properties:
@@ -2453,25 +2453,25 @@ paths:
                     status:
                       type: string
                       enum:
-                        - SWAP_REQUEST_STATUS_UNSPECIFIED
-                        - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                        - SWAP_REQUEST_STATUS_NOT_MATCHED
-                        - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
-                        - SWAP_REQUEST_STATUS_COMPLETED
-                        - SWAP_REQUEST_STATUS_CANCELED
-                        - SWAP_REQUEST_STATUS_EXPIRED
-                      default: SWAP_REQUEST_STATUS_UNSPECIFIED
+                        - ORDER_STATUS_UNSPECIFIED
+                        - ORDER_STATUS_NOT_EXECUTED
+                        - ORDER_STATUS_NOT_MATCHED
+                        - ORDER_STATUS_PARTIALLY_MATCHED
+                        - ORDER_STATUS_COMPLETED
+                        - ORDER_STATUS_CANCELED
+                        - ORDER_STATUS_EXPIRED
+                      default: ORDER_STATUS_UNSPECIFIED
                       description: |-
-                        SwapRequestStatus enumerates swap request statuses.
+                        OrderStatus enumerates order statuses.
 
-                         - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
-                         - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                         - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
-                         - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
-                         - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
-                         - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-                         - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-                  description: SwapRequest defines a swap request.
+                         - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
+                         - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+                         - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+                         - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+                         - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+                         - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
+                         - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
+                  description: Order defines an order.
               pagination:
                 type: object
                 properties:
@@ -2500,8 +2500,8 @@ paths:
                            PageResponse page = 2;
                    }
             description: >-
-              QuerySwapRequestsResponse is response type for the
-              Query/SwapRequests RPC method.
+              QueryOrdersResponse is response type for the Query/Orders RPC
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -2589,17 +2589,17 @@ paths:
           format: boolean
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pairs/{pair_id}/swap_requests/{id}':
+  '/squad/liquidity/v1beta1/pairs/{pair_id}/orders/{id}':
     get:
-      summary: SwapRequest returns the specific swap request.
-      operationId: SwapRequest
+      summary: Order returns the specific order.
+      operationId: Order
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              swap_request:
+              order:
                 type: object
                 properties:
                   id:
@@ -2620,21 +2620,23 @@ paths:
                     type: string
                     title: >-
                       orderer specifies the bech32-encoded address that makes an
-                      order to swap from the pool
+                      order
                   direction:
-                    title: direction specifies the swap direction; either buy or sell
+                    title: >-
+                      direction specifies the order direction; either buy or
+                      sell
                     type: string
                     enum:
-                      - SWAP_DIRECTION_UNSPECIFIED
-                      - SWAP_DIRECTION_BUY
-                      - SWAP_DIRECTION_SELL
-                    default: SWAP_DIRECTION_UNSPECIFIED
+                      - ORDER_DIRECTION_UNSPECIFIED
+                      - ORDER_DIRECTION_BUY
+                      - ORDER_DIRECTION_SELL
+                    default: ORDER_DIRECTION_UNSPECIFIED
                     description: |-
-                      SwapDirection enumerates swap directions.
+                      OrderDirection enumerates order directions.
 
-                       - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-                       - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
-                       - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
+                       - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+                       - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+                       - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
                   offer_coin:
                     type: object
                     properties:
@@ -2703,28 +2705,28 @@ paths:
                   status:
                     type: string
                     enum:
-                      - SWAP_REQUEST_STATUS_UNSPECIFIED
-                      - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                      - SWAP_REQUEST_STATUS_NOT_MATCHED
-                      - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
-                      - SWAP_REQUEST_STATUS_COMPLETED
-                      - SWAP_REQUEST_STATUS_CANCELED
-                      - SWAP_REQUEST_STATUS_EXPIRED
-                    default: SWAP_REQUEST_STATUS_UNSPECIFIED
+                      - ORDER_STATUS_UNSPECIFIED
+                      - ORDER_STATUS_NOT_EXECUTED
+                      - ORDER_STATUS_NOT_MATCHED
+                      - ORDER_STATUS_PARTIALLY_MATCHED
+                      - ORDER_STATUS_COMPLETED
+                      - ORDER_STATUS_CANCELED
+                      - ORDER_STATUS_EXPIRED
+                    default: ORDER_STATUS_UNSPECIFIED
                     description: |-
-                      SwapRequestStatus enumerates swap request statuses.
+                      OrderStatus enumerates order statuses.
 
-                       - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
-                       - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                       - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
-                       - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
-                       - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
-                       - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-                       - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-                description: SwapRequest defines a swap request.
+                       - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
+                       - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+                       - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+                       - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+                       - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+                       - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
+                       - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
+                description: Order defines an order.
             description: >-
-              QuerySwapRequestResponse is response type for the
-              Query/SwapRequest RPC method.
+              QueryOrderResponse is response type for the Query/Order RPC
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -2773,15 +2775,17 @@ paths:
               params:
                 type: object
                 properties:
-                  initial_pool_coin_supply:
-                    type: string
                   batch_size:
                     type: integer
                     format: int64
                   tick_precision:
                     type: integer
                     format: int64
-                  min_initial_deposit_amount:
+                  fee_collector_address:
+                    type: string
+                  dust_collector_address:
+                    type: string
+                  initial_pool_coin_supply:
                     type: string
                   pair_creation_fee:
                     type: array
@@ -2817,15 +2821,15 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                  fee_collector_address:
+                  min_initial_deposit_amount:
                     type: string
                   max_price_limit_ratio:
+                    type: string
+                  max_order_lifespan:
                     type: string
                   swap_fee_rate:
                     type: string
                   withdraw_fee_rate:
-                    type: string
-                  max_order_lifespan:
                     type: string
                 description: Params defines the parameters for the liquidity module.
             description: >-
@@ -4053,6 +4057,101 @@ paths:
         description: Find out more about the params
         url: >-
           https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md
+  /squad/liquidstaking/v1beta1/states:
+    get:
+      summary: States returns states of the liquidstaking module.
+      description: Returns states of the liquid staking module.
+      operationId: States
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              net_amount_state:
+                type: object
+                properties:
+                  mint_rate:
+                    type: string
+                    title: mint_rate is bTokenTotalSupply / NetAmount
+                  btoken_total_supply:
+                    type: string
+                    title: >-
+                      btoken_total_supply returns the total supply of
+                      btoken(liquid_bond_denom)
+                  net_amount:
+                    type: string
+                    title: >-
+                      net_amount is proxy account's native token balance + total
+                      liquid tokens + total remaining rewards + total
+
+                      unbonding balance
+                  total_del_shares:
+                    type: string
+                    title: >-
+                      total_del_shares define the delegation shares of all
+                      liquid validators
+                  total_liquid_tokens:
+                    type: string
+                    title: >-
+                      total_liquid_tokens define the token amount worth of
+                      delegation shares of all liquid validator (slashing
+                      applied
+
+                      amount)
+                  total_remaining_rewards:
+                    type: string
+                    title: >-
+                      total_remaining_rewards define the sum of remaining
+                      rewards of proxy account by all liquid validators
+                  total_unbonding_balance:
+                    type: string
+                    title: >-
+                      total_unbonding_balance define the unbonding balance of
+                      proxy account by all liquid validator (slashing applied
+
+                      amount)
+                  proxy_acc_balance:
+                    type: string
+                    title: >-
+                      proxy_acc_balance define the balance of proxy account for
+                      the native token
+                description: >-
+                  NetAmountState is type for net amount raw data and mint rate,
+                  This is a value that depends on the several module
+
+                  state every time, so it is used only for calculation and query
+                  and is not stored in kv.
+            description: >-
+              QueryStatesResponse is the response type for the Query/States RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the liquid staking
+        url: 'https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec'
   /squad/liquidstaking/v1beta1/validators:
     get:
       summary: >-
@@ -5225,6 +5324,148 @@ definitions:
            - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
            - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
     description: DepositRequest defines a deposit request.
+  squad.liquidity.v1beta1.Order:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+        title: id specifies the id for the request
+      pair_id:
+        type: string
+        format: uint64
+        title: pair_id specifies the pair id
+      msg_height:
+        type: string
+        format: int64
+        title: >-
+          msg_height specifies the block height when the request is stored for
+          the batch execution
+      orderer:
+        type: string
+        title: orderer specifies the bech32-encoded address that makes an order
+      direction:
+        title: direction specifies the order direction; either buy or sell
+        type: string
+        enum:
+          - ORDER_DIRECTION_UNSPECIFIED
+          - ORDER_DIRECTION_BUY
+          - ORDER_DIRECTION_SELL
+        default: ORDER_DIRECTION_UNSPECIFIED
+        description: |-
+          OrderDirection enumerates order directions.
+
+           - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+           - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+           - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
+      offer_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      remaining_offer_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+        title: remaining_offer_coin specifies the remaining offer coin
+      received_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+        title: received_coin specifies the received coin after the swap
+      price:
+        type: string
+        title: price specifies the price that an orderer is willing to swap
+      amount:
+        type: string
+      open_amount:
+        type: string
+      batch_id:
+        type: string
+        format: uint64
+        title: batch_id specifies the pair's batch id when the request is stored
+      expire_at:
+        type: string
+        format: date-time
+      status:
+        type: string
+        enum:
+          - ORDER_STATUS_UNSPECIFIED
+          - ORDER_STATUS_NOT_EXECUTED
+          - ORDER_STATUS_NOT_MATCHED
+          - ORDER_STATUS_PARTIALLY_MATCHED
+          - ORDER_STATUS_COMPLETED
+          - ORDER_STATUS_CANCELED
+          - ORDER_STATUS_EXPIRED
+        default: ORDER_STATUS_UNSPECIFIED
+        description: |-
+          OrderStatus enumerates order statuses.
+
+           - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
+           - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+           - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+           - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+           - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+           - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
+           - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
+    description: Order defines an order.
+  squad.liquidity.v1beta1.OrderDirection:
+    type: string
+    enum:
+      - ORDER_DIRECTION_UNSPECIFIED
+      - ORDER_DIRECTION_BUY
+      - ORDER_DIRECTION_SELL
+    default: ORDER_DIRECTION_UNSPECIFIED
+    description: |-
+      OrderDirection enumerates order directions.
+
+       - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+       - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+       - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
+  squad.liquidity.v1beta1.OrderStatus:
+    type: string
+    enum:
+      - ORDER_STATUS_UNSPECIFIED
+      - ORDER_STATUS_NOT_EXECUTED
+      - ORDER_STATUS_NOT_MATCHED
+      - ORDER_STATUS_PARTIALLY_MATCHED
+      - ORDER_STATUS_COMPLETED
+      - ORDER_STATUS_CANCELED
+      - ORDER_STATUS_EXPIRED
+    default: ORDER_STATUS_UNSPECIFIED
+    description: |-
+      OrderStatus enumerates order statuses.
+
+       - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
+       - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+       - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+       - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+       - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+       - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
+       - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
   squad.liquidity.v1beta1.Pair:
     type: object
     properties:
@@ -5237,7 +5478,7 @@ definitions:
         type: string
       escrow_address:
         type: string
-      last_swap_request_id:
+      last_order_id:
         type: string
         format: uint64
       last_price:
@@ -5249,15 +5490,17 @@ definitions:
   squad.liquidity.v1beta1.Params:
     type: object
     properties:
-      initial_pool_coin_supply:
-        type: string
       batch_size:
         type: integer
         format: int64
       tick_precision:
         type: integer
         format: int64
-      min_initial_deposit_amount:
+      fee_collector_address:
+        type: string
+      dust_collector_address:
+        type: string
+      initial_pool_coin_supply:
         type: string
       pair_creation_fee:
         type: array
@@ -5287,15 +5530,15 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-      fee_collector_address:
+      min_initial_deposit_amount:
         type: string
       max_price_limit_ratio:
+        type: string
+      max_order_lifespan:
         type: string
       swap_fee_rate:
         type: string
       withdraw_fee_rate:
-        type: string
-      max_order_lifespan:
         type: string
     description: Params defines the parameters for the liquidity module.
   squad.liquidity.v1beta1.PoolResponse:
@@ -5549,6 +5792,277 @@ definitions:
     description: >-
       QueryDepositRequestsResponse is response type for the
       Query/DepositRequests RPC method.
+  squad.liquidity.v1beta1.QueryOrderResponse:
+    type: object
+    properties:
+      order:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uint64
+            title: id specifies the id for the request
+          pair_id:
+            type: string
+            format: uint64
+            title: pair_id specifies the pair id
+          msg_height:
+            type: string
+            format: int64
+            title: >-
+              msg_height specifies the block height when the request is stored
+              for the batch execution
+          orderer:
+            type: string
+            title: orderer specifies the bech32-encoded address that makes an order
+          direction:
+            title: direction specifies the order direction; either buy or sell
+            type: string
+            enum:
+              - ORDER_DIRECTION_UNSPECIFIED
+              - ORDER_DIRECTION_BUY
+              - ORDER_DIRECTION_SELL
+            default: ORDER_DIRECTION_UNSPECIFIED
+            description: |-
+              OrderDirection enumerates order directions.
+
+               - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+               - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+               - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
+          offer_coin:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+          remaining_offer_coin:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+            title: remaining_offer_coin specifies the remaining offer coin
+          received_coin:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+            title: received_coin specifies the received coin after the swap
+          price:
+            type: string
+            title: price specifies the price that an orderer is willing to swap
+          amount:
+            type: string
+          open_amount:
+            type: string
+          batch_id:
+            type: string
+            format: uint64
+            title: batch_id specifies the pair's batch id when the request is stored
+          expire_at:
+            type: string
+            format: date-time
+          status:
+            type: string
+            enum:
+              - ORDER_STATUS_UNSPECIFIED
+              - ORDER_STATUS_NOT_EXECUTED
+              - ORDER_STATUS_NOT_MATCHED
+              - ORDER_STATUS_PARTIALLY_MATCHED
+              - ORDER_STATUS_COMPLETED
+              - ORDER_STATUS_CANCELED
+              - ORDER_STATUS_EXPIRED
+            default: ORDER_STATUS_UNSPECIFIED
+            description: |-
+              OrderStatus enumerates order statuses.
+
+               - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
+               - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+               - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+               - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+               - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+               - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
+               - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
+        description: Order defines an order.
+    description: QueryOrderResponse is response type for the Query/Order RPC method.
+  squad.liquidity.v1beta1.QueryOrdersResponse:
+    type: object
+    properties:
+      orders:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uint64
+              title: id specifies the id for the request
+            pair_id:
+              type: string
+              format: uint64
+              title: pair_id specifies the pair id
+            msg_height:
+              type: string
+              format: int64
+              title: >-
+                msg_height specifies the block height when the request is stored
+                for the batch execution
+            orderer:
+              type: string
+              title: orderer specifies the bech32-encoded address that makes an order
+            direction:
+              title: direction specifies the order direction; either buy or sell
+              type: string
+              enum:
+                - ORDER_DIRECTION_UNSPECIFIED
+                - ORDER_DIRECTION_BUY
+                - ORDER_DIRECTION_SELL
+              default: ORDER_DIRECTION_UNSPECIFIED
+              description: |-
+                OrderDirection enumerates order directions.
+
+                 - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+                 - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+                 - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
+            offer_coin:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            remaining_offer_coin:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+              title: remaining_offer_coin specifies the remaining offer coin
+            received_coin:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+              title: received_coin specifies the received coin after the swap
+            price:
+              type: string
+              title: price specifies the price that an orderer is willing to swap
+            amount:
+              type: string
+            open_amount:
+              type: string
+            batch_id:
+              type: string
+              format: uint64
+              title: >-
+                batch_id specifies the pair's batch id when the request is
+                stored
+            expire_at:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum:
+                - ORDER_STATUS_UNSPECIFIED
+                - ORDER_STATUS_NOT_EXECUTED
+                - ORDER_STATUS_NOT_MATCHED
+                - ORDER_STATUS_PARTIALLY_MATCHED
+                - ORDER_STATUS_COMPLETED
+                - ORDER_STATUS_CANCELED
+                - ORDER_STATUS_EXPIRED
+              default: ORDER_STATUS_UNSPECIFIED
+              description: |-
+                OrderStatus enumerates order statuses.
+
+                 - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
+                 - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+                 - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+                 - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+                 - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+                 - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
+                 - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
+          description: Order defines an order.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: QueryOrdersResponse is response type for the Query/Orders RPC method.
   squad.liquidity.v1beta1.QueryPairResponse:
     type: object
     properties:
@@ -5564,7 +6078,7 @@ definitions:
             type: string
           escrow_address:
             type: string
-          last_swap_request_id:
+          last_order_id:
             type: string
             format: uint64
           last_price:
@@ -5591,7 +6105,7 @@ definitions:
               type: string
             escrow_address:
               type: string
-            last_swap_request_id:
+            last_order_id:
               type: string
               format: uint64
             last_price:
@@ -5632,15 +6146,17 @@ definitions:
       params:
         type: object
         properties:
-          initial_pool_coin_supply:
-            type: string
           batch_size:
             type: integer
             format: int64
           tick_precision:
             type: integer
             format: int64
-          min_initial_deposit_amount:
+          fee_collector_address:
+            type: string
+          dust_collector_address:
+            type: string
+          initial_pool_coin_supply:
             type: string
           pair_creation_fee:
             type: array
@@ -5676,15 +6192,15 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-          fee_collector_address:
+          min_initial_deposit_amount:
             type: string
           max_price_limit_ratio:
+            type: string
+          max_order_lifespan:
             type: string
           swap_fee_rate:
             type: string
           withdraw_fee_rate:
-            type: string
-          max_order_lifespan:
             type: string
         description: Params defines the parameters for the liquidity module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
@@ -5797,285 +6313,6 @@ definitions:
                    PageResponse page = 2;
            }
     description: QueryPoolsResponse is response type for the Query/Pools RPC method.
-  squad.liquidity.v1beta1.QuerySwapRequestResponse:
-    type: object
-    properties:
-      swap_request:
-        type: object
-        properties:
-          id:
-            type: string
-            format: uint64
-            title: id specifies the id for the request
-          pair_id:
-            type: string
-            format: uint64
-            title: pair_id specifies the pair id
-          msg_height:
-            type: string
-            format: int64
-            title: >-
-              msg_height specifies the block height when the request is stored
-              for the batch execution
-          orderer:
-            type: string
-            title: >-
-              orderer specifies the bech32-encoded address that makes an order
-              to swap from the pool
-          direction:
-            title: direction specifies the swap direction; either buy or sell
-            type: string
-            enum:
-              - SWAP_DIRECTION_UNSPECIFIED
-              - SWAP_DIRECTION_BUY
-              - SWAP_DIRECTION_SELL
-            default: SWAP_DIRECTION_UNSPECIFIED
-            description: |-
-              SwapDirection enumerates swap directions.
-
-               - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-               - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
-               - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-          offer_coin:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-          remaining_offer_coin:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-            title: remaining_offer_coin specifies the remaining offer coin
-          received_coin:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-            title: received_coin specifies the received coin after the swap
-          price:
-            type: string
-            title: price specifies the price that an orderer is willing to swap
-          amount:
-            type: string
-          open_amount:
-            type: string
-          batch_id:
-            type: string
-            format: uint64
-            title: batch_id specifies the pair's batch id when the request is stored
-          expire_at:
-            type: string
-            format: date-time
-          status:
-            type: string
-            enum:
-              - SWAP_REQUEST_STATUS_UNSPECIFIED
-              - SWAP_REQUEST_STATUS_NOT_EXECUTED
-              - SWAP_REQUEST_STATUS_NOT_MATCHED
-              - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
-              - SWAP_REQUEST_STATUS_COMPLETED
-              - SWAP_REQUEST_STATUS_CANCELED
-              - SWAP_REQUEST_STATUS_EXPIRED
-            default: SWAP_REQUEST_STATUS_UNSPECIFIED
-            description: |-
-              SwapRequestStatus enumerates swap request statuses.
-
-               - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
-               - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-               - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
-               - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
-               - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
-               - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-               - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-        description: SwapRequest defines a swap request.
-    description: >-
-      QuerySwapRequestResponse is response type for the Query/SwapRequest RPC
-      method.
-  squad.liquidity.v1beta1.QuerySwapRequestsResponse:
-    type: object
-    properties:
-      swap_requests:
-        type: array
-        items:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uint64
-              title: id specifies the id for the request
-            pair_id:
-              type: string
-              format: uint64
-              title: pair_id specifies the pair id
-            msg_height:
-              type: string
-              format: int64
-              title: >-
-                msg_height specifies the block height when the request is stored
-                for the batch execution
-            orderer:
-              type: string
-              title: >-
-                orderer specifies the bech32-encoded address that makes an order
-                to swap from the pool
-            direction:
-              title: direction specifies the swap direction; either buy or sell
-              type: string
-              enum:
-                - SWAP_DIRECTION_UNSPECIFIED
-                - SWAP_DIRECTION_BUY
-                - SWAP_DIRECTION_SELL
-              default: SWAP_DIRECTION_UNSPECIFIED
-              description: |-
-                SwapDirection enumerates swap directions.
-
-                 - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-                 - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
-                 - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-            offer_coin:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-            remaining_offer_coin:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-              title: remaining_offer_coin specifies the remaining offer coin
-            received_coin:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-              title: received_coin specifies the received coin after the swap
-            price:
-              type: string
-              title: price specifies the price that an orderer is willing to swap
-            amount:
-              type: string
-            open_amount:
-              type: string
-            batch_id:
-              type: string
-              format: uint64
-              title: >-
-                batch_id specifies the pair's batch id when the request is
-                stored
-            expire_at:
-              type: string
-              format: date-time
-            status:
-              type: string
-              enum:
-                - SWAP_REQUEST_STATUS_UNSPECIFIED
-                - SWAP_REQUEST_STATUS_NOT_EXECUTED
-                - SWAP_REQUEST_STATUS_NOT_MATCHED
-                - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
-                - SWAP_REQUEST_STATUS_COMPLETED
-                - SWAP_REQUEST_STATUS_CANCELED
-                - SWAP_REQUEST_STATUS_EXPIRED
-              default: SWAP_REQUEST_STATUS_UNSPECIFIED
-              description: |-
-                SwapRequestStatus enumerates swap request statuses.
-
-                 - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
-                 - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-                 - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
-                 - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
-                 - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
-                 - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-                 - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-          description: SwapRequest defines a swap request.
-      pagination:
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
-    description: >-
-      QuerySwapRequestsResponse is response type for the Query/SwapRequests RPC
-      method.
   squad.liquidity.v1beta1.QueryWithdrawRequestResponse:
     type: object
     properties:
@@ -6280,150 +6517,6 @@ definitions:
        - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
        - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
        - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
-  squad.liquidity.v1beta1.SwapDirection:
-    type: string
-    enum:
-      - SWAP_DIRECTION_UNSPECIFIED
-      - SWAP_DIRECTION_BUY
-      - SWAP_DIRECTION_SELL
-    default: SWAP_DIRECTION_UNSPECIFIED
-    description: |-
-      SwapDirection enumerates swap directions.
-
-       - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-       - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
-       - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-  squad.liquidity.v1beta1.SwapRequest:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uint64
-        title: id specifies the id for the request
-      pair_id:
-        type: string
-        format: uint64
-        title: pair_id specifies the pair id
-      msg_height:
-        type: string
-        format: int64
-        title: >-
-          msg_height specifies the block height when the request is stored for
-          the batch execution
-      orderer:
-        type: string
-        title: >-
-          orderer specifies the bech32-encoded address that makes an order to
-          swap from the pool
-      direction:
-        title: direction specifies the swap direction; either buy or sell
-        type: string
-        enum:
-          - SWAP_DIRECTION_UNSPECIFIED
-          - SWAP_DIRECTION_BUY
-          - SWAP_DIRECTION_SELL
-        default: SWAP_DIRECTION_UNSPECIFIED
-        description: |-
-          SwapDirection enumerates swap directions.
-
-           - SWAP_DIRECTION_UNSPECIFIED: SWAP_DIRECTION_UNSPECIFIED specifies unknown swap direction
-           - SWAP_DIRECTION_BUY: SWAP_DIRECTION_BUY specifies buy(swap quote coin to base coin) swap direction
-           - SWAP_DIRECTION_SELL: SWAP_DIRECTION_SELL specifies sell(swap base coin to quote coin) swap direction
-      offer_coin:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-      remaining_offer_coin:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-        title: remaining_offer_coin specifies the remaining offer coin
-      received_coin:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-        title: received_coin specifies the received coin after the swap
-      price:
-        type: string
-        title: price specifies the price that an orderer is willing to swap
-      amount:
-        type: string
-      open_amount:
-        type: string
-      batch_id:
-        type: string
-        format: uint64
-        title: batch_id specifies the pair's batch id when the request is stored
-      expire_at:
-        type: string
-        format: date-time
-      status:
-        type: string
-        enum:
-          - SWAP_REQUEST_STATUS_UNSPECIFIED
-          - SWAP_REQUEST_STATUS_NOT_EXECUTED
-          - SWAP_REQUEST_STATUS_NOT_MATCHED
-          - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
-          - SWAP_REQUEST_STATUS_COMPLETED
-          - SWAP_REQUEST_STATUS_CANCELED
-          - SWAP_REQUEST_STATUS_EXPIRED
-        default: SWAP_REQUEST_STATUS_UNSPECIFIED
-        description: |-
-          SwapRequestStatus enumerates swap request statuses.
-
-           - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
-           - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-           - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
-           - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
-           - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
-           - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-           - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
-    description: SwapRequest defines a swap request.
-  squad.liquidity.v1beta1.SwapRequestStatus:
-    type: string
-    enum:
-      - SWAP_REQUEST_STATUS_UNSPECIFIED
-      - SWAP_REQUEST_STATUS_NOT_EXECUTED
-      - SWAP_REQUEST_STATUS_NOT_MATCHED
-      - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED
-      - SWAP_REQUEST_STATUS_COMPLETED
-      - SWAP_REQUEST_STATUS_CANCELED
-      - SWAP_REQUEST_STATUS_EXPIRED
-    default: SWAP_REQUEST_STATUS_UNSPECIFIED
-    description: |-
-      SwapRequestStatus enumerates swap request statuses.
-
-       - SWAP_REQUEST_STATUS_UNSPECIFIED: SWAP_REQUEST_STATUS_UNSPECIFIED specifies unknown swap request status
-       - SWAP_REQUEST_STATUS_NOT_EXECUTED: SWAP_REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
-       - SWAP_REQUEST_STATUS_NOT_MATCHED: SWAP_REQUEST_STATUS_NOT_MATCHED indicates the request is executed but has no match
-       - SWAP_REQUEST_STATUS_PARTIALLY_MATCHED: SWAP_REQUEST_STATUS_PARTIALLY_MATCHED indicates the order is partially matched
-       - SWAP_REQUEST_STATUS_COMPLETED: SWAP_REQUEST_STATUS_COMPLETED indicates the order is fully matched and completed
-       - SWAP_REQUEST_STATUS_CANCELED: SWAP_REQUEST_STATUS_CANCELED indicates the request is canceled
-       - SWAP_REQUEST_STATUS_EXPIRED: SWAP_REQUEST_STATUS_EXPIRED indicates the request is expired
   squad.liquidity.v1beta1.WithdrawRequest:
     type: object
     properties:
@@ -6528,6 +6621,57 @@ definitions:
     description: >-
       LiquidValidatorState is type LiquidValidator with state added to return to
       query results.
+  squad.liquidstaking.v1beta1.NetAmountState:
+    type: object
+    properties:
+      mint_rate:
+        type: string
+        title: mint_rate is bTokenTotalSupply / NetAmount
+      btoken_total_supply:
+        type: string
+        title: >-
+          btoken_total_supply returns the total supply of
+          btoken(liquid_bond_denom)
+      net_amount:
+        type: string
+        title: >-
+          net_amount is proxy account's native token balance + total liquid
+          tokens + total remaining rewards + total
+
+          unbonding balance
+      total_del_shares:
+        type: string
+        title: total_del_shares define the delegation shares of all liquid validators
+      total_liquid_tokens:
+        type: string
+        title: >-
+          total_liquid_tokens define the token amount worth of delegation shares
+          of all liquid validator (slashing applied
+
+          amount)
+      total_remaining_rewards:
+        type: string
+        title: >-
+          total_remaining_rewards define the sum of remaining rewards of proxy
+          account by all liquid validators
+      total_unbonding_balance:
+        type: string
+        title: >-
+          total_unbonding_balance define the unbonding balance of proxy account
+          by all liquid validator (slashing applied
+
+          amount)
+      proxy_acc_balance:
+        type: string
+        title: >-
+          proxy_acc_balance define the balance of proxy account for the native
+          token
+    description: >-
+      NetAmountState is type for net amount raw data and mint rate, This is a
+      value that depends on the several module
+
+      state every time, so it is used only for calculation and query and is not
+      stored in kv.
   squad.liquidstaking.v1beta1.Params:
     type: object
     properties:
@@ -6700,6 +6844,63 @@ definitions:
               staking to minimize decimal loss and consider gas efficiency.
         description: Params defines the set of params for the liquidstaking module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  squad.liquidstaking.v1beta1.QueryStatesResponse:
+    type: object
+    properties:
+      net_amount_state:
+        type: object
+        properties:
+          mint_rate:
+            type: string
+            title: mint_rate is bTokenTotalSupply / NetAmount
+          btoken_total_supply:
+            type: string
+            title: >-
+              btoken_total_supply returns the total supply of
+              btoken(liquid_bond_denom)
+          net_amount:
+            type: string
+            title: >-
+              net_amount is proxy account's native token balance + total liquid
+              tokens + total remaining rewards + total
+
+              unbonding balance
+          total_del_shares:
+            type: string
+            title: >-
+              total_del_shares define the delegation shares of all liquid
+              validators
+          total_liquid_tokens:
+            type: string
+            title: >-
+              total_liquid_tokens define the token amount worth of delegation
+              shares of all liquid validator (slashing applied
+
+              amount)
+          total_remaining_rewards:
+            type: string
+            title: >-
+              total_remaining_rewards define the sum of remaining rewards of
+              proxy account by all liquid validators
+          total_unbonding_balance:
+            type: string
+            title: >-
+              total_unbonding_balance define the unbonding balance of proxy
+              account by all liquid validator (slashing applied
+
+              amount)
+          proxy_acc_balance:
+            type: string
+            title: >-
+              proxy_acc_balance define the balance of proxy account for the
+              native token
+        description: >-
+          NetAmountState is type for net amount raw data and mint rate, This is
+          a value that depends on the several module
+
+          state every time, so it is used only for calculation and query and is
+          not stored in kv.
+    description: QueryStatesResponse is the response type for the Query/States RPC method.
   squad.liquidstaking.v1beta1.ValidatorStatus:
     type: string
     enum:

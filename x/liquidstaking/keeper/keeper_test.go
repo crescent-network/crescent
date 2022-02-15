@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	val, found := s.app.StakingKeeper.GetValidator(s.ctx, valOper)
 	s.Require().True(found)
 	tokens := val.Tokens
-	liquidTokens := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
+	liquidTokens := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 
 	// check sign info
 	info, found := s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
@@ -244,11 +244,15 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	s.Require().True(info.Tombstoned)
 	s.Require().True(liquidValidator.IsTombstoned(s.ctx, s.app.StakingKeeper, s.app.SlashingKeeper))
 	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
-	liquidTokensSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
+	liquidTokensSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	tokensSlashed := val.Tokens
 	s.Require().True(tokensSlashed.LT(tokens))
 	s.Require().True(liquidTokensSlashed.LT(liquidTokens))
 
+	s.app.StakingKeeper.BlockValidatorUpdates(s.ctx)
+	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
+	// set unbonding status, no more rewards before return Bonded
+	s.Require().Equal(val.Status, stakingtypes.Unbonding)
 	//// check slashed
 	//doubleSignFraction := s.app.SlashingKeeper.SlashFractionDoubleSign(s.ctx)
 	//liquidTokensAfterSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
@@ -256,7 +260,7 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	//fmt.Println(liquidTokens, expectedSlashedLiquidTokens, liquidTokensAfterSlashed)
 	//
 	//// TODO: 24998 * 0.95 + 25000 == 48748, but 48778, maybe reward 30
-	//rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckRemainingRewards(s.ctx, types.LiquidStakingProxyAcc)
+	//rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	//fmt.Println(rewards, totalDelShares, totalLiquidTokens)
 	//slashedStakingAmt := stakingAmt.ToDec().MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
 	//fmt.Println(slashedStakingAmt)

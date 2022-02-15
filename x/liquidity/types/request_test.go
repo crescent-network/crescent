@@ -214,133 +214,133 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 	}
 }
 
-func TestSwapRequest_Validate(t *testing.T) {
+func TestOrder_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		malleate    func(req *types.SwapRequest)
+		malleate    func(order *types.Order)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(req *types.SwapRequest) {},
+			func(order *types.Order) {},
 			"",
 		},
 		{
 			"zero id",
-			func(req *types.SwapRequest) {
-				req.Id = 0
+			func(order *types.Order) {
+				order.Id = 0
 			},
 			"id must not be 0",
 		},
 		{
 			"zero pair id",
-			func(req *types.SwapRequest) {
-				req.PairId = 0
+			func(order *types.Order) {
+				order.PairId = 0
 			},
 			"pair id must not be 0",
 		},
 		{
 			"zero message height",
-			func(req *types.SwapRequest) {
-				req.MsgHeight = 0
+			func(order *types.Order) {
+				order.MsgHeight = 0
 			},
 			"message height must not be 0",
 		},
 		{
 			"invalid orderer addr",
-			func(req *types.SwapRequest) {
-				req.Orderer = "invalidaddr"
+			func(order *types.Order) {
+				order.Orderer = "invalidaddr"
 			},
 			"invalid orderer address invalidaddr: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			"invalid direction",
-			func(req *types.SwapRequest) {
-				req.Direction = 10
+			func(order *types.Order) {
+				order.Direction = 10
 			},
 			"invalid direction: 10",
 		},
 		{
 			"invalid offer coin",
-			func(req *types.SwapRequest) {
-				req.OfferCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
+			func(order *types.Order) {
+				order.OfferCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
 			},
 			"invalid offer coin -1denom1: negative coin amount: -1",
 		},
 		{
 			"zero offer coin",
-			func(req *types.SwapRequest) {
-				req.OfferCoin = squad.ParseCoin("0denom1")
+			func(order *types.Order) {
+				order.OfferCoin = squad.ParseCoin("0denom1")
 			},
 			"offer coin must not be 0",
 		},
 		{
 			"invalid remaining offer coin",
-			func(req *types.SwapRequest) {
-				req.RemainingOfferCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
+			func(order *types.Order) {
+				order.RemainingOfferCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
 			},
 			"invalid remaining offer coin -1denom1: negative coin amount: -1",
 		},
 		{
 			"zero remaining offer coin",
-			func(req *types.SwapRequest) {
-				req.RemainingOfferCoin = squad.ParseCoin("0denom1")
+			func(order *types.Order) {
+				order.RemainingOfferCoin = squad.ParseCoin("0denom1")
 			},
 			"",
 		},
 		{
 			"invalid received coin",
-			func(req *types.SwapRequest) {
-				req.ReceivedCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
+			func(order *types.Order) {
+				order.ReceivedCoin = sdk.Coin{Denom: "denom1", Amount: sdk.NewInt(-1)}
 			},
 			"invalid received coin -1denom1: negative coin amount: -1",
 		},
 		{
 			"zero received coin",
-			func(req *types.SwapRequest) {
-				req.ReceivedCoin = squad.ParseCoin("0denom1")
+			func(order *types.Order) {
+				order.ReceivedCoin = squad.ParseCoin("0denom1")
 			},
 			"",
 		},
 		{
 			"zero price",
-			func(req *types.SwapRequest) {
-				req.Price = sdk.ZeroDec()
+			func(order *types.Order) {
+				order.Price = sdk.ZeroDec()
 			},
 			"price must be positive: 0.000000000000000000",
 		},
 		{
 			"zero amount",
-			func(req *types.SwapRequest) {
-				req.Amount = sdk.ZeroInt()
+			func(order *types.Order) {
+				order.Amount = sdk.ZeroInt()
 			},
 			"amount must be positive: 0",
 		},
 		{
 			"negative open amount",
-			func(req *types.SwapRequest) {
-				req.OpenAmount = sdk.NewInt(-1)
+			func(order *types.Order) {
+				order.OpenAmount = sdk.NewInt(-1)
 			},
 			"open amount must not be negative: -1",
 		},
 		{
 			"zero batch id",
-			func(req *types.SwapRequest) {
-				req.BatchId = 0
+			func(order *types.Order) {
+				order.BatchId = 0
 			},
 			"batch id must not be 0",
 		},
 		{
 			"no expiration info",
-			func(req *types.SwapRequest) {
-				req.ExpireAt = time.Time{}
+			func(order *types.Order) {
+				order.ExpireAt = time.Time{}
 			},
 			"no expiration info",
 		},
 		{
 			"invalid status",
-			func(req *types.SwapRequest) {
-				req.Status = 10
+			func(order *types.Order) {
+				order.Status = 10
 			},
 			"invalid status: 10",
 		},
@@ -349,12 +349,12 @@ func TestSwapRequest_Validate(t *testing.T) {
 			pair := types.NewPair(1, "denom1", "denom2")
 			orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
 			msg := types.NewMsgLimitOrder(
-				orderer, pair.Id, types.SwapDirectionBuy, squad.ParseCoin("1000000denom2"),
+				orderer, pair.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"),
 				"denom1", squad.ParseDec("1.0"), newInt(1000000), types.DefaultMaxOrderLifespan)
 			expireAt := squad.ParseTime("2022-01-01T00:00:00Z")
-			req := types.NewSwapRequestForLimitOrder(msg, 1, pair, squad.ParseCoin("1000000denom2"), msg.Price, expireAt, 1)
-			tc.malleate(&req)
-			err := req.Validate()
+			order := types.NewOrderForLimitOrder(msg, 1, pair, squad.ParseCoin("1000000denom2"), msg.Price, expireAt, 1)
+			tc.malleate(&order)
+			err := order.Validate()
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {

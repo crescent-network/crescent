@@ -59,12 +59,12 @@ func (s *KeeperTestSuite) TestRemainingOfferCoinEscrowInvariant() {
 
 	oldReq := req
 	req.RemainingOfferCoin = squad.ParseCoin("2000000denom1")
-	s.keeper.SetSwapRequest(s.ctx, req)
+	s.keeper.SetOrder(s.ctx, req)
 	_, broken = keeper.RemainingOfferCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().True(broken)
 
 	req = oldReq
-	s.keeper.SetSwapRequest(s.ctx, req)
+	s.keeper.SetOrder(s.ctx, req)
 	s.nextBlock()
 	_, broken = keeper.RemainingOfferCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().False(broken)

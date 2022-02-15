@@ -109,3 +109,45 @@ message LiquidValidatorState {
   string liquid_tokens = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
+
+// NetAmountState is type for net amount raw data and mint rate, This is a value that depends on the several module
+// state every time, so it is used only for calculation and query and is not stored in kv.
+message NetAmountState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = true;
+
+  // mint_rate is bTokenTotalSupply / NetAmount
+  string mint_rate = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // btoken_total_supply returns the total supply of btoken(liquid_bond_denom)
+  string btoken_total_supply = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // net_amount is proxy account's native token balance + total liquid tokens + total remaining rewards + total
+  // unbonding balance
+  string net_amount = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // total_del_shares define the delegation shares of all liquid validators
+  string total_del_shares = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // total_liquid_tokens define the token amount worth of delegation shares of all liquid validator (slashing applied
+  // amount)
+  string total_liquid_tokens = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // total_remaining_rewards define the sum of remaining rewards of proxy account by all liquid validators
+  string total_remaining_rewards = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // total_unbonding_balance define the unbonding balance of proxy account by all liquid validator (slashing applied
+  // amount)
+  string total_unbonding_balance = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // proxy_acc_balance define the balance of proxy account for the native token
+  string proxy_acc_balance = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}

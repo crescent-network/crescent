@@ -14,11 +14,11 @@ func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
-// NetAmount calculates the sum of bondedDenom balance, delegation power(slash applied LiquidTokens), the remaining reward of types.LiquidStakingProxyAcc
+// Deprecated: NetAmount calculates the sum of bondedDenom balance, delegation power(slash applied LiquidTokens), the remaining reward of types.LiquidStakingProxyAcc
 // During Liquid Unstacking, btoken immediately burns and the unbonding queue belongs to the requester, so the liquid staker's unbonding values are excluded on netAmount.
 func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 	balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
-	totalRewards, _, totalLiquidTokens := k.CheckRemainingRewards(ctx, types.LiquidStakingProxyAcc)
+	totalRewards, _, totalLiquidTokens := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
 	unbondingPower := sdk.ZeroInt()
 	ubds := k.stakingKeeper.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
 	for _, ubd := range ubds {
@@ -28,6 +28,34 @@ func (k Keeper) NetAmount(ctx sdk.Context) sdk.Dec {
 		}
 	}
 	return balance.ToDec().Add(totalLiquidTokens.ToDec()).Add(totalRewards).Add(unbondingPower.ToDec())
+}
+
+// NetAmountState calculates the sum of bondedDenom balance, total delegation tokens(slash applied LiquidTokens), total remaining reward of types.LiquidStakingProxyAcc
+// During Liquid Unstacking, btoken immediately burns and the unbonding queue belongs to the requester, so the liquid staker's unbonding values are excluded on netAmount
+// It is used only for calculation and query and is not stored in kv.
+func (k Keeper) NetAmountState(ctx sdk.Context) (nas types.NetAmountState) {
+	nas.ProxyAccBalance = k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
+
+	totalRemainingRewards, totalDelShares, totalLiquidTokens := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
+	nas.TotalRemainingRewards = totalRemainingRewards
+	nas.TotalDelShares = totalDelShares
+	nas.TotalLiquidTokens = totalLiquidTokens
+
+	totalUnbondingBalance := sdk.ZeroInt()
+	ubds := k.stakingKeeper.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
+	for _, ubd := range ubds {
+		for _, entry := range ubd.Entries {
+			// use Balance(slashing applied) not InitialBalance(without slashing)
+			totalUnbondingBalance = totalUnbondingBalance.Add(entry.Balance)
+		}
+	}
+	nas.TotalUnbondingBalance = totalUnbondingBalance
+	nas.BtokenTotalSupply = k.bankKeeper.GetSupply(ctx, k.LiquidBondDenom(ctx)).Amount
+	nas.NetAmount = nas.CalcNetAmount()
+	nas.MintRate = nas.CalcMintRate()
+
+	// TODO: consider add totalBondedLiquidTokens
+	return
 }
 
 // LiquidStaking mints bToken worth of staking coin value according to NetAmount and performs LiquidDelegate.
@@ -50,7 +78,7 @@ func (k Keeper) LiquidStaking(
 	}
 
 	// NetAmount must be calculated before send
-	netAmount := k.NetAmount(ctx)
+	nas := k.NetAmountState(ctx)
 
 	// send staking coin to liquid staking proxy account to proxy delegation
 	err = k.bankKeeper.SendCoins(ctx, liquidStaker, proxyAcc, sdk.NewCoins(stakingCoin))
@@ -60,10 +88,9 @@ func (k Keeper) LiquidStaking(
 
 	// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
 	liquidBondDenom := k.LiquidBondDenom(ctx)
-	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
 	bTokenMintAmount = stakingCoin.Amount
-	if bTokenTotalSupply.IsPositive() {
-		bTokenMintAmount = types.NativeTokenToBToken(stakingCoin.Amount, bTokenTotalSupply.Amount, netAmount)
+	if nas.BtokenTotalSupply.IsPositive() {
+		bTokenMintAmount = types.NativeTokenToBToken(stakingCoin.Amount, nas.BtokenTotalSupply, nas.NetAmount)
 	}
 
 	// mint on module acc and send
@@ -123,14 +150,15 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, types.ErrActiveLiquidValidatorsNotExists
 	}
 
+	// Get NetAmount states
+	nas := k.NetAmountState(ctx)
+
 	// UnstakeAmount = NetAmount * BTokenAmount/TotalSupply * (1-UnstakeFeeRate)
-	bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)
-	if unstakingBtoken.Amount.GT(bTokenTotalSupply.Amount) {
+	if unstakingBtoken.Amount.GT(nas.BtokenTotalSupply) {
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, types.ErrInvalidBTokenSupply
 	}
-	netAmount := k.NetAmount(ctx)
 
-	unbondingAmount := types.BTokenToNativeToken(unstakingBtoken.Amount, bTokenTotalSupply.Amount, netAmount)
+	unbondingAmount := types.BTokenToNativeToken(unstakingBtoken.Amount, nas.BtokenTotalSupply, nas.NetAmount)
 	unbondingAmount = types.DeductFeeRate(unbondingAmount, params.UnstakeFeeRate)
 
 	totalReturnAmount := sdk.ZeroInt()
@@ -144,7 +172,7 @@ func (k Keeper) LiquidUnstaking(
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, err
 	}
 
-	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper)
+	totalLiquidTokens, liquidTokenMap := activeVals.TotalActiveLiquidTokens(ctx, k.stakingKeeper, false)
 	// crumb may occur due to a decimal error in dividing the unstaking bToken into the weight of liquid validators, it will remain in the NetAmount
 	unbondingAmounts, _ := types.DivideByCurrentWeight(activeVals, unbondingAmount, totalLiquidTokens, liquidTokenMap)
 	if len(unbondingAmounts) == 0 {
@@ -204,7 +232,8 @@ func (k Keeper) LiquidUnbond(
 	return completionTime, returnAmount, ubd, nil
 }
 
-func (k Keeper) CheckRemainingRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec, sdk.Int) {
+// CheckDelegationStates returns total remaining rewards, delshares, liquid tokens of delegations by proxy account
+func (k Keeper) CheckDelegationStates(ctx sdk.Context, proxyAcc sdk.AccAddress) (sdk.Dec, sdk.Dec, sdk.Int) {
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	totalRewards := sdk.ZeroDec()
 	totalDelShares := sdk.ZeroDec()
@@ -317,7 +346,7 @@ func (k Keeper) GetAllLiquidValidatorStates(ctx sdk.Context) (liquidValidatorSta
 			Weight:          lv.GetWeight(whitelistedValMap, active),
 			Status:          lv.GetStatus(active),
 			DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
-			LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper),
+			LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper, false),
 		}
 		liquidValidatorStates = append(liquidValidatorStates, lvState)
 	}
@@ -342,7 +371,7 @@ func (k Keeper) GetLiquidValidatorState(ctx sdk.Context, addr sdk.ValAddress) (l
 		Weight:          lv.GetWeight(whitelistedValMap, active),
 		Status:          lv.GetStatus(active),
 		DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
-		LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper),
+		LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper, false),
 	}, true
 }
 

@@ -78,7 +78,7 @@ func PoolCoinEscrowInvariant(k Keeper) sdk.Invariant {
 
 // RemainingOfferCoinEscrowInvariant checks that the amount of coins in each pair's
 // escrow address is greater or equal than remaining offer coins in the pair's
-// swap requests.
+// orders.
 func RemainingOfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var (
@@ -87,7 +87,7 @@ func RemainingOfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
 		)
 		_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
 			remainingOfferCoins := sdk.Coins{}
-			_ = k.IterateSwapRequestsByPair(ctx, pair.Id, func(req types.SwapRequest) (stop bool, err error) {
+			_ = k.IterateOrdersByPair(ctx, pair.Id, func(req types.Order) (stop bool, err error) {
 				if !req.Status.ShouldBeDeleted() {
 					remainingOfferCoins = remainingOfferCoins.Add(req.RemainingOfferCoin)
 				}

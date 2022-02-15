@@ -37,8 +37,8 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &reqB)
 			return fmt.Sprintf("%v\n%v", reqA, reqB)
 
-		case bytes.Equal(kvA.Key[:1], types.SwapRequestKeyPrefix):
-			var reqA, reqB types.SwapRequest
+		case bytes.Equal(kvA.Key[:1], types.OrderKeyPrefix):
+			var reqA, reqB types.Order
 			cdc.MustUnmarshal(kvA.Value, &reqA)
 			cdc.MustUnmarshal(kvB.Value, &reqB)
 			return fmt.Sprintf("%v\n%v", reqA, reqB)
