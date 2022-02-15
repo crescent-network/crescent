@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -42,7 +43,7 @@ Example:
 $ %s prepare-genesis mainnet squad-1
 $ %s prepare-genesis testnet squad-1
 
-The genesis output file is at $HOME/.squad/config/genesis.json
+The genesis output file is at $HOME/.squadapp/config/genesis.json
 `,
 				version.AppName,
 				version.AppName,
@@ -114,27 +115,32 @@ func PrepareGenesis(
 	genDoc.GenesisTime = genParams.GenesisTime
 	genDoc.ConsensusParams = genParams.ConsensusParams
 
-	// Gov module genesis
-	govGenState := govtypes.DefaultGenesisState()
-	govGenState.DepositParams = genParams.GovParams.DepositParams
-	govGenState.TallyParams = genParams.GovParams.TallyParams
-	govGenState.VotingParams = genParams.GovParams.VotingParams
-	govGenStateBz := cdc.MustMarshalJSON(govGenState)
-	appState[govtypes.ModuleName] = govGenStateBz
+	// Bank module app state
+	bankGenState := banktypes.DefaultGenesisState()
+	// bankGenState.DenomMetadata = genParams.BankMetadatas
+	bankGenState.Balances = genParams.BankBalances
+	bankGenStateBz := cdc.MustMarshalJSON(bankGenState)
+	appState[banktypes.ModuleName] = bankGenStateBz
 
-	// Claim module genesis
-	// claimGenState := claimtypes.DefaultGenesis()
-	// claimGenState = genParams.ClaimGenesisState
-	// claimGenStateBz := cdc.MustMarshalJSON(claimGenState)
-	// appState[claimtypes.ModuleName] = claimGenStateBz
+	// Claim module app state
+	claimGenState := claimtypes.DefaultGenesis()
+	claimGenState.Airdrops = genParams.ClaimGenesisState.Airdrops
+	claimGenState.ClaimRecords = genParams.ClaimGenesisState.ClaimRecords
+	claimGenStateBz := cdc.MustMarshalJSON(claimGenState)
+	appState[claimtypes.ModuleName] = claimGenStateBz
 
 	return appState, genDoc, nil
 }
 
 type GenesisParams struct {
+	AirdropSupply sdk.Coin
+
 	GenesisTime     time.Time
 	ChainId         string
 	ConsensusParams *tmproto.ConsensusParams
+
+	// BankMetadatas []banktypes.Metadata
+	BankBalances []banktypes.Balance
 
 	StakingParams       stakingtypes.Params
 	GovParams           govtypes.Params
@@ -147,11 +153,22 @@ type GenesisParams struct {
 func TestnetGenesisParams() *GenesisParams {
 	genParams := &GenesisParams{}
 	genParams.GenesisTime = time.Now()
+	genParams.AirdropSupply = sdk.NewCoin("airdrop", sdk.NewInt(15_000_000_000_000)) // 15 milion
 
-	// Set airdrop (airdrop id is automatically generated)
+	// Set source address balance
+	genParams.BankBalances = []banktypes.Balance{
+		{
+			Address: claimtypes.SourceAddress(1).String(),
+			Coins:   sdk.NewCoins(genParams.AirdropSupply),
+		},
+	}
+
+	// Set airdrop
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
 		{
+			AirdropId:          1,
 			SourceAddress:      claimtypes.SourceAddress(1).String(),
+			SourceCoins:        sdk.NewCoins(genParams.AirdropSupply),
 			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
 			StartTime:          genParams.GenesisTime,
 			EndTime:            farmingtypes.ParseTime("2022-02-16T00:00:00Z"),
@@ -163,8 +180,8 @@ func TestnetGenesisParams() *GenesisParams {
 		{
 			AirdropId:             1,
 			Recipient:             "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v", // validator
-			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(500_000_000))),
-			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(500_000_000))),
+			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
+			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			Actions: []claimtypes.Action{
 				{
 					ActionType: claimtypes.ActionTypeDeposit,
@@ -183,8 +200,8 @@ func TestnetGenesisParams() *GenesisParams {
 		{
 			AirdropId:             1,
 			Recipient:             "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu", // user1
-			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(200_000_000))),
-			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(200_000_000))),
+			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
+			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
 			Actions: []claimtypes.Action{
 				{
 					ActionType: claimtypes.ActionTypeDeposit,
@@ -203,8 +220,8 @@ func TestnetGenesisParams() *GenesisParams {
 		{
 			AirdropId:             1,
 			Recipient:             "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny", // user2
-			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(900_000_000))),
-			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(900_000_000))),
+			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
+			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			Actions: []claimtypes.Action{
 				{
 					ActionType: claimtypes.ActionTypeDeposit,
@@ -229,6 +246,9 @@ func MainnetGenesisParams() *GenesisParams {
 	genParams := &GenesisParams{}
 
 	// TODO: not implemented yet
+	// 1. Read csv file
+	// 2. Add genesis balances
+	// 3. Set Airdrop and ClaimRecords
 
 	return genParams
 }

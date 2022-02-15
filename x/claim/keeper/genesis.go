@@ -8,18 +8,28 @@ import (
 
 // InitGenesis initializes the module's state from a provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
-	// TODO: mint source coins to the source address
+	if err := genState.Validate(); err != nil {
+		panic(err)
+	}
 
-	for _, a := range genState.Airdrops {
-		_, found := k.GetAirdrop(ctx, a.AirdropId)
+	totalClaimableCoinsMap := make(map[uint64]sdk.Coins) // map(airdropId => totalClaimableCoins)
+	for _, r := range genState.ClaimRecords {
+		totalClaimableCoinsMap[r.AirdropId] = totalClaimableCoinsMap[r.AirdropId].Add(r.ClaimableCoins...)
+
+		k.SetClaimRecord(ctx, r)
+	}
+
+	for _, airdrop := range genState.Airdrops {
+		_, found := k.GetAirdrop(ctx, airdrop.AirdropId)
 		if found {
 			panic("airdrop already exists")
 		}
-		k.SetAirdrop(ctx, a)
-	}
 
-	for _, r := range genState.ClaimRecords {
-		k.SetClaimRecord(ctx, r)
+		if !totalClaimableCoinsMap[airdrop.AirdropId].IsEqual(airdrop.SourceCoins) {
+			panic("source coins must be equal to total claimable amounts")
+		}
+
+		k.SetAirdrop(ctx, airdrop)
 	}
 }
 
