@@ -278,7 +278,12 @@ func (k Keeper) ReleaseStakingCoins(ctx sdk.Context, farmerAcc sdk.AccAddress, s
 // during ProcessQueuedCoins.
 func (k Keeper) afterStakingCoinAdded(ctx sdk.Context, stakingCoinDenom string) {
 	k.SetHistoricalRewards(ctx, stakingCoinDenom, 0, types.HistoricalRewards{CumulativeUnitRewards: sdk.DecCoins{}})
-	k.SetCurrentEpoch(ctx, stakingCoinDenom, 1)
+	currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
+	if currentEpoch == 0 {
+		k.SetCurrentEpoch(ctx, stakingCoinDenom, 1)
+	} else {
+		k.SetCurrentEpoch(ctx, stakingCoinDenom, currentEpoch+1)
+	}
 	k.SetOutstandingRewards(ctx, stakingCoinDenom, types.OutstandingRewards{Rewards: sdk.DecCoins{}})
 }
 
@@ -300,7 +305,6 @@ func (k Keeper) afterStakingCoinRemoved(ctx sdk.Context, stakingCoinDenom string
 
 	k.DeleteOutstandingRewards(ctx, stakingCoinDenom)
 	k.DeleteAllHistoricalRewards(ctx, stakingCoinDenom)
-	k.DeleteCurrentEpoch(ctx, stakingCoinDenom)
 	return nil
 }
 
