@@ -291,9 +291,14 @@ func (s *KeeperTestSuite) TestLiquidStakingGov() {
 	otherVotes := make(govtypes.OtherVotes)
 	testOtherVotes := func(voter sdk.AccAddress, bTokenValue sdk.Int) {
 		s.Require().Len(otherVotes[voter.String()], liquidValidators.Len())
+		totalVotingPower := sdk.ZeroDec()
 		for _, v := range liquidValidators {
-			s.Require().EqualValues(otherVotes[voter.String()][v.OperatorAddress], bTokenValue.ToDec().QuoInt64(int64(liquidValidators.Len())))
+			votingPower := otherVotes[voter.String()][v.OperatorAddress]
+			totalVotingPower = totalVotingPower.Add(votingPower)
+			// equal when all liquid validator has same currentWeight
+			s.Require().EqualValues(votingPower, bTokenValue.ToDec().QuoInt64(int64(liquidValidators.Len())))
 		}
+		s.Require().EqualValues(totalVotingPower.TruncateInt(), s.keeper.CalcLiquidVotingPower(s.ctx, voter))
 	}
 	tallyLiquidGov := func() {
 		cachedCtx, _ := s.ctx.CacheContext()
