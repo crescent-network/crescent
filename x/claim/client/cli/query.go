@@ -27,8 +27,99 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		QueryAirdropsCmd(),
+		QueryAirdropCmd(),
 		QueryClaimRecord(),
 	)
+
+	return cmd
+}
+
+func QueryAirdropsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "airdrops",
+		Args:  cobra.NoArgs,
+		Short: "Query for all airdrops",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for all airdrops.
+
+Example:
+$ %s query %s airdrops
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryAirdropsRequest{
+				Pagination: pageReq,
+			}
+
+			resp, err := queryClient.Airdrops(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func QueryAirdropCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "airdrop [airdrop-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query for the specific airdrop",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for the specific airdrop.
+
+Example:
+$ %s query %s airdrop 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			airdropId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryAirdropRequest{
+				AirdropId: airdropId,
+			}
+
+			resp, err := queryClient.Airdrop(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
