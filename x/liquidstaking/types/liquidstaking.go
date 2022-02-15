@@ -64,12 +64,15 @@ func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec
 	return del.GetShares()
 }
 
-func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper) sdk.Int {
+func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) sdk.Int {
 	delShares := v.GetDelShares(ctx, sk)
 	if !delShares.IsPositive() {
 		return sdk.ZeroInt()
 	}
 	val := sk.Validator(ctx, v.GetOperator())
+	if onlyBonded && !val.IsBonded() {
+		return sdk.ZeroInt()
+	}
 	return val.TokensFromSharesTruncated(delShares).TruncateInt()
 }
 
@@ -137,11 +140,11 @@ func (vs LiquidValidators) Len() int {
 	return len(vs)
 }
 
-func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Int, map[string]sdk.Int) {
+func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) (sdk.Int, map[string]sdk.Int) {
 	totalLiquidTokens := sdk.ZeroInt()
 	liquidTokenMap := make(map[string]sdk.Int)
 	for _, lv := range vs {
-		liquidTokens := lv.GetLiquidTokens(ctx, sk)
+		liquidTokens := lv.GetLiquidTokens(ctx, sk, onlyBonded)
 		liquidTokenMap[lv.OperatorAddress] = liquidTokens
 		totalLiquidTokens = totalLiquidTokens.Add(liquidTokens)
 	}
@@ -160,8 +163,8 @@ func (avs ActiveLiquidValidators) Len() int {
 	return LiquidValidators(avs).Len()
 }
 
-func (avs ActiveLiquidValidators) TotalActiveLiquidTokens(ctx sdk.Context, sk StakingKeeper) (sdk.Int, map[string]sdk.Int) {
-	return LiquidValidators(avs).TotalLiquidTokens(ctx, sk)
+func (avs ActiveLiquidValidators) TotalActiveLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) (sdk.Int, map[string]sdk.Int) {
+	return LiquidValidators(avs).TotalLiquidTokens(ctx, sk, onlyBonded)
 }
 
 // TotalWeight for active liquid validator
