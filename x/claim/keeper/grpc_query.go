@@ -25,12 +25,12 @@ func (k Querier) ClaimRecord(c context.Context, req *types.QueryClaimRecordReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	recipientAddr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid address")
 	}
 
-	record, found := k.GetClaimRecord(ctx, addr)
+	record, found := k.GetClaimRecordByRecipient(ctx, req.AirdropId, recipientAddr)
 	if !found {
 		return nil, status.Error(codes.NotFound, "claim record not found")
 	}

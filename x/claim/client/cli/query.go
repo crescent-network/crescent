@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -36,15 +37,15 @@ func QueryClaimRecord() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
-		Use:   "claim-record [address]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "claim-record [airdrop-id] [address]",
+		Args:  cobra.ExactArgs(2),
 		Short: "Query the claim record for an account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the claim record for an account.
 This contains an address' initial claimable amounts and its completed actions.
 
 Example:
-$ %s query %s claim-record %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query %s claim-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
 				version.AppName, types.ModuleName, bech32PrefixAccAddr,
 			),
@@ -55,7 +56,12 @@ $ %s query %s claim-record %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			recipient, err := sdk.AccAddressFromBech32(args[0])
+			airdropId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			recipient, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
@@ -64,7 +70,8 @@ $ %s query %s claim-record %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			resp, err := queryClient.ClaimRecord(
 				context.Background(),
 				&types.QueryClaimRecordRequest{
-					Address: recipient.String(),
+					AirdropId: airdropId,
+					Address:   recipient.String(),
 				},
 			)
 			if err != nil {

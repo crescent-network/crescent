@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -33,17 +34,17 @@ func GetTxCmd() *cobra.Command {
 
 func NewClaimCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim [action-type]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "claim [airdrop-id] [action-type]",
+		Args:  cobra.ExactArgs(2),
 		Short: "Claim the claimable amount with an action type",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Claim the claimable amount with an action type. 
 There are 3 different types of action type. Reference the examples below.
 
 Example:
-$ %s tx %s claim deposit --from mykey
-$ %s tx %s claim swap --from mykey
-$ %s tx %s claim farming --from mykey
+$ %s tx %s 1 claim deposit --from mykey
+$ %s tx %s 1 claim swap --from mykey
+$ %s tx %s 1 claim farming --from mykey
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -56,12 +57,21 @@ $ %s tx %s claim farming --from mykey
 				return err
 			}
 
-			actionTyp := NormalizeActionType(args[0])
+			airdropId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			actionTyp := NormalizeActionType(args[1])
 			if actionTyp == types.ActionTypeUnspecified {
 				return fmt.Errorf("unknown action type %s", args[0])
 			}
 
-			msg := types.NewMsgClaim(clientCtx.GetFromAddress(), actionTyp)
+			msg := types.NewMsgClaim(
+				airdropId,
+				clientCtx.GetFromAddress(),
+				actionTyp,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

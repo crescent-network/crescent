@@ -3,20 +3,31 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
 
 func (s *KeeperTestSuite) TestGRPCClaimRecord() {
-	cr := types.ClaimRecord{
-		Address:               s.addr(0).String(),
-		InitialClaimableCoins: parseCoins("10000000denom1"),
-		DepositActionClaimed:  true,
-		SwapActionClaimed:     false,
-		FarmingActionClaimed:  false,
-	}
-	s.keeper.SetClaimRecord(s.ctx, cr)
+	airdrop := s.createAirdrop(
+		parseCoins("1000000000denom1"),
+		s.ctx.BlockTime(),
+		squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+		true,
+	)
+
+	s.createClaimRecord(
+		airdrop.AirdropId,
+		s.addr(0),
+		parseCoins("100000000denom1"),
+		parseCoins("100000000denom1"),
+		[]types.Action{
+			{ActionType: types.ActionTypeDeposit, Claimed: true},
+			{ActionType: types.ActionTypeSwap, Claimed: false},
+			{ActionType: types.ActionTypeFarming, Claimed: false},
+		},
+	)
 
 	for _, tc := range []struct {
 		name      string
@@ -45,11 +56,11 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 			},
 			false,
 			func(resp *types.QueryClaimRecordResponse) {
-				s.Require().Equal(s.addr(0).String(), resp.ClaimRecord.Address)
-				s.Require().True(coinsEq(parseCoins("10000000denom1"), resp.ClaimRecord.InitialClaimableCoins))
-				s.Require().True(resp.ClaimRecord.DepositActionClaimed)
-				s.Require().False(resp.ClaimRecord.SwapActionClaimed)
-				s.Require().False(resp.ClaimRecord.FarmingActionClaimed)
+				s.Require().Equal(s.addr(0).String(), resp.ClaimRecord.Recipient)
+				s.Require().True(coinsEq(parseCoins("100000000denom1"), resp.ClaimRecord.InitialClaimableCoins))
+				s.Require().True(resp.ClaimRecord.Actions[0].Claimed)
+				s.Require().False(resp.ClaimRecord.Actions[1].Claimed)
+				s.Require().False(resp.ClaimRecord.Actions[2].Claimed)
 			},
 		},
 	} {

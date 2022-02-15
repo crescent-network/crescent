@@ -21,7 +21,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmosquad-labs/squad/x/claim/types"
 	claimtypes "github.com/cosmosquad-labs/squad/x/claim/types"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	liqstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -146,28 +148,77 @@ func TestnetGenesisParams() *GenesisParams {
 	genParams := &GenesisParams{}
 	genParams.GenesisTime = time.Now()
 
+	// Set airdrop (airdrop id is automatically generated)
+	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
+		{
+			SourceAddress:      claimtypes.SourceAddress(1).String(),
+			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
+			StartTime:          genParams.GenesisTime,
+			EndTime:            farmingtypes.ParseTime("2022-02-16T00:00:00Z"),
+		},
+	}
+
 	// Set claim records
 	genParams.ClaimGenesisState.ClaimRecords = []claimtypes.ClaimRecord{
 		{
-			Address:               "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v", // validator
+			AirdropId:             1,
+			Recipient:             "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v", // validator
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(500_000_000))),
-			DepositActionClaimed:  false,
-			SwapActionClaimed:     false,
-			FarmingActionClaimed:  false,
+			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(500_000_000))),
+			Actions: []claimtypes.Action{
+				{
+					ActionType: claimtypes.ActionTypeDeposit,
+					Claimed:    false,
+				},
+				{
+					ActionType: claimtypes.ActionTypeSwap,
+					Claimed:    false,
+				},
+				{
+					ActionType: claimtypes.ActionTypeFarming,
+					Claimed:    false,
+				},
+			},
 		},
 		{
-			Address:               "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu", // user1
+			AirdropId:             1,
+			Recipient:             "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu", // user1
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(200_000_000))),
-			DepositActionClaimed:  false,
-			SwapActionClaimed:     false,
-			FarmingActionClaimed:  false,
+			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(200_000_000))),
+			Actions: []claimtypes.Action{
+				{
+					ActionType: claimtypes.ActionTypeDeposit,
+					Claimed:    false,
+				},
+				{
+					ActionType: claimtypes.ActionTypeSwap,
+					Claimed:    false,
+				},
+				{
+					ActionType: claimtypes.ActionTypeFarming,
+					Claimed:    false,
+				},
+			},
 		},
 		{
-			Address:               "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny", // user2
+			AirdropId:             1,
+			Recipient:             "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny", // user2
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(900_000_000))),
-			DepositActionClaimed:  false,
-			SwapActionClaimed:     false,
-			FarmingActionClaimed:  false,
+			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("airdrop", sdk.NewInt(900_000_000))),
+			Actions: []claimtypes.Action{
+				{
+					ActionType: claimtypes.ActionTypeDeposit,
+					Claimed:    false,
+				},
+				{
+					ActionType: claimtypes.ActionTypeSwap,
+					Claimed:    false,
+				},
+				{
+					ActionType: claimtypes.ActionTypeFarming,
+					Claimed:    false,
+				},
+			},
 		},
 	}
 

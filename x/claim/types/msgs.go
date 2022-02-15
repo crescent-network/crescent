@@ -15,8 +15,9 @@ const (
 )
 
 // NewMsgClaim creates a new MsgClaim.
-func NewMsgClaim(recipient sdk.AccAddress, actionType ActionType) *MsgClaim {
+func NewMsgClaim(airdropId uint64, recipient sdk.AccAddress, actionType ActionType) *MsgClaim {
 	return &MsgClaim{
+		AirdropId:  airdropId,
 		Recipient:  recipient.String(),
 		ActionType: actionType,
 	}

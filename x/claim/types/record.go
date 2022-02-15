@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (record ClaimRecord) GetAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(record.Address)
+func (r ClaimRecord) GetRecipient() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(r.Recipient)
 	if err != nil {
 		panic(err)
 	}

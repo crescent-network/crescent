@@ -40,7 +40,7 @@ func TestMsgClaim(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgClaim(testAddr, types.ActionTypeDeposit)
+			msg := types.NewMsgClaim(1, testAddr, types.ActionTypeDeposit)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgClaim, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())

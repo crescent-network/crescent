@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/binary"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -37,13 +38,74 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 //
+// Below are just shortcuts to internal functions.
+//
+
+func (s *KeeperTestSuite) createAirdrop(
+	sourceCoins sdk.Coins,
+	startTime time.Time,
+	endTime time.Time,
+	fund bool,
+) types.Airdrop {
+	nextId := s.keeper.GetLastAirdropId(s.ctx)
+	sourceAddr := types.SourceAddress(nextId)
+
+	if fund {
+		s.fundAddr(sourceAddr, sourceCoins)
+	}
+
+	s.keeper.SetAirdrop(s.ctx, types.Airdrop{
+		AirdropId:          nextId,
+		SourceAddress:      sourceAddr.String(),
+		TerminationAddress: s.addr(6).String(),
+		StartTime:          startTime,
+		EndTime:            endTime,
+	})
+
+	airdrop, found := s.keeper.GetAirdrop(s.ctx, nextId)
+	s.Require().True(found)
+
+	return airdrop
+}
+
+func (s *KeeperTestSuite) createClaimRecord(
+	airdropId uint64,
+	recipient sdk.AccAddress,
+	initialClaimableCoins sdk.Coins,
+	claimableCoins sdk.Coins,
+	actions []types.Action,
+) types.ClaimRecord {
+	s.keeper.SetClaimRecord(s.ctx, types.ClaimRecord{
+		AirdropId:             airdropId,
+		Recipient:             recipient.String(),
+		InitialClaimableCoins: initialClaimableCoins,
+		ClaimableCoins:        claimableCoins,
+		Actions:               actions,
+	})
+
+	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdropId, recipient)
+	s.Require().True(found)
+
+	return r
+}
+
+//
 // Below are useful helpers to write test code easily.
 //
+
+func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin {
+	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
+}
 
 func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 	addr := make(sdk.AccAddress, 20)
 	binary.PutVarint(addr, int64(addrNum))
 	return addr
+}
+
+func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, coins sdk.Coins) {
+	err := squadapp.FundAccount(s.app.BankKeeper, s.ctx, addr, coins)
+	s.Require().NoError(err)
 }
 
 func parseCoins(s string) sdk.Coins {
