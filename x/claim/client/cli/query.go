@@ -71,7 +71,7 @@ $ %s query %s claim-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				context.Background(),
 				&types.QueryClaimRecordRequest{
 					AirdropId: airdropId,
-					Address:   recipient.String(),
+					Recipient: recipient.String(),
 				},
 			)
 			if err != nil {

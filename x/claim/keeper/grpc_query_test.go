@@ -3,18 +3,105 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
+
+func (s *KeeperTestSuite) TestGRPCAirdrops() {
+	s.createAirdrop(1, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+	s.createAirdrop(2, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+	s.createAirdrop(3, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryAirdropsRequest
+		expectErr bool
+		postRun   func(*types.QueryAirdropsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"query all airdrops",
+			&types.QueryAirdropsRequest{},
+			false,
+			func(resp *types.QueryAirdropsResponse) {
+				s.Require().Len(resp.Airdrops, 3)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Airdrops(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGRPCAirdrop() {
+	airdrop := s.createAirdrop(1, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryAirdropRequest
+		expectErr bool
+		postRun   func(*types.QueryAirdropResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"airdrop not found",
+			&types.QueryAirdropRequest{
+				AirdropId: 5,
+			},
+			true,
+			nil,
+		},
+		{
+			"airdrop not found",
+			&types.QueryAirdropRequest{
+				AirdropId: 1,
+			},
+			false,
+			func(resp *types.QueryAirdropResponse) {
+				s.Require().Equal(airdrop.SourceAddress, resp.Airdrop.SourceAddress)
+				s.Require().Equal(airdrop.SourceCoins, resp.Airdrop.SourceCoins)
+				s.Require().Equal(airdrop.TerminationAddress, resp.Airdrop.TerminationAddress)
+				s.Require().Equal(airdrop.StartTime, resp.Airdrop.StartTime)
+				s.Require().Equal(airdrop.EndTime, resp.Airdrop.EndTime)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Airdrop(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
 
 func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 	airdrop := s.createAirdrop(
 		1,
 		parseCoins("1000000000denom1"),
 		s.ctx.BlockTime(),
-		squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
 		true,
 	)
 
@@ -45,7 +132,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 		{
 			"query with not eligible address",
 			&types.QueryClaimRecordRequest{
-				Address: s.addr(5).String(),
+				Recipient: s.addr(5).String(),
 			},
 			true,
 			nil,
@@ -54,7 +141,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 			"query by address",
 			&types.QueryClaimRecordRequest{
 				AirdropId: airdrop.AirdropId,
-				Address:   s.addr(0).String(),
+				Recipient: s.addr(0).String(),
 			},
 			false,
 			func(resp *types.QueryClaimRecordResponse) {
