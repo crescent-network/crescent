@@ -42,27 +42,27 @@ func (s *KeeperTestSuite) SetupTest() {
 //
 
 func (s *KeeperTestSuite) createAirdrop(
+	airdropId uint64,
 	sourceCoins sdk.Coins,
 	startTime time.Time,
 	endTime time.Time,
 	fund bool,
 ) types.Airdrop {
-	nextId := s.keeper.GetLastAirdropId(s.ctx)
-	sourceAddr := types.SourceAddress(nextId)
+	sourceAddr := types.SourceAddress(airdropId)
 
 	if fund {
 		s.fundAddr(sourceAddr, sourceCoins)
 	}
 
 	s.keeper.SetAirdrop(s.ctx, types.Airdrop{
-		AirdropId:          nextId,
+		AirdropId:          airdropId,
 		SourceAddress:      sourceAddr.String(),
 		TerminationAddress: s.addr(6).String(),
 		StartTime:          startTime,
 		EndTime:            endTime,
 	})
 
-	airdrop, found := s.keeper.GetAirdrop(s.ctx, nextId)
+	airdrop, found := s.keeper.GetAirdrop(s.ctx, airdropId)
 	s.Require().True(found)
 
 	return airdrop

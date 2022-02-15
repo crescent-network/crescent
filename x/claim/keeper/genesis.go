@@ -11,8 +11,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	// TODO: mint source coins to the source address
 
 	for _, a := range genState.Airdrops {
-		nextId := k.GetNextAirdropIdWithUpdate(ctx) // TODO: need to discuss if this is right approach
-		a.AirdropId = nextId
+		_, found := k.GetAirdrop(ctx, a.AirdropId)
+		if found {
+			panic("airdrop already exists")
+		}
 		k.SetAirdrop(ctx, a)
 	}
 

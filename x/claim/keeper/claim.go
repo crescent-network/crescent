@@ -9,13 +9,6 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-// GetNextAirdropIdWithUpdate increments airdrop id by one and set it.
-func (k Keeper) GetNextAirdropIdWithUpdate(ctx sdk.Context) uint64 {
-	id := k.GetLastAirdropId(ctx) + 1
-	k.SetAirdropId(ctx, id)
-	return id
-}
-
 func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, error) {
 	airdrop, found := k.GetAirdrop(ctx, msg.AirdropId)
 	if !found {

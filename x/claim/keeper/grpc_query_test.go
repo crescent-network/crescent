@@ -11,6 +11,7 @@ import (
 
 func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 	airdrop := s.createAirdrop(
+		1,
 		parseCoins("1000000000denom1"),
 		s.ctx.BlockTime(),
 		squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
