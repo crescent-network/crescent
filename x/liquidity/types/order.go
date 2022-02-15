@@ -31,12 +31,12 @@ func SortOrders(orders []amm.Order, cmp PriceComparator) {
 			case *UserOrder:
 				return orderA.RequestId < orderB.RequestId
 			case *PoolOrder:
-				return true
+				return false
 			}
 		case *PoolOrder:
 			switch orderB := orders[j].(type) {
 			case *UserOrder:
-				return false
+				return true
 			case *PoolOrder:
 				return orderA.PoolId < orderB.PoolId
 			}
