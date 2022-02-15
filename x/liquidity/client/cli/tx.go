@@ -45,9 +45,9 @@ func NewCreatePairCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pair [base-coin-denom] [quote-coin-denom]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Create a denom pair for an order book",
+		Short: "Create a pair(market) for trading",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a denom pair for an order book.
+			fmt.Sprintf(`Create a pair(market) for trading.
 Example:
 $ %s tx %s create-pair uatom usquad --from mykey
 `,

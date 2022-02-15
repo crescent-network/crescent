@@ -73,7 +73,7 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 			return pool
 		}
 		pair, _ := k.GetPair(ctx, req.PairId)
-		pairGetter = func(id uint64) types.Pair {
+		pairGetter = func(_ uint64) types.Pair {
 			return pair
 		}
 	}
@@ -341,7 +341,7 @@ func (k Querier) DepositRequests(c context.Context, req *types.QueryDepositReque
 	return &types.QueryDepositRequestsResponse{DepositRequests: drs, Pagination: pageRes}, nil
 }
 
-// DepositRequest quereis the specific deposit request.
+// DepositRequest queries the specific deposit request.
 func (k Querier) DepositRequest(c context.Context, req *types.QueryDepositRequestRequest) (*types.QueryDepositRequestResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -365,7 +365,7 @@ func (k Querier) DepositRequest(c context.Context, req *types.QueryDepositReques
 	return &types.QueryDepositRequestResponse{DepositRequest: dq}, nil
 }
 
-// WithdrawRequests quereis all withdraw requests.
+// WithdrawRequests queries all withdraw requests.
 func (k Querier) WithdrawRequests(c context.Context, req *types.QueryWithdrawRequestsRequest) (*types.QueryWithdrawRequestsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -404,7 +404,7 @@ func (k Querier) WithdrawRequests(c context.Context, req *types.QueryWithdrawReq
 	return &types.QueryWithdrawRequestsResponse{WithdrawRequests: wrs, Pagination: pageRes}, nil
 }
 
-// WithdrawRequest quereis the specific withdraw request.
+// WithdrawRequest queries the specific withdraw request.
 func (k Querier) WithdrawRequest(c context.Context, req *types.QueryWithdrawRequestRequest) (*types.QueryWithdrawRequestResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
