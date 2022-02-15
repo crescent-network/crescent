@@ -25,7 +25,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 			panic("airdrop already exists")
 		}
 
-		if !totalClaimableCoinsMap[airdrop.AirdropId].IsEqual(airdrop.SourceCoins) {
+		// The source account balances must be greater than or equal to the total claimable amounts
+		balances := k.bankKeeper.GetAllBalances(ctx, airdrop.GetSourceAddress())
+		if !balances.IsAllGTE(totalClaimableCoinsMap[airdrop.AirdropId]) {
 			panic("source coins must be equal to total claimable amounts")
 		}
 
