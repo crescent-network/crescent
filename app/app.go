@@ -170,7 +170,7 @@ var (
 		farmingtypes.ModuleName:        nil,
 		liquiditytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
 		liquidstakingtypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
-		claimtypes.ModuleName:          {authtypes.Minter},
+		claimtypes.ModuleName:          nil,
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	}
 )
