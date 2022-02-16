@@ -702,7 +702,7 @@ func (s *KeeperTestSuite) TestGRPCOrder() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	req := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -731,20 +731,20 @@ func (s *KeeperTestSuite) TestGRPCOrder() {
 			},
 			false,
 			func(resp *types.QueryOrderResponse) {
-				s.Require().Equal(req.Id, resp.Order.Id)
-				s.Require().Equal(req.PairId, resp.Order.PairId)
-				s.Require().Equal(req.MsgHeight, resp.Order.MsgHeight)
-				s.Require().Equal(req.Orderer, resp.Order.Orderer)
-				s.Require().Equal(req.Direction, resp.Order.Direction)
-				s.Require().Equal(req.OfferCoin, resp.Order.OfferCoin)
-				s.Require().Equal(req.RemainingOfferCoin, resp.Order.RemainingOfferCoin)
-				s.Require().Equal(req.ReceivedCoin, resp.Order.ReceivedCoin)
-				s.Require().Equal(req.Price, resp.Order.Price)
-				s.Require().Equal(req.Amount, resp.Order.Amount)
-				s.Require().Equal(req.OpenAmount, resp.Order.OpenAmount)
-				s.Require().Equal(req.BatchId, resp.Order.BatchId)
-				s.Require().Equal(req.ExpireAt, resp.Order.ExpireAt)
-				s.Require().NotEqual(req.Status, resp.Order.Status)
+				s.Require().Equal(order.Id, resp.Order.Id)
+				s.Require().Equal(order.PairId, resp.Order.PairId)
+				s.Require().Equal(order.MsgHeight, resp.Order.MsgHeight)
+				s.Require().Equal(order.Orderer, resp.Order.Orderer)
+				s.Require().Equal(order.Direction, resp.Order.Direction)
+				s.Require().Equal(order.OfferCoin, resp.Order.OfferCoin)
+				s.Require().Equal(order.RemainingOfferCoin, resp.Order.RemainingOfferCoin)
+				s.Require().Equal(order.ReceivedCoin, resp.Order.ReceivedCoin)
+				s.Require().Equal(order.Price, resp.Order.Price)
+				s.Require().Equal(order.Amount, resp.Order.Amount)
+				s.Require().Equal(order.OpenAmount, resp.Order.OpenAmount)
+				s.Require().Equal(order.BatchId, resp.Order.BatchId)
+				s.Require().Equal(order.ExpireAt, resp.Order.ExpireAt)
+				s.Require().NotEqual(order.Status, resp.Order.Status)
 			},
 		},
 	} {

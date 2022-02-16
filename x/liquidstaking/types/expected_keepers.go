@@ -7,6 +7,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	farmintypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
@@ -85,7 +86,7 @@ type DistrKeeper interface {
 type LiquidityKeeper interface {
 	GetPair(ctx sdk.Context, id uint64) (pair liquiditytypes.Pair, found bool)
 	GetPool(ctx sdk.Context, id uint64) (pool liquiditytypes.Pool, found bool)
-	GetPoolBalance(ctx sdk.Context, pool liquiditytypes.Pool, pair liquiditytypes.Pair) (rx sdk.Int, ry sdk.Int)
+	GetPoolBalances(ctx sdk.Context, pool liquiditytypes.Pool) (rx sdk.Coin, ry sdk.Coin)
 	GetPoolCoinSupply(ctx sdk.Context, pool liquiditytypes.Pool) sdk.Int
 }
 

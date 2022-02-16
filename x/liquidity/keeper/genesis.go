@@ -27,8 +27,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	for _, req := range genState.WithdrawRequests {
 		k.SetWithdrawRequest(ctx, req)
 	}
-	for _, req := range genState.Orders {
-		k.SetOrder(ctx, req)
+	for _, order := range genState.Orders {
+		k.SetOrder(ctx, order)
 	}
 }
 

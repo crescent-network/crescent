@@ -79,8 +79,8 @@ func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.Ord
 
 	requestId := k.GetNextOrderIdWithUpdate(ctx, pair)
 	expireAt := ctx.BlockTime().Add(msg.OrderLifespan)
-	req := types.NewOrderForLimitOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
-	k.SetOrder(ctx, req)
+	order := types.NewOrderForLimitOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
+	k.SetOrder(ctx, order)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -92,14 +92,14 @@ func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.Ord
 			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
 			sdk.NewAttribute(types.AttributeKeyPrice, price.String()),
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
-			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
-			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
+			sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(order.BatchId, 10)),
+			sdk.NewAttribute(types.AttributeKeyExpireAt, order.ExpireAt.Format(time.RFC3339)),
 			sdk.NewAttribute(types.AttributeKeyRefundedCoins, refundedCoin.String()),
 		),
 	})
 
-	return req, nil
+	return order, nil
 }
 
 // ValidateMsgMarketOrder validates types.MsgMarketOrder with state and returns
@@ -163,13 +163,12 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.O
 
 	requestId := k.GetNextOrderIdWithUpdate(ctx, pair)
 	expireAt := ctx.BlockTime().Add(msg.OrderLifespan)
-	req := types.NewOrderForMarketOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
-	k.SetOrder(ctx, req)
+	order := types.NewOrderForMarketOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
+	k.SetOrder(ctx, order)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeMarketOrder,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderDirection, msg.Direction.String()),
@@ -177,13 +176,14 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.O
 			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
 			sdk.NewAttribute(types.AttributeKeyPrice, price.String()),
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(req.BatchId, 10)),
-			sdk.NewAttribute(types.AttributeKeyExpireAt, req.ExpireAt.Format(time.RFC3339)),
+			sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyBatchId, strconv.FormatUint(order.BatchId, 10)),
+			sdk.NewAttribute(types.AttributeKeyExpireAt, order.ExpireAt.Format(time.RFC3339)),
 			sdk.NewAttribute(types.AttributeKeyRefundedCoins, refundedCoin.String()),
 		),
 	})
 
-	return req, nil
+	return order, nil
 }
 
 // ValidateMsgCancelOrder validates types.MsgCancelOrder and returns the order.
@@ -307,9 +307,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 
 	var poolOrderSources []amm.OrderSource
 	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
-		rx, ry := k.GetPoolBalance(ctx, pool, pair)
+		rx, ry := k.getPoolBalances(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
-		ammPool := amm.NewBasicPool(rx, ry, ps)
+		ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, ps)
 		if ammPool.IsDepleted() {
 			k.MarkPoolAsDisabled(ctx, pool)
 			return false, nil

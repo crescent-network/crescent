@@ -166,21 +166,21 @@ func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	// Execute matching
 	liquidity.EndBlocker(ctx, k)
 
-	req, found := k.GetOrder(ctx, req.PairId, req.Id)
+	order, found := k.GetOrder(ctx, order.PairId, order.Id)
 	s.Require().True(found)
-	s.Require().Equal(types.OrderStatusNotMatched, req.Status)
+	s.Require().Equal(types.OrderStatusNotMatched, order.Status)
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(10 * time.Second))
 	// Expire the order, here BeginBlocker is not called to check
 	// the request's changed status
 	liquidity.EndBlocker(ctx, k)
 
-	req, _ = k.GetOrder(ctx, req.PairId, req.Id)
-	s.Require().Equal(types.OrderStatusExpired, req.Status)
+	order, _ = k.GetOrder(ctx, order.PairId, order.Id)
+	s.Require().Equal(types.OrderStatusExpired, order.Status)
 
 	s.Require().True(coinsEq(squad.ParseCoins("1000000denom2"), s.getBalances(s.addr(1))))
 }
@@ -212,21 +212,21 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
 
 	// Cannot cancel an order within a same batch
-	err := k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), req.PairId, req.Id))
+	err := k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), order.PairId, order.Id))
 	s.Require().ErrorIs(err, types.ErrSameBatch)
 
 	s.nextBlock()
 
 	// Now an order can be canceled
-	err = k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), req.PairId, req.Id))
+	err = k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), order.PairId, order.Id))
 	s.Require().NoError(err)
 
-	req, found := k.GetOrder(ctx, req.PairId, req.Id)
+	order, found := k.GetOrder(ctx, order.PairId, order.Id)
 	s.Require().True(found)
-	s.Require().Equal(types.OrderStatusCanceled, req.Status)
+	s.Require().Equal(types.OrderStatusCanceled, order.Status)
 
 	// Coins are refunded
 	s.Require().True(coinsEq(squad.ParseCoins("10000denom2"), s.getBalances(s.addr(1))))
@@ -234,7 +234,7 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 	s.nextBlock()
 
 	// Order is deleted
-	_, found = k.GetOrder(ctx, req.PairId, req.Id)
+	_, found = k.GetOrder(ctx, order.PairId, order.Id)
 	s.Require().False(found)
 }
 

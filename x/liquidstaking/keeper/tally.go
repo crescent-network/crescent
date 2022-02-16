@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	squadtypes "github.com/cosmosquad-labs/squad/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
@@ -68,26 +69,25 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 
 		// add balance of PoolTokens including bToken value
 		if pool, found := k.liquidityKeeper.GetPool(ctx, liquiditytypes.ParsePoolCoinDenom(denom)); found {
-			if pair, found := k.liquidityKeeper.GetPair(ctx, pool.PairId); found {
-				rx, ry := k.liquidityKeeper.GetPoolBalance(ctx, pool, pair)
-				poolCoinSupply := k.liquidityKeeper.GetPoolCoinSupply(ctx, pool)
-				if !poolCoinSupply.IsPositive() {
-					continue
-				}
-				bTokenSharePerPoolCoin := sdk.ZeroDec()
-				if pair.QuoteCoinDenom == liquidBondDenom {
-					bTokenSharePerPoolCoin = rx.ToDec().Quo(poolCoinSupply.ToDec())
-				}
-				if pair.BaseCoinDenom == liquidBondDenom {
-					bTokenSharePerPoolCoin = ry.ToDec().Quo(poolCoinSupply.ToDec())
-				}
-				if !bTokenSharePerPoolCoin.IsPositive() {
-					continue
-				}
-				bTokenSharePerPoolCoinMap[denom] = bTokenSharePerPoolCoin
-				for voter, balance := range balanceByVoter {
-					bTokenValueMap.AddOrSet(voter, squadtypes.GetShareValue(balance, bTokenSharePerPoolCoin))
-				}
+			rx, ry := k.liquidityKeeper.GetPoolBalances(ctx, pool)
+			poolCoinSupply := k.liquidityKeeper.GetPoolCoinSupply(ctx, pool)
+			if !poolCoinSupply.IsPositive() {
+				continue
+			}
+			bTokenSharePerPoolCoin := sdk.ZeroDec()
+			pair, _ := k.liquidityKeeper.GetPair(ctx, pool.PairId)
+			if pair.QuoteCoinDenom == liquidBondDenom {
+				bTokenSharePerPoolCoin = rx.Amount.ToDec().Quo(poolCoinSupply.ToDec())
+			}
+			if pair.BaseCoinDenom == liquidBondDenom {
+				bTokenSharePerPoolCoin = ry.Amount.ToDec().Quo(poolCoinSupply.ToDec())
+			}
+			if !bTokenSharePerPoolCoin.IsPositive() {
+				continue
+			}
+			bTokenSharePerPoolCoinMap[denom] = bTokenSharePerPoolCoin
+			for voter, balance := range balanceByVoter {
+				bTokenValueMap.AddOrSet(voter, squadtypes.GetShareValue(balance, bTokenSharePerPoolCoin))
 			}
 		}
 	}
