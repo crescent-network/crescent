@@ -79,7 +79,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		record.ClaimableCoins = record.ClaimableCoins.Sub(amt)
 
 		if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), amt); err != nil {
-			return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to send coins to the recipient")
+			return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to transfer coins to the recipient")
 		}
 	}
 
@@ -97,4 +97,14 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 	})
 
 	return record, nil
+}
+
+// TerminateAirdrop terminates the airdrop and transfer the remaining coins to the termination address.
+func (k Keeper) TerminateAirdrop(ctx sdk.Context, airdrop types.Airdrop) error {
+	amt := k.bankKeeper.GetAllBalances(ctx, airdrop.GetSourceAddress())
+
+	if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), airdrop.GetTerminationAddress(), amt); err != nil {
+		return sdkerrors.Wrap(err, "failed to transfer the remaining coins to the termination address")
+	}
+	return nil
 }

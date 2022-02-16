@@ -21,17 +21,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	for _, airdrop := range genState.Airdrops {
 		_, found := k.GetAirdrop(ctx, airdrop.AirdropId)
-		if found {
-			panic("airdrop already exists")
+		if !found {
+			k.SetAirdrop(ctx, airdrop)
 		}
 
 		// The source account balances must be greater than or equal to the total claimable amounts
 		balances := k.bankKeeper.GetAllBalances(ctx, airdrop.GetSourceAddress())
 		if !balances.IsAllGTE(totalClaimableCoinsMap[airdrop.AirdropId]) {
-			panic("source coins must be equal to total claimable amounts")
+			panic("source account balances must be equal to total claimable coins")
 		}
-
-		k.SetAirdrop(ctx, airdrop)
 	}
 }
 
@@ -39,7 +37,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	airdrops := k.GetAllAirdrops(ctx)
 
-	// TODO: verify this with test case
 	records := []types.ClaimRecord{}
 	for _, airdrop := range airdrops {
 		records = append(records, k.GetAllClaimRecordsByAirdropId(ctx, airdrop.AirdropId)...)

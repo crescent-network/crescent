@@ -119,12 +119,13 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, record types.ClaimRecord) {
 }
 
 // GetAllAirdrops returns all types.Airdrop stored.
-func (k Keeper) GetAllAirdrops(ctx sdk.Context) (airdrops []types.Airdrop) {
+func (k Keeper) GetAllAirdrops(ctx sdk.Context) []types.Airdrop {
+	airdrops := []types.Airdrop{}
 	k.IterateAllAirdrops(ctx, func(airdrop types.Airdrop) (stop bool) {
 		airdrops = append(airdrops, airdrop)
 		return false
 	})
-	return
+	return airdrops
 }
 
 // GetAllClaimRecordsByAirdropId returns all types.ClaimRecord stored.

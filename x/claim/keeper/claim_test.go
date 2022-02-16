@@ -1,9 +1,12 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	squadtypes "github.com/cosmosquad-labs/squad/types"
+	"github.com/cosmosquad-labs/squad/x/claim"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -127,6 +130,7 @@ func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
 
 	// Terminate the airdrop
 	s.ctx = s.ctx.WithBlockTime(airdrop.EndTime.AddDate(0, 0, 1))
+	claim.EndBlocker(s.ctx, s.keeper)
 
 	// Claim farming action must fail
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
@@ -135,4 +139,9 @@ func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
 		ActionType: types.ActionTypeFarming,
 	})
 	s.Require().ErrorIs(err, types.ErrTerminatedAirdrop)
+
+	t1 := s.getAllBalances(airdrop.GetSourceAddress())
+	t2 := s.getAllBalances(airdrop.GetTerminationAddress())
+	fmt.Println("t1: ", t1)
+	fmt.Println("t2: ", t2)
 }

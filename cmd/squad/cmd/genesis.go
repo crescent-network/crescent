@@ -184,18 +184,9 @@ func TestnetGenesisParams() *GenesisParams {
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			Actions: []claimtypes.Action{
-				{
-					ActionType: claimtypes.ActionTypeDeposit,
-					Claimed:    false,
-				},
-				{
-					ActionType: claimtypes.ActionTypeSwap,
-					Claimed:    false,
-				},
-				{
-					ActionType: claimtypes.ActionTypeFarming,
-					Claimed:    false,
-				},
+				{ActionType: types.ActionTypeDeposit, Claimed: false},
+				{ActionType: types.ActionTypeSwap, Claimed: false},
+				{ActionType: types.ActionTypeFarming, Claimed: false},
 			},
 		},
 		{
@@ -204,18 +195,9 @@ func TestnetGenesisParams() *GenesisParams {
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
 			Actions: []claimtypes.Action{
-				{
-					ActionType: claimtypes.ActionTypeDeposit,
-					Claimed:    false,
-				},
-				{
-					ActionType: claimtypes.ActionTypeSwap,
-					Claimed:    false,
-				},
-				{
-					ActionType: claimtypes.ActionTypeFarming,
-					Claimed:    false,
-				},
+				{ActionType: types.ActionTypeDeposit, Claimed: false},
+				{ActionType: types.ActionTypeSwap, Claimed: false},
+				{ActionType: types.ActionTypeFarming, Claimed: false},
 			},
 		},
 		{
@@ -224,18 +206,9 @@ func TestnetGenesisParams() *GenesisParams {
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			Actions: []claimtypes.Action{
-				{
-					ActionType: claimtypes.ActionTypeDeposit,
-					Claimed:    false,
-				},
-				{
-					ActionType: claimtypes.ActionTypeSwap,
-					Claimed:    false,
-				},
-				{
-					ActionType: claimtypes.ActionTypeFarming,
-					Claimed:    false,
-				},
+				{ActionType: types.ActionTypeDeposit, Claimed: false},
+				{ActionType: types.ActionTypeSwap, Claimed: false},
+				{ActionType: types.ActionTypeFarming, Claimed: false},
 			},
 		},
 	}
