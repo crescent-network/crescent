@@ -44,3 +44,5 @@ func DivideByCurrentWeight(avs ActiveLiquidValidators, input sdk.Dec, totalLiqui
 	}
 	return outputs, input.Sub(totalOutput)
 }
+
+// TODO: DivideByBondedWeight
