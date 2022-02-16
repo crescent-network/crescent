@@ -10,7 +10,6 @@
 type Airdrop struct {
 	AirdropId          uint64    // airdrop_id specifies index of the airdrop
 	SourceAddress      string    // source_address defines the bech32-encoded source address
-	SourceCoins        sdk.Coins // source_coins specifies the airdrop coins
 	TerminationAddress string    // termination_address defines the bech32-encoded termination address
 	StartTime          time.Time // start_time specifies the start time of the airdrop
 	EndTime            time.Time // end_time specifies the start time of the airdrop
