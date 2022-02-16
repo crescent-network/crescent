@@ -52,6 +52,14 @@ func (s *KeeperTestSuite) TestClaim() {
 	})
 	s.Require().NoError(err)
 
+	// Claim farming action
+	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
+		AirdropId:  airdrop.AirdropId,
+		Recipient:  record.Recipient,
+		ActionType: types.ActionTypeDeposit,
+	})
+	s.Require().ErrorIs(err, types.ErrAlreadyClaimedAll)
+
 	// Verify
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.AirdropId, record.GetRecipient())
 	s.Require().True(found)
@@ -86,14 +94,13 @@ func (s *KeeperTestSuite) TestClaimExecuteSameAction() {
 	})
 	s.Require().NoError(err)
 
-	// Claim the same deposit action
-	// Return value must be nil
+	// Claim the already completed deposit action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
 		AirdropId:  airdrop.AirdropId,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeDeposit,
 	})
-	s.Require().Nil(err)
+	s.Require().ErrorIs(err, types.ErrAlreadyClaimed)
 }
 
 func (s *KeeperTestSuite) TestClaimAirdropTerminated() {

@@ -44,22 +44,18 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		}
 	}
 
-	// The recipient completed all the actions and it returns nil on purpose
-	// for better client handling; it prevents from multiple txs getting failed
+	// The recipient already completed all the actions
 	if unclaimedActions == 0 {
-		// TODO: consider emitting events since it returns nil?
-		return types.ClaimRecord{}, nil
+		return types.ClaimRecord{}, types.ErrAlreadyClaimedAll
 	}
 
-	// The recipient already completed the action and it returns nil on purpose
-	// for better client handling; it prevents from multiple txs getting failed
+	// The recipient already completed the particular action
 	claimed, found := actionsMap[msg.ActionType]
 	if !found {
 		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "action type not found")
 	}
 	if claimed {
-		// TODO: consider emitting events since it returns nil?
-		return types.ClaimRecord{}, nil
+		return types.ClaimRecord{}, types.ErrAlreadyClaimed
 	}
 
 	// Use divisor to send a proportional amount of the claimable amount to the recipient

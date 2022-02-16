@@ -8,5 +8,7 @@ import (
 
 // x/claim module sentinel errors
 var (
-	ErrTerminatedAirdrop = sdkerrors.Register(ModuleName, 2, "terminated airdrop event")
+	ErrAlreadyClaimedAll = sdkerrors.Register(ModuleName, 2, "already claimed all actions")
+	ErrAlreadyClaimed    = sdkerrors.Register(ModuleName, 3, "already claimed action")
+	ErrTerminatedAirdrop = sdkerrors.Register(ModuleName, 4, "terminated airdrop event")
 )
