@@ -94,10 +94,10 @@ func (k Keeper) GetAirdrop(ctx sdk.Context, airdropId uint64) (airdrop types.Air
 func (k Keeper) SetAirdrop(ctx sdk.Context, airdrop types.Airdrop) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&airdrop)
-	k.SetAirdropId(ctx, airdrop.AirdropId)
-	k.SetStartTime(ctx, airdrop.AirdropId, airdrop.StartTime)
-	k.SetEndTime(ctx, airdrop.AirdropId, airdrop.EndTime)
-	store.Set(types.GetAirdropKey(airdrop.AirdropId), bz)
+	k.SetAirdropId(ctx, airdrop.Id)
+	k.SetStartTime(ctx, airdrop.Id, airdrop.StartTime)
+	k.SetEndTime(ctx, airdrop.Id, airdrop.EndTime)
+	store.Set(types.GetAirdropKey(airdrop.Id), bz)
 }
 
 // GetClaimRecordByRecipient returns the claim record for the given airdrop id and the recipient address.

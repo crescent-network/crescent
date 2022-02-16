@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestClaim() {
 		true,
 	)
 
-	record := s.createClaimRecord(airdrop.AirdropId, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
+	record := s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
 		[]types.Action{
 			{ActionType: types.ActionTypeDeposit, Claimed: false},
 			{ActionType: types.ActionTypeSwap, Claimed: false},
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestClaim() {
 
 	// Claim deposit action
 	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeDeposit,
 	})
@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestClaim() {
 
 	// Claim swap action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeSwap,
 	})
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestClaim() {
 
 	// Claim farming action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeFarming,
 	})
@@ -54,14 +54,14 @@ func (s *KeeperTestSuite) TestClaim() {
 
 	// Claim farming action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeDeposit,
 	})
 	s.Require().ErrorIs(err, types.ErrAlreadyClaimedAll)
 
 	// Verify
-	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.AirdropId, record.GetRecipient())
+	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
 	s.Require().True(found)
 	s.Require().True(r.ClaimableCoins.IsZero())
 	s.Require().True(coinsEq(r.InitialClaimableCoins, sdk.NewCoins(s.getBalance(record.GetRecipient(), "denom1"))))
@@ -79,7 +79,7 @@ func (s *KeeperTestSuite) TestClaimExecuteSameAction() {
 		true,
 	)
 
-	record := s.createClaimRecord(airdrop.AirdropId, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
+	record := s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
 		[]types.Action{
 			{ActionType: types.ActionTypeDeposit, Claimed: false},
 			{ActionType: types.ActionTypeSwap, Claimed: false},
@@ -88,7 +88,7 @@ func (s *KeeperTestSuite) TestClaimExecuteSameAction() {
 
 	// Claim deposit action
 	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeDeposit,
 	})
@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestClaimExecuteSameAction() {
 
 	// Claim the already completed deposit action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeDeposit,
 	})
@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
 		true,
 	)
 
-	record := s.createClaimRecord(airdrop.AirdropId, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
+	record := s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
 		[]types.Action{
 			{ActionType: types.ActionTypeDeposit, Claimed: false},
 			{ActionType: types.ActionTypeSwap, Claimed: false},
@@ -121,7 +121,7 @@ func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
 
 	// Claim deposit action
 	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeDeposit,
 	})
@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
 
 	// Claim swap action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeSwap,
 	})
@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
 
 	// Claim farming action must fail
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.AirdropId,
+		AirdropId:  airdrop.Id,
 		Recipient:  record.Recipient,
 		ActionType: types.ActionTypeFarming,
 	})

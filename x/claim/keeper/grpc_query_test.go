@@ -106,7 +106,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 	)
 
 	s.createClaimRecord(
-		airdrop.AirdropId,
+		airdrop.Id,
 		s.addr(0),
 		parseCoins("100000000denom1"),
 		parseCoins("100000000denom1"),
@@ -140,7 +140,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 		{
 			"query by address",
 			&types.QueryClaimRecordRequest{
-				AirdropId: airdrop.AirdropId,
+				AirdropId: airdrop.Id,
 				Recipient: s.addr(0).String(),
 			},
 			false,

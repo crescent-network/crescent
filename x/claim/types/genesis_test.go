@@ -29,7 +29,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				Airdrops: []types.Airdrop{
 					{
 
-						AirdropId:          1,
+						Id:                 1,
 						SourceAddress:      types.SourceAddress(1).String(),
 						SourceCoins:        sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(1_000_000_000_000))),
 						TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
@@ -82,7 +82,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			valid: true,
 		},
-		// TODO: add invalid cases
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			err := tc.genState.Validate()

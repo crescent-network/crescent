@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 	sampleGenState := types.GenesisState{
 		Airdrops: []types.Airdrop{
 			{
-				AirdropId:          1,
+				Id:                 1,
 				SourceAddress:      s.addr(0).String(),
 				SourceCoins:        parseCoins("100000000000denom1"),
 				TerminationAddress: s.addr(5).String(),
@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	sampleGenState := types.GenesisState{
 		Airdrops: []types.Airdrop{
 			{
-				AirdropId:          1,
+				Id:                 1,
 				SourceAddress:      s.addr(0).String(),
 				SourceCoins:        parseCoins("100000000000denom1"),
 				TerminationAddress: s.addr(6).String(),
@@ -68,7 +68,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				EndTime:            s.ctx.BlockTime().AddDate(0, 1, 0),
 			},
 			{
-				AirdropId:          2,
+				Id:                 2,
 				SourceAddress:      s.addr(1).String(),
 				SourceCoins:        parseCoins("200000000000denom1"),
 				TerminationAddress: s.addr(6).String(),

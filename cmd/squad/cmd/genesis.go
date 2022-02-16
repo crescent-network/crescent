@@ -26,7 +26,6 @@ import (
 
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 	claimtypes "github.com/cosmosquad-labs/squad/x/claim/types"
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	liqstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -167,12 +166,12 @@ func TestnetGenesisParams() *GenesisParams {
 	// Set airdrop
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
 		{
-			AirdropId:          1,
+			Id:                 1,
 			SourceAddress:      claimtypes.SourceAddress(1).String(),
 			SourceCoins:        sdk.NewCoins(genParams.AirdropSupply),
 			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
 			StartTime:          genParams.GenesisTime,
-			EndTime:            farmingtypes.ParseTime("2022-02-16T00:00:00Z"),
+			EndTime:            genParams.GenesisTime.AddDate(0, 1, 0),
 		},
 	}
 
@@ -235,12 +234,12 @@ func MainnetGenesisParams() *GenesisParams {
 	// Set airdrop
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
 		{
-			AirdropId:          1,
+			Id:                 1,
 			SourceAddress:      claimtypes.SourceAddress(1).String(),
 			SourceCoins:        sdk.NewCoins(genParams.AirdropSupply),
 			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
 			StartTime:          genParams.GenesisTime,
-			EndTime:            farmingtypes.ParseTime("2022-05-01T00:00:00Z"),
+			EndTime:            genParams.GenesisTime.AddDate(0, 1, 0),
 		},
 	}
 

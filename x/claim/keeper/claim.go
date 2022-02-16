@@ -15,12 +15,12 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "airdrop not found")
 	}
 
-	record, found := k.GetClaimRecordByRecipient(ctx, airdrop.AirdropId, msg.GetRecipient())
+	record, found := k.GetClaimRecordByRecipient(ctx, airdrop.Id, msg.GetRecipient())
 	if !found {
 		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
 	}
 
-	endTime := k.GetEndTime(ctx, airdrop.AirdropId)
+	endTime := k.GetEndTime(ctx, airdrop.Id)
 	if !endTime.After(ctx.BlockTime()) {
 		return types.ClaimRecord{}, types.ErrTerminatedAirdrop
 	}

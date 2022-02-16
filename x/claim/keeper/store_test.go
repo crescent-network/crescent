@@ -38,13 +38,13 @@ func (s *KeeperTestSuite) TestAirdropStartAndEndTime() {
 		true,
 	)
 
-	_, found := s.keeper.GetAirdrop(s.ctx, airdrop.AirdropId)
+	_, found := s.keeper.GetAirdrop(s.ctx, airdrop.Id)
 	s.Require().True(found)
 
-	startTime := s.keeper.GetStartTime(s.ctx, airdrop.AirdropId)
+	startTime := s.keeper.GetStartTime(s.ctx, airdrop.Id)
 	s.Require().Equal(airdrop.StartTime, *startTime)
 
-	endTime := s.keeper.GetEndTime(s.ctx, airdrop.AirdropId)
+	endTime := s.keeper.GetEndTime(s.ctx, airdrop.Id)
 	s.Require().Equal(airdrop.EndTime, *endTime)
 }
 
@@ -57,25 +57,25 @@ func (s *KeeperTestSuite) TestAllClaimRecords() {
 		true,
 	)
 
-	s.createClaimRecord(airdrop.AirdropId, s.addr(0), parseCoins("300000000denom1"), parseCoins("300000000denom1"),
+	s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("300000000denom1"), parseCoins("300000000denom1"),
 		[]types.Action{
 			{ActionType: types.ActionTypeDeposit, Claimed: false},
 			{ActionType: types.ActionTypeSwap, Claimed: false},
 			{ActionType: types.ActionTypeFarming, Claimed: false}},
 	)
-	s.createClaimRecord(airdrop.AirdropId, s.addr(1), parseCoins("300000000denom1"), parseCoins("300000000denom1"),
+	s.createClaimRecord(airdrop.Id, s.addr(1), parseCoins("300000000denom1"), parseCoins("300000000denom1"),
 		[]types.Action{
 			{ActionType: types.ActionTypeDeposit, Claimed: true},
 			{ActionType: types.ActionTypeSwap, Claimed: false},
 			{ActionType: types.ActionTypeFarming, Claimed: false}},
 	)
-	s.createClaimRecord(airdrop.AirdropId, s.addr(2), parseCoins("400000000denom1"), parseCoins("400000000denom1"),
+	s.createClaimRecord(airdrop.Id, s.addr(2), parseCoins("400000000denom1"), parseCoins("400000000denom1"),
 		[]types.Action{
 			{ActionType: types.ActionTypeDeposit, Claimed: false},
 			{ActionType: types.ActionTypeSwap, Claimed: true},
 			{ActionType: types.ActionTypeFarming, Claimed: true}},
 	)
 
-	records := s.keeper.GetAllClaimRecordsByAirdropId(s.ctx, airdrop.AirdropId)
+	records := s.keeper.GetAllClaimRecordsByAirdropId(s.ctx, airdrop.Id)
 	s.Require().Len(records, 3)
 }
