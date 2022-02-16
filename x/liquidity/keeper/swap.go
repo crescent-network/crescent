@@ -77,7 +77,7 @@ func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.Ord
 		return types.Order{}, err
 	}
 
-	requestId := k.GetNextOrderIdWithUpdate(ctx, pair)
+	requestId := k.getNextOrderIdWithUpdate(ctx, pair)
 	expireAt := ctx.BlockTime().Add(msg.OrderLifespan)
 	order := types.NewOrderForLimitOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
 	k.SetOrder(ctx, order)
@@ -161,7 +161,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.O
 		return types.Order{}, err
 	}
 
-	requestId := k.GetNextOrderIdWithUpdate(ctx, pair)
+	requestId := k.getNextOrderIdWithUpdate(ctx, pair)
 	expireAt := ctx.BlockTime().Add(msg.OrderLifespan)
 	order := types.NewOrderForMarketOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
 	k.SetOrder(ctx, order)
