@@ -20,7 +20,6 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 			{
 				Id:                 1,
 				SourceAddress:      s.addr(0).String(),
-				SourceCoins:        parseCoins("100000000000denom1"),
 				TerminationAddress: s.addr(5).String(),
 				StartTime:          s.ctx.BlockTime(),
 				EndTime:            s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -46,7 +45,7 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 		s.keeper.InitGenesis(s.ctx, sampleGenState)
 	})
 
-	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), sampleGenState.Airdrops[0].SourceCoins)
+	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), parseCoins("100000000000denom1"))
 	s.keeper.InitGenesis(s.ctx, sampleGenState)
 
 	_, found := s.keeper.GetAirdrop(s.ctx, 1)
@@ -62,7 +61,6 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 			{
 				Id:                 1,
 				SourceAddress:      s.addr(0).String(),
-				SourceCoins:        parseCoins("100000000000denom1"),
 				TerminationAddress: s.addr(6).String(),
 				StartTime:          s.ctx.BlockTime(),
 				EndTime:            s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -70,7 +68,6 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 			{
 				Id:                 2,
 				SourceAddress:      s.addr(1).String(),
-				SourceCoins:        parseCoins("200000000000denom1"),
 				TerminationAddress: s.addr(6).String(),
 				StartTime:          s.ctx.BlockTime().AddDate(0, 5, 0),
 				EndTime:            s.ctx.BlockTime().AddDate(0, 7, 0),
@@ -136,8 +133,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	}
 
 	// Initialize genesis state
-	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), sampleGenState.Airdrops[0].SourceCoins)
-	s.fundAddr(sampleGenState.Airdrops[1].GetSourceAddress(), sampleGenState.Airdrops[1].SourceCoins)
+	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), parseCoins("100000000000denom1"))
+	s.fundAddr(sampleGenState.Airdrops[1].GetSourceAddress(), parseCoins("200000000000denom1"))
 	s.Require().NotPanics(func() {
 		s.keeper.InitGenesis(s.ctx, sampleGenState)
 	})

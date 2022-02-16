@@ -8,7 +8,7 @@
 
 // Airdrop defines airdrop information.
 type Airdrop struct {
-	AirdropId          uint64    // airdrop_id specifies index of the airdrop
+	Id                 uint64    // airdrop_id specifies index of the airdrop
 	SourceAddress      string    // source_address defines the bech32-encoded source address
 	TerminationAddress string    // termination_address defines the bech32-encoded termination address
 	StartTime          time.Time // start_time specifies the start time of the airdrop

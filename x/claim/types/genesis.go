@@ -41,9 +41,6 @@ func (a Airdrop) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(a.TerminationAddress); err != nil {
 		return err
 	}
-	if !a.SourceCoins.IsAllPositive() {
-		return errors.New("source coins must be all positive")
-	}
 	if !a.EndTime.After(a.StartTime) {
 		return errors.New("end time must be greater than start time")
 	}

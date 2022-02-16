@@ -17,10 +17,6 @@ message Airdrop {
   // where the source of coins from
   string source_address = 2;
 
-  // source_coins specifies the airdrop coins
-  repeated cosmos.base.v1beta1.Coin source_coins = 3
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-
   // termination_address defines the bech32-encoded termination address
   // where the remaining source coins are sent to
   string termination_address = 4;

@@ -31,7 +31,6 @@ func TestGenesisState_Validate(t *testing.T) {
 
 						Id:                 1,
 						SourceAddress:      types.SourceAddress(1).String(),
-						SourceCoins:        sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(1_000_000_000_000))),
 						TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
 						StartTime:          farmingtypes.ParseTime("2022-02-01T00:00:00Z"),
 						EndTime:            farmingtypes.ParseTime("2022-06-01T00:00:00Z"),

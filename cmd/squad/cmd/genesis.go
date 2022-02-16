@@ -168,7 +168,6 @@ func TestnetGenesisParams() *GenesisParams {
 		{
 			Id:                 1,
 			SourceAddress:      claimtypes.SourceAddress(1).String(),
-			SourceCoins:        sdk.NewCoins(genParams.AirdropSupply),
 			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
 			StartTime:          genParams.GenesisTime,
 			EndTime:            genParams.GenesisTime.AddDate(0, 1, 0),
@@ -236,7 +235,6 @@ func MainnetGenesisParams() *GenesisParams {
 		{
 			Id:                 1,
 			SourceAddress:      claimtypes.SourceAddress(1).String(),
-			SourceCoins:        sdk.NewCoins(genParams.AirdropSupply),
 			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
 			StartTime:          genParams.GenesisTime,
 			EndTime:            genParams.GenesisTime.AddDate(0, 1, 0),

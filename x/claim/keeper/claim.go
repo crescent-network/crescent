@@ -25,6 +25,9 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		return types.ClaimRecord{}, types.ErrTerminatedAirdrop
 	}
 
+	// TODO: sanity check whether or not if the receipient has executed deposit, swap, and farming stake
+	//
+
 	// Increment a number of unclaimed actions and add values
 	// to actionsMap to sanity check the already completed action
 	actionsMap := make(map[types.ActionType]bool, len(record.Actions))
@@ -60,6 +63,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 
 	// Use divisor to send a proportional amount of the claimable amount to the recipient
 	// When unclaimedActions is 1, send all the remaining amount to the recipient
+	// TODO: verify logic without case 1
 	switch unclaimedActions {
 	case 1:
 		amt := record.ClaimableCoins

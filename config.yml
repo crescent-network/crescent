@@ -46,11 +46,8 @@ genesis:
         liquid_bond_denom: "busquad"
     claim:
       airdrops:
-        - airdrop_id: "1"
+        - id: "1"
           source_address: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr" # source
-          source_coins: 
-            - amount: "5000000000000"
-              denom: "airdrop"
           termination_address: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta"
           start_time: "2022-02-01T00:00:00Z"
           end_time: "2022-02-21T00:00:00Z"

@@ -12,6 +12,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		panic(err)
 	}
 
+	// TODO: consider removing this check
 	totalClaimableCoinsMap := make(map[uint64]sdk.Coins) // map(airdropId => totalClaimableCoins)
 	for _, r := range genState.ClaimRecords {
 		totalClaimableCoinsMap[r.AirdropId] = totalClaimableCoinsMap[r.AirdropId].Add(r.ClaimableCoins...)
