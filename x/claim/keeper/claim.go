@@ -63,18 +63,19 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 	}
 
 	// Use divisor to send a proportional amount of the claimable amount to the recipient
-	// Send all the remaining amount to the recipient when unclaimedActions is 1
+	// When unclaimedActions is 1, send all the remaining amount to the recipient
 	switch unclaimedActions {
-	case 2, 3:
-		divisor := sdk.NewDec(unclaimedActions)
-		amt, _ := sdk.NewDecCoinsFromCoins(record.ClaimableCoins...).QuoDecTruncate(divisor).TruncateDecimal()
+	case 1:
+		amt := record.ClaimableCoins
 		record.ClaimableCoins = record.ClaimableCoins.Sub(amt)
 
 		if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), amt); err != nil {
 			return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to send coins to the recipient")
 		}
+
 	default:
-		amt := record.ClaimableCoins
+		divisor := sdk.NewDec(unclaimedActions)
+		amt, _ := sdk.NewDecCoinsFromCoins(record.ClaimableCoins...).QuoDecTruncate(divisor).TruncateDecimal()
 		record.ClaimableCoins = record.ClaimableCoins.Sub(amt)
 
 		if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), amt); err != nil {

@@ -92,3 +92,47 @@ func (s *KeeperTestSuite) TestClaimExecuteSameAction() {
 	})
 	s.Require().Nil(err)
 }
+
+func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
+	airdrop := s.createAirdrop(
+		1,
+		parseCoins("1000000000denom1"),
+		squadtypes.MustParseRFC3339("2022-02-01T00:00:00Z"),
+		squadtypes.MustParseRFC3339("2022-06-01T00:00:00Z"),
+		true,
+	)
+
+	record := s.createClaimRecord(airdrop.AirdropId, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
+		[]types.Action{
+			{ActionType: types.ActionTypeDeposit, Claimed: false},
+			{ActionType: types.ActionTypeSwap, Claimed: false},
+			{ActionType: types.ActionTypeFarming, Claimed: false}},
+	)
+
+	// Claim deposit action
+	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
+		AirdropId:  airdrop.AirdropId,
+		Recipient:  record.Recipient,
+		ActionType: types.ActionTypeDeposit,
+	})
+	s.Require().NoError(err)
+
+	// Claim swap action
+	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
+		AirdropId:  airdrop.AirdropId,
+		Recipient:  record.Recipient,
+		ActionType: types.ActionTypeSwap,
+	})
+	s.Require().NoError(err)
+
+	// Terminate the airdrop
+	s.ctx = s.ctx.WithBlockTime(airdrop.EndTime.AddDate(0, 0, 1))
+
+	// Claim farming action must fail
+	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
+		AirdropId:  airdrop.AirdropId,
+		Recipient:  record.Recipient,
+		ActionType: types.ActionTypeFarming,
+	})
+	s.Require().ErrorIs(err, types.ErrTerminatedAirdrop)
+}
