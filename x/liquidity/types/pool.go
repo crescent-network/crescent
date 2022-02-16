@@ -63,6 +63,7 @@ func (pool Pool) GetReserveAddress() sdk.AccAddress {
 	return addr
 }
 
+// Validate validates Pool for genesis.
 func (pool Pool) Validate() error {
 	if pool.Id == 0 {
 		return fmt.Errorf("pool id must not be 0")
@@ -79,6 +80,8 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
+// BasicPoolOrderSource is the order source for a pool which implements
+// amm.OrderSource.
 type BasicPoolOrderSource struct {
 	amm.Pool
 	PoolId                        uint64
@@ -86,7 +89,8 @@ type BasicPoolOrderSource struct {
 	BaseCoinDenom, QuoteCoinDenom string
 }
 
-func NewPoolOrderSource(
+// NewBasicPoolOrderSource returns a new BasicPoolOrderSource.
+func NewBasicPoolOrderSource(
 	pool amm.Pool, poolId uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) *BasicPoolOrderSource {
 	return &BasicPoolOrderSource{
 		Pool:               pool,

@@ -61,6 +61,7 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 		price = amm.PriceToUpTick(msg.Price, int(params.TickPrecision))
 		offerCoin = msg.OfferCoin
 	}
+
 	return offerCoin, price, nil
 }
 
@@ -314,7 +315,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 			k.MarkPoolAsDisabled(ctx, pool)
 			return false, nil
 		}
-		poolOrderSource := types.NewPoolOrderSource(ammPool, pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
+		poolOrderSource := types.NewBasicPoolOrderSource(ammPool, pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		poolOrderSources = append(poolOrderSources, poolOrderSource)
 		return false, nil
 	})
@@ -327,8 +328,8 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		buyOrders := os.BuyOrdersOver(matchPrice)
 		sellOrders := os.SellOrdersUnder(matchPrice)
 
-		types.SortOrders(buyOrders, types.DescendingPrice)
-		types.SortOrders(sellOrders, types.AscendingPrice)
+		types.SortOrders(buyOrders, types.PriceDescending)
+		types.SortOrders(sellOrders, types.PriceAscending)
 
 		quoteCoinDust, matched := amm.MatchOrders(buyOrders, sellOrders, matchPrice)
 		if matched {

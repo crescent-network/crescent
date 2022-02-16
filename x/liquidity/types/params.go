@@ -10,11 +10,39 @@ import (
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
+// Liquidity params default values
+const (
+	DefaultBatchSize        uint32 = 1
+	DefaultTickPrecision    uint32 = 3
+	DefaultMaxOrderLifespan        = 24 * time.Hour
+)
+
+// Liquidity params default values
+var (
+	DefaultFeeCollectorAddress     = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
+	DefaultDustCollectorAddress    = farmingtypes.DeriveAddress(AddressType, ModuleName, "DustCollector")
+	DefaultInitialPoolCoinSupply   = sdk.NewInt(1_000_000_000_000)
+	DefaultPairCreationFee         = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultPoolCreationFee         = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultMinInitialDepositAmount = sdk.NewInt(1000000)
+	DefaultMaxPriceLimitRatio      = sdk.NewDecWithPrec(1, 1) // 10%
+	DefaultSwapFeeRate             = sdk.ZeroDec()
+	DefaultWithdrawFeeRate         = sdk.ZeroDec()
+)
+
+// General constants
 const (
 	PoolReserveAddressPrefix  = "PoolReserveAddress"
 	PairEscrowAddressPrefix   = "PairEscrowAddress"
 	ModuleAddressNameSplitter = "|"
 	AddressType               = farmingtypes.AddressType32Bytes
+)
+
+var (
+	MinCoinAmount = sdk.NewInt(100) // minimum coin amount of offer coin and base coin
+
+	// GlobalEscrowAddress is an escrow for deposit/withdraw requests.
+	GlobalEscrowAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
 )
 
 var (
@@ -32,33 +60,13 @@ var (
 	KeyWithdrawFeeRate         = []byte("WithdrawFeeRate")
 )
 
-var (
-	DefaultBatchSize               uint32 = 1
-	DefaultTickPrecision           uint32 = 3
-	DefaultFeeCollectorAddress            = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
-	DefaultDustCollectorAddress           = farmingtypes.DeriveAddress(AddressType, ModuleName, "DustCollector")
-	DefaultInitialPoolCoinSupply          = sdk.NewInt(1_000_000_000_000)
-	DefaultPairCreationFee                = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	DefaultPoolCreationFee                = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	DefaultMinInitialDepositAmount        = sdk.NewInt(1000000)
-	DefaultMaxPriceLimitRatio             = sdk.NewDecWithPrec(1, 1) // 10%
-	DefaultMaxOrderLifespan               = 24 * time.Hour
-	DefaultSwapFeeRate                    = sdk.ZeroDec()
-	DefaultWithdrawFeeRate                = sdk.ZeroDec()
-)
-
-var (
-	MinCoinAmount = sdk.NewInt(100) // minimum coin amount of offer coin and base coin
-
-	GlobalEscrowAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
-)
-
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 func ParamKeyTable() paramstypes.KeyTable {
 	return paramstypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
+// DefaultParams returns a default params for the liquidity module.
 func DefaultParams() Params {
 	return Params{
 		BatchSize:               DefaultBatchSize,
@@ -76,6 +84,7 @@ func DefaultParams() Params {
 	}
 }
 
+// ParamSetPairs implements ParamSet.
 func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyBatchSize, &params.BatchSize, validateBatchSize),
@@ -93,6 +102,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	}
 }
 
+// Validate validates Params.
 func (params Params) Validate() error {
 	for _, field := range []struct {
 		val          interface{}

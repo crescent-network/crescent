@@ -32,6 +32,7 @@ func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) Pair {
 	}
 }
 
+// Validate validates Pair for genesis.
 func (pair Pair) Validate() error {
 	if pair.Id == 0 {
 		return fmt.Errorf("pair id must not be 0")
