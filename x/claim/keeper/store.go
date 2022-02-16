@@ -103,7 +103,7 @@ func (k Keeper) SetAirdrop(ctx sdk.Context, airdrop types.Airdrop) {
 // GetClaimRecordByRecipient returns the claim record for the given airdrop id and the recipient address.
 func (k Keeper) GetClaimRecordByRecipient(ctx sdk.Context, airdropId uint64, recipient sdk.AccAddress) (record types.ClaimRecord, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetClaimRecordByRecipientKey(airdropId, recipient))
+	bz := store.Get(types.GetClaimRecordKey(airdropId, recipient))
 	if bz == nil {
 		return
 	}
@@ -115,7 +115,7 @@ func (k Keeper) GetClaimRecordByRecipient(ctx sdk.Context, airdropId uint64, rec
 func (k Keeper) SetClaimRecord(ctx sdk.Context, record types.ClaimRecord) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&record)
-	store.Set(types.GetClaimRecordByRecipientKey(record.AirdropId, record.GetRecipient()), bz)
+	store.Set(types.GetClaimRecordKey(record.AirdropId, record.GetRecipient()), bz)
 }
 
 // GetAllAirdrops returns all types.Airdrop stored.
@@ -153,7 +153,7 @@ func (k Keeper) IterateAllAirdrops(ctx sdk.Context, cb func(airdrop types.Airdro
 // IterateAllClaimRecordsByAirdropId iterates over all types.ClaimRecord stored.
 func (k Keeper) IterateAllClaimRecordsByAirdropId(ctx sdk.Context, airdropId uint64, cb func(record types.ClaimRecord) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetClaimRecordKey(airdropId))
+	iter := sdk.KVStorePrefixIterator(store, types.GetClaimRecordsByAirdropKeyPrefix(airdropId))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var record types.ClaimRecord

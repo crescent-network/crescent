@@ -44,12 +44,12 @@ func GetAirdropKey(airdropId uint64) []byte {
 	return append(AirdropKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...)
 }
 
-// GetClaimRecordKey returns the store key to retrieve the claim record by the airdrop id.
-func GetClaimRecordKey(airdropId uint64) []byte {
+// GetClaimRecordsByAirdropKeyPrefix returns the store key to retrieve the claim record by the airdrop id.
+func GetClaimRecordsByAirdropKeyPrefix(airdropId uint64) []byte {
 	return append(ClaimRecordKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...)
 }
 
-// GetClaimRecordByRecipientKey returns the tore key to retrieve the claim record by the airdrop id and the recipient address.
-func GetClaimRecordByRecipientKey(airdropId uint64, recipient sdk.AccAddress) []byte {
+// GetClaimRecordKey returns the tore key to retrieve the claim record by the airdrop id and the recipient address.
+func GetClaimRecordKey(airdropId uint64, recipient sdk.AccAddress) []byte {
 	return append(append(ClaimRecordKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...), address.MustLengthPrefix(recipient)...)
 }

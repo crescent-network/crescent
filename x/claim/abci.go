@@ -15,7 +15,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// Terminate airdrop if the airdrop end time has passed
 	for _, airdrop := range k.GetAllAirdrops(ctx) {
-		if ctx.BlockTime().After(airdrop.EndTime) {
+		if !ctx.BlockTime().Before(airdrop.EndTime) { // BlockTime >= EndTime
 			if err := k.TerminateAirdrop(ctx, airdrop); err != nil {
 				panic(err)
 			}

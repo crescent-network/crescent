@@ -52,7 +52,7 @@ func (s *keysTestSuite) TestGetClaimRecordIndexKey() {
 	}
 
 	for _, tc := range testCases {
-		key := types.GetClaimRecordByRecipientKey(tc.airdropId, tc.recipientAddr)
+		key := types.GetClaimRecordKey(tc.airdropId, tc.recipientAddr)
 		s.Require().Equal(tc.expected, key)
 	}
 }
