@@ -324,3 +324,26 @@ func TestBasicPool_Withdraw(t *testing.T) {
 		})
 	}
 }
+
+func TestBasicPool_Amount(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.ZeroInt())
+	require.True(t, squad.DecApproxEqual(
+		squad.ParseDec("1000000"),
+		pool.BuyAmountOver(defTickPrec.LowestTick()).ToDec().Mul(defTickPrec.LowestTick()),
+	))
+	require.True(t, squad.DecApproxEqual(
+		squad.ParseDec("1000000"),
+		pool.SellAmountUnder(defTickPrec.HighestTick()).ToDec()),
+	)
+}
+
+func TestMockPoolOrderSource_Orders(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.ZeroInt())
+	os := amm.NewMockPoolOrderSource(pool, "denom1", "denom2")
+	buyOrders := os.BuyOrdersOver(defTickPrec.LowestTick())
+	require.Len(t, buyOrders, 1)
+	require.True(sdk.IntEq(t, os.BuyAmountOver(defTickPrec.LowestTick()), buyOrders[0].GetOpenAmount()))
+	sellOrders := os.SellOrdersUnder(defTickPrec.HighestTick())
+	require.Len(t, sellOrders, 1)
+	require.True(sdk.IntEq(t, os.SellAmountUnder(defTickPrec.HighestTick()), sellOrders[0].GetOpenAmount()))
+}
