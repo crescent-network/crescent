@@ -53,18 +53,18 @@ func (s *KeeperTestSuite) TestPoolCoinEscrowInvariant() {
 func (s *KeeperTestSuite) TestRemainingOfferCoinEscrowInvariant() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), newInt(1000000), 0, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), newInt(1000000), 0, true)
 	_, broken := keeper.RemainingOfferCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().False(broken)
 
-	oldReq := req
-	req.RemainingOfferCoin = squad.ParseCoin("2000000denom1")
-	s.keeper.SetOrder(s.ctx, req)
+	oldOrder := order
+	order.RemainingOfferCoin = squad.ParseCoin("2000000denom1")
+	s.keeper.SetOrder(s.ctx, order)
 	_, broken = keeper.RemainingOfferCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().True(broken)
 
-	req = oldReq
-	s.keeper.SetOrder(s.ctx, req)
+	order = oldOrder
+	s.keeper.SetOrder(s.ctx, order)
 	s.nextBlock()
 	_, broken = keeper.RemainingOfferCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().False(broken)

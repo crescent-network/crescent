@@ -6,6 +6,7 @@ import (
 
 var _ OrderSource = (*mergedOrderSource)(nil)
 
+// OrderView is the interface which provides a view of orders.
 type OrderView interface {
 	HighestBuyPrice() (price sdk.Dec, found bool)
 	LowestSellPrice() (price sdk.Dec, found bool)
@@ -13,16 +14,20 @@ type OrderView interface {
 	SellAmountUnder(price sdk.Dec) sdk.Int // Includes the price
 }
 
+// OrderSource is the interface which provides a view of orders and also
+// provides a way to extract orders from it.
 type OrderSource interface {
 	OrderView
 	BuyOrdersOver(price sdk.Dec) []Order   // Includes the price
 	SellOrdersUnder(price sdk.Dec) []Order // Includes the price
 }
 
+// mergedOrderSource is a merged order source of multiple sources.
 type mergedOrderSource struct {
 	sources []OrderSource
 }
 
+// MergeOrderSources returns a merged order source of multiple sources.
 func MergeOrderSources(sources ...OrderSource) OrderSource {
 	return &mergedOrderSource{sources: sources}
 }

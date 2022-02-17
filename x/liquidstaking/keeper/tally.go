@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	squadtypes "github.com/cosmosquad-labs/squad/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
@@ -70,16 +71,16 @@ func (k Keeper) TokenSharePerPoolCoin(ctx sdk.Context, targetDenom, poolCoinDeno
 		return sdk.ZeroDec()
 	}
 
-	rx, ry := k.liquidityKeeper.GetPoolBalance(ctx, pool, pair)
+	rx, ry := k.liquidityKeeper.GetPoolBalances(ctx, pool)
 	poolCoinSupply := k.liquidityKeeper.GetPoolCoinSupply(ctx, pool)
 	if !poolCoinSupply.IsPositive() {
 		return sdk.ZeroDec()
 	}
 	bTokenSharePerPoolCoin := sdk.ZeroDec()
 	if pair.QuoteCoinDenom == targetDenom {
-		bTokenSharePerPoolCoin = rx.ToDec().QuoTruncate(poolCoinSupply.ToDec())
+		bTokenSharePerPoolCoin = rx.Amount.ToDec().QuoTruncate(poolCoinSupply.ToDec())
 	} else if pair.BaseCoinDenom == targetDenom {
-		bTokenSharePerPoolCoin = ry.ToDec().QuoTruncate(poolCoinSupply.ToDec())
+		bTokenSharePerPoolCoin = ry.Amount.ToDec().QuoTruncate(poolCoinSupply.ToDec())
 	}
 	if !bTokenSharePerPoolCoin.IsPositive() {
 		return sdk.ZeroDec()

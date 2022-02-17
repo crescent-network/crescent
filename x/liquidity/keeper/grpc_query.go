@@ -73,7 +73,7 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 			return pool
 		}
 		pair, _ := k.GetPair(ctx, req.PairId)
-		pairGetter = func(id uint64) types.Pair {
+		pairGetter = func(_ uint64) types.Pair {
 			return pair
 		}
 	}
@@ -90,13 +90,13 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 		}
 
 		pair := pairGetter(pool.PairId)
-		rx, ry := k.GetPoolBalance(ctx, pool, pair)
+		rx, ry := k.getPoolBalances(ctx, pool, pair)
 		poolRes := types.PoolResponse{
 			Id:                    pool.Id,
 			PairId:                pool.PairId,
 			ReserveAddress:        pool.ReserveAddress,
 			PoolCoinDenom:         pool.PoolCoinDenom,
-			Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
+			Balances:              sdk.NewCoins(rx, ry),
 			LastDepositRequestId:  pool.LastDepositRequestId,
 			LastWithdrawRequestId: pool.LastWithdrawRequestId,
 		}
@@ -132,15 +132,13 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", req.PoolId)
 	}
 
-	pair, _ := k.GetPair(ctx, pool.PairId)
-
-	rx, ry := k.GetPoolBalance(ctx, pool, pair)
+	rx, ry := k.GetPoolBalances(ctx, pool)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
+		Balances:              sdk.NewCoins(rx, ry),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -170,15 +168,13 @@ func (k Querier) PoolByReserveAddress(c context.Context, req *types.QueryPoolByR
 		return nil, status.Errorf(codes.NotFound, "pool by %s doesn't exist", req.ReserveAddress)
 	}
 
-	pair, _ := k.GetPair(ctx, pool.PairId)
-
-	rx, ry := k.GetPoolBalance(ctx, pool, pair)
+	rx, ry := k.GetPoolBalances(ctx, pool)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
+		Balances:              sdk.NewCoins(rx, ry),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -204,15 +200,13 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", poolId)
 	}
 
-	pair, _ := k.GetPair(ctx, pool.PairId)
-
-	rx, ry := k.GetPoolBalance(ctx, pool, pair)
+	rx, ry := k.GetPoolBalances(ctx, pool)
 	poolRes := types.PoolResponse{
 		Id:                    pool.Id,
 		PairId:                pool.PairId,
 		ReserveAddress:        pool.ReserveAddress,
 		PoolCoinDenom:         pool.PoolCoinDenom,
-		Balances:              sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, rx), sdk.NewCoin(pair.BaseCoinDenom, ry)),
+		Balances:              sdk.NewCoins(rx, ry),
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,
 	}
@@ -341,7 +335,7 @@ func (k Querier) DepositRequests(c context.Context, req *types.QueryDepositReque
 	return &types.QueryDepositRequestsResponse{DepositRequests: drs, Pagination: pageRes}, nil
 }
 
-// DepositRequest quereis the specific deposit request.
+// DepositRequest queries the specific deposit request.
 func (k Querier) DepositRequest(c context.Context, req *types.QueryDepositRequestRequest) (*types.QueryDepositRequestResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -365,7 +359,7 @@ func (k Querier) DepositRequest(c context.Context, req *types.QueryDepositReques
 	return &types.QueryDepositRequestResponse{DepositRequest: dq}, nil
 }
 
-// WithdrawRequests quereis all withdraw requests.
+// WithdrawRequests queries all withdraw requests.
 func (k Querier) WithdrawRequests(c context.Context, req *types.QueryWithdrawRequestsRequest) (*types.QueryWithdrawRequestsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -404,7 +398,7 @@ func (k Querier) WithdrawRequests(c context.Context, req *types.QueryWithdrawReq
 	return &types.QueryWithdrawRequestsResponse{WithdrawRequests: wrs, Pagination: pageRes}, nil
 }
 
-// WithdrawRequest quereis the specific withdraw request.
+// WithdrawRequest queries the specific withdraw request.
 func (k Querier) WithdrawRequest(c context.Context, req *types.QueryWithdrawRequestRequest) (*types.QueryWithdrawRequestResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
