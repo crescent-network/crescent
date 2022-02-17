@@ -1,7 +1,6 @@
 package amm
 
 import (
-	"math"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,13 +29,8 @@ func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found boo
 	j := findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
 		return os.BuyAmountOver(TickFromIndex(i, tickPrec)).GTE(os.SellAmountUnder(TickFromIndex(i-1, tickPrec)))
 	})
-	if i == j {
-		return TickFromIndex(i, tickPrec), true
-	}
-	if int(math.Abs(float64(i-j))) > 1 { // sanity check
-		panic("impossible case")
-	}
-	return TickFromIndex(RoundTickIndex(i), tickPrec), true
+	midTick := TickFromIndex(i, tickPrec).Add(TickFromIndex(j, tickPrec)).QuoInt64(2)
+	return RoundPrice(midTick, tickPrec), true
 }
 
 // findFirstTrueCondition uses the binary search to find the first index
