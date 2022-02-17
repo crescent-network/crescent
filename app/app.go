@@ -96,7 +96,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	farmingparams "github.com/cosmosquad-labs/squad/app/params"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim"
 	claimkeeper "github.com/cosmosquad-labs/squad/x/claim/keeper"
 	claimtypes "github.com/cosmosquad-labs/squad/x/claim/types"
@@ -352,26 +351,12 @@ func NewSquadApp(
 	)
 	app.StakingKeeper = &stakingKeeper
 
-	inflationSchedules := minttypes.InflationSchedules{
-		{
-			StartTime: squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
-			EndTime:   squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
-			Amount:    sdk.NewInt(300000000000000),
-		},
-		{
-			StartTime: squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
-			EndTime:   squadtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
-			Amount:    sdk.NewInt(200000000000000),
-		},
-	}
-
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		keys[minttypes.StoreKey],
 		app.GetSubspace(minttypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		inflationSchedules,
 		authtypes.FeeCollectorName,
 	)
 

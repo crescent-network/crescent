@@ -18,7 +18,7 @@ service Query {
       description: "Returns all parameters of the liquid staking module.";
   external_docs: {
   url:
-    "https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md";
+    "https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec";
   description:
     "Find out more about the params";
   }
@@ -31,7 +31,20 @@ rpc LiquidValidators(QueryLiquidValidatorsRequest) returns (QueryLiquidValidator
     description: "Returns all liquid validators of the liquid staking module.";
 external_docs: {
 url:
-  "https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec";
+  "https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec";
+description:
+  "Find out more about the liquid validators";
+}
+};
+}
+// VotingPower returns voting power of staking and liquid staking module's of the voter that can be exercised.
+rpc VotingPower(QueryVotingPowerRequest) returns (QueryVotingPowerResponse) {
+  option (google.api.http).get = "/squad/liquidstaking/v1beta1/voting_power/{voter}";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns voting power of staking and liquid staking module's of the voter that can be exercised.";
+external_docs: {
+url:
+  "https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec";
 description:
   "Find out more about the liquid validators";
 }
@@ -45,7 +58,7 @@ rpc States(QueryStatesRequest) returns (QueryStatesResponse) {
     description: "Returns states of the liquid staking module.";
 external_docs: {
 url:
-  "https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec";
+  "https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec";
 description:
   "Find out more about the liquid staking";
 }
@@ -81,4 +94,14 @@ message QueryStatesRequest {}
 // QueryStatesResponse is the response type for the Query/States RPC method.
 message QueryStatesResponse {
   NetAmountState net_amount_state = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryVotingPowerRequest is the request type for the Query/States RPC method.
+message QueryVotingPowerRequest {
+  string voter = 1;
+}
+
+// QueryVotingPowerResponse is the response type for the Query/States RPC method.
+message QueryVotingPowerResponse {
+  VotingPower voting_power = 1 [(gogoproto.nullable) = false];
 }

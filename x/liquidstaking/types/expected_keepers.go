@@ -10,6 +10,7 @@ import (
 
 	farmintypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // BankKeeper defines the expected bank send keeper
@@ -24,12 +25,14 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 // AccountKeeper defines the expected account keeper
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 }
 
 // StakingKeeper expected staking keeper (noalias)
@@ -37,6 +40,10 @@ type StakingKeeper interface {
 	Validator(sdk.Context, sdk.ValAddress) stakingtypes.ValidatorI
 	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
+
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+	GetBondedValidatorsByPower(ctx sdk.Context) []stakingtypes.Validator
+
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 
@@ -66,6 +73,10 @@ type StakingKeeper interface {
 	BeginRedelegation(
 		ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 	) (completionTime time.Time, err error)
+	GetAllRedelegations(
+		ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
+	) []stakingtypes.Redelegation
+	BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate
 }
 
 // GovKeeper expected gov keeper (noalias)
@@ -73,6 +84,9 @@ type GovKeeper interface {
 	Tally(ctx sdk.Context, proposal govtypes.Proposal) (passes bool, burnDeposits bool, tallyResults govtypes.TallyResult)
 	GetVotes(ctx sdk.Context, proposalID uint64) (votes govtypes.Votes)
 	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govtypes.Vote, found bool)
+	GetProposal(ctx sdk.Context, proposalID uint64) (govtypes.Proposal, bool)
+	GetProposals(ctx sdk.Context) (proposals govtypes.Proposals)
+	AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options govtypes.WeightedVoteOptions) error
 }
 
 // DistrKeeper expected distribution keeper (noalias)

@@ -66,12 +66,19 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"mint_denom":"stake","block_time_threshold":"10s"}`,
+			`{"mint_denom":"stake","block_time_threshold":"10s","inflation_schedules":[{"start_time":"2022-01-01T00:00:00Z","end_time":"2023-01-01T00:00:00Z","amount":"300000000000000"},{"start_time":"2023-01-01T00:00:00Z","end_time":"2024-01-01T00:00:00Z","amount":"200000000000000"}]}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			`block_time_threshold: 10s
+inflation_schedules:
+- amount: "300000000000000"
+  end_time: "2023-01-01T00:00:00Z"
+  start_time: "2022-01-01T00:00:00Z"
+- amount: "200000000000000"
+  end_time: "2024-01-01T00:00:00Z"
+  start_time: "2023-01-01T00:00:00Z"
 mint_denom: stake`,
 		},
 	}

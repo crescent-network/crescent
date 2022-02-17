@@ -45,3 +45,16 @@ func (k Querier) States(c context.Context, req *types.QueryStatesRequest) (*type
 
 	return &types.QueryStatesResponse{NetAmountState: k.NetAmountState(ctx)}, nil
 }
+
+// VotingPower queries voting power of staking, liquid staking module's for the voter.
+func (k Querier) VotingPower(c context.Context, req *types.QueryVotingPowerRequest) (*types.QueryVotingPowerResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	addr, err := sdk.AccAddressFromBech32(req.Voter)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryVotingPowerResponse{VotingPower: k.GetVotingPower(ctx, addr)}, nil
+}

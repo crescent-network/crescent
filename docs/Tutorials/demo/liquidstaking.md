@@ -166,7 +166,23 @@ $BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 $BINARY q staking delegations cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
 $BINARY q distribution rewards cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
 
-# reward trigger is 0.001
+# Query voting power of the liquid staking
+$BINARY q liquidstaking voting-power cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
+
+# normal stake
+$BINARY tx staking delegate cosmosvaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3m9ammr5 500000000stake \
+--chain-id localnet \
+--from user2 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Query voting power of staking and liquid staking
+$BINARY q liquidstaking voting-power cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
+
+# Query liquid staking states including net amount, mint rate
+$BINARY q liquidstaking states --output json | jq
 ```
 
 

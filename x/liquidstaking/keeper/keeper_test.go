@@ -151,6 +151,19 @@ func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBToken
 	return nil
 }
 
+func (s *KeeperTestSuite) RequireNetAmountStateZero() {
+	nas := s.keeper.NetAmountState(s.ctx)
+	s.Require().EqualValues(nas.MintRate, sdk.ZeroDec())
+	s.Require().EqualValues(nas.BtokenTotalSupply, sdk.ZeroInt())
+	s.Require().EqualValues(nas.NetAmount, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalDelShares, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalLiquidTokens, sdk.ZeroInt())
+	s.Require().EqualValues(nas.TotalRemainingRewards, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalUnbondingBalance, sdk.ZeroDec())
+	s.Require().EqualValues(nas.ProxyAccBalance, sdk.ZeroInt())
+
+}
+
 // advance block time and height for complete redelegations and unbondings
 func (s *KeeperTestSuite) completeRedelegationUnbonding() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))

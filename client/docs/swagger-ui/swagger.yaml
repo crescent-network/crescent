@@ -4056,7 +4056,7 @@ paths:
       externalDocs:
         description: Find out more about the params
         url: >-
-          https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec/07_params.md
+          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
   /squad/liquidstaking/v1beta1/states:
     get:
       summary: States returns states of the liquidstaking module.
@@ -4151,7 +4151,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the liquid staking
-        url: 'https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec'
+        url: >-
+          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
   /squad/liquidstaking/v1beta1/validators:
     get:
       summary: >-
@@ -4312,7 +4313,94 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the liquid validators
-        url: 'https://github.com/b-harvest/gravity-dex-zone/x/liquidstaking/spec'
+        url: >-
+          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
+  '/squad/liquidstaking/v1beta1/voting_power/{voter}':
+    get:
+      summary: >-
+        VotingPower returns voting power of staking and liquid staking module's
+        of the voter that can be exercised.
+      description: >-
+        Returns voting power of staking and liquid staking module's of the voter
+        that can be exercised.
+      operationId: VotingPower
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              voting_power:
+                type: object
+                properties:
+                  voter:
+                    type: string
+                    description: >-
+                      voter defines the address of the voter; bech encoded in
+                      JSON.
+                  staking_voting_power:
+                    type: string
+                    description: >-
+                      staking_voting_power return the voting power of staking
+                      that can be exercised.
+                  liquid_staking_voting_power:
+                    type: string
+                    description: >-
+                      liquid_staking_voting_power return the voting power of
+                      liquid staking that can be exercised.
+                  validator_voting_power:
+                    type: string
+                    description: >-
+                      validator_voting_power return the voting power of the
+                      validator if the voter is the validator operator that can
+                      be
+
+                      exercised.
+                description: >-
+                  VotingPower is type for current voting power of the voter
+                  including staking module's voting power and liquid staking
+
+                  module's voting power, It depends on the amount of delegation
+                  of staking module, the bonded state of the delegated
+
+                  validator, the value of btoken(liquid_bond_denom), and the
+                  pool coin and farming position containing btoken..
+            description: >-
+              QueryVotingPowerResponse is the response type for the Query/States
+              RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: voter
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the liquid validators
+        url: >-
+          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
 definitions:
   cosmos.base.query.v1beta1.PageRequest:
     type: object
@@ -6901,6 +6989,44 @@ definitions:
           state every time, so it is used only for calculation and query and is
           not stored in kv.
     description: QueryStatesResponse is the response type for the Query/States RPC method.
+  squad.liquidstaking.v1beta1.QueryVotingPowerResponse:
+    type: object
+    properties:
+      voting_power:
+        type: object
+        properties:
+          voter:
+            type: string
+            description: voter defines the address of the voter; bech encoded in JSON.
+          staking_voting_power:
+            type: string
+            description: >-
+              staking_voting_power return the voting power of staking that can
+              be exercised.
+          liquid_staking_voting_power:
+            type: string
+            description: >-
+              liquid_staking_voting_power return the voting power of liquid
+              staking that can be exercised.
+          validator_voting_power:
+            type: string
+            description: >-
+              validator_voting_power return the voting power of the validator if
+              the voter is the validator operator that can be
+
+              exercised.
+        description: >-
+          VotingPower is type for current voting power of the voter including
+          staking module's voting power and liquid staking
+
+          module's voting power, It depends on the amount of delegation of
+          staking module, the bonded state of the delegated
+
+          validator, the value of btoken(liquid_bond_denom), and the pool coin
+          and farming position containing btoken..
+    description: >-
+      QueryVotingPowerResponse is the response type for the Query/States RPC
+      method.
   squad.liquidstaking.v1beta1.ValidatorStatus:
     type: string
     enum:
@@ -6914,6 +7040,38 @@ definitions:
        - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the unspecified invalid status.
        - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the active, valid status
        - VALIDATOR_STATUS_INACTIVE: VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
+  squad.liquidstaking.v1beta1.VotingPower:
+    type: object
+    properties:
+      voter:
+        type: string
+        description: voter defines the address of the voter; bech encoded in JSON.
+      staking_voting_power:
+        type: string
+        description: >-
+          staking_voting_power return the voting power of staking that can be
+          exercised.
+      liquid_staking_voting_power:
+        type: string
+        description: >-
+          liquid_staking_voting_power return the voting power of liquid staking
+          that can be exercised.
+      validator_voting_power:
+        type: string
+        description: >-
+          validator_voting_power return the voting power of the validator if the
+          voter is the validator operator that can be
+
+          exercised.
+    description: >-
+      VotingPower is type for current voting power of the voter including
+      staking module's voting power and liquid staking
+
+      module's voting power, It depends on the amount of delegation of staking
+      module, the bonded state of the delegated
+
+      validator, the value of btoken(liquid_bond_denom), and the pool coin and
+      farming position containing btoken..
   squad.liquidstaking.v1beta1.WhitelistedValidator:
     type: object
     properties:
