@@ -20,9 +20,9 @@ const (
 func (dir OrderDirection) String() string {
 	switch dir {
 	case Buy:
-		return "buy"
+		return "Buy"
 	case Sell:
-		return "sell"
+		return "Sell"
 	default:
 		return fmt.Sprintf("OrderDirection(%d)", dir)
 	}
