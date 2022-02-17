@@ -126,6 +126,120 @@ func (s *KeeperTestSuite) TestDisabledPool() {
 	s.Require().True(pool.Disabled)
 }
 
+func (s *KeeperTestSuite) TestCreatePoolAfterDisabled() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	// Create a disabled pool.
+	poolCreator := s.addr(1)
+	pool := s.createPool(poolCreator, pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.withdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
+	s.nextBlock()
+
+	// Now a new pool can be created with same denom pair because
+	// all pools with same denom pair are disabled.
+	s.createPool(s.addr(2), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+}
+
+func (s *KeeperTestSuite) TestDeposit() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+
+	s.deposit(s.addr(1), pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.nextBlock()
+
+	// The depositor now has the same pool coin as the pool creator.
+	expectedPoolCoin := s.getBalance(s.addr(0), pool.PoolCoinDenom)
+	s.Require().True(coinsEq(sdk.NewCoins(expectedPoolCoin), s.getBalances(s.addr(1))))
+
+	s.deposit(s.addr(2), pool.Id, squad.ParseCoins("500000denom1,500000denom2"), true)
+	s.nextBlock()
+
+	// The next depositor has 1/2 pool coin of the pool creator.
+	expectedPoolCoin = sdk.NewCoin(pool.PoolCoinDenom, s.getBalance(s.addr(0), pool.PoolCoinDenom).Amount.QuoRaw(2))
+	s.Require().True(coinsEq(sdk.NewCoins(expectedPoolCoin), s.getBalances(s.addr(2))))
+}
+
+func (s *KeeperTestSuite) TestDepositRefundTooSmallMintedPoolCoin() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1500000denom2"), true)
+
+	depositor := s.addr(1)
+	depositCoins := squad.ParseCoins("20000denom1,15000denom2")
+	s.fundAddr(depositor, depositCoins)
+	req := s.deposit(depositor, pool.Id, depositCoins, false)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
+	s.Require().Equal(types.RequestStatusSucceeded, req.Status)
+
+	s.Require().True(coinEq(squad.ParseCoin("10000denom1"), s.getBalance(depositor, "denom1")))
+	s.Require().True(coinEq(squad.ParseCoin("0denom2"), s.getBalance(depositor, "denom2")))
+	liquidity.BeginBlocker(s.ctx, s.keeper)
+
+	pair = s.createPair(s.addr(0), "denom2", "denom1", true)
+	pool = s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000000denom2,1000000000000000denom1"), true)
+
+	depositor = s.addr(2)
+	depositCoins = squad.ParseCoins("1denom1,1denom2")
+	s.fundAddr(depositor, depositCoins)
+	req = s.deposit(depositor, pool.Id, depositCoins, false)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
+	s.Require().Equal(types.RequestStatusFailed, req.Status)
+
+	s.Require().True(coinsEq(depositCoins, s.getBalances(depositor)))
+}
+
+func (s *KeeperTestSuite) TestWithdraw() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+
+	depositor := s.addr(1)
+	depositCoins := squad.ParseCoins("1000000denom1,1000000denom2")
+	s.deposit(depositor, pool.Id, depositCoins, true)
+	s.nextBlock()
+
+	poolCoin := s.getBalance(depositor, pool.PoolCoinDenom)
+	s.withdraw(depositor, pool.Id, poolCoin)
+	s.nextBlock()
+
+	s.Require().True(coinsEq(depositCoins, s.getBalances(depositor)))
+}
+
+func (s *KeeperTestSuite) TestWithdrawRefund() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+
+	depositor := s.addr(1)
+	s.deposit(depositor, pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.nextBlock()
+
+	// Make the pool depleted.
+	s.sendCoins(pool.GetReserveAddress(), s.addr(2), s.getBalances(pool.GetReserveAddress()))
+
+	poolCoin := s.getBalance(depositor, pool.PoolCoinDenom)
+	s.withdraw(depositor, pool.Id, poolCoin)
+	s.nextBlock()
+
+	s.Require().True(coinsEq(sdk.NewCoins(poolCoin), s.getBalances(depositor)))
+}
+
+func (s *KeeperTestSuite) TestWithdrawRefundTooSmallWithdrawCoins() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+
+	depositor := s.addr(1)
+	s.deposit(depositor, pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.nextBlock()
+	poolCoin := s.getBalance(depositor, pool.PoolCoinDenom)
+
+	// Withdrawing too small amount of pool coin.
+	s.withdraw(depositor, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 100))
+	s.nextBlock()
+
+	s.Require().True(coinsEq(sdk.NewCoins(poolCoin), s.getBalances(depositor)))
+}
+
 func (s *KeeperTestSuite) TestDepositToDisabledPool() {
 	k, ctx := s.keeper, s.ctx
 
@@ -178,49 +292,4 @@ func (s *KeeperTestSuite) TestWithdrawFromDisabledPool() {
 	// Now any withdrawals will result in an error.
 	_, err = k.Withdraw(ctx, types.NewMsgWithdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom)))
 	s.Require().ErrorIs(err, types.ErrDisabledPool)
-}
-
-func (s *KeeperTestSuite) TestCreatePoolAfterDisabled() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-
-	// Create a disabled pool.
-	poolCreator := s.addr(1)
-	pool := s.createPool(poolCreator, pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
-	s.withdraw(poolCreator, pool.Id, s.getBalance(poolCreator, pool.PoolCoinDenom))
-	s.nextBlock()
-
-	// Now a new pool can be created with same denom pair because
-	// all pools with same denom pair are disabled.
-	s.createPool(s.addr(2), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
-}
-
-func (s *KeeperTestSuite) TestDepositRefund() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-
-	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1500000denom2"), true)
-
-	depositor := s.addr(1)
-	depositCoins := squad.ParseCoins("20000denom1,15000denom2")
-	s.fundAddr(depositor, depositCoins)
-	req := s.deposit(depositor, pool.Id, depositCoins, false)
-	liquidity.EndBlocker(s.ctx, s.keeper)
-	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
-	s.Require().Equal(types.RequestStatusSucceeded, req.Status)
-
-	s.Require().True(coinEq(squad.ParseCoin("10000denom1"), s.getBalance(depositor, "denom1")))
-	s.Require().True(coinEq(squad.ParseCoin("0denom2"), s.getBalance(depositor, "denom2")))
-	liquidity.BeginBlocker(s.ctx, s.keeper)
-
-	pair = s.createPair(s.addr(0), "denom2", "denom1", true)
-	pool = s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000000denom2,1000000000000000denom1"), true)
-
-	depositor = s.addr(2)
-	depositCoins = squad.ParseCoins("1denom1,1denom2")
-	s.fundAddr(depositor, depositCoins)
-	req = s.deposit(depositor, pool.Id, depositCoins, false)
-	liquidity.EndBlocker(s.ctx, s.keeper)
-	req, _ = s.keeper.GetDepositRequest(s.ctx, req.PoolId, req.Id)
-	s.Require().Equal(types.RequestStatusFailed, req.Status)
-
-	s.Require().True(coinsEq(depositCoins, s.getBalances(depositor)))
 }
