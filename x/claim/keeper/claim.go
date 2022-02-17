@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,28 +11,14 @@ import (
 )
 
 func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, error) {
-	airdrop, found := k.GetAirdrop(ctx, msg.AirdropId)
-	if !found {
-		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "airdrop not found")
+	airdrop, record, err := k.ValidateMsgClaim(ctx, msg)
+	if err != nil {
+		return types.ClaimRecord{}, err
 	}
 
-	record, found := k.GetClaimRecordByRecipient(ctx, airdrop.Id, msg.GetRecipient())
-	if !found {
-		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
+	if err := k.ValidateCondition(ctx, record.GetRecipient(), msg.ConditionType); err != nil {
+		return types.ClaimRecord{}, err
 	}
-
-	endTime := k.GetEndTime(ctx, airdrop.Id)
-	if !endTime.After(ctx.BlockTime()) {
-		return types.ClaimRecord{}, types.ErrTerminatedAirdrop
-	}
-
-	if record.ClaimedConditions[msg.ConditionType] {
-		return types.ClaimRecord{}, types.ErrAlreadyClaimed
-	}
-
-	//
-	// TODO: sanity check whether or not if the receipient has executed deposit, swap, and farming stake
-	//
 
 	unclaimedNum := int64(0)
 	for _, claimed := range record.ClaimedConditions {
@@ -62,6 +49,64 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 	})
 
 	return record, nil
+}
+
+// ValidateMsgClaim validates basic sanity checks required for MsgClaim.
+func (k Keeper) ValidateMsgClaim(ctx sdk.Context, msg *types.MsgClaim) (types.Airdrop, types.ClaimRecord, error) {
+	endTime := k.GetEndTime(ctx, msg.AirdropId)
+	if !endTime.After(ctx.BlockTime()) {
+		return types.Airdrop{}, types.ClaimRecord{}, types.ErrTerminatedAirdrop
+	}
+
+	airdrop, found := k.GetAirdrop(ctx, msg.AirdropId)
+	if !found {
+		return types.Airdrop{}, types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "airdrop not found")
+	}
+
+	record, found := k.GetClaimRecordByRecipient(ctx, airdrop.Id, msg.GetRecipient())
+	if !found {
+		return types.Airdrop{}, types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
+	}
+
+	if record.ClaimedConditions[msg.ConditionType] {
+		return types.Airdrop{}, types.ClaimRecord{}, types.ErrAlreadyClaimed
+	}
+
+	return airdrop, record, nil
+}
+
+// ValidateCondition validates if the recipient has executed the condition.
+func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct types.ConditionType) error {
+	skip := true
+
+	switch ct {
+	case types.ConditionTypeDeposit:
+		for _, b := range k.bankKeeper.GetAllBalances(ctx, recipient) {
+			if strings.HasPrefix(b.Denom, "pool") {
+				skip = false
+			}
+		}
+
+	case types.ConditionTypeSwap:
+		for _, o := range k.liquidityKeeper.GetAllOrders(ctx) {
+			if o.Orderer == recipient.String() {
+				skip = false
+			}
+		}
+
+	case types.ConditionTypeFarming:
+		queuedCoins := k.farmingKeeper.GetAllQueuedCoinsByFarmer(ctx, recipient)
+		stakedCoins := k.farmingKeeper.GetAllStakedCoinsByFarmer(ctx, recipient)
+		if queuedCoins.IsZero() && stakedCoins.IsZero() {
+			skip = false
+		}
+	}
+
+	if !skip {
+		return types.ErrConditionRequired
+	}
+
+	return nil
 }
 
 // TerminateAirdrop terminates the airdrop and transfer the remaining coins to the termination address.

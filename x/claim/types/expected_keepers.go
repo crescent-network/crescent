@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -12,9 +14,12 @@ type BankKeeper interface {
 }
 
 // FarmingKeeper defines the expected interface needed to check the condition.
-// type FarmingKeeper interface {
-// }
+type FarmingKeeper interface {
+	GetAllQueuedCoinsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins
+	GetAllStakedCoinsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins
+}
 
 // LiquidityKeeper defines the expected interface needed to check the condition.
-// type LiquidityKeeper interface {
-// }
+type LiquidityKeeper interface {
+	GetAllOrders(ctx sdk.Context) (reqs []liqtypes.Order)
+}

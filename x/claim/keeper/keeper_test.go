@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/binary"
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	squadapp "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/claim/keeper"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 type KeeperTestSuite struct {
@@ -88,6 +91,79 @@ func (s *KeeperTestSuite) createClaimRecord(
 	s.Require().True(found)
 
 	return r
+}
+
+func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) liqtypes.Pool {
+	params := s.app.LiquidityKeeper.GetParams(s.ctx)
+	if fund {
+		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+	}
+	pool, err := s.app.LiquidityKeeper.CreatePool(s.ctx, liqtypes.NewMsgCreatePool(creator, pairId, depositCoins))
+	s.Require().NoError(err)
+	return pool
+}
+
+func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) liqtypes.DepositRequest {
+	if fund {
+		s.fundAddr(depositor, depositCoins)
+	}
+	req, err := s.app.LiquidityKeeper.Deposit(s.ctx, liqtypes.NewMsgDeposit(depositor, poolId, depositCoins))
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) limitOrder(
+	orderer sdk.AccAddress, pairId uint64, dir liqtypes.OrderDirection,
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
+	pair, found := s.app.LiquidityKeeper.GetPair(s.ctx, pairId)
+	s.Require().True(found)
+	var offerCoin sdk.Coin
+	var demandCoinDenom string
+	switch dir {
+	case liqtypes.OrderDirectionBuy:
+		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).Ceil().TruncateInt())
+		demandCoinDenom = pair.BaseCoinDenom
+	case liqtypes.OrderDirectionSell:
+		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+		demandCoinDenom = pair.QuoteCoinDenom
+	}
+	if fund {
+		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
+	}
+	msg := liqtypes.NewMsgLimitOrder(
+		orderer, pairId, dir, offerCoin, demandCoinDenom,
+		price, amt, orderLifespan)
+	req, err := s.app.LiquidityKeeper.LimitOrder(s.ctx, msg)
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) createFixedAmountPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {
+	stakingCoinWeights := sdk.NewDecCoins()
+	for denom, weight := range stakingCoinWeightsMap {
+		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
+	}
+
+	epochAmount := sdk.NewCoins()
+	for denom, amount := range epochAmountMap {
+		epochAmount = epochAmount.Add(sdk.NewInt64Coin(denom, amount))
+	}
+
+	msg := farmingtypes.NewMsgCreateFixedAmountPlan(
+		fmt.Sprintf("plan%d", s.app.FarmingKeeper.GetGlobalPlanId(s.ctx)+1),
+		farmingPoolAcc,
+		stakingCoinWeights,
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 6, 0),
+		epochAmount,
+	)
+	_, err := s.app.FarmingKeeper.CreateFixedAmountPlan(s.ctx, msg, farmingPoolAcc, farmingPoolAcc, farmingtypes.PlanTypePublic)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
+	err := s.app.FarmingKeeper.Stake(s.ctx, farmerAcc, amt)
+	s.Require().NoError(err)
 }
 
 //
