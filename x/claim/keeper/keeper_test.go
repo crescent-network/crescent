@@ -94,10 +94,6 @@ func (s *KeeperTestSuite) createClaimRecord(
 // Below are useful helpers to write test code easily.
 //
 
-func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin {
-	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
-}
-
 func (s *KeeperTestSuite) getAllBalances(addr sdk.AccAddress) sdk.Coins {
 	return s.app.BankKeeper.GetAllBalances(s.ctx, addr)
 }
