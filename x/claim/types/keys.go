@@ -30,13 +30,13 @@ var (
 )
 
 // GetStartTimeKey returns the store key to retrieve the start time for the airdrop.
-func GetStartTimeKey(auctionId uint64) []byte {
-	return append(StartTimeKeyPrefix, sdk.Uint64ToBigEndian(auctionId)...)
+func GetStartTimeKey(airdropId uint64) []byte {
+	return append(StartTimeKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...)
 }
 
 // GetEndTimeKey returns the store key to retrieve the end time for the airdrop.
-func GetEndTimeKey(auctionId uint64) []byte {
-	return append(EndTimeKeyPrefix, sdk.Uint64ToBigEndian(auctionId)...)
+func GetEndTimeKey(airdropId uint64) []byte {
+	return append(EndTimeKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...)
 }
 
 // GetAirdropKey returns the store key to retrieve the airdrop object from the airdrop id.

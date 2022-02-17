@@ -25,7 +25,7 @@ Each of the following criteria is a multiplier of 2 in calculating the claimable
 
 ## Core Network Activities
 
-The airdrop recipient are required to complete the following actions. There is no order of execution. The recipients can execute any order the prefer.
+The airdrop recipient are required to complete the following Conditions. There is no order of execution. The recipients can execute any order the prefer.
 
 - 1/3 of the initial claimable amount is released by executing a deposit transaction to any pool
 - 1/3 of the initial claimable amount is released by executing a swap transaction from any pool

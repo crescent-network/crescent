@@ -19,7 +19,7 @@ import (
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("%s transactions subcommands", types.ModuleName),
+		Short:                      fmt.Sprintf("%s transConditions subcommands", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -62,8 +62,8 @@ $ %s tx %s claim 1 farming --from mykey
 				return err
 			}
 
-			actionTyp := NormalizeActionType(args[1])
-			if actionTyp == types.ActionTypeUnspecified {
+			actionTyp := NormalizeConditionType(args[1])
+			if actionTyp == types.ConditionTypeUnspecified {
 				return fmt.Errorf("unknown action type %s", args[0])
 			}
 

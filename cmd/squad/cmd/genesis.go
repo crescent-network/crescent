@@ -157,7 +157,7 @@ func TestnetGenesisParams() *GenesisParams {
 	// Set source address balance and add total supply
 	genParams.BankGenesisStates.Balances = []banktypes.Balance{
 		{
-			Address: claimtypes.SourceAddress(1).String(),
+			Address: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
 			Coins:   sdk.NewCoins(genParams.AirdropSupply),
 		},
 	}
@@ -167,10 +167,15 @@ func TestnetGenesisParams() *GenesisParams {
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
 		{
 			Id:                 1,
-			SourceAddress:      claimtypes.SourceAddress(1).String(),
+			SourceAddress:      "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
 			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
-			StartTime:          genParams.GenesisTime,
-			EndTime:            genParams.GenesisTime.AddDate(0, 1, 0),
+			Conditions: []claimtypes.ConditionType{
+				claimtypes.ConditionTypeDeposit,
+				claimtypes.ConditionTypeSwap,
+				claimtypes.ConditionTypeFarming,
+			},
+			StartTime: genParams.GenesisTime,
+			EndTime:   genParams.GenesisTime.AddDate(0, 1, 0),
 		},
 	}
 
@@ -181,33 +186,21 @@ func TestnetGenesisParams() *GenesisParams {
 			Recipient:             "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v", // validator
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
-			Actions: []claimtypes.Action{
-				{ActionType: types.ActionTypeDeposit, Claimed: false},
-				{ActionType: types.ActionTypeSwap, Claimed: false},
-				{ActionType: types.ActionTypeFarming, Claimed: false},
-			},
+			ClaimedConditions:     []bool{false, false, false},
 		},
 		{
 			AirdropId:             1,
 			Recipient:             "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu", // user1
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
-			Actions: []claimtypes.Action{
-				{ActionType: types.ActionTypeDeposit, Claimed: false},
-				{ActionType: types.ActionTypeSwap, Claimed: false},
-				{ActionType: types.ActionTypeFarming, Claimed: false},
-			},
+			ClaimedConditions:     []bool{false, false, false},
 		},
 		{
 			AirdropId:             1,
 			Recipient:             "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny", // user2
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
-			Actions: []claimtypes.Action{
-				{ActionType: types.ActionTypeDeposit, Claimed: false},
-				{ActionType: types.ActionTypeSwap, Claimed: false},
-				{ActionType: types.ActionTypeFarming, Claimed: false},
-			},
+			ClaimedConditions:     []bool{false, false, false},
 		},
 	}
 
@@ -224,7 +217,7 @@ func MainnetGenesisParams() *GenesisParams {
 	// Set source address balance
 	genParams.BankGenesisStates.Balances = []banktypes.Balance{
 		{
-			Address: claimtypes.SourceAddress(1).String(),
+			Address: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
 			Coins:   sdk.NewCoins(genParams.AirdropSupply),
 		},
 	}
@@ -234,7 +227,7 @@ func MainnetGenesisParams() *GenesisParams {
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
 		{
 			Id:                 1,
-			SourceAddress:      claimtypes.SourceAddress(1).String(),
+			SourceAddress:      "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
 			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
 			StartTime:          genParams.GenesisTime,
 			EndTime:            genParams.GenesisTime.AddDate(0, 1, 0),

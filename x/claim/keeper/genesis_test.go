@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	squadapp "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -21,8 +23,13 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 				Id:                 1,
 				SourceAddress:      s.addr(0).String(),
 				TerminationAddress: s.addr(5).String(),
-				StartTime:          s.ctx.BlockTime(),
-				EndTime:            s.ctx.BlockTime().AddDate(0, 1, 0),
+				Conditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+					types.ConditionTypeSwap,
+					types.ConditionTypeFarming,
+				},
+				StartTime: s.ctx.BlockTime(),
+				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
 			},
 		},
 		ClaimRecords: []types.ClaimRecord{
@@ -31,22 +38,15 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 				Recipient:             s.addr(1).String(),
 				InitialClaimableCoins: parseCoins("50000000000denom1"),
 				ClaimableCoins:        parseCoins("50000000000denom1"),
-				Actions: []types.Action{
-					{ActionType: types.ActionTypeDeposit, Claimed: false},
-					{ActionType: types.ActionTypeSwap, Claimed: false},
-					{ActionType: types.ActionTypeFarming, Claimed: false},
-				},
+				ClaimedConditions:     []bool{false, false, false},
 			},
 		},
 	}
 
-	// Source account balances are empty; therefore it panics
-	s.Require().Panics(func() {
+	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), parseCoins("100000000000denom1"))
+	s.Require().NotPanics(func() {
 		s.keeper.InitGenesis(s.ctx, sampleGenState)
 	})
-
-	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), parseCoins("100000000000denom1"))
-	s.keeper.InitGenesis(s.ctx, sampleGenState)
 
 	_, found := s.keeper.GetAirdrop(s.ctx, 1)
 	s.Require().True(found)
@@ -62,15 +62,25 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Id:                 1,
 				SourceAddress:      s.addr(0).String(),
 				TerminationAddress: s.addr(6).String(),
-				StartTime:          s.ctx.BlockTime(),
-				EndTime:            s.ctx.BlockTime().AddDate(0, 1, 0),
+				Conditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+					types.ConditionTypeSwap,
+					types.ConditionTypeFarming,
+				},
+				StartTime: s.ctx.BlockTime(),
+				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
 			},
 			{
 				Id:                 2,
 				SourceAddress:      s.addr(1).String(),
 				TerminationAddress: s.addr(6).String(),
-				StartTime:          s.ctx.BlockTime().AddDate(0, 5, 0),
-				EndTime:            s.ctx.BlockTime().AddDate(0, 7, 0),
+				Conditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+					types.ConditionTypeSwap,
+					types.ConditionTypeFarming,
+				},
+				StartTime: s.ctx.BlockTime().AddDate(0, 5, 0),
+				EndTime:   s.ctx.BlockTime().AddDate(0, 10, 0),
 			},
 		},
 		ClaimRecords: []types.ClaimRecord{
@@ -79,62 +89,42 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Recipient:             s.addr(2).String(),
 				InitialClaimableCoins: parseCoins("50000000000denom1"),
 				ClaimableCoins:        parseCoins("50000000000denom1"),
-				Actions: []types.Action{
-					{ActionType: types.ActionTypeDeposit, Claimed: true},
-					{ActionType: types.ActionTypeSwap, Claimed: false},
-					{ActionType: types.ActionTypeFarming, Claimed: false},
-				},
+				ClaimedConditions:     []bool{true, false, false},
 			},
 			{
 				AirdropId:             1,
 				Recipient:             s.addr(3).String(),
 				InitialClaimableCoins: parseCoins("50000000000denom1"),
 				ClaimableCoins:        parseCoins("50000000000denom1"),
-				Actions: []types.Action{
-					{ActionType: types.ActionTypeDeposit, Claimed: false},
-					{ActionType: types.ActionTypeSwap, Claimed: true},
-					{ActionType: types.ActionTypeFarming, Claimed: true},
-				},
+				ClaimedConditions:     []bool{false, true, false},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(3).String(),
 				InitialClaimableCoins: parseCoins("100000000000denom1"),
 				ClaimableCoins:        parseCoins("100000000000denom1"),
-				Actions: []types.Action{
-					{ActionType: types.ActionTypeDeposit, Claimed: false},
-					{ActionType: types.ActionTypeSwap, Claimed: false},
-					{ActionType: types.ActionTypeFarming, Claimed: false},
-				},
+				ClaimedConditions:     []bool{false, false, false},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(4).String(),
 				InitialClaimableCoins: parseCoins("50000000000denom1"),
 				ClaimableCoins:        parseCoins("50000000000denom1"),
-				Actions: []types.Action{
-					{ActionType: types.ActionTypeDeposit, Claimed: false},
-					{ActionType: types.ActionTypeSwap, Claimed: false},
-					{ActionType: types.ActionTypeFarming, Claimed: false},
-				},
+				ClaimedConditions:     []bool{false, false, false},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(5).String(),
 				InitialClaimableCoins: parseCoins("50000000000denom1"),
 				ClaimableCoins:        parseCoins("50000000000denom1"),
-				Actions: []types.Action{
-					{ActionType: types.ActionTypeDeposit, Claimed: false},
-					{ActionType: types.ActionTypeSwap, Claimed: false},
-					{ActionType: types.ActionTypeFarming, Claimed: false},
-				},
+				ClaimedConditions:     []bool{false, false, false},
 			},
 		},
 	}
-
-	// Initialize genesis state
 	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), parseCoins("100000000000denom1"))
 	s.fundAddr(sampleGenState.Airdrops[1].GetSourceAddress(), parseCoins("200000000000denom1"))
+
+	// Initialize genesis state
 	s.Require().NotPanics(func() {
 		s.keeper.InitGenesis(s.ctx, sampleGenState)
 	})
@@ -149,7 +139,14 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 
 	// Reinitialize exported genesis
 	s.Require().NotPanics(func() {
+		s.app = squadapp.Setup(false)
+		s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+		s.keeper = s.app.ClaimKeeper
 		s.keeper.InitGenesis(s.ctx, *genState)
+
+		s.Require().Len(s.keeper.GetAllAirdrops(s.ctx), 2)
+		s.Require().Len(s.keeper.GetAllClaimRecordsByAirdropId(s.ctx, 1), 2)
+		s.Require().Len(s.keeper.GetAllClaimRecordsByAirdropId(s.ctx, 2), 3)
 	})
 	s.Require().Equal(genState, s.keeper.ExportGenesis(s.ctx))
 }

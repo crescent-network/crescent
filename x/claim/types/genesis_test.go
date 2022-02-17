@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
@@ -9,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmosquad-labs/squad/x/claim/types"
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {
@@ -30,10 +30,15 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 
 						Id:                 1,
-						SourceAddress:      types.SourceAddress(1).String(),
-						TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
-						StartTime:          farmingtypes.ParseTime("2022-02-01T00:00:00Z"),
-						EndTime:            farmingtypes.ParseTime("2022-06-01T00:00:00Z"),
+						SourceAddress:      sdk.AccAddress(crypto.AddressHash([]byte("sourceAddress"))).String(),
+						TerminationAddress: sdk.AccAddress(crypto.AddressHash([]byte("terminationAddress"))).String(),
+						Conditions: []types.ConditionType{
+							types.ConditionTypeDeposit,
+							types.ConditionTypeSwap,
+							types.ConditionTypeFarming,
+						},
+						StartTime: time.Now(),
+						EndTime:   time.Now().AddDate(0, 1, 0),
 					},
 				},
 				ClaimRecords: []types.ClaimRecord{
@@ -42,40 +47,14 @@ func TestGenesisState_Validate(t *testing.T) {
 						Recipient:             sdk.AccAddress(crypto.AddressHash([]byte("recipient1"))).String(),
 						InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(500_000_000_000))),
 						ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(500_000_000_000))),
-						Actions: []types.Action{
-							{
-								ActionType: types.ActionTypeDeposit,
-								Claimed:    false,
-							},
-							{
-								ActionType: types.ActionTypeSwap,
-								Claimed:    false,
-							},
-							{
-								ActionType: types.ActionTypeFarming,
-								Claimed:    false,
-							},
-						},
+						ClaimedConditions:     []bool{false, false, false},
 					},
 					{
 						AirdropId:             1,
 						Recipient:             sdk.AccAddress(crypto.AddressHash([]byte("recipient2"))).String(),
 						InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(500_000_000_000))),
 						ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(500_000_000_000))),
-						Actions: []types.Action{
-							{
-								ActionType: types.ActionTypeDeposit,
-								Claimed:    false,
-							},
-							{
-								ActionType: types.ActionTypeSwap,
-								Claimed:    false,
-							},
-							{
-								ActionType: types.ActionTypeFarming,
-								Claimed:    false,
-							},
-						},
+						ClaimedConditions:     []bool{false, false, false},
 					},
 				},
 			},

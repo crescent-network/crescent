@@ -8,6 +8,6 @@ const (
 	AttributeKeyRecipient             = "recipient"
 	AttributeKeyInitialClaimableCoins = "initial_claimable_coins"
 	AttributeKeyClaimableCoins        = "claimable_coins"
-	AttributeKeyActionType            = "action_type"
+	AttributeKeyConditionType         = "condition_type"
 	AttributeKeyClaimed               = "claimed"
 )

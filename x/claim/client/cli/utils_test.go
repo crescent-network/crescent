@@ -9,23 +9,23 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-func TestNormalizeActionType(t *testing.T) {
+func TestNormalizeConditionType(t *testing.T) {
 	testCases := []struct {
 		name string
 		arg  string
-		want types.ActionType
+		want types.ConditionType
 	}{
-		{"invalid", "order", types.ActionTypeUnspecified},
-		{"deposit", "deposit", types.ActionTypeDeposit},
-		{"deposit", "d", types.ActionTypeDeposit},
-		{"swap", "swap", types.ActionTypeSwap},
-		{"swap", "s", types.ActionTypeSwap},
-		{"farming", "farming", types.ActionTypeFarming},
-		{"farming", "f", types.ActionTypeFarming},
+		{"invalid", "order", types.ConditionTypeUnspecified},
+		{"deposit", "deposit", types.ConditionTypeDeposit},
+		{"deposit", "d", types.ConditionTypeDeposit},
+		{"swap", "swap", types.ConditionTypeSwap},
+		{"swap", "s", types.ConditionTypeSwap},
+		{"farming", "farming", types.ConditionTypeFarming},
+		{"farming", "f", types.ConditionTypeFarming},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.want, cli.NormalizeActionType(tc.arg))
+			require.Equal(t, tc.want, cli.NormalizeConditionType(tc.arg))
 		})
 	}
 }

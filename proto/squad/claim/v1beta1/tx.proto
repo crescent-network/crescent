@@ -20,8 +20,8 @@ message MsgClaim {
   // recipient specifies the bech32-encoded address that is eligible to claim airdrop
   string recipient = 2;
 
-  // action_type specifies the action type
-  ActionType action_type = 3;
+  // condition_type specifies the condition type
+  ConditionType condition_type = 3;
 }
 
 message MsgClaimResponse {}

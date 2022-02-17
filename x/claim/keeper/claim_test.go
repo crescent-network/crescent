@@ -1,11 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
@@ -15,123 +10,182 @@ import (
 func (s *KeeperTestSuite) TestClaim() {
 	airdrop := s.createAirdrop(
 		1,
+		s.addr(0),
 		parseCoins("1000000000denom1"),
-		squadtypes.MustParseRFC3339("2022-02-01T00:00:00Z"),
-		squadtypes.MustParseRFC3339("2022-06-01T00:00:00Z"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeFarming,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
 		true,
 	)
 
-	record := s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
-		[]types.Action{
-			{ActionType: types.ActionTypeDeposit, Claimed: false},
-			{ActionType: types.ActionTypeSwap, Claimed: false},
-			{ActionType: types.ActionTypeFarming, Claimed: false}},
+	record := s.createClaimRecord(
+		airdrop.Id,
+		s.addr(1),
+		parseCoins("666666667denom1"),
+		parseCoins("666666667denom1"),
+		[]bool{false, false, false},
 	)
 
 	// Claim deposit action
 	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeDeposit,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeDeposit,
 	})
 	s.Require().NoError(err)
 
 	// Claim swap action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeSwap,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeSwap,
 	})
 	s.Require().NoError(err)
 
 	// Claim farming action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeFarming,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeFarming,
 	})
 	s.Require().NoError(err)
 
-	// Claim farming action
-	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeDeposit,
-	})
-	s.Require().ErrorIs(err, types.ErrAlreadyClaimedAll)
+	// Claim already claimed action
+	// _, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
+	// 	AirdropId:     airdrop.Id,
+	// 	Recipient:     record.Recipient,
+	// 	ConditionType: types.ConditionTypeDeposit,
+	// })
+	// s.Require().ErrorIs(err, types.ErrAlreadyClaimed)
 
-	// Verify
-	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
-	s.Require().True(found)
-	s.Require().True(r.ClaimableCoins.IsZero())
-	s.Require().True(coinsEq(r.InitialClaimableCoins, sdk.NewCoins(s.getBalance(record.GetRecipient(), "denom1"))))
-	s.Require().True(r.Actions[0].Claimed)
-	s.Require().True(r.Actions[1].Claimed)
-	s.Require().True(r.Actions[2].Claimed)
+	// // Verify
+	// r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
+	// s.Require().True(found)
+	// s.Require().True(r.ClaimableCoins.IsZero())
+	// s.Require().True(coinsEq(r.InitialClaimableCoins, sdk.NewCoins(s.getBalance(record.GetRecipient(), "denom1"))))
+	// s.Require().True(r.ClaimedConditions[0])
+	// s.Require().True(r.ClaimedConditions[1])
+	// s.Require().True(r.ClaimedConditions[2])
 }
 
 func (s *KeeperTestSuite) TestClaimExecuteSameAction() {
 	airdrop := s.createAirdrop(
 		1,
+		s.addr(0),
 		parseCoins("1000000000denom1"),
-		squadtypes.MustParseRFC3339("2022-02-01T00:00:00Z"),
-		squadtypes.MustParseRFC3339("2022-06-01T00:00:00Z"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeFarming,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
 		true,
 	)
 
-	record := s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
-		[]types.Action{
-			{ActionType: types.ActionTypeDeposit, Claimed: false},
-			{ActionType: types.ActionTypeSwap, Claimed: false},
-			{ActionType: types.ActionTypeFarming, Claimed: false}},
+	record := s.createClaimRecord(
+		airdrop.Id,
+		s.addr(0),
+		parseCoins("100000000denom1"),
+		parseCoins("100000000denom1"),
+		[]bool{false, false, false},
 	)
 
 	// Claim deposit action
 	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeDeposit,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeDeposit,
 	})
 	s.Require().NoError(err)
 
 	// Claim the already completed deposit action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeDeposit,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeDeposit,
 	})
 	s.Require().ErrorIs(err, types.ErrAlreadyClaimed)
 }
-
-func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
+func (s *KeeperTestSuite) TestTerminateAidropClaimAll() {
 	airdrop := s.createAirdrop(
 		1,
+		s.addr(0),
 		parseCoins("1000000000denom1"),
-		squadtypes.MustParseRFC3339("2022-02-01T00:00:00Z"),
-		squadtypes.MustParseRFC3339("2022-06-01T00:00:00Z"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeFarming,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
 		true,
 	)
 
-	record := s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("100000000denom1"), parseCoins("100000000denom1"),
-		[]types.Action{
-			{ActionType: types.ActionTypeDeposit, Claimed: false},
-			{ActionType: types.ActionTypeSwap, Claimed: false},
-			{ActionType: types.ActionTypeFarming, Claimed: false}},
+	record := s.createClaimRecord(
+		airdrop.Id,
+		s.addr(0),
+		parseCoins("100000000denom1"),
+		parseCoins("100000000denom1"),
+		[]bool{false, false, false},
+	)
+
+	// Claim deposit action
+	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, record.GetRecipient(), types.ConditionTypeDeposit))
+	s.Require().NoError(err)
+
+	// Claim swap action
+	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, record.GetRecipient(), types.ConditionTypeSwap))
+	s.Require().NoError(err)
+
+	// Claim farming action
+	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, record.GetRecipient(), types.ConditionTypeFarming))
+	s.Require().NoError(err)
+
+	err = s.keeper.TerminateAirdrop(s.ctx, airdrop)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestTerminatAirdropClaimPartial() {
+	airdrop := s.createAirdrop(
+		1,
+		s.addr(0),
+		parseCoins("1000000000denom1"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeFarming,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
+		true,
+	)
+
+	record := s.createClaimRecord(
+		airdrop.Id,
+		s.addr(0),
+		parseCoins("100000000denom1"),
+		parseCoins("100000000denom1"),
+		[]bool{false, false, false},
 	)
 
 	// Claim deposit action
 	_, err := s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeDeposit,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeDeposit,
 	})
 	s.Require().NoError(err)
 
 	// Claim swap action
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeSwap,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeSwap,
 	})
 	s.Require().NoError(err)
 
@@ -141,14 +195,12 @@ func (s *KeeperTestSuite) TestClaimAirdropTerminated() {
 
 	// Claim farming action must fail
 	_, err = s.keeper.Claim(s.ctx, &types.MsgClaim{
-		AirdropId:  airdrop.Id,
-		Recipient:  record.Recipient,
-		ActionType: types.ActionTypeFarming,
+		AirdropId:     airdrop.Id,
+		Recipient:     record.Recipient,
+		ConditionType: types.ConditionTypeFarming,
 	})
 	s.Require().ErrorIs(err, types.ErrTerminatedAirdrop)
 
-	t1 := s.getAllBalances(airdrop.GetSourceAddress())
-	t2 := s.getAllBalances(airdrop.GetTerminationAddress())
-	fmt.Println("t1: ", t1)
-	fmt.Println("t2: ", t2)
+	sourceBalanaces := s.getAllBalances(airdrop.GetSourceAddress())
+	s.Require().True(sourceBalanaces.IsZero())
 }

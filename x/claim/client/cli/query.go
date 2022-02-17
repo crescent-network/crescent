@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -133,7 +132,7 @@ func QueryClaimRecord() *cobra.Command {
 		Short: "Query the claim record for an account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the claim record for an account.
-This contains an address' initial claimable amounts and its completed actions.
+This contains an address' initial claimable amounts and its completed Conditions.
 
 Example:
 $ %s query %s claim-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
@@ -159,7 +158,7 @@ $ %s query %s claim-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 
 			queryClient := types.NewQueryClient(clientCtx)
 			resp, err := queryClient.ClaimRecord(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryClaimRecordRequest{
 					AirdropId: airdropId,
 					Recipient: recipient.String(),

@@ -19,7 +19,10 @@ message Airdrop {
 
   // termination_address defines the bech32-encoded termination address
   // where the remaining source coins are sent to
-  string termination_address = 4;
+  string termination_address = 3;
+
+  // conditions specifies a list of conditions
+  repeated ConditionType conditions = 4 [(gogoproto.nullable) = false];
 
   // start_time specifies the start time of the airdrop
   google.protobuf.Timestamp start_time = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
@@ -44,32 +47,24 @@ message ClaimRecord {
   repeated cosmos.base.v1beta1.Coin claimable_coins = 4
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  // actions specifies a list of actions
-  repeated Action actions = 5 [(gogoproto.nullable) = false];
+  // claimed_conditions specifies a list of condition statuses
+  // index of boolean in array refers to the condition enum #
+  repeated bool claimed_conditions = 5 [(gogoproto.nullable) = false];
 }
 
-// Action defines an action type and its claimed status.
-message Action {
-  // action_type specifies the action type
-  ActionType action_type = 1;
-
-  // claimed specifies the status of an action
-  bool claimed = 2;
-}
-
-// ActionType defines the type of action that a recipient must execute in order to receive a claimable amount.
-enum ActionType {
+// ConditionType defines the type of condition that a recipient must execute in order to receive a claimable amount.
+enum ConditionType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  // ACTION_TYPE_UNSPECIFIED specifies an unknown action type
-  ACTION_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ActionTypeUnspecified"];
+  // CONDITION_TYPE_DEPOSIT specifies deposit condition type
+  CONDITION_TYPE_DEPOSIT = 0 [(gogoproto.enumvalue_customname) = "ConditionTypeDeposit"];
 
-  // ACTION_TYPE_DEPOSIT specifies deposit action type
-  ACTION_TYPE_DEPOSIT = 1 [(gogoproto.enumvalue_customname) = "ActionTypeDeposit"];
+  // CONDITION_TYPE_SWAP specifies swap condition type
+  CONDITION_TYPE_SWAP = 1 [(gogoproto.enumvalue_customname) = "ConditionTypeSwap"];
 
-  // ACTION_TYPE_SWAP specifies swap action type
-  ACTION_TYPE_SWAP = 2 [(gogoproto.enumvalue_customname) = "ActionTypeSwap"];
+  // CONDITION_TYPE_FARMING specifies farming (stake) condition type
+  CONDITION_TYPE_FARMING = 2 [(gogoproto.enumvalue_customname) = "ConditionTypeFarming"];
 
-  // ACTION_TYPE_FARMING specifies farming (stake) action type
-  ACTION_TYPE_FARMING = 3 [(gogoproto.enumvalue_customname) = "ActionTypeFarming"];
+  // CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
+  CONDITION_TYPE_UNSPECIFIED = 99 [(gogoproto.enumvalue_customname) = "ConditionTypeUnspecified"];
 }

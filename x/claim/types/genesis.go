@@ -2,7 +2,7 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,8 +24,8 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	for _, cr := range gs.ClaimRecords {
-		if err := cr.Validate(); err != nil {
+	for _, r := range gs.ClaimRecords {
+		if err := r.Validate(); err != nil {
 			return err
 		}
 	}
@@ -38,11 +38,21 @@ func (a Airdrop) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(a.SourceAddress); err != nil {
 		return err
 	}
+
 	if _, err := sdk.AccAddressFromBech32(a.TerminationAddress); err != nil {
 		return err
 	}
+
 	if !a.EndTime.After(a.StartTime) {
 		return errors.New("end time must be greater than start time")
+	}
+
+	for _, c := range a.Conditions {
+		switch c {
+		case ConditionTypeDeposit, ConditionTypeSwap, ConditionTypeFarming:
+		default:
+			return fmt.Errorf("unknown action type %T", c)
+		}
 	}
 	return nil
 }
@@ -52,18 +62,13 @@ func (r ClaimRecord) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(r.Recipient); err != nil {
 		return err
 	}
+
 	if !r.InitialClaimableCoins.IsAllPositive() {
 		return fmt.Errorf("initial claimable amount must be positive: %s", r.InitialClaimableCoins.String())
 	}
+
 	if !r.ClaimableCoins.IsAllPositive() {
 		return fmt.Errorf("claimable amount must be positive: %s", r.InitialClaimableCoins.String())
-	}
-	for _, action := range r.Actions {
-		if action.ActionType != ActionTypeDeposit &&
-			action.ActionType != ActionTypeSwap &&
-			action.ActionType != ActionTypeFarming {
-			return fmt.Errorf("unknown action type %T", action.ActionType)
-		}
 	}
 	return nil
 }

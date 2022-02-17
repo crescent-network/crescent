@@ -9,17 +9,17 @@ var (
 	_ sdk.Msg = (*MsgClaim)(nil)
 )
 
-// Message types for the claim module
+// Message types for the claim module.
 const (
 	TypeMsgClaim = "claim"
 )
 
 // NewMsgClaim creates a new MsgClaim.
-func NewMsgClaim(airdropId uint64, recipient sdk.AccAddress, actionType ActionType) *MsgClaim {
+func NewMsgClaim(airdropId uint64, recipient sdk.AccAddress, ConditionType ConditionType) *MsgClaim {
 	return &MsgClaim{
-		AirdropId:  airdropId,
-		Recipient:  recipient.String(),
-		ActionType: actionType,
+		AirdropId:     airdropId,
+		Recipient:     recipient.String(),
+		ConditionType: ConditionType,
 	}
 }
 
@@ -31,11 +31,13 @@ func (msg MsgClaim) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %v", err)
 	}
-	switch msg.ActionType {
-	case ActionTypeDeposit, ActionTypeSwap, ActionTypeFarming:
+
+	switch msg.ConditionType {
+	case ConditionTypeDeposit, ConditionTypeSwap, ConditionTypeFarming:
 	default:
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action type: %s", msg.ActionType.String())
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid action type: %s", msg.ConditionType.String())
 	}
+
 	return nil
 }
 

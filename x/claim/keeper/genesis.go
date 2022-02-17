@@ -12,25 +12,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		panic(err)
 	}
 
-	// TODO: consider removing this check
-	totalClaimableCoinsMap := make(map[uint64]sdk.Coins) // map(airdropId => totalClaimableCoins)
-	for _, r := range genState.ClaimRecords {
-		totalClaimableCoinsMap[r.AirdropId] = totalClaimableCoinsMap[r.AirdropId].Add(r.ClaimableCoins...)
-
-		k.SetClaimRecord(ctx, r)
+	for _, a := range genState.Airdrops {
+		_, found := k.GetAirdrop(ctx, a.Id)
+		if found {
+			panic("airdrop already exists")
+		}
+		k.SetAirdrop(ctx, a)
 	}
 
-	for _, airdrop := range genState.Airdrops {
-		_, found := k.GetAirdrop(ctx, airdrop.Id)
-		if !found {
-			k.SetAirdrop(ctx, airdrop)
-		}
-
-		// The source account balances must be greater than or equal to the total claimable amounts
-		balances := k.bankKeeper.GetAllBalances(ctx, airdrop.GetSourceAddress())
-		if !balances.IsAllGTE(totalClaimableCoinsMap[airdrop.Id]) {
-			panic("source account balances must be equal to total claimable coins")
-		}
+	for _, r := range genState.ClaimRecords {
+		k.SetClaimRecord(ctx, r)
 	}
 }
 
@@ -39,8 +30,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	airdrops := k.GetAllAirdrops(ctx)
 
 	records := []types.ClaimRecord{}
-	for _, airdrop := range airdrops {
-		records = append(records, k.GetAllClaimRecordsByAirdropId(ctx, airdrop.Id)...)
+	for _, a := range airdrops {
+		records = append(records, k.GetAllClaimRecordsByAirdropId(ctx, a.Id)...)
 	}
 
 	return &types.GenesisState{

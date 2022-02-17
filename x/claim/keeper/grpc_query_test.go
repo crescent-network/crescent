@@ -9,9 +9,18 @@ import (
 )
 
 func (s *KeeperTestSuite) TestGRPCAirdrops() {
-	s.createAirdrop(1, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(2, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(3, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+	conditions := []types.ConditionType{
+		types.ConditionTypeDeposit,
+		types.ConditionTypeSwap,
+		types.ConditionTypeFarming,
+	}
+
+	s.createAirdrop(1, s.addr(1), parseCoins("1000000000denom1"), conditions,
+		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+	s.createAirdrop(2, s.addr(2), parseCoins("1000000000denom1"), conditions,
+		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+	s.createAirdrop(3, s.addr(3), parseCoins("1000000000denom1"), conditions,
+		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
 
 	for _, tc := range []struct {
 		name      string
@@ -47,7 +56,19 @@ func (s *KeeperTestSuite) TestGRPCAirdrops() {
 }
 
 func (s *KeeperTestSuite) TestGRPCAirdrop() {
-	airdrop := s.createAirdrop(1, parseCoins("1000000000denom1"), s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
+	airdrop := s.createAirdrop(
+		1,
+		s.addr(0),
+		parseCoins("1000000000denom1"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeFarming,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
+		true,
+	)
 
 	for _, tc := range []struct {
 		name      string
@@ -70,9 +91,9 @@ func (s *KeeperTestSuite) TestGRPCAirdrop() {
 			nil,
 		},
 		{
-			"airdrop not found",
+			"query with airdrop id",
 			&types.QueryAirdropRequest{
-				AirdropId: 1,
+				AirdropId: airdrop.Id,
 			},
 			false,
 			func(resp *types.QueryAirdropResponse) {
@@ -98,22 +119,24 @@ func (s *KeeperTestSuite) TestGRPCAirdrop() {
 func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 	airdrop := s.createAirdrop(
 		1,
+		s.addr(0),
 		parseCoins("1000000000denom1"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeFarming,
+		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
 		true,
 	)
 
-	s.createClaimRecord(
+	record := s.createClaimRecord(
 		airdrop.Id,
-		s.addr(0),
-		parseCoins("100000000denom1"),
-		parseCoins("100000000denom1"),
-		[]types.Action{
-			{ActionType: types.ActionTypeDeposit, Claimed: true},
-			{ActionType: types.ActionTypeSwap, Claimed: false},
-			{ActionType: types.ActionTypeFarming, Claimed: false},
-		},
+		s.addr(1),
+		parseCoins("90000000denom1"),
+		parseCoins("600000000denom1"),
+		[]bool{true, false, false},
 	)
 
 	for _, tc := range []struct {
@@ -129,7 +152,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 			nil,
 		},
 		{
-			"query with not eligible address",
+			"query with not eligible recipient address",
 			&types.QueryClaimRecordRequest{
 				Recipient: s.addr(5).String(),
 			},
@@ -137,18 +160,18 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 			nil,
 		},
 		{
-			"query by address",
+			"query by airdrop id and recipient address",
 			&types.QueryClaimRecordRequest{
 				AirdropId: airdrop.Id,
-				Recipient: s.addr(0).String(),
+				Recipient: record.Recipient,
 			},
 			false,
 			func(resp *types.QueryClaimRecordResponse) {
-				s.Require().Equal(s.addr(0).String(), resp.ClaimRecord.Recipient)
-				s.Require().True(coinsEq(parseCoins("100000000denom1"), resp.ClaimRecord.InitialClaimableCoins))
-				s.Require().True(resp.ClaimRecord.Actions[0].Claimed)
-				s.Require().False(resp.ClaimRecord.Actions[1].Claimed)
-				s.Require().False(resp.ClaimRecord.Actions[2].Claimed)
+				s.Require().Equal(record.Recipient, resp.ClaimRecord.Recipient)
+				s.Require().True(coinsEq(parseCoins("90000000denom1"), record.InitialClaimableCoins))
+				s.Require().True(resp.ClaimRecord.ClaimedConditions[0])
+				s.Require().False(resp.ClaimRecord.ClaimedConditions[1])
+				s.Require().False(resp.ClaimRecord.ClaimedConditions[2])
 			},
 		},
 	} {

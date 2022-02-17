@@ -25,64 +25,29 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		return types.ClaimRecord{}, types.ErrTerminatedAirdrop
 	}
 
-	// TODO: sanity check whether or not if the receipient has executed deposit, swap, and farming stake
-	//
-
-	// Increment a number of unclaimed actions and add values
-	// to actionsMap to sanity check the already completed action
-	actionsMap := make(map[types.ActionType]bool, len(record.Actions))
-	unclaimedActions := int64(0)
-	for i, action := range record.Actions {
-		if !action.Claimed {
-			unclaimedActions++
-		}
-
-		actionsMap[action.ActionType] = action.Claimed
-
-		// Update the claimed status
-		if action.ActionType == msg.ActionType {
-			if !action.Claimed {
-				record.Actions[i].Claimed = true
-			}
-		}
-	}
-
-	// The recipient already completed all the actions
-	if unclaimedActions == 0 {
-		return types.ClaimRecord{}, types.ErrAlreadyClaimedAll
-	}
-
-	// The recipient already completed the particular action
-	claimed, found := actionsMap[msg.ActionType]
-	if !found {
-		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "action type not found")
-	}
-	if claimed {
+	if record.ClaimedConditions[msg.ConditionType] {
 		return types.ClaimRecord{}, types.ErrAlreadyClaimed
 	}
 
-	// Use divisor to send a proportional amount of the claimable amount to the recipient
-	// When unclaimedActions is 1, send all the remaining amount to the recipient
-	// TODO: verify logic without case 1
-	switch unclaimedActions {
-	case 1:
-		amt := record.ClaimableCoins
-		record.ClaimableCoins = record.ClaimableCoins.Sub(amt)
+	//
+	// TODO: sanity check whether or not if the receipient has executed deposit, swap, and farming stake
+	//
 
-		if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), amt); err != nil {
-			return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to send coins to the recipient")
-		}
-
-	default:
-		divisor := sdk.NewDec(unclaimedActions)
-		amt, _ := sdk.NewDecCoinsFromCoins(record.ClaimableCoins...).QuoDecTruncate(divisor).TruncateDecimal()
-		record.ClaimableCoins = record.ClaimableCoins.Sub(amt)
-
-		if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), amt); err != nil {
-			return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to transfer coins to the recipient")
+	unclaimedNum := int64(0)
+	for _, claimed := range record.ClaimedConditions {
+		if !claimed {
+			unclaimedNum++
 		}
 	}
 
+	claimableCoins := record.GetClaimableCoinsForCondition(unclaimedNum)
+
+	if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), claimableCoins); err != nil {
+		return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to transfer coins to the recipient")
+	}
+
+	record.ClaimableCoins = record.ClaimableCoins.Sub(claimableCoins)
+	record.ClaimedConditions[msg.ConditionType] = true
 	k.SetClaimRecord(ctx, record)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -92,7 +57,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 			sdk.NewAttribute(types.AttributeKeyRecipient, record.Recipient),
 			sdk.NewAttribute(types.AttributeKeyInitialClaimableCoins, record.InitialClaimableCoins.String()),
 			sdk.NewAttribute(types.AttributeKeyClaimableCoins, record.ClaimableCoins.String()),
-			sdk.NewAttribute(types.AttributeKeyActionType, msg.ActionType.String()),
+			sdk.NewAttribute(types.AttributeKeyConditionType, msg.ConditionType.String()),
 		),
 	})
 
@@ -102,9 +67,10 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 // TerminateAirdrop terminates the airdrop and transfer the remaining coins to the termination address.
 func (k Keeper) TerminateAirdrop(ctx sdk.Context, airdrop types.Airdrop) error {
 	amt := k.bankKeeper.GetAllBalances(ctx, airdrop.GetSourceAddress())
-
-	if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), airdrop.GetTerminationAddress(), amt); err != nil {
-		return sdkerrors.Wrap(err, "failed to transfer the remaining coins to the termination address")
+	if !amt.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), airdrop.GetTerminationAddress(), amt); err != nil {
+			return sdkerrors.Wrap(err, "failed to transfer the remaining coins to the termination address")
+		}
 	}
 	return nil
 }

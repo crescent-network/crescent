@@ -43,13 +43,13 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) createAirdrop(
 	id uint64,
+	sourceAddr sdk.AccAddress,
 	sourceCoins sdk.Coins,
+	conditions []types.ConditionType,
 	startTime time.Time,
 	endTime time.Time,
 	fund bool,
 ) types.Airdrop {
-	sourceAddr := types.SourceAddress(id)
-
 	if fund {
 		s.fundAddr(sourceAddr, sourceCoins)
 	}
@@ -58,6 +58,7 @@ func (s *KeeperTestSuite) createAirdrop(
 		Id:                 id,
 		SourceAddress:      sourceAddr.String(),
 		TerminationAddress: s.addr(6).String(),
+		Conditions:         conditions,
 		StartTime:          startTime,
 		EndTime:            endTime,
 	})
@@ -73,14 +74,14 @@ func (s *KeeperTestSuite) createClaimRecord(
 	recipient sdk.AccAddress,
 	initialClaimableCoins sdk.Coins,
 	claimableCoins sdk.Coins,
-	actions []types.Action,
+	claimedConditions []bool,
 ) types.ClaimRecord {
 	s.keeper.SetClaimRecord(s.ctx, types.ClaimRecord{
 		AirdropId:             airdropId,
 		Recipient:             recipient.String(),
 		InitialClaimableCoins: initialClaimableCoins,
 		ClaimableCoins:        claimableCoins,
-		Actions:               actions,
+		ClaimedConditions:     claimedConditions,
 	})
 
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdropId, recipient)

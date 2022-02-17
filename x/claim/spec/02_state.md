@@ -8,11 +8,12 @@
 
 // Airdrop defines airdrop information.
 type Airdrop struct {
-	Id                 uint64    // airdrop_id specifies index of the airdrop
-	SourceAddress      string    // source_address defines the bech32-encoded source address
-	TerminationAddress string    // termination_address defines the bech32-encoded termination address
-	StartTime          time.Time // start_time specifies the start time of the airdrop
-	EndTime            time.Time // end_time specifies the start time of the airdrop
+	Id                 uint64          // the airdrop id
+	SourceAddress      string          // the bech32-encoded source address
+	TerminationAddress string          // the bech32-encoded termination address
+	Conditions         []ConditionType // the list of conditions
+	StartTime          time.Time       // the start time of the airdrop
+	EndTime            time.Time       // the end time of the airdrop
 }
 ```
 
@@ -21,36 +22,29 @@ type Airdrop struct {
 ```go
 // ClaimRecord defines claim record that corresponds to the airdrop.
 type ClaimRecord struct {
-	AirdropId             uint64    // airdrop_id specifies airdrop id
-	Recipient             string    // recipient specifies the bech32-encoded address that is eligible to claim airdrop
-	InitialClaimableCoins sdk.Coins // initial_claimable_coins specifies the initial claimable coins
-	ClaimableCoins        sdk.Coins // claimable_coins specifies the unclaimed claimable coins
-	Actions               []Action  // actions specifies a list of actions
+	AirdropId             uint64    // airdrop id
+	Recipient             string    // the bech32-encoded address that is eligible to claim airdrop
+	InitialClaimableCoins sdk.Coins // the initial claimable coins
+	ClaimableCoins        sdk.Coins // the unclaimed claimable coins
+	ClaimedConditions     []bool    // the list of condition statuses
 }
 ```
 
-### Action Type
+### Condition Type
 
 ```go
-
-// Action defines an action type and its claimed status.
-type Action struct {
-	ActionType ActionType // action_type specifies the action type
-	Claimed    bool       // claimed specifies the status of an action
-}
-
-// ActionType defines the type of action that a recipient must execute in order to receive a claimable amount.
-type ActionType int32
+// ConditionType defines the type of condition that a recipient must execute in order to receive a claimable amount.
+type ConditionType int32
 
 const (
-	// ACTION_TYPE_UNSPECIFIED specifies an unknown action type
-	ActionTypeUnspecified ActionType = 0
-	// ACTION_TYPE_DEPOSIT specifies deposit action type
-	ActionTypeDeposit ActionType = 1
-	// ACTION_TYPE_SWAP specifies swap action type
-	ActionTypeSwap ActionType = 2
-	// ACTION_TYPE_FARMING specifies farming (stake) action type
-	ActionTypeFarming ActionType = 3
+	// CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
+	ConditionTypeUnspecified ConditionType = 0
+	// CONDITION_TYPE_DEPOSIT specifies deposit condition type
+	ConditionTypeDeposit ConditionType = 1
+	// CONDITION_TYPE_SWAP specifies swap condition type
+	ConditionTypeSwap ConditionType = 2
+	// CONDITION_TYPE_FARMING specifies farming (stake) condition type
+	ConditionTypeFarming ConditionType = 3
 )
 ```
 
@@ -66,8 +60,9 @@ const (
 
 Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list.
 
-- `LastAirdropIdKey: 0xd0 -> uint64`
-- `StartTimeKey: 0xd5 | AirdropId -> ProtocolBuffer(Timestamp)`
-- `EndTimeKey: 0xd6 | AirdropId -> ProtocolBuffer(Timestamp)`
+- `LastAirdropIdKey: 0xd0 -> Uint64Value(lastAirdropId)`
+- `StartTimeKey: 0xd5 | AirdropId -> sdk.FormatTimeBytes(Timestamp)`
+- `EndTimeKey: 0xd6 | AirdropId -> sdk.FormatTimeBytes(Timestamp)`
 - `AirdropKey: 0xd7 | AirdropId -> ProtocolBuffer(Airdrop)`
-- `ClaimRecordKey: 0xd8 | AirdropId -> ProtocolBuffer(ClaimRecord)`
+- `ClaimRecordsByAirdropKeyPrefix: 0xd8 | AirdropId -> ProtocolBuffer(ClaimRecord)`
+- `ClaimRecordKey: 0xd8 | AirdropId | RecipientAddrLen (1 byte) | RecipientAddr -> ProtocolBuffer(ClaimRecord)`

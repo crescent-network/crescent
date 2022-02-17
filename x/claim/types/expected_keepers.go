@@ -10,3 +10,11 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
+
+// FarmingKeeper defines the expected interface needed to check the condition.
+// type FarmingKeeper interface {
+// }
+
+// LiquidityKeeper defines the expected interface needed to check the condition.
+// type LiquidityKeeper interface {
+// }

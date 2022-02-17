@@ -34,13 +34,13 @@ func TestMsgClaim(t *testing.T) {
 		{
 			"invalid action type",
 			func(msg *types.MsgClaim) {
-				msg.ActionType = types.ActionTypeUnspecified
+				msg.ConditionType = types.ConditionTypeUnspecified
 			},
-			"invalid action type: ACTION_TYPE_UNSPECIFIED: invalid request",
+			"invalid action type: CONDITION_TYPE_UNSPECIFIED: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgClaim(1, testAddr, types.ActionTypeDeposit)
+			msg := types.NewMsgClaim(1, testAddr, types.ConditionTypeDeposit)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgClaim, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
