@@ -147,5 +147,5 @@ func RoundPrice(price sdk.Dec, prec int) sdk.Dec {
 	if price.Equal(tick) {
 		return price
 	}
-	return TickFromIndex(RoundTickIndex(TickToIndex(price, prec)), prec)
+	return TickFromIndex(RoundTickIndex(TickToIndex(tick, prec)), prec)
 }
