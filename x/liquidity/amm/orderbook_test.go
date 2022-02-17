@@ -11,7 +11,14 @@ import (
 )
 
 func newOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) *amm.BaseOrder {
-	return amm.NewBaseOrder(dir, price, amt, sdk.NewCoin("denom1", amm.OfferCoinAmount(dir, price, amt)), "denom2")
+	var offerCoinDenom, demandCoinDenom string
+	switch dir {
+	case amm.Buy:
+		offerCoinDenom, demandCoinDenom = "denom2", "denom1"
+	case amm.Sell:
+		offerCoinDenom, demandCoinDenom = "denom1", "denom2"
+	}
+	return amm.NewBaseOrder(dir, price, amt, sdk.NewCoin(offerCoinDenom, amm.OfferCoinAmount(dir, price, amt)), demandCoinDenom)
 }
 
 func TestOrderBook(t *testing.T) {
