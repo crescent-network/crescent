@@ -77,28 +77,28 @@ func (k Keeper) ValidateMsgClaim(ctx sdk.Context, msg *types.MsgClaim) (types.Ai
 
 // ValidateCondition validates if the recipient has executed the condition.
 func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct types.ConditionType) error {
-	skip := true
+	skip := false
 
 	switch ct {
 	case types.ConditionTypeDeposit:
 		for _, b := range k.bankKeeper.GetAllBalances(ctx, recipient) {
 			if strings.HasPrefix(b.Denom, "pool") {
-				skip = false
+				skip = true
 			}
 		}
 
 	case types.ConditionTypeSwap:
 		for _, o := range k.liquidityKeeper.GetAllOrders(ctx) {
 			if o.Orderer == recipient.String() {
-				skip = false
+				skip = true
 			}
 		}
 
 	case types.ConditionTypeFarming:
 		queuedCoins := k.farmingKeeper.GetAllQueuedCoinsByFarmer(ctx, recipient)
 		stakedCoins := k.farmingKeeper.GetAllStakedCoinsByFarmer(ctx, recipient)
-		if queuedCoins.IsZero() && stakedCoins.IsZero() {
-			skip = false
+		if !queuedCoins.IsZero() || !stakedCoins.IsZero() {
+			skip = true
 		}
 	}
 

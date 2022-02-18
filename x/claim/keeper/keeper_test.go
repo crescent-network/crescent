@@ -93,6 +93,16 @@ func (s *KeeperTestSuite) createClaimRecord(
 	return r
 }
 
+func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) liqtypes.Pair {
+	params := s.app.LiquidityKeeper.GetParams(s.ctx)
+	if fund {
+		s.fundAddr(creator, params.PairCreationFee)
+	}
+	pair, err := s.app.LiquidityKeeper.CreatePair(s.ctx, liqtypes.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+	s.Require().NoError(err)
+	return pair
+}
+
 func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) liqtypes.Pool {
 	params := s.app.LiquidityKeeper.GetParams(s.ctx)
 	if fund {
@@ -117,6 +127,7 @@ func (s *KeeperTestSuite) limitOrder(
 	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
 	pair, found := s.app.LiquidityKeeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
+
 	var offerCoin sdk.Coin
 	var demandCoinDenom string
 	switch dir {
@@ -127,18 +138,40 @@ func (s *KeeperTestSuite) limitOrder(
 		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
 		demandCoinDenom = pair.QuoteCoinDenom
 	}
+
 	if fund {
 		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
-	msg := liqtypes.NewMsgLimitOrder(
+
+	req, err := s.app.LiquidityKeeper.LimitOrder(s.ctx, liqtypes.NewMsgLimitOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
-		price, amt, orderLifespan)
-	req, err := s.app.LiquidityKeeper.LimitOrder(s.ctx, msg)
+		price, amt, orderLifespan),
+	)
 	s.Require().NoError(err)
+
 	return req
 }
 
-func (s *KeeperTestSuite) createFixedAmountPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {
+func (s *KeeperTestSuite) buyLimitOrder(
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
+	return s.limitOrder(
+		orderer, pairId, liqtypes.OrderDirectionBuy, price, amt, orderLifespan, fund)
+}
+
+func (s *KeeperTestSuite) sellLimitOrder(
+	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
+	return s.limitOrder(
+		orderer, pairId, liqtypes.OrderDirectionSell, price, amt, orderLifespan, fund)
+}
+
+func (s *KeeperTestSuite) createFixedAmountPlan(
+	farmingPoolAcc sdk.AccAddress,
+	stakingCoinWeightsMap map[string]string,
+	epochAmountMap map[string]int64,
+	fund bool,
+) {
 	stakingCoinWeights := sdk.NewDecCoins()
 	for denom, weight := range stakingCoinWeightsMap {
 		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
@@ -147,6 +180,10 @@ func (s *KeeperTestSuite) createFixedAmountPlan(farmingPoolAcc sdk.AccAddress, s
 	epochAmount := sdk.NewCoins()
 	for denom, amount := range epochAmountMap {
 		epochAmount = epochAmount.Add(sdk.NewInt64Coin(denom, amount))
+	}
+
+	if fund {
+		s.fundAddr(farmingPoolAcc, epochAmount)
 	}
 
 	msg := farmingtypes.NewMsgCreateFixedAmountPlan(
@@ -161,7 +198,11 @@ func (s *KeeperTestSuite) createFixedAmountPlan(farmingPoolAcc sdk.AccAddress, s
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
+func (s *KeeperTestSuite) stake(farmerAcc sdk.AccAddress, amt sdk.Coins, fund bool) {
+	if fund {
+		s.fundAddr(farmerAcc, amt)
+	}
+
 	err := s.app.FarmingKeeper.Stake(s.ctx, farmerAcc, amt)
 	s.Require().NoError(err)
 }
@@ -169,6 +210,10 @@ func (s *KeeperTestSuite) stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
 //
 // Below are useful helpers to write test code easily.
 //
+
+func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin {
+	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
+}
 
 func (s *KeeperTestSuite) getAllBalances(addr sdk.AccAddress) sdk.Coins {
 	return s.app.BankKeeper.GetAllBalances(s.ctx, addr)
@@ -185,12 +230,8 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, coins sdk.Coins) {
 	s.Require().NoError(err)
 }
 
-func parseCoins(s string) sdk.Coins {
-	coins, err := sdk.ParseCoinsNormalized(s)
-	if err != nil {
-		panic(err)
-	}
-	return coins
+func coinEq(exp, got sdk.Coin) (bool, string, string, string) {
+	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {

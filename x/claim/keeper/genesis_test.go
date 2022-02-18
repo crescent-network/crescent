@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
-	squadapp "github.com/cosmosquad-labs/squad/app"
-	"github.com/cosmosquad-labs/squad/x/claim/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	squadapp "github.com/cosmosquad-labs/squad/app"
+	squad "github.com/cosmosquad-labs/squad/types"
+	"github.com/cosmosquad-labs/squad/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -36,14 +38,14 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 			{
 				AirdropId:             1,
 				Recipient:             s.addr(1).String(),
-				InitialClaimableCoins: parseCoins("50000000000denom1"),
-				ClaimableCoins:        parseCoins("50000000000denom1"),
+				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
 				ClaimedConditions:     []bool{false, false, false},
 			},
 		},
 	}
 
-	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), parseCoins("100000000000denom1"))
+	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), squad.ParseCoins("100000000000denom1"))
 	s.Require().NotPanics(func() {
 		s.keeper.InitGenesis(s.ctx, sampleGenState)
 	})
@@ -87,42 +89,42 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 			{
 				AirdropId:             1,
 				Recipient:             s.addr(2).String(),
-				InitialClaimableCoins: parseCoins("50000000000denom1"),
-				ClaimableCoins:        parseCoins("50000000000denom1"),
+				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
 				ClaimedConditions:     []bool{true, false, false},
 			},
 			{
 				AirdropId:             1,
 				Recipient:             s.addr(3).String(),
-				InitialClaimableCoins: parseCoins("50000000000denom1"),
-				ClaimableCoins:        parseCoins("50000000000denom1"),
+				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
 				ClaimedConditions:     []bool{false, true, false},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(3).String(),
-				InitialClaimableCoins: parseCoins("100000000000denom1"),
-				ClaimableCoins:        parseCoins("100000000000denom1"),
+				InitialClaimableCoins: squad.ParseCoins("100000000000denom1"),
+				ClaimableCoins:        squad.ParseCoins("100000000000denom1"),
 				ClaimedConditions:     []bool{false, false, false},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(4).String(),
-				InitialClaimableCoins: parseCoins("50000000000denom1"),
-				ClaimableCoins:        parseCoins("50000000000denom1"),
+				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
 				ClaimedConditions:     []bool{false, false, false},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(5).String(),
-				InitialClaimableCoins: parseCoins("50000000000denom1"),
-				ClaimableCoins:        parseCoins("50000000000denom1"),
+				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
 				ClaimedConditions:     []bool{false, false, false},
 			},
 		},
 	}
-	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), parseCoins("100000000000denom1"))
-	s.fundAddr(sampleGenState.Airdrops[1].GetSourceAddress(), parseCoins("200000000000denom1"))
+	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), squad.ParseCoins("100000000000denom1"))
+	s.fundAddr(sampleGenState.Airdrops[1].GetSourceAddress(), squad.ParseCoins("200000000000denom1"))
 
 	// Initialize genesis state
 	s.Require().NotPanics(func() {

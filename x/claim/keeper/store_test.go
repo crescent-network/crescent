@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -16,11 +17,11 @@ func (s *KeeperTestSuite) TestSetAirdropId() {
 		types.ConditionTypeFarming,
 	}
 
-	s.createAirdrop(1, s.addr(1), parseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(1, s.addr(1), squad.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(2, s.addr(2), parseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(2, s.addr(2), squad.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(3, s.addr(3), parseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(3, s.addr(3), squad.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
 
 	id = s.keeper.GetLastAirdropId(s.ctx)
@@ -34,13 +35,13 @@ func (s *KeeperTestSuite) TestAllAirdrops() {
 		types.ConditionTypeFarming,
 	}
 
-	s.createAirdrop(1, s.addr(1), parseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(1, s.addr(1), squad.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(2, s.addr(2), parseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(2, s.addr(2), squad.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(3, s.addr(3), parseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(3, s.addr(3), squad.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(4, s.addr(4), parseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(4, s.addr(4), squad.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
 
 	airdrops := s.keeper.GetAllAirdrops(s.ctx)
@@ -51,7 +52,7 @@ func (s *KeeperTestSuite) TestAirdropStartAndEndTime() {
 	airdrop := s.createAirdrop(
 		1,
 		s.addr(0),
-		parseCoins("1000000000denom1"),
+		squad.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -76,7 +77,7 @@ func (s *KeeperTestSuite) TestAllClaimRecords() {
 	airdrop := s.createAirdrop(
 		1,
 		s.addr(0),
-		parseCoins("1000000000denom1"),
+		squad.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -87,9 +88,9 @@ func (s *KeeperTestSuite) TestAllClaimRecords() {
 		true,
 	)
 
-	s.createClaimRecord(airdrop.Id, s.addr(0), parseCoins("300000000denom1"), parseCoins("300000000denom1"), []bool{false, false, false})
-	s.createClaimRecord(airdrop.Id, s.addr(1), parseCoins("300000000denom1"), parseCoins("300000000denom1"), []bool{false, false, false})
-	s.createClaimRecord(airdrop.Id, s.addr(2), parseCoins("400000000denom1"), parseCoins("400000000denom1"), []bool{false, false, false})
+	s.createClaimRecord(airdrop.Id, s.addr(0), squad.ParseCoins("300000000denom1"), squad.ParseCoins("300000000denom1"), []bool{false, false, false})
+	s.createClaimRecord(airdrop.Id, s.addr(1), squad.ParseCoins("300000000denom1"), squad.ParseCoins("300000000denom1"), []bool{false, false, false})
+	s.createClaimRecord(airdrop.Id, s.addr(2), squad.ParseCoins("400000000denom1"), squad.ParseCoins("400000000denom1"), []bool{false, false, false})
 
 	records := s.keeper.GetAllClaimRecordsByAirdropId(s.ctx, airdrop.Id)
 	s.Require().Len(records, 3)
