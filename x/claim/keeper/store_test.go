@@ -88,9 +88,9 @@ func (s *KeeperTestSuite) TestAllClaimRecords() {
 		true,
 	)
 
-	s.createClaimRecord(airdrop.Id, s.addr(0), squad.ParseCoins("300000000denom1"), squad.ParseCoins("300000000denom1"), []bool{false, false, false})
-	s.createClaimRecord(airdrop.Id, s.addr(1), squad.ParseCoins("300000000denom1"), squad.ParseCoins("300000000denom1"), []bool{false, false, false})
-	s.createClaimRecord(airdrop.Id, s.addr(2), squad.ParseCoins("400000000denom1"), squad.ParseCoins("400000000denom1"), []bool{false, false, false})
+	s.createClaimRecord(airdrop.Id, s.addr(0), squad.ParseCoins("300000000denom1"), squad.ParseCoins("300000000denom1"), []types.ConditionType{})
+	s.createClaimRecord(airdrop.Id, s.addr(1), squad.ParseCoins("300000000denom1"), squad.ParseCoins("300000000denom1"), []types.ConditionType{})
+	s.createClaimRecord(airdrop.Id, s.addr(2), squad.ParseCoins("400000000denom1"), squad.ParseCoins("400000000denom1"), []types.ConditionType{})
 
 	records := s.keeper.GetAllClaimRecordsByAirdropId(s.ctx, airdrop.Id)
 	s.Require().Len(records, 3)

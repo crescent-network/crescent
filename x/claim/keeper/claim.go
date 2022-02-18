@@ -11,30 +11,40 @@ import (
 )
 
 func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, error) {
-	airdrop, record, err := k.ValidateMsgClaim(ctx, msg)
-	if err != nil {
-		return types.ClaimRecord{}, err
+	endTime := k.GetEndTime(ctx, msg.AirdropId)
+	if !endTime.After(ctx.BlockTime()) {
+		return types.ClaimRecord{}, types.ErrTerminatedAirdrop
 	}
 
+	airdrop, found := k.GetAirdrop(ctx, msg.AirdropId)
+	if !found {
+		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "airdrop not found")
+	}
+
+	record, found := k.GetClaimRecordByRecipient(ctx, airdrop.Id, msg.GetRecipient())
+	if !found {
+		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
+	}
+
+	for _, c := range record.ClaimedConditions {
+		if c == msg.ConditionType {
+			return types.ClaimRecord{}, types.ErrAlreadyClaimed
+		}
+	}
+
+	// Vadliate whether or not the recipient has executed the condition
 	if err := k.ValidateCondition(ctx, record.GetRecipient(), msg.ConditionType); err != nil {
 		return types.ClaimRecord{}, err
 	}
 
-	unclaimedNum := int64(0)
-	for _, claimed := range record.ClaimedConditions {
-		if !claimed {
-			unclaimedNum++
-		}
-	}
-
-	claimableCoins := record.GetClaimableCoinsForCondition(unclaimedNum)
+	claimableCoins := record.GetClaimableCoinsForCondition(airdrop.Conditions)
 
 	if err := k.bankKeeper.SendCoins(ctx, airdrop.GetSourceAddress(), record.GetRecipient(), claimableCoins); err != nil {
 		return types.ClaimRecord{}, sdkerrors.Wrap(err, "failed to transfer coins to the recipient")
 	}
 
 	record.ClaimableCoins = record.ClaimableCoins.Sub(claimableCoins)
-	record.ClaimedConditions[msg.ConditionType] = true
+	record.ClaimedConditions = append(record.ClaimedConditions, msg.ConditionType)
 	k.SetClaimRecord(ctx, record)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -49,30 +59,6 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 	})
 
 	return record, nil
-}
-
-// ValidateMsgClaim validates basic sanity checks required for MsgClaim.
-func (k Keeper) ValidateMsgClaim(ctx sdk.Context, msg *types.MsgClaim) (types.Airdrop, types.ClaimRecord, error) {
-	endTime := k.GetEndTime(ctx, msg.AirdropId)
-	if !endTime.After(ctx.BlockTime()) {
-		return types.Airdrop{}, types.ClaimRecord{}, types.ErrTerminatedAirdrop
-	}
-
-	airdrop, found := k.GetAirdrop(ctx, msg.AirdropId)
-	if !found {
-		return types.Airdrop{}, types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "airdrop not found")
-	}
-
-	record, found := k.GetClaimRecordByRecipient(ctx, airdrop.Id, msg.GetRecipient())
-	if !found {
-		return types.Airdrop{}, types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrNotFound, "claim record not found")
-	}
-
-	if record.ClaimedConditions[msg.ConditionType] {
-		return types.Airdrop{}, types.ClaimRecord{}, types.ErrAlreadyClaimed
-	}
-
-	return airdrop, record, nil
 }
 
 // ValidateCondition validates if the recipient has executed the condition.

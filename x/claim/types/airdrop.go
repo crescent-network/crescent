@@ -28,11 +28,22 @@ func (r ClaimRecord) GetRecipient() sdk.AccAddress {
 	return addr
 }
 
-func (r ClaimRecord) GetClaimableCoinsForCondition(divisor int64) sdk.Coins {
+// GetClaimableCoinsForCondition uses unclaimed # of conditions as divisor to
+// calculate a proportionate claimable amount of coins for the condition.
+func (r ClaimRecord) GetClaimableCoinsForCondition(airdropConditions []ConditionType) sdk.Coins {
+	conditionSet := map[ConditionType]struct{}{}
+	for _, ac := range airdropConditions {
+		conditionSet[ac] = struct{}{}
+	}
+	for _, c := range r.ClaimedConditions {
+		delete(conditionSet, c)
+	}
+	unclaimedNum := sdk.NewInt(int64(len(conditionSet)))
+
 	claimableCoins := sdk.Coins{}
 	for _, c := range r.ClaimableCoins {
-		claimableAmt := c.Amount.Quo(sdk.NewInt(divisor))
-		claimableCoins = sdk.NewCoins(sdk.NewCoin(c.Denom, claimableAmt))
+		claimableAmt := c.Amount.Quo(unclaimedNum)
+		claimableCoins = claimableCoins.Add(sdk.NewCoin(c.Denom, claimableAmt))
 	}
 	return claimableCoins
 }

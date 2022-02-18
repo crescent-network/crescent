@@ -47,24 +47,24 @@ message ClaimRecord {
   repeated cosmos.base.v1beta1.Coin claimable_coins = 4
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  // claimed_conditions specifies a list of condition statuses
-  // index of boolean in array refers to the condition enum #
-  repeated bool claimed_conditions = 5 [(gogoproto.nullable) = false];
+  // claimed_conditions specifies a list of condition types
+  // initial values are empty and each condition type gets appended when claim is successfully executed
+  repeated ConditionType claimed_conditions = 5 [(gogoproto.nullable) = false];
 }
 
 // ConditionType defines the type of condition that a recipient must execute in order to receive a claimable amount.
 enum ConditionType {
   option (gogoproto.goproto_enum_prefix) = false;
 
+  // CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
+  CONDITION_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ConditionTypeUnspecified"];
+
   // CONDITION_TYPE_DEPOSIT specifies deposit condition type
-  CONDITION_TYPE_DEPOSIT = 0 [(gogoproto.enumvalue_customname) = "ConditionTypeDeposit"];
+  CONDITION_TYPE_DEPOSIT = 1 [(gogoproto.enumvalue_customname) = "ConditionTypeDeposit"];
 
   // CONDITION_TYPE_SWAP specifies swap condition type
-  CONDITION_TYPE_SWAP = 1 [(gogoproto.enumvalue_customname) = "ConditionTypeSwap"];
+  CONDITION_TYPE_SWAP = 2 [(gogoproto.enumvalue_customname) = "ConditionTypeSwap"];
 
   // CONDITION_TYPE_FARMING specifies farming (stake) condition type
-  CONDITION_TYPE_FARMING = 2 [(gogoproto.enumvalue_customname) = "ConditionTypeFarming"];
-
-  // CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
-  CONDITION_TYPE_UNSPECIFIED = 99 [(gogoproto.enumvalue_customname) = "ConditionTypeUnspecified"];
+  CONDITION_TYPE_FARMING = 3 [(gogoproto.enumvalue_customname) = "ConditionTypeFarming"];
 }

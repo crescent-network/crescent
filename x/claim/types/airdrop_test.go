@@ -12,50 +12,65 @@ import (
 
 func TestClaimableCoinsForCondition(t *testing.T) {
 	for _, tc := range []struct {
-		name   string
-		record types.ClaimRecord
+		name              string
+		airdropConditions []types.ConditionType
+		record            types.ClaimRecord
 	}{
 		{
 			"case #1",
+			[]types.ConditionType{
+				types.ConditionTypeDeposit,
+				types.ConditionTypeSwap,
+				types.ConditionTypeFarming,
+			},
 			types.ClaimRecord{
 				AirdropId:             1,
 				Recipient:             sdk.AccAddress(crypto.AddressHash([]byte("recipient"))).String(),
 				InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(100_000_000))),
 				ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(100_000_000))),
-				ClaimedConditions:     []bool{false, false, false},
+				ClaimedConditions:     []types.ConditionType{},
 			},
 		},
 		{
 			"case #2",
+			[]types.ConditionType{
+				types.ConditionTypeDeposit,
+				types.ConditionTypeSwap,
+				types.ConditionTypeFarming,
+			},
 			types.ClaimRecord{
 				AirdropId:             1,
 				Recipient:             sdk.AccAddress(crypto.AddressHash([]byte("recipient"))).String(),
 				InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(999_999_999))),
 				ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(999_999_999))),
-				ClaimedConditions:     []bool{false, false, false},
+				ClaimedConditions:     []types.ConditionType{},
 			},
 		},
 		{
 			"case #3",
+			[]types.ConditionType{
+				types.ConditionTypeDeposit,
+				types.ConditionTypeSwap,
+				types.ConditionTypeFarming,
+			},
 			types.ClaimRecord{
 				AirdropId:             1,
 				Recipient:             sdk.AccAddress(crypto.AddressHash([]byte("recipient"))).String(),
 				InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(666_777))),
 				ClaimableCoins:        sdk.NewCoins(sdk.NewCoin("denom1", sdk.NewInt(666_777))),
-				ClaimedConditions:     []bool{false, false, false},
+				ClaimedConditions:     []types.ConditionType{},
 			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			claimableCoins := sdk.Coins{}
+			for i := 0; i < len(tc.airdropConditions); i++ {
+				claimableCoins := tc.record.GetClaimableCoinsForCondition(tc.airdropConditions)
 
-			for i := len(tc.record.ClaimedConditions); i > 0; i-- {
-				amt := tc.record.GetClaimableCoinsForCondition(int64(i))
-				tc.record.ClaimableCoins = tc.record.ClaimableCoins.Sub(amt)
-
-				claimableCoins = claimableCoins.Add(amt...)
+				tc.record.ClaimableCoins = tc.record.ClaimableCoins.Sub(claimableCoins)
+				tc.record.ClaimedConditions = append(tc.record.ClaimedConditions, tc.airdropConditions[i])
 			}
-			require.Equal(t, tc.record.InitialClaimableCoins, claimableCoins)
+			require.True(t, tc.record.ClaimableCoins.IsZero())
+			require.Equal(t, tc.airdropConditions, tc.record.ClaimedConditions)
 		})
 	}
 }

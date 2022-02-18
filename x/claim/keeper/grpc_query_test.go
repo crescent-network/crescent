@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 		s.addr(1),
 		squad.ParseCoins("90000000denom1"),
 		squad.ParseCoins("600000000denom1"),
-		[]bool{true, false, false},
+		[]types.ConditionType{types.ConditionTypeDeposit},
 	)
 
 	for _, tc := range []struct {
@@ -170,9 +170,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 			func(resp *types.QueryClaimRecordResponse) {
 				s.Require().Equal(record.Recipient, resp.ClaimRecord.Recipient)
 				s.Require().True(coinsEq(squad.ParseCoins("90000000denom1"), record.InitialClaimableCoins))
-				s.Require().True(resp.ClaimRecord.ClaimedConditions[0])
-				s.Require().False(resp.ClaimRecord.ClaimedConditions[1])
-				s.Require().False(resp.ClaimRecord.ClaimedConditions[2])
+				s.Require().Len(resp.ClaimRecord.ClaimedConditions, 1)
 			},
 		},
 	} {

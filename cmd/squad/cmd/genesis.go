@@ -186,21 +186,21 @@ func TestnetGenesisParams() *GenesisParams {
 			Recipient:             "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v", // validator
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
-			ClaimedConditions:     []bool{false, false, false},
+			ClaimedConditions:     []types.ConditionType{},
 		},
 		{
 			AirdropId:             1,
 			Recipient:             "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu", // user1
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(9_000_000_000_000))),
-			ClaimedConditions:     []bool{false, false, false},
+			ClaimedConditions:     []types.ConditionType{},
 		},
 		{
 			AirdropId:             1,
 			Recipient:             "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny", // user2
 			InitialClaimableCoins: sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
 			ClaimableCoins:        sdk.NewCoins(sdk.NewCoin(genParams.AirdropSupply.Denom, sdk.NewInt(3_000_000_000_000))),
-			ClaimedConditions:     []bool{false, false, false},
+			ClaimedConditions:     []types.ConditionType{},
 		},
 	}
 

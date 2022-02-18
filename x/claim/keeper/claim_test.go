@@ -34,10 +34,10 @@ func (s *KeeperTestSuite) TestClaimDepositCondition() {
 		recipient,
 		squad.ParseCoins("666666667denom1"),
 		squad.ParseCoins("666666667denom1"),
-		[]bool{false, false, false},
+		[]types.ConditionType{},
 	)
 
-	// Create a normal pool
+	// Create a normal pair and pool
 	creator := s.addr(2)
 	s.createPair(creator, "denom3", "denom4", true)
 	s.createPool(creator, 1, squad.ParseCoins("1000000denom3,1000000denom4"), true)
@@ -52,13 +52,12 @@ func (s *KeeperTestSuite) TestClaimDepositCondition() {
 
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
 	s.Require().True(found)
-	s.Require().True(r.ClaimedConditions[types.ConditionTypeDeposit])
-	s.Require().False(r.ClaimedConditions[types.ConditionTypeSwap])
-	s.Require().False(r.ClaimedConditions[types.ConditionTypeFarming])
 	s.Require().True(coinsEq(
-		record.GetClaimableCoinsForCondition(3),
+		record.GetClaimableCoinsForCondition(airdrop.Conditions),
 		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
 	)
+	s.Require().Len(r.ClaimedConditions, 1)
+	s.Require().Equal(types.ConditionTypeDeposit, r.ClaimedConditions[0])
 }
 
 func (s *KeeperTestSuite) TestClaimSwapCondition() {
@@ -85,7 +84,7 @@ func (s *KeeperTestSuite) TestClaimSwapCondition() {
 		recipient,
 		squad.ParseCoins("666666667denom1"),
 		squad.ParseCoins("666666667denom1"),
-		[]bool{false, false, false},
+		[]types.ConditionType{},
 	)
 
 	// Create a normal pool
@@ -103,13 +102,12 @@ func (s *KeeperTestSuite) TestClaimSwapCondition() {
 
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
 	s.Require().True(found)
-	s.Require().False(r.ClaimedConditions[types.ConditionTypeDeposit])
-	s.Require().True(r.ClaimedConditions[types.ConditionTypeSwap])
-	s.Require().False(r.ClaimedConditions[types.ConditionTypeFarming])
 	s.Require().True(coinsEq(
-		record.GetClaimableCoinsForCondition(3),
+		record.GetClaimableCoinsForCondition(airdrop.Conditions),
 		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
 	)
+	s.Require().Len(r.ClaimedConditions, 1)
+	s.Require().Equal(types.ConditionTypeSwap, r.ClaimedConditions[0])
 }
 
 func (s *KeeperTestSuite) TestClaimFarmingCondition() {
@@ -136,7 +134,7 @@ func (s *KeeperTestSuite) TestClaimFarmingCondition() {
 		recipient,
 		squad.ParseCoins("666666667denom1"),
 		squad.ParseCoins("666666667denom1"),
-		[]bool{false, false, false},
+		[]types.ConditionType{},
 	)
 
 	// Create a fixed farming plan and stake
@@ -149,14 +147,12 @@ func (s *KeeperTestSuite) TestClaimFarmingCondition() {
 
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
 	s.Require().True(found)
-	s.Require().False(r.ClaimedConditions[types.ConditionTypeDeposit])
-	s.Require().False(r.ClaimedConditions[types.ConditionTypeSwap])
-	s.Require().True(r.ClaimedConditions[types.ConditionTypeFarming])
 	s.Require().True(coinsEq(
-		record.GetClaimableCoinsForCondition(3),
+		record.GetClaimableCoinsForCondition(airdrop.Conditions),
 		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
 	)
-
+	s.Require().Len(r.ClaimedConditions, 1)
+	s.Require().Equal(types.ConditionTypeFarming, r.ClaimedConditions[0])
 }
 
 func (s *KeeperTestSuite) TestClaimAll() {
@@ -183,7 +179,7 @@ func (s *KeeperTestSuite) TestClaimAll() {
 		recipient,
 		squad.ParseCoins("666666667denom1"),
 		squad.ParseCoins("666666667denom1"),
-		[]bool{false, false, false},
+		[]types.ConditionType{},
 	)
 
 	// Create a normal pool
@@ -222,13 +218,11 @@ func (s *KeeperTestSuite) TestClaimAll() {
 
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
 	s.Require().True(found)
-	s.Require().True(r.ClaimedConditions[types.ConditionTypeDeposit])
-	s.Require().True(r.ClaimedConditions[types.ConditionTypeSwap])
-	s.Require().True(r.ClaimedConditions[types.ConditionTypeFarming])
 	s.Require().True(coinsEq(
 		r.InitialClaimableCoins,
 		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
 	)
+	s.Require().Len(r.ClaimedConditions, 3)
 }
 
 func (s *KeeperTestSuite) TestClaimAlreadyClaimedCondition() {
@@ -255,7 +249,7 @@ func (s *KeeperTestSuite) TestClaimAlreadyClaimedCondition() {
 		recipient,
 		squad.ParseCoins("666666667denom1"),
 		squad.ParseCoins("666666667denom1"),
-		[]bool{false, false, false},
+		[]types.ConditionType{},
 	)
 
 	// Create a normal pool
@@ -275,6 +269,7 @@ func (s *KeeperTestSuite) TestClaimAlreadyClaimedCondition() {
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().ErrorIs(err, types.ErrAlreadyClaimed)
 }
+
 func (s *KeeperTestSuite) TestClaimAllTerminateAidrop() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
@@ -299,7 +294,7 @@ func (s *KeeperTestSuite) TestClaimAllTerminateAidrop() {
 		recipient,
 		squad.ParseCoins("1000000000denom1"),
 		squad.ParseCoins("1000000000denom1"),
-		[]bool{false, false, false},
+		[]types.ConditionType{},
 	)
 
 	// Create a normal pool
@@ -365,7 +360,7 @@ func (s *KeeperTestSuite) TestClaimPartialTerminatAirdrop() {
 		recipient,
 		squad.ParseCoins("1000000000denom1"),
 		squad.ParseCoins("1000000000denom1"),
-		[]bool{false, false, false},
+		[]types.ConditionType{},
 	)
 
 	// Create a normal pool

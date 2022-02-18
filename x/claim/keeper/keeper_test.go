@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) createClaimRecord(
 	recipient sdk.AccAddress,
 	initialClaimableCoins sdk.Coins,
 	claimableCoins sdk.Coins,
-	claimedConditions []bool,
+	claimedConditions []types.ConditionType,
 ) types.ClaimRecord {
 	s.keeper.SetClaimRecord(s.ctx, types.ClaimRecord{
 		AirdropId:             airdropId,
@@ -152,13 +152,6 @@ func (s *KeeperTestSuite) limitOrder(
 	return req
 }
 
-func (s *KeeperTestSuite) buyLimitOrder(
-	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
-	amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
-	return s.limitOrder(
-		orderer, pairId, liqtypes.OrderDirectionBuy, price, amt, orderLifespan, fund)
-}
-
 func (s *KeeperTestSuite) sellLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
@@ -228,10 +221,6 @@ func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, coins sdk.Coins) {
 	err := squadapp.FundAccount(s.app.BankKeeper, s.ctx, addr, coins)
 	s.Require().NoError(err)
-}
-
-func coinEq(exp, got sdk.Coin) (bool, string, string, string) {
-	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
