@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	dbm "github.com/tendermint/tm-db"
@@ -17,6 +18,7 @@ import (
 
 	squadapp "github.com/cosmosquad-labs/squad/app"
 	squadparams "github.com/cosmosquad-labs/squad/app/params"
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
@@ -66,9 +68,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	s.createPair("node0token", s.cfg.BondDenom)
-
-	err = s.network.WaitForNextBlock()
-	s.Require().NoError(err)
+	s.limitOrder(
+		1, types.OrderDirectionSell, squad.ParseCoin("1000000node0token"), s.cfg.BondDenom,
+		squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -93,15 +95,42 @@ func (s *IntegrationTestSuite) createPool(pairId uint64, depositCoins sdk.Coins)
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TestGetPairsCmd() {
+func (s *IntegrationTestSuite) limitOrder(
+	pairId uint64, dir types.OrderDirection, offerCoin sdk.Coin,
+	demandCoinDenom string, price sdk.Dec, amt sdk.Int, orderLifespan time.Duration) {
+	_, err := MsgLimitOrder(s.clientCtx, s.val.Address.String(), pairId, dir, offerCoin, demandCoinDenom,
+		price, amt, orderLifespan)
+	s.Require().NoError(err)
+
+	err = s.network.WaitForNextBlock()
+	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) TestQueryPairsCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	cmd := cli.QueryPairs()
+	cmd := cli.NewQueryPairsCmd()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{"--output=json"})
 	s.Require().NoError(err)
 
 	var resp types.QueryPairsResponse
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().NotNil(resp.Pairs)
+}
+
+func (s *IntegrationTestSuite) TestQueryOrdersCmd() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	cmd := cli.NewQueryOrdersCmd()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{
+		val.Address.String(),
+		"--output=json",
+	})
+	s.Require().NoError(err)
+
+	var resp types.QueryOrdersResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().Len(resp.Orders, 1)
 }
