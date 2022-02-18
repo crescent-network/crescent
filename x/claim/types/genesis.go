@@ -43,7 +43,7 @@ func (a Airdrop) Validate() error {
 		return err
 	}
 
-	if !a.EndTime.After(a.StartTime) {
+	if a.StartTime.After(a.EndTime) {
 		return errors.New("end time must be greater than start time")
 	}
 
