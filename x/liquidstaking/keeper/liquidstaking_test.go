@@ -82,8 +82,9 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(bTokenBalance, bTokenTotalSupply)
 
 	// liquid unstaking
-	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], ubdBToken)
+	ubdTime, unbondingAmt, ubds, unbondedAmt, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], ubdBToken)
 	s.Require().NoError(err)
+	s.Require().EqualValues(unbondedAmt, sdk.ZeroInt())
 	s.Require().Len(ubds, 3)
 
 	// crumb excepted on unbonding

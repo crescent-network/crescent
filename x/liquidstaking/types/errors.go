@@ -13,4 +13,7 @@ var (
 	ErrInvalidBTokenSupply             = sdkerrors.Register(ModuleName, 8, "invalid liquid bond denom supply")
 	ErrInvalidActiveLiquidValidators   = sdkerrors.Register(ModuleName, 9, "invalid active liquid validators")
 	ErrLiquidValidatorsNotExists       = sdkerrors.Register(ModuleName, 10, "liquid validators not exists")
+	ErrInsufficientProxyAccBalance     = sdkerrors.Register(ModuleName, 11, "insufficient liquid tokens or balance of proxy account, need to wait for new liquid validator to be added or unbonding of proxy account to be completed")
+	ErrTooSmallLiquidStakingAmount     = sdkerrors.Register(ModuleName, 12, "liquid staking amount is too small, the result becomes zero")
+	ErrTooSmallLiquidUnstakingAmount   = sdkerrors.Register(ModuleName, 13, "liquid unstaking amount is too small, the result becomes zero")
 )
