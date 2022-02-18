@@ -5,6 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
@@ -150,4 +153,17 @@ func (s *keysTestSuite) TestGetOrderKey() {
 func (s *keysTestSuite) TestGetOrdersByPairKeyPrefix() {
 	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0, 0x1}, types.GetOrdersByPairKeyPrefix(1))
 	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8}, types.GetOrdersByPairKeyPrefix(1000))
+}
+
+func (s *keysTestSuite) TestGetOrderIndexKey() {
+	orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
+	key := types.GetOrderIndexKey(orderer, 1, 1)
+	s.Require().Equal([]byte{0xb3, 0x14, 0x54, 0x7e, 0xfe, 0x47, 0x8f, 0xc9, 0xf9, 0x52, 0xb2,
+		0x5c, 0xbc, 0x50, 0xf2, 0x85, 0xf7, 0x7d, 0xff, 0x52, 0x9f, 0x25, 0, 0, 0, 0,
+		0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0, 0x1}, key)
+	s.Require().True(bytes.HasPrefix(key, types.GetOrderIndexKeyPrefix(orderer)))
+	orderer2, pairId, orderId := types.ParseOrderIndexKey(key)
+	s.Require().Equal(orderer, orderer2)
+	s.Require().Equal(uint64(1), pairId)
+	s.Require().Equal(uint64(1), orderId)
 }

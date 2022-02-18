@@ -36,6 +36,7 @@ var (
 	DepositRequestKeyPrefix  = []byte{0xb0}
 	WithdrawRequestKeyPrefix = []byte{0xb1}
 	OrderKeyPrefix           = []byte{0xb2}
+	OrderIndexKeyPrefix      = []byte{0xb3}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
@@ -103,6 +104,18 @@ func GetOrdersByPairKeyPrefix(pairId uint64) []byte {
 	return append(OrderKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
 }
 
+// GetOrderIndexKey returns the index key to map orders with an orderer.
+func GetOrderIndexKey(orderer sdk.AccAddress, pairId, orderId uint64) []byte {
+	return append(append(append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...),
+		sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(orderId)...)
+}
+
+// GetOrderIndexKeyPrefix returns the index key prefix to iterate orders
+// by an orderer.
+func GetOrderIndexKeyPrefix(orderer sdk.AccAddress) []byte {
+	return append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...)
+}
+
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.
 func ParsePairsByDenomsIndexKey(key []byte) (denomA, denomB string, pairId uint64) {
 	if !bytes.HasPrefix(key, PairsByDenomsIndexKeyPrefix) {
@@ -126,6 +139,19 @@ func ParsePoolsByPairIndexKey(key []byte) (poolId uint64) {
 
 	bytesLen := 8
 	poolId = sdk.BigEndianToUint64(key[1+bytesLen:])
+	return
+}
+
+// ParseOrderIndexKey parses an order index key.
+func ParseOrderIndexKey(key []byte) (orderer sdk.AccAddress, pairId, orderId uint64) {
+	if !bytes.HasPrefix(key, OrderIndexKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+
+	addrLen := key[1]
+	orderer = key[2 : 2+addrLen]
+	pairId = sdk.BigEndianToUint64(key[2+addrLen : 2+addrLen+8])
+	orderId = sdk.BigEndianToUint64(key[2+addrLen+8:])
 	return
 }
 
