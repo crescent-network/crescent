@@ -88,8 +88,16 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	//reds := s.app.StakingKeeper.GetRedelegations(s.ctx, types.LiquidStakingProxyAcc, 20)
 	s.Require().Len(reds, 3)
 
+	squadtypes.PP("before complete")
+	squadtypes.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
+	squadtypes.PP(s.keeper.NetAmountState(s.ctx))
+
 	// advance block time and height for complete redelegations
 	s.completeRedelegationUnbonding()
+
+	squadtypes.PP("after complete")
+	squadtypes.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
+	squadtypes.PP(s.keeper.NetAmountState(s.ctx))
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
@@ -258,6 +266,22 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	// unbonded to balance, equal with netAmount
 	s.Require().EqualValues(ubd.Entries[0].Balance, nas.ProxyAccBalance)
 	s.Require().EqualValues(nas.NetAmount.TruncateInt(), nas.ProxyAccBalance)
+
+	// mintRate over 1 due to slashing
+	s.Require().True(nas.MintRate.GT(sdk.OneDec()))
+	bTokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], params.LiquidBondDenom).Amount
+	nativeTokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], sdk.DefaultBondDenom).Amount
+	s.Require().EqualValues(nas.BtokenTotalSupply, bTokenBalanceBefore)
+
+	// withdraw directly unstaking when no totalLiquidTokens
+	s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], bTokenBalanceBefore, false))
+	bTokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], params.LiquidBondDenom).Amount
+	nativeTokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], sdk.DefaultBondDenom).Amount
+	s.Require().EqualValues(bTokenBalanceAfter, sdk.ZeroInt())
+	s.Require().EqualValues(nativeTokenBalanceAfter.Sub(nativeTokenBalanceBefore), nas.NetAmount.TruncateInt())
+
+	// zero net amount states
+	s.RequireNetAmountStateZero()
 }
 
 func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {

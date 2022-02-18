@@ -45,9 +45,9 @@ func NewCreatePairCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pair [base-coin-denom] [quote-coin-denom]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Create a denom pair for an order book",
+		Short: "Create a pair(market) for trading",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a denom pair for an order book.
+			fmt.Sprintf(`Create a pair(market) for trading.
 Example:
 $ %s tx %s create-pair uatom usquad --from mykey
 `,
@@ -206,16 +206,18 @@ func NewLimitOrderCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a limit order.
 Example:
-$ %s tx %s limit-order 1 ORDER_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --from mykey
+$ %s tx %s limit-order 1 buy 5000usquad uatom 0.5 10000 10s --from mykey
+$ %s tx %s limit-order 1 s 10000uatom usquad 2.0 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
-[direction]: order direction (one of: ORDER_DIRECTION_BUY,ORDER_DIRECTION_SELL)
+[direction]: order direction (one of: buy,b,sell,s)
 [offer-coin]: the amount of offer coin to swap
 [demand-coin-denom]: the denom to exchange with the offer coin
 [price]: the limit order price for the swap; the exchange ratio is X/Y where X is the amount of quote coin and Y is the amount of base coin
 [base-coin-amount]: the amount of base coin to buy or sell
 [order-lifespan]: the time duration that the order lives until it is expired; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -230,13 +232,9 @@ $ %s tx %s limit-order 1 ORDER_DIRECTION_BUY 10000usquad uatom 1.0 10000 10s --f
 				return fmt.Errorf("parse pair id: %w", err)
 			}
 
-			rawDir, ok := types.OrderDirection_value[args[1]]
-			if !ok {
-				return fmt.Errorf("unknown order direction: %s", args[1])
-			}
-			dir := types.OrderDirection(rawDir)
-			if dir != types.OrderDirectionBuy && dir != types.OrderDirectionSell {
-				return fmt.Errorf("invalid order direction: %s", dir)
+			dir, err := parseOrderDirection(args[1])
+			if err != nil {
+				return fmt.Errorf("parse order direction: %w", err)
 			}
 
 			offerCoin, err := sdk.ParseCoinNormalized(args[2])
@@ -292,15 +290,17 @@ func NewMarketOrderCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a market order.
 Example:
-$ %s tx %s market-order 1 ORDER_DIRECTION_BUY 10000usquad uatom 10000 10s --from mykey
+$ %s tx %s market-order 1 buy 5000usquad uatom 10000 10s --from mykey
+$ %s tx %s market-order 1 s 10000uatom usquad 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
-[direction]: order direction (one of: ORDER_DIRECTION_BUY,ORDER_DIRECTION_SELL)
+[direction]: order direction (one of: buy,b,sell,s)
 [offer-coin]: the amount of offer coin to swap
 [demand-coin-denom]: the denom to exchange with the offer coin
 [base-coin-amount]: the amount of base coin to buy or sell
 [order-lifespan]: the time duration that the order lives until it is expired; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -315,13 +315,9 @@ $ %s tx %s market-order 1 ORDER_DIRECTION_BUY 10000usquad uatom 10000 10s --from
 				return fmt.Errorf("parse pair id: %w", err)
 			}
 
-			rawDir, ok := types.OrderDirection_value[args[1]]
-			if !ok {
-				return fmt.Errorf("unknown order direction: %s", args[1])
-			}
-			dir := types.OrderDirection(rawDir)
-			if dir != types.OrderDirectionBuy && dir != types.OrderDirectionSell {
-				return fmt.Errorf("invalid order direction: %s", dir)
+			dir, err := parseOrderDirection(args[1])
+			if err != nil {
+				return fmt.Errorf("parse order direction: %w", err)
 			}
 
 			offerCoin, err := sdk.ParseCoinNormalized(args[2])

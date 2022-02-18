@@ -11,36 +11,46 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
-// GetNextPoolIdWithUpdate increments pool id by one and set it.
-func (k Keeper) GetNextPoolIdWithUpdate(ctx sdk.Context) uint64 {
+// getNextPoolIdWithUpdate increments pool id by one and set it.
+func (k Keeper) getNextPoolIdWithUpdate(ctx sdk.Context) uint64 {
 	id := k.GetLastPoolId(ctx) + 1
 	k.SetLastPoolId(ctx, id)
 	return id
 }
 
-// GetNextDepositRequestIdWithUpdate increments the pool's last deposit request
+// getNextDepositRequestIdWithUpdate increments the pool's last deposit request
 // id and returns it.
-func (k Keeper) GetNextDepositRequestIdWithUpdate(ctx sdk.Context, pool types.Pool) uint64 {
+func (k Keeper) getNextDepositRequestIdWithUpdate(ctx sdk.Context, pool types.Pool) uint64 {
 	id := pool.LastDepositRequestId + 1
 	pool.LastDepositRequestId = id
 	k.SetPool(ctx, pool)
 	return id
 }
 
-// GetNextWithdrawRequestIdWithUpdate increments the pool's last withdraw
+// getNextWithdrawRequestIdWithUpdate increments the pool's last withdraw
 // request id and returns it.
-func (k Keeper) GetNextWithdrawRequestIdWithUpdate(ctx sdk.Context, pool types.Pool) uint64 {
+func (k Keeper) getNextWithdrawRequestIdWithUpdate(ctx sdk.Context, pool types.Pool) uint64 {
 	id := pool.LastWithdrawRequestId + 1
 	pool.LastWithdrawRequestId = id
 	k.SetPool(ctx, pool)
 	return id
 }
 
-// GetPoolBalance returns x coin and y coin balance of the pool.
-func (k Keeper) GetPoolBalance(ctx sdk.Context, pool types.Pool, pair types.Pair) (rx sdk.Int, ry sdk.Int) {
+// GetPoolBalances returns the balances of the pool.
+func (k Keeper) GetPoolBalances(ctx sdk.Context, pool types.Pool) (rx sdk.Coin, ry sdk.Coin) {
 	reserveAddr := pool.GetReserveAddress()
-	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.QuoteCoinDenom).Amount
-	ry = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.BaseCoinDenom).Amount
+	pair, _ := k.GetPair(ctx, pool.PairId)
+	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.QuoteCoinDenom)
+	ry = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.BaseCoinDenom)
+	return
+}
+
+// getPoolBalances returns the balances of the pool.
+// It is used internally when caller already has types.Pair instance.
+func (k Keeper) getPoolBalances(ctx sdk.Context, pool types.Pool, pair types.Pair) (rx sdk.Coin, ry sdk.Coin) {
+	reserveAddr := pool.GetReserveAddress()
+	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.QuoteCoinDenom)
+	ry = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.BaseCoinDenom)
 	return
 }
 
@@ -49,6 +59,7 @@ func (k Keeper) GetPoolCoinSupply(ctx sdk.Context, pool types.Pool) sdk.Int {
 	return k.bankKeeper.GetSupply(ctx, pool.PoolCoinDenom).Amount
 }
 
+// MarkPoolAsDisabled marks a pool as disabled.
 func (k Keeper) MarkPoolAsDisabled(ctx sdk.Context, pool types.Pool) {
 	pool.Disabled = true
 	k.SetPool(ctx, pool)
@@ -100,7 +111,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 	pair, _ := k.GetPair(ctx, msg.PairId)
 
 	// Create and save the new pool object.
-	poolId := k.GetNextPoolIdWithUpdate(ctx)
+	poolId := k.getNextPoolIdWithUpdate(ctx)
 	pool := types.NewPool(poolId, pair.Id)
 	k.SetPool(ctx, pool)
 
@@ -172,7 +183,7 @@ func (k Keeper) Deposit(ctx sdk.Context, msg *types.MsgDeposit) (types.DepositRe
 	}
 
 	pool, _ := k.GetPool(ctx, msg.PoolId)
-	requestId := k.GetNextDepositRequestIdWithUpdate(ctx, pool)
+	requestId := k.getNextDepositRequestIdWithUpdate(ctx, pool)
 	req := types.NewDepositRequest(msg, pool, requestId, ctx.BlockHeight())
 	k.SetDepositRequest(ctx, req)
 
@@ -217,7 +228,7 @@ func (k Keeper) Withdraw(ctx sdk.Context, msg *types.MsgWithdraw) (types.Withdra
 		return types.WithdrawRequest{}, err
 	}
 
-	requestId := k.GetNextWithdrawRequestIdWithUpdate(ctx, pool)
+	requestId := k.getNextWithdrawRequestIdWithUpdate(ctx, pool)
 	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
 	k.SetWithdrawRequest(ctx, req)
 
@@ -245,10 +256,9 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 	}
 
 	pair, _ := k.GetPair(ctx, pool.PairId)
-
-	rx, ry := k.GetPoolBalance(ctx, pool, pair)
+	rx, ry := k.getPoolBalances(ctx, pool, pair)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	ammPool := amm.NewBasicPool(rx, ry, ps)
+	ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, ps)
 	if ammPool.IsDepleted() {
 		k.MarkPoolAsDisabled(ctx, pool)
 		if err := k.FinishDepositRequest(ctx, req, types.RequestStatusFailed); err != nil {
@@ -289,6 +299,7 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 	return nil
 }
 
+// FinishDepositRequest refunds unhandled deposit coins and set request status.
 func (k Keeper) FinishDepositRequest(ctx sdk.Context, req types.DepositRequest, status types.RequestStatus) error {
 	if req.Status != types.RequestStatusNotExecuted { // sanity check
 		return nil
@@ -331,10 +342,9 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	}
 
 	pair, _ := k.GetPair(ctx, pool.PairId)
-
-	rx, ry := k.GetPoolBalance(ctx, pool, pair)
+	rx, ry := k.getPoolBalances(ctx, pool, pair)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	ammPool := amm.NewBasicPool(rx, ry, ps)
+	ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, ps)
 	if ammPool.IsDepleted() {
 		k.MarkPoolAsDisabled(ctx, pool)
 		if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed); err != nil {
@@ -378,6 +388,7 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	return nil
 }
 
+// FinishWithdrawRequest refunds unhandled pool coin and set request status.
 func (k Keeper) FinishWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest, status types.RequestStatus) error {
 	if req.Status != types.RequestStatusNotExecuted { // sanity check
 		return nil

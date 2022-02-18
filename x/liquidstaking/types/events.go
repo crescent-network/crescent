@@ -5,6 +5,7 @@ const (
 	EventTypeMsgLiquidStake   = TypeMsgLiquidStake
 	EventTypeMsgLiquidUnstake = TypeMsgLiquidUnstake
 
+	AttributeKeyDelegator          = "delegator"
 	AttributeKeyNewShares          = "new_shares"
 	AttributeKeyBTokenMintedAmount = "btoken_minted_amount"
 	AttributeKeyCompletionTime     = "completion_time"

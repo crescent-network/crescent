@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewDepositRequest returns a new DepositRequest.
 func NewDepositRequest(msg *MsgDeposit, pool Pool, id uint64, msgHeight int64) DepositRequest {
 	return DepositRequest{
 		Id:             id,
@@ -29,6 +30,7 @@ func (req DepositRequest) GetDepositor() sdk.AccAddress {
 	return addr
 }
 
+// Validate validates DepositRequest for genesis.
 func (req DepositRequest) Validate() error {
 	if req.Id == 0 {
 		return fmt.Errorf("id must not be 0")
@@ -54,6 +56,11 @@ func (req DepositRequest) Validate() error {
 	if len(req.AcceptedCoins) != 0 && len(req.AcceptedCoins) != 2 {
 		return fmt.Errorf("wrong number of accepted coins: %d", len(req.AcceptedCoins))
 	}
+	for _, coin := range req.AcceptedCoins {
+		if req.DepositCoins.AmountOf(coin.Denom).IsZero() {
+			return fmt.Errorf("mismatching denom pair between deposit coins and accepted coins")
+		}
+	}
 	if err := req.MintedPoolCoin.Validate(); err != nil {
 		return fmt.Errorf("invalid minted pool coin %s: %w", req.MintedPoolCoin, err)
 	}
@@ -63,6 +70,7 @@ func (req DepositRequest) Validate() error {
 	return nil
 }
 
+// NewWithdrawRequest returns a new WithdrawRequest.
 func NewWithdrawRequest(msg *MsgWithdraw, id uint64, msgHeight int64) WithdrawRequest {
 	return WithdrawRequest{
 		Id:             id,
@@ -83,6 +91,7 @@ func (req WithdrawRequest) GetWithdrawer() sdk.AccAddress {
 	return addr
 }
 
+// Validate validates WithdrawRequest for genesis.
 func (req WithdrawRequest) Validate() error {
 	if req.Id == 0 {
 		return fmt.Errorf("id must not be 0")
@@ -114,6 +123,7 @@ func (req WithdrawRequest) Validate() error {
 	return nil
 }
 
+// NewOrderForLimitOrder returns a new Order from MsgLimitOrder.
 func NewOrderForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
 	return Order{
 		Id:                 id,
@@ -133,6 +143,7 @@ func NewOrderForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin s
 	}
 }
 
+// NewOrderForMarketOrder returns a new Order from MsgMarketOrder.
 func NewOrderForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
 	return Order{
 		Id:                 id,
@@ -160,6 +171,7 @@ func (order Order) GetOrderer() sdk.AccAddress {
 	return addr
 }
 
+// Validate validates Order for genesis.
 func (order Order) Validate() error {
 	if order.Id == 0 {
 		return fmt.Errorf("id must not be 0")
@@ -185,6 +197,9 @@ func (order Order) Validate() error {
 	if err := order.RemainingOfferCoin.Validate(); err != nil {
 		return fmt.Errorf("invalid remaining offer coin %s: %w", order.RemainingOfferCoin, err)
 	}
+	if order.OfferCoin.Denom != order.RemainingOfferCoin.Denom {
+		return fmt.Errorf("offer coin denom %s != remaining offer coin denom %s", order.OfferCoin.Denom, order.RemainingOfferCoin.Denom)
+	}
 	if err := order.ReceivedCoin.Validate(); err != nil {
 		return fmt.Errorf("invalid received coin %s: %w", order.ReceivedCoin, err)
 	}
@@ -209,30 +224,43 @@ func (order Order) Validate() error {
 	return nil
 }
 
+// IsValid returns true if the RequestStatus is one of:
+// RequestStatusNotExecuted, RequestStatusSucceeded, RequestStatusFailed.
 func (status RequestStatus) IsValid() bool {
 	return status == RequestStatusNotExecuted || status == RequestStatusSucceeded || status == RequestStatusFailed
 }
 
+// ShouldBeDeleted returns true if the RequestStatus is one of:
+// RequestStatusSucceeded, RequestStatusFailed.
 func (status RequestStatus) ShouldBeDeleted() bool {
 	return status == RequestStatusSucceeded || status == RequestStatusFailed
 }
 
+// IsValid returns true if the OrderStatus is one of:
+// OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched,
+// OrderStatusCompleted, OrderStatusCanceled, OrderStatusExpired.
 func (status OrderStatus) IsValid() bool {
 	return status == OrderStatusNotExecuted || status == OrderStatusNotMatched ||
 		status == OrderStatusPartiallyMatched || status == OrderStatusCompleted ||
 		status == OrderStatusCanceled || status == OrderStatusExpired
 }
 
+// IsMatchable returns true if the OrderStatus is one of:
+// OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched.
 func (status OrderStatus) IsMatchable() bool {
 	return status == OrderStatusNotExecuted ||
 		status == OrderStatusNotMatched ||
 		status == OrderStatusPartiallyMatched
 }
 
+// IsCanceledOrExpired returns true if the OrderStatus is one of:
+// OrderStatusCanceled, OrderStatusExpired.
 func (status OrderStatus) IsCanceledOrExpired() bool {
 	return status == OrderStatusCanceled || status == OrderStatusExpired
 }
 
+// ShouldBeDeleted returns true if the OrderStatus is one of:
+// OrderStatusCompleted, OrderStatusCanceled, OrderStatusExpired.
 func (status OrderStatus) ShouldBeDeleted() bool {
 	return status == OrderStatusCompleted || status.IsCanceledOrExpired()
 }

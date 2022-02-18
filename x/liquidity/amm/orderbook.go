@@ -9,10 +9,12 @@ import (
 
 var _ OrderSource = (*OrderBook)(nil)
 
+// OrderBook is an order book.
 type OrderBook struct {
 	buys, sells orderBookTicks
 }
 
+// NewOrderBook returns a new OrderBook.
 func NewOrderBook(orders ...Order) *OrderBook {
 	ob := &OrderBook{}
 	for _, order := range orders {
@@ -21,6 +23,7 @@ func NewOrderBook(orders ...Order) *OrderBook {
 	return ob
 }
 
+// Add adds orders to the order book.
 func (ob *OrderBook) Add(orders ...Order) {
 	for _, order := range orders {
 		switch order.GetDirection() {
@@ -32,30 +35,42 @@ func (ob *OrderBook) Add(orders ...Order) {
 	}
 }
 
+// HighestBuyPrice returns the highest buy price in the order book.
 func (ob *OrderBook) HighestBuyPrice() (sdk.Dec, bool) {
 	return ob.buys.highestPrice()
 }
 
+// LowestSellPrice returns the lowest sell price in the order book.
 func (ob *OrderBook) LowestSellPrice() (sdk.Dec, bool) {
 	return ob.sells.lowestPrice()
 }
 
+// BuyAmountOver returns the amount of buy orders in the order book
+// for price greater or equal than given price.
 func (ob *OrderBook) BuyAmountOver(price sdk.Dec) sdk.Int {
 	return ob.buys.amountOver(price)
 }
 
-func (ob *OrderBook) BuyOrdersOver(price sdk.Dec) []Order {
-	return ob.buys.ordersOver(price)
-}
-
+// SellAmountUnder returns the amount of sell orders in the order book
+// for price less or equal than given price.
 func (ob *OrderBook) SellAmountUnder(price sdk.Dec) sdk.Int {
 	return ob.sells.amountUnder(price)
 }
 
+// BuyOrdersOver returns buy orders in the order book for price greater
+// or equal than given price.
+func (ob *OrderBook) BuyOrdersOver(price sdk.Dec) []Order {
+	return ob.buys.ordersOver(price)
+}
+
+// SellOrdersUnder returns sell orders in the order book for price less
+// or equal than given price.
 func (ob *OrderBook) SellOrdersUnder(price sdk.Dec) []Order {
 	return ob.sells.ordersUnder(price)
 }
 
+// orderBookTicks represents a list of orderBookTick.
+// This type is used for both buy/sell sides of OrderBook.
 type orderBookTicks []*orderBookTick
 
 func (ticks *orderBookTicks) findPrice(price sdk.Dec) (i int, exact bool) {
@@ -149,6 +164,7 @@ func (ticks *orderBookTicks) ordersUnder(price sdk.Dec) []Order {
 	return orders
 }
 
+// orderBookTick represents a tick in OrderBook.
 type orderBookTick struct {
 	price  sdk.Dec
 	orders []Order

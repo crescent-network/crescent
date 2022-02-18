@@ -1,12 +1,13 @@
 package amm
 
 import (
-	"math"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// FindMatchPrice returns the best match price for given order sources.
+// If there is no matchable orders, found will be false.
 func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
 	highestBuyPrice, found := os.HighestBuyPrice()
 	if !found {
@@ -20,52 +21,48 @@ func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found boo
 		return sdk.Dec{}, false
 	}
 
-	buyAmtOver := func(i int) sdk.Int {
-		return os.BuyAmountOver(TickFromIndex(i, tickPrec))
-	}
-	sellAmtUnder := func(i int) sdk.Int {
-		return os.SellAmountUnder(TickFromIndex(i, tickPrec))
-	}
-
 	lowestTickIdx := TickToIndex(LowestTick(tickPrec), tickPrec)
 	highestTickIdx := TickToIndex(HighestTick(tickPrec), tickPrec)
-	i, found := findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
-		return buyAmtOver(i + 1).LTE(sellAmtUnder(i))
+	i := findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
+		return os.BuyAmountOver(TickFromIndex(i+1, tickPrec)).LTE(os.SellAmountUnder(TickFromIndex(i, tickPrec)))
 	})
-	if !found {
-		panic("impossible case")
-	}
-	j, found := findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
-		return buyAmtOver(i).GTE(sellAmtUnder(i - 1))
+	j := findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
+		return os.BuyAmountOver(TickFromIndex(i, tickPrec)).GTE(os.SellAmountUnder(TickFromIndex(i-1, tickPrec)))
 	})
-	if !found {
-		panic("impossible case")
-	}
+	midTick := TickFromIndex(i, tickPrec).Add(TickFromIndex(j, tickPrec)).QuoInt64(2)
+	return RoundPrice(midTick, tickPrec), true
+}
 
-	if i == j {
-		return TickFromIndex(i, tickPrec), true
-	} else {
-		if int(math.Abs(float64(i-j))) > 1 { // sanity check
+// findFirstTrueCondition uses the binary search to find the first index
+// where f(i) is true, while searching in range [start, end].
+// It assumes that f(j) == false where j < i and f(j) == true where j >= i.
+// start can be greater than end.
+func findFirstTrueCondition(start, end int, f func(i int) bool) (i int) {
+	if start < end {
+		i = start + sort.Search(end-start+1, func(i int) bool {
+			return f(start + i)
+		})
+		if i > end {
 			panic("impossible case")
 		}
-		return TickFromIndex(RoundTickIndex(i), tickPrec), true
-	}
-}
-
-func findFirstTrueCondition(start, end int, cb func(i int) bool) (int, bool) {
-	if start < end {
-		i := start + sort.Search(end-start+1, func(i int) bool {
-			return cb(start + i)
-		})
-		return i, i <= end
 	} else {
-		i := start - sort.Search(start-end+1, func(i int) bool {
-			return cb(start - i)
+		i = start - sort.Search(start-end+1, func(i int) bool {
+			return f(start - i)
 		})
-		return i, i >= end
+		if i < end {
+			panic("impossible case")
+		}
 	}
+	return
 }
 
+// FindLastMatchableOrders returns the last matchable order indexes for
+// each buy/sell side.
+// lastBuyPartialMatchAmt and lastSellPartialMatchAmt are
+// the amount of partially matched portion of the last orders.
+// FindLastMatchableOrders drops(ignores) an order if the orderer
+// receives zero demand coin after truncation when the order is either
+// fully matched or partially matched.
 func FindLastMatchableOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (lastBuyIdx, lastSellIdx int, lastBuyPartialMatchAmt, lastSellPartialMatchAmt sdk.Int, found bool) {
 	if len(buyOrders) == 0 || len(sellOrders) == 0 {
 		return 0, 0, sdk.Int{}, sdk.Int{}, false
@@ -82,17 +79,24 @@ func FindLastMatchableOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) 
 		Buy:  buySide,
 		Sell: sellSide,
 	}
+	// Repeatedly check both buy/sell side to see if there is an order to drop.
+	// If there is not, then the loop is finished.
 	for {
 		ok := true
 		for dir, side := range sides {
 			i := side.i
 			order := side.orders[i]
 			matchAmt := sdk.MinInt(buySide.totalOpenAmt, sellSide.totalOpenAmt)
-			side.partialMatchAmt = matchAmt.Sub(side.totalOpenAmt.Sub(order.GetOpenAmount()))
-			if side.totalOpenAmt.Sub(order.GetOpenAmount()).GT(matchAmt) ||
+			otherOrdersAmt := side.totalOpenAmt.Sub(order.GetOpenAmount())
+			// side.partialMatchAmt can be negative at this moment, but
+			// FindLastMatchableOrders won't return a negative amount because
+			// the if-block below would set ok = false if otherOrdersAmt >= matchAmt
+			// and the loop would be continued.
+			side.partialMatchAmt = matchAmt.Sub(otherOrdersAmt)
+			if otherOrdersAmt.GTE(matchAmt) ||
 				(dir == Sell && matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero()) {
-				if i == 0 {
-					return
+				if i == 0 { // There's no orders left, which means orders are not matchable.
+					return 0, 0, sdk.Int{}, sdk.Int{}, false
 				}
 				side.totalOpenAmt = side.totalOpenAmt.Sub(order.GetOpenAmount())
 				side.i--
@@ -105,6 +109,11 @@ func FindLastMatchableOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) 
 	}
 }
 
+// MatchOrders matches orders at given matchPrice if matchable.
+// Note that MatchOrders modifies the orders in the parameters.
+// quoteCoinDust is the difference between total paid quote coin and total
+// received quote coin.
+// quoteCoinDust can be positive because of the decimal truncation.
 func MatchOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (quoteCoinDust sdk.Int, matched bool) {
 	bi, si, pmb, pms, found := FindLastMatchableOrders(buyOrders, sellOrders, matchPrice)
 	if !found {

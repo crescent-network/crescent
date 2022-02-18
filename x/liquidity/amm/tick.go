@@ -7,6 +7,45 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TickPrecision represents a tick precision.
+type TickPrecision int
+
+func (prec TickPrecision) PriceToDownTick(price sdk.Dec) sdk.Dec {
+	return PriceToDownTick(price, int(prec))
+}
+
+func (prec TickPrecision) PriceToUpTick(price sdk.Dec) sdk.Dec {
+	return PriceToUpTick(price, int(prec))
+}
+
+func (prec TickPrecision) UpTick(price sdk.Dec) sdk.Dec {
+	return UpTick(price, int(prec))
+}
+
+func (prec TickPrecision) DownTick(price sdk.Dec) sdk.Dec {
+	return DownTick(price, int(prec))
+}
+
+func (prec TickPrecision) HighestTick() sdk.Dec {
+	return HighestTick(int(prec))
+}
+
+func (prec TickPrecision) LowestTick() sdk.Dec {
+	return LowestTick(int(prec))
+}
+
+func (prec TickPrecision) TickToIndex(tick sdk.Dec) int {
+	return TickToIndex(tick, int(prec))
+}
+
+func (prec TickPrecision) TickFromIndex(i int) sdk.Dec {
+	return TickFromIndex(i, int(prec))
+}
+
+func (prec TickPrecision) RoundPrice(price sdk.Dec) sdk.Dec {
+	return RoundPrice(price, int(prec))
+}
+
 // char returns the characteristic(integral part) of
 // log10(x * pow(10, sdk.Precision)).
 func char(x sdk.Dec) int {
@@ -147,5 +186,5 @@ func RoundPrice(price sdk.Dec, prec int) sdk.Dec {
 	if price.Equal(tick) {
 		return price
 	}
-	return TickFromIndex(RoundTickIndex(TickToIndex(price, prec)), prec)
+	return TickFromIndex(RoundTickIndex(TickToIndex(tick, prec)), prec)
 }

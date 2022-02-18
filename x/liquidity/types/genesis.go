@@ -92,7 +92,19 @@ func (genState GenesisState) Validate() error {
 		if order.BatchId > pair.CurrentBatchId {
 			return fmt.Errorf("order at index %d has a batch id greater than its pair's current batch id: %d", i, order.BatchId)
 		}
-		// TODO: check denoms
+		var offerCoinDenom, demandCoinDenom string
+		switch order.Direction {
+		case OrderDirectionBuy:
+			offerCoinDenom, demandCoinDenom = pair.QuoteCoinDenom, pair.BaseCoinDenom
+		case OrderDirectionSell:
+			offerCoinDenom, demandCoinDenom = pair.BaseCoinDenom, pair.QuoteCoinDenom
+		}
+		if order.OfferCoin.Denom != offerCoinDenom {
+			return fmt.Errorf("order at index %d has wrong offer coin denom: %s != %s", i, order.OfferCoin.Denom, offerCoinDenom)
+		}
+		if order.ReceivedCoin.Denom != demandCoinDenom {
+			return fmt.Errorf("order at index %d has wrong demand coin denom: %s != %s", i, order.OfferCoin.Denom, demandCoinDenom)
+		}
 	}
 	return nil
 }

@@ -148,7 +148,7 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 		Description: "test",
 		Changes: []paramscutils.ParamChangeJSON{{
 			Subspace: types.ModuleName,
-			Key:      "WhitelistedValidators",
+			Key:      string(types.KeyWhitelistedValidators),
 			Value:    whitelistStr,
 		},
 		},
