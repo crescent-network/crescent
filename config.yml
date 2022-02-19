@@ -34,12 +34,15 @@ genesis:
     farming:
       params:
         private_plan_creation_fee:
+          - amount: "1"
             denom: "usquad"
     liquidity:
       params:
         pair_creation_fee:
+          - amount: "1"
             denom: "usquad"
         pool_creation_fee:
+          - amount: "1"
             denom: "usquad"
     liquidstaking:
       params:
@@ -51,8 +54,8 @@ genesis:
           termination_address: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta"
           conditions:
             - "CONDITION_TYPE_DEPOSIT"
-              "CONDITION_TYPE_SWAP"
-              "CONDITION_TYPE_FARMING"
+            - "CONDITION_TYPE_SWAP"
+            - "CONDITION_TYPE_FARMING"
           start_time: "2022-02-01T00:00:00Z"
           end_time: "2022-03-21T00:00:00Z"
       claim_records:
