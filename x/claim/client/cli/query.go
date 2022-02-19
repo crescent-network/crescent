@@ -26,15 +26,15 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		QueryAirdropsCmd(),
-		QueryAirdropCmd(),
-		QueryClaimRecord(),
+		NewQueryAirdropsCmd(),
+		NewQueryAirdropCmd(),
+		NewQueryClaimRecord(),
 	)
 
 	return cmd
 }
 
-func QueryAirdropsCmd() *cobra.Command {
+func NewQueryAirdropsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "airdrops",
 		Args:  cobra.NoArgs,
@@ -78,7 +78,7 @@ $ %s query %s airdrops
 	return cmd
 }
 
-func QueryAirdropCmd() *cobra.Command {
+func NewQueryAirdropCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "airdrop [airdrop-id]",
 		Args:  cobra.ExactArgs(1),
@@ -123,7 +123,7 @@ $ %s query %s airdrop 1
 	return cmd
 }
 
-func QueryClaimRecord() *cobra.Command {
+func NewQueryClaimRecord() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
