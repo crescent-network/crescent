@@ -244,6 +244,7 @@ func (k Keeper) SetDepositRequest(ctx sdk.Context, req types.DepositRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalDepositRequest(k.cdc, req)
 	store.Set(types.GetDepositRequestKey(req.PoolId, req.Id), bz)
+	store.Set(types.GetDepositRequestIndexKey(req.GetDepositor(), req.PoolId, req.Id), []byte{})
 }
 
 // IterateAllDepositRequests iterates through all deposit requests in the store
@@ -265,9 +266,38 @@ func (k Keeper) IterateAllDepositRequests(ctx sdk.Context, cb func(req types.Dep
 	return nil
 }
 
+// IterateDepositRequestsByDepositor iterates through deposit requests in the
+// store by a depositor and call cb on each order.
+func (k Keeper) IterateDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress, cb func(req types.DepositRequest) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetDepositRequestIndexKeyPrefix(depositor))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, poolId, reqId := types.ParseDepositRequestIndexKey(iter.Key())
+		req, _ := k.GetDepositRequest(ctx, poolId, reqId)
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
 // GetAllDepositRequests returns all deposit requests in the store.
 func (k Keeper) GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequest) {
 	_ = k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool, err error) {
+		reqs = append(reqs, req)
+		return false, nil
+	})
+	return
+}
+
+// GetDepositRequestsByDepositor returns deposit requests by the depositor.
+func (k Keeper) GetDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress) (reqs []types.DepositRequest) {
+	_ = k.IterateDepositRequestsByDepositor(ctx, depositor, func(req types.DepositRequest) (stop bool, err error) {
 		reqs = append(reqs, req)
 		return false, nil
 	})
@@ -278,6 +308,7 @@ func (k Keeper) GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequ
 func (k Keeper) DeleteDepositRequest(ctx sdk.Context, req types.DepositRequest) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetDepositRequestKey(req.PoolId, req.Id))
+	store.Delete(types.GetDepositRequestIndexKey(req.GetDepositor(), req.PoolId, req.Id))
 }
 
 // GetWithdrawRequest returns the particular withdraw request.
@@ -296,6 +327,7 @@ func (k Keeper) SetWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshaWithdrawRequest(k.cdc, req)
 	store.Set(types.GetWithdrawRequestKey(req.PoolId, req.Id), bz)
+	store.Set(types.GetWithdrawRequestIndexKey(req.GetWithdrawer(), req.PoolId, req.Id), []byte{})
 }
 
 // IterateAllWithdrawRequests iterates through all withdraw requests in the store
@@ -317,9 +349,38 @@ func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.Wi
 	return nil
 }
 
+// IterateWithdrawRequestsByWithdrawer iterates through withdraw requests in the
+// store by a withdrawer and call cb on each order.
+func (k Keeper) IterateWithdrawRequestsByWithdrawer(ctx sdk.Context, withdrawer sdk.AccAddress, cb func(req types.WithdrawRequest) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetWithdrawRequestIndexKeyPrefix(withdrawer))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, poolId, reqId := types.ParseWithdrawRequestIndexKey(iter.Key())
+		req, _ := k.GetWithdrawRequest(ctx, poolId, reqId)
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
 // GetAllWithdrawRequests returns all withdraw requests in the store.
 func (k Keeper) GetAllWithdrawRequests(ctx sdk.Context) (reqs []types.WithdrawRequest) {
 	_ = k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool, err error) {
+		reqs = append(reqs, req)
+		return false, nil
+	})
+	return
+}
+
+// GetWithdrawRequestsByWithdrawer returns withdraw requests by the withdrawer.
+func (k Keeper) GetWithdrawRequestsByWithdrawer(ctx sdk.Context, withdrawer sdk.AccAddress) (reqs []types.WithdrawRequest) {
+	_ = k.IterateWithdrawRequestsByWithdrawer(ctx, withdrawer, func(req types.WithdrawRequest) (stop bool, err error) {
 		reqs = append(reqs, req)
 		return false, nil
 	})
@@ -330,6 +391,7 @@ func (k Keeper) GetAllWithdrawRequests(ctx sdk.Context) (reqs []types.WithdrawRe
 func (k Keeper) DeleteWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetWithdrawRequestKey(req.PoolId, req.Id))
+	store.Delete(types.GetWithdrawRequestIndexKey(req.GetWithdrawer(), req.PoolId, req.Id))
 }
 
 // GetOrder returns the particular order.

@@ -136,11 +136,37 @@ func (s *keysTestSuite) TestGetDepositRequestKey() {
 		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetDepositRequestKey(1000, 1001))
 }
 
+func (s *keysTestSuite) TestDepositRequestIndexKey() {
+	depositor := sdk.AccAddress(crypto.AddressHash([]byte("depositor")))
+	key := types.GetDepositRequestIndexKey(depositor, 1, 2)
+	s.Require().Equal([]byte{0xb4, 0x14, 0x9a, 0x69, 0x97, 0x1f, 0x1d, 0xb2, 0xe1, 0xd8, 0x77,
+		0x73, 0x6f, 0x7d, 0x36, 0x96, 0x90, 0xa3, 0xbf, 0x57, 0xcf, 0x22, 0, 0, 0, 0,
+		0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0, 0x2}, key)
+	s.Require().True(bytes.HasPrefix(key, types.GetDepositRequestIndexKeyPrefix(depositor)))
+	depositor2, poolId, reqId := types.ParseDepositRequestIndexKey(key)
+	s.Require().Equal(depositor, depositor2)
+	s.Require().Equal(uint64(1), poolId)
+	s.Require().Equal(uint64(2), reqId)
+}
+
 func (s *keysTestSuite) TestGetWithdrawRequestKey() {
 	s.Require().Equal([]byte{0xb1, 0, 0, 0, 0, 0, 0, 0, 0x1, 0, 0,
 		0, 0, 0, 0, 0, 0x1}, types.GetWithdrawRequestKey(1, 1))
 	s.Require().Equal([]byte{0xb1, 0, 0, 0, 0, 0, 0, 0x3, 0xe8, 0,
 		0, 0, 0, 0, 0, 0x3, 0xe9}, types.GetWithdrawRequestKey(1000, 1001))
+}
+
+func (s *keysTestSuite) TestWithdrawRequestIndexKey() {
+	withdrawer := sdk.AccAddress(crypto.AddressHash([]byte("withdrawer")))
+	key := types.GetWithdrawRequestIndexKey(withdrawer, 1, 2)
+	s.Require().Equal([]byte{0xb5, 0x14, 0x19, 0xcd, 0x70, 0x1f, 0x44, 0xf1, 0xed, 0xe, 0x3,
+		0xa7, 0xf3, 0xf8, 0x7c, 0xff, 0x84, 0x79, 0x58, 0xc6, 0x56, 0xc2, 0, 0, 0, 0,
+		0, 0, 0, 0x1, 0, 0, 0, 0, 0, 0, 0, 0x2}, key)
+	s.Require().True(bytes.HasPrefix(key, types.GetWithdrawRequestIndexKeyPrefix(withdrawer)))
+	withdrawer2, poolId, reqId := types.ParseWithdrawRequestIndexKey(key)
+	s.Require().Equal(withdrawer, withdrawer2)
+	s.Require().Equal(uint64(1), poolId)
+	s.Require().Equal(uint64(2), reqId)
 }
 
 func (s *keysTestSuite) TestGetOrderKey() {
@@ -155,7 +181,7 @@ func (s *keysTestSuite) TestGetOrdersByPairKeyPrefix() {
 	s.Require().Equal([]byte{0xb2, 0, 0, 0, 0, 0, 0, 0x3, 0xe8}, types.GetOrdersByPairKeyPrefix(1000))
 }
 
-func (s *keysTestSuite) TestGetOrderIndexKey() {
+func (s *keysTestSuite) TestOrderIndexKey() {
 	orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
 	key := types.GetOrderIndexKey(orderer, 1, 1)
 	s.Require().Equal([]byte{0xb3, 0x14, 0x54, 0x7e, 0xfe, 0x47, 0x8f, 0xc9, 0xf9, 0x52, 0xb2,
