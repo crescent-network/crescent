@@ -8,6 +8,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -284,6 +285,18 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	//fmt.Println(s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
 	//s.Require().EqualValues(slashedStakingAmt, s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
 
+}
+
+func (s *KeeperTestSuite) createContinuousVestingAccount(from sdk.AccAddress, to sdk.AccAddress, amt sdk.Coins, startTime, endTime time.Time) vestingtypes.ContinuousVestingAccount {
+	baseAccount := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, to)
+	_, ok := baseAccount.(*authtypes.BaseAccount)
+	s.Require().True(ok)
+	baseVestingAccount := vestingtypes.NewBaseVestingAccount(baseAccount.(*authtypes.BaseAccount), amt, endTime.Unix())
+	cVestingAcc := vestingtypes.NewContinuousVestingAccountRaw(baseVestingAccount, startTime.Unix())
+	s.app.AccountKeeper.SetAccount(s.ctx, cVestingAcc)
+	err := s.app.BankKeeper.SendCoins(s.ctx, from, to, amt)
+	s.Require().NoError(err)
+	return *cVestingAcc
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {

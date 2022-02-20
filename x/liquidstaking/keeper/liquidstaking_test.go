@@ -1,7 +1,10 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -174,4 +177,52 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(nas.TotalLiquidTokens, sdk.ZeroInt())
 	s.Require().Equal(nas.ProxyAccBalance, sdk.ZeroInt())
 	s.Require().Equal(nas.NetAmount, sdk.ZeroDec())
+}
+
+func (s *KeeperTestSuite) TestLiquidStakingFromVestingAccount() {
+	_, valOpers, _ := s.CreateValidators([]int64{1000000, 2000000, 3000000})
+	params := s.keeper.GetParams(s.ctx)
+
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	from := s.delAddrs[0]
+	vestingAmt := s.app.BankKeeper.GetAllBalances(s.ctx, from)
+	vestingStartTime := s.ctx.BlockTime().Add(1 * time.Hour)
+	vestingEndTime := s.ctx.BlockTime().Add(2 * time.Hour)
+	vestingMidTime := s.ctx.BlockTime().Add(90 * time.Minute)
+
+	vestingAccAddr := "cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss"
+	vestingAcc, err := sdk.AccAddressFromBech32(vestingAccAddr)
+	s.Require().NoError(err)
+
+	// createContinuousVestingAccount
+	cVestingAcc := s.createContinuousVestingAccount(from, vestingAcc, vestingAmt, vestingStartTime, vestingEndTime)
+	spendableCoins := s.app.BankKeeper.SpendableCoins(s.ctx, cVestingAcc.GetAddress())
+	s.Require().True(spendableCoins.IsZero())
+	lockedCoins := s.app.BankKeeper.LockedCoins(s.ctx, cVestingAcc.GetAddress())
+	s.Require().EqualValues(lockedCoins, vestingAmt)
+
+	// failed liquid staking, no spendable coins on the vesting account ( not allowed locked coins )
+	err = s.liquidStaking(vestingAcc, vestingAmt.AmountOf(sdk.DefaultBondDenom))
+	s.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+
+	// release some vesting coins
+	s.ctx = s.ctx.WithBlockTime(vestingMidTime)
+	spendableCoins = s.app.BankKeeper.SpendableCoins(s.ctx, cVestingAcc.GetAddress())
+	s.Require().True(spendableCoins.IsAllPositive())
+	lockedCoins = s.app.BankKeeper.LockedCoins(s.ctx, cVestingAcc.GetAddress())
+	s.Require().True(lockedCoins.IsAllPositive())
+
+	// success with released spendable coins
+	err = s.liquidStaking(vestingAcc, spendableCoins.AmountOf(sdk.DefaultBondDenom))
+	s.Require().NoError(err)
+	nas := s.keeper.NetAmountState(s.ctx)
+	s.Require().EqualValues(nas.TotalLiquidTokens, spendableCoins.AmountOf(sdk.DefaultBondDenom))
 }
