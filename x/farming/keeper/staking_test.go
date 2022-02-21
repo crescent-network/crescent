@@ -4,8 +4,10 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	simapp "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
+
 	_ "github.com/stretchr/testify/suite"
 )
 
@@ -457,4 +459,49 @@ func (suite *KeeperTestSuite) TestReserveAndReleaseStakingCoins() {
 		})
 
 	}
+}
+
+func (suite *KeeperTestSuite) TestPreserveCurrentEpoch() {
+	suite.CreateFixedAmountPlan(suite.addrs[0], map[string]string{denom1: "1"}, map[string]int64{denom2: 1000000})
+
+	suite.Require().Equal(uint64(0), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+	suite.Require().Equal(uint64(1), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.AdvanceEpoch()
+	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom2, 1000000)), suite.AllRewards(suite.addrs[1])))
+
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[1])
+	suite.Unstake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[1])
+	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.Require().True(coinsEq(
+		sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)),
+		balancesAfter.Sub(balancesBefore)))
+
+	// Few days later...
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	suite.Stake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.AdvanceEpoch()
+	suite.Require().Equal(uint64(3), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.AdvanceEpoch()
+	suite.Require().Equal(uint64(4), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom2, 1000000)), suite.AllRewards(suite.addrs[2])))
+
+	balancesBefore = suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[2])
+	suite.Unstake(suite.addrs[2], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	balancesAfter = suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[2])
+	suite.Require().Equal(uint64(4), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
+	suite.Require().True(coinsEq(
+		sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)),
+		balancesAfter.Sub(balancesBefore)))
+
+	suite.AdvanceEpoch()
+	suite.Require().Equal(uint64(4), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
 }
