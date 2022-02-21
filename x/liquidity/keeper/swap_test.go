@@ -344,3 +344,18 @@ func (s *KeeperTestSuite) TestFitPrice() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestGetOrdersByOrderer() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
+
+	order1 := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	order2 := s.sellLimitOrder(s.addr(1), pair2.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+
+	orders := s.keeper.GetOrdersByOrderer(s.ctx, s.addr(1))
+	s.Require().Len(orders, 2)
+	s.Require().Equal(order1.PairId, orders[0].PairId)
+	s.Require().Equal(order1.Id, orders[0].Id)
+	s.Require().Equal(order2.PairId, orders[1].PairId)
+	s.Require().Equal(order2.Id, orders[1].Id)
+}

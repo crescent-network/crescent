@@ -210,9 +210,18 @@ func (k Keeper) IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool 
 	return nil
 }
 
-// GetAllPools returns all pairs in the store.
+// GetAllPools returns all pools in the store.
 func (k Keeper) GetAllPools(ctx sdk.Context) (pools []types.Pool) {
 	_ = k.IterateAllPools(ctx, func(pool types.Pool) (stop bool, err error) {
+		pools = append(pools, pool)
+		return false, nil
+	})
+	return
+}
+
+// GetPoolsByPair returns pools within the pair.
+func (k Keeper) GetPoolsByPair(ctx sdk.Context, pairId uint64) (pools []types.Pool) {
+	_ = k.IteratePoolsByPair(ctx, pairId, func(pool types.Pool) (stop bool, err error) {
 		pools = append(pools, pool)
 		return false, nil
 	})
@@ -235,6 +244,7 @@ func (k Keeper) SetDepositRequest(ctx sdk.Context, req types.DepositRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalDepositRequest(k.cdc, req)
 	store.Set(types.GetDepositRequestKey(req.PoolId, req.Id), bz)
+	store.Set(types.GetDepositRequestIndexKey(req.GetDepositor(), req.PoolId, req.Id), []byte{})
 }
 
 // IterateAllDepositRequests iterates through all deposit requests in the store
@@ -256,6 +266,26 @@ func (k Keeper) IterateAllDepositRequests(ctx sdk.Context, cb func(req types.Dep
 	return nil
 }
 
+// IterateDepositRequestsByDepositor iterates through deposit requests in the
+// store by a depositor and call cb on each order.
+func (k Keeper) IterateDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress, cb func(req types.DepositRequest) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetDepositRequestIndexKeyPrefix(depositor))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, poolId, reqId := types.ParseDepositRequestIndexKey(iter.Key())
+		req, _ := k.GetDepositRequest(ctx, poolId, reqId)
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
 // GetAllDepositRequests returns all deposit requests in the store.
 func (k Keeper) GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequest) {
 	_ = k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool, err error) {
@@ -265,10 +295,20 @@ func (k Keeper) GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequ
 	return
 }
 
+// GetDepositRequestsByDepositor returns deposit requests by the depositor.
+func (k Keeper) GetDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress) (reqs []types.DepositRequest) {
+	_ = k.IterateDepositRequestsByDepositor(ctx, depositor, func(req types.DepositRequest) (stop bool, err error) {
+		reqs = append(reqs, req)
+		return false, nil
+	})
+	return
+}
+
 // DeleteDepositRequest deletes a deposit request.
-func (k Keeper) DeleteDepositRequest(ctx sdk.Context, poolId, id uint64) {
+func (k Keeper) DeleteDepositRequest(ctx sdk.Context, req types.DepositRequest) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetDepositRequestKey(poolId, id))
+	store.Delete(types.GetDepositRequestKey(req.PoolId, req.Id))
+	store.Delete(types.GetDepositRequestIndexKey(req.GetDepositor(), req.PoolId, req.Id))
 }
 
 // GetWithdrawRequest returns the particular withdraw request.
@@ -287,6 +327,7 @@ func (k Keeper) SetWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshaWithdrawRequest(k.cdc, req)
 	store.Set(types.GetWithdrawRequestKey(req.PoolId, req.Id), bz)
+	store.Set(types.GetWithdrawRequestIndexKey(req.GetWithdrawer(), req.PoolId, req.Id), []byte{})
 }
 
 // IterateAllWithdrawRequests iterates through all withdraw requests in the store
@@ -308,6 +349,26 @@ func (k Keeper) IterateAllWithdrawRequests(ctx sdk.Context, cb func(req types.Wi
 	return nil
 }
 
+// IterateWithdrawRequestsByWithdrawer iterates through withdraw requests in the
+// store by a withdrawer and call cb on each order.
+func (k Keeper) IterateWithdrawRequestsByWithdrawer(ctx sdk.Context, withdrawer sdk.AccAddress, cb func(req types.WithdrawRequest) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetWithdrawRequestIndexKeyPrefix(withdrawer))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, poolId, reqId := types.ParseWithdrawRequestIndexKey(iter.Key())
+		req, _ := k.GetWithdrawRequest(ctx, poolId, reqId)
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
 // GetAllWithdrawRequests returns all withdraw requests in the store.
 func (k Keeper) GetAllWithdrawRequests(ctx sdk.Context) (reqs []types.WithdrawRequest) {
 	_ = k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool, err error) {
@@ -317,10 +378,20 @@ func (k Keeper) GetAllWithdrawRequests(ctx sdk.Context) (reqs []types.WithdrawRe
 	return
 }
 
+// GetWithdrawRequestsByWithdrawer returns withdraw requests by the withdrawer.
+func (k Keeper) GetWithdrawRequestsByWithdrawer(ctx sdk.Context, withdrawer sdk.AccAddress) (reqs []types.WithdrawRequest) {
+	_ = k.IterateWithdrawRequestsByWithdrawer(ctx, withdrawer, func(req types.WithdrawRequest) (stop bool, err error) {
+		reqs = append(reqs, req)
+		return false, nil
+	})
+	return
+}
+
 // DeleteWithdrawRequest deletes a withdraw request.
-func (k Keeper) DeleteWithdrawRequest(ctx sdk.Context, poolId, id uint64) {
+func (k Keeper) DeleteWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetWithdrawRequestKey(poolId, id))
+	store.Delete(types.GetWithdrawRequestKey(req.PoolId, req.Id))
+	store.Delete(types.GetWithdrawRequestIndexKey(req.GetWithdrawer(), req.PoolId, req.Id))
 }
 
 // GetOrder returns the particular order.
@@ -339,6 +410,7 @@ func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshaOrder(k.cdc, order)
 	store.Set(types.GetOrderKey(order.PairId, order.Id), bz)
+	store.Set(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id), []byte{})
 }
 
 // IterateAllOrders iterates through all orders in the store and all
@@ -379,6 +451,26 @@ func (k Keeper) IterateOrdersByPair(ctx sdk.Context, pairId uint64, cb func(orde
 	return nil
 }
 
+// IterateOrdersByOrderer iterates through orders in the store by an orderer
+// and call cb on each order.
+func (k Keeper) IterateOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress, cb func(order types.Order) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetOrderIndexKeyPrefix(orderer))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, pairId, orderId := types.ParseOrderIndexKey(iter.Key())
+		order, _ := k.GetOrder(ctx, pairId, orderId)
+		stop, err := cb(order)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
 // GetAllOrders returns all orders in the store.
 func (k Keeper) GetAllOrders(ctx sdk.Context) (orders []types.Order) {
 	_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
@@ -388,8 +480,27 @@ func (k Keeper) GetAllOrders(ctx sdk.Context) (orders []types.Order) {
 	return
 }
 
+// GetOrdersByPair returns orders within the pair.
+func (k Keeper) GetOrdersByPair(ctx sdk.Context, pairId uint64) (orders []types.Order) {
+	_ = k.IterateOrdersByPair(ctx, pairId, func(order types.Order) (stop bool, err error) {
+		orders = append(orders, order)
+		return false, nil
+	})
+	return
+}
+
+// GetOrdersByOrderer returns orders by the orderer.
+func (k Keeper) GetOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress) (orders []types.Order) {
+	_ = k.IterateOrdersByOrderer(ctx, orderer, func(order types.Order) (stop bool, err error) {
+		orders = append(orders, order)
+		return false, nil
+	})
+	return
+}
+
 // DeleteOrder deletes an order.
-func (k Keeper) DeleteOrder(ctx sdk.Context, pairId, id uint64) {
+func (k Keeper) DeleteOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetOrderKey(pairId, id))
+	store.Delete(types.GetOrderKey(order.PairId, order.Id))
+	store.Delete(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id))
 }
