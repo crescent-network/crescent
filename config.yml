@@ -51,7 +51,6 @@ genesis:
       airdrops:
         - id: "1"
           source_address: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr" # source
-          termination_address: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta"
           conditions:
             - "CONDITION_TYPE_DEPOSIT"
             - "CONDITION_TYPE_SWAP"
