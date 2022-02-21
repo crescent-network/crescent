@@ -25,3 +25,8 @@ type LiquidityKeeper interface {
 	GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequest)
 	GetAllOrders(ctx sdk.Context) (reqs []liqtypes.Order)
 }
+
+// DistrKeeper is the keeper of the distribution store
+type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}

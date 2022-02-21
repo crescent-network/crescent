@@ -99,7 +99,6 @@ func (s *KeeperTestSuite) TestGRPCAirdrop() {
 			false,
 			func(resp *types.QueryAirdropResponse) {
 				s.Require().Equal(airdrop.SourceAddress, resp.Airdrop.SourceAddress)
-				s.Require().Equal(airdrop.TerminationAddress, resp.Airdrop.TerminationAddress)
 				s.Require().Equal(airdrop.StartTime, resp.Airdrop.StartTime)
 				s.Require().Equal(airdrop.EndTime, resp.Airdrop.EndTime)
 			},

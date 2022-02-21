@@ -22,9 +22,8 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 	sampleGenState := types.GenesisState{
 		Airdrops: []types.Airdrop{
 			{
-				Id:                 1,
-				SourceAddress:      s.addr(0).String(),
-				TerminationAddress: s.addr(5).String(),
+				Id:            1,
+				SourceAddress: s.addr(0).String(),
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
@@ -61,9 +60,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	sampleGenState := types.GenesisState{
 		Airdrops: []types.Airdrop{
 			{
-				Id:                 1,
-				SourceAddress:      s.addr(0).String(),
-				TerminationAddress: s.addr(6).String(),
+				Id:            1,
+				SourceAddress: s.addr(0).String(),
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
@@ -73,9 +71,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
 			},
 			{
-				Id:                 2,
-				SourceAddress:      s.addr(1).String(),
-				TerminationAddress: s.addr(6).String(),
+				Id:            2,
+				SourceAddress: s.addr(1).String(),
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,

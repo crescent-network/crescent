@@ -10,7 +10,6 @@
 type Airdrop struct {
 	Id                 uint64          // the airdrop id
 	SourceAddress      string          // the bech32-encoded source address
-	TerminationAddress string          // the bech32-encoded termination address
 	Conditions         []ConditionType // the list of conditions
 	StartTime          time.Time       // the start time of the airdrop
 	EndTime            time.Time       // the end time of the airdrop

@@ -14,6 +14,7 @@ type Keeper struct {
 	cdc             codec.BinaryCodec
 	storeKey        sdk.StoreKey
 	bankKeeper      types.BankKeeper
+	distrKeeper     types.DistrKeeper
 	farmingKeeper   types.FarmingKeeper
 	liquidityKeeper types.LiquidityKeeper
 }
@@ -22,6 +23,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
 	bk types.BankKeeper,
+	dk types.DistrKeeper,
 	fk types.FarmingKeeper,
 	lk types.LiquidityKeeper,
 ) *Keeper {
@@ -29,6 +31,7 @@ func NewKeeper(
 		cdc:             cdc,
 		storeKey:        storeKey,
 		bankKeeper:      bk,
+		distrKeeper:     dk,
 		farmingKeeper:   fk,
 		liquidityKeeper: lk,
 	}

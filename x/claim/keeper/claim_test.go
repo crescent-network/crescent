@@ -331,9 +331,11 @@ func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 	claim.EndBlocker(s.ctx, s.keeper)
 
 	// Source account balances must be zero
-	// Termination account must be zero
 	s.Require().True(s.getAllBalances(airdrop.GetSourceAddress()).IsZero())
-	s.Require().True(s.getAllBalances(airdrop.GetTerminationAddress()).IsZero())
+
+	// Community pool must be zero
+	feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+	s.Require().True(feePool.CommunityPool.IsZero())
 }
 
 func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
@@ -393,7 +395,9 @@ func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
 	s.Require().ErrorIs(err, types.ErrTerminatedAirdrop)
 
 	// Source account balances must be zero
-	// Termination account must have the remaining coins
 	s.Require().True(s.getAllBalances(airdrop.GetSourceAddress()).IsZero())
-	s.Require().False(s.getAllBalances(airdrop.GetTerminationAddress()).IsZero())
+
+	// Community pool must have the remaining coins
+	feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+	s.Require().False(feePool.CommunityPool.IsZero())
 }

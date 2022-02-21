@@ -166,9 +166,8 @@ func TestnetGenesisParams() *GenesisParams {
 	// Set airdrop
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
 		{
-			Id:                 1,
-			SourceAddress:      "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
-			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
+			Id:            1,
+			SourceAddress: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
 			Conditions: []claimtypes.ConditionType{
 				claimtypes.ConditionTypeDeposit,
 				claimtypes.ConditionTypeSwap,
@@ -226,11 +225,10 @@ func MainnetGenesisParams() *GenesisParams {
 	// Set airdrop
 	genParams.ClaimGenesisState.Airdrops = []types.Airdrop{
 		{
-			Id:                 1,
-			SourceAddress:      "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
-			TerminationAddress: "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta", // auth fee collector
-			StartTime:          genParams.GenesisTime,
-			EndTime:            genParams.GenesisTime.AddDate(0, 1, 0),
+			Id:            1,
+			SourceAddress: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
+			StartTime:     genParams.GenesisTime,
+			EndTime:       genParams.GenesisTime.AddDate(0, 1, 0),
 		},
 	}
 

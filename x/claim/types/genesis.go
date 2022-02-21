@@ -39,10 +39,6 @@ func (a Airdrop) Validate() error {
 		return err
 	}
 
-	if _, err := sdk.AccAddressFromBech32(a.TerminationAddress); err != nil {
-		return err
-	}
-
 	if a.StartTime.After(a.EndTime) {
 		return errors.New("end time must be greater than start time")
 	}

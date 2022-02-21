@@ -12,14 +12,6 @@ func (a Airdrop) GetSourceAddress() sdk.AccAddress {
 	return addr
 }
 
-func (a Airdrop) GetTerminationAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(a.TerminationAddress)
-	if err != nil {
-		panic(err)
-	}
-	return addr
-}
-
 func (r ClaimRecord) GetRecipient() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(r.Recipient)
 	if err != nil {

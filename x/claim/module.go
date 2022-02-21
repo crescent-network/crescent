@@ -104,6 +104,7 @@ type AppModule struct {
 
 	keeper          keeper.Keeper
 	bankKeeper      types.BankKeeper
+	distrKeeper     types.DistrKeeper
 	farmingKeeper   types.FarmingKeeper
 	liquidityKeeper types.LiquidityKeeper
 }
@@ -112,6 +113,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	bankKeeper types.BankKeeper,
+	distrKeeper types.DistrKeeper,
 	farmingKeeper types.FarmingKeeper,
 	liquidityKeeper types.LiquidityKeeper,
 ) AppModule {
@@ -119,6 +121,7 @@ func NewAppModule(
 		AppModuleBasic:  NewAppModuleBasic(cdc),
 		keeper:          keeper,
 		bankKeeper:      bankKeeper,
+		distrKeeper:     distrKeeper,
 		farmingKeeper:   farmingKeeper,
 		liquidityKeeper: liquidityKeeper,
 	}

@@ -29,9 +29,8 @@ func TestGenesisState_Validate(t *testing.T) {
 				Airdrops: []types.Airdrop{
 					{
 
-						Id:                 1,
-						SourceAddress:      sdk.AccAddress(crypto.AddressHash([]byte("sourceAddress"))).String(),
-						TerminationAddress: sdk.AccAddress(crypto.AddressHash([]byte("terminationAddress"))).String(),
+						Id:            1,
+						SourceAddress: sdk.AccAddress(crypto.AddressHash([]byte("sourceAddress"))).String(),
 						Conditions: []types.ConditionType{
 							types.ConditionTypeDeposit,
 							types.ConditionTypeSwap,

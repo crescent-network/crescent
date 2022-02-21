@@ -58,12 +58,11 @@ func (s *KeeperTestSuite) createAirdrop(
 	}
 
 	s.keeper.SetAirdrop(s.ctx, types.Airdrop{
-		Id:                 id,
-		SourceAddress:      sourceAddr.String(),
-		TerminationAddress: s.addr(6).String(),
-		Conditions:         conditions,
-		StartTime:          startTime,
-		EndTime:            endTime,
+		Id:            id,
+		SourceAddress: sourceAddr.String(),
+		Conditions:    conditions,
+		StartTime:     startTime,
+		EndTime:       endTime,
 	})
 
 	airdrop, found := s.keeper.GetAirdrop(s.ctx, id)

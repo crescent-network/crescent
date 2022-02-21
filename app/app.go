@@ -442,6 +442,7 @@ func NewSquadApp(
 		appCodec,
 		keys[claimtypes.StoreKey],
 		app.BankKeeper,
+		app.DistrKeeper,
 		app.FarmingKeeper,
 		app.LiquidityKeeper,
 	)
@@ -530,7 +531,7 @@ func NewSquadApp(
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GovKeeper),
-		claim.NewAppModule(appCodec, app.ClaimKeeper, app.BankKeeper, app.FarmingKeeper, app.LiquidityKeeper),
+		claim.NewAppModule(appCodec, app.ClaimKeeper, app.BankKeeper, app.DistrKeeper, app.FarmingKeeper, app.LiquidityKeeper),
 		app.transferModule,
 	)
 

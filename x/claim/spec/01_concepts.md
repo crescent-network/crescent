@@ -32,6 +32,6 @@ The airdrop recipient are required to complete the following Conditions. There i
 - 1/3 of the initial claimable amount is released by executing a staking transaction for any farming plan
 
 
-## EndTime
+## Termination
 
-TODO: describe 
+An airdrop ends when the `EndTime` is passed over the current time. All the unclaimed airdrop coins are sent to the community pool.
