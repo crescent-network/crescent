@@ -25,11 +25,11 @@ func TestBasicPool(t *testing.T) {
 		require.True(t, found)
 		require.True(sdk.DecEq(t, pool.Price(), lowest))
 
-		lowest = amm.LowestTick(defTickPrec)
+		lowest = defTickPrec.LowestTick()
 		buyAmt := pool.BuyAmountOver(lowest)
 		expected := rx.ToDec().QuoRoundUp(lowest)
 		require.True(t, squad.DecApproxEqual(expected, buyAmt.ToDec()))
-		highest = amm.HighestTick(defTickPrec)
+		highest = defTickPrec.HighestTick()
 		sellAmt := pool.SellAmountUnder(highest)
 		require.True(t, ry.Sub(sellAmt).LTE(sdk.OneInt()))
 	}

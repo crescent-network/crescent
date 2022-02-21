@@ -215,14 +215,14 @@ func TestDivideByCurrentWeight(t *testing.T) {
 		totalTargetAmt := sdk.ZeroDec()
 		totalLiquidTokens := sdk.ZeroInt()
 		liquidTokenMap := make(map[string]sdk.Int)
-		var alvs types.ActiveLiquidValidators
+		var lvs types.LiquidValidators
 		for _, v := range tc.liquidValidators {
 			totalLiquidTokens = totalLiquidTokens.Add(v.LiquidTokens)
 			liquidTokenMap[v.OperatorAddress] = v.LiquidTokens
-			alvs = append(alvs, types.LiquidValidator{
+			lvs = append(lvs, types.LiquidValidator{
 				OperatorAddress: v.OperatorAddress})
 		}
-		outputs, crumb := types.DivideByCurrentWeight(alvs, tc.addStakingAmt, totalLiquidTokens, liquidTokenMap)
+		outputs, crumb := types.DivideByCurrentWeight(lvs, tc.addStakingAmt, totalLiquidTokens, liquidTokenMap)
 		for k, v := range outputs {
 			fmt.Println(k, v.String())
 			totalTargetAmt = totalTargetAmt.Add(v)

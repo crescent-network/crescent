@@ -11,6 +11,7 @@ This message is expected to fail if:
 - the active liquid validator does not exist
 - the `Amount` `Coin` has a denomination different than one defined by `StakingKeeper.BondDenom()`
 - the mint rate is invalid, meaning the active liquid validator has no tokens
+- insufficient spendable balances (not allowed locked coins)
 - the amount delegated is less than the minimum allowed liquid staking `params.MinLiquidStakingAmount`
 
 The delegator receives newly minted bTokens at the current mint rate. The mint rate is the total supply of bTokens divided by the number of native tokens.

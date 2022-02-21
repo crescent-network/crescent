@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +17,22 @@ import (
 var (
 	KeyMintDenom          = []byte("MintDenom")
 	KeyBlockTimeThreshold = []byte("BlockTimeThreshold")
+	KeyInflationSchedules = []byte("InflationSchedules")
+
+	// TODO: fix
+	DefaultInflationSchedules = []InflationSchedule{
+		{
+			StartTime: squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
+			EndTime:   squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(300000000000000),
+		},
+		{
+			StartTime: squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			EndTime:   squadtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
+			Amount:    sdk.NewInt(200000000000000),
+		},
+	}
+	DefaultBlockTimeThreshold = 10 * time.Second
 )
 
 // ParamTable for mint module.
@@ -24,12 +41,14 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, BlockTimeThreshold time.Duration,
+	// TODO: []InflationSchedule or InflationSchedules
+	mintDenom string, BlockTimeThreshold time.Duration, InflationSchedules []InflationSchedule,
 ) Params {
 
 	return Params{
 		MintDenom:          mintDenom,
 		BlockTimeThreshold: BlockTimeThreshold,
+		InflationSchedules: InflationSchedules,
 	}
 }
 
@@ -37,7 +56,8 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		MintDenom:          sdk.DefaultBondDenom,
-		BlockTimeThreshold: 10 * time.Second,
+		BlockTimeThreshold: DefaultBlockTimeThreshold,
+		InflationSchedules: DefaultInflationSchedules,
 	}
 }
 
@@ -50,6 +70,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
+	// TODO: InflationSchedules
 	return nil
 
 }
@@ -65,6 +86,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
 		paramtypes.NewParamSetPair(KeyBlockTimeThreshold, &p.BlockTimeThreshold, validateBlockTimeThreshold),
+		paramtypes.NewParamSetPair(KeyInflationSchedules, &p.InflationSchedules, validateInflationSchedules),
 	}
 }
 
@@ -94,5 +116,21 @@ func validateBlockTimeThreshold(i interface{}) error {
 		return fmt.Errorf("block time threshold must be positive: %d", v)
 	}
 
+	return nil
+}
+
+func validateInflationSchedules(i interface{}) error {
+	v, ok := i.([]InflationSchedule)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	for _, inflation := range v {
+		if !inflation.Amount.IsPositive() {
+			return fmt.Errorf("inflation schedule amount must be positive: %s", v)
+		}
+		if !inflation.EndTime.After(inflation.StartTime) {
+			return fmt.Errorf("end time %s must be greater than start time %s", inflation.EndTime.Format(time.RFC3339), inflation.StartTime.Format(time.RFC3339))
+		}
+	}
 	return nil
 }

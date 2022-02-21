@@ -16,7 +16,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// fetch stored params
 	params := k.GetParams(ctx)
 
-	InflationSchedules := k.GetInflationSchedules()
+	InflationSchedules := k.GetInflationSchedules(ctx)
 	blockInflation := sdk.ZeroInt()
 	for _, schedule := range InflationSchedules {
 		if !schedule.EndTime.Before(ctx.BlockTime()) && !schedule.StartTime.After(ctx.BlockTime()) {

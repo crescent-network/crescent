@@ -13,16 +13,27 @@ var (
 	_ amm.Order = (*UserOrder)(nil)
 	_ amm.Order = (*PoolOrder)(nil)
 
-	DescendingPrice PriceComparator = func(a, b amm.Order) bool {
+	// PriceDescending defines a price comparator which is used to sort orders
+	// by price in descending order.
+	PriceDescending PriceComparator = func(a, b amm.Order) bool {
 		return a.GetPrice().GT(b.GetPrice())
 	}
-	AscendingPrice PriceComparator = func(a, b amm.Order) bool {
+	// PriceAscending defines a price comparator which is used to sort orders
+	// by price in ascending order.
+	PriceAscending PriceComparator = func(a, b amm.Order) bool {
 		return a.GetPrice().LT(b.GetPrice())
 	}
 )
 
+// PriceComparator is used to sort orders by price.
 type PriceComparator func(a, b amm.Order) bool
 
+// SortOrders sorts orders by these four criteria:
+// 1. Price - descending/ascending based on PriceComparator
+// 2. Amount - Larger amount takes higher priority than smaller amount
+// 3. Order type - pool orders take higher priority than user orders
+// 4. Time - early orders take higher priority. For pools, the pool with
+//    lower pool id takes higher priority
 func SortOrders(orders []amm.Order, cmp PriceComparator) {
 	sort.SliceStable(orders, func(i, j int) bool {
 		switch orderA := orders[i].(type) {
@@ -31,12 +42,12 @@ func SortOrders(orders []amm.Order, cmp PriceComparator) {
 			case *UserOrder:
 				return orderA.RequestId < orderB.RequestId
 			case *PoolOrder:
-				return true
+				return false
 			}
 		case *PoolOrder:
 			switch orderB := orders[j].(type) {
 			case *UserOrder:
-				return false
+				return true
 			case *PoolOrder:
 				return orderA.PoolId < orderB.PoolId
 			}
@@ -51,12 +62,14 @@ func SortOrders(orders []amm.Order, cmp PriceComparator) {
 	})
 }
 
+// UserOrder is the user order type.
 type UserOrder struct {
 	*amm.BaseOrder
 	RequestId uint64
 	Orderer   sdk.AccAddress
 }
 
+// NewUserOrder returns a new user order.
 func NewUserOrder(order Order) *UserOrder {
 	var dir amm.OrderDirection
 	switch order.Direction {
@@ -72,26 +85,7 @@ func NewUserOrder(order Order) *UserOrder {
 	}
 }
 
-func (order *UserOrder) SetOpenAmount(amt sdk.Int) amm.Order {
-	order.BaseOrder.SetOpenAmount(amt)
-	return order
-}
-
-func (order *UserOrder) DecrRemainingOfferCoin(amt sdk.Int) amm.Order {
-	order.BaseOrder.DecrRemainingOfferCoin(amt)
-	return order
-}
-
-func (order *UserOrder) IncrReceivedDemandCoin(amt sdk.Int) amm.Order {
-	order.BaseOrder.IncrReceivedDemandCoin(amt)
-	return order
-}
-
-func (order *UserOrder) SetMatched(matched bool) amm.Order {
-	order.BaseOrder.SetMatched(matched)
-	return order
-}
-
+// PoolOrder is the pool order type.
 type PoolOrder struct {
 	*amm.BaseOrder
 	PoolId         uint64
@@ -99,6 +93,7 @@ type PoolOrder struct {
 	OfferCoin      sdk.Coin
 }
 
+// NewPoolOrder returns a new pool order.
 func NewPoolOrder(
 	poolId uint64, reserveAddr sdk.AccAddress, dir amm.OrderDirection, price sdk.Dec, amt sdk.Int,
 	offerCoin sdk.Coin, demandCoinDenom string) *PoolOrder {
@@ -108,24 +103,4 @@ func NewPoolOrder(
 		ReserveAddress: reserveAddr,
 		OfferCoin:      offerCoin,
 	}
-}
-
-func (order *PoolOrder) SetOpenAmount(amt sdk.Int) amm.Order {
-	order.BaseOrder.SetOpenAmount(amt)
-	return order
-}
-
-func (order *PoolOrder) DecrRemainingOfferCoin(amt sdk.Int) amm.Order {
-	order.BaseOrder.DecrRemainingOfferCoin(amt)
-	return order
-}
-
-func (order *PoolOrder) IncrReceivedDemandCoin(amt sdk.Int) amm.Order {
-	order.BaseOrder.IncrReceivedDemandCoin(amt)
-	return order
-}
-
-func (order *PoolOrder) SetMatched(matched bool) amm.Order {
-	order.BaseOrder.SetMatched(matched)
-	return order
 }

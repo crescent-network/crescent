@@ -33,7 +33,7 @@ func BenchmarkFindMatchPrice(b *testing.B) {
 			os := amm.MergeOrderSources(append(poolOrderSources, ob)...)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				amm.FindMatchPrice(os, defTickPrec)
+				amm.FindMatchPrice(os, int(defTickPrec))
 			}
 		})
 	}

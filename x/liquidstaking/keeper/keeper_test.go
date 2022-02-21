@@ -8,6 +8,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -123,14 +124,18 @@ func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBToken
 	ctx, writeCache := s.ctx.CacheContext()
 	params := s.keeper.GetParams(ctx)
 	alv := s.keeper.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
-	balanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, sdk.DefaultBondDenom)
+	balanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, sdk.DefaultBondDenom).Amount
 	btokenBalanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
-	ubdTime, unbondingAmt, ubds, err := s.keeper.LiquidUnstaking(ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.LiquidBondDenom, ubdBTokenAmt))
+	ubdTime, unbondingAmt, ubds, unbondedAmt, err := s.keeper.LiquidUnstaking(ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoin(params.LiquidBondDenom, ubdBTokenAmt))
 	if err != nil {
 		return err
 	}
+	balanceAfter := s.app.BankKeeper.GetBalance(ctx, liquidStaker, sdk.DefaultBondDenom).Amount
 	btokenBalanceAfter := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
 	s.Require().EqualValues(ubdBTokenAmt, btokenBalanceBefore.Sub(btokenBalanceAfter))
+	if unbondedAmt.IsPositive() {
+		s.Require().EqualValues(unbondedAmt, balanceAfter.Sub(balanceBefore))
+	}
 	s.Require().Len(ubds, len(alv))
 	for _, v := range alv {
 		_, found := s.app.StakingKeeper.GetUnbondingDelegation(ctx, liquidStaker, v.GetOperator())
@@ -145,10 +150,23 @@ func (s *KeeperTestSuite) liquidUnstaking(liquidStaker sdk.AccAddress, ubdBToken
 			_, found := s.app.StakingKeeper.GetUnbondingDelegation(ctx, liquidStaker, v.GetOperator())
 			s.Require().False(found)
 		}
-		s.Require().EqualValues(balanceCompleteUBD.Amount, balanceBefore.Amount.Add(unbondingAmt))
+		s.Require().EqualValues(balanceCompleteUBD.Amount, balanceBefore.Add(unbondingAmt).Add(unbondedAmt))
 	}
 	writeCache()
 	return nil
+}
+
+func (s *KeeperTestSuite) RequireNetAmountStateZero() {
+	nas := s.keeper.NetAmountState(s.ctx)
+	s.Require().EqualValues(nas.MintRate, sdk.ZeroDec())
+	s.Require().EqualValues(nas.BtokenTotalSupply, sdk.ZeroInt())
+	s.Require().EqualValues(nas.NetAmount, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalDelShares, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalLiquidTokens, sdk.ZeroInt())
+	s.Require().EqualValues(nas.TotalRemainingRewards, sdk.ZeroDec())
+	s.Require().EqualValues(nas.TotalUnbondingBalance, sdk.ZeroDec())
+	s.Require().EqualValues(nas.ProxyAccBalance, sdk.ZeroInt())
+
 }
 
 // advance block time and height for complete redelegations and unbondings
@@ -209,7 +227,7 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	val, found := s.app.StakingKeeper.GetValidator(s.ctx, valOper)
 	s.Require().True(found)
 	tokens := val.Tokens
-	liquidTokens := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
+	liquidTokens := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 
 	// check sign info
 	info, found := s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
@@ -244,7 +262,7 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	s.Require().True(info.Tombstoned)
 	s.Require().True(liquidValidator.IsTombstoned(s.ctx, s.app.StakingKeeper, s.app.SlashingKeeper))
 	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
-	liquidTokensSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
+	liquidTokensSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	tokensSlashed := val.Tokens
 	s.Require().True(tokensSlashed.LT(tokens))
 	s.Require().True(liquidTokensSlashed.LT(liquidTokens))
@@ -267,6 +285,18 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	//fmt.Println(s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
 	//s.Require().EqualValues(slashedStakingAmt, s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
 
+}
+
+func (s *KeeperTestSuite) createContinuousVestingAccount(from sdk.AccAddress, to sdk.AccAddress, amt sdk.Coins, startTime, endTime time.Time) vestingtypes.ContinuousVestingAccount {
+	baseAccount := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, to)
+	_, ok := baseAccount.(*authtypes.BaseAccount)
+	s.Require().True(ok)
+	baseVestingAccount := vestingtypes.NewBaseVestingAccount(baseAccount.(*authtypes.BaseAccount), amt, endTime.Unix())
+	cVestingAcc := vestingtypes.NewContinuousVestingAccountRaw(baseVestingAccount, startTime.Unix())
+	s.app.AccountKeeper.SetAccount(s.ctx, cVestingAcc)
+	err := s.app.BankKeeper.SendCoins(s.ctx, from, to, amt)
+	s.Require().NoError(err)
+	return *cVestingAcc
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {

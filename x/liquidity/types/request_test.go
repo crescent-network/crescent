@@ -80,6 +80,14 @@ func TestDepositRequest_Validate(t *testing.T) {
 			"wrong number of accepted coins: 1",
 		},
 		{
+			"wrong denom pair",
+			func(req *types.DepositRequest) {
+				req.DepositCoins = squad.ParseCoins("1000000denom1,1000000denom2")
+				req.AcceptedCoins = squad.ParseCoins("1000000denom2,1000000denom3")
+			},
+			"mismatching denom pair between deposit coins and accepted coins",
+		},
+		{
 			"invalid minted pool coin",
 			func(req *types.DepositRequest) {
 				req.MintedPoolCoin = sdk.Coin{Denom: "pool1", Amount: sdk.NewInt(-1)}
@@ -284,9 +292,17 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			"zero remaining offer coin",
 			func(order *types.Order) {
-				order.RemainingOfferCoin = squad.ParseCoin("0denom1")
+				order.RemainingOfferCoin = squad.ParseCoin("0denom2")
 			},
 			"",
+		},
+		{
+			"mismatching denom pair",
+			func(order *types.Order) {
+				order.OfferCoin = squad.ParseCoin("1000000denom1")
+				order.RemainingOfferCoin = squad.ParseCoin("1000000denom2")
+			},
+			"offer coin denom denom1 != remaining offer coin denom denom2",
 		},
 		{
 			"invalid received coin",

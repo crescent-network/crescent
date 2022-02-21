@@ -698,11 +698,12 @@ func (s *KeeperTestSuite) TestGRPCOrders() {
 		})
 	}
 }
+
 func (s *KeeperTestSuite) TestGRPCOrder() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	req := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -731,25 +732,101 @@ func (s *KeeperTestSuite) TestGRPCOrder() {
 			},
 			false,
 			func(resp *types.QueryOrderResponse) {
-				s.Require().Equal(req.Id, resp.Order.Id)
-				s.Require().Equal(req.PairId, resp.Order.PairId)
-				s.Require().Equal(req.MsgHeight, resp.Order.MsgHeight)
-				s.Require().Equal(req.Orderer, resp.Order.Orderer)
-				s.Require().Equal(req.Direction, resp.Order.Direction)
-				s.Require().Equal(req.OfferCoin, resp.Order.OfferCoin)
-				s.Require().Equal(req.RemainingOfferCoin, resp.Order.RemainingOfferCoin)
-				s.Require().Equal(req.ReceivedCoin, resp.Order.ReceivedCoin)
-				s.Require().Equal(req.Price, resp.Order.Price)
-				s.Require().Equal(req.Amount, resp.Order.Amount)
-				s.Require().Equal(req.OpenAmount, resp.Order.OpenAmount)
-				s.Require().Equal(req.BatchId, resp.Order.BatchId)
-				s.Require().Equal(req.ExpireAt, resp.Order.ExpireAt)
-				s.Require().NotEqual(req.Status, resp.Order.Status)
+				s.Require().Equal(order.Id, resp.Order.Id)
+				s.Require().Equal(order.PairId, resp.Order.PairId)
+				s.Require().Equal(order.MsgHeight, resp.Order.MsgHeight)
+				s.Require().Equal(order.Orderer, resp.Order.Orderer)
+				s.Require().Equal(order.Direction, resp.Order.Direction)
+				s.Require().Equal(order.OfferCoin, resp.Order.OfferCoin)
+				s.Require().Equal(order.RemainingOfferCoin, resp.Order.RemainingOfferCoin)
+				s.Require().Equal(order.ReceivedCoin, resp.Order.ReceivedCoin)
+				s.Require().Equal(order.Price, resp.Order.Price)
+				s.Require().Equal(order.Amount, resp.Order.Amount)
+				s.Require().Equal(order.OpenAmount, resp.Order.OpenAmount)
+				s.Require().Equal(order.BatchId, resp.Order.BatchId)
+				s.Require().Equal(order.ExpireAt, resp.Order.ExpireAt)
+				s.Require().NotEqual(order.Status, resp.Order.Status)
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
 			resp, err := s.querier.Order(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair2 := s.createPair(s.addr(0), "denom2", "denom2", true)
+
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	order2 := s.buyLimitOrder(s.addr(1), pair2.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryOrdersByOrdererRequest
+		expectErr bool
+		postRun   func(*types.QueryOrdersResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryOrdersByOrdererRequest{},
+			true,
+			nil,
+		},
+		{
+			"query orders by orderer",
+			&types.QueryOrdersByOrdererRequest{
+				Orderer: s.addr(1).String(),
+			},
+			false,
+			func(resp *types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 2)
+				s.Require().Equal(order.PairId, resp.Orders[0].PairId)
+				s.Require().Equal(order.Id, resp.Orders[0].Id)
+				s.Require().Equal(order2.PairId, resp.Orders[1].PairId)
+				s.Require().Equal(order2.Id, resp.Orders[1].Id)
+			},
+		},
+		{
+			"no orders from an orderer",
+			&types.QueryOrdersByOrdererRequest{
+				Orderer: s.addr(3).String(),
+			},
+			false,
+			func(resp *types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 0)
+			},
+		},
+		{
+			"query by pair id",
+			&types.QueryOrdersByOrdererRequest{
+				Orderer: s.addr(1).String(),
+				PairId:  pair.Id,
+			},
+			false,
+			func(resp *types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 1)
+				s.Require().Equal(order.PairId, resp.Orders[0].PairId)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.OrdersByOrderer(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

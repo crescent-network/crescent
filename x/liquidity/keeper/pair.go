@@ -9,15 +9,15 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
-// GetNextPairIdWithUpdate increments pair id by one and set it.
-func (k Keeper) GetNextPairIdWithUpdate(ctx sdk.Context) uint64 {
+// getNextPairIdWithUpdate increments pair id by one and set it.
+func (k Keeper) getNextPairIdWithUpdate(ctx sdk.Context) uint64 {
 	id := k.GetLastPairId(ctx) + 1
 	k.SetLastPairId(ctx, id)
 	return id
 }
 
-// GetNextOrderIdWithUpdate increments the pair's last order id and returns it.
-func (k Keeper) GetNextOrderIdWithUpdate(ctx sdk.Context, pair types.Pair) uint64 {
+// getNextOrderIdWithUpdate increments the pair's last order id and returns it.
+func (k Keeper) getNextOrderIdWithUpdate(ctx sdk.Context, pair types.Pair) uint64 {
 	id := pair.LastOrderId + 1
 	pair.LastOrderId = id
 	k.SetPair(ctx, pair)
@@ -46,7 +46,7 @@ func (k Keeper) CreatePair(ctx sdk.Context, msg *types.MsgCreatePair) (types.Pai
 		return types.Pair{}, sdkerrors.Wrap(err, "insufficient pair creation fee")
 	}
 
-	id := k.GetNextPairIdWithUpdate(ctx)
+	id := k.getNextPairIdWithUpdate(ctx)
 	pair := types.NewPair(id, msg.BaseCoinDenom, msg.QuoteCoinDenom)
 	k.SetPair(ctx, pair)
 
