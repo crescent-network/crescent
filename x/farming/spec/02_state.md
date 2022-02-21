@@ -167,7 +167,7 @@ type HistoricalRewards struct {
 }
 ```
 
-- HistoricalRewards: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Epoch) -> ProtocolBuffer(HistoricalRewards)`
+- HistoricalRewards: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | Epoch -> ProtocolBuffer(HistoricalRewards)`
 - CurrentEpoch: `0x32 | StakingCoinDenom -> ProtocolBuffer(uint64)`
   - CurrentEpoch remains unchanged after all farmers has unstaked their coins.
 ## Outstanding Rewards
