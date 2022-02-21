@@ -10,11 +10,11 @@ The `claim` module emits the following events:
 
 | Type    | Attribute Key           | Attribute Value         |
 | ------- | ----------------------- | ----------------------- |
+| claim   | airdrop_id              | {airdropId}             |
 | claim   | recipient               | {recipientAddress}      |
 | claim   | initial_claimable_coins | {initialClaimableCoins} |
-| claim   | claimable_coins         | {claimableCoins} |
-| claim   | deposit_action_claimed  | {depositActionClaimed}  |
-| claim   | swap_action_claimed     | {swapActionClaimed}     |
-| claim   | farming_action_claimed  | {farmingActionClaimed}  |
+| claim   | claimable_coins         | {claimableCoins}        |
+| claim   | condition_type          | {conditionType}         |
+| claim   | claimed                 | {claimed}               |
 | message | module                  | claim                   |
 |         |                         |                         |

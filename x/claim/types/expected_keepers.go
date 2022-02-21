@@ -2,19 +2,30 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	// authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-)
 
-// AccountKeeper defines the expected account keeper used for simulations (noalias)
-type AccountKeeper interface {
-	// GetModuleAddress(name string) sdk.AccAddress
-	// SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
-	// GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-}
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+)
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	// GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	// MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+}
+
+// FarmingKeeper defines the expected interface needed to check the condition.
+type FarmingKeeper interface {
+	GetAllQueuedCoinsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins
+	GetAllStakedCoinsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins
+}
+
+// LiquidityKeeper defines the expected interface needed to check the condition.
+type LiquidityKeeper interface {
+	GetDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress) (reqs []types.DepositRequest)
+	GetOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress) (orders []types.Order)
+}
+
+// DistrKeeper is the keeper of the distribution store
+type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

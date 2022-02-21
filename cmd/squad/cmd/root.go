@@ -191,6 +191,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingCo
 		genutilcli.GenTxCmd(squadapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, squadapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(squadapp.ModuleBasics),
 		AddGenesisAccountCmd(squadapp.DefaultNodeHome),
+		PrepareGenesisCmd(squadapp.DefaultNodeHome, squadapp.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(squadapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),

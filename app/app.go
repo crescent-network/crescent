@@ -441,9 +441,10 @@ func NewSquadApp(
 	app.ClaimKeeper = *claimkeeper.NewKeeper(
 		appCodec,
 		keys[claimtypes.StoreKey],
-		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(claimtypes.ModuleName),
+		app.DistrKeeper,
+		app.FarmingKeeper,
+		app.LiquidityKeeper,
 	)
 
 	// register the proposal types
@@ -530,7 +531,7 @@ func NewSquadApp(
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GovKeeper),
-		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper),
+		claim.NewAppModule(appCodec, app.ClaimKeeper, app.BankKeeper, app.DistrKeeper, app.FarmingKeeper, app.LiquidityKeeper),
 		app.transferModule,
 	)
 

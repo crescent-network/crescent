@@ -5,51 +5,38 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
 type Keeper struct {
-	cdc           codec.BinaryCodec
-	storeKey      sdk.StoreKey
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	paramSpace    paramtypes.Subspace
+	cdc             codec.BinaryCodec
+	storeKey        sdk.StoreKey
+	bankKeeper      types.BankKeeper
+	distrKeeper     types.DistrKeeper
+	farmingKeeper   types.FarmingKeeper
+	liquidityKeeper types.LiquidityKeeper
 }
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
-	paramSpace paramtypes.Subspace,
+	dk types.DistrKeeper,
+	fk types.FarmingKeeper,
+	lk types.LiquidityKeeper,
 ) *Keeper {
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return &Keeper{
-		cdc:           cdc,
-		storeKey:      storeKey,
-		accountKeeper: ak,
-		bankKeeper:    bk,
-		paramSpace:    paramSpace,
+		cdc:             cdc,
+		storeKey:        storeKey,
+		bankKeeper:      bk,
+		distrKeeper:     dk,
+		farmingKeeper:   fk,
+		liquidityKeeper: lk,
 	}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// GetParams get all parameters as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
-	return
-}
-
-// SetParams set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
 }

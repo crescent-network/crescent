@@ -4,11 +4,10 @@ package types
 const (
 	EventTypeClaim = "claim"
 
+	AttributeKeyAirdropId             = "airdrop_id"
 	AttributeKeyRecipient             = "recipient"
 	AttributeKeyInitialClaimableCoins = "initial_claimable_coins"
 	AttributeKeyClaimableCoins        = "claimable_coins"
-	AttributeKeyDepositActionClaimed  = "deposit_action_claimed"
-	AttributeKeySwapActionClaimed     = "swap_action_claimed"
-	AttributeKeyFarmingActionClaimed  = "farming_action_claimed"
-	AttributeKeyUnclaimedCoins        = "unclaimed_coins"
+	AttributeKeyConditionType         = "condition_type"
+	AttributeKeyClaimed               = "claimed"
 )

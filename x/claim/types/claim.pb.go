@@ -9,15 +9,19 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -25,21 +29,69 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the parameters for the module.
-type Params struct {
+// ConditionType defines the type of condition that a recipient must execute in order to receive a claimable amount.
+type ConditionType int32
+
+const (
+	// CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
+	ConditionTypeUnspecified ConditionType = 0
+	// CONDITION_TYPE_DEPOSIT specifies deposit condition type
+	ConditionTypeDeposit ConditionType = 1
+	// CONDITION_TYPE_SWAP specifies swap condition type
+	ConditionTypeSwap ConditionType = 2
+	// CONDITION_TYPE_FARMING specifies farming (stake) condition type
+	ConditionTypeFarming ConditionType = 3
+)
+
+var ConditionType_name = map[int32]string{
+	0: "CONDITION_TYPE_UNSPECIFIED",
+	1: "CONDITION_TYPE_DEPOSIT",
+	2: "CONDITION_TYPE_SWAP",
+	3: "CONDITION_TYPE_FARMING",
 }
 
-func (m *Params) Reset()      { *m = Params{} }
-func (*Params) ProtoMessage() {}
-func (*Params) Descriptor() ([]byte, []int) {
+var ConditionType_value = map[string]int32{
+	"CONDITION_TYPE_UNSPECIFIED": 0,
+	"CONDITION_TYPE_DEPOSIT":     1,
+	"CONDITION_TYPE_SWAP":        2,
+	"CONDITION_TYPE_FARMING":     3,
+}
+
+func (x ConditionType) String() string {
+	return proto.EnumName(ConditionType_name, int32(x))
+}
+
+func (ConditionType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_84886eaa62c7639a, []int{0}
 }
-func (m *Params) XXX_Unmarshal(b []byte) error {
+
+// Airdrop defines airdrop information.
+type Airdrop struct {
+	// id specifies index of the airdrop
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// source_address defines the bech32-encoded source address
+	// where the source of coins from
+	SourceAddress string `protobuf:"bytes,2,opt,name=source_address,json=sourceAddress,proto3" json:"source_address,omitempty"`
+	// conditions specifies a list of conditions
+	Conditions []ConditionType `protobuf:"varint,3,rep,packed,name=conditions,proto3,enum=squad.claim.v1beta1.ConditionType" json:"conditions,omitempty"`
+	// start_time specifies the start time of the airdrop
+	StartTime time.Time `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	// end_time specifies the start time of the airdrop
+	EndTime time.Time `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
+}
+
+func (m *Airdrop) Reset()         { *m = Airdrop{} }
+func (m *Airdrop) String() string { return proto.CompactTextString(m) }
+func (*Airdrop) ProtoMessage()    {}
+func (*Airdrop) Descriptor() ([]byte, []int) {
+	return fileDescriptor_84886eaa62c7639a, []int{0}
+}
+func (m *Airdrop) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Airdrop) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Params.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Airdrop.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -49,31 +101,31 @@ func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Params) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Params.Merge(m, src)
+func (m *Airdrop) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Airdrop.Merge(m, src)
 }
-func (m *Params) XXX_Size() int {
+func (m *Airdrop) XXX_Size() int {
 	return m.Size()
 }
-func (m *Params) XXX_DiscardUnknown() {
-	xxx_messageInfo_Params.DiscardUnknown(m)
+func (m *Airdrop) XXX_DiscardUnknown() {
+	xxx_messageInfo_Airdrop.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Params proto.InternalMessageInfo
+var xxx_messageInfo_Airdrop proto.InternalMessageInfo
 
+// ClaimRecord defines claim record that corresponds to the airdrop.
 type ClaimRecord struct {
-	// address specifies the bech32-encoded address that is eligible to claim airdrop
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// airdrop_id specifies airdrop id
+	AirdropId uint64 `protobuf:"varint,1,opt,name=airdrop_id,json=airdropId,proto3" json:"airdrop_id,omitempty"`
+	// recipient specifies the bech32-encoded address that is eligible to claim airdrop
+	Recipient string `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	// initial_claimable_coins specifies the initial claimable coins
-	InitialClaimableCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=initial_claimable_coins,json=initialClaimableCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_claimable_coins"`
+	InitialClaimableCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=initial_claimable_coins,json=initialClaimableCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_claimable_coins"`
 	// claimable_coins specifies the unclaimed claimable coins
-	ClaimableCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=claimable_coins,json=claimableCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"claimable_coins"`
-	// deposit_action_claimed specifies the liquidity/deposit action
-	DepositActionClaimed bool `protobuf:"varint,4,opt,name=deposit_action_claimed,json=depositActionClaimed,proto3" json:"deposit_action_claimed,omitempty"`
-	// swap_action_claimed specifies the liquidity/swap action
-	SwapActionClaimed bool `protobuf:"varint,5,opt,name=swap_action_claimed,json=swapActionClaimed,proto3" json:"swap_action_claimed,omitempty"`
-	// farming_action_claimed specifies the farming/stake action
-	FarmingActionClaimed bool `protobuf:"varint,6,opt,name=farming_action_claimed,json=farmingActionClaimed,proto3" json:"farming_action_claimed,omitempty"`
+	ClaimableCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=claimable_coins,json=claimableCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"claimable_coins"`
+	// claimed_conditions specifies a list of condition types
+	// initial values are empty and each condition type gets appended when claim is successfully executed
+	ClaimedConditions []ConditionType `protobuf:"varint,5,rep,packed,name=claimed_conditions,json=claimedConditions,proto3,enum=squad.claim.v1beta1.ConditionType" json:"claimed_conditions,omitempty"`
 }
 
 func (m *ClaimRecord) Reset()         { *m = ClaimRecord{} }
@@ -110,41 +162,57 @@ func (m *ClaimRecord) XXX_DiscardUnknown() {
 var xxx_messageInfo_ClaimRecord proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*Params)(nil), "squad.claim.v1beta1.Params")
+	proto.RegisterEnum("squad.claim.v1beta1.ConditionType", ConditionType_name, ConditionType_value)
+	proto.RegisterType((*Airdrop)(nil), "squad.claim.v1beta1.Airdrop")
 	proto.RegisterType((*ClaimRecord)(nil), "squad.claim.v1beta1.ClaimRecord")
 }
 
 func init() { proto.RegisterFile("squad/claim/v1beta1/claim.proto", fileDescriptor_84886eaa62c7639a) }
 
 var fileDescriptor_84886eaa62c7639a = []byte{
-	// 375 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xbd, 0x4e, 0xfb, 0x30,
-	0x14, 0xc5, 0x93, 0x7f, 0xfb, 0x2f, 0xe0, 0x4a, 0x45, 0xa4, 0xa5, 0x84, 0x0e, 0x4e, 0xd5, 0x29,
-	0x4b, 0x1d, 0x0a, 0x9d, 0xd8, 0x68, 0x56, 0x06, 0x94, 0x91, 0xa5, 0x72, 0x12, 0x13, 0x2c, 0x92,
-	0x38, 0xc4, 0x2e, 0x1f, 0x33, 0x2f, 0xc0, 0xc8, 0xc8, 0xcc, 0x4b, 0xb0, 0x76, 0xec, 0xc8, 0xc4,
-	0x47, 0xfb, 0x22, 0x28, 0x76, 0x2a, 0xd4, 0xb2, 0x32, 0x25, 0xf6, 0xb9, 0xe7, 0xfe, 0xee, 0xb5,
-	0x0e, 0xb0, 0xf8, 0xf5, 0x04, 0x87, 0x4e, 0x10, 0x63, 0x9a, 0x38, 0x37, 0x03, 0x9f, 0x08, 0x3c,
-	0x50, 0x27, 0x94, 0xe5, 0x4c, 0x30, 0xa3, 0x29, 0x0b, 0x90, 0xba, 0x2a, 0x0b, 0x3a, 0xad, 0x88,
-	0x45, 0x4c, 0xea, 0x4e, 0xf1, 0xa7, 0x4a, 0x3b, 0x30, 0x60, 0x3c, 0x61, 0xdc, 0xf1, 0x31, 0x27,
-	0x3f, 0xbd, 0x18, 0x4d, 0x95, 0xde, 0x6b, 0x80, 0xda, 0x19, 0xce, 0x71, 0xc2, 0x8f, 0xab, 0x4f,
-	0xcf, 0x96, 0xd6, 0x7b, 0xad, 0x80, 0xba, 0x5b, 0xf4, 0xf5, 0x48, 0xc0, 0xf2, 0xd0, 0x30, 0xc1,
-	0x06, 0x0e, 0xc3, 0x9c, 0x70, 0x6e, 0xea, 0x5d, 0xdd, 0xde, 0xf2, 0x96, 0x47, 0xe3, 0x41, 0x07,
-	0x7b, 0x34, 0xa5, 0x82, 0xe2, 0x78, 0x2c, 0x27, 0xc1, 0x7e, 0x4c, 0xc6, 0x45, 0x6b, 0x6e, 0xfe,
-	0xeb, 0x56, 0xec, 0xfa, 0xe1, 0x3e, 0x52, 0x70, 0x54, 0xc0, 0x97, 0x73, 0x22, 0x97, 0xd1, 0x74,
-	0x74, 0x30, 0x7d, 0xb7, 0xb4, 0x97, 0x0f, 0xcb, 0x8e, 0xa8, 0xb8, 0x9c, 0xf8, 0x28, 0x60, 0x89,
-	0x53, 0x4e, 0xaa, 0x3e, 0x7d, 0x1e, 0x5e, 0x39, 0xe2, 0x3e, 0x23, 0x5c, 0x1a, 0xb8, 0xb7, 0x5b,
-	0xb2, 0xdc, 0x25, 0x4a, 0x5e, 0x1b, 0x02, 0x6c, 0xaf, 0xc3, 0x2b, 0x7f, 0x0f, 0x6f, 0x04, 0xab,
-	0xd4, 0x21, 0x68, 0x87, 0x24, 0x63, 0x9c, 0x8a, 0x31, 0x0e, 0x04, 0x65, 0xa9, 0x7a, 0x01, 0x12,
-	0x9a, 0xd5, 0xae, 0x6e, 0x6f, 0x7a, 0xad, 0x52, 0x3d, 0x91, 0xa2, 0xab, 0x34, 0x03, 0x81, 0x26,
-	0xbf, 0xc5, 0xd9, 0xba, 0xe5, 0xbf, 0xb4, 0xec, 0x14, 0xd2, 0x6a, 0xfd, 0x10, 0xb4, 0x2f, 0x70,
-	0x9e, 0xd0, 0x34, 0x5a, 0xb7, 0xd4, 0x14, 0xa5, 0x54, 0x57, 0x5c, 0xa3, 0xd3, 0xe9, 0x17, 0xd4,
-	0xa6, 0x73, 0xa8, 0xcf, 0xe6, 0x50, 0xff, 0x9c, 0x43, 0xfd, 0x71, 0x01, 0xb5, 0xd9, 0x02, 0x6a,
-	0x6f, 0x0b, 0xa8, 0x9d, 0xa3, 0x5f, 0x3b, 0x17, 0x51, 0xea, 0xc7, 0xd8, 0xe7, 0x8e, 0x8a, 0xdd,
-	0x5d, 0x19, 0x3c, 0xb9, 0xbf, 0x5f, 0x93, 0x31, 0x39, 0xfa, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xfe,
-	0xab, 0x25, 0x90, 0x94, 0x02, 0x00, 0x00,
+	// 620 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x4f, 0x6f, 0xd3, 0x30,
+	0x14, 0x4f, 0xda, 0x8e, 0xad, 0x9e, 0x56, 0x3a, 0x6f, 0x83, 0x12, 0x8d, 0x34, 0x9a, 0x84, 0x54,
+	0x21, 0x2d, 0x61, 0x83, 0x23, 0x12, 0xea, 0xbf, 0x41, 0x24, 0xe8, 0xaa, 0xb4, 0xd3, 0x04, 0x97,
+	0xc8, 0x89, 0xbd, 0x62, 0xd1, 0xc4, 0x21, 0x76, 0x81, 0x9d, 0xb9, 0xa0, 0x9d, 0xf6, 0x05, 0x26,
+	0x0e, 0xdc, 0xf8, 0x24, 0x3b, 0xee, 0xc8, 0x89, 0xc1, 0xf6, 0x01, 0xf8, 0x0a, 0x28, 0x71, 0xba,
+	0xad, 0xa3, 0x97, 0x49, 0x9c, 0x12, 0xff, 0xde, 0xfb, 0xbd, 0x9f, 0xdf, 0xef, 0xd9, 0x06, 0x55,
+	0xfe, 0x7e, 0x84, 0xb0, 0xe5, 0x0f, 0x11, 0x0d, 0xac, 0x0f, 0x1b, 0x1e, 0x11, 0x68, 0x43, 0xae,
+	0xcc, 0x28, 0x66, 0x82, 0xc1, 0xa5, 0x34, 0xc1, 0x94, 0x50, 0x96, 0xa0, 0x2d, 0x0f, 0xd8, 0x80,
+	0xa5, 0x71, 0x2b, 0xf9, 0x93, 0xa9, 0x5a, 0x75, 0xc0, 0xd8, 0x60, 0x48, 0xac, 0x74, 0xe5, 0x8d,
+	0xf6, 0x2c, 0x41, 0x03, 0xc2, 0x05, 0x0a, 0xa2, 0x2c, 0x41, 0xf7, 0x19, 0x0f, 0x18, 0xb7, 0x3c,
+	0xc4, 0xc9, 0xa5, 0x18, 0xa3, 0xa1, 0x8c, 0xaf, 0x1d, 0xe6, 0xc0, 0x6c, 0x9d, 0xc6, 0x38, 0x66,
+	0x11, 0x2c, 0x81, 0x1c, 0xc5, 0x15, 0xd5, 0x50, 0x6b, 0x05, 0x27, 0x47, 0x31, 0x7c, 0x00, 0x4a,
+	0x9c, 0x8d, 0x62, 0x9f, 0xb8, 0x08, 0xe3, 0x98, 0x70, 0x5e, 0xc9, 0x19, 0x6a, 0xad, 0xe8, 0x2c,
+	0x48, 0xb4, 0x2e, 0x41, 0xf8, 0x02, 0x00, 0x9f, 0x85, 0x98, 0x0a, 0xca, 0x42, 0x5e, 0xc9, 0x1b,
+	0xf9, 0x5a, 0x69, 0x73, 0xcd, 0x9c, 0xd2, 0x83, 0xd9, 0x1c, 0xa7, 0xf5, 0xf7, 0x23, 0xd2, 0x28,
+	0x1c, 0xff, 0xac, 0x2a, 0xce, 0x15, 0x2e, 0x6c, 0x02, 0xc0, 0x05, 0x8a, 0x85, 0x9b, 0x74, 0x51,
+	0x29, 0x18, 0x6a, 0x6d, 0x7e, 0x53, 0x33, 0x65, 0x8b, 0xe6, 0xb8, 0x45, 0xb3, 0x3f, 0x6e, 0xb1,
+	0x31, 0x97, 0x54, 0x38, 0x3c, 0xad, 0xaa, 0x4e, 0x31, 0xe5, 0x25, 0x11, 0xf8, 0x0c, 0xcc, 0x91,
+	0x10, 0xcb, 0x12, 0x33, 0x37, 0x28, 0x31, 0x4b, 0x42, 0x9c, 0xe0, 0x6b, 0x5f, 0xf3, 0x60, 0xbe,
+	0x99, 0xec, 0xdb, 0x21, 0x3e, 0x8b, 0x31, 0xbc, 0x0f, 0x00, 0x92, 0x0e, 0xb9, 0x17, 0xf6, 0x14,
+	0x33, 0xc4, 0xc6, 0x70, 0x15, 0x14, 0x63, 0xe2, 0xd3, 0x88, 0x92, 0x50, 0x64, 0x06, 0x5d, 0x02,
+	0xf0, 0xb3, 0x0a, 0xee, 0xd2, 0x90, 0x0a, 0x8a, 0x86, 0x6e, 0x6a, 0x06, 0xf2, 0x86, 0xc4, 0x4d,
+	0x06, 0x20, 0xad, 0x9a, 0xdf, 0xbc, 0x67, 0xca, 0x11, 0x99, 0xc9, 0x88, 0xae, 0x58, 0x45, 0xc3,
+	0xc6, 0xa3, 0x64, 0x73, 0xdf, 0x4f, 0xab, 0xb5, 0x01, 0x15, 0x6f, 0x47, 0x9e, 0xe9, 0xb3, 0xc0,
+	0xca, 0xe6, 0x29, 0x3f, 0xeb, 0x1c, 0xbf, 0xb3, 0xc4, 0x7e, 0x44, 0x78, 0x4a, 0xe0, 0xce, 0x4a,
+	0xa6, 0xd5, 0x1c, 0x4b, 0xa5, 0x30, 0x14, 0xe0, 0xf6, 0x75, 0xf1, 0xc2, 0xff, 0x17, 0x2f, 0xf9,
+	0x93, 0xaa, 0xbb, 0x00, 0xa6, 0x08, 0xc1, 0xee, 0x95, 0x03, 0x32, 0x73, 0xc3, 0x03, 0xb2, 0x98,
+	0xd5, 0xb8, 0x88, 0xf1, 0x87, 0x7f, 0x54, 0xb0, 0x30, 0x91, 0x0a, 0x9f, 0x02, 0xad, 0xb9, 0xdd,
+	0x69, 0xd9, 0x7d, 0x7b, 0xbb, 0xe3, 0xf6, 0x5f, 0x77, 0xdb, 0xee, 0x4e, 0xa7, 0xd7, 0x6d, 0x37,
+	0xed, 0x2d, 0xbb, 0xdd, 0x2a, 0x2b, 0xda, 0xea, 0xc1, 0x91, 0x51, 0x99, 0xa0, 0xec, 0x84, 0x3c,
+	0x22, 0x3e, 0xdd, 0xa3, 0x04, 0xc3, 0x27, 0xe0, 0xce, 0x35, 0x76, 0xab, 0xdd, 0xdd, 0xee, 0xd9,
+	0xfd, 0xb2, 0xaa, 0x55, 0x0e, 0x8e, 0x8c, 0xe5, 0x09, 0x66, 0x8b, 0x44, 0x8c, 0x53, 0x01, 0x4d,
+	0xb0, 0x74, 0x8d, 0xd5, 0xdb, 0xad, 0x77, 0xcb, 0x39, 0x6d, 0xe5, 0xe0, 0xc8, 0x58, 0x9c, 0xa0,
+	0xf4, 0x3e, 0xa2, 0x68, 0x8a, 0xca, 0x56, 0xdd, 0x79, 0x65, 0x77, 0x9e, 0x97, 0xf3, 0x53, 0x54,
+	0xb6, 0x50, 0x1c, 0xd0, 0x70, 0xa0, 0x15, 0xbe, 0x7c, 0xd3, 0x95, 0xc6, 0xcb, 0xe3, 0xdf, 0xba,
+	0x72, 0x7c, 0xa6, 0xab, 0x27, 0x67, 0xba, 0xfa, 0xeb, 0x4c, 0x57, 0x0f, 0xcf, 0x75, 0xe5, 0xe4,
+	0x5c, 0x57, 0x7e, 0x9c, 0xeb, 0xca, 0x1b, 0xf3, 0x9f, 0x11, 0x25, 0xde, 0xae, 0x0f, 0x91, 0xc7,
+	0x2d, 0xf9, 0xd8, 0x7c, 0xca, 0x9e, 0x9b, 0x74, 0x5c, 0xde, 0xad, 0xf4, 0x22, 0x3c, 0xfe, 0x1b,
+	0x00, 0x00, 0xff, 0xff, 0x99, 0x8b, 0x0b, 0xd1, 0x8a, 0x04, 0x00, 0x00,
 }
 
-func (m *Params) Marshal() (dAtA []byte, err error) {
+func (m *Airdrop) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -154,16 +222,62 @@ func (m *Params) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Params) MarshalTo(dAtA []byte) (int, error) {
+func (m *Airdrop) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Airdrop) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
+	if err1 != nil {
+		return 0, err1
+	}
+	i -= n1
+	i = encodeVarintClaim(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x2a
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintClaim(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x22
+	if len(m.Conditions) > 0 {
+		dAtA4 := make([]byte, len(m.Conditions)*10)
+		var j3 int
+		for _, num := range m.Conditions {
+			for num >= 1<<7 {
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j3++
+			}
+			dAtA4[j3] = uint8(num)
+			j3++
+		}
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintClaim(dAtA, i, uint64(j3))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.SourceAddress) > 0 {
+		i -= len(m.SourceAddress)
+		copy(dAtA[i:], m.SourceAddress)
+		i = encodeVarintClaim(dAtA, i, uint64(len(m.SourceAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Id != 0 {
+		i = encodeVarintClaim(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -187,35 +301,23 @@ func (m *ClaimRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.FarmingActionClaimed {
-		i--
-		if m.FarmingActionClaimed {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
+	if len(m.ClaimedConditions) > 0 {
+		dAtA6 := make([]byte, len(m.ClaimedConditions)*10)
+		var j5 int
+		for _, num := range m.ClaimedConditions {
+			for num >= 1<<7 {
+				dAtA6[j5] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j5++
+			}
+			dAtA6[j5] = uint8(num)
+			j5++
 		}
+		i -= j5
+		copy(dAtA[i:], dAtA6[:j5])
+		i = encodeVarintClaim(dAtA, i, uint64(j5))
 		i--
-		dAtA[i] = 0x30
-	}
-	if m.SwapActionClaimed {
-		i--
-		if m.SwapActionClaimed {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x28
-	}
-	if m.DepositActionClaimed {
-		i--
-		if m.DepositActionClaimed {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x2a
 	}
 	if len(m.ClaimableCoins) > 0 {
 		for iNdEx := len(m.ClaimableCoins) - 1; iNdEx >= 0; iNdEx-- {
@@ -228,7 +330,7 @@ func (m *ClaimRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintClaim(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 		}
 	}
 	if len(m.InitialClaimableCoins) > 0 {
@@ -242,15 +344,20 @@ func (m *ClaimRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintClaim(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x1a
 		}
 	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintClaim(dAtA, i, uint64(len(m.Address)))
+	if len(m.Recipient) > 0 {
+		i -= len(m.Recipient)
+		copy(dAtA[i:], m.Recipient)
+		i = encodeVarintClaim(dAtA, i, uint64(len(m.Recipient)))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x12
+	}
+	if m.AirdropId != 0 {
+		i = encodeVarintClaim(dAtA, i, uint64(m.AirdropId))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -266,12 +373,30 @@ func encodeVarintClaim(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *Params) Size() (n int) {
+func (m *Airdrop) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
+	if m.Id != 0 {
+		n += 1 + sovClaim(uint64(m.Id))
+	}
+	l = len(m.SourceAddress)
+	if l > 0 {
+		n += 1 + l + sovClaim(uint64(l))
+	}
+	if len(m.Conditions) > 0 {
+		l = 0
+		for _, e := range m.Conditions {
+			l += sovClaim(uint64(e))
+		}
+		n += 1 + sovClaim(uint64(l)) + l
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovClaim(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
+	n += 1 + l + sovClaim(uint64(l))
 	return n
 }
 
@@ -281,7 +406,10 @@ func (m *ClaimRecord) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
+	if m.AirdropId != 0 {
+		n += 1 + sovClaim(uint64(m.AirdropId))
+	}
+	l = len(m.Recipient)
 	if l > 0 {
 		n += 1 + l + sovClaim(uint64(l))
 	}
@@ -297,14 +425,12 @@ func (m *ClaimRecord) Size() (n int) {
 			n += 1 + l + sovClaim(uint64(l))
 		}
 	}
-	if m.DepositActionClaimed {
-		n += 2
-	}
-	if m.SwapActionClaimed {
-		n += 2
-	}
-	if m.FarmingActionClaimed {
-		n += 2
+	if len(m.ClaimedConditions) > 0 {
+		l = 0
+		for _, e := range m.ClaimedConditions {
+			l += sovClaim(uint64(e))
+		}
+		n += 1 + sovClaim(uint64(l)) + l
 	}
 	return n
 }
@@ -315,7 +441,7 @@ func sovClaim(x uint64) (n int) {
 func sozClaim(x uint64) (n int) {
 	return sovClaim(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Params) Unmarshal(dAtA []byte) error {
+func (m *Airdrop) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -338,12 +464,198 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Params: wiretype end group for non-group")
+			return fmt.Errorf("proto: Airdrop: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Airdrop: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClaim
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SourceAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType == 0 {
+				var v ConditionType
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClaim
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= ConditionType(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Conditions = append(m.Conditions, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClaim
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthClaim
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthClaim
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.Conditions) == 0 {
+					m.Conditions = make([]ConditionType, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v ConditionType
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowClaim
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= ConditionType(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Conditions = append(m.Conditions, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClaim
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClaim
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipClaim(dAtA[iNdEx:])
@@ -395,8 +707,27 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AirdropId", wireType)
+			}
+			m.AirdropId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AirdropId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -424,9 +755,9 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Address = string(dAtA[iNdEx:postIndex])
+			m.Recipient = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InitialClaimableCoins", wireType)
 			}
@@ -460,7 +791,7 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ClaimableCoins", wireType)
 			}
@@ -494,66 +825,75 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DepositActionClaimed", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowClaim
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.DepositActionClaimed = bool(v != 0)
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SwapActionClaimed", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowClaim
+			if wireType == 0 {
+				var v ConditionType
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClaim
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= ConditionType(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.ClaimedConditions = append(m.ClaimedConditions, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClaim
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthClaim
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthClaim
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				if elementCount != 0 && len(m.ClaimedConditions) == 0 {
+					m.ClaimedConditions = make([]ConditionType, 0, elementCount)
 				}
+				for iNdEx < postIndex {
+					var v ConditionType
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowClaim
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= ConditionType(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ClaimedConditions = append(m.ClaimedConditions, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimedConditions", wireType)
 			}
-			m.SwapActionClaimed = bool(v != 0)
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FarmingActionClaimed", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowClaim
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.FarmingActionClaimed = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipClaim(dAtA[iNdEx:])

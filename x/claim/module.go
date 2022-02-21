@@ -102,22 +102,28 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	keeper          keeper.Keeper
+	bankKeeper      types.BankKeeper
+	distrKeeper     types.DistrKeeper
+	farmingKeeper   types.FarmingKeeper
+	liquidityKeeper types.LiquidityKeeper
 }
 
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	distrKeeper types.DistrKeeper,
+	farmingKeeper types.FarmingKeeper,
+	liquidityKeeper types.LiquidityKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
-		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
+		AppModuleBasic:  NewAppModuleBasic(cdc),
+		keeper:          keeper,
+		bankKeeper:      bankKeeper,
+		distrKeeper:     distrKeeper,
+		farmingKeeper:   farmingKeeper,
+		liquidityKeeper: liquidityKeeper,
 	}
 }
 
@@ -151,7 +157,6 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 // InitGenesis performs the module's genesis initialization It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
-	// Initialize global index to index in genesis state
 	var genState types.GenesisState
 	cdc.MustUnmarshalJSON(gs, &genState)
 	am.keeper.InitGenesis(ctx, genState)
@@ -172,6 +177,7 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock executes all ABCI EndBlock logic respective to the module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }

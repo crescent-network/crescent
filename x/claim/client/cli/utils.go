@@ -6,16 +6,16 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-// NormalizeActionType normalizes specified action type.
-func NormalizeActionType(actionType string) types.ActionType {
-	switch strings.ToLower(actionType) {
+// NormalizeConditionType normalizes specified condition type.
+func NormalizeConditionType(ConditionType string) types.ConditionType {
+	switch strings.ToLower(ConditionType) {
 	case "d", "deposit":
-		return types.ActionTypeDeposit
+		return types.ConditionTypeDeposit
 	case "s", "swap":
-		return types.ActionTypeSwap
+		return types.ConditionTypeSwap
 	case "f", "farming":
-		return types.ActionTypeFarming
+		return types.ConditionTypeFarming
 	default:
-		return types.ActionTypeUnspecified
+		return types.ConditionTypeUnspecified
 	}
 }

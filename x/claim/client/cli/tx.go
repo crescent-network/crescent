@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,7 +19,7 @@ import (
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("%s transactions subcommands", types.ModuleName),
+		Short:                      fmt.Sprintf("%s transaction subcommands", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -33,17 +34,17 @@ func GetTxCmd() *cobra.Command {
 
 func NewClaimCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim [action-type]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Claim the claimable amount with an action type",
+		Use:   "claim [airdrop-id] [condition-type]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Claim the claimable amount with a condition type",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Claim the claimable amount with an action type. 
-There are 3 different types of action type. Reference the examples below.
+			fmt.Sprintf(`Claim the claimable amount with a condition type. 
+There are 3 different condition types. Reference the examples below.
 
 Example:
-$ %s tx %s claim deposit --from mykey
-$ %s tx %s claim swap --from mykey
-$ %s tx %s claim farming --from mykey
+$ %s tx %s claim 1 deposit --from mykey
+$ %s tx %s claim 1 swap --from mykey
+$ %s tx %s claim 1 farming --from mykey
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -56,12 +57,21 @@ $ %s tx %s claim farming --from mykey
 				return err
 			}
 
-			actionTyp := NormalizeActionType(args[0])
-			if actionTyp == types.ActionTypeUnspecified {
-				return fmt.Errorf("unknown action type %s", args[0])
+			airdropId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
 			}
 
-			msg := types.NewMsgClaim(clientCtx.GetFromAddress(), actionTyp)
+			condType := NormalizeConditionType(args[1])
+			if condType == types.ConditionTypeUnspecified {
+				return fmt.Errorf("unknown condition type %s", args[0])
+			}
+
+			msg := types.NewMsgClaim(
+				airdropId,
+				clientCtx.GetFromAddress(),
+				condType,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

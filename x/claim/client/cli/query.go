@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -26,22 +26,24 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		QueryParams(),
-		QueryClaimRecord(),
+		NewQueryAirdropsCmd(),
+		NewQueryAirdropCmd(),
+		NewQueryClaimRecordCmd(),
 	)
 
 	return cmd
 }
 
-func QueryParams() *cobra.Command {
+func NewQueryAirdropsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "params",
+		Use:   "airdrops",
 		Args:  cobra.NoArgs,
-		Short: "Query the current claim parameters information",
+		Short: "Query for all airdrops",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query values set as claim parameters.
+			fmt.Sprintf(`Query for all airdrops.
+
 Example:
-$ %s query %s params
+$ %s query %s airdrops
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -53,13 +55,21 @@ $ %s query %s params
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(res)
+			req := &types.QueryAirdropsRequest{
+				Pagination: pageReq,
+			}
+
+			resp, err := queryClient.Airdrops(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
 		},
 	}
 
@@ -68,19 +78,64 @@ $ %s query %s params
 	return cmd
 }
 
-func QueryClaimRecord() *cobra.Command {
+func NewQueryAirdropCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "airdrop [airdrop-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query for the specific airdrop",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for the specific airdrop.
+
+Example:
+$ %s query %s airdrop 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			airdropId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryAirdropRequest{
+				AirdropId: airdropId,
+			}
+
+			resp, err := queryClient.Airdrop(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewQueryClaimRecordCmd() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
-		Use:   "claim-record [address]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "claim-record [airdrop-id] [address]",
+		Args:  cobra.ExactArgs(2),
 		Short: "Query the claim record for an account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the claim record for an account.
-This contains an address' initial claimable amounts and its completed actions.
+This contains an address' initial claimable amounts and its completed conditions.
 
 Example:
-$ %s query %s claim-record %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query %s claim-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
 				version.AppName, types.ModuleName, bech32PrefixAccAddr,
 			),
@@ -91,16 +146,22 @@ $ %s query %s claim-record %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			recipient, err := sdk.AccAddressFromBech32(args[0])
+			airdropId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			recipient, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
 			resp, err := queryClient.ClaimRecord(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryClaimRecordRequest{
-					Address: recipient.String(),
+					AirdropId: airdropId,
+					Recipient: recipient.String(),
 				},
 			)
 			if err != nil {
