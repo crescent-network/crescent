@@ -66,17 +66,13 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 
 	switch ct {
 	case types.ConditionTypeDeposit:
-		for _, d := range k.liquidityKeeper.GetAllDepositRequests(ctx) {
-			if d.Depositor == recipient.String() {
-				skip = true
-			}
+		if len(k.liquidityKeeper.GetDepositRequestsByDepositor(ctx, recipient)) != 0 {
+			skip = true
 		}
 
 	case types.ConditionTypeSwap:
-		for _, o := range k.liquidityKeeper.GetAllOrders(ctx) {
-			if o.Orderer == recipient.String() {
-				skip = true
-			}
+		if len(k.liquidityKeeper.GetOrdersByOrderer(ctx, recipient)) != 0 {
+			skip = true
 		}
 
 	case types.ConditionTypeFarming:

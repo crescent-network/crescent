@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
-	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -22,8 +21,8 @@ type FarmingKeeper interface {
 
 // LiquidityKeeper defines the expected interface needed to check the condition.
 type LiquidityKeeper interface {
-	GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequest)
-	GetAllOrders(ctx sdk.Context) (reqs []liqtypes.Order)
+	GetDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress) (reqs []types.DepositRequest)
+	GetOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress) (orders []types.Order)
 }
 
 // DistrKeeper is the keeper of the distribution store
