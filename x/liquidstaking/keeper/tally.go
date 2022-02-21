@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -117,7 +115,6 @@ func (k Keeper) CalcStakingVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk
 			if delShares.IsPositive() && val.IsBonded() && !valAddr.Equals(addr) {
 				votingPower := val.TokensFromSharesTruncated(delShares).TruncateInt()
 				if votingPower.IsPositive() {
-					fmt.Println("[-------CalcStakingVotingPower] ", valAddr.Equals(addr), votingPower, delShares, valAddr.String(), val.GetStatus(), val.GetTokens(), val.GetDelegatorShares(), val.GetBondedTokens())
 					totalVotingPower = totalVotingPower.Add(votingPower)
 				}
 			}

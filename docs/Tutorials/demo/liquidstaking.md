@@ -26,6 +26,8 @@ export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
 export USER_2="fuel obscure melt april direct second usual hair leave hobby beef bacon solid drum used law mercy worry fat super must ritual bring faculty"
+# cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
+export USER_3="smooth bike pool jealous cinnamon seat tiger team canoe almost core bag fluid garbage embrace gorilla wise door toe upon present canal myth corn"
 export VALIDATOR_1_GENESIS_COINS=100000000000000000stake,10000000000uatom,10000000000uusd
 export USER_1_GENESIS_COINS=10000000000stake,10000000000uatom,10000000000uusd
 export USER_2_GENESIS_COINS=10000000000stake,10000000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,10000000000pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5,10000000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C,10000000000poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07
@@ -35,6 +37,7 @@ $BINARY init $CHAIN_ID --chain-id $CHAIN_ID
 echo $VALIDATOR_1 | $BINARY keys add val1 --keyring-backend test --recover
 echo $USER_1 | $BINARY keys add user1 --keyring-backend test --recover
 echo $USER_2 | $BINARY keys add user2 --keyring-backend test --recover
+echo $USER_3 | $BINARY keys add user3 --keyring-backend test --recover
 $BINARY add-genesis-account $($BINARY keys show val1 --keyring-backend test -a) $VALIDATOR_1_GENESIS_COINS
 $BINARY add-genesis-account $($BINARY keys show user1 --keyring-backend test -a) $USER_1_GENESIS_COINS
 $BINARY add-genesis-account $($BINARY keys show user2 --keyring-backend test -a) $USER_2_GENESIS_COINS
