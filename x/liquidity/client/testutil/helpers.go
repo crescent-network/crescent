@@ -3,6 +3,7 @@ package testutil
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -11,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmosquad-labs/squad/x/liquidity/client/cli"
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 var commonArgs = []string{
@@ -37,4 +39,28 @@ func MsgCreatePool(clientCtx client.Context, from string, pairId uint64, deposit
 	}, commonArgs...), extraArgs...)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewCreatePoolCmd(), args)
+}
+
+func MsgLimitOrder(
+	clientCtx client.Context, from string, pairId uint64, dir types.OrderDirection, offerCoin sdk.Coin,
+	demandCoinDenom string, price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, extraArgs ...string) (testutil.BufferWriter, error) {
+	var dirStr string
+	switch dir {
+	case types.OrderDirectionBuy:
+		dirStr = "buy"
+	case types.OrderDirectionSell:
+		dirStr = "sell"
+	}
+	args := append(append([]string{
+		strconv.FormatUint(pairId, 10),
+		dirStr,
+		offerCoin.String(),
+		demandCoinDenom,
+		price.String(),
+		amt.String(),
+		orderLifespan.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
+	}, commonArgs...), extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewLimitOrderCmd(), args)
 }

@@ -224,3 +224,31 @@ func (s *KeeperTestSuite) TestDepositRefund() {
 
 	s.Require().True(coinsEq(depositCoins, s.getBalances(depositor)))
 }
+
+func (s *KeeperTestSuite) TestGetDepositRequestsByDepositor() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	req1 := s.deposit(s.addr(1), pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	req2 := s.deposit(s.addr(1), pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	reqs := s.keeper.GetDepositRequestsByDepositor(s.ctx, s.addr(1))
+	s.Require().Len(reqs, 2)
+	s.Require().Equal(req1.PoolId, reqs[0].PoolId)
+	s.Require().Equal(req1.Id, reqs[0].Id)
+	s.Require().Equal(req2.PoolId, reqs[1].PoolId)
+	s.Require().Equal(req2.Id, reqs[1].Id)
+}
+
+func (s *KeeperTestSuite) TestWithdrawRequestsByWithdrawer() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.deposit(s.addr(1), pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.nextBlock()
+	req1 := s.withdraw(s.addr(1), pool.Id, squad.ParseCoin("10000pool1"))
+	req2 := s.withdraw(s.addr(1), pool.Id, squad.ParseCoin("10000pool1"))
+	reqs := s.keeper.GetWithdrawRequestsByWithdrawer(s.ctx, s.addr(1))
+	s.Require().Len(reqs, 2)
+	s.Require().Equal(req1.PoolId, reqs[0].PoolId)
+	s.Require().Equal(req1.Id, reqs[0].Id)
+	s.Require().Equal(req2.PoolId, reqs[1].PoolId)
+	s.Require().Equal(req2.Id, reqs[1].Id)
+}
