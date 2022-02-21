@@ -72,7 +72,6 @@ func TotalLiquidTokensInvariant(k Keeper) sdk.Invariant {
 			return "", false
 		}
 
-		// TODO: Separate Active and InActive LiquidTokens and process them.
 		_, _, totalDelegationTokensOfProxyAcc := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
 		totalLiquidTokensOfLiquidValidators, _ := lvs.TotalLiquidTokens(ctx, k.stakingKeeper, false)
 

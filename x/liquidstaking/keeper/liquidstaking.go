@@ -64,7 +64,7 @@ func (k Keeper) LiquidStaking(
 	// NetAmount must be calculated before send
 	nas := k.NetAmountState(ctx)
 
-	// send staking coin to liquid staking proxy account to proxy delegation
+	// send staking coin to liquid staking proxy account to proxy delegation, need sufficient spendable balances
 	err = k.bankKeeper.SendCoins(ctx, liquidStaker, proxyAcc, sdk.NewCoins(stakingCoin))
 	if err != nil {
 		return sdk.ZeroDec(), bTokenMintAmount, err

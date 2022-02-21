@@ -23,8 +23,6 @@ const (
 )
 
 func genUnstakeFeeRate(r *rand.Rand) sdk.Dec {
-	//// TODO: tmp zero
-	//return sdk.ZeroDec()
 	return simtypes.RandomDecAmount(r, sdk.NewDecWithPrec(1, 2))
 }
 
@@ -37,8 +35,6 @@ func genMinLiquidStakingAmount(r *rand.Rand) sdk.Int {
 }
 
 func genTargetWeight(r *rand.Rand) sdk.Int {
-	// TODO: tmp 10
-	//return sdk.NewInt(10)
 	return sdk.NewInt(int64(simtypes.RandIntBetween(r, 1, 20)))
 }
 
