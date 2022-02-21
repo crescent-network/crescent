@@ -123,7 +123,7 @@ The parameters of the plan state are:
 
 - LastEpochTime: `[]byte("lastEpochTime") -> ProtocolBuffer(Timestamp)`
 
-- CurrentEpochDays: `[]byte("currentEpochDays") -> uint32` 
+- CurrentEpochDays: `[]byte("currentEpochDays") -> ProtocolBuffer(uint32)`
 
 ## Staking
 
@@ -168,8 +168,8 @@ type HistoricalRewards struct {
 ```
 
 - HistoricalRewards: `0x31 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | BigEndian(Epoch) -> ProtocolBuffer(HistoricalRewards)`
-- CurrentEpoch: `0x32 | StakingCoinDenom -> BigEndian(CurrentEpoch)`
-
+- CurrentEpoch: `0x32 | StakingCoinDenom -> ProtocolBuffer(uint64)`
+  - CurrentEpoch remains unchanged after all farmers has unstaked their coins.
 ## Outstanding Rewards
 
 The `OutstandingRewards` struct holds outstanding (un-withdrawn) rewards for a staking denom.
