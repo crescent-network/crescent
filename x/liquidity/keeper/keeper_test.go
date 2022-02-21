@@ -12,6 +12,7 @@ import (
 
 	squadapp "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/liquidity"
+	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
@@ -111,16 +112,17 @@ func (s *KeeperTestSuite) limitOrder(
 	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
 	pair, found := s.keeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
-	var offerCoin sdk.Coin
-	var demandCoinDenom string
+	var ammDir amm.OrderDirection
+	var offerCoinDenom, demandCoinDenom string
 	switch dir {
 	case types.OrderDirectionBuy:
-		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).Ceil().TruncateInt())
-		demandCoinDenom = pair.BaseCoinDenom
+		ammDir = amm.Buy
+		offerCoinDenom, demandCoinDenom = pair.QuoteCoinDenom, pair.BaseCoinDenom
 	case types.OrderDirectionSell:
-		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
-		demandCoinDenom = pair.QuoteCoinDenom
+		ammDir = amm.Sell
+		offerCoinDenom, demandCoinDenom = pair.BaseCoinDenom, pair.QuoteCoinDenom
 	}
+	offerCoin := sdk.NewCoin(offerCoinDenom, amm.OfferCoinAmount(ammDir, price, amt))
 	if fund {
 		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
@@ -146,13 +148,57 @@ func (s *KeeperTestSuite) sellLimitOrder(
 		orderer, pairId, types.OrderDirectionSell, price, amt, orderLifespan, fund)
 }
 
+func (s *KeeperTestSuite) marketOrder(
+	orderer sdk.AccAddress, pairId uint64, dir types.OrderDirection,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	pair, found := s.keeper.GetPair(s.ctx, pairId)
+	s.Require().True(found)
+	s.Require().NotNil(pair.LastPrice)
+	lastPrice := *pair.LastPrice
+	params := s.keeper.GetParams(s.ctx)
+	var offerCoin sdk.Coin
+	var demandCoinDenom string
+	switch dir {
+	case types.OrderDirectionBuy:
+		maxPrice := lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio))
+		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, amm.OfferCoinAmount(amm.Buy, maxPrice, amt))
+		demandCoinDenom = pair.BaseCoinDenom
+	case types.OrderDirectionSell:
+		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+		demandCoinDenom = pair.QuoteCoinDenom
+	}
+	if fund {
+		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
+	}
+	msg := types.NewMsgMarketOrder(
+		orderer, pairId, dir, offerCoin, demandCoinDenom,
+		amt, orderLifespan)
+	req, err := s.keeper.MarketOrder(s.ctx, msg)
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) buyMarketOrder(
+	orderer sdk.AccAddress, pairId uint64,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	return s.marketOrder(
+		orderer, pairId, types.OrderDirectionBuy, amt, orderLifespan, fund)
+}
+
+//nolint
+func (s *KeeperTestSuite) sellMarketOrder(
+	orderer sdk.AccAddress, pairId uint64,
+	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	return s.marketOrder(
+		orderer, pairId, types.OrderDirectionSell, amt, orderLifespan, fund)
+}
+
 //nolint
 func (s *KeeperTestSuite) cancelOrder(orderer sdk.AccAddress, pairId, orderId uint64) {
 	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(orderer, pairId, orderId))
 	s.Require().NoError(err)
 }
 
-//nolint
 func (s *KeeperTestSuite) cancelAllOrders(orderer sdk.AccAddress, pairIds []uint64) {
 	err := s.keeper.CancelAllOrders(s.ctx, types.NewMsgCancelAllOrders(orderer, pairIds))
 	s.Require().NoError(err)
@@ -164,6 +210,10 @@ func coinEq(exp, got sdk.Coin) (bool, string, string, string) {
 
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func intEq(exp, got sdk.Int) (bool, string, string, string) {
+	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
 func decEq(exp, got sdk.Dec) (bool, string, string, string) {

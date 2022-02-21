@@ -17,9 +17,7 @@ type OrderBook struct {
 // NewOrderBook returns a new OrderBook.
 func NewOrderBook(orders ...Order) *OrderBook {
 	ob := &OrderBook{}
-	for _, order := range orders {
-		ob.Add(order)
-	}
+	ob.Add(orders...)
 	return ob
 }
 
@@ -73,11 +71,11 @@ func (ob *OrderBook) SellOrdersUnder(price sdk.Dec) []Order {
 // This type is used for both buy/sell sides of OrderBook.
 type orderBookTicks []*orderBookTick
 
-func (ticks *orderBookTicks) findPrice(price sdk.Dec) (i int, exact bool) {
-	i = sort.Search(len(*ticks), func(i int) bool {
-		return (*ticks)[i].price.LTE(price)
+func (ticks orderBookTicks) findPrice(price sdk.Dec) (i int, exact bool) {
+	i = sort.Search(len(ticks), func(i int) bool {
+		return ticks[i].price.LTE(price)
 	})
-	if i < len(*ticks) && (*ticks)[i].price.Equal(price) {
+	if i < len(ticks) && ticks[i].price.Equal(price) {
 		exact = true
 	}
 	return
@@ -98,11 +96,11 @@ func (ticks *orderBookTicks) add(order Order) {
 	}
 }
 
-func (ticks *orderBookTicks) highestPrice() (sdk.Dec, bool) {
-	if len(*ticks) == 0 {
+func (ticks orderBookTicks) highestPrice() (sdk.Dec, bool) {
+	if len(ticks) == 0 {
 		return sdk.Dec{}, false
 	}
-	for _, tick := range *ticks {
+	for _, tick := range ticks {
 		if TotalOpenAmount(tick.orders).IsPositive() {
 			return tick.price, true
 		}
@@ -110,56 +108,56 @@ func (ticks *orderBookTicks) highestPrice() (sdk.Dec, bool) {
 	return sdk.Dec{}, false
 }
 
-func (ticks *orderBookTicks) lowestPrice() (sdk.Dec, bool) {
-	if len(*ticks) == 0 {
+func (ticks orderBookTicks) lowestPrice() (sdk.Dec, bool) {
+	if len(ticks) == 0 {
 		return sdk.Dec{}, false
 	}
-	for i := len(*ticks) - 1; i >= 0; i-- {
-		if TotalOpenAmount((*ticks)[i].orders).IsPositive() {
-			return (*ticks)[i].price, true
+	for i := len(ticks) - 1; i >= 0; i-- {
+		if TotalOpenAmount(ticks[i].orders).IsPositive() {
+			return ticks[i].price, true
 		}
 	}
 	return sdk.Dec{}, false
 }
 
-func (ticks *orderBookTicks) amountOver(price sdk.Dec) sdk.Int {
+func (ticks orderBookTicks) amountOver(price sdk.Dec) sdk.Int {
 	i, exact := ticks.findPrice(price)
 	if !exact {
 		i--
 	}
 	amt := sdk.ZeroInt()
 	for ; i >= 0; i-- {
-		amt = amt.Add(TotalOpenAmount((*ticks)[i].orders))
+		amt = amt.Add(TotalOpenAmount(ticks[i].orders))
 	}
 	return amt
 }
 
-func (ticks *orderBookTicks) amountUnder(price sdk.Dec) sdk.Int {
+func (ticks orderBookTicks) amountUnder(price sdk.Dec) sdk.Int {
 	i, _ := ticks.findPrice(price)
 	amt := sdk.ZeroInt()
-	for ; i < len(*ticks); i++ {
-		amt = amt.Add(TotalOpenAmount((*ticks)[i].orders))
+	for ; i < len(ticks); i++ {
+		amt = amt.Add(TotalOpenAmount(ticks[i].orders))
 	}
 	return amt
 }
 
-func (ticks *orderBookTicks) ordersOver(price sdk.Dec) []Order {
+func (ticks orderBookTicks) ordersOver(price sdk.Dec) []Order {
 	i, exact := ticks.findPrice(price)
 	if !exact {
 		i--
 	}
 	var orders []Order
 	for ; i >= 0; i-- {
-		orders = append(orders, (*ticks)[i].orders...)
+		orders = append(orders, ticks[i].orders...)
 	}
 	return orders
 }
 
-func (ticks *orderBookTicks) ordersUnder(price sdk.Dec) []Order {
+func (ticks orderBookTicks) ordersUnder(price sdk.Dec) []Order {
 	i, _ := ticks.findPrice(price)
 	var orders []Order
-	for ; i < len(*ticks); i++ {
-		orders = append(orders, (*ticks)[i].orders...)
+	for ; i < len(ticks); i++ {
+		orders = append(orders, ticks[i].orders...)
 	}
 	return orders
 }

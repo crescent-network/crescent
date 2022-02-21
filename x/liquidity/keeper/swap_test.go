@@ -161,6 +161,40 @@ func (s *KeeperTestSuite) TestLimitOrderRefund() {
 	}
 }
 
+func (s *KeeperTestSuite) TestMarketOrder() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	// When there is no last price in the pair, only limit orders can be made.
+	// These two orders will be matched.
+	s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	s.nextBlock()
+
+	// Now users can make market orders.
+	// In this case, addr(3) user's order takes higher priority than addr(4) user's,
+	// because market buy orders have 10% higher price than the last price(1.0).
+	s.buyMarketOrder(s.addr(3), pair.Id, sdk.NewInt(10000), 0, true)
+	s.buyLimitOrder(s.addr(4), pair.Id, squad.ParseDec("1.08"), sdk.NewInt(10000), 0, true)
+	s.sellLimitOrder(s.addr(5), pair.Id, squad.ParseDec("1.07"), sdk.NewInt(10000), 0, true)
+	s.nextBlock()
+
+	// Check the result.
+	s.Require().True(coinEq(squad.ParseCoin("10000denom1"), s.getBalance(s.addr(3), "denom1")))
+	s.Require().True(coinsEq(squad.ParseCoins("10800denom2"), s.getBalances(s.addr(4))))
+}
+
+func (s *KeeperTestSuite) TestMarketOrderWithNoLastPrice() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	s.Require().Nil(pair.LastPrice)
+	offerCoin := squad.ParseCoin("10000denom2")
+	s.fundAddr(s.addr(1), sdk.NewCoins(offerCoin))
+	msg := types.NewMsgMarketOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy, offerCoin, "denom1", sdk.NewInt(10000), 0)
+	_, err := s.keeper.MarketOrder(s.ctx, msg)
+	s.Require().ErrorIs(err, types.ErrNoLastPrice)
+}
+
 func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
 	k, ctx := s.keeper, s.ctx
 
@@ -207,6 +241,28 @@ func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
 	s.Require().True(decEq(squad.ParseDec("1.0"), *pair.LastPrice))
 }
 
+func (s *KeeperTestSuite) TestPartialMatch() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(5000), 0, true)
+	s.nextBlock()
+
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().True(found)
+	s.Require().Equal(types.OrderStatusPartiallyMatched, order.Status)
+	s.Require().True(coinEq(squad.ParseCoin("5000denom2"), order.RemainingOfferCoin))
+	s.Require().True(coinEq(squad.ParseCoin("5000denom1"), order.ReceivedCoin))
+	s.Require().True(intEq(sdk.NewInt(5000), order.OpenAmount))
+
+	s.sellMarketOrder(s.addr(3), pair.Id, sdk.NewInt(5000), 0, true)
+	s.nextBlock()
+
+	// Now completely matched.
+	_, found = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().False(found)
+}
+
 func (s *KeeperTestSuite) TestCancelOrder() {
 	k, ctx := s.keeper, s.ctx
 
@@ -236,6 +292,41 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 	// Order is deleted
 	_, found = k.GetOrder(ctx, order.PairId, order.Id)
 	s.Require().False(found)
+}
+
+func (s *KeeperTestSuite) TestCancelAllOrders() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	s.cancelAllOrders(s.addr(1), nil) // CancelAllOrders doesn't cancel orders within in same batch
+	s.nextBlock()
+
+	// The order is still alive.
+	_, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().True(found)
+
+	s.cancelAllOrders(s.addr(1), nil) // This time, it cancels the order.
+	order, found = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	// Canceling an order doesn't delete the order immediately.
+	s.Require().True(found)
+	// Instead, the order becomes canceled.
+	s.Require().Equal(types.OrderStatusCanceled, order.Status)
+
+	// The order won't be matched with this market order, since the order is
+	// already canceled.
+	s.sellLimitOrder(s.addr(3), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	s.nextBlock()
+	s.Require().True(coinsEq(squad.ParseCoins("10000denom2"), s.getBalances(s.addr(1))))
+
+	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
+	s.buyLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.5"), sdk.NewInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair2.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	s.nextBlock()
+	// CancelAllOrders can cancel orders in specific pairs.
+	s.cancelAllOrders(s.addr(2), []uint64{pair.Id})
+	// Coins from first two orders are refunded, but not from the last order.
+	s.Require().True(coinsEq(squad.ParseCoins("10000denom2,10000denom1"), s.getBalances(s.addr(2))))
 }
 
 func (s *KeeperTestSuite) TestDustCollector() {

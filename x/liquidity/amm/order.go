@@ -20,9 +20,9 @@ const (
 func (dir OrderDirection) String() string {
 	switch dir {
 	case Buy:
-		return "buy"
+		return "Buy"
 	case Sell:
-		return "sell"
+		return "Sell"
 	default:
 		return fmt.Sprintf("OrderDirection(%d)", dir)
 	}
@@ -35,6 +35,7 @@ type Order interface {
 	GetAmount() sdk.Int // The original order amount
 	GetOpenAmount() sdk.Int
 	SetOpenAmount(amt sdk.Int)
+	GetOfferCoin() sdk.Coin
 	GetRemainingOfferCoin() sdk.Coin
 	DecrRemainingOfferCoin(amt sdk.Int) // Decrement remaining offer coin amount
 	GetReceivedDemandCoin() sdk.Coin
@@ -58,6 +59,7 @@ type BaseOrder struct {
 	Price              sdk.Dec
 	Amount             sdk.Int
 	OpenAmount         sdk.Int
+	OfferCoin          sdk.Coin
 	RemainingOfferCoin sdk.Coin
 	ReceivedDemandCoin sdk.Coin
 	Matched            bool
@@ -70,6 +72,7 @@ func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int, offerCoin sdk.
 		Price:              price,
 		Amount:             amt,
 		OpenAmount:         amt,
+		OfferCoin:          offerCoin,
 		RemainingOfferCoin: offerCoin,
 		ReceivedDemandCoin: sdk.NewCoin(demandCoinDenom, sdk.ZeroInt()),
 	}
@@ -98,6 +101,10 @@ func (order *BaseOrder) GetOpenAmount() sdk.Int {
 // SetOpenAmount sets open amount of the order.
 func (order *BaseOrder) SetOpenAmount(amt sdk.Int) {
 	order.OpenAmount = amt
+}
+
+func (order *BaseOrder) GetOfferCoin() sdk.Coin {
+	return order.OfferCoin
 }
 
 // GetRemainingOfferCoin returns remaining offer coin of the order.
