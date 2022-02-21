@@ -64,5 +64,4 @@ Stores are KVStores in the multi-store. The key to find the store is the first p
 - `StartTimeKey: 0xd5 | AirdropId -> sdk.FormatTimeBytes(Timestamp)`
 - `EndTimeKey: 0xd6 | AirdropId -> sdk.FormatTimeBytes(Timestamp)`
 - `AirdropKey: 0xd7 | AirdropId -> ProtocolBuffer(Airdrop)`
-- `ClaimRecordsByAirdropKeyPrefix: 0xd8 | AirdropId -> ProtocolBuffer(ClaimRecord)`
 - `ClaimRecordKey: 0xd8 | AirdropId | RecipientAddrLen (1 byte) | RecipientAddr -> ProtocolBuffer(ClaimRecord)`

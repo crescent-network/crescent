@@ -19,7 +19,7 @@ import (
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("%s transConditions subcommands", types.ModuleName),
+		Short:                      fmt.Sprintf("%s transaction subcommands", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -34,12 +34,12 @@ func GetTxCmd() *cobra.Command {
 
 func NewClaimCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim [airdrop-id] [action-type]",
+		Use:   "claim [airdrop-id] [condition-type]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Claim the claimable amount with an action type",
+		Short: "Claim the claimable amount with a condition type",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Claim the claimable amount with an action type. 
-There are 3 different types of action type. Reference the examples below.
+			fmt.Sprintf(`Claim the claimable amount with a condition type. 
+There are 3 different condition types. Reference the examples below.
 
 Example:
 $ %s tx %s claim 1 deposit --from mykey
@@ -62,15 +62,15 @@ $ %s tx %s claim 1 farming --from mykey
 				return err
 			}
 
-			actionTyp := NormalizeConditionType(args[1])
-			if actionTyp == types.ConditionTypeUnspecified {
-				return fmt.Errorf("unknown action type %s", args[0])
+			condType := NormalizeConditionType(args[1])
+			if condType == types.ConditionTypeUnspecified {
+				return fmt.Errorf("unknown condition type %s", args[0])
 			}
 
 			msg := types.NewMsgClaim(
 				airdropId,
 				clientCtx.GetFromAddress(),
-				actionTyp,
+				condType,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

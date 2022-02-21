@@ -6,7 +6,7 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-// NormalizeConditionType normalizes specified action type.
+// NormalizeConditionType normalizes specified condition type.
 func NormalizeConditionType(ConditionType string) types.ConditionType {
 	switch strings.ToLower(ConditionType) {
 	case "d", "deposit":

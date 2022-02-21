@@ -14,7 +14,7 @@ The `claim` module emits the following events:
 | claim   | recipient               | {recipientAddress}      |
 | claim   | initial_claimable_coins | {initialClaimableCoins} |
 | claim   | claimable_coins         | {claimableCoins}        |
-| claim   | action_type             | {ConditionType}            |
+| claim   | condition_type          | {conditionType}         |
 | claim   | claimed                 | {claimed}               |
 | message | module                  | claim                   |
 |         |                         |                         |

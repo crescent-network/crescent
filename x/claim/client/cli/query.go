@@ -28,7 +28,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(
 		NewQueryAirdropsCmd(),
 		NewQueryAirdropCmd(),
-		NewQueryClaimRecord(),
+		NewQueryClaimRecordCmd(),
 	)
 
 	return cmd
@@ -123,7 +123,7 @@ $ %s query %s airdrop 1
 	return cmd
 }
 
-func NewQueryClaimRecord() *cobra.Command {
+func NewQueryClaimRecordCmd() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
@@ -132,7 +132,7 @@ func NewQueryClaimRecord() *cobra.Command {
 		Short: "Query the claim record for an account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the claim record for an account.
-This contains an address' initial claimable amounts and its completed Conditions.
+This contains an address' initial claimable amounts and its completed conditions.
 
 Example:
 $ %s query %s claim-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj

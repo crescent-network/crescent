@@ -10,7 +10,7 @@ import (
 	_ "github.com/stretchr/testify/suite"
 )
 
-func (s *KeeperTestSuite) TestClaimDepositCondition() {
+func (s *KeeperTestSuite) TestClaim_DepositCondition() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestClaimDepositCondition() {
 	s.deposit(recipient, 1, squad.ParseCoins("500000denom3,500000denom4"), true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Claim deposit action
+	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().NoError(err)
 
@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestClaimDepositCondition() {
 	s.Require().Equal(types.ConditionTypeDeposit, r.ClaimedConditions[0])
 }
 
-func (s *KeeperTestSuite) TestClaimSwapCondition() {
+func (s *KeeperTestSuite) TestClaim_SwapCondition() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestClaimSwapCondition() {
 	s.sellLimitOrder(recipient, 1, squad.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Claim swap action
+	// Claim swap condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().NoError(err)
 
@@ -110,7 +110,7 @@ func (s *KeeperTestSuite) TestClaimSwapCondition() {
 	s.Require().Equal(types.ConditionTypeSwap, r.ClaimedConditions[0])
 }
 
-func (s *KeeperTestSuite) TestClaimFarmingCondition() {
+func (s *KeeperTestSuite) TestClaim_FarmingCondition() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestClaimFarmingCondition() {
 	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
 	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
 
-	// Claim farming stake action
+	// Claim farming stake condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeFarming))
 	s.Require().NoError(err)
 
@@ -155,7 +155,7 @@ func (s *KeeperTestSuite) TestClaimFarmingCondition() {
 	s.Require().Equal(types.ConditionTypeFarming, r.ClaimedConditions[0])
 }
 
-func (s *KeeperTestSuite) TestClaimAll() {
+func (s *KeeperTestSuite) TestClaim_All() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -204,15 +204,15 @@ func (s *KeeperTestSuite) TestClaimAll() {
 	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
 	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
 
-	// Claim deposit action
+	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().NoError(err)
 
-	// Claim swap action
+	// Claim swap condition
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().NoError(err)
 
-	// Claim farming stake action
+	// Claim farming stake condition
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeFarming))
 	s.Require().NoError(err)
 
@@ -225,7 +225,7 @@ func (s *KeeperTestSuite) TestClaimAll() {
 	s.Require().Len(r.ClaimedConditions, 3)
 }
 
-func (s *KeeperTestSuite) TestClaimAlreadyClaimedCondition() {
+func (s *KeeperTestSuite) TestClaim_AlreadyClaimedCondition() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -261,16 +261,16 @@ func (s *KeeperTestSuite) TestClaimAlreadyClaimedCondition() {
 	s.deposit(recipient, 1, squad.ParseCoins("500000denom3,500000denom4"), true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Claim deposit action
+	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().NoError(err)
 
-	// Claim the already completed deposit action
+	// Claim the already completed deposit condition
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().ErrorIs(err, types.ErrAlreadyClaimed)
 }
 
-func (s *KeeperTestSuite) TestClaimAllTerminateAidrop() {
+func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -314,15 +314,15 @@ func (s *KeeperTestSuite) TestClaimAllTerminateAidrop() {
 	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
 	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
 
-	// Claim deposit action
+	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().NoError(err)
 
-	// Claim swap action
+	// Claim swap condition
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().NoError(err)
 
-	// Claim farming stake action
+	// Claim farming stake condition
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeFarming))
 	s.Require().NoError(err)
 
@@ -336,7 +336,7 @@ func (s *KeeperTestSuite) TestClaimAllTerminateAidrop() {
 	s.Require().True(s.getAllBalances(airdrop.GetTerminationAddress()).IsZero())
 }
 
-func (s *KeeperTestSuite) TestClaimPartialTerminatAirdrop() {
+func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -380,7 +380,7 @@ func (s *KeeperTestSuite) TestClaimPartialTerminatAirdrop() {
 	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
 	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
 
-	// Claim deposit action
+	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().NoError(err)
 
@@ -388,7 +388,7 @@ func (s *KeeperTestSuite) TestClaimPartialTerminatAirdrop() {
 	s.ctx = s.ctx.WithBlockTime(airdrop.EndTime.AddDate(0, 0, 1))
 	claim.EndBlocker(s.ctx, s.keeper)
 
-	// Claim swap action
+	// Claim swap condition
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().ErrorIs(err, types.ErrTerminatedAirdrop)
 

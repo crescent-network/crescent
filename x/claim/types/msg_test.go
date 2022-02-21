@@ -32,11 +32,11 @@ func TestMsgClaim(t *testing.T) {
 			"invalid recipient address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
-			"invalid action type",
+			"invalid condition type",
 			func(msg *types.MsgClaim) {
 				msg.ConditionType = types.ConditionTypeUnspecified
 			},
-			"invalid action type: CONDITION_TYPE_UNSPECIFIED: invalid request",
+			"invalid condition type: CONDITION_TYPE_UNSPECIFIED: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

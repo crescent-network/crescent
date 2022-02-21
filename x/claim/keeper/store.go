@@ -19,10 +19,7 @@ func (k Keeper) GetLastAirdropId(ctx sdk.Context) uint64 {
 		id = 0 // initialize the airdrop id
 	} else {
 		val := gogotypes.UInt64Value{}
-		err := k.cdc.Unmarshal(bz, &val)
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshal(bz, &val)
 		id = val.GetValue()
 	}
 	return id

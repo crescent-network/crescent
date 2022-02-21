@@ -51,7 +51,7 @@ func (a Airdrop) Validate() error {
 		switch c {
 		case ConditionTypeDeposit, ConditionTypeSwap, ConditionTypeFarming:
 		default:
-			return fmt.Errorf("unknown action type %T", c)
+			return fmt.Errorf("unknown condition type %T", c)
 		}
 	}
 	return nil
