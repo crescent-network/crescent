@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -67,8 +66,8 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 
 	switch ct {
 	case types.ConditionTypeDeposit:
-		for _, b := range k.bankKeeper.GetAllBalances(ctx, recipient) {
-			if strings.HasPrefix(b.Denom, "pool") {
+		for _, d := range k.liquidityKeeper.GetAllDepositRequests(ctx) {
+			if d.Depositor == recipient.String() {
 				skip = true
 			}
 		}

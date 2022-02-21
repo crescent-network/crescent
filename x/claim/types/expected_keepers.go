@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -21,5 +22,6 @@ type FarmingKeeper interface {
 
 // LiquidityKeeper defines the expected interface needed to check the condition.
 type LiquidityKeeper interface {
+	GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequest)
 	GetAllOrders(ctx sdk.Context) (reqs []liqtypes.Order)
 }
