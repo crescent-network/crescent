@@ -11,18 +11,16 @@ import (
 
 // Keeper of the mint store
 type Keeper struct {
-	cdc                codec.BinaryCodec
-	storeKey           sdk.StoreKey
-	paramSpace         paramtypes.Subspace
-	bankKeeper         types.BankKeeper
-	inflationSchedules types.InflationSchedules
-	feeCollectorName   string
+	cdc              codec.BinaryCodec
+	storeKey         sdk.StoreKey
+	paramSpace       paramtypes.Subspace
+	bankKeeper       types.BankKeeper
+	feeCollectorName string
 }
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper,
-	inflationSchedules types.InflationSchedules, feeCollectorName string,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -35,12 +33,11 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:                cdc,
-		storeKey:           key,
-		paramSpace:         paramSpace,
-		bankKeeper:         bk,
-		inflationSchedules: inflationSchedules,
-		feeCollectorName:   feeCollectorName,
+		cdc:              cdc,
+		storeKey:         key,
+		paramSpace:       paramSpace,
+		bankKeeper:       bk,
+		feeCollectorName: feeCollectorName,
 	}
 }
 
@@ -78,6 +75,7 @@ func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
 }
 
 // GetInflationSchedules return inflation schedules set on app
-func (k Keeper) GetInflationSchedules() types.InflationSchedules {
-	return k.inflationSchedules
+func (k Keeper) GetInflationSchedules(ctx sdk.Context) (res []types.InflationSchedule) {
+	k.paramSpace.Get(ctx, types.KeyInflationSchedules, &res)
+	return
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -15,41 +16,63 @@ import (
 
 // Simulation parameter constants
 const (
-	EpochBlocks      = "epoch_blocks"
-	LiquidValidators = "liquidValidators"
+	unstakeFeeRate         = "unstake_fee_rate"
+	liquidBondDenom        = "liquid_bond_denom"
+	minLiquidStakingAmount = "min_liquid_staking_amount"
+	whitelistedValidator   = "whiteliqted_validator"
 )
 
-//// GenEpochBlocks returns randomized epoch blocks.
-//func GenEpochBlocks(r *rand.Rand) uint32 {
-//	return uint32(simtypes.RandIntBetween(r, int(types.DefaultEpochBlocks), 10))
-//}
+func genUnstakeFeeRate(r *rand.Rand) sdk.Dec {
+	//// TODO: tmp zero
+	//return sdk.ZeroDec()
+	return simtypes.RandomDecAmount(r, sdk.NewDecWithPrec(1, 2))
+}
 
-// GenLiquidValidators returns randomized liquidValidators.
-func GenLiquidValidators(r *rand.Rand) []types.LiquidValidator {
-	ranLiquidValidators := make([]types.LiquidValidator, 0)
+func genLiquidBondDenom(r *rand.Rand) string {
+	return types.DefaultLiquidBondDenom
+}
 
-	for i := 0; i < simtypes.RandIntBetween(r, 1, 3); i++ {
-		liquidValidator := types.LiquidValidator{}
-		ranLiquidValidators = append(ranLiquidValidators, liquidValidator)
-	}
+func genMinLiquidStakingAmount(r *rand.Rand) sdk.Int {
+	return sdk.NewInt(int64(simtypes.RandIntBetween(r, 0, 10000000)))
+}
 
-	return ranLiquidValidators
+func genTargetWeight(r *rand.Rand) sdk.Int {
+	// TODO: tmp 10
+	//return sdk.NewInt(10)
+	return sdk.NewInt(int64(simtypes.RandIntBetween(r, 1, 20)))
+}
+
+// genWhitelistedValidator returns randomized whitelisted validators.
+func genWhitelistedValidator(r *rand.Rand) []types.WhitelistedValidator {
+	//ranLiquidValidators := make([]types.WhitelistedValidator, 0)
+	return []types.WhitelistedValidator{}
 }
 
 // RandomizedGenState generates a random GenesisState for liquidstaking.
 func RandomizedGenState(simState *module.SimulationState) {
-	var liquidValidators []types.LiquidValidator
-	//simState.AppParams.GetOrGenerate(
-	//	simState.Cdc, LiquidValidators, &liquidValidators, simState.Rand,
-	//	func(r *rand.Rand) { liquidValidators = GenLiquidValidators(r) },
-	//)
+	genesis := types.DefaultGenesisState()
 
-	liquidValidatorGenesis := types.GenesisState{
-		Params:           types.DefaultParams(),
-		LiquidValidators: liquidValidators,
-	}
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, unstakeFeeRate, &genesis.Params.UnstakeFeeRate, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.UnstakeFeeRate = genUnstakeFeeRate(r) },
+	)
 
-	bz, _ := json.MarshalIndent(&liquidValidatorGenesis, "", " ")
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, liquidBondDenom, &genesis.Params.LiquidBondDenom, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.LiquidBondDenom = genLiquidBondDenom(r) },
+	)
+
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, minLiquidStakingAmount, &genesis.Params.MinLiquidStakingAmount, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.MinLiquidStakingAmount = genMinLiquidStakingAmount(r) },
+	)
+
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, whitelistedValidator, &genesis.Params.WhitelistedValidators, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.WhitelistedValidators = genWhitelistedValidator(r) },
+	)
+
+	bz, _ := json.MarshalIndent(&genesis, "", " ")
 	fmt.Printf("Selected randomly generated liquidstaking parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&liquidValidatorGenesis)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 }

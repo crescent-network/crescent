@@ -22,6 +22,8 @@ message Params {
     (gogoproto.jsontag)     = "block_time_threshold,omitempty",
     (gogoproto.moretags)    = "yaml:\"block_time_threshold\""
   ];
+
+  repeated InflationSchedule inflation_schedules = 3 [(gogoproto.nullable) = false];
 }
 
 // InflationSchedule defines the start and end time of the inflation period, and the amount of inflation during that

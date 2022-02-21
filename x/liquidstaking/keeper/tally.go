@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -88,8 +90,22 @@ func (k Keeper) TokenSharePerPoolCoin(ctx sdk.Context, targetDenom, poolCoinDeno
 	return bTokenSharePerPoolCoin
 }
 
-// CalcVotingPower returns voting power of the addr by normal delegations
-func (k Keeper) CalcVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk.Int {
+func (k Keeper) GetVotingPower(ctx sdk.Context, addr sdk.AccAddress) types.VotingPower {
+	val, found := k.stakingKeeper.GetValidator(ctx, addr.Bytes())
+	validatorVotingPower := sdk.ZeroInt()
+	if found {
+		validatorVotingPower = val.BondedTokens()
+	}
+	return types.VotingPower{
+		Voter:                    addr.String(),
+		StakingVotingPower:       k.CalcStakingVotingPower(ctx, addr),
+		LiquidStakingVotingPower: k.CalcLiquidStakingVotingPower(ctx, addr),
+		ValidatorVotingPower:     validatorVotingPower,
+	}
+}
+
+// CalcStakingVotingPower returns voting power of the addr by normal delegations except self-delegation
+func (k Keeper) CalcStakingVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk.Int {
 	totalVotingPower := sdk.ZeroInt()
 	k.stakingKeeper.IterateDelegations(
 		ctx, addr,
@@ -97,10 +113,11 @@ func (k Keeper) CalcVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk.Int {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			delShares := del.GetShares()
-			// if the validator not bonded, bonded token and voting power is zero
-			if delShares.IsPositive() && val.IsBonded() {
+			// if the validator not bonded, bonded token and voting power is zero, and except self-delegation power
+			if delShares.IsPositive() && val.IsBonded() && !valAddr.Equals(addr) {
 				votingPower := val.TokensFromSharesTruncated(delShares).TruncateInt()
 				if votingPower.IsPositive() {
+					fmt.Println("[-------CalcStakingVotingPower] ", valAddr.Equals(addr), votingPower, delShares, valAddr.String(), val.GetStatus(), val.GetTokens(), val.GetDelegatorShares(), val.GetBondedTokens())
 					totalVotingPower = totalVotingPower.Add(votingPower)
 				}
 			}
@@ -110,9 +127,8 @@ func (k Keeper) CalcVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk.Int {
 	return totalVotingPower
 }
 
-// CalcLiquidVotingPower returns voting power of the addr by liquid bond denom
-// TODO: refactor votingPowerStruct (delShares, btoken, poolCoin, farming)
-func (k Keeper) CalcLiquidVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk.Int {
+// CalcLiquidStakingVotingPower returns voting power of the addr by liquid bond denom
+func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk.Int {
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 
 	// skip when no liquid bond token supply
@@ -162,7 +178,7 @@ func (k Keeper) CalcLiquidVotingPower(ctx sdk.Context, addr sdk.AccAddress) sdk.
 	}
 }
 
-func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
+func (k Keeper) TallyLiquidStakingGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 
 	// skip when no liquid bond token supply
@@ -228,7 +244,7 @@ func (k Keeper) TallyLiquidGov(ctx sdk.Context, votes *govtypes.Votes, otherVote
 		if votingPower.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
 			// drop crumb for defensive policy about delShares decimal errors
-			dividedPowers, _ := types.DivideByCurrentWeight((types.ActiveLiquidValidators)(liquidVals), votingPower, totalBondedLiquidTokens, bondedLiquidTokenMap)
+			dividedPowers, _ := types.DivideByCurrentWeight(liquidVals, votingPower, totalBondedLiquidTokens, bondedLiquidTokenMap)
 			if len(dividedPowers) == 0 {
 				continue
 			}

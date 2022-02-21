@@ -25,24 +25,24 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		QueryParams(),
-		QueryPools(),
-		QueryPool(),
-		QueryPairs(),
-		QueryPair(),
-		QueryDepositRequests(),
-		QueryDepositRequest(),
-		QueryWithdrawRequests(),
-		QueryWithdrawRequest(),
-		QueryOrders(),
-		QueryOrder(),
+		NewQueryParamsCmd(),
+		NewQueryPoolsCmd(),
+		NewQueryPoolCmd(),
+		NewQueryPairsCmd(),
+		NewQueryPairCmd(),
+		NewQueryDepositRequestsCmd(),
+		NewQueryDepositRequestCmd(),
+		NewQueryWithdrawRequestsCmd(),
+		NewQueryWithdrawRequestCmd(),
+		NewQueryOrdersCmd(),
+		NewQueryOrderCmd(),
 	)
 
 	return cmd
 }
 
-// QueryParams implements the params query command.
-func QueryParams() *cobra.Command {
+// NewQueryParamsCmd implements the params query command.
+func NewQueryParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
 		Args:  cobra.NoArgs,
@@ -77,8 +77,8 @@ $ %s query %s params
 	return cmd
 }
 
-// QueryPairs implements the pairs query command.
-func QueryPairs() *cobra.Command {
+// NewQueryPairsCmd implements the pairs query command.
+func NewQueryPairsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pairs",
 		Args:  cobra.NoArgs,
@@ -127,8 +127,8 @@ $ %s query %s pairs --denoms=uatom,usquad
 	return cmd
 }
 
-// QueryPair implements the pair query command.
-func QueryPair() *cobra.Command {
+// NewQueryPairCmd implements the pair query command.
+func NewQueryPairCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pair [pair-id]",
 		Args:  cobra.ExactArgs(1),
@@ -170,8 +170,8 @@ $ %s query %s pair 1
 	return cmd
 }
 
-// QueryPools implements the pools query command.
-func QueryPools() *cobra.Command {
+// NewQueryPoolsCmd implements the pools query command.
+func NewQueryPoolsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pools",
 		Args:  cobra.NoArgs,
@@ -236,8 +236,8 @@ $ %s query %s pools --disabled=true
 	return cmd
 }
 
-// QueryPool implements the pool query command.
-func QueryPool() *cobra.Command {
+// NewQueryPoolCmd implements the pool query command.
+func NewQueryPoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool [pool-id]",
 		Args:  cobra.MaximumNArgs(1),
@@ -282,27 +282,21 @@ $ %s query %s pool --reserve-address=cosmos1...
 				res, err = queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{
 					PoolId: *poolId,
 				})
-				if err != nil {
-					return err
-				}
 			case poolCoinDenom != "":
 				res, err = queryClient.PoolByPoolCoinDenom(
 					cmd.Context(),
 					&types.QueryPoolByPoolCoinDenomRequest{
 						PoolCoinDenom: poolCoinDenom,
 					})
-				if err != nil {
-					return err
-				}
 			case reserveAddr != "":
 				res, err = queryClient.PoolByReserveAddress(
 					cmd.Context(),
 					&types.QueryPoolByReserveAddressRequest{
 						ReserveAddress: reserveAddr,
 					})
-				if err != nil {
-					return err
-				}
+			}
+			if err != nil {
+				return err
 			}
 
 			return clientCtx.PrintProto(res)
@@ -315,8 +309,8 @@ $ %s query %s pool --reserve-address=cosmos1...
 	return cmd
 }
 
-// QueryDepositRequests implements the deposit requests query command.
-func QueryDepositRequests() *cobra.Command {
+// NewQueryDepositRequestsCmd implements the deposit requests query command.
+func NewQueryDepositRequestsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit-requests [pool-id]",
 		Args:  cobra.ExactArgs(1),
@@ -366,8 +360,8 @@ $ %s query %s deposit-requests 1
 	return cmd
 }
 
-// QueryDepositRequest implements the deposit request query command.
-func QueryDepositRequest() *cobra.Command {
+// NewQueryDepositRequestCmd implements the deposit request query command.
+func NewQueryDepositRequestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit-request [pool-id] [id]",
 		Args:  cobra.ExactArgs(2),
@@ -417,8 +411,8 @@ $ %s query %s deposit-requests 1 1
 	return cmd
 }
 
-// QueryWithdrawRequests implements the withdraw requests query command.
-func QueryWithdrawRequests() *cobra.Command {
+// NewQueryWithdrawRequestsCmd implements the withdraw requests query command.
+func NewQueryWithdrawRequestsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-requests [pool-id]",
 		Args:  cobra.ExactArgs(1),
@@ -468,8 +462,8 @@ $ %s query %s withdraw-requests 1
 	return cmd
 }
 
-// QueryWithdrawRequest implements the withdraw request query command.
-func QueryWithdrawRequest() *cobra.Command {
+// NewQueryWithdrawRequestCmd implements the withdraw request query command.
+func NewQueryWithdrawRequestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-request [pool-id] [id]",
 		Args:  cobra.ExactArgs(2),
@@ -519,17 +513,21 @@ $ %s query %s withdraw-requests 1 1
 	return cmd
 }
 
-// QueryOrders implements the orders query command.
-func QueryOrders() *cobra.Command {
+// NewQueryOrdersCmd implements the orders query command.
+func NewQueryOrdersCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "orders [pair-id]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "orders [orderer]",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "Query for all orders in the pair",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all orders in the pair.
 Example:
-$ %s query %s orders 1
+$ %s query %s orders cosmos1...
+$ %s query %s orders --pair-id=1 cosmos1...
+$ %s query %s orders --pair-id=1
 `,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -544,19 +542,40 @@ $ %s query %s orders 1
 				return err
 			}
 
-			pairId, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
+			var orderer *string
+			if len(args) > 0 {
+				orderer = &args[0]
+			}
+
+			var pairId uint64
+			pairIdStr, _ := cmd.Flags().GetString(FlagPairId)
+			if pairIdStr != "" {
+				pairId, err = strconv.ParseUint(pairIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("parse pair id: %w", err)
+				}
+			}
+			if orderer == nil && pairId == 0 {
+				return fmt.Errorf("either orderer or pair-id must be specified")
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Orders(
-				cmd.Context(),
-				&types.QueryOrdersRequest{
+			var res *types.QueryOrdersResponse
+			if orderer == nil {
+				res, err = queryClient.Orders(cmd.Context(), &types.QueryOrdersRequest{
 					PairId:     pairId,
 					Pagination: pageReq,
 				})
+			} else {
+				res, err = queryClient.OrdersByOrderer(
+					cmd.Context(),
+					&types.QueryOrdersByOrdererRequest{
+						Orderer:    *orderer,
+						PairId:     pairId,
+						Pagination: pageReq,
+					})
+			}
 			if err != nil {
 				return err
 			}
@@ -570,8 +589,8 @@ $ %s query %s orders 1
 	return cmd
 }
 
-// QueryOrder implements the order query command.
-func QueryOrder() *cobra.Command {
+// NewQueryOrderCmd implements the order query command.
+func NewQueryOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "order [pair-id] [id]",
 		Args:  cobra.ExactArgs(2),

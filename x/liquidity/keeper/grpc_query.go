@@ -484,3 +484,41 @@ func (k Querier) Order(c context.Context, req *types.QueryOrderRequest) (*types.
 
 	return &types.QueryOrderResponse{Order: order}, nil
 }
+
+// OrdersByOrderer returns orders made by an orderer.
+func (k Querier) OrdersByOrderer(c context.Context, req *types.QueryOrdersByOrdererRequest) (*types.QueryOrdersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	orderer, err := sdk.AccAddressFromBech32(req.Orderer)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "orderer address %s is invalid", req.Orderer)
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+
+	keyPrefix := types.GetOrderIndexKeyPrefix(orderer)
+	orderStore := prefix.NewStore(store, keyPrefix)
+	var orders []types.Order
+	pageRes, err := query.FilteredPaginate(orderStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		_, pairId, orderId := types.ParseOrderIndexKey(append(keyPrefix, key...))
+		if req.PairId != 0 && pairId != req.PairId {
+			return false, nil
+		}
+
+		order, _ := k.GetOrder(ctx, pairId, orderId)
+
+		if accumulate {
+			orders = append(orders, order)
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
+}

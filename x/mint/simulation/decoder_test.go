@@ -5,24 +5,24 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/simulation"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
+	"github.com/cosmosquad-labs/squad/x/mint/simulation"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/stretchr/testify/require"
 )
 
-func TestDecodeLiquidStakingStore(t *testing.T) {
+func TestDecodeLastBlockTimeStore(t *testing.T) {
 
 	cdc := simapp.MakeTestEncodingConfig()
 	dec := simulation.NewDecodeStore(cdc.Marshaler)
 
-	tc := types.LiquidValidator{
-		OperatorAddress: "cosmosvaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3m9ammr5",
-	}
+	tc := squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z")
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: types.LiquidValidatorsKey, Value: cdc.Marshaler.MustMarshal(&tc)},
+			{Key: types.LastBlockTimeKey, Value: sdk.FormatTimeBytes(tc)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -31,7 +31,7 @@ func TestDecodeLiquidStakingStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"LiquidValidator", fmt.Sprintf("%v\n%v", tc, tc)},
+		{"LastBlockTime", fmt.Sprintf("%v\n%v", tc, tc)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

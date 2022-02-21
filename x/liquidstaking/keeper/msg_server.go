@@ -42,10 +42,10 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 		sdk.NewEvent(
 			types.EventTypeMsgLiquidStake,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
 			sdk.NewAttribute(types.AttributeKeyBTokenMintedAmount, bTokenMintAmount.String()),
@@ -66,10 +66,10 @@ func (k msgServer) LiquidUnstake(goCtx context.Context, msg *types.MsgLiquidUnst
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 		sdk.NewEvent(
 			types.EventTypeMsgLiquidUnstake,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyUnbondingAmount, unbondingAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),

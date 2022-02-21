@@ -20,4 +20,13 @@ const (
 	DefaultWeightAddPublicPlanProposal    int = 5
 	DefaultWeightUpdatePublicPlanProposal int = 5
 	DefaultWeightDeletePublicPlanProposal int = 5
+
+	DefaultWeightMsgLiquidStake   int = 80
+	DefaultWeightMsgLiquidUnstake int = 30
+
+	DefaultWeightAddWhitelistValidatorsProposal    int = 50
+	DefaultWeightUpdateWhitelistValidatorsProposal int = 5
+	DefaultWeightDeleteWhitelistValidatorsProposal int = 5
+	DefaultWeightCompleteRedelegationUnbonding     int = 30
+	DefaultWeightTallyWithLiquidStaking            int = 30
 )

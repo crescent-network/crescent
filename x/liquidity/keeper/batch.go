@@ -54,19 +54,19 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
 	_ = k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool, err error) {
 		if req.Status.ShouldBeDeleted() {
-			k.DeleteDepositRequest(ctx, req.PoolId, req.Id)
+			k.DeleteDepositRequest(ctx, req)
 		}
 		return false, nil
 	})
 	_ = k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool, err error) {
 		if req.Status.ShouldBeDeleted() {
-			k.DeleteWithdrawRequest(ctx, req.PoolId, req.Id)
+			k.DeleteWithdrawRequest(ctx, req)
 		}
 		return false, nil
 	})
 	_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
 		if order.Status.ShouldBeDeleted() {
-			k.DeleteOrder(ctx, order.PairId, order.Id)
+			k.DeleteOrder(ctx, order)
 		}
 		return false, nil
 	})

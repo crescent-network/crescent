@@ -151,3 +151,27 @@ message NetAmountState {
   string proxy_acc_balance = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
+
+// VotingPower is type for current voting power of the voter including staking module's voting power and liquid staking
+// module's voting power, It depends on the amount of delegation of staking module, the bonded state of the delegated
+// validator, the value of btoken(liquid_bond_denom), and the pool coin and farming position containing btoken..
+message VotingPower {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // voter defines the address of the voter; bech encoded in JSON.
+  string voter = 1;
+
+  // staking_voting_power return the voting power of staking that can be exercised.
+  string staking_voting_power = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // liquid_staking_voting_power return the voting power of liquid staking that can be exercised.
+  string liquid_staking_voting_power = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // validator_voting_power return the voting power of the validator if the voter is the validator operator that can be
+  // exercised.
+  string validator_voting_power = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}

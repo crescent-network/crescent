@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -154,24 +155,21 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 	// tombstone status also handled on Rebalancing
 	reds := k.Rebalancing(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValMap, types.RebalancingTrigger)
 
-	// TODO: consider refactoring and also put on endblock and AfterValidatorRemoved hook
 	for _, lv := range liquidValidators {
 		if !k.ActiveCondition(ctx, lv, whitelistedValMap.IsListed(lv.OperatorAddress)) {
 			// unbond all delShares to proxyAcc if delShares exist on inactive validators
 			delShares := lv.GetDelShares(ctx, k.stakingKeeper)
 			if delShares.IsPositive() {
+				fmt.Println("[TRY unbonding on rebalancing]", delShares)
 				_, _, _, err := k.LiquidUnbond(ctx, types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc, lv.GetOperator(), delShares)
 				if err != nil {
 					panic(err)
 				}
 			}
 			_, found := k.stakingKeeper.GetDelegation(ctx, types.LiquidStakingProxyAcc, lv.GetOperator())
-			if found {
-				panic("inactive liquid tokens")
+			if !found {
+				k.RemoveLiquidValidator(ctx, lv)
 			}
-
-			// remove inactive liquid validator (no delShares)
-			k.RemoveLiquidValidator(ctx, lv)
 		}
 	}
 

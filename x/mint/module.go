@@ -170,12 +170,12 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 
 // RandomizedParams creates randomized mint param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	//sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations doesn't return any mint module operation.
