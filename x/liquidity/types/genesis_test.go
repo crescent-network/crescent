@@ -203,8 +203,9 @@ func TestGenesisState_Validate(t *testing.T) {
 			"wrong offer coin denom",
 			func(genState *types.GenesisState) {
 				genState.Orders[0].OfferCoin.Denom = "denom3"
+				genState.Orders[0].RemainingOfferCoin.Denom = "denom3"
 			},
-			"invalid order at index 0: offer coin denom denom3 != remaining offer coin denom denom1",
+			"order at index 0 has wrong offer coin denom: denom3 != denom1",
 		},
 		{
 			"wrong demand coin denom",
