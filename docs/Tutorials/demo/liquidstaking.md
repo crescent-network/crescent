@@ -423,3 +423,193 @@ $BINARY q liquidstaking params --output json | jq
 $BINARY q liquidstaking liquid-validators --output json | jq
 ```
 
+
+
+# vesting test
+
+periods.json
+```json
+{
+    "start_time": 1645498130,
+    "periods":
+    [
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        },
+        {
+            "coins": "1000000stake",
+            "length_seconds": 60
+        }
+    ]
+}
+```
+
+```bash
+# cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
+export USER_3="smooth bike pool jealous cinnamon seat tiger team canoe almost core bag fluid garbage embrace gorilla wise door toe upon present canal myth corn"
+
+echo $USER_3 | $BINARY keys add user3 --keyring-backend test --recover
+
+# Create periodic vesting account
+$BINARY tx vesting create-periodic-vesting-account cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss periods.json \
+--chain-id localnet \
+--from user1 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json 
+
+# or Create continuous vesting account
+$BINARY tx vesting create-vesting-account cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss 100000000stake 1700000000 \
+--chain-id localnet \
+--from user1 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# fail Create vesting account, already existing
+$BINARY tx vesting create-vesting-account cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny 100000000stake 1700000000 \
+--chain-id localnet \
+--from user1 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Query vesting account
+$BINARY q account cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
+$BINARY q bank balances cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
+
+# Send test, failed not freed balance
+$BINARY tx bank send cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny 100000000stake \
+--chain-id localnet \
+--from user3 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# delegate failed custom sdk need spendable balances for delegation
+$BINARY tx staking delegate cosmosvaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3m9ammr5 100000000stake \
+--chain-id localnet \
+--from user3 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# fail liquid staking with locked amount
+$BINARY tx liquidstaking liquid-stake 100000000stake \
+--chain-id localnet \
+--from user3 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+```
