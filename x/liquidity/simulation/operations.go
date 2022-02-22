@@ -373,9 +373,13 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		if pair.LastPrice != nil {
 			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
 		} else {
-			rx, ry := k.GetPoolBalances(ctx, pool)
-			ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.ZeroInt())
-			minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
+			if pool != (types.Pool{}) {
+				rx, ry := k.GetPoolBalances(ctx, pool)
+				ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.ZeroInt())
+				minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
+			} else {
+				minPrice, maxPrice = squad.ParseDec("0.1"), squad.ParseDec("10.0")
+			}
 		}
 		price := amm.PriceToDownTick(squad.RandomDec(r, minPrice, maxPrice), int(params.TickPrecision))
 
@@ -448,7 +452,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "no account to make a limit order"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "no account to make a market order"), nil, nil
 		}
 
 		_, maxPrice := minMaxPrice(k, ctx, *pair.LastPrice)
@@ -714,18 +718,13 @@ func findPairToMakeLimitOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, sp
 
 	for _, pair := range pairs {
 		var resPool types.Pool
-		found := false // Found a non-disabled pool?
 		_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 			if !pool.Disabled {
 				resPool = pool
-				found = true
 				return true, nil
 			}
 			return false, nil
 		})
-		if !found {
-			continue
-		}
 
 		dirs := []types.OrderDirection{types.OrderDirectionBuy, types.OrderDirectionSell}
 		r.Shuffle(len(dirs), func(i, j int) {
