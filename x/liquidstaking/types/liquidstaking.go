@@ -110,9 +110,8 @@ func ActiveCondition(validator stakingtypes.Validator, whitelisted bool, tombsto
 type LiquidValidators []LiquidValidator
 type ActiveLiquidValidators LiquidValidators
 
-// TODO: add test code type level
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
-func (vs LiquidValidators) MinMaxGap(targetMap, liquidTokenMap map[string]sdk.Int, threshold sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int, lastRedelegation bool) {
+func (vs LiquidValidators) MinMaxGap(targetMap, liquidTokenMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int, lastRedelegation bool) {
 	maxGap := sdk.ZeroInt()
 	minGap := sdk.ZeroInt()
 
