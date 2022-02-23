@@ -233,7 +233,7 @@ func (k Keeper) TallyLiquidStakingGov(ctx sdk.Context, votes *govtypes.Votes, ot
 	}
 
 	for voter, bTokenValue := range bTokenValueMap {
-		// caclulate voting power of the voter, distribute voting power to liquid validators by current weight of bonded liquid tokens
+		// calculate voting power of the voter, distribute voting power to liquid validators by current weight of bonded liquid tokens
 		votingPower := sdk.ZeroDec()
 		if bTokenValue.IsPositive() {
 			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, totalBondedLiquidTokens.ToDec())

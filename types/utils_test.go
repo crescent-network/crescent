@@ -39,8 +39,8 @@ func TestParseTime(t *testing.T) {
 	require.NoError(t, err)
 	errorCase := "9999-12-31T00:00:00_ErrorCase"
 	_, err = time.Parse(time.RFC3339, errorCase)
-	require.PanicsWithError(t, err.Error(), func() { types.MustParseRFC3339(errorCase) })
-	require.Equal(t, normalRes, types.MustParseRFC3339(normalCase))
+	require.PanicsWithError(t, err.Error(), func() { types.ParseTime(errorCase) })
+	require.Equal(t, normalRes, types.ParseTime(normalCase))
 }
 
 func TestDateRangesOverlap(t *testing.T) {
@@ -55,50 +55,50 @@ func TestDateRangesOverlap(t *testing.T) {
 		{
 			"not overlapping",
 			false,
-			types.MustParseRFC3339("2021-12-01T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-02T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-03T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-04T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-04T00:00:00Z"),
 		},
 		{
 			"same end time and start time",
 			false,
-			types.MustParseRFC3339("2021-12-01T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-02T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-02T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
 		},
 		{
 			"end time and start time differs by a little amount",
 			true,
-			types.MustParseRFC3339("2021-12-01T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-02T00:00:00.001Z"),
-			types.MustParseRFC3339("2021-12-02T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00.001Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
 		},
 		{
 			"overlap #1",
 			true,
-			types.MustParseRFC3339("2021-12-01T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-03T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-02T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-04T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-04T00:00:00Z"),
 		},
 		{
 			"overlap #2 - same ranges",
 			true,
-			types.MustParseRFC3339("2021-12-01T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-03T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-01T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
 		},
 		{
 			"overlap #3 - one includes another",
 			true,
-			types.MustParseRFC3339("2021-12-02T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-03T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-01T00:00:00Z"),
-			types.MustParseRFC3339("2021-12-04T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-04T00:00:00Z"),
 		},
 	}
 	for _, tc := range testCases {

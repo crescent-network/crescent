@@ -19,16 +19,16 @@ var (
 	KeyBlockTimeThreshold = []byte("BlockTimeThreshold")
 	KeyInflationSchedules = []byte("InflationSchedules")
 
-	// TODO: fix
+	// DefaultInflationSchedules is example of inflation schedules, It could be rearranged on genesis or gov
 	DefaultInflationSchedules = []InflationSchedule{
 		{
-			StartTime: squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"),
-			EndTime:   squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
+			StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
+			EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
 			Amount:    sdk.NewInt(300000000000000),
 		},
 		{
-			StartTime: squadtypes.MustParseRFC3339("2023-01-01T00:00:00Z"),
-			EndTime:   squadtypes.MustParseRFC3339("2024-01-01T00:00:00Z"),
+			StartTime: squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+			EndTime:   squadtypes.ParseTime("2024-01-01T00:00:00Z"),
 			Amount:    sdk.NewInt(200000000000000),
 		},
 	}
@@ -41,7 +41,6 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	// TODO: []InflationSchedule or InflationSchedules
 	mintDenom string, BlockTimeThreshold time.Duration, InflationSchedules []InflationSchedule,
 ) Params {
 
@@ -69,8 +68,9 @@ func (p Params) Validate() error {
 	if err := validateBlockTimeThreshold(p.BlockTimeThreshold); err != nil {
 		return err
 	}
-
-	// TODO: InflationSchedules
+	if err := validateInflationSchedules(p.InflationSchedules); err != nil {
+		return err
+	}
 	return nil
 
 }

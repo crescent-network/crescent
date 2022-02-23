@@ -11,7 +11,7 @@ import (
 
 func (s *KeeperTestSuite) TestRebalancingCase1() {
 	_, valOpers, pks := s.CreateValidators([]int64{1000000, 1000000, 1000000, 1000000, 1000000})
-	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.ParseTime("2022-03-01T00:00:00Z"))
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	s.keeper.SetParams(s.ctx, params)
