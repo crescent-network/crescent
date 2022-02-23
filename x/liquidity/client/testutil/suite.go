@@ -204,6 +204,26 @@ func (s *IntegrationTestSuite) TestQueryOrdersCmd() {
 				s.Require().Equal(uint64(1), resp.Orders[0].Id)
 			},
 		},
+		{
+			"no arguments",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"either orderer or pair-id must be specified",
+			nil,
+		},
+		{
+			"specify both orderer and pair id",
+			[]string{
+				s.val.Address.String(),
+				fmt.Sprintf("--%s=%d", cli.FlagPairId, 1),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			"",
+			func(resp types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 1)
+				s.Require().Equal(uint64(1), resp.Orders[0].PairId)
+				s.Require().Equal(uint64(1), resp.Orders[0].Id)
+			},
+		},
 	} {
 		s.Run(tc.name, func() {
 			cmd := cli.NewQueryOrdersCmd()

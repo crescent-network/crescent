@@ -41,6 +41,28 @@ func MsgCreatePool(clientCtx client.Context, from string, pairId uint64, deposit
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewCreatePoolCmd(), args)
 }
 
+//nolint
+func MsgDeposit(clientCtx client.Context, from string, poolId uint64, depositCoins sdk.Coins, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := append(append([]string{
+		strconv.FormatUint(poolId, 10),
+		depositCoins.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
+	}, commonArgs...), extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewDepositCmd(), args)
+}
+
+//nolint
+func MsgWithdraw(clientCtx client.Context, from string, poolId uint64, poolCoin sdk.Coin, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := append(append([]string{
+		strconv.FormatUint(poolId, 10),
+		poolCoin.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
+	}, commonArgs...), extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewWithdrawCmd(), args)
+}
+
 func MsgLimitOrder(
 	clientCtx client.Context, from string, pairId uint64, dir types.OrderDirection, offerCoin sdk.Coin,
 	demandCoinDenom string, price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, extraArgs ...string) (testutil.BufferWriter, error) {
