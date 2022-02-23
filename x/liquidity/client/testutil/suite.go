@@ -184,16 +184,38 @@ func (s *IntegrationTestSuite) TestQueryPoolsCmd() {
 
 func (s *IntegrationTestSuite) TestQueryOrdersCmd() {
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
 
-	cmd := cli.NewQueryOrdersCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{
-		val.Address.String(),
-		"--output=json",
-	})
-	s.Require().NoError(err)
-
-	var resp types.QueryOrdersResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().Len(resp.Orders, 1)
+	for _, tc := range []struct {
+		name        string
+		args        []string
+		expectedErr string
+		postRun     func(resp types.QueryOrdersResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				fmt.Sprintf("--%s=%d", cli.FlagPairId, 1),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			"",
+			func(resp types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 1)
+				s.Require().Equal(uint64(1), resp.Orders[0].PairId)
+				s.Require().Equal(uint64(1), resp.Orders[0].Id)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			cmd := cli.NewQueryOrdersCmd()
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				var resp types.QueryOrdersResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
 }
