@@ -219,7 +219,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			func(genState *types.GenesisState) {
 				genState.Orders = []types.Order{order, order}
 			},
-			"withdraw request at index 1 has a duplicate id: 1",
+			"order at index 1 has a duplicate id: 1",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
