@@ -4,7 +4,7 @@
 
 ## MsgLiquidStake
 
-Within this message the delegator provides coins, and in return receives some amount bTokens
+Within this message the delegator provides coins, and in return receives newly minted bTokens at the current mint rate.
 
 This message is expected to fail if:
 
@@ -13,8 +13,6 @@ This message is expected to fail if:
 - the mint rate is invalid, meaning the active liquid validator has no tokens
 - insufficient spendable balances (not allowed locked coins)
 - the amount delegated is less than the minimum allowed liquid staking `params.MinLiquidStakingAmount`
-
-The delegator receives newly minted bTokens at the current mint rate. The mint rate is the total supply of bTokens divided by the number of native tokens.
 
 ```go
 type MsgLiquidStake struct {
@@ -25,21 +23,14 @@ type MsgLiquidStake struct {
 
 ## MsgLiquidUnstake
 
-This message allows delegators to unstake their liquid stake position
+This message allows delegators to unstake their liquid stake position by burn the requested bToken amount and begins unbonding the corresponding value.
 
 This message is expected to fail if:
 
-- the delegator doesn't have sufficient bTokens
-- the active liquid validator doesn't exist
-- the amount of bTokens is less than the minimum allowed unstaking
 - the `Amount` has a denomination different than one defined by `params.LiquidBondDenom`
+- the delegator doesn't have sufficient bTokens `Amount`
+- liquid validators to unbond doesn't exist with insufficient liquid tokens or balance of proxy account
 
-When this message is processed the following actions occur:
-
-- calculate the amount of native tokens for bTokens to unstake
-- burn the bTokens
-- `LiquidStakingProxyAcc` unbond the active liquid validator's DelShares by calculated native token worth of bTokens divided by current weight of active liquid validators
-    - the `DelegatorAddress` of the `UnbondingDelegation` would be `MsgLiquidStake.DelegatorAddress` not `LiquidStakingProxyAcc`
 
 ```go
 type MsgLiquidUnstake struct {

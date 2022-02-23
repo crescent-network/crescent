@@ -4,7 +4,9 @@
 
 ## LiquidValidator
 
-LiquidValidator is the Validator that can be the target of LiquidStaking and LiquidUnstaking, Active, Weight, etc. fields are derived as functions to deal with by maintaining consistency with the state of the staking module.
+LiquidValidator is the validator that can be the target of liquid staking and liquid unstaking.
+Active Status, Weight, LiquidTokens, DelShares, etc. fields are derived as functions to deal with by maintaining consistency with the state of the staking module.
+LiquidValidators are generated when the validator included in params.WhitelistedValidators meets the active conditions, and then if it becomes inactive status and no delShares involved liquid staking due to rebalancing and unbonding, removes the LiquidValidator.
 
 ```go
 type LiquidValidator struct {
@@ -13,12 +15,29 @@ type LiquidValidator struct {
 }
 ```
 
+```go
+// LiquidValidatorState is type LiquidValidator with state added to return to query results.
+type LiquidValidatorState struct {
+	// operator_address defines the address of the validator's operator; bech encoded in JSON.
+	OperatorAddress string
+	// weight specifies the weight for liquid staking, unstaking amount
+	Weight sdk.Int
+	// status is the liquid validator status
+	Status ValidatorStatus
+	// del_shares define the delegation shares of the validator
+	DelShares sdk.Dec
+	// liquid_tokens define the token amount worth of delegation shares of the validator (slashing applied amount)
+	LiquidTokens sdk.Int
+}
+```
+
 LiquidValidators: `0xc0 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(liquidValidator)`
 
+### Status
 LiquidValidators can have one of two statuses
 
-- `Active` : When some validators in the active set are elected to whitelist by governance, liquid staker's delegating amount of native tokens are distributed to these vaidators. They can be slashed for misbehavior. They can be delisted. Liquid stakers who unbond their delegation must wait the duration of the UnStakingTime, a chain-specific param, during which time they are still slashable for offences of the active liquid validators if those offences were committed during the period of time that the tokens were bonded.
-- `Inactive` : Not meet Active Condition, but has delegation shares of LiquidStakingProxyAcc, **Inactive liquid validator's TargetWeight Would be zero**
+- `Active` : When some validators in the active set are elected to whitelist by governance, delegator's delegating amount of native tokens are distributed to these vaidators. They can be slashed for misbehavior. They can be delisted. Liquid stakers who unbond their delegation must wait the duration of the UnStakingTime, a chain-specific param, during which time they are still slashable for offences of the active liquid validators if those offences were committed during the period of time that the tokens were bonded.
+- `Inactive` : Not meet Active Condition, but has delegation shares of LiquidStakingProxyAcc, **Inactive liquid validator's Weight would be derived zero**
 
 ```go
 const (
@@ -28,23 +47,53 @@ const (
 )
 ```
 
+### Active Conditions
+- included on whitelist
+- existed valid validator on staking module ( existed, not nil DelShares and tokens, valid exchange rate)
+- not tombstoned
+
+
+### Weight
+
+Weight of LiquidValidator is derived as follows depending on the Status.
+
+- Active LiquidValidator : `TargetWeight` value defined in `params.WhitelistedValidators` by governance
+- Inactive LiquidValidator : zero (`0`)
+
 ## NetAmount
- NetAmount = `LiquidStakingProxyAcc's native token balance + total liquid tokens(delegation tokens slashing applied) + total remaining rewards + total unbonding balance`
-  - `MintRate = bTokenTotalSupply / NetAmount`
-  - NativeTokenToBToken : `nativeTokenAmount * bTokenTotalSupply / netAmount` with truncations
-  - BTokenToNativeToken : `bTokenAmount * netAmount / bTokenTotalSupply * (1-UnstakeFeeRate)` with truncations
 
-## Liquid Staking
+NetAmount is the sum of the items below of `LiquidStakingProxyAcc`. 
+- token amount worth of delegation shares of all liquid validators
+- remaining rewards 
+- native token balance
+- unbonding balance
 
-- Liquid stakers may delegate coins to active liquid validators; under this circumstance their funds are held in a `LiquidStaking` data structure. It is owned by one liquid staker, and is associated with the bTokens which represent their shares for active liquid validators.
-- bTokens
-
-  Liquid stakers receive bTokens in return for their liquid staking position. The amount of bTokens are minted is based on mint rate, calculated as follows from the total supply of bTokens and net amount of native tokens.
-    - `MintAmount = StakeAmount * MintRate` by NativeTokenToBToken
-    - when initial liquid staking, `MintAmount == StakeAmount`
+MintRate is the total supply of bTokens divided by NetAmount `bTokenTotalSupply / NetAmount` depending on the equation, the value transformation between native tokens and bTokens can be calculated as follows.
+- NativeTokenToBToken : `nativeTokenAmount * bTokenTotalSupply / netAmount` with truncations
+- BTokenToNativeToken : `bTokenAmount * netAmount / bTokenTotalSupply * (1-params.UnstakeFeeRate)` with truncations
 
 
-## UnStaking
+### NetAmountState
 
-- Shares in the `LiquidStaking` can be unstaked, but they must for some time exist as an `Unstaking`, where shares can be reduced if misbehavior is detected. The amount of native tokens returned is calculated as follows
-    - `UnstakeAmount = bTokenAmount / MintRate * (1 - UnstakeFeeRate)` by BTokenToNativeToken
+NetAmountState is type for net amount raw data and mint rate, This is a value that depends on the several module state every time, so it is used only for calculation and query and is not stored in kv.
+
+```go
+type NetAmountState struct {
+	// mint_rate is bTokenTotalSupply / NetAmount
+	MintRate sdk.Dec
+	// btoken_total_supply returns the total supply of btoken(liquid_bond_denom)
+	BtokenTotalSupply sdk.Int
+	// net_amount is proxy account's native token balance + total liquid tokens + total remaining rewards + total unbonding balance
+	NetAmount sdk.Dec
+	// total_del_shares define the delegation shares of all liquid validators
+	TotalDelShares sdk.Dec
+	// total_liquid_tokens define the token amount worth of delegation shares of all liquid validator (slashing applied amount)
+	TotalLiquidTokens sdk.Int
+	// total_remaining_rewards define the sum of remaining rewards of proxy account by all liquid validators
+	TotalRemainingRewards sdk.Dec
+	// total_unbonding_balance define the unbonding balance of proxy account by all liquid validator (slashing applied amount)
+	TotalUnbondingBalance sdk.Int
+	// proxy_acc_balance define the balance of proxy account for the native token
+	ProxyAccBalance sdk.Int
+}
+```

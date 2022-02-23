@@ -5,7 +5,7 @@
 The liquid-staking module contains the following parameters:
 
 | Key                    | Type                   | Example                |
-|------------------------| ---------------------- | ---------------------- |
+|------------------------|------------------------|------------------------|
 | LiquidBondDenom        | string                 | “bstake”               |
 | WhitelistedValidators  | []WhitelistedValidator |                        |
 | UnstakeFeeRate         | string (sdk.Dec)       | "0.001000000000000000" |
@@ -44,7 +44,7 @@ Define the minimum liquid staking amount to minimize decimal loss and consider g
 ## Constant Variables
 
 | Key                | Type             | Constant Value         |
-| ------------------ | ---------------- | ---------------------- |
+|--------------------|------------------|------------------------|
 | RebalancingTrigger | string (sdk.Dec) | "0.001000000000000000" |
 | RewardTrigger      | string (sdk.Dec) | "0.001000000000000000" |
 
