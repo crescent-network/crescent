@@ -405,35 +405,3 @@ func (k Keeper) GetWeightMap(ctx sdk.Context, liquidVals types.LiquidValidators,
 	}
 	return weightMap, totalWeight
 }
-
-//// Deprecated: LiquidStakingWithBalancing for using simple weight distribution, not rebalancing, not using on this version for simplify.
-//func (k Keeper) LiquidStakingWithBalancing(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.ActiveLiquidValidators, stakingAmt sdk.Int) (newShares sdk.Dec, err error) {
-//	totalNewShares := sdk.ZeroDec()
-//	targetMap := k.AddStakingTargetMap(ctx, activeVals, stakingAmt)
-//	for valStr, amt := range targetMap {
-//		val, err := sdk.ValAddressFromBech32(valStr)
-//		if err != nil {
-//			return sdk.ZeroDec(), err
-//		}
-//		validator, found := k.stakingKeeper.GetValidator(ctx, val)
-//		if !found {
-//			panic("validator not founded")
-//		}
-//		newShares, err = k.stakingKeeper.Delegate(ctx, proxyAcc, amt, stakingtypes.Unbonded, validator, true)
-//		if err != nil {
-//			return sdk.ZeroDec(), err
-//		}
-//		totalNewShares = totalNewShares.Add(newShares)
-//	}
-//	return totalNewShares, nil
-//}
-
-//// Deprecated: GetValidatorsMap get the set of all validators as map with no limits
-//func (k Keeper) GetValidatorsMap(ctx sdk.Context) map[string]stakingtypes.Validator {
-//	valMap := make(map[string]stakingtypes.Validator)
-//	vals := k.stakingKeeper.GetAllValidators(ctx)
-//	for _, val := range vals {
-//		valMap[val.OperatorAddress] = val
-//	}
-//	return valMap
-//}

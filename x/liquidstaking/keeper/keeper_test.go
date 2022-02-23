@@ -271,20 +271,6 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
 	// set unbonding status, no more rewards before return Bonded
 	s.Require().Equal(val.Status, stakingtypes.Unbonding)
-	//// check slashed
-	//doubleSignFraction := s.app.SlashingKeeper.SlashFractionDoubleSign(s.ctx)
-	//liquidTokensAfterSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
-	//expectedSlashedLiquidTokens := liquidTokens.MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
-	//fmt.Println(liquidTokens, expectedSlashedLiquidTokens, liquidTokensAfterSlashed)
-	//
-	//// TODO: 24998 * 0.95 + 25000 == 48748, but 48778, maybe reward 30
-	//rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
-	//fmt.Println(rewards, totalDelShares, totalLiquidTokens)
-	//slashedStakingAmt := stakingAmt.ToDec().MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
-	//fmt.Println(slashedStakingAmt)
-	//fmt.Println(s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
-	//s.Require().EqualValues(slashedStakingAmt, s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
-
 }
 
 func (s *KeeperTestSuite) createContinuousVestingAccount(from sdk.AccAddress, to sdk.AccAddress, amt sdk.Coins, startTime, endTime time.Time) vestingtypes.ContinuousVestingAccount {
