@@ -73,7 +73,6 @@ func (genState GenesisState) Validate() error {
 		depositReqSet[req.PoolId][req.Id] = struct{}{}
 	}
 	withdrawReqSet := map[uint64]map[uint64]struct{}{}
-	fmt.Printf("%+v\n", genState.WithdrawRequests)
 	for i, req := range genState.WithdrawRequests {
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("invalid withdraw request at index %d: %w", i, err)
