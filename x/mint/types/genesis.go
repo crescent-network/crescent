@@ -17,10 +17,7 @@ func NewGenesisState(params Params, lastBlockTime *time.Time) *GenesisState {
 
 // DefaultGenesisState creates a default GenesisState object
 func DefaultGenesisState() *GenesisState {
-	return &GenesisState{
-		LastBlockTime: nil,
-		Params:        DefaultParams(),
-	}
+	return NewGenesisState(DefaultParams(), nil)
 }
 
 // ValidateGenesis validates the provided genesis state to ensure the

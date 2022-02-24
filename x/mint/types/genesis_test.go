@@ -18,9 +18,7 @@ func TestGenesisState_Validate(t *testing.T) {
 	}{
 		{
 			"default is valid",
-			func(genState *types.GenesisState) {
-				genState = types.DefaultGenesisState()
-			},
+			func(genState *types.GenesisState) {},
 			"",
 		},
 		{

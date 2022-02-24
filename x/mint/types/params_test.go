@@ -40,6 +40,11 @@ func TestParamsValidate(t *testing.T) {
 		expectedErr string
 	}{
 		{
+			"valid default params",
+			func(params *types.Params) {},
+			"",
+		},
+		{
 			"empty mint denom",
 			func(params *types.Params) {
 				params.MintDenom = ""
@@ -130,6 +135,42 @@ func TestParamsValidate(t *testing.T) {
 				}
 			},
 			"inflation periods cannot be overlapped 2022-01-01T00:00:00Z ~ 2023-01-01T00:00:00Z with 2022-12-01T00:00:00Z ~ 2024-01-01T00:00:00Z",
+		},
+		{
+			"valid inflation schedules",
+			func(params *types.Params) {
+				params.InflationSchedules = []types.InflationSchedule{
+					{
+						StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
+						EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						Amount:    sdk.NewInt(31536000),
+					},
+					{
+						StartTime: squadtypes.ParseTime("2023-01-01T00:00:01Z"),
+						EndTime:   squadtypes.ParseTime("2024-01-01T00:00:00Z"),
+						Amount:    sdk.NewInt(31536000),
+					},
+				}
+			},
+			"",
+		},
+		{
+			"same start date with end date is allowed on inflation schedules",
+			func(params *types.Params) {
+				params.InflationSchedules = []types.InflationSchedule{
+					{
+						StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
+						EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						Amount:    sdk.NewInt(31536000),
+					},
+					{
+						StartTime: squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						EndTime:   squadtypes.ParseTime("2024-01-01T00:00:00Z"),
+						Amount:    sdk.NewInt(31536000),
+					},
+				}
+			},
+			"",
 		},
 	}
 
