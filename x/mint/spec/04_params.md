@@ -13,11 +13,24 @@ The mint module contains the following parameters:
 | inflation_schedules  | []InflationSchedule |         |
 
 
+## MintDenom
+
+MintDenom is the denomination of the coin to be minted.
+
+## BlockTimeThreshold
+
+If the difference in block time from the `LastBlockTime` is greater than `BlockTimeThreshold`, the block only generates inflation as long as `BlockTimeThreshold.
+so actual minted amount could be less than the defined `InflationSchedule.Amount` depending on the number of times blocks having the block time length over `BlockTimeThreshold` occurs.
+
+This is to prevent inflationary manipulation attacks caused by stopping chains or block time manipulation.
+
 ## InflationSchedules
 
-InflationSchedules is a list struct of `InflationSchedules`.
+InflationSchedules is a list struct of `InflationSchedules`, Those inflation schedules cannot overlap, but the end times and start times could be the same, and in this case, priority is given according to the order of the list.
 
 `InflationSchedule` defines the start and end time of the inflation period, and the amount of inflation during that period.
+
+`InflationSchedule.Amount` should be over the inflation schedule duration seconds to avoid decimal loss
 
 ```go
 type InflationSchedule struct {

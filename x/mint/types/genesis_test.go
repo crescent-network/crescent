@@ -18,7 +18,9 @@ func TestGenesisState_Validate(t *testing.T) {
 	}{
 		{
 			"default is valid",
-			func(genState *types.GenesisState) {},
+			func(genState *types.GenesisState) {
+				genState = types.DefaultGenesisState()
+			},
 			"",
 		},
 		{
@@ -46,22 +48,15 @@ func TestGenesisState_Validate(t *testing.T) {
 			"invalid last block time",
 		},
 		{
-			"invalid mint denom",
+			"empty inflation",
 			func(genState *types.GenesisState) {
-				genState.Params.MintDenom = ""
+				genState.Params.InflationSchedules = nil
 			},
-			"mint denom cannot be blank",
-		},
-		{
-			"invalid mint denom2",
-			func(genState *types.GenesisState) {
-				genState.Params.MintDenom = "a"
-			},
-			"invalid denom: a",
+			"",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			genState := types.DefaultGenesisState()
+			genState := types.NewGenesisState(types.DefaultParams(), nil)
 			tc.malleate(genState)
 			err := types.ValidateGenesis(*genState)
 			if tc.expectedErr == "" {

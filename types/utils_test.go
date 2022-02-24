@@ -43,7 +43,7 @@ func TestParseTime(t *testing.T) {
 	require.Equal(t, normalRes, types.ParseTime(normalCase))
 }
 
-func TestDateRangesOverlap(t *testing.T) {
+func TestDateRangesOverlapped(t *testing.T) {
 	testCases := []struct {
 		name           string
 		expectedResult bool
@@ -61,7 +61,7 @@ func TestDateRangesOverlap(t *testing.T) {
 			types.ParseTime("2021-12-04T00:00:00Z"),
 		},
 		{
-			"same end time and start time",
+			"not overlapped on same end time and start time",
 			false,
 			types.ParseTime("2021-12-01T00:00:00Z"),
 			types.ParseTime("2021-12-02T00:00:00Z"),
@@ -69,10 +69,26 @@ func TestDateRangesOverlap(t *testing.T) {
 			types.ParseTime("2021-12-03T00:00:00Z"),
 		},
 		{
+			"not overlapped on same end time and start time 2",
+			false,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+		},
+		{
+			"for the same time, it doesn't seem to overlap",
+			false,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+		},
+		{
 			"end time and start time differs by a little amount",
 			true,
 			types.ParseTime("2021-12-01T00:00:00Z"),
-			types.ParseTime("2021-12-02T00:00:00.001Z"),
+			types.ParseTime("2021-12-02T00:00:00.01Z"),
 			types.ParseTime("2021-12-02T00:00:00Z"),
 			types.ParseTime("2021-12-03T00:00:00Z"),
 		},
@@ -103,8 +119,59 @@ func TestDateRangesOverlap(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expectedResult, types.DateRangesOverlap(tc.startTimeA, tc.endTimeA, tc.startTimeB, tc.endTimeB))
-			require.Equal(t, tc.expectedResult, types.DateRangesOverlap(tc.startTimeB, tc.endTimeB, tc.startTimeA, tc.endTimeA))
+			require.Equal(t, tc.expectedResult, types.DateRangesOverlapped(tc.startTimeA, tc.endTimeA, tc.startTimeB, tc.endTimeB))
+			require.Equal(t, tc.expectedResult, types.DateRangesOverlapped(tc.startTimeB, tc.endTimeB, tc.startTimeA, tc.endTimeA))
+		})
+	}
+}
+
+func TestDateRangeIncluded(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expectedResult bool
+		targeTime      time.Time
+		startTime      time.Time
+		endTime        time.Time
+	}{
+		{
+			"not included, before started",
+			false,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:01Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+		},
+		{
+			"not included, after ended",
+			false,
+			types.ParseTime("2021-12-03T00:00:01Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+		},
+		{
+			"included on same start time",
+			true,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+		},
+		{
+			"included on same end time",
+			true,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+		},
+		{
+			"included on same start time and end time",
+			true,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expectedResult, types.DateRangeIncluded(tc.targeTime, tc.startTime, tc.endTime))
 		})
 	}
 }

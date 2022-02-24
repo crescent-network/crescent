@@ -53,10 +53,27 @@ func (suite *ModuleTestSuite) SetupTest() {
 }
 
 func (s *ModuleTestSuite) TestInitGenesis() {
+	// default gent state case
 	genState := types.DefaultGenesisState()
 	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
 	got := mint.ExportGenesis(s.ctx, s.app.MintKeeper)
 	s.Require().Equal(*genState, *got)
+
+	// not nil last block time case
+	testTime := squadtypes.ParseTime("2023-01-01T00:00:00Z")
+	genState.LastBlockTime = &testTime
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
+	got = mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().Equal(*genState, *got)
+
+	// invalid last block time case
+	testTime2 := time.Unix(-62136697901, 0)
+	genState.LastBlockTime = &testTime2
+	s.Require().Panics(func() {
+		mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
+	})
+	got = mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().NotEqual(*genState, *got)
 }
 
 func (s *ModuleTestSuite) TestImportExportGenesis() {

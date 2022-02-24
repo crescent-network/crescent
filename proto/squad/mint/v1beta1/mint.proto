@@ -23,7 +23,11 @@ message Params {
     (gogoproto.moretags)    = "yaml:\"block_time_threshold\""
   ];
 
-  repeated InflationSchedule inflation_schedules = 3 [(gogoproto.nullable) = false];
+  repeated InflationSchedule inflation_schedules = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "inflation_schedules",
+    (gogoproto.moretags) = "yaml:\"inflation_schedules\""
+  ];
 }
 
 // InflationSchedule defines the start and end time of the inflation period, and the amount of inflation during that
