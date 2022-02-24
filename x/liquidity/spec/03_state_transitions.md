@@ -14,16 +14,6 @@ Add a coin pair to the liquidity module so that users can create a pool for that
 ### MsgCreatePool
 Create pool of existing pair to the liquidity module so that users can deposit reserve coins or withdraw pool coin.
 
-## Cancel Swap Order
-
-### MsgCancelOrder
-
-Cancel a swap request already stored in the store. It is impossible to cancel a swap order message submitted in the same batch because it can be canceled only by specifying swap request id. 
-
-### MsgCancelAllOrder
-
-Cancel all user's orders for specific pairs or for all pairs in the liquidity module.
-
 ## Coin Escrow for Liquidity Module Messages
 
 Transaction confirmation causes state transition on the Bank module. Some messages on the liquidity module require coin escrow before confirmation.
@@ -36,9 +26,19 @@ To deposit coins into an existing `Pool`, the depositor must escrow `DepositCoin
 
 To withdraw coins from a `Pool`, the withdrawer must escrow `PoolCoin` into `GlobalEscrowAddr`.
 
-### MsgSwap
+### MsgLimitOrder, MsgMarketOrder
 
-To request a coin swap, the swap requestor must escrow `OfferCoin` into each pair’s `EscrowAddress`.
+To request a coin swap, the orderer must escrow `OfferCoin` into each pair’s `EscrowAddress`.
+
+## Cancel Swap Order
+
+### MsgCancelOrder
+
+Cancel an order already stored in the store. It is impossible to cancel a swap order message submitted in the same batch because it can be canceled only by specifying order id.
+
+### MsgCancelAllOrder
+
+Cancel all user's orders for specific pairs or for all pairs in the liquidity module.
 
 ## Batch Execution
 
@@ -46,7 +46,7 @@ Batch execution causes state transitions on the `Bank` module. The following cat
 
 ### Coin Swap
 
-After a successful coin swap, coins accumulated in the pair's `EscrowAddress` for swaps are sent to other swap requestors or to the `Pool`.
+After a successful coin swap, coins accumulated in the pair's `EscrowAddress` for swaps are sent to other orderer or to the `Pool`.
 
 ### Deposit
 
@@ -58,51 +58,31 @@ After a successful withdraw transaction, escrowed pool coins are burned and a co
 
 ## Swap Process
 
-### Find price direction
-- get mid price
-    - mid price = (HighestBuyPrice+LowestSellPrice)/2
-- if one or more than one price does not exist → no matching
-- expecting direction
-    - definitions
-        - BuyGteMidPrice (BGMP) : buy amount greater than or equal to mid price
-        - SellLteMidPrice (SLMP) : sell amount less than or equal to mid price
-    - price direction
-        - increasing : if BGMP > SLMP
-        - decreasing : if BGMP < SLMP
-        - staying : otherwise
-
 ### Matching Price Calculation
-- variables
-  `CX(i)` : Sum of all buy amount of orders with tick equal or higher than this `tick(i)`
-  `CY(i)` : Sum of all sell amount of orders with tick equal or less than this `tick(i)`
-- for all tick i, if `CX(i) == 0` or `CY(i) == 0`, there is no matchable order
-- if i < j, for highest tick i with `CX(i)` > 0 and lowest tick j with `CY(j)` > 0, there is no matchable order
-- for staying case
-    - if mid price is on tick, mid price is matching price
-    - else : applying banker’s rounding for mid price to match the tick precision
-- price discovery for increasing or decreasing case
-    - initial price (start of iteration)
-        - increasing case : tick with price less than or equal to mid price
-        - decreasing case : tick with price greater than or equal to mid price
-    - end of iteration
-        - increasing case : highest tick i with `CX(i)` > 0
-        - decreasing case : lowest tick j with `CY(j)` > 0
-    - discovery logic
-        - find first `tick(i)` with `CX(i+1)` ≤ `CY(i)` and `CX(i)` ≥ `CY(i-1)`
-        - if there is no tick with upper condition, the last tick(from end of iteration) is the matching price
+- CX(i) : Sum of all buy amount of orders with tick equal or higher than tick(i)
+- CY(i) : Sum of all sell amount of orders with tick equal or less than tick(i)
+- Check matchability
+    - for all tick i, if CX(i) == 0 or CY(i) == 0, there is no matchable order
+    - If i < j, for highest tick i with CX(i) > 0 and lowest tick j with CY(j) > 0, there is no matchable order
+- price discovery logic
+    - find tick(i) with CX(i+1) ≤ CY(i) and CX(i) ≥ CY(i-1)
+    - if there are two or more ticks that satisfies above condition
+        - tick(l) : lowest tick with both conditions hold
+        - tick(h) : highest tick with both conditions hold
+        - result = PriceToRoundedTick((tick(l)+tick(h))/2)
 
 ### Matching Execution
 - Priority
+    - orderbook : order from pool → order from user
     - price : buy order with high order price, sell order with low order price
     - amount : large amount → small amount
-    - orderbook : order from user → order from pool
     - id : small number id → large number id (pool id, order id)
 - Matching : line up buy orders with price greater than or equal to matching price and sell orders with price less than or equal to matching price both are sorted by above priority, respectively. 
 Then match each other based on the shorter side. Orders at the end of each side may be partially matched.
 
-## Change states of swap requests with expired lifespan
+## Change states of orders with expired lifespan
 
-After batch execution, status of all remaining swap requests with `ExpiredAt` higher than current block time are changed to `SwapRequestStatusExpired`
+After batch execution, status of all remaining orders with `ExpiredAt` higher than current block time are changed to `OrderStatusExpired`
 
 ## Refund escrowed coins
 

@@ -64,12 +64,12 @@ The `liquidity` module emits the following events:
 |-------------|-------------------|-------------------|
 | limit_order | orderer           | {orderer}         |
 | limit_order | pair_id           | {pairId}          |
-| limit_order | swap_direction    | {direction}       |
+| limit_order | order_direction   | {direction}       |
 | limit_order | offer_coin        | {offerCoin}       |
 | limit_order | demand_coin_denom | {demandCoinDenom} |
 | limit_order | price             | {price}           |
 | limit_order | amount            | {amount}          |
-| limit_order | request_id        | {reqId}           |
+| limit_order | order_id          | {orderId}         |
 | limit_order | batch_id          | {batchId}         |
 | limit_order | expire_at         | {expireAt}        |
 | limit_order | refunded_coin     | {refundedCoin}    |
@@ -81,30 +81,31 @@ The `liquidity` module emits the following events:
 
 | Type         | Attribute Key     | Attribute Value   |
 |--------------|-------------------|-------------------|
-| market_order | request_id        | {reqId}           |
 | market_order | orderer           | {orderer}         |
 | market_order | pair_id           | {pairId}          |
-| market_order | swap_direction    | {direction}       |
+| market_order | order_direction   | {direction}       |
 | market_order | offer_coin        | {offerCoin}       |
 | market_order | demand_coin_denom | {demandCoinDenom} |
 | market_order | price             | {price}           |
 | market_order | amount            | {amount}          |
+| market_order | order_id          | {orderId}         |
 | market_order | batch_id          | {batchId}         |
 | market_order | expire_at         | {expireAt}        |
+| market_order | refunded_coins    | {refundedCoin}    |
 | message      | module            | liquidity         |
 | message      | action            | market_order      |
 | message      | sender            | {senderAddress}   |
 
 ### MsgCancelOrder
 
-| Type         | Attribute Key    | Attribute Value |
-|--------------|------------------|-----------------|
-| cancel_order | orderer          | {orderer}       |
-| cancel_order | pair_id          | {pairId}        |
-| cancel_order | swap_request_id  | {swapRequestId} |
-| message      | module           | liquidity       |
-| message      | action           | cancel_order    |
-| message      | sender           | {senderAddress} |
+| Type         | Attribute Key | Attribute Value |
+|--------------|---------------|-----------------|
+| cancel_order | orderer       | {orderer}       |
+| cancel_order | pair_id       | {pairId}        |
+| cancel_order | order_id      | {orderId}       |
+| message      | module        | liquidity       |
+| message      | action        | cancel_order    |
+| message      | sender        | {senderAddress} |
 
 ## EndBlocker
 
@@ -117,6 +118,7 @@ The `liquidity` module emits the following events:
 | deposit_result | pool_id          | {poolId}         |
 | deposit_result | deposit_coins    | {depositCoins}   |
 | deposit_result | accepted_coins   | {acceptedCoins}  |
+| deposit_result | refunded_coins   | {refundedCoins}  |
 | deposit_result | minted_pool_coin | {mintedPoolCoin} |
 | deposit_result | status           | {status}         |
 
@@ -128,6 +130,7 @@ The `liquidity` module emits the following events:
 | withdrawal_result | withdrawer       | {withdrawer}     |
 | withdrawal_result | pool_id          | {poolId}         |
 | withdrawal_result | pool_coin        | {poolCoin}       |
+| withdrawal_result | refunded_coins   | {refundedCoins}  |
 | withdrawal_result | withdrawn_coins  | {withdrawnCoins} |
 | withdrawal_result | status           | {status}         |
 
@@ -138,7 +141,7 @@ The `liquidity` module emits the following events:
 | order_result | request_id           | {reqId}              |
 | order_result | orderer              | {orderer}            |
 | order_result | pair_id              | {pairId}             |
-| order_result | swap_direction       | {direction}          |
+| order_result | order_direction      | {direction}          |
 | order_result | remaining_offer_coin | {remainingOfferCoin} |
 | order_result | received_coin        | {receivedCoin}       |
 | order_result | status               | {status}             |

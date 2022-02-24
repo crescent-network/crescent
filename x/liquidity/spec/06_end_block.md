@@ -8,13 +8,13 @@ These operations occur before the end-block operations for the liquidity module.
 
 After successful message verification and coin `escrow` process, the incoming `MsgDeposit`, `MsgWithdraw`, `MsgLimitOrder` and `MsgMarketOrder` messages are converted to requests and stored.
 
-##End-Block
+## End-Block
 
 End-block operations for the Liquidity Module.
 
 ### Execute Requests
 
-If there are `{*action}Request` that have not yet executed in the batch, the batch is executed. This batch contains one or more `Deposit`, `Withdraw`, and `Swap` processes.
+If there are `{*action}Request` and `Order` that have not yet executed in the batch, the batch is executed. This batch contains one or more `Deposit`, `Withdraw`, and swap` processes.
 
 - **Transact and refund for each request**
 
@@ -22,7 +22,7 @@ If there are `{*action}Request` that have not yet executed in the batch, the bat
 
 - **Set states for each request according to the results**
 
-  After transact and refund transactions occur for each request, update the state of each `{*action}Request` according to the results.
+  After transact and refund transactions occur for each request, update the state of each `{*action}Request` or `Order` according to the results.
 
   Even if the request is completed or expired:
 

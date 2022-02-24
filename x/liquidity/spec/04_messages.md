@@ -132,16 +132,16 @@ Cancel a swap order with `MsgCancelOrder` message.
 type MsgCancelOrder struct {
     Orderer       string  // the bech32-encoded address that makes an order
     PairId        uint64  // the pair id
-    SwapRequestId uint64  // the swap request id
+    OrderId uint64  // the order id
 }
 ```
 ### Validity Checks
 Validity checks are performed for MsgCancelOrder messages. The transaction that is triggered with the MsgCancelOrder message fails if:
 - `Orderer` address does not exist
 - The pair with `PairId` does not exist
-- `SwapRequestId` does not exist in pair with `PairId`
-- `Orderer` is not the orderer from swap request with `SwapRequestId`
-- Swap request with `SwapRequestId` is already canceled
+- `OrderId` does not exist in pair with `PairId`
+- `Orderer` is not the orderer from order with `OrderId`
+- Order with `OrderId` is already canceled
 
 ## MsgCancelAllOrders
 Cancel all swap order with `MsgCancelAllOrder` message.
@@ -155,7 +155,7 @@ type MsgCancelAllOrders struct {
 Validity checks are performed for MsgCancelOrder messages. The transaction that is triggered with the MsgCancelOrder message fails if:
 - `Orderer` address does not exist
 - `PairId` in `PairIds` does not exist
-- There is no swap request in one of pair with `PairId` in `PairIds`
-- There is no swap request is not already canceled in one of pair with `PairId` in `PairIds`
-- There is no swap request with `BatchId` lower than pair's `CurrentBatchId` in one of pair with `PairId` in `PairIds`
+- There is no order in one of pair with `PairId` in `PairIds`
+- There is no order which is already canceled in one of pair with `PairId` in `PairIds`
+- There is no order with `BatchId` lower than pair's `CurrentBatchId` in one of pair with `PairId` in `PairIds`
 

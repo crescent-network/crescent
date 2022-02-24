@@ -16,7 +16,7 @@ type Pair struct {
     BaseCoinDenom       string  // denom of the base coin for the pair
     QuoteCoinDenom      string  // denom of the quote coin for the pair
     EscrowAddress       string  // address for the escrow account 
-    LastSwapRequestId   uint64  // index of the last swap request for the pair
+    LastOrderId   uint64  // index of the last order for the pair
     LastPrice           sdk.Dec // the last swap price of the pair
     CurrentBatchId      uint64  // index of the batch for pair
 }
@@ -92,37 +92,37 @@ type WithdrawRequest struct {
 }
 ```
 
-## SwapRequestStatus
+## OrderStatus
 ```go
-type SwapRequestStatus int32
+type OrderStatus int32
 
 const (
-    SwapRequestStatusUnspecified SwapRequestStatus = iota + 1
-    SwapRequestStatusNotExecuted
-    SwapRequestStatusNotMatched
-    SwapRequestStatusPartiallyMatched
-    SwapRequestStatusCompleted
-    SwapRequestStatusCanceled
-    SwapRequestStatusExpired
+    OrderStatusUnspecified OrderStatus = iota + 1
+    OrderStatusNotExecuted
+    OrderStatusNotMatched
+    OrderStatusPartiallyMatched
+    OrderStatusCompleted
+    OrderStatusCanceled
+    OrderStatusExpired
 )
 ```
 
-## SwapRequest
-`SwapRequest` defines the state of swap message(`MsgLimitOrder`, `MsgMarketOrder`) as it is processed in the next batch or batches.
+## Order
+`Order` defines the state of swap message(`MsgLimitOrder`, `MsgMarketOrder`) as it is processed in the next batch or batches.
 
 When a user sends `MsgLimitOrder` or `MsgMarketOrder` transaction to the network, it is accumulated in a batch.
-`SwapRequest` contains the information required for swap transaction, the result and the status of the request.
+`Order` contains the information required for swap transaction, the result and the status of the request.
 
 ```go
-type SwapDirection int32
+type OrderDirection int32
 
 const (
-    SwapDirectionUnspecified  SwapDirection = iota + 1
-    SwapDirectionBuy
-    SwalDirectionSell
+    OrderDirectionUnspecified  SwapDirection = iota + 1
+    OrderDirectionBuy
+    OrderDirectionSell
 )
 
-type SwapRequest struct {
+type Order struct {
     Id                  uint64          // index of the swap message for the pair
     PairId              uint64          // index of the pair where the swap order is placed
     MsgHeight           int64           // block height where this message is appended to the batch
@@ -136,7 +136,7 @@ type SwapRequest struct {
     OpenAmount          sdk.Int         // remaining order amount in base coin after matching
     BatchId             uint64          // batch id of the pair when swap order is submitted
     ExpireAt            time.Time       // swap orders are cancelled when current block time is greater than ExpireAt
-    Status              SwapRequestStatus
+    Status              OrderStatus
 }
 ```
 
@@ -169,7 +169,7 @@ Stores are KVStores in the `multistore`. The key to find the store is the first 
 
 ### The index key to lookup pairs with the given denom
 
-- PairIndexKey: `[]byte{0xa7} | BaseCoinDenomLen (1 byte) | BaseCoinDenom | QuoteCoinDenomLen (1 byte) | QuoteCoinDenom | PairId -> nil`
+- PairsByDenomsIndexKey: `[]byte{0xa7} | DenomALen (1 byte) | DenomA | DenomBLen (1 byte) | DenomB | PairId -> nil`
 
 ### The key to get the pool object
 
@@ -187,10 +187,22 @@ Stores are KVStores in the `multistore`. The key to find the store is the first 
 
 - DepositRequestKey: `[]byte{0xb0} | PoolId | DepositRequestId -> ProtocolBuffer(DepositRequest)`
 
+### The index key to get the deposit request by depositor address, pool id and request id
+
+- DepositRequestIndexKey: `[]byte{0xb4} | DepositorAddressLen (1 byte) | DepositorAddress | PoolId | ReqId -> nil`
+
 ### The key to get the withdraw request by pool id and withdraw request id
 
 - WithdrawRequestKey: `[]byte{0xb1} | PoolId | WithdrawRequestId -> ProtocolBuffer(WithdrawRequest)`
 
-### The key to get the swap request by pool id and swap request id
+### The index key to get the withdraw request by withdrawer address, pool id and request id
 
-- SwapRequestKey: `[]byte{0xb2} | PoolId | SwapRequestId -> ProtocolBuffer(SwapRequest)`
+- WithdrawRequestIndexKey: `[]byte{0xb5} | WithdrawerAddressLen (1 byte) | WithdrawerAddress | PoolId | ReqId -> nil`
+
+### The key to get the order by pair id and order id
+
+- OrderKey: `[]byte{0xb2} | PairId | Id -> ProtocolBuffer(Order)`
+
+### The index key to get the order by orderer address, pair id and order id
+
+- OrderIndexKey: `[]byte{0xb3} | OrdererAddressLen (1 byte) | OrdererAddress | PairId | OrderId -> nil`

@@ -8,4 +8,4 @@ Begin block operations for the liquidity module delete requests that were execut
 
 - Delete `DepositRequest` and `WithdrawRequest` messages with status `RequestStatusSucceeded`
   or `RequestStatusFailed`
-- Delete `SwapRequest` messages with status `SwapRequestStatusCompleted`, `SwapRequestStatusCanceled` or `SwapRequestStatusExpired`
+- Delete `Order` messages with status `OrderStatusCompleted`, `OrderStatusCanceled` or `OrderStatusExpired`
