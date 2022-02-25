@@ -131,6 +131,37 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
 	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
 }
 
+// PoolsOrderBook assumes that lastPrice is on ticks.
+func PoolsOrderBook(pools []Pool, lastPrice sdk.Dec, numTicks, tickPrec int) *OrderBook {
+	prec := TickPrecision(tickPrec)
+	i := prec.TickToIndex(lastPrice)
+	highestTick := prec.TickFromIndex(i + numTicks)
+	lowestTick := prec.TickFromIndex(i - numTicks)
+	ob := NewOrderBook()
+	for _, pool := range pools {
+		poolPrice := pool.Price()
+		if poolPrice.GT(lowestTick) { // Buy orders
+			startTick := sdk.MinDec(prec.DownTick(poolPrice), highestTick)
+			accAmt := sdk.ZeroInt()
+			for tick := startTick; tick.GTE(lowestTick); tick = prec.DownTick(tick) {
+				amt := pool.BuyAmountOver(tick).Sub(accAmt)
+				ob.Add(NewBaseOrder(Buy, tick, amt, sdk.Coin{}, "denom"))
+				accAmt = accAmt.Add(amt)
+			}
+		}
+		if poolPrice.LT(highestTick) { // Sell orders
+			startTick := sdk.MaxDec(prec.UpTick(poolPrice), lowestTick)
+			accAmt := sdk.ZeroInt()
+			for tick := startTick; tick.LTE(highestTick); tick = prec.UpTick(tick) {
+				amt := pool.SellAmountUnder(tick).Sub(accAmt)
+				ob.Add(NewBaseOrder(Sell, tick, amt, sdk.Coin{}, "denom"))
+				accAmt = accAmt.Add(amt)
+			}
+		}
+	}
+	return ob
+}
+
 // MockPoolOrderSource demonstrates how to implement a pool OrderSource.
 type MockPoolOrderSource struct {
 	Pool
