@@ -35,12 +35,14 @@ func (ob *OrderBook) Add(orders ...Order) {
 
 // HighestBuyPrice returns the highest buy price in the order book.
 func (ob *OrderBook) HighestBuyPrice() (sdk.Dec, bool) {
-	return ob.buys.highestPrice()
+	price, _, found := ob.buys.highestPrice()
+	return price, found
 }
 
 // LowestSellPrice returns the lowest sell price in the order book.
 func (ob *OrderBook) LowestSellPrice() (sdk.Dec, bool) {
-	return ob.sells.lowestPrice()
+	price, _, found := ob.sells.lowestPrice()
+	return price, found
 }
 
 // BuyAmountOver returns the amount of buy orders in the order book
@@ -65,6 +67,36 @@ func (ob *OrderBook) BuyOrdersOver(price sdk.Dec) []Order {
 // or equal than given price.
 func (ob *OrderBook) SellOrdersUnder(price sdk.Dec) []Order {
 	return ob.sells.ordersUnder(price)
+}
+
+func (ob *OrderBook) HighestPrice() (sdk.Dec, bool) {
+	highestBuyPrice, _, foundBuy := ob.buys.highestPrice()
+	highestSellPrice, _, foundSell := ob.sells.highestPrice()
+	switch {
+	case foundBuy && foundSell:
+		return sdk.MaxDec(highestBuyPrice, highestSellPrice), true
+	case foundBuy:
+		return highestBuyPrice, true
+	case foundSell:
+		return highestSellPrice, true
+	default:
+		return sdk.Dec{}, false
+	}
+}
+
+func (ob *OrderBook) LowestPrice() (sdk.Dec, bool) {
+	lowestBuyPrice, _, foundBuy := ob.buys.lowestPrice()
+	lowestSellPrice, _, foundSell := ob.sells.lowestPrice()
+	switch {
+	case foundBuy && foundSell:
+		return sdk.MinDec(lowestBuyPrice, lowestSellPrice), true
+	case foundBuy:
+		return lowestBuyPrice, true
+	case foundSell:
+		return lowestSellPrice, true
+	default:
+		return sdk.Dec{}, false
+	}
 }
 
 // orderBookTicks represents a list of orderBookTick.
@@ -96,28 +128,28 @@ func (ticks *orderBookTicks) add(order Order) {
 	}
 }
 
-func (ticks orderBookTicks) highestPrice() (sdk.Dec, bool) {
+func (ticks orderBookTicks) highestPrice() (sdk.Dec, int, bool) {
 	if len(ticks) == 0 {
-		return sdk.Dec{}, false
+		return sdk.Dec{}, 0, false
 	}
-	for _, tick := range ticks {
+	for i, tick := range ticks {
 		if TotalOpenAmount(tick.orders).IsPositive() {
-			return tick.price, true
+			return tick.price, i, true
 		}
 	}
-	return sdk.Dec{}, false
+	return sdk.Dec{}, 0, false
 }
 
-func (ticks orderBookTicks) lowestPrice() (sdk.Dec, bool) {
+func (ticks orderBookTicks) lowestPrice() (sdk.Dec, int, bool) {
 	if len(ticks) == 0 {
-		return sdk.Dec{}, false
+		return sdk.Dec{}, 0, false
 	}
 	for i := len(ticks) - 1; i >= 0; i-- {
 		if TotalOpenAmount(ticks[i].orders).IsPositive() {
-			return ticks[i].price, true
+			return ticks[i].price, i, true
 		}
 	}
-	return sdk.Dec{}, false
+	return sdk.Dec{}, 0, false
 }
 
 func (ticks orderBookTicks) amountOver(price sdk.Dec) sdk.Int {
