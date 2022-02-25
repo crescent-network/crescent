@@ -93,7 +93,6 @@ func (p Params) Validate() error {
 }
 
 func ValidateLiquidBondDenom(i interface{}) error {
-	// TODO: btoken denom must be immutable
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

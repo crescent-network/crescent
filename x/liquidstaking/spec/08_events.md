@@ -34,13 +34,13 @@
 
 ### MsgLiquidUnstake
 
-| Type           | Attribute Key       | Attribute Value    |
-|----------------|---------------------|--------------------|
-| liquid_unstake | validator           | {validatorAddress} |
-| liquid_unstake | amount              | {bTokenBurnAmount} |
-| liquid_unstake | unbonding_amount    | {unbondingAmount}  |
-| liquid_unstake | unbonded_amount     | {unbondedAmount}   |
-| liquid_unstake | completion_time [0] | {completionTime}   |
-| message        | module              | liquidstaking      |
-| message        | action              | liquid_unstake     |
-| message        | sender              | {senderAddress}    |
+| Type           | Attribute Key    | Attribute Value    |
+|----------------|------------------|--------------------|
+| liquid_unstake | validator        | {validatorAddress} |
+| liquid_unstake | amount           | {bTokenBurnAmount} |
+| liquid_unstake | unbonding_amount | {unbondingAmount}  |
+| liquid_unstake | unbonded_amount  | {unbondedAmount}   |
+| liquid_unstake | completion_time  | {completionTime}   |
+| message        | module           | liquidstaking      |
+| message        | action           | liquid_unstake     |
+| message        | sender           | {senderAddress}    |

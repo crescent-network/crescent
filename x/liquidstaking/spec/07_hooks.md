@@ -2,15 +2,17 @@
 
 # Hooks
 
-## TallyLiquidGov
+## TallyLiquidStakingGov
 
-Calculate the voting power of the person who participated in liquid staking.
+Calculate the corresponding voting power of the voter who owns bToken by the following method
 
-- bToken
-  - balance of bToken
-  - Farming Staking Position of bToken
-  - Farming Queued Staking of bToken
-- PoolTokens including bToken
-  - balance of PoolTokens including bToken
-  - Farming Staking Position of PoolTokens including bToken
-  - Farming Queued Staking of PoolTokens including bToken
+- balance of bToken
+- balance of PoolCoins including bToken
+- farming position of bToken
+- farming position of PoolCoins including bToken
+
+This calculation is dependent on modules `x/liquidity` and `x/farming`, the farming position includes staking and queued staking.
+
+the calculated voting power is added, deducted, overwritten as `otherVotes` on tally of `cosmos-sdk/x/gov` by calling `govHooks.GetOtherVotes` 
+
+each voting power of `otherVotes` is distributed to liquid validators by current weight of **bonded** liquidTokens each liquid validators has **bonded** status of `cosmos-sdk/x/staking` module states     
