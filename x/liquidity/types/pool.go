@@ -102,7 +102,6 @@ func NewBasicPoolOrderSource(
 }
 
 func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
-	// TODO: use providable x amount?
 	amt := os.BuyAmountOver(price)
 	if amt.IsZero() {
 		return nil

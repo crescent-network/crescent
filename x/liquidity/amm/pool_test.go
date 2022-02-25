@@ -147,8 +147,6 @@ func TestBasicPool_Deposit(t *testing.T) {
 		ax, ay int64 // expected accepted coin amount
 		pc     int64 // expected minted pool coin amount
 	}{
-		// TODO: what if a pool has positive pool coin supply
-		//       but has zero reserve balance?
 		{
 			name: "ideal deposit",
 			rx:   2000,
