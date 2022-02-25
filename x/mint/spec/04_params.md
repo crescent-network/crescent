@@ -26,7 +26,7 @@ This is to prevent inflationary manipulation attacks caused by stopping chains o
 
 ## InflationSchedules
 
-InflationSchedules is a list struct of `InflationSchedules`, Those inflation schedules cannot overlap, but the end times and start times could be the same, and in this case, priority is given according to the order of the list.
+InflationSchedules is a list of `InflationSchedules`, Those inflation schedules cannot overlap, start time is inclusive for the schedule and end time is exclusive so the end times and other start times could be the same.
 
 `InflationSchedule` defines the start and end time of the inflation period, and the amount of inflation during that period.
 

@@ -136,11 +136,11 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 
-	ctx = ctx.WithBlockHeight(100).WithBlockTime(squadtypes.ParseTime("2022-12-31T23:59:50Z"))
+	ctx = ctx.WithBlockHeight(100).WithBlockTime(squadtypes.ParseTime("2023-01-01T00:00:00Z"))
 
 	// applied 10sec(params.BlockTimeThreshold) block time due to block time diff is over params.BlockTimeThreshold
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(95129375))
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(31709791))
 
 	// 317097919 / 5 * (365 * 24 * 60 * 60) / 200000000000000 ~= 1
 	// 317097919 ~= 200000000000000 / (365 * 24 * 60 * 60) * 5

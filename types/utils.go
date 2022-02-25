@@ -36,16 +36,16 @@ func PP(data interface{}) {
 	fmt.Printf("%s \n", p)
 }
 
-// DateRangesOverlapped returns true if two date ranges overlap each other.
-// for the same time, it doesn't seem to overlap.
-func DateRangesOverlapped(startTimeA, endTimeA, startTimeB, endTimeB time.Time) bool {
-	return endTimeB.After(startTimeA) && startTimeB.Before(endTimeA)
+// DateRangesOverlap returns true if two date ranges overlap each other.
+// End time is exclusive and start time is inclusive.
+func DateRangesOverlap(startTimeA, endTimeA, startTimeB, endTimeB time.Time) bool {
+	return startTimeA.Before(endTimeB) && endTimeA.After(startTimeB)
 }
 
 // DateRangeIncluded returns true if the target date included on the start, end time range.
-// Start time is inclusive and end time is inclusive also.
+// End time is exclusive and start time is inclusive.
 func DateRangeIncluded(targetTime, startTime, endTime time.Time) bool {
-	return !endTime.Before(targetTime) && !startTime.After(targetTime)
+	return endTime.After(targetTime) && !startTime.After(targetTime)
 }
 
 // ParseDec is a shortcut for sdk.MustNewDecFromStr.

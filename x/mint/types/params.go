@@ -124,7 +124,7 @@ func validateInflationSchedules(i interface{}) error {
 			return fmt.Errorf("inflation end time %s must be greater than start time %s", inflation.EndTime.Format(time.RFC3339), inflation.StartTime.Format(time.RFC3339))
 		}
 		for _, inflationOther := range v[j+1:] {
-			if squadtypes.DateRangesOverlapped(inflation.StartTime, inflation.EndTime, inflationOther.StartTime, inflationOther.EndTime) {
+			if squadtypes.DateRangesOverlap(inflation.StartTime, inflation.EndTime, inflationOther.StartTime, inflationOther.EndTime) {
 				return fmt.Errorf("inflation periods cannot be overlapped %s ~ %s with %s ~ %s", inflation.StartTime.Format(time.RFC3339), inflation.EndTime.Format(time.RFC3339), inflationOther.StartTime.Format(time.RFC3339), inflationOther.EndTime.Format(time.RFC3339))
 			}
 		}
