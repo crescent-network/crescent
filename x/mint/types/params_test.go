@@ -18,16 +18,7 @@ func TestParams(t *testing.T) {
 
 	defaultParams := types.DefaultParams()
 
-	paramsStr := `mintdenom: stake
-block_time_threshold: 10s
-inflation_schedules:
-- start_time: 2022-01-01T00:00:00Z
-  end_time: 2023-01-01T00:00:00Z
-  amount: "300000000000000"
-- start_time: 2023-01-01T00:00:00Z
-  end_time: 2024-01-01T00:00:00Z
-  amount: "200000000000000"
-`
+	paramsStr := `mint_denom:"stake" block_time_threshold:<seconds:10 > inflation_schedules:<start_time:<seconds:1640995200 > end_time:<seconds:1672531200 > amount:"300000000000000" > inflation_schedules:<start_time:<seconds:1672531200 > end_time:<seconds:1704067200 > amount:"200000000000000" > `
 	require.Equal(t, paramsStr, defaultParams.String())
 }
 

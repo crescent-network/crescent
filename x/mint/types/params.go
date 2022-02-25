@@ -6,11 +6,9 @@ import (
 	"strings"
 	"time"
 
-	squadtypes "github.com/cosmosquad-labs/squad/types"
-	yaml "gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 )
 
 // Parameter store keys
@@ -62,12 +60,6 @@ func (p Params) Validate() error {
 	}
 	return nil
 
-}
-
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }
 
 // Implements params.ParamSet
