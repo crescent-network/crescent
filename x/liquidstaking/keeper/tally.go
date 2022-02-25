@@ -32,31 +32,31 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) m
 	return denomAddrBalanceMap
 }
 
-// TokenValueFromFarmingPositions returns TokenValue of exist farming positions including queued of the addr
-func (k Keeper) TokenValueFromFarmingPositions(ctx sdk.Context, addr sdk.AccAddress, targetDenom string, tokenSharePerPoolCoinMap map[string]sdk.Dec) sdk.Int {
-	tokenValue := sdk.ZeroInt()
+// TokenAmountFromFarmingPositions returns worth of staked tokens amount of exist farming positions including queued of the addr
+func (k Keeper) TokenAmountFromFarmingPositions(ctx sdk.Context, addr sdk.AccAddress, targetDenom string, tokenSharePerPoolCoinMap map[string]sdk.Dec) sdk.Int {
+	tokenAmount := sdk.ZeroInt()
 
-	// add value of Farming Staking Position of bToken and PoolTokens including bToken
+	// add worth of staked amount of Farming Staking Position of bToken and PoolTokens including bToken
 	k.farmingKeeper.IterateStakingsByFarmer(ctx, addr, func(stakingCoinDenom string, staking farmingtypes.Staking) (stop bool) {
 		if stakingCoinDenom == targetDenom {
-			tokenValue = tokenValue.Add(staking.Amount)
+			tokenAmount = tokenAmount.Add(staking.Amount)
 		} else if ratio, ok := tokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-			tokenValue = tokenValue.Add(squadtypes.GetShareValue(staking.Amount, ratio))
+			tokenAmount = tokenAmount.Add(squadtypes.GetShareValue(staking.Amount, ratio))
 		}
 		return false
 	})
 
-	// add value of Farming Queued Staking of bToken and PoolTokens including bToken
+	// add worth of staked amount of Farming Queued Staking of bToken and PoolTokens including bToken
 	k.farmingKeeper.IterateQueuedStakingsByFarmer(ctx, addr, func(stakingCoinDenom string, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
 		if stakingCoinDenom == targetDenom {
-			tokenValue = tokenValue.Add(queuedStaking.Amount)
+			tokenAmount = tokenAmount.Add(queuedStaking.Amount)
 		} else if ratio, ok := tokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-			tokenValue = tokenValue.Add(squadtypes.GetShareValue(queuedStaking.Amount, ratio))
+			tokenAmount = tokenAmount.Add(squadtypes.GetShareValue(queuedStaking.Amount, ratio))
 		}
 		return false
 	})
 
-	return tokenValue
+	return tokenAmount
 }
 
 // TokenSharePerPoolCoin returns token share of the target denom of a pool coin
@@ -146,30 +146,30 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 		return sdk.ZeroInt()
 	}
 
-	bTokenValue := sdk.ZeroInt()
+	bTokenAmount := sdk.ZeroInt()
 	bTokenSharePerPoolCoinMap := make(map[string]sdk.Dec)
 	balances := k.bankKeeper.GetAllBalances(ctx, addr)
 	for _, coin := range balances {
-		// add balance of bToken value
+		// add balance of bToken
 		if coin.Denom == liquidBondDenom {
-			bTokenValue = bTokenValue.Add(coin.Amount)
+			bTokenAmount = bTokenAmount.Add(coin.Amount)
 		}
 
 		// check if the denom is pool coin
 		bTokenSharePerPoolCoin := k.TokenSharePerPoolCoin(ctx, liquidBondDenom, coin.Denom)
 		if bTokenSharePerPoolCoin.IsPositive() {
 			bTokenSharePerPoolCoinMap[coin.Denom] = bTokenSharePerPoolCoin
-			bTokenValue = bTokenValue.Add(squadtypes.GetShareValue(coin.Amount, bTokenSharePerPoolCoin))
+			bTokenAmount = bTokenAmount.Add(squadtypes.GetShareValue(coin.Amount, bTokenSharePerPoolCoin))
 		}
 	}
 
-	tokenValue := k.TokenValueFromFarmingPositions(ctx, addr, liquidBondDenom, bTokenSharePerPoolCoinMap)
-	if tokenValue.IsPositive() {
-		bTokenValue = bTokenValue.Add(tokenValue)
+	tokenAmount := k.TokenAmountFromFarmingPositions(ctx, addr, liquidBondDenom, bTokenSharePerPoolCoinMap)
+	if tokenAmount.IsPositive() {
+		bTokenAmount = bTokenAmount.Add(tokenAmount)
 	}
 
-	if bTokenValue.IsPositive() {
-		return types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, totalBondedLiquidTokens.ToDec()).TruncateInt()
+	if bTokenAmount.IsPositive() {
+		return types.BTokenToNativeToken(bTokenAmount, bTokenTotalSupply, totalBondedLiquidTokens.ToDec()).TruncateInt()
 	} else {
 		return sdk.ZeroInt()
 	}
@@ -198,53 +198,51 @@ func (k Keeper) TallyLiquidStakingGov(ctx sdk.Context, votes *govtypes.Votes, ot
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
 	bTokenSharePerPoolCoinMap := make(map[string]sdk.Dec)
-	bTokenValueMap := make(squadtypes.StrIntMap)
+	bTokenOwnMap := make(squadtypes.StrIntMap)
 
-	// calculate btoken value of each voter
+	// calculate owned btoken amount of each voter
 	for denom, balanceByVoter := range voterBalanceByDenom {
 
-		// add balance of bToken value
+		// add balance of bToken
 		if denom == liquidBondDenom {
 			for voter, balance := range balanceByVoter {
-				bTokenValueMap.AddOrSet(voter, balance)
+				bTokenOwnMap.AddOrSet(voter, balance)
 			}
+			continue
 		}
 
-		// if the denom is pool coin, calc btoken share and add btoken value on bTokenValueMap
+		// if the denom is pool coin, calc btoken share and add owned btoken on bTokenOwnMap
 		bTokenSharePerPoolCoin := k.TokenSharePerPoolCoin(ctx, liquidBondDenom, denom)
 		if bTokenSharePerPoolCoin.IsPositive() {
 			bTokenSharePerPoolCoinMap[denom] = bTokenSharePerPoolCoin
 			for voter, balance := range balanceByVoter {
-				bTokenValueMap.AddOrSet(voter, squadtypes.GetShareValue(balance, bTokenSharePerPoolCoin))
+				bTokenOwnMap.AddOrSet(voter, squadtypes.GetShareValue(balance, bTokenSharePerPoolCoin))
 			}
 		}
 	}
 
-	// add btoken value of farming positions on bTokenValueMap
+	// add owned btoken amount of farming positions on bTokenOwnMap
 	for _, vote := range *votes {
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
 		if err != nil {
 			continue
 		}
-		tokenValue := k.TokenValueFromFarmingPositions(ctx, voter, liquidBondDenom, bTokenSharePerPoolCoinMap)
-		if tokenValue.IsPositive() {
-			bTokenValueMap.AddOrSet(vote.Voter, tokenValue)
+		tokenAmount := k.TokenAmountFromFarmingPositions(ctx, voter, liquidBondDenom, bTokenSharePerPoolCoinMap)
+		if tokenAmount.IsPositive() {
+			bTokenOwnMap.AddOrSet(vote.Voter, tokenAmount)
 		}
 	}
 
-	for voter, bTokenValue := range bTokenValueMap {
-		// caclulate voting power of the voter, distribute voting power to liquid validators by current weight of bonded liquid tokens
+	for voter, bTokenAmount := range bTokenOwnMap {
+		// calculate voting power of the voter, distribute voting power to liquid validators by current weight of bonded liquid tokens
 		votingPower := sdk.ZeroDec()
-		if bTokenValue.IsPositive() {
-			votingPower = types.BTokenToNativeToken(bTokenValue, bTokenTotalSupply, totalBondedLiquidTokens.ToDec())
+		if bTokenAmount.IsPositive() {
+			votingPower = types.BTokenToNativeToken(bTokenAmount, bTokenTotalSupply, totalBondedLiquidTokens.ToDec())
 		}
 		if votingPower.IsPositive() {
 			(*otherVotes)[voter] = map[string]sdk.Dec{}
 			// drop crumb for defensive policy about delShares decimal errors
 			dividedPowers, _ := types.DivideByCurrentWeight(liquidVals, votingPower, totalBondedLiquidTokens, bondedLiquidTokenMap)
-			if len(dividedPowers) == 0 {
-				continue
-			}
 			for i, val := range liquidVals {
 				if !dividedPowers[i].IsPositive() {
 					continue

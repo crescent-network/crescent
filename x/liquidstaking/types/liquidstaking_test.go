@@ -9,6 +9,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	whitelistedValidators = []types.WhitelistedValidator{
+		{
+			ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
+			TargetWeight:     sdk.NewInt(10),
+		},
+		{
+			ValidatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
+			TargetWeight:     sdk.NewInt(1),
+		},
+		{
+			ValidatorAddress: "cosmosvaloper18hfzxheyknesfgcrttr5dg50ffnfphtwtar9fz",
+			TargetWeight:     sdk.NewInt(-1),
+		},
+		{
+			ValidatorAddress: "cosmosvaloper1ld6vlyy24906u3aqp5lj54f3nsg2592nm9nj5c",
+			TargetWeight:     sdk.NewInt(0),
+		},
+	}
+)
+
 func TestBTokenToNativeTokenWithFee(t *testing.T) {
 	testCases := []struct {
 		bTokenAmount            sdk.Int

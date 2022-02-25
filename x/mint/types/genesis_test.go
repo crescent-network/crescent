@@ -24,7 +24,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"valid last block time",
 			func(genState *types.GenesisState) {
-				tmpTime := squadtypes.MustParseRFC3339("0001-01-01T00:00:00Z")
+				tmpTime := squadtypes.ParseTime("0001-01-01T00:00:00Z")
 				genState.LastBlockTime = &tmpTime
 			},
 			"",
@@ -32,7 +32,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"valid last block time2",
 			func(genState *types.GenesisState) {
-				tmpTime := squadtypes.MustParseRFC3339("9999-12-31T00:00:00Z")
+				tmpTime := squadtypes.ParseTime("9999-12-31T00:00:00Z")
 				genState.LastBlockTime = &tmpTime
 			},
 			"",
@@ -46,22 +46,15 @@ func TestGenesisState_Validate(t *testing.T) {
 			"invalid last block time",
 		},
 		{
-			"invalid mint denom",
+			"empty inflation",
 			func(genState *types.GenesisState) {
-				genState.Params.MintDenom = ""
+				genState.Params.InflationSchedules = nil
 			},
-			"mint denom cannot be blank",
-		},
-		{
-			"invalid mint denom2",
-			func(genState *types.GenesisState) {
-				genState.Params.MintDenom = "a"
-			},
-			"invalid denom: a",
+			"",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			genState := types.DefaultGenesisState()
+			genState := types.NewGenesisState(types.DefaultParams(), nil)
 			tc.malleate(genState)
 			err := types.ValidateGenesis(*genState)
 			if tc.expectedErr == "" {
