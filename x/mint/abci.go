@@ -20,7 +20,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	InflationSchedules := k.GetInflationSchedules(ctx)
 	blockInflation := sdk.ZeroInt()
 	for _, schedule := range InflationSchedules {
-		if squadtypes.DateRangeIncluded(ctx.BlockTime(), schedule.StartTime, schedule.EndTime) {
+		if squadtypes.DateRangeIncludes(schedule.StartTime, schedule.EndTime, ctx.BlockTime()) {
 			lastBlockTime := k.GetLastBlockTime(ctx)
 			// if not set LastBlockTime(e.g. fist block), skip minting inflation
 			if lastBlockTime == nil {

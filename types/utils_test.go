@@ -171,7 +171,7 @@ func TestDateRangeIncluded(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expectedResult, types.DateRangeIncluded(tc.targeTime, tc.startTime, tc.endTime))
+			require.Equal(t, tc.expectedResult, types.DateRangeIncludes(tc.startTime, tc.endTime, tc.targeTime))
 		})
 	}
 }

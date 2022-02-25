@@ -14,8 +14,7 @@ message Params {
 
   // block_time_threshold is a safety to accept only blocktime as much as it and give inflation even if the chain stops
   // or the last blocktime is huge by manipulating blocktime.
-  google.protobuf.Duration block_time_threshold = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.jsontag) = "omitempty"];
+  google.protobuf.Duration block_time_threshold = 2 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 
   repeated InflationSchedule inflation_schedules = 3 [(gogoproto.nullable) = false];
 }
