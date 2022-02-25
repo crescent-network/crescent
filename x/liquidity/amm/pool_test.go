@@ -16,7 +16,7 @@ func TestBasicPool(t *testing.T) {
 	r := rand.New(rand.NewSource(0))
 	for i := 0; i < 1000; i++ {
 		rx, ry := sdk.NewInt(1+r.Int63n(100000000)), sdk.NewInt(1+r.Int63n(100000000))
-		pool := amm.NewBasicPool(rx, ry, sdk.ZeroInt())
+		pool := amm.NewBasicPool(rx, ry, sdk.Int{})
 
 		highest, found := pool.HighestBuyPrice()
 		require.True(t, found)
@@ -326,7 +326,7 @@ func TestBasicPool_Withdraw(t *testing.T) {
 }
 
 func TestBasicPool_Amount(t *testing.T) {
-	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.ZeroInt())
+	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
 	require.True(t, squad.DecApproxEqual(
 		squad.ParseDec("1000000"),
 		pool.BuyAmountOver(defTickPrec.LowestTick()).ToDec().Mul(defTickPrec.LowestTick()),
@@ -338,7 +338,7 @@ func TestBasicPool_Amount(t *testing.T) {
 }
 
 func TestMockPoolOrderSource_Orders(t *testing.T) {
-	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.ZeroInt())
+	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
 	os := amm.NewMockPoolOrderSource(pool, "denom1", "denom2")
 	buyOrders := os.BuyOrdersOver(defTickPrec.LowestTick())
 	require.Len(t, buyOrders, 1)
