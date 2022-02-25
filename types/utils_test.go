@@ -43,7 +43,7 @@ func TestParseTime(t *testing.T) {
 	require.Equal(t, normalRes, types.ParseTime(normalCase))
 }
 
-func TestDateRangesOverlapped(t *testing.T) {
+func TestDateRangesOverlap(t *testing.T) {
 	testCases := []struct {
 		name           string
 		expectedResult bool
@@ -125,7 +125,7 @@ func TestDateRangesOverlapped(t *testing.T) {
 	}
 }
 
-func TestDateRangeIncluded(t *testing.T) {
+func TestDateRangeIncludes(t *testing.T) {
 	testCases := []struct {
 		name           string
 		expectedResult bool
