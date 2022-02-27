@@ -12,9 +12,9 @@ import (
 )
 
 // GetVoterBalanceByDenom return map of balance amount of voter by denom
-func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) map[string]map[string]sdk.Int {
+func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes govtypes.Votes) map[string]map[string]sdk.Int {
 	denomAddrBalanceMap := map[string]map[string]sdk.Int{}
-	for _, vote := range *votes {
+	for _, vote := range votes {
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
 		if err != nil {
 			continue
@@ -175,7 +175,7 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 	}
 }
 
-func (k Keeper) TallyLiquidStakingGov(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
+func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Votes, votingPowers *govtypes.AdditionalVotingPowers) {
 	liquidBondDenom := k.LiquidBondDenom(ctx)
 
 	// skip when no liquid bond token supply
@@ -222,7 +222,7 @@ func (k Keeper) TallyLiquidStakingGov(ctx sdk.Context, votes *govtypes.Votes, ot
 	}
 
 	// add owned btoken amount of farming positions on bTokenOwnMap
-	for _, vote := range *votes {
+	for _, vote := range votes {
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
 		if err != nil {
 			continue
@@ -240,17 +240,17 @@ func (k Keeper) TallyLiquidStakingGov(ctx sdk.Context, votes *govtypes.Votes, ot
 			votingPower = types.BTokenToNativeToken(bTokenAmount, bTokenTotalSupply, totalBondedLiquidTokens.ToDec())
 		}
 		if votingPower.IsPositive() {
-			(*otherVotes)[voter] = map[string]sdk.Dec{}
+			(*votingPowers)[voter] = map[string]sdk.Dec{}
 			// drop crumb for defensive policy about delShares decimal errors
 			dividedPowers, _ := types.DivideByCurrentWeight(liquidVals, votingPower, totalBondedLiquidTokens, bondedLiquidTokenMap)
 			for i, val := range liquidVals {
 				if !dividedPowers[i].IsPositive() {
 					continue
 				}
-				if existed, ok := (*otherVotes)[voter][val.OperatorAddress]; ok {
-					(*otherVotes)[voter][val.OperatorAddress] = existed.Add(dividedPowers[i])
+				if existed, ok := (*votingPowers)[voter][val.OperatorAddress]; ok {
+					(*votingPowers)[voter][val.OperatorAddress] = existed.Add(dividedPowers[i])
 				} else {
-					(*otherVotes)[voter][val.OperatorAddress] = dividedPowers[i]
+					(*votingPowers)[voter][val.OperatorAddress] = dividedPowers[i]
 				}
 			}
 		}

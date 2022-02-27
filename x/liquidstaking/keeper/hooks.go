@@ -21,7 +21,7 @@ func (h Hooks) AfterProposalVote(_ sdk.Context, _ uint64, _ sdk.AccAddress)    {
 func (h Hooks) AfterProposalFailedMinDeposit(_ sdk.Context, _ uint64)          {}
 func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64)         {}
 
-// GetOtherVotes calculate the voting power of the person who participated in liquid staking.
-func (h Hooks) GetOtherVotes(ctx sdk.Context, votes *govtypes.Votes, otherVotes *govtypes.OtherVotes) {
-	h.k.TallyLiquidStakingGov(ctx, votes, otherVotes)
+// SetAdditionalVotingPowers calculate and set voting powers of the person who participated in liquid staking voters in votes.
+func (h Hooks) SetAdditionalVotingPowers(ctx sdk.Context, votes govtypes.Votes, votingPowers *govtypes.AdditionalVotingPowers) {
+	h.k.SetLiquidStakingVotingPowers(ctx, votes, votingPowers)
 }

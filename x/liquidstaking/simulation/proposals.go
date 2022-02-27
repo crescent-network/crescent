@@ -196,7 +196,7 @@ func SimulateCompleteRedelegationUnbonding(sk types.StakingKeeper, k keeper.Keep
 	}
 }
 
-// SimulateTallyWithLiquidStaking mocking tally for TallyLiquidStakingGov.
+// SimulateTallyWithLiquidStaking mocking tally for SetLiquidStakingVotingPowers.
 func SimulateTallyWithLiquidStaking(ak types.AccountKeeper, bk types.BankKeeper, gk types.GovKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		proposals := gk.GetProposals(ctx)
