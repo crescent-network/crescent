@@ -396,7 +396,7 @@ func (k Keeper) ActiveCondition(ctx sdk.Context, v types.LiquidValidator, whitel
 }
 
 func (k Keeper) GetWeightMap(ctx sdk.Context, liquidVals types.LiquidValidators, whitelistedValMap types.WhitelistedValMap) (map[string]sdk.Int, sdk.Int) {
-	weightMap := make(map[string]sdk.Int)
+	weightMap := map[string]sdk.Int{}
 	totalWeight := sdk.ZeroInt()
 	for _, val := range liquidVals {
 		weight := val.GetWeight(whitelistedValMap, k.ActiveCondition(ctx, val, whitelistedValMap.IsListed(val.OperatorAddress)))

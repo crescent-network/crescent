@@ -115,7 +115,7 @@ func ValidateWhitelistedValidators(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	valMap := make(map[string]struct{})
+	valMap := map[string]struct{}{}
 	for _, wv := range wvs {
 		_, valErr := sdk.ValAddressFromBech32(wv.ValidatorAddress)
 		if valErr != nil {

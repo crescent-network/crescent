@@ -13,7 +13,7 @@ import (
 
 // GetVoterBalanceByDenom return map of balance amount of voter by denom
 func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes *govtypes.Votes) map[string]map[string]sdk.Int {
-	denomAddrBalanceMap := make(map[string]map[string]sdk.Int)
+	denomAddrBalanceMap := map[string]map[string]sdk.Int{}
 	for _, vote := range *votes {
 		voter, err := sdk.AccAddressFromBech32(vote.Voter)
 		if err != nil {
@@ -147,7 +147,7 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 	}
 
 	bTokenAmount := sdk.ZeroInt()
-	bTokenSharePerPoolCoinMap := make(map[string]sdk.Dec)
+	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
 	balances := k.bankKeeper.GetAllBalances(ctx, addr)
 	for _, coin := range balances {
 		// add balance of bToken
@@ -197,7 +197,7 @@ func (k Keeper) TallyLiquidStakingGov(ctx sdk.Context, votes *govtypes.Votes, ot
 
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
-	bTokenSharePerPoolCoinMap := make(map[string]sdk.Dec)
+	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
 	bTokenOwnMap := make(squadtypes.StrIntMap)
 
 	// calculate owned btoken amount of each voter

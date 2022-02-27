@@ -141,7 +141,7 @@ func (vs LiquidValidators) Len() int {
 
 func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) (sdk.Int, map[string]sdk.Int) {
 	totalLiquidTokens := sdk.ZeroInt()
-	liquidTokenMap := make(map[string]sdk.Int)
+	liquidTokenMap := map[string]sdk.Int{}
 	for _, lv := range vs {
 		liquidTokens := lv.GetLiquidTokens(ctx, sk, onlyBonded)
 		liquidTokenMap[lv.OperatorAddress] = liquidTokens
@@ -151,7 +151,7 @@ func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, 
 }
 
 func (vs LiquidValidators) Map() map[string]struct{} {
-	valMap := make(map[string]struct{})
+	valMap := map[string]struct{}{}
 	for _, val := range vs {
 		valMap[val.OperatorAddress] = struct{}{}
 	}
