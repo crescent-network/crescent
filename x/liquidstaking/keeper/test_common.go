@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -20,7 +21,7 @@ func RandomValidator(r *rand.Rand, keeper types.StakingKeeper, ctx sdk.Context) 
 	return vals[i], true
 }
 
-// RandomValidator returns a random validator given access to the keeper and ctx
+// RandomActiveLiquidValidator returns a random validator given access to the keeper and ctx
 func RandomActiveLiquidValidator(r *rand.Rand, ctx sdk.Context, k Keeper, sk types.StakingKeeper) (val stakingtypes.Validator, ok bool) {
 	avs := k.GetActiveLiquidValidators(ctx, k.GetParams(ctx).WhitelistedValMap())
 	if len(avs) == 0 {

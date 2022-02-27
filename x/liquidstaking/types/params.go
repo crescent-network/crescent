@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 // Parameter store keys

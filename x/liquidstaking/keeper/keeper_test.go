@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,18 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
-	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
-	"github.com/cosmosquad-labs/squad/x/mint"
-	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/cosmosquad-labs/squad/app"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/mint"
 )
 
 var (

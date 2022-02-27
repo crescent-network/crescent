@@ -3,13 +3,15 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/k0kubun/pp"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	simapp "github.com/cosmosquad-labs/squad/app"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
-	"github.com/k0kubun/pp"
 )
 
 // test Liquid Staking gov power

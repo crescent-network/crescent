@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	squadtypes "github.com/cosmosquad-labs/squad/types"
+
 	"github.com/cosmosquad-labs/squad/x/mint/keeper"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )

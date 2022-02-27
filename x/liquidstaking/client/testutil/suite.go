@@ -6,23 +6,23 @@ import (
 	"strings"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmdb "github.com/tendermint/tm-db"
+
 	"github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
-	"github.com/stretchr/testify/suite"
-	tmdb "github.com/tendermint/tm-db"
-
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type IntegrationTestSuite struct {

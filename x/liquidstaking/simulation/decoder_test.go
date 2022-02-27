@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/simulation"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDecodeLiquidStakingStore(t *testing.T) {

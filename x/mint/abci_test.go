@@ -4,19 +4,20 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmosquad-labs/squad/app"
 	simapp "github.com/cosmosquad-labs/squad/app"
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/mint"
 	"github.com/cosmosquad-labs/squad/x/mint/keeper"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 var (

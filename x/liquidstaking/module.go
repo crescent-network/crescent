@@ -21,7 +21,6 @@ import (
 	//"github.com/squad-network/squad/x/liquidstaking/client/rest"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
-
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/simulation"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )

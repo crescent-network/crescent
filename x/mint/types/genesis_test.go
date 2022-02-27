@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/stretchr/testify/require"
 
+	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
