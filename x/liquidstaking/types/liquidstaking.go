@@ -150,10 +150,10 @@ func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, 
 	return totalLiquidTokens, liquidTokenMap
 }
 
-func (vs LiquidValidators) Map() map[string]bool {
-	valMap := make(map[string]bool)
+func (vs LiquidValidators) Map() map[string]struct{} {
+	valMap := make(map[string]struct{})
 	for _, val := range vs {
-		valMap[val.OperatorAddress] = true
+		valMap[val.OperatorAddress] = struct{}{}
 	}
 	return valMap
 }
