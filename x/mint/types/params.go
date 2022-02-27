@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	squadtypes "github.com/cosmosquad-labs/squad/types"
+	squad "github.com/cosmosquad-labs/squad/types"
 )
 
 // Parameter store keys
@@ -21,13 +21,13 @@ var (
 	// DefaultInflationSchedules is example of inflation schedules, It could be rearranged on genesis or gov
 	DefaultInflationSchedules = []InflationSchedule{
 		{
-			StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
-			EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+			StartTime: squad.ParseTime("2022-01-01T00:00:00Z"),
+			EndTime:   squad.ParseTime("2023-01-01T00:00:00Z"),
 			Amount:    sdk.NewInt(300000000000000),
 		},
 		{
-			StartTime: squadtypes.ParseTime("2023-01-01T00:00:00Z"),
-			EndTime:   squadtypes.ParseTime("2024-01-01T00:00:00Z"),
+			StartTime: squad.ParseTime("2023-01-01T00:00:00Z"),
+			EndTime:   squad.ParseTime("2024-01-01T00:00:00Z"),
 			Amount:    sdk.NewInt(200000000000000),
 		},
 	}
@@ -117,7 +117,7 @@ func validateInflationSchedules(i interface{}) error {
 			return fmt.Errorf("inflation end time %s must be greater than start time %s", inflation.EndTime.Format(time.RFC3339), inflation.StartTime.Format(time.RFC3339))
 		}
 		for _, inflationOther := range v[j+1:] {
-			if squadtypes.DateRangesOverlap(inflation.StartTime, inflation.EndTime, inflationOther.StartTime, inflationOther.EndTime) {
+			if squad.DateRangesOverlap(inflation.StartTime, inflation.EndTime, inflationOther.StartTime, inflationOther.EndTime) {
 				return fmt.Errorf("inflation periods cannot be overlapped %s ~ %s with %s ~ %s", inflation.StartTime.Format(time.RFC3339), inflation.EndTime.Format(time.RFC3339), inflationOther.StartTime.Format(time.RFC3339), inflationOther.EndTime.Format(time.RFC3339))
 			}
 		}

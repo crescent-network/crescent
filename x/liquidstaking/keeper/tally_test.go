@@ -8,7 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	simapp "github.com/cosmosquad-labs/squad/app"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 		votingPowers = govtypes.AdditionalVotingPowers{}
 		votes := s.app.GovKeeper.GetVotes(cachedCtx, proposal.ProposalId)
 		s.keeper.SetLiquidStakingVotingPowers(cachedCtx, votes, &votingPowers)
-		squadtypes.PP(votingPowers)
+		squad.PP(votingPowers)
 
 		s.Require().Len(votingPowers, 5)
 		testVotingPowers(delB, delBbToken)
@@ -388,8 +388,8 @@ func (s *KeeperTestSuite) TestVotingPower() {
 	votingPower = s.keeper.GetVotingPower(s.ctx, delA)
 	s.Require().EqualValues(votingPower.StakingVotingPower, sdk.ZeroInt())
 	s.Require().EqualValues(votingPower.LiquidStakingVotingPower, sdk.ZeroInt())
-	squadtypes.PP(s.keeper.NetAmountState(s.ctx))
-	squadtypes.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
+	squad.PP(s.keeper.NetAmountState(s.ctx))
+	squad.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
 
 	// rebalancing not occurred because no active liquid validators, unbonding started all liquid tokens, no liquid staking voting power
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)

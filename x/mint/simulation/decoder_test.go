@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	squadtypes "github.com/cosmosquad-labs/squad/types"
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/mint/simulation"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
@@ -20,7 +20,7 @@ func TestDecodeLastBlockTimeStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig()
 	dec := simulation.NewDecodeStore(cdc.Marshaler)
 
-	tc := squadtypes.ParseTime("2022-01-01T00:00:00Z")
+	tc := squad.ParseTime("2022-01-01T00:00:00Z")
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

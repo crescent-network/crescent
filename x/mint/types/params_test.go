@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/stretchr/testify/require"
 
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -75,8 +75,8 @@ func TestParamsValidate(t *testing.T) {
 			func(params *types.Params) {
 				params.InflationSchedules = []types.InflationSchedule{
 					{
-						StartTime: squadtypes.ParseTime("2023-01-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2022-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2023-01-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2022-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(300000000000000),
 					},
 				}
@@ -88,8 +88,8 @@ func TestParamsValidate(t *testing.T) {
 			func(params *types.Params) {
 				params.InflationSchedules = []types.InflationSchedule{
 					{
-						StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2022-01-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2023-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(-1),
 					},
 				}
@@ -101,8 +101,8 @@ func TestParamsValidate(t *testing.T) {
 			func(params *types.Params) {
 				params.InflationSchedules = []types.InflationSchedule{
 					{
-						StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2022-01-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2023-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(31535999),
 					},
 				}
@@ -114,13 +114,13 @@ func TestParamsValidate(t *testing.T) {
 			func(params *types.Params) {
 				params.InflationSchedules = []types.InflationSchedule{
 					{
-						StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2022-01-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2023-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(31536000),
 					},
 					{
-						StartTime: squadtypes.ParseTime("2022-12-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2024-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2022-12-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2024-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(31536000),
 					},
 				}
@@ -132,13 +132,13 @@ func TestParamsValidate(t *testing.T) {
 			func(params *types.Params) {
 				params.InflationSchedules = []types.InflationSchedule{
 					{
-						StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2022-01-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2023-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(31536000),
 					},
 					{
-						StartTime: squadtypes.ParseTime("2023-01-01T00:00:01Z"),
-						EndTime:   squadtypes.ParseTime("2024-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2023-01-01T00:00:01Z"),
+						EndTime:   squad.ParseTime("2024-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(31536000),
 					},
 				}
@@ -150,13 +150,13 @@ func TestParamsValidate(t *testing.T) {
 			func(params *types.Params) {
 				params.InflationSchedules = []types.InflationSchedule{
 					{
-						StartTime: squadtypes.ParseTime("2022-01-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2023-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2022-01-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2023-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(31536000),
 					},
 					{
-						StartTime: squadtypes.ParseTime("2023-01-01T00:00:00Z"),
-						EndTime:   squadtypes.ParseTime("2024-01-01T00:00:00Z"),
+						StartTime: squad.ParseTime("2023-01-01T00:00:00Z"),
+						EndTime:   squad.ParseTime("2024-01-01T00:00:00Z"),
 						Amount:    sdk.NewInt(31536000),
 					},
 				}

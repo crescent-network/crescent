@@ -22,7 +22,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/cosmosquad-labs/squad/app"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
+	squad "github.com/cosmosquad-labs/squad/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking"
@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.delAddrs = simapp.AddTestAddrs(s.app, s.ctx, 10, sdk.NewInt(1_000_000_000))
 	s.valAddrs = simapp.ConvertAddrsToValAddrs(s.delAddrs)
 
-	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.ParseTime("2022-03-01T00:00:00Z"))
+	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(squad.ParseTime("2022-03-01T00:00:00Z"))
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	s.keeper.SetParams(s.ctx, params)

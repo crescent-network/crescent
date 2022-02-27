@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmosquad-labs/squad/app"
 	simapp "github.com/cosmosquad-labs/squad/app"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/mint"
 	"github.com/cosmosquad-labs/squad/x/mint/keeper"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
@@ -61,7 +61,7 @@ func (s *ModuleTestSuite) TestInitGenesis() {
 	s.Require().Equal(*genState, *got)
 
 	// not nil last block time case
-	testTime := squadtypes.ParseTime("2023-01-01T00:00:00Z")
+	testTime := squad.ParseTime("2023-01-01T00:00:00Z")
 	genState.LastBlockTime = &testTime
 	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
 	got = mint.ExportGenesis(s.ctx, s.app.MintKeeper)
@@ -89,12 +89,12 @@ func (s *ModuleTestSuite) TestImportExportGenesis() {
 	genState3 := mint.ExportGenesis(ctx, k)
 	s.Require().Equal(*genState, genState2, *genState3)
 
-	ctx = ctx.WithBlockTime(squadtypes.ParseTime("2022-01-01T00:00:00Z"))
+	ctx = ctx.WithBlockTime(squad.ParseTime("2022-01-01T00:00:00Z"))
 	mint.BeginBlocker(ctx, k)
 	genState4 := mint.ExportGenesis(ctx, k)
 	bz = s.app.AppCodec().MustMarshalJSON(genState4)
 	s.app.AppCodec().MustUnmarshalJSON(bz, &genState5)
-	s.Require().Equal(*genState5.LastBlockTime, squadtypes.ParseTime("2022-01-01T00:00:00Z"))
+	s.Require().Equal(*genState5.LastBlockTime, squad.ParseTime("2022-01-01T00:00:00Z"))
 	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState5)
 	genState6 := mint.ExportGenesis(ctx, k)
 	s.Require().Equal(*genState4, genState5, genState6)
@@ -124,7 +124,7 @@ func TestConstantInflation(t *testing.T) {
 		return mintedAmt.Amount
 	}
 
-	ctx = ctx.WithBlockHeight(0).WithBlockTime(squadtypes.ParseTime("2022-01-01T00:00:00Z"))
+	ctx = ctx.WithBlockHeight(0).WithBlockTime(squad.ParseTime("2022-01-01T00:00:00Z"))
 
 	// skip first block inflation, not set LastBlockTime
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(0))
@@ -137,7 +137,7 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 
-	ctx = ctx.WithBlockHeight(100).WithBlockTime(squadtypes.ParseTime("2023-01-01T00:00:00Z"))
+	ctx = ctx.WithBlockHeight(100).WithBlockTime(squad.ParseTime("2023-01-01T00:00:00Z"))
 
 	// applied 10sec(params.BlockTimeThreshold) block time due to block time diff is over params.BlockTimeThreshold
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
@@ -162,7 +162,7 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
 
 	// no inflation
-	ctx = ctx.WithBlockHeight(300).WithBlockTime(squadtypes.ParseTime("2030-01-01T01:00:00Z"))
+	ctx = ctx.WithBlockHeight(300).WithBlockTime(squad.ParseTime("2030-01-01T01:00:00Z"))
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())

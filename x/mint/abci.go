@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
+	squad "github.com/cosmosquad-labs/squad/types"
 
 	"github.com/cosmosquad-labs/squad/x/mint/keeper"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
@@ -29,7 +29,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	blockInflation := sdk.ZeroInt()
 	var blockDurationForInflation time.Duration
 	for _, schedule := range inflationSchedules {
-		if squadtypes.DateRangeIncludes(schedule.StartTime, schedule.EndTime, ctx.BlockTime()) {
+		if squad.DateRangeIncludes(schedule.StartTime, schedule.EndTime, ctx.BlockTime()) {
 			blockDurationForInflation = ctx.BlockTime().Sub(*lastBlockTime)
 			if blockDurationForInflation > params.BlockTimeThreshold {
 				blockDurationForInflation = params.BlockTimeThreshold
