@@ -340,7 +340,7 @@ func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, whitelistedValMap typ
 
 	for ; iterator.Valid(); iterator.Next() {
 		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
-		if k.ActiveCondition(ctx, val, whitelistedValMap.IsListed(val.OperatorAddress)) {
+		if k.IsActiveLiquidValidator(ctx, val, whitelistedValMap) {
 			vals = append(vals, val)
 		}
 	}
@@ -351,7 +351,7 @@ func (k Keeper) GetAllLiquidValidatorStates(ctx sdk.Context) (liquidValidatorSta
 	lvs := k.GetAllLiquidValidators(ctx)
 	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
 	for _, lv := range lvs {
-		active := k.ActiveCondition(ctx, lv, whitelistedValMap.IsListed(lv.OperatorAddress))
+		active := k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap)
 		lvState := types.LiquidValidatorState{
 			OperatorAddress: lv.OperatorAddress,
 			Weight:          lv.GetWeight(whitelistedValMap, active),
@@ -376,7 +376,7 @@ func (k Keeper) GetLiquidValidatorState(ctx sdk.Context, addr sdk.ValAddress) (l
 		}, false
 	}
 	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
-	active := k.ActiveCondition(ctx, lv, whitelistedValMap.IsListed(lv.OperatorAddress))
+	active := k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap)
 	return types.LiquidValidatorState{
 		OperatorAddress: lv.OperatorAddress,
 		Weight:          lv.GetWeight(whitelistedValMap, active),
@@ -386,20 +386,31 @@ func (k Keeper) GetLiquidValidatorState(ctx sdk.Context, addr sdk.ValAddress) (l
 	}, true
 }
 
-func (k Keeper) ActiveCondition(ctx sdk.Context, v types.LiquidValidator, whitelisted bool) bool {
-	val, found := k.stakingKeeper.GetValidator(ctx, v.GetOperator())
+func (k Keeper) IsActiveLiquidValidator(ctx sdk.Context, lv types.LiquidValidator, whitelistedValMap types.WhitelistedValMap) bool {
+	val, found := k.stakingKeeper.GetValidator(ctx, lv.GetOperator())
 	if !found {
 		return false
 	}
-	tombstoned := v.IsTombstoned(ctx, k.stakingKeeper, k.slashingKeeper)
-	return types.ActiveCondition(val, whitelisted, tombstoned)
+	return types.ActiveCondition(val, whitelistedValMap.IsListed(lv.OperatorAddress), k.IsTombstoned(ctx, lv))
+}
+
+func (k Keeper) IsTombstoned(ctx sdk.Context, lv types.LiquidValidator) bool {
+	val, found := k.stakingKeeper.GetValidator(ctx, lv.GetOperator())
+	if !found {
+		return false
+	}
+	consPk, err := val.ConsPubKey()
+	if err != nil {
+		return false
+	}
+	return k.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(consPk.Address()))
 }
 
 func (k Keeper) GetWeightMap(ctx sdk.Context, liquidVals types.LiquidValidators, whitelistedValMap types.WhitelistedValMap) (map[string]sdk.Int, sdk.Int) {
 	weightMap := map[string]sdk.Int{}
 	totalWeight := sdk.ZeroInt()
 	for _, val := range liquidVals {
-		weight := val.GetWeight(whitelistedValMap, k.ActiveCondition(ctx, val, whitelistedValMap.IsListed(val.OperatorAddress)))
+		weight := val.GetWeight(whitelistedValMap, k.IsActiveLiquidValidator(ctx, val, whitelistedValMap))
 		totalWeight = totalWeight.Add(weight)
 		weightMap[val.OperatorAddress] = weight
 	}

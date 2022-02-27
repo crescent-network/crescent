@@ -173,7 +173,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 			lv := types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 			}
-			if k.ActiveCondition(ctx, lv, true) {
+			if k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap) {
 				k.SetLiquidValidator(ctx, lv)
 				liquidValidators = append(liquidValidators, lv)
 				ctx.EventManager().EmitEvents(sdk.Events{
@@ -192,7 +192,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 	reds := k.Rebalance(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValMap, types.RebalancingTrigger)
 
 	for _, lv := range liquidValidators {
-		if !k.ActiveCondition(ctx, lv, whitelistedValMap.IsListed(lv.OperatorAddress)) {
+		if !k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap) {
 			// unbond all delShares to proxyAcc if delShares exist on inactive validators
 			delShares := lv.GetDelShares(ctx, k.stakingKeeper)
 			if delShares.IsPositive() {
