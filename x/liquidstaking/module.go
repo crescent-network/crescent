@@ -21,7 +21,6 @@ import (
 	//"github.com/squad-network/squad/x/liquidstaking/client/rest"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
-
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/simulation"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -173,7 +172,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // EndBlock returns the end blocker for the liquidstaking module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
 

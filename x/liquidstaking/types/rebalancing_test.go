@@ -3,9 +3,11 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 var (
@@ -409,7 +411,7 @@ func TestDivideByCurrentWeight(t *testing.T) {
 
 		totalTargetAmt := sdk.ZeroDec()
 		totalLiquidTokens := sdk.ZeroInt()
-		liquidTokenMap := make(map[string]sdk.Int)
+		liquidTokenMap := map[string]sdk.Int{}
 		var lvs types.LiquidValidators
 		for _, v := range tc.liquidValidators {
 			totalLiquidTokens = totalLiquidTokens.Add(v.LiquidTokens)

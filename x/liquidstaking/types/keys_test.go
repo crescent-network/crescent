@@ -3,9 +3,10 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )

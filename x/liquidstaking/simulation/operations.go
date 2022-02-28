@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 
 	squadappparams "github.com/cosmosquad-labs/squad/app/params"
+	squad "github.com/cosmosquad-labs/squad/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 // Simulation operation weights constants.
@@ -88,7 +88,7 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			}
 		}
 		fmt.Println("## ADD liquid NetAmountState", stakingCoin)
-		squadtypes.PP(k.NetAmountState(ctx))
+		squad.PP(k.NetAmountState(ctx))
 
 		msg := types.NewMsgLiquidStake(delegator, stakingCoin)
 		txCtx := simulation.OperationInput{
@@ -134,7 +134,7 @@ func SimulateMsgLiquidUnstake(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			// spendable must be greater than unstaking coins
 			if spendable.AmountOf(types.DefaultLiquidBondDenom).GTE(unstakingCoin.Amount) {
 				fmt.Println("## UNBONDING NetAmountState", unstakingCoin)
-				squadtypes.PP(k.NetAmountState(ctx))
+				squad.PP(k.NetAmountState(ctx))
 				break
 			}
 		}

@@ -1,15 +1,15 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
 
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -57,7 +57,7 @@ $ %s query %s params
 
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.Params(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryParamsRequest{},
 			)
 			if err != nil {
@@ -95,16 +95,13 @@ $ %s query %s liquid-validators
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
 			res, err := queryClient.LiquidValidators(
-				context.Background(),
-				&types.QueryLiquidValidatorsRequest{
-					Pagination: pageReq,
-				},
+				cmd.Context(),
+				&types.QueryLiquidValidatorsRequest{},
 			)
 			if err != nil {
 				return err
@@ -143,7 +140,7 @@ $ %s query %s states
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.States(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryStatesRequest{},
 			)
 			if err != nil {
@@ -188,7 +185,7 @@ $ %s query %s voting-power %s1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.VotingPower(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryVotingPowerRequest{Voter: voter.String()},
 			)
 			if err != nil {

@@ -1,15 +1,16 @@
 package keeper_test
 
 import (
-	gocontext "context"
+	"context"
 	"testing"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	squadapp "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
@@ -38,7 +39,7 @@ func (suite *MintTestSuite) SetupTest() {
 func (suite *MintTestSuite) TestGRPCParams() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	params, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	params, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(params.Params, app.MintKeeper.GetParams(ctx))
 }

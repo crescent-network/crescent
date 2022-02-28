@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 // Parameter store keys
@@ -114,7 +115,7 @@ func ValidateWhitelistedValidators(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	valMap := make(map[string]bool)
+	valMap := map[string]struct{}{}
 	for _, wv := range wvs {
 		_, valErr := sdk.ValAddressFromBech32(wv.ValidatorAddress)
 		if valErr != nil {
@@ -132,7 +133,7 @@ func ValidateWhitelistedValidators(i interface{}) error {
 		if _, ok := valMap[wv.ValidatorAddress]; ok {
 			return fmt.Errorf("liquidstaking validator cannot be duplicated: %s", wv.ValidatorAddress)
 		}
-		valMap[wv.ValidatorAddress] = true
+		valMap[wv.ValidatorAddress] = struct{}{}
 	}
 	return nil
 }

@@ -2,5 +2,6 @@ package types
 
 // Mint module event types
 const (
-	EventTypeMint = ModuleName
+	EventTypeMint             = ModuleName
+	AttributeKeyBlockDuration = "block_duration"
 )

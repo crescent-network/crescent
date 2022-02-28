@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	squadtypes "github.com/cosmosquad-labs/squad/types"
 	"github.com/stretchr/testify/require"
 
+	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
@@ -24,7 +24,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"valid last block time",
 			func(genState *types.GenesisState) {
-				tmpTime := squadtypes.ParseTime("0001-01-01T00:00:00Z")
+				tmpTime := squad.ParseTime("0001-01-01T00:00:00Z")
 				genState.LastBlockTime = &tmpTime
 			},
 			"",
@@ -32,7 +32,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"valid last block time2",
 			func(genState *types.GenesisState) {
-				tmpTime := squadtypes.ParseTime("9999-12-31T00:00:00Z")
+				tmpTime := squad.ParseTime("9999-12-31T00:00:00Z")
 				genState.LastBlockTime = &tmpTime
 			},
 			"",

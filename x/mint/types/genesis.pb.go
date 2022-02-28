@@ -29,9 +29,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the mint module's genesis state.
 type GenesisState struct {
-	// last_block_time defines last block time, It used to calculate inflation.
+	// last_block_time defines the last block time, which is used to calculate inflation.
 	LastBlockTime *time.Time `protobuf:"bytes,1,opt,name=last_block_time,json=lastBlockTime,proto3,stdtime" json:"last_block_time,omitempty" yaml:"last_block_time"`
-	// params defines all the paramaters of the module.
+	// params defines all the parameters of the module.
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
 }
 
