@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	_ "github.com/stretchr/testify/suite"
-
 	squad "github.com/cosmosquad-labs/squad/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (s *KeeperTestSuite) TestDepositWithdraw() {

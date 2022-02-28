@@ -4,11 +4,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/stretchr/testify/suite"
 
 	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (s *KeeperTestSuite) TestLimitOrder() {

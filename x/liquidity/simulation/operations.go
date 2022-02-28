@@ -306,7 +306,9 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		for _, simAccount = range accs {
 			spendable = bk.SpendableCoins(ctx, simAccount.Address)
 			for _, coin := range spendable {
-				if poolId = types.ParsePoolCoinDenom(coin.Denom); poolId != 0 {
+				var err error
+				poolId, err = types.ParsePoolCoinDenom(coin.Denom)
+				if err != nil {
 					skip = false
 					break loop
 				}
