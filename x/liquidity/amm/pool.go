@@ -131,10 +131,13 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
 	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
 }
 
-// PoolsOrderBook assumes that lastPrice is on ticks.
-func PoolsOrderBook(pools []Pool, lastPrice sdk.Dec, numTicks, tickPrec int) *OrderBook {
+// PoolsOrderBook returns an order book with orders made by pools.
+// The order book has at most (numTicks*2+1) ticks visible, which includes
+// basePrice, numTicks ticks over basePrice and numTicks ticks under basePrice.
+// PoolsOrderBook assumes that basePrice is on ticks.
+func PoolsOrderBook(pools []Pool, basePrice sdk.Dec, numTicks, tickPrec int) *OrderBook {
 	prec := TickPrecision(tickPrec)
-	i := prec.TickToIndex(lastPrice)
+	i := prec.TickToIndex(basePrice)
 	highestTick := prec.TickFromIndex(i + numTicks)
 	lowestTick := prec.TickFromIndex(i - numTicks)
 	ob := NewOrderBook()
@@ -145,8 +148,10 @@ func PoolsOrderBook(pools []Pool, lastPrice sdk.Dec, numTicks, tickPrec int) *Or
 			accAmt := sdk.ZeroInt()
 			for tick := startTick; tick.GTE(lowestTick); tick = prec.DownTick(tick) {
 				amt := pool.BuyAmountOver(tick).Sub(accAmt)
-				ob.Add(NewBaseOrder(Buy, tick, amt, sdk.Coin{}, "denom"))
-				accAmt = accAmt.Add(amt)
+				if amt.IsPositive() {
+					ob.Add(NewBaseOrder(Buy, tick, amt, sdk.Coin{}, "denom"))
+					accAmt = accAmt.Add(amt)
+				}
 			}
 		}
 		if poolPrice.LT(highestTick) { // Sell orders
@@ -154,8 +159,10 @@ func PoolsOrderBook(pools []Pool, lastPrice sdk.Dec, numTicks, tickPrec int) *Or
 			accAmt := sdk.ZeroInt()
 			for tick := startTick; tick.LTE(highestTick); tick = prec.UpTick(tick) {
 				amt := pool.SellAmountUnder(tick).Sub(accAmt)
-				ob.Add(NewBaseOrder(Sell, tick, amt, sdk.Coin{}, "denom"))
-				accAmt = accAmt.Add(amt)
+				if amt.IsPositive() {
+					ob.Add(NewBaseOrder(Sell, tick, amt, sdk.Coin{}, "denom"))
+					accAmt = accAmt.Add(amt)
+				}
 			}
 		}
 	}
