@@ -40,7 +40,7 @@ func SortOrders(orders []amm.Order, cmp PriceComparator) {
 		case *UserOrder:
 			switch orderB := orders[j].(type) {
 			case *UserOrder:
-				return orderA.RequestId < orderB.RequestId
+				return orderA.OrderId < orderB.OrderId
 			case *PoolOrder:
 				return false
 			}
@@ -65,8 +65,8 @@ func SortOrders(orders []amm.Order, cmp PriceComparator) {
 // UserOrder is the user order type.
 type UserOrder struct {
 	*amm.BaseOrder
-	RequestId uint64
-	Orderer   sdk.AccAddress
+	OrderId uint64
+	Orderer sdk.AccAddress
 }
 
 // NewUserOrder returns a new user order.
@@ -80,7 +80,7 @@ func NewUserOrder(order Order) *UserOrder {
 	}
 	return &UserOrder{
 		BaseOrder: amm.NewBaseOrder(dir, order.Price, order.OpenAmount, order.RemainingOfferCoin, order.ReceivedCoin.Denom),
-		RequestId: order.Id,
+		OrderId:   order.Id,
 		Orderer:   order.GetOrderer(),
 	}
 }

@@ -369,7 +369,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		switch order := order.(type) {
 		case *types.UserOrder:
 			// TODO: optimize read/write (can there be only one write?)
-			o, _ := k.GetOrder(ctx, pair.Id, order.RequestId)
+			o, _ := k.GetOrder(ctx, pair.Id, order.OrderId)
 			o.OpenAmount = order.OpenAmount
 			o.RemainingOfferCoin = order.RemainingOfferCoin
 			o.ReceivedCoin = o.ReceivedCoin.AddAmount(order.ReceivedDemandCoin.Amount)
