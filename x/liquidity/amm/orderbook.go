@@ -108,7 +108,7 @@ func (ob *OrderBook) stringRepresentation(prices []sdk.Dec) string {
 		return prices[i].GT(prices[j])
 	})
 	var b strings.Builder
-	b.WriteString("+-----buy------+----------price-----------+-----sell-----+\n")
+	b.WriteString("+--------buy---------+------------price-------------+--------sell--------+\n")
 	for _, price := range prices {
 		buyAmt, sellAmt := sdk.ZeroInt(), sdk.ZeroInt()
 		if i, exact := ob.buys.findPrice(price); exact {
@@ -117,9 +117,9 @@ func (ob *OrderBook) stringRepresentation(prices []sdk.Dec) string {
 		if i, exact := ob.sells.findPrice(price); exact {
 			sellAmt = TotalOpenAmount(ob.sells[i].orders)
 		}
-		_, _ = fmt.Fprintf(&b, "| %12s | %24s | %-12s |\n", buyAmt, price.String(), sellAmt)
+		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", buyAmt, price.String(), sellAmt)
 	}
-	b.WriteString("+--------------+--------------------------+--------------+")
+	b.WriteString("+--------------------+------------------------------+--------------------+")
 	return b.String()
 }
 
