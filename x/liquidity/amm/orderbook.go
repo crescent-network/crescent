@@ -97,9 +97,6 @@ func (ticks *orderBookTicks) add(order Order) {
 }
 
 func (ticks orderBookTicks) highestPrice() (sdk.Dec, bool) {
-	if len(ticks) == 0 {
-		return sdk.Dec{}, false
-	}
 	for _, tick := range ticks {
 		if TotalOpenAmount(tick.orders).IsPositive() {
 			return tick.price, true
@@ -109,9 +106,6 @@ func (ticks orderBookTicks) highestPrice() (sdk.Dec, bool) {
 }
 
 func (ticks orderBookTicks) lowestPrice() (sdk.Dec, bool) {
-	if len(ticks) == 0 {
-		return sdk.Dec{}, false
-	}
 	for i := len(ticks) - 1; i >= 0; i-- {
 		if TotalOpenAmount(ticks[i].orders).IsPositive() {
 			return ticks[i].price, true
