@@ -95,16 +95,13 @@ $ %s query %s liquid-validators
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
 			res, err := queryClient.LiquidValidators(
 				cmd.Context(),
-				&types.QueryLiquidValidatorsRequest{
-					Pagination: pageReq,
-				},
+				&types.QueryLiquidValidatorsRequest{},
 			)
 			if err != nil {
 				return err
