@@ -21,12 +21,16 @@ type Pool interface {
 
 // BasicPool is the basic pool type.
 type BasicPool struct {
+	// rx and ry are the pool's reserve balance of each x/y coin.
+	// In perspective of a pair, x coin is the quote coin and
+	// y coin is the base coin.
 	rx, ry sdk.Dec
-	ps     sdk.Dec
+	// ps is the pool's pool coin supply.
+	ps sdk.Dec
 }
 
 // NewBasicPool returns a new BasicPool.
-// Pass sdk.ZeroInt() to ps when ps is not going to be used.
+// It is OK to pass an empty sdk.Int to ps when ps is not going to be used.
 func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 	return &BasicPool{
 		rx: rx.ToDec(),
