@@ -1,6 +1,7 @@
 package amm_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -335,6 +336,31 @@ func TestBasicPool_Amount(t *testing.T) {
 		squad.ParseDec("1000000"),
 		pool.SellAmountUnder(defTickPrec.HighestTick()).ToDec()),
 	)
+}
+
+func ExamplePoolsOrderBook() {
+	pools := []amm.Pool{
+		amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{}),
+	}
+	ob := amm.PoolsOrderBook(pools, squad.ParseDec("1.0"), 6, int(defTickPrec))
+	fmt.Println(ob.FullString(int(defTickPrec)))
+
+	// Output:
+	// +--------buy---------+------------price-------------+--------sell--------+
+	// |                  0 |         1.006000000000000000 | 989                |
+	// |                  0 |         1.005000000000000000 | 991                |
+	// |                  0 |         1.004000000000000000 | 993                |
+	// |                  0 |         1.003000000000000000 | 995                |
+	// |                  0 |         1.002000000000000000 | 997                |
+	// |                  0 |         1.001000000000000000 | 999                |
+	// |                  0 |         1.000000000000000000 | 0                  |
+	// |                100 |         0.999900000000000000 | 0                  |
+	// |                100 |         0.999800000000000000 | 0                  |
+	// |                100 |         0.999700000000000000 | 0                  |
+	// |                100 |         0.999600000000000000 | 0                  |
+	// |                100 |         0.999500000000000000 | 0                  |
+	// |                100 |         0.999400000000000000 | 0                  |
+	// +--------------------+------------------------------+--------------------+
 }
 
 func TestMockPoolOrderSource_Orders(t *testing.T) {
