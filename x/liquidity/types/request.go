@@ -224,6 +224,11 @@ func (order Order) Validate() error {
 	return nil
 }
 
+// ExpiredAt returns whether the order should be deleted at given time.
+func (order Order) ExpiredAt(t time.Time) bool {
+	return !order.ExpireAt.After(t)
+}
+
 // IsValid returns true if the RequestStatus is one of:
 // RequestStatusNotExecuted, RequestStatusSucceeded, RequestStatusFailed.
 func (status RequestStatus) IsValid() bool {

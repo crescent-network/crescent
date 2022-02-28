@@ -281,8 +281,8 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		case types.OrderStatusNotExecuted,
 			types.OrderStatusNotMatched,
 			types.OrderStatusPartiallyMatched:
-			if req.Status != types.OrderStatusNotExecuted && !ctx.BlockTime().Before(req.ExpireAt) {
-				if err := k.FinishOrder(ctx, req, types.OrderStatusExpired); err != nil {
+			if order.Status != types.OrderStatusNotExecuted && order.ExpiredAt(ctx.BlockTime()) {
+				if err := k.FinishOrder(ctx, order, types.OrderStatusExpired); err != nil {
 					return false, err
 				}
 				return false, nil
