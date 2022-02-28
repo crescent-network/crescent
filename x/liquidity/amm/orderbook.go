@@ -3,6 +3,7 @@ package amm
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -97,6 +98,55 @@ func (ob *OrderBook) LowestPrice() (sdk.Dec, bool) {
 	default:
 		return sdk.Dec{}, false
 	}
+}
+
+func (ob *OrderBook) stringRepresentation(prices []sdk.Dec) string {
+	if len(prices) == 0 {
+		return "<nil>"
+	}
+	sort.Slice(prices, func(i, j int) bool {
+		return prices[i].GT(prices[j])
+	})
+	var b strings.Builder
+	b.WriteString("+-----buy------+----------price-----------+-----sell-----+\n")
+	for _, price := range prices {
+		buyAmt, sellAmt := sdk.ZeroInt(), sdk.ZeroInt()
+		if i, exact := ob.buys.findPrice(price); exact {
+			buyAmt = TotalOpenAmount(ob.buys[i].orders)
+		}
+		if i, exact := ob.sells.findPrice(price); exact {
+			sellAmt = TotalOpenAmount(ob.sells[i].orders)
+		}
+		_, _ = fmt.Fprintf(&b, "| %12s | %24s | %-12s |\n", buyAmt, price.String(), sellAmt)
+	}
+	b.WriteString("+--------------+--------------------------+--------------+")
+	return b.String()
+}
+
+// FullString returns a full string representation of the order book.
+// FullString includes all possible price ticks from the order book's
+// highest price to the lowest price.
+func (ob *OrderBook) FullString(tickPrec int) string {
+	var prices []sdk.Dec
+	highest, found := ob.HighestPrice()
+	if !found {
+		return "<nil>"
+	}
+	lowest, _ := ob.LowestPrice()
+	for ; lowest.LTE(highest); lowest = UpTick(lowest, tickPrec) {
+		prices = append(prices, lowest)
+	}
+	return ob.stringRepresentation(prices)
+}
+
+// String returns a compact string representation of the order book.
+// String includes a tick only when there is at least one order on it.
+func (ob *OrderBook) String() string {
+	var prices []sdk.Dec
+	for _, tick := range append(ob.buys, ob.sells...) {
+		prices = append(prices, tick.price)
+	}
+	return ob.stringRepresentation(prices)
 }
 
 // orderBookTicks represents a list of orderBookTick.
