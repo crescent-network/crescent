@@ -44,7 +44,7 @@ Example:
 $ %s prepare-genesis mainnet squad-1
 $ %s prepare-genesis testnet squad-1
 
-The genesis output file is at $HOME/.squadapp/config/genesis.json
+The genesis output file is at $HOME/.appHomeDir/config/genesis.json
 `,
 				version.AppName,
 				version.AppName,

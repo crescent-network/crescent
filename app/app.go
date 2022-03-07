@@ -114,8 +114,6 @@ import (
 	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
-const appName = "SquadApp"
-
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
@@ -239,7 +237,7 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".squadapp")
+	DefaultNodeHome = filepath.Join(userHomeDir, appUserHomeDir)
 }
 
 // NewApp returns a reference to an initialized App.

@@ -36,25 +36,6 @@ import (
 	farmingparams "github.com/cosmosquad-labs/squad/app/params"
 )
 
-const (
-	// BIP-44 path "44'/118'/0'/0/0"
-	Purpose  = uint32(44)
-	CoinType = uint32(118)
-
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = "cosmos"
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = Bech32PrefixAccAddr + "pub"
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = Bech32PrefixAccAddr + "valoper"
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = Bech32PrefixAccAddr + "valoperpub"
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = Bech32PrefixAccAddr + "valcons"
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = Bech32PrefixAccAddr + "valconspub"
-)
-
 var (
 	// AddressVerifier squad address verifier
 	AddressVerifier = func(bz []byte) error {
@@ -68,11 +49,11 @@ var (
 
 func GetConfig() *sdk.Config {
 	sdkConfig := sdk.GetConfig()
-	sdkConfig.SetPurpose(Purpose)
-	sdkConfig.SetCoinType(CoinType)
-	sdkConfig.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
-	sdkConfig.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
-	sdkConfig.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
+	sdkConfig.SetPurpose(app.Purpose)
+	sdkConfig.SetCoinType(app.CoinType)
+	sdkConfig.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
+	sdkConfig.SetBech32PrefixForValidator(app.Bech32PrefixValAddr, app.Bech32PrefixValPub)
+	sdkConfig.SetBech32PrefixForConsensusNode(app.Bech32PrefixConsAddr, app.Bech32PrefixConsPub)
 	sdkConfig.SetAddressVerifier(AddressVerifier)
 	return sdkConfig
 }
