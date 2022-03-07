@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	appparams "github.com/cosmosquad-labs/squad/app/params"
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
@@ -195,11 +195,11 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		depositCoins := sdk.NewCoins(
 			sdk.NewCoin(
 				pair.BaseCoinDenom,
-				squad.RandomInt(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.BaseCoinDenom)),
+				utils.RandomInt(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.BaseCoinDenom)),
 			),
 			sdk.NewCoin(
 				pair.QuoteCoinDenom,
-				squad.RandomInt(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.QuoteCoinDenom)),
+				utils.RandomInt(r, minDepositAmt, spendable.Sub(params.PoolCreationFee).AmountOf(pair.QuoteCoinDenom)),
 			),
 		)
 
@@ -250,10 +250,10 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 				depositCoins = sdk.NewCoins(
 					sdk.NewCoin(
 						pair.BaseCoinDenom,
-						squad.RandomInt(r, sdk.OneInt(), spendable.AmountOf(pair.BaseCoinDenom))),
+						utils.RandomInt(r, sdk.OneInt(), spendable.AmountOf(pair.BaseCoinDenom))),
 					sdk.NewCoin(
 						pair.QuoteCoinDenom,
-						squad.RandomInt(r, sdk.OneInt(), spendable.AmountOf(pair.QuoteCoinDenom))),
+						utils.RandomInt(r, sdk.OneInt(), spendable.AmountOf(pair.QuoteCoinDenom))),
 				)
 				if depositCoins.IsAllLTE(spendable) {
 					skip = false
@@ -317,7 +317,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		}
 
 		pool, _ := k.GetPool(ctx, poolId)
-		poolCoin := sdk.NewCoin(pool.PoolCoinDenom, squad.RandomInt(r, sdk.OneInt(), spendable.AmountOf(pool.PoolCoinDenom)))
+		poolCoin := sdk.NewCoin(pool.PoolCoinDenom, utils.RandomInt(r, sdk.OneInt(), spendable.AmountOf(pool.PoolCoinDenom)))
 		msg := types.NewMsgWithdraw(simAccount.Address, poolId, poolCoin)
 
 		txCtx := simulation.OperationInput{
@@ -377,9 +377,9 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.Int{})
 			minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
 		}
-		price := amm.PriceToDownTick(squad.RandomDec(r, minPrice, maxPrice), int(params.TickPrecision))
+		price := amm.PriceToDownTick(utils.RandomDec(r, minPrice, maxPrice), int(params.TickPrecision))
 
-		amt := squad.RandomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
+		amt := utils.RandomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
 
 		var offerCoin sdk.Coin
 		var demandCoinDenom string
@@ -453,7 +453,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 
 		_, maxPrice := minMaxPrice(k, ctx, *pair.LastPrice)
 
-		amt := squad.RandomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
+		amt := utils.RandomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
 
 		var offerCoin sdk.Coin
 		var demandCoinDenom string

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	crumb := ubdBToken.Amount.Sub(ubdBToken.Amount.QuoRaw(3).MulRaw(3)) // 1
 	s.Require().EqualValues(unbondingAmt, ubdBToken.Amount.Sub(crumb))  // 9999
 	s.Require().Equal(ubds[0].DelegatorAddress, s.delAddrs[0].String())
-	s.Require().Equal(ubdTime, squad.ParseTime("2022-03-22T00:00:00Z"))
+	s.Require().Equal(ubdTime, utils.ParseTime("2022-03-22T00:00:00Z"))
 	bTokenBalanceAfter := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], liquidBondDenom)
 	s.Require().Equal(bTokenBalanceAfter, sdk.NewCoin(liquidBondDenom, sdk.NewInt(40000)))
 

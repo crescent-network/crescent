@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
@@ -22,29 +22,29 @@ func TestFindMatchPrice(t *testing.T) {
 		{
 			"happy case",
 			amm.NewOrderBook(
-				newOrder(amm.Buy, squad.ParseDec("1.1"), sdk.NewInt(10000)),
-				newOrder(amm.Sell, squad.ParseDec("0.9"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("1.1"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9"), sdk.NewInt(10000)),
 			),
 			true,
-			squad.ParseDec("1.0"),
+			utils.ParseDec("1.0"),
 		},
 		{
 			"buy order only",
-			amm.NewOrderBook(newOrder(amm.Buy, squad.ParseDec("1.0"), sdk.NewInt(10000))),
+			amm.NewOrderBook(newOrder(amm.Buy, utils.ParseDec("1.0"), sdk.NewInt(10000))),
 			false,
 			sdk.Dec{},
 		},
 		{
 			"sell order only",
-			amm.NewOrderBook(newOrder(amm.Sell, squad.ParseDec("1.0"), sdk.NewInt(10000))),
+			amm.NewOrderBook(newOrder(amm.Sell, utils.ParseDec("1.0"), sdk.NewInt(10000))),
 			false,
 			sdk.Dec{},
 		},
 		{
 			"highest buy price is lower than lowest sell price",
 			amm.NewOrderBook(
-				newOrder(amm.Buy, squad.ParseDec("0.9"), sdk.NewInt(10000)),
-				newOrder(amm.Sell, squad.ParseDec("1.1"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("0.9"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("1.1"), sdk.NewInt(10000)),
 			),
 			false,
 			sdk.Dec{},
@@ -61,7 +61,7 @@ func TestFindMatchPrice(t *testing.T) {
 }
 
 func TestFindMatchPrice_Rounding(t *testing.T) {
-	basePrice := squad.ParseDec("0.9990")
+	basePrice := utils.ParseDec("0.9990")
 
 	for i := 0; i < 50; i++ {
 		ob := amm.NewOrderBook(
@@ -81,13 +81,13 @@ func TestFindMatchPrice_Rounding(t *testing.T) {
 }
 
 func TestFindLastMatchableOrders(t *testing.T) {
-	_, _, _, _, found := amm.FindLastMatchableOrders(nil, nil, squad.ParseDec("1.0"))
+	_, _, _, _, found := amm.FindLastMatchableOrders(nil, nil, utils.ParseDec("1.0"))
 	require.False(t, found)
 
 	for seed := int64(0); seed < 100; seed++ {
 		r := rand.New(rand.NewSource(seed))
 
-		minPrice, maxPrice := squad.ParseDec("0.01"), squad.ParseDec("1.0")
+		minPrice, maxPrice := utils.ParseDec("0.01"), utils.ParseDec("1.0")
 		minAmt, maxAmt := sdk.NewInt(30), sdk.NewInt(300)
 
 		for i := 0; i < 100; i++ {
@@ -95,16 +95,16 @@ func TestFindLastMatchableOrders(t *testing.T) {
 			numBuyOrders := 1 + r.Intn(5)
 			numSellOrders := 1 + r.Intn(5)
 			for j := 0; j < numBuyOrders; j++ {
-				price := squad.ParseDec("1.0") // Price is not important.
-				amt := squad.RandomInt(r, minAmt, maxAmt)
+				price := utils.ParseDec("1.0") // Price is not important.
+				amt := utils.RandomInt(r, minAmt, maxAmt)
 				buyOrders = append(buyOrders, newOrder(amm.Buy, price, amt))
 			}
 			for j := 0; j < numSellOrders; j++ {
-				price := squad.ParseDec("1.0") // Price is not important.
-				amt := squad.RandomInt(r, minAmt, maxAmt)
+				price := utils.ParseDec("1.0") // Price is not important.
+				amt := utils.RandomInt(r, minAmt, maxAmt)
 				sellOrders = append(sellOrders, newOrder(amm.Sell, price, amt))
 			}
-			matchPrice := defTickPrec.PriceToDownTick(squad.RandomDec(r, minPrice, maxPrice))
+			matchPrice := defTickPrec.PriceToDownTick(utils.RandomDec(r, minPrice, maxPrice))
 			// We don't sort orders like in real situations, and it doesn't
 			// actually matter.
 			bi, si, pmb, pms, found := amm.FindLastMatchableOrders(buyOrders, sellOrders, matchPrice)
@@ -119,7 +119,7 @@ func TestFindLastMatchableOrders(t *testing.T) {
 }
 
 func TestMatchOrders(t *testing.T) {
-	_, matched := amm.MatchOrders(nil, nil, squad.ParseDec("1.0"))
+	_, matched := amm.MatchOrders(nil, nil, utils.ParseDec("1.0"))
 	require.False(t, matched)
 
 	for _, tc := range []struct {
@@ -132,32 +132,32 @@ func TestMatchOrders(t *testing.T) {
 		{
 			"happy case",
 			amm.NewOrderBook(
-				newOrder(amm.Buy, squad.ParseDec("1.0"), sdk.NewInt(10000)),
-				newOrder(amm.Sell, squad.ParseDec("1.0"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("1.0"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("1.0"), sdk.NewInt(10000)),
 			),
-			squad.ParseDec("1.0"),
+			utils.ParseDec("1.0"),
 			true,
 			sdk.ZeroInt(),
 		},
 		{
 			"happy case #2",
 			amm.NewOrderBook(
-				newOrder(amm.Buy, squad.ParseDec("1.1"), sdk.NewInt(10000)),
-				newOrder(amm.Sell, squad.ParseDec("0.9"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("1.1"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9"), sdk.NewInt(10000)),
 			),
-			squad.ParseDec("1.0"),
+			utils.ParseDec("1.0"),
 			true,
 			sdk.ZeroInt(),
 		},
 		{
 			"positive quote coin dust",
 			amm.NewOrderBook(
-				newOrder(amm.Buy, squad.ParseDec("0.9999"), sdk.NewInt(1000)),
-				newOrder(amm.Buy, squad.ParseDec("0.9999"), sdk.NewInt(1000)),
-				newOrder(amm.Sell, squad.ParseDec("0.9999"), sdk.NewInt(1000)),
-				newOrder(amm.Sell, squad.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Buy, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Buy, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
 			),
-			squad.ParseDec("0.9999"),
+			utils.ParseDec("0.9999"),
 			true,
 			sdk.NewInt(2),
 		},
@@ -189,7 +189,7 @@ func TestMatchOrders(t *testing.T) {
 							effPrice = received.Amount.ToDec().QuoInt(paid.Amount)
 						}
 						fmt.Println(paid, received, effPrice, tc.matchPrice)
-						require.True(t, squad.DecApproxEqual(tc.matchPrice, effPrice))
+						require.True(t, utils.DecApproxEqual(tc.matchPrice, effPrice))
 					}
 				}
 			}

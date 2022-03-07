@@ -18,7 +18,7 @@ import (
 
 	"github.com/cosmosquad-labs/squad/app"
 	squadparams "github.com/cosmosquad-labs/squad/app/params"
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
@@ -69,8 +69,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.createPair("node0token", s.cfg.BondDenom)
 	s.limitOrder(
-		1, types.OrderDirectionSell, squad.ParseCoin("1000000node0token"), s.cfg.BondDenom,
-		squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute)
+		1, types.OrderDirectionSell, utils.ParseCoin("1000000node0token"), s.cfg.BondDenom,
+		utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
