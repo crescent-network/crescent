@@ -17,7 +17,7 @@ import (
 type MintTestSuite struct {
 	suite.Suite
 
-	app         *squadapp.SquadApp
+	app         *squadapp.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
 }

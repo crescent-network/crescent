@@ -34,7 +34,7 @@ type IntegrationTestSuite struct {
 
 func NewAppConstructor(encodingCfg squadparams.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
-		return squadapp.NewSquadApp(
+		return squadapp.NewApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},

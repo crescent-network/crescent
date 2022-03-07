@@ -20,7 +20,7 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app       *squadapp.SquadApp
+	app       *squadapp.App
 	ctx       sdk.Context
 	keeper    keeper.Keeper
 	querier   keeper.Querier
