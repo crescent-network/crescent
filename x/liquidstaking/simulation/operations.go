@@ -12,7 +12,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	squadappparams "github.com/cosmosquad-labs/squad/app/params"
+	appparams "github.com/cosmosquad-labs/squad/app/params"
 	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
@@ -34,14 +34,14 @@ func WeightedOperations(
 	var weightMsgLiquidStake int
 	appParams.GetOrGenerate(cdc, OpWeightMsgLiquidStake, &weightMsgLiquidStake, nil,
 		func(_ *rand.Rand) {
-			weightMsgLiquidStake = squadappparams.DefaultWeightMsgLiquidStake
+			weightMsgLiquidStake = appparams.DefaultWeightMsgLiquidStake
 		},
 	)
 
 	var weightMsgLiquidUnstake int
 	appParams.GetOrGenerate(cdc, OpWeightMsgLiquidUnstake, &weightMsgLiquidUnstake, nil,
 		func(_ *rand.Rand) {
-			weightMsgLiquidUnstake = squadappparams.DefaultWeightMsgLiquidUnstake
+			weightMsgLiquidUnstake = appparams.DefaultWeightMsgLiquidUnstake
 		},
 	)
 

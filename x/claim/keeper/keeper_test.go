@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/claim/keeper"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
@@ -21,7 +21,7 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app       *squadapp.App
+	app       *app.App
 	ctx       sdk.Context
 	keeper    keeper.Keeper
 	querier   keeper.Querier
@@ -33,7 +33,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.app = squadapp.Setup(false)
+	s.app = app.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.keeper = s.app.ClaimKeeper
 	s.querier = keeper.Querier{Keeper: s.keeper}
@@ -218,7 +218,7 @@ func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, coins sdk.Coins) {
-	err := squadapp.FundAccount(s.app.BankKeeper, s.ctx, addr, coins)
+	err := app.FundAccount(s.app.BankKeeper, s.ctx, addr, coins)
 	s.Require().NoError(err)
 }
 

@@ -32,7 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/app"
 	farmingparams "github.com/cosmosquad-labs/squad/app/params"
 )
 
@@ -83,7 +83,7 @@ func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 	sdkConfig := GetConfig()
 	sdkConfig.Seal()
 
-	encodingConfig := squadapp.MakeEncodingConfig()
+	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -91,7 +91,7 @@ func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(squadapp.DefaultNodeHome).
+		WithHomeDir(app.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
@@ -185,28 +185,28 @@ lru_size = 0`
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingConfig) {
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(squadapp.ModuleBasics, squadapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, squadapp.DefaultNodeHome),
+		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(squadapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, squadapp.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(squadapp.ModuleBasics),
-		AddGenesisAccountCmd(squadapp.DefaultNodeHome),
-		PrepareGenesisCmd(squadapp.DefaultNodeHome, squadapp.ModuleBasics),
+		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		AddGenesisAccountCmd(app.DefaultNodeHome),
+		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(squadapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
 
 	a := appCreator{encodingConfig}
-	server.AddCommands(rootCmd, squadapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(squadapp.DefaultNodeHome),
+		keys.Commands(app.DefaultNodeHome),
 	)
 
 	// add rosetta
@@ -235,7 +235,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	squadapp.ModuleBasics.AddQueryCommands(cmd)
+	app.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -261,7 +261,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	squadapp.ModuleBasics.AddTxCommands(cmd)
+	app.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -299,7 +299,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
-	return squadapp.NewApp(
+	return app.NewApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -325,20 +325,20 @@ func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
 
-	var farmingApp *squadapp.App
+	var farmingApp *app.App
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
 	if height != -1 {
-		farmingApp = squadapp.NewApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		farmingApp = app.NewApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 
 		if err := farmingApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		farmingApp = squadapp.NewApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		farmingApp = app.NewApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 	}
 
 	return farmingApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

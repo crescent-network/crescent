@@ -3,7 +3,7 @@ package keeper_test
 import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/app"
 	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 
 	// Reinitialize exported genesis
 	s.Require().NotPanics(func() {
-		s.app = squadapp.Setup(false)
+		s.app = app.Setup(false)
 		s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 		s.keeper = s.app.ClaimKeeper
 		s.keeper.InitGenesis(s.ctx, *genState)

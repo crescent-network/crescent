@@ -12,7 +12,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	squadappparams "github.com/cosmosquad-labs/squad/app/params"
+	appparams "github.com/cosmosquad-labs/squad/app/params"
 	squad "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
@@ -38,42 +38,42 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var weightMsgCreatePair int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePair, &weightMsgCreatePair, nil, func(_ *rand.Rand) {
-		weightMsgCreatePair = squadappparams.DefaultWeightMsgCreatePair
+		weightMsgCreatePair = appparams.DefaultWeightMsgCreatePair
 	})
 
 	var weightMsgCreatePool int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePool, &weightMsgCreatePool, nil, func(_ *rand.Rand) {
-		weightMsgCreatePool = squadappparams.DefaultWeightMsgCreatePool
+		weightMsgCreatePool = appparams.DefaultWeightMsgCreatePool
 	})
 
 	var weightMsgDeposit int
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil, func(_ *rand.Rand) {
-		weightMsgDeposit = squadappparams.DefaultWeightMsgDeposit
+		weightMsgDeposit = appparams.DefaultWeightMsgDeposit
 	})
 
 	var weightMsgWithdraw int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdraw, &weightMsgWithdraw, nil, func(_ *rand.Rand) {
-		weightMsgWithdraw = squadappparams.DefaultWeightMsgWithdraw
+		weightMsgWithdraw = appparams.DefaultWeightMsgWithdraw
 	})
 
 	var weightMsgLimitOrder int
 	appParams.GetOrGenerate(cdc, OpWeightMsgLimitOrder, &weightMsgLimitOrder, nil, func(_ *rand.Rand) {
-		weightMsgLimitOrder = squadappparams.DefaultWeightMsgLimitOrder
+		weightMsgLimitOrder = appparams.DefaultWeightMsgLimitOrder
 	})
 
 	var weightMsgMarketOrder int
 	appParams.GetOrGenerate(cdc, OpWeightMsgMarketOrder, &weightMsgMarketOrder, nil, func(_ *rand.Rand) {
-		weightMsgMarketOrder = squadappparams.DefaultWeightMsgMarketOrder
+		weightMsgMarketOrder = appparams.DefaultWeightMsgMarketOrder
 	})
 
 	var weightMsgCancelOrder int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelOrder, &weightMsgCancelOrder, nil, func(_ *rand.Rand) {
-		weightMsgCancelOrder = squadappparams.DefaultWeightMsgCancelOrder
+		weightMsgCancelOrder = appparams.DefaultWeightMsgCancelOrder
 	})
 
 	var weightMsgCancelAllOrders int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelAllOrders, &weightMsgCancelAllOrders, nil, func(_ *rand.Rand) {
-		weightMsgCancelAllOrders = squadappparams.DefaultWeightMsgCancelAllOrders
+		weightMsgCancelAllOrders = appparams.DefaultWeightMsgCancelAllOrders
 	})
 
 	return simulation.WeightedOperations{
@@ -147,7 +147,7 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -208,7 +208,7 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -274,7 +274,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -323,7 +323,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -406,7 +406,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -480,7 +480,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -535,7 +535,7 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,
@@ -600,7 +600,7 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k k
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           squadappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
 			Msg:             msg,
 			MsgType:         msg.Type(),
 			Context:         ctx,

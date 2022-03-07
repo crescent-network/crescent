@@ -10,7 +10,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	squadappparams "github.com/cosmosquad-labs/squad/app/params"
+	appparams "github.com/cosmosquad-labs/squad/app/params"
 	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
@@ -34,35 +34,35 @@ func WeightedOperations(
 	var weightMsgCreateFixedAmountPlan int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateFixedAmountPlan, &weightMsgCreateFixedAmountPlan, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateFixedAmountPlan = squadappparams.DefaultWeightMsgCreateFixedAmountPlan
+			weightMsgCreateFixedAmountPlan = appparams.DefaultWeightMsgCreateFixedAmountPlan
 		},
 	)
 
 	var weightMsgCreateRatioPlan int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateRatioPlan, &weightMsgCreateRatioPlan, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateRatioPlan = squadappparams.DefaultWeightMsgCreateRatioPlan
+			weightMsgCreateRatioPlan = appparams.DefaultWeightMsgCreateRatioPlan
 		},
 	)
 
 	var weightMsgStake int
 	appParams.GetOrGenerate(cdc, OpWeightMsgStake, &weightMsgStake, nil,
 		func(_ *rand.Rand) {
-			weightMsgStake = squadappparams.DefaultWeightMsgStake
+			weightMsgStake = appparams.DefaultWeightMsgStake
 		},
 	)
 
 	var weightMsgUnstake int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnstake, &weightMsgUnstake, nil,
 		func(_ *rand.Rand) {
-			weightMsgUnstake = squadappparams.DefaultWeightMsgUnstake
+			weightMsgUnstake = appparams.DefaultWeightMsgUnstake
 		},
 	)
 
 	var weightMsgHarvest int
 	appParams.GetOrGenerate(cdc, OpWeightMsgHarvest, &weightMsgHarvest, nil,
 		func(_ *rand.Rand) {
-			weightMsgHarvest = squadappparams.DefaultWeightMsgHarvest
+			weightMsgHarvest = appparams.DefaultWeightMsgHarvest
 		},
 	)
 

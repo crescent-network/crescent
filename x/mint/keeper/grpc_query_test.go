@@ -10,20 +10,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 type MintTestSuite struct {
 	suite.Suite
 
-	app         *squadapp.App
+	app         *app.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
 }
 
 func (suite *MintTestSuite) SetupTest() {
-	app := squadapp.Setup(false)
+	app := app.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
