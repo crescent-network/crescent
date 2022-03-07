@@ -27,7 +27,7 @@ func BenchmarkFindMatchPrice(b *testing.B) {
 			var poolOrderSources []amm.OrderSource
 			for i := 0; i < 1000; i++ {
 				rx, ry := squad.RandomInt(r, minReserveAmt, maxReserveAmt), squad.RandomInt(r, minReserveAmt, maxReserveAmt)
-				pool := amm.NewBasicPool(rx, ry, sdk.ZeroInt())
+				pool := amm.NewBasicPool(rx, ry, sdk.Int{})
 				poolOrderSources = append(poolOrderSources, amm.NewMockPoolOrderSource(pool, "denom1", "denom2"))
 			}
 			os := amm.MergeOrderSources(append(poolOrderSources, ob)...)

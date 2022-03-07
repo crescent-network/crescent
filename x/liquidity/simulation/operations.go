@@ -374,7 +374,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
 		} else {
 			rx, ry := k.GetPoolBalances(ctx, pool)
-			ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.ZeroInt())
+			ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.Int{})
 			minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
 		}
 		price := amm.PriceToDownTick(squad.RandomDec(r, minPrice, maxPrice), int(params.TickPrecision))
