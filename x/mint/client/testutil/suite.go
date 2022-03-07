@@ -12,7 +12,7 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
 
-	"github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/mint/client/cli"
 	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
@@ -32,7 +32,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	db := tmdb.NewMemDB()
-	cfg := app.NewConfig(db)
+	cfg := chain.NewConfig(db)
 	s.cfg = cfg
 
 	genesisState := s.cfg.GenesisState

@@ -12,7 +12,7 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/mint"
 	"github.com/cosmosquad-labs/squad/x/mint/keeper"
@@ -28,7 +28,7 @@ var (
 type ModuleTestSuite struct {
 	suite.Suite
 
-	app    *simapp.App
+	app    *chain.App
 	ctx    sdk.Context
 	keeper keeper.Keeper
 	addrs  []sdk.AccAddress
@@ -39,15 +39,15 @@ func TestModuleTestSuite(t *testing.T) {
 }
 
 func (suite *ModuleTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	suite.app = app
 	suite.ctx = ctx
 	suite.keeper = suite.app.MintKeeper
-	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
+	suite.addrs = chain.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
 	for _, addr := range suite.addrs {
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
+		err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
 		suite.Require().NoError(err)
 	}
 }
@@ -100,7 +100,7 @@ func (s *ModuleTestSuite) TestImportExportGenesis() {
 }
 
 func TestConstantInflation(t *testing.T) {
-	app := simapp.Setup(false)
+	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.InitChain(

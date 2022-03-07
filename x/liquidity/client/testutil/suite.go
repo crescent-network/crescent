@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	squadparams "github.com/cosmosquad-labs/squad/app/params"
 	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/client/cli"
@@ -34,7 +34,7 @@ type IntegrationTestSuite struct {
 
 func NewAppConstructor(encodingCfg squadparams.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
-		return app.NewApp(
+		return chain.NewApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
@@ -51,11 +51,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	encCfg := app.MakeTestEncodingConfig()
+	encCfg := chain.MakeTestEncodingConfig()
 
 	cfg := network.DefaultConfig()
 	cfg.AppConstructor = NewAppConstructor(encCfg)
-	cfg.GenesisState = app.ModuleBasics.DefaultGenesis(cfg.Codec)
+	cfg.GenesisState = chain.ModuleBasics.DefaultGenesis(cfg.Codec)
 	cfg.NumValidators = 1
 
 	s.cfg = cfg

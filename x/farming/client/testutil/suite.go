@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -38,7 +38,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	keeper.EnableAdvanceEpoch = true
 
 	db := tmdb.NewMemDB()
-	cfg := app.NewConfig(db)
+	cfg := chain.NewConfig(db)
 	cfg.NumValidators = 1
 
 	var genesisState types.GenesisState
@@ -674,7 +674,7 @@ func (s *QueryCmdTestSuite) SetupSuite() {
 	keeper.EnableAdvanceEpoch = true
 
 	db := tmdb.NewMemDB()
-	cfg := app.NewConfig(db)
+	cfg := chain.NewConfig(db)
 	cfg.NumValidators = 1
 
 	var genesisState types.GenesisState
