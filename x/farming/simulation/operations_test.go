@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmosquad-labs/squad/app/params"
 	"github.com/cosmosquad-labs/squad/x/farming/simulation"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -25,7 +25,7 @@ func TestWeightedOperations(t *testing.T) {
 
 	ctx.WithChainID("test-chain")
 
-	cdc := app.AppCodec()
+	cdc := types.ModuleCdc
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
@@ -83,7 +83,7 @@ func TestSimulateMsgCreateFixedAmountPlan(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgCreateFixedAmountPlan
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -121,7 +121,7 @@ func TestSimulateMsgCreateRatioPlan(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgCreateRatioPlan
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -157,7 +157,7 @@ func TestSimulateMsgStake(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgStake
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -198,7 +198,7 @@ func TestSimulateMsgUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgUnstake
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -270,7 +270,7 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgHarvest
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
