@@ -43,7 +43,7 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the farming module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	// types.RegisterLegacyAminoCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the farming
