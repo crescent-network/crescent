@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	chain "github.com/cosmosquad-labs/squad/app"
+	"github.com/cosmosquad-labs/squad/x/farming"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -259,6 +260,7 @@ func (suite *KeeperTestSuite) TestTotalStakings() {
 	suite.Require().True(intEq(sdk.NewInt(200000), totalStakings.Amount))
 
 	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 200000)))
+	farming.EndBlocker(suite.ctx, suite.keeper)
 	_, found = suite.keeper.GetTotalStakings(suite.ctx, denom1)
 	suite.Require().False(found)
 }

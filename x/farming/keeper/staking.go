@@ -180,13 +180,13 @@ func (k Keeper) DeleteTotalStakings(ctx sdk.Context, stakingCoinDenom string) {
 // IncreaseTotalStakings increases total stakings for given staking coin denom
 // by given amount.
 func (k Keeper) IncreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, amount sdk.Int) {
-	totalStaking, found := k.GetTotalStakings(ctx, stakingCoinDenom)
+	totalStakings, found := k.GetTotalStakings(ctx, stakingCoinDenom)
 	if !found {
-		totalStaking.Amount = sdk.ZeroInt()
+		totalStakings.Amount = sdk.ZeroInt()
 	}
-	totalStaking.Amount = totalStaking.Amount.Add(amount)
-	k.SetTotalStakings(ctx, stakingCoinDenom, totalStaking)
-	if totalStaking.Amount.Equal(amount) {
+	totalStakings.Amount = totalStakings.Amount.Add(amount)
+	k.SetTotalStakings(ctx, stakingCoinDenom, totalStakings)
+	if totalStakings.Amount.Equal(amount) {
 		k.afterStakingCoinAdded(ctx, stakingCoinDenom)
 	}
 }
@@ -194,19 +194,15 @@ func (k Keeper) IncreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, 
 // DecreaseTotalStakings decreases total stakings for given staking coin denom
 // by given amount.
 func (k Keeper) DecreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, amount sdk.Int) {
-	totalStaking, found := k.GetTotalStakings(ctx, stakingCoinDenom)
+	totalStakings, found := k.GetTotalStakings(ctx, stakingCoinDenom)
 	if !found {
 		panic("total stakings not found")
 	}
-	if totalStaking.Amount.Equal(amount) {
-		k.DeleteTotalStakings(ctx, stakingCoinDenom)
-		if err := k.afterStakingCoinRemoved(ctx, stakingCoinDenom); err != nil {
-			panic(err)
-		}
-	} else {
-		totalStaking.Amount = totalStaking.Amount.Sub(amount)
-		k.SetTotalStakings(ctx, stakingCoinDenom, totalStaking)
+	if totalStakings.Amount.LT(amount) {
+		panic("cannot set negative total stakings")
 	}
+	totalStakings.Amount = totalStakings.Amount.Sub(amount)
+	k.SetTotalStakings(ctx, stakingCoinDenom, totalStakings)
 }
 
 // IterateTotalStakings iterates through all total stakings
@@ -425,6 +421,20 @@ func (k Keeper) ProcessQueuedCoins(ctx sdk.Context) {
 			StartingEpoch: k.GetCurrentEpoch(ctx, stakingCoinDenom),
 		})
 
+		return false
+	})
+}
+
+// PruneTotalStakings deletes total stakings with amount of zero and calls
+// cleanup logic for each staking coin denom.
+func (k Keeper) PruneTotalStakings(ctx sdk.Context) {
+	k.IterateTotalStakings(ctx, func(stakingCoinDenom string, totalStakings types.TotalStakings) (stop bool) {
+		if totalStakings.Amount.IsZero() {
+			k.DeleteTotalStakings(ctx, stakingCoinDenom)
+			if err := k.afterStakingCoinRemoved(ctx, stakingCoinDenom); err != nil {
+				panic(err)
+			}
+		}
 		return false
 	})
 }
