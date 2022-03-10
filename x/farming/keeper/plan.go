@@ -217,7 +217,7 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 // the termination address and mark the plan as terminated.
 func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 	if plan.GetFarmingPoolAddress().String() != plan.GetTerminationAddress().String() {
-		balances := k.bankKeeper.GetAllBalances(ctx, plan.GetFarmingPoolAddress())
+		balances := k.bankKeeper.SpendableCoins(ctx, plan.GetFarmingPoolAddress())
 		if balances.IsAllPositive() {
 			if err := k.bankKeeper.SendCoins(ctx, plan.GetFarmingPoolAddress(), plan.GetTerminationAddress(), balances); err != nil {
 				return err
@@ -245,7 +245,8 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 func (k Keeper) DerivePrivatePlanFarmingPoolAcc(ctx sdk.Context, name string) (sdk.AccAddress, error) {
 	nextPlanId := k.GetGlobalPlanId(ctx) + 1
 	poolAcc := types.PrivatePlanFarmingPoolAcc(name, nextPlanId)
-	if !k.bankKeeper.GetAllBalances(ctx, poolAcc).Empty() {
+	if !k.bankKeeper.
+		GetAllBalances(ctx, poolAcc).Empty() {
 		return nil, types.ErrConflictPrivatePlanFarmingPool
 	}
 	return poolAcc, nil

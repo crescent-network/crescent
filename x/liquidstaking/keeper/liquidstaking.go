@@ -20,7 +20,7 @@ func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {
 // During Liquid Unstacking, btoken immediately burns and the unbonding queue belongs to the requester, so the liquid staker's unbonding values are excluded on netAmount
 // It is used only for calculation and query and is not stored in kv.
 func (k Keeper) NetAmountState(ctx sdk.Context) (nas types.NetAmountState) {
-	nas.ProxyAccBalance = k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
+	nas.ProxyAccBalance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc).Amount
 
 	totalRemainingRewards, totalDelShares, totalLiquidTokens := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
 	nas.TotalRemainingRewards = totalRemainingRewards
