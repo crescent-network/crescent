@@ -34,7 +34,8 @@ func TestGenesisState_Validate(t *testing.T) {
 						Conditions: []types.ConditionType{
 							types.ConditionTypeDeposit,
 							types.ConditionTypeSwap,
-							types.ConditionTypeFarming,
+							types.ConditionTypeLiquidStake,
+							types.ConditionTypeVote,
 						},
 						StartTime: time.Now(),
 						EndTime:   time.Now().AddDate(0, 1, 0),

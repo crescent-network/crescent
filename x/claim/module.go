@@ -105,7 +105,7 @@ type AppModule struct {
 	keeper          keeper.Keeper
 	bankKeeper      types.BankKeeper
 	distrKeeper     types.DistrKeeper
-	farmingKeeper   types.FarmingKeeper
+	govKeeper       types.GovKeeper
 	liquidityKeeper types.LiquidityKeeper
 }
 
@@ -114,7 +114,7 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
-	farmingKeeper types.FarmingKeeper,
+	govKeeper types.GovKeeper,
 	liquidityKeeper types.LiquidityKeeper,
 ) AppModule {
 	return AppModule{
@@ -122,7 +122,7 @@ func NewAppModule(
 		keeper:          keeper,
 		bankKeeper:      bankKeeper,
 		distrKeeper:     distrKeeper,
-		farmingKeeper:   farmingKeeper,
+		govKeeper:       govKeeper,
 		liquidityKeeper: liquidityKeeper,
 	}
 }

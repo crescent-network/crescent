@@ -21,7 +21,8 @@ func TestClaimableCoinsForCondition(t *testing.T) {
 			[]types.ConditionType{
 				types.ConditionTypeDeposit,
 				types.ConditionTypeSwap,
-				types.ConditionTypeFarming,
+				types.ConditionTypeLiquidStake,
+				types.ConditionTypeVote,
 			},
 			types.ClaimRecord{
 				AirdropId:             1,
@@ -36,7 +37,8 @@ func TestClaimableCoinsForCondition(t *testing.T) {
 			[]types.ConditionType{
 				types.ConditionTypeDeposit,
 				types.ConditionTypeSwap,
-				types.ConditionTypeFarming,
+				types.ConditionTypeLiquidStake,
+				types.ConditionTypeVote,
 			},
 			types.ClaimRecord{
 				AirdropId:             1,
@@ -51,7 +53,8 @@ func TestClaimableCoinsForCondition(t *testing.T) {
 			[]types.ConditionType{
 				types.ConditionTypeDeposit,
 				types.ConditionTypeSwap,
-				types.ConditionTypeFarming,
+				types.ConditionTypeLiquidStake,
+				types.ConditionTypeVote,
 			},
 			types.ClaimRecord{
 				AirdropId:             1,

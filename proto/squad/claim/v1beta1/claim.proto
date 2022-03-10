@@ -18,7 +18,7 @@ message Airdrop {
   string source_address = 2;
 
   // conditions specifies a list of conditions
-  repeated ConditionType conditions = 3 [(gogoproto.nullable) = false];
+  repeated ConditionType conditions = 3;
 
   // start_time specifies the start time of the airdrop
   google.protobuf.Timestamp start_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
@@ -45,7 +45,7 @@ message ClaimRecord {
 
   // claimed_conditions specifies a list of condition types
   // initial values are empty and each condition type gets appended when claim is successfully executed
-  repeated ConditionType claimed_conditions = 5 [(gogoproto.nullable) = false];
+  repeated ConditionType claimed_conditions = 5;
 }
 
 // ConditionType defines the type of condition that a recipient must execute in order to receive a claimable amount.
@@ -61,6 +61,9 @@ enum ConditionType {
   // CONDITION_TYPE_SWAP specifies swap condition type
   CONDITION_TYPE_SWAP = 2 [(gogoproto.enumvalue_customname) = "ConditionTypeSwap"];
 
-  // CONDITION_TYPE_FARMING specifies farming (stake) condition type
-  CONDITION_TYPE_FARMING = 3 [(gogoproto.enumvalue_customname) = "ConditionTypeFarming"];
+  // CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+  CONDITION_TYPE_LIQUIDSTAKE = 3 [(gogoproto.enumvalue_customname) = "ConditionTypeLiquidStake"];
+
+  // CONDITION_TYPE_VOTE specifies governance vote condition type
+  CONDITION_TYPE_VOTE = 4 [(gogoproto.enumvalue_customname) = "ConditionTypeVote"];
 }

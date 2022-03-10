@@ -15,7 +15,7 @@ type Keeper struct {
 	storeKey        sdk.StoreKey
 	bankKeeper      types.BankKeeper
 	distrKeeper     types.DistrKeeper
-	farmingKeeper   types.FarmingKeeper
+	govKeeper       types.GovKeeper
 	liquidityKeeper types.LiquidityKeeper
 }
 
@@ -24,7 +24,7 @@ func NewKeeper(
 	storeKey sdk.StoreKey,
 	bk types.BankKeeper,
 	dk types.DistrKeeper,
-	fk types.FarmingKeeper,
+	gk types.GovKeeper,
 	lk types.LiquidityKeeper,
 ) *Keeper {
 	return &Keeper{
@@ -32,7 +32,7 @@ func NewKeeper(
 		storeKey:        storeKey,
 		bankKeeper:      bk,
 		distrKeeper:     dk,
-		farmingKeeper:   fk,
+		govKeeper:       gk,
 		liquidityKeeper: lk,
 	}
 }

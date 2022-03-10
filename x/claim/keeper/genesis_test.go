@@ -27,7 +27,8 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime(),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -65,7 +66,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime(),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -76,7 +78,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime().AddDate(0, 5, 0),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 10, 0),

@@ -14,7 +14,8 @@ func (s *KeeperTestSuite) TestSetAirdropId() {
 	conditions := []types.ConditionType{
 		types.ConditionTypeDeposit,
 		types.ConditionTypeSwap,
-		types.ConditionTypeFarming,
+		types.ConditionTypeLiquidStake,
+		types.ConditionTypeVote,
 	}
 
 	s.createAirdrop(1, s.addr(1), squad.ParseCoins("1000000000denom1"), conditions,
@@ -32,7 +33,8 @@ func (s *KeeperTestSuite) TestAllAirdrops() {
 	conditions := []types.ConditionType{
 		types.ConditionTypeDeposit,
 		types.ConditionTypeSwap,
-		types.ConditionTypeFarming,
+		types.ConditionTypeLiquidStake,
+		types.ConditionTypeVote,
 	}
 
 	s.createAirdrop(1, s.addr(1), squad.ParseCoins("1000000000denom1"), conditions,
@@ -56,7 +58,8 @@ func (s *KeeperTestSuite) TestAirdropStartAndEndTime() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -81,7 +84,8 @@ func (s *KeeperTestSuite) TestAllClaimRecords() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),

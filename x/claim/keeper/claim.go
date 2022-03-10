@@ -75,12 +75,11 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 			skip = true
 		}
 
-	case types.ConditionTypeFarming:
-		queuedCoins := k.farmingKeeper.GetAllQueuedCoinsByFarmer(ctx, recipient)
-		stakedCoins := k.farmingKeeper.GetAllStakedCoinsByFarmer(ctx, recipient)
-		if !queuedCoins.IsZero() || !stakedCoins.IsZero() {
-			skip = true
-		}
+	case types.ConditionTypeLiquidStake:
+		// TODO: update me
+	case types.ConditionTypeVote:
+		// TODO: update me
+
 	}
 
 	if !skip {
