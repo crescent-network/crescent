@@ -701,8 +701,6 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 
 	// add farming, liquidstaking proxy account
 	modAccAddrs[farmingtypes.RewardsReserveAcc.String()] = true
-	// TODO: temporary removed for withdraw rewards
-	//modAccAddrs[liquidstakingtypes.LiquidStakingProxyAcc.String()] = true
 
 	return modAccAddrs
 }
