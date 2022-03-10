@@ -23328,7 +23328,7 @@ paths:
   '/squad/liquidity/v1beta1/pools/{pool_id}':
     get:
       summary: Pool returns the specific liquidity pool.
-      operationId: LiquidityParams
+      operationId: LiquidityPool
       responses:
         '200':
           description: A successful response.

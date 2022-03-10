@@ -25,7 +25,7 @@
       "operationIds": {
         "rename": {
           "Params": "LiquidityParams",
-          "Pool": "LiquidityParams"
+          "Pool": "LiquidityPool"
         }
       }
     },
