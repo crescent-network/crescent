@@ -481,7 +481,7 @@ func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
 		return false
 	})
 
-	rewardsReservePoolBalances := k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)
+	rewardsReservePoolBalances := k.bankKeeper.SpendableCoins(ctx, types.RewardsReserveAcc)
 	if !rewardsReservePoolBalances.IsAllGTE(remainingRewards) {
 		return types.ErrInvalidRemainingRewardsAmount
 	}
@@ -499,7 +499,7 @@ func (k Keeper) ValidateOutstandingRewardsAmount(ctx sdk.Context) error {
 		return false
 	})
 
-	rewardsReservePoolBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)...)
+	rewardsReservePoolBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.SpendableCoins(ctx, types.RewardsReserveAcc)...)
 	_, hasNeg := rewardsReservePoolBalances.SafeSub(totalOutstandingRewards)
 	if hasNeg {
 		return types.ErrInvalidOutstandingRewardsAmount
