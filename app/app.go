@@ -699,7 +699,7 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 
-	// add farming, liquidstaking proxy account
+	// add farming rewards reserve account
 	modAccAddrs[farmingtypes.RewardsReserveAcc.String()] = true
 
 	return modAccAddrs
