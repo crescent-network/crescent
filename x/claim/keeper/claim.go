@@ -76,10 +76,20 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 		}
 
 	case types.ConditionTypeLiquidStake:
-		// TODO: update me
-	case types.ConditionTypeVote:
-		// TODO: update me
+		params := k.liquidStakingKeeper.GetParams(ctx)
+		bTokenBalance := k.bankKeeper.GetBalance(ctx, recipient, params.LiquidBondDenom)
+		if !bTokenBalance.IsZero() {
+			skip = true
+		}
 
+	case types.ConditionTypeVote:
+		fmt.Println("ConditionTypeVote")
+		fmt.Println("votes: ", k.govKeeper.GetAllVotes(ctx))
+		for _, v := range k.govKeeper.GetAllVotes(ctx) {
+			if v.Voter == recipient.String() {
+				skip = true
+			}
+		}
 	}
 
 	if !skip {
@@ -91,7 +101,7 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 
 // TerminateAirdrop terminates the airdrop and transfer the remaining coins to the community pool.
 func (k Keeper) TerminateAirdrop(ctx sdk.Context, airdrop types.Airdrop) error {
-	amt := k.bankKeeper.GetAllBalances(ctx, airdrop.GetSourceAddress())
+	amt := k.bankKeeper.SpendableCoins(ctx, airdrop.GetSourceAddress())
 	if !amt.IsZero() {
 		if err := k.distrKeeper.FundCommunityPool(ctx, amt, airdrop.GetSourceAddress()); err != nil {
 			return sdkerrors.Wrap(err, "failed to transfer the remaining coins to the community pool")
