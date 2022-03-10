@@ -31,7 +31,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		}
 	}
 
-	// Vadliate whether or not the recipient has executed the condition
+	// Validate whether or not the recipient has executed the condition
 	if err := k.ValidateCondition(ctx, record.GetRecipient(), msg.ConditionType); err != nil {
 		return types.ClaimRecord{}, err
 	}
@@ -84,7 +84,9 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 
 	case types.ConditionTypeVote:
 		fmt.Println("ConditionTypeVote")
-		fmt.Println("votes: ", k.govKeeper.GetAllVotes(ctx))
+
+		fmt.Println("proposals: ", k.govKeeper.GetProposals(ctx))
+
 		for _, v := range k.govKeeper.GetAllVotes(ctx) {
 			if v.Voter == recipient.String() {
 				skip = true

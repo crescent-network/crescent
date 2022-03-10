@@ -1,7 +1,10 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
@@ -161,55 +164,55 @@ func (s *KeeperTestSuite) TestClaim_LiquidStakeCondition() {
 }
 
 func (s *KeeperTestSuite) TestClaim_VoteCondition() {
-	// // Create an airdrop
-	// sourceAddr := s.addr(0)
-	// airdrop := s.createAirdrop(
-	// 	1,
-	// 	sourceAddr,
-	// 	squad.ParseCoins("1000000000denom1"),
-	// 	[]types.ConditionType{
-	// 		types.ConditionTypeDeposit,
-	// 		types.ConditionTypeSwap,
-	// 		types.ConditionTypeLiquidStake,
-	// 		types.ConditionTypeVote,
-	// 	},
-	// 	s.ctx.BlockTime(),
-	// 	s.ctx.BlockTime().AddDate(0, 1, 0),
-	// 	true,
-	// )
+	// Create an airdrop
+	sourceAddr := s.addr(0)
+	airdrop := s.createAirdrop(
+		1,
+		sourceAddr,
+		utils.ParseCoins("1000000000denom1"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
+		true,
+	)
 
-	// // Create a claim record
-	// recipient := s.addr(1)
-	// record := s.createClaimRecord(
-	// 	airdrop.Id,
-	// 	recipient,
-	// 	squad.ParseCoins("666666667denom1"),
-	// 	squad.ParseCoins("666666667denom1"),
-	// 	[]types.ConditionType{},
-	// )
+	// Create a claim record
+	recipient := s.addr(1)
+	record := s.createClaimRecord(
+		airdrop.Id,
+		recipient,
+		utils.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
+		[]types.ConditionType{},
+	)
 
-	// // Submit a governance proposal
-	// s.createTextProposal(sourceAddr, "Text", "Description")
+	// Submit a governance proposal
+	s.createTextProposal(sourceAddr, "Text", "Description")
 
-	// // Vote
-	// s.vote(recipient, 1, govtypes.OptionYes)
+	// Vote
+	s.vote(recipient, 1, govtypes.OptionYes)
 
 	// fmt.Println(s.app.GovKeeper.GetAllVotes(s.ctx))
 
-	// // Claim condition
-	// _, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeVote))
-	// s.Require().NoError(err)
+	// Claim condition
+	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeVote))
+	s.Require().NoError(err)
 
-	// r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
-	// s.Require().True(found)
+	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
+	s.Require().True(found)
 
-	// fmt.Println("r: ", r)
-	// s.Require().True(coinsEq(
-	// 	record.GetClaimableCoinsForCondition(airdrop.Conditions),
-	// 	sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
-	// )
-	// s.Require().Len(r.ClaimedConditions, 1)
-	// s.Require().Equal(types.ConditionTypeVote, r.ClaimedConditions[0])
+	fmt.Println("r: ", r)
+	s.Require().True(coinsEq(
+		record.GetClaimableCoinsForCondition(airdrop.Conditions),
+		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
+	)
+	s.Require().Len(r.ClaimedConditions, 1)
+	s.Require().Equal(types.ConditionTypeVote, r.ClaimedConditions[0])
 }
 
 func (s *KeeperTestSuite) TestClaim_All() {
@@ -218,7 +221,7 @@ func (s *KeeperTestSuite) TestClaim_All() {
 	// airdrop := s.createAirdrop(
 	// 	1,
 	// 	sourceAddr,
-	// 	squad.ParseCoins("1000000000denom1"),
+	// 	utils.ParseCoins("1000000000denom1"),
 	// 	[]types.ConditionType{
 	// 		types.ConditionTypeDeposit,
 	// 		types.ConditionTypeSwap,
@@ -235,8 +238,8 @@ func (s *KeeperTestSuite) TestClaim_All() {
 	// record := s.createClaimRecord(
 	// 	airdrop.Id,
 	// 	recipient,
-	// 	squad.ParseCoins("666666667denom1"),
-	// 	squad.ParseCoins("666666667denom1"),
+	// 	utils.ParseCoins("666666667denom1"),
+	// 	utils.ParseCoins("666666667denom1"),
 	// 	[]types.ConditionType{},
 	// )
 
@@ -244,18 +247,18 @@ func (s *KeeperTestSuite) TestClaim_All() {
 	// params := s.app.LiquidityKeeper.GetParams(s.ctx)
 	// creator := s.addr(2)
 	// s.createPair(creator, "denom3", "denom4", true)
-	// s.createPool(creator, 1, squad.ParseCoins("1000000denom3,1000000denom4"), true)
+	// s.createPool(creator, 1, utils.ParseCoins("1000000denom3,1000000denom4"), true)
 
 	// pool, found := s.app.LiquidityKeeper.GetPool(s.ctx, 1)
 	// s.Require().True(found)
 	// s.Require().Equal(params.InitialPoolCoinSupply, s.getBalance(creator, pool.PoolCoinDenom).Amount)
 
 	// // The recipient makes a deposit
-	// s.deposit(recipient, pool.Id, squad.ParseCoins("500000denom3,500000denom4"), true)
+	// s.deposit(recipient, pool.Id, utils.ParseCoins("500000denom3,500000denom4"), true)
 	// liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// // The recipient makes a limit order
-	// s.sellLimitOrder(recipient, 1, squad.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
+	// s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	// liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// // Create a fixed farming plan and stake
@@ -339,7 +342,7 @@ func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 	// airdrop := s.createAirdrop(
 	// 	1,
 	// 	sourceAddr,
-	// 	squad.ParseCoins("1000000000denom1"),
+	// 	utils.ParseCoins("1000000000denom1"),
 	// 	[]types.ConditionType{
 	// 		types.ConditionTypeDeposit,
 	// 		types.ConditionTypeSwap,
@@ -356,22 +359,22 @@ func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 	// s.createClaimRecord(
 	// 	airdrop.Id,
 	// 	recipient,
-	// 	squad.ParseCoins("1000000000denom1"),
-	// 	squad.ParseCoins("1000000000denom1"),
+	// 	utils.ParseCoins("1000000000denom1"),
+	// 	utils.ParseCoins("1000000000denom1"),
 	// 	[]types.ConditionType{},
 	// )
 
 	// // Create a normal pool
 	// creator := s.addr(2)
 	// s.createPair(creator, "denom3", "denom4", true)
-	// s.createPool(creator, 1, squad.ParseCoins("1000000denom3,1000000denom4"), true)
+	// s.createPool(creator, 1, utils.ParseCoins("1000000denom3,1000000denom4"), true)
 
 	// // The recipient makes a deposit
-	// s.deposit(recipient, 1, squad.ParseCoins("500000denom3,500000denom4"), true)
+	// s.deposit(recipient, 1, utils.ParseCoins("500000denom3,500000denom4"), true)
 	// liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// // The recipient makes a limit order
-	// s.sellLimitOrder(recipient, 1, squad.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
+	// s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	// liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// // Create a fixed farming plan and stake
@@ -412,7 +415,7 @@ func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
 	// airdrop := s.createAirdrop(
 	// 	1,
 	// 	sourceAddr,
-	// 	squad.ParseCoins("1000000000denom1"),
+	// 	utils.ParseCoins("1000000000denom1"),
 	// 	[]types.ConditionType{
 	// 		types.ConditionTypeDeposit,
 	// 		types.ConditionTypeSwap,
@@ -429,22 +432,22 @@ func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
 	// s.createClaimRecord(
 	// 	airdrop.Id,
 	// 	recipient,
-	// 	squad.ParseCoins("1000000000denom1"),
-	// 	squad.ParseCoins("1000000000denom1"),
+	// 	utils.ParseCoins("1000000000denom1"),
+	// 	utils.ParseCoins("1000000000denom1"),
 	// 	[]types.ConditionType{},
 	// )
 
 	// // Create a normal pool
 	// creator := s.addr(2)
 	// s.createPair(creator, "denom3", "denom4", true)
-	// s.createPool(creator, 1, squad.ParseCoins("1000000denom3,1000000denom4"), true)
+	// s.createPool(creator, 1, utils.ParseCoins("1000000denom3,1000000denom4"), true)
 
 	// // The recipient makes a deposit
-	// s.deposit(recipient, 1, squad.ParseCoins("500000denom3,500000denom4"), true)
+	// s.deposit(recipient, 1, utils.ParseCoins("500000denom3,500000denom4"), true)
 	// liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// // The recipient makes a limit order
-	// s.sellLimitOrder(recipient, 1, squad.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
+	// s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	// liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// // Create a fixed farming plan and stake

@@ -21,6 +21,8 @@ type DistrKeeper interface {
 }
 
 type GovKeeper interface {
+	GetProposals(ctx sdk.Context) (proposals govtypes.Proposals)
+	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govtypes.Vote, found bool)
 	GetAllVotes(ctx sdk.Context) (votes govtypes.Votes)
 }
 
