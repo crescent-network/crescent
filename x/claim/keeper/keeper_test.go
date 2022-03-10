@@ -259,10 +259,6 @@ func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin
 	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
 }
 
-func (s *KeeperTestSuite) getAllBalances(addr sdk.AccAddress) sdk.Coins {
-	return s.app.BankKeeper.GetAllBalances(s.ctx, addr)
-}
-
 func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 	addr := make(sdk.AccAddress, 20)
 	binary.PutVarint(addr, int64(addrNum))
