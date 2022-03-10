@@ -1,8 +1,9 @@
 package app
 
 const (
-	appName        = "SquadApp"
-	appUserHomeDir = ".squadapp"
+	AppName        = "SquadApp"
+	AppUserHomeDir = ".squadapp"
+	AppBinary      = "squad"
 
 	// BIP-44 path "44'/118'/0'/0/0"
 	Purpose  = uint32(44)

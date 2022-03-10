@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	// AddressVerifier squad address verifier
+	// AddressVerifier address verifier
 	AddressVerifier = func(bz []byte) error {
 		if n := len(bz); n != 20 && n != 32 {
 			return fmt.Errorf("incorrect address length %d", n)
@@ -58,7 +58,7 @@ func GetConfig() *sdk.Config {
 	return sdkConfig
 }
 
-// NewRootCmd creates a new root command for squad. It is called once in the
+// NewRootCmd creates a new root command for the app. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 	sdkConfig := GetConfig()
@@ -76,8 +76,8 @@ func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
-		Use:   "squad",
-		Short: "squad app",
+		Use:   chain.AppBinary,
+		Short: chain.AppBinary + " app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -172,7 +172,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingCo
 		genutilcli.GenTxCmd(chain.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, chain.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(chain.ModuleBasics),
 		AddGenesisAccountCmd(chain.DefaultNodeHome),
-		PrepareGenesisCmd(chain.DefaultNodeHome, chain.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(chain.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),

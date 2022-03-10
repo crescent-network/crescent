@@ -77,7 +77,7 @@ func TestFullAppSimulation(t *testing.T) {
 	}()
 
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
-	require.Equal(t, appName, app.Name())
+	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -115,7 +115,7 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
-	require.Equal(t, appName, app.Name())
+	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -155,7 +155,7 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	newApp := NewApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
-	require.Equal(t, appName, app.Name())
+	require.Equal(t, AppName, app.Name())
 
 	var genesisState GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)
@@ -215,7 +215,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
-	require.Equal(t, appName, app.Name())
+	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
@@ -260,7 +260,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	newApp := NewApp(logger, newDB, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
-	require.Equal(t, appName, app.Name())
+	require.Equal(t, AppName, app.Name())
 
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
