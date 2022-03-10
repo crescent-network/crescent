@@ -3,7 +3,7 @@ package keeper_test
 import (
 	_ "github.com/stretchr/testify/suite"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 )
 
 func (s *KeeperTestSuite) TestDepositWithdraw() {
@@ -14,7 +14,7 @@ func (s *KeeperTestSuite) TestDepositWithdraw() {
 	// Create a normal pool
 	creator := s.addr(0)
 	s.createPair(creator, "denom1", "denom2", true)
-	s.createPool(creator, 1, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.createPool(creator, 1, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 
 	pool, found := k.GetPool(ctx, 1)
 	s.Require().True(found)
@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestDepositWithdraw() {
 
 	// A depositor makes a deposit
 	depositor := s.addr(1)
-	s.deposit(depositor, pool.Id, squad.ParseCoins("500000denom1,500000denom2"), true)
+	s.deposit(depositor, pool.Id, utils.ParseCoins("500000denom1,500000denom2"), true)
 	s.nextBlock()
 
 	// The depositor withdraws pool coin

@@ -13,7 +13,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/claim/keeper"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
@@ -23,7 +23,7 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app       *squadapp.SquadApp
+	app       *chain.App
 	ctx       sdk.Context
 	keeper    keeper.Keeper
 	querier   keeper.Querier
@@ -35,7 +35,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.app = squadapp.Setup(false)
+	s.app = chain.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.keeper = s.app.ClaimKeeper
 	s.querier = keeper.Querier{Keeper: s.keeper}
@@ -164,9 +164,9 @@ func (s *KeeperTestSuite) createWhitelistedValidators(powers []int64) ([]sdk.Acc
 	params := s.app.LiquidStakingKeeper.GetParams(s.ctx)
 
 	num := len(powers)
-	addrs := squadapp.AddTestAddrsIncremental(s.app, s.ctx, num, sdk.NewInt(1000000000))
-	valAddrs := squadapp.ConvertAddrsToValAddrs(addrs)
-	pks := squadapp.CreateTestPubKeys(num)
+	addrs := chain.AddTestAddrsIncremental(s.app, s.ctx, num, sdk.NewInt(1000000000))
+	valAddrs := chain.ConvertAddrsToValAddrs(addrs)
+	pks := chain.CreateTestPubKeys(num)
 
 	for i, power := range powers {
 		val, err := stakingtypes.NewValidator(valAddrs[i], pks[i], stakingtypes.Description{})
@@ -270,7 +270,7 @@ func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, coins sdk.Coins) {
-	err := squadapp.FundAccount(s.app.BankKeeper, s.ctx, addr, coins)
+	err := chain.FundAccount(s.app.BankKeeper, s.ctx, addr, coins)
 	s.Require().NoError(err)
 }
 

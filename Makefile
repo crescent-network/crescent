@@ -1,5 +1,9 @@
 #!/usr/bin/make -f
 
+NAME=squad
+APPNAME=squad
+REPO=github.com/cosmosquad-labs/squad
+
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
@@ -50,8 +54,8 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=squad \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=squad \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=$(NAME) \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=$(APPNAME) \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
@@ -63,7 +67,7 @@ endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
-testing_ldflags = -X github.com/cosmosquad-labs/squad/x/farming/keeper.enableAdvanceEpoch=true
+testing_ldflags = -X $(REPO)/x/farming/keeper.enableAdvanceEpoch=true
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 TESTING_BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags) $(testing_ldflags)'
@@ -79,25 +83,25 @@ include contrib/devtools/Makefile
 
 build: go.sum
 ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -o build/squad.exe ./cmd/squad
+	go build $(BUILD_FLAGS) -o build/$(APPNAME).exe ./cmd/$(APPNAME)
 else
-	go build $(BUILD_FLAGS) -o build/squad ./cmd/squad
+	go build $(BUILD_FLAGS) -o build/$(APPNAME) ./cmd/$(APPNAME)
 endif
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 install: go.sum
-	go install $(BUILD_FLAGS) ./cmd/squad
+	go install $(BUILD_FLAGS) ./cmd/$(APPNAME)
 
 install-testing: go.sum
-	go install $(TESTING_BUILD_FLAGS) ./cmd/squad
+	go install $(TESTING_BUILD_FLAGS) ./cmd/$(APPNAME)
 
 build-reproducible: go.sum
 	$(DOCKER) rm latest-build || true
 	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64' \
-        --env APP=squad \
+        --env APP=$(APPNAME) \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
@@ -203,7 +207,7 @@ lint:
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs goimports -w -local github.com/cosmosquad-labs/squad
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs goimports -w -local $(REPO)
 
 .PHONY: format
 

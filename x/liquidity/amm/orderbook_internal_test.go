@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 )
 
 // Copied from orderbook_test.go
@@ -24,13 +24,13 @@ func newOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
 
 func TestOrderBookTicks_add(t *testing.T) {
 	prices := []sdk.Dec{
-		squad.ParseDec("1.0"),
-		squad.ParseDec("1.1"),
-		squad.ParseDec("1.05"),
-		squad.ParseDec("1.1"),
-		squad.ParseDec("1.2"),
-		squad.ParseDec("0.9"),
-		squad.ParseDec("0.9"),
+		utils.ParseDec("1.0"),
+		utils.ParseDec("1.1"),
+		utils.ParseDec("1.05"),
+		utils.ParseDec("1.1"),
+		utils.ParseDec("1.2"),
+		utils.ParseDec("0.9"),
+		utils.ParseDec("0.9"),
 	}
 	var ticks orderBookTicks
 	for _, price := range prices {
@@ -42,7 +42,7 @@ func TestOrderBookTicks_add(t *testing.T) {
 	}
 	prices = nil
 	for priceStr := range pricesSet {
-		prices = append(prices, squad.ParseDec(priceStr))
+		prices = append(prices, utils.ParseDec(priceStr))
 	}
 	sort.Slice(prices, func(i, j int) bool {
 		return prices[i].GT(prices[j])

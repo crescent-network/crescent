@@ -3,7 +3,6 @@ package types
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -70,7 +69,7 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 }
 
 func (msg MsgCreateFixedAmountPlan) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateFixedAmountPlan) GetSigners() []sdk.AccAddress {
@@ -132,7 +131,7 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 }
 
 func (msg MsgCreateRatioPlan) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateRatioPlan) GetSigners() []sdk.AccAddress {
@@ -180,7 +179,7 @@ func (msg MsgStake) ValidateBasic() error {
 }
 
 func (msg MsgStake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgStake) GetSigners() []sdk.AccAddress {
@@ -228,7 +227,7 @@ func (msg MsgUnstake) ValidateBasic() error {
 }
 
 func (msg MsgUnstake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgUnstake) GetSigners() []sdk.AccAddress {
@@ -278,7 +277,7 @@ func (msg MsgHarvest) ValidateBasic() error {
 }
 
 func (msg MsgHarvest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
@@ -316,7 +315,7 @@ func (msg MsgAdvanceEpoch) ValidateBasic() error {
 }
 
 func (msg MsgAdvanceEpoch) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgAdvanceEpoch) GetSigners() []sdk.AccAddress {

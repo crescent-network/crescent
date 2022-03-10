@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -91,27 +91,27 @@ func TestMsgCreatePool(t *testing.T) {
 		{
 			"invalid deposit coins",
 			func(msg *types.MsgCreatePool) {
-				msg.DepositCoins = sdk.Coins{squad.ParseCoin("0denom1"), squad.ParseCoin("1000000denom2")}
+				msg.DepositCoins = sdk.Coins{utils.ParseCoin("0denom1"), utils.ParseCoin("1000000denom2")}
 			},
 			"coin 0denom1 amount is not positive",
 		},
 		{
 			"invalid deposit coins",
 			func(msg *types.MsgCreatePool) {
-				msg.DepositCoins = sdk.Coins{squad.ParseCoin("1000000denom1"), squad.ParseCoin("0denom2")}
+				msg.DepositCoins = sdk.Coins{utils.ParseCoin("1000000denom1"), utils.ParseCoin("0denom2")}
 			},
 			"coin denom2 amount is not positive",
 		},
 		{
 			"invalid deposit coins",
 			func(msg *types.MsgCreatePool) {
-				msg.DepositCoins = squad.ParseCoins("1000000denom1,1000000denom2,1000000denom3")
+				msg.DepositCoins = utils.ParseCoins("1000000denom1,1000000denom2,1000000denom3")
 			},
 			"wrong number of deposit coins: 3: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCreatePool(testAddr, 1, squad.ParseCoins("1000000denom1,1000000denom2"))
+			msg := types.NewMsgCreatePool(testAddr, 1, utils.ParseCoins("1000000denom1,1000000denom2"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgCreatePool, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -156,21 +156,21 @@ func TestMsgDeposit(t *testing.T) {
 		{
 			"invalid deposit coins",
 			func(msg *types.MsgDeposit) {
-				msg.DepositCoins = sdk.Coins{squad.ParseCoin("0denom1"), squad.ParseCoin("1000000denom2")}
+				msg.DepositCoins = sdk.Coins{utils.ParseCoin("0denom1"), utils.ParseCoin("1000000denom2")}
 			},
 			"coin 0denom1 amount is not positive",
 		},
 		{
 			"invalid deposit coins",
 			func(msg *types.MsgDeposit) {
-				msg.DepositCoins = sdk.Coins{squad.ParseCoin("1000000denom1"), squad.ParseCoin("0denom2")}
+				msg.DepositCoins = sdk.Coins{utils.ParseCoin("1000000denom1"), utils.ParseCoin("0denom2")}
 			},
 			"coin denom2 amount is not positive",
 		},
 		{
 			"invalid deposit coins",
 			func(msg *types.MsgDeposit) {
-				msg.DepositCoins = squad.ParseCoins("1000000denom1,1000000denom2,1000000denom3")
+				msg.DepositCoins = utils.ParseCoins("1000000denom1,1000000denom2,1000000denom3")
 			},
 			"wrong number of deposit coins: 3: invalid request",
 		},
@@ -178,7 +178,7 @@ func TestMsgDeposit(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgDeposit(testAddr, 1, squad.ParseCoins("1000000denom1,1000000denom2"))
+			msg := types.NewMsgDeposit(testAddr, 1, utils.ParseCoins("1000000denom1,1000000denom2"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgDeposit, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -223,13 +223,13 @@ func TestMsgWithdraw(t *testing.T) {
 		{
 			"invalid pool coin",
 			func(msg *types.MsgWithdraw) {
-				msg.PoolCoin = squad.ParseCoin("0pool1")
+				msg.PoolCoin = utils.ParseCoin("0pool1")
 			},
 			"pool coin must be positive: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgWithdraw(testAddr, 1, squad.ParseCoin("1000000pool1"))
+			msg := types.NewMsgWithdraw(testAddr, 1, utils.ParseCoin("1000000pool1"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgWithdraw, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -282,22 +282,22 @@ func TestMsgLimitOrder(t *testing.T) {
 		{
 			"invalid offer coin",
 			func(msg *types.MsgLimitOrder) {
-				msg.OfferCoin = squad.ParseCoin("0denom1")
+				msg.OfferCoin = utils.ParseCoin("0denom1")
 			},
 			"offer coin must be positive: invalid request",
 		},
 		{
 			"insufficient offer coin amount",
 			func(msg *types.MsgLimitOrder) {
-				msg.OfferCoin = squad.ParseCoin("10denom1")
+				msg.OfferCoin = utils.ParseCoin("10denom1")
 			},
 			"offer coin is less than minimum coin amount: invalid request",
 		},
 		{
 			"insufficient offer coin amount",
 			func(msg *types.MsgLimitOrder) {
-				msg.OfferCoin = squad.ParseCoin("1000000denom2")
-				msg.Price = squad.ParseDec("10")
+				msg.OfferCoin = utils.ParseCoin("1000000denom2")
+				msg.Price = utils.ParseDec("10")
 				msg.Amount = newInt(1000000)
 			},
 			"1000000denom2 is smaller than 10000000denom2: insufficient offer coin",
@@ -312,7 +312,7 @@ func TestMsgLimitOrder(t *testing.T) {
 		{
 			"same offer coin denom and demand coin denom",
 			func(msg *types.MsgLimitOrder) {
-				msg.OfferCoin = squad.ParseCoin("1000000denom1")
+				msg.OfferCoin = utils.ParseCoin("1000000denom1")
 				msg.DemandCoinDenom = "denom1"
 			},
 			"offer coin denom and demand coin denom must not be same: invalid request",
@@ -320,7 +320,7 @@ func TestMsgLimitOrder(t *testing.T) {
 		{
 			"invalid price",
 			func(msg *types.MsgLimitOrder) {
-				msg.Price = squad.ParseDec("0")
+				msg.Price = utils.ParseDec("0")
 			},
 			"price must be positive: invalid request",
 		},
@@ -348,8 +348,8 @@ func TestMsgLimitOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgLimitOrder(
-				testAddr, 1, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"),
-				"denom1", squad.ParseDec("1.0"), newInt(1000000), orderLifespan)
+				testAddr, 1, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"),
+				"denom1", utils.ParseDec("1.0"), newInt(1000000), orderLifespan)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgLimitOrder, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -402,14 +402,14 @@ func TestMsgMarketOrder(t *testing.T) {
 		{
 			"invalid offer coin",
 			func(msg *types.MsgMarketOrder) {
-				msg.OfferCoin = squad.ParseCoin("0denom1")
+				msg.OfferCoin = utils.ParseCoin("0denom1")
 			},
 			"offer coin must be positive: invalid request",
 		},
 		{
 			"insufficient offer coin amount",
 			func(msg *types.MsgMarketOrder) {
-				msg.OfferCoin = squad.ParseCoin("10denom1")
+				msg.OfferCoin = utils.ParseCoin("10denom1")
 			},
 			"offer coin is less than minimum coin amount: invalid request",
 		},
@@ -423,7 +423,7 @@ func TestMsgMarketOrder(t *testing.T) {
 		{
 			"same offer coin denom and demand coin denom",
 			func(msg *types.MsgMarketOrder) {
-				msg.OfferCoin = squad.ParseCoin("1000000denom1")
+				msg.OfferCoin = utils.ParseCoin("1000000denom1")
 				msg.DemandCoinDenom = "denom1"
 			},
 			"offer coin denom and demand coin denom must not be same: invalid request",
@@ -452,7 +452,7 @@ func TestMsgMarketOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgMarketOrder(
-				testAddr, 1, types.OrderDirectionBuy, squad.ParseCoin("1000000denom1"),
+				testAddr, 1, types.OrderDirectionBuy, utils.ParseCoin("1000000denom1"),
 				"denom2", newInt(1000000), orderLifespan)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgMarketOrder, msg.Type())

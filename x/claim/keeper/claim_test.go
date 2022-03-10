@@ -2,7 +2,8 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	squad "github.com/cosmosquad-labs/squad/types"
+
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity"
 
@@ -15,7 +16,7 @@ func (s *KeeperTestSuite) TestClaim_DepositCondition() {
 	airdrop := s.createAirdrop(
 		1,
 		sourceAddr,
-		squad.ParseCoins("1000000000denom1"),
+		utils.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -32,18 +33,18 @@ func (s *KeeperTestSuite) TestClaim_DepositCondition() {
 	record := s.createClaimRecord(
 		airdrop.Id,
 		recipient,
-		squad.ParseCoins("666666667denom1"),
-		squad.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
 		[]types.ConditionType{},
 	)
 
 	// Create a normal pair and pool
 	creator := s.addr(2)
 	s.createPair(creator, "denom3", "denom4", true)
-	s.createPool(creator, 1, squad.ParseCoins("1000000denom3,1000000denom4"), true)
+	s.createPool(creator, 1, utils.ParseCoins("1000000denom3,1000000denom4"), true)
 
 	// The recipient makes a deposit
-	s.deposit(recipient, 1, squad.ParseCoins("500000denom3,500000denom4"), true)
+	s.deposit(recipient, 1, utils.ParseCoins("500000denom3,500000denom4"), true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// Claim condition
@@ -66,7 +67,7 @@ func (s *KeeperTestSuite) TestClaim_SwapCondition() {
 	airdrop := s.createAirdrop(
 		1,
 		sourceAddr,
-		squad.ParseCoins("1000000000denom1"),
+		utils.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -83,18 +84,18 @@ func (s *KeeperTestSuite) TestClaim_SwapCondition() {
 	record := s.createClaimRecord(
 		airdrop.Id,
 		recipient,
-		squad.ParseCoins("666666667denom1"),
-		squad.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
 		[]types.ConditionType{},
 	)
 
 	// Create a normal pool
 	creator := s.addr(2)
 	s.createPair(creator, "denom3", "denom4", true)
-	s.createPool(creator, 1, squad.ParseCoins("1000000denom3,1000000denom4"), true)
+	s.createPool(creator, 1, utils.ParseCoins("1000000denom3,1000000denom4"), true)
 
 	// The recipient makes a limit order
-	s.sellLimitOrder(recipient, 1, squad.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
+	s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// Claim condition
@@ -117,7 +118,7 @@ func (s *KeeperTestSuite) TestClaim_LiquidStakeCondition() {
 	airdrop := s.createAirdrop(
 		1,
 		sourceAddr,
-		squad.ParseCoins("1000000000denom1"),
+		utils.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -134,8 +135,8 @@ func (s *KeeperTestSuite) TestClaim_LiquidStakeCondition() {
 	record := s.createClaimRecord(
 		airdrop.Id,
 		recipient,
-		squad.ParseCoins("666666667denom1"),
-		squad.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
 		[]types.ConditionType{},
 	)
 
@@ -292,7 +293,7 @@ func (s *KeeperTestSuite) TestClaim_AlreadyClaimedCondition() {
 	airdrop := s.createAirdrop(
 		1,
 		sourceAddr,
-		squad.ParseCoins("1000000000denom1"),
+		utils.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -309,18 +310,18 @@ func (s *KeeperTestSuite) TestClaim_AlreadyClaimedCondition() {
 	s.createClaimRecord(
 		airdrop.Id,
 		recipient,
-		squad.ParseCoins("666666667denom1"),
-		squad.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
 		[]types.ConditionType{},
 	)
 
 	// Create a normal pool
 	creator := s.addr(2)
 	s.createPair(creator, "denom3", "denom4", true)
-	s.createPool(creator, 1, squad.ParseCoins("1000000denom3,1000000denom4"), true)
+	s.createPool(creator, 1, utils.ParseCoins("1000000denom3,1000000denom4"), true)
 
 	// The recipient makes a deposit
-	s.deposit(recipient, 1, squad.ParseCoins("500000denom3,500000denom4"), true)
+	s.deposit(recipient, 1, utils.ParseCoins("500000denom3,500000denom4"), true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
 	// Claim deposit condition

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 
@@ -24,10 +24,10 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 	s.createPair(creator, "denom1", "denom3", true)
 	s.createPair(creator, "denom2", "denom3", true)
 	s.createPair(creator, "denom3", "denom4", true)
-	s.createPool(creator, 1, squad.ParseCoins("1000000denom1,1000000denom2"), true)
-	s.createPool(creator, 2, squad.ParseCoins("5000000denom1,5000000denom3"), true)
-	s.createPool(creator, 3, squad.ParseCoins("3000000denom2,3000000denom3"), true)
-	pair4 := s.createPool(creator, 4, squad.ParseCoins("3000000denom3,3000000denom4"), true)
+	s.createPool(creator, 1, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.createPool(creator, 2, utils.ParseCoins("5000000denom1,5000000denom3"), true)
+	s.createPool(creator, 3, utils.ParseCoins("3000000denom2,3000000denom3"), true)
+	pair4 := s.createPool(creator, 4, utils.ParseCoins("3000000denom3,3000000denom4"), true)
 	pair4.Disabled = true
 	s.keeper.SetPool(s.ctx, pair4)
 
@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestGRPCPools() {
 func (s *KeeperTestSuite) TestGRPCPool() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	pool := s.createPool(creator, pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 
 	for _, tc := range []struct {
 		name      string
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
 				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
-				s.Require().Equal(squad.ParseCoins("1000000denom1,1000000denom2"), resp.Pool.Balances)
+				s.Require().Equal(utils.ParseCoins("1000000denom1,1000000denom2"), resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
 			},
@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 func (s *KeeperTestSuite) TestGRPCPoolByReserveAddress() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, pair.Id, squad.ParseCoins("2000000denom1,2000000denom2"), true)
+	pool := s.createPool(creator, pair.Id, utils.ParseCoins("2000000denom1,2000000denom2"), true)
 
 	for _, tc := range []struct {
 		name      string
@@ -191,7 +191,7 @@ func (s *KeeperTestSuite) TestGRPCPoolByReserveAddress() {
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
 				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
-				s.Require().Equal(squad.ParseCoins("2000000denom1,2000000denom2"), resp.Pool.Balances)
+				s.Require().Equal(utils.ParseCoins("2000000denom1,2000000denom2"), resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
 			},
@@ -212,7 +212,7 @@ func (s *KeeperTestSuite) TestGRPCPoolByReserveAddress() {
 func (s *KeeperTestSuite) TestGRPCPoolByPoolCoinDenom() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, pair.Id, squad.ParseCoins("5000000denom1,5000000denom2"), true)
+	pool := s.createPool(creator, pair.Id, utils.ParseCoins("5000000denom1,5000000denom2"), true)
 
 	for _, tc := range []struct {
 		name      string
@@ -243,7 +243,7 @@ func (s *KeeperTestSuite) TestGRPCPoolByPoolCoinDenom() {
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
 				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
-				s.Require().Equal(squad.ParseCoins("5000000denom1,5000000denom2"), resp.Pool.Balances)
+				s.Require().Equal(utils.ParseCoins("5000000denom1,5000000denom2"), resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
 			},
@@ -393,13 +393,13 @@ func (s *KeeperTestSuite) TestGRPCPair() {
 func (s *KeeperTestSuite) TestGRPCDepositRequests() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, pair.Id, squad.ParseCoins("5000000denom1,5000000denom2"), true)
+	pool := s.createPool(creator, pair.Id, utils.ParseCoins("5000000denom1,5000000denom2"), true)
 
 	depositor := s.addr(1)
-	s.deposit(depositor, pool.Id, squad.ParseCoins("250000denom1,250000denom2"), true)
-	s.deposit(depositor, pool.Id, squad.ParseCoins("250000denom1,250000denom2"), true)
-	s.deposit(depositor, pool.Id, squad.ParseCoins("250000denom1,250000denom2"), true)
-	s.deposit(depositor, pool.Id, squad.ParseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, utils.ParseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, utils.ParseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, utils.ParseCoins("250000denom1,250000denom2"), true)
+	s.deposit(depositor, pool.Id, utils.ParseCoins("250000denom1,250000denom2"), true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -456,10 +456,10 @@ func (s *KeeperTestSuite) TestGRPCDepositRequests() {
 func (s *KeeperTestSuite) TestGRPCDepositRequest() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, pair.Id, squad.ParseCoins("5000000denom1,5000000denom2"), true)
+	pool := s.createPool(creator, pair.Id, utils.ParseCoins("5000000denom1,5000000denom2"), true)
 
 	depositor := s.addr(1)
-	req := s.deposit(depositor, pool.Id, squad.ParseCoins("250000denom1,250000denom2"), true)
+	req := s.deposit(depositor, pool.Id, utils.ParseCoins("250000denom1,250000denom2"), true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -524,7 +524,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequests() {
 
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, pair.Id, squad.ParseCoins("5000000denom1,5000000denom2"), true)
+	pool := s.createPool(creator, pair.Id, utils.ParseCoins("5000000denom1,5000000denom2"), true)
 	poolCoinBalance := s.app.BankKeeper.GetBalance(s.ctx, creator, pool.PoolCoinDenom)
 	s.Require().Equal(params.InitialPoolCoinSupply, poolCoinBalance.Amount)
 
@@ -587,7 +587,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequests() {
 func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
-	pool := s.createPool(creator, pair.Id, squad.ParseCoins("5000000denom1,5000000denom2"), true)
+	pool := s.createPool(creator, pair.Id, utils.ParseCoins("5000000denom1,5000000denom2"), true)
 
 	req := s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 50000))
 	liquidity.EndBlocker(s.ctx, s.keeper)
@@ -651,11 +651,11 @@ func (s *KeeperTestSuite) TestGRPCOrders() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
-	s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(5000000), 10*time.Second, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), newInt(10000), time.Hour, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), newInt(700000), time.Hour, true)
-	s.buyLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(5000000), 10*time.Second, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), newInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), newInt(700000), time.Hour, true)
+	s.buyLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -703,7 +703,7 @@ func (s *KeeperTestSuite) TestGRPCOrder() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 
-	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {
@@ -765,9 +765,9 @@ func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pair2 := s.createPair(s.addr(0), "denom2", "denom2", true)
 
-	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
-	order2 := s.buyLimitOrder(s.addr(1), pair2.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	order2 := s.buyLimitOrder(s.addr(1), pair2.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 
 	for _, tc := range []struct {

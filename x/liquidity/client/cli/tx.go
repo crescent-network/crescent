@@ -49,7 +49,7 @@ func NewCreatePairCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a pair(market) for trading.
 Example:
-$ %s tx %s create-pair uatom usquad --from mykey
+$ %s tx %s create-pair uatom stake --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -82,7 +82,7 @@ func NewCreatePoolCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a liquidity pool with coins.
 Example:
-$ %s tx %s create-pool 1 1000000000uatom,50000000000usquad --from mykey
+$ %s tx %s create-pool 1 1000000000uatom,50000000000stake --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -122,7 +122,7 @@ func NewDepositCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Deposit coins to a liquidity pool.
 Example:
-$ %s tx %s deposit 1 1000000000uatom,50000000000usquad --from mykey
+$ %s tx %s deposit 1 1000000000uatom,50000000000stake --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -206,8 +206,8 @@ func NewLimitOrderCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a limit order.
 Example:
-$ %s tx %s limit-order 1 buy 5000usquad uatom 0.5 10000 10s --from mykey
-$ %s tx %s limit-order 1 s 10000uatom usquad 2.0 10000 10s --from mykey
+$ %s tx %s limit-order 1 buy 5000stake uatom 0.5 10000 10s --from mykey
+$ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
 [direction]: order direction (one of: buy,b,sell,s)
@@ -290,8 +290,8 @@ func NewMarketOrderCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a market order.
 Example:
-$ %s tx %s market-order 1 buy 5000usquad uatom 10000 10s --from mykey
-$ %s tx %s market-order 1 s 10000uatom usquad 10000 10s --from mykey
+$ %s tx %s market-order 1 buy 5000stake uatom 10000 10s --from mykey
+$ %s tx %s market-order 1 s 10000uatom stake 10000 10s --from mykey
 
 [pair-id]: pair id to swap with
 [direction]: order direction (one of: buy,b,sell,s)

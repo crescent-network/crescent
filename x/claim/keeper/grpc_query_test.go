@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -17,11 +17,11 @@ func (s *KeeperTestSuite) TestGRPCAirdrops() {
 		types.ConditionTypeVote,
 	}
 
-	s.createAirdrop(1, s.addr(1), squad.ParseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(1, s.addr(1), utils.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(2, s.addr(2), squad.ParseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(2, s.addr(2), utils.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
-	s.createAirdrop(3, s.addr(3), squad.ParseCoins("1000000000denom1"), conditions,
+	s.createAirdrop(3, s.addr(3), utils.ParseCoins("1000000000denom1"), conditions,
 		s.ctx.BlockTime(), s.ctx.BlockTime().AddDate(0, 1, 0), true)
 
 	for _, tc := range []struct {
@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) TestGRPCAirdrop() {
 	airdrop := s.createAirdrop(
 		1,
 		s.addr(0),
-		squad.ParseCoins("1000000000denom1"),
+		utils.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 	airdrop := s.createAirdrop(
 		1,
 		s.addr(0),
-		squad.ParseCoins("1000000000denom1"),
+		utils.ParseCoins("1000000000denom1"),
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
@@ -137,8 +137,8 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 	record := s.createClaimRecord(
 		airdrop.Id,
 		s.addr(1),
-		squad.ParseCoins("90000000denom1"),
-		squad.ParseCoins("600000000denom1"),
+		utils.ParseCoins("90000000denom1"),
+		utils.ParseCoins("600000000denom1"),
 		[]types.ConditionType{types.ConditionTypeDeposit},
 	)
 
@@ -171,7 +171,7 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 			false,
 			func(resp *types.QueryClaimRecordResponse) {
 				s.Require().Equal(record.Recipient, resp.ClaimRecord.Recipient)
-				s.Require().True(coinsEq(squad.ParseCoins("90000000denom1"), record.InitialClaimableCoins))
+				s.Require().True(coinsEq(utils.ParseCoins("90000000denom1"), record.InitialClaimableCoins))
 				s.Require().Len(resp.ClaimRecord.ClaimedConditions, 1)
 			},
 		},

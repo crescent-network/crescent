@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
@@ -29,7 +29,7 @@ func TestBasicPool(t *testing.T) {
 		lowest = defTickPrec.LowestTick()
 		buyAmt := pool.BuyAmountOver(lowest)
 		expected := rx.ToDec().QuoRoundUp(lowest)
-		require.True(t, squad.DecApproxEqual(expected, buyAmt.ToDec()))
+		require.True(t, utils.DecApproxEqual(expected, buyAmt.ToDec()))
 		highest = defTickPrec.HighestTick()
 		sellAmt := pool.SellAmountUnder(highest)
 		require.True(t, ry.Sub(sellAmt).LTE(sdk.OneInt()))
@@ -328,12 +328,12 @@ func TestBasicPool_Withdraw(t *testing.T) {
 
 func TestBasicPool_Amount(t *testing.T) {
 	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
-	require.True(t, squad.DecApproxEqual(
-		squad.ParseDec("1000000"),
+	require.True(t, utils.DecApproxEqual(
+		utils.ParseDec("1000000"),
 		pool.BuyAmountOver(defTickPrec.LowestTick()).ToDec().Mul(defTickPrec.LowestTick()),
 	))
-	require.True(t, squad.DecApproxEqual(
-		squad.ParseDec("1000000"),
+	require.True(t, utils.DecApproxEqual(
+		utils.ParseDec("1000000"),
 		pool.SellAmountUnder(defTickPrec.HighestTick()).ToDec()),
 	)
 }
@@ -342,7 +342,7 @@ func ExamplePoolsOrderBook() {
 	pools := []amm.Pool{
 		amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{}),
 	}
-	ob := amm.PoolsOrderBook(pools, squad.ParseDec("1.0"), 6, int(defTickPrec))
+	ob := amm.PoolsOrderBook(pools, utils.ParseDec("1.0"), 6, int(defTickPrec))
 	fmt.Println(ob.FullString(int(defTickPrec)))
 
 	// Output:
