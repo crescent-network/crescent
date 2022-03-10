@@ -20,7 +20,7 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
 
-	"github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -35,7 +35,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	db := tmdb.NewMemDB()
-	cfg := app.NewConfig(db)
+	cfg := chain.NewConfig(db)
 	//cfg.TimeoutCommit = 3 * time.Second
 	cfg.NumValidators = 1
 	s.cfg = cfg

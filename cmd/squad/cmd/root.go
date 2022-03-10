@@ -32,31 +32,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	farmingparams "github.com/cosmosquad-labs/squad/app/params"
 )
 
-const (
-	// BIP-44 path "44'/118'/0'/0/0"
-	Purpose  = uint32(44)
-	CoinType = uint32(118)
-
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = "cosmos"
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = Bech32PrefixAccAddr + "pub"
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = Bech32PrefixAccAddr + "valoper"
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = Bech32PrefixAccAddr + "valoperpub"
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = Bech32PrefixAccAddr + "valcons"
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = Bech32PrefixAccAddr + "valconspub"
-)
-
 var (
-	// AddressVerifier squad address verifier
+	// AddressVerifier address verifier
 	AddressVerifier = func(bz []byte) error {
 		if n := len(bz); n != 20 && n != 32 {
 			return fmt.Errorf("incorrect address length %d", n)
@@ -68,22 +49,22 @@ var (
 
 func GetConfig() *sdk.Config {
 	sdkConfig := sdk.GetConfig()
-	sdkConfig.SetPurpose(Purpose)
-	sdkConfig.SetCoinType(CoinType)
-	sdkConfig.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
-	sdkConfig.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
-	sdkConfig.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
+	sdkConfig.SetPurpose(chain.Purpose)
+	sdkConfig.SetCoinType(chain.CoinType)
+	sdkConfig.SetBech32PrefixForAccount(chain.Bech32PrefixAccAddr, chain.Bech32PrefixAccPub)
+	sdkConfig.SetBech32PrefixForValidator(chain.Bech32PrefixValAddr, chain.Bech32PrefixValPub)
+	sdkConfig.SetBech32PrefixForConsensusNode(chain.Bech32PrefixConsAddr, chain.Bech32PrefixConsPub)
 	sdkConfig.SetAddressVerifier(AddressVerifier)
 	return sdkConfig
 }
 
-// NewRootCmd creates a new root command for squad. It is called once in the
+// NewRootCmd creates a new root command for the app. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 	sdkConfig := GetConfig()
 	sdkConfig.Seal()
 
-	encodingConfig := squadapp.MakeEncodingConfig()
+	encodingConfig := chain.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -91,12 +72,12 @@ func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(squadapp.DefaultNodeHome).
+		WithHomeDir(chain.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
-		Use:   "squad",
-		Short: "squad app",
+		Use:   chain.AppBinary,
+		Short: chain.AppBinary + " app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -185,28 +166,27 @@ lru_size = 0`
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingConfig) {
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(squadapp.ModuleBasics, squadapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, squadapp.DefaultNodeHome),
+		genutilcli.InitCmd(chain.ModuleBasics, chain.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, chain.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(squadapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, squadapp.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(squadapp.ModuleBasics),
-		AddGenesisAccountCmd(squadapp.DefaultNodeHome),
-		PrepareGenesisCmd(squadapp.DefaultNodeHome, squadapp.ModuleBasics),
+		genutilcli.GenTxCmd(chain.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, chain.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(chain.ModuleBasics),
+		AddGenesisAccountCmd(chain.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(squadapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(chain.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
 
 	a := appCreator{encodingConfig}
-	server.AddCommands(rootCmd, squadapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, chain.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(squadapp.DefaultNodeHome),
+		keys.Commands(chain.DefaultNodeHome),
 	)
 
 	// add rosetta
@@ -235,7 +215,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	squadapp.ModuleBasics.AddQueryCommands(cmd)
+	chain.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -261,7 +241,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	squadapp.ModuleBasics.AddTxCommands(cmd)
+	chain.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -299,7 +279,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
-	return squadapp.NewSquadApp(
+	return chain.NewApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -325,21 +305,21 @@ func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
 
-	var farmingApp *squadapp.SquadApp
+	var app *chain.App
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
 	if height != -1 {
-		farmingApp = squadapp.NewSquadApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		app = chain.NewApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 
-		if err := farmingApp.LoadHeight(height); err != nil {
+		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		farmingApp = squadapp.NewSquadApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		app = chain.NewApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 	}
 
-	return farmingApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return app.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }

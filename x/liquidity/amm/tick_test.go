@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
@@ -18,13 +18,13 @@ func TestPriceToTick(t *testing.T) {
 		price    sdk.Dec
 		expected sdk.Dec
 	}{
-		{squad.ParseDec("0.000000000000099999"), squad.ParseDec("0.00000000000009999")},
-		{squad.ParseDec("1.999999999999999999"), squad.ParseDec("1.999")},
-		{squad.ParseDec("99.999999999999999999"), squad.ParseDec("99.99")},
-		{squad.ParseDec("100.999999999999999999"), squad.ParseDec("100.9")},
-		{squad.ParseDec("9999.999999999999999999"), squad.ParseDec("9999")},
-		{squad.ParseDec("10019"), squad.ParseDec("10010")},
-		{squad.ParseDec("1000100005"), squad.ParseDec("1000000000")},
+		{utils.ParseDec("0.000000000000099999"), utils.ParseDec("0.00000000000009999")},
+		{utils.ParseDec("1.999999999999999999"), utils.ParseDec("1.999")},
+		{utils.ParseDec("99.999999999999999999"), utils.ParseDec("99.99")},
+		{utils.ParseDec("100.999999999999999999"), utils.ParseDec("100.9")},
+		{utils.ParseDec("9999.999999999999999999"), utils.ParseDec("9999")},
+		{utils.ParseDec("10019"), utils.ParseDec("10010")},
+		{utils.ParseDec("1000100005"), utils.ParseDec("1000000000")},
 	} {
 		require.True(sdk.DecEq(t, tc.expected, amm.PriceToDownTick(tc.price, 3)))
 	}
@@ -37,14 +37,14 @@ func TestTick(t *testing.T) {
 		expected sdk.Dec
 	}{
 		{0, 3, sdk.NewDecWithPrec(1, int64(sdk.Precision-defTickPrec))},
-		{1, 3, squad.ParseDec("0.000000000000001001")},
-		{8999, 3, squad.ParseDec("0.000000000000009999")},
-		{9000, 3, squad.ParseDec("0.000000000000010000")},
-		{9001, 3, squad.ParseDec("0.000000000000010010")},
-		{17999, 3, squad.ParseDec("0.000000000000099990")},
-		{18000, 3, squad.ParseDec("0.000000000000100000")},
+		{1, 3, utils.ParseDec("0.000000000000001001")},
+		{8999, 3, utils.ParseDec("0.000000000000009999")},
+		{9000, 3, utils.ParseDec("0.000000000000010000")},
+		{9001, 3, utils.ParseDec("0.000000000000010010")},
+		{17999, 3, utils.ParseDec("0.000000000000099990")},
+		{18000, 3, utils.ParseDec("0.000000000000100000")},
 		{135000, 3, sdk.NewDec(1)},
-		{135001, 3, squad.ParseDec("1.001")},
+		{135001, 3, utils.ParseDec("1.001")},
 	} {
 		t.Run("", func(t *testing.T) {
 			res := amm.TickFromIndex(tc.i, tc.prec)
@@ -60,16 +60,16 @@ func TestUpTick(t *testing.T) {
 		prec     int
 		expected sdk.Dec
 	}{
-		{squad.ParseDec("1000000000000000000"), 3, squad.ParseDec("1001000000000000000")},
-		{squad.ParseDec("1000"), 3, squad.ParseDec("1001")},
-		{squad.ParseDec("999.9"), 3, squad.ParseDec("1000")},
-		{squad.ParseDec("999.0"), 3, squad.ParseDec("999.1")},
-		{squad.ParseDec("1.100"), 3, squad.ParseDec("1.101")},
-		{squad.ParseDec("1.000"), 3, squad.ParseDec("1.001")},
-		{squad.ParseDec("0.9999"), 3, squad.ParseDec("1.000")},
-		{squad.ParseDec("0.1000"), 3, squad.ParseDec("0.1001")},
-		{squad.ParseDec("0.09999"), 3, squad.ParseDec("0.1000")},
-		{squad.ParseDec("0.09997"), 3, squad.ParseDec("0.09998")},
+		{utils.ParseDec("1000000000000000000"), 3, utils.ParseDec("1001000000000000000")},
+		{utils.ParseDec("1000"), 3, utils.ParseDec("1001")},
+		{utils.ParseDec("999.9"), 3, utils.ParseDec("1000")},
+		{utils.ParseDec("999.0"), 3, utils.ParseDec("999.1")},
+		{utils.ParseDec("1.100"), 3, utils.ParseDec("1.101")},
+		{utils.ParseDec("1.000"), 3, utils.ParseDec("1.001")},
+		{utils.ParseDec("0.9999"), 3, utils.ParseDec("1.000")},
+		{utils.ParseDec("0.1000"), 3, utils.ParseDec("0.1001")},
+		{utils.ParseDec("0.09999"), 3, utils.ParseDec("0.1000")},
+		{utils.ParseDec("0.09997"), 3, utils.ParseDec("0.09998")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.UpTick(tc.price, tc.prec)))
@@ -83,16 +83,16 @@ func TestDownTick(t *testing.T) {
 		prec     int
 		expected sdk.Dec
 	}{
-		{squad.ParseDec("1000000000000000000"), 3, squad.ParseDec("999900000000000000")},
-		{squad.ParseDec("10010"), 3, squad.ParseDec("10000")},
-		{squad.ParseDec("100.0"), 3, squad.ParseDec("99.99")},
-		{squad.ParseDec("99.99"), 3, squad.ParseDec("99.98")},
-		{squad.ParseDec("1.000"), 3, squad.ParseDec("0.9999")},
-		{squad.ParseDec("0.9990"), 3, squad.ParseDec("0.9989")},
-		{squad.ParseDec("0.9999"), 3, squad.ParseDec("0.9998")},
-		{squad.ParseDec("0.1"), 3, squad.ParseDec("0.09999")},
-		{squad.ParseDec("0.00000000000001000"), 3, squad.ParseDec("0.000000000000009999")},
-		{squad.ParseDec("0.000000000000001001"), 3, squad.ParseDec("0.000000000000001000")},
+		{utils.ParseDec("1000000000000000000"), 3, utils.ParseDec("999900000000000000")},
+		{utils.ParseDec("10010"), 3, utils.ParseDec("10000")},
+		{utils.ParseDec("100.0"), 3, utils.ParseDec("99.99")},
+		{utils.ParseDec("99.99"), 3, utils.ParseDec("99.98")},
+		{utils.ParseDec("1.000"), 3, utils.ParseDec("0.9999")},
+		{utils.ParseDec("0.9990"), 3, utils.ParseDec("0.9989")},
+		{utils.ParseDec("0.9999"), 3, utils.ParseDec("0.9998")},
+		{utils.ParseDec("0.1"), 3, utils.ParseDec("0.09999")},
+		{utils.ParseDec("0.00000000000001000"), 3, utils.ParseDec("0.000000000000009999")},
+		{utils.ParseDec("0.000000000000001001"), 3, utils.ParseDec("0.000000000000001000")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.DownTick(tc.price, tc.prec)))
@@ -141,10 +141,10 @@ func TestPriceToUpTick(t *testing.T) {
 		prec     int
 		expected sdk.Dec
 	}{
-		{squad.ParseDec("1.0015"), 3, squad.ParseDec("1.002")},
-		{squad.ParseDec("100"), 3, squad.ParseDec("100")},
-		{squad.ParseDec("100.01"), 3, squad.ParseDec("100.1")},
-		{squad.ParseDec("100.099"), 3, squad.ParseDec("100.1")},
+		{utils.ParseDec("1.0015"), 3, utils.ParseDec("1.002")},
+		{utils.ParseDec("100"), 3, utils.ParseDec("100")},
+		{utils.ParseDec("100.01"), 3, utils.ParseDec("100.1")},
+		{utils.ParseDec("100.099"), 3, utils.ParseDec("100.1")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.PriceToUpTick(tc.price, tc.prec)))
@@ -181,17 +181,17 @@ func TestRoundPrice(t *testing.T) {
 		prec     int
 		expected sdk.Dec
 	}{
-		{squad.ParseDec("0.000000000000001000"), 3, squad.ParseDec("0.000000000000001000")},
-		{squad.ParseDec("0.000000000000010000"), 3, squad.ParseDec("0.000000000000010000")},
-		{squad.ParseDec("0.000000000000010005"), 3, squad.ParseDec("0.000000000000010000")},
-		{squad.ParseDec("0.000000000000010015"), 3, squad.ParseDec("0.000000000000010020")},
-		{squad.ParseDec("0.000000000000010025"), 3, squad.ParseDec("0.000000000000010020")},
-		{squad.ParseDec("0.000000000000010035"), 3, squad.ParseDec("0.000000000000010040")},
-		{squad.ParseDec("0.000000000000010045"), 3, squad.ParseDec("0.000000000000010040")},
-		{squad.ParseDec("1.0005"), 3, squad.ParseDec("1.0")},
-		{squad.ParseDec("1.0015"), 3, squad.ParseDec("1.002")},
-		{squad.ParseDec("1.0025"), 3, squad.ParseDec("1.002")},
-		{squad.ParseDec("1.0035"), 3, squad.ParseDec("1.004")},
+		{utils.ParseDec("0.000000000000001000"), 3, utils.ParseDec("0.000000000000001000")},
+		{utils.ParseDec("0.000000000000010000"), 3, utils.ParseDec("0.000000000000010000")},
+		{utils.ParseDec("0.000000000000010005"), 3, utils.ParseDec("0.000000000000010000")},
+		{utils.ParseDec("0.000000000000010015"), 3, utils.ParseDec("0.000000000000010020")},
+		{utils.ParseDec("0.000000000000010025"), 3, utils.ParseDec("0.000000000000010020")},
+		{utils.ParseDec("0.000000000000010035"), 3, utils.ParseDec("0.000000000000010040")},
+		{utils.ParseDec("0.000000000000010045"), 3, utils.ParseDec("0.000000000000010040")},
+		{utils.ParseDec("1.0005"), 3, utils.ParseDec("1.0")},
+		{utils.ParseDec("1.0015"), 3, utils.ParseDec("1.002")},
+		{utils.ParseDec("1.0025"), 3, utils.ParseDec("1.002")},
+		{utils.ParseDec("1.0035"), 3, utils.ParseDec("1.004")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.RoundPrice(tc.price, tc.prec)))
@@ -201,14 +201,14 @@ func TestRoundPrice(t *testing.T) {
 
 func BenchmarkUpTick(b *testing.B) {
 	b.Run("price fit in ticks", func(b *testing.B) {
-		price := squad.ParseDec("0.9999")
+		price := utils.ParseDec("0.9999")
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			amm.UpTick(price, 3)
 		}
 	})
 	b.Run("price not fit in ticks", func(b *testing.B) {
-		price := squad.ParseDec("0.99995")
+		price := utils.ParseDec("0.99995")
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			amm.UpTick(price, 3)
@@ -218,21 +218,21 @@ func BenchmarkUpTick(b *testing.B) {
 
 func BenchmarkDownTick(b *testing.B) {
 	b.Run("price fit in ticks", func(b *testing.B) {
-		price := squad.ParseDec("0.9999")
+		price := utils.ParseDec("0.9999")
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			amm.DownTick(price, 3)
 		}
 	})
 	b.Run("price not fit in ticks", func(b *testing.B) {
-		price := squad.ParseDec("0.99995")
+		price := utils.ParseDec("0.99995")
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			amm.DownTick(price, 3)
 		}
 	})
 	b.Run("price at edge", func(b *testing.B) {
-		price := squad.ParseDec("1")
+		price := utils.ParseDec("1")
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			amm.DownTick(price, 3)

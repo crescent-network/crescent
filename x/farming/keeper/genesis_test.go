@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/farming"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 
@@ -181,7 +181,7 @@ func (suite *KeeperTestSuite) TestMarshalUnmarshalDefaultGenesis() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(*genState, genState2)
 
-	app2 := simapp.Setup(false)
+	app2 := chain.Setup(false)
 	ctx2 := app2.BaseApp.NewContext(false, tmproto.Header{})
 	keeper2 := app2.FarmingKeeper
 	keeper2.InitGenesis(ctx2, genState2)

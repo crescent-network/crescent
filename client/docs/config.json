@@ -1,11 +1,17 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "CosmoSquad - REST and gRPC Gateway docs",
+    "title": "REST and gRPC Gateway docs",
     "description": "A REST interface for state queries, transactions",
     "version": "0.0.1"
   },
   "apis": [
+    {
+      "url": "./client/docs/swagger_legacy.yaml",
+      "dereference": {
+        "circular": "ignore"
+      }
+    },
     {
       "url": "./tmp-swagger-gen/squad/farming/v1beta1/query.swagger.json",
       "operationIds": {
@@ -18,7 +24,8 @@
       "url": "./tmp-swagger-gen/squad/liquidity/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "LiquidityParams"
+          "Params": "LiquidityParams",
+          "Pool": "LiquidityPool"
         }
       }
     },
@@ -27,6 +34,22 @@
       "operationIds": {
         "rename": {
           "Params": "LiquidStakingParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/squad/mint/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MintParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/squad/claim/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ClaimParams"
         }
       }
     }

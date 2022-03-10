@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
-	squadcli "github.com/cosmosquad-labs/squad/x/farming/client/cli"
+	"github.com/cosmosquad-labs/squad/x/farming/client/cli"
 )
 
 var commonArgs = []string{
@@ -30,7 +30,7 @@ func MsgCreateFixedAmountPlanExec(clientCtx client.Context, from string, file st
 
 	args = append(args, commonArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, squadcli.NewCreateFixedAmountPlanCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewCreateFixedAmountPlanCmd(), args)
 }
 
 // MsgStakeExec creates a transaction for staking coin.
@@ -44,7 +44,7 @@ func MsgStakeExec(clientCtx client.Context, from string, stakingCoins string,
 
 	args = append(args, commonArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, squadcli.NewStakeCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewStakeCmd(), args)
 }
 
 // MsgAdvanceEpochExec creates a transaction to advance epoch by 1.
@@ -57,7 +57,7 @@ func MsgAdvanceEpochExec(clientCtx client.Context, from string,
 
 	args = append(args, commonArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, squadcli.NewAdvanceEpochCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewAdvanceEpochCmd(), args)
 }
 
 // MsgSendExec creates a transaction to transfer coins.

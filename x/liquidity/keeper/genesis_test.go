@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -14,13 +14,13 @@ func (s *KeeperTestSuite) TestDefaultGenesis() {
 }
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {
-	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(squad.ParseTime("2022-01-01T00:00:00Z"))
+	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
 	k, ctx := s.keeper, s.ctx
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	pool := s.createPool(s.addr(0), pair.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 
-	s.deposit(s.addr(1), pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.deposit(s.addr(1), pool.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 	s.nextBlock()
 
 	poolCoin := s.getBalance(s.addr(1), pool.PoolCoinDenom)
@@ -28,19 +28,19 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.withdraw(s.addr(1), pool.Id, poolCoin)
 	s.nextBlock()
 
-	s.buyLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), newInt(10000), 0, true)
+	s.buyLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), newInt(10000), 0, true)
 	s.nextBlock()
 
-	depositReq := s.deposit(s.addr(3), pool.Id, squad.ParseCoins("1000000denom1,1000000denom2"), true)
+	depositReq := s.deposit(s.addr(3), pool.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 	withdrawReq := s.withdraw(s.addr(1), pool.Id, poolCoin)
-	order := s.sellLimitOrder(s.addr(3), pair.Id, squad.ParseDec("1.0"), newInt(1000), 0, true)
+	order := s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("1.0"), newInt(1000), 0, true)
 
 	genState := k.ExportGenesis(ctx)
 
 	bz := s.app.AppCodec().MustMarshalJSON(genState)
 
 	s.SetupTest()
-	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(squad.ParseTime("2022-01-01T00:00:00Z"))
+	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
 	k, ctx = s.keeper, s.ctx
 
 	var genState2 types.GenesisState

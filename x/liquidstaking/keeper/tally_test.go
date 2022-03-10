@@ -7,8 +7,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
-	squad "github.com/cosmosquad-labs/squad/types"
+	chain "github.com/cosmosquad-labs/squad/app"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -17,9 +17,9 @@ func (s *KeeperTestSuite) TestGetVoterBalanceByDenom() {
 	voter1, _ := sdk.AccAddressFromBech32("cosmos138w269yyeyj0unge54km8572lgf54l8e3yu8lg")
 	voter2, _ := sdk.AccAddressFromBech32("cosmos1u0wfxlachgzqpwnkcwj2vzy025ehzv0qlhujnr")
 
-	simapp.InitAccountWithCoins(s.app, s.ctx, voter1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))))
-	simapp.InitAccountWithCoins(s.app, s.ctx, voter2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))))
-	simapp.InitAccountWithCoins(s.app, s.ctx, voter2, sdk.NewCoins(sdk.NewCoin(types.DefaultLiquidBondDenom, sdk.NewInt(500000))))
+	chain.InitAccountWithCoins(s.app, s.ctx, voter1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))))
+	chain.InitAccountWithCoins(s.app, s.ctx, voter2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000))))
+	chain.InitAccountWithCoins(s.app, s.ctx, voter2, sdk.NewCoins(sdk.NewCoin(types.DefaultLiquidBondDenom, sdk.NewInt(500000))))
 
 	tp := govtypes.NewTextProposal("Test", "description")
 	proposal, err := s.app.GovKeeper.SubmitProposal(s.ctx, tp)
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 		votingPowers = govtypes.AdditionalVotingPowers{}
 		votes := s.app.GovKeeper.GetVotes(cachedCtx, proposal.ProposalId)
 		s.keeper.SetLiquidStakingVotingPowers(cachedCtx, votes, &votingPowers)
-		squad.PP(votingPowers)
+		utils.PP(votingPowers)
 
 		s.Require().Len(votingPowers, 5)
 		testVotingPowers(delB, delBbToken)
@@ -388,8 +388,8 @@ func (s *KeeperTestSuite) TestVotingPower() {
 	votingPower = s.keeper.GetVotingPower(s.ctx, delA)
 	s.Require().EqualValues(votingPower.StakingVotingPower, sdk.ZeroInt())
 	s.Require().EqualValues(votingPower.LiquidStakingVotingPower, sdk.ZeroInt())
-	squad.PP(s.keeper.NetAmountState(s.ctx))
-	squad.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
+	utils.PP(s.keeper.NetAmountState(s.ctx))
+	utils.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
 
 	// rebalancing not occurred because no active liquid validators, unbonding started all liquid tokens, no liquid staking voting power
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)

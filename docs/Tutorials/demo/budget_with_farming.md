@@ -56,7 +56,7 @@ make install-testing
 
 ```bash
 export BINARY=squad
-export HOME_FARMINGAPP=$HOME/.squadapp
+export HOME_APP=$HOME/.squadapp
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
@@ -86,21 +86,21 @@ fi
 # Enable API and swagger docs and modify parameters for the governance proposal and
 # inflation rate from 13% to 33%
 if [ $platform = 'linux' ]; then
-	sed -i 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
-	sed -i 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
-	sed -i 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
-	sed -i 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-	sed -i 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-	sed -i 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_FARMINGAPP/config/genesis.json
-  sed -i 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_FARMINGAPP/config/genesis.json
+	sed -i 's/enable = false/enable = true/g' $HOME_APP/config/app.toml
+	sed -i 's/swagger = false/swagger = true/g' $HOME_APP/config/app.toml
+	sed -i 's%"amount": "10000000"%"amount": "1"%g' $HOME_APP/config/genesis.json
+	sed -i 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+	sed -i 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+	sed -i 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_APP/config/genesis.json
+  sed -i 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_APP/config/genesis.json
 else
-	sed -i '' 's/enable = false/enable = true/g' $HOME_FARMINGAPP/config/app.toml
-	sed -i '' 's/swagger = false/swagger = true/g' $HOME_FARMINGAPP/config/app.toml
-	sed -i '' 's%"amount": "10000000"%"amount": "1"%g' $HOME_FARMINGAPP/config/genesis.json
-	sed -i '' 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-	sed -i '' 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_FARMINGAPP/config/genesis.json
-	sed -i '' 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_FARMINGAPP/config/genesis.json
-  sed -i '' 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_FARMINGAPP/config/genesis.json
+	sed -i '' 's/enable = false/enable = true/g' $HOME_APP/config/app.toml
+	sed -i '' 's/swagger = false/swagger = true/g' $HOME_APP/config/app.toml
+	sed -i '' 's%"amount": "10000000"%"amount": "1"%g' $HOME_APP/config/genesis.json
+	sed -i '' 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+	sed -i '' 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+	sed -i '' 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_APP/config/genesis.json
+  sed -i '' 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_APP/config/genesis.json
 fi
 
 # Start

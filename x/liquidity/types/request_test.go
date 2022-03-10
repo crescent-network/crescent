@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -61,7 +61,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of deposit coins",
 			func(req *types.DepositRequest) {
-				req.DepositCoins = squad.ParseCoins("1000000denom1")
+				req.DepositCoins = utils.ParseCoins("1000000denom1")
 			},
 			"wrong number of deposit coins: 1",
 		},
@@ -75,15 +75,15 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of accepted coins",
 			func(req *types.DepositRequest) {
-				req.AcceptedCoins = squad.ParseCoins("1000000denom1")
+				req.AcceptedCoins = utils.ParseCoins("1000000denom1")
 			},
 			"wrong number of accepted coins: 1",
 		},
 		{
 			"wrong denom pair",
 			func(req *types.DepositRequest) {
-				req.DepositCoins = squad.ParseCoins("1000000denom1,1000000denom2")
-				req.AcceptedCoins = squad.ParseCoins("1000000denom2,1000000denom3")
+				req.DepositCoins = utils.ParseCoins("1000000denom1,1000000denom2")
+				req.AcceptedCoins = utils.ParseCoins("1000000denom2,1000000denom3")
 			},
 			"mismatching denom pair between deposit coins and accepted coins",
 		},
@@ -97,7 +97,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"zero minted pool coin",
 			func(req *types.DepositRequest) {
-				req.MintedPoolCoin = squad.ParseCoin("0pool1")
+				req.MintedPoolCoin = utils.ParseCoin("0pool1")
 			},
 			"",
 		},
@@ -112,7 +112,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := types.NewPool(1, 1)
 			depositor := sdk.AccAddress(crypto.AddressHash([]byte("depositor")))
-			msg := types.NewMsgDeposit(depositor, 1, squad.ParseCoins("1000000denom1,1000000denom2"))
+			msg := types.NewMsgDeposit(depositor, 1, utils.ParseCoins("1000000denom1,1000000denom2"))
 			req := types.NewDepositRequest(msg, pool, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()
@@ -174,7 +174,7 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 		{
 			"zero pool coin",
 			func(req *types.WithdrawRequest) {
-				req.PoolCoin = squad.ParseCoin("0pool1")
+				req.PoolCoin = utils.ParseCoin("0pool1")
 			},
 			"pool coin must not be 0",
 		},
@@ -188,14 +188,14 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 		{
 			"valid withdrawn coins",
 			func(req *types.WithdrawRequest) {
-				req.WithdrawnCoins = squad.ParseCoins("1000000denom1")
+				req.WithdrawnCoins = utils.ParseCoins("1000000denom1")
 			},
 			"",
 		},
 		{
 			"wrong number of withdrawn coins",
 			func(req *types.WithdrawRequest) {
-				req.WithdrawnCoins = squad.ParseCoins("100000denom1,1000000denom2,1000000denom3")
+				req.WithdrawnCoins = utils.ParseCoins("100000denom1,1000000denom2,1000000denom3")
 			},
 			"wrong number of withdrawn coins: 3",
 		},
@@ -209,7 +209,7 @@ func TestWithdrawRequest_Validate(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			withdrawer := sdk.AccAddress(crypto.AddressHash([]byte("withdrawer")))
-			msg := types.NewMsgWithdraw(withdrawer, 1, squad.ParseCoin("1000pool1"))
+			msg := types.NewMsgWithdraw(withdrawer, 1, utils.ParseCoin("1000pool1"))
 			req := types.NewWithdrawRequest(msg, 1, 1)
 			tc.malleate(&req)
 			err := req.Validate()
@@ -278,7 +278,7 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			"zero offer coin",
 			func(order *types.Order) {
-				order.OfferCoin = squad.ParseCoin("0denom1")
+				order.OfferCoin = utils.ParseCoin("0denom1")
 			},
 			"offer coin must not be 0",
 		},
@@ -292,15 +292,15 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			"zero remaining offer coin",
 			func(order *types.Order) {
-				order.RemainingOfferCoin = squad.ParseCoin("0denom2")
+				order.RemainingOfferCoin = utils.ParseCoin("0denom2")
 			},
 			"",
 		},
 		{
 			"mismatching denom pair",
 			func(order *types.Order) {
-				order.OfferCoin = squad.ParseCoin("1000000denom1")
-				order.RemainingOfferCoin = squad.ParseCoin("1000000denom2")
+				order.OfferCoin = utils.ParseCoin("1000000denom1")
+				order.RemainingOfferCoin = utils.ParseCoin("1000000denom2")
 			},
 			"offer coin denom denom1 != remaining offer coin denom denom2",
 		},
@@ -314,7 +314,7 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			"zero received coin",
 			func(order *types.Order) {
-				order.ReceivedCoin = squad.ParseCoin("0denom1")
+				order.ReceivedCoin = utils.ParseCoin("0denom1")
 			},
 			"",
 		},
@@ -365,10 +365,10 @@ func TestOrder_Validate(t *testing.T) {
 			pair := types.NewPair(1, "denom1", "denom2")
 			orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
 			msg := types.NewMsgLimitOrder(
-				orderer, pair.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"),
-				"denom1", squad.ParseDec("1.0"), newInt(1000000), types.DefaultMaxOrderLifespan)
-			expireAt := squad.ParseTime("2022-01-01T00:00:00Z")
-			order := types.NewOrderForLimitOrder(msg, 1, pair, squad.ParseCoin("1000000denom2"), msg.Price, expireAt, 1)
+				orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"),
+				"denom1", utils.ParseDec("1.0"), newInt(1000000), types.DefaultMaxOrderLifespan)
+			expireAt := utils.ParseTime("2022-01-01T00:00:00Z")
+			order := types.NewOrderForLimitOrder(msg, 1, pair, utils.ParseCoin("1000000denom2"), msg.Price, expireAt, 1)
 			tc.malleate(&order)
 			err := order.Validate()
 			if tc.expectedErr == "" {
