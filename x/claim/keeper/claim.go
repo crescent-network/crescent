@@ -83,10 +83,6 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 		}
 
 	case types.ConditionTypeVote:
-		fmt.Println("ConditionTypeVote")
-
-		fmt.Println("proposals: ", k.govKeeper.GetProposals(ctx))
-
 		for _, v := range k.govKeeper.GetAllVotes(ctx) {
 			if v.Voter == recipient.String() {
 				skip = true

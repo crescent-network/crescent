@@ -28,8 +28,8 @@ func NewKeeper(
 	gk types.GovKeeper,
 	lk types.LiquidityKeeper,
 	lsk types.LiquidStakingKeeper,
-) *Keeper {
-	return &Keeper{
+) Keeper {
+	return Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		bankKeeper:          bk,

@@ -426,28 +426,6 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
-	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
-		appCodec,
-		keys[liquidstakingtypes.StoreKey],
-		app.GetSubspace(liquidstakingtypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.DistrKeeper,
-		app.GovKeeper,
-		app.LiquidityKeeper,
-		app.FarmingKeeper,
-		app.SlashingKeeper,
-	)
-	app.ClaimKeeper = *claimkeeper.NewKeeper(
-		appCodec,
-		keys[claimtypes.StoreKey],
-		app.BankKeeper,
-		app.DistrKeeper,
-		app.GovKeeper,
-		app.LiquidityKeeper,
-		app.LiquidStakingKeeper,
-	)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -469,10 +447,34 @@ func NewApp(
 		govRouter,
 	)
 
+	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
+		appCodec,
+		keys[liquidstakingtypes.StoreKey],
+		app.GetSubspace(liquidstakingtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.GovKeeper,
+		app.LiquidityKeeper,
+		app.FarmingKeeper,
+		app.SlashingKeeper,
+	)
+
 	app.GovKeeper = *app.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 			app.LiquidStakingKeeper.Hooks(),
 		),
+	)
+
+	app.ClaimKeeper = claimkeeper.NewKeeper(
+		appCodec,
+		keys[claimtypes.StoreKey],
+		app.BankKeeper,
+		app.DistrKeeper,
+		app.GovKeeper,
+		app.LiquidityKeeper,
+		app.LiquidStakingKeeper,
 	)
 
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
