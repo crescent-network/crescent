@@ -112,6 +112,9 @@ import (
 	"github.com/cosmosquad-labs/squad/x/mint"
 	mintkeeper "github.com/cosmosquad-labs/squad/x/mint/keeper"
 	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
+
+	// unnamed import of statik for swagger UI support
+	_ "github.com/cosmosquad-labs/squad/client/docs/statik"
 )
 
 var (
