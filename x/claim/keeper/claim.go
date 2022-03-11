@@ -88,7 +88,7 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 		k.govKeeper.IterateAllVotes(ctx, func(vote govtypes.Vote) (stop bool) {
 			if vote.Voter == recipient.String() {
 				ok = true
-				return
+				return true
 			}
 			return false
 		})
