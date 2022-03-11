@@ -1,17 +1,14 @@
 package simulation
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/cosmosquad-labs/squad/app/params"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
@@ -48,12 +45,12 @@ func ProposalContents(ak types.AccountKeeper, bk types.BankKeeper, sk types.Stak
 		simulation.NewWeightedProposalContent(
 			OpWeightCompleteRedelegationUnbonding,
 			params.DefaultWeightCompleteRedelegationUnbonding,
-			SimulateCompleteRedelegationUnbonding(sk, k),
+			SimulateCompleteRedelegationUnbonding(sk),
 		),
 		simulation.NewWeightedProposalContent(
 			OpWeightTallyWithLiquidStaking,
 			params.DefaultWeightTallyWithLiquidStaking,
-			SimulateTallyWithLiquidStaking(ak, bk, gk, k),
+			SimulateTallyWithLiquidStaking(ak, bk, gk),
 		),
 	}
 }
@@ -70,30 +67,17 @@ func SimulateAddWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.Kee
 			val, _ := keeper.RandomValidator(r, sk, ctx)
 			if _, ok := wm[val.OperatorAddress]; !ok {
 				params.WhitelistedValidators = append(params.WhitelistedValidators,
-					types.WhitelistedValidator{
+					&types.WhitelistedValidator{
 						ValidatorAddress: val.OperatorAddress,
 						TargetWeight:     genTargetWeight(r),
 					})
 				fmt.Println("## added vals", val.OperatorAddress)
+				// manually set params for simulation
+				k.SetParams(ctx, params)
 				break
 			}
 		}
-
-		whitelistStr, err := json.Marshal(&params.WhitelistedValidators)
-		if err != nil {
-			panic(err)
-		}
-		change := proposal.NewParamChange(types.ModuleName, string(types.KeyWhitelistedValidators), string(whitelistStr))
-
-		// manually set params for simulation
-		k.SetParams(ctx, params)
-
-		// this proposal could be passed due to x/gov simulation voting process
-		return proposal.NewParameterChangeProposal(
-			"AddWhitelistValidatorsProposal",
-			"AddWhitelistValidatorsProposal",
-			[]proposal.ParamChange{change},
-		)
+		return nil
 	}
 }
 
@@ -108,27 +92,13 @@ func SimulateUpdateWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.
 				if params.WhitelistedValidators[i].ValidatorAddress == targetVal.OperatorAddress {
 					params.WhitelistedValidators[i].TargetWeight = genTargetWeight(r)
 					fmt.Println("## update vals", targetVal.OperatorAddress)
+					// manually set params for simulation
 					k.SetParams(ctx, params)
 					break
 				}
 			}
 		}
-
-		whitelistStr, err := json.Marshal(&params.WhitelistedValidators)
-		if err != nil {
-			panic(err)
-		}
-		change := proposal.NewParamChange(types.ModuleName, string(types.KeyWhitelistedValidators), string(whitelistStr))
-
-		// manually set params for simulation
-		k.SetParams(ctx, params)
-
-		// this proposal could be passed due to x/gov simulation voting process
-		return proposal.NewParameterChangeProposal(
-			"UpdateWhitelistValidatorsProposal",
-			"UpdateWhitelistValidatorsProposal",
-			[]proposal.ParamChange{change},
-		)
+		return nil
 	}
 }
 
@@ -139,7 +109,7 @@ func SimulateDeleteWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.
 
 		targetVal, found := keeper.RandomActiveLiquidValidator(r, ctx, k, sk)
 		if found {
-			remove := func(slice []types.WhitelistedValidator, s int) []types.WhitelistedValidator {
+			remove := func(slice types.WhitelistedValidators, s int) types.WhitelistedValidators {
 				return append(slice[:s], slice[s+1:]...)
 			}
 
@@ -153,24 +123,12 @@ func SimulateDeleteWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.
 				}
 			}
 		}
-
-		whitelistStr, err := json.Marshal(&params.WhitelistedValidators)
-		if err != nil {
-			panic(err)
-		}
-		change := proposal.NewParamChange(types.ModuleName, string(types.KeyWhitelistedValidators), string(whitelistStr))
-
-		// this proposal could be passed due to x/gov simulation voting process
-		return proposal.NewParameterChangeProposal(
-			"SimulateDeleteWhitelistValidatorsProposal",
-			"SimulateDeleteWhitelistValidatorsProposal",
-			[]proposal.ParamChange{change},
-		)
+		return nil
 	}
 }
 
 // SimulateCompleteRedelegationUnbonding mocking complete redelegations, unbondings by BlockValidatorUpdates of staking keeper.
-func SimulateCompleteRedelegationUnbonding(sk types.StakingKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
+func SimulateCompleteRedelegationUnbonding(sk types.StakingKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		reds := sk.GetAllRedelegations(ctx, types.LiquidStakingProxyAcc, nil, nil)
 		ubds := sk.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
@@ -179,25 +137,12 @@ func SimulateCompleteRedelegationUnbonding(sk types.StakingKeeper, k keeper.Keep
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 100).WithBlockTime(ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))
 			sk.BlockValidatorUpdates(ctx)
 		}
-		params := k.GetParams(ctx)
-
-		whitelistStr, err := json.Marshal(&params.WhitelistedValidators)
-		if err != nil {
-			panic(err)
-		}
-		change := proposal.NewParamChange(types.ModuleName, string(types.KeyWhitelistedValidators), string(whitelistStr))
-
-		// this proposal could be passed due to x/gov simulation voting process
-		return proposal.NewParameterChangeProposal(
-			"SimulateCompleteRedelegationUnbonding",
-			"SimulateCompleteRedelegationUnbonding",
-			[]proposal.ParamChange{change},
-		)
+		return nil
 	}
 }
 
 // SimulateTallyWithLiquidStaking mocking tally for SetLiquidStakingVotingPowers.
-func SimulateTallyWithLiquidStaking(ak types.AccountKeeper, bk types.BankKeeper, gk types.GovKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
+func SimulateTallyWithLiquidStaking(ak types.AccountKeeper, bk types.BankKeeper, gk types.GovKeeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		proposals := gk.GetProposals(ctx)
 		var targetProposal *govtypes.Proposal
@@ -230,20 +175,6 @@ func SimulateTallyWithLiquidStaking(ak types.AccountKeeper, bk types.BankKeeper,
 				}
 			}
 		}
-
-		params := k.GetParams(ctx)
-
-		whitelistStr, err := json.Marshal(&params.WhitelistedValidators)
-		if err != nil {
-			panic(err)
-		}
-		change := proposal.NewParamChange(types.ModuleName, string(types.KeyWhitelistedValidators), string(whitelistStr))
-
-		// this proposal could be passed due to x/gov simulation voting process
-		return proposal.NewParameterChangeProposal(
-			"SimulateTallyWithLiquidStaking",
-			"SimulateTallyWithLiquidStaking",
-			[]proposal.ParamChange{change},
-		)
+		return nil
 	}
 }

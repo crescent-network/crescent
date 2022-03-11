@@ -13,6 +13,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	if err := types.ValidateGenesis(genState); err != nil {
 		panic(err)
 	}
+	// init to prevent nil slice, []*types.WhitelistedValidator(nil)
+	if genState.Params.WhitelistedValidators == nil {
+		genState.Params.WhitelistedValidators = types.DefaultParams().WhitelistedValidators
+	}
 	k.SetParams(ctx, genState.Params)
 
 	for _, lv := range genState.LiquidValidators {
@@ -28,7 +32,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 // ExportGenesis returns the liquidstaking module's genesis state.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
-	liquidValidators := k.GetAllLiquidValidators(ctx)
+	// init to prevent nil slice, []*types.WhitelistedValidator(nil)
+	if params.WhitelistedValidators == nil {
+		params.WhitelistedValidators = types.DefaultParams().WhitelistedValidators
+	}
 
+	liquidValidators := k.GetAllLiquidValidators(ctx)
+	// init to prevent nil slice, []types.LiquidValidator(nil)
+	if len(liquidValidators) == 0 {
+		liquidValidators = types.LiquidValidators{}
+	}
 	return types.NewGenesisState(params, liquidValidators)
 }

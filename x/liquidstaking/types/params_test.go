@@ -14,21 +14,35 @@ import (
 func TestParams(t *testing.T) {
 	require.IsType(t, paramstypes.KeyTable{}, types.ParamKeyTable())
 
-	defaultParams := types.DefaultParams()
+	params := types.DefaultParams()
 
 	paramsStr := `liquid_bond_denom: bstake
-whitelisted_validators: []
 unstake_fee_rate: "0.001000000000000000"
 min_liquid_staking_amount: "1000000"
 `
-	require.Equal(t, paramsStr, defaultParams.String())
+	require.Equal(t, paramsStr, params.String())
+
+	params.WhitelistedValidators = types.WhitelistedValidators{
+		{
+			ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
+			TargetWeight:     sdk.NewInt(10),
+		},
+	}
+	paramsStr = `liquid_bond_denom: bstake
+whitelisted_validators:
+- validator_address: cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv
+  target_weight: "10"
+unstake_fee_rate: "0.001000000000000000"
+min_liquid_staking_amount: "1000000"
+`
+	require.Equal(t, paramsStr, params.String())
 }
 
 func TestWhitelistedValMap(t *testing.T) {
 	params := types.DefaultParams()
 	require.EqualValues(t, params.WhitelistedValMap(), types.WhitelistedValMap{})
 
-	params.WhitelistedValidators = []types.WhitelistedValidator{
+	params.WhitelistedValidators = types.WhitelistedValidators{
 		whitelistedValidators[0],
 		whitelistedValidators[1],
 	}
@@ -37,7 +51,7 @@ func TestWhitelistedValMap(t *testing.T) {
 	require.Len(t, params.WhitelistedValidators, len(wvm))
 
 	for _, wv := range params.WhitelistedValidators {
-		require.EqualValues(t, wvm[wv.ValidatorAddress], wv)
+		require.EqualValues(t, wvm[wv.ValidatorAddress], *wv)
 		require.True(t, wvm.IsListed(wv.ValidatorAddress))
 	}
 
@@ -72,7 +86,7 @@ func TestValidateWhitelistedValidators(t *testing.T) {
 		{
 			"duplicated whitelisted validators",
 			func(params *types.Params) {
-				params.WhitelistedValidators = []types.WhitelistedValidator{
+				params.WhitelistedValidators = types.WhitelistedValidators{
 					{
 						ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
 						TargetWeight:     sdk.NewInt(10),
@@ -88,7 +102,7 @@ func TestValidateWhitelistedValidators(t *testing.T) {
 		{
 			"invalid whitelisted validator address",
 			func(params *types.Params) {
-				params.WhitelistedValidators = []types.WhitelistedValidator{
+				params.WhitelistedValidators = types.WhitelistedValidators{
 					{
 						ValidatorAddress: "invalidaddr",
 						TargetWeight:     sdk.NewInt(10),
@@ -100,7 +114,7 @@ func TestValidateWhitelistedValidators(t *testing.T) {
 		{
 			"nil whitelisted validator target weight",
 			func(params *types.Params) {
-				params.WhitelistedValidators = []types.WhitelistedValidator{
+				params.WhitelistedValidators = types.WhitelistedValidators{
 					{
 						ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
 						TargetWeight:     sdk.Int{},
@@ -112,7 +126,7 @@ func TestValidateWhitelistedValidators(t *testing.T) {
 		{
 			"negative whitelisted validator target weight",
 			func(params *types.Params) {
-				params.WhitelistedValidators = []types.WhitelistedValidator{
+				params.WhitelistedValidators = types.WhitelistedValidators{
 					{
 						ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
 						TargetWeight:     sdk.NewInt(-1),
@@ -124,7 +138,7 @@ func TestValidateWhitelistedValidators(t *testing.T) {
 		{
 			"zero whitelisted validator target weight",
 			func(params *types.Params) {
-				params.WhitelistedValidators = []types.WhitelistedValidator{
+				params.WhitelistedValidators = types.WhitelistedValidators{
 					{
 						ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
 						TargetWeight:     sdk.ZeroInt(),

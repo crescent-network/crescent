@@ -105,7 +105,6 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
-		//return simulation.GenAndDeliverTx(txCtx, fees)
 		return GenAndDeliverTxWithRandFees(txCtx, LiquidStakingGas)
 	}
 }

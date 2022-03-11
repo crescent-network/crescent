@@ -183,11 +183,11 @@ func (s *KeeperTestSuite) createWhitelistedValidators(powers []int64) ([]sdk.Acc
 		s.Require().Equal(newShares.TruncateInt(), sdk.NewInt(power))
 	}
 
-	whitelistedVals := []liquidstakingtypes.WhitelistedValidator{}
+	whitelistedVals := liquidstakingtypes.WhitelistedValidators{}
 
 	// Add active validator
 	for _, valAddr := range valAddrs {
-		whitelistedVals = append(whitelistedVals, liquidstakingtypes.WhitelistedValidator{
+		whitelistedVals = append(whitelistedVals, &liquidstakingtypes.WhitelistedValidator{
 			ValidatorAddress: valAddr.String(),
 			TargetWeight:     sdk.NewInt(1),
 		})

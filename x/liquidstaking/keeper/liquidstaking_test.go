@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(bTokenMintAmt, sdk.Int{})
 
 	// add active validator
-	params.WhitelistedValidators = []types.WhitelistedValidator{
+	params.WhitelistedValidators = types.WhitelistedValidators{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
@@ -185,7 +185,7 @@ func (s *KeeperTestSuite) TestLiquidStakingFromVestingAccount() {
 	params := s.keeper.GetParams(s.ctx)
 
 	// add active validator
-	params.WhitelistedValidators = []types.WhitelistedValidator{
+	params.WhitelistedValidators = types.WhitelistedValidators{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
