@@ -12,7 +12,7 @@ Unlike general DEXs, we introduced the concept of an orderbook for versatility a
 
 ## Tick System
 
-We introduce tick system in Crescent DEX, alongside with enabling order book feature. This is a natural consequence because most exchanges with order book have its own tick system. The size of tick is configured by using the `TickPreicision` governance parameter.
+We introduce tick system in DEX, alongside with enabling order book feature. This is a natural consequence because most exchanges with order book have its own tick system. The size of tick is configured by using the `TickPreicision` governance parameter.
 
 ## Liquidity Pool
 
