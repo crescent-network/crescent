@@ -16,8 +16,8 @@ import (
 	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/claim/keeper"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
-	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
-	lstypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 type KeeperTestSuite struct {
@@ -94,48 +94,48 @@ func (s *KeeperTestSuite) createClaimRecord(
 	return r
 }
 
-func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) liqtypes.Pair {
+func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) liquiditytypes.Pair {
 	params := s.app.LiquidityKeeper.GetParams(s.ctx)
 	if fund {
 		s.fundAddr(creator, params.PairCreationFee)
 	}
-	pair, err := s.app.LiquidityKeeper.CreatePair(s.ctx, liqtypes.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+	pair, err := s.app.LiquidityKeeper.CreatePair(s.ctx, liquiditytypes.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
 	s.Require().NoError(err)
 	return pair
 }
 
-func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) liqtypes.Pool {
+func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) liquiditytypes.Pool {
 	params := s.app.LiquidityKeeper.GetParams(s.ctx)
 	if fund {
 		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
 	}
-	pool, err := s.app.LiquidityKeeper.CreatePool(s.ctx, liqtypes.NewMsgCreatePool(creator, pairId, depositCoins))
+	pool, err := s.app.LiquidityKeeper.CreatePool(s.ctx, liquiditytypes.NewMsgCreatePool(creator, pairId, depositCoins))
 	s.Require().NoError(err)
 	return pool
 }
 
-func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) liqtypes.DepositRequest {
+func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) liquiditytypes.DepositRequest {
 	if fund {
 		s.fundAddr(depositor, depositCoins)
 	}
-	req, err := s.app.LiquidityKeeper.Deposit(s.ctx, liqtypes.NewMsgDeposit(depositor, poolId, depositCoins))
+	req, err := s.app.LiquidityKeeper.Deposit(s.ctx, liquiditytypes.NewMsgDeposit(depositor, poolId, depositCoins))
 	s.Require().NoError(err)
 	return req
 }
 
 func (s *KeeperTestSuite) limitOrder(
-	orderer sdk.AccAddress, pairId uint64, dir liqtypes.OrderDirection,
-	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
+	orderer sdk.AccAddress, pairId uint64, dir liquiditytypes.OrderDirection,
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) liquiditytypes.Order {
 	pair, found := s.app.LiquidityKeeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
 
 	var offerCoin sdk.Coin
 	var demandCoinDenom string
 	switch dir {
-	case liqtypes.OrderDirectionBuy:
+	case liquiditytypes.OrderDirectionBuy:
 		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).Ceil().TruncateInt())
 		demandCoinDenom = pair.BaseCoinDenom
-	case liqtypes.OrderDirectionSell:
+	case liquiditytypes.OrderDirectionSell:
 		offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
 		demandCoinDenom = pair.QuoteCoinDenom
 	}
@@ -144,7 +144,7 @@ func (s *KeeperTestSuite) limitOrder(
 		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
 
-	req, err := s.app.LiquidityKeeper.LimitOrder(s.ctx, liqtypes.NewMsgLimitOrder(
+	req, err := s.app.LiquidityKeeper.LimitOrder(s.ctx, liquiditytypes.NewMsgLimitOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		price, amt, orderLifespan),
 	)
@@ -155,9 +155,9 @@ func (s *KeeperTestSuite) limitOrder(
 
 func (s *KeeperTestSuite) sellLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
-	amt sdk.Int, orderLifespan time.Duration, fund bool) liqtypes.Order {
+	amt sdk.Int, orderLifespan time.Duration, fund bool) liquiditytypes.Order {
 	return s.limitOrder(
-		orderer, pairId, liqtypes.OrderDirectionSell, price, amt, orderLifespan, fund)
+		orderer, pairId, liquiditytypes.OrderDirectionSell, price, amt, orderLifespan, fund)
 }
 
 func (s *KeeperTestSuite) createWhitelistedValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []cryptotypes.PubKey) {
@@ -183,11 +183,11 @@ func (s *KeeperTestSuite) createWhitelistedValidators(powers []int64) ([]sdk.Acc
 		s.Require().Equal(newShares.TruncateInt(), sdk.NewInt(power))
 	}
 
-	whitelistedVals := []lstypes.WhitelistedValidator{}
+	whitelistedVals := []liquidstakingtypes.WhitelistedValidator{}
 
 	// Add active validator
 	for _, valAddr := range valAddrs {
-		whitelistedVals = append(whitelistedVals, lstypes.WhitelistedValidator{
+		whitelistedVals = append(whitelistedVals, liquidstakingtypes.WhitelistedValidator{
 			ValidatorAddress: valAddr.String(),
 			TargetWeight:     sdk.NewInt(1),
 		})
@@ -213,7 +213,7 @@ func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt 
 	btokenBalanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
 	newShares, bTokenMintAmt, err := lsKeeper.LiquidStaking(
 		ctx,
-		lstypes.LiquidStakingProxyAcc,
+		liquidstakingtypes.LiquidStakingProxyAcc,
 		liquidStaker,
 		sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt),
 	)

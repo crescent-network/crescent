@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	liqtypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
-	lstypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -20,15 +20,15 @@ type DistrKeeper interface {
 }
 
 type GovKeeper interface {
-	GetAllVotes(ctx sdk.Context) (votes govtypes.Votes)
+	IterateAllVotes(ctx sdk.Context, cb func(vote govtypes.Vote) (stop bool))
 }
 
 // LiquidityKeeper defines the expected interface needed to check the condition.
 type LiquidityKeeper interface {
-	GetDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress) (reqs []liqtypes.DepositRequest)
-	GetOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress) (orders []liqtypes.Order)
+	GetDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.AccAddress) (reqs []liquiditytypes.DepositRequest)
+	GetOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress) (orders []liquiditytypes.Order)
 }
 
 type LiquidStakingKeeper interface {
-	GetParams(ctx sdk.Context) (params lstypes.Params)
+	GetParams(ctx sdk.Context) (params liquidstakingtypes.Params)
 }

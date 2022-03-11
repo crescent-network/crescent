@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
@@ -84,12 +85,12 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 		}
 
 	case types.ConditionTypeVote:
-		for _, v := range k.govKeeper.GetAllVotes(ctx) {
-			if v.Voter == recipient.String() {
+		k.govKeeper.IterateAllVotes(ctx, func(vote govtypes.Vote) (stop bool) {
+			if vote.Voter == recipient.String() {
 				skip = true
-				break
 			}
-		}
+			return false
+		})
 	}
 
 	if !skip {
