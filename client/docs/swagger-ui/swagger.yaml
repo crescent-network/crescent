@@ -20359,7 +20359,7 @@ paths:
       externalDocs:
         description: Find out more about the params
         url: >-
-          https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/07_params.md
+          https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/08_params.md
   /squad/farming/v1beta1/plans:
     get:
       summary: Plans returns all plans.
@@ -24573,7 +24573,8 @@ paths:
                           - CONDITION_TYPE_UNSPECIFIED
                           - CONDITION_TYPE_DEPOSIT
                           - CONDITION_TYPE_SWAP
-                          - CONDITION_TYPE_FARMING
+                          - CONDITION_TYPE_LIQUIDSTAKE
+                          - CONDITION_TYPE_VOTE
                         default: CONDITION_TYPE_UNSPECIFIED
                         description: >-
                           ConditionType defines the type of condition that a
@@ -24583,7 +24584,8 @@ paths:
                            - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
                            - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
                            - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-                           - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+                           - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+                           - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
                       title: conditions specifies a list of conditions
                     start_time:
                       type: string
@@ -24736,7 +24738,8 @@ paths:
                         - CONDITION_TYPE_UNSPECIFIED
                         - CONDITION_TYPE_DEPOSIT
                         - CONDITION_TYPE_SWAP
-                        - CONDITION_TYPE_FARMING
+                        - CONDITION_TYPE_LIQUIDSTAKE
+                        - CONDITION_TYPE_VOTE
                       default: CONDITION_TYPE_UNSPECIFIED
                       description: >-
                         ConditionType defines the type of condition that a
@@ -24746,7 +24749,8 @@ paths:
                          - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
                          - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
                          - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-                         - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+                         - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+                         - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
                     title: conditions specifies a list of conditions
                   start_time:
                     type: string
@@ -24858,7 +24862,8 @@ paths:
                         - CONDITION_TYPE_UNSPECIFIED
                         - CONDITION_TYPE_DEPOSIT
                         - CONDITION_TYPE_SWAP
-                        - CONDITION_TYPE_FARMING
+                        - CONDITION_TYPE_LIQUIDSTAKE
+                        - CONDITION_TYPE_VOTE
                       default: CONDITION_TYPE_UNSPECIFIED
                       description: >-
                         ConditionType defines the type of condition that a
@@ -24868,7 +24873,8 @@ paths:
                          - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
                          - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
                          - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-                         - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+                         - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+                         - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
                     title: >-
                       claimed_conditions specifies a list of condition types
 
@@ -43814,7 +43820,8 @@ definitions:
             - CONDITION_TYPE_UNSPECIFIED
             - CONDITION_TYPE_DEPOSIT
             - CONDITION_TYPE_SWAP
-            - CONDITION_TYPE_FARMING
+            - CONDITION_TYPE_LIQUIDSTAKE
+            - CONDITION_TYPE_VOTE
           default: CONDITION_TYPE_UNSPECIFIED
           description: >-
             ConditionType defines the type of condition that a recipient must
@@ -43823,7 +43830,8 @@ definitions:
              - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
              - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
              - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-             - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+             - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+             - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
         title: conditions specifies a list of conditions
       start_time:
         type: string
@@ -43884,7 +43892,8 @@ definitions:
             - CONDITION_TYPE_UNSPECIFIED
             - CONDITION_TYPE_DEPOSIT
             - CONDITION_TYPE_SWAP
-            - CONDITION_TYPE_FARMING
+            - CONDITION_TYPE_LIQUIDSTAKE
+            - CONDITION_TYPE_VOTE
           default: CONDITION_TYPE_UNSPECIFIED
           description: >-
             ConditionType defines the type of condition that a recipient must
@@ -43893,7 +43902,8 @@ definitions:
              - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
              - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
              - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-             - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+             - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+             - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
         title: >-
           claimed_conditions specifies a list of condition types
 
@@ -43906,7 +43916,8 @@ definitions:
       - CONDITION_TYPE_UNSPECIFIED
       - CONDITION_TYPE_DEPOSIT
       - CONDITION_TYPE_SWAP
-      - CONDITION_TYPE_FARMING
+      - CONDITION_TYPE_LIQUIDSTAKE
+      - CONDITION_TYPE_VOTE
     default: CONDITION_TYPE_UNSPECIFIED
     description: >-
       ConditionType defines the type of condition that a recipient must execute
@@ -43915,7 +43926,8 @@ definitions:
        - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
        - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
        - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-       - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+       - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+       - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
   squad.claim.v1beta1.QueryAirdropResponse:
     type: object
     properties:
@@ -43939,7 +43951,8 @@ definitions:
                 - CONDITION_TYPE_UNSPECIFIED
                 - CONDITION_TYPE_DEPOSIT
                 - CONDITION_TYPE_SWAP
-                - CONDITION_TYPE_FARMING
+                - CONDITION_TYPE_LIQUIDSTAKE
+                - CONDITION_TYPE_VOTE
               default: CONDITION_TYPE_UNSPECIFIED
               description: >-
                 ConditionType defines the type of condition that a recipient
@@ -43948,7 +43961,8 @@ definitions:
                  - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
                  - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
                  - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-                 - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+                 - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+                 - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
             title: conditions specifies a list of conditions
           start_time:
             type: string
@@ -43985,7 +43999,8 @@ definitions:
                   - CONDITION_TYPE_UNSPECIFIED
                   - CONDITION_TYPE_DEPOSIT
                   - CONDITION_TYPE_SWAP
-                  - CONDITION_TYPE_FARMING
+                  - CONDITION_TYPE_LIQUIDSTAKE
+                  - CONDITION_TYPE_VOTE
                 default: CONDITION_TYPE_UNSPECIFIED
                 description: >-
                   ConditionType defines the type of condition that a recipient
@@ -43994,7 +44009,8 @@ definitions:
                    - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
                    - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
                    - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-                   - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+                   - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+                   - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
               title: conditions specifies a list of conditions
             start_time:
               type: string
@@ -44090,7 +44106,8 @@ definitions:
                 - CONDITION_TYPE_UNSPECIFIED
                 - CONDITION_TYPE_DEPOSIT
                 - CONDITION_TYPE_SWAP
-                - CONDITION_TYPE_FARMING
+                - CONDITION_TYPE_LIQUIDSTAKE
+                - CONDITION_TYPE_VOTE
               default: CONDITION_TYPE_UNSPECIFIED
               description: >-
                 ConditionType defines the type of condition that a recipient
@@ -44099,7 +44116,8 @@ definitions:
                  - CONDITION_TYPE_UNSPECIFIED: CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
                  - CONDITION_TYPE_DEPOSIT: CONDITION_TYPE_DEPOSIT specifies deposit condition type
                  - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
-                 - CONDITION_TYPE_FARMING: CONDITION_TYPE_FARMING specifies farming (stake) condition type
+                 - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+                 - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
             title: >-
               claimed_conditions specifies a list of condition types
 
