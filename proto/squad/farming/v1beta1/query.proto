@@ -22,7 +22,7 @@ service Query {
       description: "Returns all parameters of the farming module.";
   external_docs: {
   url:
-    "https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/07_params.md";
+    "https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/08_params.md";
   description:
     "Find out more about the params";
   }
