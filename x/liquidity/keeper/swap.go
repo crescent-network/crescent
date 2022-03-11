@@ -289,7 +289,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 			}
 			ob.Add(types.NewUserOrder(order))
 			if order.Status == types.OrderStatusNotExecuted {
-				order.Status = types.OrderStatusNotMatched
+				order.SetStatus(types.OrderStatusNotMatched)
 				k.SetOrder(ctx, order)
 			}
 			skip = false
@@ -378,7 +378,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 					return err
 				}
 			} else {
-				o.Status = types.OrderStatusPartiallyMatched
+				o.SetStatus(types.OrderStatusPartiallyMatched)
 				k.SetOrder(ctx, o)
 				// TODO: emit an event?
 			}
@@ -408,7 +408,7 @@ func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, status types.Ord
 		}
 	}
 
-	order.Status = status
+	order.SetStatus(status)
 	k.SetOrder(ctx, order)
 
 	ctx.EventManager().EmitEvents(sdk.Events{

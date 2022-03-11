@@ -313,7 +313,7 @@ func (k Keeper) FinishDepositRequest(ctx sdk.Context, req types.DepositRequest, 
 			return err
 		}
 	}
-	req.Status = status
+	req.SetStatus(status)
 	k.SetDepositRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -403,7 +403,7 @@ func (k Keeper) FinishWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest
 			return err
 		}
 	}
-	req.Status = status
+	req.SetStatus(status)
 	k.SetWithdrawRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{

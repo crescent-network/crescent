@@ -70,6 +70,12 @@ func (req DepositRequest) Validate() error {
 	return nil
 }
 
+// SetStatus sets the request's status.
+// SetStatus is to easily find locations where the status is changed.
+func (req *DepositRequest) SetStatus(status RequestStatus) {
+	req.Status = status
+}
+
 // NewWithdrawRequest returns a new WithdrawRequest.
 func NewWithdrawRequest(msg *MsgWithdraw, id uint64, msgHeight int64) WithdrawRequest {
 	return WithdrawRequest{
@@ -121,6 +127,12 @@ func (req WithdrawRequest) Validate() error {
 		return fmt.Errorf("invalid status: %s", req.Status)
 	}
 	return nil
+}
+
+// SetStatus sets the request's status.
+// SetStatus is to easily find locations where the status is changed.
+func (req *WithdrawRequest) SetStatus(status RequestStatus) {
+	req.Status = status
 }
 
 // NewOrderForLimitOrder returns a new Order from MsgLimitOrder.
@@ -227,6 +239,12 @@ func (order Order) Validate() error {
 // ExpiredAt returns whether the order should be deleted at given time.
 func (order Order) ExpiredAt(t time.Time) bool {
 	return !order.ExpireAt.After(t)
+}
+
+// SetStatus sets the order's status.
+// SetStatus is to easily find locations where the status is changed.
+func (order *Order) SetStatus(status OrderStatus) {
+	order.Status = status
 }
 
 // IsValid returns true if the RequestStatus is one of:
