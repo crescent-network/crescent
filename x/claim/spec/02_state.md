@@ -42,8 +42,10 @@ const (
 	ConditionTypeDeposit ConditionType = 1
 	// CONDITION_TYPE_SWAP specifies swap condition type
 	ConditionTypeSwap ConditionType = 2
-	// CONDITION_TYPE_FARMING specifies farming (stake) condition type
-	ConditionTypeFarming ConditionType = 3
+	// CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+	ConditionTypeLiquidStake ConditionType = 3
+	// CONDITION_TYPE_VOTE specifies governance vote condition type
+	ConditionTypeVote ConditionType = 3
 )
 ```
 
