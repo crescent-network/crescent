@@ -2,7 +2,7 @@
 
 # Concepts
 
-The `claim` module distributes claimable amount of all airdrop recipients as they complete the tasks in core network activities. Full allocation can be claimed within 6 months from launch. Unclaimed amounts from the airdrop quantity within the claim period will be allocated to the community fund. The airdrop recipients are Cosmos Hub stakers based on a snapshot taken 2022.01.01 00:00 UTC (Block 8902586). The amount of delegation to centralized exchange validators are excluded from eligibility and there is a bonus going towards the airdrop recipients who were supportive of the `liquidity` module, Gravity DEX. 
+The `claim` module distributes claimable amount of all airdrop recipients as they complete the tasks in core network activities. Full allocation can be claimed within 6 months from launch. Unclaimed amounts from the airdrop quantity within the claim period will be allocated to the community fund. The airdrop recipients are Cosmos Hub stakers based on a snapshot taken at 2022.01.01 00:00 UTC (Block 8902586). The amount of delegation to centralized exchange validators are excluded from eligibility and there is a bonus going towards the airdrop recipients who were supportive of the `liquidity` module, Gravity DEX. 
 
 ## Claimable Amount Calculation
 
@@ -29,7 +29,7 @@ The airdrop recipient are required to complete the following conditions (tasks) 
 
 - 20% of the initial DEXdrop claimable amount is released in genesis
 - 20% of the initial DEXdrop claimable amount is released by executing a deposit transaction to any pool
-- 20% of the initial DEXdrop claimable amount is released by executing a swap transaction from any pool
+- 20% of the initial DEXdrop claimable amount is released by executing an order transaction in any pair
 - 20% of the initial DEXdrop claimable amount is released by executing a liquid staking transaction
 - 20% of the initial DEXdrop claimable amount is released by executing a governance vote transaction 
 

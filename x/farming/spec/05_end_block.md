@@ -1,4 +1,4 @@
-<!-- order: 6 -->
+<!-- order: 5 -->
 # End-Block
 
 At each end-block call, the `farming` module operations are specified to execute.

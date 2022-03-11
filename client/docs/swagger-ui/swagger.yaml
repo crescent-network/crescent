@@ -20359,7 +20359,7 @@ paths:
       externalDocs:
         description: Find out more about the params
         url: >-
-          https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/08_params.md
+          https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/07_params.md
   /squad/farming/v1beta1/plans:
     get:
       summary: Plans returns all plans.
