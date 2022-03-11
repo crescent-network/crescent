@@ -33,7 +33,8 @@ func (msg MsgClaim) ValidateBasic() error {
 	}
 
 	switch msg.ConditionType {
-	case ConditionTypeDeposit, ConditionTypeSwap, ConditionTypeFarming:
+	case ConditionTypeDeposit, ConditionTypeSwap,
+		ConditionTypeLiquidStake, ConditionTypeVote:
 	default:
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid condition type: %s", msg.ConditionType.String())
 	}

@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
@@ -20,7 +22,8 @@ func (s *KeeperTestSuite) TestClaim_DepositCondition() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -46,7 +49,7 @@ func (s *KeeperTestSuite) TestClaim_DepositCondition() {
 	s.deposit(recipient, 1, utils.ParseCoins("500000denom3,500000denom4"), true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Claim deposit condition
+	// Claim condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
 	s.Require().NoError(err)
 
@@ -70,7 +73,8 @@ func (s *KeeperTestSuite) TestClaim_SwapCondition() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -96,7 +100,7 @@ func (s *KeeperTestSuite) TestClaim_SwapCondition() {
 	s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Claim swap condition
+	// Claim condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().NoError(err)
 
@@ -110,7 +114,7 @@ func (s *KeeperTestSuite) TestClaim_SwapCondition() {
 	s.Require().Equal(types.ConditionTypeSwap, r.ClaimedConditions[0])
 }
 
-func (s *KeeperTestSuite) TestClaim_FarmingCondition() {
+func (s *KeeperTestSuite) TestClaim_LiquidStakeCondition() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -120,7 +124,8 @@ func (s *KeeperTestSuite) TestClaim_FarmingCondition() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -137,12 +142,14 @@ func (s *KeeperTestSuite) TestClaim_FarmingCondition() {
 		[]types.ConditionType{},
 	)
 
-	// Create a fixed farming plan and stake
-	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
-	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
+	// Create whitelisted validators
+	s.createWhitelistedValidators([]int64{1000000, 1000000, 1000000})
 
-	// Claim farming stake condition
-	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeFarming))
+	// Make a liquid staking
+	s.liquidStaking(recipient, sdk.NewInt(100_000_000), true)
+
+	// Claim condition
+	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeLiquidStake))
 	s.Require().NoError(err)
 
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
@@ -152,7 +159,56 @@ func (s *KeeperTestSuite) TestClaim_FarmingCondition() {
 		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
 	)
 	s.Require().Len(r.ClaimedConditions, 1)
-	s.Require().Equal(types.ConditionTypeFarming, r.ClaimedConditions[0])
+	s.Require().Equal(types.ConditionTypeLiquidStake, r.ClaimedConditions[0])
+}
+
+func (s *KeeperTestSuite) TestClaim_VoteCondition() {
+	// Create an airdrop
+	sourceAddr := s.addr(0)
+	airdrop := s.createAirdrop(
+		1,
+		sourceAddr,
+		utils.ParseCoins("1000000000denom1"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 1, 0),
+		true,
+	)
+
+	// Create a claim record
+	recipient := s.addr(1)
+	record := s.createClaimRecord(
+		airdrop.Id,
+		recipient,
+		utils.ParseCoins("666666667denom1"),
+		utils.ParseCoins("666666667denom1"),
+		[]types.ConditionType{},
+	)
+
+	// Submit a governance proposal
+	s.createTextProposal(sourceAddr, "Text", "Description")
+
+	// Vote
+	s.vote(recipient, 1, govtypes.OptionYes)
+
+	// Claim condition
+	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeVote))
+	s.Require().NoError(err)
+
+	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
+	s.Require().True(found)
+
+	s.Require().True(coinsEq(
+		record.GetClaimableCoinsForCondition(airdrop.Conditions),
+		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
+	)
+	s.Require().Len(r.ClaimedConditions, 1)
+	s.Require().Equal(types.ConditionTypeVote, r.ClaimedConditions[0])
 }
 
 func (s *KeeperTestSuite) TestClaim_All() {
@@ -165,7 +221,8 @@ func (s *KeeperTestSuite) TestClaim_All() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -200,9 +257,17 @@ func (s *KeeperTestSuite) TestClaim_All() {
 	s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Create a fixed farming plan and stake
-	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
-	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
+	// Create whitelisted validators
+	s.createWhitelistedValidators([]int64{1000000, 1000000, 1000000})
+
+	// Make a liquid staking
+	s.liquidStaking(recipient, sdk.NewInt(100_000_000), true)
+
+	// Submit a governance proposal
+	s.createTextProposal(sourceAddr, "Text", "Description")
+
+	// Vote
+	s.vote(recipient, 1, govtypes.OptionYes)
 
 	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
@@ -212,8 +277,12 @@ func (s *KeeperTestSuite) TestClaim_All() {
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().NoError(err)
 
-	// Claim farming stake condition
-	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeFarming))
+	// Claim liquid stake condition
+	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeLiquidStake))
+	s.Require().NoError(err)
+
+	// Claim vote condition
+	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeVote))
 	s.Require().NoError(err)
 
 	r, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, record.GetRecipient())
@@ -222,7 +291,7 @@ func (s *KeeperTestSuite) TestClaim_All() {
 		r.InitialClaimableCoins,
 		sdk.NewCoins(s.getBalance(r.GetRecipient(), "denom1"))),
 	)
-	s.Require().Len(r.ClaimedConditions, 3)
+	s.Require().Len(r.ClaimedConditions, 4)
 }
 
 func (s *KeeperTestSuite) TestClaim_AlreadyClaimedCondition() {
@@ -235,7 +304,8 @@ func (s *KeeperTestSuite) TestClaim_AlreadyClaimedCondition() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -270,7 +340,7 @@ func (s *KeeperTestSuite) TestClaim_AlreadyClaimedCondition() {
 	s.Require().ErrorIs(err, types.ErrAlreadyClaimed)
 }
 
-func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
+func (s *KeeperTestSuite) TestClaim_All_TerminateAidrop() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -280,7 +350,8 @@ func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -310,9 +381,17 @@ func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 	s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Create a fixed farming plan and stake
-	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
-	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
+	// Create whitelisted validators
+	s.createWhitelistedValidators([]int64{1000000, 1000000, 1000000})
+
+	// Make a liquid staking
+	s.liquidStaking(recipient, sdk.NewInt(100_000_000), true)
+
+	// Submit a governance proposal
+	s.createTextProposal(sourceAddr, "Text", "Description")
+
+	// Vote
+	s.vote(recipient, 1, govtypes.OptionYes)
 
 	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
@@ -322,8 +401,12 @@ func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().NoError(err)
 
-	// Claim farming stake condition
-	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeFarming))
+	// Claim liquid stake condition
+	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeLiquidStake))
+	s.Require().NoError(err)
+
+	// Claim vote condition
+	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeVote))
 	s.Require().NoError(err)
 
 	// Terminate the airdrop
@@ -338,7 +421,7 @@ func (s *KeeperTestSuite) TestClaim_AllTerminateAidrop() {
 	s.Require().True(feePool.CommunityPool.IsZero())
 }
 
-func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
+func (s *KeeperTestSuite) TestClaim_Partial_TerminatAirdrop() {
 	// Create an airdrop
 	sourceAddr := s.addr(0)
 	airdrop := s.createAirdrop(
@@ -348,7 +431,8 @@ func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -378,9 +462,17 @@ func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
 	s.sellLimitOrder(recipient, 1, utils.ParseDec("1.0"), sdk.NewInt(1000), 10, true)
 	liquidity.EndBlocker(s.ctx, s.app.LiquidityKeeper)
 
-	// Create a fixed farming plan and stake
-	s.createFixedAmountPlan(s.addr(2), map[string]string{"denom1": "1"}, map[string]int64{"denom3": 500000}, true)
-	s.stake(recipient, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1000000)), true)
+	// Create whitelisted validators
+	s.createWhitelistedValidators([]int64{1000000, 1000000, 1000000})
+
+	// Make a liquid staking
+	s.liquidStaking(recipient, sdk.NewInt(100_000_000), true)
+
+	// Submit a governance proposal
+	s.createTextProposal(sourceAddr, "Text", "Description")
+
+	// Vote
+	s.vote(recipient, 1, govtypes.OptionYes)
 
 	// Claim deposit condition
 	_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeDeposit))
@@ -391,6 +483,7 @@ func (s *KeeperTestSuite) TestClaim_PartialTerminatAirdrop() {
 	claim.EndBlocker(s.ctx, s.keeper)
 
 	// Claim swap condition
+	// Must return ErrTerminatedAirdrop
 	_, err = s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeSwap))
 	s.Require().ErrorIs(err, types.ErrTerminatedAirdrop)
 

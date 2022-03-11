@@ -2,7 +2,7 @@
 
 # Concepts
 
-The `claim` module distributes claimable amount of all airdrop recipients when they complete participating in core network activities. The airdrop recipients are Cosmos Hub stakers based on 8902586 (2022.01.01 UTC 00:00) block height and there is a bonus going towards the airdrop recipients who were supportive of the `liquidity` module. 
+The `claim` module distributes claimable amount of all airdrop recipients as they complete the tasks in core network activities. Full allocation can be claimed within 6 months from launch. Unclaimed amounts from the airdrop quantity within the claim period will be allocated to the community fund. The airdrop recipients are Cosmos Hub stakers based on a snapshot taken at 2022.01.01 00:00 UTC (Block 8902586). The amount of delegation to centralized exchange validators are excluded from eligibility and there is a bonus going towards the airdrop recipients who were supportive of the `liquidity` module, Gravity DEX. 
 
 ## Claimable Amount Calculation
 
@@ -25,13 +25,14 @@ Each of the following criteria is a multiplier of 2 in calculating the claimable
 
 ## Core Network Activities
 
-The airdrop recipient are required to complete the following Conditions. There is no order of execution. The recipients can execute any order the prefer.
+The airdrop recipient are required to complete the following conditions (tasks) and there is no order of execution.
 
-- 1/3 of the initial claimable amount is released by executing a deposit transaction to any pool
-- 1/3 of the initial claimable amount is released by executing a swap transaction from any pool
-- 1/3 of the initial claimable amount is released by executing a staking transaction for any farming plan
-
+- 20% of the initial DEXdrop claimable amount is released in genesis
+- 20% of the initial DEXdrop claimable amount is released by executing a deposit transaction to any pool
+- 20% of the initial DEXdrop claimable amount is released by executing an order transaction in any pair
+- 20% of the initial DEXdrop claimable amount is released by executing a liquid staking transaction
+- 20% of the initial DEXdrop claimable amount is released by executing a governance vote transaction 
 
 ## Termination
 
-An airdrop ends when the `EndTime` is passed over the current time. All the unclaimed airdrop coins are sent to the community pool.
+An airdrop ends when the `EndTime` is passed over the current time. Unclaimed amounts from the airdrop quantity within the claim period will be allocated to the community fund.

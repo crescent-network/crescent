@@ -27,7 +27,8 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime(),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -65,7 +66,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime(),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -76,7 +78,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime().AddDate(0, 5, 0),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 10, 0),
@@ -95,7 +98,9 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Recipient:             s.addr(3).String(),
 				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
 				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{},
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeLiquidStake,
+				},
 			},
 			{
 				AirdropId:             2,
@@ -109,14 +114,20 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Recipient:             s.addr(4).String(),
 				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
 				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{types.ConditionTypeDeposit},
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+				},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(5).String(),
 				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
 				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{types.ConditionTypeDeposit, types.ConditionTypeSwap},
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+					types.ConditionTypeSwap,
+					types.ConditionTypeLiquidStake,
+				},
 			},
 		},
 	}

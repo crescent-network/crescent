@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
@@ -31,7 +32,7 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 		}
 	}
 
-	// Vadliate whether or not the recipient has executed the condition
+	// Validate whether or not the recipient has executed the condition
 	if err := k.ValidateCondition(ctx, record.GetRecipient(), msg.ConditionType); err != nil {
 		return types.ClaimRecord{}, err
 	}
@@ -62,28 +63,38 @@ func (k Keeper) Claim(ctx sdk.Context, msg *types.MsgClaim) (types.ClaimRecord, 
 
 // ValidateCondition validates if the recipient has executed the condition.
 func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct types.ConditionType) error {
-	skip := false
+	ok := false
 
 	switch ct {
 	case types.ConditionTypeDeposit:
 		if len(k.liquidityKeeper.GetDepositRequestsByDepositor(ctx, recipient)) != 0 {
-			skip = true
+			ok = true
 		}
 
 	case types.ConditionTypeSwap:
 		if len(k.liquidityKeeper.GetOrdersByOrderer(ctx, recipient)) != 0 {
-			skip = true
+			ok = true
 		}
 
-	case types.ConditionTypeFarming:
-		queuedCoins := k.farmingKeeper.GetAllQueuedCoinsByFarmer(ctx, recipient)
-		stakedCoins := k.farmingKeeper.GetAllStakedCoinsByFarmer(ctx, recipient)
-		if !queuedCoins.IsZero() || !stakedCoins.IsZero() {
-			skip = true
+	case types.ConditionTypeLiquidStake:
+		params := k.liquidStakingKeeper.GetParams(ctx)
+		spendable := k.bankKeeper.SpendableCoins(ctx, recipient)
+		bTokenBalance := spendable.AmountOf(params.LiquidBondDenom)
+		if !bTokenBalance.IsZero() {
+			ok = true
 		}
+
+	case types.ConditionTypeVote:
+		k.govKeeper.IterateAllVotes(ctx, func(vote govtypes.Vote) (stop bool) {
+			if vote.Voter == recipient.String() {
+				ok = true
+				return true
+			}
+			return false
+		})
 	}
 
-	if !skip {
+	if !ok {
 		return types.ErrConditionRequired
 	}
 

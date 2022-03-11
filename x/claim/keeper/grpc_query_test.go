@@ -13,7 +13,8 @@ func (s *KeeperTestSuite) TestGRPCAirdrops() {
 	conditions := []types.ConditionType{
 		types.ConditionTypeDeposit,
 		types.ConditionTypeSwap,
-		types.ConditionTypeFarming,
+		types.ConditionTypeLiquidStake,
+		types.ConditionTypeVote,
 	}
 
 	s.createAirdrop(1, s.addr(1), utils.ParseCoins("1000000000denom1"), conditions,
@@ -64,7 +65,8 @@ func (s *KeeperTestSuite) TestGRPCAirdrop() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -124,7 +126,8 @@ func (s *KeeperTestSuite) TestGRPCClaimRecord() {
 		[]types.ConditionType{
 			types.ConditionTypeDeposit,
 			types.ConditionTypeSwap,
-			types.ConditionTypeFarming,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
 		},
 		s.ctx.BlockTime(),
 		s.ctx.BlockTime().AddDate(0, 1, 0),
