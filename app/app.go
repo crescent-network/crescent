@@ -112,9 +112,10 @@ import (
 	"github.com/cosmosquad-labs/squad/x/mint"
 	mintkeeper "github.com/cosmosquad-labs/squad/x/mint/keeper"
 	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
-)
 
-const appName = "SquadApp"
+	// unnamed import of statik for swagger UI support
+	_ "github.com/cosmosquad-labs/squad/client/docs/statik"
+)
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -176,14 +177,14 @@ var (
 
 // Verify app interface at compile time
 var (
-	_ simapp.App              = (*SquadApp)(nil)
-	_ servertypes.Application = (*SquadApp)(nil)
+	_ simapp.App              = (*App)(nil)
+	_ servertypes.Application = (*App)(nil)
 )
 
-// SquadApp extends an ABCI application, but with most of its parameters exported.
+// App extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type SquadApp struct {
+type App struct {
 	*baseapp.BaseApp
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -239,11 +240,11 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".squadapp")
+	DefaultNodeHome = filepath.Join(userHomeDir, AppUserHomeDir)
 }
 
-// NewSquadApp returns a reference to an initialized SquadApp.
-func NewSquadApp(
+// NewApp returns a reference to an initialized App.
+func NewApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -254,12 +255,12 @@ func NewSquadApp(
 	encodingConfig farmingparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) *SquadApp {
+) *App {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -289,7 +290,7 @@ func NewSquadApp(
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	app := &SquadApp{
+	app := &App{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
@@ -664,20 +665,20 @@ func NewSquadApp(
 }
 
 // Name returns the name of the App.
-func (app *SquadApp) Name() string { return app.BaseApp.Name() }
+func (app *App) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
-func (app *SquadApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block.
-func (app *SquadApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
 // InitChainer application update at chain initialization.
-func (app *SquadApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -687,83 +688,81 @@ func (app *SquadApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 }
 
 // LoadHeight loads a particular height.
-func (app *SquadApp) LoadHeight(height int64) error {
+func (app *App) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *SquadApp) ModuleAccountAddrs() map[string]bool {
+func (app *App) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 
-	// add farming, liquidstaking proxy account
+	// add farming rewards reserve account
 	modAccAddrs[farmingtypes.RewardsReserveAcc.String()] = true
-	// TODO: temporary removed for withdraw rewards
-	//modAccAddrs[liquidstakingtypes.LiquidStakingProxyAcc.String()] = true
 
 	return modAccAddrs
 }
 
-// LegacyAmino returns SquadApp's amino codec.
+// LegacyAmino returns App's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SquadApp) LegacyAmino() *codec.LegacyAmino {
+func (app *App) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 
-// AppCodec returns SquadApp's app codec.
+// AppCodec returns App's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SquadApp) AppCodec() codec.Codec {
+func (app *App) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns SquadApp's InterfaceRegistry
-func (app *SquadApp) InterfaceRegistry() types.InterfaceRegistry {
+// InterfaceRegistry returns App's InterfaceRegistry
+func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *SquadApp) GetKey(storeKey string) *sdk.KVStoreKey {
+func (app *App) GetKey(storeKey string) *sdk.KVStoreKey {
 	return app.keys[storeKey]
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *SquadApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
+func (app *App) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
 
 // GetMemKey returns the MemStoreKey for the provided mem key.
 //
 // NOTE: This is solely used for testing purposes.
-func (app *SquadApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+func (app *App) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
 	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *SquadApp) GetSubspace(moduleName string) paramstypes.Subspace {
+func (app *App) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *SquadApp) SimulationManager() *module.SimulationManager {
+func (app *App) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *SquadApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register legacy tx routes.
@@ -784,12 +783,12 @@ func (app *SquadApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
-func (app *SquadApp) RegisterTxService(clientCtx client.Context) {
+func (app *App) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *SquadApp) RegisterTendermintService(clientCtx client.Context) {
+func (app *App) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 

@@ -19,7 +19,7 @@ var _ gov.Content = &PublicPlanProposal{}
 
 func init() {
 	gov.RegisterProposalType(ProposalTypePublicPlan)
-	gov.RegisterProposalTypeCodec(&PublicPlanProposal{}, "cosmos-sdk/PublicPlanProposal")
+	gov.RegisterProposalTypeCodec(&PublicPlanProposal{}, "cosmos-sdk/PublicPlanProposal") // TODO: change prefix
 }
 
 // NewPublicPlanProposal creates a new PublicPlanProposal object.

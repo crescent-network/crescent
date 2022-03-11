@@ -13,6 +13,8 @@ var (
 // It also satisfies OrderView interface.
 type Pool interface {
 	OrderView
+	Balances() (rx, ry sdk.Int)
+	PoolCoinSupply() sdk.Int
 	Price() sdk.Dec
 	IsDepleted() bool
 	Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int)
@@ -24,19 +26,29 @@ type BasicPool struct {
 	// rx and ry are the pool's reserve balance of each x/y coin.
 	// In perspective of a pair, x coin is the quote coin and
 	// y coin is the base coin.
-	rx, ry sdk.Dec
+	rx, ry sdk.Int
 	// ps is the pool's pool coin supply.
-	ps sdk.Dec
+	ps sdk.Int
 }
 
 // NewBasicPool returns a new BasicPool.
 // It is OK to pass an empty sdk.Int to ps when ps is not going to be used.
 func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 	return &BasicPool{
-		rx: rx.ToDec(),
-		ry: ry.ToDec(),
-		ps: ps.ToDec(),
+		rx: rx,
+		ry: ry,
+		ps: ps,
 	}
+}
+
+// Balances returns the balances of the pool.
+func (pool *BasicPool) Balances() (rx, ry sdk.Int) {
+	return pool.rx, pool.ry
+}
+
+// PoolCoinSupply returns the pool coin supply.
+func (pool *BasicPool) PoolCoinSupply() sdk.Int {
+	return pool.ps
 }
 
 // Price returns the pool price.
@@ -44,7 +56,7 @@ func (pool *BasicPool) Price() sdk.Dec {
 	if pool.rx.IsZero() || pool.ry.IsZero() {
 		panic("pool price is not defined for a depleted pool")
 	}
-	return pool.rx.Quo(pool.ry)
+	return pool.rx.ToDec().Quo(pool.ry.ToDec())
 }
 
 // IsDepleted returns whether the pool is depleted or not.
@@ -59,15 +71,18 @@ func (pool *BasicPool) Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int) {
 	// Note that we take as many coins as possible(by ceiling numbers)
 	// from depositor and mint as little coins as possible.
 
+	rx, ry := pool.rx.ToDec(), pool.ry.ToDec()
+	ps := pool.ps.ToDec()
+
 	// pc = floor(ps * min(x / rx, y / ry))
-	pc = pool.ps.MulTruncate(sdk.MinDec(
-		x.ToDec().QuoTruncate(pool.rx),
-		y.ToDec().QuoTruncate(pool.ry),
+	pc = ps.MulTruncate(sdk.MinDec(
+		x.ToDec().QuoTruncate(rx),
+		y.ToDec().QuoTruncate(ry),
 	)).TruncateInt()
 
-	mintProportion := pc.ToDec().Quo(pool.ps)             // pc / ps
-	ax = pool.rx.Mul(mintProportion).Ceil().TruncateInt() // ceil(rx * mintProportion)
-	ay = pool.ry.Mul(mintProportion).Ceil().TruncateInt() // ceil(ry * mintProportion)
+	mintProportion := pc.ToDec().Quo(ps)             // pc / ps
+	ax = rx.Mul(mintProportion).Ceil().TruncateInt() // ceil(rx * mintProportion)
+	ay = ry.Mul(mintProportion).Ceil().TruncateInt() // ceil(ry * mintProportion)
 	return
 }
 
@@ -75,17 +90,17 @@ func (pool *BasicPool) Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int) {
 // pc pool coin.
 // Withdraw also takes care of the fee rate.
 func (pool *BasicPool) Withdraw(pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
-	if pc.ToDec().Equal(pool.ps) {
+	if pc.Equal(pool.ps) {
 		// Redeeming the last pool coin - give all remaining rx and ry.
-		x = pool.rx.TruncateInt()
-		y = pool.ry.TruncateInt()
+		x = pool.rx
+		y = pool.ry
 		return
 	}
 
-	proportion := pc.ToDec().QuoTruncate(pool.ps)                             // pc / ps
-	multiplier := sdk.OneDec().Sub(feeRate)                                   // 1 - feeRate
-	x = pool.rx.MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(rx * proportion * multiplier)
-	y = pool.ry.MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(ry * proportion * multiplier)
+	proportion := pc.ToDec().QuoTruncate(pool.ps.ToDec())                             // pc / ps
+	multiplier := sdk.OneDec().Sub(feeRate)                                           // 1 - feeRate
+	x = pool.rx.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(rx * proportion * multiplier)
+	y = pool.ry.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(ry * proportion * multiplier)
 	return
 }
 
@@ -109,7 +124,7 @@ func (pool *BasicPool) BuyAmountOver(price sdk.Dec) sdk.Int {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
-	return pool.rx.QuoTruncate(price).Sub(pool.ry).TruncateInt()
+	return pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
 }
 
 // SellAmountUnder returns the amount of sell orders for price less or equal
@@ -118,7 +133,45 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
-	return pool.ry.Sub(pool.rx.QuoRoundUp(price)).TruncateInt()
+	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
+}
+
+// PoolsOrderBook returns an order book with orders made by pools.
+// The order book has at most (numTicks*2+1) ticks visible, which includes
+// basePrice, numTicks ticks over basePrice and numTicks ticks under basePrice.
+// PoolsOrderBook assumes that basePrice is on ticks.
+func PoolsOrderBook(pools []Pool, basePrice sdk.Dec, numTicks, tickPrec int) *OrderBook {
+	prec := TickPrecision(tickPrec)
+	i := prec.TickToIndex(basePrice)
+	highestTick := prec.TickFromIndex(i + numTicks)
+	lowestTick := prec.TickFromIndex(i - numTicks)
+	ob := NewOrderBook()
+	for _, pool := range pools {
+		poolPrice := pool.Price()
+		if poolPrice.GT(lowestTick) { // Buy orders
+			startTick := sdk.MinDec(prec.DownTick(poolPrice), highestTick)
+			accAmt := sdk.ZeroInt()
+			for tick := startTick; tick.GTE(lowestTick); tick = prec.DownTick(tick) {
+				amt := pool.BuyAmountOver(tick).Sub(accAmt)
+				if amt.IsPositive() {
+					ob.Add(NewBaseOrder(Buy, tick, amt, sdk.Coin{}, "denom"))
+					accAmt = accAmt.Add(amt)
+				}
+			}
+		}
+		if poolPrice.LT(highestTick) { // Sell orders
+			startTick := sdk.MaxDec(prec.UpTick(poolPrice), lowestTick)
+			accAmt := sdk.ZeroInt()
+			for tick := startTick; tick.LTE(highestTick); tick = prec.UpTick(tick) {
+				amt := pool.SellAmountUnder(tick).Sub(accAmt)
+				if amt.IsPositive() {
+					ob.Add(NewBaseOrder(Sell, tick, amt, sdk.Coin{}, "denom"))
+					accAmt = accAmt.Add(amt)
+				}
+			}
+		}
+	}
+	return ob
 }
 
 // MockPoolOrderSource demonstrates how to implement a pool OrderSource.

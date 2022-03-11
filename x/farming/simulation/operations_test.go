@@ -9,14 +9,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/app/params"
 	"github.com/cosmosquad-labs/squad/x/farming/simulation"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -25,7 +25,7 @@ func TestWeightedOperations(t *testing.T) {
 
 	ctx.WithChainID("test-chain")
 
-	cdc := app.AppCodec()
+	cdc := types.ModuleCdc
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
@@ -83,7 +83,7 @@ func TestSimulateMsgCreateFixedAmountPlan(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgCreateFixedAmountPlan
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -121,7 +121,7 @@ func TestSimulateMsgCreateRatioPlan(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgCreateRatioPlan
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -157,7 +157,7 @@ func TestSimulateMsgStake(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgStake
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -198,7 +198,7 @@ func TestSimulateMsgUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgUnstake
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -270,7 +270,7 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgHarvest
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -283,8 +283,8 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	require.Equal(t, sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 100300000000), balances)
 }
 
-func createTestApp(isCheckTx bool) (*squadapp.SquadApp, sdk.Context) {
-	app := squadapp.Setup(isCheckTx)
+func createTestApp(isCheckTx bool) (*chain.App, sdk.Context) {
+	app := chain.Setup(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
@@ -292,7 +292,7 @@ func createTestApp(isCheckTx bool) (*squadapp.SquadApp, sdk.Context) {
 	return app, ctx
 }
 
-func getTestingAccounts(t *testing.T, r *rand.Rand, app *squadapp.SquadApp, ctx sdk.Context, n int) []simtypes.Account {
+func getTestingAccounts(t *testing.T, r *rand.Rand, app *chain.App, ctx sdk.Context, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 100_000_000_000)

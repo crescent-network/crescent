@@ -88,7 +88,7 @@ func NewQueryPairsCmd() *cobra.Command {
 Example:
 $ %s query %s pairs
 $ %s query %s pairs --denoms=uatom
-$ %s query %s pairs --denoms=uatom,usquad
+$ %s query %s pairs --denoms=uatom,stake
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,

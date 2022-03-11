@@ -9,12 +9,12 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
-	app := simapp.Setup(false)
+	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.InitChain(

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -423,7 +423,7 @@ func (suite *KeeperTestSuite) TestReserveAndReleaseStakingCoins() {
 		},
 	} {
 		suite.Run(tc.name, func() {
-			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, tc.farmerAcc, sdk.NewCoins(sdk.Coin{
+			err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, tc.farmerAcc, sdk.NewCoins(sdk.Coin{
 				Denom:  denom9,
 				Amount: sdk.NewInt(100000),
 			}, sdk.Coin{

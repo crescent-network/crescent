@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -46,7 +45,7 @@ func (msg MsgLiquidStake) ValidateBasic() error {
 }
 
 func (msg MsgLiquidStake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgLiquidStake) GetSigners() []sdk.AccAddress {
@@ -94,7 +93,7 @@ func (msg MsgLiquidUnstake) ValidateBasic() error {
 }
 
 func (msg MsgLiquidUnstake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgLiquidUnstake) GetSigners() []sdk.AccAddress {

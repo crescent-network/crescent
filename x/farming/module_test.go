@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/farming/keeper"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
@@ -30,7 +30,7 @@ var (
 type ModuleTestSuite struct {
 	suite.Suite
 
-	app                 *simapp.SquadApp
+	app                 *chain.App
 	ctx                 sdk.Context
 	keeper              keeper.Keeper
 	querier             keeper.Querier
@@ -45,16 +45,16 @@ func TestModuleTestSuite(t *testing.T) {
 }
 
 func (suite *ModuleTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	suite.app = app
 	suite.ctx = ctx
 	suite.keeper = suite.app.FarmingKeeper
 	suite.querier = keeper.Querier{Keeper: suite.keeper}
-	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
+	suite.addrs = chain.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
 	for _, addr := range suite.addrs {
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
+		err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
 		suite.Require().NoError(err)
 	}
 	suite.sampleFixedAmtPlans = []types.PlanI{

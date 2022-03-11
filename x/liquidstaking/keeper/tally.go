@@ -5,7 +5,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
@@ -19,7 +19,7 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes govtypes.Votes) ma
 		if err != nil {
 			continue
 		}
-		balances := k.bankKeeper.GetAllBalances(ctx, voter)
+		balances := k.bankKeeper.SpendableCoins(ctx, voter)
 		for _, coin := range balances {
 			if _, ok := denomAddrBalanceMap[coin.Denom]; !ok {
 				denomAddrBalanceMap[coin.Denom] = map[string]sdk.Int{}
@@ -41,7 +41,7 @@ func (k Keeper) TokenAmountFromFarmingPositions(ctx sdk.Context, addr sdk.AccAdd
 		if stakingCoinDenom == targetDenom {
 			tokenAmount = tokenAmount.Add(staking.Amount)
 		} else if ratio, ok := tokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-			tokenAmount = tokenAmount.Add(squad.GetShareValue(staking.Amount, ratio))
+			tokenAmount = tokenAmount.Add(utils.GetShareValue(staking.Amount, ratio))
 		}
 		return false
 	})
@@ -51,7 +51,7 @@ func (k Keeper) TokenAmountFromFarmingPositions(ctx sdk.Context, addr sdk.AccAdd
 		if stakingCoinDenom == targetDenom {
 			tokenAmount = tokenAmount.Add(queuedStaking.Amount)
 		} else if ratio, ok := tokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-			tokenAmount = tokenAmount.Add(squad.GetShareValue(queuedStaking.Amount, ratio))
+			tokenAmount = tokenAmount.Add(utils.GetShareValue(queuedStaking.Amount, ratio))
 		}
 		return false
 	})
@@ -153,7 +153,7 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 
 	bTokenAmount := sdk.ZeroInt()
 	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
-	balances := k.bankKeeper.GetAllBalances(ctx, addr)
+	balances := k.bankKeeper.SpendableCoins(ctx, addr)
 	for _, coin := range balances {
 		// add balance of bToken
 		if coin.Denom == liquidBondDenom {
@@ -164,7 +164,7 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 		bTokenSharePerPoolCoin := k.TokenSharePerPoolCoin(ctx, liquidBondDenom, coin.Denom)
 		if bTokenSharePerPoolCoin.IsPositive() {
 			bTokenSharePerPoolCoinMap[coin.Denom] = bTokenSharePerPoolCoin
-			bTokenAmount = bTokenAmount.Add(squad.GetShareValue(coin.Amount, bTokenSharePerPoolCoin))
+			bTokenAmount = bTokenAmount.Add(utils.GetShareValue(coin.Amount, bTokenSharePerPoolCoin))
 		}
 	}
 
@@ -203,7 +203,7 @@ func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Vot
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
 	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
-	bTokenOwnMap := make(squad.StrIntMap)
+	bTokenOwnMap := make(utils.StrIntMap)
 
 	// calculate owned btoken amount of each voter
 	for denom, balanceByVoter := range voterBalanceByDenom {
@@ -221,7 +221,7 @@ func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Vot
 		if bTokenSharePerPoolCoin.IsPositive() {
 			bTokenSharePerPoolCoinMap[denom] = bTokenSharePerPoolCoin
 			for voter, balance := range balanceByVoter {
-				bTokenOwnMap.AddOrSet(voter, squad.GetShareValue(balance, bTokenSharePerPoolCoin))
+				bTokenOwnMap.AddOrSet(voter, utils.GetShareValue(balance, bTokenSharePerPoolCoin))
 			}
 		}
 	}

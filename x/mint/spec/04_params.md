@@ -48,13 +48,13 @@ Example of inflation schedules
 ```go
 ExampleInflationSchedules = []InflationSchedule{
     {
-        StartTime: squad.ParseTime("2022-01-01T00:00:00Z"),
-        EndTime:   squad.ParseTime("2023-01-01T00:00:00Z"),
+        StartTime: utils.ParseTime("2022-01-01T00:00:00Z"),
+        EndTime:   utils.ParseTime("2023-01-01T00:00:00Z"),
         Amount:    sdk.NewInt(300000000000000),
     },
     {
-        StartTime: squad.ParseTime("2023-01-01T00:00:00Z"),
-        EndTime:   squad.ParseTime("2024-01-01T00:00:00Z"),
+        StartTime: utils.ParseTime("2023-01-01T00:00:00Z"),
+        EndTime:   utils.ParseTime("2024-01-01T00:00:00Z"),
         Amount:    sdk.NewInt(200000000000000),
     },
 }

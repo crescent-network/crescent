@@ -444,7 +444,7 @@ func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
 	})
 
 	for _, coin := range reservedCoins {
-		balanceStakingReserveAcc := k.bankKeeper.GetAllBalances(ctx, types.StakingReserveAcc(coin.Denom))
+		balanceStakingReserveAcc := k.bankKeeper.SpendableCoins(ctx, types.StakingReserveAcc(coin.Denom))
 		if !balanceStakingReserveAcc.IsAllGTE(sdk.Coins{coin}) {
 			return types.ErrInvalidStakingReservedAmount
 		}

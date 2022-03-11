@@ -43,7 +43,7 @@ import (
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
-// SquadApp testing.
+// App testing.
 var DefaultConsensusParams = &abci.ConsensusParams{
 	Block: &abci.BlockParams{
 		MaxBytes: 200000,
@@ -70,18 +70,18 @@ func MakeTestEncodingConfig() simappparams.EncodingConfig {
 	return encodingConfig
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*SquadApp, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewSquadApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
 }
 
-// Setup initializes a new SquadApp. A Nop logger is set in SquadApp.
-func Setup(isCheckTx bool) *SquadApp {
+// Setup initializes a new App. A Nop logger is set in App.
+func Setup(isCheckTx bool) *App {
 	app, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
@@ -103,11 +103,11 @@ func Setup(isCheckTx bool) *SquadApp {
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new SquadApp with a validator set and genesis accounts
+// SetupWithGenesisValSet initializes a new App with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
-// account. A Nop logger is set in SquadApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SquadApp {
+// account. A Nop logger is set in App.
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	app, genesisState := setup(true, 5)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
@@ -184,9 +184,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
-// SetupWithGenesisAccounts initializes a new SquadApp with the provided genesis
+// SetupWithGenesisAccounts initializes a new App with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SquadApp {
+func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -253,8 +253,8 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	return addresses
 }
 
-// AddTestAddrsFromPubKeys adds the addresses into the SquadApp providing only the public keys.
-func AddTestAddrsFromPubKeys(app *SquadApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
+// AddTestAddrsFromPubKeys adds the addresses into the App providing only the public keys.
+func AddTestAddrsFromPubKeys(app *App, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
 
 	for _, pk := range pubKeys {
@@ -264,17 +264,17 @@ func AddTestAddrsFromPubKeys(app *SquadApp, ctx sdk.Context, pubKeys []cryptotyp
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrs(app *App, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(app *App, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
-func addTestAddrs(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(app *App, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
@@ -286,7 +286,7 @@ func addTestAddrs(app *SquadApp, ctx sdk.Context, accNum int, accAmt sdk.Int, st
 	return testAddrs
 }
 
-func InitAccountWithCoins(app *SquadApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func InitAccountWithCoins(app *App, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		panic(err)
@@ -331,7 +331,7 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 }
 
 // CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *SquadApp, addr sdk.AccAddress, balances sdk.Coins) {
+func CheckBalance(t *testing.T, app *App, addr sdk.AccAddress, balances sdk.Coins) {
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
@@ -499,7 +499,7 @@ func NewConfig(dbm *dbm.MemDB) network.Config {
 // NewAppConstructor returns a new network AppConstructor.
 func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB) network.AppConstructor {
 	return func(val network.Validator) types.Application {
-		return NewSquadApp(
+		return NewApp(
 			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},

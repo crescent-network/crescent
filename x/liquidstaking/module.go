@@ -42,7 +42,9 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the liquidstaking module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
 // DefaultGenesis returns default genesis state as raw bytes for the liquidstaking
 // module.
@@ -125,7 +127,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // Route returns the message routing key for the liquidstaking module.
 func (am AppModule) Route() sdk.Route {
-	// Modification of BiquidStakings of Params proceeds to governance proposition, not to Tx.
+	// Modification of LiquidStakings of Params proceeds to governance proposition, not to Tx.
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
