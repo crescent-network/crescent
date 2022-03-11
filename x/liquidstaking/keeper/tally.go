@@ -19,7 +19,7 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes govtypes.Votes) ma
 		if err != nil {
 			continue
 		}
-		balances := k.bankKeeper.GetAllBalances(ctx, voter)
+		balances := k.bankKeeper.SpendableCoins(ctx, voter)
 		for _, coin := range balances {
 			if _, ok := denomAddrBalanceMap[coin.Denom]; !ok {
 				denomAddrBalanceMap[coin.Denom] = map[string]sdk.Int{}
@@ -148,7 +148,7 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 
 	bTokenAmount := sdk.ZeroInt()
 	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
-	balances := k.bankKeeper.GetAllBalances(ctx, addr)
+	balances := k.bankKeeper.SpendableCoins(ctx, addr)
 	for _, coin := range balances {
 		// add balance of bToken
 		if coin.Denom == liquidBondDenom {

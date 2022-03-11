@@ -77,7 +77,8 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 
 	case types.ConditionTypeLiquidStake:
 		params := k.liquidStakingKeeper.GetParams(ctx)
-		bTokenBalance := k.bankKeeper.GetBalance(ctx, recipient, params.LiquidBondDenom)
+		spendable := k.bankKeeper.SpendableCoins(ctx, recipient)
+		bTokenBalance := spendable.AmountOf(params.LiquidBondDenom)
 		if !bTokenBalance.IsZero() {
 			skip = true
 		}

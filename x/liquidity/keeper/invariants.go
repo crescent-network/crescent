@@ -46,7 +46,7 @@ func DepositCoinsEscrowInvariant(k Keeper) sdk.Invariant {
 			}
 			return false, nil
 		})
-		balances := k.bankKeeper.GetAllBalances(ctx, types.GlobalEscrowAddress)
+		balances := k.bankKeeper.SpendableCoins(ctx, types.GlobalEscrowAddress)
 		broken := !balances.IsAllGTE(escrowDepositCoins)
 		return sdk.FormatInvariant(
 			types.ModuleName, "deposit-coins-escrow",
@@ -67,7 +67,7 @@ func PoolCoinEscrowInvariant(k Keeper) sdk.Invariant {
 			}
 			return false, nil
 		})
-		balances := k.bankKeeper.GetAllBalances(ctx, types.GlobalEscrowAddress)
+		balances := k.bankKeeper.SpendableCoins(ctx, types.GlobalEscrowAddress)
 		broken := !balances.IsAllGTE(escrowPoolCoins)
 		return sdk.FormatInvariant(
 			types.ModuleName, "pool-coin-escrow",
@@ -93,7 +93,7 @@ func RemainingOfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
 				}
 				return false, nil
 			})
-			balances := k.bankKeeper.GetAllBalances(ctx, pair.GetEscrowAddress())
+			balances := k.bankKeeper.SpendableCoins(ctx, pair.GetEscrowAddress())
 			if !balances.IsAllGTE(remainingOfferCoins) {
 				count++
 				msg += fmt.Sprintf("\tpair %d has %s, which is smaller than %s\n", pair.Id, balances, remainingOfferCoins)
