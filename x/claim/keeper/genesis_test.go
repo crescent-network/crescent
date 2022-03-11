@@ -98,7 +98,9 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Recipient:             s.addr(3).String(),
 				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
 				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{},
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeLiquidStake,
+				},
 			},
 			{
 				AirdropId:             2,
@@ -112,14 +114,20 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Recipient:             s.addr(4).String(),
 				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
 				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{types.ConditionTypeDeposit},
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+				},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(5).String(),
 				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
 				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{types.ConditionTypeDeposit, types.ConditionTypeSwap},
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+					types.ConditionTypeSwap,
+					types.ConditionTypeLiquidStake,
+				},
 			},
 		},
 	}

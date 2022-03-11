@@ -87,6 +87,7 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 		for _, v := range k.govKeeper.GetAllVotes(ctx) {
 			if v.Voter == recipient.String() {
 				skip = true
+				break
 			}
 		}
 	}
