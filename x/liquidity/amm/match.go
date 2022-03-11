@@ -21,14 +21,22 @@ func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found boo
 		return sdk.Dec{}, false
 	}
 
-	lowestTickIdx := TickToIndex(LowestTick(tickPrec), tickPrec)
-	highestTickIdx := TickToIndex(HighestTick(tickPrec), tickPrec)
-	i := findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
-		return os.BuyAmountOver(TickFromIndex(i+1, tickPrec)).LTE(os.SellAmountUnder(TickFromIndex(i, tickPrec)))
+	prec := TickPrecision(tickPrec)
+	lowestTickIdx := prec.TickToIndex(prec.LowestTick())
+	highestTickIdx := prec.TickToIndex(prec.HighestTick())
+	var i, j int
+	i, found = findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
+		return os.BuyAmountOver(prec.TickFromIndex(i + 1)).LTE(os.SellAmountUnder(prec.TickFromIndex(i)))
 	})
-	j := findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
-		return os.BuyAmountOver(TickFromIndex(i, tickPrec)).GTE(os.SellAmountUnder(TickFromIndex(i-1, tickPrec)))
+	if !found {
+		return sdk.Dec{}, false
+	}
+	j, found = findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
+		return os.BuyAmountOver(prec.TickFromIndex(i)).GTE(os.SellAmountUnder(prec.TickFromIndex(i - 1)))
 	})
+	if !found {
+		return sdk.Dec{}, false
+	}
 	midTick := TickFromIndex(i, tickPrec).Add(TickFromIndex(j, tickPrec)).QuoInt64(2)
 	return RoundPrice(midTick, tickPrec), true
 }
@@ -37,23 +45,23 @@ func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found boo
 // where f(i) is true, while searching in range [start, end].
 // It assumes that f(j) == false where j < i and f(j) == true where j >= i.
 // start can be greater than end.
-func findFirstTrueCondition(start, end int, f func(i int) bool) (i int) {
+func findFirstTrueCondition(start, end int, f func(i int) bool) (i int, found bool) {
 	if start < end {
 		i = start + sort.Search(end-start+1, func(i int) bool {
 			return f(start + i)
 		})
 		if i > end {
-			panic("impossible case")
+			return 0, false
 		}
-	} else {
-		i = start - sort.Search(start-end+1, func(i int) bool {
-			return f(start - i)
-		})
-		if i < end {
-			panic("impossible case")
-		}
+		return i, true
 	}
-	return
+	i = start - sort.Search(start-end+1, func(i int) bool {
+		return f(start - i)
+	})
+	if i < end {
+		return 0, false
+	}
+	return i, true
 }
 
 // FindLastMatchableOrders returns the last matchable order indexes for

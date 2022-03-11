@@ -18,7 +18,7 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 		panic(err)
 	}
 	if err := k.IterateAllOrders(ctx, func(req types.Order) (stop bool, err error) {
-		if req.Status != types.OrderStatusCompleted && !req.Status.IsCanceledOrExpired() && !ctx.BlockTime().Before(req.ExpireAt) { // ExpireAt <= BlockTime
+		if req.Status.CanBeExpired() && req.ExpiredAt(ctx.BlockTime()) {
 			if err := k.FinishOrder(ctx, req, types.OrderStatusExpired); err != nil {
 				return false, err
 			}

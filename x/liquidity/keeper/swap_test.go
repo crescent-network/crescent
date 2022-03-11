@@ -4,11 +4,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/stretchr/testify/suite"
 
 	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (s *KeeperTestSuite) TestLimitOrder() {
@@ -261,6 +262,17 @@ func (s *KeeperTestSuite) TestPartialMatch() {
 	// Now completely matched.
 	_, found = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().False(found)
+}
+
+func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	// Create a pool with very low price.
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000000000000000000000000000000000000000denom1,1000000denom2"), true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(10), 10*time.Second, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().True(found)
+	s.Require().Equal(types.OrderStatusNotMatched, order.Status)
 }
 
 func (s *KeeperTestSuite) TestCancelOrder() {

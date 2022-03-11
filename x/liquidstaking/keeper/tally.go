@@ -61,7 +61,12 @@ func (k Keeper) TokenAmountFromFarmingPositions(ctx sdk.Context, addr sdk.AccAdd
 
 // TokenSharePerPoolCoin returns token share of the target denom of a pool coin
 func (k Keeper) TokenSharePerPoolCoin(ctx sdk.Context, targetDenom, poolCoinDenom string) sdk.Dec {
-	pool, found := k.liquidityKeeper.GetPool(ctx, liquiditytypes.ParsePoolCoinDenom(poolCoinDenom))
+	poolId, err := liquiditytypes.ParsePoolCoinDenom(poolCoinDenom)
+	if err != nil {
+		// If poolCoinDenom is not a valid pool coin denom, just return zero.
+		return sdk.ZeroDec()
+	}
+	pool, found := k.liquidityKeeper.GetPool(ctx, poolId)
 	if !found {
 		return sdk.ZeroDec()
 	}
