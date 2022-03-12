@@ -7,6 +7,7 @@ const (
 	DefaultWeightMsgStake                 int = 85
 	DefaultWeightMsgUnstake               int = 30
 	DefaultWeightMsgHarvest               int = 30
+	DefaultWeightMsgRemovePlan            int = 10
 
 	DefaultWeightMsgCreatePair      int = 10
 	DefaultWeightMsgCreatePool      int = 15

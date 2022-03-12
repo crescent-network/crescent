@@ -5,6 +5,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -38,6 +39,7 @@ func GetTxCmd() *cobra.Command {
 		NewStakeCmd(),
 		NewUnstakeCmd(),
 		NewHarvestCmd(),
+		NewRemovePlanCmd(),
 	)
 	if keeper.EnableAdvanceEpoch {
 		farmingTxCmd.AddCommand(NewAdvanceEpochCmd())
@@ -343,6 +345,39 @@ $ %s tx %s harvest --all --from mykey
 	cmd.Flags().AddFlagSet(flagSetHarvest())
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+// NewRemovePlanCmd implements the remove plan handler.
+func NewRemovePlanCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-plan",
+		Args:  cobra.ExactArgs(1),
+		Short: "Remove a terminated private plan",
+		Long: fmt.Sprintf(`Remove a terminated private plan.
+Example:
+$ %s tx %s remove-plan 1 --from mykey`,
+			version.AppName, types.ModuleName,
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			creator := clientCtx.GetFromAddress()
+
+			planId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse plan id: %w", err)
+			}
+
+			msg := types.NewMsgRemovePlan(creator, planId)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

@@ -836,8 +836,6 @@ func (suite *KeeperTestSuite) TestDeletePublicPlan() {
 			for _, e := range cacheCtx.EventManager().ABCIEvents() {
 				if e.Type == types.EventTypePlanTerminated {
 					suite.Require().Equal(fmt.Sprint(plans[0].GetId()), string(e.Attributes[0].Value))
-					suite.Require().Equal(tc.farmingPoolAddr.String(), string(e.Attributes[1].Value))
-					suite.Require().Equal(tc.terminationAddr.String(), string(e.Attributes[2].Value))
 					isPlanTerminatedEventType = true
 					break
 				}

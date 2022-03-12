@@ -19,10 +19,11 @@ func TestParams(t *testing.T) {
 
 	paramsStr := `private_plan_creation_fee:
 - denom: stake
-  amount: "100000000"
+  amount: "1000000000"
 next_epoch_days: 1
 farming_fee_collector: cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x
 delayed_staking_gas_fee: 60000
+max_num_private_plans: 10000
 `
 	require.Equal(t, paramsStr, defaultParams.String())
 }

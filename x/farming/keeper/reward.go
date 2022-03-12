@@ -331,7 +331,7 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 	plans := map[uint64]types.PlanI{} // it maps planId to plan.
 	for _, plan := range k.GetPlans(ctx) {
 		// Add plans that are not terminated and active to the map.
-		if !plan.GetTerminated() && types.IsPlanActiveAt(plan, ctx.BlockTime()) {
+		if !plan.IsTerminated() && types.IsPlanActiveAt(plan, ctx.BlockTime()) {
 			plans[plan.GetId()] = plan
 		}
 	}

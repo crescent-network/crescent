@@ -120,7 +120,7 @@ func (plan *BasePlan) SetEndTime(t time.Time) error {
 	return nil
 }
 
-func (plan *BasePlan) GetTerminated() bool {
+func (plan *BasePlan) IsTerminated() bool {
 	return plan.Terminated
 }
 
@@ -157,7 +157,7 @@ func (plan BasePlan) GetBasePlan() *BasePlan {
 		StakingCoinWeights:   plan.GetStakingCoinWeights(),
 		StartTime:            plan.GetStartTime(),
 		EndTime:              plan.GetEndTime(),
-		Terminated:           plan.GetTerminated(),
+		Terminated:           plan.IsTerminated(),
 		LastDistributionTime: plan.GetLastDistributionTime(),
 		DistributedCoins:     plan.GetDistributedCoins(),
 	}
@@ -233,7 +233,7 @@ type PlanI interface {
 	GetEndTime() time.Time
 	SetEndTime(time.Time) error
 
-	GetTerminated() bool
+	IsTerminated() bool
 	SetTerminated(bool) error
 
 	GetLastDistributionTime() *time.Time

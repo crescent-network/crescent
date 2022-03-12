@@ -117,6 +117,7 @@ The parameters of the plan state are:
 - Plan: `0x11 | Id -> ProtocolBuffer(Plan)`
 - GlobalPlanIdKey: `[]byte("globalPlanId") -> ProtocolBuffer(uint64)`
   - store latest plan id
+- NumPrivatePlans: `[]byte("numPrivatePlans") -> ProtocolBuffer(uint32)`
 - ModuleName, RouterKey, StoreKey, QuerierRoute: `farming`
 
 ## Epoch

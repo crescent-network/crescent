@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
@@ -145,7 +145,7 @@ func TestPlanI(t *testing.T) {
 		{
 			"Terminated",
 			func() interface{} {
-				return plan.GetTerminated()
+				return plan.IsTerminated()
 			},
 			func(plan types.PlanI, val interface{}) error {
 				return plan.SetTerminated(val.(bool))

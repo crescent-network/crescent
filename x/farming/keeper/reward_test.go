@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			types.ParseTime("2021-07-27T00:00:00Z"),
 			map[uint64]sdk.Coins{
 				3: sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000000), sdk.NewInt64Coin(denom2, 500000000),
-					sdk.NewInt64Coin(denom3, 500000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 500000000))},
+					sdk.NewInt64Coin(denom3, 500000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 500000000000))},
 		},
 		{
 			"test case for ratio plans #2",
@@ -177,7 +177,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 			types.ParseTime("2021-07-28T11:00:00Z"),
 			map[uint64]sdk.Coins{
 				4: sdk.NewCoins(sdk.NewInt64Coin(denom1, 600000000), sdk.NewInt64Coin(denom2, 600000000),
-					sdk.NewInt64Coin(denom3, 600000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 600000000))},
+					sdk.NewInt64Coin(denom3, 600000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 600000000000))},
 		},
 		{
 			"test case for fixed plans with a ratio plan over balance #1",
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestAllocationInfos() {
 	} {
 		suite.Run(tc.name, func() {
 			for _, plan := range suite.keeper.GetPlans(suite.ctx) {
-				suite.keeper.RemovePlan(suite.ctx, plan)
+				suite.keeper.DeletePlan(suite.ctx, plan)
 			}
 			for _, plan := range tc.plans {
 				suite.keeper.SetPlan(suite.ctx, plan)

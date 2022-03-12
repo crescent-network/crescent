@@ -10,10 +10,11 @@ Anyone can create this private plan type message.
 
 - A fixed amount plan distributes the amount of coins by a fixed amount that is defined in `EpochAmount`. 
 - Internally, the private plan's farming pool address is derived and assigned to the plan. 
+- The plan's `TerminationAddress` is set to the plan creator's address.
 
 The creator must query the plan and send the amount of coins to the farming pool address so that the plan distributes as intended. 
 
-**Note:** The `PlanCreationFee` must be paid on plan creation to prevent spamming attacks.
+**Note:** The `PlanCreationFee` must be paid on plan creation to prevent spamming attacks. This fee is refunded when the creator removes the plan by sending `MsgRemovePlan`.
 
 ```go
 type MsgCreateFixedAmountPlan struct {
@@ -32,12 +33,13 @@ Anyone can create this private plan type message.
 
 - A ratio plan plans to distribute amount of coins by ratio defined in `EpochRatio`.
 - Internally, the private plan's farming pool address is derived and assigned to the plan.
+- The plan's `TerminationAddress` is set to the plan creator's address.
 
 The creator must query the plan and send the amount of coins to the farming pool address so that the plan distributes as intended. 
 
 For a ratio plan, whichever coins the farming pool address has in balances are used every epoch. 
 
-**Note:** The `PlanCreationFee` must be paid on plan creation to prevent spamming attacks.
+**Note:** The `PlanCreationFee` must be paid on plan creation to prevent spamming attacks. This fee is refunded when the creator removes the plan by sending `MsgRemovePlan`.
 
 
 ```go
@@ -87,6 +89,18 @@ A farmer must harvest their farming rewards. This mechanism is similar to the Co
 type MsgHarvest struct {
     Farmer            string   // bech32-encoded address of the farmer
     StakingCoinDenoms []string // staking coin denoms that the farmer has staked
+}
+```
+
+## MsgRemovePlan
+
+After a private plan is terminated, the plan's creator should remove the plan by sending `MsgRemovePlan`.
+By removing a plan, the plan is deleted in the store and the creator gets `PrivatePlanCreationFee` refunded.
+
+```go
+type MsgRemovePlan struct {
+	Creator string // bech32-encoded address of the plan creator
+	PlanId  uint64 // id of the plan that is going to be removed
 }
 ```
 
