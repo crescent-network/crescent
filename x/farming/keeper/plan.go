@@ -313,8 +313,7 @@ func (k Keeper) RemovePlan(ctx sdk.Context, creator sdk.AccAddress, planId uint6
 func (k Keeper) DerivePrivatePlanFarmingPoolAcc(ctx sdk.Context, name string) (sdk.AccAddress, error) {
 	nextPlanId := k.GetGlobalPlanId(ctx) + 1
 	poolAcc := types.PrivatePlanFarmingPoolAcc(name, nextPlanId)
-	if !k.bankKeeper.
-		GetAllBalances(ctx, poolAcc).Empty() {
+	if !k.bankKeeper.GetAllBalances(ctx, poolAcc).Empty() {
 		return nil, types.ErrConflictPrivatePlanFarmingPool
 	}
 	return poolAcc, nil

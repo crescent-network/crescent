@@ -64,7 +64,6 @@ func (s *IntegrationTestSuite) TearDownTest() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
-	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	name := "test"
@@ -230,7 +229,6 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
-	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	name := "test"
@@ -396,7 +394,6 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewStakeCmd() {
-	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -464,7 +461,6 @@ func (s *IntegrationTestSuite) TestNewStakeCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
-	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	_, err := MsgStakeExec(
@@ -542,7 +538,6 @@ func (s *IntegrationTestSuite) TestNewUnstakeCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewHarvestCmd() {
-	//s.SetupTest()
 	val := s.network.Validators[0]
 
 	req := cli.PrivateFixedPlanRequest{

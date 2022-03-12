@@ -337,7 +337,7 @@ func TestSimulateMsgRemovePlan(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgRemovePlan
-	err = app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
