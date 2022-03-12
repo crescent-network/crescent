@@ -136,6 +136,10 @@ func (k Keeper) UnmarshalPlan(bz []byte) (plan types.PlanI, err error) {
 
 // CreateFixedAmountPlan sets fixed amount plan.
 func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixedAmountPlan, farmingPoolAcc, terminationAcc sdk.AccAddress, typ types.PlanType) (types.PlanI, error) {
+	if !ctx.BlockTime().Before(msg.EndTime) { // EndTime <= BlockTime
+		return nil, sdkerrors.Wrap(types.ErrInvalidPlanEndTime, "end time has already passed")
+	}
+
 	if typ == types.PlanTypePrivate {
 		params := k.GetParams(ctx)
 
@@ -182,7 +186,10 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 
 // CreateRatioPlan sets ratio plan.
 func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, farmingPoolAcc, terminationAcc sdk.AccAddress, typ types.PlanType) (types.PlanI, error) {
-	nextId := k.GetNextPlanIdWithUpdate(ctx)
+	if !ctx.BlockTime().Before(msg.EndTime) { // EndTime <= BlockTime
+		return nil, sdkerrors.Wrap(types.ErrInvalidPlanEndTime, "end time has already passed")
+	}
+
 	if typ == types.PlanTypePrivate {
 		params := k.GetParams(ctx)
 
@@ -196,6 +203,7 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		}
 	}
 
+	nextId := k.GetNextPlanIdWithUpdate(ctx)
 	basePlan := types.NewBasePlan(
 		nextId,
 		msg.Name,

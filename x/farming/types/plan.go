@@ -74,7 +74,10 @@ func (plan *BasePlan) SetType(typ PlanType) error {
 }
 
 func (plan BasePlan) GetFarmingPoolAddress() sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(plan.FarmingPoolAddress)
+	addr, err := sdk.AccAddressFromBech32(plan.FarmingPoolAddress)
+	if err != nil {
+		panic(err)
+	}
 	return addr
 }
 
@@ -84,7 +87,10 @@ func (plan *BasePlan) SetFarmingPoolAddress(addr sdk.AccAddress) error {
 }
 
 func (plan BasePlan) GetTerminationAddress() sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(plan.TerminationAddress)
+	addr, err := sdk.AccAddressFromBech32(plan.TerminationAddress)
+	if err != nil {
+		panic(err)
+	}
 	return addr
 }
 

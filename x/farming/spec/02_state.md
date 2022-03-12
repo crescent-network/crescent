@@ -11,6 +11,15 @@ The plan interface exposes methods to read and write standard farming plan infor
 Note that all of these methods operate on a plan struct that confirms to the interface. In order to write the plan to the store, the plan keeper is required.
 
 ```go
+// PlanType enumerates the valid types of a plan.
+type PlanType int32
+
+const (
+    PlanTypeNil PlanType = 0
+    PlanTypePublic PlanType = 1
+    PlanTypePrivate PlanType = 2
+)
+
 // PlanI is an interface used to store plan records within state.
 type PlanI interface {
     proto.Message
@@ -21,8 +30,8 @@ type PlanI interface {
     GetName() string
     SetName(name string) error
 
-    GetType() int32
-    SetType(int32) error
+    GetType() PlanType
+    SetType(PlanType) error
 
     GetFarmingPoolAddress() sdk.AccAddress
     SetFarmingPoolAddress(sdk.AccAddress) error
@@ -30,8 +39,8 @@ type PlanI interface {
     GetTerminationAddress() sdk.AccAddress
     SetTerminationAddress(sdk.AccAddress) error
 
-    GetStakingCoinsWeight() sdk.DecCoins
-    SetStakingCoinsWeight(sdk.DecCoins) error
+    GetStakingCoinsWeights() sdk.DecCoins
+    SetStakingCoinsWeights(sdk.DecCoins) error
 
     GetStartTime() time.Time
     SetStartTime(time.Time) error

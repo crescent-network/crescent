@@ -132,3 +132,28 @@ func (suite *KeeperTestSuite) TestMaxNumPrivatePlans() {
 	_, err = msgServer.CreateFixedAmountPlan(sdk.WrapSDKContext(suite.ctx), msg)
 	suite.Require().ErrorIs(err, types.ErrNumPrivatePlansLimit)
 }
+
+func (suite *KeeperTestSuite) TestCreateExpiredPlan() {
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2022-01-01T00:00:00Z"))
+
+	msg := types.NewMsgCreateFixedAmountPlan(
+		"plan1", suite.addrs[4], sdk.NewDecCoins(sdk.NewInt64DecCoin(denom1, 1)),
+		types.ParseTime("2021-01-01T00:00:00Z"), types.ParseTime("2022-01-01T00:00:00Z"),
+		sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	msgServer := keeper.NewMsgServerImpl(suite.keeper)
+	_, err := msgServer.CreateFixedAmountPlan(sdk.WrapSDKContext(suite.ctx), msg)
+	suite.Require().ErrorIs(err, types.ErrInvalidPlanEndTime)
+
+	req := types.AddPlanRequest{
+		Name:               "plan2",
+		FarmingPoolAddress: suite.addrs[4].String(),
+		TerminationAddress: suite.addrs[4].String(),
+		StakingCoinWeights: sdk.NewDecCoins(sdk.NewInt64DecCoin(denom1, 1)),
+		StartTime:          types.ParseTime("2021-01-01T00:00:00Z"),
+		EndTime:            types.ParseTime("2022-01-01T00:00:00Z"),
+		EpochRatio:         sdk.NewDecWithPrec(3, 1),
+	}
+	proposal := types.NewPublicPlanProposal("title", "description", []types.AddPlanRequest{req}, nil, nil)
+	err = suite.govHandler(suite.ctx, proposal)
+	suite.Require().ErrorIs(err, types.ErrInvalidPlanEndTime)
+}
