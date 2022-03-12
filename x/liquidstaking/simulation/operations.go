@@ -77,8 +77,18 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 
 		delegator := account.GetAddress()
 
-		stakingCoin := sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simtypes.RandIntBetween(r, int(params.MinLiquidStakingAmount.Int64()), 1_000_000_000)))
-
+		ns := k.NetAmountState(ctx)
+		var btokenUnitAmount sdk.Dec
+		if ns.BtokenTotalSupply.IsZero() {
+			btokenUnitAmount = sdk.OneDec()
+		} else {
+			btokenUnitAmount = types.BTokenToNativeToken(sdk.OneInt(), ns.BtokenTotalSupply, ns.NetAmount)
+		}
+		stakingAmt := int64(simtypes.RandIntBetween(r, int(btokenUnitAmount.TruncateInt64()), int(btokenUnitAmount.TruncateInt64())*1000000))
+		if stakingAmt < params.MinLiquidStakingAmount.Int64() {
+			stakingAmt = params.MinLiquidStakingAmount.Int64()
+		}
+		stakingCoin := sdk.NewInt64Coin(sdk.DefaultBondDenom, stakingAmt)
 		if !spendable.AmountOf(sdk.DefaultBondDenom).GTE(stakingCoin.Amount) {
 			if err := bk.MintCoins(ctx, types.ModuleName, sdk.NewCoins(stakingCoin)); err != nil {
 				panic(err)
@@ -86,8 +96,9 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			if err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delegator, sdk.NewCoins(stakingCoin)); err != nil {
 				panic(err)
 			}
+			spendable = bk.SpendableCoins(ctx, account.GetAddress())
 		}
-		fmt.Println("## ADD liquid NetAmountState", stakingCoin)
+		fmt.Println("## ADD liquid NetAmountState", stakingCoin, spendable)
 		utils.PP(k.NetAmountState(ctx))
 
 		msg := types.NewMsgLiquidStake(delegator, stakingCoin)
