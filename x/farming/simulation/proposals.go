@@ -203,12 +203,15 @@ func SimulateAdvanceEpoch(k keeper.Keeper, bk types.BankKeeper) simtypes.Content
 				if err := bk.SendCoinsFromModuleToAccount(ctx, liquiditytypes.ModuleName, plan.GetFarmingPoolAddress(), mintCoins); err != nil {
 					return nil
 				}
-				break
 				fmt.Println("[minted farming pool]", mintCoins, plan.String())
+				break
 			}
 
 		}
-		k.AdvanceEpoch(ctx)
+		err := k.AdvanceEpoch(ctx)
+		if err != nil {
+			return nil
+		}
 		fmt.Println("[AdvanceEpoch]")
 		return nil
 	}

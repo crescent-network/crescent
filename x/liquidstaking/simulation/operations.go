@@ -27,8 +27,8 @@ var (
 	Gas  = uint64(20000000)
 	Fees = sdk.Coins{
 		{
-			"stake",
-			sdk.NewInt(1000),
+			Denom:  "stake",
+			Amount: sdk.NewInt(1000),
 		},
 	}
 )
