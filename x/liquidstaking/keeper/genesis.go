@@ -14,8 +14,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		panic(err)
 	}
 	// init to prevent nil slice, []*types.WhitelistedValidator(nil)
-	if genState.Params.WhitelistedValidators == nil {
-		genState.Params.WhitelistedValidators = types.DefaultParams().WhitelistedValidators
+	if genState.Params.WhitelistedValidators == nil || len(genState.Params.WhitelistedValidators) == 0 {
+		genState.Params.WhitelistedValidators = types.WhitelistedValidators{}
 	}
 	k.SetParams(ctx, genState.Params)
 
@@ -33,14 +33,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 	// init to prevent nil slice, []*types.WhitelistedValidator(nil)
-	if params.WhitelistedValidators == nil {
-		params.WhitelistedValidators = types.DefaultParams().WhitelistedValidators
+	if params.WhitelistedValidators == nil || len(params.WhitelistedValidators) == 0 {
+		params.WhitelistedValidators = types.WhitelistedValidators{}
 	}
 
 	liquidValidators := k.GetAllLiquidValidators(ctx)
-	// init to prevent nil slice, []types.LiquidValidator(nil)
-	if len(liquidValidators) == 0 {
-		liquidValidators = types.LiquidValidators{}
-	}
 	return types.NewGenesisState(params, liquidValidators)
 }

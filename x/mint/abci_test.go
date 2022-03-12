@@ -86,7 +86,8 @@ func (s *ModuleTestSuite) TestImportExportGenesis() {
 	mint.InitGenesis(ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState2)
 
 	genState3 := mint.ExportGenesis(ctx, k)
-	s.Require().Equal(*genState, genState2, *genState3)
+	s.Require().Equal(*genState, genState2)
+	s.Require().Equal(genState2, *genState3)
 
 	ctx = ctx.WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
 	mint.BeginBlocker(ctx, k)
@@ -166,4 +167,28 @@ func TestConstantInflation(t *testing.T) {
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())
+}
+
+func (s *ModuleTestSuite) TestDefaultGenesis() {
+	genState := *types.DefaultGenesisState()
+
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState)
+	got := mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().Equal(genState, *got)
+}
+
+func (s *ModuleTestSuite) TestImportExportGenesisEmpty() {
+	emptyParams := types.DefaultParams()
+	emptyParams.InflationSchedules = []types.InflationSchedule{}
+	s.app.MintKeeper.SetParams(s.ctx, emptyParams)
+	genState := mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+
+	var genState2 types.GenesisState
+	bz := s.app.AppCodec().MustMarshalJSON(genState)
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState2)
+
+	genState3 := mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().Equal(*genState, genState2)
+	s.Require().EqualValues(genState2, *genState3)
 }

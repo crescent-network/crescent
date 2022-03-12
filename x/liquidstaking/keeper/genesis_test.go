@@ -42,7 +42,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	k.InitGenesis(ctx, genState2)
 	genState3 := k.ExportGenesis(ctx)
 
-	s.Require().Equal(*genState, genState2, *genState3)
+	s.Require().Equal(*genState, genState2)
+	s.Require().Equal(genState2, *genState3)
 
 	lvs = k.GetAllLiquidValidators(ctx)
 	s.Require().Len(lvs, 2)
@@ -63,5 +64,6 @@ func (s *KeeperTestSuite) TestImportExportGenesisEmpty() {
 	k.InitGenesis(ctx, genState2)
 
 	genState3 := k.ExportGenesis(ctx)
-	s.Require().Equal(*genState, genState2, *genState3)
+	s.Require().Equal(*genState, genState2)
+	s.Require().Equal(genState2, *genState3)
 }
