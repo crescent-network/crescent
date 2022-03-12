@@ -498,7 +498,6 @@ func (suite *KeeperTestSuite) TestInitializeAndPruneStakingCoinInfo() {
 	// about the staking coin.
 	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1)))
 	farming.EndBlocker(suite.ctx, suite.keeper)
-	suite.Require().Equal(uint64(0), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
 	_, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
 	suite.Require().False(found)
 	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
