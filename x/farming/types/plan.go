@@ -249,26 +249,28 @@ type PlanI interface {
 
 // ValidateTotalEpochRatio validates a farmer's total epoch ratio that must be equal to 1.
 func ValidateTotalEpochRatio(plans []PlanI) error {
-	totalEpochRatio := make(map[string]sdk.Dec)
+	for i, plan := range plans {
+		plan, ok := plan.(*RatioPlan)
+		if !ok {
+			continue
+		}
 
-	for _, plan := range plans {
-		farmingPoolAddr := plan.GetFarmingPoolAddress().String()
-
-		if plan, ok := plan.(*RatioPlan); ok {
-			if err := plan.Validate(); err != nil {
-				return err
+		totalRatio := plan.EpochRatio
+		for j, otherPlan := range plans {
+			if i == j {
+				continue
 			}
-
-			if epochRatio, ok := totalEpochRatio[farmingPoolAddr]; ok {
-				totalEpochRatio[farmingPoolAddr] = epochRatio.Add(plan.EpochRatio)
-			} else {
-				totalEpochRatio[farmingPoolAddr] = plan.EpochRatio
+			otherPlan, ok := otherPlan.(*RatioPlan)
+			if !ok {
+				continue
+			}
+			if otherPlan.FarmingPoolAddress == plan.FarmingPoolAddress &&
+				DateRangeIncludes(
+					otherPlan.GetStartTime(), otherPlan.GetEndTime(), plan.GetStartTime()) {
+				totalRatio = totalRatio.Add(otherPlan.EpochRatio)
 			}
 		}
-	}
-
-	for _, farmerRatio := range totalEpochRatio {
-		if farmerRatio.GT(sdk.OneDec()) {
+		if totalRatio.GT(sdk.OneDec()) {
 			return sdkerrors.Wrap(ErrInvalidTotalEpochRatio, "total epoch ratio must be lower than 1")
 		}
 	}
