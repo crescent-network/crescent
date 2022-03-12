@@ -569,6 +569,32 @@ func TestUnpackPlanJSON(t *testing.T) {
 	require.Equal(t, uint64(1), plan2.GetId())
 }
 
+func TestValidatePlanName(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		expectErr bool
+	}{
+		{"", true},
+		{"valid", false},
+		{"valid!", false},
+		{" extra space", true},
+		{"contains\nline break", true},
+		{"Plan #1", false},
+		{"contains\x00null", true},
+		{"It's valid", false},
+		{"With|AccNameSplitter", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := types.ValidatePlanName(tc.name)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestStakingReserveAcc(t *testing.T) {
 	testCases := []struct {
 		stakingCoinDenom string

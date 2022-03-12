@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,6 +23,8 @@ const (
 var (
 	_ PlanI = (*FixedAmountPlan)(nil)
 	_ PlanI = (*RatioPlan)(nil)
+
+	planNameRegexp = regexp.MustCompile(`^[[:print:]]+$`)
 )
 
 // NewBasePlan creates a new BasePlan object
@@ -171,11 +174,8 @@ func (plan BasePlan) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(plan.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", plan.TerminationAddress, err)
 	}
-	if strings.Contains(plan.Name, AccNameSplitter) {
-		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot contain %s", AccNameSplitter)
-	}
-	if len(plan.Name) > MaxNameLength {
-		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot be longer than max length of %d", MaxNameLength)
+	if err := ValidatePlanName(plan.Name); err != nil {
+		return sdkerrors.Wrap(ErrInvalidPlanName, err.Error())
 	}
 	if err := ValidateStakingCoinTotalWeights(plan.StakingCoinWeights); err != nil {
 		return err
@@ -356,6 +356,26 @@ func ValidateStakingCoinTotalWeights(weights sdk.DecCoins) error {
 	}
 	if !totalWeight.Equal(sdk.OneDec()) {
 		return sdkerrors.Wrap(ErrInvalidStakingCoinWeights, "total weight must be 1")
+	}
+	return nil
+}
+
+// ValidatePlanName validates a plan name.
+func ValidatePlanName(name string) error {
+	if strings.TrimSpace(name) != name {
+		return fmt.Errorf("extra whitespaces around name")
+	}
+	if name == "" {
+		return fmt.Errorf("plan name must not be empty")
+	}
+	if !planNameRegexp.MatchString(name) {
+		return fmt.Errorf("name contains invalid characters: %s", name)
+	}
+	if strings.Contains(name, AccNameSplitter) {
+		return fmt.Errorf("plan name cannot contain %s", AccNameSplitter)
+	}
+	if len(name) > MaxNameLength {
+		return fmt.Errorf("plan name cannot be longer than max length of %d", MaxNameLength)
 	}
 	return nil
 }
