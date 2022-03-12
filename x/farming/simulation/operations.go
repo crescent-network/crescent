@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	utils "github.com/cosmosquad-labs/squad/types"
 
 	appparams "github.com/cosmosquad-labs/squad/app/params"
 	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
@@ -23,6 +24,16 @@ const (
 	OpWeightMsgStake                 = "op_weight_msg_stake"
 	OpWeightMsgUnstake               = "op_weight_msg_unstake"
 	OpWeightMsgHarvest               = "op_weight_msg_harvest"
+)
+
+var (
+	Gas  = uint64(20000000)
+	Fees = sdk.Coins{
+		{
+			"stake",
+			sdk.NewInt(1000),
+		},
+	}
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights.
@@ -145,7 +156,7 @@ func SimulateMsgCreateFixedAmountPlan(ak farmingtypes.AccountKeeper, bk farmingt
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -202,7 +213,7 @@ func SimulateMsgCreateRatioPlan(ak farmingtypes.AccountKeeper, bk farmingtypes.B
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -241,7 +252,7 @@ func SimulateMsgStake(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKeeper,
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -304,7 +315,7 @@ func SimulateMsgUnstake(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKeepe
 			ModuleName:      farmingtypes.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -362,7 +373,7 @@ func SimulateMsgHarvest(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKeepe
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -389,7 +400,6 @@ func mintPoolCoins(ctx sdk.Context, r *rand.Rand, bk farmingtypes.BankKeeper, ac
 
 func fundBalances(ctx sdk.Context, r *rand.Rand, bk farmingtypes.BankKeeper, acc sdk.AccAddress) (mintCoins sdk.Coins, err error) {
 	for _, denom := range []string{
-		"stake",
 		"testa",
 		"testb",
 		"testc",

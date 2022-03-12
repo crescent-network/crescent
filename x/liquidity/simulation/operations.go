@@ -31,6 +31,16 @@ const (
 	OpWeightMsgCancelAllOrders = "op_weight_msg_cancel_all_orders"
 )
 
+var (
+	Gas  = uint64(20000000)
+	Fees = sdk.Coins{
+		{
+			"stake",
+			sdk.NewInt(1000),
+		},
+	}
+)
+
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
@@ -158,7 +168,7 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -219,7 +229,7 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -285,7 +295,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -336,7 +346,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -419,7 +429,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -493,7 +503,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -548,7 +558,7 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -613,7 +623,7 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k k
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
