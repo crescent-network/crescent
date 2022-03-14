@@ -9,6 +9,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/cosmosquad-labs/squad/app/params"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
@@ -67,7 +68,7 @@ func SimulateAddWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.Kee
 			val, _ := keeper.RandomValidator(r, sk, ctx)
 			if _, ok := wm[val.OperatorAddress]; !ok {
 				params.WhitelistedValidators = append(params.WhitelistedValidators,
-					&types.WhitelistedValidator{
+					types.WhitelistedValidator{
 						ValidatorAddress: val.OperatorAddress,
 						TargetWeight:     genTargetWeight(r),
 					})
@@ -109,7 +110,7 @@ func SimulateDeleteWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.
 
 		targetVal, found := keeper.RandomActiveLiquidValidator(r, ctx, k, sk)
 		if found {
-			remove := func(slice types.WhitelistedValidators, s int) types.WhitelistedValidators {
+			remove := func(slice []types.WhitelistedValidator, s int) []types.WhitelistedValidator {
 				return append(slice[:s], slice[s+1:]...)
 			}
 

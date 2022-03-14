@@ -41,7 +41,7 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &genState)
 
 	require.Equal(t, types.DefaultLiquidBondDenom, genState.Params.LiquidBondDenom)
-	require.EqualValues(t, types.WhitelistedValidators{}, genState.Params.WhitelistedValidators)
+	require.Equal(t, []types.WhitelistedValidator{}, genState.Params.WhitelistedValidators)
 	require.Equal(t, sdk.MustNewDecFromStr("0.007235342144855554"), genState.Params.UnstakeFeeRate)
 	require.Equal(t, sdk.NewInt(5142676), genState.Params.MinLiquidStakingAmount)
 }

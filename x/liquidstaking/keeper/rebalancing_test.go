@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 
 	stakingAmt := sdk.NewInt(49998)
 	// add active validator
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	fmt.Println("-----------")
 
 	// update whitelist validator
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
@@ -101,7 +101,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	utils.PP(s.keeper.NetAmountState(s.ctx))
 
 	// update whitelist validator
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.completeRedelegationUnbonding()
 
 	// remove whitelist validator
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
@@ -176,7 +176,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.completeRedelegationUnbonding()
 
 	// remove whitelist validator
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 	}
@@ -289,7 +289,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
 	_, valOpers, _ := s.CreateValidators([]int64{1000000, 1000000, 1000000})
 	params := s.keeper.GetParams(s.ctx)
 
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 	}
@@ -322,7 +322,7 @@ func (s *KeeperTestSuite) TestRemoveAllLiquidValidator() {
 	_, valOpers, _ := s.CreateValidators([]int64{1000000, 1000000, 1000000})
 	params := s.keeper.GetParams(s.ctx)
 
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 	}
@@ -342,7 +342,7 @@ func (s *KeeperTestSuite) TestRemoveAllLiquidValidator() {
 	s.Require().EqualValues(nasBefore.ProxyAccBalance, sdk.ZeroInt())
 
 	// remove all whitelist
-	params.WhitelistedValidators = types.WhitelistedValidators{}
+	params.WhitelistedValidators = []types.WhitelistedValidator{}
 	s.keeper.SetParams(s.ctx, params)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 

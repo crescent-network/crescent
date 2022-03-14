@@ -49,7 +49,7 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default liquidstaking module parameters.
 func DefaultParams() Params {
 	return Params{
-		WhitelistedValidators:  WhitelistedValidators{},
+		WhitelistedValidators:  []WhitelistedValidator{},
 		LiquidBondDenom:        DefaultLiquidBondDenom,
 		UnstakeFeeRate:         DefaultUnstakeFeeRate,
 		MinLiquidStakingAmount: DefaultMinLiquidStakingAmount,
@@ -69,12 +69,6 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 // String returns a human-readable string representation of the parameters.
 func (p Params) String() string {
 	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
-// String implements stringer insterface
-func (wv WhitelistedValidator) String() string {
-	out, _ := yaml.Marshal(wv)
 	return string(out)
 }
 
@@ -118,7 +112,7 @@ func ValidateLiquidBondDenom(i interface{}) error {
 
 // ValidateWhitelistedValidators validates liquidstaking validator and total weight.
 func ValidateWhitelistedValidators(i interface{}) error {
-	wvs, ok := i.([]*WhitelistedValidator)
+	wvs, ok := i.([]WhitelistedValidator)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

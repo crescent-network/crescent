@@ -29,14 +29,14 @@ var (
 
 func TestDivideByWeight(t *testing.T) {
 	testCases := []struct {
-		whitelistedVals  types.WhitelistedValidators
+		whitelistedVals  []types.WhitelistedValidator
 		addStakingAmt    sdk.Int
 		currentDelShares []sdk.Int
 		expectedOutputs  []sdk.Int
 		expectedCrumb    sdk.Int
 	}{
 		{
-			whitelistedVals: types.WhitelistedValidators{
+			whitelistedVals: []types.WhitelistedValidator{
 				{
 					ValidatorAddress: liquidValidators[0].OperatorAddress,
 					TargetWeight:     sdk.NewInt(1),
@@ -56,7 +56,7 @@ func TestDivideByWeight(t *testing.T) {
 			expectedCrumb:    sdk.NewInt(1),
 		},
 		{
-			whitelistedVals: types.WhitelistedValidators{
+			whitelistedVals: []types.WhitelistedValidator{
 				{
 					ValidatorAddress: liquidValidators[0].OperatorAddress,
 					TargetWeight:     sdk.NewInt(2),
@@ -76,7 +76,7 @@ func TestDivideByWeight(t *testing.T) {
 			expectedCrumb:    sdk.NewInt(0),
 		},
 		{
-			whitelistedVals: types.WhitelistedValidators{
+			whitelistedVals: []types.WhitelistedValidator{
 				{
 					ValidatorAddress: liquidValidators[0].OperatorAddress,
 					TargetWeight:     sdk.NewInt(1),
@@ -98,7 +98,7 @@ func TestDivideByWeight(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		require.IsType(t, types.WhitelistedValidators{}, tc.whitelistedVals)
+		require.IsType(t, []types.WhitelistedValidator{}, tc.whitelistedVals)
 		require.IsType(t, sdk.Int{}, tc.addStakingAmt)
 		require.IsType(t, sdk.Int{}, tc.expectedCrumb)
 		require.IsType(t, []sdk.Int{}, tc.expectedOutputs)

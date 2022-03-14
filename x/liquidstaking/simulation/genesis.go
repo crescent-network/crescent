@@ -39,8 +39,8 @@ func genTargetWeight(r *rand.Rand) sdk.Int {
 }
 
 // genWhitelistedValidator returns randomized whitelisted validators.
-func genWhitelistedValidator(r *rand.Rand) types.WhitelistedValidators {
-	return types.DefaultParams().WhitelistedValidators
+func genWhitelistedValidator(r *rand.Rand) []types.WhitelistedValidator {
+	return []types.WhitelistedValidator{}
 }
 
 // RandomizedGenState generates a random GenesisState for liquidstaking.

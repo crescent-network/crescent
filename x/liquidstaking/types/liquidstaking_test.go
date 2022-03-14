@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	whitelistedValidators = types.WhitelistedValidators{
+	whitelistedValidators = []types.WhitelistedValidator{
 		{
 			ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
 			TargetWeight:     sdk.NewInt(10),

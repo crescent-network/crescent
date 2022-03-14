@@ -120,7 +120,7 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 	s.Require().NoError(err)
 	fmt.Println(out)
 
-	whitelist := types.WhitelistedValidators{
+	whitelist := []types.WhitelistedValidator{
 		{
 			ValidatorAddress: vals[0].ValAddress.String(),
 			TargetWeight:     sdk.NewInt(10),

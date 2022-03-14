@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	_, valOpers, _ := s.CreateValidators([]int64{1000000, 1000000, 1000000})
 	params := k.GetParams(ctx)
 
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 	}

@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 
 	// v1, v2, v3, v4
 	vals, valOpers, _ := s.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
@@ -219,7 +219,7 @@ func (s *KeeperTestSuite) TestTallyLiquidStakingGov2() {
 	params := types.DefaultParams()
 
 	vals, valOpers, _ := s.CreateValidators([]int64{10000000})
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 	}
 	s.keeper.SetParams(s.ctx, params)
@@ -287,7 +287,7 @@ func (s *KeeperTestSuite) TestVotingPower() {
 	liquidStakingAmount := sdk.NewInt(50000000)
 
 	vals, valOpers, pks := s.CreateValidators([]int64{selfDelegationAmount.Int64(), selfDelegationAmount.Int64()})
-	params.WhitelistedValidators = types.WhitelistedValidators{
+	params.WhitelistedValidators = []types.WhitelistedValidator{
 		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
 		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(5)},
 	}

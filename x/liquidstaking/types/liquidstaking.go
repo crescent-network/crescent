@@ -6,7 +6,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type WhitelistedValidators []*WhitelistedValidator
 type WhitelistedValMap map[string]WhitelistedValidator
 
 func (whitelistedValMap WhitelistedValMap) IsListed(operatorAddr string) bool {
@@ -17,10 +16,10 @@ func (whitelistedValMap WhitelistedValMap) IsListed(operatorAddr string) bool {
 	}
 }
 
-func GetWhitelistedValMap(whitelistedValidators WhitelistedValidators) WhitelistedValMap {
+func GetWhitelistedValMap(whitelistedValidators []WhitelistedValidator) WhitelistedValMap {
 	whitelistedValMap := make(WhitelistedValMap)
 	for _, wv := range whitelistedValidators {
-		whitelistedValMap[wv.ValidatorAddress] = *wv
+		whitelistedValMap[wv.ValidatorAddress] = wv
 	}
 	return whitelistedValMap
 }
