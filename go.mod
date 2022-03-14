@@ -18,8 +18,8 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/budget v1.1.0
-	github.com/tendermint/tendermint v0.34.14
-	github.com/tendermint/tm-db v0.6.4
+	github.com/tendermint/tendermint v0.34.15
+	github.com/tendermint/tm-db v0.6.6
 	google.golang.org/genproto v0.0.0-20220302033224-9aa15565e42a
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
