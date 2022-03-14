@@ -90,6 +90,7 @@ func TestValidateGenesis(t *testing.T) {
 						FarmingPoolCoins: sdk.NewCoins(),
 					},
 				}
+				genState.GlobalPlanId = 1
 			},
 			"unknown plan type: PLAN_TYPE_UNSPECIFIED: invalid plan type",
 		},
@@ -119,7 +120,7 @@ func TestValidateGenesis(t *testing.T) {
 			"coin 0denom3 amount is not positive",
 		},
 		{
-			"not sorted plan ids",
+			"plan id greater than the global last plan id",
 			func(genState *types.GenesisState) {
 				planA := types.NewRatioPlan(
 					types.NewBasePlan(
@@ -138,7 +139,7 @@ func TestValidateGenesis(t *testing.T) {
 				)
 				planB := types.NewFixedAmountPlan(
 					types.NewBasePlan(
-						2,
+						3,
 						"planB",
 						types.PlanTypePublic,
 						validAcc.String(),
@@ -155,16 +156,17 @@ func TestValidateGenesis(t *testing.T) {
 				planBAny, _ := types.PackPlan(planB)
 				genState.PlanRecords = []types.PlanRecord{
 					{
-						Plan:             *planBAny,
-						FarmingPoolCoins: sdk.NewCoins(),
-					},
-					{
 						Plan:             *planAAny,
 						FarmingPoolCoins: sdk.NewCoins(),
 					},
+					{
+						Plan:             *planBAny,
+						FarmingPoolCoins: sdk.NewCoins(),
+					},
 				}
+				genState.GlobalPlanId = 2
 			},
-			"pool records must be sorted",
+			"plan id is greater than the global last plan id",
 		},
 		{
 			"invalid plan records - invalid sum of epoch ratio",
@@ -211,6 +213,7 @@ func TestValidateGenesis(t *testing.T) {
 						FarmingPoolCoins: sdk.NewCoins(),
 					},
 				}
+				genState.GlobalPlanId = 2
 			},
 			"total epoch ratio must be lower than 1: invalid total epoch ratio",
 		},

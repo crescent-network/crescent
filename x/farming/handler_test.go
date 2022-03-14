@@ -137,3 +137,32 @@ func (suite *ModuleTestSuite) TestMsgHarvest() {
 	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, types.RewardsReserveAcc).IsZero())
 	suite.Require().True(suite.Rewards(suite.addrs[0]).IsZero())
 }
+
+func (suite *ModuleTestSuite) TestMsgRemovePlan() {
+	handler := farming.NewHandler(suite.keeper)
+
+	// Create a private plan.
+	_, err := handler(suite.ctx, types.NewMsgCreateRatioPlan(
+		"plan1", suite.addrs[4], sdk.NewDecCoins(sdk.NewInt64DecCoin(denom1, 1)),
+		types.ParseTime("2022-01-01T00:00:00Z"), types.ParseTime("2023-01-01T00:00:00Z"),
+		sdk.MustNewDecFromStr("0.1")))
+	suite.Require().NoError(err)
+
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2022-01-01T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper) // The plan above is not terminated yet.
+
+	// Plan is not terminated yet.
+	_, err = handler(suite.ctx, types.NewMsgRemovePlan(suite.addrs[4], 1))
+	suite.Require().EqualError(err, "plan 1 is not terminated yet: invalid request")
+
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2023-01-01T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper) // The plan is terminated now.
+
+	// Wrong creator.
+	_, err = handler(suite.ctx, types.NewMsgRemovePlan(suite.addrs[0], 1))
+	suite.Require().EqualError(err, "only the plan creator can remove the plan: unauthorized")
+
+	// Happy case.
+	_, err = handler(suite.ctx, types.NewMsgRemovePlan(suite.addrs[4], 1))
+	suite.Require().NoError(err)
+}

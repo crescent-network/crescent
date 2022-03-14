@@ -71,6 +71,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	//}
 	suite.keeper.SetPlan(suite.ctx, plans[1])
 	suite.keeper.SetPlan(suite.ctx, plans[0])
+	suite.keeper.SetGlobalPlanId(suite.ctx, 2)
 
 	suite.Stake(suite.addrs[1], sdk.NewCoins(
 		sdk.NewInt64Coin(denom1, 1_000_000),
@@ -97,6 +98,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		suite.keeper.InitGenesis(suite.ctx, *genState)
 	})
 	suite.Require().Equal(genState, suite.keeper.ExportGenesis(suite.ctx))
+	suite.Require().Equal(1, suite.keeper.GetNumActivePrivatePlans(suite.ctx))
 }
 
 func (suite *KeeperTestSuite) TestInitGenesisPanics() {
@@ -107,6 +109,7 @@ func (suite *KeeperTestSuite) TestInitGenesisPanics() {
 	for _, plan := range suite.samplePlans {
 		suite.keeper.SetPlan(cacheCtx, plan)
 	}
+	suite.keeper.SetGlobalPlanId(cacheCtx, 4)
 
 	err := suite.keeper.Stake(cacheCtx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 	suite.Require().NoError(err)

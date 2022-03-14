@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestGRPCPlans() {
 				suite.Require().NoError(err)
 				suite.Require().Len(plans, 2)
 				for _, plan := range plans {
-					suite.Require().True(plan.GetTerminated())
+					suite.Require().True(plan.IsTerminated())
 				}
 			},
 		},
@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestGRPCPlans() {
 				suite.Require().NoError(err)
 				suite.Require().Len(plans, 2)
 				for _, plan := range plans {
-					suite.Require().False(plan.GetTerminated())
+					suite.Require().False(plan.IsTerminated())
 				}
 			},
 		},

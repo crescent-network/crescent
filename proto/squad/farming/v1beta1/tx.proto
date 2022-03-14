@@ -27,6 +27,9 @@ service Msg {
   // Harvest defines a method for claiming farming rewards
   rpc Harvest(MsgHarvest) returns (MsgHarvestResponse);
 
+  // RemovePlan defines a method for removing a terminated plan.
+  rpc RemovePlan(MsgRemovePlan) returns (MsgRemovePlanResponse);
+
   // AdvanceEpoch defines a method for advancing epoch by one, just for testing purpose
   // and shouldn't be used in real world
   rpc AdvanceEpoch(MsgAdvanceEpoch) returns (MsgAdvanceEpochResponse);
@@ -160,6 +163,18 @@ message MsgHarvest {
 
 // MsgHarvestResponse defines the Msg/MsgHarvestResponse response type.
 message MsgHarvestResponse {}
+
+// MsgRemovePlan defines a message for removing a terminated plan.
+message MsgRemovePlan {
+  option (gogoproto.goproto_getters) = false;
+
+  string creator = 1;
+
+  uint64 plan_id = 2 [(gogoproto.moretags) = "yaml:\"plan_id\""];
+}
+
+// MsgRemovePlanResponse defines the Msg/RemovePlan response type.
+message MsgRemovePlanResponse {}
 
 // MsgAdvanceEpoch defines a message to advance epoch by one.
 message MsgAdvanceEpoch {
