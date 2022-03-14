@@ -351,10 +351,10 @@ $ %s tx %s harvest --all --from mykey
 // NewRemovePlanCmd implements the remove plan handler.
 func NewRemovePlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-plan",
+		Use:   "remove-plan [plan-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Remove a terminated private plan",
-		Long: fmt.Sprintf(`Remove a terminated private plan.
+		Long: fmt.Sprintf(`Remove a terminated private plan and get the plan creation fee refunded.
 Example:
 $ %s tx %s remove-plan 1 --from mykey`,
 			version.AppName, types.ModuleName,
