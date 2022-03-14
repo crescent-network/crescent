@@ -28,7 +28,7 @@ var (
 	Fees = sdk.Coins{
 		{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1000),
+			Amount: sdk.NewInt(0),
 		},
 	}
 )
@@ -92,7 +92,7 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		} else {
 			btokenUnitAmount = types.BTokenToNativeToken(sdk.OneInt(), ns.BtokenTotalSupply, ns.NetAmount)
 		}
-		stakingAmt := int64(simtypes.RandIntBetween(r, int(btokenUnitAmount.TruncateInt64()), int(btokenUnitAmount.TruncateInt64())*1000000))
+		stakingAmt := int64(simtypes.RandIntBetween(r, int(btokenUnitAmount.TruncateInt64()), 100000000000000))
 		if stakingAmt < params.MinLiquidStakingAmount.Int64() {
 			stakingAmt = params.MinLiquidStakingAmount.Int64()
 		}
