@@ -206,6 +206,8 @@ func NewLimitOrderCmd() *cobra.Command {
 			fmt.Sprintf(`Make a limit order.
 Example:
 $ %s tx %s limit-order 1 buy 5000stake uatom 0.5 10000 --from mykey
+$ %s tx %s limit-order 1 b 5000stake uatom 0.5 10000 --from mykey
+$ %s tx %s limit-order 1 sell 10000uatom stake 2.0 10000 --order-lifespan=10m --from mykey
 $ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 --order-lifespan=10m --from mykey
 
 [pair-id]: pair id to swap with
@@ -215,6 +217,8 @@ $ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 --order-lifespan=10m --fro
 [price]: the limit order price for the swap; the exchange ratio is X/Y where X is the amount of quote coin and Y is the amount of base coin
 [amount]: the amount of base coin to buy or sell
 `,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
@@ -287,6 +291,8 @@ func NewMarketOrderCmd() *cobra.Command {
 			fmt.Sprintf(`Make a market order.
 Example:
 $ %s tx %s market-order 1 buy 5000stake uatom 10000 --from mykey
+$ %s tx %s market-order 1 b 5000stake uatom 10000 --from mykey
+$ %s tx %s market-order 1 sell 10000uatom stake 10000 --order-lifespan=10m --from mykey
 $ %s tx %s market-order 1 s 10000uatom stake 10000 --order-lifespan=10m --from mykey
 
 [pair-id]: pair id to swap with
@@ -295,6 +301,8 @@ $ %s tx %s market-order 1 s 10000uatom stake 10000 --order-lifespan=10m --from m
 [demand-coin-denom]: the denom to exchange with the offer coin
 [amount]: the amount of base coin to buy or sell
 `,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
