@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
@@ -20,7 +20,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		PoolId:         1,
 		MsgHeight:      1,
 		Depositor:      sdk.AccAddress(crypto.AddressHash([]byte("depositor"))).String(),
-		DepositCoins:   squad.ParseCoins("1000000denom1,1000000denom2"),
+		DepositCoins:   utils.ParseCoins("1000000denom1,1000000denom2"),
 		MintedPoolCoin: sdk.NewInt64Coin("pool1", 0),
 		Status:         types.RequestStatusNotExecuted,
 	}
@@ -41,11 +41,11 @@ func TestGenesisState_Validate(t *testing.T) {
 		OfferCoin:          sdk.NewInt64Coin("denom1", 1000000),
 		RemainingOfferCoin: sdk.NewInt64Coin("denom1", 500000),
 		ReceivedCoin:       sdk.NewInt64Coin("denom2", 500000),
-		Price:              squad.ParseDec("1.0"),
+		Price:              utils.ParseDec("1.0"),
 		Amount:             sdk.NewInt(1000000),
 		OpenAmount:         sdk.NewInt(500000),
 		BatchId:            1,
-		ExpireAt:           squad.ParseTime("2022-02-01T00:00:00Z"),
+		ExpireAt:           utils.ParseTime("2022-02-01T00:00:00Z"),
 		Status:             types.OrderStatusPartiallyMatched,
 	}
 
@@ -139,7 +139,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"wrong deposit coins",
 			func(genState *types.GenesisState) {
-				genState.DepositRequests[0].DepositCoins = squad.ParseCoins("1000000denom1,1000000denom3")
+				genState.DepositRequests[0].DepositCoins = utils.ParseCoins("1000000denom1,1000000denom3")
 			},
 			"deposit request at index 0 has wrong deposit coins: 1000000denom1,1000000denom3",
 		},
@@ -219,7 +219,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			func(genState *types.GenesisState) {
 				genState.Orders = []types.Order{order, order}
 			},
-			"withdraw request at index 1 has a duplicate id: 1",
+			"order at index 1 has a duplicate id: 1",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

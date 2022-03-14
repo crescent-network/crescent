@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
-	squad "github.com/cosmosquad-labs/squad/types"
+	chain "github.com/cosmosquad-labs/squad/app"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/simulation"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 func TestDecodeLiquidityStore(t *testing.T) {
-	cdc := squadapp.MakeTestEncodingConfig().Marshaler
+	cdc := chain.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	pair := types.NewPair(1, "denom1", "denom2")
@@ -46,11 +46,11 @@ func TestDecodeLiquidityStore(t *testing.T) {
 		OfferCoin:          sdk.NewInt64Coin("denom1", 1000000),
 		RemainingOfferCoin: sdk.NewInt64Coin("denom1", 500000),
 		ReceivedCoin:       sdk.NewInt64Coin("denom2", 500000),
-		Price:              squad.ParseDec("1.0"),
+		Price:              utils.ParseDec("1.0"),
 		Amount:             sdk.NewInt(1000000),
 		OpenAmount:         sdk.NewInt(500000),
 		BatchId:            1,
-		ExpireAt:           squad.ParseTime("2022-02-01T00:00:00Z"),
+		ExpireAt:           utils.ParseTime("2022-02-01T00:00:00Z"),
 		Status:             types.OrderStatusPartiallyMatched,
 	}
 

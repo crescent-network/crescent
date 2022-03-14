@@ -46,7 +46,7 @@ func (genState GenesisState) Validate() error {
 		}
 		poolMap[pool.Id] = pool
 	}
-	depositReqSet := map[uint64]struct{}{}
+	depositReqSet := map[uint64]map[uint64]struct{}{}
 	for i, req := range genState.DepositRequests {
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("invalid deposit request at index %d: %w", i, err)
@@ -63,12 +63,16 @@ func (genState GenesisState) Validate() error {
 			req.DepositCoins.AmountOf(pair.QuoteCoinDenom).IsZero() {
 			return fmt.Errorf("deposit request at index %d has wrong deposit coins: %s", i, req.DepositCoins)
 		}
-		if _, ok := depositReqSet[req.Id]; ok {
-			return fmt.Errorf("deposit request at index %d has a duplicate id: %d", i, req.Id)
+		if set, ok := depositReqSet[req.PoolId]; ok {
+			if _, ok := set[req.Id]; ok {
+				return fmt.Errorf("deposit request at index %d has a duplicate id: %d", i, req.Id)
+			}
+		} else {
+			depositReqSet[req.PoolId] = map[uint64]struct{}{}
 		}
-		depositReqSet[req.Id] = struct{}{}
+		depositReqSet[req.PoolId][req.Id] = struct{}{}
 	}
-	withdrawReqSet := map[uint64]struct{}{}
+	withdrawReqSet := map[uint64]map[uint64]struct{}{}
 	for i, req := range genState.WithdrawRequests {
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("invalid withdraw request at index %d: %w", i, err)
@@ -80,12 +84,16 @@ func (genState GenesisState) Validate() error {
 		if req.PoolCoin.Denom != pool.PoolCoinDenom {
 			return fmt.Errorf("withdraw request at index %d has wrong pool coin: %s", i, req.PoolCoin)
 		}
-		if _, ok := withdrawReqSet[req.Id]; ok {
-			return fmt.Errorf("withdraw request at index %d has a duplicate id: %d", i, req.Id)
+		if set, ok := withdrawReqSet[req.PoolId]; ok {
+			if _, ok := set[req.Id]; ok {
+				return fmt.Errorf("withdraw request at index %d has a duplicate id: %d", i, req.Id)
+			}
+		} else {
+			withdrawReqSet[req.PoolId] = map[uint64]struct{}{}
 		}
-		withdrawReqSet[req.Id] = struct{}{}
+		withdrawReqSet[req.PoolId][req.Id] = struct{}{}
 	}
-	orderMap := map[uint64]struct{}{}
+	orderSet := map[uint64]map[uint64]struct{}{}
 	for i, order := range genState.Orders {
 		if err := order.Validate(); err != nil {
 			return fmt.Errorf("invalid order at index %d: %w", i, err)
@@ -110,10 +118,14 @@ func (genState GenesisState) Validate() error {
 		if order.ReceivedCoin.Denom != demandCoinDenom {
 			return fmt.Errorf("order at index %d has wrong demand coin denom: %s != %s", i, order.OfferCoin.Denom, demandCoinDenom)
 		}
-		if _, ok := orderMap[order.Id]; ok {
-			return fmt.Errorf("withdraw request at index %d has a duplicate id: %d", i, order.Id)
+		if set, ok := orderSet[order.PairId]; ok {
+			if _, ok := set[order.Id]; ok {
+				return fmt.Errorf("order at index %d has a duplicate id: %d", i, order.Id)
+			}
+		} else {
+			orderSet[order.PairId] = map[uint64]struct{}{}
 		}
-		orderMap[order.Id] = struct{}{}
+		orderSet[order.PairId][order.Id] = struct{}{}
 	}
 	return nil
 }

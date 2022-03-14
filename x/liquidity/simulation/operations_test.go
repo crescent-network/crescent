@@ -11,8 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
-	squad "github.com/cosmosquad-labs/squad/types"
+	chain "github.com/cosmosquad-labs/squad/app"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
 	"github.com/cosmosquad-labs/squad/x/liquidity/simulation"
@@ -22,13 +22,13 @@ import (
 type SimTestSuite struct {
 	suite.Suite
 
-	app    *squadapp.SquadApp
+	app    *chain.App
 	ctx    sdk.Context
 	keeper keeper.Keeper
 }
 
 func (s *SimTestSuite) SetupTest() {
-	s.app = squadapp.Setup(false)
+	s.app = chain.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.keeper = s.app.LiquidityKeeper
 }
@@ -88,7 +88,7 @@ func (s *SimTestSuite) TestSimulateMsgDeposit() {
 	accs := s.getTestingAccounts(r, 1)
 
 	pair := s.createPair(accs[0].Address, "denom1", "stake")
-	pool := s.createPool(accs[0].Address, pair.Id, squad.ParseCoins("1000000denom1,1000000stake"))
+	pool := s.createPool(accs[0].Address, pair.Id, utils.ParseCoins("1000000denom1,1000000stake"))
 
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
@@ -113,7 +113,7 @@ func (s *SimTestSuite) TestSimulateMsgWithdraw() {
 	accs := s.getTestingAccounts(r, 1)
 
 	pair := s.createPair(accs[0].Address, "denom1", "stake")
-	pool := s.createPool(accs[0].Address, pair.Id, squad.ParseCoins("1000000denom1,1000000stake"))
+	pool := s.createPool(accs[0].Address, pair.Id, utils.ParseCoins("1000000denom1,1000000stake"))
 
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
@@ -167,7 +167,7 @@ func (s *SimTestSuite) TestSimulateMsgMarketOrder() {
 	accs := s.getTestingAccounts(r, 1)
 
 	pair := s.createPair(accs[0].Address, "denom1", "stake")
-	p := squad.ParseDec("1.0")
+	p := utils.ParseDec("1.0")
 	pair.LastPrice = &p
 	s.keeper.SetPair(s.ctx, pair)
 
@@ -198,7 +198,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelOrder() {
 	accs := s.getTestingAccounts(r, 1)
 
 	pair := s.createPair(accs[0].Address, "denom1", "stake")
-	order := s.limitOrder(accs[0].Address, pair.Id, types.OrderDirectionBuy, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
+	order := s.limitOrder(accs[0].Address, pair.Id, types.OrderDirectionBuy, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
 	// Increment the pair's current batch id to simulate next block.
 	pair.CurrentBatchId++
 	s.keeper.SetPair(s.ctx, pair)
@@ -228,9 +228,9 @@ func (s *SimTestSuite) TestSimulateMsgCancelAllOrders() {
 	pair1 := s.createPair(accs[0].Address, "denom1", "stake")
 	pair2 := s.createPair(accs[0].Address, "stake", "denom1")
 	pair3 := s.createPair(accs[0].Address, "denom2", "stake")
-	s.limitOrder(accs[0].Address, pair1.Id, types.OrderDirectionBuy, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
-	s.limitOrder(accs[0].Address, pair2.Id, types.OrderDirectionSell, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
-	s.limitOrder(accs[0].Address, pair3.Id, types.OrderDirectionSell, squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
+	s.limitOrder(accs[0].Address, pair1.Id, types.OrderDirectionBuy, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
+	s.limitOrder(accs[0].Address, pair2.Id, types.OrderDirectionSell, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
+	s.limitOrder(accs[0].Address, pair3.Id, types.OrderDirectionSell, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
 	pair1.CurrentBatchId++
 	s.keeper.SetPair(s.ctx, pair1)
 	pair2.CurrentBatchId++
@@ -269,7 +269,7 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	for _, acc := range accs {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, acc.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		s.Require().NoError(squadapp.FundAccount(s.app.BankKeeper, s.ctx, acc.GetAddress(), initCoins))
+		s.Require().NoError(chain.FundAccount(s.app.BankKeeper, s.ctx, acc.GetAddress(), initCoins))
 	}
 
 	return accs

@@ -39,3 +39,11 @@ func flagSetPairs() *flag.FlagSet {
 
 	return fs
 }
+
+func flagSetOrders() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.String(FlagPairId, "", "The pair id")
+
+	return fs
+}
