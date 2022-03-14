@@ -40,7 +40,6 @@ func genTargetWeight(r *rand.Rand) sdk.Int {
 
 // genWhitelistedValidator returns randomized whitelisted validators.
 func genWhitelistedValidator(r *rand.Rand) []types.WhitelistedValidator {
-	//ranLiquidValidators := make([]types.WhitelistedValidator, 0)
 	return []types.WhitelistedValidator{}
 }
 

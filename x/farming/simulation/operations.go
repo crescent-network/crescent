@@ -9,11 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	utils "github.com/cosmosquad-labs/squad/types"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 
 	appparams "github.com/cosmosquad-labs/squad/app/params"
 	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
 	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
-	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
 
 // Simulation operation weights constants.
@@ -24,6 +25,30 @@ const (
 	OpWeightMsgUnstake               = "op_weight_msg_unstake"
 	OpWeightMsgHarvest               = "op_weight_msg_harvest"
 	OpWeightMsgRemovePlan            = "op_weight_msg_remove_plan"
+)
+
+var (
+	Gas  = uint64(20000000)
+	Fees = sdk.Coins{
+		{
+			Denom:  "stake",
+			Amount: sdk.NewInt(1000),
+		},
+	}
+)
+
+var (
+	poolCoinDenoms = []string{
+		"pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5",
+		"pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C",
+		"poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07",
+	}
+
+	testCoinDenoms = []string{
+		"testa",
+		"testb",
+		"testc",
+	}
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights.
@@ -119,18 +144,18 @@ func SimulateMsgCreateFixedAmountPlan(ak farmingtypes.AccountKeeper, bk farmingt
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateFixedAmountPlan, "insufficient balance for plan creation fee"), nil, nil
 		}
 
+		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
+		creatorAcc := account.GetAddress()
 		// mint pool coins to simulate the real-world cases
-		poolCoins, err := mintPoolCoins(ctx, r, bk, simAccount)
+		funds, err := fundBalances(ctx, r, bk, creatorAcc, testCoinDenoms)
 		if err != nil {
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateFixedAmountPlan, "unable to mint pool coins"), nil, nil
 		}
-		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
-		creatorAcc := account.GetAddress()
 		stakingCoinWeights := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
 		startTime := ctx.BlockTime()
-		endTime := startTime.AddDate(0, 1, 0)
+		endTime := startTime.AddDate(1, 0, 0)
 		epochAmount := sdk.NewCoins(
-			sdk.NewInt64Coin(poolCoins[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))),
+			sdk.NewInt64Coin(funds[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))),
 		)
 
 		msg := farmingtypes.NewMsgCreateFixedAmountPlan(
@@ -157,7 +182,7 @@ func SimulateMsgCreateFixedAmountPlan(ak farmingtypes.AccountKeeper, bk farmingt
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -178,18 +203,17 @@ func SimulateMsgCreateRatioPlan(ak farmingtypes.AccountKeeper, bk farmingtypes.B
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateRatioPlan, "insufficient balance for plan creation fee"), nil, nil
 		}
 
+		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
+		creatorAcc := account.GetAddress()
 		// mint pool coins to simulate the real-world cases
-		_, err := mintPoolCoins(ctx, r, bk, simAccount)
+		_, err := fundBalances(ctx, r, bk, account.GetAddress(), testCoinDenoms)
 		if err != nil {
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateRatioPlan, "unable to mint pool coins"), nil, nil
 		}
-
-		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
-		creatorAcc := account.GetAddress()
 		stakingCoinWeights := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
 		startTime := ctx.BlockTime()
-		endTime := startTime.AddDate(0, 1, 0)
-		epochRatio := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10)), 1)
+		endTime := startTime.AddDate(1, 0, 0)
+		epochRatio := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10)), 3)
 
 		msg := farmingtypes.NewMsgCreateRatioPlan(
 			name,
@@ -215,7 +239,7 @@ func SimulateMsgCreateRatioPlan(ak farmingtypes.AccountKeeper, bk farmingtypes.B
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -254,7 +278,7 @@ func SimulateMsgStake(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKeeper,
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -317,7 +341,7 @@ func SimulateMsgUnstake(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKeepe
 			ModuleName:      farmingtypes.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
@@ -420,26 +444,22 @@ func SimulateMsgRemovePlan(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKe
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
 	}
 }
 
-// mintPoolCoins mints random amount of coins with the provided pool coin denoms and
+// fundBalances mints random amount of coins with the provided coin denoms and
 // send them to the simulated account.
-func mintPoolCoins(ctx sdk.Context, r *rand.Rand, bk farmingtypes.BankKeeper, acc simtypes.Account) (mintCoins sdk.Coins, err error) {
-	for _, denom := range []string{
-		"pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5",
-		"pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C",
-		"poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07",
-	} {
+func fundBalances(ctx sdk.Context, r *rand.Rand, bk farmingtypes.BankKeeper, acc sdk.AccAddress, denoms []string) (mintCoins sdk.Coins, err error) {
+	for _, denom := range denoms {
 		mintCoins = mintCoins.Add(sdk.NewInt64Coin(denom, int64(simtypes.RandIntBetween(r, 1e14, 1e15))))
 	}
 
-	if err := bk.MintCoins(ctx, liquiditytypes.ModuleName, mintCoins); err != nil {
+	if err := bk.MintCoins(ctx, minttypes.ModuleName, mintCoins); err != nil {
 		return nil, err
 	}
 
-	if err := bk.SendCoinsFromModuleToAccount(ctx, liquiditytypes.ModuleName, acc.Address, mintCoins); err != nil {
+	if err := bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, acc, mintCoins); err != nil {
 		return nil, err
 	}
 	return mintCoins, nil

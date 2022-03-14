@@ -89,10 +89,10 @@ func TestSimulateMsgCreateFixedAmountPlan(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgCreateFixedAmountPlan, msg.Type())
-	require.Equal(t, "simulation-test-GkqEG", msg.Name)
+	require.Equal(t, "simulation-test-nhwJy", msg.Name)
 	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
 	require.Equal(t, "1.000000000000000000stake", msg.StakingCoinWeights.String())
-	require.Equal(t, "126410694pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C", msg.EpochAmount.String())
+	require.Equal(t, "126410694testa", msg.EpochAmount.String())
 	require.Len(t, futureOperations, 0)
 }
 
@@ -127,10 +127,10 @@ func TestSimulateMsgCreateRatioPlan(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgCreateRatioPlan, msg.Type())
-	require.Equal(t, "simulation-test-GkqEG", msg.Name)
+	require.Equal(t, "simulation-test-nhwJy", msg.Name)
 	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
 	require.Equal(t, "1.000000000000000000stake", msg.StakingCoinWeights.String())
-	require.Equal(t, "0.700000000000000000", msg.EpochRatio.String())
+	require.Equal(t, "0.007000000000000000", msg.EpochRatio.String())
 	require.Len(t, futureOperations, 0)
 }
 

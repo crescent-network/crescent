@@ -1,11 +1,13 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 
 	"github.com/cosmosquad-labs/squad/app/params"
 	"github.com/cosmosquad-labs/squad/x/farming/keeper"
@@ -17,6 +19,7 @@ const (
 	OpWeightSimulateAddPublicPlanProposal    = "op_weight_add_public_plan_proposal"
 	OpWeightSimulateUpdatePublicPlanProposal = "op_weight_update_public_plan_proposal"
 	OpWeightSimulateDeletePublicPlanProposal = "op_weight_delete_public_plan_proposal"
+	OpWeightSimulateAdvanceEpoch             = "op_weight_advance_epoch"
 )
 
 // ProposalContents defines the module weighted proposals' contents
@@ -37,6 +40,11 @@ func ProposalContents(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keep
 			params.DefaultWeightDeletePublicPlanProposal,
 			SimulateDeletePublicPlanProposal(ak, bk, k),
 		),
+		simulation.NewWeightedProposalContent(
+			OpWeightSimulateAdvanceEpoch,
+			params.DefaultWeightAdvanceEpoch,
+			SimulateAdvanceEpoch(k, bk),
+		),
 	}
 }
 
@@ -54,7 +62,7 @@ func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, 
 			return nil
 		}
 
-		poolCoins, err := mintPoolCoins(ctx, r, bk, simAccount)
+		poolCoins, err := fundBalances(ctx, r, bk, simAccount.Address, poolCoinDenoms)
 		if err != nil {
 			return nil
 		}
@@ -85,7 +93,7 @@ func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			return nil
 		}
 
-		poolCoins, err := mintPoolCoins(ctx, r, bk, simAccount)
+		poolCoins, err := fundBalances(ctx, r, bk, simAccount.Address, poolCoinDenoms)
 		if err != nil {
 			return nil
 		}
@@ -177,6 +185,35 @@ func SimulateDeletePublicPlanProposal(ak types.AccountKeeper, bk types.BankKeepe
 			[]types.ModifyPlanRequest{},
 			deletePlanReqs,
 		)
+	}
+}
+
+// SimulateAdvanceEpoch manually advance epoch for simulation palns
+func SimulateAdvanceEpoch(k keeper.Keeper, bk types.BankKeeper) simtypes.ContentSimulatorFn {
+	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+		plans := k.GetPlans(ctx)
+		plansLen := len(plans)
+		for i := 0; i < plansLen; i++ {
+			plan := plans[rand.Intn(plansLen)]
+			if plan.GetType() == types.PlanTypePrivate {
+				mintCoins := sdk.NewCoins(sdk.NewInt64Coin("farmingreward", int64(simtypes.RandIntBetween(r, 0, 1e15))))
+				if err := bk.MintCoins(ctx, minttypes.ModuleName, mintCoins); err != nil {
+					return nil
+				}
+				if err := bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, plan.GetFarmingPoolAddress(), mintCoins); err != nil {
+					return nil
+				}
+				fmt.Println("[minted farming pool]", mintCoins, plan.String())
+				break
+			}
+
+		}
+		err := k.AdvanceEpoch(ctx)
+		if err != nil {
+			return nil
+		}
+		fmt.Println("[AdvanceEpoch]")
+		return nil
 	}
 }
 

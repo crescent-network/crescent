@@ -1,4 +1,4 @@
-<!-- order: 6 -->
+<!-- order: 7 -->
 
 # Events
 
@@ -50,7 +50,7 @@ The `liquidity` module emits the following events:
 
 | Type      | Attribute Key | Attribute Value |
 |-----------|---------------|-----------------|
-| withdraw  | withdrawer    | {creator}       |
+| withdraw  | withdrawer    | {withdrawer}    |
 | withdraw  | pool_id       | {poolId}        |
 | withdraw  | pool_coin     | {poolCoin}      |
 | withdraw  | request_id    | {reqId}         |
@@ -72,7 +72,7 @@ The `liquidity` module emits the following events:
 | limit_order | order_id          | {orderId}         |
 | limit_order | batch_id          | {batchId}         |
 | limit_order | expire_at         | {expireAt}        |
-| limit_order | refunded_coin     | {refundedCoin}    |
+| limit_order | refunded_coins    | {refundedCoins}   |
 | message     | module            | liquidity         |
 | message     | action            | limit_order       |
 | message     | sender            | {senderAddress}   |
@@ -91,7 +91,7 @@ The `liquidity` module emits the following events:
 | market_order | order_id          | {orderId}         |
 | market_order | batch_id          | {batchId}         |
 | market_order | expire_at         | {expireAt}        |
-| market_order | refunded_coins    | {refundedCoin}    |
+| market_order | refunded_coins    | {refundedCoins}   |
 | message      | module            | liquidity         |
 | message      | action            | market_order      |
 | message      | sender            | {senderAddress}   |
@@ -106,6 +106,17 @@ The `liquidity` module emits the following events:
 | message      | module        | liquidity       |
 | message      | action        | cancel_order    |
 | message      | sender        | {senderAddress} |
+
+### MsgCancelAllOrders
+
+| Type              | Attribute Key      | Attribute Value   |
+|-------------------|--------------------|-------------------|
+| cancel_all_orders | orderer            | {orderer}         |
+| cancel_all_orders | pair_ids           | {pairIds}         |
+| cancel_all_orders | canceled_order_ids | {orderIds}        |
+| message           | module             | liquidity         |
+| message           | action             | cancel_all_orders |
+| message           | sender             | {senderAddress}   |
 
 ## EndBlocker
 

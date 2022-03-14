@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -233,42 +234,53 @@ func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 
 // CancelAllOrders handles types.MsgCancelAllOrders and cancels all orders.
 func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) error {
-	cb := func(pair types.Pair, req types.Order) (stop bool, err error) {
-		if req.Orderer == msg.Orderer && req.Status != types.OrderStatusCanceled && req.BatchId < pair.CurrentBatchId {
-			if err := k.FinishOrder(ctx, req, types.OrderStatusCanceled); err != nil {
+	var canceledOrderIds []string
+	cb := func(pair types.Pair, order types.Order) (stop bool, err error) {
+		if order.Orderer == msg.Orderer && order.Status != types.OrderStatusCanceled && order.BatchId < pair.CurrentBatchId {
+			if err := k.FinishOrder(ctx, order, types.OrderStatusCanceled); err != nil {
 				return false, err
 			}
+			canceledOrderIds = append(canceledOrderIds, strconv.FormatUint(order.Id, 10))
 		}
 		return false, nil
 	}
 
+	var pairIds []string
 	if len(msg.PairIds) == 0 {
 		pairMap := map[uint64]types.Pair{}
-		if err := k.IterateAllOrders(ctx, func(req types.Order) (stop bool, err error) {
-			pair, ok := pairMap[req.PairId]
+		if err := k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
+			pair, ok := pairMap[order.PairId]
 			if !ok {
-				pair, _ = k.GetPair(ctx, req.PairId)
-				pairMap[req.PairId] = pair
+				pair, _ = k.GetPair(ctx, order.PairId)
+				pairMap[order.PairId] = pair
 			}
-			return cb(pair, req)
+			return cb(pair, order)
 		}); err != nil {
 			return err
 		}
-
-		return nil
+	} else {
+		for _, pairId := range msg.PairIds {
+			pairIds = append(pairIds, strconv.FormatUint(pairId, 10))
+			pair, found := k.GetPair(ctx, pairId)
+			if !found {
+				return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
+			}
+			if err := k.IterateOrdersByPair(ctx, pairId, func(req types.Order) (stop bool, err error) {
+				return cb(pair, req)
+			}); err != nil {
+				return err
+			}
+		}
 	}
 
-	for _, pairId := range msg.PairIds {
-		pair, found := k.GetPair(ctx, pairId)
-		if !found {
-			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
-		}
-		if err := k.IterateOrdersByPair(ctx, pairId, func(req types.Order) (stop bool, err error) {
-			return cb(pair, req)
-		}); err != nil {
-			return err
-		}
-	}
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCancelAllOrders,
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyPairIds, strings.Join(pairIds, ",")),
+			sdk.NewAttribute(types.AttributeKeyCanceledOrderIds, strings.Join(canceledOrderIds, ",")),
+		),
+	})
 
 	return nil
 }
