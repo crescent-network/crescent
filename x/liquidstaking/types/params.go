@@ -49,6 +49,7 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default liquidstaking module parameters.
 func DefaultParams() Params {
 	return Params{
+		WhitelistedValidators:  []WhitelistedValidator{},
 		LiquidBondDenom:        DefaultLiquidBondDenom,
 		UnstakeFeeRate:         DefaultUnstakeFeeRate,
 		MinLiquidStakingAmount: DefaultMinLiquidStakingAmount,

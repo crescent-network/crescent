@@ -7,7 +7,14 @@ import (
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params: DefaultParams(),
+		Params:           DefaultParams(),
+		LastPairId:       0,
+		LastPoolId:       0,
+		Pairs:            []Pair{},
+		Pools:            []Pool{},
+		DepositRequests:  []DepositRequest{},
+		WithdrawRequests: []WithdrawRequest{},
+		Orders:           []Order{},
 	}
 }
 
