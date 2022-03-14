@@ -1,23 +1,23 @@
-<!-- order: 7 -->
+<!-- order: 8 -->
 
 # Parameters
 
 The `liquidity` module contains the following parameters:
 
 | Key                     | Type                | Example                                                           |
-|-------------------------| ------------------- | ----------------------------------------------------------------- |
-| BatchSize               | uint32              | 1
-| TickPrecision           | uint32              | 3
-| FeeCollectorAddress     | string              |
-| DustCollectorAddress    | string              |
-| InitialPoolCoinSupply   | string (sdk.Int)    | "1000000000000"
-| PairCreationFee         | string (sdk.Coins)  | [{"denom":"stake","amount":"1000000"}]
-| PoolCreationFee         | string (sdk.Coins)  | [{"denom":"stake","amount":"1000000"}]
-| MinInitialDepositAmount | string (sdk.Int)    | "1000000"
-| MaxPriceLimitRatio      | string (sdk.Dec)    | "0.100000000000000000"
-| MaxOrderLifespan        | time.Duration       | 24hours
-| SwapFeeRate             | string (sdk.Dec)    | "0.000000000000000000"
-| WithdrawFeeRate         | string (sdk.Dec)    | "0.000000000000000000"
+| ----------------------- | ------------------- | ----------------------------------------------------------------- |
+| BatchSize               | uint32              | 1                                                                 |
+| TickPrecision           | uint32              | 3                                                                 |
+| FeeCollectorAddress     | string              | cosmos1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvqau9aj0 |
+| DustCollectorAddress    | string              | cosmos1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0se4s8xs |
+| InitialPoolCoinSupply   | string (sdk.Int)    | "1000000000000"                                                   |
+| PairCreationFee         | string (sdk.Coins)  | [{"denom":"stake","amount":"1000000"}]                            |
+| PoolCreationFee         | string (sdk.Coins)  | [{"denom":"stake","amount":"1000000"}]                            |
+| MinInitialDepositAmount | string (sdk.Int)    | "1000000"                                                         |
+| MaxPriceLimitRatio      | string (sdk.Dec)    | "0.100000000000000000"                                            |
+| MaxOrderLifespan        | time.Duration       | 24hours                                                           |
+| SwapFeeRate             | string (sdk.Dec)    | "0.000000000000000000"                                            |
+| WithdrawFeeRate         | string (sdk.Dec)    | "0.000000000000000000"                                            |
 
 ## BatchSize
 

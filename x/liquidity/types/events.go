@@ -9,6 +9,7 @@ const (
 	EventTypeLimitOrder       = "limit_order"
 	EventTypeMarketOrder      = "market_order"
 	EventTypeCancelOrder      = "cancel_order"
+	EventTypeCancelAllOrders  = "cancel_all_orders"
 	EventTypeDepositResult    = "deposit_result"
 	EventTypeWithdrawalResult = "withdrawal_result"
 	EventTypeOrderResult      = "order_result"
@@ -40,5 +41,7 @@ const (
 	AttributeKeyExpireAt           = "expire_at"
 	AttributeKeyRemainingOfferCoin = "remaining_offer_coin"
 	AttributeKeyReceivedCoin       = "received_coin"
+	AttributeKeyPairIds            = "pair_ids"
+	AttributeKeyCanceledOrderIds   = "canceled_order_ids"
 	AttributeKeyStatus             = "status"
 )
