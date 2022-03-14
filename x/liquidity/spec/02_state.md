@@ -10,15 +10,16 @@ Pair stores information about the coin pair in the liquidity module.
 A pair is the dyadic quotation of the relative value of a base coin unit against the unit of quote coin. 
 
 Pair type has the following structure.
+
 ```go
 type Pair struct {
-    Id                  uint64  // index of the coin pair
-    BaseCoinDenom       string  // denom of the base coin for the pair
-    QuoteCoinDenom      string  // denom of the quote coin for the pair
-    EscrowAddress       string  // address for the escrow account 
-    LastOrderId   uint64  // index of the last order for the pair
-    LastPrice           sdk.Dec // the last swap price of the pair
-    CurrentBatchId      uint64  // index of the batch for pair
+    Id             uint64  // id of the coin pair
+    BaseCoinDenom  string  // denom of the base coin for the pair
+    QuoteCoinDenom string  // denom of the quote coin for the pair
+    EscrowAddress  string  // address for the escrow account
+    LastOrderId    uint64  // id of the last order for the pair
+    LastPrice      sdk.Dec // the last swap price of the pair
+    CurrentBatchId uint64  // id of the batch for pair
 }
 ```
 
@@ -27,23 +28,28 @@ type Pair struct {
 Pool stores information about the liquidity pool. 
 
 Pool type has the following structure.
+
 ```go
 type Pool struct {
-    Id                    uint64  // index of the liquidity pool
-    PairId                uint64  // index of the coin pair constituting this pool
+    Id                    uint64  // id of the liquidity pool
+    PairId                uint64  // id of the coin pair constituting this pool
     ReserveAddress        string  // reserve account address for the liquidity pool to store reserve coins
     PoolCoinDenom         string  // denom of the pool coin
-    LastDepositRequestId  uint64  // index of the last deposit request for the pool
-    LastWithdrawRequestId uint64  // index of the last withdraw request for the pool
-    Disabled              bool    // ture if pool is disabled, false if not disabled
+    LastDepositRequestId  uint64  // id of the last deposit request for the pool
+    LastWithdrawRequestId uint64  // id of the last withdraw request for the pool
+    Disabled              bool    // true if pool is disabled, false if not disabled
 }
 ```
 
-# Request
-Deposit, withdrawal, or swap orders are accumulated for a pre-defined period, which can be one or more blocks in length. 
-Orders are then added to the pair or pool and executed at the end of the batch. The following requests are executed in batch-style.
+# Requests
+
+Deposit, withdrawal, or swap orders are accumulated for a pre-defined period,
+which can be one or more blocks in length.
+Orders are then added to the pair or pool and executed at the end of the batch.
+The following requests are executed in batch-style.
 
 ## RequestStatus
+
 ```go
 type RequestStatus int32
 
@@ -56,43 +62,48 @@ const (
 ```
 
 ## DepositRequest
+
 `DeposiRequest` defines the state of deposit message as it is processed in the next batch or batches.
 
 When a user sends `MsgDeposit` transaction to the network, it is accumulated in a batch.
-`DeposiRequest` contains the information required for deposit transaction, the result and the status of the request.
+`DeposiRequest` contains the information required for deposit transaction,
+the result and the status of the request.
 
 ```go
 type DepositRequest struct {
-    Id              uint64      // index of the deposit message in the liquidity pool
-    PoolId          uint64      // index of the pool where the deposit will occur
-    MsgHeight       int64       // block height where this message is appended to the batch
-    Depositor       string      // address that makes a deposit to the pool
-    DepositCoins    sdk.Coins   // the amount of coins to deposit
-    AcceptedCoins   sdk.Coins   // the amount of accepted coins to deposit
-    MintedPoolCoin  sdk.Coin    // the amount of minted pool coin for the amount of accepted coins
-    Status          RequestStatus
+    Id             uint64      // id of the deposit message in the liquidity pool
+    PoolId         uint64      // id of the pool where the deposit will occur
+    MsgHeight      int64       // block height where this message is appended to the batch
+    Depositor      string      // address that makes a deposit to the pool
+    DepositCoins   sdk.Coins   // the amount of coins to deposit
+    AcceptedCoins  sdk.Coins   // the amount of accepted coins to deposit
+    MintedPoolCoin sdk.Coin    // the amount of minted pool coin for the amount of accepted coins
+    Status         RequestStatus
 }
 ```
 
 ## WithdrawRequest
+
 `WithdrawRequest` defines the state of withdraw message as it is processed in the next batch or batches.
 
 When a user sends `MsgWithdraw` transaction to the network, it is accumulated in a batch.
-`WithdrawRequest` contains the information required for withdraw transaction, the result and the status of the request.
+`WithdrawRequest` contains the information required for withdraw transaction,
+the result and the status of the request.
 
 ```go
 type WithdrawRequest struct {
-    Id              uint64      // index of the withdraw message in the liquidity pool
-    PoolId          uint64      // index of the pool where the withdraw will occur
-    MsgHeight       int64       // block height where this message is appended to the batch
-    Withdrawer      string      // address that withdraws pool coin from the pool
-    PoolCoin        sdk.Coin    // the amount of pool coin to withdraw
-    WithdrawnCoins  sdk.Coin    // the amount of reserve coins for the amount of withdrawn pool coin
-    Status          RequestStatus
+    Id             uint64      // id of the withdraw message in the liquidity pool
+    PoolId         uint64      // id of the pool where the withdraw will occur
+    MsgHeight      int64       // block height where this message is appended to the batch
+    Withdrawer     string      // address that withdraws pool coin from the pool
+    PoolCoin       sdk.Coin    // the amount of pool coin to withdraw
+    WithdrawnCoins sdk.Coin    // the amount of reserve coins for the amount of withdrawn pool coin
+    Status         RequestStatus
 }
 ```
 
 ## OrderStatus
+
 ```go
 type OrderStatus int32
 
@@ -108,10 +119,14 @@ const (
 ```
 
 ## Order
-`Order` defines the state of swap message(`MsgLimitOrder`, `MsgMarketOrder`) as it is processed in the next batch or batches.
 
-When a user sends `MsgLimitOrder` or `MsgMarketOrder` transaction to the network, it is accumulated in a batch.
-`Order` contains the information required for swap transaction, the result and the status of the request.
+`Order` defines the state of swap message(`MsgLimitOrder`, `MsgMarketOrder`) as it is processed
+in the next batch or batches.
+
+When a user sends `MsgLimitOrder` or `MsgMarketOrder` transaction to the network,
+it is accumulated in a batch.
+`Order` contains the information required for swap transaction,
+the result and the status of the request.
 
 ```go
 type OrderDirection int32
@@ -123,20 +138,20 @@ const (
 )
 
 type Order struct {
-    Id                  uint64          // index of the swap message for the pair
-    PairId              uint64          // index of the pair where the swap order is placed
-    MsgHeight           int64           // block height where this message is appended to the batch
-    Orderer             string          // address from which swap order was requested 
-    Direction           SwapDirection
-    OfferCoin           sdk.Coin        // amount of coin provided when requesting a swap
-    RemainingOfferCoin  sdk.Coin        // remaining amount of offer coin after matching
-    ReceivedCoin        sdk.Coin        // amount of received coin after matching
-    Price               sdk.Dec         // order price of the swap message
-    Amount              sdk.Int         // order amount in base coin of the swap message 
-    OpenAmount          sdk.Int         // remaining order amount in base coin after matching
-    BatchId             uint64          // batch id of the pair when swap order is submitted
-    ExpireAt            time.Time       // swap orders are cancelled when current block time is greater than ExpireAt
-    Status              OrderStatus
+    Id                 uint64          // id of the swap message for the pair
+    PairId             uint64          // id of the pair where the swap order is placed
+    MsgHeight          int64           // block height where this message is appended to the batch
+    Orderer            string          // address from which swap order was requested
+    Direction          OrderDirection
+    OfferCoin          sdk.Coin        // amount of coin provided when requesting a swap
+    RemainingOfferCoin sdk.Coin        // remaining amount of offer coin after matching
+    ReceivedCoin       sdk.Coin        // amount of received coin after matching
+    Price              sdk.Dec         // order price of the swap message
+    Amount             sdk.Int         // order amount in base coin of the swap message
+    OpenAmount         sdk.Int         // remaining order amount in base coin after matching
+    BatchId            uint64          // batch id of the pair when swap order is submitted
+    ExpireAt           time.Time       // swap orders are cancelled when current block time is greater than ExpireAt
+    Status             OrderStatus
 }
 ```
 
@@ -149,7 +164,8 @@ type Order struct {
 
 # Store
 
-Stores are KVStores in the `multistore`. The key to find the store is the first parameter in the list.
+Stores are KVStores in the `multistore`.
+The key to find the store is the first parameter in the list.
 
 ### The key for the latest pair id
 
