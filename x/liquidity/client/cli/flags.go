@@ -52,7 +52,7 @@ func flagSetOrders() *flag.FlagSet {
 func flagSetOrder() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Duration(FlagOrderLifespan, 0, "Lifespan of an order")
+	fs.Duration(FlagOrderLifespan, 0, "Duration the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns|us|ms|s|m|h")
 
 	return fs
 }
