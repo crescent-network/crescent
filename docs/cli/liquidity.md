@@ -245,7 +245,22 @@ market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount] [or
 | | | 
 
 ```bash
+# Make a market order to swap 
+squad tx liquidity market-order 1 buy 100000usquad uatom 10000 10s \
+--chain-id localnet \
+--from alice \
+--keyring-backend=test \
+--broadcast-mode block \
+--yes \
+--output json | jq
 
+#
+# Tips
+#
+# You can query order requests by using the following command
+# You must query this right away to get the result
+# Otherwise, it is removed as it is executed.
+squad q liquidity orders 1 -o json | jq
 ```
 
 ### CancelOrder
