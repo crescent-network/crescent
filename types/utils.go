@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -145,4 +146,22 @@ func GenAndDeliverTxWithFees(txCtx simulation.OperationInput, gas uint64, fees s
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
 	}
 	return GenAndDeliverTx(txCtx, fees, gas)
+}
+
+// ShuffleSimAccounts returns randomly shuffled simulation accounts.
+func ShuffleSimAccounts(accs []simtypes.Account) []simtypes.Account {
+	accs2 := make([]simtypes.Account, len(accs))
+	copy(accs2, accs)
+	rand.Shuffle(len(accs2), func(i, j int) {
+		accs2[i], accs2[j] = accs2[j], accs2[i]
+	})
+	return accs2
+}
+
+// TestAddress returns an address for testing purpose.
+// TestAddress returns same address when addrNum is same.
+func TestAddress(addrNum int) sdk.AccAddress {
+	addr := make(sdk.AccAddress, 20)
+	binary.PutVarint(addr, int64(addrNum))
+	return addr
 }

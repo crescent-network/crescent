@@ -136,7 +136,7 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "all pairs have already been created"), nil, nil
 		}
 
-		accs = shuffleAccs(accs)
+		accs = utils.ShuffleSimAccounts(accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -182,7 +182,7 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		params := k.GetParams(ctx)
 		minDepositAmt := params.MinInitialDepositAmount
 
-		accs = shuffleAccs(accs)
+		accs = utils.ShuffleSimAccounts(accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -240,7 +240,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		accs = shuffleAccs(accs)
+		accs = utils.ShuffleSimAccounts(accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -306,7 +306,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		accs = shuffleAccs(accs)
+		accs = utils.ShuffleSimAccounts(accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -359,7 +359,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		params := k.GetParams(ctx)
 
-		accs = shuffleAccs(accs)
+		accs = utils.ShuffleSimAccounts(accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -442,7 +442,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 
 		params := k.GetParams(ctx)
 
-		accs = shuffleAccs(accs)
+		accs = utils.ShuffleSimAccounts(accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -646,12 +646,6 @@ func fundAccountsOnce(r *rand.Rand, ctx sdk.Context, bk types.BankKeeper, accs [
 			}
 		}
 	})
-}
-
-func shuffleAccs(accs []simtypes.Account) []simtypes.Account {
-	accs2 := make([]simtypes.Account, len(accs))
-	copy(accs2, accs)
-	return accs2
 }
 
 func findNonExistingPair(r *rand.Rand, bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (string, string, bool) {
