@@ -584,6 +584,7 @@ $ %s query %s orders --pair-id=1
 		},
 	}
 
+	cmd.Flags().AddFlagSet(flagSetOrders())
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
