@@ -1,36 +1,21 @@
 # Documentation
 
-How to use the farming module documentation.
+How to use the documentation
 
 * [Documentation](#documentation)
-   * [Overview](#overview)
+   * [Layout](#layout)
    * [Contributing](#contributing)
-   * [Reference](#reference)
 
-## Overview
+## Layout
 
-In farming module, we use the  *Grand Unified Theory of Documentation* (David Laing) as described by [Divio](https://documentation.divio.com/) as a basis for our documentation strategy.
+* [gRPC-gateway REST Routes](./api) - available gRPC-gateway REST Routes for all modules
+* [Command-line Interfaces](./cli) - available Command-Line Interfaces for all modules
+* [Tutorials](./tutorials) - contains any type of demo or presentation
+* [Localnet](./localnet) - contains guideline of how to build `squad` and bootstrap local network
+* [Reference](./reference) - contains reference documentation and it is inteded to be information-oriented
 
-This approach outlines four specific use cases for documentation:
+## Contribution
 
-* [Tutorials](./Tutorials/README.md)
-* [How-Tos](./How-To/README.md)
-* [Explanation](./Explanation/README.md)
-* [Reference](./Reference/README.md)
+We welcome contributions from everyone. The `main` branch contains the latest development version of the code. You can create a branch from `main` and create a pull request, or maintain your own fork and submit a cross-repository pull request. It is important to create an issue before you start fixing a bug or implementing a new feature.
 
-For further background please see [the ADR relating to the documentation structure](./Explanation/ADR/adr-002-docs-structure.md). 
-
-## Contributing
-
-* Write all documentation following [Google Documentation Best Practice](https://google.github.io/styleguide/docguide/best_practices.html)
-* Generate as much documentation as possible from the code.
-* Raise a PR for all documentation changes
-* Follow our [Code of Conduct](../CONTRIBUTING.md)
-
-## Reference
-
-- [Google Style Guide for Markdown](https://github.com/google/styleguide/blob/gh-pages/docguide/style.md)
-- [Write the Docs global community](https://www.writethedocs.org/)
-- [Write the Docs Code of Conduct](https://www.writethedocs.org/code-of-conduct/#the-principles)
-- [The good docs project](https://github.com/thegooddocsproject)
-- [Readme editor](https://readme.so/editor)
+If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop `Squad`. Thank you to all those who have contributed to Squad!
