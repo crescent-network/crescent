@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
@@ -13,13 +14,12 @@ func (k Keeper) GetLastBlockTime(ctx sdk.Context) *time.Time {
 	bz := store.Get(types.LastBlockTimeKey)
 	if bz == nil {
 		return nil
-	} else {
-		ts, err := sdk.ParseTimeBytes(bz)
-		if err != nil {
-			panic(err)
-		}
-		return &ts
 	}
+	ts, err := sdk.ParseTimeBytes(bz)
+	if err != nil {
+		panic(err)
+	}
+	return &ts
 }
 
 // SetLastBlockTime stores the last block time.

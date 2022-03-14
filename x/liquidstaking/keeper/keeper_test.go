@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,18 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
-	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
-	"github.com/cosmosquad-labs/squad/x/mint"
-	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
+	utils "github.com/cosmosquad-labs/squad/types"
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
+	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	"github.com/cosmosquad-labs/squad/x/mint"
 )
 
 var (
@@ -37,7 +38,7 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app        *simapp.SquadApp
+	app        *chain.App
 	ctx        sdk.Context
 	keeper     keeper.Keeper
 	querier    keeper.Querier
@@ -52,7 +53,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
+	s.app = chain.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.govHandler = params.NewParamChangeProposalHandler(s.app.ParamsKeeper)
 	stakingParams := stakingtypes.DefaultParams()
@@ -62,11 +63,11 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.keeper = s.app.LiquidStakingKeeper
 	s.querier = keeper.Querier{Keeper: s.keeper}
-	s.addrs = simapp.AddTestAddrs(s.app, s.ctx, 10, sdk.NewInt(1_000_000_000))
-	s.delAddrs = simapp.AddTestAddrs(s.app, s.ctx, 10, sdk.NewInt(1_000_000_000))
-	s.valAddrs = simapp.ConvertAddrsToValAddrs(s.delAddrs)
+	s.addrs = chain.AddTestAddrs(s.app, s.ctx, 10, sdk.NewInt(1_000_000_000))
+	s.delAddrs = chain.AddTestAddrs(s.app, s.ctx, 10, sdk.NewInt(1_000_000_000))
+	s.valAddrs = chain.ConvertAddrsToValAddrs(s.delAddrs)
 
-	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-03-01T00:00:00Z"))
+	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(utils.ParseTime("2022-03-01T00:00:00Z"))
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
 	s.keeper.SetParams(s.ctx, params)
@@ -83,9 +84,9 @@ func (s *KeeperTestSuite) TearDownTest() {
 func (s *KeeperTestSuite) CreateValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []cryptotypes.PubKey) {
 	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{})
 	num := len(powers)
-	addrs := simapp.AddTestAddrsIncremental(s.app, s.ctx, num, sdk.NewInt(1000000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	pks := simapp.CreateTestPubKeys(num)
+	addrs := chain.AddTestAddrsIncremental(s.app, s.ctx, num, sdk.NewInt(1000000000))
+	valAddrs := chain.ConvertAddrsToValAddrs(addrs)
+	pks := chain.CreateTestPubKeys(num)
 
 	for i, power := range powers {
 		val, err := stakingtypes.NewValidator(valAddrs[i], pks[i], stakingtypes.Description{})
@@ -260,7 +261,7 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	info, found = s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
 	s.Require().True(found)
 	s.Require().True(info.Tombstoned)
-	s.Require().True(liquidValidator.IsTombstoned(s.ctx, s.app.StakingKeeper, s.app.SlashingKeeper))
+	s.Require().True(s.keeper.IsTombstoned(s.ctx, liquidValidator))
 	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
 	liquidTokensSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	tokensSlashed := val.Tokens
@@ -271,20 +272,6 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
 	// set unbonding status, no more rewards before return Bonded
 	s.Require().Equal(val.Status, stakingtypes.Unbonding)
-	//// check slashed
-	//doubleSignFraction := s.app.SlashingKeeper.SlashFractionDoubleSign(s.ctx)
-	//liquidTokensAfterSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper)
-	//expectedSlashedLiquidTokens := liquidTokens.MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
-	//fmt.Println(liquidTokens, expectedSlashedLiquidTokens, liquidTokensAfterSlashed)
-	//
-	//// TODO: 24998 * 0.95 + 25000 == 48748, but 48778, maybe reward 30
-	//rewards, totalDelShares, totalLiquidTokens := s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
-	//fmt.Println(rewards, totalDelShares, totalLiquidTokens)
-	//slashedStakingAmt := stakingAmt.ToDec().MulTruncate(sdk.OneDec().Sub(doubleSignFraction)).TruncateInt()
-	//fmt.Println(slashedStakingAmt)
-	//fmt.Println(s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
-	//s.Require().EqualValues(slashedStakingAmt, s.keeper.GetAllLiquidValidators(s.ctx).TotalActiveLiquidTokens(s.ctx, s.app.StakingKeeper).TruncateInt())
-
 }
 
 func (s *KeeperTestSuite) createContinuousVestingAccount(from sdk.AccAddress, to sdk.AccAddress, amt sdk.Coins, startTime, endTime time.Time) vestingtypes.ContinuousVestingAccount {

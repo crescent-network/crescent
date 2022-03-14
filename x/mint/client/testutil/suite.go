@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmosquad-labs/squad/app"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmdb "github.com/tendermint/tm-db"
+
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/mint/client/cli"
 	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 )
@@ -31,7 +32,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	db := tmdb.NewMemDB()
-	cfg := app.NewConfig(db)
+	cfg := chain.NewConfig(db)
 	s.cfg = cfg
 
 	genesisState := s.cfg.GenesisState

@@ -16,7 +16,7 @@ const (
 	AttributeKeyCompletionTime        = "completion_time"
 	AttributeKeyUnbondingAmount       = "unbonding_amount"
 	AttributeKeyUnbondedAmount        = "unbonded_amount"
-	AttributeKeyLiquidValdator        = "liquid_validator"
+	AttributeKeyLiquidValidator       = "liquid_validator"
 	AttributeKeyRedelegationCount     = "redelegation_count"
 	AttributeKeyRedelegationFailCount = "redelegation_fail_count"
 

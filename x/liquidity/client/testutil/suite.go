@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,10 +14,11 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tm-db"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	squadparams "github.com/cosmosquad-labs/squad/app/params"
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
 )
@@ -34,7 +34,7 @@ type IntegrationTestSuite struct {
 
 func NewAppConstructor(encodingCfg squadparams.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
-		return squadapp.NewSquadApp(
+		return chain.NewApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
@@ -51,11 +51,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	encCfg := squadapp.MakeTestEncodingConfig()
+	encCfg := chain.MakeTestEncodingConfig()
 
 	cfg := network.DefaultConfig()
 	cfg.AppConstructor = NewAppConstructor(encCfg)
-	cfg.GenesisState = squadapp.ModuleBasics.DefaultGenesis(cfg.Codec)
+	cfg.GenesisState = chain.ModuleBasics.DefaultGenesis(cfg.Codec)
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
@@ -69,8 +69,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.createPair("node0token", s.cfg.BondDenom)
 	s.limitOrder(
-		1, types.OrderDirectionSell, squad.ParseCoin("1000000node0token"), s.cfg.BondDenom,
-		squad.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute)
+		1, types.OrderDirectionSell, utils.ParseCoin("1000000node0token"), s.cfg.BondDenom,
+		utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

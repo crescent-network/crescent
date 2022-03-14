@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -45,7 +46,7 @@ func NetAmountInvariant(k Keeper) sdk.Invariant {
 			return msg, broken
 		}
 		nas := k.NetAmountState(ctx)
-		balance := k.bankKeeper.GetBalance(ctx, types.LiquidStakingProxyAcc, k.stakingKeeper.BondDenom(ctx)).Amount
+		balance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc).Amount
 		NetAmountExceptBalance := nas.NetAmount.Sub(balance.ToDec())
 		liquidBondDenom := k.LiquidBondDenom(ctx)
 		bTokenTotalSupply := k.bankKeeper.GetSupply(ctx, liquidBondDenom)

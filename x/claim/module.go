@@ -45,14 +45,9 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterInterfaces registers the module's interface types.
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
-}
-
 // RegisterLegacyAminoCodec registers the module's types for the legacy amino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers the module's interface types
@@ -102,11 +97,12 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper          keeper.Keeper
-	bankKeeper      types.BankKeeper
-	distrKeeper     types.DistrKeeper
-	farmingKeeper   types.FarmingKeeper
-	liquidityKeeper types.LiquidityKeeper
+	keeper              keeper.Keeper
+	bankKeeper          types.BankKeeper
+	distrKeeper         types.DistrKeeper
+	govKeeper           types.GovKeeper
+	liquidityKeeper     types.LiquidityKeeper
+	liquidStakingKeeper types.LiquidStakingKeeper
 }
 
 func NewAppModule(
@@ -114,16 +110,18 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
-	farmingKeeper types.FarmingKeeper,
+	govKeeper types.GovKeeper,
 	liquidityKeeper types.LiquidityKeeper,
+	liquidStakingKeeper types.LiquidStakingKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic:  NewAppModuleBasic(cdc),
-		keeper:          keeper,
-		bankKeeper:      bankKeeper,
-		distrKeeper:     distrKeeper,
-		farmingKeeper:   farmingKeeper,
-		liquidityKeeper: liquidityKeeper,
+		AppModuleBasic:      NewAppModuleBasic(cdc),
+		keeper:              keeper,
+		bankKeeper:          bankKeeper,
+		distrKeeper:         distrKeeper,
+		govKeeper:           govKeeper,
+		liquidityKeeper:     liquidityKeeper,
+		liquidStakingKeeper: liquidStakingKeeper,
 	}
 }
 
@@ -148,6 +146,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.Querier{Keeper: am.keeper})
 }
 

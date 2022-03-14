@@ -20,8 +20,10 @@ func TestNormalizeConditionType(t *testing.T) {
 		{"deposit", "d", types.ConditionTypeDeposit},
 		{"swap", "swap", types.ConditionTypeSwap},
 		{"swap", "s", types.ConditionTypeSwap},
-		{"farming", "farming", types.ConditionTypeFarming},
-		{"farming", "f", types.ConditionTypeFarming},
+		{"liquidstake", "liquidstake", types.ConditionTypeLiquidStake},
+		{"liquidstake", "ls", types.ConditionTypeLiquidStake},
+		{"vote", "vote", types.ConditionTypeVote},
+		{"vote", "v", types.ConditionTypeVote},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

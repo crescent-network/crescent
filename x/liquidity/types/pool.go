@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -12,7 +13,11 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
-var _ amm.OrderSource = (*BasicPoolOrderSource)(nil)
+var (
+	_ amm.OrderSource = (*BasicPoolOrderSource)(nil)
+
+	poolCoinDenomRegexp = regexp.MustCompile(`^pool([1-9]\d*)$`)
+)
 
 // PoolReserveAddress returns a unique pool reserve account address for each pool.
 func PoolReserveAddress(poolId uint64) sdk.AccAddress {
@@ -41,18 +46,17 @@ func PoolCoinDenom(poolId uint64) string {
 	return fmt.Sprintf("pool%d", poolId)
 }
 
-// ParsePoolCoinDenom trims pool prefix from the pool coin denom and returns pool id.
-func ParsePoolCoinDenom(denom string) uint64 {
-	if !strings.HasPrefix(denom, "pool") {
-		return 0
+// ParsePoolCoinDenom parses a pool coin denom and returns the pool id.
+func ParsePoolCoinDenom(denom string) (poolId uint64, err error) {
+	chunks := poolCoinDenomRegexp.FindStringSubmatch(denom)
+	if len(chunks) == 0 {
+		return 0, fmt.Errorf("%s is not a pool coin denom", denom)
 	}
-
-	poolId, err := strconv.ParseUint(strings.TrimPrefix(denom, "pool"), 10, 64)
+	poolId, err = strconv.ParseUint(chunks[1], 10, 64)
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf("parse pool id: %w", err)
 	}
-
-	return poolId
+	return poolId, nil
 }
 
 func (pool Pool) GetReserveAddress() sdk.AccAddress {

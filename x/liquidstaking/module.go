@@ -21,7 +21,6 @@ import (
 	//"github.com/squad-network/squad/x/liquidstaking/client/rest"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
-
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/simulation"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
@@ -43,7 +42,9 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the liquidstaking module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
 // DefaultGenesis returns default genesis state as raw bytes for the liquidstaking
 // module.
@@ -126,7 +127,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // Route returns the message routing key for the liquidstaking module.
 func (am AppModule) Route() sdk.Route {
-	// Modification of BiquidStakings of Params proceeds to governance proposition, not to Tx.
+	// Modification of LiquidStakings of Params proceeds to governance proposition, not to Tx.
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
@@ -142,6 +143,7 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.Querier{Keeper: am.keeper})
 }
 
@@ -172,7 +174,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // EndBlock returns the end blocker for the liquidstaking module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
 

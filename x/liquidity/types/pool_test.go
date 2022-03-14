@@ -29,12 +29,38 @@ func TestPoolCoinDenom(t *testing.T) {
 	}{
 		{1, "pool1"},
 		{10, "pool10"},
+		{18446744073709551615, "pool18446744073709551615"},
 	} {
 		t.Run("", func(t *testing.T) {
 			poolCoinDenom := types.PoolCoinDenom(tc.poolId)
-			poolId := types.ParsePoolCoinDenom(poolCoinDenom)
 			require.Equal(t, tc.expected, poolCoinDenom)
-			require.Equal(t, tc.poolId, poolId)
+		})
+	}
+}
+
+func TestParsePoolCoinDenomFailure(t *testing.T) {
+	for _, tc := range []struct {
+		denom      string
+		expectsErr bool
+	}{
+		{"pool1", false},
+		{"pool10", false},
+		{"pool18446744073709551615", false},
+		{"pool18446744073709551616", true},
+		{"pool01", true},
+		{"pool-10", true},
+		{"pool+10", true},
+		{"usquad", true},
+		{"denom1", true},
+	} {
+		t.Run("", func(t *testing.T) {
+			poolId, err := types.ParsePoolCoinDenom(tc.denom)
+			if tc.expectsErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.denom, types.PoolCoinDenom(poolId))
+			}
 		})
 	}
 }

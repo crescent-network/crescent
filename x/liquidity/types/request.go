@@ -70,6 +70,12 @@ func (req DepositRequest) Validate() error {
 	return nil
 }
 
+// SetStatus sets the request's status.
+// SetStatus is to easily find locations where the status is changed.
+func (req *DepositRequest) SetStatus(status RequestStatus) {
+	req.Status = status
+}
+
 // NewWithdrawRequest returns a new WithdrawRequest.
 func NewWithdrawRequest(msg *MsgWithdraw, id uint64, msgHeight int64) WithdrawRequest {
 	return WithdrawRequest{
@@ -121,6 +127,12 @@ func (req WithdrawRequest) Validate() error {
 		return fmt.Errorf("invalid status: %s", req.Status)
 	}
 	return nil
+}
+
+// SetStatus sets the request's status.
+// SetStatus is to easily find locations where the status is changed.
+func (req *WithdrawRequest) SetStatus(status RequestStatus) {
+	req.Status = status
 }
 
 // NewOrderForLimitOrder returns a new Order from MsgLimitOrder.
@@ -224,39 +236,77 @@ func (order Order) Validate() error {
 	return nil
 }
 
+// ExpiredAt returns whether the order should be deleted at given time.
+func (order Order) ExpiredAt(t time.Time) bool {
+	return !order.ExpireAt.After(t)
+}
+
+// SetStatus sets the order's status.
+// SetStatus is to easily find locations where the status is changed.
+func (order *Order) SetStatus(status OrderStatus) {
+	order.Status = status
+}
+
 // IsValid returns true if the RequestStatus is one of:
 // RequestStatusNotExecuted, RequestStatusSucceeded, RequestStatusFailed.
 func (status RequestStatus) IsValid() bool {
-	return status == RequestStatusNotExecuted || status == RequestStatusSucceeded || status == RequestStatusFailed
+	switch status {
+	case RequestStatusNotExecuted, RequestStatusSucceeded, RequestStatusFailed:
+		return true
+	default:
+		return false
+	}
 }
 
 // ShouldBeDeleted returns true if the RequestStatus is one of:
 // RequestStatusSucceeded, RequestStatusFailed.
 func (status RequestStatus) ShouldBeDeleted() bool {
-	return status == RequestStatusSucceeded || status == RequestStatusFailed
+	switch status {
+	case RequestStatusSucceeded, RequestStatusFailed:
+		return true
+	default:
+		return false
+	}
 }
 
 // IsValid returns true if the OrderStatus is one of:
 // OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched,
 // OrderStatusCompleted, OrderStatusCanceled, OrderStatusExpired.
 func (status OrderStatus) IsValid() bool {
-	return status == OrderStatusNotExecuted || status == OrderStatusNotMatched ||
-		status == OrderStatusPartiallyMatched || status == OrderStatusCompleted ||
-		status == OrderStatusCanceled || status == OrderStatusExpired
+	switch status {
+	case OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched,
+		OrderStatusCompleted, OrderStatusCanceled, OrderStatusExpired:
+		return true
+	default:
+		return false
+	}
 }
 
 // IsMatchable returns true if the OrderStatus is one of:
 // OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched.
 func (status OrderStatus) IsMatchable() bool {
-	return status == OrderStatusNotExecuted ||
-		status == OrderStatusNotMatched ||
-		status == OrderStatusPartiallyMatched
+	switch status {
+	case OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched:
+		return true
+	default:
+		return false
+	}
+}
+
+// CanBeExpired has the same condition as IsMatchable.
+func (status OrderStatus) CanBeExpired() bool {
+	return status.IsMatchable()
 }
 
 // IsCanceledOrExpired returns true if the OrderStatus is one of:
 // OrderStatusCanceled, OrderStatusExpired.
 func (status OrderStatus) IsCanceledOrExpired() bool {
-	return status == OrderStatusCanceled || status == OrderStatusExpired
+	switch status {
+	case OrderStatusCanceled, OrderStatusExpired:
+		return true
+	default:
+		return false
+	}
 }
 
 // ShouldBeDeleted returns true if the OrderStatus is one of:

@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
 // Parameter store keys
@@ -23,7 +24,7 @@ var (
 	// DefaultUnstakeFeeRate is the default Unstake Fee Rate.
 	DefaultUnstakeFeeRate = sdk.NewDecWithPrec(1, 3) // "0.001000000000000000"
 
-	// MinLiquidStakingAmount is the default minimum liquid staking amount.
+	// DefaultMinLiquidStakingAmount is the default minimum liquid staking amount.
 	DefaultMinLiquidStakingAmount = sdk.NewInt(1000000)
 
 	// Const variables
@@ -59,8 +60,8 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyLiquidBondDenom, &p.LiquidBondDenom, ValidateLiquidBondDenom),
 		paramstypes.NewParamSetPair(KeyWhitelistedValidators, &p.WhitelistedValidators, ValidateWhitelistedValidators),
-		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, validateUnstakeFeeRate),
-		paramstypes.NewParamSetPair(KeyMinLiquidStakingAmount, &p.MinLiquidStakingAmount, validateMinLiquidStakingAmount),
+		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, ValidateUnstakeFeeRate),
+		paramstypes.NewParamSetPair(KeyMinLiquidStakingAmount, &p.MinLiquidStakingAmount, ValidateMinLiquidStakingAmount),
 	}
 }
 
@@ -82,8 +83,8 @@ func (p Params) Validate() error {
 	}{
 		{p.LiquidBondDenom, ValidateLiquidBondDenom},
 		{p.WhitelistedValidators, ValidateWhitelistedValidators},
-		{p.UnstakeFeeRate, validateUnstakeFeeRate},
-		{p.MinLiquidStakingAmount, validateMinLiquidStakingAmount},
+		{p.UnstakeFeeRate, ValidateUnstakeFeeRate},
+		{p.MinLiquidStakingAmount, ValidateMinLiquidStakingAmount},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
@@ -93,14 +94,13 @@ func (p Params) Validate() error {
 }
 
 func ValidateLiquidBondDenom(i interface{}) error {
-	// TODO: btoken denom must be immutable
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if strings.TrimSpace(v) == "" {
-		return fmt.Errorf("bond denom cannot be blank")
+		return fmt.Errorf("liquid bond denom cannot be blank")
 	}
 
 	if err := sdk.ValidateDenom(v); err != nil {
@@ -115,7 +115,7 @@ func ValidateWhitelistedValidators(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	valMap := make(map[string]bool)
+	valMap := map[string]struct{}{}
 	for _, wv := range wvs {
 		_, valErr := sdk.ValAddressFromBech32(wv.ValidatorAddress)
 		if valErr != nil {
@@ -133,12 +133,12 @@ func ValidateWhitelistedValidators(i interface{}) error {
 		if _, ok := valMap[wv.ValidatorAddress]; ok {
 			return fmt.Errorf("liquidstaking validator cannot be duplicated: %s", wv.ValidatorAddress)
 		}
-		valMap[wv.ValidatorAddress] = true
+		valMap[wv.ValidatorAddress] = struct{}{}
 	}
 	return nil
 }
 
-func validateUnstakeFeeRate(i interface{}) error {
+func ValidateUnstakeFeeRate(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -159,7 +159,7 @@ func validateUnstakeFeeRate(i interface{}) error {
 	return nil
 }
 
-func validateMinLiquidStakingAmount(i interface{}) error {
+func ValidateMinLiquidStakingAmount(i interface{}) error {
 	v, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

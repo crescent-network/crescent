@@ -4,17 +4,18 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/stretchr/testify/suite"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity"
 	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 func (s *KeeperTestSuite) TestLimitOrder() {
 	// Create a denom1/denom2 pair and set last price to 1.0
 	pair1 := s.createPair(s.addr(0), "denom1", "denom2", true)
-	lastPrice := squad.ParseDec("1.0")
+	lastPrice := utils.ParseDec("1.0")
 	pair1.LastPrice = &lastPrice
 	s.keeper.SetPair(s.ctx, pair1)
 
@@ -22,7 +23,7 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 	pair2 := s.createPair(s.addr(0), "denom2", "denom1", true)
 
 	orderer := s.addr(1)
-	s.fundAddr(orderer, squad.ParseCoins("1000000000denom1,1000000000denom2"))
+	s.fundAddr(orderer, utils.ParseCoins("1000000000denom1,1000000000denom2"))
 
 	for _, tc := range []struct {
 		name        string
@@ -32,64 +33,64 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 		{
 			"happy case",
 			types.NewMsgLimitOrder(
-				orderer, pair1.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"), "denom1",
-				squad.ParseDec("1.0"), newInt(1000000), 0),
+				orderer, pair1.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"), "denom1",
+				utils.ParseDec("1.0"), newInt(1000000), 0),
 			"",
 		},
 		{
 			"wrong offer coin and demand coin denom",
 			types.NewMsgLimitOrder(
-				orderer, pair1.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom1"), "denom2",
-				squad.ParseDec("1.0"), newInt(1000000), 0),
+				orderer, pair1.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom1"), "denom2",
+				utils.ParseDec("1.0"), newInt(1000000), 0),
 			"denom pair (denom2, denom1) != (denom1, denom2): wrong denom pair",
 		},
 		{
 			"correct offer coin and demand coin denom",
 			types.NewMsgLimitOrder(
-				orderer, pair2.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom1"), "denom2",
-				squad.ParseDec("1.0"), newInt(1000000), 0),
+				orderer, pair2.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom1"), "denom2",
+				utils.ParseDec("1.0"), newInt(1000000), 0),
 			"",
 		},
 		{
 			"price not fit in ticks",
 			types.NewMsgLimitOrder(
-				orderer, pair1.Id, types.OrderDirectionSell, squad.ParseCoin("1000000denom1"), "denom2",
-				squad.ParseDec("1.0005"), newInt(1000000), 0),
+				orderer, pair1.Id, types.OrderDirectionSell, utils.ParseCoin("1000000denom1"), "denom2",
+				utils.ParseDec("1.0005"), newInt(1000000), 0),
 			"",
 		},
 		{
 			"too long order lifespan",
 			types.NewMsgLimitOrder(
-				orderer, pair1.Id, types.OrderDirectionSell, squad.ParseCoin("1000000denom1"), "denom2",
-				squad.ParseDec("1.0"), newInt(1000000), 48*time.Hour),
+				orderer, pair1.Id, types.OrderDirectionSell, utils.ParseCoin("1000000denom1"), "denom2",
+				utils.ParseDec("1.0"), newInt(1000000), 48*time.Hour),
 			"48h0m0s is longer than 24h0m0s: order lifespan is too long",
 		},
 		{
 			"pair not found",
 			types.NewMsgLimitOrder(
-				orderer, 3, types.OrderDirectionBuy, squad.ParseCoin("1000000denom1"), "denom2",
-				squad.ParseDec("1.0"), newInt(1000000), 0),
+				orderer, 3, types.OrderDirectionBuy, utils.ParseCoin("1000000denom1"), "denom2",
+				utils.ParseDec("1.0"), newInt(1000000), 0),
 			"pair 3 not found: not found",
 		},
 		{
 			"price out of lower limit",
 			types.NewMsgLimitOrder(
-				orderer, pair1.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"), "denom1",
-				squad.ParseDec("0.8"), newInt(1000000), 0),
+				orderer, pair1.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"), "denom1",
+				utils.ParseDec("0.8"), newInt(1000000), 0),
 			"0.800000000000000000 is lower than 0.900000000000000000: price out of range limit",
 		},
 		{
 			"price out of upper limit",
 			types.NewMsgLimitOrder(
-				orderer, pair1.Id, types.OrderDirectionBuy, squad.ParseCoin("2000000denom2"), "denom1",
-				squad.ParseDec("1.2"), newInt(1000000), 0),
+				orderer, pair1.Id, types.OrderDirectionBuy, utils.ParseCoin("2000000denom2"), "denom1",
+				utils.ParseDec("1.2"), newInt(1000000), 0),
 			"1.200000000000000000 is higher than 1.100000000000000000: price out of range limit",
 		},
 		{
 			"no price limit without last price",
 			types.NewMsgLimitOrder(
-				orderer, pair2.Id, types.OrderDirectionSell, squad.ParseCoin("1000000denom2"), "denom1",
-				squad.ParseDec("100.0"), newInt(1000000), 0),
+				orderer, pair2.Id, types.OrderDirectionSell, utils.ParseCoin("1000000denom2"), "denom1",
+				utils.ParseDec("100.0"), newInt(1000000), 0),
 			"",
 		},
 	} {
@@ -115,7 +116,7 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 func (s *KeeperTestSuite) TestLimitOrderRefund() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	orderer := s.addr(1)
-	s.fundAddr(orderer, squad.ParseCoins("1000000000denom1,1000000000denom2"))
+	s.fundAddr(orderer, utils.ParseCoins("1000000000denom1,1000000000denom2"))
 
 	for _, tc := range []struct {
 		msg          *types.MsgLimitOrder
@@ -123,27 +124,27 @@ func (s *KeeperTestSuite) TestLimitOrderRefund() {
 	}{
 		{
 			types.NewMsgLimitOrder(
-				orderer, pair.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"), "denom1",
-				squad.ParseDec("1.0"), newInt(1000000), 0),
-			squad.ParseCoin("0denom2"),
+				orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"), "denom1",
+				utils.ParseDec("1.0"), newInt(1000000), 0),
+			utils.ParseCoin("0denom2"),
 		},
 		{
 			types.NewMsgLimitOrder(
-				orderer, pair.Id, types.OrderDirectionBuy, squad.ParseCoin("1000000denom2"), "denom1",
-				squad.ParseDec("1.0"), newInt(10000), 0),
-			squad.ParseCoin("990000denom2"),
+				orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"), "denom1",
+				utils.ParseDec("1.0"), newInt(10000), 0),
+			utils.ParseCoin("990000denom2"),
 		},
 		{
 			types.NewMsgLimitOrder(
-				orderer, pair.Id, types.OrderDirectionBuy, squad.ParseCoin("1000denom2"), "denom1",
-				squad.ParseDec("0.9999"), newInt(1000), 0),
-			squad.ParseCoin("0denom2"),
+				orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1000denom2"), "denom1",
+				utils.ParseDec("0.9999"), newInt(1000), 0),
+			utils.ParseCoin("0denom2"),
 		},
 		{
 			types.NewMsgLimitOrder(
-				orderer, pair.Id, types.OrderDirectionBuy, squad.ParseCoin("102denom2"), "denom1",
-				squad.ParseDec("1.001"), newInt(100), 0),
-			squad.ParseCoin("1denom2"),
+				orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("102denom2"), "denom1",
+				utils.ParseDec("1.001"), newInt(100), 0),
+			utils.ParseCoin("1denom2"),
 		},
 	} {
 		s.Run("", func() {
@@ -166,28 +167,28 @@ func (s *KeeperTestSuite) TestMarketOrder() {
 
 	// When there is no last price in the pair, only limit orders can be made.
 	// These two orders will be matched.
-	s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
 	s.nextBlock()
 
 	// Now users can make market orders.
 	// In this case, addr(3) user's order takes higher priority than addr(4) user's,
 	// because market buy orders have 10% higher price than the last price(1.0).
 	s.buyMarketOrder(s.addr(3), pair.Id, sdk.NewInt(10000), 0, true)
-	s.buyLimitOrder(s.addr(4), pair.Id, squad.ParseDec("1.08"), sdk.NewInt(10000), 0, true)
-	s.sellLimitOrder(s.addr(5), pair.Id, squad.ParseDec("1.07"), sdk.NewInt(10000), 0, true)
+	s.buyLimitOrder(s.addr(4), pair.Id, utils.ParseDec("1.08"), sdk.NewInt(10000), 0, true)
+	s.sellLimitOrder(s.addr(5), pair.Id, utils.ParseDec("1.07"), sdk.NewInt(10000), 0, true)
 	s.nextBlock()
 
 	// Check the result.
-	s.Require().True(coinEq(squad.ParseCoin("10000denom1"), s.getBalance(s.addr(3), "denom1")))
-	s.Require().True(coinsEq(squad.ParseCoins("10800denom2"), s.getBalances(s.addr(4))))
+	s.Require().True(coinEq(utils.ParseCoin("10000denom1"), s.getBalance(s.addr(3), "denom1")))
+	s.Require().True(coinsEq(utils.ParseCoins("10800denom2"), s.getBalances(s.addr(4))))
 }
 
 func (s *KeeperTestSuite) TestMarketOrderWithNoLastPrice() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	s.Require().Nil(pair.LastPrice)
-	offerCoin := squad.ParseCoin("10000denom2")
+	offerCoin := utils.ParseCoin("10000denom2")
 	s.fundAddr(s.addr(1), sdk.NewCoins(offerCoin))
 	msg := types.NewMsgMarketOrder(
 		s.addr(1), pair.Id, types.OrderDirectionBuy, offerCoin, "denom1", sdk.NewInt(10000), 0)
@@ -200,7 +201,7 @@ func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	// Execute matching
 	liquidity.EndBlocker(ctx, k)
 
@@ -216,7 +217,7 @@ func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
 	order, _ = k.GetOrder(ctx, order.PairId, order.Id)
 	s.Require().Equal(types.OrderStatusExpired, order.Status)
 
-	s.Require().True(coinsEq(squad.ParseCoins("1000000denom2"), s.getBalances(s.addr(1))))
+	s.Require().True(coinsEq(utils.ParseCoins("1000000denom2"), s.getBalances(s.addr(1))))
 }
 
 func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
@@ -224,8 +225,8 @@ func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	req1 := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), newInt(10000), time.Hour, true)
-	req2 := s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), newInt(10000), time.Hour, true)
+	req1 := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), newInt(10000), time.Hour, true)
+	req2 := s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), newInt(10000), time.Hour, true)
 	liquidity.EndBlocker(ctx, k)
 
 	req1, _ = k.GetOrder(ctx, req1.PairId, req1.Id)
@@ -233,26 +234,26 @@ func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
 	req2, _ = k.GetOrder(ctx, req2.PairId, req2.Id)
 	s.Require().Equal(types.OrderStatusCompleted, req2.Status)
 
-	s.Require().True(coinsEq(squad.ParseCoins("10000denom1"), s.getBalances(s.addr(1))))
-	s.Require().True(coinsEq(squad.ParseCoins("10000denom2"), s.getBalances(s.addr(2))))
+	s.Require().True(coinsEq(utils.ParseCoins("10000denom1"), s.getBalances(s.addr(1))))
+	s.Require().True(coinsEq(utils.ParseCoins("10000denom2"), s.getBalances(s.addr(2))))
 
 	pair, _ = k.GetPair(ctx, pair.Id)
 	s.Require().NotNil(pair.LastPrice)
-	s.Require().True(decEq(squad.ParseDec("1.0"), *pair.LastPrice))
+	s.Require().True(decEq(utils.ParseDec("1.0"), *pair.LastPrice))
 }
 
 func (s *KeeperTestSuite) TestPartialMatch() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(5000), 0, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(5000), 0, true)
 	s.nextBlock()
 
 	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.OrderStatusPartiallyMatched, order.Status)
-	s.Require().True(coinEq(squad.ParseCoin("5000denom2"), order.RemainingOfferCoin))
-	s.Require().True(coinEq(squad.ParseCoin("5000denom1"), order.ReceivedCoin))
+	s.Require().True(coinEq(utils.ParseCoin("5000denom2"), order.RemainingOfferCoin))
+	s.Require().True(coinEq(utils.ParseCoin("5000denom1"), order.ReceivedCoin))
 	s.Require().True(intEq(sdk.NewInt(5000), order.OpenAmount))
 
 	s.sellMarketOrder(s.addr(3), pair.Id, sdk.NewInt(5000), 0, true)
@@ -263,12 +264,23 @@ func (s *KeeperTestSuite) TestPartialMatch() {
 	s.Require().False(found)
 }
 
+func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	// Create a pool with very low price.
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000000000000000000000000000000000000000denom1,1000000denom2"), true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(10), 10*time.Second, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().True(found)
+	s.Require().Equal(types.OrderStatusNotMatched, order.Status)
+}
+
 func (s *KeeperTestSuite) TestCancelOrder() {
 	k, ctx := s.keeper, s.ctx
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
 
 	// Cannot cancel an order within a same batch
 	err := k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), order.PairId, order.Id))
@@ -285,7 +297,7 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 	s.Require().Equal(types.OrderStatusCanceled, order.Status)
 
 	// Coins are refunded
-	s.Require().True(coinsEq(squad.ParseCoins("10000denom2"), s.getBalances(s.addr(1))))
+	s.Require().True(coinsEq(utils.ParseCoins("10000denom2"), s.getBalances(s.addr(1))))
 
 	s.nextBlock()
 
@@ -297,7 +309,7 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 func (s *KeeperTestSuite) TestCancelAllOrders() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	order := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
 	s.cancelAllOrders(s.addr(1), nil) // CancelAllOrders doesn't cancel orders within in same batch
 	s.nextBlock()
 
@@ -314,40 +326,40 @@ func (s *KeeperTestSuite) TestCancelAllOrders() {
 
 	// The order won't be matched with this market order, since the order is
 	// already canceled.
-	s.sellLimitOrder(s.addr(3), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
 	s.nextBlock()
-	s.Require().True(coinsEq(squad.ParseCoins("10000denom2"), s.getBalances(s.addr(1))))
+	s.Require().True(coinsEq(utils.ParseCoins("10000denom2"), s.getBalances(s.addr(1))))
 
 	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
-	s.buyLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("1.5"), sdk.NewInt(10000), time.Hour, true)
-	s.sellLimitOrder(s.addr(2), pair2.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	s.buyLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.5"), sdk.NewInt(10000), time.Hour, true)
+	s.sellLimitOrder(s.addr(2), pair2.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), time.Hour, true)
 	s.nextBlock()
 	// CancelAllOrders can cancel orders in specific pairs.
 	s.cancelAllOrders(s.addr(2), []uint64{pair.Id})
 	// Coins from first two orders are refunded, but not from the last order.
-	s.Require().True(coinsEq(squad.ParseCoins("10000denom2,10000denom1"), s.getBalances(s.addr(2))))
+	s.Require().True(coinsEq(utils.ParseCoins("10000denom2,10000denom1"), s.getBalances(s.addr(2))))
 }
 
 func (s *KeeperTestSuite) TestDustCollector() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-	s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("0.9005"), newInt(1000), 0, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, squad.ParseDec("0.9005"), newInt(1000), 0, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.9005"), newInt(1000), 0, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.9005"), newInt(1000), 0, true)
 	s.nextBlock()
 
-	s.Require().True(coinsEq(squad.ParseCoins("1000denom1"), s.getBalances(s.addr(1))))
-	s.Require().True(coinsEq(squad.ParseCoins("900denom2"), s.getBalances(s.addr(2))))
+	s.Require().True(coinsEq(utils.ParseCoins("1000denom1"), s.getBalances(s.addr(1))))
+	s.Require().True(coinsEq(utils.ParseCoins("900denom2"), s.getBalances(s.addr(2))))
 
 	s.Require().True(s.getBalances(pair.GetEscrowAddress()).IsZero())
 	params := s.keeper.GetParams(s.ctx)
 	dustCollectorAddr, _ := sdk.AccAddressFromBech32(params.DustCollectorAddress)
-	s.Require().True(coinsEq(squad.ParseCoins("1denom2"), s.getBalances(dustCollectorAddr)))
+	s.Require().True(coinsEq(utils.ParseCoins("1denom2"), s.getBalances(dustCollectorAddr)))
 }
 
 func (s *KeeperTestSuite) TestFitPrice() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	lastPrice := squad.ParseDec("1")
+	lastPrice := utils.ParseDec("1")
 	pair.LastPrice = &lastPrice
 	s.keeper.SetPair(s.ctx, pair)
 
@@ -359,49 +371,49 @@ func (s *KeeperTestSuite) TestFitPrice() {
 	}{
 		{
 			"",
-			squad.ParseDec("1"),
+			utils.ParseDec("1"),
 			types.OrderDirectionBuy,
 			"",
 		},
 		{
 			"",
-			squad.ParseDec("1"),
+			utils.ParseDec("1"),
 			types.OrderDirectionSell,
 			"",
 		},
 		{
 			"",
-			squad.ParseDec("1.1"),
+			utils.ParseDec("1.1"),
 			types.OrderDirectionBuy,
 			"",
 		},
 		{
 			"",
-			squad.ParseDec("0.9"),
+			utils.ParseDec("0.9"),
 			types.OrderDirectionSell,
 			"",
 		},
 		{
 			"",
-			squad.ParseDec("1.099999999"),
+			utils.ParseDec("1.099999999"),
 			types.OrderDirectionBuy,
 			"",
 		},
 		{
 			"",
-			squad.ParseDec("0.900000001"),
+			utils.ParseDec("0.900000001"),
 			types.OrderDirectionSell,
 			"",
 		},
 		{
 			"",
-			squad.ParseDec("1.10000001"),
+			utils.ParseDec("1.10000001"),
 			types.OrderDirectionBuy,
 			"1.100000010000000000 is higher than 1.100000000000000000: price out of range limit",
 		},
 		{
 			"",
-			squad.ParseDec("0.8999999"),
+			utils.ParseDec("0.8999999"),
 			types.OrderDirectionSell,
 			"0.899999900000000000 is lower than 0.900000000000000000: price out of range limit",
 		},
@@ -440,8 +452,8 @@ func (s *KeeperTestSuite) TestGetOrdersByOrderer() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
 
-	order1 := s.buyLimitOrder(s.addr(1), pair.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
-	order2 := s.sellLimitOrder(s.addr(1), pair2.Id, squad.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	order1 := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
+	order2 := s.sellLimitOrder(s.addr(1), pair2.Id, utils.ParseDec("1.0"), sdk.NewInt(10000), 0, true)
 
 	orders := s.keeper.GetOrdersByOrderer(s.ctx, s.addr(1))
 	s.Require().Len(orders, 2)

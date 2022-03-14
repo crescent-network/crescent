@@ -15,5 +15,4 @@ const (
 
 	// Query endpoints supported by the mint querier
 	QueryParameters = "parameters"
-	//QueryInflationSchedules        = "inflation"
 )

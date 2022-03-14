@@ -6,5 +6,6 @@ order: 0
 
 ## The Constant Inflation Minting Mechanism
 
-removes existing dynamic inflation rate algorithm in Cosmos-SDK and uses “constant inflation”.
+The constant inflation is minted in proportion to the block time length according to the amount and the inflation schedules defined in params, not the existing existing dynamic inflation rate algorithm in original Cosmos-SDK.
+Actual minted amount could be less than the defined `InflationSchedule.Amount` depending on the number of times blocks having the block time length over `BlockTimeThreshold` occurs and decimal loss.
 

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
 
@@ -102,9 +102,9 @@ func (suite *KeeperTestSuite) TestSimulation() {
 		suite.keeper.SetPlan(suite.ctx, plan)
 	}
 
-	addrs := simapp.AddTestAddrs(suite.app, suite.ctx, 2, sdk.ZeroInt())
+	addrs := chain.AddTestAddrs(suite.app, suite.ctx, 2, sdk.ZeroInt())
 	for _, addr := range addrs {
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.NewCoins(
+		err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.NewCoins(
 			sdk.NewInt64Coin(denom1, 1_000_000_000_000),
 			sdk.NewInt64Coin(denom2, 1_000_000_000_000)))
 		suite.Require().NoError(err)

@@ -194,7 +194,10 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	poolId := types.ParsePoolCoinDenom(req.PoolCoinDenom)
+	poolId, err := types.ParsePoolCoinDenom(req.PoolCoinDenom)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse pool coin denom: %v", err)
+	}
 	pool, found := k.GetPool(ctx, poolId)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", poolId)

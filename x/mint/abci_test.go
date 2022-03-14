@@ -4,19 +4,19 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	squadtypes "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmosquad-labs/squad/app"
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/mint"
 	"github.com/cosmosquad-labs/squad/x/mint/keeper"
+	"github.com/cosmosquad-labs/squad/x/mint/types"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 type ModuleTestSuite struct {
 	suite.Suite
 
-	app    *simapp.SquadApp
+	app    *chain.App
 	ctx    sdk.Context
 	keeper keeper.Keeper
 	addrs  []sdk.AccAddress
@@ -39,24 +39,41 @@ func TestModuleTestSuite(t *testing.T) {
 }
 
 func (suite *ModuleTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	suite.app = app
 	suite.ctx = ctx
 	suite.keeper = suite.app.MintKeeper
-	suite.addrs = simapp.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
+	suite.addrs = chain.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
 	for _, addr := range suite.addrs {
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
+		err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, addr, initialBalances)
 		suite.Require().NoError(err)
 	}
 }
 
 func (s *ModuleTestSuite) TestInitGenesis() {
+	// default gent state case
 	genState := types.DefaultGenesisState()
 	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
 	got := mint.ExportGenesis(s.ctx, s.app.MintKeeper)
 	s.Require().Equal(*genState, *got)
+
+	// not nil last block time case
+	testTime := utils.ParseTime("2023-01-01T00:00:00Z")
+	genState.LastBlockTime = &testTime
+	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
+	got = mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().Equal(*genState, *got)
+
+	// invalid last block time case
+	testTime2 := time.Unix(-62136697901, 0)
+	genState.LastBlockTime = &testTime2
+	s.Require().Panics(func() {
+		mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, genState)
+	})
+	got = mint.ExportGenesis(s.ctx, s.app.MintKeeper)
+	s.Require().NotEqual(*genState, *got)
 }
 
 func (s *ModuleTestSuite) TestImportExportGenesis() {
@@ -71,19 +88,19 @@ func (s *ModuleTestSuite) TestImportExportGenesis() {
 	genState3 := mint.ExportGenesis(ctx, k)
 	s.Require().Equal(*genState, genState2, *genState3)
 
-	ctx = ctx.WithBlockTime(squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	ctx = ctx.WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
 	mint.BeginBlocker(ctx, k)
 	genState4 := mint.ExportGenesis(ctx, k)
 	bz = s.app.AppCodec().MustMarshalJSON(genState4)
 	s.app.AppCodec().MustUnmarshalJSON(bz, &genState5)
-	s.Require().Equal(*genState5.LastBlockTime, squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	s.Require().Equal(*genState5.LastBlockTime, utils.ParseTime("2022-01-01T00:00:00Z"))
 	mint.InitGenesis(s.ctx, s.app.MintKeeper, s.app.AccountKeeper, &genState5)
 	genState6 := mint.ExportGenesis(ctx, k)
 	s.Require().Equal(*genState4, genState5, genState6)
 }
 
 func TestConstantInflation(t *testing.T) {
-	app := app.Setup(false)
+	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.InitChain(
@@ -106,8 +123,7 @@ func TestConstantInflation(t *testing.T) {
 		return mintedAmt.Amount
 	}
 
-	//ctx = ctx.WithBlockHeight(0).WithBlockTime(liquidstakingtypes.MustParseRFC3339("2021-12-31T23:59:50Z"))
-	ctx = ctx.WithBlockHeight(0).WithBlockTime(squadtypes.MustParseRFC3339("2022-01-01T00:00:00Z"))
+	ctx = ctx.WithBlockHeight(0).WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
 
 	// skip first block inflation, not set LastBlockTime
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(0))
@@ -120,11 +136,11 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
 
-	ctx = ctx.WithBlockHeight(100).WithBlockTime(squadtypes.MustParseRFC3339("2022-12-31T23:59:50Z"))
+	ctx = ctx.WithBlockHeight(100).WithBlockTime(utils.ParseTime("2023-01-01T00:00:00Z"))
 
 	// applied 10sec(params.BlockTimeThreshold) block time due to block time diff is over params.BlockTimeThreshold
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(95129375))
-	require.EqualValues(t, advanceHeight(), sdk.NewInt(47564687))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
+	require.EqualValues(t, advanceHeight(), sdk.NewInt(31709791))
 
 	// 317097919 / 5 * (365 * 24 * 60 * 60) / 200000000000000 ~= 1
 	// 317097919 ~= 200000000000000 / (365 * 24 * 60 * 60) * 5
@@ -145,7 +161,7 @@ func TestConstantInflation(t *testing.T) {
 	require.EqualValues(t, advanceHeight(), sdk.NewInt(63419583))
 
 	// no inflation
-	ctx = ctx.WithBlockHeight(300).WithBlockTime(squadtypes.MustParseRFC3339("2030-01-01T01:00:00Z"))
+	ctx = ctx.WithBlockHeight(300).WithBlockTime(utils.ParseTime("2030-01-01T01:00:00Z"))
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())
 	require.True(t, advanceHeight().IsZero())

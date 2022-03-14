@@ -40,8 +40,9 @@ func (k Keeper) getNextWithdrawRequestIdWithUpdate(ctx sdk.Context, pool types.P
 func (k Keeper) GetPoolBalances(ctx sdk.Context, pool types.Pool) (rx sdk.Coin, ry sdk.Coin) {
 	reserveAddr := pool.GetReserveAddress()
 	pair, _ := k.GetPair(ctx, pool.PairId)
-	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.QuoteCoinDenom)
-	ry = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.BaseCoinDenom)
+	spendable := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
+	rx = sdk.NewCoin(pair.QuoteCoinDenom, spendable.AmountOf(pair.QuoteCoinDenom))
+	ry = sdk.NewCoin(pair.BaseCoinDenom, spendable.AmountOf(pair.BaseCoinDenom))
 	return
 }
 
@@ -49,8 +50,9 @@ func (k Keeper) GetPoolBalances(ctx sdk.Context, pool types.Pool) (rx sdk.Coin, 
 // It is used internally when caller already has types.Pair instance.
 func (k Keeper) getPoolBalances(ctx sdk.Context, pool types.Pool, pair types.Pair) (rx sdk.Coin, ry sdk.Coin) {
 	reserveAddr := pool.GetReserveAddress()
-	rx = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.QuoteCoinDenom)
-	ry = k.bankKeeper.GetBalance(ctx, reserveAddr, pair.BaseCoinDenom)
+	spendable := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
+	rx = sdk.NewCoin(pair.QuoteCoinDenom, spendable.AmountOf(pair.QuoteCoinDenom))
+	ry = sdk.NewCoin(pair.BaseCoinDenom, spendable.AmountOf(pair.BaseCoinDenom))
 	return
 }
 
@@ -285,8 +287,8 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 
 	acceptedCoins := sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, ax), sdk.NewCoin(pair.BaseCoinDenom, ay))
 	bulkOp := types.NewBulkSendCoinsOperation()
-	bulkOp.SendCoins(types.GlobalEscrowAddress, pool.GetReserveAddress(), acceptedCoins)
-	bulkOp.SendCoins(k.accountKeeper.GetModuleAddress(types.ModuleName), req.GetDepositor(), mintingCoins)
+	bulkOp.QueueSendCoins(types.GlobalEscrowAddress, pool.GetReserveAddress(), acceptedCoins)
+	bulkOp.QueueSendCoins(k.accountKeeper.GetModuleAddress(types.ModuleName), req.GetDepositor(), mintingCoins)
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
 	}
@@ -311,7 +313,7 @@ func (k Keeper) FinishDepositRequest(ctx sdk.Context, req types.DepositRequest, 
 			return err
 		}
 	}
-	req.Status = status
+	req.SetStatus(status)
 	k.SetDepositRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -366,8 +368,8 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	burningCoins := sdk.NewCoins(req.PoolCoin)
 
 	bulkOp := types.NewBulkSendCoinsOperation()
-	bulkOp.SendCoins(types.GlobalEscrowAddress, k.accountKeeper.GetModuleAddress(types.ModuleName), burningCoins)
-	bulkOp.SendCoins(pool.GetReserveAddress(), req.GetWithdrawer(), withdrawnCoins)
+	bulkOp.QueueSendCoins(types.GlobalEscrowAddress, k.accountKeeper.GetModuleAddress(types.ModuleName), burningCoins)
+	bulkOp.QueueSendCoins(pool.GetReserveAddress(), req.GetWithdrawer(), withdrawnCoins)
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
 	}
@@ -401,7 +403,7 @@ func (k Keeper) FinishWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest
 			return err
 		}
 	}
-	req.Status = status
+	req.SetStatus(status)
 	k.SetWithdrawRequest(ctx, req)
 
 	ctx.EventManager().EmitEvents(sdk.Events{

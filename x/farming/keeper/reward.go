@@ -318,7 +318,7 @@ type AllocationInfo struct {
 // balance, then allocation will not happen.
 func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 	// farmingPoolBalances is a cache for balances of each farming pool,
-	// to reduce number of BankKeeper.GetAllBalances calls.
+	// to reduce number of BankKeeper.SpendableCoins calls.
 	// It maps farmingPoolAddress to the pool's balance.
 	farmingPoolBalances := map[string]sdk.Coins{}
 
@@ -344,10 +344,10 @@ func (k Keeper) AllocationInfos(ctx sdk.Context) []AllocationInfo {
 		farmingPool := farmingPoolAcc.String()
 
 		// Lookup if we already have the farming pool's balance in the cache.
-		// If not, call BankKeeper.GetAllBalances and add the result to the cache.
+		// If not, call BankKeeper.SpendableCoins and add the result to the cache.
 		balances, ok := farmingPoolBalances[farmingPool]
 		if !ok {
-			balances = k.bankKeeper.GetAllBalances(ctx, farmingPoolAcc)
+			balances = k.bankKeeper.SpendableCoins(ctx, farmingPoolAcc)
 			farmingPoolBalances[farmingPool] = balances
 		}
 
@@ -481,7 +481,7 @@ func (k Keeper) ValidateRemainingRewardsAmount(ctx sdk.Context) error {
 		return false
 	})
 
-	rewardsReservePoolBalances := k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)
+	rewardsReservePoolBalances := k.bankKeeper.SpendableCoins(ctx, types.RewardsReserveAcc)
 	if !rewardsReservePoolBalances.IsAllGTE(remainingRewards) {
 		return types.ErrInvalidRemainingRewardsAmount
 	}
@@ -499,7 +499,7 @@ func (k Keeper) ValidateOutstandingRewardsAmount(ctx sdk.Context) error {
 		return false
 	})
 
-	rewardsReservePoolBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc)...)
+	rewardsReservePoolBalances := sdk.NewDecCoinsFromCoins(k.bankKeeper.SpendableCoins(ctx, types.RewardsReserveAcc)...)
 	_, hasNeg := rewardsReservePoolBalances.SafeSub(totalOutstandingRewards)
 	if hasNeg {
 		return types.ErrInvalidOutstandingRewardsAmount

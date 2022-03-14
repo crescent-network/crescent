@@ -44,18 +44,6 @@ func (v LiquidValidator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
-func (v LiquidValidator) IsTombstoned(ctx sdk.Context, stakingKeeper StakingKeeper, slashingKeeper SlashingKeeper) bool {
-	val, found := stakingKeeper.GetValidator(ctx, v.GetOperator())
-	if !found {
-		return false
-	}
-	consPk, err := val.ConsPubKey()
-	if err != nil {
-		return false
-	}
-	return slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(consPk.Address()))
-}
-
 func (v LiquidValidator) GetDelShares(ctx sdk.Context, sk StakingKeeper) sdk.Dec {
 	del, found := sk.GetDelegation(ctx, LiquidStakingProxyAcc, v.GetOperator())
 	if !found {
@@ -110,9 +98,8 @@ func ActiveCondition(validator stakingtypes.Validator, whitelisted bool, tombsto
 type LiquidValidators []LiquidValidator
 type ActiveLiquidValidators LiquidValidators
 
-// TODO: add test code type level
 // MinMaxGap Return the list of LiquidValidator with the maximum gap and minimum gap from the target weight of LiquidValidators, respectively.
-func (vs LiquidValidators) MinMaxGap(targetMap, liquidTokenMap map[string]sdk.Int, threshold sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int, lastRedelegation bool) {
+func (vs LiquidValidators) MinMaxGap(targetMap, liquidTokenMap map[string]sdk.Int) (minGapVal LiquidValidator, maxGapVal LiquidValidator, amountNeeded sdk.Int, lastRedelegation bool) {
 	maxGap := sdk.ZeroInt()
 	minGap := sdk.ZeroInt()
 
@@ -142,7 +129,7 @@ func (vs LiquidValidators) Len() int {
 
 func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, onlyBonded bool) (sdk.Int, map[string]sdk.Int) {
 	totalLiquidTokens := sdk.ZeroInt()
-	liquidTokenMap := make(map[string]sdk.Int)
+	liquidTokenMap := map[string]sdk.Int{}
 	for _, lv := range vs {
 		liquidTokens := lv.GetLiquidTokens(ctx, sk, onlyBonded)
 		liquidTokenMap[lv.OperatorAddress] = liquidTokens
@@ -151,10 +138,10 @@ func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, 
 	return totalLiquidTokens, liquidTokenMap
 }
 
-func (vs LiquidValidators) Map() map[string]bool {
-	valMap := make(map[string]bool)
+func (vs LiquidValidators) Map() map[string]struct{} {
+	valMap := map[string]struct{}{}
 	for _, val := range vs {
-		valMap[val.OperatorAddress] = true
+		valMap[val.OperatorAddress] = struct{}{}
 	}
 	return valMap
 }
@@ -201,13 +188,6 @@ func (nas NetAmountState) CalcMintRate() sdk.Dec {
 	}
 	return nas.BtokenTotalSupply.ToDec().QuoTruncate(nas.NetAmount)
 }
-
-// WIP: add state
-//type State struct {
-//	NetAmountState        NetAmountState
-//	LiquidValidatorStates LiquidValidatorStates
-//	// ValidatorMap  map[string]stakingtypes.Validator
-//}
 
 type LiquidValidatorStates []LiquidValidatorState
 

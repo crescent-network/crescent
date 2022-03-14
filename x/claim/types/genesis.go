@@ -45,7 +45,8 @@ func (a Airdrop) Validate() error {
 
 	for _, c := range a.Conditions {
 		switch c {
-		case ConditionTypeDeposit, ConditionTypeSwap, ConditionTypeFarming:
+		case ConditionTypeDeposit, ConditionTypeSwap,
+			ConditionTypeLiquidStake, ConditionTypeVote:
 		default:
 			return fmt.Errorf("unknown condition type %T", c)
 		}

@@ -2,7 +2,6 @@ syntax = "proto3";
 package squad.liquidstaking.v1beta1;
 
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 import "squad/liquidstaking/v1beta1/liquidstaking.proto";
 import "gogoproto/gogo.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
@@ -75,17 +74,11 @@ message QueryParamsResponse {
 }
 
 // QueryLiquidValidatorsRequest is the request type for the Query/LiquidValidators RPC method.
-message QueryLiquidValidatorsRequest {
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
+message QueryLiquidValidatorsRequest {}
 
 // QueryLiquidValidatorsResponse is the response type for the Query/LiquidValidators RPC method.
 message QueryLiquidValidatorsResponse {
   repeated LiquidValidatorState liquid_validators = 1 [(gogoproto.nullable) = false];
-
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryStatesRequest is the request type for the Query/States RPC method.

@@ -13,8 +13,10 @@ func NormalizeConditionType(ConditionType string) types.ConditionType {
 		return types.ConditionTypeDeposit
 	case "s", "swap":
 		return types.ConditionTypeSwap
-	case "f", "farming":
-		return types.ConditionTypeFarming
+	case "ls", "liquidstake":
+		return types.ConditionTypeLiquidStake
+	case "v", "vote":
+		return types.ConditionTypeVote
 	default:
 		return types.ConditionTypeUnspecified
 	}

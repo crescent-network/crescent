@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	simapp "github.com/cosmosquad-labs/squad/app"
+	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -251,8 +251,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards() {
 }
 
 func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanAllBalances() {
-	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	farmingPoolAcc := chain.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
 	suite.Require().NoError(err)
 
 	// The sum of epoch ratios is exactly 1.
@@ -269,8 +269,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanAllBalances() {
 }
 
 func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanAllBalances() {
-	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	farmingPoolAcc := chain.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
 	suite.Require().NoError(err)
 
 	// The sum of epoch ratios is exactly 1.
@@ -287,8 +287,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanAllBalances() {
 }
 
 func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanOverBalances() {
-	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	farmingPoolAcc := chain.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
 	suite.Require().NoError(err)
 
 	// The sum of epoch amounts is over the balances the farming pool has,
@@ -306,8 +306,8 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanOverBalances() 
 }
 
 func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanOverBalances() {
-	farmingPoolAcc := simapp.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+	farmingPoolAcc := chain.AddTestAddrs(suite.app, suite.ctx, 1, sdk.ZeroInt())[0]
+	err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, farmingPoolAcc, sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
 	suite.Require().NoError(err)
 
 	// The sum of epoch ratios is over 1, so the reward allocation should never happen.

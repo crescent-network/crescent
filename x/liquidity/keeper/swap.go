@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -233,42 +234,53 @@ func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 
 // CancelAllOrders handles types.MsgCancelAllOrders and cancels all orders.
 func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) error {
-	cb := func(pair types.Pair, req types.Order) (stop bool, err error) {
-		if req.Orderer == msg.Orderer && req.Status != types.OrderStatusCanceled && req.BatchId < pair.CurrentBatchId {
-			if err := k.FinishOrder(ctx, req, types.OrderStatusCanceled); err != nil {
+	var canceledOrderIds []string
+	cb := func(pair types.Pair, order types.Order) (stop bool, err error) {
+		if order.Orderer == msg.Orderer && order.Status != types.OrderStatusCanceled && order.BatchId < pair.CurrentBatchId {
+			if err := k.FinishOrder(ctx, order, types.OrderStatusCanceled); err != nil {
 				return false, err
 			}
+			canceledOrderIds = append(canceledOrderIds, strconv.FormatUint(order.Id, 10))
 		}
 		return false, nil
 	}
 
+	var pairIds []string
 	if len(msg.PairIds) == 0 {
 		pairMap := map[uint64]types.Pair{}
-		if err := k.IterateAllOrders(ctx, func(req types.Order) (stop bool, err error) {
-			pair, ok := pairMap[req.PairId]
+		if err := k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
+			pair, ok := pairMap[order.PairId]
 			if !ok {
-				pair, _ = k.GetPair(ctx, req.PairId)
-				pairMap[req.PairId] = pair
+				pair, _ = k.GetPair(ctx, order.PairId)
+				pairMap[order.PairId] = pair
 			}
-			return cb(pair, req)
+			return cb(pair, order)
 		}); err != nil {
 			return err
 		}
-
-		return nil
+	} else {
+		for _, pairId := range msg.PairIds {
+			pairIds = append(pairIds, strconv.FormatUint(pairId, 10))
+			pair, found := k.GetPair(ctx, pairId)
+			if !found {
+				return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
+			}
+			if err := k.IterateOrdersByPair(ctx, pairId, func(req types.Order) (stop bool, err error) {
+				return cb(pair, req)
+			}); err != nil {
+				return err
+			}
+		}
 	}
 
-	for _, pairId := range msg.PairIds {
-		pair, found := k.GetPair(ctx, pairId)
-		if !found {
-			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
-		}
-		if err := k.IterateOrdersByPair(ctx, pairId, func(req types.Order) (stop bool, err error) {
-			return cb(pair, req)
-		}); err != nil {
-			return err
-		}
-	}
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCancelAllOrders,
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyPairIds, strings.Join(pairIds, ",")),
+			sdk.NewAttribute(types.AttributeKeyCanceledOrderIds, strings.Join(canceledOrderIds, ",")),
+		),
+	})
 
 	return nil
 }
@@ -276,26 +288,26 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) 
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	ob := amm.NewOrderBook()
 	skip := true // Whether to skip the matching since there is no orders.
-	if err := k.IterateOrdersByPair(ctx, pair.Id, func(req types.Order) (stop bool, err error) {
-		switch req.Status {
+	if err := k.IterateOrdersByPair(ctx, pair.Id, func(order types.Order) (stop bool, err error) {
+		switch order.Status {
 		case types.OrderStatusNotExecuted,
 			types.OrderStatusNotMatched,
 			types.OrderStatusPartiallyMatched:
-			if req.Status != types.OrderStatusNotExecuted && !ctx.BlockTime().Before(req.ExpireAt) {
-				if err := k.FinishOrder(ctx, req, types.OrderStatusExpired); err != nil {
+			if order.Status != types.OrderStatusNotExecuted && order.ExpiredAt(ctx.BlockTime()) {
+				if err := k.FinishOrder(ctx, order, types.OrderStatusExpired); err != nil {
 					return false, err
 				}
 				return false, nil
 			}
-			ob.Add(types.NewUserOrder(req))
-			if req.Status == types.OrderStatusNotExecuted {
-				req.Status = types.OrderStatusNotMatched
-				k.SetOrder(ctx, req)
+			ob.Add(types.NewUserOrder(order))
+			if order.Status == types.OrderStatusNotExecuted {
+				order.SetStatus(types.OrderStatusNotMatched)
+				k.SetOrder(ctx, order)
 			}
 			skip = false
 		case types.OrderStatusCanceled:
 		default:
-			return false, fmt.Errorf("invalid order status: %s", req.Status)
+			return false, fmt.Errorf("invalid order status: %s", order.Status)
 		}
 		return false, nil
 	}); err != nil {
@@ -355,7 +367,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		}
 		if order, ok := order.(*types.PoolOrder); ok {
 			paidCoin := order.OfferCoin.Sub(order.RemainingOfferCoin)
-			bulkOp.SendCoins(order.ReserveAddress, pair.GetEscrowAddress(), sdk.NewCoins(paidCoin))
+			bulkOp.QueueSendCoins(order.ReserveAddress, pair.GetEscrowAddress(), sdk.NewCoins(paidCoin))
 		}
 	}
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
@@ -369,63 +381,63 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		switch order := order.(type) {
 		case *types.UserOrder:
 			// TODO: optimize read/write (can there be only one write?)
-			req, _ := k.GetOrder(ctx, pair.Id, order.RequestId)
-			req.OpenAmount = order.OpenAmount
-			req.RemainingOfferCoin = order.RemainingOfferCoin
-			req.ReceivedCoin = req.ReceivedCoin.AddAmount(order.ReceivedDemandCoin.Amount)
+			o, _ := k.GetOrder(ctx, pair.Id, order.OrderId)
+			o.OpenAmount = order.OpenAmount
+			o.RemainingOfferCoin = order.RemainingOfferCoin
+			o.ReceivedCoin = o.ReceivedCoin.AddAmount(order.ReceivedDemandCoin.Amount)
 			if order.OpenAmount.IsZero() {
-				if err := k.FinishOrder(ctx, req, types.OrderStatusCompleted); err != nil {
+				if err := k.FinishOrder(ctx, o, types.OrderStatusCompleted); err != nil {
 					return err
 				}
 			} else {
-				req.Status = types.OrderStatusPartiallyMatched
-				k.SetOrder(ctx, req)
+				o.SetStatus(types.OrderStatusPartiallyMatched)
+				k.SetOrder(ctx, o)
 				// TODO: emit an event?
 			}
-			bulkOp.SendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(order.ReceivedDemandCoin))
+			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(order.ReceivedDemandCoin))
 		case *types.PoolOrder:
-			bulkOp.SendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(order.ReceivedDemandCoin))
+			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(order.ReceivedDemandCoin))
 		}
 	}
 	params := k.GetParams(ctx)
 	dustCollectorAddr, _ := sdk.AccAddressFromBech32(params.DustCollectorAddress)
-	bulkOp.SendCoins(pair.GetEscrowAddress(), dustCollectorAddr, sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDust)))
+	bulkOp.QueueSendCoins(pair.GetEscrowAddress(), dustCollectorAddr, sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDust)))
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (k Keeper) FinishOrder(ctx sdk.Context, req types.Order, status types.OrderStatus) error {
-	if req.Status == types.OrderStatusCompleted || req.Status.IsCanceledOrExpired() { // sanity check
+func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, status types.OrderStatus) error {
+	if order.Status == types.OrderStatusCompleted || order.Status.IsCanceledOrExpired() { // sanity check
 		return nil
 	}
 
-	if req.RemainingOfferCoin.IsPositive() {
-		pair, _ := k.GetPair(ctx, req.PairId)
-		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), req.GetOrderer(), sdk.NewCoins(req.RemainingOfferCoin)); err != nil {
+	if order.RemainingOfferCoin.IsPositive() {
+		pair, _ := k.GetPair(ctx, order.PairId)
+		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), order.GetOrderer(), sdk.NewCoins(order.RemainingOfferCoin)); err != nil {
 			return err
 		}
 	}
 
-	req.Status = status
-	k.SetOrder(ctx, req)
+	order.SetStatus(status)
+	k.SetOrder(ctx, order)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeOrderResult,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(req.Id, 10)),
-			sdk.NewAttribute(types.AttributeKeyOrderer, req.Orderer),
-			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(req.PairId, 10)),
-			sdk.NewAttribute(types.AttributeKeyOrderDirection, req.Direction.String()),
+			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(order.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer),
+			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(order.PairId, 10)),
+			sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
 			// TODO: include these attributes?
-			//sdk.NewAttribute(types.AttributeKeyOfferCoin, req.OfferCoin.String()),
-			//sdk.NewAttribute(types.AttributeKeyAmount, req.Amount.String()),
-			//sdk.NewAttribute(types.AttributeKeyOpenAmount, req.OpenAmount.String()),
-			//sdk.NewAttribute(types.AttributeKeyPrice, req.Price.String()),
-			sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, req.RemainingOfferCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyReceivedCoin, req.ReceivedCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyStatus, req.Status.String()),
+			//sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
+			//sdk.NewAttribute(types.AttributeKeyAmount, order.Amount.String()),
+			//sdk.NewAttribute(types.AttributeKeyOpenAmount, order.OpenAmount.String()),
+			//sdk.NewAttribute(types.AttributeKeyPrice, order.Price.String()),
+			sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, order.RemainingOfferCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyReceivedCoin, order.ReceivedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyStatus, order.Status.String()),
 		),
 	})
 

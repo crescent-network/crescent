@@ -3,8 +3,8 @@ package keeper_test
 import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	squadapp "github.com/cosmosquad-labs/squad/app"
-	squad "github.com/cosmosquad-labs/squad/types"
+	chain "github.com/cosmosquad-labs/squad/app"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -27,7 +27,8 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime(),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -37,14 +38,14 @@ func (s *KeeperTestSuite) TestInitExportGenesis() {
 			{
 				AirdropId:             1,
 				Recipient:             s.addr(1).String(),
-				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
-				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
+				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
 				ClaimedConditions:     []types.ConditionType{},
 			},
 		},
 	}
 
-	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), squad.ParseCoins("100000000000denom1"))
+	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), utils.ParseCoins("100000000000denom1"))
 	s.Require().NotPanics(func() {
 		s.keeper.InitGenesis(s.ctx, sampleGenState)
 	})
@@ -65,7 +66,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime(),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 1, 0),
@@ -76,7 +78,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 				Conditions: []types.ConditionType{
 					types.ConditionTypeDeposit,
 					types.ConditionTypeSwap,
-					types.ConditionTypeFarming,
+					types.ConditionTypeLiquidStake,
+					types.ConditionTypeVote,
 				},
 				StartTime: s.ctx.BlockTime().AddDate(0, 5, 0),
 				EndTime:   s.ctx.BlockTime().AddDate(0, 10, 0),
@@ -86,42 +89,50 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 			{
 				AirdropId:             1,
 				Recipient:             s.addr(2).String(),
-				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
-				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
+				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
 				ClaimedConditions:     []types.ConditionType{},
 			},
 			{
 				AirdropId:             1,
 				Recipient:             s.addr(3).String(),
-				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
-				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{},
+				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeLiquidStake,
+				},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(3).String(),
-				InitialClaimableCoins: squad.ParseCoins("100000000000denom1"),
-				ClaimableCoins:        squad.ParseCoins("100000000000denom1"),
+				InitialClaimableCoins: utils.ParseCoins("100000000000denom1"),
+				ClaimableCoins:        utils.ParseCoins("100000000000denom1"),
 				ClaimedConditions:     []types.ConditionType{},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(4).String(),
-				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
-				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{types.ConditionTypeDeposit},
+				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+				},
 			},
 			{
 				AirdropId:             2,
 				Recipient:             s.addr(5).String(),
-				InitialClaimableCoins: squad.ParseCoins("50000000000denom1"),
-				ClaimableCoins:        squad.ParseCoins("50000000000denom1"),
-				ClaimedConditions:     []types.ConditionType{types.ConditionTypeDeposit, types.ConditionTypeSwap},
+				InitialClaimableCoins: utils.ParseCoins("50000000000denom1"),
+				ClaimableCoins:        utils.ParseCoins("50000000000denom1"),
+				ClaimedConditions: []types.ConditionType{
+					types.ConditionTypeDeposit,
+					types.ConditionTypeSwap,
+					types.ConditionTypeLiquidStake,
+				},
 			},
 		},
 	}
-	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), squad.ParseCoins("100000000000denom1"))
-	s.fundAddr(sampleGenState.Airdrops[1].GetSourceAddress(), squad.ParseCoins("200000000000denom1"))
+	s.fundAddr(sampleGenState.Airdrops[0].GetSourceAddress(), utils.ParseCoins("100000000000denom1"))
+	s.fundAddr(sampleGenState.Airdrops[1].GetSourceAddress(), utils.ParseCoins("200000000000denom1"))
 
 	// Initialize genesis state
 	s.Require().NotPanics(func() {
@@ -138,7 +149,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 
 	// Reinitialize exported genesis
 	s.Require().NotPanics(func() {
-		s.app = squadapp.Setup(false)
+		s.app = chain.Setup(false)
 		s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 		s.keeper = s.app.ClaimKeeper
 		s.keeper.InitGenesis(s.ctx, *genState)

@@ -7,12 +7,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	squad "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/cosmosquad-labs/squad/types"
 	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
 )
 
 func BenchmarkFindMatchPrice(b *testing.B) {
-	minPrice, maxPrice := squad.ParseDec("0.0000001"), squad.ParseDec("10000000")
+	minPrice, maxPrice := utils.ParseDec("0.0000001"), utils.ParseDec("10000000")
 	minAmt, maxAmt := sdk.NewInt(100), sdk.NewInt(10000000)
 	minReserveAmt, maxReserveAmt := sdk.NewInt(500), sdk.NewInt(1000000000)
 
@@ -21,13 +21,13 @@ func BenchmarkFindMatchPrice(b *testing.B) {
 			r := rand.New(rand.NewSource(seed))
 			ob := amm.NewOrderBook()
 			for i := 0; i < 10000; i++ {
-				ob.Add(newOrder(amm.Buy, squad.RandomDec(r, minPrice, maxPrice), squad.RandomInt(r, minAmt, maxAmt)))
-				ob.Add(newOrder(amm.Sell, squad.RandomDec(r, minPrice, maxPrice), squad.RandomInt(r, minAmt, maxAmt)))
+				ob.Add(newOrder(amm.Buy, utils.RandomDec(r, minPrice, maxPrice), utils.RandomInt(r, minAmt, maxAmt)))
+				ob.Add(newOrder(amm.Sell, utils.RandomDec(r, minPrice, maxPrice), utils.RandomInt(r, minAmt, maxAmt)))
 			}
 			var poolOrderSources []amm.OrderSource
 			for i := 0; i < 1000; i++ {
-				rx, ry := squad.RandomInt(r, minReserveAmt, maxReserveAmt), squad.RandomInt(r, minReserveAmt, maxReserveAmt)
-				pool := amm.NewBasicPool(rx, ry, sdk.ZeroInt())
+				rx, ry := utils.RandomInt(r, minReserveAmt, maxReserveAmt), utils.RandomInt(r, minReserveAmt, maxReserveAmt)
+				pool := amm.NewBasicPool(rx, ry, sdk.Int{})
 				poolOrderSources = append(poolOrderSources, amm.NewMockPoolOrderSource(pool, "denom1", "denom2"))
 			}
 			os := amm.MergeOrderSources(append(poolOrderSources, ob)...)
