@@ -12,6 +12,7 @@ const (
 	FlagPoolCoinDenom  = "pool-coin-denom"
 	FlagReserveAddress = "reserve-address"
 	FlagDenoms         = "denoms"
+	FlagOrderLifespan  = "order-lifespan"
 )
 
 func flagSetPools() *flag.FlagSet {
@@ -44,6 +45,14 @@ func flagSetOrders() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagPairId, "", "The pair id")
+
+	return fs
+}
+
+func flagSetOrder() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.Duration(FlagOrderLifespan, 0, "Lifespan of an order")
 
 	return fs
 }
