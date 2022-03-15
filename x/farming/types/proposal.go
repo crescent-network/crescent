@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -121,14 +120,8 @@ func (p *AddPlanRequest) IsForRatioPlan() bool {
 
 // Validate validates AddPlanRequest.
 func (p *AddPlanRequest) Validate() error {
-	if p.Name == "" {
-		return sdkerrors.Wrap(ErrInvalidPlanName, "plan name must not be empty")
-	}
-	if strings.Contains(p.Name, AccNameSplitter) {
-		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot contain %s", AccNameSplitter)
-	}
-	if len(p.Name) > MaxNameLength {
-		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot be longer than max length of %d", MaxNameLength)
+	if err := ValidatePlanName(p.Name); err != nil {
+		return sdkerrors.Wrap(ErrInvalidPlanName, err.Error())
 	}
 	if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
@@ -204,11 +197,10 @@ func (p *ModifyPlanRequest) Validate() error {
 	if p.PlanId == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid plan id: %d", p.PlanId)
 	}
-	if strings.Contains(p.Name, AccNameSplitter) {
-		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot contain %s", AccNameSplitter)
-	}
-	if len(p.Name) > MaxNameLength {
-		return sdkerrors.Wrapf(ErrInvalidPlanName, "plan name cannot be longer than max length of %d", MaxNameLength)
+	if p.Name != "" {
+		if err := ValidatePlanName(p.Name); err != nil {
+			return sdkerrors.Wrap(ErrInvalidPlanName, err.Error())
+		}
 	}
 	if p.FarmingPoolAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {

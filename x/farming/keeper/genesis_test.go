@@ -14,6 +14,27 @@ import (
 	_ "github.com/stretchr/testify/suite"
 )
 
+func (s *KeeperTestSuite) TestDefaultGenesis() {
+	genState := *types.DefaultGenesisState()
+
+	s.keeper.InitGenesis(s.ctx, genState)
+	got := s.keeper.ExportGenesis(s.ctx)
+	s.Require().Equal(genState, *got)
+}
+
+func (s *KeeperTestSuite) TestImportExportGenesisEmpty() {
+	k, ctx := s.keeper, s.ctx
+	genState := k.ExportGenesis(ctx)
+
+	var genState2 types.GenesisState
+	bz := s.app.AppCodec().MustMarshalJSON(genState)
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
+	k.InitGenesis(ctx, genState2)
+
+	genState3 := k.ExportGenesis(ctx)
+	s.Require().Equal(*genState, genState2, *genState3)
+}
+
 func (suite *KeeperTestSuite) TestInitGenesis() {
 	plans := []types.PlanI{
 		types.NewFixedAmountPlan(
@@ -50,6 +71,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	//}
 	suite.keeper.SetPlan(suite.ctx, plans[1])
 	suite.keeper.SetPlan(suite.ctx, plans[0])
+	suite.keeper.SetGlobalPlanId(suite.ctx, 2)
 
 	suite.Stake(suite.addrs[1], sdk.NewCoins(
 		sdk.NewInt64Coin(denom1, 1_000_000),
@@ -76,6 +98,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		suite.keeper.InitGenesis(suite.ctx, *genState)
 	})
 	suite.Require().Equal(genState, suite.keeper.ExportGenesis(suite.ctx))
+	suite.Require().Equal(1, suite.keeper.GetNumActivePrivatePlans(suite.ctx))
 }
 
 func (suite *KeeperTestSuite) TestInitGenesisPanics() {
@@ -86,6 +109,7 @@ func (suite *KeeperTestSuite) TestInitGenesisPanics() {
 	for _, plan := range suite.samplePlans {
 		suite.keeper.SetPlan(cacheCtx, plan)
 	}
+	suite.keeper.SetGlobalPlanId(cacheCtx, 4)
 
 	err := suite.keeper.Stake(cacheCtx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 	suite.Require().NoError(err)

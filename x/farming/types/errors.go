@@ -16,4 +16,5 @@ var (
 	ErrInvalidStakingReservedAmount    = sdkerrors.Register(ModuleName, 9, "staking reserved amount invariant broken")
 	ErrInvalidRemainingRewardsAmount   = sdkerrors.Register(ModuleName, 10, "remaining rewards amount invariant broken")
 	ErrInvalidOutstandingRewardsAmount = sdkerrors.Register(ModuleName, 11, "outstanding rewards amount invariant broken")
+	ErrNumPrivatePlansLimit            = sdkerrors.Register(ModuleName, 12, "cannot create private plans more than the limit")
 )

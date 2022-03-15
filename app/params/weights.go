@@ -7,6 +7,7 @@ const (
 	DefaultWeightMsgStake                 int = 85
 	DefaultWeightMsgUnstake               int = 30
 	DefaultWeightMsgHarvest               int = 30
+	DefaultWeightMsgRemovePlan            int = 10
 
 	DefaultWeightMsgCreatePair      int = 10
 	DefaultWeightMsgCreatePool      int = 15
@@ -20,6 +21,7 @@ const (
 	DefaultWeightAddPublicPlanProposal    int = 5
 	DefaultWeightUpdatePublicPlanProposal int = 5
 	DefaultWeightDeletePublicPlanProposal int = 5
+	DefaultWeightAdvanceEpoch             int = 10
 
 	DefaultWeightMsgLiquidStake   int = 80
 	DefaultWeightMsgLiquidUnstake int = 30

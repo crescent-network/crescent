@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
@@ -189,6 +188,10 @@ func (k Keeper) LiquidUnstaking(
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
 	for i, val := range liquidVals {
+		// skip zero weight liquid validator
+		if !unbondingAmounts[i].IsPositive() {
+			continue
+		}
 		var ubd stakingtypes.UnbondingDelegation
 		var returnAmount sdk.Int
 		var weightedShare sdk.Dec
@@ -320,7 +323,7 @@ func (k Keeper) RemoveLiquidValidator(ctx sdk.Context, val types.LiquidValidator
 // GetAllLiquidValidators get the set of all liquid validators with no limits, used during genesis dump
 func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals types.LiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
-
+	vals = types.LiquidValidators{}
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
 	defer iterator.Close()
 

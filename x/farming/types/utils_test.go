@@ -19,6 +19,57 @@ func TestParseTime(t *testing.T) {
 	require.Equal(t, normalRes, types.ParseTime(normalCase))
 }
 
+func TestDateRangeIncludes(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expectedResult bool
+		targeTime      time.Time
+		startTime      time.Time
+		endTime        time.Time
+	}{
+		{
+			"not included, before started",
+			false,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:01Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+		},
+		{
+			"not included, after ended",
+			false,
+			types.ParseTime("2021-12-03T00:00:01Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+		},
+		{
+			"included on start time",
+			true,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-03T00:00:00Z"),
+		},
+		{
+			"not included on end time",
+			false,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-01T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+		},
+		{
+			"not included on same start time and end time",
+			false,
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+			types.ParseTime("2021-12-02T00:00:00Z"),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expectedResult, types.DateRangeIncludes(tc.startTime, tc.endTime, tc.targeTime))
+		})
+	}
+}
+
 func TestDeriveAddress(t *testing.T) {
 	testCases := []struct {
 		addressType     types.AddressType

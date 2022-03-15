@@ -110,6 +110,7 @@ $ %s query %s plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C3
 			farmingPoolAddr, _ := cmd.Flags().GetString(FlagFarmingPoolAddr)
 			terminationAddr, _ := cmd.Flags().GetString(FlagTerminationAddr)
 			stakingCoinDenom, _ := cmd.Flags().GetString(FlagStakingCoinDenom)
+			terminated, _ := cmd.Flags().GetString(FlagTerminated)
 
 			var resp *types.QueryPlansResponse
 
@@ -123,6 +124,7 @@ $ %s query %s plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C3
 				FarmingPoolAddress: farmingPoolAddr,
 				TerminationAddress: terminationAddr,
 				StakingCoinDenom:   stakingCoinDenom,
+				Terminated:         terminated,
 				Pagination:         pageReq,
 			}
 			if planType != "" {

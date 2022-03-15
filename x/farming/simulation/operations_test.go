@@ -44,6 +44,7 @@ func TestWeightedOperations(t *testing.T) {
 		{params.DefaultWeightMsgStake, types.ModuleName, types.TypeMsgStake},
 		{params.DefaultWeightMsgUnstake, types.ModuleName, types.TypeMsgUnstake},
 		{params.DefaultWeightMsgHarvest, types.ModuleName, types.TypeMsgHarvest},
+		{params.DefaultWeightMsgRemovePlan, types.ModuleName, types.TypeMsgRemovePlan},
 	}
 
 	for i, w := range weightedOps {
@@ -88,10 +89,10 @@ func TestSimulateMsgCreateFixedAmountPlan(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgCreateFixedAmountPlan, msg.Type())
-	require.Equal(t, "simulation-test-GkqEG", msg.Name)
+	require.Equal(t, "simulation-test-nhwJy", msg.Name)
 	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
 	require.Equal(t, "1.000000000000000000stake", msg.StakingCoinWeights.String())
-	require.Equal(t, "126410694pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C", msg.EpochAmount.String())
+	require.Equal(t, "126410694testa", msg.EpochAmount.String())
 	require.Len(t, futureOperations, 0)
 }
 
@@ -126,10 +127,10 @@ func TestSimulateMsgCreateRatioPlan(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgCreateRatioPlan, msg.Type())
-	require.Equal(t, "simulation-test-GkqEG", msg.Name)
+	require.Equal(t, "simulation-test-nhwJy", msg.Name)
 	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
 	require.Equal(t, "1.000000000000000000stake", msg.StakingCoinWeights.String())
-	require.Equal(t, "0.700000000000000000", msg.EpochRatio.String())
+	require.Equal(t, "0.007000000000000000", msg.EpochRatio.String())
 	require.Len(t, futureOperations, 0)
 }
 
@@ -281,6 +282,69 @@ func TestSimulateMsgHarvest(t *testing.T) {
 
 	balances := app.BankKeeper.GetBalance(ctx, accounts[1].Address, "pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5")
 	require.Equal(t, sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 100300000000), balances)
+}
+
+func TestSimulateMsgRemovePlan(t *testing.T) {
+	app, ctx := createTestApp(false)
+
+	// setup a single account
+	s := rand.NewSource(1)
+	r := rand.New(s)
+
+	accounts := getTestingAccounts(t, r, app, ctx, 1)
+
+	// begin a new block
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  app.LastBlockHeight() + 1,
+			Time:    types.ParseTime("2022-01-01T00:00:00Z"),
+			AppHash: app.LastCommitID().Hash,
+		},
+	})
+
+	// Create a new terminated plan.
+	_, err := app.FarmingKeeper.CreateFixedAmountPlan(
+		ctx,
+		&types.MsgCreateFixedAmountPlan{
+			Name:    "simulation-test",
+			Creator: accounts[0].Address.String(),
+			StakingCoinWeights: sdk.NewDecCoins(
+				sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10, 1)), // 100%
+			),
+			StartTime: types.ParseTime("0001-01-01T00:00:00Z"),
+			EndTime:   types.ParseTime("0001-01-02T00:00:00Z"),
+			EpochAmount: sdk.NewCoins(
+				sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 300_000_000),
+			),
+		},
+		accounts[0].Address,
+		accounts[0].Address,
+		types.PlanTypePrivate,
+	)
+	require.NoError(t, err)
+	app.EndBlock(abci.RequestEndBlock{Height: app.LastBlockHeight()})
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  app.LastBlockHeight() + 1,
+			Time:    types.ParseTime("2022-01-01T00:00:00Z"),
+			AppHash: app.LastCommitID().Hash,
+		},
+	})
+
+	// execute operation
+	op := simulation.SimulateMsgRemovePlan(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgRemovePlan
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgRemovePlan, msg.Type())
+	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
+	require.Equal(t, uint64(1), msg.PlanId)
+	require.Len(t, futureOperations, 0)
 }
 
 func createTestApp(isCheckTx bool) (*chain.App, sdk.Context) {

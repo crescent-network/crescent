@@ -11,6 +11,7 @@ const (
 	FlagFarmingPoolAddr  = "farming-pool-addr"
 	FlagTerminationAddr  = "termination-addr"
 	FlagStakingCoinDenom = "staking-coin-denom"
+	FlagTerminated       = "terminated"
 	FlagAll              = "all"
 )
 
@@ -22,6 +23,7 @@ func flagSetPlans() *flag.FlagSet {
 	fs.String(FlagFarmingPoolAddr, "", "The bech32 address of the farming pool account")
 	fs.String(FlagTerminationAddr, "", "The bech32 address of the termination account")
 	fs.String(FlagStakingCoinDenom, "", "The staking coin denom")
+	fs.String(FlagTerminated, "", "Whether the plan is terminated or not (true/false)")
 
 	return fs
 }

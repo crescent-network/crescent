@@ -94,6 +94,16 @@ func (k msgServer) Harvest(goCtx context.Context, msg *types.MsgHarvest) (*types
 	return &types.MsgHarvestResponse{}, nil
 }
 
+func (k msgServer) RemovePlan(goCtx context.Context, msg *types.MsgRemovePlan) (*types.MsgRemovePlanResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.Keeper.RemovePlan(ctx, msg.GetCreator(), msg.PlanId); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRemovePlanResponse{}, nil
+}
+
 // AdvanceEpoch defines a method for advancing epoch by one, just for testing purpose
 // and shouldn't be used in real world.
 func (k msgServer) AdvanceEpoch(goCtx context.Context, msg *types.MsgAdvanceEpoch) (*types.MsgAdvanceEpochResponse, error) {

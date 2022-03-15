@@ -108,7 +108,7 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 		}
 
 		if req.Terminated != "" {
-			if plan.GetTerminated() != terminated {
+			if plan.IsTerminated() != terminated {
 				return false, nil
 			}
 		}

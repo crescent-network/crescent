@@ -60,3 +60,17 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.Require().True(found)
 	s.Require().Equal(order, order2)
 }
+
+func (s *KeeperTestSuite) TestImportExportGenesisEmpty() {
+	k, ctx := s.keeper, s.ctx
+	genState := k.ExportGenesis(ctx)
+
+	var genState2 types.GenesisState
+	bz := s.app.AppCodec().MustMarshalJSON(genState)
+	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
+	k.InitGenesis(ctx, genState2)
+
+	genState3 := k.ExportGenesis(ctx)
+	s.Require().Equal(*genState, genState2)
+	s.Require().Equal(genState2, *genState3)
+}

@@ -24,7 +24,7 @@ const (
 
 var (
 	initialBalances = sdk.NewCoins(
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000),
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000),
 		sdk.NewInt64Coin(denom1, 1_000_000_000),
 		sdk.NewInt64Coin(denom2, 1_000_000_000),
 		sdk.NewInt64Coin(denom3, 1_000_000_000))

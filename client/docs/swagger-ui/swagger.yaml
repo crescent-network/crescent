@@ -20161,6 +20161,9 @@ paths:
                     title: >-
                       delayed_staking_gas_fee is used to impose gas fee for the
                       delayed staking
+                  max_num_private_plans:
+                    type: integer
+                    format: int64
                 description: Params defines the set of params for the farming module.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
@@ -41489,6 +41492,9 @@ definitions:
         title: >-
           delayed_staking_gas_fee is used to impose gas fee for the delayed
           staking
+      max_num_private_plans:
+        type: integer
+        format: int64
     description: Params defines the set of params for the farming module.
   squad.farming.v1beta1.QueryCurrentEpochDaysResponse:
     type: object
@@ -41548,6 +41554,9 @@ definitions:
             title: >-
               delayed_staking_gas_fee is used to impose gas fee for the delayed
               staking
+          max_num_private_plans:
+            type: integer
+            format: int64
         description: Params defines the set of params for the farming module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   squad.farming.v1beta1.QueryPlanResponse:

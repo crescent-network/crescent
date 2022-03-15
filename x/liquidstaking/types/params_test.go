@@ -14,14 +14,29 @@ import (
 func TestParams(t *testing.T) {
 	require.IsType(t, paramstypes.KeyTable{}, types.ParamKeyTable())
 
-	defaultParams := types.DefaultParams()
+	params := types.DefaultParams()
 
 	paramsStr := `liquid_bond_denom: bstake
 whitelisted_validators: []
 unstake_fee_rate: "0.001000000000000000"
 min_liquid_staking_amount: "1000000"
 `
-	require.Equal(t, paramsStr, defaultParams.String())
+	require.Equal(t, paramsStr, params.String())
+
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{
+			ValidatorAddress: "cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv",
+			TargetWeight:     sdk.NewInt(10),
+		},
+	}
+	paramsStr = `liquid_bond_denom: bstake
+whitelisted_validators:
+- validator_address: cosmosvaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv
+  target_weight: "10"
+unstake_fee_rate: "0.001000000000000000"
+min_liquid_staking_amount: "1000000"
+`
+	require.Equal(t, paramsStr, params.String())
 }
 
 func TestWhitelistedValMap(t *testing.T) {
