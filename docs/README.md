@@ -8,11 +8,11 @@ How to use the documentation
 
 ## Layout
 
-* [gRPC-gateway REST Routes](./api) - available gRPC-gateway REST Routes for all modules
-* [Command-line Interfaces](./cli) - available Command-Line Interfaces for all modules
-* [Tutorials](./tutorials) - contains any type of demo or presentation
-* [Localnet](./localnet) - contains guideline of how to build `squad` and bootstrap local network
-* [Reference](./reference) - contains reference documentation and it is inteded to be information-oriented
+* [gRPC-gateway REST Routes](api) - available gRPC-gateway REST Routes for all modules
+* [Command-line Interfaces](cli) - available Command-Line Interfaces for all modules
+* [Tutorials](tutorials) - contains any type of demo or presentation
+* [Localnet](localnet) - contains guideline of how to build `squad` and bootstrap local network
+* [Reference](reference) - contains reference documentation and it is inteded to be information-oriented
 
 ## Contribution
 
