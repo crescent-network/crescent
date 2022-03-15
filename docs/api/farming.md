@@ -25,8 +25,14 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 ### Params
 
 Query the values set as farming parameters:
-<!-- markdown-link-check-disable-next-line -->
+
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/params
+```
+
 
 ```json
 {
@@ -47,8 +53,13 @@ http://localhost:1317/cosmos/farming/v1beta1/params
 
 Query all the farming plans exist in the network:
 
-<!-- markdown-link-check-disable-next-line -->
+
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/plans
+```
 
 ```json
 {
@@ -96,8 +107,13 @@ http://localhost:1317/cosmos/farming/v1beta1/plans
 
 Query a particular plan:
 
-<!-- markdown-link-check-disable-next-line -->
+
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/plans/1
+```
 
 ```json
 {
@@ -139,8 +155,13 @@ http://localhost:1317/cosmos/farming/v1beta1/plans/1
 
 Query for all stakings by a farmer: 
 
-<!-- markdown-link-check-disable-next-line -->
+
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
+```
 
 ```json
 {
@@ -157,8 +178,12 @@ http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qa
 
 Query for all stakings by a farmer with the given staking coin denom
 
-<!-- markdown-link-check-disable-next-line -->
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny?staking_coin_denom=poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 
+```
 
 ```json
 {
@@ -176,8 +201,13 @@ http://localhost:1317/cosmos/farming/v1beta1/stakings/cosmos185fflsvwrz0cx46w6qa
 
 Query for total stakings by a staking coin denom: 
 
-<!-- markdown-link-check-disable-next-line -->
+
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/total_stakings/poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 
+```
 
 ```json
 {
@@ -189,8 +219,12 @@ http://localhost:1317/cosmos/farming/v1beta1/total_stakings/poolD35A0CC16EE598F9
 
 Query for all rewards by a farmer:
 
-<!-- markdown-link-check-disable-next-line -->
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
+```
 
 ```json
 {
@@ -206,8 +240,12 @@ http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qad
 
 Query for all rewards by a farmer with the staking coin denom:
 
-<!-- markdown-link-check-disable-next-line -->
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny?staking_coin_denom=poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+```
 
 ```json
 {
@@ -224,8 +262,12 @@ http://localhost:1317/cosmos/farming/v1beta1/rewards/cosmos185fflsvwrz0cx46w6qad
 
 Query for the current epoch days:
 
-<!-- markdown-link-check-disable-next-line -->
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
 http://localhost:1317/cosmos/farming/v1beta1/current_epoch_days
+```
 
 ```json
 {

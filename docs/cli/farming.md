@@ -12,11 +12,11 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
 ## Command Line Interfaces
 
 - [Transaction](#Transaction)
-    * [MsgCreateFixedAmountPlan](#MsgCreateFixedAmountPlan)
-    * [MsgCreateRatioPlan](#MsgCreateRatioPlan)
-    * [MsgStake](#MsgStake)
-    * [MsgUnstake](#MsgUnstake)
-    * [MsgHarvest](#MsgHarvest)
+    * [CreateFixedAmountPlan](#CreateFixedAmountPlan)
+    * [CreateRatioPlan](#CreateRatioPlan)
+    * [Stake](#Stake)
+    * [Unstake](#Unstake)
+    * [Harvest](#Harvest)
 - [Query](#Query)
     * [Params](#Params)
     * [Plans](#Plans)
@@ -30,7 +30,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
 
 +++ https://github.com/tendermint/farming/blob/main/proto/tendermint/farming/v1beta1/tx.proto#L13-L29
 
-### MsgCreateFixedAmountPlan
+### CreateFixedAmountPlan
 
 Anyone can create this private plan type message. A fixed amount plan plans to distribute amount of coins by a fixed amount defined in `EpochAmount`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan. The creator queries the plan and sends amount of coins to the farming pool address so that the plan distributes as intended. To prevent spamming attacks, a `PlanCreationFee` fee must be paid on plan creation.
 
@@ -89,7 +89,7 @@ Result:
   "body": {
     "messages": [
       {
-        "@type": "/cosmos.farming.v1beta1.MsgCreateFixedAmountPlan",
+        "@type": "/cosmos.farming.v1beta1.CreateFixedAmountPlan",
         "name": "This plan intends to provide incentives for liquidity pool investors and ATOM holders",
         "creator": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
         "staking_coin_weights": [
@@ -145,7 +145,7 @@ Result:
 }
 ```
 
-### MsgCreateRatioPlan
+### CreateRatioPlan
 
 Anyone can create this private plan type message. A ratio plan plans to distribute amount of coins by ratio that is defined in `EpochRatio`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan. The creator must query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. For a ratio plan, whichever coins that the farming pool address has in balances are used every epoch. To prevent spamming attacks, a `PlanCreationFee` fee must be paid on plan creation.
 
@@ -193,7 +193,7 @@ $BINARY tx farming create-private-ratio-plan private-ratio-plan.json \
   "body": {
     "messages": [
       {
-        "@type": "/cosmos.farming.v1beta1.MsgCreateRatioPlan",
+        "@type": "/cosmos.farming.v1beta1.CreateRatioPlan",
         "name": "This plan intends to provide incentives for Cosmonauts!",
         "creator": "cosmos13w4ueuk80d3kmwk7ntlhp84fk0arlm3mqf0w08",
         "staking_coin_weights": [
@@ -244,7 +244,7 @@ $BINARY tx farming create-private-ratio-plan private-ratio-plan.json \
 }
 ```
 
-### MsgStake
+### Stake
 
 ```bash
 # Stake pool coin
@@ -263,7 +263,7 @@ $BINARY tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E388375
   "body": {
     "messages": [
       {
-        "@type": "/cosmos.farming.v1beta1.MsgStake",
+        "@type": "/cosmos.farming.v1beta1.Stake",
         "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
         "staking_coins": [
           {
@@ -306,7 +306,7 @@ $BINARY tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E388375
 }
 ```
 
-### MsgUnstake
+### Unstake
 
 ```bash
 # Unstake coins from the farming plan
@@ -325,7 +325,7 @@ $BINARY tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E3883
   "body": {
     "messages": [
       {
-        "@type": "/cosmos.farming.v1beta1.MsgUnstake",
+        "@type": "/cosmos.farming.v1beta1.Unstake",
         "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
         "unstaking_coins": [
           {
@@ -368,7 +368,7 @@ $BINARY tx farming unstake 2500000poolD35A0CC16EE598F90B044CE296A405BA9C381E3883
 }
 ```
 
-### MsgHarvest
+### Harvest
 
 ```bash
 # Harvest farming rewards from the farming plan
@@ -400,7 +400,7 @@ $BINARY tx farming harvest \
   "body": {
     "messages": [
       {
-        "@type": "/cosmos.farming.v1beta1.MsgHarvest",
+        "@type": "/cosmos.farming.v1beta1.Harvest",
         "farmer": "cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny",
         "staking_coin_denoms": [
           "uatom",
