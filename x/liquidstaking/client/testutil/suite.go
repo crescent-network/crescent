@@ -6,13 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	squadparams "github.com/cosmosquad-labs/squad/app/params"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
@@ -32,11 +36,22 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+func NewAppConstructor(encodingCfg squadparams.EncodingConfig) network.AppConstructor {
+	return func(val network.Validator) servertypes.Application {
+		return chain.NewApp(
+			val.Ctx.Logger, tmdb.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			encodingCfg,
+			simapp.EmptyAppOptions{},
+			baseapp.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+	}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	db := tmdb.NewMemDB()
 	cfg := chain.NewConfig(db)
-	//cfg.TimeoutCommit = 3 * time.Second
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
@@ -111,32 +126,18 @@ whitelisted_validators: []
 	}
 }
 
-// TODO: WIP add assertion
 func (s *IntegrationTestSuite) TestLiquidStaking() {
 	vals := s.network.Validators
 	clientCtx := vals[0].ClientCtx
 
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, stakingcli.GetCmdQueryValidators(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, stakingcli.GetCmdQueryValidators(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err)
-	fmt.Println(out)
 
 	whitelist := []types.WhitelistedValidator{
 		{
 			ValidatorAddress: vals[0].ValAddress.String(),
 			TargetWeight:     sdk.NewInt(10),
 		},
-		//{
-		//	ValidatorAddress: vals[2].ValAddress.String(),
-		//	TargetWeight:     sdk.NewInt(10),
-		//},
-		//{
-		//	ValidatorAddress: vals[3].ValAddress.String(),
-		//	TargetWeight:     sdk.NewInt(10),
-		//},
-		//{
-		//	ValidatorAddress: vals[4].ValAddress.String(),
-		//	TargetWeight:     sdk.NewInt(10),
-		//},
 	}
 	whitelistStr, err := json.Marshal(&whitelist)
 	if err != nil {
@@ -160,85 +161,100 @@ func (s *IntegrationTestSuite) TestLiquidStaking() {
 	}
 
 	//create a proposal with deposit
-	res, err := MsgParamChangeProposalExec(
+	_, err = MsgParamChangeProposalExec(
 		vals[0].ClientCtx,
 		vals[0].Address.String(),
 		testutil.WriteToNewTempFile(s.T(), string(paramChangeProp)).Name(),
 	)
-	fmt.Println(res, err)
 	s.Require().NoError(err)
 	_, err = MsgVote(vals[0].ClientCtx, vals[0].Address.String(), "1", "yes")
 	s.Require().NoError(err)
 	err = s.network.WaitForNextBlock()
 	s.Require().NoError(err)
-	//_, err = MsgVote(vals[0].ClientCtx, vals[1].Address.String(), "1", "yes")
-	//s.Require().NoError(err)
-	//_, err = MsgVote(vals[2].ClientCtx, vals[2].Address.String(), "1", "yes")
-	//s.Require().NoError(err)
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, govcli.GetCmdQueryProposals(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, govcli.GetCmdQueryProposals(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryLiquidValidators(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryParams(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryStates(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
+	lvs := s.getLiquidValidatorStates()
+	s.Require().Len(lvs, 0)
 
-	res, err = MsgLiquidStakeExec(
+	states := s.getStates()
+	s.Require().True(states.BtokenTotalSupply.IsZero())
+	s.Require().True(states.TotalLiquidTokens.IsZero())
+	s.Require().True(states.TotalDelShares.IsZero())
+	s.Require().True(states.NetAmount.IsZero())
+
+	_, err = MsgLiquidStakeExec(
 		vals[0].ClientCtx,
 		vals[0].Address.String(),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000000)).String(),
 	)
-	fmt.Println(res, err)
+	s.Require().NoError(err)
 
 	err = s.network.WaitForNextBlock()
 	s.Require().NoError(err)
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, stakingcli.GetCmdQueryDelegations(), []string{types.LiquidStakingProxyAcc.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
+	lvs = s.getLiquidValidatorStates()
+	s.Require().Len(lvs, 1)
+	s.Require().True(lvs[0].LiquidTokens.GTE(sdk.NewInt(100000000)))
+	s.Require().True(lvs[0].DelShares.GTE(sdk.NewDec(100000000)))
+	s.Require().Equal(lvs[0].Status, types.ValidatorStatusActive)
+	s.Require().Equal(lvs[0].Weight, sdk.NewInt(10))
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), []string{vals[0].Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
+	states = s.getStates()
+	s.Require().EqualValues(states.BtokenTotalSupply, sdk.NewInt(100000000))
+	s.Require().True(states.TotalLiquidTokens.GTE(sdk.NewInt(100000000)))
+	s.Require().True(states.TotalDelShares.GTE(sdk.NewDec(100000000)))
+	s.Require().True(states.NetAmount.GTE(sdk.NewDec(100000000)))
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryLiquidValidators(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
+	_, err = MsgLiquidUnstakeExec(
+		vals[0].ClientCtx,
+		vals[0].Address.String(),
+		sdk.NewCoin(types.DefaultLiquidBondDenom, sdk.NewInt(50000000)).String(),
+	)
+	s.Require().NoError(err)
+	err = s.network.WaitForNextBlock()
+	s.Require().NoError(err)
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cli.GetCmdQueryStates(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	fmt.Println(out, err)
+	lvs = s.getLiquidValidatorStates()
+	s.Require().Len(lvs, 1)
 
-	// TODO: fix timed out waiting for tx to be included in a block
-	//res, err = MsgLiquidUnstakeExec(
-	//	vals[0].ClientCtx,
-	//	vals[0].Address.String(),
-	//	sdk.NewCoin(types.DefaultLiquidBondDenom, sdk.NewInt(100000000)).String(),
-	//)
-	//fmt.Println(res, err)
-	//s.Require().NoError(err)
-	//fmt.Println(res)
-	//err = s.network.WaitForNextBlock()
-	//s.Require().NoError(err)
+	states = s.getStates()
+	s.Require().EqualValues(states.BtokenTotalSupply, sdk.NewInt(50000000))
+	s.Require().True(states.TotalLiquidTokens.GTE(sdk.NewInt(50000000)))
+	s.Require().True(states.TotalDelShares.GTE(sdk.NewDec(50000000)))
+	s.Require().True(states.NetAmount.GTE(sdk.NewDec(50000000)))
 
-	//_, err = s.network.WaitForHeight(1)
-	//s.Require().NoError(err)
+	_, err = MsgLiquidUnstakeExec(
+		vals[0].ClientCtx,
+		vals[0].Address.String(),
+		sdk.NewCoin(types.DefaultLiquidBondDenom, sdk.NewInt(50000000)).String(),
+	)
+	s.Require().NoError(err)
+	err = s.network.WaitForNextBlock()
+	s.Require().NoError(err)
 
-	//// create a proposal without deposit
-	//_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-	//	"Text Proposal 2", "Where is the title!?", govtypes.ProposalTypeText)
-	//s.Require().NoError(err)
-	//_, err = s.network.WaitForHeight(1)
-	//s.Require().NoError(err)
-	//
-	//// create a proposal3 with deposit
-	//_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-	//	"Text Proposal 3", "Where is the title!?", govtypes.ProposalTypeText,
-	//	fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govtypes.DefaultMinDepositTokens).String()))
-	//s.Require().NoError(err)
-	//_, err = s.network.WaitForHeight(1)
-	//s.Require().NoError(err)
-	//
-	//// vote for proposal3 as val
-	//_, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
-	//s.Require().NoError(err)
+	states = s.getStates()
+	s.Require().True(states.BtokenTotalSupply.IsZero())
+	s.Require().True(states.TotalLiquidTokens.IsZero())
+	s.Require().True(states.TotalDelShares.IsZero())
+	s.Require().True(states.NetAmount.IsZero())
+}
+
+func (s *IntegrationTestSuite) getStates() types.NetAmountState {
+	ctx := s.network.Validators[0].ClientCtx
+	var states types.QueryStatesResponse
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.GetCmdQueryStates(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(out.Bytes(), &states), out.String())
+	return states.NetAmountState
+}
+
+func (s *IntegrationTestSuite) getLiquidValidatorStates() []types.LiquidValidatorState {
+	ctx := s.network.Validators[0].ClientCtx
+	var liquidValsResult types.QueryLiquidValidatorsResponse
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.GetCmdQueryLiquidValidators(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(out.Bytes(), &liquidValsResult), out.String())
+	return liquidValsResult.GetLiquidValidators()
 }
