@@ -53,6 +53,10 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 		}
 		price = amm.PriceToDownTick(msg.Price, int(params.TickPrecision))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, price, msg.Amount))
+		if msg.OfferCoin.IsLT(offerCoin) {
+			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+				types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, offerCoin)
+		}
 	case types.OrderDirectionSell:
 		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
 			return sdk.Coin{}, sdk.Dec{},
@@ -61,6 +65,10 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 		}
 		price = amm.PriceToUpTick(msg.Price, int(params.TickPrecision))
 		offerCoin = msg.OfferCoin
+		if msg.OfferCoin.Amount.LT(msg.Amount) {
+			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+				types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount))
+		}
 	}
 
 	return offerCoin, price, nil
@@ -133,6 +141,10 @@ func (k Keeper) ValidateMsgMarketOrder(ctx sdk.Context, msg *types.MsgMarketOrde
 		}
 		price = amm.PriceToDownTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, price, msg.Amount))
+		if msg.OfferCoin.IsLT(offerCoin) {
+			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+				types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, offerCoin)
+		}
 	case types.OrderDirectionSell:
 		if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
 			return sdk.Coin{}, sdk.Dec{},
@@ -141,10 +153,10 @@ func (k Keeper) ValidateMsgMarketOrder(ctx sdk.Context, msg *types.MsgMarketOrde
 		}
 		price = amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), int(params.TickPrecision))
 		offerCoin = msg.OfferCoin
-	}
-	if msg.OfferCoin.IsLT(offerCoin) {
-		return sdk.Coin{}, sdk.Dec{},
-			sdkerrors.Wrapf(types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, offerCoin)
+		if msg.OfferCoin.Amount.LT(msg.Amount) {
+			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+				types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount))
+		}
 	}
 
 	return offerCoin, price, nil
