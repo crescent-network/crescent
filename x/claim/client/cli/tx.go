@@ -38,8 +38,10 @@ func NewClaimCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Claim the claimable amount with a condition type",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Claim the claimable amount with a condition type. 
-There are 4 different condition types. Reference the examples below.
+			fmt.Sprintf(`Claim your claimable amount with a condition type. 
+Full allocation can be claimed by completing all tasks in core network activities. 
+There are 4 different tasks (condition types) and you must complete the task before claiming the amount. 
+Reference the spec docs to understand the mechanism. 
 
 Example:
 $ %s tx %s claim 1 deposit --from mykey
