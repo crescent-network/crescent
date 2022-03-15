@@ -13,7 +13,7 @@ import (
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
-// GenAirdrops generates randomly generated airdrops.
+// GenAirdrops randomly generates airdrops.
 func GenAirdrops(r *rand.Rand) (airdrops []types.Airdrop) {
 	numAirdrops := r.Intn(5)
 	airdrops = make([]types.Airdrop, numAirdrops)
@@ -43,7 +43,7 @@ func GenAirdrops(r *rand.Rand) (airdrops []types.Airdrop) {
 	return
 }
 
-// GenClaimRecords generates randomly generated claim records.
+// GenClaimRecords randomly generates claim records.
 func GenClaimRecords(r *rand.Rand, accs []simtypes.Account, airdrops []types.Airdrop) (claimRecords []types.ClaimRecord) {
 	if len(airdrops) == 0 {
 		return nil
