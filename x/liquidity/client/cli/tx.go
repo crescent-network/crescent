@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -200,14 +199,16 @@ $ %s tx %s withdraw 1 10000pool1 --from mykey
 
 func NewLimitOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount] [order-lifespan]",
-		Args:  cobra.ExactArgs(7),
+		Use:   "limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount]",
+		Args:  cobra.ExactArgs(6),
 		Short: "Make a limit order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a limit order.
 Example:
-$ %s tx %s limit-order 1 buy 5000stake uatom 0.5 10000 10s --from mykey
-$ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 10s --from mykey
+$ %s tx %s limit-order 1 buy 5000stake uatom 0.5 10000 --from mykey
+$ %s tx %s limit-order 1 b 5000stake uatom 0.5 10000 --from mykey
+$ %s tx %s limit-order 1 sell 10000uatom stake 2.0 10000 --order-lifespan=10m --from mykey
+$ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 --order-lifespan=10m --from mykey
 
 [pair-id]: pair id to swap with
 [direction]: order direction (one of: buy,b,sell,s)
@@ -215,8 +216,9 @@ $ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 10s --from mykey
 [demand-coin-denom]: the denom to exchange with the offer coin
 [price]: the limit order price for the swap; the exchange ratio is X/Y where X is the amount of quote coin and Y is the amount of base coin
 [amount]: the amount of base coin to buy or sell
-[order-lifespan]: the time duration that the order lives until it is expired; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
@@ -257,10 +259,7 @@ $ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 10s --from mykey
 				return fmt.Errorf("invalid amount: %s", args[5])
 			}
 
-			orderLifespan, err := time.ParseDuration(args[6])
-			if err != nil {
-				return fmt.Errorf("invalid order lifespan: %w", err)
-			}
+			orderLifespan, _ := cmd.Flags().GetDuration(FlagOrderLifespan)
 
 			msg := types.NewMsgLimitOrder(
 				clientCtx.GetFromAddress(),
@@ -277,6 +276,7 @@ $ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 10s --from mykey
 		},
 	}
 
+	cmd.Flags().AddFlagSet(flagSetOrder())
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -284,22 +284,25 @@ $ %s tx %s limit-order 1 s 10000uatom stake 2.0 10000 10s --from mykey
 
 func NewMarketOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount] [order-lifespan]",
-		Args:  cobra.ExactArgs(6),
+		Use:   "market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount]",
+		Args:  cobra.ExactArgs(5),
 		Short: "Make a market order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a market order.
 Example:
-$ %s tx %s market-order 1 buy 5000stake uatom 10000 10s --from mykey
-$ %s tx %s market-order 1 s 10000uatom stake 10000 10s --from mykey
+$ %s tx %s market-order 1 buy 5000stake uatom 10000 --from mykey
+$ %s tx %s market-order 1 b 5000stake uatom 10000 --from mykey
+$ %s tx %s market-order 1 sell 10000uatom stake 10000 --order-lifespan=10m --from mykey
+$ %s tx %s market-order 1 s 10000uatom stake 10000 --order-lifespan=10m --from mykey
 
 [pair-id]: pair id to swap with
 [direction]: order direction (one of: buy,b,sell,s)
 [offer-coin]: the amount of offer coin to swap
 [demand-coin-denom]: the denom to exchange with the offer coin
 [amount]: the amount of base coin to buy or sell
-[order-lifespan]: the time duration that the order lives until it is expired; valid time units are "ns", "us", "ms", "s", "m", and "h" 
 `,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
@@ -335,10 +338,7 @@ $ %s tx %s market-order 1 s 10000uatom stake 10000 10s --from mykey
 				return fmt.Errorf("invalid amount: %s", args[4])
 			}
 
-			orderLifespan, err := time.ParseDuration(args[5])
-			if err != nil {
-				return fmt.Errorf("invalid order lifespan: %w", err)
-			}
+			orderLifespan, _ := cmd.Flags().GetDuration(FlagOrderLifespan)
 
 			msg := types.NewMsgMarketOrder(
 				clientCtx.GetFromAddress(),
@@ -354,6 +354,7 @@ $ %s tx %s market-order 1 s 10000uatom stake 10000 10s --from mykey
 		},
 	}
 
+	cmd.Flags().AddFlagSet(flagSetOrder())
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

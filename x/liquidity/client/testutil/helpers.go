@@ -58,7 +58,7 @@ func MsgLimitOrder(
 		demandCoinDenom,
 		price.String(),
 		amt.String(),
-		orderLifespan.String(),
+		fmt.Sprintf("--%s=%s", cli.FlagOrderLifespan, orderLifespan.String()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...), extraArgs...)
 
