@@ -53,6 +53,8 @@ create-pair [base-coin-denom] [quote-coin-denom]
 | quote-coin-deom   | denom of the quote coin for the pair |
 | | | 
 
+Example
+
 ```bash
 # Create a pair ATOM/UST
 squad tx liquidity create-pair uatom uusd \
@@ -86,6 +88,7 @@ create-pool [pair-id] [deposit-coins]
 | deposit-coins | deposit amount of base and quote coins |
 | | | 
 
+Example
 
 ```bash
 # Create a pool 3000ATOM/1000UST
@@ -122,6 +125,8 @@ deposit [pool-id] [deposit-coins]
 | deposit-coins | deposit amount of base and quote coins |
 | | | 
 
+Example
+
 ```bash
 # Deposit 30ATOM/10UST to the pool
 squad tx liquidity deposit 1 30000000uatom,10000000uusd \
@@ -157,6 +162,7 @@ withdraw [pool-id] [pool-coin]
 | pool-coin    | amount of pool coin to withdraw |
 | | | 
 
+Example
 
 ```bash
 # Withdraw pool coin from the pool
@@ -186,7 +192,7 @@ Buy limit order will be matched at lower than or equal to the defined order pric
 Order uses a batch execution methodology. Order requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch.
 
 ```bash
-limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount] [order-lifespan]
+limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount]
 ```
 
 | **Argument**      |  **Description**                |
@@ -197,14 +203,25 @@ limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amou
 | demand-coin-denom | demand coin denom that the orderer is willing to swap for |
 | price             | order price; the exchange ratio is the amount of quote coin over the amount of base coin |
 | amount            | amount of base coin that the orderer is willing to buy or sell |
-| order-lifespan    | order lifespan; how long it resides within the chain. Maximum duration is a day. |
 | | | 
 
+Example
 
 ```bash
 # Make a limit order to swap
-squad tx liquidity limit-order 1 sell 1000000uatom uusd 0.33 1000000 20s \
+squad tx liquidity limit-order 1 sell 50000000uatom uusd 0.33 50000000 \
 --chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Make a limit order to swap with order-lifespan flag
+# It is the duration the order lives until it is expired
+squad tx liquidity limit-order 1 sell 50000000uatom uusd 0.33 50000000 \
+--chain-id localnet \
+--order-lifespan 30s \
 --from alice \
 --keyring-backend test \
 --broadcast-mode block \
@@ -228,11 +245,9 @@ Unlike a limit order, there is no need to input order price. Buy market order us
 
 Order uses a batch execution methodology. Order requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch.
 
-
 ```bash
-market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount] [order-lifespan]
+market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount]
 ```
-
 
 | **Argument**      |  **Description**                |
 | :---------------- | :------------------------------ |
@@ -241,18 +256,31 @@ market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount] [or
 | offer-coin        | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price * amount. For sell direction, base coin amount must be greater than or equal to the amount value.  |
 | demand-coin-denom | demand coin denom that the orderer is willing to swap for |
 | amount            | amount of base coin that the orderer is willing to buy or sell |
-| order-lifespan    | order lifespan; how long it resides within the chain. Maximum duration is a day. |
 | | | 
+
+Example
 
 ```bash
 # Make a market order to swap 
-squad tx liquidity market-order 1 sell 5000000uatom uusd 5000000 20s \
+squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
 --broadcast-mode block \
 --yes \
 --output json | jq
+
+# Make a limit order to swap with order-lifespan flag
+# It is the duration the order lives until it is expired
+squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
+--chain-id localnet \
+--order-lifespan 30s \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
 
 #
 # Tips
@@ -265,27 +293,38 @@ squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json |
 
 ## CancelOrder
 
+Cancel an order.
 
 ```bash
-
+cancel-order [pair-id] [order-id]
 ```
 
-| **Argument** |  **Description**                |
-| :----------- | :------------------------------ |
-| pool-id      | pool id                         |
-| pool-coin    | amount of pool coin to withdraw |
+| **Argument** |  **Description** |
+| :----------- | :----------------|
+| pair-id      | pair id          |
+| order-id     | order id         |
 | | | 
 
+Example
 
 ```bash
-
+squad tx liquidity cancel-order 1 1 \
+--chain-id localnet \
+--from alice \
+--keyring-backend=test \
+--broadcast-mode block \
+--yes \
+--output json | jq
 ```
 
 ## CancelAllOrders
 
+Cancel all orders.
+
+This command provides a convenient way to cancel all orders.
 
 ```bash
-
+cancel-all-orders [pair-ids]
 ```
 
 | **Argument** |  **Description**                |
@@ -294,22 +333,199 @@ squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json |
 | pool-coin    | amount of pool coin to withdraw |
 | | | 
 
+Example
 
 ```bash
-
+squad tx liquidity cancel-all-orders 1,2,3 \
+--chain-id localnet \
+--from alice \
+--keyring-backend=test \
+--broadcast-mode block \
+--yes \
+--output json | jq
 ```
 
 # Queries
 
 ## Params
+
+Query the current liquidity parameters information
+
+```bash
+params
+```
+
+Example
+
+```bash
+squad q liquidity params -o json | jq
+```
+
 ## Pairs
+
+Query for all pairs
+
+```bash
+pairs
+```
+
+Example
+
+```bash
+# Query all pairs
+squad q liquidity pairs -o json | jq
+
+# Query all pairs that has the defined denom
+squad q liquidity pairs --denoms=uatom -o json | jq
+
+# Query all pairs that has the defined denoms
+squad q liquidity pairs --denoms=uatom,uusd -o json | jq
+```
+
 ## Pair
+
+Query details for the particular pair
+
+```bash
+pair [pair-id]
+```
+
+Example
+
+```bash
+squad q liquidity pair 1 -o json | jq
+```
+
 ## Pools
+
+Query for all pools
+
+```bash
+pools
+```
+
+Example
+
+```bash
+# Query all pools
+squad q liquidity pools -o json | jq
+
+# Query all pools that has the pair id
+squad q liquidity pools -o json --pair-id=1 | jq
+
+# Query all pools with disabled flag
+squad q liquidity pools -o json --disabled=false | jq
+```
+
 ## Pool
+
+Query details for the particular pool
+
+```bash
+pool [pool-id]
+```
+
+Example
+
+```bash
+# Query the specific pool
+squad q liquidity pool 1 -o json | jq
+
+# Query the specific pool that has the defined pool coin denom
+squad q liquidity pool --pool-coin-denom=pool1 -o json | jq
+```
+
 ## DepositRequests
+
+Query for all deposit requests in the pool
+
+```bash
+deposit-requests [pool-id]
+```
+
+Example
+
+```bash
+squad q liquidity deposit-requests 1 -o json | jq
+```
+
 ## DepositRequest
+
+Query details for the particular deposit request in the pool
+
+```bash
+deposit-request [pool-id] [id]
+```
+
+Example
+
+```bash
+squad q liquidity deposit-request 1 1 -o json | jq
+```
+
 ## WithdrawRequests
+
+Query for all withdraw requests in the pool
+
+```bash
+withdraw-requests [pool-id]
+```
+
+Example
+
+```bash
+squad q liquidity withdraw-requests 1 -o json | jq
+```
+
 ## WithdrawRequest
+
+Query details for the particular withdraw request in the pool
+
+```bash
+withdraw-request [pool-id] [id]
+```
+
+Example
+
+```bash
+squad q liquidity withdraw-request 1 1 -o json | jq
+```
+
 ## Orders
+
+Query for all orders in the pair
+
+```bash
+orders
+```
+
+Example
+
+```bash
+squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v \
+-o json | jq
+
+squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v \
+--pair-id=1 \
+-o json | jq
+
+squad q liquidity orders \
+--pair-id=1 \
+-o json | jq
+```
+
 ## Order
+
+Query details for the particular order
+
+```bash
+squad query liquidity order [pair-id] [id]
+```
+
+Example
+
+```bash
+squad q liquidity order 1 1
+```
+
 
