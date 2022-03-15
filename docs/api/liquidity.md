@@ -9,31 +9,31 @@ Description: A high-level overview of what gRPC-gateway REST routes are supporte
 
 This document provides a high-level overview of what gRPC-gateway REST routes are supported in the liquidity module.
 
-## REST Routes
+## gRPC-gateway REST Routes
 
+<!-- markdown-link-check-disable -->
 ++https://github.com/cosmosquad-labs/squad/blob/main/proto/squad/liquidity/v1beta1/query.proto 
 
-- [RESTRoutes](#RESTRoutes)
-    * [Params](#Params)
-    * [Pairs](#Pairs)
-    * [Pair](#Pair)
-    * [Pools](#Pools)
-    * [Pool](#Pool)
-    * [PoolByReserveAddress](#PoolByReserveAddress)
-    * [PoolByPoolCoinDenom](#PoolByPoolCoinDenom)
-    * [DepositRequests](#DepositRequests)
-    * [DepositRequest](#DepositRequest)
-    * [WithdrawRequests](#WithdrawRequests)
-    * [WithdrawRequest](#WithdrawRequest)
-    * [Orders](#Orrers)
-    * [Order](#Order)
-    * [OrdersByOrderer](#OrdersByOrderer)
+- [Params](#Params)
+- [Pairs](#Pairs)
+- [Pair](#Pair)
+- [Pools](#Pools)
+- [Pool](#Pool)
+- [PoolByReserveAddress](#PoolByReserveAddress)
+- [PoolByPoolCoinDenom](#PoolByPoolCoinDenom)
+- [DepositRequests](#DepositRequests)
+- [DepositRequest](#DepositRequest)
+- [WithdrawRequests](#WithdrawRequests)
+- [WithdrawRequest](#WithdrawRequest)
+- [Orders](#Orrers)
+- [Order](#Order)
+- [OrdersByOrderer](#OrdersByOrderer)
 
 ## Params
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/params
 ```
@@ -73,7 +73,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pairs
 http://localhost:1317/squad/liquidity/v1beta1/pairs?denoms=uatom
@@ -106,7 +106,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pairs/1
 ```
@@ -131,7 +131,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools
 http://localhost:1317/squad/liquidity/v1beta1/pools?pair_id=1
@@ -173,7 +173,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools/1
 ```
@@ -207,7 +207,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools/reserve_address/cosmos1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfns20gpwy
 ```
@@ -241,7 +241,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools/pool_coin_denom/pool1
 ```
@@ -275,7 +275,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools/1/deposit_requests
 ```
@@ -328,7 +328,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools/1/deposit_requests/1
 ```
@@ -375,7 +375,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools/1/withdraw_requests
 ```
@@ -418,7 +418,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pools/1/withdraw_requests/1
 ```
@@ -455,7 +455,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pairs/1/orders
 ```
@@ -502,7 +502,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/pairs/1/orders/1
 ```
@@ -543,7 +543,7 @@ Example Response
 
 Example Request 
 
-<!-- markdown-link-check-disable-next-line -->
+<!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/squad/liquidity/v1beta1/orders/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
 ```

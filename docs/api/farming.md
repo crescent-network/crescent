@@ -3,13 +3,16 @@ Title: REST APIs
 Description: A high-level overview of gRPC-gateway REST routes in farming module.
 ---
 
+## Synopsis
+
+This document provides a high-level overview of what gRPC-gateway REST routes are supported in the farming module.
+
+
 ## Swagger Documentation
 
 - Swagger Cosmos SDK Farming Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/1.0.0)
 
 ## gRPC-gateway REST Routes
-
-In order to test out the following REST routes, set up a local node to query from. See the [localnet tutorial](../../Tutorials/localnet) on how to build the `squad` binary and bootstrap a local network in your local machine.
 
 - [Params](#Params)
 - [Plans](#Plans)

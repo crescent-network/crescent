@@ -10,12 +10,10 @@ How to use the documentation
 
 * [gRPC-gateway REST Routes](api) - available gRPC-gateway REST Routes for all modules
 * [Command-line Interfaces](cli) - available Command-Line Interfaces for all modules
-* [Tutorials](tutorials) - contains any type of demo or presentation
-* [Localnet](localnet) - contains guideline of how to build `squad` and bootstrap local network
-* [Reference](reference) - contains reference documentation and it is inteded to be information-oriented
+* [Demo](demo) - contains any type of demo or presentation
 
 ## Contribution
 
 We welcome contributions from everyone. The `main` branch contains the latest development version of the code. You can create a branch from `main` and create a pull request, or maintain your own fork and submit a cross-repository pull request. It is important to create an issue before you start fixing a bug or implementing a new feature.
 
-If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop `Squad`. Thank you to all those who have contributed to Squad!
+If you're not sure where to start check out [CONTRIBUTING.md](../CONTRIBUTING.md) for our guidelines & policies for how we develop `Squad`. Thank you to all those who have contributed to Squad!
