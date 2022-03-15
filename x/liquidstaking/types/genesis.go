@@ -14,7 +14,7 @@ func NewGenesisState(params Params, liquidValidators []LiquidValidator) *Genesis
 func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(
 		DefaultParams(),
-		nil,
+		[]LiquidValidator{},
 	)
 }
 

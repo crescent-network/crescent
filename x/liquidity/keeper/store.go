@@ -97,6 +97,7 @@ func (k Keeper) IterateAllPairs(ctx sdk.Context, cb func(pair types.Pair) (stop 
 
 // GetAllPairs returns all pairs in the store.
 func (k Keeper) GetAllPairs(ctx sdk.Context) (pairs []types.Pair) {
+	pairs = []types.Pair{}
 	_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
 		pairs = append(pairs, pair)
 		return false, nil
@@ -212,6 +213,7 @@ func (k Keeper) IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool 
 
 // GetAllPools returns all pools in the store.
 func (k Keeper) GetAllPools(ctx sdk.Context) (pools []types.Pool) {
+	pools = []types.Pool{}
 	_ = k.IterateAllPools(ctx, func(pool types.Pool) (stop bool, err error) {
 		pools = append(pools, pool)
 		return false, nil
@@ -288,6 +290,7 @@ func (k Keeper) IterateDepositRequestsByDepositor(ctx sdk.Context, depositor sdk
 
 // GetAllDepositRequests returns all deposit requests in the store.
 func (k Keeper) GetAllDepositRequests(ctx sdk.Context) (reqs []types.DepositRequest) {
+	reqs = []types.DepositRequest{}
 	_ = k.IterateAllDepositRequests(ctx, func(req types.DepositRequest) (stop bool, err error) {
 		reqs = append(reqs, req)
 		return false, nil
@@ -371,6 +374,7 @@ func (k Keeper) IterateWithdrawRequestsByWithdrawer(ctx sdk.Context, withdrawer 
 
 // GetAllWithdrawRequests returns all withdraw requests in the store.
 func (k Keeper) GetAllWithdrawRequests(ctx sdk.Context) (reqs []types.WithdrawRequest) {
+	reqs = []types.WithdrawRequest{}
 	_ = k.IterateAllWithdrawRequests(ctx, func(req types.WithdrawRequest) (stop bool, err error) {
 		reqs = append(reqs, req)
 		return false, nil
@@ -473,6 +477,7 @@ func (k Keeper) IterateOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress, 
 
 // GetAllOrders returns all orders in the store.
 func (k Keeper) GetAllOrders(ctx sdk.Context) (orders []types.Order) {
+	orders = []types.Order{}
 	_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
 		orders = append(orders, order)
 		return false, nil
