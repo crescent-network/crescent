@@ -39,13 +39,15 @@ func NewClaimCmd() *cobra.Command {
 		Short: "Claim the claimable amount with a condition type",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Claim the claimable amount with a condition type. 
-There are 3 different condition types. Reference the examples below.
+There are 4 different condition types. Reference the examples below.
 
 Example:
 $ %s tx %s claim 1 deposit --from mykey
 $ %s tx %s claim 1 swap --from mykey
-$ %s tx %s claim 1 farming --from mykey
+$ %s tx %s claim 1 liquidstake --from mykey
+$ %s tx %s claim 1 vote --from mykey
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
