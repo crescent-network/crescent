@@ -24,23 +24,23 @@ const (
 	maxOrderLifespan   = "max_order_lifespan"
 )
 
-func genBatchSize(r *rand.Rand) uint32 {
+func GenBatchSize(r *rand.Rand) uint32 {
 	return uint32(r.Int31n(5) + 1)
 }
 
-func genTickPrecision(r *rand.Rand) uint32 {
+func GenTickPrecision(r *rand.Rand) uint32 {
 	return uint32(r.Int31n(4))
 }
 
-func genMaxPriceLimitRatio(r *rand.Rand) sdk.Dec {
+func GenMaxPriceRatio(r *rand.Rand) sdk.Dec {
 	return simtypes.RandomDecAmount(r, sdk.NewDecWithPrec(2, 1))
 }
 
-func genWithdrawFeeRate(r *rand.Rand) sdk.Dec {
+func GenWithdrawFeeRate(r *rand.Rand) sdk.Dec {
 	return simtypes.RandomDecAmount(r, sdk.NewDecWithPrec(1, 2))
 }
 
-func genMaxOrderLifespan(r *rand.Rand) time.Duration {
+func GenMaxOrderLifespan(r *rand.Rand) time.Duration {
 	return time.Duration(r.Int63n(int64(72 * time.Hour)))
 }
 
@@ -50,27 +50,27 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, batchSize, &genesis.Params.BatchSize, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.BatchSize = genBatchSize(r) },
+		func(r *rand.Rand) { genesis.Params.BatchSize = GenBatchSize(r) },
 	)
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, tickPrecision, &genesis.Params.TickPrecision, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.TickPrecision = genTickPrecision(r) },
+		func(r *rand.Rand) { genesis.Params.TickPrecision = GenTickPrecision(r) },
 	)
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, maxPriceLimitRatio, &genesis.Params.MaxPriceLimitRatio, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.MaxPriceLimitRatio = genMaxPriceLimitRatio(r) },
+		func(r *rand.Rand) { genesis.Params.MaxPriceLimitRatio = GenMaxPriceRatio(r) },
 	)
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, withdrawFeeRate, &genesis.Params.WithdrawFeeRate, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.WithdrawFeeRate = genWithdrawFeeRate(r) },
+		func(r *rand.Rand) { genesis.Params.WithdrawFeeRate = GenWithdrawFeeRate(r) },
 	)
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, maxOrderLifespan, &genesis.Params.MaxOrderLifespan, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.MaxOrderLifespan = genMaxOrderLifespan(r) },
+		func(r *rand.Rand) { genesis.Params.MaxOrderLifespan = GenMaxOrderLifespan(r) },
 	)
 
 	bz, _ := json.MarshalIndent(genesis, "", " ")

@@ -32,7 +32,7 @@ var (
 	Fees = sdk.Coins{
 		{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1000),
+			Amount: sdk.NewInt(0),
 		},
 	}
 )
