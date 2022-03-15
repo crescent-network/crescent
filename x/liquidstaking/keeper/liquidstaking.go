@@ -188,6 +188,10 @@ func (k Keeper) LiquidUnstaking(
 	var ubdTime time.Time
 	var ubds []stakingtypes.UnbondingDelegation
 	for i, val := range liquidVals {
+		// skip zero weight liquid validator
+		if !unbondingAmounts[i].IsPositive() {
+			continue
+		}
 		var ubd stakingtypes.UnbondingDelegation
 		var returnAmount sdk.Int
 		var weightedShare sdk.Dec

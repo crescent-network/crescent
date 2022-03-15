@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmosquad-labs/squad/x/farming/types"
 )
@@ -145,7 +145,7 @@ func TestPlanI(t *testing.T) {
 		{
 			"Terminated",
 			func() interface{} {
-				return plan.GetTerminated()
+				return plan.IsTerminated()
 			},
 			func(plan types.PlanI, val interface{}) error {
 				return plan.SetTerminated(val.(bool))
@@ -439,6 +439,7 @@ func TestTotalEpochRatio(t *testing.T) {
 	name1 := "testPlan1"
 	name2 := "testPlan2"
 	farmingPoolAddr1 := sdk.AccAddress("farmingPoolAddr1")
+	farmingPoolAddr2 := sdk.AccAddress("farmingPoolAddr2")
 	terminationAddr1 := sdk.AccAddress("terminationAddr1")
 	stakingCoinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{Denom: "testFarmStakingCoinDenom", Amount: sdk.MustNewDecFromStr("1.0")},
@@ -471,6 +472,98 @@ func TestTotalEpochRatio(t *testing.T) {
 				),
 			},
 			sdkerrors.Wrap(types.ErrInvalidTotalEpochRatio, "total epoch ratio must be lower than 1"),
+		},
+		{
+			[]types.PlanI{
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						1, "plan1", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-01-01T00:00:00Z"), types.ParseTime("2023-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(7, 1), // 0.7
+				),
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						2, "plan2", types.PlanTypePublic,
+						farmingPoolAddr2.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-01-01T00:00:00Z"), types.ParseTime("2023-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(7, 1), // 0.7
+				),
+			},
+			nil,
+		},
+		{
+			[]types.PlanI{
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						1, "plan1", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-01-01T00:00:00Z"), types.ParseTime("2023-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(7, 1), // 0.7
+				),
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						2, "plan2", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2023-01-01T00:00:00Z"), types.ParseTime("2024-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(7, 1), // 0.7
+				),
+			},
+			nil,
+		},
+		{
+			[]types.PlanI{
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						1, "plan1", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-01-01T00:00:00Z"), types.ParseTime("2023-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(7, 1), // 0.7
+				),
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						2, "plan2", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-12-31T00:00:00Z"), types.ParseTime("2024-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(7, 1), // 0.7
+				),
+			},
+			sdkerrors.Wrap(types.ErrInvalidTotalEpochRatio, "total epoch ratio must be lower than 1"),
+		},
+		{
+			[]types.PlanI{
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						1, "plan1", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-01-01T00:00:00Z"), types.ParseTime("2023-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(5, 1), // 0.5
+				),
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						2, "plan2", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-01-01T00:00:00Z"), types.ParseTime("2022-07-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(5, 1), // 0.5
+				),
+				types.NewRatioPlan(
+					types.NewBasePlan(
+						3, "plan3", types.PlanTypePublic,
+						farmingPoolAddr1.String(), terminationAddr1.String(), stakingCoinWeights,
+						types.ParseTime("2022-07-01T00:00:00Z"), types.ParseTime("2023-01-01T00:00:00Z"),
+					),
+					sdk.NewDecWithPrec(5, 1), // 0.5
+				),
+			},
+			nil,
 		},
 	}
 
@@ -567,6 +660,32 @@ func TestUnpackPlanJSON(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(1), plan2.GetId())
+}
+
+func TestValidatePlanName(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		expectErr bool
+	}{
+		{"", true},
+		{"valid", false},
+		{"valid!", false},
+		{" extra space", true},
+		{"contains\nline break", true},
+		{"Plan #1", false},
+		{"contains\x00null", true},
+		{"It's valid", false},
+		{"With|AccNameSplitter", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := types.ValidatePlanName(tc.name)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestStakingReserveAcc(t *testing.T) {

@@ -13,6 +13,7 @@ var (
 	_ sdk.Msg = (*MsgStake)(nil)
 	_ sdk.Msg = (*MsgUnstake)(nil)
 	_ sdk.Msg = (*MsgHarvest)(nil)
+	_ sdk.Msg = (*MsgRemovePlan)(nil)
 	_ sdk.Msg = (*MsgAdvanceEpoch)(nil)
 )
 
@@ -23,6 +24,7 @@ const (
 	TypeMsgStake                 = "stake"
 	TypeMsgUnstake               = "unstake"
 	TypeMsgHarvest               = "harvest"
+	TypeMsgRemovePlan            = "remove_plan"
 	TypeMsgAdvanceEpoch          = "advance_epoch"
 )
 
@@ -123,9 +125,6 @@ func (msg MsgCreateRatioPlan) ValidateBasic() error {
 	}
 	if err := ValidateEpochRatio(msg.EpochRatio); err != nil {
 		return err
-	}
-	if msg.EpochRatio.GT(sdk.OneDec()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid epoch ratio")
 	}
 	return nil
 }
@@ -290,6 +289,51 @@ func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
 
 func (msg MsgHarvest) GetFarmer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+// NewMsgRemovePlan creates a new MsgRemovePlan.
+func NewMsgRemovePlan(
+	creator sdk.AccAddress,
+	planId uint64,
+) *MsgRemovePlan {
+	return &MsgRemovePlan{
+		Creator: creator.String(),
+		PlanId:  planId,
+	}
+}
+
+func (msg MsgRemovePlan) Route() string { return RouterKey }
+
+func (msg MsgRemovePlan) Type() string { return TypeMsgRemovePlan }
+
+func (msg MsgRemovePlan) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address %q: %v", msg.Creator, err)
+	}
+	if msg.PlanId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan id must not be 0")
+	}
+	return nil
+}
+
+func (msg MsgRemovePlan) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgRemovePlan) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgRemovePlan) GetCreator() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}

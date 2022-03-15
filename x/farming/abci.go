@@ -15,8 +15,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	logger := k.Logger(ctx)
 
+	k.PruneTotalStakings(ctx)
+
 	for _, plan := range k.GetPlans(ctx) {
-		if !plan.GetTerminated() && ctx.BlockTime().After(plan.GetEndTime()) {
+		if !plan.IsTerminated() && !ctx.BlockTime().Before(plan.GetEndTime()) {
 			if err := k.TerminatePlan(ctx, plan); err != nil {
 				logger.Error("failed to terminate plan", "plan_id", plan.GetId())
 			}

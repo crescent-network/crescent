@@ -38,7 +38,7 @@ func (req DepositRequest) Validate() error {
 	if req.PoolId == 0 {
 		return fmt.Errorf("pool id must not be 0")
 	}
-	if req.MsgHeight == 0 { // TODO: is this check correct?
+	if req.MsgHeight == 0 {
 		return fmt.Errorf("message height must not be 0")
 	}
 	if _, err := sdk.AccAddressFromBech32(req.Depositor); err != nil {
@@ -105,7 +105,7 @@ func (req WithdrawRequest) Validate() error {
 	if req.PoolId == 0 {
 		return fmt.Errorf("pool id must not be 0")
 	}
-	if req.MsgHeight == 0 { // TODO: is this check correct?
+	if req.MsgHeight == 0 {
 		return fmt.Errorf("message height must not be 0")
 	}
 	if _, err := sdk.AccAddressFromBech32(req.Withdrawer); err != nil {
@@ -191,7 +191,7 @@ func (order Order) Validate() error {
 	if order.PairId == 0 {
 		return fmt.Errorf("pair id must not be 0")
 	}
-	if order.MsgHeight == 0 { // TODO: is this check correct?
+	if order.MsgHeight == 0 {
 		return fmt.Errorf("message height must not be 0")
 	}
 	if _, err := sdk.AccAddressFromBech32(order.Orderer); err != nil {

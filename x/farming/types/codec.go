@@ -18,6 +18,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgStake{}, "farming/MsgStake", nil)
 	cdc.RegisterConcrete(&MsgUnstake{}, "farming/MsgUnstake", nil)
 	cdc.RegisterConcrete(&MsgHarvest{}, "farming/MsgHarvest", nil)
+	cdc.RegisterConcrete(&MsgRemovePlan{}, "farming/MsgRemovePlan", nil)
 	cdc.RegisterConcrete(&FixedAmountPlan{}, "farming/FixedAmountPlan", nil)
 	cdc.RegisterConcrete(&RatioPlan{}, "farming/RatioPlan", nil)
 	cdc.RegisterConcrete(&PublicPlanProposal{}, "farming/PublicPlanProposal", nil)
@@ -32,6 +33,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgStake{},
 		&MsgUnstake{},
 		&MsgHarvest{},
+		&MsgRemovePlan{},
 	)
 
 	registry.RegisterImplementations(

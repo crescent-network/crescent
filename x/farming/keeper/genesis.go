@@ -23,15 +23,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	for i, record := range genState.PlanRecords {
-		plan, err := types.UnpackPlan(&record.Plan)
-		if err != nil {
-			panic(err)
-		}
+	k.SetGlobalPlanId(ctx, genState.GlobalPlanId)
+
+	for _, record := range genState.PlanRecords {
+		plan, _ := types.UnpackPlan(&record.Plan) // Already validated
 		k.SetPlan(ctx, plan)
-		if i == len(genState.PlanRecords)-1 {
-			k.SetGlobalPlanId(ctx, plan.GetId())
-		}
 	}
 
 	totalStakings := map[string]sdk.Int{} // (staking coin denom) => (amount)
@@ -122,13 +118,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	plans := []types.PlanRecord{}
+	planRecords := []types.PlanRecord{}
 	for _, plan := range k.GetPlans(ctx) {
 		any, err := types.PackPlan(plan)
 		if err != nil {
 			panic(err)
 		}
-		plans = append(plans, types.PlanRecord{
+		planRecords = append(planRecords, types.PlanRecord{
 			Plan:             *any,
 			FarmingPoolCoins: k.bankKeeper.GetAllBalances(ctx, plan.GetFarmingPoolAddress()),
 		})
@@ -200,7 +196,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	return types.NewGenesisState(
 		params,
-		plans,
+		k.GetGlobalPlanId(ctx),
+		planRecords,
 		stakings,
 		queuedStakings,
 		totalStakings,

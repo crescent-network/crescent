@@ -30,3 +30,9 @@ func DeriveAddress(addressType AddressType, moduleName, name string) sdk.AccAddr
 		return sdk.AccAddress{}
 	}
 }
+
+// DateRangeIncludes returns true if the target date included on the start, end time range.
+// End time is exclusive and start time is inclusive.
+func DateRangeIncludes(startTime, endTime, targetTime time.Time) bool {
+	return endTime.After(targetTime) && !startTime.After(targetTime)
+}

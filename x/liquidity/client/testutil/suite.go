@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
 
 	chain "github.com/cosmosquad-labs/squad/app"
@@ -30,6 +32,8 @@ type IntegrationTestSuite struct {
 	network   *network.Network
 	val       *network.Validator
 	clientCtx client.Context
+
+	denom1, denom2 string
 }
 
 func NewAppConstructor(encodingCfg squadparams.EncodingConfig) network.AppConstructor {
@@ -67,7 +71,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	s.createPair("node0token", s.cfg.BondDenom)
+	s.denom1, s.denom2 = fmt.Sprintf("%stoken", s.val.Moniker), s.cfg.BondDenom
+
+	s.createPair(s.denom1, s.denom2)
+	s.createPool(1, sdk.NewCoins(sdk.NewInt64Coin(s.denom1, 10000000), sdk.NewInt64Coin(s.denom2, 10000000)))
 	s.limitOrder(
 		1, types.OrderDirectionSell, utils.ParseCoin("1000000node0token"), s.cfg.BondDenom,
 		utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute)
@@ -86,7 +93,6 @@ func (s *IntegrationTestSuite) createPair(baseCoinDenom, quoteCoinDenom string) 
 	s.Require().NoError(err)
 }
 
-//nolint
 func (s *IntegrationTestSuite) createPool(pairId uint64, depositCoins sdk.Coins) {
 	_, err := MsgCreatePool(s.clientCtx, s.val.Address.String(), pairId, depositCoins)
 	s.Require().NoError(err)
@@ -108,29 +114,128 @@ func (s *IntegrationTestSuite) limitOrder(
 
 func (s *IntegrationTestSuite) TestQueryPairsCmd() {
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
 
-	cmd := cli.NewQueryPairsCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{"--output=json"})
-	s.Require().NoError(err)
+	for _, tc := range []struct {
+		name        string
+		args        []string
+		expectedErr string
+		postRun     func(resp types.QueryPairsResponse)
+	}{
+		{
+			"happy case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"",
+			func(resp types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 1)
+				s.Require().Equal(s.denom1, resp.Pairs[0].BaseCoinDenom)
+				s.Require().Equal(s.denom2, resp.Pairs[0].QuoteCoinDenom)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			cmd := cli.NewQueryPairsCmd()
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				var resp types.QueryPairsResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
 
-	var resp types.QueryPairsResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().NotNil(resp.Pairs)
+func (s *IntegrationTestSuite) TestQueryPoolsCmd() {
+	val := s.network.Validators[0]
+
+	for _, tc := range []struct {
+		name        string
+		args        []string
+		expectedErr string
+		postRun     func(resp types.QueryPoolsResponse)
+	}{
+		{
+			"happy case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"",
+			func(resp types.QueryPoolsResponse) {
+				s.Require().Len(resp.Pools, 1)
+				s.Require().Equal(uint64(1), resp.Pools[0].PairId)
+				s.Require().Equal(uint64(1), resp.Pools[0].Id)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			cmd := cli.NewQueryPoolsCmd()
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				var resp types.QueryPoolsResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestQueryOrdersCmd() {
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
 
-	cmd := cli.NewQueryOrdersCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{
-		val.Address.String(),
-		"--output=json",
-	})
-	s.Require().NoError(err)
-
-	var resp types.QueryOrdersResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().Len(resp.Orders, 1)
+	for _, tc := range []struct {
+		name        string
+		args        []string
+		expectedErr string
+		postRun     func(resp types.QueryOrdersResponse)
+	}{
+		{
+			"happy case",
+			[]string{
+				fmt.Sprintf("--%s=%d", cli.FlagPairId, 1),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			"",
+			func(resp types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 1)
+				s.Require().Equal(uint64(1), resp.Orders[0].PairId)
+				s.Require().Equal(uint64(1), resp.Orders[0].Id)
+			},
+		},
+		{
+			"no arguments",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			"either orderer or pair-id must be specified",
+			nil,
+		},
+		{
+			"specify both orderer and pair id",
+			[]string{
+				s.val.Address.String(),
+				fmt.Sprintf("--%s=%d", cli.FlagPairId, 1),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			"",
+			func(resp types.QueryOrdersResponse) {
+				s.Require().Len(resp.Orders, 1)
+				s.Require().Equal(uint64(1), resp.Orders[0].PairId)
+				s.Require().Equal(uint64(1), resp.Orders[0].Id)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			cmd := cli.NewQueryOrdersCmd()
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				var resp types.QueryOrdersResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
 }

@@ -112,8 +112,11 @@ type MsgLimitOrder struct {
 ```
 
 `Price` that isn't fit on price ticks is automatically converted by this rule:
+
 - For buy orders, the resulting price will be the highest tick price lower than(or equal to) `Price`
 - For sell orders, the resulting price will be the lowest tick price higher than(or equal to) `Price`
+
+Note that an order will be executed for at least one batch, even if `OrderLifespan` is specified as `0`.
 
 ### Validity Checks
 
@@ -151,6 +154,8 @@ Market orders are converted to limit orders by following rule:
 - Sell market orders are converted to limit orders with price of `LastPrice * (1-MaxPriceLimitRatio)`
 
 After the conversion, market orders are treated same as limit orders.
+
+Note that an order will be executed for at least one batch, even if `OrderLifespan` is specified as `0`.
 
 ### Validity Checks
 

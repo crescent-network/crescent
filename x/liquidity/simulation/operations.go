@@ -36,7 +36,7 @@ var (
 	Fees = sdk.Coins{
 		{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1000),
+			Amount: sdk.NewInt(0),
 		},
 	}
 )
@@ -385,9 +385,13 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		if pair.LastPrice != nil {
 			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
 		} else {
-			rx, ry := k.GetPoolBalances(ctx, pool)
-			ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.Int{})
-			minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
+			if pool != (types.Pool{}) {
+				rx, ry := k.GetPoolBalances(ctx, pool)
+				ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.ZeroInt())
+				minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
+			} else {
+				minPrice, maxPrice = utils.ParseDec("0.1"), utils.ParseDec("10.0")
+			}
 		}
 		price := amm.PriceToDownTick(utils.RandomDec(r, minPrice, maxPrice), int(params.TickPrecision))
 
@@ -460,7 +464,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "no account to make a limit order"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "no account to make a market order"), nil, nil
 		}
 
 		_, maxPrice := minMaxPrice(k, ctx, *pair.LastPrice)
@@ -478,10 +482,10 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			demandCoinDenom = pair.QuoteCoinDenom
 		}
 		if offerCoin.Amount.LT(types.MinCoinAmount) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "too small offer coin amount"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "too small offer coin amount"), nil, nil
 		}
 		if !sdk.NewCoins(offerCoin).IsAllLTE(spendable) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "insufficient funds"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "insufficient funds"), nil, nil
 		}
 
 		lifespan := time.Duration(r.Int63n(int64(params.MaxOrderLifespan)))
@@ -720,18 +724,13 @@ func findPairToMakeLimitOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, sp
 
 	for _, pair := range pairs {
 		var resPool types.Pool
-		found := false // Found a non-disabled pool?
 		_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 			if !pool.Disabled {
 				resPool = pool
-				found = true
 				return true, nil
 			}
 			return false, nil
 		})
-		if !found {
-			continue
-		}
 
 		dirs := []types.OrderDirection{types.OrderDirectionBuy, types.OrderDirectionSell}
 		r.Shuffle(len(dirs), func(i, j int) {

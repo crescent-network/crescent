@@ -11,6 +11,8 @@ import (
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	claimtypes "github.com/cosmosquad-labs/squad/x/claim/types"
+	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 	"github.com/stretchr/testify/require"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
@@ -188,6 +190,8 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[budgettypes.StoreKey], newApp.keys[budgettypes.StoreKey], [][]byte{}},
 		{app.keys[farmingtypes.StoreKey], newApp.keys[farmingtypes.StoreKey], [][]byte{}},
 		{app.keys[liquidstakingtypes.StoreKey], newApp.keys[liquidstakingtypes.StoreKey], [][]byte{}},
+		{app.keys[liquiditytypes.StoreKey], newApp.keys[liquiditytypes.StoreKey], [][]byte{}},
+		{app.keys[claimtypes.StoreKey], newApp.keys[claimtypes.StoreKey], [][]byte{}},
 		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 	}

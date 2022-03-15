@@ -10,7 +10,7 @@ import (
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
 
-// BeginBlocker collects liquidStakings for the current block
+// BeginBlocker updates liquid validator set changes for the current block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	k.UpdateLiquidValidatorSet(ctx)

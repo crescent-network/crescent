@@ -20,41 +20,43 @@ message GenesisState {
   // params defines all the parameters for the farming module
   Params params = 1 [(gogoproto.nullable) = false];
 
-  // plan_records defines the plan records used for genesis state
-  repeated PlanRecord plan_records = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"plan_records\""];
+  uint64 global_plan_id = 2 [(gogoproto.moretags) = "yaml:\"global_plan_id\""];
 
-  repeated StakingRecord staking_records = 3
+  // plan_records defines the plan records used for genesis state
+  repeated PlanRecord plan_records = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"plan_records\""];
+
+  repeated StakingRecord staking_records = 4
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"staking_records\""];
 
-  repeated QueuedStakingRecord queued_staking_records = 4
+  repeated QueuedStakingRecord queued_staking_records = 5
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"queued_staking_records\""];
 
-  repeated HistoricalRewardsRecord historical_rewards_records = 5
+  repeated HistoricalRewardsRecord historical_rewards_records = 6
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"historical_rewards_records\""];
 
-  repeated OutstandingRewardsRecord outstanding_rewards_records = 6
+  repeated OutstandingRewardsRecord outstanding_rewards_records = 7
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"outstanding_rewards_records\""];
 
-  repeated CurrentEpochRecord current_epoch_records = 7
+  repeated CurrentEpochRecord current_epoch_records = 8
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"current_epoch_records\""];
 
-  repeated TotalStakingsRecord total_stakings_records = 8
+  repeated TotalStakingsRecord total_stakings_records = 9
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_stakings_records\""];
 
   // reward_pool_coins specifies balance of the reward pool to be distributed in the plans
   // this param is needed for import/export validation
-  repeated cosmos.base.v1beta1.Coin reward_pool_coins = 9 [
+  repeated cosmos.base.v1beta1.Coin reward_pool_coins = 10 [
     (gogoproto.moretags)     = "yaml:\"reward_pool_coins\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable)     = false
   ];
 
   // last_epoch_time specifies the last executed epoch time of the plans
-  google.protobuf.Timestamp last_epoch_time = 10
+  google.protobuf.Timestamp last_epoch_time = 11
       [(gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"last_epoch_time\""];
 
   // current_epoch_days specifies the epoch used when allocating farming rewards in end blocker
-  uint32 current_epoch_days = 11;
+  uint32 current_epoch_days = 12;
 }
 
 // PlanRecord is used for import/export via genesis json.

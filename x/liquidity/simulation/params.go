@@ -17,27 +17,27 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyBatchSize),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", genBatchSize(r))
+				return fmt.Sprintf("%d", GenBatchSize(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyTickPrecision),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", genTickPrecision(r))
+				return fmt.Sprintf("%d", GenTickPrecision(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyMaxPriceLimitRatio),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", genMaxPriceLimitRatio(r))
+				return fmt.Sprintf("\"%s\"", GenMaxPriceRatio(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyWithdrawFeeRate),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", genWithdrawFeeRate(r))
+				return fmt.Sprintf("\"%s\"", GenWithdrawFeeRate(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyMaxOrderLifespan),
 			func(r *rand.Rand) string {
-				bz, _ := json.Marshal(genMaxOrderLifespan(r))
+				bz, _ := json.Marshal(GenMaxOrderLifespan(r))
 				return fmt.Sprintf("\"%s\"", bz)
 			},
 		),

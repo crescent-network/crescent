@@ -35,5 +35,10 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 				return fmt.Sprintf("\"%s\"", GenFarmingFeeCollector(r))
 			},
 		),
+		simulation.NewSimParamChange(types.ModuleName, string(types.KeyMaxNumPrivatePlans),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("%d", GenMaxNumPrivatePlans(r))
+			},
+		),
 	}
 }
