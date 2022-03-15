@@ -5,12 +5,10 @@ The Squad containing below Cosmos SDK modules
 - liquidity
 - liquidstaking
 - farming
-- mint
+- mint (constant inflation)
 - claim
 
-Also, customized cosmos-sdk is used, Please check the difference on [cosmosquad-labs/cosmos-sdk](https://github.com/cosmosquad-labs/cosmos-sdk/compare/v0.44.5...0.44.5-enchanced).
-
-- <!-- markdown-link-check-disable -->
+<!-- markdown-link-check-disable -->
 - see the [main](https://github.com/cosmosquad-labs/squad/tree/main) branch for the latest 
 - see [releases](https://github.com/cosmosquad-labs/squad/releases) for the latest release
 
@@ -18,10 +16,12 @@ Also, customized cosmos-sdk is used, Please check the difference on [cosmosquad-
 
 If you haven't already, install Golang by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
-| Requirement                                                                                                    | Notes             |
-|----------------------------------------------------------------------------------------------------------------|-------------------|
-| Go version                                                                                                     | Go1.16 or higher  |
-| [cosmosquad-labs/cosmos-sdk](https://github.com/cosmosquad-labs/cosmos-sdk/compare/v0.44.5...0.44.5-enchanced) | v0.44.5 or higher |
+This project uses customized cosmos-sdk, Please check the difference on [here](https://github.com/cosmosquad-labs/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
+
+| Requirement           | Notes             |
+|-----------------------|-------------------|
+| Go version            | Go1.16 or higher  |
+| customized cosmos-sdk | v1.0.2-sdk-0.44.5 |
 
 ## Installation
 
