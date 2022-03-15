@@ -464,7 +464,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "no account to make a market order"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "no account to make a market order"), nil, nil
 		}
 
 		_, maxPrice := minMaxPrice(k, ctx, *pair.LastPrice)
@@ -482,10 +482,10 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			demandCoinDenom = pair.QuoteCoinDenom
 		}
 		if offerCoin.Amount.LT(types.MinCoinAmount) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "too small offer coin amount"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "too small offer coin amount"), nil, nil
 		}
 		if !sdk.NewCoins(offerCoin).IsAllLTE(spendable) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "insufficient funds"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "insufficient funds"), nil, nil
 		}
 
 		lifespan := time.Duration(r.Int63n(int64(params.MaxOrderLifespan)))
