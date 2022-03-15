@@ -3,6 +3,8 @@ Title: REST APIs
 Description: A high-level overview of gRPC-gateway REST routes in farming module.
 ---
 
+# Farming Module
+ 
 ## Synopsis
 
 This document provides a high-level overview of what gRPC-gateway REST routes are supported in the farming module.
