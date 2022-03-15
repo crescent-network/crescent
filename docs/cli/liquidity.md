@@ -35,9 +35,9 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
     * [Orders](#Orrers)
     * [Order](#Order)
 
-## Transaction
+# Transaction
 
-### CreatePair
+## CreatePair
 
 Create a pair (market) for trading. 
 
@@ -58,7 +58,7 @@ create-pair [base-coin-denom] [quote-coin-denom]
 squad tx liquidity create-pair uatom uusd \
 --chain-id localnet \
 --from alice \
---keyring-backend=test \
+--keyring-backend test \
 --broadcast-mode block \
 --yes \
 --output json | jq
@@ -70,7 +70,7 @@ squad tx liquidity create-pair uatom uusd \
 squad q liquidity pairs -o json | jq
 ```
 
-### CreatePool
+## CreatePool
 
 Create a liquidity pool in existing pair. 
 
@@ -92,7 +92,7 @@ create-pool [pair-id] [deposit-coins]
 squad tx liquidity create-pool 1 3000000000uatom,1000000000uusd \
 --chain-id localnet \
 --from alice \
---keyring-backend=test \
+--keyring-backend test \
 --broadcast-mode block \
 --yes \
 --output json | jq
@@ -104,7 +104,7 @@ squad tx liquidity create-pool 1 3000000000uatom,1000000000uusd \
 squad q liquidity pools -o json | jq
 ```
 
-### Deposit
+## Deposit
 
 Deposit coins to a liquidity pool.  
 
@@ -127,7 +127,7 @@ deposit [pool-id] [deposit-coins]
 squad tx liquidity deposit 1 30000000uatom,10000000uusd \
 --chain-id localnet \
 --from alice \
---keyring-backend=test \
+--keyring-backend test \
 --broadcast-mode block \
 --yes \
 --output json | jq
@@ -141,7 +141,7 @@ squad tx liquidity deposit 1 30000000uatom,10000000uusd \
 squad q liquidity deposit-requests 1 -o json | jq
 ```
 
-### Withdraw
+## Withdraw
 
 Withdraw coins from the liquidity pool.
 
@@ -163,7 +163,7 @@ withdraw [pool-id] [pool-coin]
 squad tx liquidity withdraw 1 500000000000pool1 \
 --chain-id localnet \
 --from alice \
---keyring-backend=test \
+--keyring-backend test \
 --broadcast-mode block \
 --yes \
 --output json | jq
@@ -177,7 +177,7 @@ squad tx liquidity withdraw 1 500000000000pool1 \
 squad q liquidity withdraw-requests 1 -o json | jq
 ```
 
-### LimitOrder
+## LimitOrder
 
 Make a limit order.
 
@@ -202,11 +202,11 @@ limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amou
 
 
 ```bash
-# Make a limit order to swap 
-squad tx liquidity limit-order 1 sell 100000uatom uusd 0.99 100000 10s \
+# Make a limit order to swap
+squad tx liquidity limit-order 1 sell 1000000uatom uusd 0.33 1000000 20s \
 --chain-id localnet \
 --from alice \
---keyring-backend=test \
+--keyring-backend test \
 --broadcast-mode block \
 --yes \
 --output json | jq
@@ -217,10 +217,10 @@ squad tx liquidity limit-order 1 sell 100000uatom uusd 0.99 100000 10s \
 # You can query order requests by using the following command
 # You must query this right away to get the result
 # Otherwise, it is removed as it is executed.
-squad q liquidity orders 1 -o json | jq
+squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
 ```
 
-### MarketOrder
+## MarketOrder
 
 Make a market order.
 
@@ -246,10 +246,10 @@ market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount] [or
 
 ```bash
 # Make a market order to swap 
-squad tx liquidity market-order 1 buy 100000usquad uatom 10000 10s \
+squad tx liquidity market-order 1 sell 5000000uatom uusd 5000000 20s \
 --chain-id localnet \
 --from alice \
---keyring-backend=test \
+--keyring-backend test \
 --broadcast-mode block \
 --yes \
 --output json | jq
@@ -260,10 +260,10 @@ squad tx liquidity market-order 1 buy 100000usquad uatom 10000 10s \
 # You can query order requests by using the following command
 # You must query this right away to get the result
 # Otherwise, it is removed as it is executed.
-squad q liquidity orders 1 -o json | jq
+squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
 ```
 
-### CancelOrder
+## CancelOrder
 
 
 ```bash
@@ -281,7 +281,7 @@ squad q liquidity orders 1 -o json | jq
 
 ```
 
-### CancelAllOrders
+## CancelAllOrders
 
 
 ```bash
@@ -299,17 +299,17 @@ squad q liquidity orders 1 -o json | jq
 
 ```
 
-## Queries
+# Queries
 
-### Params
-### Pairs
-### Pair
-### Pools
-### Pool
-### DepositRequests
-### DepositRequest
-### WithdrawRequests
-### WithdrawRequest
-### Orders
-### Order
+## Params
+## Pairs
+## Pair
+## Pools
+## Pool
+## DepositRequests
+## DepositRequest
+## WithdrawRequests
+## WithdrawRequest
+## Orders
+## Order
 
