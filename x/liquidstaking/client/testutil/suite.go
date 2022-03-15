@@ -6,13 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	squadparams "github.com/cosmosquad-labs/squad/app/params"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -25,6 +24,7 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 
 	chain "github.com/cosmosquad-labs/squad/app"
+	squadparams "github.com/cosmosquad-labs/squad/app/params"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
 	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
