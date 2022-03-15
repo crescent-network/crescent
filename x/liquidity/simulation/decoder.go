@@ -20,7 +20,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			return fmt.Sprintf("%v\n%v", pairA, pairB)
 
 		case bytes.Equal(kvA.Key[:1], types.PoolKeyPrefix):
-			var poolA, poolB types.Pair
+			var poolA, poolB types.Pool
 			cdc.MustUnmarshal(kvA.Value, &poolA)
 			cdc.MustUnmarshal(kvB.Value, &poolB)
 			return fmt.Sprintf("%v\n%v", poolA, poolB)
