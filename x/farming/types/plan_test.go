@@ -14,7 +14,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 func TestPlanI(t *testing.T) {

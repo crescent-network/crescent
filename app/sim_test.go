@@ -9,14 +9,6 @@ import (
 	"os"
 	"testing"
 
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
-	claimtypes "github.com/cosmosquad-labs/squad/x/claim/types"
-	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
-	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
-	"github.com/stretchr/testify/require"
-	budgettypes "github.com/tendermint/budget/x/budget/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -34,13 +26,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	"github.com/stretchr/testify/require"
+	budgettypes "github.com/tendermint/budget/x/budget/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	claimtypes "github.com/crescent-network/crescent/x/claim/types"
+	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
+	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
+	minttypes "github.com/crescent-network/crescent/x/mint/types"
+
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
 )
 
 // Get flags every time the simulator is run

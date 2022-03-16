@@ -14,9 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	chain "github.com/cosmosquad-labs/squad/app"
-	"github.com/cosmosquad-labs/squad/x/mint/simulation"
-	"github.com/cosmosquad-labs/squad/x/mint/types"
+	chain "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/mint/simulation"
+	"github.com/crescent-network/crescent/x/mint/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

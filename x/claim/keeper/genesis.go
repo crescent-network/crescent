@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmosquad-labs/squad/x/claim/types"
+	"github.com/crescent-network/crescent/x/claim/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.

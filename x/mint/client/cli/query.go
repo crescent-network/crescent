@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
-	"github.com/cosmosquad-labs/squad/x/mint/types"
+	"github.com/crescent-network/crescent/x/mint/types"
 )
 
 // GetQueryCmd returns the cli query commands for the mint module.

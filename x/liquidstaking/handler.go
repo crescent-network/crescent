@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 // NewHandler returns a new msg handler.

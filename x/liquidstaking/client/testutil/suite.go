@@ -23,10 +23,10 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
 
-	chain "github.com/cosmosquad-labs/squad/app"
-	squadparams "github.com/cosmosquad-labs/squad/app/params"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/client/cli"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	chain "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/x/liquidstaking/client/cli"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 type IntegrationTestSuite struct {
@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
-func NewAppConstructor(encodingCfg squadparams.EncodingConfig) network.AppConstructor {
+func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
 		return chain.NewApp(
 			val.Ctx.Logger, tmdb.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,

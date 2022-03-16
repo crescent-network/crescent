@@ -1,0 +1,33 @@
+syntax = "proto3";
+package crescent.mint.v1beta1;
+
+option go_package = "github.com/crescent-network/crescent/x/mint/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// Params holds parameters for the mint module.
+message Params {
+  // type of coin to mint
+  string mint_denom = 1;
+
+  // block_time_threshold is a safety to accept only blocktime as much as it and give inflation even if the chain stops
+  // or the last blocktime is huge by manipulating blocktime.
+  google.protobuf.Duration block_time_threshold = 2 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+
+  repeated InflationSchedule inflation_schedules = 3 [(gogoproto.nullable) = false];
+}
+
+// InflationSchedule defines the start and end time of the inflation period, and the amount of inflation during that
+// period.
+message InflationSchedule {
+  // start_time is a start date time of the inflation period
+  google.protobuf.Timestamp start_time = 1
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+  // end_time is a start date time of the inflation period
+  google.protobuf.Timestamp end_time = 2
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+  // amount is the amount of inflation during that period.
+  string amount = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}

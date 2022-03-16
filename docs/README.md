@@ -16,4 +16,4 @@ How to use the documentation
 
 We welcome contributions from everyone. The `main` branch contains the latest development version of the code. You can create a branch from `main` and create a pull request, or maintain your own fork and submit a cross-repository pull request. It is important to create an issue before you start fixing a bug or implementing a new feature.
 
-If you're not sure where to start check out [CONTRIBUTING.md](../CONTRIBUTING.md) for our guidelines & policies for how we develop `Squad`. Thank you to all those who have contributed to Squad!
+If you're not sure where to start check out [CONTRIBUTING.md](../CONTRIBUTING.md) for our guidelines & policies for how we develop `Crescent`. Thank you to all those who have contributed to Crescent!

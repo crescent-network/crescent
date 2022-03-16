@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 func TestParams_Validate(t *testing.T) {

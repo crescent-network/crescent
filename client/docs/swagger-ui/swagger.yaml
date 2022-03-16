@@ -1,8 +1,8 @@
 swagger: '2.0'
 info:
-  title: REST and gRPC Gateway docs
+  title: Crescent REST and gRPC Gateway docs
   description: 'A REST interface for state queries, transactions'
-  version: 0.0.1
+  version: 1.0.0-rc1
 paths:
   /node_info:
     get:
@@ -19883,7 +19883,785 @@ paths:
           format: boolean
       tags:
         - Query
-  /squad/farming/v1beta1/current_epoch_days:
+  '/cosmos/budget/v1beta1/addresses/{name}':
+    get:
+      summary: >-
+        Addresses returns an address that can be used as source and destination
+        is derived according to the given type,
+
+        module name, and name.
+      operationId: Addresses
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              address:
+                type: string
+            description: >-
+              QueryAddressesResponse is the response type for the
+              Query/Addresses RPC method.
+        '400':
+          description: Bad Request
+          schema: {}
+          examples:
+            application/json:
+              code: 3
+              message: 'invalid names with address type: invalid request'
+              details: []
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: name
+          description: The name to be used for address derivation.
+          in: path
+          required: true
+          type: string
+        - name: type
+          description: >-
+            The Address Type, default 0 for ADDRESS_TYPE_32_BYTES or 1 for
+            ADDRESS_TYPE_20_BYTES.
+
+             - ADDRESS_TYPE_32_BYTES: the 32 bytes length address type of ADR 028.
+             - ADDRESS_TYPE_20_BYTES: the default 20 bytes length address type.
+          in: query
+          required: false
+          type: string
+          enum:
+            - ADDRESS_TYPE_32_BYTES
+            - ADDRESS_TYPE_20_BYTES
+          default: ADDRESS_TYPE_32_BYTES
+        - name: module_name
+          description: >-
+            The module name to be used for address derivation, default is
+            budget.
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /cosmos/budget/v1beta1/budgets:
+    get:
+      summary: Budgets returns all budgets.
+      description: Returns all budgets.
+      operationId: Budgets
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              budgets:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    budget:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          title: name defines the name of the budget
+                        rate:
+                          type: string
+                          title: >-
+                            rate specifies the distributing amount by ratio of
+                            total budget source
+                        source_address:
+                          type: string
+                          title: >-
+                            source_address defines the bech32-encoded address
+                            that source of the budget
+                        destination_address:
+                          type: string
+                          title: >-
+                            destination_address defines the bech32-encoded
+                            address of the budget pool to distribute
+                        start_time:
+                          type: string
+                          format: date-time
+                          title: start_time specifies the start time of the budget
+                        end_time:
+                          type: string
+                          format: date-time
+                          title: end_time specifies the end time of the budget
+                      description: Budget defines a budget object.
+                    total_collected_coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+            description: >-
+              QueryBudgetsResponse is the response type for the Query/Budgets
+              RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: name
+          in: query
+          required: false
+          type: string
+        - name: source_address
+          in: query
+          required: false
+          type: string
+        - name: destination_address
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the budget
+        url: >-
+          https://github.com/tendermint/budget/blob/main/x/budget/spec/02_state.md
+  /cosmos/budget/v1beta1/params:
+    get:
+      summary: Params returns parameters of the budget module.
+      description: Returns all parameters of the budget module.
+      operationId: BudgetParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  epoch_blocks:
+                    type: integer
+                    format: int64
+                    title: >-
+                      The universal epoch length in number of blocks
+
+                      A collection of budgets is executed with this epoch_blocks
+                      parameter
+                  budgets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          title: name defines the name of the budget
+                        rate:
+                          type: string
+                          title: >-
+                            rate specifies the distributing amount by ratio of
+                            total budget source
+                        source_address:
+                          type: string
+                          title: >-
+                            source_address defines the bech32-encoded address
+                            that source of the budget
+                        destination_address:
+                          type: string
+                          title: >-
+                            destination_address defines the bech32-encoded
+                            address of the budget pool to distribute
+                        start_time:
+                          type: string
+                          format: date-time
+                          title: start_time specifies the start time of the budget
+                        end_time:
+                          type: string
+                          format: date-time
+                          title: end_time specifies the end time of the budget
+                      description: Budget defines a budget object.
+                    title: >-
+                      Budgets parameter can be added, modified, and deleted
+                      through
+
+                      parameter change governance proposal
+                description: Params defines the parameters for the budget module.
+            description: >-
+              QueryParamsResponse is the response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the params
+        url: >-
+          https://github.com/tendermint/budget/blob/main/x/budget/spec/06_params.md
+  /crescent/farming/v1beta1/current_epoch_days:
     get:
       summary: CurrentEpochDays returns current epoch days.
       description: Returns the current epoch days
@@ -20102,8 +20880,8 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#currentepochdays
-  /squad/farming/v1beta1/params:
+          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#currentepochdays
+  /crescent/farming/v1beta1/params:
     get:
       summary: Params returns parameters of the farming module.
       description: Returns all parameters of the farming module.
@@ -20362,8 +21140,8 @@ paths:
       externalDocs:
         description: Find out more about the params
         url: >-
-          https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/07_params.md
-  /squad/farming/v1beta1/plans:
+          https://github.com/crescent-network/crescent/blob/main/x/farming/spec/07_params.md
+  /crescent/farming/v1beta1/plans:
     get:
       summary: Plans returns all plans.
       description: Returns a list of all farming plans with pagination result.
@@ -20863,8 +21641,8 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#Plans
-  '/squad/farming/v1beta1/plans/{plan_id}':
+          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#Plans
+  '/crescent/farming/v1beta1/plans/{plan_id}':
     get:
       summary: Plan returns a specific plan.
       description: Returns the farming plan that corresponds to the plan_id.
@@ -21273,8 +22051,8 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#plan
-  '/squad/farming/v1beta1/rewards/{farmer}':
+          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#plan
+  '/crescent/farming/v1beta1/rewards/{farmer}':
     get:
       summary: Rewards returns rewards for a farmer
       description: Returns all rewards coins that corresponds to the farmer
@@ -21516,8 +22294,8 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#rewards
-  '/squad/farming/v1beta1/stakings/{farmer}':
+          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#rewards
+  '/crescent/farming/v1beta1/stakings/{farmer}':
     get:
       summary: Stakings returns all stakings by a farmer.
       description: >-
@@ -21778,8 +22556,8 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#stakings
-  '/squad/farming/v1beta1/total_stakings/{staking_coin_denom}':
+          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#stakings
+  '/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}':
     get:
       summary: TotalStakings returns total staking amount for a staking coin denom
       description: Returns total stakings that corresponds to the staking_coin_denom
@@ -22002,8 +22780,8 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/docs/How-To/cli#totalstakings
-  '/squad/liquidity/v1beta1/orders/{orderer}':
+          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#totalstakings
+  '/crescent/liquidity/v1beta1/orders/{orderer}':
     get:
       summary: OrdersByOrderer returns orders made by an orderer.
       operationId: OrdersByOrderer
@@ -22261,7 +23039,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /squad/liquidity/v1beta1/pairs:
+  /crescent/liquidity/v1beta1/pairs:
     get:
       summary: Pairs returns all liquidity pairs.
       operationId: Pairs
@@ -22413,7 +23191,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pairs/{pair_id}':
+  '/crescent/liquidity/v1beta1/pairs/{pair_id}':
     get:
       summary: Pair returns the specific pair.
       operationId: Pair
@@ -22475,7 +23253,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pairs/{pair_id}/orders':
+  '/crescent/liquidity/v1beta1/pairs/{pair_id}/orders':
     get:
       summary: Orders returns all orders within the pair.
       operationId: Orders
@@ -22729,7 +23507,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pairs/{pair_id}/orders/{id}':
+  '/crescent/liquidity/v1beta1/pairs/{pair_id}/orders/{id}':
     get:
       summary: Order returns the specific order.
       operationId: Order
@@ -22902,7 +23680,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /squad/liquidity/v1beta1/params:
+  /crescent/liquidity/v1beta1/params:
     get:
       summary: Params returns parameters of the module.
       operationId: LiquidityParams
@@ -23008,7 +23786,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /squad/liquidity/v1beta1/pools:
+  /crescent/liquidity/v1beta1/pools:
     get:
       summary: Pools returns all liquidity pools.
       operationId: Pools
@@ -23179,7 +23957,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}':
+  '/crescent/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}':
     get:
       summary: >-
         PoolByPoolCoinDenom returns all pools that correspond to the pool coin
@@ -23258,7 +24036,7 @@ paths:
           type: string
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/reserve_address/{reserve_address}':
+  '/crescent/liquidity/v1beta1/pools/reserve_address/{reserve_address}':
     get:
       summary: >-
         PoolByReserveAddress returns all pools that correspond to the reserve
@@ -23337,7 +24115,7 @@ paths:
           type: string
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/{pool_id}':
+  '/crescent/liquidity/v1beta1/pools/{pool_id}':
     get:
       summary: Pool returns the specific liquidity pool.
       operationId: LiquidityPool
@@ -23415,7 +24193,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/{pool_id}/deposit_requests':
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests':
     get:
       summary: DepositRequests returns all deposit requests.
       operationId: DepositRequests
@@ -23637,7 +24415,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}':
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}':
     get:
       summary: DepositRequest returns the specific deposit request.
       operationId: DepositRequest
@@ -23776,7 +24554,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/{pool_id}/withdraw_requests':
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests':
     get:
       summary: WithdrawRequests returns all withdraw requests.
       operationId: WithdrawRequests
@@ -23982,7 +24760,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/squad/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}':
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}':
     get:
       summary: WithdrawRequest returns the specific withdraw request.
       operationId: WithdrawRequest
@@ -24106,7 +24884,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /squad/liquidstaking/v1beta1/params:
+  /crescent/liquidstaking/v1beta1/params:
     get:
       summary: Params returns parameters of the liquidstaking module.
       description: Returns all parameters of the liquid staking module.
@@ -24205,8 +24983,8 @@ paths:
       externalDocs:
         description: Find out more about the params
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
-  /squad/liquidstaking/v1beta1/states:
+          https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec
+  /crescent/liquidstaking/v1beta1/states:
     get:
       summary: States returns states of the liquidstaking module.
       description: Returns states of the liquid staking module.
@@ -24301,8 +25079,8 @@ paths:
       externalDocs:
         description: Find out more about the liquid staking
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
-  /squad/liquidstaking/v1beta1/validators:
+          https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec
+  /crescent/liquidstaking/v1beta1/validators:
     get:
       summary: >-
         LiquidValidators returns liquid validators with states of the
@@ -24387,8 +25165,8 @@ paths:
       externalDocs:
         description: Find out more about the liquid validators
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
-  '/squad/liquidstaking/v1beta1/voting_power/{voter}':
+          https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec
+  '/crescent/liquidstaking/v1beta1/voting_power/{voter}':
     get:
       summary: >-
         VotingPower returns voting power of staking and liquid staking module's
@@ -24473,8 +25251,8 @@ paths:
       externalDocs:
         description: Find out more about the liquid validators
         url: >-
-          https://github.com/cosmosquad-labs/squad/tree/main/x/liquidstaking/spec
-  /squad/mint/v1beta1/params:
+          https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec
+  /crescent/mint/v1beta1/params:
     get:
       summary: Params returns the total set of minting parameters.
       operationId: MintParams
@@ -24553,7 +25331,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /squad/claim/v1beta1/airdrops:
+  /crescent/claim/v1beta1/airdrops:
     get:
       summary: Airdrops returns all airdrops.
       operationId: Airdrops
@@ -24720,7 +25498,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/squad/claim/v1beta1/airdrops/{airdrop_id}':
+  '/crescent/claim/v1beta1/airdrops/{airdrop_id}':
     get:
       summary: Airdrop returns the specific airdrop.
       operationId: Airdrop
@@ -24806,7 +25584,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/squad/claim/v1beta1/airdrops/{airdrop_id}/claim_records/{recipient}':
+  '/crescent/claim/v1beta1/airdrops/{airdrop_id}/claim_records/{recipient}':
     get:
       summary: ClaimRecord returns the claim record for the recipient address.
       operationId: ClaimRecord
@@ -41460,7 +42238,255 @@ definitions:
     description: >-
       QueryAllowancesResponse is the response type for the Query/Allowances RPC
       method.
-  squad.farming.v1beta1.Params:
+  cosmos.budget.v1beta1.AddressType:
+    type: string
+    enum:
+      - ADDRESS_TYPE_32_BYTES
+      - ADDRESS_TYPE_20_BYTES
+    default: ADDRESS_TYPE_32_BYTES
+    description: |-
+      AddressType enumerates the available types of a address.
+
+       - ADDRESS_TYPE_32_BYTES: the 32 bytes length address type of ADR 028.
+       - ADDRESS_TYPE_20_BYTES: the default 20 bytes length address type.
+  cosmos.budget.v1beta1.Budget:
+    type: object
+    properties:
+      name:
+        type: string
+        title: name defines the name of the budget
+      rate:
+        type: string
+        title: rate specifies the distributing amount by ratio of total budget source
+      source_address:
+        type: string
+        title: >-
+          source_address defines the bech32-encoded address that source of the
+          budget
+      destination_address:
+        type: string
+        title: >-
+          destination_address defines the bech32-encoded address of the budget
+          pool to distribute
+      start_time:
+        type: string
+        format: date-time
+        title: start_time specifies the start time of the budget
+      end_time:
+        type: string
+        format: date-time
+        title: end_time specifies the end time of the budget
+    description: Budget defines a budget object.
+  cosmos.budget.v1beta1.BudgetResponse:
+    type: object
+    properties:
+      budget:
+        type: object
+        properties:
+          name:
+            type: string
+            title: name defines the name of the budget
+          rate:
+            type: string
+            title: >-
+              rate specifies the distributing amount by ratio of total budget
+              source
+          source_address:
+            type: string
+            title: >-
+              source_address defines the bech32-encoded address that source of
+              the budget
+          destination_address:
+            type: string
+            title: >-
+              destination_address defines the bech32-encoded address of the
+              budget pool to distribute
+          start_time:
+            type: string
+            format: date-time
+            title: start_time specifies the start time of the budget
+          end_time:
+            type: string
+            format: date-time
+            title: end_time specifies the end time of the budget
+        description: Budget defines a budget object.
+      total_collected_coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  cosmos.budget.v1beta1.Params:
+    type: object
+    properties:
+      epoch_blocks:
+        type: integer
+        format: int64
+        title: |-
+          The universal epoch length in number of blocks
+          A collection of budgets is executed with this epoch_blocks parameter
+      budgets:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              title: name defines the name of the budget
+            rate:
+              type: string
+              title: >-
+                rate specifies the distributing amount by ratio of total budget
+                source
+            source_address:
+              type: string
+              title: >-
+                source_address defines the bech32-encoded address that source of
+                the budget
+            destination_address:
+              type: string
+              title: >-
+                destination_address defines the bech32-encoded address of the
+                budget pool to distribute
+            start_time:
+              type: string
+              format: date-time
+              title: start_time specifies the start time of the budget
+            end_time:
+              type: string
+              format: date-time
+              title: end_time specifies the end time of the budget
+          description: Budget defines a budget object.
+        title: |-
+          Budgets parameter can be added, modified, and deleted through
+          parameter change governance proposal
+    description: Params defines the parameters for the budget module.
+  cosmos.budget.v1beta1.QueryAddressesResponse:
+    type: object
+    properties:
+      address:
+        type: string
+    description: >-
+      QueryAddressesResponse is the response type for the Query/Addresses RPC
+      method.
+  cosmos.budget.v1beta1.QueryBudgetsResponse:
+    type: object
+    properties:
+      budgets:
+        type: array
+        items:
+          type: object
+          properties:
+            budget:
+              type: object
+              properties:
+                name:
+                  type: string
+                  title: name defines the name of the budget
+                rate:
+                  type: string
+                  title: >-
+                    rate specifies the distributing amount by ratio of total
+                    budget source
+                source_address:
+                  type: string
+                  title: >-
+                    source_address defines the bech32-encoded address that
+                    source of the budget
+                destination_address:
+                  type: string
+                  title: >-
+                    destination_address defines the bech32-encoded address of
+                    the budget pool to distribute
+                start_time:
+                  type: string
+                  format: date-time
+                  title: start_time specifies the start time of the budget
+                end_time:
+                  type: string
+                  format: date-time
+                  title: end_time specifies the end time of the budget
+              description: Budget defines a budget object.
+            total_collected_coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+    description: >-
+      QueryBudgetsResponse is the response type for the Query/Budgets RPC
+      method.
+  cosmos.budget.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          epoch_blocks:
+            type: integer
+            format: int64
+            title: >-
+              The universal epoch length in number of blocks
+
+              A collection of budgets is executed with this epoch_blocks
+              parameter
+          budgets:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                  title: name defines the name of the budget
+                rate:
+                  type: string
+                  title: >-
+                    rate specifies the distributing amount by ratio of total
+                    budget source
+                source_address:
+                  type: string
+                  title: >-
+                    source_address defines the bech32-encoded address that
+                    source of the budget
+                destination_address:
+                  type: string
+                  title: >-
+                    destination_address defines the bech32-encoded address of
+                    the budget pool to distribute
+                start_time:
+                  type: string
+                  format: date-time
+                  title: start_time specifies the start time of the budget
+                end_time:
+                  type: string
+                  format: date-time
+                  title: end_time specifies the end time of the budget
+              description: Budget defines a budget object.
+            title: |-
+              Budgets parameter can be added, modified, and deleted through
+              parameter change governance proposal
+        description: Params defines the parameters for the budget module.
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  crescent.farming.v1beta1.Params:
     type: object
     properties:
       private_plan_creation_fee:
@@ -41505,7 +42531,7 @@ definitions:
         type: integer
         format: int64
     description: Params defines the set of params for the farming module.
-  squad.farming.v1beta1.QueryCurrentEpochDaysResponse:
+  crescent.farming.v1beta1.QueryCurrentEpochDaysResponse:
     type: object
     properties:
       current_epoch_days:
@@ -41514,7 +42540,7 @@ definitions:
     description: >-
       QuerCurrentEpochDaysResponse is the response type for the
       Query/CurrentEpochDays RPC method.
-  squad.farming.v1beta1.QueryParamsResponse:
+  crescent.farming.v1beta1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -41568,7 +42594,7 @@ definitions:
             format: int64
         description: Params defines the set of params for the farming module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  squad.farming.v1beta1.QueryPlanResponse:
+  crescent.farming.v1beta1.QueryPlanResponse:
     type: object
     properties:
       plan:
@@ -41731,7 +42757,7 @@ definitions:
                 "value": "1.212s"
               }
     description: QueryPlanResponse is the response type for the Query/Plan RPC method.
-  squad.farming.v1beta1.QueryPlansResponse:
+  crescent.farming.v1beta1.QueryPlansResponse:
     type: object
     properties:
       plans:
@@ -41918,7 +42944,7 @@ definitions:
 
               was set, its value is undefined otherwise
     description: QueryPlansResponse is the response type for the Query/Plans RPC method.
-  squad.farming.v1beta1.QueryRewardsResponse:
+  crescent.farming.v1beta1.QueryRewardsResponse:
     type: object
     properties:
       rewards:
@@ -41938,7 +42964,7 @@ definitions:
     description: >-
       QueryRewardsResponse is the response type for the Query/Rewards RPC
       method.
-  squad.farming.v1beta1.QueryStakingsResponse:
+  crescent.farming.v1beta1.QueryStakingsResponse:
     type: object
     properties:
       staked_coins:
@@ -41972,7 +42998,7 @@ definitions:
     description: >-
       QueryStakingsResponse is the response type for the Query/Stakings RPC
       method.
-  squad.farming.v1beta1.QueryTotalStakingsResponse:
+  crescent.farming.v1beta1.QueryTotalStakingsResponse:
     type: object
     properties:
       amount:
@@ -41980,7 +43006,7 @@ definitions:
     description: >-
       QueryTotalStakingsResponse is the response type for the
       Query/TotalStakings RPC method.
-  squad.liquidity.v1beta1.DepositRequest:
+  crescent.liquidity.v1beta1.DepositRequest:
     type: object
     properties:
       id:
@@ -42060,7 +43086,7 @@ definitions:
            - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
            - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
     description: DepositRequest defines a deposit request.
-  squad.liquidity.v1beta1.Order:
+  crescent.liquidity.v1beta1.Order:
     type: object
     properties:
       id:
@@ -42168,7 +43194,7 @@ definitions:
            - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
            - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
     description: Order defines an order.
-  squad.liquidity.v1beta1.OrderDirection:
+  crescent.liquidity.v1beta1.OrderDirection:
     type: string
     enum:
       - ORDER_DIRECTION_UNSPECIFIED
@@ -42181,7 +43207,7 @@ definitions:
        - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
        - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
        - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-  squad.liquidity.v1beta1.OrderStatus:
+  crescent.liquidity.v1beta1.OrderStatus:
     type: string
     enum:
       - ORDER_STATUS_UNSPECIFIED
@@ -42202,7 +43228,7 @@ definitions:
        - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
        - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
        - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
-  squad.liquidity.v1beta1.Pair:
+  crescent.liquidity.v1beta1.Pair:
     type: object
     properties:
       id:
@@ -42223,7 +43249,7 @@ definitions:
         type: string
         format: uint64
     description: Pair defines a coin pair.
-  squad.liquidity.v1beta1.Params:
+  crescent.liquidity.v1beta1.Params:
     type: object
     properties:
       batch_size:
@@ -42286,7 +43312,7 @@ definitions:
         type: string
         format: uint64
     description: Params defines the parameters for the liquidity module.
-  squad.liquidity.v1beta1.PoolResponse:
+  crescent.liquidity.v1beta1.PoolResponse:
     type: object
     properties:
       id:
@@ -42320,7 +43346,7 @@ definitions:
         type: string
         format: uint64
     description: PoolResponse defines a custom pool response message.
-  squad.liquidity.v1beta1.QueryDepositRequestResponse:
+  crescent.liquidity.v1beta1.QueryDepositRequestResponse:
     type: object
     properties:
       deposit_request:
@@ -42415,7 +43441,7 @@ definitions:
     description: >-
       QueryDepositRequestResponse is response type for the Query/DepositRequest
       RPC method.
-  squad.liquidity.v1beta1.QueryDepositRequestsResponse:
+  crescent.liquidity.v1beta1.QueryDepositRequestsResponse:
     type: object
     properties:
       deposit_requests:
@@ -42537,7 +43563,7 @@ definitions:
     description: >-
       QueryDepositRequestsResponse is response type for the
       Query/DepositRequests RPC method.
-  squad.liquidity.v1beta1.QueryOrderResponse:
+  crescent.liquidity.v1beta1.QueryOrderResponse:
     type: object
     properties:
       order:
@@ -42658,7 +43684,7 @@ definitions:
                - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
         description: Order defines an order.
     description: QueryOrderResponse is response type for the Query/Order RPC method.
-  squad.liquidity.v1beta1.QueryOrdersResponse:
+  crescent.liquidity.v1beta1.QueryOrdersResponse:
     type: object
     properties:
       orders:
@@ -42808,7 +43834,7 @@ definitions:
                    PageResponse page = 2;
            }
     description: QueryOrdersResponse is response type for the Query/Orders RPC method.
-  squad.liquidity.v1beta1.QueryPairResponse:
+  crescent.liquidity.v1beta1.QueryPairResponse:
     type: object
     properties:
       pair:
@@ -42833,7 +43859,7 @@ definitions:
             format: uint64
         description: Pair defines a coin pair.
     description: QueryPairResponse is response type for the Query/Pair RPC method.
-  squad.liquidity.v1beta1.QueryPairsResponse:
+  crescent.liquidity.v1beta1.QueryPairsResponse:
     type: object
     properties:
       pairs:
@@ -42885,7 +43911,7 @@ definitions:
                    PageResponse page = 2;
            }
     description: QueryPairsResponse is response type for the Query/Pairs RPC method.
-  squad.liquidity.v1beta1.QueryParamsResponse:
+  crescent.liquidity.v1beta1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -42958,7 +43984,7 @@ definitions:
             format: uint64
         description: Params defines the parameters for the liquidity module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  squad.liquidity.v1beta1.QueryPoolResponse:
+  crescent.liquidity.v1beta1.QueryPoolResponse:
     type: object
     properties:
       pool:
@@ -42999,7 +44025,7 @@ definitions:
             format: uint64
         description: PoolResponse defines a custom pool response message.
     description: QueryPoolResponse is response type for the Query/Pool RPC method.
-  squad.liquidity.v1beta1.QueryPoolsResponse:
+  crescent.liquidity.v1beta1.QueryPoolsResponse:
     type: object
     properties:
       pools:
@@ -43067,7 +44093,7 @@ definitions:
                    PageResponse page = 2;
            }
     description: QueryPoolsResponse is response type for the Query/Pools RPC method.
-  squad.liquidity.v1beta1.QueryWithdrawRequestResponse:
+  crescent.liquidity.v1beta1.QueryWithdrawRequestResponse:
     type: object
     properties:
       withdraw_request:
@@ -43147,7 +44173,7 @@ definitions:
     description: >-
       QueryWithdrawRequestResponse is response type for the
       Query/WithdrawRequest RPC method.
-  squad.liquidity.v1beta1.QueryWithdrawRequestsResponse:
+  crescent.liquidity.v1beta1.QueryWithdrawRequestsResponse:
     type: object
     properties:
       withdraw_requests:
@@ -43256,7 +44282,7 @@ definitions:
     description: >-
       QueryWithdrawRequestsResponse is response type for the
       Query/WithdrawRequests RPC method.
-  squad.liquidity.v1beta1.RequestStatus:
+  crescent.liquidity.v1beta1.RequestStatus:
     type: string
     enum:
       - REQUEST_STATUS_UNSPECIFIED
@@ -43271,7 +44297,7 @@ definitions:
        - REQUEST_STATUS_NOT_EXECUTED: REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
        - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
        - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
-  squad.liquidity.v1beta1.WithdrawRequest:
+  crescent.liquidity.v1beta1.WithdrawRequest:
     type: object
     properties:
       id:
@@ -43339,7 +44365,7 @@ definitions:
            - REQUEST_STATUS_SUCCEEDED: REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
            - REQUEST_STATUS_FAILED: REQUEST_STATUS_FAILED indicates the request is failed
     description: WithdrawRequest defines a withdraw request.
-  squad.liquidstaking.v1beta1.LiquidValidatorState:
+  crescent.liquidstaking.v1beta1.LiquidValidatorState:
     type: object
     properties:
       operator_address:
@@ -43375,7 +44401,7 @@ definitions:
     description: >-
       LiquidValidatorState is type LiquidValidator with state added to return to
       query results.
-  squad.liquidstaking.v1beta1.NetAmountState:
+  crescent.liquidstaking.v1beta1.NetAmountState:
     type: object
     properties:
       mint_rate:
@@ -43426,7 +44452,7 @@ definitions:
 
       state every time, so it is used only for calculation and query and is not
       stored in kv.
-  squad.liquidstaking.v1beta1.Params:
+  crescent.liquidstaking.v1beta1.Params:
     type: object
     properties:
       liquid_bond_denom:
@@ -43479,7 +44505,7 @@ definitions:
 
           staking to minimize decimal loss and consider gas efficiency.
     description: Params defines the set of params for the liquidstaking module.
-  squad.liquidstaking.v1beta1.QueryLiquidValidatorsResponse:
+  crescent.liquidstaking.v1beta1.QueryLiquidValidatorsResponse:
     type: object
     properties:
       liquid_validators:
@@ -43523,7 +44549,7 @@ definitions:
     description: >-
       QueryLiquidValidatorsResponse is the response type for the
       Query/LiquidValidators RPC method.
-  squad.liquidstaking.v1beta1.QueryParamsResponse:
+  crescent.liquidstaking.v1beta1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -43580,7 +44606,7 @@ definitions:
               staking to minimize decimal loss and consider gas efficiency.
         description: Params defines the set of params for the liquidstaking module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  squad.liquidstaking.v1beta1.QueryStatesResponse:
+  crescent.liquidstaking.v1beta1.QueryStatesResponse:
     type: object
     properties:
       net_amount_state:
@@ -43637,7 +44663,7 @@ definitions:
           state every time, so it is used only for calculation and query and is
           not stored in kv.
     description: QueryStatesResponse is the response type for the Query/States RPC method.
-  squad.liquidstaking.v1beta1.QueryVotingPowerResponse:
+  crescent.liquidstaking.v1beta1.QueryVotingPowerResponse:
     type: object
     properties:
       voting_power:
@@ -43675,7 +44701,7 @@ definitions:
     description: >-
       QueryVotingPowerResponse is the response type for the Query/States RPC
       method.
-  squad.liquidstaking.v1beta1.ValidatorStatus:
+  crescent.liquidstaking.v1beta1.ValidatorStatus:
     type: string
     enum:
       - VALIDATOR_STATUS_UNSPECIFIED
@@ -43688,7 +44714,7 @@ definitions:
        - VALIDATOR_STATUS_UNSPECIFIED: VALIDATOR_STATUS_UNSPECIFIED defines the unspecified invalid status.
        - VALIDATOR_STATUS_ACTIVE: VALIDATOR_STATUS_ACTIVE defines the active, valid status
        - VALIDATOR_STATUS_INACTIVE: VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
-  squad.liquidstaking.v1beta1.VotingPower:
+  crescent.liquidstaking.v1beta1.VotingPower:
     type: object
     properties:
       voter:
@@ -43720,7 +44746,7 @@ definitions:
 
       validator, the value of btoken(liquid_bond_denom), and the pool coin and
       farming position containing btoken..
-  squad.liquidstaking.v1beta1.WhitelistedValidator:
+  crescent.liquidstaking.v1beta1.WhitelistedValidator:
     type: object
     properties:
       validator_address:
@@ -43743,7 +44769,7 @@ definitions:
       In the case of inactive, it is calculated
 
       as zero.
-  squad.mint.v1beta1.InflationSchedule:
+  crescent.mint.v1beta1.InflationSchedule:
     type: object
     properties:
       start_time:
@@ -43762,7 +44788,7 @@ definitions:
       and the amount of inflation during that
 
       period.
-  squad.mint.v1beta1.Params:
+  crescent.mint.v1beta1.Params:
     type: object
     properties:
       mint_denom:
@@ -43797,7 +44823,7 @@ definitions:
 
             period.
     description: Params holds parameters for the mint module.
-  squad.mint.v1beta1.QueryParamsResponse:
+  crescent.mint.v1beta1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -43836,7 +44862,7 @@ definitions:
 
                 period.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  squad.claim.v1beta1.Airdrop:
+  crescent.claim.v1beta1.Airdrop:
     type: object
     properties:
       id:
@@ -43878,7 +44904,7 @@ definitions:
         format: date-time
         title: end_time specifies the start time of the airdrop
     description: Airdrop defines airdrop information.
-  squad.claim.v1beta1.ClaimRecord:
+  crescent.claim.v1beta1.ClaimRecord:
     type: object
     properties:
       airdrop_id:
@@ -43946,7 +44972,7 @@ definitions:
           initial values are empty and each condition type gets appended when
           claim is successfully executed
     description: ClaimRecord defines claim record that corresponds to the airdrop.
-  squad.claim.v1beta1.ConditionType:
+  crescent.claim.v1beta1.ConditionType:
     type: string
     enum:
       - CONDITION_TYPE_UNSPECIFIED
@@ -43964,7 +44990,7 @@ definitions:
        - CONDITION_TYPE_SWAP: CONDITION_TYPE_SWAP specifies swap condition type
        - CONDITION_TYPE_LIQUIDSTAKE: CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
        - CONDITION_TYPE_VOTE: CONDITION_TYPE_VOTE specifies governance vote condition type
-  squad.claim.v1beta1.QueryAirdropResponse:
+  crescent.claim.v1beta1.QueryAirdropResponse:
     type: object
     properties:
       airdrop:
@@ -44010,7 +45036,7 @@ definitions:
             title: end_time specifies the start time of the airdrop
         description: Airdrop defines airdrop information.
     description: QueryAirdropResponse is response type for the Query/Airdrop RPC method.
-  squad.claim.v1beta1.QueryAirdropsResponse:
+  crescent.claim.v1beta1.QueryAirdropsResponse:
     type: object
     properties:
       airdrops:
@@ -44083,7 +45109,7 @@ definitions:
                    PageResponse page = 2;
            }
     description: QueryAirdropsResponse is response type for the Query/Airdrops RPC method.
-  squad.claim.v1beta1.QueryClaimRecordResponse:
+  crescent.claim.v1beta1.QueryClaimRecordResponse:
     type: object
     properties:
       claim_record:

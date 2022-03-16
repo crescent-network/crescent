@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 type keysTestSuite struct {

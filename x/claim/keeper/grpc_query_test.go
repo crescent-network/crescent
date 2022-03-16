@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/claim/types"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

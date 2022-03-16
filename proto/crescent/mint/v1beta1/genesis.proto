@@ -1,0 +1,18 @@
+syntax = "proto3";
+package crescent.mint.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/mint/v1beta1/mint.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/mint/types";
+
+// GenesisState defines the mint module's genesis state.
+message GenesisState {
+  // last_block_time defines the last block time, which is used to calculate inflation.
+  google.protobuf.Timestamp last_block_time = 1
+      [(gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"last_block_time\""];
+
+  // params defines all the parameters of the module.
+  Params params = 2 [(gogoproto.nullable) = false];
+}

@@ -4,13 +4,13 @@
 
 The `farming` module contains the following parameters:
 
-| Key                        | Type      | Example                                                             |
-| -------------------------- | --------- | ------------------------------------------------------------------- |
-| PrivatePlanCreationFee     | sdk.Coins | [{"denom":"stake","amount":"1000000000"}]                           |
-| NextEpochDays              | uint32    | 1                                                                   |
-| FarmingFeeCollector        | string    | "cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x" |
-| DelayedStakingGasFee       | sdk.Gas   | 60000                                                               |
-| MaxNumPrivatePlans         | uint32    | 10000                                                               |
+| Key                    | Type      | Example                                                          |
+|------------------------|-----------|------------------------------------------------------------------|
+| PrivatePlanCreationFee | sdk.Coins | [{"denom":"stake","amount":"1000000000"}]                        |
+| NextEpochDays          | uint32    | 1                                                                |
+| FarmingFeeCollector    | string    | "cre1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mq4p6cjy" |
+| DelayedStakingGasFee   | sdk.Gas   | 60000                                                            |
+| MaxNumPrivatePlans     | uint32    | 10000                                                            |
 
 
 ## PrivatePlanCreationFee

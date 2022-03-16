@@ -12,11 +12,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/cosmosquad-labs/squad/app"
-	"github.com/cosmosquad-labs/squad/app/params"
-	"github.com/cosmosquad-labs/squad/x/farming/simulation"
-	"github.com/cosmosquad-labs/squad/x/farming/types"
-	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
+	chain "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/x/farming/simulation"
+	"github.com/crescent-network/crescent/x/farming/types"
+	minttypes "github.com/crescent-network/crescent/x/mint/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -237,7 +237,7 @@ func TestSimulateMsgHarvest(t *testing.T) {
 			StartTime: types.ParseTime("0001-01-01T00:00:00Z"),
 			EndTime:   types.ParseTime("9999-01-01T00:00:00Z"),
 			EpochAmount: sdk.NewCoins(
-				sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 300_000_000),
+				sdk.NewInt64Coin("pool1", 300_000_000),
 			),
 		},
 		accounts[0].Address,
@@ -280,8 +280,8 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	require.Equal(t, []string{"stake"}, msg.StakingCoinDenoms)
 	require.Len(t, futureOperations, 0)
 
-	balances := app.BankKeeper.GetBalance(ctx, accounts[1].Address, "pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5")
-	require.Equal(t, sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 100300000000), balances)
+	balances := app.BankKeeper.GetBalance(ctx, accounts[1].Address, "pool1")
+	require.Equal(t, sdk.NewInt64Coin("pool1", 100300000000), balances)
 }
 
 func TestSimulateMsgRemovePlan(t *testing.T) {
@@ -314,7 +314,7 @@ func TestSimulateMsgRemovePlan(t *testing.T) {
 			StartTime: types.ParseTime("0001-01-01T00:00:00Z"),
 			EndTime:   types.ParseTime("0001-01-02T00:00:00Z"),
 			EpochAmount: sdk.NewCoins(
-				sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 300_000_000),
+				sdk.NewInt64Coin("pool1", 300_000_000),
 			),
 		},
 		accounts[0].Address,
@@ -362,7 +362,7 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *chain.App, ctx sdk.Cont
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 100_000_000_000)
 	initCoins := sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, initAmt),
-		sdk.NewInt64Coin("pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5", 100_000_000_000),
+		sdk.NewInt64Coin("pool1", 100_000_000_000),
 	)
 
 	// add coins to the accounts

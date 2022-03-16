@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+package crescent.farming.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/farming/types";
+
+// Msg defines the farming Msg service.
+service Msg {
+  // CreateFixedAmountPlan defines a method for creating a new fixed amount
+  // farming plan
+  rpc CreateFixedAmountPlan(MsgCreateFixedAmountPlan) returns (MsgCreateFixedAmountPlanResponse);
+
+  // CreateRatioPlan defines a method for creating a new ratio farming plan
+  rpc CreateRatioPlan(MsgCreateRatioPlan) returns (MsgCreateRatioPlanResponse);
+
+  // Stake defines a method for staking coins into the farming plan
+  rpc Stake(MsgStake) returns (MsgStakeResponse);
+
+  // Unstake defines a method for unstaking coins from the farming plan
+  rpc Unstake(MsgUnstake) returns (MsgUnstakeResponse);
+
+  // Harvest defines a method for claiming farming rewards
+  rpc Harvest(MsgHarvest) returns (MsgHarvestResponse);
+
+  // RemovePlan defines a method for removing a terminated plan.
+  rpc RemovePlan(MsgRemovePlan) returns (MsgRemovePlanResponse);
+
+  // AdvanceEpoch defines a method for advancing epoch by one, just for testing purpose
+  // and shouldn't be used in real world
+  rpc AdvanceEpoch(MsgAdvanceEpoch) returns (MsgAdvanceEpochResponse);
+}
+
+// MsgCreateFixedAmountPlan defines a SDK message for creating a new fixed
+// amount farming plan.
+message MsgCreateFixedAmountPlan {
+  option (gogoproto.goproto_getters) = false;
+
+  // name specifies the name for the plan
+  string name = 1;
+
+  // creator defines the bech32-encoded address of the creator for the private plan, termination address is also set to
+  // this creator.
+  string creator = 2;
+
+  // staking_coin_weights specifies coins weight for the plan
+  repeated cosmos.base.v1beta1.DecCoin staking_coin_weights = 3 [
+    (gogoproto.moretags)     = "yaml:\"staking_coin_weights\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // start_time specifies the start time of the plan
+  google.protobuf.Timestamp start_time = 4
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+
+  // end_time specifies the end time of the plan
+  google.protobuf.Timestamp end_time = 5
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+
+  // epoch_amount specifies the distributing amount for each epoch
+  repeated cosmos.base.v1beta1.Coin epoch_amount = 6 [
+    (gogoproto.moretags)     = "yaml:\"epoch_amount\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+// MsgCreateFixedAmountPlanResponse defines the MsgCreateFixedAmountPlanResponse response type.
+message MsgCreateFixedAmountPlanResponse {}
+
+// MsgCreateRatioPlan defines a SDK message for creating a new ratio farming
+// plan.
+message MsgCreateRatioPlan {
+  option (gogoproto.goproto_getters) = false;
+
+  // name specifies the name for the plan
+  string name = 1;
+
+  // creator defines the bech32-encoded address of the creator for the private plan, termination address is also set to
+  // this creator.
+  string creator = 2;
+
+  // staking_coin_weights specifies coins weight for the plan
+  repeated cosmos.base.v1beta1.DecCoin staking_coin_weights = 3 [
+    (gogoproto.moretags)     = "yaml:\"staking_coin_weights\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // start_time specifies the start time of the plan
+  google.protobuf.Timestamp start_time = 4
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+
+  // end_time specifies the end time of the plan
+  google.protobuf.Timestamp end_time = 5
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+
+  // epoch_ratio specifies the distributing amount by ratio
+  string epoch_ratio = 6 [
+    (gogoproto.moretags)   = "yaml:\"epoch_ratio\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// MsgCreateRatioPlanResponse  defines the Msg/MsgCreateRatioPlanResponse
+// response type.
+message MsgCreateRatioPlanResponse {}
+
+// MsgStake defines a SDK message for staking coins into the farming plan.
+message MsgStake {
+  option (gogoproto.goproto_getters) = false;
+
+  // farmer defines the bech32-encoded address of the farmer
+  string farmer = 1;
+
+  // staking_coins specifies coins to stake
+  repeated cosmos.base.v1beta1.Coin staking_coins = 2 [
+    (gogoproto.moretags)     = "yaml:\"staking_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+// MsgStakeResponse  defines the Msg/MsgStakeResponse response type.
+message MsgStakeResponse {}
+
+// MsgUnstake defines a SDK message for performing unstaking of coins from the
+// farming plan.
+message MsgUnstake {
+  option (gogoproto.goproto_getters) = false;
+
+  // farmer defines the bech32-encoded address of the farmer
+  string farmer = 1;
+
+  // unstaking_coins specifies coins to stake
+  repeated cosmos.base.v1beta1.Coin unstaking_coins = 2 [
+    (gogoproto.moretags)     = "yaml:\"unstaking_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+// MsgUnstakeResponse defines the Msg/MsgUnstakeResponse response type.
+message MsgUnstakeResponse {}
+
+// MsgHarvest defines a SDK message for claiming rewards from the farming plan.
+message MsgHarvest {
+  option (gogoproto.goproto_getters) = false;
+
+  // farmer defines the bech32-encoded address of the farmer
+  string farmer = 1;
+
+  // staking_coin_denoms is the set of denoms of staked coins as a source of the reward for
+  // harvesting
+  repeated string staking_coin_denoms = 2 [(gogoproto.moretags) = "yaml:\"staking_coin_denoms\""];
+}
+
+// MsgHarvestResponse defines the Msg/MsgHarvestResponse response type.
+message MsgHarvestResponse {}
+
+// MsgRemovePlan defines a message for removing a terminated plan.
+message MsgRemovePlan {
+  option (gogoproto.goproto_getters) = false;
+
+  string creator = 1;
+
+  uint64 plan_id = 2 [(gogoproto.moretags) = "yaml:\"plan_id\""];
+}
+
+// MsgRemovePlanResponse defines the Msg/RemovePlan response type.
+message MsgRemovePlanResponse {}
+
+// MsgAdvanceEpoch defines a message to advance epoch by one.
+message MsgAdvanceEpoch {
+  option (gogoproto.goproto_getters) = false;
+
+  // requester defines the bech32-encoded address of the requester
+  string requester = 1;
+}
+
+// MsgAdvanceEpochResponse defines the Msg/AdvanceEpoch response type.
+message MsgAdvanceEpochResponse {}

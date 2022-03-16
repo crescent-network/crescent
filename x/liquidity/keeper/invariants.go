@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 // RegisterInvariants registers all liquidity module invariants.

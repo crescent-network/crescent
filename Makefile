@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 
-NAME=squad
-APPNAME=squad
-REPO=github.com/cosmosquad-labs/squad
+NAME=crescent
+APPNAME=crescentd
+REPO=github.com/crescent-network/crescent
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')

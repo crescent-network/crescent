@@ -3,9 +3,9 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmosquad-labs/squad/x/farming"
-	"github.com/cosmosquad-labs/squad/x/farming/keeper"
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 func (suite *KeeperTestSuite) TestGlobalPlanId() {

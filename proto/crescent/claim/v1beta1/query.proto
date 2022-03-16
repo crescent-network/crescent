@@ -1,0 +1,61 @@
+syntax = "proto3";
+package crescent.claim.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "crescent/claim/v1beta1/claim.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/claim/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Airdrops returns all airdrops.
+  rpc Airdrops(QueryAirdropsRequest) returns (QueryAirdropsResponse) {
+    option (google.api.http).get = "/crescent/claim/v1beta1/airdrops";
+  }
+
+  // Airdrop returns the specific airdrop.
+  rpc Airdrop(QueryAirdropRequest) returns (QueryAirdropResponse) {
+    option (google.api.http).get = "/crescent/claim/v1beta1/airdrops/{airdrop_id}";
+  }
+
+  // ClaimRecord returns the claim record for the recipient address.
+  rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
+    option (google.api.http).get = "/crescent/claim/v1beta1/airdrops/{airdrop_id}/claim_records/{recipient}";
+  }
+}
+
+// QueryAirdropsRequest is request type for the Query/Airdrops RPC method.
+message QueryAirdropsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAirdropsResponse is response type for the Query/Airdrops RPC method.
+message QueryAirdropsResponse {
+  repeated Airdrop airdrops = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryAirdropRequest is request type for the Query/Airdrop RPC method.
+message QueryAirdropRequest {
+  uint64 airdrop_id = 1;
+}
+
+// QueryAirdropResponse is response type for the Query/Airdrop RPC method.
+message QueryAirdropResponse {
+  Airdrop airdrop = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryClaimRecordRequest is request type for the Query/ClaimRecord RPC method.
+message QueryClaimRecordRequest {
+  uint64 airdrop_id = 1;
+
+  string recipient = 2;
+}
+
+// QueryClaimRecordResponse is response type for the Query/ClaimRecord RPC method.
+message QueryClaimRecordResponse {
+  ClaimRecord claim_record = 1 [(gogoproto.nullable) = false];
+}

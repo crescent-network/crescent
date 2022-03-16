@@ -19,32 +19,14 @@ The farming module is a Cosmos SDK-based module that implements farming function
 
 One use case is to use the module to provide incentives for liquidity pool investors for their pool participation.
 
-## Resources
-
-**Budget module**
-
-- [tendermint/budget GitHub repo](https://github.com/tendermint/budget)
-- [x/budget spec docs](https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md)
-- Audit-ready [demo version](https://github.com/tendermint/budget/releases)
-- Other useful resources are available in the [budget docs](https://github.com/tendermint/budget/blob/main/docs) folder
-- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs v1.0.0](https://app.swaggerhub.com/apis-docs/gravity-devs/budget/1.0.0)
-
-**Farming module**
-
-- [tendermint/farming GitHub repo](https://github.com/tendermint/farming)
-- [x/farming spec docs](https://github.com/tendermint/farming/blob/main/x/farming/spec/01_concepts.md)
-- Audit-ready [demo version](https://github.com/tendermint/farming/releases)
-- Other useful resources are available in the [farming docs](https://github.com/tendermint/farming/blob/main/docs) folder
-- Swagger Cosmos SDK Budget Module [REST and gRPC Gateway docs v1.0.0](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/1.0.0)
-
 ## Demo
 
 ### Step 1. Build from source
 
 ```bash
-# Clone the demo project and build `squad` for testing
-git clone https://github.com/cosmosquad-labs/squad.git
-cd squad
+# Clone the demo project and build `crescentd` for testing
+git clone https://github.com/crescent-network/crescent.git
+cd crescent
 make install-testing
 ```
 
@@ -55,15 +37,15 @@ make install-testing
 - Modify governance parameters to lower threshold and decrease time to reduce governance process
 
 ```bash
-export BINARY=squad
-export HOME_APP=$HOME/.squadapp
+export BINARY=crescentd
+export HOME_APP=$HOME/.crescent
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
 export USER_2="fuel obscure melt april direct second usual hair leave hobby beef bacon solid drum used law mercy worry fat super must ritual bring faculty"
 export VALIDATOR_1_GENESIS_COINS=100000000000000000stake,10000000000uatom,10000000000uusd
 export USER_1_GENESIS_COINS=10000000000stake,10000000000uatom,10000000000uusd
-export USER_2_GENESIS_COINS=10000000000stake,10000000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,10000000000pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5,10000000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C,10000000000poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07
+export USER_2_GENESIS_COINS=10000000000stake,10000000000pool1,10000000000pool2,10000000000pool3,10000000000pool4
 
 # Bootstrap
 $BINARY init $CHAIN_ID --chain-id $CHAIN_ID
@@ -116,13 +98,13 @@ In this demo, you create a budget plan that distributes partial amount of coins 
 The `GravityDEXFarmingBudget` account is derived using the following query.
 ```bash
 $BINARY query budget address GravityDEXFarmingBudget --module-name farming
-# > address: cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
+# > address: cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx
 ```
 
 This code snippet is how the module derives the account.
 
 ```go
-// cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky
+// cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx
 sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
 ```
 
@@ -150,8 +132,8 @@ Use the following values for the fields:
         {
           "name": "gravity-dex-farming-20213Q-20313Q",
           "rate": "0.500000000000000000",
-          "source_address": "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta",
-          "destination_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
+          "source_address": "cre17xpfvakm2amg962yls6f84z3kell8c5l53s97s",
+          "destination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
           "start_time": "2021-09-01T00:00:00Z",
           "end_time": "2031-09-30T00:00:00Z"
         }
@@ -201,7 +183,7 @@ $BINARY q budget params --output json | jq
 
 ```bash
 # Query balances of the Gravity DEX budget collector account address
-$BINARY q bank balances cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky \
+$BINARY q bank balances cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx \
 --output json | jq
 ```
 
@@ -230,15 +212,15 @@ where the fields in the JSON file are:
   "add_plan_requests": [
     {
       "name": "First Public Ratio Plan",
-      "farming_pool_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
-      "termination_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
+      "farming_pool_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
+      "termination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
       "staking_coin_weights": [
         {
-          "denom": "pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5",
+          "denom": "pool1",
           "amount": "0.500000000000000000"
         },
         {
-          "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+          "denom": "pool2",
           "amount": "0.500000000000000000"
         }
       ],
@@ -290,11 +272,11 @@ $BINARY q farming plans --output json | jq
 
 ```bash
 # Query balance of user2
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Stake pool coin
-$BINARY tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+$BINARY tx farming stake 5000000pool1 \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -303,23 +285,23 @@ $BINARY tx farming stake 5000000poolD35A0CC16EE598F90B044CE296A405BA9C381E388375
 --output json | jq
 
 # Query for all stakings by a staker address
-$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # You can also query using the following command
 # Query for all stakings by a staker address with the given staking coin denom
-$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
---staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+--staking-coin-denom pool1 \
 --output json | jq
 ```
 
 ### Step 7. (Custom Message) Send AdvanceEpoch for Reward Distribution
 
-To simulate reward distribution for this demo, enable a custom transaction message `AdvanceEpoch` when you build the binary `squad` with the `make install-testing` command. 
+To simulate reward distribution for this demo, enable a custom transaction message `AdvanceEpoch` when you build the binary `crescentd` with the `make install-testing` command. 
 
 When you send the `AdvanceEpoch` message to the network, it increases epoch by day 1.
 
-In this step, you might wonder why you need to increase 2 epochs by sending two transactions to the network. The reason is to ensure fairness of distribution. The global parameter called `next_epoch_days` can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, the internal state `current_epoch_days` is used to process staking and reward distribution in an end blocker. This technical decision has been made by the Gravity DEX team. To understand more about this decision, feel free to jump right into [the code](https://github.com/tendermint/farming/blob/main/x/farming/abci.go#L13).
+In this step, you might wonder why you need to increase 2 epochs by sending two transactions to the network. The reason is to ensure fairness of distribution. The global parameter called `next_epoch_days` can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, the internal state `current_epoch_days` is used to process staking and reward distribution in an end blocker. This technical decision has been made by the Gravity DEX team. To understand more about this decision, feel free to jump right into `x/farmingabci.go`.
 
 ```bash
 # Increase epoch by 1 
@@ -333,7 +315,7 @@ $BINARY tx farming advance-epoch \
 
 # Query for all stakings by a staker address
 # Queued coins should have been moved to staked coins 
-$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Increase epoch by 1 again to distribute rewards
@@ -346,7 +328,7 @@ $BINARY tx farming advance-epoch \
 --output json | jq
 
 # Query rewards
-$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 ```
 
@@ -355,7 +337,7 @@ $BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
 ```bash
 # Query balance of user2 account 
 # There should be no rewards claimed yet
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Harvest all with all flag
@@ -369,12 +351,12 @@ $BINARY tx farming harvest \
 --output json | jq
 
 # Query the balance again to see if stake coin has increased
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # You can also query with the following command
 # Harvest farming rewards from the farming plan with the staking coin
-$BINARY tx farming harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 \
+$BINARY tx farming harvest pool1 \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -393,8 +375,8 @@ Update the following values of the fields:
 
 - `plan_id`: 1
 - `staking_coin_weights`
-    - `pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5` weight 50% → 100%
-    - `poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4` weight 50% → 0% ( deleted)
+    - `pool1` weight 50% → 100%
+    - `pool2` weight 50% → 0% ( deleted)
 - `epoch_ratio`: 0.500000000000000000 (50%)
 
 Add a second public ratio plan proposal:
@@ -403,8 +385,8 @@ Add a second public ratio plan proposal:
 - `farming_pool_address`: the Gravity DEX budget collector account address
 - `termination_address`: the Gravity DEX budget collector account address
 - `staking_coin_weights`
-    - `pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C`
-    - `poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07`
+    - `pool3`
+    - `pool4`
 - `start_time`: 2021-09-11T00:00:00Z
 - `end_time`: 2031-09-30T00:00:00Z
 - `epoch_ratio`: 0.500000000000000000 (50%)
@@ -417,11 +399,11 @@ Add a second public ratio plan proposal:
     {
       "plan_id": 1,
       "name": "First Public Ratio Plan",
-      "farming_pool_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
-      "termination_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
+      "farming_pool_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
+      "termination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
       "staking_coin_weights": [
         {
-          "denom": "pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5",
+          "denom": "pool1",
           "amount": "1.000000000000000000"
         }
       ],
@@ -433,15 +415,15 @@ Add a second public ratio plan proposal:
   "add_plan_requests": [
     {
       "name": "Second Public Ratio Plan",
-      "farming_pool_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
-      "termination_address": "cosmos1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqqkcxcky",
+      "farming_pool_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
+      "termination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
       "staking_coin_weights": [
         {
-          "denom": "pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C",
+          "denom": "pool3",
           "amount": "0.500000000000000000"
         },
         {
-          "denom": "poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07",
+          "denom": "pool4",
           "amount": "0.500000000000000000"
         }
       ],
@@ -503,11 +485,11 @@ $BINARY tx farming advance-epoch \
 # Query rewards
 # Rewards should be empty because user2's staking coin is not defined
 # in staking coin weights any more
-$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Stake another pool coin that is defined in the second plan
-$BINARY tx farming stake 5000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C \
+$BINARY tx farming stake 5000000pool3 \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -516,7 +498,7 @@ $BINARY tx farming stake 5000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17
 --output json | jq
 
 # Query what user2 is staking
-$BINARY q farming stakings cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Increase epoch by 2 again to distribute rewards
@@ -529,10 +511,10 @@ $BINARY tx farming advance-epoch \
 --output json | jq
 
 # Query rewards
-$BINARY q farming rewards cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q farming rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 ```
 
 ## Conclusion
 
-Throughout the demo, you learn what the budget and farming modules are and how they work to provide eseential functionalities in the Cosmos ecosystem. Thank you for taking your time and your interest. 
+Throughout the demo, you learn what the budget and farming modules are and how they work to provide essential functionalities in the Cosmos ecosystem. Thank you for taking your time and your interest.

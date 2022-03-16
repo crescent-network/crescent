@@ -1,0 +1,17 @@
+syntax = "proto3";
+package crescent.claim.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "crescent/claim/v1beta1/claim.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/claim/types";
+
+// GenesisState defines the claim module's genesis state.
+message GenesisState {
+  // airdrops specifies a list of airdrops
+  repeated Airdrop airdrops = 1 [(gogoproto.nullable) = false];
+
+  // claim_records specifies a list of claim records
+  repeated ClaimRecord claim_records = 2 [(gogoproto.nullable) = false];
+}

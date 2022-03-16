@@ -7,7 +7,7 @@ The `claim` module distributes claimable amount of all airdrop recipients as the
 ## Claimable Amount Calculation
 
 <!-- markdown-link-check-disable-next-line -->
-Claimable amount for each user is calculated by [this airdrop-calculator program](https://github.com/cosmosquad-labs/airdrop-calculator). The program uses the following formulas to calculate the claimable score and amount.
+Claimable amount for each user is calculated by [this airdrop-calculator program](https://github.com/crescent-network/airdrop-calculator). The program uses the following formulas to calculate the claimable score and amount.
 
 ```
 // Sqaure root of the delegation shares a user had at the snapshot date and multiply by 2 for each criteria

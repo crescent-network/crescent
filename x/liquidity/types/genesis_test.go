@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

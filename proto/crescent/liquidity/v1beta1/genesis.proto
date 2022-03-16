@@ -1,0 +1,27 @@
+syntax = "proto3";
+package crescent.liquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/liquidity/v1beta1/liquidity.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// GenesisState defines the liquidity module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  uint64 last_pair_id = 2;
+
+  uint64 last_pool_id = 3;
+
+  repeated Pair pairs = 4 [(gogoproto.nullable) = false];
+
+  repeated Pool pools = 5 [(gogoproto.nullable) = false];
+
+  repeated DepositRequest deposit_requests = 6 [(gogoproto.nullable) = false];
+
+  repeated WithdrawRequest withdraw_requests = 7 [(gogoproto.nullable) = false];
+
+  repeated Order orders = 8 [(gogoproto.nullable) = false];
+}

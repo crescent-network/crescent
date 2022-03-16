@@ -8,8 +8,8 @@ The `liquidity` module contains the following parameters:
 |--------------------------|--------------------|-------------------------------------------------------------------|
 | BatchSize                | uint32             | 1                                                                 |
 | TickPrecision            | uint32             | 3                                                                 |
-| FeeCollectorAddress      | string             | cosmos1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvqau9aj0 |
-| DustCollectorAddress     | string             | cosmos1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0se4s8xs |
+| FeeCollectorAddress      | string             | cre1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvq303p8d    |
+| DustCollectorAddress     | string             | cre1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0s4xymnj    |
 | MinInitialPoolCoinSupply | string (sdk.Int)   | "1000000000000"                                                   |
 | PairCreationFee          | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                            |
 | PoolCreationFee          | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                            |

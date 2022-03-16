@@ -1,0 +1,255 @@
+syntax = "proto3";
+package crescent.liquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "crescent/liquidity/v1beta1/liquidity.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/liquidity/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params returns parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/params";
+  }
+
+  // Pools returns all liquidity pools.
+  rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools";
+  }
+
+  // Pool returns the specific liquidity pool.
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}";
+  }
+
+  // PoolByReserveAddress returns all pools that correspond to the reserve account.
+  rpc PoolByReserveAddress(QueryPoolByReserveAddressRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/reserve_address/{reserve_address}";
+  }
+
+  // PoolByPoolCoinDenom returns all pools that correspond to the pool coin denom.
+  rpc PoolByPoolCoinDenom(QueryPoolByPoolCoinDenomRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}";
+  }
+
+  // Pairs returns all liquidity pairs.
+  rpc Pairs(QueryPairsRequest) returns (QueryPairsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs";
+  }
+
+  // Pair returns the specific pair.
+  rpc Pair(QueryPairRequest) returns (QueryPairResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}";
+  }
+
+  // DepositRequests returns all deposit requests.
+  rpc DepositRequests(QueryDepositRequestsRequest) returns (QueryDepositRequestsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests";
+  }
+
+  // DepositRequest returns the specific deposit request.
+  rpc DepositRequest(QueryDepositRequestRequest) returns (QueryDepositRequestResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}";
+  }
+
+  // WithdrawRequests returns all withdraw requests.
+  rpc WithdrawRequests(QueryWithdrawRequestsRequest) returns (QueryWithdrawRequestsResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests";
+  }
+
+  // WithdrawRequest returns the specific withdraw request.
+  rpc WithdrawRequest(QueryWithdrawRequestRequest) returns (QueryWithdrawRequestResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}";
+  }
+
+  // Orders returns all orders within the pair.
+  rpc Orders(QueryOrdersRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders";
+  }
+
+  // Order returns the specific order.
+  rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders/{id}";
+  }
+
+  // OrdersByOrderer returns orders made by an orderer.
+  rpc OrdersByOrderer(QueryOrdersByOrdererRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/orders/{orderer}";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPoolsRequest is request type for the Query/Pools RPC method.
+message QueryPoolsRequest {
+  uint64 pair_id = 1;
+
+  string disabled = 2;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryPoolsResponse is response type for the Query/Pools RPC method.
+message QueryPoolsResponse {
+  repeated PoolResponse pools = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryPoolRequest is request type for the Query/Pool RPC method.
+message QueryPoolRequest {
+  uint64 pool_id = 1;
+}
+
+// QueryPoolResponse is response type for the Query/Pool RPC method.
+message QueryPoolResponse {
+  PoolResponse pool = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPoolByReserveAddressRequest is request type for the Query/PoolByReserveAddress RPC method.
+message QueryPoolByReserveAddressRequest {
+  string reserve_address = 1;
+}
+
+// QueryPoolByPoolCoinDenomRequest is request type for the Query/PoolByPoolCoinDenom RPC method.
+message QueryPoolByPoolCoinDenomRequest {
+  string pool_coin_denom = 1;
+}
+
+// QueryPairsRequest is request type for the Query/Pairs RPC method.
+message QueryPairsRequest {
+  repeated string denoms = 1;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryPairsResponse is response type for the Query/Pairs RPC method.
+message QueryPairsResponse {
+  repeated Pair pairs = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryPairRequest is request type for the Query/Pair RPC method.
+message QueryPairRequest {
+  uint64 pair_id = 1;
+}
+
+// QueryPairResponse is response type for the Query/Pair RPC method.
+message QueryPairResponse {
+  Pair pair = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryDepositRequestsRequest is request type for the Query/DepositRequests RPC method.
+message QueryDepositRequestsRequest {
+  uint64 pool_id = 1;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryDepositRequestsResponse is response type for the Query/DepositRequests RPC method.
+message QueryDepositRequestsResponse {
+  repeated DepositRequest deposit_requests = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryDepositRequestRequest is request type for the Query/DepositRequest RPC method.
+message QueryDepositRequestRequest {
+  uint64 pool_id = 1;
+  uint64 id      = 2;
+}
+
+// QueryDepositRequestResponse is response type for the Query/DepositRequest RPC method.
+message QueryDepositRequestResponse {
+  DepositRequest deposit_request = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryWithdrawRequestsRequest is request type for the Query/WithdrawRequests RPC method.
+message QueryWithdrawRequestsRequest {
+  uint64 pool_id = 1;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryWithdrawRequestsResponse is response type for the Query/WithdrawRequests RPC method.
+message QueryWithdrawRequestsResponse {
+  repeated WithdrawRequest withdraw_requests = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryWithdrawRequestRequest is request type for the Query/WithdrawRequest RPC method.
+message QueryWithdrawRequestRequest {
+  uint64 pool_id = 1;
+  uint64 id      = 2;
+}
+
+// QueryWithdrawRequestResponse is response type for the Query/WithdrawRequest RPC method.
+message QueryWithdrawRequestResponse {
+  WithdrawRequest withdraw_request = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryOrdersRequest is request type for the Query/Orders RPC method.
+message QueryOrdersRequest {
+  uint64 pair_id = 1;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryOrdersResponse is response type for the Query/Orders RPC method.
+message QueryOrdersResponse {
+  repeated Order orders = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryOrderRequest is request type for the Query/Order RPC method.
+message QueryOrderRequest {
+  uint64 pair_id = 1;
+  uint64 id      = 2;
+}
+
+// QueryOrderResponse is response type for the Query/Order RPC method.
+message QueryOrderResponse {
+  Order order = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryOrdersByOrdererRequest is request type for the Query/OrdersByOrderer RPC method.
+message QueryOrdersByOrdererRequest {
+  string                                orderer    = 1;
+  uint64                                pair_id    = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+//
+// Custom response messages
+//
+
+// PoolResponse defines a custom pool response message.
+message PoolResponse {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  string reserve_address = 3;
+
+  string pool_coin_denom = 4;
+
+  repeated cosmos.base.v1beta1.Coin balances = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  uint64 last_deposit_request_id = 6;
+
+  uint64 last_withdraw_request_id = 7;
+}

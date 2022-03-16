@@ -19,8 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/cosmosquad-labs/squad/x/farming/keeper"
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 // GetTxCmd returns a root CLI command handler for all x/farming transaction commands.
@@ -67,7 +67,7 @@ Where plan.json contains:
   "name": "This plan intends to provide incentives for Cosmonauts!",
   "staking_coin_weights": [
     {
-      "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+      "denom": "pool1",
       "amount": "1.000000000000000000"
     }
   ],
@@ -140,7 +140,7 @@ Where plan.json contains:
   "name": "This plan intends to provide incentives for Cosmonauts!",
   "staking_coin_weights": [
     {
-      "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+      "denom": "pool1",
       "amount": "1.000000000000000000"
     }
   ],
@@ -201,8 +201,8 @@ func NewStakeCmd() *cobra.Command {
 To get farming rewards, you must stake coins that are defined in available plans on a network. 
 
 Example:
-$ %s tx %s stake 1000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
-$ %s tx %s stake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,500pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5 --from mykey
+$ %s tx %s stake 1000pool1 --from mykey
+$ %s tx %s stake 500pool1,500pool2 --from mykey
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -244,8 +244,8 @@ func NewUnstakeCmd() *cobra.Command {
 Note that unstaking doesn't require any period and your accumulated rewards are automatically withdrawn to your wallet.
 
 Example:
-$ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
-$ %s tx %s unstake 500poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,500pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5 --from mykey
+$ %s tx %s unstake 500pool1 --from mykey
+$ %s tx %s unstake 500pool1,500pool2 --from mykey
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -285,8 +285,8 @@ func NewHarvestCmd() *cobra.Command {
 			fmt.Sprintf(`Harvest farming rewards from the staking coin denoms that are defined in the availble plans.
 
 Example:
-$ %s tx %s harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4 --from mykey
-$ %s tx %s harvest poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5 --from mykey
+$ %s tx %s harvest pool1 --from mykey
+$ %s tx %s harvest pool1,pool2 --from mykey
 $ %s tx %s harvest --all --from mykey
 `,
 				version.AppName, types.ModuleName,
@@ -425,7 +425,7 @@ func GetCmdSubmitPublicPlanProposal() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a a public farming plan along with an initial deposit. You can submit this governance proposal
 to add, update, and delete farming plan. The proposal details must be supplied via a JSON file. A JSON file to add plan request proposal is 
-provided below. For more examples, please refer to https://github.com/tendermint/farming/blob/main/docs/Tutorials/demo/plans.md
+provided below.
 
 Example:
 $ %s tx gov submit-proposal public-farming-plan <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
@@ -438,11 +438,11 @@ Where proposal.json contains:
   "name": "Cosmos Hub Community Tax",
   "add_plan_requests": [
     {
-      "farming_pool_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
-      "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
+      "farming_pool_address": "cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3",
+      "termination_address": "cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3",
       "staking_coin_weights": [
         {
-          "denom": "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+          "denom": "pool1",
           "amount": "0.800000000000000000"
         },
         {

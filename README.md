@@ -1,6 +1,6 @@
-# Squad
+# Crescent
 
-The Squad containing below Cosmos SDK modules
+The Crescent containing below Cosmos SDK modules
 
 - liquidity
 - liquidstaking
@@ -8,15 +8,15 @@ The Squad containing below Cosmos SDK modules
 - mint (constant inflation)
 - claim
 
-<!-- markdown-link-check-disable -->
-- see the [main](https://github.com/cosmosquad-labs/squad/tree/main) branch for the latest 
-- see [releases](https://github.com/cosmosquad-labs/squad/releases) for the latest release
+- <!-- markdown-link-check-disable -->
+- see the [main](https://github.com/crescent-network/crescent/tree/main) branch for the latest 
+- see [releases](https://github.com/crescent-network/crescent/releases) for the latest release
 
 ## Dependencies
 
 If you haven't already, install Golang by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
-This project uses customized cosmos-sdk, Please check the difference on [here](https://github.com/cosmosquad-labs/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
+This project uses customized cosmos-sdk, Please check the difference on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
 
 | Requirement           | Notes             |
 |-----------------------|-------------------|
@@ -26,9 +26,9 @@ This project uses customized cosmos-sdk, Please check the difference on [here](h
 ## Installation
 
 ```bash
-# Use git to clone the source code and install `squad`
-git clone https://github.com/cosmosquad-labs/squad.git
-cd squad
+# Use git to clone the source code and install `crescentd`
+git clone https://github.com/crescent-network/crescent.git
+cd crescent
 make install
 ```
 
@@ -38,15 +38,15 @@ To get started to the project, visit the [TECHNICAL-SETUP.md](./TECHNICAL-SETUP.
 
 ## Documentation
 
-The Squad documentation is available in [docs](./docs) folder and technical specification is available in [specs](https://github.com/cosmosquad-labs/squad/blob/main/x/farming/spec/README.md) folder. 
+The Crescent documentation is available in [docs](./docs) folder and technical specification is available in `x/{module}/spec/` folder. 
 
 These are some of the documents that help you to quickly get you on board with the farming module.
 
-- [How to bootstrap a local network with farming module](./docs/Tutorials/localnet)
-- [How to use Command Line Interfaces](./docs/How-To/cli)
-- [How to use gRPC-gateway REST Routes](./docs/How-To)
-- [Demo for how to budget and farming modules](./docs/Tutorials/demo/budget_with_farming.md)
+- [Demo Script](./docs/demo)
+- [How to use Command Line Interfaces](./docs/cli)
+- [How to use gRPC-gateway REST Routes](./docs/api)
+- [REST and gRPC Gateway Swagger docs](https://app.swaggerhub.com/apis-docs/crescent/crescent)
 
 ## Contributing
 
-We welcome contributions from everyone. The [main](https://github.com/cosmosquad-labs/squad/tree/main) branch contains the development version of the code. You can branch of from main and create a pull request, or maintain your own fork and submit a cross-repository pull request. If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop squad. Thank you to all those who have contributed to squad!
+We welcome contributions from everyone. The [main](https://github.com/crescent-network/crescent/tree/main) branch contains the development version of the code. You can branch of from main and create a pull request, or maintain your own fork and submit a cross-repository pull request. If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop crescent. Thank you to all those who have contributed to crescent!

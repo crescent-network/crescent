@@ -1,0 +1,182 @@
+syntax = "proto3";
+package crescent.liquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/duration.proto";
+import "crescent/liquidity/v1beta1/liquidity.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Msg defines the Msg service.
+service Msg {
+  // CreatePair defines a method for creating a pair
+  rpc CreatePair(MsgCreatePair) returns (MsgCreatePairResponse);
+
+  // CreatePool defines a method for creating a pool
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+
+  // Deposit defines a method for depositing coins to the pool
+  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
+
+  // Withdraw defines a method for withdrawing pool coin from the pool
+  rpc Withdraw(MsgWithdraw) returns (MsgWithdrawResponse);
+
+  // LimitOrder defines a method for making a limit order
+  rpc LimitOrder(MsgLimitOrder) returns (MsgLimitOrderResponse);
+
+  // MarketOrder defines a method for making a market order
+  rpc MarketOrder(MsgMarketOrder) returns (MsgMarketOrderResponse);
+
+  // CancelOrder defines a method for cancelling an order
+  rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+
+  // CancelAllOrders defines a method for cancelling all orders
+  rpc CancelAllOrders(MsgCancelAllOrders) returns (MsgCancelAllOrdersResponse);
+}
+
+// MsgCreatePair defines an SDK message for creating a pair.
+message MsgCreatePair {
+  // creator specifies the bech32-encoded address that is the pair creator.
+  string creator = 1;
+
+  // base_coin_denom specifies the base coin denom of the pair.
+  string base_coin_denom = 2;
+
+  // quote_coin_denom specifies the quote coin denom of the pair.
+  string quote_coin_denom = 3;
+}
+
+message MsgCreatePairResponse {}
+
+// MsgCreatePool defines an SDK message for creating a pool.
+message MsgCreatePool {
+  // creator specifies the bech32-encoded address that is the pool creator
+  string creator = 1;
+
+  // pair_id specifies the pair id.
+  uint64 pair_id = 2;
+
+  // deposit_coins specifies the amount of coins to deposit.
+  repeated cosmos.base.v1beta1.Coin deposit_coins = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// MsgCreatePoolResponse defines the Msg/CreatePool response type.
+message MsgCreatePoolResponse {}
+
+// MsgDeposit defines an SDK message for depositing coins to the pool
+message MsgDeposit {
+  // depositor specifies the bech32-encoded address that makes a deposit to the pool
+  string depositor = 1;
+
+  // pool_id specifies the pool id
+  uint64 pool_id = 2;
+
+  // deposit_coins specifies the amount of coins to deposit.
+  repeated cosmos.base.v1beta1.Coin deposit_coins = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// MsgDepositResponse defines the Msg/Deposit response type.
+message MsgDepositResponse {}
+
+// MsgWithdraw defines an SDK message for withdrawing pool coin from the pool
+message MsgWithdraw {
+  // withdrawer specifies the bech32-encoded address that withdraws pool coin from the pool
+  string withdrawer = 1;
+
+  // pool_id specifies the pool id
+  uint64 pool_id = 2;
+
+  // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
+  cosmos.base.v1beta1.Coin pool_coin = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgWithdrawResponse defines the Msg/Withdraw response type.
+message MsgWithdrawResponse {}
+
+// MsgLimitOrder defines an SDK message for making a limit order
+message MsgLimitOrder {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_id specifies the pair id
+  uint64 pair_id = 2;
+
+  // direction specifies the order direction(buy or sell)
+  OrderDirection direction = 3;
+
+  // offer_coin specifies the amount of coin the orderer offers
+  cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
+
+  // demand_coin_denom specifies the demand coin denom
+  string demand_coin_denom = 5;
+
+  // price specifies the order price
+  string price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // amount specifies the amount of base coin the orderer wants to buy or sell
+  string amount = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // order_lifespan specifies the order lifespan
+  google.protobuf.Duration order_lifespan = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+// MsgLimitOrderResponse defines the Msg/LimitOrder response type.
+message MsgLimitOrderResponse {}
+
+// MsgMarketOrder defines an SDK message for making a market order
+message MsgMarketOrder {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_id specifies the pair id
+  uint64 pair_id = 2;
+
+  // direction specifies the order direction(buy or sell)
+  OrderDirection direction = 3;
+
+  // offer_coin specifies the amount of coin the orderer offers
+  cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
+
+  // demand_coin_denom specifies the demand coin denom
+  string demand_coin_denom = 5;
+
+  // amount specifies the amount of base coin the orderer wants to buy or sell
+  string amount = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // order_lifespan specifies the order lifespan
+  google.protobuf.Duration order_lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+// MsgMarketOrderResponse defines the Msg/MarketOrder response type.
+message MsgMarketOrderResponse {}
+
+// MsgCancelOrder defines an SDK message for cancelling an order
+message MsgCancelOrder {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_id specifies the pair id
+  uint64 pair_id = 2;
+
+  // order_id specifies the order id
+  uint64 order_id = 3;
+}
+
+// MsgCancelOrderResponse defines the Msg/CancelOrder response type.
+message MsgCancelOrderResponse {}
+
+// MsgCancelAllOrders defines an SDK message for cancelling all orders
+message MsgCancelAllOrders {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_ids specifies pair ids to cancel orders
+  repeated uint64 pair_ids = 2;
+}
+
+// MsgCancelAllOrdersResponse defines the Msg/CancelAllOrders response type.
+message MsgCancelAllOrdersResponse {}

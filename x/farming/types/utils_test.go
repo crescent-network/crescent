@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 func TestParseTime(t *testing.T) {

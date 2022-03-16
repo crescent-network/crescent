@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package crescent.farming.v1beta1;
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "crescent/farming/v1beta1/farming.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package            = "github.com/crescent-network/crescent/x/farming/types";
+option (gogoproto.equal_all) = true;
+
+// GenesisState defines the farming module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters for the farming module
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  uint64 global_plan_id = 2 [(gogoproto.moretags) = "yaml:\"global_plan_id\""];
+
+  // plan_records defines the plan records used for genesis state
+  repeated PlanRecord plan_records = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"plan_records\""];
+
+  repeated StakingRecord staking_records = 4
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"staking_records\""];
+
+  repeated QueuedStakingRecord queued_staking_records = 5
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"queued_staking_records\""];
+
+  repeated HistoricalRewardsRecord historical_rewards_records = 6
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"historical_rewards_records\""];
+
+  repeated OutstandingRewardsRecord outstanding_rewards_records = 7
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"outstanding_rewards_records\""];
+
+  repeated CurrentEpochRecord current_epoch_records = 8
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"current_epoch_records\""];
+
+  repeated TotalStakingsRecord total_stakings_records = 9
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_stakings_records\""];
+
+  // reward_pool_coins specifies balance of the reward pool to be distributed in the plans
+  // this param is needed for import/export validation
+  repeated cosmos.base.v1beta1.Coin reward_pool_coins = 10 [
+    (gogoproto.moretags)     = "yaml:\"reward_pool_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // last_epoch_time specifies the last executed epoch time of the plans
+  google.protobuf.Timestamp last_epoch_time = 11
+      [(gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"last_epoch_time\""];
+
+  // current_epoch_days specifies the epoch used when allocating farming rewards in end blocker
+  uint32 current_epoch_days = 12;
+}
+
+// PlanRecord is used for import/export via genesis json.
+message PlanRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // plan specifies the plan interface; it can be FixedAmountPlan or RatioPlan
+  google.protobuf.Any plan = 1 [(gogoproto.nullable) = false, (cosmos_proto.accepts_interface) = "PlanI"];
+
+  // farming_pool_coins specifies balance of the farming pool for the plan
+  // this param is needed for import/export validation
+  repeated cosmos.base.v1beta1.Coin farming_pool_coins = 2 [
+    (gogoproto.moretags)     = "yaml:\"farming_pool_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+// StakingRecord is used for import/export via genesis json.
+message StakingRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+
+  string farmer = 2;
+
+  Staking staking = 3 [(gogoproto.nullable) = false];
+}
+
+// QueuedStakingRecord is used for import/export via genesis json.
+message QueuedStakingRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+
+  string farmer = 2;
+
+  QueuedStaking queued_staking = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"queued_staking\""];
+}
+
+// TotalStakingsRecord is used for import/export via genesis json.
+message TotalStakingsRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+
+  // amount specifies total amount of the staking for the staking coin denom except queued staking
+  string amount = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // staking_reserve_coins specifies balance of the staking reserve account where staking and queued staking for the
+  // staking coin denom is stored this param is needed for import/export validation
+  repeated cosmos.base.v1beta1.Coin staking_reserve_coins = 9 [
+    (gogoproto.moretags)     = "yaml:\"staking_reserve_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+// HistoricalRewardsRecord is used for import/export via genesis json.
+message HistoricalRewardsRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+
+  uint64 epoch = 2;
+
+  HistoricalRewards historical_rewards = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"historical_rewards\""];
+}
+
+// OutstandingRewardsRecord is used for import/export via genesis json.
+message OutstandingRewardsRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+
+  OutstandingRewards outstanding_rewards = 2
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"outstanding_rewards\""];
+}
+
+// CurrentEpochRecord is used for import/export via genesis json.
+message CurrentEpochRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string staking_coin_denom = 1 [(gogoproto.moretags) = "yaml:\"staking_coin_denom\""];
+
+  uint64 current_epoch = 2 [(gogoproto.moretags) = "yaml:\"current_epoch\""];
+}

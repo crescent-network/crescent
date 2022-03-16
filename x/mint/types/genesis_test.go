@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/mint/types"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/mint/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

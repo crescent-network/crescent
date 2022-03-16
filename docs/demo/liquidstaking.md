@@ -7,9 +7,9 @@
 ### Build from source
 
 ```bash
-# Clone the demo project and build `squad` for testing
-git clone https://github.com/cosmosquad-labs/squad.git
-cd squad
+# Clone the demo project and build `crescentd` for testing
+git clone https://github.com/crescent-network/crescent.git
+cd crescent
 make install-testing
 ```
 
@@ -20,17 +20,19 @@ make install-testing
 - Modify governance parameters to lower threshold and decrease time to reduce governance process
 
 ```bash
-export BINARY=squad
-export HOME_APP=$HOME/.squadapp
+export BINARY=crescentd
+export HOME_APP=$HOME/.crescent
 export CHAIN_ID=localnet
 export VALIDATOR_1="struggle panic room apology luggage game screen wing want lazy famous eight robot picture wrap act uphold grab away proud music danger naive opinion"
+# cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
 export USER_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
+# cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 export USER_2="fuel obscure melt april direct second usual hair leave hobby beef bacon solid drum used law mercy worry fat super must ritual bring faculty"
-# cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
+# cre10n3ncmlsaqfuwsmfll8kq6hvt4x7c8czhnv69a
 export USER_3="smooth bike pool jealous cinnamon seat tiger team canoe almost core bag fluid garbage embrace gorilla wise door toe upon present canal myth corn"
 export VALIDATOR_1_GENESIS_COINS=100000000000000000stake,10000000000uatom,10000000000uusd
 export USER_1_GENESIS_COINS=10000000000stake,10000000000uatom,10000000000uusd
-export USER_2_GENESIS_COINS=10000000000stake,10000000000poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4,10000000000pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5,10000000000pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C,10000000000poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07
+export USER_2_GENESIS_COINS=10000000000stake,10000000000pool1,10000000000pool2,10000000000pool3,10000000000pool4
 
 # Bootstrap
 $BINARY init $CHAIN_ID --chain-id $CHAIN_ID
@@ -93,7 +95,7 @@ Use the following values for the fields:
       "value":
       [
         {
-          "validator_address": "cosmosvaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3m9ammr5",
+          "validator_address": "crevaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3mx4uyhq",
           "target_weight": "10"
         }
       ]
@@ -106,7 +108,7 @@ Use the following values for the fields:
 Now, run each command one at a time. You can copy and paste each command in the command line in your terminal:
 
 ```bash
-export BINARY=squad
+export BINARY=crescentd
 
 # Submit a param-change governance proposal
 $BINARY tx gov submit-proposal param-change liquidstaking-param-change-proposal.json \
@@ -146,7 +148,7 @@ $BINARY q liquidstaking liquid-validators --output json | jq
 
 ```bash
 # Query balance of user2
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Liquid Stake
@@ -162,18 +164,18 @@ $BINARY tx liquidstaking liquid-stake 1000000000stake \
 $BINARY q liquidstaking liquid-validators --output json | jq
 
 # Query balance of user2, you can find 1000000000bstake balance
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
-# Query delegations and rewards of liquidstaking proxy module account cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk
-$BINARY q staking delegations cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
-$BINARY q distribution rewards cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
+# Query delegations and rewards of liquidstaking proxy module account cre1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyqr4aec5
+$BINARY q staking delegations cre1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyqr4aec5 --output json | jq
+$BINARY q distribution rewards cre1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyqr4aec5 --output json | jq
 
 # Query voting power of the liquid staking
-$BINARY q liquidstaking voting-power cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
+$BINARY q liquidstaking voting-power cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output json | jq
 
 # normal stake
-$BINARY tx staking delegate cosmosvaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3m9ammr5 500000000stake \
+$BINARY tx staking delegate crevaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3mx4uyhq 500000000stake \
 --chain-id localnet \
 --from user2 \
 --keyring-backend test \
@@ -182,7 +184,7 @@ $BINARY tx staking delegate cosmosvaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3m9ammr5
 --output json | jq
 
 # Query voting power of staking and liquid staking
-$BINARY q liquidstaking voting-power cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
+$BINARY q liquidstaking voting-power cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output json | jq
 
 # Query liquid staking states including net amount, mint rate
 $BINARY q liquidstaking states --output json | jq
@@ -193,7 +195,7 @@ $BINARY q liquidstaking states --output json | jq
 
 ```bash
 # Query balance of user2
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Liquid UnStake
@@ -207,21 +209,21 @@ $BINARY tx liquidstaking liquid-unstake 500000000bstake \
 --output json | jq
 
 # Query balance of user2, you can find 500000000bstake balance left
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Query liquid validators, you can find del_shares, liquid_tokens 500000000.000000000000000000 + withdrawn and re-staked rewards + UnstakeFee (0.001)
 $BINARY q liquidstaking liquid-validators --output json | jq
 
-# Query delegations and rewards of liquidstaking proxy module account cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk
-$BINARY q staking delegations cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
-$BINARY q distribution rewards cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk --output json | jq
+# Query delegations and rewards of liquidstaking proxy module account cre1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyqr4aec5
+$BINARY q staking delegations cre1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyqr4aec5 --output json | jq
+$BINARY q distribution rewards cre1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyqr4aec5 --output json | jq
 
 # Query unbonding, 499500000(UnstakeFee(0.001) deducted) + rewards
-$BINARY q staking unbonding-delegations cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny --output json | jq
+$BINARY q staking unbonding-delegations cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output json | jq
 
 # Query balance of liquidstaking proxy module account
-$BINARY q bank balances cosmos1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyq0xf9dk \
+$BINARY q bank balances cre1qf3v4kns89qg42xwqhek5cmjw9fsr0ssy7z0jwcjy2dgz6pvjnyqr4aec5 \
 --output json | jq
 
 # reward trigger is 0.001
@@ -342,7 +344,7 @@ $BINARY tx gov vote $PROPOSAL yes \
 # Query Tally with TallyLiquidGov calculation, voting power is worth of btoken balance of the user  
 $BINARY q gov tally $PROPOSAL --output json | jq
 
-$BINARY q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny \
+$BINARY q bank balances cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Query the proposal again to check the status PROPOSAL_STATUS_PASSED
@@ -550,13 +552,13 @@ periods.json
 ```
 
 ```bash
-# cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
+# cre10n3ncmlsaqfuwsmfll8kq6hvt4x7c8czhnv69a
 export USER_3="smooth bike pool jealous cinnamon seat tiger team canoe almost core bag fluid garbage embrace gorilla wise door toe upon present canal myth corn"
 
 echo $USER_3 | $BINARY keys add user3 --keyring-backend test --recover
 
 # Create periodic vesting account
-$BINARY tx vesting create-periodic-vesting-account cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss periods.json \
+$BINARY tx vesting create-periodic-vesting-account cre10n3ncmlsaqfuwsmfll8kq6hvt4x7c8czhnv69a periods.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -565,7 +567,7 @@ $BINARY tx vesting create-periodic-vesting-account cosmos10n3ncmlsaqfuwsmfll8kq6
 --output json 
 
 # or Create continuous vesting account
-$BINARY tx vesting create-vesting-account cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss 100000000stake 1700000000 \
+$BINARY tx vesting create-vesting-account cre10n3ncmlsaqfuwsmfll8kq6hvt4x7c8czhnv69a 100000000stake 1700000000 \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -574,7 +576,7 @@ $BINARY tx vesting create-vesting-account cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8c
 --output json | jq
 
 # fail Create vesting account, already existing
-$BINARY tx vesting create-vesting-account cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny 100000000stake 1700000000 \
+$BINARY tx vesting create-vesting-account cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf 100000000stake 1700000000 \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -583,11 +585,11 @@ $BINARY tx vesting create-vesting-account cosmos185fflsvwrz0cx46w6qada7mdy92m6kx
 --output json | jq
 
 # Query vesting account
-$BINARY q account cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
-$BINARY q bank balances cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss
+$BINARY q account cre10n3ncmlsaqfuwsmfll8kq6hvt4x7c8czhnv69a
+$BINARY q bank balances cre10n3ncmlsaqfuwsmfll8kq6hvt4x7c8czhnv69a
 
 # Send test, failed not freed balance
-$BINARY tx bank send cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny 100000000stake \
+$BINARY tx bank send cre10n3ncmlsaqfuwsmfll8kq6hvt4x7c8czhnv69a cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf 100000000stake \
 --chain-id localnet \
 --from user3 \
 --keyring-backend test \
@@ -596,7 +598,7 @@ $BINARY tx bank send cosmos10n3ncmlsaqfuwsmfll8kq6hvt4x7c8cznmllss cosmos185ffls
 --output json | jq
 
 # delegate failed custom sdk need spendable balances for delegation
-$BINARY tx staking delegate cosmosvaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3m9ammr5 100000000stake \
+$BINARY tx staking delegate crevaloper13w4ueuk80d3kmwk7ntlhp84fk0arlm3mx4uyhq 100000000stake \
 --chain-id localnet \
 --from user3 \
 --keyring-backend test \

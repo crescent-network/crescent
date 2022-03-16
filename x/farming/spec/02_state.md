@@ -202,8 +202,8 @@ An example of `FixedAmountPlan`:
     "id": 1,
     "name": "testPlan",
     "type": 1,
-    "farming_pool_address": "cosmos1...",
-    "termination_address": "cosmos1...",
+    "farming_pool_address": "cre1...",
+    "termination_address": "cre1...",
     "staking_coin_weights": [
       {
         "denom": "xxx",
@@ -246,8 +246,8 @@ An example of `RatioPlan`:
     "id": 1,
     "name": "testPlan",
     "type": 1,
-    "farming_pool_address": "cosmos1...",
-    "termination_address": "cosmos1...",
+    "farming_pool_address": "cre1...",
+    "termination_address": "cre1...",
     "staking_coin_weights": [
       {
         "denom": "xxx",

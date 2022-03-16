@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package crescent.farming.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "crescent/farming/v1beta1/farming.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/farming/types";
+
+// PublicPlanProposal defines a public farming plan governance proposal that receives one of the following requests:
+// A request that creates a public farming plan, a request that updates the plan, and a request that deletes the plan.
+// For public plan creation, depending on which field is passed, either epoch amount or epoch ratio, it creates a fixed
+// amount plan or ratio plan.
+message PublicPlanProposal {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  // title specifies the title of the plan
+  string title = 1;
+
+  // description specifies the description of the plan
+  string description = 2;
+
+  // add_plan_requests specifies AddPlanRequest object
+  repeated AddPlanRequest add_plan_requests = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"add_plan_requests\""];
+
+  // modify_plan_requests specifies ModifyPlanRequest object
+  repeated ModifyPlanRequest modify_plan_requests = 4
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"modify_plan_requests\""];
+
+  // delete_plan_requests specifies DeletePlanRequest object
+  repeated DeletePlanRequest delete_plan_requests = 5
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"delete_plan_requests\""];
+}
+
+// AddPlanRequest details a proposal for creating a public plan.
+message AddPlanRequest {
+  // name specifies the plan name for display
+  string name = 1;
+
+  // farming_pool_address defines the bech32-encoded address of the farming pool
+  string farming_pool_address = 2 [(gogoproto.moretags) = "yaml:\"farming_pool_address\""];
+
+  // termination_address defines the bech32-encoded address that terminates plan
+  // when the plan ends after the end time, the balance of farming pool address
+  // is transferred to the termination address
+  string termination_address = 3 [(gogoproto.moretags) = "yaml:\"termination_address\""];
+
+  // staking_coin_weights specifies coin weights for the plan
+  repeated cosmos.base.v1beta1.DecCoin staking_coin_weights = 4 [
+    (gogoproto.moretags)     = "yaml:\"staking_coin_weights\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // start_time specifies the start time of the plan
+  google.protobuf.Timestamp start_time = 5
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+
+  // end_time specifies the end time of the plan
+  google.protobuf.Timestamp end_time = 6
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+
+  // epoch_amount specifies the distributing amount for each epoch
+  repeated cosmos.base.v1beta1.Coin epoch_amount = 7 [
+    (gogoproto.moretags)     = "yaml:\"epoch_amount\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // epoch_ratio specifies the distributing amount by ratio
+  string epoch_ratio = 8 [
+    (gogoproto.moretags)   = "yaml:\"epoch_ratio\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// ModifyPlanRequest details a proposal for modifying the existing public plan.
+message ModifyPlanRequest {
+  // plan_id specifies index of the farming plan
+  uint64 plan_id = 1;
+
+  // name specifies the plan name for display
+  string name = 2;
+
+  // farming_pool_address defines the bech32-encoded address of the farming pool
+  string farming_pool_address = 3 [(gogoproto.moretags) = "yaml:\"farming_pool_address\""];
+
+  // termination_address defines the bech32-encoded address that terminates plan
+  // when the plan ends after the end time, the balance of farming pool address
+  // is transferred to the termination address
+  string termination_address = 4 [(gogoproto.moretags) = "yaml:\"termination_address\""];
+
+  // staking_coin_weights specifies coin weights for the plan
+  repeated cosmos.base.v1beta1.DecCoin staking_coin_weights = 5 [
+    (gogoproto.moretags)     = "yaml:\"staking_coin_weights\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // start_time specifies the start time of the plan
+  google.protobuf.Timestamp start_time = 6
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = true, (gogoproto.moretags) = "yaml:\"start_time\""];
+
+  // end_time specifies the end time of the plan
+  google.protobuf.Timestamp end_time = 7
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = true, (gogoproto.moretags) = "yaml:\"end_time\""];
+
+  // epoch_amount specifies the distributing amount for each epoch
+  repeated cosmos.base.v1beta1.Coin epoch_amount = 8 [
+    (gogoproto.moretags)     = "yaml:\"epoch_amount\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // epoch_ratio specifies the distributing amount by ratio
+  string epoch_ratio = 9 [
+    (gogoproto.moretags)   = "yaml:\"epoch_ratio\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// DeletePlanRequest details a proposal for deleting an existing public plan.
+message DeletePlanRequest {
+  // plan_id specifies index of the farming plan
+  uint64 plan_id = 1;
+}

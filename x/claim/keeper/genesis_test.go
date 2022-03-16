@@ -3,9 +3,9 @@ package keeper_test
 import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/cosmosquad-labs/squad/app"
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/claim/types"
+	chain "github.com/crescent-network/crescent/app"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

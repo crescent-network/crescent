@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmosquad-labs/squad/types"
+	"github.com/crescent-network/crescent/types"
 	"github.com/stretchr/testify/require"
 )
 

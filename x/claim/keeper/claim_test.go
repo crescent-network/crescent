@@ -4,10 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/claim"
-	"github.com/cosmosquad-labs/squad/x/claim/types"
-	"github.com/cosmosquad-labs/squad/x/liquidity"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/claim"
+	"github.com/crescent-network/crescent/x/claim/types"
+	"github.com/crescent-network/crescent/x/liquidity"
 
 	_ "github.com/stretchr/testify/suite"
 )

@@ -12,7 +12,7 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 ## gRPC-gateway REST Routes
 
 <!-- markdown-link-check-disable -->
-++https://github.com/cosmosquad-labs/squad/blob/main/proto/squad/claim/v1beta1/query.proto 
+++https://github.com/crescent-network/crescent/blob/main/proto/crescent/claim/v1beta1/query.proto 
 
 - [Airdrops](#Airdrops)
 - [Airdrop](#Airdrop)
@@ -25,7 +25,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/claim/v1beta1/airdrops
+http://localhost:1317/crescent/claim/v1beta1/airdrops
 ```
 
 Example Response
@@ -35,7 +35,7 @@ Example Response
   "airdrops": [
     {
       "id": "1",
-      "source_address": "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
+      "source_address": "cre15rz2rwnlgr7nf6eauz52usezffwrxc0mxajpmw",
       "conditions": [
         "CONDITION_TYPE_DEPOSIT",
         "CONDITION_TYPE_SWAP",
@@ -59,7 +59,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/claim/v1beta1/airdrops/1
+http://localhost:1317/crescent/claim/v1beta1/airdrops/1
 ```
 
 Example Response
@@ -68,7 +68,7 @@ Example Response
 {
   "airdrop": {
     "id": "1",
-    "source_address": "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr",
+    "source_address": "cre15rz2rwnlgr7nf6eauz52usezffwrxc0mxajpmw",
     "conditions": [
       "CONDITION_TYPE_DEPOSIT",
       "CONDITION_TYPE_SWAP",
@@ -88,7 +88,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/claim/v1beta1/airdrops/1/claim_records/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
+http://localhost:1317/crescent/claim/v1beta1/airdrops/1/claim_records/cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
 ```
 
 Example Response
@@ -97,7 +97,7 @@ Example Response
 {
   "claim_record": {
     "airdrop_id": "1",
-    "recipient": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+    "recipient": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "initial_claimable_coins": [
       {
         "denom": "airdrop",

@@ -7,9 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	chain "github.com/cosmosquad-labs/squad/app"
-	"github.com/cosmosquad-labs/squad/x/farming"
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	chain "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

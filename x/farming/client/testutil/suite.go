@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	chain "github.com/cosmosquad-labs/squad/app"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -16,9 +15,10 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmdb "github.com/tendermint/tm-db"
 
-	"github.com/cosmosquad-labs/squad/x/farming/client/cli"
-	"github.com/cosmosquad-labs/squad/x/farming/keeper"
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	chain "github.com/crescent-network/crescent/app"
+	"github.com/crescent-network/crescent/x/farming/client/cli"
+	"github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 type IntegrationTestSuite struct {
@@ -69,7 +69,7 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 	name := "test"
 	coinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{
-			Denom:  "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+			Denom:  "pool1",
 			Amount: sdk.MustNewDecFromStr("1.0"),
 		},
 	)
@@ -107,7 +107,7 @@ func (s *IntegrationTestSuite) TestNewCreateFixedAmountPlanCmd() {
 	// invalid staking coin weights
 	case4 := cli.PrivateFixedPlanRequest{
 		Name:               name,
-		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4", sdk.NewInt(2))),
+		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("pool1", sdk.NewInt(2))),
 		StartTime:          types.ParseTime("0001-01-01T00:00:00Z"),
 		EndTime:            types.ParseTime("9999-01-01T00:00:00Z"),
 		EpochAmount:        sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000)),
@@ -234,7 +234,7 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 	name := "test"
 	coinWeights := sdk.NewDecCoins(
 		sdk.DecCoin{
-			Denom:  "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+			Denom:  "pool1",
 			Amount: sdk.MustNewDecFromStr("1.0"),
 		},
 	)
@@ -272,7 +272,7 @@ func (s *IntegrationTestSuite) TestNewCreateRatioPlanCmd() {
 	// invalid staking coin weights
 	case4 := cli.PrivateRatioPlanRequest{
 		Name:               name,
-		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4", sdk.NewInt(2))),
+		StakingCoinWeights: sdk.NewDecCoins(sdk.NewDecCoin("pool1", sdk.NewInt(2))),
 		StartTime:          types.ParseTime("0001-01-01T00:00:00Z"),
 		EndTime:            types.ParseTime("9999-01-01T00:00:00Z"),
 		EpochRatio:         sdk.MustNewDecFromStr("0.1"),

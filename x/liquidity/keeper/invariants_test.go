@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/liquidity/keeper"
 )
 
 func (s *KeeperTestSuite) TestDepositCoinsEscrowInvariant() {

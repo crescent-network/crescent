@@ -58,7 +58,7 @@ Example
 
 ```bash
 # Create a pair ATOM/UST
-squad tx liquidity create-pair uatom uusd \
+crescentd tx liquidity create-pair uatom uusd \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -70,7 +70,7 @@ squad tx liquidity create-pair uatom uusd \
 # Tips
 #
 # You can query pairs using the following command
-squad q liquidity pairs -o json | jq
+crescentd q liquidity pairs -o json | jq
 ```
 
 ## CreatePool
@@ -94,7 +94,7 @@ Example
 
 ```bash
 # Create a pool 1000ATOM/3000UST
-squad tx liquidity create-pool 1 1000000000uatom,3000000000uusd \
+crescentd tx liquidity create-pool 1 1000000000uatom,3000000000uusd \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -106,7 +106,7 @@ squad tx liquidity create-pool 1 1000000000uatom,3000000000uusd \
 # Tips
 #
 # You can query pools using the following command
-squad q liquidity pools -o json | jq
+crescentd q liquidity pools -o json | jq
 ```
 
 ## Deposit
@@ -132,7 +132,7 @@ Example
 
 ```bash
 # Deposit 10ATOM/30UST to the pool
-squad tx liquidity deposit 1 10000000uatom,30000000uusd \
+crescentd tx liquidity deposit 1 10000000uatom,30000000uusd \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -146,7 +146,7 @@ squad tx liquidity deposit 1 10000000uatom,30000000uusd \
 # You can query deposit requests by using the following command
 # You must query this right away to get the result
 # Otherwise, it is removed as it is executed.
-squad q liquidity deposit-requests 1 -o json | jq
+crescentd q liquidity deposit-requests 1 -o json | jq
 ```
 
 ## Withdraw
@@ -170,7 +170,7 @@ Example
 
 ```bash
 # Withdraw pool coin from the pool
-squad tx liquidity withdraw 1 500000000000pool1 \
+crescentd tx liquidity withdraw 1 500000000000pool1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -184,7 +184,7 @@ squad tx liquidity withdraw 1 500000000000pool1 \
 # You can query withdraw requests by using the following command
 # You must query this right away to get the result
 # Otherwise, it is removed as it is executed.
-squad q liquidity withdraw-requests 1 -o json | jq
+crescentd q liquidity withdraw-requests 1 -o json | jq
 ```
 
 ## LimitOrder
@@ -218,7 +218,7 @@ Example
 
 ```bash
 # Make a limit order to swap
-squad tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
+crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -227,7 +227,7 @@ squad tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
 --output json | jq
 
 # Make a limit order to swap with order-lifespan flag
-squad tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
+crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
 --chain-id localnet \
 --order-lifespan 30s \
 --from alice \
@@ -242,7 +242,7 @@ squad tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
 # You can query order requests by using the following command
 # You must query this right away to get the result
 # Otherwise, it is removed as it is executed.
-squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
+crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 ## MarketOrder
@@ -279,7 +279,7 @@ Example
 
 ```bash
 # Make a market order to swap 
-squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
+crescentd tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -288,7 +288,7 @@ squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 --output json | jq
 
 # Make a limit order to swap with order-lifespan flag
-squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
+crescentd tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 --chain-id localnet \
 --order-lifespan 30s \
 --from alice \
@@ -303,7 +303,7 @@ squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 # You can query order requests by using the following command
 # You must query this right away to get the result
 # Otherwise, it is removed as it is executed.
-squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
+crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 ## CancelOrder
@@ -324,7 +324,7 @@ cancel-order [pair-id] [order-id]
 Example
 
 ```bash
-squad tx liquidity cancel-order 1 1 \
+crescentd tx liquidity cancel-order 1 1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend=test \
@@ -353,7 +353,7 @@ cancel-all-orders [pair-ids]
 Example
 
 ```bash
-squad tx liquidity cancel-all-orders 1,2,3 \
+crescentd tx liquidity cancel-all-orders 1,2,3 \
 --chain-id localnet \
 --from alice \
 --keyring-backend=test \
@@ -377,7 +377,7 @@ params
 Example
 
 ```bash
-squad q liquidity params -o json | jq
+crescentd q liquidity params -o json | jq
 ```
 
 ## Pairs
@@ -394,13 +394,13 @@ Example
 
 ```bash
 # Query all pairs
-squad q liquidity pairs -o json | jq
+crescentd q liquidity pairs -o json | jq
 
 # Query all pairs that has the defined denom
-squad q liquidity pairs --denoms=uatom -o json | jq
+crescentd q liquidity pairs --denoms=uatom -o json | jq
 
 # Query all pairs that has the defined denoms
-squad q liquidity pairs --denoms=uatom,uusd -o json | jq
+crescentd q liquidity pairs --denoms=uatom,uusd -o json | jq
 ```
 
 ## Pair
@@ -416,7 +416,7 @@ pair [pair-id]
 Example
 
 ```bash
-squad q liquidity pair 1 -o json | jq
+crescentd q liquidity pair 1 -o json | jq
 ```
 
 ## Pools
@@ -433,13 +433,13 @@ Example
 
 ```bash
 # Query all pools
-squad q liquidity pools -o json | jq
+crescentd q liquidity pools -o json | jq
 
 # Query all pools that has the pair id
-squad q liquidity pools -o json --pair-id=1 | jq
+crescentd q liquidity pools -o json --pair-id=1 | jq
 
 # Query all pools with disabled flag
-squad q liquidity pools -o json --disabled=false | jq
+crescentd q liquidity pools -o json --disabled=false | jq
 ```
 
 ## Pool
@@ -456,10 +456,10 @@ Example
 
 ```bash
 # Query the specific pool
-squad q liquidity pool 1 -o json | jq
+crescentd q liquidity pool 1 -o json | jq
 
 # Query the specific pool that has the defined pool coin denom
-squad q liquidity pool --pool-coin-denom=pool1 -o json | jq
+crescentd q liquidity pool --pool-coin-denom=pool1 -o json | jq
 ```
 
 ## DepositRequests
@@ -475,7 +475,7 @@ deposit-requests [pool-id]
 Example
 
 ```bash
-squad q liquidity deposit-requests 1 -o json | jq
+crescentd q liquidity deposit-requests 1 -o json | jq
 ```
 
 ## DepositRequest
@@ -491,7 +491,7 @@ deposit-request [pool-id] [id]
 Example
 
 ```bash
-squad q liquidity deposit-request 1 1 -o json | jq
+crescentd q liquidity deposit-request 1 1 -o json | jq
 ```
 
 ## WithdrawRequests
@@ -507,7 +507,7 @@ withdraw-requests [pool-id]
 Example
 
 ```bash
-squad q liquidity withdraw-requests 1 -o json | jq
+crescentd q liquidity withdraw-requests 1 -o json | jq
 ```
 
 ## WithdrawRequest
@@ -523,7 +523,7 @@ withdraw-request [pool-id] [id]
 Example
 
 ```bash
-squad q liquidity withdraw-request 1 1 -o json | jq
+crescentd q liquidity withdraw-request 1 1 -o json | jq
 ```
 
 ## Orders
@@ -539,14 +539,14 @@ orders
 Example
 
 ```bash
-squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v \
+crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p \
 -o json | jq
 
-squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v \
+crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p \
 --pair-id=1 \
 -o json | jq
 
-squad q liquidity orders \
+crescentd q liquidity orders \
 --pair-id=1 \
 -o json | jq
 ```
@@ -564,7 +564,7 @@ order [pair-id] [id]
 Example
 
 ```bash
-squad q liquidity order 1 1
+crescentd q liquidity order 1 1
 ```
 
 

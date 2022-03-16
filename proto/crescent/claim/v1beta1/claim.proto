@@ -1,0 +1,69 @@
+syntax = "proto3";
+package crescent.claim.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/x/claim/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Airdrop defines airdrop information.
+message Airdrop {
+  // id specifies index of the airdrop
+  uint64 id = 1;
+
+  // source_address defines the bech32-encoded source address
+  // where the source of coins from
+  string source_address = 2;
+
+  // conditions specifies a list of conditions
+  repeated ConditionType conditions = 3;
+
+  // start_time specifies the start time of the airdrop
+  google.protobuf.Timestamp start_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+
+  // end_time specifies the start time of the airdrop
+  google.protobuf.Timestamp end_time = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+// ClaimRecord defines claim record that corresponds to the airdrop.
+message ClaimRecord {
+  // airdrop_id specifies airdrop id
+  uint64 airdrop_id = 1;
+
+  // recipient specifies the bech32-encoded address that is eligible to claim airdrop
+  string recipient = 2;
+
+  // initial_claimable_coins specifies the initial claimable coins
+  repeated cosmos.base.v1beta1.Coin initial_claimable_coins = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  // claimable_coins specifies the unclaimed claimable coins
+  repeated cosmos.base.v1beta1.Coin claimable_coins = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  // claimed_conditions specifies a list of condition types
+  // initial values are empty and each condition type gets appended when claim is successfully executed
+  repeated ConditionType claimed_conditions = 5;
+}
+
+// ConditionType defines the type of condition that a recipient must execute in order to receive a claimable amount.
+enum ConditionType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // CONDITION_TYPE_UNSPECIFIED specifies an unknown condition type
+  CONDITION_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ConditionTypeUnspecified"];
+
+  // CONDITION_TYPE_DEPOSIT specifies deposit condition type
+  CONDITION_TYPE_DEPOSIT = 1 [(gogoproto.enumvalue_customname) = "ConditionTypeDeposit"];
+
+  // CONDITION_TYPE_SWAP specifies swap condition type
+  CONDITION_TYPE_SWAP = 2 [(gogoproto.enumvalue_customname) = "ConditionTypeSwap"];
+
+  // CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
+  CONDITION_TYPE_LIQUIDSTAKE = 3 [(gogoproto.enumvalue_customname) = "ConditionTypeLiquidStake"];
+
+  // CONDITION_TYPE_VOTE specifies governance vote condition type
+  CONDITION_TYPE_VOTE = 4 [(gogoproto.enumvalue_customname) = "ConditionTypeVote"];
+}

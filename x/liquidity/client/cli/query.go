@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -247,7 +247,7 @@ func NewQueryPoolCmd() *cobra.Command {
 Example:
 $ %s query %s pool 1
 $ %s query %s pool --pool-coin-denom=pool1
-$ %s query %s pool --reserve-address=cosmos1...
+$ %s query %s pool --reserve-address=cre1...
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -522,8 +522,8 @@ func NewQueryOrdersCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all orders in the pair.
 Example:
-$ %s query %s orders cosmos1...
-$ %s query %s orders --pair-id=1 cosmos1...
+$ %s query %s orders cre1...
+$ %s query %s orders --pair-id=1 cre1...
 $ %s query %s orders --pair-id=1
 `,
 				version.AppName, types.ModuleName,

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 func TestPoolReserveAddress(t *testing.T) {
@@ -50,7 +50,7 @@ func TestParsePoolCoinDenomFailure(t *testing.T) {
 		{"pool01", true},
 		{"pool-10", true},
 		{"pool+10", true},
-		{"usquad", true},
+		{"ucre", true},
 		{"denom1", true},
 	} {
 		t.Run("", func(t *testing.T) {

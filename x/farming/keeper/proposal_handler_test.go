@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/cosmosquad-labs/squad/x/farming"
-	"github.com/cosmosquad-labs/squad/x/farming/keeper"
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/farming/keeper"
+	"github.com/crescent-network/crescent/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -366,7 +366,7 @@ func (suite *KeeperTestSuite) TestValidateAddPublicPlanProposal() {
 				suite.addrs[0].String(),
 				sdk.NewDecCoins(
 					sdk.DecCoin{
-						Denom:  "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+						Denom:  "pool1",
 						Amount: sdk.MustNewDecFromStr("0.1"),
 					},
 				),
@@ -566,7 +566,7 @@ func (suite *KeeperTestSuite) TestValidateModifyPublicPlanProposal() {
 				plan.GetTerminationAddress().String(),
 				sdk.NewDecCoins(
 					sdk.DecCoin{
-						Denom:  "poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4",
+						Denom:  "pool1",
 						Amount: sdk.MustNewDecFromStr("0.1"),
 					},
 				),

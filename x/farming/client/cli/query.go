@@ -17,7 +17,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/cosmosquad-labs/squad/x/farming/types"
+	"github.com/crescent-network/crescent/x/farming/types"
 )
 
 // GetQueryCmd returns a root CLI command handler for all x/farming query commands.
@@ -91,7 +91,7 @@ $ %s query %s plans
 $ %s query %s plans --plan-type private
 $ %s query %s plans --farming-pool-addr %s1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
 $ %s query %s plans --termination-addr %s1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
-$ %s query %s plans --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+$ %s query %s plans --staking-coin-denom pool1
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -209,7 +209,7 @@ Optionally restrict coins for a staking coin denom.
 
 Example:
 $ %s query %s stakings %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-$ %s query %s stakings %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+$ %s query %s stakings %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-denom pool1
 `,
 				version.AppName, types.ModuleName, bech32PrefixAccAddr,
 				version.AppName, types.ModuleName, bech32PrefixAccAddr,
@@ -257,7 +257,7 @@ func GetCmdQueryTotalStakings() *cobra.Command {
 			fmt.Sprintf(`Query total staking amount for a staking coin denom.
 
 Example:
-$ %s query %s total-stakings poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+$ %s query %s total-stakings pool1
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -305,7 +305,7 @@ Optionally restrict rewards for a staking coin denom.
 
 Example:
 $ %s query %s rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-$ %s query %s rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-denom poolD35A0CC16EE598F90B044CE296A405BA9C381E38837599D96F2F70C2F02A23A4
+$ %s query %s rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --staking-coin-denom pool1
 `,
 				version.AppName, types.ModuleName, bech32PrefixAccAddr,
 				version.AppName, types.ModuleName, bech32PrefixAccAddr,

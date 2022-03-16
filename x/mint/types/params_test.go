@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	utils "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/stretchr/testify/require"
 
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/cosmosquad-labs/squad/x/mint/types"
+	"github.com/crescent-network/crescent/x/mint/types"
 )
 
 func TestParams(t *testing.T) {

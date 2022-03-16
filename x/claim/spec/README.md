@@ -1,4 +1,4 @@
-<!-- order: 0 title: Squad Overview parent: title: "claim" -->
+<!-- order: 0 title: Overview parent: title: "claim" -->
 
 # `claim`
 

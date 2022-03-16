@@ -12,7 +12,7 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 ## gRPC-gateway REST Routes
 
 <!-- markdown-link-check-disable -->
-++https://github.com/cosmosquad-labs/squad/blob/main/proto/squad/liquidity/v1beta1/query.proto 
+++https://github.com/crescent-network/crescent/blob/main/proto/crescent/liquidity/v1beta1/query.proto 
 
 - [Params](#Params)
 - [Pairs](#Pairs)
@@ -35,7 +35,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/params
+http://localhost:1317/crescent/liquidity/v1beta1/params
 ```
 
 Example Response
@@ -45,8 +45,8 @@ Example Response
   "params": {
     "batch_size": 1,
     "tick_precision": 3,
-    "fee_collector_address": "cosmos1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvqau9aj0",
-    "dust_collector_address": "cosmos1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0se4s8xs",
+    "fee_collector_address": "cre1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvq303p8d",
+    "dust_collector_address": "cre1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0s4xymnj",
     "initial_pool_coin_supply": "1000000000000",
     "pair_creation_fee": [
       {
@@ -75,9 +75,9 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pairs
-http://localhost:1317/squad/liquidity/v1beta1/pairs?denoms=uatom
-http://localhost:1317/squad/liquidity/v1beta1/pairs?denoms=uatom&denoms=uusd
+http://localhost:1317/crescent/liquidity/v1beta1/pairs
+http://localhost:1317/crescent/liquidity/v1beta1/pairs?denoms=uatom
+http://localhost:1317/crescent/liquidity/v1beta1/pairs?denoms=uatom&denoms=uusd
 ```
 
 Example Response
@@ -89,7 +89,7 @@ Example Response
       "id": "1",
       "base_coin_denom": "uatom",
       "quote_coin_denom": "uusd",
-      "escrow_address": "cosmos17u9nx0h9cmhypp6cg9lf4q8ku9l3k8mz232su7m28m39lkz25dgqzkypxs",
+      "escrow_address": "cre17u9nx0h9cmhypp6cg9lf4q8ku9l3k8mz232su7m28m39lkz25dgqw9sanj",
       "last_order_id": "4",
       "last_price": "0.310500000000000000",
       "current_batch_id": "5"
@@ -108,7 +108,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pairs/1
+http://localhost:1317/crescent/liquidity/v1beta1/pairs/1
 ```
 
 Example Response
@@ -119,7 +119,7 @@ Example Response
     "id": "1",
     "base_coin_denom": "uatom",
     "quote_coin_denom": "uusd",
-    "escrow_address": "cosmos17u9nx0h9cmhypp6cg9lf4q8ku9l3k8mz232su7m28m39lkz25dgqzkypxs",
+    "escrow_address": "cre17u9nx0h9cmhypp6cg9lf4q8ku9l3k8mz232su7m28m39lkz25dgqw9sanj",
     "last_order_id": "4",
     "last_price": "0.310500000000000000",
     "current_batch_id": "5"
@@ -133,9 +133,9 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools
-http://localhost:1317/squad/liquidity/v1beta1/pools?pair_id=1
-http://localhost:1317/squad/liquidity/v1beta1/pools?disabled=false
+http://localhost:1317/crescent/liquidity/v1beta1/pools
+http://localhost:1317/crescent/liquidity/v1beta1/pools?pair_id=1
+http://localhost:1317/crescent/liquidity/v1beta1/pools?disabled=false
 ```
 
 Example Response
@@ -146,7 +146,7 @@ Example Response
     {
       "id": "1",
       "pair_id": "1",
-      "reserve_address": "cosmos1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfns20gpwy",
+      "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
       "pool_coin_denom": "pool1",
       "balances": [
         {
@@ -175,7 +175,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools/1
+http://localhost:1317/crescent/liquidity/v1beta1/pools/1
 ```
 
 Example Response
@@ -185,7 +185,7 @@ Example Response
   "pool": {
     "id": "1",
     "pair_id": "1",
-    "reserve_address": "cosmos1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfns20gpwy",
+    "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
     "pool_coin_denom": "pool1",
     "balances": [
       {
@@ -209,7 +209,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools/reserve_address/cosmos1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfns20gpwy
+http://localhost:1317/crescent/liquidity/v1beta1/pools/reserve_address/cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx
 ```
 
 Example Response
@@ -219,7 +219,7 @@ Example Response
   "pool": {
     "id": "1",
     "pair_id": "1",
-    "reserve_address": "cosmos1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfns20gpwy",
+    "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
     "pool_coin_denom": "pool1",
     "balances": [
       {
@@ -243,7 +243,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools/pool_coin_denom/pool1
+http://localhost:1317/crescent/liquidity/v1beta1/pools/pool_coin_denom/pool1
 ```
 
 Example Response
@@ -253,7 +253,7 @@ Example Response
   "pool": {
     "id": "1",
     "pair_id": "1",
-    "reserve_address": "cosmos1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfns20gpwy",
+    "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
     "pool_coin_denom": "pool1",
     "balances": [
       {
@@ -277,7 +277,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools/1/deposit_requests
+http://localhost:1317/crescent/liquidity/v1beta1/pools/1/deposit_requests
 ```
 
 Example Response
@@ -289,7 +289,7 @@ Example Response
       "id": "2",
       "pool_id": "1",
       "msg_height": "1849",
-      "depositor": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+      "depositor": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
       "deposit_coins": [
         {
           "denom": "uatom",
@@ -330,7 +330,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools/1/deposit_requests/1
+http://localhost:1317/crescent/liquidity/v1beta1/pools/1/deposit_requests/1
 ```
 
 Example Response
@@ -341,7 +341,7 @@ Example Response
     "id": "5",
     "pool_id": "1",
     "msg_height": "1929",
-    "depositor": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+    "depositor": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "deposit_coins": [
       {
         "denom": "uatom",
@@ -377,7 +377,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools/1/withdraw_requests
+http://localhost:1317/crescent/liquidity/v1beta1/pools/1/withdraw_requests
 ```
 
 Example Response
@@ -389,7 +389,7 @@ Example Response
       "id": "2",
       "pool_id": "1",
       "msg_height": "1987",
-      "withdrawer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+      "withdrawer": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
       "pool_coin": {
         "denom": "pool1",
         "amount": "10000000"
@@ -420,7 +420,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pools/1/withdraw_requests/1
+http://localhost:1317/crescent/liquidity/v1beta1/pools/1/withdraw_requests/1
 ```
 
 Example Response
@@ -431,7 +431,7 @@ Example Response
     "id": "3",
     "pool_id": "1",
     "msg_height": "2016",
-    "withdrawer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+    "withdrawer": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "pool_coin": {
       "denom": "pool1",
       "amount": "10000000"
@@ -457,7 +457,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pairs/1/orders
+http://localhost:1317/crescent/liquidity/v1beta1/pairs/1/orders
 ```
 
 Example Response
@@ -469,7 +469,7 @@ Example Response
       "id": "5",
       "pair_id": "1",
       "msg_height": "2129",
-      "orderer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+      "orderer": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
       "direction": "ORDER_DIRECTION_SELL",
       "offer_coin": {
         "denom": "uatom",
@@ -504,7 +504,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/pairs/1/orders/1
+http://localhost:1317/crescent/liquidity/v1beta1/pairs/1/orders/1
 ```
 
 Example Response
@@ -515,7 +515,7 @@ Example Response
     "id": "8",
     "pair_id": "1",
     "msg_height": "2280",
-    "orderer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+    "orderer": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "direction": "ORDER_DIRECTION_SELL",
     "offer_coin": {
       "denom": "uatom",
@@ -545,7 +545,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/liquidity/v1beta1/orders/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
+http://localhost:1317/crescent/liquidity/v1beta1/orders/cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
 ```
 
 Example Response
@@ -557,7 +557,7 @@ Example Response
       "id": "7",
       "pair_id": "1",
       "msg_height": "2242",
-      "orderer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+      "orderer": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
       "direction": "ORDER_DIRECTION_SELL",
       "offer_coin": {
         "denom": "uatom",

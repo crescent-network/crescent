@@ -4,7 +4,7 @@
 
 ## Abstract
 
-This document specifies the Liquid Staking module of the Squad. Generally, in the context of cosmos-ecosystem, staking may not be preffered due to long lockup times when getting your assets back.
+This document specifies the Liquid Staking module of the Crescent. Generally, in the context of cosmos-ecosystem, staking may not be preffered due to long lockup times when getting your assets back.
 
 ## Contents
 

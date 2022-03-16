@@ -9,12 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	utils "github.com/cosmosquad-labs/squad/types"
-	minttypes "github.com/cosmosquad-labs/squad/x/mint/types"
 
-	appparams "github.com/cosmosquad-labs/squad/app/params"
-	farmingkeeper "github.com/cosmosquad-labs/squad/x/farming/keeper"
-	farmingtypes "github.com/cosmosquad-labs/squad/x/farming/types"
+	appparams "github.com/crescent-network/crescent/app/params"
+	utils "github.com/crescent-network/crescent/types"
+	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
+	minttypes "github.com/crescent-network/crescent/x/mint/types"
 )
 
 // Simulation operation weights constants.
@@ -39,9 +39,9 @@ var (
 
 var (
 	poolCoinDenoms = []string{
-		"pool93E069B333B5ECEBFE24C6E1437E814003248E0DD7FF8B9F82119F4587449BA5",
-		"pool3036F43CB8131A1A63D2B3D3B11E9CF6FA2A2B6FEC17D5AD283C25C939614A8C",
-		"poolE4D2617BFE03E1146F6BBA1D9893F2B3D77BA29E7ED532BB721A39FF1ECC1B07",
+		"pool1",
+		"pool2",
+		"pool3",
 	}
 
 	testCoinDenoms = []string{

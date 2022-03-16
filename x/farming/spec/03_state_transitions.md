@@ -55,7 +55,7 @@ If the sum of total calculated `EpochAmount` (or `EpochRatio` multiplied by the 
 
 For each [abci end block call](https://docs.cosmos.network/master/modules/staking/05_end_block.html), the operations to update the rewards allocation are:
 
-++ https://github.com/tendermint/farming/blob/69db071ce30b99617b8ba9bb6efac76e74cd100b/x/farming/keeper/reward.go#L363-L426
+++ `/x/farming/keeper/reward.go`
 
 - Calculates rewards allocation information for the end of the current epoch depending on plan type `FixedAmountPlan` or `RatioPlan`
 - Distributes total allocated coins from each plan’s farming pool address `FarmingPoolAddress` to the rewards reserve pool account `RewardsReserveAcc`

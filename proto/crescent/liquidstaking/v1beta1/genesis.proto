@@ -1,0 +1,20 @@
+syntax = "proto3";
+package crescent.liquidstaking.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/liquidstaking/v1beta1/liquidstaking.proto";
+
+option go_package            = "github.com/crescent-network/crescent/x/liquidstaking/types";
+option (gogoproto.equal_all) = true;
+
+// GenesisState defines the liquidstaking module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters for the liquidstaking module
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  repeated LiquidValidator liquid_validators = 2
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"liquid_validators\""];
+}

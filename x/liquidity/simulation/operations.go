@@ -12,11 +12,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/cosmosquad-labs/squad/app/params"
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/liquidity/amm"
-	"github.com/cosmosquad-labs/squad/x/liquidity/keeper"
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	appparams "github.com/crescent-network/crescent/app/params"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/liquidity/amm"
+	"github.com/crescent-network/crescent/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 // Simulation operation weights constants.
@@ -310,15 +310,19 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
-		var poolId uint64
+		var pool types.Pool
 		skip := true
 	loop:
 		for _, simAccount = range accs {
 			spendable = bk.SpendableCoins(ctx, simAccount.Address)
 			for _, coin := range spendable {
-				var err error
-				poolId, err = types.ParsePoolCoinDenom(coin.Denom)
-				if err == nil {
+				poolId, err := types.ParsePoolCoinDenom(coin.Denom)
+				if err != nil {
+					continue
+				}
+				var found bool
+				pool, found = k.GetPool(ctx, poolId)
+				if found {
 					skip = false
 					break loop
 				}
@@ -328,9 +332,8 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdraw, "no account to withdraw from pool"), nil, nil
 		}
 
-		pool, _ := k.GetPool(ctx, poolId)
 		poolCoin := sdk.NewCoin(pool.PoolCoinDenom, utils.RandomInt(r, sdk.OneInt(), spendable.AmountOf(pool.PoolCoinDenom)))
-		msg := types.NewMsgWithdraw(simAccount.Address, poolId, poolCoin)
+		msg := types.NewMsgWithdraw(simAccount.Address, pool.Id, poolCoin)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

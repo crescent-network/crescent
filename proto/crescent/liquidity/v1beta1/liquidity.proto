@@ -1,0 +1,236 @@
+syntax = "proto3";
+package crescent.liquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Params defines the parameters for the liquidity module.
+message Params {
+  uint32 batch_size = 1;
+
+  uint32 tick_precision = 2;
+
+  string fee_collector_address = 3;
+
+  string dust_collector_address = 4;
+
+  string min_initial_pool_coin_supply = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  repeated cosmos.base.v1beta1.Coin pair_creation_fee = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 7
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  string min_initial_deposit_amount = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  string max_price_limit_ratio = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  google.protobuf.Duration max_order_lifespan = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+
+  string swap_fee_rate = 11
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string withdraw_fee_rate = 12
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  uint64 deposit_extra_gas = 13
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
+
+  uint64 withdraw_extra_gas = 14
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
+
+  uint64 order_extra_gas = 15
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
+}
+
+// Pair defines a coin pair.
+message Pair {
+  uint64 id = 1;
+
+  string base_coin_denom = 2;
+
+  string quote_coin_denom = 3;
+
+  string escrow_address = 4;
+
+  uint64 last_order_id = 5;
+
+  string last_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  uint64 current_batch_id = 7;
+}
+
+// Pool defines a basic liquidity pool with no min-price and max-price.
+message Pool {
+  uint64 id = 1;
+
+  uint64 pair_id = 2;
+
+  string reserve_address = 3;
+
+  string pool_coin_denom = 4;
+
+  uint64 last_deposit_request_id = 5;
+
+  uint64 last_withdraw_request_id = 6;
+
+  bool disabled = 7;
+}
+
+// DepositRequest defines a deposit request.
+message DepositRequest {
+  // id specifies the id for the request
+  uint64 id = 1;
+
+  // pool_id specifies the pool id
+  uint64 pool_id = 2;
+
+  // msg_height specifies the block height when the request is stored for the batch execution
+  int64 msg_height = 3;
+
+  // depositor specifies the bech32-encoded address that makes a deposit to the pool
+  string depositor = 4;
+
+  // deposit_coins specifies the amount of coins to deposit.
+  repeated cosmos.base.v1beta1.Coin deposit_coins = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  // accepted_coins specifies the amount of coins that are accepted.
+  repeated cosmos.base.v1beta1.Coin accepted_coins = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin minted_pool_coin = 7 [(gogoproto.nullable) = false];
+
+  RequestStatus status = 8;
+}
+
+// WithdrawRequest defines a withdraw request.
+message WithdrawRequest {
+  // id specifies the id for the request
+  uint64 id = 1;
+
+  // pool_id specifies the pool id
+  uint64 pool_id = 2;
+
+  // msg_height specifies the block height when the request is stored for the batch execution
+  int64 msg_height = 3;
+
+  // withdrawer specifies the bech32-encoded address that withdraws pool coin from the pool
+  string withdrawer = 4;
+
+  // pool_coin specifies the pool coin that is a proof of liquidity provider for the pool
+  cosmos.base.v1beta1.Coin pool_coin = 5 [(gogoproto.nullable) = false];
+
+  // withdrawn_coins specifies the amount of coins that are withdrawn.
+  repeated cosmos.base.v1beta1.Coin withdrawn_coins = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  RequestStatus status = 7;
+}
+
+// Order defines an order.
+message Order {
+  // id specifies the id for the request
+  uint64 id = 1;
+
+  // pair_id specifies the pair id
+  uint64 pair_id = 2;
+
+  // msg_height specifies the block height when the request is stored for the batch execution
+  int64 msg_height = 3;
+
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 4;
+
+  // direction specifies the order direction; either buy or sell
+  OrderDirection direction = 5;
+
+  cosmos.base.v1beta1.Coin offer_coin = 6 [(gogoproto.nullable) = false];
+
+  // remaining_offer_coin specifies the remaining offer coin
+  cosmos.base.v1beta1.Coin remaining_offer_coin = 7 [(gogoproto.nullable) = false];
+
+  // received_coin specifies the received coin after the swap
+  cosmos.base.v1beta1.Coin received_coin = 8 [(gogoproto.nullable) = false];
+
+  // price specifies the price that an orderer is willing to swap
+  string price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string amount = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  string open_amount = 11
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // batch_id specifies the pair's batch id when the request is stored
+  uint64 batch_id = 12;
+
+  google.protobuf.Timestamp expire_at = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+
+  OrderStatus status = 14;
+}
+
+// OrderDirection enumerates order directions.
+enum OrderDirection {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+  ORDER_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OrderDirectionUnspecified"];
+
+  // ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+  ORDER_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "OrderDirectionBuy"];
+
+  // ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
+  ORDER_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "OrderDirectionSell"];
+}
+
+// RequestStatus enumerates request statuses.
+enum RequestStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // REQUEST_STATUS_UNSPECIFIED specifies unknown request status
+  REQUEST_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "RequestStatusUnspecified"];
+
+  // REQUEST_STATUS_NOT_EXECUTED indicates the request is not executed yet
+  REQUEST_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "RequestStatusNotExecuted"];
+
+  // REQUEST_STATUS_SUCCEEDED indicates the request has been succeeded
+  REQUEST_STATUS_SUCCEEDED = 2 [(gogoproto.enumvalue_customname) = "RequestStatusSucceeded"];
+
+  // REQUEST_STATUS_FAILED indicates the request is failed
+  REQUEST_STATUS_FAILED = 3 [(gogoproto.enumvalue_customname) = "RequestStatusFailed"];
+}
+
+// OrderStatus enumerates order statuses.
+enum OrderStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // ORDER_STATUS_UNSPECIFIED specifies unknown order status
+  ORDER_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OrderStatusUnspecified"];
+
+  // ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+  ORDER_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "OrderStatusNotExecuted"];
+
+  // ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+  ORDER_STATUS_NOT_MATCHED = 2 [(gogoproto.enumvalue_customname) = "OrderStatusNotMatched"];
+
+  // ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+  ORDER_STATUS_PARTIALLY_MATCHED = 3 [(gogoproto.enumvalue_customname) = "OrderStatusPartiallyMatched"];
+
+  // ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+  ORDER_STATUS_COMPLETED = 4 [(gogoproto.enumvalue_customname) = "OrderStatusCompleted"];
+
+  // ORDER_STATUS_CANCELED indicates the order has been canceled
+  ORDER_STATUS_CANCELED = 5 [(gogoproto.enumvalue_customname) = "OrderStatusCanceled"];
+
+  // ORDER_STATUS_EXPIRED indicates the order has been expired
+  ORDER_STATUS_EXPIRED = 6 [(gogoproto.enumvalue_customname) = "OrderStatusExpired"];
+}

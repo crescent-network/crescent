@@ -3,7 +3,7 @@
 
 At each end-block call, the `farming` module operations are specified to execute.
 
-++ https://github.com/tendermint/farming/blob/69db071ce3/x/farming/abci.go#L13-L46
+++ `/x/farming/abci.go`
 
 At the end of each block:
 
@@ -21,4 +21,4 @@ Although a global parameter `NextEpochDays` exists, the farming module uses an i
 
 Suppose `NextEpochDays` is 7 and it is proposed to change the value to 1 through governance proposal. Although the proposal is passed, rewards allocation must continue to proceed with 7, not 1. 
 
-To explore internal state `CurrentEpochDays` in more detail, see the [test code](https://github.com/tendermint/farming/blob/69db071ce3/x/farming/abci_test.go#L12-L64). 
+To explore internal state `CurrentEpochDays` in more detail, see the test code on `/x/farming/abci_test.go` 

@@ -11,10 +11,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/cosmosquad-labs/squad/app/params"
-	utils "github.com/cosmosquad-labs/squad/types"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/keeper"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking/types"
+	appparams "github.com/crescent-network/crescent/app/params"
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
 
 // Simulation operation weights constants.

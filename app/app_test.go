@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v2/modules/core"
-	"github.com/cosmosquad-labs/squad/x/mint"
+	"github.com/crescent-network/crescent/x/mint"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/budget/x/budget"
@@ -36,9 +36,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmosquad-labs/squad/x/farming"
-	"github.com/cosmosquad-labs/squad/x/liquidity"
-	"github.com/cosmosquad-labs/squad/x/liquidstaking"
+	"github.com/crescent-network/crescent/x/farming"
+	"github.com/crescent-network/crescent/x/liquidity"
+	"github.com/crescent-network/crescent/x/liquidstaking"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

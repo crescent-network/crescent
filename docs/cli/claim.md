@@ -31,7 +31,7 @@ Before claiming your claimable amount with certain condition, that condition mus
 Usage 
 
 ```bash
-squad tx claim claim [airdrop-id] [condition-type]
+crescentd tx claim claim [airdrop-id] [condition-type]
 ```
 
 | **Argument**      |  **Description**                                            |
@@ -43,7 +43,7 @@ Example
 
 ```bash
 # Claim a claimable amount with the liquidity deposit condition
-squad tx claim claim 1 deposit \
+crescentd tx claim claim 1 deposit \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -52,7 +52,7 @@ squad tx claim claim 1 deposit \
 --output json | jq
 
 # Claim a claimable amount with the liquidity swap condition
-squad tx claim claim 1 swap \
+crescentd tx claim claim 1 swap \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -61,7 +61,7 @@ squad tx claim claim 1 swap \
 --output json | jq
 
 # Claim a claimable amount with the liquidstaking stake condition
-squad tx claim claim 1 liquidstake \
+crescentd tx claim claim 1 liquidstake \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -70,7 +70,7 @@ squad tx claim claim 1 liquidstake \
 --output json | jq
 
 # Claim a claimable amount with the gov vote condition
-squad tx claim claim 1 vote \
+crescentd tx claim claim 1 vote \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -88,13 +88,13 @@ Query for all airdrops
 Usage 
 
 ```bash
-squad query claim airdrops
+crescentd query claim airdrops
 ```
 
 Example
 
 ```bash
-squad query claim airdrops -o json | jq
+crescentd query claim airdrops -o json | jq
 ```
 
 ## Airdrop
@@ -104,13 +104,13 @@ Query details for the particular airdrop
 Usage 
 
 ```bash
-squad query claim airdrop [airdrop-id]
+crescentd query claim airdrop [airdrop-id]
 ```
 
 Example
 
 ```bash
-squad query claim airdrop 1 -o json | jq
+crescentd query claim airdrop 1 -o json | jq
 ```
 
 ## ClaimRecord
@@ -120,11 +120,11 @@ Query the claim record for an account
 Usage 
 
 ```bash
-squad query claim claim-record [airdrop-id] [address]
+crescentd query claim claim-record [airdrop-id] [address]
 ```
 
 Example
 
 ```bash
-squad query claim claim-record 1 cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
+crescentd query claim claim-record 1 cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
 ```

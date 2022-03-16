@@ -1,0 +1,27 @@
+syntax = "proto3";
+package crescent.claim.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/claim/v1beta1/claim.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/x/claim/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Msg defines the Msg service.
+service Msg {
+  rpc Claim(MsgClaim) returns (MsgClaimResponse);
+}
+
+// MsgClaim defines a SDK message for claiming claimable amount.
+message MsgClaim {
+  // airdrop_id specifies index of the airdrop
+  uint64 airdrop_id = 1;
+
+  // recipient specifies the bech32-encoded address that is eligible to claim airdrop
+  string recipient = 2;
+
+  // condition_type specifies the condition type
+  ConditionType condition_type = 3;
+}
+
+message MsgClaimResponse {}

@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/cosmosquad-labs/squad/x/claim/keeper"
-	"github.com/cosmosquad-labs/squad/x/claim/types"
+	"github.com/crescent-network/crescent/x/claim/keeper"
+	"github.com/crescent-network/crescent/x/claim/types"
 )
 
 // NewHandler creates an sdk.Handler for all the claim type messages.
