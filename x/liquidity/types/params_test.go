@@ -43,18 +43,18 @@ func TestParams_Validate(t *testing.T) {
 			"invalid dust collector address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"negative InitialPoolCoinSupply",
+			"negative MinInitialPoolCoinSupply",
 			func(params *types.Params) {
-				params.InitialPoolCoinSupply = sdk.NewInt(-1)
+				params.MinInitialPoolCoinSupply = sdk.NewInt(-1)
 			},
-			"initial pool coin supply must be positive: -1",
+			"min initial pool coin supply must be positive: -1",
 		},
 		{
-			"zero InitialPoolCoinSupply",
+			"zero MinInitialPoolCoinSupply",
 			func(params *types.Params) {
-				params.InitialPoolCoinSupply = sdk.ZeroInt()
+				params.MinInitialPoolCoinSupply = sdk.ZeroInt()
 			},
-			"initial pool coin supply must be positive: 0",
+			"min initial pool coin supply must be positive: 0",
 		},
 		{
 			"invalid PairCreationFee",

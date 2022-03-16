@@ -19,15 +19,15 @@ const (
 
 // Liquidity params default values
 var (
-	DefaultFeeCollectorAddress     = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
-	DefaultDustCollectorAddress    = farmingtypes.DeriveAddress(AddressType, ModuleName, "DustCollector")
-	DefaultInitialPoolCoinSupply   = sdk.NewInt(1_000_000_000_000)
-	DefaultPairCreationFee         = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	DefaultPoolCreationFee         = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-	DefaultMinInitialDepositAmount = sdk.NewInt(1000000)
-	DefaultMaxPriceLimitRatio      = sdk.NewDecWithPrec(1, 1) // 10%
-	DefaultSwapFeeRate             = sdk.ZeroDec()
-	DefaultWithdrawFeeRate         = sdk.ZeroDec()
+	DefaultFeeCollectorAddress      = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
+	DefaultDustCollectorAddress     = farmingtypes.DeriveAddress(AddressType, ModuleName, "DustCollector")
+	DefaultMinInitialPoolCoinSupply = sdk.NewInt(1_000_000_000_000)
+	DefaultPairCreationFee          = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultPoolCreationFee          = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultMinInitialDepositAmount  = sdk.NewInt(1000000)
+	DefaultMaxPriceLimitRatio       = sdk.NewDecWithPrec(1, 1) // 10%
+	DefaultSwapFeeRate              = sdk.ZeroDec()
+	DefaultWithdrawFeeRate          = sdk.ZeroDec()
 )
 
 // General constants
@@ -46,18 +46,18 @@ var (
 )
 
 var (
-	KeyBatchSize               = []byte("BatchSize")
-	KeyTickPrecision           = []byte("TickPrecision")
-	KeyFeeCollectorAddress     = []byte("FeeCollectorAddress")
-	KeyDustCollectorAddress    = []byte("DustCollectorAddress")
-	KeyInitialPoolCoinSupply   = []byte("InitialPoolCoinSupply")
-	KeyPairCreationFee         = []byte("PairCreationFee")
-	KeyPoolCreationFee         = []byte("PoolCreationFee")
-	KeyMinInitialDepositAmount = []byte("MinInitialDepositAmount")
-	KeyMaxPriceLimitRatio      = []byte("MaxPriceLimitRatio")
-	KeyMaxOrderLifespan        = []byte("MaxOrderLifespan")
-	KeySwapFeeRate             = []byte("SwapFeeRate")
-	KeyWithdrawFeeRate         = []byte("WithdrawFeeRate")
+	KeyBatchSize                = []byte("BatchSize")
+	KeyTickPrecision            = []byte("TickPrecision")
+	KeyFeeCollectorAddress      = []byte("FeeCollectorAddress")
+	KeyDustCollectorAddress     = []byte("DustCollectorAddress")
+	KeyMinInitialPoolCoinSupply = []byte("MinInitialPoolCoinSupply")
+	KeyPairCreationFee          = []byte("PairCreationFee")
+	KeyPoolCreationFee          = []byte("PoolCreationFee")
+	KeyMinInitialDepositAmount  = []byte("MinInitialDepositAmount")
+	KeyMaxPriceLimitRatio       = []byte("MaxPriceLimitRatio")
+	KeyMaxOrderLifespan         = []byte("MaxOrderLifespan")
+	KeySwapFeeRate              = []byte("SwapFeeRate")
+	KeyWithdrawFeeRate          = []byte("WithdrawFeeRate")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -69,18 +69,18 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns a default params for the liquidity module.
 func DefaultParams() Params {
 	return Params{
-		BatchSize:               DefaultBatchSize,
-		TickPrecision:           DefaultTickPrecision,
-		FeeCollectorAddress:     DefaultFeeCollectorAddress.String(),
-		DustCollectorAddress:    DefaultDustCollectorAddress.String(),
-		InitialPoolCoinSupply:   DefaultInitialPoolCoinSupply,
-		PairCreationFee:         DefaultPairCreationFee,
-		PoolCreationFee:         DefaultPoolCreationFee,
-		MinInitialDepositAmount: DefaultMinInitialDepositAmount,
-		MaxPriceLimitRatio:      DefaultMaxPriceLimitRatio,
-		MaxOrderLifespan:        DefaultMaxOrderLifespan,
-		SwapFeeRate:             DefaultSwapFeeRate,
-		WithdrawFeeRate:         DefaultWithdrawFeeRate,
+		BatchSize:                DefaultBatchSize,
+		TickPrecision:            DefaultTickPrecision,
+		FeeCollectorAddress:      DefaultFeeCollectorAddress.String(),
+		DustCollectorAddress:     DefaultDustCollectorAddress.String(),
+		MinInitialPoolCoinSupply: DefaultMinInitialPoolCoinSupply,
+		PairCreationFee:          DefaultPairCreationFee,
+		PoolCreationFee:          DefaultPoolCreationFee,
+		MinInitialDepositAmount:  DefaultMinInitialDepositAmount,
+		MaxPriceLimitRatio:       DefaultMaxPriceLimitRatio,
+		MaxOrderLifespan:         DefaultMaxOrderLifespan,
+		SwapFeeRate:              DefaultSwapFeeRate,
+		WithdrawFeeRate:          DefaultWithdrawFeeRate,
 	}
 }
 
@@ -91,7 +91,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyTickPrecision, &params.TickPrecision, validateTickPrecision),
 		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &params.FeeCollectorAddress, validateFeeCollectorAddress),
 		paramstypes.NewParamSetPair(KeyDustCollectorAddress, &params.DustCollectorAddress, validateDustCollectorAddress),
-		paramstypes.NewParamSetPair(KeyInitialPoolCoinSupply, &params.InitialPoolCoinSupply, validateInitialPoolCoinSupply),
+		paramstypes.NewParamSetPair(KeyMinInitialPoolCoinSupply, &params.MinInitialPoolCoinSupply, validateMinInitialPoolCoinSupply),
 		paramstypes.NewParamSetPair(KeyPairCreationFee, &params.PairCreationFee, validatePairCreationFee),
 		paramstypes.NewParamSetPair(KeyPoolCreationFee, &params.PoolCreationFee, validatePoolCreationFee),
 		paramstypes.NewParamSetPair(KeyMinInitialDepositAmount, &params.MinInitialDepositAmount, validateMinInitialDepositAmount),
@@ -112,7 +112,7 @@ func (params Params) Validate() error {
 		{params.TickPrecision, validateTickPrecision},
 		{params.FeeCollectorAddress, validateFeeCollectorAddress},
 		{params.DustCollectorAddress, validateDustCollectorAddress},
-		{params.InitialPoolCoinSupply, validateInitialPoolCoinSupply},
+		{params.MinInitialPoolCoinSupply, validateMinInitialPoolCoinSupply},
 		{params.PairCreationFee, validatePairCreationFee},
 		{params.PoolCreationFee, validatePoolCreationFee},
 		{params.MinInitialDepositAmount, validateMinInitialDepositAmount},
@@ -176,18 +176,18 @@ func validateDustCollectorAddress(i interface{}) error {
 	return nil
 }
 
-func validateInitialPoolCoinSupply(i interface{}) error {
+func validateMinInitialPoolCoinSupply(i interface{}) error {
 	v, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v.IsNil() {
-		return fmt.Errorf("initial pool coin supply must not be nil")
+		return fmt.Errorf("min initial pool coin supply must not be nil")
 	}
 
 	if !v.IsPositive() {
-		return fmt.Errorf("initial pool coin supply must be positive: %s", v)
+		return fmt.Errorf("min initial pool coin supply must be positive: %s", v)
 	}
 
 	return nil

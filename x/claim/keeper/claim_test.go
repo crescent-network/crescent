@@ -247,7 +247,7 @@ func (s *KeeperTestSuite) TestClaim_All() {
 
 	pool, found := s.app.LiquidityKeeper.GetPool(s.ctx, 1)
 	s.Require().True(found)
-	s.Require().Equal(params.InitialPoolCoinSupply, s.getBalance(creator, pool.PoolCoinDenom).Amount)
+	s.Require().Equal(params.MinInitialPoolCoinSupply, s.getBalance(creator, pool.PoolCoinDenom).Amount)
 
 	// The recipient makes a deposit
 	s.deposit(recipient, pool.Id, utils.ParseCoins("500000denom3,500000denom4"), true)
