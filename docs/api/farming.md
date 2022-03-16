@@ -67,7 +67,7 @@ http://localhost:1317/cosmos/farming/v1beta1/plans
 {
   "plans": [
     {
-      "@type": "/cosmos.farming.v1beta1.RatioPlan",
+      "@type": "/squad.farming.v1beta1.MsgCreateRatioPlan",
       "base_plan": {
         "id": "1",
         "name": "Second Public Ratio Plan",
@@ -120,7 +120,7 @@ http://localhost:1317/cosmos/farming/v1beta1/plans/1
 ```json
 {
   "plan": {
-    "@type": "/cosmos.farming.v1beta1.RatioPlan",
+    "@type": "/squad.farming.v1beta1.MsgCreateRatioPlan",
     "base_plan": {
       "id": "1",
       "name": "Second Public Ratio Plan",

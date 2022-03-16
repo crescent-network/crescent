@@ -43,6 +43,8 @@ Create a pair (market) for trading.
 
 A pair consists of a base coin and a quote coin and you can think of a pair in an order book. An orderer can request a limit or market order once a pair is created. Anyone can create a pair by paying a fee `PairCreationFee` (default is 1000000stake).
 
+Usage
+
 ```bash
 create-pair [base-coin-denom] [quote-coin-denom]
 ```
@@ -77,6 +79,8 @@ Create a liquidity pool in existing pair.
 
 Pool(s) belong to a pair. Therefore, a pair must exist in order to create a pool. Anyone can create a pool by paying a fee PoolCreationFee (default is 1000000stake).
 
+Usage
+
 ```bash
 create-pool [pair-id] [deposit-coins]
 ```
@@ -89,8 +93,8 @@ create-pool [pair-id] [deposit-coins]
 Example
 
 ```bash
-# Create a pool 3000ATOM/1000UST
-squad tx liquidity create-pool 1 3000000000uatom,1000000000uusd \
+# Create a pool 1000ATOM/3000UST
+squad tx liquidity create-pool 1 1000000000uatom,3000000000uusd \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -101,7 +105,7 @@ squad tx liquidity create-pool 1 3000000000uatom,1000000000uusd \
 #
 # Tips
 #
-# You can query pairs using the following command
+# You can query pools using the following command
 squad q liquidity pools -o json | jq
 ```
 
@@ -109,9 +113,11 @@ squad q liquidity pools -o json | jq
 
 Deposit coins to a liquidity pool.  
 
-Deposit uses a batch execution methodology. Deposit requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch. A minimum deposit amount is 1000000stake.
+Deposit uses a batch execution methodology. Deposit requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch. A minimum deposit amount is 1000000 for each denomination.
 
-Note that in an order book system, a pool is considered as an orderer. A liquidity in the pool places orders conservatively. What that means it that it places buy orders lower than the pool price and places sell order higher than the pool price.
+Note that in an order book system, a pool is considered as an orderer. A liquidity in the pool places orders conservatively. What that means is that it places buy orders lower than the pool price and places sell orders higher than the pool price.
+
+Usage
 
 ```bash
 deposit [pool-id] [deposit-coins]
@@ -125,8 +131,8 @@ deposit [pool-id] [deposit-coins]
 Example
 
 ```bash
-# Deposit 30ATOM/10UST to the pool
-squad tx liquidity deposit 1 30000000uatom,10000000uusd \
+# Deposit 10ATOM/30UST to the pool
+squad tx liquidity deposit 1 10000000uatom,30000000uusd \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -148,6 +154,8 @@ squad q liquidity deposit-requests 1 -o json | jq
 Withdraw coins from the liquidity pool.
 
 Withdraw uses a batch execution methodology. Withdraw requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch.
+
+Usage
 
 ```bash
 withdraw [pool-id] [pool-coin]
@@ -187,6 +195,8 @@ Buy limit order will be matched at lower than or equal to the defined order pric
 
 Order uses a batch execution methodology. Order requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch.
 
+Usage
+
 ```bash
 limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount]
 ```
@@ -208,7 +218,7 @@ Example
 
 ```bash
 # Make a limit order to swap
-squad tx liquidity limit-order 1 sell 50000000uatom uusd 0.33 50000000 \
+squad tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -217,7 +227,7 @@ squad tx liquidity limit-order 1 sell 50000000uatom uusd 0.33 50000000 \
 --output json | jq
 
 # Make a limit order to swap with order-lifespan flag
-squad tx liquidity limit-order 1 sell 50000000uatom uusd 0.33 50000000 \
+squad tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
 --chain-id localnet \
 --order-lifespan 30s \
 --from alice \
@@ -246,6 +256,8 @@ Buy market order uses `MaxPriceLimitRatio` of the last price, which is `LastPric
 Sell market order uses negative MaxPriceLimitRatio of the last price, which is `LastPrice * (1-MaxPriceLimitRatio)`.
 
 Order uses a batch execution methodology. Order requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch.
+
+Usage
 
 ```bash
 market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount]
@@ -298,6 +310,8 @@ squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json |
 
 Cancel an order.
 
+Usage
+
 ```bash
 cancel-order [pair-id] [order-id]
 ```
@@ -324,6 +338,8 @@ squad tx liquidity cancel-order 1 1 \
 Cancel all orders.
 
 This command provides a convenient way to cancel all orders.
+
+Usage
 
 ```bash
 cancel-all-orders [pair-ids]
@@ -352,6 +368,8 @@ squad tx liquidity cancel-all-orders 1,2,3 \
 
 Query the current liquidity parameters information
 
+Usage
+
 ```bash
 params
 ```
@@ -365,6 +383,8 @@ squad q liquidity params -o json | jq
 ## Pairs
 
 Query for all pairs
+
+Usage
 
 ```bash
 pairs
@@ -387,6 +407,8 @@ squad q liquidity pairs --denoms=uatom,uusd -o json | jq
 
 Query details for the particular pair
 
+Usage
+
 ```bash
 pair [pair-id]
 ```
@@ -400,6 +422,8 @@ squad q liquidity pair 1 -o json | jq
 ## Pools
 
 Query for all pools
+
+Usage
 
 ```bash
 pools
@@ -422,6 +446,8 @@ squad q liquidity pools -o json --disabled=false | jq
 
 Query details for the particular pool
 
+Usage
+
 ```bash
 pool [pool-id]
 ```
@@ -440,6 +466,8 @@ squad q liquidity pool --pool-coin-denom=pool1 -o json | jq
 
 Query for all deposit requests in the pool
 
+Usage
+
 ```bash
 deposit-requests [pool-id]
 ```
@@ -453,6 +481,8 @@ squad q liquidity deposit-requests 1 -o json | jq
 ## DepositRequest
 
 Query details for the particular deposit request in the pool
+
+Usage
 
 ```bash
 deposit-request [pool-id] [id]
@@ -468,6 +498,8 @@ squad q liquidity deposit-request 1 1 -o json | jq
 
 Query for all withdraw requests in the pool
 
+Usage
+
 ```bash
 withdraw-requests [pool-id]
 ```
@@ -482,6 +514,8 @@ squad q liquidity withdraw-requests 1 -o json | jq
 
 Query details for the particular withdraw request in the pool
 
+Usage
+
 ```bash
 withdraw-request [pool-id] [id]
 ```
@@ -494,7 +528,9 @@ squad q liquidity withdraw-request 1 1 -o json | jq
 
 ## Orders
 
-Query for all orders in the pair
+Query for all orders made by an orderer or in the pair.
+
+Usage
 
 ```bash
 orders
@@ -518,6 +554,8 @@ squad q liquidity orders \
 ## Order
 
 Query details for the particular order
+
+Usage
 
 ```bash
 squad query liquidity order [pair-id] [id]
