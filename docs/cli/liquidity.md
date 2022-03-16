@@ -558,7 +558,7 @@ Query details for the particular order
 Usage
 
 ```bash
-squad query liquidity order [pair-id] [id]
+order [pair-id] [id]
 ```
 
 Example
