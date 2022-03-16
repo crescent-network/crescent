@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestDepositWithdraw() {
 
 	pool, found := k.GetPool(ctx, 1)
 	s.Require().True(found)
-	s.Require().Equal(params.InitialPoolCoinSupply, s.getBalance(creator, pool.PoolCoinDenom).Amount)
+	s.Require().Equal(params.MinInitialPoolCoinSupply, s.getBalance(creator, pool.PoolCoinDenom).Amount)
 
 	// A depositor makes a deposit
 	depositor := s.addr(1)

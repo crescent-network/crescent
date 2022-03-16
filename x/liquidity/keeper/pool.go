@@ -130,7 +130,13 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 	}
 
 	// Mint and send pool coin to the creator.
-	poolCoin := sdk.NewCoin(pool.PoolCoinDenom, params.InitialPoolCoinSupply)
+	// Minting pool coin amount is calculated based on two coins' amount.
+	// Minimum minting amount is params.MinInitialPoolCoinSupply.
+	ps := sdk.MaxInt(
+		amm.InitialPoolCoinSupply(msg.DepositCoins[0].Amount, msg.DepositCoins[1].Amount),
+		params.MinInitialPoolCoinSupply,
+	)
+	poolCoin := sdk.NewCoin(pool.PoolCoinDenom, ps)
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(poolCoin)); err != nil {
 		return types.Pool{}, err
 	}

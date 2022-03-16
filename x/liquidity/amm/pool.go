@@ -1,6 +1,8 @@
 package amm
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -172,6 +174,16 @@ func PoolsOrderBook(pools []Pool, basePrice sdk.Dec, numTicks, tickPrec int) *Or
 		}
 	}
 	return ob
+}
+
+// InitialPoolCoinSupply returns ideal initial pool coin minting amount.
+func InitialPoolCoinSupply(x, y sdk.Int) sdk.Int {
+	cx := len(x.BigInt().Text(10)) - 1 // characteristic of x
+	cy := len(y.BigInt().Text(10)) - 1 // characteristic of y
+	c := ((cx + 1) + (cy + 1) + 1) / 2 // ceil(((cx + 1) + (cy + 1)) / 2)
+	res := big.NewInt(10)
+	res.Exp(res, big.NewInt(int64(c)), nil) // 10^c
+	return sdk.NewIntFromBigInt(res)
 }
 
 // MockPoolOrderSource demonstrates how to implement a pool OrderSource.
