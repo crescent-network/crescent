@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -288,9 +287,6 @@ func (k Keeper) WithdrawLiquidRewards(ctx sdk.Context, proxyAcc sdk.AccAddress) 
 			return false
 		},
 	)
-	if totalRewards.IsPositive() {
-		fmt.Println("[WithdrawLiquidRewards]", totalRewards)
-	}
 	return totalRewards
 }
 

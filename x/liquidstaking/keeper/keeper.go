@@ -17,12 +17,10 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	stakingKeeper types.StakingKeeper
-	distrKeeper   types.DistrKeeper
-	// Could be deprecated, govKeeper when govHook cover all cases
-	govKeeper       types.GovKeeper
+	accountKeeper   types.AccountKeeper
+	bankKeeper      types.BankKeeper
+	stakingKeeper   types.StakingKeeper
+	distrKeeper     types.DistrKeeper
 	liquidityKeeper types.LiquidityKeeper
 	farmingKeeper   types.FarmingKeeper
 	slashingKeeper  types.SlashingKeeper
@@ -34,7 +32,7 @@ type Keeper struct {
 // - minting, burning PoolCoins
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
-	distrKeeper types.DistrKeeper, govKeeper types.GovKeeper, liquidityKeeper types.LiquidityKeeper,
+	distrKeeper types.DistrKeeper, liquidityKeeper types.LiquidityKeeper,
 	farmingKeeper types.FarmingKeeper, slashingKeeper types.SlashingKeeper,
 ) Keeper {
 	// ensure liquidstaking module account is set
@@ -55,7 +53,6 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 		bankKeeper:      bankKeeper,
 		stakingKeeper:   stakingKeeper,
 		distrKeeper:     distrKeeper,
-		govKeeper:       govKeeper,
 		liquidityKeeper: liquidityKeeper,
 		farmingKeeper:   farmingKeeper,
 		slashingKeeper:  slashingKeeper,

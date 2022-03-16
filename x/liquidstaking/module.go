@@ -95,14 +95,13 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	distrKeeper   types.DistrKeeper
 	govKeeper     types.GovKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
-	stakingKeeper types.StakingKeeper, distrKeeper types.DistrKeeper, govKeeper types.GovKeeper,
+	stakingKeeper types.StakingKeeper, govKeeper types.GovKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -110,7 +109,6 @@ func NewAppModule(
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		stakingKeeper:  stakingKeeper,
-		distrKeeper:    distrKeeper,
 		govKeeper:      govKeeper,
 	}
 }
