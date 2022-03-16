@@ -4,20 +4,21 @@
 
 The `liquidity` module contains the following parameters:
 
-| Key                     | Type                | Example                                                           |
-| ----------------------- | ------------------- | ----------------------------------------------------------------- |
-| BatchSize               | uint32              | 1                                                                 |
-| TickPrecision           | uint32              | 3                                                                 |
-| FeeCollectorAddress     | string              | cosmos1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvqau9aj0 |
-| DustCollectorAddress    | string              | cosmos1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0se4s8xs |
-| InitialPoolCoinSupply   | string (sdk.Int)    | "1000000000000"                                                   |
-| PairCreationFee         | string (sdk.Coins)  | [{"denom":"stake","amount":"1000000"}]                            |
-| PoolCreationFee         | string (sdk.Coins)  | [{"denom":"stake","amount":"1000000"}]                            |
-| MinInitialDepositAmount | string (sdk.Int)    | "1000000"                                                         |
-| MaxPriceLimitRatio      | string (sdk.Dec)    | "0.100000000000000000"                                            |
-| MaxOrderLifespan        | time.Duration       | 24hours                                                           |
-| SwapFeeRate             | string (sdk.Dec)    | "0.000000000000000000"                                            |
-| WithdrawFeeRate         | string (sdk.Dec)    | "0.000000000000000000"                                            |
+| Key                     | Type               | Example                                                           |
+|-------------------------|--------------------|-------------------------------------------------------------------|
+| BatchSize               | uint32             | 1                                                                 |
+| TickPrecision           | uint32             | 3                                                                 |
+| FeeCollectorAddress     | string             | cosmos1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvqau9aj0 |
+| DustCollectorAddress    | string             | cosmos1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0se4s8xs |
+| InitialPoolCoinSupply   | string (sdk.Int)   | "1000000000000"                                                   |
+| PairCreationFee         | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                            |
+| PoolCreationFee         | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                            |
+| MinInitialDepositAmount | string (sdk.Int)   | "1000000"                                                         |
+| MaxPriceLimitRatio      | string (sdk.Dec)   | "0.100000000000000000"                                            |
+| MaxOrderLifespan        | time.Duration      | 24hours                                                           |
+| SwapFeeRate             | string (sdk.Dec)   | "0.000000000000000000"                                            |
+| WithdrawFeeRate         | string (sdk.Dec)   | "0.000000000000000000"                                            |
+| OrderExtraGas           | uint64 (sdk.Gas)   | 35000                                                             |
 
 ## BatchSize
 
@@ -83,3 +84,8 @@ Instead, pool just adjust pool's quoting prices to reflect the swap fees.
 
 Reserve coin withdrawal with less proportion by WithdrawFeeRate.
 This fee prevents attack vectors from repeated deposit/withdraw transactions.
+
+## OrderExtraGas
+
+Extra gas imposed to the orderer when they make an order, since the order matching
+is happened in end-block, not in the msg handler.

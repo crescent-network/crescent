@@ -22971,6 +22971,9 @@ paths:
                     type: string
                   withdraw_fee_rate:
                     type: string
+                  order_extra_gas:
+                    type: string
+                    format: uint64
                 description: Params defines the parameters for the liquidity module.
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
@@ -42267,6 +42270,9 @@ definitions:
         type: string
       withdraw_fee_rate:
         type: string
+      order_extra_gas:
+        type: string
+        format: uint64
     description: Params defines the parameters for the liquidity module.
   squad.liquidity.v1beta1.PoolResponse:
     type: object
@@ -42929,6 +42935,9 @@ definitions:
             type: string
           withdraw_fee_rate:
             type: string
+          order_extra_gas:
+            type: string
+            format: uint64
         description: Params defines the parameters for the liquidity module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   squad.liquidity.v1beta1.QueryPoolResponse:
