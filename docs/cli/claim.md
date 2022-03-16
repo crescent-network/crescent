@@ -28,6 +28,8 @@ Claim your claimable amount with a condition type.
 
 Before claiming your claimable amount with certain condition, that condition must be met in previous.
 
+Usage 
+
 ```bash
 squad tx claim claim [airdrop-id] [condition-type]
 ```
@@ -83,6 +85,8 @@ squad tx claim claim 1 vote \
 
 Query for all airdrops 
 
+Usage 
+
 ```bash
 squad query claim airdrops
 ```
@@ -97,6 +101,8 @@ squad query claim airdrops -o json | jq
 
 Query details for the particular airdrop
 
+Usage 
+
 ```bash
 squad query claim airdrop [airdrop-id]
 ```
@@ -110,6 +116,8 @@ squad query claim airdrop 1 -o json | jq
 ## ClaimRecord
 
 Query the claim record for an account
+
+Usage 
 
 ```bash
 squad query claim claim-record [airdrop-id] [address]

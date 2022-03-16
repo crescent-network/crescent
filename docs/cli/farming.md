@@ -31,6 +31,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
 
 ## Transaction
 
+<!-- markdown-link-check-disable -->
 ++ https://github.com/cosmosquad-labs/squad/blob/main/proto/squad/farming/v1beta1/tx.proto
 
 ### CreateFixedAmountPlan
@@ -247,6 +248,7 @@ squad tx farming remove-plan 1 \
 
 ## Query
 
+<!-- markdown-link-check-disable -->
 ++ https://github.com/cosmosquad-labs/squad/blob/main/proto/squad/farming/v1beta1/query.proto
 
 ### Params 
