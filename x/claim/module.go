@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -14,10 +15,12 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmosquad-labs/squad/x/claim/client/cli"
 	"github.com/cosmosquad-labs/squad/x/claim/keeper"
+	"github.com/cosmosquad-labs/squad/x/claim/simulation"
 	"github.com/cosmosquad-labs/squad/x/claim/types"
 )
 
@@ -32,11 +35,11 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the module.
 type AppModuleBasic struct {
-	cdc codec.BinaryCodec
+	cdc codec.Codec
 }
 
 // NewAppModuleBasic returns a new AppModuleBasic.
-func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
+func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
 }
 
@@ -98,6 +101,7 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper              keeper.Keeper
+	accountKeeper       types.AccountKeeper
 	bankKeeper          types.BankKeeper
 	distrKeeper         types.DistrKeeper
 	govKeeper           types.GovKeeper
@@ -108,6 +112,7 @@ type AppModule struct {
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
+	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
 	govKeeper types.GovKeeper,
@@ -117,6 +122,7 @@ func NewAppModule(
 	return AppModule{
 		AppModuleBasic:      NewAppModuleBasic(cdc),
 		keeper:              keeper,
+		accountKeeper:       accountKeeper,
 		bankKeeper:          bankKeeper,
 		distrKeeper:         distrKeeper,
 		govKeeper:           govKeeper,
@@ -179,4 +185,29 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
+}
+
+// GenerateGenesisState creates a randomized GenesisState of the module.
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for the module's types
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+// WeightedOperations returns the all the module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }

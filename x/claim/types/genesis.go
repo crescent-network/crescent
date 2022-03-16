@@ -64,8 +64,8 @@ func (r ClaimRecord) Validate() error {
 		return fmt.Errorf("initial claimable amount must be positive: %s", r.InitialClaimableCoins.String())
 	}
 
-	if !r.ClaimableCoins.IsAllPositive() {
-		return fmt.Errorf("claimable amount must be positive: %s", r.InitialClaimableCoins.String())
+	if err := r.ClaimableCoins.Validate(); err != nil {
+		return fmt.Errorf("invalid claimable coins: %w", err)
 	}
 	return nil
 }

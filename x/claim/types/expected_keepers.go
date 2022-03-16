@@ -2,11 +2,17 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	liquiditytypes "github.com/cosmosquad-labs/squad/x/liquidity/types"
 	liquidstakingtypes "github.com/cosmosquad-labs/squad/x/liquidstaking/types"
 )
+
+// AccountKeeper is the expected x/auth module keeper.
+type AccountKeeper interface {
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
+}
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
