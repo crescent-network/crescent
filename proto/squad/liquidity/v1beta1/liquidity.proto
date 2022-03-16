@@ -42,7 +42,13 @@ message Params {
   string withdraw_fee_rate = 12
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  uint64 order_extra_gas = 13
+  uint64 deposit_extra_gas = 13
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
+
+  uint64 withdraw_extra_gas = 14
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
+
+  uint64 order_extra_gas = 15
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
 }
 

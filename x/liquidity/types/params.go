@@ -28,7 +28,9 @@ var (
 	DefaultMaxPriceLimitRatio      = sdk.NewDecWithPrec(1, 1) // 10%
 	DefaultSwapFeeRate             = sdk.ZeroDec()
 	DefaultWithdrawFeeRate         = sdk.ZeroDec()
-	DefaultOrderExtraGas           = sdk.Gas(35000)
+	DefaultDepositExtraGas         = sdk.Gas(60000)
+	DefaultWithdrawExtraGas        = sdk.Gas(64000)
+	DefaultOrderExtraGas           = sdk.Gas(37000)
 )
 
 // General constants
@@ -59,6 +61,8 @@ var (
 	KeyMaxOrderLifespan        = []byte("MaxOrderLifespan")
 	KeySwapFeeRate             = []byte("SwapFeeRate")
 	KeyWithdrawFeeRate         = []byte("WithdrawFeeRate")
+	KeyDepositExtraGas         = []byte("DepositExtraGas")
+	KeyWithdrawExtraGas        = []byte("WithdrawExtraGas")
 	KeyOrderExtraGas           = []byte("OrderExtraGas")
 )
 
@@ -83,6 +87,8 @@ func DefaultParams() Params {
 		MaxOrderLifespan:        DefaultMaxOrderLifespan,
 		SwapFeeRate:             DefaultSwapFeeRate,
 		WithdrawFeeRate:         DefaultWithdrawFeeRate,
+		DepositExtraGas:         DefaultDepositExtraGas,
+		WithdrawExtraGas:        DefaultWithdrawExtraGas,
 		OrderExtraGas:           DefaultOrderExtraGas,
 	}
 }
@@ -102,7 +108,9 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 		paramstypes.NewParamSetPair(KeySwapFeeRate, &params.SwapFeeRate, validateSwapFeeRate),
 		paramstypes.NewParamSetPair(KeyWithdrawFeeRate, &params.WithdrawFeeRate, validateWithdrawFeeRate),
-		paramstypes.NewParamSetPair(KeyOrderExtraGas, &params.OrderExtraGas, validateOrderExtraGas),
+		paramstypes.NewParamSetPair(KeyDepositExtraGas, &params.DepositExtraGas, validateExtraGas),
+		paramstypes.NewParamSetPair(KeyWithdrawExtraGas, &params.WithdrawExtraGas, validateExtraGas),
+		paramstypes.NewParamSetPair(KeyOrderExtraGas, &params.OrderExtraGas, validateExtraGas),
 	}
 }
 
@@ -124,7 +132,9 @@ func (params Params) Validate() error {
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 		{params.SwapFeeRate, validateSwapFeeRate},
 		{params.WithdrawFeeRate, validateWithdrawFeeRate},
-		{params.OrderExtraGas, validateOrderExtraGas},
+		{params.DepositExtraGas, validateExtraGas},
+		{params.WithdrawExtraGas, validateExtraGas},
+		{params.OrderExtraGas, validateExtraGas},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -289,7 +299,7 @@ func validateWithdrawFeeRate(i interface{}) error {
 	return nil
 }
 
-func validateOrderExtraGas(i interface{}) error {
+func validateExtraGas(i interface{}) error {
 	_, ok := i.(sdk.Gas)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

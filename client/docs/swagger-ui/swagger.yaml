@@ -22971,6 +22971,12 @@ paths:
                     type: string
                   withdraw_fee_rate:
                     type: string
+                  deposit_extra_gas:
+                    type: string
+                    format: uint64
+                  withdraw_extra_gas:
+                    type: string
+                    format: uint64
                   order_extra_gas:
                     type: string
                     format: uint64
@@ -42270,6 +42276,12 @@ definitions:
         type: string
       withdraw_fee_rate:
         type: string
+      deposit_extra_gas:
+        type: string
+        format: uint64
+      withdraw_extra_gas:
+        type: string
+        format: uint64
       order_extra_gas:
         type: string
         format: uint64
@@ -42935,6 +42947,12 @@ definitions:
             type: string
           withdraw_fee_rate:
             type: string
+          deposit_extra_gas:
+            type: string
+            format: uint64
+          withdraw_extra_gas:
+            type: string
+            format: uint64
           order_extra_gas:
             type: string
             format: uint64

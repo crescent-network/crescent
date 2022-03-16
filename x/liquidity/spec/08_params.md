@@ -85,6 +85,16 @@ Instead, pool just adjust pool's quoting prices to reflect the swap fees.
 Reserve coin withdrawal with less proportion by WithdrawFeeRate.
 This fee prevents attack vectors from repeated deposit/withdraw transactions.
 
+## DepositExtraGas
+
+Extra gas imposed to the depositor when they deposit to a pool, since the deposit
+is happened in end-block, not in the msg handler.
+
+## WithdrawExtraGas
+
+Extra gas imposed to the withdrawer when they withdraw from a pool, since the withdrawal
+is happened in end-block, not in the msg handler.
+
 ## OrderExtraGas
 
 Extra gas imposed to the orderer when they make an order, since the order matching
