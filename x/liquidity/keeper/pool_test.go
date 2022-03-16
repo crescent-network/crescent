@@ -140,6 +140,21 @@ func (s *KeeperTestSuite) TestCreatePoolAfterDisabled() {
 	s.createPool(s.addr(2), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 }
 
+func (s *KeeperTestSuite) TestCreatePoolInitialPoolCoinSupply() {
+	params := s.keeper.GetParams(s.ctx)
+
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	poolCreator := s.addr(1)
+	pool := s.createPool(poolCreator, pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.Require().True(intEq(params.MinInitialPoolCoinSupply, s.getBalance(poolCreator, pool.PoolCoinDenom).Amount))
+
+	pair = s.createPair(s.addr(0), "denom2", "denom3", true)
+
+	pool = s.createPool(poolCreator, pair.Id, utils.ParseCoins("2000000000000denom2,500000000000000denom3"), true)
+	s.Require().True(intEq(sdk.NewInt(100000000000000), s.getBalance(poolCreator, pool.PoolCoinDenom).Amount))
+}
+
 func (s *KeeperTestSuite) TestDeposit() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)

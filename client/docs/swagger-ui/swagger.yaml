@@ -22925,7 +22925,7 @@ paths:
                     type: string
                   dust_collector_address:
                     type: string
-                  initial_pool_coin_supply:
+                  min_initial_pool_coin_supply:
                     type: string
                   pair_creation_fee:
                     type: array
@@ -42236,7 +42236,7 @@ definitions:
         type: string
       dust_collector_address:
         type: string
-      initial_pool_coin_supply:
+      min_initial_pool_coin_supply:
         type: string
       pair_creation_fee:
         type: array
@@ -42901,7 +42901,7 @@ definitions:
             type: string
           dust_collector_address:
             type: string
-          initial_pool_coin_supply:
+          min_initial_pool_coin_supply:
             type: string
           pair_creation_fee:
             type: array

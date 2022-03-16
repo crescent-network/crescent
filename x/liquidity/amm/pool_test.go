@@ -361,6 +361,23 @@ func ExamplePoolsOrderBook() {
 	// +--------------------+------------------------------+--------------------+
 }
 
+func TestInitialPoolCoinSupply(t *testing.T) {
+	for _, tc := range []struct {
+		x, y sdk.Int
+		ps   sdk.Int
+	}{
+		{sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.NewInt(10000000)},
+		{sdk.NewInt(1000000), sdk.NewInt(10000000), sdk.NewInt(100000000)},
+		{sdk.NewInt(1000000), sdk.NewInt(100000000), sdk.NewInt(100000000)},
+		{sdk.NewInt(10000000), sdk.NewInt(100000000), sdk.NewInt(1000000000)},
+		{sdk.NewInt(999999), sdk.NewInt(9999999), sdk.NewInt(10000000)},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.True(sdk.IntEq(t, tc.ps, amm.InitialPoolCoinSupply(tc.x, tc.y)))
+		})
+	}
+}
+
 func TestMockPoolOrderSource_Orders(t *testing.T) {
 	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
 	os := amm.NewMockPoolOrderSource(pool, "denom1", "denom2")

@@ -19,7 +19,7 @@ message Params {
 
   string dust_collector_address = 4;
 
-  string initial_pool_coin_supply = 5
+  string min_initial_pool_coin_supply = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   repeated cosmos.base.v1beta1.Coin pair_creation_fee = 6
