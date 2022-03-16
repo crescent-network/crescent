@@ -1,5 +1,5 @@
 init:
-  home: "~/.squadapp"
+  home: "$HOME/.squadapp"
 accounts:
   - name: alice # cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
     mnemonic: "guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
@@ -52,12 +52,10 @@ genesis:
         whitelisted_validators:
           - validator_address: "cosmosvaloper1zaavvzxez0elundtn32qnk9lkm8kmcsz8ycjrl"
             target_weight: "100000000"
-      # liquid_validators:
-        # - operator_address: "cosmosvaloper1zaavvzxez0elundtn32qnk9lkm8kmcsz8ycjrl"
     claim:
       airdrops:
         - id: "1"
-          source_address: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr" # source
+          source_address: "cosmos15rz2rwnlgr7nf6eauz52usezffwrxc0mz4pywr"
           conditions:
             - "CONDITION_TYPE_DEPOSIT"
             - "CONDITION_TYPE_SWAP"
