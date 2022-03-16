@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
 	chain "github.com/cosmosquad-labs/squad/app"
@@ -41,15 +40,11 @@ func TestDecodeClaimStore(t *testing.T) {
 			types.ConditionTypeVote,
 		},
 	}
-	startTime := utils.ParseTime("2022-01-01T00:00:00Z")
-	endTime := utils.ParseTime("2023-01-01T00:00:00Z")
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.AirdropKeyPrefix, Value: cdc.MustMarshal(&airdrop)},
 			{Key: types.ClaimRecordKeyPrefix, Value: cdc.MustMarshal(&claimRecord)},
-			{Key: types.StartTimeKeyPrefix, Value: sdk.FormatTimeBytes(startTime)},
-			{Key: types.EndTimeKeyPrefix, Value: sdk.FormatTimeBytes(endTime)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -60,8 +55,6 @@ func TestDecodeClaimStore(t *testing.T) {
 	}{
 		{"Airdrop", fmt.Sprintf("%v\n%v", airdrop, airdrop)},
 		{"ClaimRecord", fmt.Sprintf("%v\n%v", claimRecord, claimRecord)},
-		{"StartTime", fmt.Sprintf("%v\n%v", startTime, startTime)},
-		{"EndTime", fmt.Sprintf("%v\n%v", endTime, endTime)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

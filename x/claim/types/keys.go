@@ -21,23 +21,9 @@ const (
 
 // Keys for store prefixes
 var (
-	LastAirdropIdKey = []byte{0xd0} // key for the latest airdrop id
-
-	StartTimeKeyPrefix   = []byte{0xd5}
-	EndTimeKeyPrefix     = []byte{0xd6}
-	AirdropKeyPrefix     = []byte{0xd7}
-	ClaimRecordKeyPrefix = []byte{0xd8}
+	AirdropKeyPrefix     = []byte{0xd5}
+	ClaimRecordKeyPrefix = []byte{0xd6}
 )
-
-// GetStartTimeKey returns the store key to retrieve the start time for the airdrop.
-func GetStartTimeKey(airdropId uint64) []byte {
-	return append(StartTimeKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...)
-}
-
-// GetEndTimeKey returns the store key to retrieve the end time for the airdrop.
-func GetEndTimeKey(airdropId uint64) []byte {
-	return append(EndTimeKeyPrefix, sdk.Uint64ToBigEndian(airdropId)...)
-}
 
 // GetAirdropKey returns the store key to retrieve the airdrop object from the airdrop id.
 func GetAirdropKey(airdropId uint64) []byte {
