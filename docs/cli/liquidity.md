@@ -51,7 +51,6 @@ create-pair [base-coin-denom] [quote-coin-denom]
 | :---------------- | :----------------------------------- |
 | base-coin-denom   | denom of the base coin for the pair  | 
 | quote-coin-deom   | denom of the quote coin for the pair |
-| | | 
 
 Example
 
@@ -86,7 +85,6 @@ create-pool [pair-id] [deposit-coins]
 | :------------ | :------------------------------------- |
 | pair-id       | pair id                                | 
 | deposit-coins | deposit amount of base and quote coins |
-| | | 
 
 Example
 
@@ -123,7 +121,6 @@ deposit [pool-id] [deposit-coins]
 | :------------ | :------------------------------------- |
 | pool-id       | pool id                                |
 | deposit-coins | deposit amount of base and quote coins |
-| | | 
 
 Example
 
@@ -160,7 +157,6 @@ withdraw [pool-id] [pool-coin]
 | :----------- | :------------------------------ |
 | pool-id      | pool id                         |
 | pool-coin    | amount of pool coin to withdraw |
-| | | 
 
 Example
 
@@ -203,7 +199,10 @@ limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amou
 | demand-coin-denom | demand coin denom that the orderer is willing to swap for |
 | price             | order price; the exchange ratio is the amount of quote coin over the amount of base coin |
 | amount            | amount of base coin that the orderer is willing to buy or sell |
-| | | 
+
+| **Optional Flag** |  **Description**                                     |
+| :---------------- | :--------------------------------------------------- |
+| order-lifespan    | the duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns|us|ms|s|m|h|
 
 Example
 
@@ -218,7 +217,6 @@ squad tx liquidity limit-order 1 sell 50000000uatom uusd 0.33 50000000 \
 --output json | jq
 
 # Make a limit order to swap with order-lifespan flag
-# It is the duration the order lives until it is expired
 squad tx liquidity limit-order 1 sell 50000000uatom uusd 0.33 50000000 \
 --chain-id localnet \
 --order-lifespan 30s \
@@ -256,7 +254,6 @@ market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount]
 | offer-coin        | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price * amount. For sell direction, base coin amount must be greater than or equal to the amount value.  |
 | demand-coin-denom | demand coin denom that the orderer is willing to swap for |
 | amount            | amount of base coin that the orderer is willing to buy or sell |
-| | | 
 
 Example
 
@@ -303,7 +300,6 @@ cancel-order [pair-id] [order-id]
 | :----------- | :----------------|
 | pair-id      | pair id          |
 | order-id     | order id         |
-| | | 
 
 Example
 
@@ -331,7 +327,6 @@ cancel-all-orders [pair-ids]
 | :----------- | :------------------------------ |
 | pool-id      | pool id                         |
 | pool-coin    | amount of pool coin to withdraw |
-| | | 
 
 Example
 
