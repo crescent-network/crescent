@@ -18,6 +18,9 @@ The `liquidity` module contains the following parameters:
 | MaxOrderLifespan         | time.Duration      | 24hours                                                           |
 | SwapFeeRate              | string (sdk.Dec)   | "0.000000000000000000"                                            |
 | WithdrawFeeRate          | string (sdk.Dec)   | "0.000000000000000000"                                            |
+| DepositExtraGas          | uint64 (sdk.Gas)   | 60000                                                             |
+| WithdrawExtraGas         | uint64 (sdk.Gas)   | 64000                                                             |
+| OrderExtraGas            | uint64 (sdk.Gas)   | 37000                                                             |
 
 ## BatchSize
 
@@ -84,3 +87,18 @@ Instead, pool just adjust pool's quoting prices to reflect the swap fees.
 
 Reserve coin withdrawal with less proportion by WithdrawFeeRate.
 This fee prevents attack vectors from repeated deposit/withdraw transactions.
+
+## DepositExtraGas
+
+Extra gas imposed to the depositor when they deposit to a pool, since the deposit
+is happened in end-block, not in the msg handler.
+
+## WithdrawExtraGas
+
+Extra gas imposed to the withdrawer when they withdraw from a pool, since the withdrawal
+is happened in end-block, not in the msg handler.
+
+## OrderExtraGas
+
+Extra gas imposed to the orderer when they make an order, since the order matching
+is happened in end-block, not in the msg handler.

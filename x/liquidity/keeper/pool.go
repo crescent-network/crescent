@@ -195,6 +195,9 @@ func (k Keeper) Deposit(ctx sdk.Context, msg *types.MsgDeposit) (types.DepositRe
 	req := types.NewDepositRequest(msg, pool, requestId, ctx.BlockHeight())
 	k.SetDepositRequest(ctx, req)
 
+	params := k.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(params.DepositExtraGas, "DepositExtraGas")
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeDeposit,
@@ -239,6 +242,9 @@ func (k Keeper) Withdraw(ctx sdk.Context, msg *types.MsgWithdraw) (types.Withdra
 	requestId := k.getNextWithdrawRequestIdWithUpdate(ctx, pool)
 	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
 	k.SetWithdrawRequest(ctx, req)
+
+	params := k.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(params.WithdrawExtraGas, "WithdrawExtraGas")
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
