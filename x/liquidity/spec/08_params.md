@@ -18,7 +18,9 @@ The `liquidity` module contains the following parameters:
 | MaxOrderLifespan        | time.Duration      | 24hours                                                           |
 | SwapFeeRate             | string (sdk.Dec)   | "0.000000000000000000"                                            |
 | WithdrawFeeRate         | string (sdk.Dec)   | "0.000000000000000000"                                            |
-| OrderExtraGas           | uint64 (sdk.Gas)   | 35000                                                             |
+| DepositExtraGas         | uint64 (sdk.Gas)   | 60000                                                             |
+| WithdrawExtraGas        | uint64 (sdk.Gas)   | 64000                                                             |
+| OrderExtraGas           | uint64 (sdk.Gas)   | 37000                                                             |
 
 ## BatchSize
 
