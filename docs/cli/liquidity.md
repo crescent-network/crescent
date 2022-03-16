@@ -191,18 +191,18 @@ Order uses a batch execution methodology. Order requests are accumulated in a ba
 limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount]
 ```
 
-| **Argument**      |  **Description**                |
-| :---------------- | :------------------------------ |
-| pair-id           | pair id                         |
-| direction         | swap direction; buy or sell |
-| offer-coin        | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price * amount. For sell direction, base coin amount must be greater than or equal to the amount value.  |
-| demand-coin-denom | demand coin denom that the orderer is willing to swap for |
-| price             | order price; the exchange ratio is the amount of quote coin over the amount of base coin |
-| amount            | amount of base coin that the orderer is willing to buy or sell |
+| **Argument**        |  **Description**                |
+| :------------------ | :------------------------------ |
+| pair-id             | pair id                         |
+| direction           | swap direction; buy or sell |
+| offer-coin          | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price * amount. For sell direction, base coin amount must be greater than or equal to the amount value.  |
+| demand-coin-denom   | demand coin denom that the orderer is willing to swap for |
+| price               | order price; the exchange ratio is the amount of quote coin over the amount of base coin |
+| amount              | amount of base coin that the orderer is willing to buy or sell |
 
-| **Optional Flag** |  **Description**                                     |
-| :---------------- | :--------------------------------------------------- |
-| order-lifespan    | the duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns|us|ms|s|m|h|
+| **Optional Flag**  |  **Description**                                     |
+| :------------------- | :--------------------------------------------------- |
+| order-lifespan       | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns|us|ms|s|m|h|
 
 Example
 
@@ -255,6 +255,10 @@ market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount]
 | demand-coin-denom | demand coin denom that the orderer is willing to swap for |
 | amount            | amount of base coin that the orderer is willing to buy or sell |
 
+| **Optional Flag**  |  **Description**                                     |
+| :------------------- | :--------------------------------------------------- |
+| order-lifespan       | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns|us|ms|s|m|h|
+
 Example
 
 ```bash
@@ -268,7 +272,6 @@ squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 --output json | jq
 
 # Make a limit order to swap with order-lifespan flag
-# It is the duration the order lives until it is expired
 squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 --chain-id localnet \
 --order-lifespan 30s \
