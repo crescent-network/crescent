@@ -21,8 +21,6 @@ const (
 
 // Keys for store prefixes
 var (
-	LastAirdropIdKey = []byte{0xd0} // key for the latest airdrop id
-
 	AirdropKeyPrefix     = []byte{0xd5}
 	ClaimRecordKeyPrefix = []byte{0xd6}
 )

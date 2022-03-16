@@ -61,6 +61,5 @@ const (
 
 Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list.
 
-- `LastAirdropIdKey: 0xd0 -> Uint64Value(lastAirdropId)`
 - `AirdropKey: 0xd5 | AirdropId -> ProtocolBuffer(Airdrop)`
 - `ClaimRecordKey: 0xd6 | AirdropId | RecipientAddrLen (1 byte) | RecipientAddr -> ProtocolBuffer(ClaimRecord)`
