@@ -239,7 +239,11 @@ squad q liquidity orders cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json |
 
 Make a market order.
 
-Unlike a limit order, there is no need to input order price. Buy market order uses `MaxPriceLimitRatio` of the last price, which is `LastPrice * (1+MaxPriceLimitRatio)`. Sell market order uses negative MaxPriceLimitRatio of the last price, which is `LastPrice * (1-MaxPriceLimitRatio)`.
+Unlike a limit order, there is no need to input order price. 
+
+Buy market order uses `MaxPriceLimitRatio` of the last price, which is `LastPrice * (1+MaxPriceLimitRatio)`. 
+
+Sell market order uses negative MaxPriceLimitRatio of the last price, which is `LastPrice * (1-MaxPriceLimitRatio)`.
 
 Order uses a batch execution methodology. Order requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch.
 
@@ -280,7 +284,6 @@ squad tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 --broadcast-mode block \
 --yes \
 --output json | jq
-
 
 #
 # Tips
