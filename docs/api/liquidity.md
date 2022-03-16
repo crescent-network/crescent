@@ -25,7 +25,7 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - [DepositRequest](#DepositRequest)
 - [WithdrawRequests](#WithdrawRequests)
 - [WithdrawRequest](#WithdrawRequest)
-- [Orders](#Orrers)
+- [Orders](#Orders)
 - [Order](#Order)
 - [OrdersByOrderer](#OrdersByOrderer)
 
@@ -51,13 +51,13 @@ Example Response
     "pair_creation_fee": [
       {
         "denom": "stake",
-        "amount": "1"
+        "amount": "1000000"
       }
     ],
     "pool_creation_fee": [
       {
         "denom": "stake",
-        "amount": "1"
+        "amount": "1000000"
       }
     ],
     "min_initial_deposit_amount": "1000000",

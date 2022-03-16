@@ -1,6 +1,6 @@
 ---
 Title: Liquidity
-Description: A high-level overview of how the command-line interfaces (CLI) work for the liquidity module.
+Description: A high-level overview of how the command-line interfaces (CLI) works for the liquidity module.
 ---
 
 # Liquidity Module
@@ -17,8 +17,8 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
     * [CreatePair](#CreatePair)
     * [CreatePool](#CreatePool)
     * [Deposit](#Deposit)
-    * [Withdraw](#Withdrawool)
-    * [LimitOrder](#LimitOrderol)
+    * [Withdraw](#Withdraw)
+    * [LimitOrder](#LimitOrder)
     * [MarketOrder](#MarketOrder)
     * [CancelOrder](#CancelOrder)
     * [CancelAllOrders](#CancelAllOrders)

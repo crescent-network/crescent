@@ -1,6 +1,6 @@
 ---
 Title: Farming
-Description: A high-level overview of how the command-line interfaces (CLI) work for the farming module.
+Description: A high-level overview of how the command-line interfaces (CLI) works for the farming module.
 ---
 
 # Farming Module
