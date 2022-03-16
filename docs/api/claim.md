@@ -88,7 +88,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/squad/claim/v1beta1/airdrops/{airdrop_id}/claim_records/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
+http://localhost:1317/squad/claim/v1beta1/airdrops/1/claim_records/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
 ```
 
 Example Response
