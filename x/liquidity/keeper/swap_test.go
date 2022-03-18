@@ -146,6 +146,18 @@ func (s *KeeperTestSuite) TestLimitOrderRefund() {
 				utils.ParseDec("1.001"), newInt(100), 0),
 			utils.ParseCoin("1denom2"),
 		},
+		{
+			types.NewMsgLimitOrder(
+				orderer, pair.Id, types.OrderDirectionSell, utils.ParseCoin("1000denom1"), "denom2",
+				utils.ParseDec("1.100"), newInt(1000), 0),
+			utils.ParseCoin("0denom1"),
+		},
+		{
+			types.NewMsgLimitOrder(
+				orderer, pair.Id, types.OrderDirectionSell, utils.ParseCoin("1000denom1"), "denom2",
+				utils.ParseDec("1.100"), newInt(100), 0),
+			utils.ParseCoin("900denom1"),
+		},
 	} {
 		s.Run("", func() {
 			s.Require().NoError(tc.msg.ValidateBasic())
@@ -182,6 +194,52 @@ func (s *KeeperTestSuite) TestMarketOrder() {
 	// Check the result.
 	s.Require().True(coinEq(utils.ParseCoin("10000denom1"), s.getBalance(s.addr(3), "denom1")))
 	s.Require().True(coinsEq(utils.ParseCoins("10800denom2"), s.getBalances(s.addr(4))))
+}
+
+func (s *KeeperTestSuite) TestMarketOrderRefund() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	p := utils.ParseDec("1.0")
+	pair.LastPrice = &p
+	s.keeper.SetPair(s.ctx, pair)
+	orderer := s.addr(1)
+	s.fundAddr(orderer, utils.ParseCoins("1000000000denom1,1000000000denom2"))
+
+	for _, tc := range []struct {
+		msg          *types.MsgMarketOrder
+		refundedCoin sdk.Coin
+	}{
+		{
+			types.NewMsgMarketOrder(
+				orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1100000denom2"), "denom1",
+				newInt(1000000), 0),
+			utils.ParseCoin("0denom2"),
+		},
+		{
+			types.NewMsgMarketOrder(
+				orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"), "denom1",
+				newInt(10000), 0),
+			utils.ParseCoin("989000denom2"),
+		},
+		{
+			types.NewMsgMarketOrder(
+				orderer, pair.Id, types.OrderDirectionSell, utils.ParseCoin("1000000denom1"), "denom2",
+				newInt(10000), 0),
+			utils.ParseCoin("990000denom1"),
+		},
+	} {
+		s.Run("", func() {
+			s.Require().NoError(tc.msg.ValidateBasic())
+
+			balanceBefore := s.getBalance(orderer, tc.msg.OfferCoin.Denom)
+			_, err := s.keeper.MarketOrder(s.ctx, tc.msg)
+			s.Require().NoError(err)
+
+			balanceAfter := s.getBalance(orderer, tc.msg.OfferCoin.Denom)
+
+			refundedCoin := balanceAfter.Sub(balanceBefore.Sub(tc.msg.OfferCoin))
+			s.Require().True(coinEq(tc.refundedCoin, refundedCoin))
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestMarketOrderWithNoLastPrice() {

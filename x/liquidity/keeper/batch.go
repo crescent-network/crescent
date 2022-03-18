@@ -17,9 +17,9 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 	}); err != nil {
 		panic(err)
 	}
-	if err := k.IterateAllOrders(ctx, func(req types.Order) (stop bool, err error) {
-		if req.Status.CanBeExpired() && req.ExpiredAt(ctx.BlockTime()) {
-			if err := k.FinishOrder(ctx, req, types.OrderStatusExpired); err != nil {
+	if err := k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
+		if order.Status.CanBeExpired() && order.ExpiredAt(ctx.BlockTime()) {
+			if err := k.FinishOrder(ctx, order, types.OrderStatusExpired); err != nil {
 				return false, err
 			}
 		}
