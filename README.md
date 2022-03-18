@@ -8,7 +8,7 @@ The Crescent containing below Cosmos SDK modules
 - mint (constant inflation)
 - claim
 
-- <!-- markdown-link-check-disable -->
+<!-- markdown-link-check-disable -->
 - see the [main](https://github.com/crescent-network/crescent/tree/main) branch for the latest 
 - see [releases](https://github.com/crescent-network/crescent/releases) for the latest release
 

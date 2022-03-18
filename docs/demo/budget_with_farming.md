@@ -301,7 +301,7 @@ To simulate reward distribution for this demo, enable a custom transaction messa
 
 When you send the `AdvanceEpoch` message to the network, it increases epoch by day 1.
 
-In this step, you might wonder why you need to increase 2 epochs by sending two transactions to the network. The reason is to ensure fairness of distribution. The global parameter called `next_epoch_days` can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, the internal state `current_epoch_days` is used to process staking and reward distribution in an end blocker. This technical decision has been made by the Gravity DEX team. To understand more about this decision, feel free to jump right into `x/farmingabci.go`.
+In this step, you might wonder why you need to increase 2 epochs by sending two transactions to the network. The reason is to ensure fairness of distribution. The global parameter called `next_epoch_days` can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, the internal state `current_epoch_days` is used to process staking and reward distribution in an end blocker. This technical decision has been made by the Gravity DEX team. To understand more about this decision, feel free to jump right into `x/farming/abci.go`.
 
 ```bash
 # Increase epoch by 1 
