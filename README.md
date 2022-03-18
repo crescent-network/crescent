@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/crescent-network/crescent/branch/main/graph/badge.svg?token=Y8f2q3zLDm)](https://codecov.io/gh/crescent-network/crescent)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/crescent-network/crescent)](https://pkg.go.dev/github.com/crescent-network/crescent)
+
 # Crescent
 
 The Crescent containing below Cosmos SDK modules
@@ -8,7 +11,7 @@ The Crescent containing below Cosmos SDK modules
 - mint (constant inflation)
 - claim
 
-- <!-- markdown-link-check-disable -->
+<!-- markdown-link-check-disable -->
 - see the [main](https://github.com/crescent-network/crescent/tree/main) branch for the latest 
 - see [releases](https://github.com/crescent-network/crescent/releases) for the latest release
 
