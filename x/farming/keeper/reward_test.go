@@ -503,3 +503,21 @@ func (suite *KeeperTestSuite) TestInitializeAndPruneStakingCoinInfo() {
 	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
 	suite.Require().False(found)
 }
+
+func (suite *KeeperTestSuite) TestAllocateRewardsZeroTotalStakings() {
+	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch()
+	suite.AdvanceEpoch()
+
+	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	suite.AdvanceEpoch() // This should not cause a panic.
+	totalStakings, found := suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().True(found)
+	suite.Require().True(totalStakings.Amount.IsZero())
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	_, found = suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().False(found)
+}
