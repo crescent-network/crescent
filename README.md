@@ -69,13 +69,10 @@ If `crescentd` is installed correctly, the following information is returned:
 ```
 name: crescent
 server_name: crescentd
-version: 1.0.0-rc2-14-g8e32c3c
-commit: 8e32c3c4be60f52341a04f9a41bacced68458515
-build_tags: netgo
-go: go version go1.16.4 darwin/amd64
-build_deps:
+version: TBD
 ...
 .....
+......
 ```
 
 ## Dependency
