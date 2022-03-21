@@ -15,7 +15,7 @@ func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {
 }
 
 // NetAmountState calculates the sum of bondedDenom balance, total delegation tokens(slash applied LiquidTokens), total remaining reward of types.LiquidStakingProxyAcc
-// During Liquid Unstacking, btoken immediately burns and the unbonding queue belongs to the requester, so the liquid staker's unbonding values are excluded on netAmount
+// During liquid unstaking, btoken immediately burns and the unbonding queue belongs to the requester, so the liquid staker's unbonding values are excluded on netAmount
 // It is used only for calculation and query and is not stored in kv.
 func (k Keeper) NetAmountState(ctx sdk.Context) (nas types.NetAmountState) {
 	nas.ProxyAccBalance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc).Amount

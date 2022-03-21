@@ -24,7 +24,7 @@ This project uses customized cosmos-sdk, Please check the difference on [here](h
 | Requirement           | Notes             |
 |-----------------------|-------------------|
 | Go version            | Go1.16 or higher  |
-| customized cosmos-sdk | v1.0.2-sdk-0.44.5 |
+| Cosmos SDK (custom)   | v1.0.2-sdk-0.44.5 |
 
 ## Installation
 

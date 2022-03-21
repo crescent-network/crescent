@@ -7,7 +7,7 @@ Description: A high-level overview of gRPC-gateway REST routes in farming module
  
 ## Synopsis
 
-This document provides a high-level overview of what gRPC-gateway REST routes are supported in the farming module.
+This document provides a high-level overview of what gRPC-gateway REST routes are supported in the `farming` module.
 
 
 ## Swagger Documentation
@@ -15,6 +15,9 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - Swagger Cosmos SDK Farming Module [REST and gRPC Gateway docs](https://app.swaggerhub.com/apis-docs/gravity-devs/farming/1.0.0)
 
 ## gRPC-gateway REST Routes
+
+<!-- markdown-link-check-disable -->
+++https://github.com/crescent-network/crescent/blob/main/proto/crescent/farming/v1beta1/query.proto 
 
 - [Params](#Params)
 - [Plans](#Plans)

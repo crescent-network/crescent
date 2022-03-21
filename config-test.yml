@@ -1,5 +1,7 @@
 init:
-  home: "~/.crescent"
+  home: "$HOME/.crescent"
+build:
+  ldflags: ["-X github.com/crescent-network/crescent/x/farming/keeper.enableAdvanceEpoch=true"]
 accounts:
   - name: alice # cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
     mnemonic: "guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
