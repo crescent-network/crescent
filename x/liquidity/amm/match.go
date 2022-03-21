@@ -91,7 +91,8 @@ func FindLastMatchableOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) 
 	// If there is not, then the loop is finished.
 	for {
 		ok := true
-		for dir, side := range sides {
+		for _, dir := range []OrderDirection{Buy, Sell} {
+			side := sides[dir]
 			i := side.i
 			order := side.orders[i]
 			matchAmt := sdk.MinInt(buySide.totalOpenAmt, sellSide.totalOpenAmt)

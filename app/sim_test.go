@@ -36,11 +36,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	claimtypes "github.com/crescent-network/crescent/x/claim/types"
+	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
 	liquidstakingtypes "github.com/crescent-network/crescent/x/liquidstaking/types"
 	minttypes "github.com/crescent-network/crescent/x/mint/types"
-
-	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
 )
 
 // Get flags every time the simulator is run
@@ -298,8 +297,8 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
 
-	numSeeds := 1
-	numTimesToRunPerSeed := 1
+	numSeeds := 3
+	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {

@@ -399,10 +399,10 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		switch order := order.(type) {
 		case *types.UserOrder:
 			o, _ := k.GetOrder(ctx, pair.Id, order.OrderId)
-			o.OpenAmount = order.OpenAmount
-			o.RemainingOfferCoin = order.RemainingOfferCoin
-			o.ReceivedCoin = o.ReceivedCoin.AddAmount(order.ReceivedDemandCoin.Amount)
-			if order.OpenAmount.IsZero() {
+			o.OpenAmount = o.OpenAmount.Sub(order.Amount.Sub(order.OpenAmount))
+			o.RemainingOfferCoin = o.RemainingOfferCoin.Sub(order.OfferCoin.Sub(order.RemainingOfferCoin))
+			o.ReceivedCoin = o.ReceivedCoin.Add(order.ReceivedDemandCoin)
+			if o.OpenAmount.IsZero() {
 				if err := k.FinishOrder(ctx, o, types.OrderStatusCompleted); err != nil {
 					return err
 				}
