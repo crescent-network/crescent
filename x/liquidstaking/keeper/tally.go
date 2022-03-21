@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -205,12 +207,19 @@ func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Vot
 	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
 	bTokenOwnMap := make(utils.StrIntMap)
 
+	// sort denom keys of voterBalanceByDenom for deterministic iteration
+	var denoms []string
+	for denom := range voterBalanceByDenom {
+		denoms = append(denoms, denom)
+	}
+	sort.Strings(denoms)
+
 	// calculate owned btoken amount of each voter
-	for denom, balanceByVoter := range voterBalanceByDenom {
+	for _, denom := range denoms {
 
 		// add balance of bToken
 		if denom == liquidBondDenom {
-			for voter, balance := range balanceByVoter {
+			for voter, balance := range voterBalanceByDenom[denom] {
 				bTokenOwnMap.AddOrSet(voter, balance)
 			}
 			continue
@@ -220,7 +229,7 @@ func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Vot
 		bTokenSharePerPoolCoin := k.TokenSharePerPoolCoin(ctx, liquidBondDenom, denom)
 		if bTokenSharePerPoolCoin.IsPositive() {
 			bTokenSharePerPoolCoinMap[denom] = bTokenSharePerPoolCoin
-			for voter, balance := range balanceByVoter {
+			for voter, balance := range voterBalanceByDenom[denom] {
 				bTokenOwnMap.AddOrSet(voter, utils.GetShareValue(balance, bTokenSharePerPoolCoin))
 			}
 		}
