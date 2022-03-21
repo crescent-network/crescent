@@ -1,55 +1,100 @@
+<p>&nbsp;</p>
+<p align="center">
+
+<img src="crescent_core_image.png" width=700 height=280>
+
+</p>
+
+<p align="center">
+Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<br/><br/>
+</p>
+
 [![codecov](https://codecov.io/gh/crescent-network/crescent/branch/main/graph/badge.svg?token=Y8f2q3zLDm)](https://codecov.io/gh/crescent-network/crescent)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/crescent-network/crescent)](https://pkg.go.dev/github.com/crescent-network/crescent)
 
-# Crescent
 
-The Crescent containing below Cosmos SDK modules
+## What is Crescent?
 
-- liquidity
-- liquidstaking
-- farming
-- mint (constant inflation)
-- claim
+Crescent is a DeFi Hub that provides innovative and powerful tools to empower user's digital assets to maximize their financial returns and manage associated risks in the most efficient way. In the base layer, Crescent Core has DEX functionality that has several unique characteristics.
 
-<!-- markdown-link-check-disable -->
-- see the [main](https://github.com/crescent-network/crescent/tree/main) branch for the latest 
-- see [releases](https://github.com/crescent-network/crescent/releases) for the latest release
+- A Hybrid DEX : a hybrid system of orderbook and AMM
+- Tick System : standardization of order price
+- Batch Execution : all orders included in same block are fairly executed
+- Ranged Pools : liquidity pools providing liquidity within predefined price range
+- Optimized Liquidity Incentives Strategy
+- Synergy with Crescent Boost
 
-## Dependencies
+## Installation
 
-If you haven't already, install Golang by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
+### Use binaries
 
-This project uses customized cosmos-sdk, Please check the difference on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
+This is the easiest way to get started. Download a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/crescent-network/crescent/releases) page.
+
+### Build from source
+
+**Step 1. Install Golang**
+
+Go version [1.16](https://go.dev/doc/go1.16) or higher is required for Crescent Core.
+
+If you haven't already, install Go by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
+
+**Step 2. Get Crescent Core source code**
+
+Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `main` branch. This branch contains the latest stable release, which will install the `crescentd` binary.
+
+```bash
+git clone https://github.com/crescent-network/crescent.git
+cd crescent && git checkout main
+make install
+```
+
+**Step 3. Verify your installation**
+
+Verify that you have installed `crescentd` successfully by running the following command:
+
+```bash
+crescentd version --long
+```
+
+If `crescented` is installed correctly, the following information is returned:
+
+```
+name: crescent
+server_name: crescentd
+version: 1.0.0-rc2-14-g8e32c3c
+commit: 8e32c3c4be60f52341a04f9a41bacced68458515
+build_tags: netgo
+go: go version go1.16.4 darwin/amd64
+build_deps:
+...
+.....
+```
+
+## Dependency
+
+Crescent Core uses a customized Cosmos SDK. Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
 
 | Requirement           | Notes             |
 |-----------------------|-------------------|
 | Go version            | Go1.16 or higher  |
-| Cosmos SDK (custom)   | v1.0.2-sdk-0.44.5 |
-
-## Installation
-
-```bash
-# Use git to clone the source code and install `crescentd`
-git clone https://github.com/crescent-network/crescent.git
-cd crescent
-make install
-```
-
-## Getting Started
-
-To get started to the project, visit the [TECHNICAL-SETUP.md](./TECHNICAL-SETUP.md) docs.
+| customized cosmos-sdk | v1.0.2-sdk-0.44.5 |
 
 ## Documentation
 
-The Crescent documentation is available in [docs](./docs) folder and technical specification is available in `x/{module}/spec/` folder. 
+The documentation is available in [docs](./docs) directory. If you are a developer interested in technical specification, see inside each `x/{module}`'s `spec` directory.
 
-These are some of the documents that help you to quickly get you on board with the farming module.
+## Community
 
-- [Demo Script](./docs/demo)
-- [How to use Command Line Interfaces](./docs/cli)
-- [How to use gRPC-gateway REST Routes](./docs/api)
-- [REST and gRPC Gateway Swagger docs](https://app.swaggerhub.com/apis-docs/crescent/crescent)
+* [Official Website](https://crescent.network/)
+* [Medium Blog](https://crescentnetwork.medium.com/)
+* [Discord](https://discord.gg/ctnEqtzM)
+* [Telegram](https://t.me/+5lJ33oeqV2QwYzQ1)
+* [Twitter](https://twitter.com/CrescentHub)
 
 ## Contributing
 
-We welcome contributions from everyone. The [main](https://github.com/crescent-network/crescent/tree/main) branch contains the development version of the code. You can branch of from main and create a pull request, or maintain your own fork and submit a cross-repository pull request. If you're not sure where to start check out [CONTRIBUTING.md](./CONTRIBUTING.md) for our guidelines & policies for how we develop crescent. Thank you to all those who have contributed to crescent!
+Crescent is a public and open-source blockchain protocol. We welcome contributions from everyone. If you are interested in contributing to Crescent Core, please review our [CONTRIBUTING](CONTRIBUTING.md) guide. Thank you to all those who have contributed to Crescent Core.
+
+## License
+
+This software is licensed under the Apache 2.0 license. Read more about it [here](LICENSE).
