@@ -64,7 +64,7 @@ Verify that you have installed `crescentd` successfully by running the following
 crescentd version --long
 ```
 
-If `crescented` is installed correctly, the following information is returned:
+If `crescentd` is installed correctly, the following information is returned:
 
 ```
 name: crescent
@@ -89,7 +89,7 @@ Crescent Core uses a customized Cosmos SDK. Please check the differences on [her
 
 ## Documentation
 
-The documentation is available in [docs](./docs) directory. If you are a developer interested in technical specification, see inside each `x/{module}`'s `spec` directory.
+The documentation is available in [docs](docs) directory. If you are a developer interested in technical specification, see inside each `x/{module}`'s `spec` directory.
 
 ## Community
 
