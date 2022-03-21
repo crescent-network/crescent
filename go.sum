@@ -894,8 +894,8 @@ github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c h1:g+WoO5jjkqGAzH
 github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c/go.mod h1:ahpPrc7HpcfEWDQRZEmnXMzHY03mLDYMCxeDzy46i+8=
 github.com/tendermint/btcd v0.1.1 h1:0VcxPfflS2zZ3RiOAHkBiFUcPvbtRj5O7zHmcJWHV7s=
 github.com/tendermint/btcd v0.1.1/go.mod h1:DC6/m53jtQzr/NFmMNEu0rxf18/ktVoVtMrnDD5pN+U=
-github.com/tendermint/budget v1.1.0 h1:aFyaAdB695ePMC2i1vYZwb4R00FEvGV4csKdlp+Axl8=
-github.com/tendermint/budget v1.1.0/go.mod h1:6dU+Vcu1Uef+4STjANpbOq0Gxb6YJRjqsx1tJF45MRA=
+github.com/tendermint/budget v1.1.1 h1:kwB4gMWBL0FWwhQZ3kMn+eLr6NzWlN65l9a1sW829GQ=
+github.com/tendermint/budget v1.1.1/go.mod h1:6dU+Vcu1Uef+4STjANpbOq0Gxb6YJRjqsx1tJF45MRA=
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 h1:hqAk8riJvK4RMWx1aInLzndwxKalgi5rTqgfXxOxbEI=
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15/go.mod h1:z4YtwM70uOnk8h0pjJYlj3zdYwi9l03By6iAIF5j/Pk=
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=
