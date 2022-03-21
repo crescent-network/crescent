@@ -96,6 +96,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	farmingparams "github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/app/upgrades/testnet/rc3"
 	"github.com/crescent-network/crescent/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/x/claim/keeper"
 	claimtypes "github.com/crescent-network/crescent/x/claim/types"
@@ -657,6 +658,9 @@ func NewApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
+	app.SetUpgradeStoreLoaders()
+	app.SetUpgradeHandlers()
+
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(fmt.Sprintf("failed to load latest version: %s", err))
@@ -828,4 +832,24 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(liquidstakingtypes.ModuleName)
 
 	return paramsKeeper
+}
+
+func (app *App) SetUpgradeStoreLoaders() {
+	// common logics for set upgrades
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	// testnet upgrade state loaders
+	if upgradeInfo.Name == rc3.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &rc3.StoreUpgrades))
+	}
+}
+
+func (app *App) SetUpgradeHandlers() {
+	// testnet upgrade handlers
+	app.UpgradeKeeper.SetUpgradeHandler(
+		rc3.UpgradeName, rc3.UpgradeHandler)
 }
