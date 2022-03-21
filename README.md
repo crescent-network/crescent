@@ -7,10 +7,18 @@
 
 <p align="center">
 Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<br/><br/>
-</p>
 
-[![codecov](https://codecov.io/gh/crescent-network/crescent/branch/main/graph/badge.svg?token=Y8f2q3zLDm)](https://codecov.io/gh/crescent-network/crescent)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/crescent-network/crescent)](https://pkg.go.dev/github.com/crescent-network/crescent)
+<a href="https://pkg.go.dev/badge/github.com/crescent-network/crescent">
+    <img src="https://pkg.go.dev/badge/github.com/crescent-network/crescent">
+</a>
+<a href="https://codecov.io/gh/crescent-network/crescent">
+    <img src="https://codecov.io/gh/crescent-network/crescent/branch/main/graph/badge.svg">
+</a>
+<a href="https://github.com/crescent-network/crescent/workflows/Tests/badge.svg">
+    <img src="https://github.com/crescent-network/crescent/actions/workflows/test.yml/badge.svg">
+</a>
+
+</p>
 
 
 ## What is Crescent?
