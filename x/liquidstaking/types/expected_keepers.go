@@ -83,6 +83,7 @@ type GovKeeper interface {
 	GetVotes(ctx sdk.Context, proposalID uint64) (votes govtypes.Votes)
 	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govtypes.Vote, found bool)
 	GetProposal(ctx sdk.Context, proposalID uint64) (govtypes.Proposal, bool)
+	SetProposal(ctx sdk.Context, proposal govtypes.Proposal)
 	GetProposals(ctx sdk.Context) (proposals govtypes.Proposals)
 	AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options govtypes.WeightedVoteOptions) error
 }

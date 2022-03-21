@@ -3,6 +3,7 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -170,8 +171,13 @@ func SimulateTallyWithLiquidStaking(ak types.AccountKeeper, bk types.BankKeeper,
 					if err != nil {
 						panic(err)
 					}
-					_, _, res := gk.Tally(ctx, *targetProposal)
-					fmt.Println("## SimulateTallyWithLiquidStaking", res)
+					targetProposal.DepositEndTime = ctx.BlockTime()
+					targetProposal.VotingEndTime = ctx.BlockTime()
+					ctx = ctx.WithBlockTime(ctx.BlockTime().Add(5 * time.Second))
+					cachedCtx, _ := ctx.CacheContext()
+					_, _, res := gk.Tally(cachedCtx, *targetProposal)
+					targetProposal.FinalTallyResult = res
+					fmt.Println("## SimulateTallyWithLiquidStaking", res, targetProposal.ProposalId)
 					break
 				}
 			}
