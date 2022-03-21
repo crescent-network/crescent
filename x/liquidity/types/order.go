@@ -72,14 +72,20 @@ type UserOrder struct {
 // NewUserOrder returns a new user order.
 func NewUserOrder(order Order) *UserOrder {
 	var dir amm.OrderDirection
+	var amt sdk.Int
 	switch order.Direction {
 	case OrderDirectionBuy:
 		dir = amm.Buy
+		amt = sdk.MinInt(
+			order.OpenAmount,
+			order.RemainingOfferCoin.Amount.ToDec().QuoTruncate(order.Price).TruncateInt(),
+		)
 	case OrderDirectionSell:
 		dir = amm.Sell
+		amt = order.OpenAmount
 	}
 	return &UserOrder{
-		BaseOrder: amm.NewBaseOrder(dir, order.Price, order.OpenAmount, order.RemainingOfferCoin, order.ReceivedCoin.Denom),
+		BaseOrder: amm.NewBaseOrder(dir, order.Price, amt, order.RemainingOfferCoin, order.ReceivedCoin.Denom),
 		OrderId:   order.Id,
 		Orderer:   order.GetOrderer(),
 	}

@@ -552,3 +552,40 @@ func (s *KeeperTestSuite) TestInsufficientOfferCoin() {
 	_, err = s.keeper.MarketOrder(s.ctx, msg2)
 	s.Require().ErrorIs(err, types.ErrInsufficientOfferCoin)
 }
+
+func (s *KeeperTestSuite) TestInsufficientRemainingOfferCoin() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.5"), sdk.NewInt(10000), time.Minute, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.5"), sdk.NewInt(1001), 0, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	liquidity.BeginBlocker(s.ctx, s.keeper)
+
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.5"), sdk.NewInt(8999), 0, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	liquidity.BeginBlocker(s.ctx, s.keeper)
+
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().True(found)
+	s.Require().Equal(types.OrderStatusPartiallyMatched, order.Status)
+	s.Require().True(intEq(sdk.OneInt(), order.OpenAmount))
+}
+
+func (s *KeeperTestSuite) TestNegativeOpenAmount() {
+	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(utils.ParseTime("2022-03-01T00:00:00Z"))
+
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.82"), sdk.NewInt(648744), 0, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.82"), sdk.NewInt(648745), 0, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().True(found)
+	s.Require().False(order.OpenAmount.IsNegative())
+
+	genState := s.keeper.ExportGenesis(s.ctx)
+	s.Require().NotPanics(func() {
+		s.keeper.InitGenesis(s.ctx, *genState)
+	})
+}
