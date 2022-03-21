@@ -23,7 +23,7 @@ Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<b
 
 ## What is Crescent?
 
-Crescent is a DeFi Hub that provides innovative and powerful tools to empower user's digital assets to maximize their financial returns and manage associated risks in the most efficient way. In the base layer, Crescent Core has DEX functionality that has several unique characteristics.
+Crescent is a DeFi Hub that provides innovative and powerful tools that empower users’ digital assets for maximizing their financial returns while manage associated risks in the most efficient way. In the base layer, Crescent core has a DEX functionality equipped with several unique characteristics.
 
 - A Hybrid DEX : a hybrid system of orderbook and AMM
 - Tick System : standardization of order price
