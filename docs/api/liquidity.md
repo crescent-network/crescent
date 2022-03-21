@@ -7,7 +7,7 @@ Description: A high-level overview of what gRPC-gateway REST routes are supporte
 
 ## Synopsis
 
-This document provides a high-level overview of what gRPC-gateway REST routes are supported in the liquidity module.
+This document provides a high-level overview of what gRPC-gateway REST routes are supported in the `liquidity` module.
 
 ## gRPC-gateway REST Routes
 

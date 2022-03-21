@@ -159,11 +159,11 @@ $ %s query %s states
 // GetCmdQueryVotingPower implements the query voting power command.
 func GetCmdQueryVotingPower() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "voting-power",
+		Use:   "voting-power [voter]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query voting power",
+		Short: "Query the voter's voting power",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Queries staking, liquid staking voting power of voter.
+			fmt.Sprintf(`Query the voter's staking and liquid staking voting power.
 
 Example:
 $ %s query %s voting-power %s1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
