@@ -120,20 +120,13 @@ func (p *AddPlanRequest) IsForRatioPlan() bool {
 
 // Validate validates AddPlanRequest.
 func (p *AddPlanRequest) Validate() error {
-	if err := ValidatePlanName(p.Name); err != nil {
-		return sdkerrors.Wrap(ErrInvalidPlanName, err.Error())
-	}
-	if _, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress); err != nil {
+	// farmingPoolAddr is used as an arbitrary creator address in msg validation below.
+	farmingPoolAddr, err := sdk.AccAddressFromBech32(p.FarmingPoolAddress)
+	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address %q: %v", p.FarmingPoolAddress, err)
 	}
 	if _, err := sdk.AccAddressFromBech32(p.TerminationAddress); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address %q: %v", p.TerminationAddress, err)
-	}
-	if err := ValidateStakingCoinTotalWeights(p.StakingCoinWeights); err != nil {
-		return err
-	}
-	if !p.EndTime.After(p.StartTime) {
-		return sdkerrors.Wrapf(ErrInvalidPlanEndTime, "end time %s must be greater than start time %s", p.EndTime, p.StartTime)
 	}
 
 	isForFixedAmountPlan := p.IsForFixedAmountPlan()
@@ -142,11 +135,15 @@ func (p *AddPlanRequest) Validate() error {
 	case isForFixedAmountPlan == isForRatioPlan:
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "exactly one of epoch amount or epoch ratio must be provided")
 	case isForFixedAmountPlan:
-		if err := ValidateEpochAmount(p.EpochAmount); err != nil {
+		if err := NewMsgCreateFixedAmountPlan(
+			p.Name, farmingPoolAddr, p.StakingCoinWeights, p.StartTime, p.EndTime, p.EpochAmount,
+		).ValidateBasic(); err != nil {
 			return err
 		}
 	case isForRatioPlan:
-		if err := ValidateEpochRatio(p.EpochRatio); err != nil {
+		if err := NewMsgCreateRatioPlan(
+			p.Name, farmingPoolAddr, p.StakingCoinWeights, p.StartTime, p.EndTime, p.EpochRatio,
+		).ValidateBasic(); err != nil {
 			return err
 		}
 	}

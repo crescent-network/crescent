@@ -10,6 +10,9 @@ The `farming` module contains the following public plan governance proposal that
 
 - `DeletePlanRequest` is the request proposal that requests the module to delete the plan. It sends all remaining coins in the plan's farming pool `FarmingPoolAddress` to the termination address `TerminationAddress` and mark the plan as terminated.
 
+Note that adding or modifying `RatioPlan`s is disabled by default.
+The binary should be built using `make install-testing` command to enable that.
+
 ## PublicPlanProposal
 
 ```go

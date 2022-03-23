@@ -7,9 +7,9 @@ const (
 	EventTypeStake                 = "stake"
 	EventTypeUnstake               = "unstake"
 	EventTypeHarvest               = "harvest"
+	EventTypeRemovePlan            = "remove_plan"
 	EventTypeRewardsWithdrawn      = "rewards_withdrawn"
 	EventTypePlanTerminated        = "plan_terminated"
-	EventTypePlanRemoved           = "plan_removed"
 	EventTypeRewardsAllocated      = "rewards_allocated"
 
 	AttributeKeyPlanId             = "plan_id" //nolint:golint

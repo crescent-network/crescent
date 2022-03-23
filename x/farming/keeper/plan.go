@@ -140,9 +140,40 @@ func (k Keeper) CreateFixedAmountPlan(ctx sdk.Context, msg *types.MsgCreateFixed
 		return nil, sdkerrors.Wrap(types.ErrInvalidPlanEndTime, "end time has already passed")
 	}
 
-	if typ == types.PlanTypePrivate {
-		params := k.GetParams(ctx)
+	for _, coin := range msg.StakingCoinWeights {
+		if k.bankKeeper.GetSupply(ctx, coin.Denom).Amount.IsZero() {
+			return nil, sdkerrors.Wrapf(types.ErrInvalidStakingCoinWeights, "denom %s has no supply", coin.Denom)
+		}
+	}
+	for _, coin := range msg.EpochAmount {
+		if k.bankKeeper.GetSupply(ctx, coin.Denom).Amount.IsZero() {
+			return nil, sdkerrors.Wrapf(types.ErrInvalidEpochAmount, "denom %s has no supply", coin.Denom)
+		}
+	}
 
+	var maxNumDenoms int
+	switch typ {
+	case types.PlanTypePrivate:
+		maxNumDenoms = types.PrivatePlanMaxNumDenoms
+	case types.PlanTypePublic:
+		maxNumDenoms = types.PublicPlanMaxNumDenoms
+	}
+	if len(msg.StakingCoinWeights) > maxNumDenoms {
+		return nil, sdkerrors.Wrapf(
+			types.ErrNumMaxDenomsLimit,
+			"number of denoms in staking coin weights is %d, which exceeds the limit %d",
+			len(msg.StakingCoinWeights), maxNumDenoms)
+	}
+	if len(msg.EpochAmount) > maxNumDenoms {
+		return nil, sdkerrors.Wrapf(
+			types.ErrNumMaxDenomsLimit,
+			"number of denoms in epoch amount is %d, which exceeds the limit %d",
+			len(msg.EpochAmount), maxNumDenoms)
+	}
+
+	params := k.GetParams(ctx)
+
+	if typ == types.PlanTypePrivate {
 		if uint32(k.GetNumActivePrivatePlans(ctx)) >= params.MaxNumPrivatePlans {
 			return nil, types.ErrNumPrivatePlansLimit
 		}
@@ -190,9 +221,29 @@ func (k Keeper) CreateRatioPlan(ctx sdk.Context, msg *types.MsgCreateRatioPlan, 
 		return nil, sdkerrors.Wrap(types.ErrInvalidPlanEndTime, "end time has already passed")
 	}
 
-	if typ == types.PlanTypePrivate {
-		params := k.GetParams(ctx)
+	for _, coin := range msg.StakingCoinWeights {
+		if k.bankKeeper.GetSupply(ctx, coin.Denom).Amount.IsZero() {
+			return nil, sdkerrors.Wrapf(types.ErrInvalidStakingCoinWeights, "denom %s has no supply", coin.Denom)
+		}
+	}
 
+	var maxNumDenoms int
+	switch typ {
+	case types.PlanTypePrivate:
+		maxNumDenoms = types.PrivatePlanMaxNumDenoms
+	case types.PlanTypePublic:
+		maxNumDenoms = types.PublicPlanMaxNumDenoms
+	}
+	if len(msg.StakingCoinWeights) > maxNumDenoms {
+		return nil, sdkerrors.Wrapf(
+			types.ErrNumMaxDenomsLimit,
+			"number of denoms in staking coin weights is %d, which exceeds the limit %d",
+			len(msg.StakingCoinWeights), maxNumDenoms)
+	}
+
+	params := k.GetParams(ctx)
+
+	if typ == types.PlanTypePrivate {
 		if uint32(k.GetNumActivePrivatePlans(ctx)) >= params.MaxNumPrivatePlans {
 			return nil, types.ErrNumPrivatePlansLimit
 		}
@@ -298,7 +349,7 @@ func (k Keeper) RemovePlan(ctx sdk.Context, creator sdk.AccAddress, planId uint6
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypePlanRemoved,
+			types.EventTypeRemovePlan,
 			sdk.NewAttribute(types.AttributeKeyPlanId, strconv.FormatUint(plan.GetId(), 10)),
 			sdk.NewAttribute(types.AttributeKeyFarmingPoolAddress, plan.GetFarmingPoolAddress().String()),
 			sdk.NewAttribute(types.AttributeKeyTerminationAddress, plan.GetTerminationAddress().String()),

@@ -5,9 +5,9 @@ There are two different types of farming plans in the farming module. Whereas a 
 
 In this documentation, some sample data in JSON are provided. They will be used to test out farming plan functionality.
 
-## Table of Contetns
+## Table of Contents
 
-- [Bootstrap Local Network](#Boostrap)
+- [Bootstrap Local Network](#Bootstrap)
 - [Public Farming Plan](#Public-Farming-Plan)
   * [AddPublicFarmingFixedAmountPlan](#AddPublicFarmingFixedAmountPlan)
   * [AddPublicFarmingRatioPlan](#AddPublicFarmingRatioPlan)
@@ -20,11 +20,13 @@ In this documentation, some sample data in JSON are provided. They will be used 
 
 # Bootstrap
 
+***Since the creation of ratio plans through msg server or gov proposal is disabled by default, you have to build the binary with `make install-testing` to activate it.***
+
 ```bash
 # Clone the project 
 git clone https://github.com/crescent-network/crescent.git
 cd crescent
-make install
+make install-testing
 
 # Configure variables
 export BINARY=crescentd
