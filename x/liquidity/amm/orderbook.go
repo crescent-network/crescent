@@ -40,6 +40,12 @@ func (ob *OrderBook) Orders() []Order {
 	return append(ob.BuyOrders(), ob.SellOrders()...)
 }
 
+// OrdersAt returns orders at given price in the order book.
+// Note that the orders are not sorted.
+func (ob *OrderBook) OrdersAt(price sdk.Dec) []Order {
+	return append(ob.BuyOrdersAt(price), ob.SellOrdersAt(price)...)
+}
+
 // BuyOrders returns all buy orders in the order book.
 // Note that the orders are not sorted.
 func (ob *OrderBook) BuyOrders() []Order {
@@ -52,13 +58,13 @@ func (ob *OrderBook) SellOrders() []Order {
 	return ob.sells.orders()
 }
 
-// BuyOrdersAt returns orders at given price in the order book.
+// BuyOrdersAt returns buy orders at given price in the order book.
 // Note that the orders are not sorted.
 func (ob *OrderBook) BuyOrdersAt(price sdk.Dec) []Order {
 	return ob.buys.ordersAt(price)
 }
 
-// SellOrdersAt returns orders at given price in the order book.
+// SellOrdersAt returns sell orders at given price in the order book.
 // Note that the orders are not sorted.
 func (ob *OrderBook) SellOrdersAt(price sdk.Dec) []Order {
 	return ob.sells.ordersAt(price)
