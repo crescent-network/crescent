@@ -4,7 +4,7 @@ order: 4
 
 # Parameters
 
-The mint module contains the following parameters:
+The `mint` module contains the following parameters:
 
 | Key                  | Type                | Example |
 |----------------------|---------------------|---------|
@@ -12,33 +12,25 @@ The mint module contains the following parameters:
 | block_time_threshold | time.duration       | "10s"   |
 | inflation_schedules  | []InflationSchedule |         |
 
-
 ## MintDenom
 
 MintDenom is the denomination of the coin to be minted.
 
 ## BlockTimeThreshold
 
-If the difference in block time from the `LastBlockTime` is greater than `BlockTimeThreshold`, the block only generates inflation as long as `BlockTimeThreshold.
-so actual minted amount could be less than the defined `InflationSchedule.Amount` depending on the number of times blocks having the block time length over `BlockTimeThreshold` occurs.
-
-This is to prevent inflationary manipulation attacks caused by stopping chains or block time manipulation.
+It is a parameter to prevent from inflationary manipulation attacks. Although it is highly unlikely to happen, block time manipulation can be possible with a group of malicious validators who have enough voting power. In case block time delays, `BlockTimeThreshold` will be used for `BlockDurationForInflation` to calculate inflation amount for the block. If the `BlockDurationForInflation` is greater than `BlockTimeThreshold`, the block generates with `BlockTimeThreshold` value. Therefore, it is possible that the actual minted amount is less than the defined inflation schedule amount.
 
 ## InflationSchedules
 
-InflationSchedules is a list of `InflationSchedules`, Those inflation schedules cannot overlap, start time is inclusive for the schedule and end time is exclusive so the end times and other start times could be the same.
-
-`InflationSchedule` defines the start and end time of the inflation period, and the amount of inflation during that period.
-
-`InflationSchedule.Amount` should be over the inflation schedule duration seconds to avoid decimal loss
+It is a list of inflation schedules to mint coins to be sent to the fee collector account. Each `InflationSchedule` defines start time, end time, and an amount of inflation. The start and end times of inflation schedules can't overlap from one another. While `StartTime` is inclusive of the current time, `EndTime` is exclusive. And, `Amount` for each schedule must be greater than the amount that is converted by subtracting the `EndTime` from the `StartTime` in seconds. Reference the `squad/x/mint/types/params.go` to fully understand them.
 
 ```go
 type InflationSchedule struct {
-	// start_time is a start date time of the inflation period
+	// start_time defines the start date time for the inflation schedule
     StartTime time.Time
-	// end_time is a start date time of the inflation period
+	// end_time defines the end date time for the inflation schedule
     EndTime   time.Time
-	// amount is the amount of inflation during that period.
+	// amount defines the total amount of inflation for the schedule
     Amount    sdk.Int
 }
 ```

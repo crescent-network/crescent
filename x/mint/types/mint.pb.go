@@ -31,11 +31,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params holds parameters for the mint module.
 type Params struct {
-	// type of coin to mint
+	// mint_denom defines denomination of coin to be minted
 	MintDenom string `protobuf:"bytes,1,opt,name=mint_denom,json=mintDenom,proto3" json:"mint_denom,omitempty"`
-	// block_time_threshold is a safety to accept only blocktime as much as it and give inflation even if the chain stops
-	// or the last blocktime is huge by manipulating blocktime.
-	BlockTimeThreshold time.Duration       `protobuf:"bytes,2,opt,name=block_time_threshold,json=blockTimeThreshold,proto3,stdduration" json:"block_time_threshold"`
+	// block_time_threshold defines block time threshold to prevent from any inflationary manipulation attacks
+	// it is used for maximum block duration when calculating block inflation
+	BlockTimeThreshold time.Duration `protobuf:"bytes,2,opt,name=block_time_threshold,json=blockTimeThreshold,proto3,stdduration" json:"block_time_threshold"`
+	// inflation_schedules defines a list of inflation schedules
 	InflationSchedules []InflationSchedule `protobuf:"bytes,3,rep,name=inflation_schedules,json=inflationSchedules,proto3" json:"inflation_schedules"`
 }
 
@@ -96,11 +97,11 @@ func (m *Params) GetInflationSchedules() []InflationSchedule {
 // InflationSchedule defines the start and end time of the inflation period, and the amount of inflation during that
 // period.
 type InflationSchedule struct {
-	// start_time is a start date time of the inflation period
+	// start_time defines the start date time for the inflation schedule
 	StartTime time.Time `protobuf:"bytes,1,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
-	// end_time is a start date time of the inflation period
+	// end_time defines the end date time for the inflation schedule
 	EndTime time.Time `protobuf:"bytes,2,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
-	// amount is the amount of inflation during that period.
+	// amount defines the total amount of inflation for the schedule
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
 }
 
