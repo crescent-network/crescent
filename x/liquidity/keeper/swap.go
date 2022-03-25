@@ -91,6 +91,7 @@ func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.Ord
 	expireAt := ctx.BlockTime().Add(msg.OrderLifespan)
 	order := types.NewOrderForLimitOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
 	k.SetOrder(ctx, order)
+	k.SetOrderIndex(ctx, order)
 
 	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.OrderExtraGas, "OrderExtraGas")
@@ -182,6 +183,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.O
 	expireAt := ctx.BlockTime().Add(msg.OrderLifespan)
 	order := types.NewOrderForMarketOrder(msg, requestId, pair, offerCoin, price, expireAt, ctx.BlockHeight())
 	k.SetOrder(ctx, order)
+	k.SetOrderIndex(ctx, order)
 
 	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.OrderExtraGas, "OrderExtraGas")

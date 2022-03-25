@@ -58,9 +58,6 @@ func (k Keeper) SetPair(ctx sdk.Context, pair types.Pair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalPair(k.cdc, pair)
 	store.Set(types.GetPairKey(pair.Id), bz)
-	k.SetPairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
-	k.SetPairLookupIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
-	k.SetPairLookupIndex(ctx, pair.QuoteCoinDenom, pair.BaseCoinDenom, pair.Id)
 }
 
 // SetPairIndex stores a pair index.
@@ -155,8 +152,6 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalPool(k.cdc, pool)
 	store.Set(types.GetPoolKey(pool.Id), bz)
-	k.SetPoolByReserveIndex(ctx, pool)
-	k.SetPoolsByPairIndex(ctx, pool)
 }
 
 // SetPoolByReserveIndex stores a pool by reserve account index key.
@@ -246,6 +241,10 @@ func (k Keeper) SetDepositRequest(ctx sdk.Context, req types.DepositRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalDepositRequest(k.cdc, req)
 	store.Set(types.GetDepositRequestKey(req.PoolId, req.Id), bz)
+}
+
+func (k Keeper) SetDepositRequestIndex(ctx sdk.Context, req types.DepositRequest) {
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetDepositRequestIndexKey(req.GetDepositor(), req.PoolId, req.Id), []byte{})
 }
 
@@ -311,6 +310,11 @@ func (k Keeper) GetDepositRequestsByDepositor(ctx sdk.Context, depositor sdk.Acc
 func (k Keeper) DeleteDepositRequest(ctx sdk.Context, req types.DepositRequest) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetDepositRequestKey(req.PoolId, req.Id))
+	k.DeleteDepositRequestIndex(ctx, req)
+}
+
+func (k Keeper) DeleteDepositRequestIndex(ctx sdk.Context, req types.DepositRequest) {
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetDepositRequestIndexKey(req.GetDepositor(), req.PoolId, req.Id))
 }
 
@@ -330,6 +334,10 @@ func (k Keeper) SetWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshaWithdrawRequest(k.cdc, req)
 	store.Set(types.GetWithdrawRequestKey(req.PoolId, req.Id), bz)
+}
+
+func (k Keeper) SetWithdrawRequestIndex(ctx sdk.Context, req types.WithdrawRequest) {
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetWithdrawRequestIndexKey(req.GetWithdrawer(), req.PoolId, req.Id), []byte{})
 }
 
@@ -395,6 +403,11 @@ func (k Keeper) GetWithdrawRequestsByWithdrawer(ctx sdk.Context, withdrawer sdk.
 func (k Keeper) DeleteWithdrawRequest(ctx sdk.Context, req types.WithdrawRequest) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetWithdrawRequestKey(req.PoolId, req.Id))
+	k.DeleteWithdrawRequestIndex(ctx, req)
+}
+
+func (k Keeper) DeleteWithdrawRequestIndex(ctx sdk.Context, req types.WithdrawRequest) {
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetWithdrawRequestIndexKey(req.GetWithdrawer(), req.PoolId, req.Id))
 }
 
@@ -414,6 +427,10 @@ func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshaOrder(k.cdc, order)
 	store.Set(types.GetOrderKey(order.PairId, order.Id), bz)
+}
+
+func (k Keeper) SetOrderIndex(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id), []byte{})
 }
 
@@ -507,5 +524,10 @@ func (k Keeper) GetOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress) (ord
 func (k Keeper) DeleteOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetOrderKey(order.PairId, order.Id))
+	k.DeleteOrderIndex(ctx, order)
+}
+
+func (k Keeper) DeleteOrderIndex(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id))
 }
