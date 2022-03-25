@@ -21,6 +21,8 @@ type Pool interface {
 	IsDepleted() bool
 	Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int)
 	Withdraw(pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int)
+	ProvidableXAmountOver(price sdk.Dec) sdk.Int
+	ProvidableYAmountUnder(price sdk.Dec) sdk.Int
 }
 
 // BasicPool is the basic pool type.
@@ -132,6 +134,17 @@ func (pool *BasicPool) BuyAmountOver(price sdk.Dec) sdk.Int {
 // SellAmountUnder returns the amount of sell orders for price less or equal
 // than given price.
 func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
+	return pool.ProvidableYAmountUnder(price)
+}
+
+func (pool *BasicPool) ProvidableXAmountOver(price sdk.Dec) sdk.Int {
+	if price.GTE(pool.Price()) {
+		return sdk.ZeroInt()
+	}
+	return pool.rx.ToDec().Sub(pool.ry.ToDec().Mul(price)).TruncateInt()
+}
+
+func (pool *BasicPool) ProvidableYAmountUnder(price sdk.Dec) sdk.Int {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
@@ -154,9 +167,10 @@ func PoolsOrderBook(pools []Pool, basePrice sdk.Dec, numTicks, tickPrec int) *Or
 			startTick := sdk.MinDec(prec.DownTick(poolPrice), highestTick)
 			accAmt := sdk.ZeroInt()
 			for tick := startTick; tick.GTE(lowestTick); tick = prec.DownTick(tick) {
-				amt := pool.BuyAmountOver(tick).Sub(accAmt)
+				amt := pool.ProvidableXAmountOver(tick).Sub(accAmt)
 				if amt.IsPositive() {
-					ob.Add(NewBaseOrder(Buy, tick, amt, sdk.Coin{}, "denom"))
+					ob.Add(NewBaseOrder(
+						Buy, tick, amt.ToDec().QuoTruncate(tick).TruncateInt(), sdk.Coin{}, "denom"))
 					accAmt = accAmt.Add(amt)
 				}
 			}
@@ -165,6 +179,39 @@ func PoolsOrderBook(pools []Pool, basePrice sdk.Dec, numTicks, tickPrec int) *Or
 			startTick := sdk.MaxDec(prec.UpTick(poolPrice), lowestTick)
 			accAmt := sdk.ZeroInt()
 			for tick := startTick; tick.LTE(highestTick); tick = prec.UpTick(tick) {
+				amt := pool.SellAmountUnder(tick).Sub(accAmt)
+				if amt.IsPositive() {
+					ob.Add(NewBaseOrder(Sell, tick, amt, sdk.Coin{}, "denom"))
+					accAmt = accAmt.Add(amt)
+				}
+			}
+		}
+	}
+	return ob
+}
+
+func PoolsOrderBook2(pools []Pool, ticks []sdk.Dec) *OrderBook {
+	highestTick := ticks[0]
+	lowestTick := ticks[len(ticks)-1]
+	gap := ticks[0].Sub(ticks[1])
+	ob := NewOrderBook()
+	for _, pool := range pools {
+		poolPrice := pool.Price()
+		if poolPrice.GT(lowestTick) { // Buy orders
+			accAmt := pool.ProvidableXAmountOver(highestTick.Add(gap))
+			for _, tick := range ticks {
+				amt := pool.ProvidableXAmountOver(tick).Sub(accAmt)
+				if amt.IsPositive() {
+					ob.Add(NewBaseOrder(
+						Buy, tick, amt.ToDec().QuoTruncate(tick).TruncateInt(), sdk.Coin{}, "denom"))
+					accAmt = accAmt.Add(amt)
+				}
+			}
+		}
+		if poolPrice.LT(highestTick) { // Sell orders
+			accAmt := pool.SellAmountUnder(lowestTick.Sub(gap))
+			for i := len(ticks) - 1; i >= 0; i-- {
+				tick := ticks[i]
 				amt := pool.SellAmountUnder(tick).Sub(accAmt)
 				if amt.IsPositive() {
 					ob.Add(NewBaseOrder(Sell, tick, amt, sdk.Coin{}, "denom"))

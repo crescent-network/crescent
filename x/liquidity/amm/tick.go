@@ -188,3 +188,37 @@ func RoundPrice(price sdk.Dec, prec int) sdk.Dec {
 	}
 	return TickFromIndex(RoundTickIndex(TickToIndex(tick, prec)), prec)
 }
+
+//nolint
+func Ticks(basePrice sdk.Dec, numTicks, tickPrec int) []sdk.Dec {
+	panic("not implemented")
+}
+
+func EvenTicks(basePrice sdk.Dec, numTicks, tickPrec int) []sdk.Dec {
+	prec := TickPrecision(tickPrec)
+	baseTick := prec.PriceToDownTick(basePrice)
+	highestTick := prec.TickFromIndex(prec.TickToIndex(baseTick) + numTicks)
+	highestGap := highestTick.Sub(prec.DownTick(highestTick))
+	currentGap := prec.UpTick(baseTick).Sub(baseTick)
+	var (
+		start         sdk.Dec
+		numTotalTicks int
+	)
+	if !currentGap.Equal(highestGap) {
+		start = pow10(char(highestTick)).Sub(highestGap)
+		numTotalTicks = 2 * numTicks
+	} else {
+		start = baseTick
+		if baseTick.Equal(basePrice) {
+			numTotalTicks = 2*numTicks + 1
+		} else {
+			numTotalTicks = 2 * numTicks
+		}
+	}
+	highestTick = start.Add(highestGap.MulInt64(int64(numTicks)))
+	var prices []sdk.Dec
+	for i, tick := 0, highestTick; i < numTotalTicks; i, tick = i+1, tick.Sub(highestGap) {
+		prices = append(prices, tick)
+	}
+	return prices
+}
