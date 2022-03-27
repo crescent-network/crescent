@@ -340,9 +340,9 @@ func ExamplePoolsOrderBook() {
 	pools := []amm.Pool{
 		amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{}),
 	}
-	ob := amm.PoolsOrderBook(pools, utils.ParseDec("1.0"), 6, int(defTickPrec))
+	ob := amm.PoolsOrderBook(pools, amm.Ticks(utils.ParseDec("1.0"), 6, int(defTickPrec)))
 	fmt.Println(ob.FullString(int(defTickPrec)))
-	ob = amm.PoolsOrderBook(pools, utils.ParseDec("1.006"), 6, int(defTickPrec))
+	ob = amm.PoolsOrderBook(pools, amm.Ticks(utils.ParseDec("1.006"), 6, int(defTickPrec)))
 	fmt.Println(ob.FullString(int(defTickPrec)))
 
 	// Output:
@@ -377,140 +377,13 @@ func ExamplePoolsOrderBook() {
 	// +--------------------+------------------------------+--------------------+
 }
 
-func TestEvenTicks(t *testing.T) {
-	dec := utils.ParseDec
-	for _, tc := range []struct {
-		basePrice sdk.Dec
-		numTicks  int
-		prices    []sdk.Dec
-	}{
-		{
-			dec("999.9"), 3,
-			[]sdk.Dec{
-				dec("1002"),
-				dec("1001"),
-				dec("1000"),
-				dec("999.0"),
-				dec("998.0"),
-				dec("997.0"),
-			},
-		},
-		{
-			dec("2.0"), 3,
-			[]sdk.Dec{
-				dec("2.003"),
-				dec("2.002"),
-				dec("2.001"),
-				dec("2.000"),
-				dec("1.999"),
-				dec("1.998"),
-				dec("1.997"),
-			},
-		},
-		{
-			dec("1.000001"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-			},
-		},
-		{
-			dec("1.0"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.9999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99985"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.9998"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99975"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-			},
-		},
-		{
-			dec("0.9997"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-				dec("0.9994"),
-			},
-		},
-	} {
-		t.Run("", func(t *testing.T) {
-			require.Equal(t, tc.prices, amm.EvenTicks(tc.basePrice, tc.numTicks, int(defTickPrec)))
-		})
-	}
-}
-
-func ExamplePoolsOrderBook2() {
+func ExamplePoolsOrderBook_EvenTicks() {
 	pools := []amm.Pool{
 		amm.NewBasicPool(sdk.NewInt(1000000000), sdk.NewInt(1000000000), sdk.Int{}),
 	}
-	ob := amm.PoolsOrderBook2(pools, amm.EvenTicks(utils.ParseDec("1.0"), 3, int(defTickPrec)))
+	ob := amm.PoolsOrderBook(pools, amm.EvenTicks(utils.ParseDec("1.0"), 3, int(defTickPrec)))
 	fmt.Println(ob.FullString(int(defTickPrec)))
-	ob = amm.PoolsOrderBook2(pools, amm.EvenTicks(utils.ParseDec("0.999"), 3, int(defTickPrec)))
+	ob = amm.PoolsOrderBook(pools, amm.EvenTicks(utils.ParseDec("0.999"), 3, int(defTickPrec)))
 	fmt.Println(ob.FullString(int(defTickPrec)))
 
 	// Output:

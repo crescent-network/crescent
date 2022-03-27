@@ -189,11 +189,32 @@ func RoundPrice(price sdk.Dec, prec int) sdk.Dec {
 	return TickFromIndex(RoundTickIndex(TickToIndex(tick, prec)), prec)
 }
 
-//nolint
+// Ticks returns ticks around basePrice with maximum number of numTicks*2+1.
+// If basePrice fits in tick system, then the number of ticks will be numTicks*2+1.
+// Else, the number will be numTicks*2.
 func Ticks(basePrice sdk.Dec, numTicks, tickPrec int) []sdk.Dec {
-	panic("not implemented")
+	prec := TickPrecision(tickPrec)
+	baseTick := prec.PriceToDownTick(basePrice)
+	i := prec.TickToIndex(baseTick)
+	highestTick := prec.TickFromIndex(i + numTicks)
+	var lowestTick sdk.Dec
+	if baseTick.Equal(basePrice) {
+		lowestTick = prec.TickFromIndex(i - numTicks)
+	} else {
+		lowestTick = prec.TickFromIndex(i - numTicks + 1)
+	}
+	var ticks []sdk.Dec
+	for tick := lowestTick; tick.LTE(highestTick); tick = prec.UpTick(tick) {
+		ticks = append(ticks, tick)
+	}
+	sortTicks(ticks)
+	return ticks
 }
 
+// EvenTicks returns ticks around basePrice with maximum number of numTicks*2+1.
+// The gap is the same across all ticks.
+// If basePrice fits in tick system, then the number of ticks will be numTicks*2+1.
+// Else, the number will be numTicks*2.
 func EvenTicks(basePrice sdk.Dec, numTicks, tickPrec int) []sdk.Dec {
 	prec := TickPrecision(tickPrec)
 	baseTick := prec.PriceToDownTick(basePrice)
@@ -216,9 +237,10 @@ func EvenTicks(basePrice sdk.Dec, numTicks, tickPrec int) []sdk.Dec {
 		}
 	}
 	highestTick = start.Add(highestGap.MulInt64(int64(numTicks)))
-	var prices []sdk.Dec
+	var ticks []sdk.Dec
 	for i, tick := 0, highestTick; i < numTotalTicks; i, tick = i+1, tick.Sub(highestGap) {
-		prices = append(prices, tick)
+		ticks = append(ticks, tick)
 	}
-	return prices
+	sortTicks(ticks)
+	return ticks
 }
