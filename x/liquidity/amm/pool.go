@@ -122,8 +122,8 @@ func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 	return pool.Price(), true
 }
 
-// BuyAmountOver returns the amount of buy orders for price greater or equal
-// than given price.
+// BuyAmountOver returns the amount of buy orders for price greater than
+// or equal to given price.
 func (pool *BasicPool) BuyAmountOver(price sdk.Dec) sdk.Int {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
@@ -131,12 +131,14 @@ func (pool *BasicPool) BuyAmountOver(price sdk.Dec) sdk.Int {
 	return pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
 }
 
-// SellAmountUnder returns the amount of sell orders for price less or equal
-// than given price.
+// SellAmountUnder returns the amount of sell orders for price less than
+// or equal to given price.
 func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
 	return pool.ProvidableYAmountUnder(price)
 }
 
+// ProvidableXAmountOver returns the amount of x coin the pool would provide
+// for price greater than or equal to given price.
 func (pool *BasicPool) ProvidableXAmountOver(price sdk.Dec) sdk.Int {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
@@ -144,6 +146,8 @@ func (pool *BasicPool) ProvidableXAmountOver(price sdk.Dec) sdk.Int {
 	return pool.rx.ToDec().Sub(pool.ry.ToDec().Mul(price)).TruncateInt()
 }
 
+// ProvidableYAmountUnder returns the amount of y coin the pool would provide
+// for price less than or equal to given price.
 func (pool *BasicPool) ProvidableYAmountUnder(price sdk.Dec) sdk.Int {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
