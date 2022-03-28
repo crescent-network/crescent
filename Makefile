@@ -11,6 +11,7 @@ BINDIR ?= $(GOPATH)/bin
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 BUILDDIR ?= $(CURDIR)/build
+LEDGER_ENABLED ?= true
 SIMAPP = ./app
 
 export GO111MODULE = on
