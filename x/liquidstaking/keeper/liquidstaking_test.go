@@ -8,6 +8,7 @@ import (
 
 	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	minttypes "github.com/crescent-network/crescent/x/mint/types"
 )
 
 // tests LiquidStaking, LiquidUnstaking
@@ -19,8 +20,9 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	stakingAmt := sdk.NewInt(50000)
 
 	// fail, no active validator
-	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
-	s.Require().Error(err)
+	cachedCtx, _ := s.ctx.CacheContext()
+	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(cachedCtx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	s.Require().ErrorIs(err, types.ErrActiveLiquidValidatorsNotExists)
 	s.Require().Equal(newShares, sdk.ZeroDec())
 	s.Require().Equal(bTokenMintAmt, sdk.Int{})
 
@@ -158,7 +160,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	bTokenTotalSupply = s.app.BankKeeper.GetSupply(s.ctx, liquidBondDenom)
 	btokenBalanceBefore := s.app.BankKeeper.GetBalance(s.ctx, s.delAddrs[0], params.LiquidBondDenom).Amount
 	s.Require().EqualValues(bTokenTotalSupply.Amount, btokenBalanceBefore)
-	s.Require().Error(s.liquidUnstaking(s.delAddrs[0], btokenBalanceBefore, true))
+	s.Require().ErrorIs(s.liquidUnstaking(s.delAddrs[0], btokenBalanceBefore, true), sdkerrors.ErrInvalidRequest)
 
 	// all remaining rewards re-staked, request last unstaking, unbond all
 	s.advanceHeight(1, true)
@@ -226,4 +228,79 @@ func (s *KeeperTestSuite) TestLiquidStakingFromVestingAccount() {
 	s.Require().NoError(err)
 	nas := s.keeper.NetAmountState(s.ctx)
 	s.Require().EqualValues(nas.TotalLiquidTokens, spendableCoins.AmountOf(sdk.DefaultBondDenom))
+}
+
+func (s *KeeperTestSuite) TestLiquidUnstakingEdgeCases() {
+	mintParams := s.app.MintKeeper.GetParams(s.ctx)
+	mintParams.InflationSchedules = []minttypes.InflationSchedule{}
+	s.app.MintKeeper.SetParams(s.ctx, mintParams)
+
+	_, valOpers, _ := s.CreateValidators([]int64{1000000, 2000000, 3000000})
+	params := s.keeper.GetParams(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	stakingAmt := sdk.NewInt(5000000)
+
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	// fail Invalid BondDenom case
+	_, _, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin("bad", stakingAmt))
+	s.Require().ErrorIs(err, types.ErrInvalidBondDenom)
+
+	// success liquid staking
+	s.Require().NoError(s.liquidStaking(s.delAddrs[0], stakingAmt))
+
+	// fail when liquid unstaking with too small amount
+	_, _, _, _, err = s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(2)))
+	s.Require().ErrorIs(err, types.ErrTooSmallLiquidUnstakingAmount)
+
+	// fail when liquid unstaking with zero amount
+	_, _, _, _, err = s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(0)))
+	s.Require().ErrorIs(err, types.ErrTooSmallLiquidUnstakingAmount)
+
+	// fail when invalid liquid bond denom
+	_, _, _, _, err = s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin("stake", sdk.NewInt(10000)))
+	s.Require().ErrorIs(err, types.ErrInvalidLiquidBondDenom)
+
+	// set empty whitelisted, active liquid validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{}
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	// error case where there is a quantity that are unbonding balance or remaining rewards that is not re-stake or withdrawn in netAmount.
+	_, _, _, _, err = s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(1000)))
+	s.Require().ErrorIs(err, types.ErrInsufficientProxyAccBalance)
+
+	// success after complete unbonding
+	s.completeRedelegationUnbonding()
+	ubdTime, unbondingAmt, ubds, unbondedAmt, err := s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(1000)))
+	s.Require().NoError(err)
+	s.Require().EqualValues(unbondedAmt, sdk.NewInt(1000))
+	s.Require().EqualValues(unbondingAmt, sdk.ZeroInt())
+	s.Require().EqualValues(ubdTime, time.Time{})
+	s.Require().Len(ubds, 0)
+
+	// TODO: remove debugging log
+	//s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], sdk.NewInt(1000), true))
+	//s.Require().NoError(err, types.ErrInsufficientProxyAccBalance)
+	states := s.keeper.NetAmountState(s.ctx)
+	utils.PP(states)
+
+	//_, _, _, _, err := s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewInt(2), true)
+	//ubdTime, unbondingAmt, ubds, unbondedAmt, err := s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewInt(2), true)
+	//fmt.Println(ubdTime.String())
+	//fmt.Println(unbondingAmt.String())
+	//fmt.Println(ubds)
+	//fmt.Println(ubdTime)
+	//fmt.Println(unbondedAmt.String())
+	//s.Require().NoError(err)
+	//a := sdk.NewDec(1_000_000_000_000_000_000)
+	//b := sdk.MustNewDecFromStr("0.1").Quo(a)
+	//fmt.Println(b)
 }
