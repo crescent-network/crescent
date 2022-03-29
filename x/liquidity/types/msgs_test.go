@@ -301,7 +301,7 @@ func TestMsgLimitOrder(t *testing.T) {
 				msg.Price = utils.ParseDec("10")
 				msg.Amount = newInt(1000000)
 			},
-			"1000000denom2 is smaller than 10000000denom2: insufficient offer coin",
+			"1000000denom2 is less than 10000000denom2: insufficient offer coin",
 		},
 		{
 			"invalid demand coin denom",

@@ -326,7 +326,7 @@ func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	// Create a pool with very low price.
 	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000000000000000000000000000000000000000denom1,1000000denom2"), true)
-	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(10), 10*time.Second, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(100000000000000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
@@ -521,38 +521,6 @@ func (s *KeeperTestSuite) TestGetOrdersByOrderer() {
 	s.Require().Equal(order2.Id, orders[1].Id)
 }
 
-func (s *KeeperTestSuite) TestInsufficientOfferCoin() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	p := utils.ParseDec("1.0")
-	pair.LastPrice = &p
-	s.keeper.SetPair(s.ctx, pair)
-
-	msg := types.NewMsgLimitOrder(
-		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("10000denom2"), "denom1",
-		utils.ParseDec("1.0"), sdk.NewInt(100000), 0)
-	_, err := s.keeper.LimitOrder(s.ctx, msg)
-	s.Require().ErrorIs(err, types.ErrInsufficientOfferCoin)
-
-	s.fundAddr(s.addr(1), utils.ParseCoins("10000denom1"))
-	msg = types.NewMsgLimitOrder(
-		s.addr(1), pair.Id, types.OrderDirectionSell, utils.ParseCoin("10000denom1"), "denom2",
-		utils.ParseDec("1.0"), sdk.NewInt(100000), 0)
-	_, err = s.keeper.LimitOrder(s.ctx, msg)
-	s.Require().ErrorIs(err, types.ErrInsufficientOfferCoin)
-
-	msg2 := types.NewMsgMarketOrder(
-		s.addr(2), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("10000denom2"), "denom1",
-		sdk.NewInt(100000), 0)
-	_, err = s.keeper.MarketOrder(s.ctx, msg2)
-	s.Require().ErrorIs(err, types.ErrInsufficientOfferCoin)
-
-	msg2 = types.NewMsgMarketOrder(
-		s.addr(2), pair.Id, types.OrderDirectionSell, utils.ParseCoin("10000denom1"), "denom2",
-		sdk.NewInt(100000), 0)
-	_, err = s.keeper.MarketOrder(s.ctx, msg2)
-	s.Require().ErrorIs(err, types.ErrInsufficientOfferCoin)
-}
-
 func (s *KeeperTestSuite) TestInsufficientRemainingOfferCoin() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
@@ -563,11 +531,9 @@ func (s *KeeperTestSuite) TestInsufficientRemainingOfferCoin() {
 
 	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.5"), sdk.NewInt(8999), 0, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
-	liquidity.BeginBlocker(s.ctx, s.keeper)
-
 	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
-	s.Require().Equal(types.OrderStatusPartiallyMatched, order.Status)
+	s.Require().Equal(types.OrderStatusExpired, order.Status)
 	s.Require().True(intEq(sdk.OneInt(), order.OpenAmount))
 }
 
