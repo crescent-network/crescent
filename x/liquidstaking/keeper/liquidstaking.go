@@ -391,14 +391,10 @@ func (k Keeper) IsActiveLiquidValidator(ctx sdk.Context, lv types.LiquidValidato
 	if !found {
 		return false
 	}
-	return types.ActiveCondition(val, whitelistedValMap.IsListed(lv.OperatorAddress), k.IsTombstoned(ctx, lv))
+	return types.ActiveCondition(val, whitelistedValMap.IsListed(lv.OperatorAddress), k.IsTombstoned(ctx, val))
 }
 
-func (k Keeper) IsTombstoned(ctx sdk.Context, lv types.LiquidValidator) bool {
-	val, found := k.stakingKeeper.GetValidator(ctx, lv.GetOperator())
-	if !found {
-		return false
-	}
+func (k Keeper) IsTombstoned(ctx sdk.Context, val stakingtypes.Validator) bool {
 	consPk, err := val.ConsPubKey()
 	if err != nil {
 		return false

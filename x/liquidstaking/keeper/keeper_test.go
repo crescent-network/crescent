@@ -271,8 +271,8 @@ func (s *KeeperTestSuite) doubleSign(valOper sdk.ValAddress, consAddr sdk.ConsAd
 	info, found = s.app.SlashingKeeper.GetValidatorSigningInfo(s.ctx, consAddr)
 	s.Require().True(found)
 	s.Require().True(info.Tombstoned)
-	s.Require().True(s.keeper.IsTombstoned(s.ctx, liquidValidator))
 	val, _ = s.app.StakingKeeper.GetValidator(s.ctx, valOper)
+	s.Require().True(s.keeper.IsTombstoned(s.ctx, val))
 	liquidTokensSlashed := liquidValidator.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	tokensSlashed := val.Tokens
 	s.Require().True(tokensSlashed.LT(tokens))
