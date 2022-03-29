@@ -763,7 +763,7 @@ func (s *KeeperTestSuite) TestGRPCOrder() {
 
 func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	pair2 := s.createPair(s.addr(0), "denom2", "denom2", true)
+	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
 
 	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
 	order2 := s.buyLimitOrder(s.addr(1), pair2.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
