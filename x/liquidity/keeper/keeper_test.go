@@ -80,7 +80,9 @@ func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quot
 	if fund {
 		s.fundAddr(creator, params.PairCreationFee)
 	}
-	pair, err := s.keeper.CreatePair(s.ctx, types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+	msg := types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom)
+	s.Require().NoError(msg.ValidateBasic())
+	pair, err := s.keeper.CreatePair(s.ctx, msg)
 	s.Require().NoError(err)
 	return pair
 }
@@ -91,7 +93,9 @@ func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depo
 	if fund {
 		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
 	}
-	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, pairId, depositCoins))
+	msg := types.NewMsgCreatePool(creator, pairId, depositCoins)
+	s.Require().NoError(msg.ValidateBasic())
+	pool, err := s.keeper.CreatePool(s.ctx, msg)
 	s.Require().NoError(err)
 	return pool
 }
@@ -136,6 +140,7 @@ func (s *KeeperTestSuite) limitOrder(
 	msg := types.NewMsgLimitOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		price, amt, orderLifespan)
+	s.Require().NoError(msg.ValidateBasic())
 	req, err := s.keeper.LimitOrder(s.ctx, msg)
 	s.Require().NoError(err)
 	return req
@@ -183,6 +188,7 @@ func (s *KeeperTestSuite) marketOrder(
 	msg := types.NewMsgMarketOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		amt, orderLifespan)
+	s.Require().NoError(msg.ValidateBasic())
 	req, err := s.keeper.MarketOrder(s.ctx, msg)
 	s.Require().NoError(err)
 	return req
