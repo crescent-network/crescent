@@ -124,6 +124,9 @@ func FindLastMatchableOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) 
 // received quote coin.
 // quoteCoinDust can be positive because of the decimal truncation.
 func MatchOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (quoteCoinDust sdk.Int, matched bool) {
+	buyOrders = DropSmallOrders(buyOrders, matchPrice)
+	sellOrders = DropSmallOrders(sellOrders, matchPrice)
+
 	bi, si, pmb, pms, found := FindLastMatchableOrders(buyOrders, sellOrders, matchPrice)
 	if !found {
 		return sdk.Int{}, false
@@ -164,4 +167,17 @@ func MatchOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (quoteCoinDu
 	}
 
 	return quoteCoinDust, true
+}
+
+// DropSmallOrders returns filtered orders, where orders with too small amount
+// are dropped.
+func DropSmallOrders(orders []Order, matchPrice sdk.Dec) []Order {
+	var res []Order
+	for _, order := range orders {
+		openAmt := order.GetOpenAmount()
+		if openAmt.IsPositive() && matchPrice.MulInt(openAmt).TruncateInt().IsPositive() {
+			res = append(res, order)
+		}
+	}
+	return res
 }

@@ -589,3 +589,87 @@ func (s *KeeperTestSuite) TestNegativeOpenAmount() {
 		s.keeper.InitGenesis(s.ctx, *genState)
 	})
 }
+
+func (s *KeeperTestSuite) TestRejectSmallOrders() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	s.fundAddr(s.addr(1), utils.ParseCoins("10000000denom1,10000000denom2"))
+
+	// Too small offer coin amount.
+	msg := types.NewMsgLimitOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("99denom2"),
+		"denom1", utils.ParseDec("0.1"), sdk.NewInt(990), 0)
+	s.Require().EqualError(msg.ValidateBasic(), "offer coin is less than minimum coin amount: invalid request")
+
+	// Too small order amount.
+	msg = types.NewMsgLimitOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("990denom2"),
+		"denom1", utils.ParseDec("10.0"), sdk.NewInt(99), 0)
+	s.Require().EqualError(msg.ValidateBasic(), "base coin is less than minimum coin amount: invalid request")
+
+	// Too small orders.
+	msg = types.NewMsgLimitOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("101denom2"),
+		"denom1", utils.ParseDec("0.00010001"), sdk.NewInt(999999), 0)
+	s.Require().NoError(msg.ValidateBasic())
+	_, err := s.keeper.LimitOrder(s.ctx, msg)
+	s.Require().ErrorIs(err, types.ErrTooSmallOrder)
+
+	msg = types.NewMsgLimitOrder(
+		s.addr(1), pair.Id, types.OrderDirectionSell, utils.ParseCoin("999999denom1"),
+		"denom2", utils.ParseDec("0.0001"), sdk.NewInt(999999), 0)
+	s.Require().NoError(msg.ValidateBasic())
+	_, err = s.keeper.LimitOrder(s.ctx, msg)
+	s.Require().ErrorIs(err, types.ErrTooSmallOrder)
+
+	// Too small offer coin amount.
+	msg2 := types.NewMsgMarketOrder(
+		s.addr(1), pair.Id, types.OrderDirectionSell, utils.ParseCoin("99denom1"),
+		"denom2", sdk.NewInt(99), 0)
+	s.Require().EqualError(msg2.ValidateBasic(), "offer coin is less than minimum coin amount: invalid request")
+
+	// Too small order amount.
+	msg2 = types.NewMsgMarketOrder(
+		s.addr(1), pair.Id, types.OrderDirectionSell, utils.ParseCoin("100denom1"),
+		"denom2", sdk.NewInt(99), 0)
+	s.Require().EqualError(msg2.ValidateBasic(), "base coin is less than minimum coin amount: invalid request")
+
+	p := utils.ParseDec("0.0001")
+	pair.LastPrice = &p
+	s.keeper.SetPair(s.ctx, pair)
+
+	// Too small orders.
+	msg2 = types.NewMsgMarketOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("100denom2"),
+		"denom1", sdk.NewInt(909090), 0)
+	s.Require().NoError(msg2.ValidateBasic())
+	_, err = s.keeper.MarketOrder(s.ctx, msg2)
+	s.Require().ErrorIs(err, types.ErrTooSmallOrder)
+
+	msg2 = types.NewMsgMarketOrder(
+		s.addr(1), pair.Id, types.OrderDirectionSell, utils.ParseCoin("1000denom1"),
+		"denom2", sdk.NewInt(1000), 0)
+	s.Require().NoError(msg2.ValidateBasic())
+	_, err = s.keeper.MarketOrder(s.ctx, msg2)
+	s.Require().ErrorIs(err, types.ErrTooSmallOrder)
+}
+
+func (s *KeeperTestSuite) TestExpireSmallOrders() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000018"), sdk.NewInt(10000000), time.Minute, true)
+	// This order should have 10000 open amount after matching.
+	// If this order would be matched after that, then the orderer will receive
+	// floor(10000*0.000018) demand coin, which is zero.
+	// So the order must have been expired after matching.
+	order := s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.000018"), sdk.NewInt(10010000), time.Minute, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	s.Require().True(found)
+	s.Require().Equal(types.OrderStatusExpired, order.Status)
+	liquidity.BeginBlocker(s.ctx, s.keeper) // Delete outdated states.
+
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000019"), sdk.NewInt(100000000), time.Minute, true)
+	s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("0.000019"), sdk.NewInt(100000000), time.Minute, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+}

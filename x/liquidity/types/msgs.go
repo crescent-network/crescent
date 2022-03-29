@@ -300,7 +300,7 @@ func (msg MsgLimitOrder) ValidateBasic() error {
 		minOfferCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount)
 	}
 	if msg.OfferCoin.IsLT(minOfferCoin) {
-		return sdkerrors.Wrapf(ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, minOfferCoin)
+		return sdkerrors.Wrapf(ErrInsufficientOfferCoin, "%s is less than %s", msg.OfferCoin, minOfferCoin)
 	}
 	if msg.Amount.LT(MinCoinAmount) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "base coin is less than minimum coin amount")

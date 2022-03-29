@@ -70,6 +70,9 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 				types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount))
 		}
 	}
+	if types.IsTooSmallOrderAmount(msg.Amount, price) {
+		return sdk.Coin{}, sdk.Dec{}, types.ErrTooSmallOrder
+	}
 
 	return offerCoin, price, nil
 }
@@ -161,6 +164,9 @@ func (k Keeper) ValidateMsgMarketOrder(ctx sdk.Context, msg *types.MsgMarketOrde
 			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
 				types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount))
 		}
+	}
+	if types.IsTooSmallOrderAmount(msg.Amount, price) {
+		return sdk.Coin{}, sdk.Dec{}, types.ErrTooSmallOrder
 	}
 
 	return offerCoin, price, nil

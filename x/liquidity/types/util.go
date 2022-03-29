@@ -34,3 +34,9 @@ func (op *BulkSendCoinsOperation) Run(ctx sdk.Context, bankKeeper BankKeeper) er
 	}
 	return nil
 }
+
+// IsTooSmallOrderAmount returns whether the order amount is too small for
+// matching, based on the order price.
+func IsTooSmallOrderAmount(amt sdk.Int, price sdk.Dec) bool {
+	return amt.LT(MinCoinAmount) || price.MulInt(amt).LT(MinCoinAmount.ToDec())
+}

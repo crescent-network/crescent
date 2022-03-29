@@ -107,7 +107,7 @@ func NewBasicPoolOrderSource(
 
 func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
 	amt := os.BuyAmountOver(price)
-	if amt.IsZero() {
+	if IsTooSmallOrderAmount(amt, price) {
 		return nil
 	}
 	quoteCoin := sdk.NewCoin(os.QuoteCoinDenom, amm.OfferCoinAmount(amm.Buy, price, amt))
@@ -116,7 +116,7 @@ func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
 
 func (os *BasicPoolOrderSource) SellOrdersUnder(price sdk.Dec) []amm.Order {
 	amt := os.SellAmountUnder(price)
-	if amt.IsZero() {
+	if IsTooSmallOrderAmount(amt, price) {
 		return nil
 	}
 	baseCoin := sdk.NewCoin(os.BaseCoinDenom, amt)
