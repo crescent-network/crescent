@@ -64,17 +64,6 @@ Verify that you have installed `crescentd` successfully by running the following
 crescentd version --long
 ```
 
-If `crescentd` is installed correctly, the following information is returned:
-
-```
-name: crescent
-server_name: crescentd
-version: TBD
-...
-.....
-......
-```
-
 ## Dependency
 
 Crescent Core uses a customized Cosmos SDK. Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
@@ -92,7 +81,7 @@ The documentation is available in [docs](docs) directory. If you are a developer
 
 * [Official Website](https://crescent.network/)
 * [Medium Blog](https://crescentnetwork.medium.com/)
-* [Discord](https://discord.gg/ctnEqtzM)
+* [Discord](https://discord.com/invite/vmjfqHy4UA)
 * [Telegram](https://t.me/+5lJ33oeqV2QwYzQ1)
 * [Twitter](https://twitter.com/CrescentHub)
 
