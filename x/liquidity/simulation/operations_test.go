@@ -155,11 +155,11 @@ func (s *SimTestSuite) TestSimulateMsgLimitOrder() {
 	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Orderer)
 	s.Require().Equal(pair.Id, msg.PairId)
 	s.Require().Equal(types.OrderDirectionSell, msg.Direction)
-	s.Require().Equal("239747denom1", msg.OfferCoin.String())
+	s.Require().Equal("6010denom1", msg.OfferCoin.String())
 	s.Require().Equal("stake", msg.DemandCoinDenom)
-	s.Require().Equal("5.439000000000000000", msg.Price.String())
-	s.Require().Equal("239747", msg.Amount.String())
-	s.Require().Equal("15h40m44.578894929s", msg.OrderLifespan.String())
+	s.Require().Equal("1.228000000000000000", msg.Price.String())
+	s.Require().Equal("6010", msg.Amount.String())
+	s.Require().Equal("9h14m25.122290029s", msg.OrderLifespan.String())
 }
 
 func (s *SimTestSuite) TestSimulateMsgMarketOrder() {
@@ -187,10 +187,10 @@ func (s *SimTestSuite) TestSimulateMsgMarketOrder() {
 	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Orderer)
 	s.Require().Equal(pair.Id, msg.PairId)
 	s.Require().Equal(types.OrderDirectionSell, msg.Direction)
-	s.Require().Equal("668250denom1", msg.OfferCoin.String())
+	s.Require().Equal("10383denom1", msg.OfferCoin.String())
 	s.Require().Equal("stake", msg.DemandCoinDenom)
-	s.Require().Equal("668250", msg.Amount.String())
-	s.Require().Equal("4h54m51.286980153s", msg.OrderLifespan.String())
+	s.Require().Equal("10383", msg.Amount.String())
+	s.Require().Equal("15h40m44.578894929s", msg.OrderLifespan.String())
 }
 
 func (s *SimTestSuite) TestSimulateMsgCancelOrder() {

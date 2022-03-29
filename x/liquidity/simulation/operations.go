@@ -393,12 +393,16 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 				ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.ZeroInt())
 				minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
 			} else {
-				minPrice, maxPrice = utils.ParseDec("0.1"), utils.ParseDec("10.0")
+				minPrice, maxPrice = utils.ParseDec("0.5"), utils.ParseDec("5.0")
 			}
 		}
 		price := amm.PriceToDownTick(utils.RandomDec(r, minPrice, maxPrice), int(params.TickPrecision))
 
-		amt := utils.RandomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
+		minAmt := sdk.MaxInt(
+			types.MinCoinAmount,
+			types.MinCoinAmount.ToDec().QuoRoundUp(price).Ceil().TruncateInt(),
+		)
+		amt := utils.RandomInt(r, minAmt, minAmt.MulRaw(100))
 
 		var offerCoin sdk.Coin
 		var demandCoinDenom string
@@ -470,9 +474,13 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "no account to make a market order"), nil, nil
 		}
 
-		_, maxPrice := minMaxPrice(k, ctx, *pair.LastPrice)
+		minPrice, maxPrice := minMaxPrice(k, ctx, *pair.LastPrice)
 
-		amt := utils.RandomInt(r, types.MinCoinAmount, sdk.NewInt(1000000))
+		minAmt := sdk.MaxInt(
+			types.MinCoinAmount,
+			types.MinCoinAmount.ToDec().QuoRoundUp(minPrice).Ceil().TruncateInt(),
+		)
+		amt := utils.RandomInt(r, minAmt, minAmt.MulRaw(100))
 
 		var offerCoin sdk.Coin
 		var demandCoinDenom string
