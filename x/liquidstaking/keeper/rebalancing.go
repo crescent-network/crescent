@@ -144,10 +144,14 @@ func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap t
 	}
 
 	// re-staking
-	_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, activeVals, proxyAccBalance.Amount, whitelistedValMap)
+	cachedCtx, writeCache := ctx.CacheContext()
+	_, err := k.LiquidDelegate(cachedCtx, types.LiquidStakingProxyAcc, activeVals, proxyAccBalance.Amount, whitelistedValMap)
 	if err != nil {
-		panic(err)
+		logger := k.Logger(ctx)
+		logger.Error("re-staking failed", "error", err)
+		return
 	}
+	writeCache()
 	logger := k.Logger(ctx)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -194,13 +198,16 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 
 	for _, lv := range liquidValidators {
 		if !k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap) {
-			// unbond all delShares to proxyAcc if delShares exist on inactive validators
+			// unbond all delShares to proxyAcc if delShares exist on inactive liquid validators
 			delShares := lv.GetDelShares(ctx, k.stakingKeeper)
 			if delShares.IsPositive() {
-				completionTime, returnAmount, _, err := k.LiquidUnbond(ctx, types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc, lv.GetOperator(), delShares)
+				cachedCtx, writeCache := ctx.CacheContext()
+				completionTime, returnAmount, _, err := k.LiquidUnbond(cachedCtx, types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc, lv.GetOperator(), delShares)
 				if err != nil {
-					panic(err)
+					logger.Error("liquid unbonding of inactive liquid validator failed", "error", err)
+					continue
 				}
+				writeCache()
 				unbondingAmount := sdk.Coin{Denom: k.stakingKeeper.BondDenom(ctx), Amount: returnAmount}.String()
 				ctx.EventManager().EmitEvents(sdk.Events{
 					sdk.NewEvent(
