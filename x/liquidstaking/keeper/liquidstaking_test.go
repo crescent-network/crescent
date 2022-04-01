@@ -230,6 +230,37 @@ func (s *KeeperTestSuite) TestLiquidStakingFromVestingAccount() {
 	s.Require().EqualValues(nas.TotalLiquidTokens, spendableCoins.AmountOf(sdk.DefaultBondDenom))
 }
 
+func (s *KeeperTestSuite) TestLiquidStakingEdgeCases() {
+	_, valOpers, _ := s.CreateValidators([]int64{1000000, 2000000, 3000000})
+	params := s.keeper.GetParams(s.ctx)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	stakingAmt := sdk.NewInt(5000000)
+
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	// fail Invalid BondDenom case
+	_, _, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin("bad", stakingAmt))
+	s.Require().ErrorIs(err, types.ErrInvalidBondDenom)
+
+	// liquid staking, unstaking with huge amount
+	hugeAmt := sdk.NewInt(1_000_000_000_000_000_000)
+	s.fundAddr(s.delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, hugeAmt.MulRaw(2))))
+	s.Require().NoError(s.liquidStaking(s.delAddrs[0], hugeAmt))
+	s.Require().NoError(s.liquidStaking(s.delAddrs[0], hugeAmt))
+	s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], hugeAmt, true))
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.completeRedelegationUnbonding()
+	states := s.keeper.NetAmountState(s.ctx)
+	states.TotalLiquidTokens.Equal(hugeAmt)
+}
+
 func (s *KeeperTestSuite) TestLiquidUnstakingEdgeCases() {
 	mintParams := s.app.MintKeeper.GetParams(s.ctx)
 	mintParams.InflationSchedules = []minttypes.InflationSchedule{}
@@ -249,15 +280,11 @@ func (s *KeeperTestSuite) TestLiquidUnstakingEdgeCases() {
 	s.keeper.SetParams(s.ctx, params)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
-	// fail Invalid BondDenom case
-	_, _, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin("bad", stakingAmt))
-	s.Require().ErrorIs(err, types.ErrInvalidBondDenom)
-
 	// success liquid staking
 	s.Require().NoError(s.liquidStaking(s.delAddrs[0], stakingAmt))
 
 	// fail when liquid unstaking with too small amount
-	_, _, _, _, err = s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(2)))
+	_, _, _, _, err := s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(2)))
 	s.Require().ErrorIs(err, types.ErrTooSmallLiquidUnstakingAmount)
 
 	// fail when liquid unstaking with zero amount

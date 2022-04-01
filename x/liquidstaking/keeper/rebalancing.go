@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
@@ -16,12 +17,18 @@ func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (ba
 
 // TryRedelegation attempts redelegation, which is applied only when successful through cached context because there is a constraint that fails if already receiving redelegation.
 func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (completionTime time.Time, err error) {
-	cachedCtx, writeCache := ctx.CacheContext()
-	srcVal := re.SrcValidator.GetOperator()
 	dstVal := re.DstValidator.GetOperator()
+	srcVal := re.SrcValidator.GetOperator()
+
+	// check the source validator already has receiving transitive redelegation
+	hasReceiving := k.stakingKeeper.HasReceivingRedelegation(ctx, re.Delegator, srcVal)
+	if hasReceiving {
+		return time.Time{}, stakingtypes.ErrTransitiveRedelegation
+	}
+
 	// calculate delShares from tokens with validation
 	shares, err := k.stakingKeeper.ValidateUnbondAmount(
-		cachedCtx, re.Delegator, srcVal, re.Amount,
+		ctx, re.Delegator, srcVal, re.Amount,
 	)
 	if err != nil {
 		return time.Time{}, err
@@ -31,6 +38,7 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 	if re.Last {
 		shares = re.SrcValidator.GetDelShares(ctx, k.stakingKeeper)
 	}
+	cachedCtx, writeCache := ctx.CacheContext()
 	completionTime, err = k.stakingKeeper.BeginRedelegation(cachedCtx, re.Delegator, srcVal, dstVal, shares)
 	if err != nil {
 		return time.Time{}, err
