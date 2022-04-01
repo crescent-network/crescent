@@ -204,7 +204,7 @@ func (k Keeper) LiquidUnstaking(
 			continue
 		}
 		// unbond with weightedShare
-		ubdTime, returnAmount, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare)
+		ubdTime, returnAmount, ubd, err = k.LiquidUnbond(ctx, proxyAcc, liquidStaker, val.GetOperator(), weightedShare, true)
 		if err != nil {
 			return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, sdk.ZeroInt(), err
 		}
@@ -216,13 +216,19 @@ func (k Keeper) LiquidUnstaking(
 
 // LiquidUnbond unbond delegation shares to active validators by proxy account.
 func (k Keeper) LiquidUnbond(
-	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
+	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec, checkMaxEntries bool,
 ) (time.Time, sdk.Int, stakingtypes.UnbondingDelegation, error) {
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
 	if !found {
 		return time.Time{}, sdk.ZeroInt(), stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoDelegatorForAddress
 	}
 
+	// If checkMaxEntries is true, perform a maximum limit unbonding entries check.
+	if checkMaxEntries && k.stakingKeeper.HasMaxUnbondingDelegationEntries(ctx, liquidStaker, valAddr) {
+		return time.Time{}, sdk.ZeroInt(), stakingtypes.UnbondingDelegation{}, stakingtypes.ErrMaxUnbondingDelegationEntries
+	}
+
+	// unbond from proxy account
 	returnAmount, err := k.stakingKeeper.Unbond(ctx, proxyAcc, valAddr, shares)
 	if err != nil {
 		return time.Time{}, sdk.ZeroInt(), stakingtypes.UnbondingDelegation{}, err
@@ -236,6 +242,7 @@ func (k Keeper) LiquidUnbond(
 		}
 	}
 
+	// Unbonding from proxy account, but queues to liquid staker.
 	completionTime := ctx.BlockHeader().Time.Add(k.stakingKeeper.UnbondingTime(ctx))
 	ubd := k.stakingKeeper.SetUnbondingDelegationEntry(ctx, liquidStaker, valAddr, ctx.BlockHeight(), completionTime, returnAmount)
 	k.stakingKeeper.InsertUBDQueue(ctx, ubd, completionTime)

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
@@ -254,6 +255,7 @@ func (s *KeeperTestSuite) TestLiquidStakingEdgeCases() {
 	s.fundAddr(s.delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, hugeAmt.MulRaw(2))))
 	s.Require().NoError(s.liquidStaking(s.delAddrs[0], hugeAmt))
 	s.Require().NoError(s.liquidStaking(s.delAddrs[0], hugeAmt))
+	s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], sdk.NewInt(10), true))
 	s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], hugeAmt, true))
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 	s.completeRedelegationUnbonding()
@@ -295,6 +297,18 @@ func (s *KeeperTestSuite) TestLiquidUnstakingEdgeCases() {
 	_, _, _, _, err = s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewCoin("stake", sdk.NewInt(10000)))
 	s.Require().ErrorIs(err, types.ErrInvalidLiquidBondDenom)
 
+	// verify that there is no problem performing liquid unstaking as much as the MaxEntries
+	stakingParams := s.app.StakingKeeper.GetParams(s.ctx)
+	for i := uint32(0); i < stakingParams.MaxEntries; i++ {
+		s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], sdk.NewInt(1000), false))
+	}
+	// fail in an attempt beyond MaxEntries
+	s.Require().ErrorIs(s.liquidUnstaking(s.delAddrs[0], sdk.NewInt(1000), false), stakingtypes.ErrMaxUnbondingDelegationEntries)
+	dels := s.app.StakingKeeper.GetUnbondingDelegations(s.ctx, s.delAddrs[0], 100)
+	for _, ubd := range dels {
+		s.Require().EqualValues(stakingParams.MaxEntries, len(ubd.Entries))
+	}
+
 	// set empty whitelisted, active liquid validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{}
 	s.keeper.SetParams(s.ctx, params)
@@ -312,22 +326,6 @@ func (s *KeeperTestSuite) TestLiquidUnstakingEdgeCases() {
 	s.Require().EqualValues(unbondingAmt, sdk.ZeroInt())
 	s.Require().EqualValues(ubdTime, time.Time{})
 	s.Require().Len(ubds, 0)
-
-	// TODO: remove debugging log
-	//s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], sdk.NewInt(1000), true))
-	//s.Require().NoError(err, types.ErrInsufficientProxyAccBalance)
-	states := s.keeper.NetAmountState(s.ctx)
-	utils.PP(states)
-
-	//_, _, _, _, err := s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewInt(2), true)
-	//ubdTime, unbondingAmt, ubds, unbondedAmt, err := s.liquidUnstakingWithResult(s.delAddrs[0], sdk.NewInt(2), true)
-	//fmt.Println(ubdTime.String())
-	//fmt.Println(unbondingAmt.String())
-	//fmt.Println(ubds)
-	//fmt.Println(ubdTime)
-	//fmt.Println(unbondedAmt.String())
-	//s.Require().NoError(err)
-	//a := sdk.NewDec(1_000_000_000_000_000_000)
-	//b := sdk.MustNewDecFromStr("0.1").Quo(a)
-	//fmt.Println(b)
+	//states := s.keeper.NetAmountState(s.ctx)
+	//utils.PP(states)
 }

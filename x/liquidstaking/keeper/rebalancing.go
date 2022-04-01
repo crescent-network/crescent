@@ -210,7 +210,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 			delShares := lv.GetDelShares(ctx, k.stakingKeeper)
 			if delShares.IsPositive() {
 				cachedCtx, writeCache := ctx.CacheContext()
-				completionTime, returnAmount, _, err := k.LiquidUnbond(cachedCtx, types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc, lv.GetOperator(), delShares)
+				completionTime, returnAmount, _, err := k.LiquidUnbond(cachedCtx, types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc, lv.GetOperator(), delShares, false)
 				if err != nil {
 					logger.Error("liquid unbonding of inactive liquid validator failed", "error", err)
 					continue

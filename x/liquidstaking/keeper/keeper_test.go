@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.govHandler = params.NewParamChangeProposalHandler(s.app.ParamsKeeper)
 	stakingParams := stakingtypes.DefaultParams()
-	stakingParams.MaxEntries = 200
+	stakingParams.MaxEntries = 7
 	stakingParams.MaxValidators = 30
 	s.app.StakingKeeper.SetParams(s.ctx, stakingParams)
 
