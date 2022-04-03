@@ -64,7 +64,7 @@ func SimulateAddWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.Kee
 
 		vals := sk.GetBondedValidatorsByPower(ctx)
 
-		wm := params.WhitelistedValMap()
+		wm := params.WhitelistedValsMap()
 		for i := 0; i < len(vals) && len(params.WhitelistedValidators) < MaxWhitelistValidators; i++ {
 			val, _ := keeper.RandomValidator(r, sk, ctx)
 			if _, ok := wm[val.OperatorAddress]; !ok {

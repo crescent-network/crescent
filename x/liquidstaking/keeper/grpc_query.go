@@ -43,7 +43,7 @@ func (k Querier) States(c context.Context, req *types.QueryStatesRequest) (*type
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	return &types.QueryStatesResponse{NetAmountState: k.NetAmountState(ctx)}, nil
+	return &types.QueryStatesResponse{NetAmountState: k.GetNetAmountState(ctx)}, nil
 }
 
 // VotingPower queries voting power of staking, liquid staking module's for the voter.

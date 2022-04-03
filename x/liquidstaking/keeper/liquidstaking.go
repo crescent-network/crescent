@@ -15,16 +15,11 @@ func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
-// NetAmountState calculates the sum of bondedDenom balance, total delegation tokens(slash applied LiquidTokens), total remaining reward of types.LiquidStakingProxyAcc
+// GetNetAmountState calculates the sum of bondedDenom balance, total delegation tokens(slash applied LiquidTokens), total remaining reward of types.LiquidStakingProxyAcc
 // During liquid unstaking, btoken immediately burns and the unbonding queue belongs to the requester, so the liquid staker's unbonding values are excluded on netAmount
 // It is used only for calculation and query and is not stored in kv.
-func (k Keeper) NetAmountState(ctx sdk.Context) (nas types.NetAmountState) {
-	nas.ProxyAccBalance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc).Amount
-
+func (k Keeper) GetNetAmountState(ctx sdk.Context) (nas types.NetAmountState) {
 	totalRemainingRewards, totalDelShares, totalLiquidTokens := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
-	nas.TotalRemainingRewards = totalRemainingRewards
-	nas.TotalDelShares = totalDelShares
-	nas.TotalLiquidTokens = totalLiquidTokens
 
 	totalUnbondingBalance := sdk.ZeroInt()
 	ubds := k.stakingKeeper.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
@@ -34,39 +29,52 @@ func (k Keeper) NetAmountState(ctx sdk.Context) (nas types.NetAmountState) {
 			totalUnbondingBalance = totalUnbondingBalance.Add(entry.Balance)
 		}
 	}
-	nas.TotalUnbondingBalance = totalUnbondingBalance
-	nas.BtokenTotalSupply = k.bankKeeper.GetSupply(ctx, k.LiquidBondDenom(ctx)).Amount
+
+	nas = types.NetAmountState{
+		BtokenTotalSupply:     k.bankKeeper.GetSupply(ctx, k.LiquidBondDenom(ctx)).Amount,
+		TotalDelShares:        totalDelShares,
+		TotalLiquidTokens:     totalLiquidTokens,
+		TotalRemainingRewards: totalRemainingRewards,
+		TotalUnbondingBalance: totalUnbondingBalance,
+		ProxyAccBalance:       k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc).Amount,
+	}
+
 	nas.NetAmount = nas.CalcNetAmount()
 	nas.MintRate = nas.CalcMintRate()
 	return
 }
 
-// LiquidStaking mints bToken worth of staking coin value according to NetAmount and performs LiquidDelegate.
-func (k Keeper) LiquidStaking(
+// LiquidStake mints bToken worth of staking coin value according to NetAmount and performs LiquidDelegate.
+func (k Keeper) LiquidStake(
 	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, stakingCoin sdk.Coin) (newShares sdk.Dec, bTokenMintAmount sdk.Int, err error) {
+	params := k.GetParams(ctx)
+
+	// check minimum liquid staking amount
+	if stakingCoin.Amount.LT(params.MinLiquidStakingAmount) {
+		return sdk.ZeroDec(), sdk.ZeroInt(), types.ErrLessThanMinLiquidStakingAmount
+	}
 
 	// check bond denomination
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	if stakingCoin.Denom != bondDenom {
-		return sdk.ZeroDec(), bTokenMintAmount, sdkerrors.Wrapf(
+		return sdk.ZeroDec(), sdk.ZeroInt(), sdkerrors.Wrapf(
 			types.ErrInvalidBondDenom, "invalid coin denomination: got %s, expected %s", stakingCoin.Denom, bondDenom,
 		)
 	}
 
-	params := k.GetParams(ctx)
-	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValMap)
-	if activeVals.Len() == 0 || !activeVals.TotalWeight(whitelistedValMap).IsPositive() {
-		return sdk.ZeroDec(), bTokenMintAmount, types.ErrActiveLiquidValidatorsNotExists
+	whitelistedValsMap := types.GetWhitelistedValsMap(params.WhitelistedValidators)
+	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValsMap)
+	if activeVals.Len() == 0 || !activeVals.TotalWeight(whitelistedValsMap).IsPositive() {
+		return sdk.ZeroDec(), sdk.ZeroInt(), types.ErrActiveLiquidValidatorsNotExists
 	}
 
 	// NetAmount must be calculated before send
-	nas := k.NetAmountState(ctx)
+	nas := k.GetNetAmountState(ctx)
 
 	// send staking coin to liquid staking proxy account to proxy delegation, need sufficient spendable balances
 	err = k.bankKeeper.SendCoins(ctx, liquidStaker, proxyAcc, sdk.NewCoins(stakingCoin))
 	if err != nil {
-		return sdk.ZeroDec(), bTokenMintAmount, err
+		return sdk.ZeroDec(), sdk.ZeroInt(), err
 	}
 
 	// mint btoken, MintAmount = TotalSupply * StakeAmount/NetAmount
@@ -90,15 +98,16 @@ func (k Keeper) LiquidStaking(
 	if err != nil {
 		return sdk.ZeroDec(), bTokenMintAmount, err
 	}
-	newShares, err = k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount, whitelistedValMap)
+
+	newShares, err = k.LiquidDelegate(ctx, proxyAcc, activeVals, stakingCoin.Amount, whitelistedValsMap)
 	return newShares, bTokenMintAmount, err
 }
 
 // LiquidDelegate delegates staking amount to active validators by proxy account.
-func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.ActiveLiquidValidators, stakingAmt sdk.Int, whitelistedValMap types.WhitelistedValMap) (newShares sdk.Dec, err error) {
+func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeVals types.ActiveLiquidValidators, stakingAmt sdk.Int, whitelistedValsMap types.WhitelistedValsMap) (newShares sdk.Dec, err error) {
 	totalNewShares := sdk.ZeroDec()
 	// crumb may occur due to a decimal point error in dividing the staking amount into the weight of liquid validators, It added on first active liquid validator
-	weightedAmt, crumb := types.DivideByWeight(activeVals, stakingAmt, whitelistedValMap)
+	weightedAmt, crumb := types.DivideByWeight(activeVals, stakingAmt, whitelistedValsMap)
 	if len(weightedAmt) == 0 {
 		return sdk.ZeroDec(), types.ErrInvalidActiveLiquidValidators
 	}
@@ -117,8 +126,8 @@ func (k Keeper) LiquidDelegate(ctx sdk.Context, proxyAcc sdk.AccAddress, activeV
 	return totalNewShares, nil
 }
 
-// LiquidUnstaking burns unstakingBtoken and performs LiquidUnbond to active liquid validators with del shares worth of shares according to NetAmount with each validators current weight.
-func (k Keeper) LiquidUnstaking(
+// LiquidUnstake burns unstakingBtoken and performs LiquidUnbond to active liquid validators with del shares worth of shares according to NetAmount with each validators current weight.
+func (k Keeper) LiquidUnstake(
 	ctx sdk.Context, proxyAcc, liquidStaker sdk.AccAddress, unstakingBtoken sdk.Coin,
 ) (time.Time, sdk.Int, []stakingtypes.UnbondingDelegation, sdk.Int, error) {
 
@@ -132,7 +141,7 @@ func (k Keeper) LiquidUnstaking(
 	}
 
 	// Get NetAmount states
-	nas := k.NetAmountState(ctx)
+	nas := k.GetNetAmountState(ctx)
 
 	if unstakingBtoken.Amount.GT(nas.BtokenTotalSupply) {
 		return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, sdk.ZeroInt(), types.ErrInvalidBTokenSupply
@@ -163,7 +172,8 @@ func (k Keeper) LiquidUnstaking(
 	// if no totalLiquidTokens, withdraw directly from balance of proxy acc
 	if !totalLiquidTokens.IsPositive() {
 		if nas.ProxyAccBalance.GTE(unbondingAmountInt) {
-			err = k.bankKeeper.SendCoins(ctx, types.LiquidStakingProxyAcc, liquidStaker, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), unbondingAmountInt)))
+			err = k.bankKeeper.SendCoins(ctx, types.LiquidStakingProxyAcc, liquidStaker,
+				sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), unbondingAmountInt)))
 			if err != nil {
 				return time.Time{}, sdk.ZeroInt(), []stakingtypes.UnbondingDelegation{}, sdk.ZeroInt(), err
 			} else {
@@ -340,14 +350,14 @@ func (k Keeper) GetAllLiquidValidators(ctx sdk.Context) (vals types.LiquidValida
 }
 
 // GetActiveLiquidValidators get the set of active liquid validators.
-func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, whitelistedValMap types.WhitelistedValMap) (vals types.ActiveLiquidValidators) {
+func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, whitelistedValsMap types.WhitelistedValsMap) (vals types.ActiveLiquidValidators) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.LiquidValidatorsKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		val := types.MustUnmarshalLiquidValidator(k.cdc, iterator.Value())
-		if k.IsActiveLiquidValidator(ctx, val, whitelistedValMap) {
+		if k.IsActiveLiquidValidator(ctx, val, whitelistedValsMap) {
 			vals = append(vals, val)
 		}
 	}
@@ -356,12 +366,12 @@ func (k Keeper) GetActiveLiquidValidators(ctx sdk.Context, whitelistedValMap typ
 
 func (k Keeper) GetAllLiquidValidatorStates(ctx sdk.Context) (liquidValidatorStates []types.LiquidValidatorState) {
 	lvs := k.GetAllLiquidValidators(ctx)
-	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
+	whitelistedValsMap := k.GetParams(ctx).WhitelistedValsMap()
 	for _, lv := range lvs {
-		active := k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap)
+		active := k.IsActiveLiquidValidator(ctx, lv, whitelistedValsMap)
 		lvState := types.LiquidValidatorState{
 			OperatorAddress: lv.OperatorAddress,
-			Weight:          lv.GetWeight(whitelistedValMap, active),
+			Weight:          lv.GetWeight(whitelistedValsMap, active),
 			Status:          lv.GetStatus(active),
 			DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
 			LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper, false),
@@ -382,23 +392,23 @@ func (k Keeper) GetLiquidValidatorState(ctx sdk.Context, addr sdk.ValAddress) (l
 			LiquidTokens:    sdk.ZeroInt(),
 		}, false
 	}
-	whitelistedValMap := k.GetParams(ctx).WhitelistedValMap()
-	active := k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap)
+	whitelistedValsMap := k.GetParams(ctx).WhitelistedValsMap()
+	active := k.IsActiveLiquidValidator(ctx, lv, whitelistedValsMap)
 	return types.LiquidValidatorState{
 		OperatorAddress: lv.OperatorAddress,
-		Weight:          lv.GetWeight(whitelistedValMap, active),
+		Weight:          lv.GetWeight(whitelistedValsMap, active),
 		Status:          lv.GetStatus(active),
 		DelShares:       lv.GetDelShares(ctx, k.stakingKeeper),
 		LiquidTokens:    lv.GetLiquidTokens(ctx, k.stakingKeeper, false),
 	}, true
 }
 
-func (k Keeper) IsActiveLiquidValidator(ctx sdk.Context, lv types.LiquidValidator, whitelistedValMap types.WhitelistedValMap) bool {
+func (k Keeper) IsActiveLiquidValidator(ctx sdk.Context, lv types.LiquidValidator, whitelistedValsMap types.WhitelistedValsMap) bool {
 	val, found := k.stakingKeeper.GetValidator(ctx, lv.GetOperator())
 	if !found {
 		return false
 	}
-	return types.ActiveCondition(val, whitelistedValMap.IsListed(lv.OperatorAddress), k.IsTombstoned(ctx, val))
+	return types.ActiveCondition(val, whitelistedValsMap.IsListed(lv.OperatorAddress), k.IsTombstoned(ctx, val))
 }
 
 func (k Keeper) IsTombstoned(ctx sdk.Context, val stakingtypes.Validator) bool {
@@ -409,11 +419,11 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, val stakingtypes.Validator) bool {
 	return k.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(consPk.Address()))
 }
 
-func (k Keeper) GetWeightMap(ctx sdk.Context, liquidVals types.LiquidValidators, whitelistedValMap types.WhitelistedValMap) (map[string]sdk.Int, sdk.Int) {
+func (k Keeper) GetWeightMap(ctx sdk.Context, liquidVals types.LiquidValidators, whitelistedValsMap types.WhitelistedValsMap) (map[string]sdk.Int, sdk.Int) {
 	weightMap := map[string]sdk.Int{}
 	totalWeight := sdk.ZeroInt()
 	for _, val := range liquidVals {
-		weight := val.GetWeight(whitelistedValMap, k.IsActiveLiquidValidator(ctx, val, whitelistedValMap))
+		weight := val.GetWeight(whitelistedValsMap, k.IsActiveLiquidValidator(ctx, val, whitelistedValsMap))
 		totalWeight = totalWeight.Add(weight)
 		weightMap[val.OperatorAddress] = weight
 	}

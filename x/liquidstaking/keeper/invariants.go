@@ -45,7 +45,7 @@ func NetAmountInvariant(k Keeper) sdk.Invariant {
 		if lvs.Len() == 0 {
 			return msg, broken
 		}
-		nas := k.NetAmountState(ctx)
+		nas := k.GetNetAmountState(ctx)
 		balance := k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc).Amount
 		NetAmountExceptBalance := nas.NetAmount.Sub(balance.ToDec())
 		liquidBondDenom := k.LiquidBondDenom(ctx)

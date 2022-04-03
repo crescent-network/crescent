@@ -15,6 +15,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(utils.ParseTime("2022-03-01T00:00:00Z"))
 	params := s.keeper.GetParams(s.ctx)
 	params.UnstakeFeeRate = sdk.ZeroDec()
+	params.MinLiquidStakingAmount = sdk.NewInt(10000)
 	s.keeper.SetParams(s.ctx, params)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
@@ -29,7 +30,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	reds := s.keeper.UpdateLiquidValidatorSet(s.ctx)
 	s.Require().Len(reds, 0)
 
-	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	newShares, bTokenMintAmt, err := s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().NoError(err)
 	s.Require().Equal(newShares, stakingAmt.ToDec())
 	s.Require().Equal(bTokenMintAmt, stakingAmt)
@@ -91,14 +92,14 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 
 	utils.PP("before complete")
 	utils.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
-	utils.PP(s.keeper.NetAmountState(s.ctx))
+	utils.PP(s.keeper.GetNetAmountState(s.ctx))
 
 	// advance block time and height for complete redelegations
 	s.completeRedelegationUnbonding()
 
 	utils.PP("after complete")
 	utils.PP(s.keeper.GetAllLiquidValidatorStates(s.ctx))
-	utils.PP(s.keeper.NetAmountState(s.ctx))
+	utils.PP(s.keeper.GetNetAmountState(s.ctx))
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
@@ -259,7 +260,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().Equal(val1.Status, stakingtypes.Unbonded)
 
 	// no rewards, delShares, liquid tokens
-	nas := s.keeper.NetAmountState(s.ctx)
+	nas := s.keeper.GetNetAmountState(s.ctx)
 	s.Require().EqualValues(nas.TotalRemainingRewards, sdk.ZeroDec())
 	s.Require().EqualValues(nas.TotalDelShares, sdk.ZeroDec())
 	s.Require().EqualValues(nas.TotalLiquidTokens, sdk.ZeroInt())
@@ -311,8 +312,8 @@ func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {
 	s.NotEqualValues(totalLiquidTokens, sdk.ZeroDec())
 
 	// withdraw rewards and re-staking
-	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
-	s.keeper.WithdrawRewardsAndReStaking(s.ctx, whitelistedValMap)
+	whitelistedValsMap := types.GetWhitelistedValsMap(params.WhitelistedValidators)
+	s.keeper.WithdrawRewardsAndReStake(s.ctx, whitelistedValsMap)
 	totalRewardsAfter, totalDelSharesAfter, totalLiquidTokensAfter := s.keeper.CheckDelegationStates(s.ctx, types.LiquidStakingProxyAcc)
 	s.EqualValues(totalRewardsAfter, sdk.ZeroDec())
 	s.EqualValues(totalDelSharesAfter, totalRewards.TruncateDec().Add(totalDelShares), totalLiquidTokensAfter)
@@ -334,7 +335,7 @@ func (s *KeeperTestSuite) TestRemoveAllLiquidValidator() {
 
 	// allocate rewards
 	s.advanceHeight(1, false)
-	nasBefore := s.keeper.NetAmountState(s.ctx)
+	nasBefore := s.keeper.GetNetAmountState(s.ctx)
 	s.Require().NotEqualValues(nasBefore.TotalRemainingRewards, sdk.ZeroDec())
 	s.Require().NotEqualValues(nasBefore.TotalDelShares, sdk.ZeroDec())
 	s.Require().NotEqualValues(nasBefore.NetAmount, sdk.ZeroDec())
@@ -350,7 +351,7 @@ func (s *KeeperTestSuite) TestRemoveAllLiquidValidator() {
 	lvs := s.keeper.GetAllLiquidValidators(s.ctx)
 	s.Require().Len(lvs, 0)
 
-	nasAfter := s.keeper.NetAmountState(s.ctx)
+	nasAfter := s.keeper.GetNetAmountState(s.ctx)
 	s.Require().EqualValues(nasAfter.TotalRemainingRewards, sdk.ZeroDec())
 	s.Require().EqualValues(nasAfter.ProxyAccBalance, nasBefore.TotalRemainingRewards.TruncateInt())
 	s.Require().EqualValues(nasAfter.TotalDelShares, sdk.ZeroDec())
@@ -358,7 +359,7 @@ func (s *KeeperTestSuite) TestRemoveAllLiquidValidator() {
 	s.Require().EqualValues(nasBefore.NetAmount.TruncateInt(), nasAfter.NetAmount.TruncateInt())
 
 	s.completeRedelegationUnbonding()
-	nasAfter2 := s.keeper.NetAmountState(s.ctx)
+	nasAfter2 := s.keeper.GetNetAmountState(s.ctx)
 	s.Require().EqualValues(nasAfter2.ProxyAccBalance, nasAfter.ProxyAccBalance.Add(nasBefore.TotalLiquidTokens))
 	s.Require().EqualValues(nasAfter2.NetAmount.TruncateInt(), nasBefore.NetAmount.TruncateInt())
 }

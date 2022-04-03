@@ -12,20 +12,22 @@ import (
 	minttypes "github.com/crescent-network/crescent/x/mint/types"
 )
 
-// tests LiquidStaking, LiquidUnstaking
-func (s *KeeperTestSuite) TestLiquidStaking() {
+// tests LiquidStake, LiquidUnstake
+func (s *KeeperTestSuite) TestLiquidStake() {
 	_, valOpers, _ := s.CreateValidators([]int64{1000000, 2000000, 3000000})
 	params := s.keeper.GetParams(s.ctx)
+	params.MinLiquidStakingAmount = sdk.NewInt(50000)
+	s.keeper.SetParams(s.ctx, params)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
-	stakingAmt := sdk.NewInt(50000)
+	stakingAmt := params.MinLiquidStakingAmount
 
 	// fail, no active validator
 	cachedCtx, _ := s.ctx.CacheContext()
-	newShares, bTokenMintAmt, err := s.keeper.LiquidStaking(cachedCtx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	newShares, bTokenMintAmt, err := s.keeper.LiquidStake(cachedCtx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().ErrorIs(err, types.ErrActiveLiquidValidatorsNotExists)
 	s.Require().Equal(newShares, sdk.ZeroDec())
-	s.Require().Equal(bTokenMintAmt, sdk.Int{})
+	s.Require().Equal(bTokenMintAmt, sdk.ZeroInt())
 
 	// add active validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
@@ -56,7 +58,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(sdk.ZeroInt(), res[2].LiquidTokens)
 
 	// liquid staking
-	newShares, bTokenMintAmt, err = s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	newShares, bTokenMintAmt, err = s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
 	s.Require().NoError(err)
 	s.Require().Equal(newShares, stakingAmt.ToDec())
 	s.Require().Equal(bTokenMintAmt, stakingAmt)
@@ -89,7 +91,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(bTokenBalance, bTokenTotalSupply)
 
 	// liquid unstaking
-	ubdTime, unbondingAmt, ubds, unbondedAmt, err := s.keeper.LiquidUnstaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], ubdBToken)
+	ubdTime, unbondingAmt, ubds, unbondedAmt, err := s.keeper.LiquidUnstake(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], ubdBToken)
 	s.Require().NoError(err)
 	s.Require().EqualValues(unbondedAmt, sdk.ZeroInt())
 	s.Require().Len(ubds, 3)
@@ -170,11 +172,11 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], btokenBalanceBefore, true))
 
 	// still active liquid validator after unbond all
-	alv := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValMap())
+	alv := s.keeper.GetActiveLiquidValidators(s.ctx, params.WhitelistedValsMap())
 	s.Require().True(len(alv) != 0)
 
 	// no btoken supply and netAmount after unbond all
-	nas := s.keeper.NetAmountState(s.ctx)
+	nas := s.keeper.GetNetAmountState(s.ctx)
 	s.Require().EqualValues(nas.BtokenTotalSupply, sdk.ZeroInt())
 	s.Require().Equal(nas.TotalRemainingRewards, sdk.ZeroDec())
 	s.Require().Equal(nas.TotalDelShares, sdk.ZeroDec())
@@ -183,7 +185,7 @@ func (s *KeeperTestSuite) TestLiquidStaking() {
 	s.Require().Equal(nas.NetAmount, sdk.ZeroDec())
 }
 
-func (s *KeeperTestSuite) TestLiquidStakingFromVestingAccount() {
+func (s *KeeperTestSuite) TestLiquidStakeFromVestingAccount() {
 	_, valOpers, _ := s.CreateValidators([]int64{1000000, 2000000, 3000000})
 	params := s.keeper.GetParams(s.ctx)
 
@@ -227,11 +229,11 @@ func (s *KeeperTestSuite) TestLiquidStakingFromVestingAccount() {
 	// success with released spendable coins
 	err = s.liquidStaking(vestingAcc, spendableCoins.AmountOf(sdk.DefaultBondDenom))
 	s.Require().NoError(err)
-	nas := s.keeper.NetAmountState(s.ctx)
+	nas := s.keeper.GetNetAmountState(s.ctx)
 	s.Require().EqualValues(nas.TotalLiquidTokens, spendableCoins.AmountOf(sdk.DefaultBondDenom))
 }
 
-func (s *KeeperTestSuite) TestLiquidStakingEdgeCases() {
+func (s *KeeperTestSuite) TestLiquidStakeEdgeCases() {
 	_, valOpers, _ := s.CreateValidators([]int64{1000000, 2000000, 3000000})
 	params := s.keeper.GetParams(s.ctx)
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
@@ -247,7 +249,7 @@ func (s *KeeperTestSuite) TestLiquidStakingEdgeCases() {
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 
 	// fail Invalid BondDenom case
-	_, _, err := s.keeper.LiquidStaking(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin("bad", stakingAmt))
+	_, _, err := s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin("bad", stakingAmt))
 	s.Require().ErrorIs(err, types.ErrInvalidBondDenom)
 
 	// liquid staking, unstaking with huge amount
@@ -259,11 +261,11 @@ func (s *KeeperTestSuite) TestLiquidStakingEdgeCases() {
 	s.Require().NoError(s.liquidUnstaking(s.delAddrs[0], hugeAmt, true))
 	s.keeper.UpdateLiquidValidatorSet(s.ctx)
 	s.completeRedelegationUnbonding()
-	states := s.keeper.NetAmountState(s.ctx)
+	states := s.keeper.GetNetAmountState(s.ctx)
 	states.TotalLiquidTokens.Equal(hugeAmt)
 }
 
-func (s *KeeperTestSuite) TestLiquidUnstakingEdgeCases() {
+func (s *KeeperTestSuite) TestLiquidUnstakeEdgeCases() {
 	mintParams := s.app.MintKeeper.GetParams(s.ctx)
 	mintParams.InflationSchedules = []minttypes.InflationSchedule{}
 	s.app.MintKeeper.SetParams(s.ctx, mintParams)
@@ -326,6 +328,4 @@ func (s *KeeperTestSuite) TestLiquidUnstakingEdgeCases() {
 	s.Require().EqualValues(unbondingAmt, sdk.ZeroInt())
 	s.Require().EqualValues(ubdTime, time.Time{})
 	s.Require().Len(ubds, 0)
-	//states := s.keeper.NetAmountState(s.ctx)
-	//utils.PP(states)
 }

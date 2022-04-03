@@ -14,15 +14,15 @@ type Redelegation struct {
 
 // DivideByWeight divide the input value by the ratio of the param weight of the liquid validator and return it with crumb
 // which is may occur while dividing according to the weight of active liquid validators by decimal error.
-func DivideByWeight(avs ActiveLiquidValidators, input sdk.Int, whitelistedValMap WhitelistedValMap) (outputs []sdk.Int, crumb sdk.Int) {
-	totalWeight := avs.TotalWeight(whitelistedValMap)
+func DivideByWeight(avs ActiveLiquidValidators, input sdk.Int, whitelistedValsMap WhitelistedValsMap) (outputs []sdk.Int, crumb sdk.Int) {
+	totalWeight := avs.TotalWeight(whitelistedValsMap)
 	if !totalWeight.IsPositive() {
 		return []sdk.Int{}, sdk.ZeroInt()
 	}
 	totalOutput := sdk.ZeroInt()
 	unitInput := input.ToDec().QuoTruncate(totalWeight.ToDec())
 	for _, val := range avs {
-		output := unitInput.MulInt(val.GetWeight(whitelistedValMap, true)).TruncateInt()
+		output := unitInput.MulInt(val.GetWeight(whitelistedValsMap, true)).TruncateInt()
 		totalOutput = totalOutput.Add(output)
 		outputs = append(outputs, output)
 	}

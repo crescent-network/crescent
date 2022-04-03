@@ -28,16 +28,13 @@ var _ types.MsgServer = msgServer{}
 
 func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake) (*types.MsgLiquidStakeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	params := k.GetParams(ctx)
-	if msg.Amount.Amount.LT(params.MinLiquidStakingAmount) {
-		return nil, types.ErrLessThanMinLiquidStakingAmount
-	}
 
-	newShares, bTokenMintAmount, err := k.LiquidStaking(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
+	newShares, bTokenMintAmount, err := k.Keeper.LiquidStake(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
 	if err != nil {
 		return nil, err
 	}
 
+	liquidBondDenom := k.LiquidBondDenom(ctx)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -48,7 +45,7 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
-			sdk.NewAttribute(types.AttributeKeyBTokenMintedAmount, sdk.Coin{Denom: params.LiquidBondDenom, Amount: bTokenMintAmount}.String()),
+			sdk.NewAttribute(types.AttributeKeyBTokenMintedAmount, sdk.Coin{Denom: liquidBondDenom, Amount: bTokenMintAmount}.String()),
 		),
 	})
 	return &types.MsgLiquidStakeResponse{}, nil
@@ -57,7 +54,7 @@ func (k msgServer) LiquidStake(goCtx context.Context, msg *types.MsgLiquidStake)
 func (k msgServer) LiquidUnstake(goCtx context.Context, msg *types.MsgLiquidUnstake) (*types.MsgLiquidUnstakeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	completionTime, unbondingAmount, _, unbondedAmount, err := k.LiquidUnstaking(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
+	completionTime, unbondingAmount, _, unbondedAmount, err := k.Keeper.LiquidUnstake(ctx, types.LiquidStakingProxyAcc, msg.GetDelegator(), msg.Amount)
 	if err != nil {
 		return nil, err
 	}

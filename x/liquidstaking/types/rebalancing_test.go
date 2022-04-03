@@ -104,14 +104,14 @@ func TestDivideByWeight(t *testing.T) {
 		require.IsType(t, []sdk.Int{}, tc.expectedOutputs)
 
 		totalTargetAmt := sdk.ZeroInt()
-		valMap := types.GetWhitelistedValMap(tc.whitelistedVals)
+		valsMap := types.GetWhitelistedValsMap(tc.whitelistedVals)
 		var activeVals types.ActiveLiquidValidators
 		for _, v := range tc.whitelistedVals {
 			activeVals = append(activeVals, types.LiquidValidator{
 				OperatorAddress: v.ValidatorAddress,
 			})
 		}
-		outputs, crumb := types.DivideByWeight(activeVals, tc.addStakingAmt, valMap)
+		outputs, crumb := types.DivideByWeight(activeVals, tc.addStakingAmt, valsMap)
 		for _, v := range outputs {
 			totalTargetAmt = totalTargetAmt.Add(v)
 		}
