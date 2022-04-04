@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -285,7 +286,25 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 		return nil
 	}
 
-	ax, ay, pc := ammPool.Deposit(req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
+	var ax, ay, pc sdk.Int
+	hasOverflow := false
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if s, ok := r.(string); !ok || !strings.Contains(strings.ToLower(s), "overflow") {
+					panic(r)
+				}
+				hasOverflow = true
+			}
+		}()
+		ax, ay, pc = ammPool.Deposit(req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
+	}()
+	if hasOverflow {
+		if err := k.FinishDepositRequest(ctx, req, types.RequestStatusFailed); err != nil {
+			return err
+		}
+		return nil
+	}
 
 	if pc.IsZero() {
 		if err := k.FinishDepositRequest(ctx, req, types.RequestStatusFailed); err != nil {
