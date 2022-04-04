@@ -4,7 +4,12 @@ order: 3
 
 # Begin-Block
 
-- BlockInflation = `InflationAmountThisPeriod * min(CurrentBlockTime-LastBlockTime,params.block_time_threshold)/(InflationPeriodEndDate-InflationPeriodStartDate)`
-- BlockInflationRate = `BlockInflation * BlocksPerYear / TotalSupply`
-- if no LastBlockTime(genesis block) → no inflation
-- Set LastBlockTime for this block's block time on end of begin-block 
+Begin block operation for the `mint` module calculates `BlockInflation` to mint coins to be sent to the fee collector and sets `LastBlockTime` value. It is worth noting that there is no inflation in genesis block as it doesn't have `LastBlockTime`.
+
+## Inflation Calculation
+
+At the beginning of each block, block inflation is calculated with the following calculation.
+
+```
+BlockInflation = InflationScheduleAmount * min(BlockDurationForInflation, BlockTimeThreshold) / (InflationScheduleEndTime - InflationScheduleStartTime)
+```
