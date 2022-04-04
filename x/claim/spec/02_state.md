@@ -45,7 +45,7 @@ const (
 	// CONDITION_TYPE_LIQUIDSTAKE specifies liquid stake condition type
 	ConditionTypeLiquidStake ConditionType = 3
 	// CONDITION_TYPE_VOTE specifies governance vote condition type
-	ConditionTypeVote ConditionType = 3
+	ConditionTypeVote ConditionType = 4
 )
 ```
 
