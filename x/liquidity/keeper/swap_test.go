@@ -639,3 +639,25 @@ func (s *KeeperTestSuite) TestExpireSmallOrders() {
 	s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("0.000019"), sdk.NewInt(100000000), time.Minute, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 }
+
+func (s *KeeperTestSuite) TestPoolOrderOverflow() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	i, _ := sdk.NewIntFromString("99999999999999999999999999999999999999999999999999999999999999999999999999999")
+	s.createPool(s.addr(0), pair.Id, sdk.NewCoins(sdk.NewCoin("denom1", i), sdk.NewCoin("denom2", i)), true)
+
+	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(1e17), 0, true)
+	s.Require().NotPanics(func() {
+		liquidity.EndBlocker(s.ctx, s.keeper)
+	})
+}
+
+func (s *KeeperTestSuite) TestUserOrderOverflow() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	i, _ := sdk.NewIntFromString("115792089237316195423570985008687907853269984665640564039457584007913129639935")
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.002"), i, 0, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.002"), i, 0, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.001"), sdk.NewInt(1e10), 0, true)
+	s.Require().NotPanics(func() {
+		liquidity.EndBlocker(s.ctx, s.keeper)
+	})
+}

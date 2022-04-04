@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -164,4 +165,26 @@ func TestAddress(addrNum int) sdk.AccAddress {
 	addr := make(sdk.AccAddress, 20)
 	binary.PutVarint(addr, int64(addrNum))
 	return addr
+}
+
+func SafeMath(f, onOverflow func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			if IsOverflow(r) {
+				onOverflow()
+			} else {
+				panic(r)
+			}
+		}
+	}()
+	f()
+}
+
+func IsOverflow(r interface{}) bool {
+	switch r := r.(type) {
+	case string:
+		s := strings.ToLower(r)
+		return strings.Contains(s, "overflow") || strings.HasSuffix(s, "out of bound")
+	}
+	return false
 }

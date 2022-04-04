@@ -4,6 +4,8 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	utils "github.com/cosmosquad-labs/squad/types"
 )
 
 var (
@@ -75,18 +77,23 @@ func (pool *BasicPool) Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int) {
 	// Note that we take as many coins as possible(by ceiling numbers)
 	// from depositor and mint as little coins as possible.
 
-	rx, ry := pool.rx.ToDec(), pool.ry.ToDec()
-	ps := pool.ps.ToDec()
+	utils.SafeMath(func() {
+		rx, ry := pool.rx.ToDec(), pool.ry.ToDec()
+		ps := pool.ps.ToDec()
 
-	// pc = floor(ps * min(x / rx, y / ry))
-	pc = ps.MulTruncate(sdk.MinDec(
-		x.ToDec().QuoTruncate(rx),
-		y.ToDec().QuoTruncate(ry),
-	)).TruncateInt()
+		// pc = floor(ps * min(x / rx, y / ry))
+		pc = ps.MulTruncate(sdk.MinDec(
+			x.ToDec().QuoTruncate(rx),
+			y.ToDec().QuoTruncate(ry),
+		)).TruncateInt()
 
-	mintProportion := pc.ToDec().Quo(ps)             // pc / ps
-	ax = rx.Mul(mintProportion).Ceil().TruncateInt() // ceil(rx * mintProportion)
-	ay = ry.Mul(mintProportion).Ceil().TruncateInt() // ceil(ry * mintProportion)
+		mintProportion := pc.ToDec().Quo(ps)             // pc / ps
+		ax = rx.Mul(mintProportion).Ceil().TruncateInt() // ceil(rx * mintProportion)
+		ay = ry.Mul(mintProportion).Ceil().TruncateInt() // ceil(ry * mintProportion)
+	}, func() {
+		ax, ay, pc = sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt()
+	})
+
 	return
 }
 
@@ -101,10 +108,15 @@ func (pool *BasicPool) Withdraw(pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
 		return
 	}
 
-	proportion := pc.ToDec().QuoTruncate(pool.ps.ToDec())                             // pc / ps
-	multiplier := sdk.OneDec().Sub(feeRate)                                           // 1 - feeRate
-	x = pool.rx.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(rx * proportion * multiplier)
-	y = pool.ry.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(ry * proportion * multiplier)
+	utils.SafeMath(func() {
+		proportion := pc.ToDec().QuoTruncate(pool.ps.ToDec())                             // pc / ps
+		multiplier := sdk.OneDec().Sub(feeRate)                                           // 1 - feeRate
+		x = pool.rx.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(rx * proportion * multiplier)
+		y = pool.ry.ToDec().MulTruncate(proportion).MulTruncate(multiplier).TruncateInt() // floor(ry * proportion * multiplier)
+	}, func() {
+		x, y = sdk.ZeroInt(), sdk.ZeroInt()
+	})
+
 	return
 }
 
@@ -124,11 +136,16 @@ func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 
 // BuyAmountOver returns the amount of buy orders for price greater than
 // or equal to given price.
-func (pool *BasicPool) BuyAmountOver(price sdk.Dec) sdk.Int {
+func (pool *BasicPool) BuyAmountOver(price sdk.Dec) (amt sdk.Int) {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
-	return pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
+	utils.SafeMath(func() {
+		amt = pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
+	}, func() {
+		amt = MaxCoinAmount
+	})
+	return
 }
 
 // SellAmountUnder returns the amount of sell orders for price less than

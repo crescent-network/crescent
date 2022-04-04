@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
@@ -76,10 +77,14 @@ func NewUserOrder(order Order) *UserOrder {
 	switch order.Direction {
 	case OrderDirectionBuy:
 		dir = amm.Buy
-		amt = sdk.MinInt(
-			order.OpenAmount,
-			order.RemainingOfferCoin.Amount.ToDec().QuoTruncate(order.Price).TruncateInt(),
-		)
+		utils.SafeMath(func() {
+			amt = sdk.MinInt(
+				order.OpenAmount,
+				order.RemainingOfferCoin.Amount.ToDec().QuoTruncate(order.Price).TruncateInt(),
+			)
+		}, func() {
+			amt = order.OpenAmount
+		})
 	case OrderDirectionSell:
 		dir = amm.Sell
 		amt = order.OpenAmount
