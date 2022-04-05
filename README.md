@@ -23,7 +23,7 @@ Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<b
 
 ## What is Crescent?
 
-Crescent is a DeFi Hub that provides innovative and powerful tools that empower users’ digital assets for maximizing their financial returns while manage associated risks in the most efficient way. In the base layer, Crescent core has a DEX functionality equipped with several unique characteristics.
+Crescent is a DeFi Hub that provides innovative and powerful tools that empower users’ digital assets for maximizing their financial returns while managing associated risks in the most efficient way. In the base layer, Crescent core has a DEX functionality equipped with several unique characteristics.
 
 - A Hybrid DEX : a hybrid system of orderbook and AMM
 - Tick System : standardization of order price
@@ -48,7 +48,7 @@ If you haven't already, install Go by following the [official docs](https://gola
 
 **Step 2. Get Crescent Core source code**
 
-Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `main` branch. This branch contains the latest stable release, which will install the `crescentd` binary.
+Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `main` branch. This branch contains the latest release, which will install the `crescentd` binary.
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
