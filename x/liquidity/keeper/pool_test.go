@@ -155,6 +155,20 @@ func (s *KeeperTestSuite) TestCreatePoolInitialPoolCoinSupply() {
 	s.Require().True(intEq(sdk.NewInt(100000000000000), s.getBalance(poolCreator, pool.PoolCoinDenom).Amount))
 }
 
+func (s *KeeperTestSuite) TestPoolIndexes() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	pool := s.createPool(s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+
+	pool2, found := s.keeper.GetPoolByReserveAddress(s.ctx, pool.GetReserveAddress())
+	s.Require().True(found)
+	s.Require().Equal(pool.Id, pool2.Id)
+
+	pools := s.keeper.GetPoolsByPair(s.ctx, pair.Id)
+	s.Require().Len(pools, 1)
+	s.Require().Equal(pool.Id, pools[0].Id)
+}
+
 func (s *KeeperTestSuite) TestDeposit() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
