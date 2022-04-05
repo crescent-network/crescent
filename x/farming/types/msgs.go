@@ -52,6 +52,9 @@ func (msg MsgCreateFixedAmountPlan) Route() string { return RouterKey }
 func (msg MsgCreateFixedAmountPlan) Type() string { return TypeMsgCreateFixedAmountPlan }
 
 func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
+	if err := ValidatePlanName(msg.Name); err != nil {
+		return sdkerrors.Wrap(ErrInvalidPlanName, err.Error())
+	}
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address %q: %v", msg.Creator, err)
 	}
@@ -64,7 +67,7 @@ func (msg MsgCreateFixedAmountPlan) ValidateBasic() error {
 	if msg.EpochAmount.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "epoch amount must not be empty")
 	}
-	if err := msg.EpochAmount.Validate(); err != nil {
+	if err := ValidateEpochAmount(msg.EpochAmount); err != nil {
 		return err
 	}
 	return nil
@@ -114,6 +117,9 @@ func (msg MsgCreateRatioPlan) Route() string { return RouterKey }
 func (msg MsgCreateRatioPlan) Type() string { return TypeMsgCreateRatioPlan }
 
 func (msg MsgCreateRatioPlan) ValidateBasic() error {
+	if err := ValidatePlanName(msg.Name); err != nil {
+		return sdkerrors.Wrap(ErrInvalidPlanName, err.Error())
+	}
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address %q: %v", msg.Creator, err)
 	}

@@ -53,9 +53,7 @@ When a farmer unstakes an amount of coins, the following state transitions occur
 
 If the sum of total calculated `EpochAmount` (or `EpochRatio` multiplied by the farming pool balance) exceeds the farming pool balance, then skip the reward allocation for that epoch.
 
-For each [abci end block call](https://docs.cosmos.network/master/modules/staking/05_end_block.html), the operations to update the rewards allocation are:
-
-++ `/x/farming/keeper/reward.go`
+For each abci end block call, the operations to update the rewards allocation are:
 
 - Calculates rewards allocation information for the end of the current epoch depending on plan type `FixedAmountPlan` or `RatioPlan`
 - Distributes total allocated coins from each plan’s farming pool address `FarmingPoolAddress` to the rewards reserve pool account `RewardsReserveAcc`

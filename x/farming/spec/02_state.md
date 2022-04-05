@@ -11,15 +11,6 @@ The plan interface exposes methods to read and write standard farming plan infor
 Note that all of these methods operate on a plan struct that confirms to the interface. In order to write the plan to the store, the plan keeper is required.
 
 ```go
-// PlanType enumerates the valid types of a plan.
-type PlanType int32
-
-const (
-    PlanTypeNil PlanType = 0
-    PlanTypePublic PlanType = 1
-    PlanTypePrivate PlanType = 2
-)
-
 // PlanI is an interface used to store plan records within state.
 type PlanI interface {
     proto.Message

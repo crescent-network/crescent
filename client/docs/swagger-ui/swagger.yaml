@@ -20879,8 +20879,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#currentepochdays
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   /crescent/farming/v1beta1/params:
     get:
       summary: Params returns parameters of the farming module.
@@ -20942,6 +20941,9 @@ paths:
                   max_num_private_plans:
                     type: integer
                     format: int64
+                    title: >-
+                      max_num_private_plans is the maximum number of active
+                      private plans
                 description: Params defines the set of params for the farming module.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
@@ -21640,8 +21642,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#Plans
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/plans/{plan_id}':
     get:
       summary: Plan returns a specific plan.
@@ -22050,8 +22051,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#plan
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/rewards/{farmer}':
     get:
       summary: Rewards returns rewards for a farmer
@@ -22293,8 +22293,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#rewards
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/stakings/{farmer}':
     get:
       summary: Stakings returns all stakings by a farmer.
@@ -22555,8 +22554,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#stakings
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}':
     get:
       summary: TotalStakings returns total staking amount for a staking coin denom
@@ -22779,8 +22777,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#totalstakings
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/liquidity/v1beta1/orders/{orderer}':
     get:
       summary: OrdersByOrderer returns orders made by an orderer.
@@ -42532,6 +42529,7 @@ definitions:
       max_num_private_plans:
         type: integer
         format: int64
+        title: max_num_private_plans is the maximum number of active private plans
     description: Params defines the set of params for the farming module.
   crescent.farming.v1beta1.QueryCurrentEpochDaysResponse:
     type: object
@@ -42594,6 +42592,9 @@ definitions:
           max_num_private_plans:
             type: integer
             format: int64
+            title: >-
+              max_num_private_plans is the maximum number of active private
+              plans
         description: Params defines the set of params for the farming module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   crescent.farming.v1beta1.QueryPlanResponse:

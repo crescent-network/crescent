@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -28,6 +30,9 @@ var (
 		sdk.NewInt64Coin(denom1, 1_000_000_000),
 		sdk.NewInt64Coin(denom2, 1_000_000_000),
 		sdk.NewInt64Coin(denom3, 1_000_000_000))
+
+	sampleStartTime = types.ParseTime("0001-01-01T00:00:00Z")
+	sampleEndTime   = types.ParseTime("9999-12-31T00:00:00Z")
 )
 
 type KeeperTestSuite struct {
@@ -37,6 +42,7 @@ type KeeperTestSuite struct {
 	ctx                 sdk.Context
 	keeper              keeper.Keeper
 	querier             keeper.Querier
+	msgServer           types.MsgServer
 	govHandler          govtypes.Handler
 	addrs               []sdk.AccAddress
 	sampleFixedAmtPlans []types.PlanI
@@ -52,10 +58,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	keeper.EnableRatioPlan = true
+
 	suite.app = app
 	suite.ctx = ctx
 	suite.keeper = suite.app.FarmingKeeper
 	suite.querier = keeper.Querier{Keeper: suite.keeper}
+	suite.msgServer = keeper.NewMsgServerImpl(suite.keeper)
 	suite.govHandler = farming.NewPublicPlanProposalHandler(suite.keeper)
 	suite.addrs = chain.AddTestAddrs(suite.app, suite.ctx, 6, sdk.ZeroInt())
 	for _, addr := range suite.addrs {
@@ -166,6 +175,81 @@ func (suite *KeeperTestSuite) AdvanceEpoch() {
 	suite.Require().NoError(err)
 }
 
+func (suite *KeeperTestSuite) createPrivateFixedAmountPlan(
+	creator sdk.AccAddress, stakingCoinWeights sdk.DecCoins,
+	startTime, endTime time.Time, epochAmt sdk.Coins) (types.PlanI, error) {
+	msg := types.NewMsgCreateFixedAmountPlan(
+		fmt.Sprintf("plan%d", suite.keeper.GetGlobalPlanId(suite.ctx)+1),
+		creator, stakingCoinWeights,
+		startTime, endTime, epochAmt,
+	)
+	farmingPoolAcc, err := suite.keeper.DerivePrivatePlanFarmingPoolAcc(suite.ctx, msg.Name)
+	if err != nil {
+		return nil, err
+	}
+	plan, err := suite.keeper.CreateFixedAmountPlan(suite.ctx, msg, farmingPoolAcc, creator, types.PlanTypePrivate)
+	if err != nil {
+		return nil, err
+	}
+	return plan, nil
+}
+
+func (suite *KeeperTestSuite) createPublicFixedAmountPlan(
+	farmingPoolAcc, terminationAcc sdk.AccAddress, stakingCoinWeights sdk.DecCoins,
+	startTime, endTime time.Time, epochAmt sdk.Coins) (types.PlanI, error) {
+	msg := types.NewMsgCreateFixedAmountPlan(
+		fmt.Sprintf("plan%d", suite.keeper.GetGlobalPlanId(suite.ctx)+1),
+		farmingPoolAcc, stakingCoinWeights,
+		startTime, endTime, epochAmt,
+	)
+	plan, err := suite.keeper.CreateFixedAmountPlan(suite.ctx, msg, farmingPoolAcc, terminationAcc, types.PlanTypePublic)
+	if err != nil {
+		return nil, err
+	}
+	return plan, nil
+}
+
+func (suite *KeeperTestSuite) createPrivateRatioPlan(
+	creator sdk.AccAddress, stakingCoinWeights sdk.DecCoins,
+	startTime, endTime time.Time, epochRatio sdk.Dec) (types.PlanI, error) {
+	msg := types.NewMsgCreateRatioPlan(
+		fmt.Sprintf("plan%d", suite.keeper.GetGlobalPlanId(suite.ctx)+1),
+		creator, stakingCoinWeights,
+		startTime, endTime, epochRatio,
+	)
+	farmingPoolAcc, err := suite.keeper.DerivePrivatePlanFarmingPoolAcc(suite.ctx, msg.Name)
+	if err != nil {
+		return nil, err
+	}
+	plan, err := suite.keeper.CreateRatioPlan(suite.ctx, msg, farmingPoolAcc, creator, types.PlanTypePrivate)
+	if err != nil {
+		return nil, err
+	}
+	if err := types.ValidateTotalEpochRatio(suite.keeper.GetPlans(suite.ctx)); err != nil {
+		return nil, err
+	}
+	return plan, nil
+}
+
+func (suite *KeeperTestSuite) createPublicRatioPlan(
+	farmingPoolAcc, terminationAcc sdk.AccAddress,
+	stakingCoinWeights sdk.DecCoins, startTime, endTime time.Time,
+	epochRatio sdk.Dec) (types.PlanI, error) {
+	msg := types.NewMsgCreateRatioPlan(
+		fmt.Sprintf("plan%d", suite.keeper.GetGlobalPlanId(suite.ctx)+1),
+		farmingPoolAcc, stakingCoinWeights,
+		startTime, endTime, epochRatio,
+	)
+	plan, err := suite.keeper.CreateRatioPlan(suite.ctx, msg, farmingPoolAcc, terminationAcc, types.PlanTypePublic)
+	if err != nil {
+		return nil, err
+	}
+	if err := types.ValidateTotalEpochRatio(suite.keeper.GetPlans(suite.ctx)); err != nil {
+		return nil, err
+	}
+	return plan, nil
+}
+
 func (suite *KeeperTestSuite) CreateFixedAmountPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {
 	stakingCoinWeights := sdk.NewDecCoins()
 	for denom, weight := range stakingCoinWeightsMap {
@@ -209,6 +293,40 @@ func (suite *KeeperTestSuite) CreateRatioPlan(farmingPoolAcc sdk.AccAddress, sta
 	suite.Require().NoError(err)
 }
 
+func (suite *KeeperTestSuite) handleProposal(content govtypes.Content) {
+	suite.T().Helper()
+	err := content.ValidateBasic()
+	suite.Require().NoError(err)
+	err = suite.govHandler(suite.ctx, content)
+	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) addDenoms(denoms ...string) {
+	suite.T().Helper()
+	coins := sdk.Coins{}
+	for _, denom := range denoms {
+		coins = coins.Add(sdk.NewInt64Coin(denom, 1))
+	}
+	err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) addDenomsFromCoins(coins sdk.Coins) {
+	var denoms []string
+	for _, coin := range coins {
+		denoms = append(denoms, coin.Denom)
+	}
+	suite.addDenoms(denoms...)
+}
+
+func (suite *KeeperTestSuite) addDenomsFromDecCoins(coins sdk.DecCoins) {
+	var denoms []string
+	for _, coin := range coins {
+		denoms = append(denoms, coin.Denom)
+	}
+	suite.addDenoms(denoms...)
+}
+
 func intEq(exp, got sdk.Int) (bool, string, string, string) {
 	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
@@ -223,4 +341,28 @@ func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 
 func decCoinsEq(exp, got sdk.DecCoins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func parseCoins(s string) sdk.Coins {
+	coins, err := sdk.ParseCoinsNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}
+
+func parseDecCoins(s string) sdk.DecCoins {
+	decCoins, err := sdk.ParseDecCoins(s)
+	if err != nil {
+		panic(err)
+	}
+	return decCoins
+}
+
+func parseDec(s string) sdk.Dec {
+	dec, err := sdk.NewDecFromStr(s)
+	if err != nil {
+		panic(err)
+	}
+	return dec
 }

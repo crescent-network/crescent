@@ -15,15 +15,25 @@ import (
 
 var (
 	enableAdvanceEpoch = "false" // Set this to "true" using build flags to enable AdvanceEpoch msg handling.
+	enableRatioPlan    = "false" // Set this to "true" using build flags to enable creation of RatioPlans.
 
 	// EnableAdvanceEpoch indicates whether msgServer accepts MsgAdvanceEpoch or not.
 	// Never set this to true in production mode. Doing that will expose serious attack vector.
 	EnableAdvanceEpoch = false
+	// EnableRatioPlan indicates whether msgServer and proposal handler accept
+	// creation of RatioPlans.
+	// Default is false, which means that RatioPlans can't be created through a
+	// MsgCreateRatioPlan msg and a PublicPlanProposal.
+	EnableRatioPlan = false
 )
 
 func init() {
 	var err error
 	EnableAdvanceEpoch, err = strconv.ParseBool(enableAdvanceEpoch)
+	if err != nil {
+		panic(err)
+	}
+	EnableRatioPlan, err = strconv.ParseBool(enableRatioPlan)
 	if err != nil {
 		panic(err)
 	}

@@ -14,6 +14,7 @@ import (
 
 	chain "github.com/crescent-network/crescent/app"
 	"github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/x/farming/keeper"
 	"github.com/crescent-network/crescent/x/farming/simulation"
 	"github.com/crescent-network/crescent/x/farming/types"
 	minttypes "github.com/crescent-network/crescent/x/mint/types"
@@ -100,6 +101,7 @@ func TestSimulateMsgCreateFixedAmountPlan(t *testing.T) {
 // Abnormal scenarios, where the message are created by an errors are not tested here.
 func TestSimulateMsgCreateRatioPlan(t *testing.T) {
 	app, ctx := createTestApp(false)
+	keeper.EnableRatioPlan = true
 
 	// setup a single account
 	s := rand.NewSource(1)
