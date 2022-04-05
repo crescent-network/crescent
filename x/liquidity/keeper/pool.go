@@ -179,6 +179,14 @@ func (k Keeper) ValidateMsgDeposit(ctx sdk.Context, msg *types.MsgDeposit) error
 		}
 	}
 
+	rx, ry := k.getPoolBalances(ctx, pool, pair)
+	if rx.Amount.Add(msg.DepositCoins.AmountOf(rx.Denom)).GT(amm.MaxCoinAmount) {
+		return types.ErrTooLargePool
+	}
+	if ry.Amount.Add(msg.DepositCoins.AmountOf(ry.Denom)).GT(amm.MaxCoinAmount) {
+		return types.ErrTooLargePool
+	}
+
 	return nil
 }
 

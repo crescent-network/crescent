@@ -110,6 +110,13 @@ func TestMsgCreatePool(t *testing.T) {
 			},
 			"wrong number of deposit coins: 3: invalid request",
 		},
+		{
+			"too large deposit coins",
+			func(msg *types.MsgCreatePool) {
+				msg.DepositCoins = utils.ParseCoins("100000000000000000000000000000000000000000denom1,100000000000000000000000000000000000000000denom2")
+			},
+			"deposit coin 100000000000000000000000000000000000000000denom1 is bigger than the max amount 10000000000000000000000000000000000000000: invalid request",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgCreatePool(testAddr, 1, utils.ParseCoins("1000000denom1,1000000denom2"))
@@ -285,14 +292,14 @@ func TestMsgLimitOrder(t *testing.T) {
 			func(msg *types.MsgLimitOrder) {
 				msg.OfferCoin = utils.ParseCoin("0denom1")
 			},
-			"offer coin must be positive: invalid request",
+			"offer coin 0denom1 is smaller than the min amount 100: invalid request",
 		},
 		{
-			"insufficient offer coin amount",
+			"small offer coin amount",
 			func(msg *types.MsgLimitOrder) {
 				msg.OfferCoin = utils.ParseCoin("10denom1")
 			},
-			"offer coin is less than minimum coin amount: invalid request",
+			"offer coin 10denom1 is smaller than the min amount 100: invalid request",
 		},
 		{
 			"insufficient offer coin amount",
@@ -326,18 +333,18 @@ func TestMsgLimitOrder(t *testing.T) {
 			"price must be positive: invalid request",
 		},
 		{
-			"invalid amount",
+			"zero order amount",
 			func(msg *types.MsgLimitOrder) {
 				msg.Amount = sdk.ZeroInt()
 			},
-			"amount must be positive: 0: invalid request",
+			"order amount 0 is smaller than the min amount 100: invalid request",
 		},
 		{
-			"insufficient amount",
+			"small order amount",
 			func(msg *types.MsgLimitOrder) {
 				msg.Amount = newInt(10)
 			},
-			"base coin is less than minimum coin amount: invalid request",
+			"order amount 10 is smaller than the min amount 100: invalid request",
 		},
 		{
 			"invalid order lifespan",
@@ -401,18 +408,18 @@ func TestMsgMarketOrder(t *testing.T) {
 			"invalid order direction: ORDER_DIRECTION_UNSPECIFIED: invalid request",
 		},
 		{
-			"invalid offer coin",
+			"zero offer coin",
 			func(msg *types.MsgMarketOrder) {
 				msg.OfferCoin = utils.ParseCoin("0denom1")
 			},
-			"offer coin must be positive: invalid request",
+			"offer coin 0denom1 is smaller than the min amount 100: invalid request",
 		},
 		{
-			"insufficient offer coin amount",
+			"small offer coin amount",
 			func(msg *types.MsgMarketOrder) {
 				msg.OfferCoin = utils.ParseCoin("10denom1")
 			},
-			"offer coin is less than minimum coin amount: invalid request",
+			"offer coin 10denom1 is smaller than the min amount 100: invalid request",
 		},
 		{
 			"invalid demand coin denom",
@@ -430,18 +437,18 @@ func TestMsgMarketOrder(t *testing.T) {
 			"offer coin denom and demand coin denom must not be same: invalid request",
 		},
 		{
-			"invalid amount",
+			"zero order amount",
 			func(msg *types.MsgMarketOrder) {
 				msg.Amount = sdk.ZeroInt()
 			},
-			"amount must be positive: 0: invalid request",
+			"order amount 0 is smaller than the min amount 100: invalid request",
 		},
 		{
-			"insufficient amount",
+			"small order amount",
 			func(msg *types.MsgMarketOrder) {
 				msg.Amount = newInt(10)
 			},
-			"base coin is less than minimum coin amount: invalid request",
+			"order amount 10 is smaller than the min amount 100: invalid request",
 		},
 		{
 			"invalid order lifespan",

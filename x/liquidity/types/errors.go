@@ -23,4 +23,5 @@ var (
 	ErrAlreadyCanceled           = sdkerrors.Register(ModuleName, 15, "the order is already canceled")
 	ErrDuplicatePairId           = sdkerrors.Register(ModuleName, 16, "duplicate pair id presents in the pair id list")
 	ErrTooSmallOrder             = sdkerrors.Register(ModuleName, 17, "too small order")
+	ErrTooLargePool              = sdkerrors.Register(ModuleName, 18, "too large pool")
 )

@@ -325,7 +325,7 @@ func (s *KeeperTestSuite) TestPartialMatch() {
 func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	// Create a pool with very low price.
-	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000000000000000000000000000000000000000denom1,1000000denom2"), true)
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("10000000000000000000000000000000000000000denom1,1000000denom2"), true)
 	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(100000000000000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
@@ -565,13 +565,13 @@ func (s *KeeperTestSuite) TestRejectSmallOrders() {
 	msg := types.NewMsgLimitOrder(
 		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("99denom2"),
 		"denom1", utils.ParseDec("0.1"), sdk.NewInt(990), 0)
-	s.Require().EqualError(msg.ValidateBasic(), "offer coin is less than minimum coin amount: invalid request")
+	s.Require().EqualError(msg.ValidateBasic(), "offer coin 99denom2 is smaller than the min amount 100: invalid request")
 
 	// Too small order amount.
 	msg = types.NewMsgLimitOrder(
 		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("990denom2"),
 		"denom1", utils.ParseDec("10.0"), sdk.NewInt(99), 0)
-	s.Require().EqualError(msg.ValidateBasic(), "base coin is less than minimum coin amount: invalid request")
+	s.Require().EqualError(msg.ValidateBasic(), "order amount 99 is smaller than the min amount 100: invalid request")
 
 	// Too small orders.
 	msg = types.NewMsgLimitOrder(
@@ -592,13 +592,13 @@ func (s *KeeperTestSuite) TestRejectSmallOrders() {
 	msg2 := types.NewMsgMarketOrder(
 		s.addr(1), pair.Id, types.OrderDirectionSell, utils.ParseCoin("99denom1"),
 		"denom2", sdk.NewInt(99), 0)
-	s.Require().EqualError(msg2.ValidateBasic(), "offer coin is less than minimum coin amount: invalid request")
+	s.Require().EqualError(msg2.ValidateBasic(), "offer coin 99denom1 is smaller than the min amount 100: invalid request")
 
 	// Too small order amount.
 	msg2 = types.NewMsgMarketOrder(
 		s.addr(1), pair.Id, types.OrderDirectionSell, utils.ParseCoin("100denom1"),
 		"denom2", sdk.NewInt(99), 0)
-	s.Require().EqualError(msg2.ValidateBasic(), "base coin is less than minimum coin amount: invalid request")
+	s.Require().EqualError(msg2.ValidateBasic(), "order amount 99 is smaller than the min amount 100: invalid request")
 
 	p := utils.ParseDec("0.0001")
 	pair.LastPrice = &p
@@ -642,21 +642,10 @@ func (s *KeeperTestSuite) TestExpireSmallOrders() {
 
 func (s *KeeperTestSuite) TestPoolOrderOverflow() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	i, _ := sdk.NewIntFromString("99999999999999999999999999999999999999999999999999999999999999999999999999999")
-	s.createPool(s.addr(0), pair.Id, sdk.NewCoins(sdk.NewCoin("denom1", i), sdk.NewCoin("denom2", i)), true)
+	i, _ := sdk.NewIntFromString("10000000000000000000000000000000000000000")
+	s.createPool(s.addr(0), pair.Id, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1e6), sdk.NewCoin("denom2", i)), true)
 
 	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(1e17), 0, true)
-	s.Require().NotPanics(func() {
-		liquidity.EndBlocker(s.ctx, s.keeper)
-	})
-}
-
-func (s *KeeperTestSuite) TestUserOrderOverflow() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	i, _ := sdk.NewIntFromString("115792089237316195423570985008687907853269984665640564039457584007913129639935")
-	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.002"), i, 0, true)
-	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.002"), i, 0, true)
-	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.001"), sdk.NewInt(1e10), 0, true)
 	s.Require().NotPanics(func() {
 		liquidity.EndBlocker(s.ctx, s.keeper)
 	})

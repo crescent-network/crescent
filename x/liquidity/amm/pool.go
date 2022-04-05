@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/crescent-network/crescent/types"
 )
 
 var (
@@ -142,6 +142,9 @@ func (pool *BasicPool) BuyAmountOver(price sdk.Dec) (amt sdk.Int) {
 	}
 	utils.SafeMath(func() {
 		amt = pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
+		if amt.GT(MaxCoinAmount) {
+			amt = MaxCoinAmount
+		}
 	}, func() {
 		amt = MaxCoinAmount
 	})

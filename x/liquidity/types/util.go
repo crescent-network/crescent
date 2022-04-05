@@ -3,6 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
 // BulkSendCoinsOperation holds a list of SendCoins operations for bulk execution.
@@ -38,5 +40,5 @@ func (op *BulkSendCoinsOperation) Run(ctx sdk.Context, bankKeeper BankKeeper) er
 // IsTooSmallOrderAmount returns whether the order amount is too small for
 // matching, based on the order price.
 func IsTooSmallOrderAmount(amt sdk.Int, price sdk.Dec) bool {
-	return amt.LT(MinCoinAmount) || price.MulInt(amt).LT(MinCoinAmount.ToDec())
+	return amt.LT(amm.MinCoinAmount) || price.MulInt(amt).LT(amm.MinCoinAmount.ToDec())
 }

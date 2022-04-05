@@ -108,6 +108,11 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	if len(msg.DepositCoins) != 2 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
 	}
+	for _, coin := range msg.DepositCoins {
+		if coin.Amount.GT(amm.MaxCoinAmount) {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "deposit coin %s is bigger than the max amount %s", coin, amm.MaxCoinAmount)
+		}
+	}
 	return nil
 }
 
@@ -274,9 +279,6 @@ func (msg MsgLimitOrder) ValidateBasic() error {
 	if msg.Direction != OrderDirectionBuy && msg.Direction != OrderDirectionSell {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid order direction: %s", msg.Direction)
 	}
-	if !msg.Amount.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
-	}
 	if err := sdk.ValidateDenom(msg.DemandCoinDenom); err != nil {
 		return sdkerrors.Wrap(err, "invalid demand coin denom")
 	}
@@ -286,11 +288,17 @@ func (msg MsgLimitOrder) ValidateBasic() error {
 	if err := msg.OfferCoin.Validate(); err != nil {
 		return sdkerrors.Wrap(err, "invalid offer coin")
 	}
-	if !msg.OfferCoin.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin must be positive")
+	if msg.OfferCoin.Amount.LT(amm.MinCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offer coin %s is smaller than the min amount %s", msg.OfferCoin, amm.MinCoinAmount)
 	}
-	if msg.OfferCoin.Amount.LT(MinCoinAmount) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin is less than minimum coin amount")
+	if msg.OfferCoin.Amount.GT(amm.MaxCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offer coin %s is bigger than the max amount %s", msg.OfferCoin, amm.MaxCoinAmount)
+	}
+	if msg.Amount.LT(amm.MinCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order amount %s is smaller than the min amount %s", msg.Amount, amm.MinCoinAmount)
+	}
+	if msg.Amount.GT(amm.MaxCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order amount %s is bigger than the max amount %s", msg.Amount, amm.MaxCoinAmount)
 	}
 	var minOfferCoin sdk.Coin
 	switch msg.Direction {
@@ -301,9 +309,6 @@ func (msg MsgLimitOrder) ValidateBasic() error {
 	}
 	if msg.OfferCoin.IsLT(minOfferCoin) {
 		return sdkerrors.Wrapf(ErrInsufficientOfferCoin, "%s is less than %s", msg.OfferCoin, minOfferCoin)
-	}
-	if msg.Amount.LT(MinCoinAmount) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "base coin is less than minimum coin amount")
 	}
 	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")
@@ -369,23 +374,23 @@ func (msg MsgMarketOrder) ValidateBasic() error {
 	if msg.Direction != OrderDirectionBuy && msg.Direction != OrderDirectionSell {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid order direction: %s", msg.Direction)
 	}
-	if !msg.Amount.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "amount must be positive: %s", msg.Amount)
-	}
 	if err := sdk.ValidateDenom(msg.DemandCoinDenom); err != nil {
 		return sdkerrors.Wrap(err, "invalid demand coin denom")
 	}
 	if err := msg.OfferCoin.Validate(); err != nil {
 		return sdkerrors.Wrap(err, "invalid offer coin")
 	}
-	if !msg.OfferCoin.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin must be positive")
+	if msg.OfferCoin.Amount.LT(amm.MinCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offer coin %s is smaller than the min amount %s", msg.OfferCoin, amm.MinCoinAmount)
 	}
-	if msg.OfferCoin.Amount.LT(MinCoinAmount) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin is less than minimum coin amount")
+	if msg.OfferCoin.Amount.GT(amm.MaxCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offer coin %s is bigger than the max amount %s", msg.OfferCoin, amm.MaxCoinAmount)
 	}
-	if msg.Amount.LT(MinCoinAmount) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "base coin is less than minimum coin amount")
+	if msg.Amount.LT(amm.MinCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order amount %s is smaller than the min amount %s", msg.Amount, amm.MinCoinAmount)
+	}
+	if msg.Amount.GT(amm.MaxCoinAmount) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "order amount %s is bigger than the max amount %s", msg.Amount, amm.MaxCoinAmount)
 	}
 	if msg.OfferCoin.Denom == msg.DemandCoinDenom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "offer coin denom and demand coin denom must not be same")

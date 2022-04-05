@@ -250,20 +250,12 @@ func (s *KeeperTestSuite) TestDepositRefundTooSmallMintedPoolCoin() {
 	s.Require().True(coinsEq(depositCoins, s.getBalances(depositor)))
 }
 
-func (s *KeeperTestSuite) TestDepositOverflow() {
+func (s *KeeperTestSuite) TestTooLargePool() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 
-	// 2^256 minus some amount of coin that already exist(to not make an overflow when minting coins).
-	i, _ := sdk.NewIntFromString("115792089237316195423570985008687907853269984665640564039457584007913120000000")
-	depositCoins := sdk.NewCoins(sdk.NewCoin("denom1", i), sdk.NewCoin("denom2", i))
-	// This will cause integer overflow in end-block.
-	s.deposit(s.addr(1), pool.Id, depositCoins, true)
-	s.Require().NotPanics(func() {
-		liquidity.EndBlocker(s.ctx, s.keeper)
-	})
-	// Deposit coins are refunded.
-	s.Require().True(coinsEq(depositCoins, s.getBalances(s.addr(1))))
+	_, err := s.keeper.Deposit(s.ctx, types.NewMsgDeposit(s.addr(1), pool.Id, utils.ParseCoins("10000000000000000000000000000000000000000denom1,10000000000000000000000000000000000000000denom2")))
+	s.Require().ErrorIs(err, types.ErrTooLargePool)
 }
 
 func (s *KeeperTestSuite) TestWithdraw() {
