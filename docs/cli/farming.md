@@ -93,6 +93,8 @@ crescentd tx farming create-private-fixed-plan private-fixed-plan.json \
 
 ## CreateRatioPlan
 
+***This message is disabled by default, you have to build the binary with `make install-testing` to activate this message.***
+
 Anyone can create this private plan type message. A ratio plan plans to distribute amount of coins by ratio that is defined in `EpochRatio`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan. The creator must query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. For a ratio plan, whichever coins that the farming pool address has in balances are used every epoch. To prevent spamming attacks, a `PlanCreationFee` fee must be paid on plan creation.
 
 Create the `private-ratio-plan.json` file. This private ratio farming plan intends to provide ratio of all coins that farming pool address has per epoch (measured in day). In this example, epoch ratio is 10 percent and 10 percent of all the coins that the creator of this plan has in balances are used as incentives for the denoms that are defined in the staking coin weights.

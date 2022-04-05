@@ -10,6 +10,15 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+const (
+	// PrivatePlanMaxNumDenoms is the maximum number of denoms in a private plan's
+	// staking coin weights and epoch amount.
+	PrivatePlanMaxNumDenoms = 50
+	// PublicPlanMaxNumDenoms is the maximum number of denoms in a public plan's
+	// staking coin weights and epoch amount.
+	PublicPlanMaxNumDenoms = 500
+)
+
 // Parameter store keys
 var (
 	KeyPrivatePlanCreationFee = []byte("PrivatePlanCreationFee")
@@ -106,7 +115,7 @@ func validateNextEpochDays(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v <= 0 {
+	if v == 0 {
 		return fmt.Errorf("next epoch days must be positive: %d", v)
 	}
 

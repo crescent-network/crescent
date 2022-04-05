@@ -3,8 +3,6 @@
 
 At each end-block call, the `farming` module operations are specified to execute.
 
-++ `/x/farming/abci.go`
-
 At the end of each block:
 
 - Terminates plans if their end time has passed over the current block time. 

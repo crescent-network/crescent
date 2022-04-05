@@ -51,6 +51,10 @@ var (
 	}
 )
 
+func init() {
+	farmingkeeper.EnableRatioPlan = true
+}
+
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak farmingtypes.AccountKeeper,
@@ -139,6 +143,10 @@ func SimulateMsgCreateFixedAmountPlan(ak farmingtypes.AccountKeeper, bk farmingt
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		params := k.GetParams(ctx)
+		if uint32(k.GetNumActivePrivatePlans(ctx)) > params.MaxNumPrivatePlans {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateFixedAmountPlan, "maximum number of private plans reached"), nil, nil
+		}
+
 		_, hasNeg := spendable.SafeSub(params.PrivatePlanCreationFee)
 		if hasNeg {
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateFixedAmountPlan, "insufficient balance for plan creation fee"), nil, nil
@@ -198,6 +206,10 @@ func SimulateMsgCreateRatioPlan(ak farmingtypes.AccountKeeper, bk farmingtypes.B
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		params := k.GetParams(ctx)
+		if uint32(k.GetNumActivePrivatePlans(ctx)) > params.MaxNumPrivatePlans {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateRatioPlan, "maximum number of private plans reached"), nil, nil
+		}
+
 		_, hasNeg := spendable.SafeSub(params.PrivatePlanCreationFee)
 		if hasNeg {
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateRatioPlan, "insufficient balance for plan creation fee"), nil, nil
@@ -352,31 +364,27 @@ func SimulateMsgHarvest(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKeepe
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var simAccount simtypes.Account
+		var stakingCoinDenoms []string
 
+		skip := true
 		// find staking from the simulated accounts
-		var ranStaking sdk.Coins
 		for _, acc := range accs {
-			staking := k.GetAllStakedCoinsByFarmer(ctx, acc.Address)
-			if !staking.IsZero() {
+			staked := k.GetAllStakedCoinsByFarmer(ctx, acc.Address)
+			stakingCoinDenoms = nil
+			for _, coin := range staked {
+				rewards := k.Rewards(ctx, acc.Address, coin.Denom)
+				if !rewards.IsZero() {
+					stakingCoinDenoms = append(stakingCoinDenoms, coin.Denom)
+				}
+			}
+			if len(stakingCoinDenoms) > 0 {
 				simAccount = acc
-				ranStaking = staking
+				skip = false
 				break
 			}
 		}
-
-		var stakingCoinDenoms []string
-		for _, coin := range ranStaking {
-			stakingCoinDenoms = append(stakingCoinDenoms, coin.Denom)
-		}
-
-		var totalRewards sdk.Coins
-		for _, denom := range stakingCoinDenoms {
-			rewards := k.Rewards(ctx, simAccount.Address, denom)
-			totalRewards = totalRewards.Add(rewards...)
-		}
-
-		if totalRewards.IsZero() {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgHarvest, "no rewards to harvest"), nil, nil
+		if skip {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgHarvest, "no account to harvest rewards"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)

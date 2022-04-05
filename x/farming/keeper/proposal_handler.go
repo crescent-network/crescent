@@ -66,6 +66,10 @@ func (k Keeper) AddPublicPlanProposal(ctx sdk.Context, proposals []types.AddPlan
 			logger := k.Logger(ctx)
 			logger.Info("created public fixed amount plan", "fixed_amount_plan", plan)
 		} else {
+			if !EnableRatioPlan {
+				return types.ErrRatioPlanDisabled
+			}
+
 			msg := types.NewMsgCreateRatioPlan(
 				p.GetName(),
 				farmingPoolAcc,
@@ -152,6 +156,10 @@ func (k Keeper) ModifyPublicPlanProposal(ctx sdk.Context, proposals []types.Modi
 			logger.Info("updated public fixed amount plan", "fixed_amount_plan", plan)
 
 		} else if p.IsForRatioPlan() {
+			if !EnableRatioPlan {
+				return types.ErrRatioPlanDisabled
+			}
+
 			// change the plan to ratio plan
 			plan = types.NewRatioPlan(plan.GetBasePlan(), p.EpochRatio)
 

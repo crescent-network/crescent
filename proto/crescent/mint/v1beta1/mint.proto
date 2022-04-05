@@ -9,25 +9,26 @@ import "google/protobuf/timestamp.proto";
 
 // Params holds parameters for the mint module.
 message Params {
-  // type of coin to mint
+  // mint_denom defines denomination of coin to be minted
   string mint_denom = 1;
 
-  // block_time_threshold is a safety to accept only blocktime as much as it and give inflation even if the chain stops
-  // or the last blocktime is huge by manipulating blocktime.
+  // block_time_threshold defines block time threshold to prevent from any inflationary manipulation attacks
+  // it is used for maximum block duration when calculating block inflation
   google.protobuf.Duration block_time_threshold = 2 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 
+  // inflation_schedules defines a list of inflation schedules
   repeated InflationSchedule inflation_schedules = 3 [(gogoproto.nullable) = false];
 }
 
 // InflationSchedule defines the start and end time of the inflation period, and the amount of inflation during that
 // period.
 message InflationSchedule {
-  // start_time is a start date time of the inflation period
+  // start_time defines the start date time for the inflation schedule
   google.protobuf.Timestamp start_time = 1
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
-  // end_time is a start date time of the inflation period
+  // end_time defines the end date time for the inflation schedule
   google.protobuf.Timestamp end_time = 2
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
-  // amount is the amount of inflation during that period.
+  // amount defines the total amount of inflation for the schedule
   string amount = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }

@@ -35,12 +35,14 @@ func GetTxCmd() *cobra.Command {
 
 	farmingTxCmd.AddCommand(
 		NewCreateFixedAmountPlanCmd(),
-		NewCreateRatioPlanCmd(),
 		NewStakeCmd(),
 		NewUnstakeCmd(),
 		NewHarvestCmd(),
 		NewRemovePlanCmd(),
 	)
+	if keeper.EnableRatioPlan {
+		farmingTxCmd.AddCommand(NewCreateRatioPlanCmd())
+	}
 	if keeper.EnableAdvanceEpoch {
 		farmingTxCmd.AddCommand(NewAdvanceEpochCmd())
 	}

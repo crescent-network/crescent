@@ -103,7 +103,8 @@ type Params struct {
 	FarmingFeeCollector string `protobuf:"bytes,3,opt,name=farming_fee_collector,json=farmingFeeCollector,proto3" json:"farming_fee_collector,omitempty" yaml:"farming_fee_collector"`
 	// delayed_staking_gas_fee is used to impose gas fee for the delayed staking
 	DelayedStakingGasFee github_com_cosmos_cosmos_sdk_types.Gas `protobuf:"varint,4,opt,name=delayed_staking_gas_fee,json=delayedStakingGasFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Gas" json:"delayed_staking_gas_fee" yaml:"delayed_staking_gas_fee"`
-	MaxNumPrivatePlans   uint32                                 `protobuf:"varint,5,opt,name=max_num_private_plans,json=maxNumPrivatePlans,proto3" json:"max_num_private_plans,omitempty" yaml:"max_num_private_plans"`
+	// max_num_private_plans is the maximum number of active private plans
+	MaxNumPrivatePlans uint32 `protobuf:"varint,5,opt,name=max_num_private_plans,json=maxNumPrivatePlans,proto3" json:"max_num_private_plans,omitempty" yaml:"max_num_private_plans"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }

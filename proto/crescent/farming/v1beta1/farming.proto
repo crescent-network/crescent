@@ -37,6 +37,7 @@ message Params {
     (gogoproto.nullable)   = false
   ];
 
+  // max_num_private_plans is the maximum number of active private plans
   uint32 max_num_private_plans = 5 [(gogoproto.moretags) = "yaml:\"max_num_private_plans\""];
 }
 

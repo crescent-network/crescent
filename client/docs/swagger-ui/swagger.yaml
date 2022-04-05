@@ -20879,8 +20879,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#currentepochdays
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   /crescent/farming/v1beta1/params:
     get:
       summary: Params returns parameters of the farming module.
@@ -20942,6 +20941,9 @@ paths:
                   max_num_private_plans:
                     type: integer
                     format: int64
+                    title: >-
+                      max_num_private_plans is the maximum number of active
+                      private plans
                 description: Params defines the set of params for the farming module.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
@@ -21640,8 +21642,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#Plans
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/plans/{plan_id}':
     get:
       summary: Plan returns a specific plan.
@@ -22050,8 +22051,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#plan
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/rewards/{farmer}':
     get:
       summary: Rewards returns rewards for a farmer
@@ -22293,8 +22293,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#rewards
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/stakings/{farmer}':
     get:
       summary: Stakings returns all stakings by a farmer.
@@ -22555,8 +22554,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#stakings
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}':
     get:
       summary: TotalStakings returns total staking amount for a staking coin denom
@@ -22779,8 +22777,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: >-
-          https://github.com/crescent-network/crescent/tree/main/docs/How-To/cli#totalstakings
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   '/crescent/liquidity/v1beta1/orders/{orderer}':
     get:
       summary: OrdersByOrderer returns orders made by an orderer.
@@ -25268,14 +25265,15 @@ paths:
                 properties:
                   mint_denom:
                     type: string
-                    title: type of coin to mint
+                    title: mint_denom defines denomination of coin to be minted
                   block_time_threshold:
                     type: string
-                    description: >-
-                      block_time_threshold is a safety to accept only blocktime
-                      as much as it and give inflation even if the chain stops
+                    title: >-
+                      block_time_threshold defines block time threshold to
+                      prevent from any inflationary manipulation attacks
 
-                      or the last blocktime is huge by manipulating blocktime.
+                      it is used for maximum block duration when calculating
+                      block inflation
                   inflation_schedules:
                     type: array
                     items:
@@ -25285,25 +25283,26 @@ paths:
                           type: string
                           format: date-time
                           title: >-
-                            start_time is a start date time of the inflation
-                            period
+                            start_time defines the start date time for the
+                            inflation schedule
                         end_time:
                           type: string
                           format: date-time
                           title: >-
-                            end_time is a start date time of the inflation
-                            period
+                            end_time defines the end date time for the inflation
+                            schedule
                         amount:
                           type: string
-                          description: >-
-                            amount is the amount of inflation during that
-                            period.
+                          title: >-
+                            amount defines the total amount of inflation for the
+                            schedule
                       description: >-
                         InflationSchedule defines the start and end time of the
                         inflation period, and the amount of inflation during
                         that
 
                         period.
+                    title: inflation_schedules defines a list of inflation schedules
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -42530,6 +42529,7 @@ definitions:
       max_num_private_plans:
         type: integer
         format: int64
+        title: max_num_private_plans is the maximum number of active private plans
     description: Params defines the set of params for the farming module.
   crescent.farming.v1beta1.QueryCurrentEpochDaysResponse:
     type: object
@@ -42592,6 +42592,9 @@ definitions:
           max_num_private_plans:
             type: integer
             format: int64
+            title: >-
+              max_num_private_plans is the maximum number of active private
+              plans
         description: Params defines the set of params for the farming module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   crescent.farming.v1beta1.QueryPlanResponse:
@@ -44775,14 +44778,14 @@ definitions:
       start_time:
         type: string
         format: date-time
-        title: start_time is a start date time of the inflation period
+        title: start_time defines the start date time for the inflation schedule
       end_time:
         type: string
         format: date-time
-        title: end_time is a start date time of the inflation period
+        title: end_time defines the end date time for the inflation schedule
       amount:
         type: string
-        description: amount is the amount of inflation during that period.
+        title: amount defines the total amount of inflation for the schedule
     description: >-
       InflationSchedule defines the start and end time of the inflation period,
       and the amount of inflation during that
@@ -44793,14 +44796,14 @@ definitions:
     properties:
       mint_denom:
         type: string
-        title: type of coin to mint
+        title: mint_denom defines denomination of coin to be minted
       block_time_threshold:
         type: string
-        description: >-
-          block_time_threshold is a safety to accept only blocktime as much as
-          it and give inflation even if the chain stops
+        title: >-
+          block_time_threshold defines block time threshold to prevent from any
+          inflationary manipulation attacks
 
-          or the last blocktime is huge by manipulating blocktime.
+          it is used for maximum block duration when calculating block inflation
       inflation_schedules:
         type: array
         items:
@@ -44809,19 +44812,22 @@ definitions:
             start_time:
               type: string
               format: date-time
-              title: start_time is a start date time of the inflation period
+              title: >-
+                start_time defines the start date time for the inflation
+                schedule
             end_time:
               type: string
               format: date-time
-              title: end_time is a start date time of the inflation period
+              title: end_time defines the end date time for the inflation schedule
             amount:
               type: string
-              description: amount is the amount of inflation during that period.
+              title: amount defines the total amount of inflation for the schedule
           description: >-
             InflationSchedule defines the start and end time of the inflation
             period, and the amount of inflation during that
 
             period.
+        title: inflation_schedules defines a list of inflation schedules
     description: Params holds parameters for the mint module.
   crescent.mint.v1beta1.QueryParamsResponse:
     type: object
@@ -44832,14 +44838,15 @@ definitions:
         properties:
           mint_denom:
             type: string
-            title: type of coin to mint
+            title: mint_denom defines denomination of coin to be minted
           block_time_threshold:
             type: string
-            description: >-
-              block_time_threshold is a safety to accept only blocktime as much
-              as it and give inflation even if the chain stops
+            title: >-
+              block_time_threshold defines block time threshold to prevent from
+              any inflationary manipulation attacks
 
-              or the last blocktime is huge by manipulating blocktime.
+              it is used for maximum block duration when calculating block
+              inflation
           inflation_schedules:
             type: array
             items:
@@ -44848,19 +44855,26 @@ definitions:
                 start_time:
                   type: string
                   format: date-time
-                  title: start_time is a start date time of the inflation period
+                  title: >-
+                    start_time defines the start date time for the inflation
+                    schedule
                 end_time:
                   type: string
                   format: date-time
-                  title: end_time is a start date time of the inflation period
+                  title: >-
+                    end_time defines the end date time for the inflation
+                    schedule
                 amount:
                   type: string
-                  description: amount is the amount of inflation during that period.
+                  title: >-
+                    amount defines the total amount of inflation for the
+                    schedule
               description: >-
                 InflationSchedule defines the start and end time of the
                 inflation period, and the amount of inflation during that
 
                 period.
+            title: inflation_schedules defines a list of inflation schedules
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   crescent.claim.v1beta1.Airdrop:
     type: object

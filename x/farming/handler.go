@@ -1,8 +1,6 @@
 package farming
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -43,9 +41,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgAdvanceEpoch:
-			if !keeper.EnableAdvanceEpoch {
-				return nil, fmt.Errorf("AdvanceEpoch is disabled")
-			}
 			res, err := msgServer.AdvanceEpoch(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 

@@ -55,8 +55,6 @@ If the sum of total calculated `EpochAmount` (or `EpochRatio` multiplied by the 
 
 For each abci end block call, the operations to update the rewards allocation are:
 
-++ `/x/farming/keeper/reward.go`
-
 - Calculates rewards allocation information for the end of the current epoch depending on plan type `FixedAmountPlan` or `RatioPlan`
 - Distributes total allocated coins from each plan’s farming pool address `FarmingPoolAddress` to the rewards reserve pool account `RewardsReserveAcc`
 - Calculates staking coin weight for each denom in each plan and gets the unit rewards by denom

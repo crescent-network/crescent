@@ -44,6 +44,11 @@ func (k msgServer) CreateFixedAmountPlan(goCtx context.Context, msg *types.MsgCr
 // CreateRatioPlan defines a method for creating ratio farming plan.
 func (k msgServer) CreateRatioPlan(goCtx context.Context, msg *types.MsgCreateRatioPlan) (*types.MsgCreateRatioPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !EnableRatioPlan {
+		return nil, types.ErrRatioPlanDisabled
+	}
+
 	poolAcc, err := k.DerivePrivatePlanFarmingPoolAcc(ctx, msg.Name)
 	if err != nil {
 		return nil, err

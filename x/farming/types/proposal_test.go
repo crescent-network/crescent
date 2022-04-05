@@ -195,7 +195,7 @@ func TestAddPlanRequest_Validate(t *testing.T) {
 				req.StartTime = types.ParseTime("2021-10-01T00:00:00Z")
 				req.EndTime = types.ParseTime("2021-09-01T00:00:00Z")
 			},
-			"end time 2021-09-01 00:00:00 +0000 UTC must be greater than start time 2021-10-01 00:00:00 +0000 UTC: invalid plan end time",
+			"end time 2021-09-01T00:00:00Z must be greater than start time 2021-10-01T00:00:00Z: invalid plan end time",
 		},
 		{
 			"empty epoch amount",
