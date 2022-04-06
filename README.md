@@ -8,7 +8,7 @@
 <p align="center">
 Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<br/><br/>
 
-<a href="https://pkg.go.dev/badge/github.com/crescent-network/crescent">
+<a href="https://pkg.go.dev/github.com/crescent-network/crescent">
     <img src="https://pkg.go.dev/badge/github.com/crescent-network/crescent">
 </a>
 <a href="https://codecov.io/gh/crescent-network/crescent">
