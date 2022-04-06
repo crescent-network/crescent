@@ -59,10 +59,10 @@ func DefaultParams() Params {
 // ParamSetPairs implements paramstypes.ParamSet.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyLiquidBondDenom, &p.LiquidBondDenom, ValidateLiquidBondDenom),
-		paramstypes.NewParamSetPair(KeyWhitelistedValidators, &p.WhitelistedValidators, ValidateWhitelistedValidators),
-		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, ValidateUnstakeFeeRate),
-		paramstypes.NewParamSetPair(KeyMinLiquidStakingAmount, &p.MinLiquidStakingAmount, ValidateMinLiquidStakingAmount),
+		paramstypes.NewParamSetPair(KeyLiquidBondDenom, &p.LiquidBondDenom, validateLiquidBondDenom),
+		paramstypes.NewParamSetPair(KeyWhitelistedValidators, &p.WhitelistedValidators, validateWhitelistedValidators),
+		paramstypes.NewParamSetPair(KeyUnstakeFeeRate, &p.UnstakeFeeRate, validateUnstakeFeeRate),
+		paramstypes.NewParamSetPair(KeyMinLiquidStakingAmount, &p.MinLiquidStakingAmount, validateMinLiquidStakingAmount),
 	}
 }
 
@@ -72,8 +72,8 @@ func (p Params) String() string {
 	return string(out)
 }
 
-func (p Params) WhitelistedValMap() WhitelistedValMap {
-	return GetWhitelistedValMap(p.WhitelistedValidators)
+func (p Params) WhitelistedValsMap() WhitelistedValsMap {
+	return GetWhitelistedValsMap(p.WhitelistedValidators)
 }
 
 // Validate validates parameters.
@@ -82,10 +82,10 @@ func (p Params) Validate() error {
 		value     interface{}
 		validator func(interface{}) error
 	}{
-		{p.LiquidBondDenom, ValidateLiquidBondDenom},
-		{p.WhitelistedValidators, ValidateWhitelistedValidators},
-		{p.UnstakeFeeRate, ValidateUnstakeFeeRate},
-		{p.MinLiquidStakingAmount, ValidateMinLiquidStakingAmount},
+		{p.LiquidBondDenom, validateLiquidBondDenom},
+		{p.WhitelistedValidators, validateWhitelistedValidators},
+		{p.UnstakeFeeRate, validateUnstakeFeeRate},
+		{p.MinLiquidStakingAmount, validateMinLiquidStakingAmount},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
@@ -94,7 +94,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func ValidateLiquidBondDenom(i interface{}) error {
+func validateLiquidBondDenom(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -110,13 +110,13 @@ func ValidateLiquidBondDenom(i interface{}) error {
 	return nil
 }
 
-// ValidateWhitelistedValidators validates liquidstaking validator and total weight.
-func ValidateWhitelistedValidators(i interface{}) error {
+// validateWhitelistedValidators validates liquidstaking validator and total weight.
+func validateWhitelistedValidators(i interface{}) error {
 	wvs, ok := i.([]WhitelistedValidator)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	valMap := map[string]struct{}{}
+	valsMap := map[string]struct{}{}
 	for _, wv := range wvs {
 		_, valErr := sdk.ValAddressFromBech32(wv.ValidatorAddress)
 		if valErr != nil {
@@ -131,15 +131,15 @@ func ValidateWhitelistedValidators(i interface{}) error {
 			return fmt.Errorf("liquidstaking validator target weight must be positive: %s", wv.TargetWeight)
 		}
 
-		if _, ok := valMap[wv.ValidatorAddress]; ok {
+		if _, ok := valsMap[wv.ValidatorAddress]; ok {
 			return fmt.Errorf("liquidstaking validator cannot be duplicated: %s", wv.ValidatorAddress)
 		}
-		valMap[wv.ValidatorAddress] = struct{}{}
+		valsMap[wv.ValidatorAddress] = struct{}{}
 	}
 	return nil
 }
 
-func ValidateUnstakeFeeRate(i interface{}) error {
+func validateUnstakeFeeRate(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -160,7 +160,7 @@ func ValidateUnstakeFeeRate(i interface{}) error {
 	return nil
 }
 
-func ValidateMinLiquidStakingAmount(i interface{}) error {
+func validateMinLiquidStakingAmount(i interface{}) error {
 	v, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

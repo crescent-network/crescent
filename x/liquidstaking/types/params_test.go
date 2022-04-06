@@ -39,16 +39,16 @@ min_liquid_staking_amount: "1000000"
 	require.Equal(t, paramsStr, params.String())
 }
 
-func TestWhitelistedValMap(t *testing.T) {
+func TestWhitelistedValsMap(t *testing.T) {
 	params := types.DefaultParams()
-	require.EqualValues(t, params.WhitelistedValMap(), types.WhitelistedValMap{})
+	require.EqualValues(t, params.WhitelistedValsMap(), types.WhitelistedValsMap{})
 
 	params.WhitelistedValidators = []types.WhitelistedValidator{
 		whitelistedValidators[0],
 		whitelistedValidators[1],
 	}
 
-	wvm := params.WhitelistedValMap()
+	wvm := params.WhitelistedValsMap()
 	require.Len(t, params.WhitelistedValidators, len(wvm))
 
 	for _, wv := range params.WhitelistedValidators {

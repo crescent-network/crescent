@@ -6,22 +6,22 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type WhitelistedValMap map[string]WhitelistedValidator
+type WhitelistedValsMap map[string]WhitelistedValidator
 
-func (whitelistedValMap WhitelistedValMap) IsListed(operatorAddr string) bool {
-	if _, ok := whitelistedValMap[operatorAddr]; ok {
+func (whitelistedValsMap WhitelistedValsMap) IsListed(operatorAddr string) bool {
+	if _, ok := whitelistedValsMap[operatorAddr]; ok {
 		return true
 	} else {
 		return false
 	}
 }
 
-func GetWhitelistedValMap(whitelistedValidators []WhitelistedValidator) WhitelistedValMap {
-	whitelistedValMap := make(WhitelistedValMap)
+func GetWhitelistedValsMap(whitelistedValidators []WhitelistedValidator) WhitelistedValsMap {
+	whitelistedValsMap := make(WhitelistedValsMap)
 	for _, wv := range whitelistedValidators {
-		whitelistedValMap[wv.ValidatorAddress] = wv
+		whitelistedValsMap[wv.ValidatorAddress] = wv
 	}
-	return whitelistedValMap
+	return whitelistedValsMap
 }
 
 // Validate validates LiquidValidator.
@@ -64,8 +64,8 @@ func (v LiquidValidator) GetLiquidTokens(ctx sdk.Context, sk StakingKeeper, only
 	return val.TokensFromSharesTruncated(delShares).TruncateInt()
 }
 
-func (v LiquidValidator) GetWeight(whitelistedValMap WhitelistedValMap, active bool) sdk.Int {
-	if wv, ok := whitelistedValMap[v.OperatorAddress]; ok && active {
+func (v LiquidValidator) GetWeight(whitelistedValsMap WhitelistedValsMap, active bool) sdk.Int {
+	if wv, ok := whitelistedValsMap[v.OperatorAddress]; ok && active {
 		return wv.TargetWeight
 	} else {
 		return sdk.ZeroInt()
@@ -139,11 +139,11 @@ func (vs LiquidValidators) TotalLiquidTokens(ctx sdk.Context, sk StakingKeeper, 
 }
 
 func (vs LiquidValidators) Map() map[string]struct{} {
-	valMap := map[string]struct{}{}
+	valsMap := map[string]struct{}{}
 	for _, val := range vs {
-		valMap[val.OperatorAddress] = struct{}{}
+		valsMap[val.OperatorAddress] = struct{}{}
 	}
-	return valMap
+	return valsMap
 }
 
 func (avs ActiveLiquidValidators) Len() int {
@@ -155,15 +155,15 @@ func (avs ActiveLiquidValidators) TotalActiveLiquidTokens(ctx sdk.Context, sk St
 }
 
 // TotalWeight for active liquid validator
-func (avs ActiveLiquidValidators) TotalWeight(whitelistedValMap WhitelistedValMap) sdk.Int {
+func (avs ActiveLiquidValidators) TotalWeight(whitelistedValsMap WhitelistedValsMap) sdk.Int {
 	totalWeight := sdk.ZeroInt()
 	for _, val := range avs {
-		totalWeight = totalWeight.Add(val.GetWeight(whitelistedValMap, true))
+		totalWeight = totalWeight.Add(val.GetWeight(whitelistedValsMap, true))
 	}
 	return totalWeight
 }
 
-// NativeTokenToBToken returns nativeTokenAmount * bTokenTotalSupply / netAmount
+// NativeTokenToBToken returns bTokenTotalSupply * nativeTokenAmount / netAmount
 func NativeTokenToBToken(nativeTokenAmount, bTokenTotalSupplyAmount sdk.Int, netAmount sdk.Dec) (bTokenAmount sdk.Int) {
 	return bTokenTotalSupplyAmount.ToDec().MulTruncate(nativeTokenAmount.ToDec()).QuoTruncate(netAmount.TruncateDec()).TruncateInt()
 }

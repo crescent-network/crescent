@@ -73,7 +73,7 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
 		params := k.GetParams(ctx)
-		avs := k.GetActiveLiquidValidators(ctx, params.WhitelistedValMap())
+		avs := k.GetActiveLiquidValidators(ctx, params.WhitelistedValsMap())
 		if len(avs) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLiquidStake, "active liquid validators not exists"), nil, nil
 		}
@@ -85,12 +85,12 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 
 		delegator := account.GetAddress()
 
-		ns := k.NetAmountState(ctx)
+		nas := k.GetNetAmountState(ctx)
 		var btokenUnitAmount sdk.Dec
-		if ns.BtokenTotalSupply.IsZero() {
+		if nas.BtokenTotalSupply.IsZero() {
 			btokenUnitAmount = sdk.OneDec()
 		} else {
-			btokenUnitAmount = types.BTokenToNativeToken(sdk.OneInt(), ns.BtokenTotalSupply, ns.NetAmount)
+			btokenUnitAmount = types.BTokenToNativeToken(sdk.OneInt(), nas.BtokenTotalSupply, nas.NetAmount)
 		}
 		stakingAmt := int64(simtypes.RandIntBetween(r, int(btokenUnitAmount.TruncateInt64()), 100000000000000))
 		if stakingAmt < params.MinLiquidStakingAmount.Int64() {
@@ -106,8 +106,8 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			}
 			spendable = bk.SpendableCoins(ctx, account.GetAddress())
 		}
-		fmt.Println("## ADD liquid NetAmountState", stakingCoin, spendable)
-		utils.PP(k.NetAmountState(ctx))
+		fmt.Println("## ADD liquid GetNetAmountState", stakingCoin, spendable)
+		utils.PP(k.GetNetAmountState(ctx))
 
 		msg := types.NewMsgLiquidStake(delegator, stakingCoin)
 		txCtx := simulation.OperationInput{
@@ -151,8 +151,8 @@ func SimulateMsgLiquidUnstake(ak types.AccountKeeper, bk types.BankKeeper, k kee
 
 			// spendable must be greater than unstaking coins
 			if spendable.AmountOf(types.DefaultLiquidBondDenom).GTE(unstakingCoin.Amount) {
-				fmt.Println("## UNBONDING NetAmountState", unstakingCoin)
-				utils.PP(k.NetAmountState(ctx))
+				fmt.Println("## UNBONDING GetNetAmountState", unstakingCoin)
+				utils.PP(k.GetNetAmountState(ctx))
 				break
 			}
 		}

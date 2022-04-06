@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/crescent-network/crescent/x/liquidstaking/types"
 )
@@ -16,12 +17,18 @@ func (k Keeper) GetProxyAccBalance(ctx sdk.Context, proxyAcc sdk.AccAddress) (ba
 
 // TryRedelegation attempts redelegation, which is applied only when successful through cached context because there is a constraint that fails if already receiving redelegation.
 func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (completionTime time.Time, err error) {
-	cachedCtx, writeCache := ctx.CacheContext()
-	srcVal := re.SrcValidator.GetOperator()
 	dstVal := re.DstValidator.GetOperator()
+	srcVal := re.SrcValidator.GetOperator()
+
+	// check the source validator already has receiving transitive redelegation
+	hasReceiving := k.stakingKeeper.HasReceivingRedelegation(ctx, re.Delegator, srcVal)
+	if hasReceiving {
+		return time.Time{}, stakingtypes.ErrTransitiveRedelegation
+	}
+
 	// calculate delShares from tokens with validation
 	shares, err := k.stakingKeeper.ValidateUnbondAmount(
-		cachedCtx, re.Delegator, srcVal, re.Amount,
+		ctx, re.Delegator, srcVal, re.Amount,
 	)
 	if err != nil {
 		return time.Time{}, err
@@ -31,6 +38,7 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 	if re.Last {
 		shares = re.SrcValidator.GetDelShares(ctx, k.stakingKeeper)
 	}
+	cachedCtx, writeCache := ctx.CacheContext()
 	completionTime, err = k.stakingKeeper.BeginRedelegation(cachedCtx, re.Delegator, srcVal, dstVal, shares)
 	if err != nil {
 		return time.Time{}, err
@@ -40,14 +48,14 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 }
 
 // Rebalance argument liquidVals containing ValidatorStatusActive which is containing just added on whitelist(liquidToken 0) and ValidatorStatusInactive to delist
-func (k Keeper) Rebalance(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, whitelistedValMap types.WhitelistedValMap, rebalancingTrigger sdk.Dec) (redelegations []types.Redelegation) {
+func (k Keeper) Rebalance(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, whitelistedValsMap types.WhitelistedValsMap, rebalancingTrigger sdk.Dec) (redelegations []types.Redelegation) {
 	logger := k.Logger(ctx)
 	totalLiquidTokens, _ := liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper, false)
 	if !totalLiquidTokens.IsPositive() {
 		return []types.Redelegation{}
 	}
 
-	weightMap, totalWeight := k.GetWeightMap(ctx, liquidVals, whitelistedValMap)
+	weightMap, totalWeight := k.GetWeightMap(ctx, liquidVals, whitelistedValsMap)
 
 	// no active liquid validators
 	if !totalWeight.IsPositive() {
@@ -118,8 +126,8 @@ func (k Keeper) Rebalance(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals t
 	return redelegations
 }
 
-// WithdrawRewardsAndReStaking withdraw rewards and re-staking when over threshold
-func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap types.WhitelistedValMap) {
+// WithdrawRewardsAndReStake withdraw rewards and re-staking when over threshold
+func (k Keeper) WithdrawRewardsAndReStake(ctx sdk.Context, whitelistedValsMap types.WhitelistedValsMap) {
 	totalRemainingRewards, _, totalLiquidTokens := k.CheckDelegationStates(ctx, types.LiquidStakingProxyAcc)
 
 	// checking over types.RewardTrigger and execute GetRewards
@@ -138,16 +146,20 @@ func (k Keeper) WithdrawRewardsAndReStaking(ctx sdk.Context, whitelistedValMap t
 	proxyAccBalance = k.GetProxyAccBalance(ctx, types.LiquidStakingProxyAcc)
 
 	// skip when no active liquid validator
-	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValMap)
+	activeVals := k.GetActiveLiquidValidators(ctx, whitelistedValsMap)
 	if len(activeVals) == 0 {
 		return
 	}
 
 	// re-staking
-	_, err := k.LiquidDelegate(ctx, types.LiquidStakingProxyAcc, activeVals, proxyAccBalance.Amount, whitelistedValMap)
+	cachedCtx, writeCache := ctx.CacheContext()
+	_, err := k.LiquidDelegate(cachedCtx, types.LiquidStakingProxyAcc, activeVals, proxyAccBalance.Amount, whitelistedValsMap)
 	if err != nil {
-		panic(err)
+		logger := k.Logger(ctx)
+		logger.Error("re-staking failed", "error", err)
+		return
 	}
+	writeCache()
 	logger := k.Logger(ctx)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -166,7 +178,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 	params := k.GetParams(ctx)
 	liquidValidators := k.GetAllLiquidValidators(ctx)
 	liquidValsMap := liquidValidators.Map()
-	whitelistedValMap := types.GetWhitelistedValMap(params.WhitelistedValidators)
+	whitelistedValsMap := types.GetWhitelistedValsMap(params.WhitelistedValidators)
 
 	// Set Liquid validators for added whitelist validators
 	for _, wv := range params.WhitelistedValidators {
@@ -174,7 +186,7 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 			lv := types.LiquidValidator{
 				OperatorAddress: wv.ValidatorAddress,
 			}
-			if k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap) {
+			if k.IsActiveLiquidValidator(ctx, lv, whitelistedValsMap) {
 				k.SetLiquidValidator(ctx, lv)
 				liquidValidators = append(liquidValidators, lv)
 				ctx.EventManager().EmitEvents(sdk.Events{
@@ -190,17 +202,20 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 
 	// rebalancing based updated liquid validators status with threshold, try by cachedCtx
 	// tombstone status also handled on Rebalance
-	reds := k.Rebalance(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValMap, types.RebalancingTrigger)
+	reds := k.Rebalance(ctx, types.LiquidStakingProxyAcc, liquidValidators, whitelistedValsMap, types.RebalancingTrigger)
 
+	// unbond all delShares to proxyAcc if delShares exist on inactive liquid validators
 	for _, lv := range liquidValidators {
-		if !k.IsActiveLiquidValidator(ctx, lv, whitelistedValMap) {
-			// unbond all delShares to proxyAcc if delShares exist on inactive validators
+		if !k.IsActiveLiquidValidator(ctx, lv, whitelistedValsMap) {
 			delShares := lv.GetDelShares(ctx, k.stakingKeeper)
 			if delShares.IsPositive() {
-				completionTime, returnAmount, _, err := k.LiquidUnbond(ctx, types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc, lv.GetOperator(), delShares)
+				cachedCtx, writeCache := ctx.CacheContext()
+				completionTime, returnAmount, _, err := k.LiquidUnbond(cachedCtx, types.LiquidStakingProxyAcc, types.LiquidStakingProxyAcc, lv.GetOperator(), delShares, false)
 				if err != nil {
-					panic(err)
+					logger.Error("liquid unbonding of inactive liquid validator failed", "error", err)
+					continue
 				}
+				writeCache()
 				unbondingAmount := sdk.Coin{Denom: k.stakingKeeper.BondDenom(ctx), Amount: returnAmount}.String()
 				ctx.EventManager().EmitEvents(sdk.Events{
 					sdk.NewEvent(
@@ -230,6 +245,6 @@ func (k Keeper) UpdateLiquidValidatorSet(ctx sdk.Context) []types.Redelegation {
 	}
 
 	// withdraw rewards and re-staking when over threshold
-	k.WithdrawRewardsAndReStaking(ctx, whitelistedValMap)
+	k.WithdrawRewardsAndReStake(ctx, whitelistedValsMap)
 	return reds
 }

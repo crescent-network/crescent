@@ -211,7 +211,7 @@ func (s *KeeperTestSuite) liquidStaking(liquidStaker sdk.AccAddress, stakingAmt 
 
 	params := lsKeeper.GetParams(ctx)
 	btokenBalanceBefore := s.app.BankKeeper.GetBalance(ctx, liquidStaker, params.LiquidBondDenom).Amount
-	newShares, bTokenMintAmt, err := lsKeeper.LiquidStaking(
+	newShares, bTokenMintAmt, err := lsKeeper.LiquidStake(
 		ctx,
 		liquidstakingtypes.LiquidStakingProxyAcc,
 		liquidStaker,
