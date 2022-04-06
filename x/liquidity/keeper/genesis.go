@@ -17,18 +17,26 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetLastPoolId(ctx, genState.LastPoolId)
 	for _, pair := range genState.Pairs {
 		k.SetPair(ctx, pair)
+		k.SetPairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+		k.SetPairLookupIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+		k.SetPairLookupIndex(ctx, pair.QuoteCoinDenom, pair.BaseCoinDenom, pair.Id)
 	}
 	for _, pool := range genState.Pools {
 		k.SetPool(ctx, pool)
+		k.SetPoolByReserveIndex(ctx, pool)
+		k.SetPoolsByPairIndex(ctx, pool)
 	}
 	for _, req := range genState.DepositRequests {
 		k.SetDepositRequest(ctx, req)
+		k.SetDepositRequestIndex(ctx, req)
 	}
 	for _, req := range genState.WithdrawRequests {
 		k.SetWithdrawRequest(ctx, req)
+		k.SetWithdrawRequestIndex(ctx, req)
 	}
 	for _, order := range genState.Orders {
 		k.SetOrder(ctx, order)
+		k.SetOrderIndex(ctx, order)
 	}
 }
 

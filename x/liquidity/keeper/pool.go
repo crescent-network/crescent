@@ -116,6 +116,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 	poolId := k.getNextPoolIdWithUpdate(ctx)
 	pool := types.NewPool(poolId, pair.Id)
 	k.SetPool(ctx, pool)
+	k.SetPoolByReserveIndex(ctx, pool)
+	k.SetPoolsByPairIndex(ctx, pool)
 
 	// Send deposit coins to the pool's reserve account.
 	creator := msg.GetCreator()
@@ -194,6 +196,7 @@ func (k Keeper) Deposit(ctx sdk.Context, msg *types.MsgDeposit) (types.DepositRe
 	requestId := k.getNextDepositRequestIdWithUpdate(ctx, pool)
 	req := types.NewDepositRequest(msg, pool, requestId, ctx.BlockHeight())
 	k.SetDepositRequest(ctx, req)
+	k.SetDepositRequestIndex(ctx, req)
 
 	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.DepositExtraGas, "DepositExtraGas")
@@ -242,6 +245,7 @@ func (k Keeper) Withdraw(ctx sdk.Context, msg *types.MsgWithdraw) (types.Withdra
 	requestId := k.getNextWithdrawRequestIdWithUpdate(ctx, pool)
 	req := types.NewWithdrawRequest(msg, requestId, ctx.BlockHeight())
 	k.SetWithdrawRequest(ctx, req)
+	k.SetWithdrawRequestIndex(ctx, req)
 
 	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.WithdrawExtraGas, "WithdrawExtraGas")

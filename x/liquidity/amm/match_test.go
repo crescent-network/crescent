@@ -1,7 +1,6 @@
 package amm_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -189,7 +188,6 @@ func TestMatchOrders(t *testing.T) {
 						case amm.Sell:
 							effPrice = received.Amount.ToDec().QuoInt(paid.Amount)
 						}
-						fmt.Println(paid, received, effPrice, tc.matchPrice)
 						require.True(t, utils.DecApproxEqual(tc.matchPrice, effPrice))
 					}
 				}

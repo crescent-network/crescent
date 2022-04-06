@@ -49,6 +49,7 @@ func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 func (s *KeeperTestSuite) sendCoins(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
+	s.T().Helper()
 	err := s.app.BankKeeper.SendCoins(s.ctx, fromAddr, toAddr, amt)
 	s.Require().NoError(err)
 }
@@ -66,6 +67,7 @@ func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
+	s.T().Helper()
 	err := s.app.BankKeeper.MintCoins(s.ctx, types.ModuleName, amt)
 	s.Require().NoError(err)
 	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.ModuleName, addr, amt)
@@ -73,26 +75,33 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 }
 
 func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) types.Pair {
+	s.T().Helper()
 	params := s.keeper.GetParams(s.ctx)
 	if fund {
 		s.fundAddr(creator, params.PairCreationFee)
 	}
-	pair, err := s.keeper.CreatePair(s.ctx, types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+	msg := types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom)
+	s.Require().NoError(msg.ValidateBasic())
+	pair, err := s.keeper.CreatePair(s.ctx, msg)
 	s.Require().NoError(err)
 	return pair
 }
 
 func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) types.Pool {
+	s.T().Helper()
 	params := s.keeper.GetParams(s.ctx)
 	if fund {
 		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
 	}
-	pool, err := s.keeper.CreatePool(s.ctx, types.NewMsgCreatePool(creator, pairId, depositCoins))
+	msg := types.NewMsgCreatePool(creator, pairId, depositCoins)
+	s.Require().NoError(msg.ValidateBasic())
+	pool, err := s.keeper.CreatePool(s.ctx, msg)
 	s.Require().NoError(err)
 	return pool
 }
 
 func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) types.DepositRequest {
+	s.T().Helper()
 	if fund {
 		s.fundAddr(depositor, depositCoins)
 	}
@@ -102,6 +111,7 @@ func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depos
 }
 
 func (s *KeeperTestSuite) withdraw(withdrawer sdk.AccAddress, poolId uint64, poolCoin sdk.Coin) types.WithdrawRequest {
+	s.T().Helper()
 	req, err := s.keeper.Withdraw(s.ctx, types.NewMsgWithdraw(withdrawer, poolId, poolCoin))
 	s.Require().NoError(err)
 	return req
@@ -110,6 +120,7 @@ func (s *KeeperTestSuite) withdraw(withdrawer sdk.AccAddress, poolId uint64, poo
 func (s *KeeperTestSuite) limitOrder(
 	orderer sdk.AccAddress, pairId uint64, dir types.OrderDirection,
 	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	s.T().Helper()
 	pair, found := s.keeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
 	var ammDir amm.OrderDirection
@@ -129,6 +140,7 @@ func (s *KeeperTestSuite) limitOrder(
 	msg := types.NewMsgLimitOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		price, amt, orderLifespan)
+	s.Require().NoError(msg.ValidateBasic())
 	req, err := s.keeper.LimitOrder(s.ctx, msg)
 	s.Require().NoError(err)
 	return req
@@ -137,6 +149,7 @@ func (s *KeeperTestSuite) limitOrder(
 func (s *KeeperTestSuite) buyLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	s.T().Helper()
 	return s.limitOrder(
 		orderer, pairId, types.OrderDirectionBuy, price, amt, orderLifespan, fund)
 }
@@ -144,6 +157,7 @@ func (s *KeeperTestSuite) buyLimitOrder(
 func (s *KeeperTestSuite) sellLimitOrder(
 	orderer sdk.AccAddress, pairId uint64, price sdk.Dec,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	s.T().Helper()
 	return s.limitOrder(
 		orderer, pairId, types.OrderDirectionSell, price, amt, orderLifespan, fund)
 }
@@ -151,6 +165,7 @@ func (s *KeeperTestSuite) sellLimitOrder(
 func (s *KeeperTestSuite) marketOrder(
 	orderer sdk.AccAddress, pairId uint64, dir types.OrderDirection,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	s.T().Helper()
 	pair, found := s.keeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
 	s.Require().NotNil(pair.LastPrice)
@@ -173,6 +188,7 @@ func (s *KeeperTestSuite) marketOrder(
 	msg := types.NewMsgMarketOrder(
 		orderer, pairId, dir, offerCoin, demandCoinDenom,
 		amt, orderLifespan)
+	s.Require().NoError(msg.ValidateBasic())
 	req, err := s.keeper.MarketOrder(s.ctx, msg)
 	s.Require().NoError(err)
 	return req
@@ -181,6 +197,7 @@ func (s *KeeperTestSuite) marketOrder(
 func (s *KeeperTestSuite) buyMarketOrder(
 	orderer sdk.AccAddress, pairId uint64,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	s.T().Helper()
 	return s.marketOrder(
 		orderer, pairId, types.OrderDirectionBuy, amt, orderLifespan, fund)
 }
@@ -189,17 +206,20 @@ func (s *KeeperTestSuite) buyMarketOrder(
 func (s *KeeperTestSuite) sellMarketOrder(
 	orderer sdk.AccAddress, pairId uint64,
 	amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
+	s.T().Helper()
 	return s.marketOrder(
 		orderer, pairId, types.OrderDirectionSell, amt, orderLifespan, fund)
 }
 
 //nolint
 func (s *KeeperTestSuite) cancelOrder(orderer sdk.AccAddress, pairId, orderId uint64) {
+	s.T().Helper()
 	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(orderer, pairId, orderId))
 	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) cancelAllOrders(orderer sdk.AccAddress, pairIds []uint64) {
+	s.T().Helper()
 	err := s.keeper.CancelAllOrders(s.ctx, types.NewMsgCancelAllOrders(orderer, pairIds))
 	s.Require().NoError(err)
 }

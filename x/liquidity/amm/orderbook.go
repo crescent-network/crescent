@@ -34,6 +34,42 @@ func (ob *OrderBook) Add(orders ...Order) {
 	}
 }
 
+// Orders returns all orders in the order book.
+// Note that the orders are not sorted.
+func (ob *OrderBook) Orders() []Order {
+	return append(ob.BuyOrders(), ob.SellOrders()...)
+}
+
+// OrdersAt returns orders at given price in the order book.
+// Note that the orders are not sorted.
+func (ob *OrderBook) OrdersAt(price sdk.Dec) []Order {
+	return append(ob.BuyOrdersAt(price), ob.SellOrdersAt(price)...)
+}
+
+// BuyOrders returns all buy orders in the order book.
+// Note that the orders are not sorted.
+func (ob *OrderBook) BuyOrders() []Order {
+	return ob.buys.orders()
+}
+
+// SellOrders returns all sell orders in the order book.
+// Note that the orders are not sorted.
+func (ob *OrderBook) SellOrders() []Order {
+	return ob.sells.orders()
+}
+
+// BuyOrdersAt returns buy orders at given price in the order book.
+// Note that the orders are not sorted.
+func (ob *OrderBook) BuyOrdersAt(price sdk.Dec) []Order {
+	return ob.buys.ordersAt(price)
+}
+
+// SellOrdersAt returns sell orders at given price in the order book.
+// Note that the orders are not sorted.
+func (ob *OrderBook) SellOrdersAt(price sdk.Dec) []Order {
+	return ob.sells.ordersAt(price)
+}
+
 // HighestBuyPrice returns the highest buy price in the order book.
 func (ob *OrderBook) HighestBuyPrice() (sdk.Dec, bool) {
 	price, _, found := ob.buys.highestPrice()
@@ -60,12 +96,14 @@ func (ob *OrderBook) SellAmountUnder(price sdk.Dec) sdk.Int {
 
 // BuyOrdersOver returns buy orders in the order book for price greater
 // or equal than given price.
+// Note that the orders are not sorted.
 func (ob *OrderBook) BuyOrdersOver(price sdk.Dec) []Order {
 	return ob.buys.ordersOver(price)
 }
 
 // SellOrdersUnder returns sell orders in the order book for price less
 // or equal than given price.
+// Note that the orders are not sorted.
 func (ob *OrderBook) SellOrdersUnder(price sdk.Dec) []Order {
 	return ob.sells.ordersUnder(price)
 }
@@ -110,13 +148,8 @@ func (ob *OrderBook) stringRepresentation(prices []sdk.Dec) string {
 	var b strings.Builder
 	b.WriteString("+--------buy---------+------------price-------------+--------sell--------+\n")
 	for _, price := range prices {
-		buyAmt, sellAmt := sdk.ZeroInt(), sdk.ZeroInt()
-		if i, exact := ob.buys.findPrice(price); exact {
-			buyAmt = TotalOpenAmount(ob.buys[i].orders)
-		}
-		if i, exact := ob.sells.findPrice(price); exact {
-			sellAmt = TotalOpenAmount(ob.sells[i].orders)
-		}
+		buyAmt := TotalOpenAmount(ob.BuyOrdersAt(price))
+		sellAmt := TotalOpenAmount(ob.SellOrdersAt(price))
 		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", buyAmt, price.String(), sellAmt)
 	}
 	b.WriteString("+--------------------+------------------------------+--------------------+")
@@ -176,6 +209,22 @@ func (ticks *orderBookTicks) add(order Order) {
 			*ticks = append(*ticks, newOrderBookTick(order))
 		}
 	}
+}
+
+func (ticks orderBookTicks) orders() []Order {
+	var orders []Order
+	for _, tick := range ticks {
+		orders = append(orders, tick.orders...)
+	}
+	return orders
+}
+
+func (ticks orderBookTicks) ordersAt(price sdk.Dec) []Order {
+	i, exact := ticks.findPrice(price)
+	if !exact {
+		return nil
+	}
+	return ticks[i].orders
 }
 
 func (ticks orderBookTicks) highestPrice() (sdk.Dec, int, bool) {

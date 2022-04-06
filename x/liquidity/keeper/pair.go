@@ -49,6 +49,9 @@ func (k Keeper) CreatePair(ctx sdk.Context, msg *types.MsgCreatePair) (types.Pai
 	id := k.getNextPairIdWithUpdate(ctx)
 	pair := types.NewPair(id, msg.BaseCoinDenom, msg.QuoteCoinDenom)
 	k.SetPair(ctx, pair)
+	k.SetPairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
+	k.SetPairLookupIndex(ctx, pair.QuoteCoinDenom, pair.BaseCoinDenom, pair.Id)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
