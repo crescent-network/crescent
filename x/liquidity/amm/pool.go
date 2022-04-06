@@ -159,11 +159,19 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
 
 // ProvidableXAmountOver returns the amount of x coin the pool would provide
 // for price greater than or equal to given price.
-func (pool *BasicPool) ProvidableXAmountOver(price sdk.Dec) sdk.Int {
+func (pool *BasicPool) ProvidableXAmountOver(price sdk.Dec) (amt sdk.Int) {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
-	return pool.rx.ToDec().Sub(pool.ry.ToDec().Mul(price)).TruncateInt()
+	utils.SafeMath(func() {
+		amt = pool.rx.ToDec().Sub(pool.ry.ToDec().Mul(price)).TruncateInt()
+		if amt.GT(MaxCoinAmount) {
+			amt = MaxCoinAmount
+		}
+	}, func() {
+		amt = MaxCoinAmount
+	})
+	return
 }
 
 // ProvidableYAmountUnder returns the amount of y coin the pool would provide
