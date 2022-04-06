@@ -102,3 +102,12 @@ is happened in end-block, not in the msg handler.
 
 Extra gas imposed to the orderer when they make an order, since the order matching
 is happened in end-block, not in the msg handler.
+
+# Global Constants
+
+## MinCoinAmount, MaxCoinAmount
+
+`MinCoinAmount` and `MaxCoinAmount` are defined under the `x/liquidity/amm` package.
+These are the minimum and maximum coin amount accepted by the liquidity module.
+Any orders with amount out of this range will be rejected in the end blocker or
+the msg server.
