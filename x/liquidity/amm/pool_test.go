@@ -426,3 +426,10 @@ func TestMockPoolOrderSource_Orders(t *testing.T) {
 	require.Len(t, sellOrders, 1)
 	require.True(sdk.IntEq(t, os.SellAmountUnder(defTickPrec.HighestTick()), sellOrders[0].GetOpenAmount()))
 }
+
+func TestBasicPool_BuyAmountOverOverflow(t *testing.T) {
+	n, _ := sdk.NewIntFromString("10000000000000000000000000000000000000000000")
+	pool := amm.NewBasicPool(n, sdk.NewInt(1000), sdk.Int{})
+	amt := pool.BuyAmountOver(defTickPrec.LowestTick())
+	require.True(sdk.IntEq(t, amm.MaxCoinAmount, amt))
+}
