@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	utils "github.com/crescent-network/crescent/types"
@@ -49,11 +50,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(16666))
 	totalLiquidTokens, _ := s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
-
-	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
-	}
-	fmt.Println("-----------")
+	s.printRedelegationsLiquidTokens()
 
 	// update whitelist validator
 	params.WhitelistedValidators = []types.WhitelistedValidator{
@@ -81,11 +78,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	s.Require().EqualValues(proxyAccDel4.Shares.TruncateInt(), sdk.NewInt(12499))
 	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
 	s.Require().EqualValues(stakingAmt, totalLiquidTokens)
-
-	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
-	}
-	fmt.Println("-----------")
+	s.printRedelegationsLiquidTokens()
 
 	//reds := s.app.StakingKeeper.GetRedelegations(s.ctx, types.LiquidStakingProxyAcc, 20)
 	s.Require().Len(reds, 3)
@@ -124,9 +117,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	proxyAccDel5, found := s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[4])
 	s.Require().True(found)
 
-	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
-	}
+	s.printRedelegationsLiquidTokens()
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(10002))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(9999))
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(9999))
@@ -163,9 +154,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	proxyAccDel5, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[4])
 	s.Require().False(found)
 
-	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
-	}
+	s.printRedelegationsLiquidTokens()
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(12501))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(12499))
 	s.Require().EqualValues(proxyAccDel3.Shares.TruncateInt(), sdk.NewInt(12499))
@@ -197,9 +186,7 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 	proxyAccDel5, found = s.app.StakingKeeper.GetDelegation(s.ctx, types.LiquidStakingProxyAcc, valOpers[4])
 	s.Require().False(found)
 
-	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
-	}
+	s.printRedelegationsLiquidTokens()
 	s.Require().EqualValues(proxyAccDel1.Shares.TruncateInt(), sdk.NewInt(24999))
 	s.Require().EqualValues(proxyAccDel2.Shares.TruncateInt(), sdk.NewInt(24999))
 	totalLiquidTokens, _ = s.keeper.GetAllLiquidValidators(s.ctx).TotalLiquidTokens(s.ctx, s.app.StakingKeeper, false)
@@ -284,6 +271,200 @@ func (s *KeeperTestSuite) TestRebalancingCase1() {
 
 	// zero net amount states
 	s.RequireNetAmountStateZero()
+}
+
+func (s *KeeperTestSuite) TestRebalancingConsecutiveCase() {
+	_, valOpers, _ := s.CreateValidators([]int64{
+		1000000, 1000000, 1000000, 1000000, 1000000,
+		1000000, 1000000, 1000000, 1000000, 1000000,
+		1000000, 1000000, 1000000, 1000000, 1000000})
+	s.ctx = s.ctx.WithBlockHeight(100).WithBlockTime(utils.ParseTime("2022-03-01T00:00:00Z"))
+	params := s.keeper.GetParams(s.ctx)
+	params.UnstakeFeeRate = sdk.ZeroDec()
+	params.MinLiquidStakingAmount = sdk.NewInt(10000)
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	stakingAmt := sdk.NewInt(10000000000000)
+	s.fundAddr(s.delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt)))
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[5].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[6].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[7].String(), TargetWeight: sdk.NewInt(1)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	reds := s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+
+	newShares, bTokenMintAmt, err := s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, stakingAmt))
+	s.Require().NoError(err)
+	s.Require().Equal(newShares, stakingAmt.ToDec())
+	s.Require().Equal(bTokenMintAmt, stakingAmt)
+	// assert rebalanced
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+	s.Require().Equal(s.redelegationsErrorCount(reds), 0)
+	s.printRedelegationsLiquidTokens()
+
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[5].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[6].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[7].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[8].String(), TargetWeight: sdk.NewInt(5)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24))
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 8)
+	s.Require().Equal(s.redelegationsErrorCount(reds), 0)
+	s.printRedelegationsLiquidTokens()
+	// assert rebalanced
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[5].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[6].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[7].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[8].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[9].String(), TargetWeight: sdk.NewInt(1)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24))
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 9)
+	s.Require().Equal(s.redelegationsErrorCount(reds), 0)
+	s.printRedelegationsLiquidTokens()
+	// assert rebalanced
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+
+	// complete redelegations
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24 * 20).Add(time.Hour))
+	staking.EndBlocker(s.ctx, *s.app.StakingKeeper)
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+	// assert rebalanced
+	s.Require().Equal(s.redelegationsErrorCount(reds), 0)
+	s.printRedelegationsLiquidTokens()
+
+	// remove active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[5].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[6].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[7].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[8].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[9].String(), TargetWeight: sdk.NewInt(1)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24))
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 9)
+	s.Require().Equal(s.redelegationsErrorCount(reds), 0)
+	s.printRedelegationsLiquidTokens()
+	// assert rebalanced
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+
+	// add active validator
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[5].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[6].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[7].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[8].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[9].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[10].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[11].String(), TargetWeight: sdk.NewInt(1)},
+		{ValidatorAddress: valOpers[12].String(), TargetWeight: sdk.NewInt(1)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24))
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 11)
+	// fail rebalancing due to redelegation hopping
+	s.Require().Equal(s.redelegationsErrorCount(reds), 11)
+	s.printRedelegationsLiquidTokens()
+
+	// complete redelegation and retry
+	s.completeRedelegationUnbonding()
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.printRedelegationsLiquidTokens()
+	s.Require().Len(reds, 11)
+	s.Require().Equal(s.redelegationsErrorCount(reds), 0)
+
+	// assert rebalanced
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+
+	// modify weight
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[4].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[5].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[6].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[7].String(), TargetWeight: sdk.NewInt(5)},
+		{ValidatorAddress: valOpers[8].String(), TargetWeight: sdk.NewInt(5)},
+		{ValidatorAddress: valOpers[9].String(), TargetWeight: sdk.NewInt(5)},
+		{ValidatorAddress: valOpers[10].String(), TargetWeight: sdk.NewInt(5)},
+		{ValidatorAddress: valOpers[11].String(), TargetWeight: sdk.NewInt(5)},
+		{ValidatorAddress: valOpers[12].String(), TargetWeight: sdk.NewInt(5)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24))
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 6)
+	// fail rebalancing partially due to redelegation hopping
+	s.Require().Equal(s.redelegationsErrorCount(reds), 3)
+	s.printRedelegationsLiquidTokens()
+
+	// additional liquid staking when not rebalanced
+	_, _, err = s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, s.delAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000)))
+	s.Require().NoError(err)
+	s.printRedelegationsLiquidTokens()
+
+	// complete some redelegations
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 100).WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24 * 20).Add(time.Hour))
+	staking.EndBlocker(s.ctx, *s.app.StakingKeeper)
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 9)
+
+	// failed redelegations with small amount (less than rebalancing trigger)
+	s.Require().Equal(s.redelegationsErrorCount(reds), 6)
+	s.printRedelegationsLiquidTokens()
+
+	// assert rebalanced
+	reds = s.keeper.UpdateLiquidValidatorSet(s.ctx)
+	s.Require().Len(reds, 0)
+	s.Require().Equal(s.redelegationsErrorCount(reds), 0)
+	s.printRedelegationsLiquidTokens()
 }
 
 func (s *KeeperTestSuite) TestWithdrawRewardsAndReStaking() {

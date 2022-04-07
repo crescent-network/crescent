@@ -190,6 +190,28 @@ func (s *KeeperTestSuite) completeRedelegationUnbonding() {
 	s.Require().Len(ubds, 0)
 }
 
+func (s *KeeperTestSuite) redelegationsErrorCount(redelegations []types.Redelegation) int {
+	errCnt := 0
+	for _, red := range redelegations {
+		if red.Error != nil {
+			errCnt++
+		}
+	}
+	return errCnt
+}
+
+func (s *KeeperTestSuite) printRedelegationsLiquidTokens() {
+	fmt.Println("-----------------")
+	redsIng := s.app.StakingKeeper.GetRedelegations(s.ctx, types.LiquidStakingProxyAcc, 50)
+	for _, red := range redsIng {
+		fmt.Println(red)
+	}
+	fmt.Println("-----------------")
+	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
+		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
+	}
+}
+
 func (s *KeeperTestSuite) advanceHeight(height int, withBeginBlock bool) {
 	feeCollector := s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	for i := 0; i < height; i++ {
