@@ -4,35 +4,32 @@
 
 ## LiquidValidators
 
-State transitions in liquid validators are performed on every `BeginBlock` in order to check for changes in the active liquid validator set. A validator can be `Active` or `Inactive`, the following transition occurs when the state changes
+State transitions of liquid validators are performed on every `BeginBlock` to keep in track of any changes in active liquid validator set. The following state transition occurs when a validator is added or removed from an active liquid validator set.
 
-### into Active
-- redelegate certain amount from all the existing Active liquid validator's LiquidTokens to newly elected validator so that every Active liquid validators have the same amount of staked tokens
+### When new `LiquidValidator` is added
 
-### expelled from Active
-- redelegate all LiquidTokens to the remaining Active liquid validators
+- Redelegation of `LiquidTokens` occurs from the existing active liquid validator set to newly added validators. This process rebalances their delegation shares that corresponds to their weight.
+
+### When `LiquidValidator` becomes inactive
+
+- Redelegation of the inactive liquid validator's `LiquidTokens` occurs to the remaining active liquid validators. If redelegation fails due to restrictions exist in `staking` module, then the module unbonds their delegation shares and remove the liquid validator from the store.
 
 ## Liquid Staking
 
-- `LiquidStakingProxyAcc` reserve native tokens from the sending account to delegates it
-- determine the amount of bTokens are minted is based on mint rate, calculated as follows from the total supply of bTokens and net amount of native tokens.
-  - `MintAmount = StakeAmount * MintRate` by NativeTokenToBToken
-  - when initial liquid staking, `MintAmount == StakeAmount`
-- mint the calculated amount of bTokens and send it to delegator's account
-- distribute the delegation from the `LiquidStakingProxyAcc` to the all the active liquid validators according to each weights
-  - internally, it calls the `Delegate` function of module `cosmos-sdk/x/staking`.
-  - crumb may occur due to a decimal point error in dividing the staking amount into the weight of liquid validators, It added on first active liquid validator
+- Reserve native token to `LiquidStakingProxyAcc`
+- Mint the amount of `bToken` that is based on `MintRate`
+  - Initial minting amount is the same as liquid staking amount
+- Send the minted `bToken` amount to the liquid delegator
+- `LiquidStakingProxyAcc` delegates delegation shares to all active liquid validators that correspond to their weight
+  - Internally, the module calls `Delegate` function in `staking` module
+  - First active liquid validator may receive slightly more delegation shares due to some crumb occuring from division
 
 ## Liquid Unstaking
 
-- The amount of native tokens returned is calculated as `UnstakeAmount = bTokenAmount / MintRate * (1 - UnstakeFeeRate)` by BTokenToNativeToken
-- burn the bTokens
-- `LiquidStakingProxyAcc` unbond the liquid validator's delShares by calculated native token worth of bTokens divided by current weight of liquid validators
-  - the `DelegatorAddress` of the `UnbondingDelegation` would be `MsgLiquidStake.DelegatorAddress` not `LiquidStakingProxyAcc`
-  - internally, it calls the `Unbond` function of module `cosmos-sdk/x/staking`, it can take up to UnbondingTime to be matured
-  - crumb may occur due to a decimal error in dividing the unstaking bToken into the weight of liquid validators, it will remain in the NetAmount
-  - if liquid validators or liquid tokens to unbond doesn't exist, withdraw balance of proxy `LiquidStakingProxyAcc` or need to re-try after waiting for new liquid validator to be added or unbonding of proxy account to be completed
-
-The following operations occur when the `UnbondingDelegation` element matures:
-
-- Unbonding of `UnbondingDelegation` is completed according to the logic of module `cosmos-sdk/x/staking`, Then the delegator of liquid staking will receive the worth of native token.
+- Calculate the unbonding amount from the requesting `bToken` 
+- Burn the requesting `bToken`
+- `LiquidStakingProxyAcc` unbonds the 
+  - Internally, the module calls `Unbond` function in `staking` module and it takes `UnbondingTime` to be matured
+  - `LiquidStakingProxyAcc` transfers an ownership of `UnbondingDelegation` to the liquid delegator. The liquid delegator is expected to receive unbonding amount after `UnbondingDelegation` is matured.
+  - Crumb may occur due to decimal loss from division and it remains in `NetAmount`
+  - Try to withdraw unstaking amount from `LiquidStakingProxyAcc` balance when 1) liquid validators don't have enough `LiquidTokens` to unbond and 2) there is no active liquid validator in the network. In case `LiquidStakingProxyAcc` doesn't have enough balance, liquid delegator must wait until active liquid validators are newly added or the proxy account gets sufficient balance that will be automatically filled when unbonding period is complete.
