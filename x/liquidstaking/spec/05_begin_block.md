@@ -2,7 +2,13 @@
 
 # Begin-Block
 
-## Liquid Validator set changes
+At the beginning of every block, the `liquidstaking` module operates the following executions.
+
+## Update Liquid Validator Set Changes
+
+### New Liquid Validator
+
+New liquid validator can be added and updated through governance process. When a new whitelisted validator is added, they become one of the active liquid validators as long as they meet the active conditions. The module redelgates the exiting `LiquidTokens` from an active liquid validator set to newly added liquid validators so that every liquid validator has the exact amount of tokens that correspond to their weight.
 
 ### Whitelisted -> Add Liquid Validator
 
@@ -17,11 +23,12 @@ When out of the `Active Conditions` When active liquid validator is out of the A
 When meet again the `Active Conditions` before removed, it begins the rebalancing process
 
 ### Inactive -> Remove Liquid Validator
-- no delShares by redelegation, unbonding completed and out of the `Active Conditions`
+
+No delShares by redelegation, unbonding completed and out of the `Active Conditions`
 
 ## Rebalancing (Auto-Redelegation)
 
-Due to the events like slashing, tombstoning, become Inactive and policy related to serial redelegation, the actual current weights of the delegated amount(LiquidTokens) of the active liquid validators can be slightly different from what was target weight intended. Therefore, rebalancing of delegated assets is needed, and it is triggered by difference of power from the intended
+Due to the events like slashing, tombstoning, becoming inactive and policy related to serial redelegation, the actual current weights of the delegated amount(LiquidTokens) of the active liquid validators can be slightly different from what was target weight intended. Therefore, rebalancing of delegated assets is needed, and it is triggered by difference of power from the intended
 
 - calculate the current weight of each active liquid validator's LiquidTokens and the difference between it and derived weight by status of each liquid validator
 - if the maximum difference exceeds `params.RebalancingTrigger` ratio of total LiquidTokens, asset rebalacing will be executed by calling `BeginRedelegation` function of `cosmos-sdk/x/staking` module

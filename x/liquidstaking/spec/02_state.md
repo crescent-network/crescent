@@ -4,80 +4,93 @@
 
 ## LiquidValidator
 
-LiquidValidator is the validator that can be the target of liquid staking and liquid unstaking.
-Active Status, Weight, LiquidTokens, DelShares, etc. fields are derived as functions to deal with by maintaining consistency with the state of the staking module.
-LiquidValidators are generated when the validator included in params.WhitelistedValidators meets the active conditions, and then if it becomes inactive status and no delShares involved liquid staking due to rebalancing and unbonding, removes the LiquidValidator.
+LiquidValidator is a validator for liquid staking. Liquid validators are set from the whitelisted validators that are defined in global parameter `params.WhitelistedValidators`. Whitelisted validators must meet the active conditions (see below section). Otherwise they become inactive status; this results to no delegation shares and being removed from the active liquid validator set. This occurs during rebalancing at every begin block. 
 
 ```go
+// LiquidValidator is a validator for liquid staking
 type LiquidValidator struct {
-   // operator_address defines the address of the validator's operator; bech encoded in JSON.
+   // operator_address defines the bech32-encoded address of the validator operator
    OperatorAddress string 
 }
 ```
 
+LiquidValidatorState contains the validator's state of status, weight, delegation shares, and liquid tokens. Each field has derived function that syncs with the state of the `staking` module. This object is not stored in KVStore and only used for querying state of a liquid validator.
+
 ```go
-// LiquidValidatorState is type LiquidValidator with state added to return to query results.
+// LiquidValidatorState is a liquid validator state
 type LiquidValidatorState struct {
-	// operator_address defines the address of the validator's operator; bech encoded in JSON.
+	// operator_address defines the bech32-encoded address of the validator operator
 	OperatorAddress string
-	// weight specifies the weight for liquid staking, unstaking amount
+	// weight defines the weight that corresponds to liquid staking and unstaking amount
 	Weight sdk.Int
-	// status is the liquid validator status
+	// status defines the liquid validator status
 	Status ValidatorStatus
-	// del_shares define the delegation shares of the validator
+	// del_shares defines the delegation shares of the liquid validator
 	DelShares sdk.Dec
-	// liquid_tokens define the token amount worth of delegation shares of the validator (slashing applied amount)
+	// liquid_tokens defines the token amount worth of delegaiton shares (slashing applied amount)
 	LiquidTokens sdk.Int
 }
 ```
 
-LiquidValidators: `0xc0 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(liquidValidator)`
+LiquidValidators: `0xc0 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(LiquidValidator)`
 
 ### Status
-LiquidValidators can have one of two statuses
 
-- `Active` : When some validators in the active set are elected to whitelist by governance, delegator's delegating amount of native tokens are distributed to these vaidators. They can be slashed for misbehavior. They can be delisted. Liquid stakers who unbond their delegation must wait the duration of the UnStakingTime, a chain-specific param, during which time they are still slashable for offences of the active liquid validators if those offences were committed during the period of time that the tokens were bonded.
-- `Inactive` : Not meet Active Condition, but has delegation shares of LiquidStakingProxyAcc, **Inactive liquid validator's Weight would be derived zero**
+A liquid validator has the following status:
+
+- `Active`: active validators are the whitelisted validators who are governed and elected by governance process. Delegators' delegations are distributed to all liquid validators that correspond to their weight.
+
+- `Inactive`: inactive validators are the ones that do not meet active conditions (see below section)
 
 ```go
 const (
-  ValidatorStatusUnspecified ValidatorStatus = 0
-  ValidatorStatusActive ValidatorStatus = 1
-  ValidatorStatusInactive ValidatorStatus = 2
+	// VALIDATOR_STATUS_UNSPECIFIED defines the unspecified invalid status
+	ValidatorStatusUnspecified ValidatorStatus = 0
+	// VALIDATOR_STATUS_ACTIVE defines the active, valid status
+	ValidatorStatusActive ValidatorStatus = 1
+	// VALIDATOR_STATUS_INACTIVE defines the inactive, invalid status
+	ValidatorStatusInactive ValidatorStatus = 2
 )
 ```
 
 ### Active Conditions
-- included on whitelist
-- existed valid validator on staking module ( existed, not nil DelShares and tokens, valid exchange rate)
-- not tombstoned
 
+- Must exist in `params.WhitelistedValidators`
+- Must be a validator in `staking` module
+- Must not be tombstoned
 
 ### Weight
 
-Weight of LiquidValidator is derived as follows depending on the Status.
+The weight of a liquid validator is derived depending on their status:
 
-- Active LiquidValidator : `TargetWeight` value defined in `params.WhitelistedValidators` by governance
-- Inactive LiquidValidator : zero (`0`)
+- Active LiquidValidator: `TargetWeight` value defined in `params.WhitelistedValidators` by governance
+
+- Inactive LiquidValidator: zero (`0`)
 
 ## NetAmount
 
-NetAmount is the sum of the items below of `LiquidStakingProxyAcc`. 
-- token amount worth of delegation shares of all liquid validators
-- remaining rewards 
-- native token balance
-- unbonding balance
+NetAmount is the sum of the following items that belongs to `LiquidStakingProxyAcc`:
 
-MintRate is the total supply of bTokens divided by NetAmount `bTokenTotalSupply / NetAmount` depending on the equation, the value transformation between native tokens and bTokens can be calculated as follows.
+- Native token balance
+- Token amount worth of delegation shares from all liquid validators
+- Remaining rewards 
+- Unbonding balance
+
+`MintRate` is the rate that is calculated from total supply of `bTokens` divided by `NetAmount`. 
+- `MintRate = bTokenTotalSupply / NetAmount` 
+
+Depending on the equation, the value transformation between native tokens and bTokens can be calculated as follows:
+
 - NativeTokenToBToken : `nativeTokenAmount * bTokenTotalSupply / netAmount` with truncations
 - BTokenToNativeToken : `bTokenAmount * netAmount / bTokenTotalSupply * (1-params.UnstakeFeeRate)` with truncations
 
 
 ### NetAmountState
 
-NetAmountState is type for net amount raw data and mint rate, This is a value that depends on the several module state every time, so it is used only for calculation and query and is not stored in kv.
+NetAmountState provides states with each field for `NetAmount`. Each field is derived from several modules. This object is not stored in KVStore and only used for querying `NetAmount` state.
 
 ```go
+// NetAmountState is type for NetAmount
 type NetAmountState struct {
 	// mint_rate is bTokenTotalSupply / NetAmount
 	MintRate sdk.Dec

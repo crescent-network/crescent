@@ -8,7 +8,7 @@ The Cosmos SDK wraps and unwraps `liquidity` module messages from transactions.
 
 ## MsgCreatePair
 
-A coin pair is created with `MsgCfeatePair` message.
+A coin pair is created with `MsgCreatePair` message.
 
 ```go
 type MsgCreatePair struct {
