@@ -14,10 +14,7 @@ Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<b
 <a href="https://codecov.io/gh/crescent-network/crescent">
     <img src="https://codecov.io/gh/crescent-network/crescent/branch/main/graph/badge.svg">
 </a>
-<a href="https://github.com/crescent-network/crescent/workflows/Tests/badge.svg">
-    <img src="https://github.com/crescent-network/crescent/actions/workflows/test.yml/badge.svg">
-</a>
-
+<img src="https://github.com/crescent-network/crescent/actions/workflows/test.yml/badge.svg">
 </p>
 
 
