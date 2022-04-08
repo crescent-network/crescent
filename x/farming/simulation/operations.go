@@ -1,10 +1,12 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -143,7 +145,7 @@ func SimulateMsgCreateFixedAmountPlan(ak farmingtypes.AccountKeeper, bk farmingt
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		params := k.GetParams(ctx)
-		if uint32(k.GetNumActivePrivatePlans(ctx)) > params.MaxNumPrivatePlans {
+		if uint32(k.GetNumActivePrivatePlans(ctx)) >= params.MaxNumPrivatePlans {
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateFixedAmountPlan, "maximum number of private plans reached"), nil, nil
 		}
 
@@ -152,45 +154,58 @@ func SimulateMsgCreateFixedAmountPlan(ak farmingtypes.AccountKeeper, bk farmingt
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateFixedAmountPlan, "insufficient balance for plan creation fee"), nil, nil
 		}
 
-		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
-		creatorAcc := account.GetAddress()
-		// mint pool coins to simulate the real-world cases
-		funds, err := fundBalances(ctx, r, bk, creatorAcc, testCoinDenoms)
-		if err != nil {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateFixedAmountPlan, "unable to mint pool coins"), nil, nil
+		rewardDenom := testCoinDenoms[r.Intn(len(testCoinDenoms))]
+		if err := ensurePositiveSupply(bk, ctx, rewardDenom); err != nil {
+			panic(fmt.Errorf("ensure positive supply of reward denom: %w", err))
 		}
-		stakingCoinWeights := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
-		startTime := ctx.BlockTime()
-		endTime := startTime.AddDate(1, 0, 0)
-		epochAmount := sdk.NewCoins(
-			sdk.NewInt64Coin(funds[r.Intn(3)].Denom, int64(simtypes.RandIntBetween(r, 10_000_000, 1_000_000_000))),
-		)
 
 		msg := farmingtypes.NewMsgCreateFixedAmountPlan(
-			name,
-			creatorAcc,
-			stakingCoinWeights,
-			startTime,
-			endTime,
-			epochAmount,
+			"plan-"+simtypes.RandStringOfLength(r, 5),
+			simAccount.Address,
+			sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1)),
+			ctx.BlockTime(),
+			ctx.BlockTime().AddDate(0, 0, 1+r.Intn(5)),
+			sdk.NewCoins(
+				sdk.NewInt64Coin(
+					rewardDenom,
+					int64(simtypes.RandIntBetween(r, 1e8, 1e9)),
+				),
+			),
 		)
 
-		txCtx := simulation.OperationInput{
-			R:               r,
-			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
-			Msg:             msg,
-			MsgType:         msg.Type(),
-			Context:         ctx,
-			SimAccount:      simAccount,
-			AccountKeeper:   ak,
-			Bankkeeper:      bk,
-			ModuleName:      farmingtypes.ModuleName,
-			CoinsSpentInMsg: spendable,
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{msg},
+			Fees,
+			Gas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			simAccount.PrivKey,
+		)
+
+		if err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
+
+		planId := k.GetGlobalPlanId(ctx) // Newly created plan's id
+		plan, found := k.GetPlan(ctx, planId)
+		if !found {
+			panic(fmt.Errorf("plan %d is not created", planId))
+		}
+
+		farmingPoolAcc := plan.GetFarmingPoolAddress()
+		if _, err := fundBalances(ctx, r, bk, farmingPoolAcc, testCoinDenoms); err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "failed to fund farming pool"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}
 }
 
@@ -206,7 +221,7 @@ func SimulateMsgCreateRatioPlan(ak farmingtypes.AccountKeeper, bk farmingtypes.B
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		params := k.GetParams(ctx)
-		if uint32(k.GetNumActivePrivatePlans(ctx)) > params.MaxNumPrivatePlans {
+		if uint32(k.GetNumActivePrivatePlans(ctx)) >= params.MaxNumPrivatePlans {
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateRatioPlan, "maximum number of private plans reached"), nil, nil
 		}
 
@@ -215,43 +230,52 @@ func SimulateMsgCreateRatioPlan(ak farmingtypes.AccountKeeper, bk farmingtypes.B
 			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateRatioPlan, "insufficient balance for plan creation fee"), nil, nil
 		}
 
-		name := "simulation-test-" + simtypes.RandStringOfLength(r, 5) // name must be unique
-		creatorAcc := account.GetAddress()
-		// mint pool coins to simulate the real-world cases
-		_, err := fundBalances(ctx, r, bk, account.GetAddress(), testCoinDenoms)
-		if err != nil {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgCreateRatioPlan, "unable to mint pool coins"), nil, nil
+		if err := ensurePositiveSupply(bk, ctx, testCoinDenoms...); err != nil {
+			panic(fmt.Errorf("ensure positive supply of reward denoms: %w", err))
 		}
-		stakingCoinWeights := sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1))
-		startTime := ctx.BlockTime()
-		endTime := startTime.AddDate(1, 0, 0)
-		epochRatio := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10)), 3)
 
 		msg := farmingtypes.NewMsgCreateRatioPlan(
-			name,
-			creatorAcc,
-			stakingCoinWeights,
-			startTime,
-			endTime,
-			epochRatio,
+			"plan-"+simtypes.RandStringOfLength(r, 5),
+			simAccount.Address,
+			sdk.NewDecCoins(sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 1)),
+			ctx.BlockTime(),
+			ctx.BlockTime().AddDate(0, 0, 1+r.Intn(5)),
+			sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10)), 3),
 		)
 
-		txCtx := simulation.OperationInput{
-			R:               r,
-			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
-			Msg:             msg,
-			MsgType:         msg.Type(),
-			Context:         ctx,
-			SimAccount:      simAccount,
-			AccountKeeper:   ak,
-			Bankkeeper:      bk,
-			ModuleName:      farmingtypes.ModuleName,
-			CoinsSpentInMsg: spendable,
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{msg},
+			Fees,
+			Gas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			simAccount.PrivKey,
+		)
+
+		if err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+		}
+
+		planId := k.GetGlobalPlanId(ctx) // Newly created plan's id
+		plan, found := k.GetPlan(ctx, planId)
+		if !found {
+			panic(fmt.Errorf("plan %d is not created", planId))
+		}
+
+		farmingPoolAcc := plan.GetFarmingPoolAddress()
+		if _, err := fundBalances(ctx, r, bk, farmingPoolAcc, testCoinDenoms); err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "failed to fund farming pool"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}
 }
 
@@ -300,45 +324,31 @@ func SimulateMsgUnstake(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKeepe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
+
+		var simAccount simtypes.Account
+		var totalCoins sdk.Coins
+		skip := true
+		for _, simAccount = range accs {
+			stakedCoins := k.GetAllStakedCoinsByFarmer(ctx, simAccount.Address)
+			queuedCoins := k.GetAllQueuedCoinsByFarmer(ctx, simAccount.Address)
+			totalCoins = stakedCoins.Add(queuedCoins...)
+			if !totalCoins.IsZero() {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgUnstake, "no account to unstake"), nil, nil
+		}
+
+		unstakingCoins := simtypes.RandSubsetCoins(r, totalCoins)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		farmer := account.GetAddress()
-		unstakingCoins := sdk.NewCoins(
-			sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1_000_000, 100_000_000))),
-		)
+		msg := farmingtypes.NewMsgUnstake(simAccount.Address, unstakingCoins)
 
-		// staking must exist in order to unstake
-		staking, sf := k.GetStaking(ctx, sdk.DefaultBondDenom, farmer)
-		if !sf {
-			staking = farmingtypes.Staking{
-				Amount: sdk.ZeroInt(),
-			}
-		}
-		queuedStaking, qsf := k.GetQueuedStaking(ctx, sdk.DefaultBondDenom, farmer)
-		if !qsf {
-			if !qsf {
-				queuedStaking = farmingtypes.QueuedStaking{
-					Amount: sdk.ZeroInt(),
-				}
-			}
-		}
-		if !sf && !qsf {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgUnstake, "unable to find staking and queued staking"), nil, nil
-		}
-		// sum of staked and queued coins must be greater than unstaking coins
-		if !staking.Amount.Add(queuedStaking.Amount).GTE(unstakingCoins[0].Amount) {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgUnstake, "insufficient funds"), nil, nil
-		}
-
-		// spendable must be greater than unstaking coins
-		if !spendable.IsAllGT(unstakingCoins) {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgUnstake, "insufficient funds"), nil, nil
-		}
-
-		msg := farmingtypes.NewMsgUnstake(farmer, unstakingCoins)
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
@@ -416,27 +426,36 @@ func SimulateMsgRemovePlan(ak farmingtypes.AccountKeeper, bk farmingtypes.BankKe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
+
+		plans := k.GetPlans(ctx)
+		r.Shuffle(len(plans), func(i, j int) {
+			plans[i], plans[j] = plans[j], plans[i]
+		})
+
+		var simAccount simtypes.Account
+		var plan farmingtypes.PlanI
+		skip := true
+	loop:
+		for _, simAccount = range accs {
+			for _, plan = range plans {
+				// Only the plan creator can remove the plan.
+				if plan.GetType() == farmingtypes.PlanTypePrivate &&
+					plan.IsTerminated() &&
+					plan.GetTerminationAddress().Equals(simAccount.Address) {
+					skip = false
+					break loop
+				}
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgRemovePlan, "no plan to remove"), nil, nil
+		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		creator := account.GetAddress()
-
-		var terminatedPlans []farmingtypes.PlanI
-		for _, plan := range k.GetPlans(ctx) {
-			if plan.IsTerminated() {
-				terminatedPlans = append(terminatedPlans, plan)
-			}
-		}
-		if len(terminatedPlans) == 0 {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, farmingtypes.TypeMsgRemovePlan, "no terminated plans to remove"), nil, nil
-		}
-
-		// Select a random terminated plan.
-		plan := terminatedPlans[simtypes.RandIntBetween(r, 0, len(terminatedPlans))]
-
-		msg := farmingtypes.NewMsgRemovePlan(creator, plan.GetId())
+		msg := farmingtypes.NewMsgRemovePlan(simAccount.Address, plan.GetId())
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
@@ -471,4 +490,14 @@ func fundBalances(ctx sdk.Context, r *rand.Rand, bk farmingtypes.BankKeeper, acc
 		return nil, err
 	}
 	return mintCoins, nil
+}
+
+// ensurePositiveSupply mints coins for each denom, with amount of 1 to ensure
+// the supply of the denom is positive.
+func ensurePositiveSupply(bk farmingtypes.BankKeeper, ctx sdk.Context, denoms ...string) error {
+	mintingCoins := sdk.Coins{}
+	for _, denom := range denoms {
+		mintingCoins = mintingCoins.Add(sdk.NewInt64Coin(denom, 1))
+	}
+	return bk.MintCoins(ctx, minttypes.ModuleName, mintingCoins)
 }

@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -73,7 +72,6 @@ func SimulateAddWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.Kee
 						ValidatorAddress: val.OperatorAddress,
 						TargetWeight:     genTargetWeight(r),
 					})
-				fmt.Println("## added vals", val.OperatorAddress)
 				// manually set params for simulation
 				k.SetParams(ctx, params)
 				break
@@ -93,7 +91,6 @@ func SimulateUpdateWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.
 			for i := range params.WhitelistedValidators {
 				if params.WhitelistedValidators[i].ValidatorAddress == targetVal.OperatorAddress {
 					params.WhitelistedValidators[i].TargetWeight = genTargetWeight(r)
-					fmt.Println("## update vals", targetVal.OperatorAddress)
 					// manually set params for simulation
 					k.SetParams(ctx, params)
 					break
@@ -119,7 +116,6 @@ func SimulateDeleteWhitelistValidatorsProposal(sk types.StakingKeeper, k keeper.
 				if params.WhitelistedValidators[i].ValidatorAddress == targetVal.OperatorAddress {
 					params.WhitelistedValidators[i].TargetWeight = genTargetWeight(r)
 					params.WhitelistedValidators = remove(params.WhitelistedValidators, i)
-					fmt.Println("## delete vals", targetVal.OperatorAddress)
 					k.SetParams(ctx, params)
 					break
 				}
@@ -135,7 +131,6 @@ func SimulateCompleteRedelegationUnbonding(sk types.StakingKeeper) simtypes.Cont
 		reds := sk.GetAllRedelegations(ctx, types.LiquidStakingProxyAcc, nil, nil)
 		ubds := sk.GetAllUnbondingDelegations(ctx, types.LiquidStakingProxyAcc)
 		if len(reds) != 0 || len(ubds) != 0 {
-			fmt.Println("## SimulateCompleteRedelegationUnbonding", ctx.BlockTime())
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 100).WithBlockTime(ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime))
 			sk.BlockValidatorUpdates(ctx)
 		}
@@ -177,7 +172,6 @@ func SimulateTallyWithLiquidStaking(ak types.AccountKeeper, bk types.BankKeeper,
 					cachedCtx, _ := ctx.CacheContext()
 					_, _, res := gk.Tally(cachedCtx, *targetProposal)
 					targetProposal.FinalTallyResult = res
-					fmt.Println("## SimulateTallyWithLiquidStaking", res, targetProposal.ProposalId)
 					break
 				}
 			}

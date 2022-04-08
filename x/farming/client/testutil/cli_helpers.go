@@ -49,7 +49,7 @@ func MsgStakeExec(clientCtx client.Context, from string, stakingCoins string,
 
 // MsgAdvanceEpochExec creates a transaction to advance epoch by 1.
 func MsgAdvanceEpochExec(clientCtx client.Context, from string,
-	extraAtgs ...string) (testutil.BufferWriter, error) {
+	extraArgs ...string) (testutil.BufferWriter, error) {
 
 	args := append([]string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
@@ -62,7 +62,7 @@ func MsgAdvanceEpochExec(clientCtx client.Context, from string,
 
 // MsgSendExec creates a transaction to transfer coins.
 func MsgSendExec(clientCtx client.Context, from string, to string, amount string,
-	extraAtgs ...string) (testutil.BufferWriter, error) {
+	extraArgs ...string) (testutil.BufferWriter, error) {
 
 	args := append([]string{
 		from,

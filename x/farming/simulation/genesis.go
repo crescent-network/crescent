@@ -28,12 +28,12 @@ func GenPrivatePlanCreationFee(r *rand.Rand) sdk.Coins {
 
 // GenNextEpochDays return default next epoch days.
 func GenNextEpochDays(r *rand.Rand) uint32 {
-	return uint32(simulation.RandIntBetween(r, int(types.DefaultNextEpochDays), 10))
+	return uint32(simulation.RandIntBetween(r, int(types.DefaultNextEpochDays), 2))
 }
 
 // GenCurrentEpochDays returns current epoch days.
 func GenCurrentEpochDays(r *rand.Rand) uint32 {
-	return uint32(simulation.RandIntBetween(r, int(types.DefaultCurrentEpochDays), 10))
+	return uint32(simulation.RandIntBetween(r, int(types.DefaultCurrentEpochDays), 2))
 }
 
 // GenFarmingFeeCollector returns default farming fee collector.

@@ -24,7 +24,7 @@ func TestProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
-	require.Len(t, weightedProposalContent, 4)
+	require.Len(t, weightedProposalContent, 3)
 
 	w0 := weightedProposalContent[0]
 	w1 := weightedProposalContent[1]

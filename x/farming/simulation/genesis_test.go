@@ -41,14 +41,14 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &genState)
 
 	dec1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(36122540)))
-	dec3 := uint32(5)
 	dec4 := "cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x"
 	dec5 := uint32(1347)
 
 	require.Equal(t, dec1, genState.Params.PrivatePlanCreationFee)
-	require.Equal(t, dec3, genState.Params.NextEpochDays)
+	require.Equal(t, uint32(1), genState.Params.NextEpochDays)
 	require.Equal(t, dec4, genState.Params.FarmingFeeCollector)
 	require.Equal(t, dec5, genState.Params.MaxNumPrivatePlans)
+	require.Equal(t, uint32(1), genState.CurrentEpochDays)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

@@ -150,10 +150,10 @@ func GenAndDeliverTxWithFees(txCtx simulation.OperationInput, gas uint64, fees s
 }
 
 // ShuffleSimAccounts returns randomly shuffled simulation accounts.
-func ShuffleSimAccounts(accs []simtypes.Account) []simtypes.Account {
+func ShuffleSimAccounts(r *rand.Rand, accs []simtypes.Account) []simtypes.Account {
 	accs2 := make([]simtypes.Account, len(accs))
 	copy(accs2, accs)
-	rand.Shuffle(len(accs2), func(i, j int) {
+	r.Shuffle(len(accs2), func(i, j int) {
 		accs2[i], accs2[j] = accs2[j], accs2[i]
 	})
 	return accs2
