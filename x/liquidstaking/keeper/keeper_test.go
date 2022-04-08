@@ -201,14 +201,30 @@ func (s *KeeperTestSuite) redelegationsErrorCount(redelegations []types.Redelega
 }
 
 func (s *KeeperTestSuite) printRedelegationsLiquidTokens() {
-	fmt.Println("-----------------")
 	redsIng := s.app.StakingKeeper.GetRedelegations(s.ctx, types.LiquidStakingProxyAcc, 50)
-	for _, red := range redsIng {
-		fmt.Println(red)
+	if len(redsIng) != 0 {
+		fmt.Println("[Redelegations]")
+		for i, red := range redsIng {
+			fmt.Println("\tRedelegation #", i+1)
+			fmt.Println("\t\tDelegatorAddress: ", red.DelegatorAddress)
+			fmt.Println("\t\tValidatorSrcAddress : ", red.ValidatorSrcAddress)
+			fmt.Println("\t\tValidatorDstAddress: ", red.ValidatorDstAddress)
+			fmt.Println("\t\tEntries: ")
+			for _, e := range red.Entries {
+				fmt.Println("\t\t\tCreationHeight: ", e.CreationHeight)
+				fmt.Println("\t\t\tCompletionTime: ", e.CompletionTime)
+				fmt.Println("\t\t\tInitialBalance: ", e.InitialBalance)
+				fmt.Println("\t\t\tSharesDst: ", e.SharesDst)
+			}
+		}
+		fmt.Println("")
 	}
-	fmt.Println("-----------------")
-	for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
-		fmt.Println(v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
+	liquidVals := s.keeper.GetAllLiquidValidators(s.ctx)
+	if len(liquidVals) != 0 {
+		fmt.Println("[LiquidValidators]")
+		for _, v := range s.keeper.GetAllLiquidValidators(s.ctx) {
+			fmt.Printf("   OperatorAddress %s; LiquidTokens: %s\n", v.OperatorAddress, v.GetLiquidTokens(s.ctx, s.app.StakingKeeper, false))
+		}
 	}
 }
 
