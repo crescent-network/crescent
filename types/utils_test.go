@@ -1,12 +1,15 @@
 package types_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/crescent-network/crescent/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/crescent-network/crescent/types"
 )
 
 func TestGetShareValue(t *testing.T) {
@@ -172,6 +175,59 @@ func TestDateRangeIncludes(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			require.Equal(t, tc.expectedResult, types.DateRangeIncludes(tc.startTime, tc.endTime, tc.targeTime))
+		})
+	}
+}
+
+func TestSafeMath(t *testing.T) {
+	maxInt, _ := sdk.NewIntFromString("115792089237316195423570985008687907853269984665640564039457584007913129639935")
+
+	for _, tc := range []struct {
+		op       func()
+		overflow bool
+	}{
+		{
+			func() {
+				maxInt.Add(sdk.OneInt())
+			},
+			true,
+		},
+		{
+			func() {
+				maxInt.Sub(sdk.OneInt())
+			},
+			false,
+		},
+		{
+			func() {
+				i, _ := new(big.Int).SetString("133499189745056880149688856635597007162669032647290798121690100488888732861290034376435130433535", 10)
+				sdk.NewDecFromBigIntWithPrec(i, sdk.Precision)
+			},
+			false,
+		},
+		{
+			func() {
+				i, _ := new(big.Int).SetString("133499189745056880149688856635597007162669032647290798121690100488888732861290034376435130433535", 10)
+				d := sdk.NewDecFromBigIntWithPrec(i, sdk.Precision)
+				d.Add(sdk.NewDecWithPrec(1, sdk.Precision))
+			},
+			true,
+		},
+		{
+			func() {
+				i, _ := new(big.Int).SetString("1334991897450568801496888566355970071626690326472907981216901004888887328612900343764351304", 10)
+				d := sdk.NewDecFromBigIntWithPrec(i, sdk.Precision)
+				d.Quo(sdk.NewDecWithPrec(1, 10))
+			},
+			true,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			overflow := false
+			types.SafeMath(tc.op, func() {
+				overflow = true
+			})
+			require.Equal(t, tc.overflow, overflow)
 		})
 	}
 }

@@ -250,6 +250,14 @@ func (s *KeeperTestSuite) TestDepositRefundTooSmallMintedPoolCoin() {
 	s.Require().True(coinsEq(depositCoins, s.getBalances(depositor)))
 }
 
+func (s *KeeperTestSuite) TestTooLargePool() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+
+	_, err := s.keeper.Deposit(s.ctx, types.NewMsgDeposit(s.addr(1), pool.Id, utils.ParseCoins("10000000000000000000000000000000000000000denom1,10000000000000000000000000000000000000000denom2")))
+	s.Require().ErrorIs(err, types.ErrTooLargePool)
+}
+
 func (s *KeeperTestSuite) TestWithdraw() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
@@ -380,4 +388,17 @@ func (s *KeeperTestSuite) TestWithdrawRequestsByWithdrawer() {
 	s.Require().Equal(req1.Id, reqs[0].Id)
 	s.Require().Equal(req2.PoolId, reqs[1].PoolId)
 	s.Require().Equal(req2.Id, reqs[1].Id)
+}
+
+func (s *KeeperTestSuite) TestPoolOrderOverflow_ExternalFunds() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+	externalFunds := utils.ParseCoins("10000000000000000000000000000000000000000000denom2")
+	s.fundAddr(s.addr(1), externalFunds)
+	s.sendCoins(s.addr(1), pool.GetReserveAddress(), externalFunds)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.0000000001"), sdk.NewInt(1e18), 0, true)
+	s.Require().NotPanics(func() {
+		liquidity.EndBlocker(s.ctx, s.keeper)
+	})
+	liquidity.BeginBlocker(s.ctx, s.keeper)
 }

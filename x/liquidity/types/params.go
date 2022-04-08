@@ -42,8 +42,6 @@ const (
 )
 
 var (
-	MinCoinAmount = sdk.NewInt(100) // minimum coin amount of offer coin and base coin
-
 	// GlobalEscrowAddress is an escrow for deposit/withdraw requests.
 	GlobalEscrowAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "GlobalEscrow")
 )

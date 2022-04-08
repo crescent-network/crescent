@@ -175,7 +175,7 @@ func DropSmallOrders(orders []Order, matchPrice sdk.Dec) []Order {
 	var res []Order
 	for _, order := range orders {
 		openAmt := order.GetOpenAmount()
-		if openAmt.IsPositive() && matchPrice.MulInt(openAmt).TruncateInt().IsPositive() {
+		if openAmt.GTE(MinCoinAmount) && matchPrice.MulInt(openAmt).TruncateInt().GTE(MinCoinAmount) {
 			res = append(res, order)
 		}
 	}

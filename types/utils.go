@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -164,4 +165,31 @@ func TestAddress(addrNum int) sdk.AccAddress {
 	addr := make(sdk.AccAddress, 20)
 	binary.PutVarint(addr, int64(addrNum))
 	return addr
+}
+
+// SafeMath runs f in safe mode, which means that any panics occurred inside f
+// gets caught by recover() and if the panic was an overflow, onOverflow is run.
+// Otherwise, if the panic was not an overflow, then SafeMath will re-throw
+// the panic.
+func SafeMath(f, onOverflow func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			if IsOverflow(r) {
+				onOverflow()
+			} else {
+				panic(r)
+			}
+		}
+	}()
+	f()
+}
+
+// IsOverflow returns true if the panic value can be interpreted as an overflow.
+func IsOverflow(r interface{}) bool {
+	switch r := r.(type) {
+	case string:
+		s := strings.ToLower(r)
+		return strings.Contains(s, "overflow") || strings.HasSuffix(s, "out of bound")
+	}
+	return false
 }
