@@ -10,6 +10,7 @@ type Redelegation struct {
 	DstValidator LiquidValidator
 	Amount       sdk.Int
 	Last         bool
+	Error        error
 }
 
 // DivideByWeight divide the input value by the ratio of the param weight of the liquid validator and return it with crumb

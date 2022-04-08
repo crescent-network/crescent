@@ -50,7 +50,7 @@ func (k Keeper) TryRedelegation(ctx sdk.Context, re types.Redelegation) (complet
 // Rebalance argument liquidVals containing ValidatorStatusActive which is containing just added on whitelist(liquidToken 0) and ValidatorStatusInactive to delist
 func (k Keeper) Rebalance(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals types.LiquidValidators, whitelistedValsMap types.WhitelistedValsMap, rebalancingTrigger sdk.Dec) (redelegations []types.Redelegation) {
 	logger := k.Logger(ctx)
-	totalLiquidTokens, _ := liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper, false)
+	totalLiquidTokens, liquidTokenMap := liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper, false)
 	if !totalLiquidTokens.IsPositive() {
 		return []types.Redelegation{}
 	}
@@ -83,16 +83,17 @@ func (k Keeper) Rebalance(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals t
 
 	failCount := 0
 	rebalancingThresholdAmt := rebalancingTrigger.Mul(totalLiquidTokens.ToDec()).TruncateInt()
-	for i := 0; i < liquidVals.Len(); i++ {
-		// sync totalLiquidTokens, liquidTokenMap applied rebalancing
-		var liquidTokenMap map[string]sdk.Int
-		totalLiquidTokens, liquidTokenMap = liquidVals.TotalLiquidTokens(ctx, k.stakingKeeper, false)
 
+	for i := 0; i < liquidVals.Len(); i++ {
 		// get min, max of liquid token gap
 		minVal, maxVal, amountNeeded, last := liquidVals.MinMaxGap(targetMap, liquidTokenMap)
 		if amountNeeded.IsZero() || (i == 0 && !amountNeeded.GT(rebalancingThresholdAmt)) {
 			break
 		}
+
+		// sync liquidTokenMap applied rebalancing
+		liquidTokenMap[maxVal.OperatorAddress] = liquidTokenMap[maxVal.OperatorAddress].Sub(amountNeeded)
+		liquidTokenMap[minVal.OperatorAddress] = liquidTokenMap[minVal.OperatorAddress].Add(amountNeeded)
 
 		// try redelegation from max validator to min validator
 		redelegation := types.Redelegation{
@@ -102,12 +103,15 @@ func (k Keeper) Rebalance(ctx sdk.Context, proxyAcc sdk.AccAddress, liquidVals t
 			Amount:       amountNeeded,
 			Last:         last,
 		}
-		redelegations = append(redelegations, redelegation)
 		_, err := k.TryRedelegation(ctx, redelegation)
 		if err != nil {
-			logger.Error("rebalancing failed due to redelegation restriction", "redelegations", redelegations, "error", err)
+			redelegation.Error = err
 			failCount++
 		}
+		redelegations = append(redelegations, redelegation)
+	}
+	if failCount > 0 {
+		logger.Error("rebalancing failed due to redelegation hopping", "redelegations", redelegations)
 	}
 	if len(redelegations) != 0 {
 		ctx.EventManager().EmitEvents(sdk.Events{
