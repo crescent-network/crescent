@@ -48,7 +48,7 @@ func GenClaimRecords(r *rand.Rand, accs []simtypes.Account, airdrops []types.Air
 	if len(airdrops) == 0 {
 		return nil
 	}
-	accs = utils.ShuffleSimAccounts(accs)
+	accs = utils.ShuffleSimAccounts(r, accs)
 	numClaimRecords := r.Intn(len(accs)) + 1
 	claimRecords = make([]types.ClaimRecord, numClaimRecords)
 	for i := 0; i < numClaimRecords; i++ {

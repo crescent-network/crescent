@@ -20,7 +20,7 @@ func TestParamChanges(t *testing.T) {
 		subspace    string
 	}{
 		{"farming/PrivatePlanCreationFee", "PrivatePlanCreationFee", "[{\"denom\":\"stake\",\"amount\":\"98498081\"}]", "farming"},
-		{"farming/NextEpochDays", "NextEpochDays", "7", "farming"},
+		{"farming/NextEpochDays", "NextEpochDays", "1", "farming"},
 		{"farming/FarmingFeeCollector", "FarmingFeeCollector", "\"cosmos1h292smhhttwy0rl3qr4p6xsvpvxc4v05s6rxtczwq3cs6qc462mqejwy8x\"", "farming"},
 		{"farming/MaxNumPrivatePlans", "MaxNumPrivatePlans", "4575", "farming"},
 	}

@@ -136,7 +136,7 @@ func SimulateMsgCreatePair(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePair, "all pairs have already been created"), nil, nil
 		}
 
-		accs = utils.ShuffleSimAccounts(accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -182,7 +182,7 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		params := k.GetParams(ctx)
 		minDepositAmt := params.MinInitialDepositAmount
 
-		accs = utils.ShuffleSimAccounts(accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -240,7 +240,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		accs = utils.ShuffleSimAccounts(accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -306,7 +306,7 @@ func SimulateMsgWithdraw(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		accs = utils.ShuffleSimAccounts(accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -362,7 +362,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		params := k.GetParams(ctx)
 
-		accs = utils.ShuffleSimAccounts(accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
@@ -453,7 +453,7 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 
 		params := k.GetParams(ctx)
 
-		accs = utils.ShuffleSimAccounts(accs)
+		accs = utils.ShuffleSimAccounts(r, accs)
 
 		var simAccount simtypes.Account
 		var spendable sdk.Coins
