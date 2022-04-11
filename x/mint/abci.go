@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	utils "github.com/crescent-network/crescent/types"
 
 	"github.com/crescent-network/crescent/x/mint/keeper"
@@ -49,7 +50,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		}
 
 		// send the minted coins to the fee collector account
-		err = k.AddInfationToFeeCollector(ctx, mintedCoins)
+		err = k.AddInflationToFeeCollector(ctx, mintedCoins)
 		if err != nil {
 			panic(err)
 		}
