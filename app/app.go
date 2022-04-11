@@ -96,7 +96,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	farmingparams "github.com/crescent-network/crescent/app/params"
-	"github.com/crescent-network/crescent/app/upgrades/testnet/rc3"
+	"github.com/crescent-network/crescent/app/upgrades/testnet/rc4"
 	"github.com/crescent-network/crescent/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/x/claim/keeper"
 	claimtypes "github.com/crescent-network/crescent/x/claim/types"
@@ -842,14 +842,14 @@ func (app *App) SetUpgradeStoreLoaders() {
 	}
 
 	// testnet upgrade state loaders
-	if upgradeInfo.Name == rc3.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == rc4.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &rc3.StoreUpgrades))
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &rc4.StoreUpgrades))
 	}
 }
 
 func (app *App) SetUpgradeHandlers() {
 	// testnet upgrade handlers
 	app.UpgradeKeeper.SetUpgradeHandler(
-		rc3.UpgradeName, rc3.UpgradeHandler)
+		rc4.UpgradeName, rc4.UpgradeHandler)
 }
