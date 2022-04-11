@@ -11,6 +11,7 @@ How to use the documentation
 * [gRPC-gateway REST Routes](api) - available gRPC-gateway REST Routes for all modules
 * [Command-line Interfaces](cli) - available Command-Line Interfaces for all modules
 * [Demo](demo) - contains any type of demo or presentation
+* [Swagger](https://app.swaggerhub.com/apis-docs/crescent/crescent) - Crescent REST and gRPC Gateway docs 
 
 ## Contributing
 
