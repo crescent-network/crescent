@@ -45,11 +45,11 @@ If you haven't already, install Go by following the [official docs](https://gola
 
 **Step 2. Get Crescent Core source code**
 
-Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `main` branch. This branch contains the latest release, which will install the `crescentd` binary.
+Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v1.0.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
-cd crescent && git checkout main
+cd crescent && git checkout release/v1.0.x
 make install
 ```
 
