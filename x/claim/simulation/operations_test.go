@@ -59,7 +59,7 @@ func TestSimulateMsgClaim(t *testing.T) {
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
-	op := simulation.SimulateMsgClaim(app.AccountKeeper, app.BankKeeper, app.ClaimKeeper)
+	op := simulation.SimulateMsgClaim(app.AccountKeeper, app.BankKeeper, app.LiquidStakingKeeper, app.ClaimKeeper)
 	opMsg, futureOps, err := op(r, app.BaseApp, ctx, accs, "")
 	require.NoError(t, err)
 	require.True(t, opMsg.OK)

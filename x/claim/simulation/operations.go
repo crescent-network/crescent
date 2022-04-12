@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"math/rand"
-	"sort"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,6 +13,7 @@ import (
 	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/claim/keeper"
 	"github.com/crescent-network/crescent/x/claim/types"
+	minttypes "github.com/crescent-network/crescent/x/mint/types"
 )
 
 const (
@@ -25,9 +25,14 @@ var (
 	Fees = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
 )
 
+var (
+	airdropDenom = "airdrop"
+)
+
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec,
-	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+	ak types.AccountKeeper, bk types.BankKeeper,
+	lk types.LiquidStakingKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgClaim int
 	appParams.GetOrGenerate(cdc, OpWeightMsgClaim, &weightMsgClaim, nil, func(_ *rand.Rand) {
@@ -37,51 +42,59 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgClaim,
-			SimulateMsgClaim(ak, bk, k),
+			SimulateMsgClaim(ak, bk, lk, k),
 		),
 	}
 }
 
-func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, lk types.LiquidStakingKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		accs = utils.ShuffleSimAccounts(r, accs)
 
-		airdrops := k.GetAllAirdrops(ctx)
-		rand.Shuffle(len(airdrops), func(i, j int) {
-			airdrops[i], airdrops[j] = airdrops[j], airdrops[i]
-		})
-		var simAccount simtypes.Account
-		var airdrop types.Airdrop
-		var claimRecord types.ClaimRecord
-		var cond types.ConditionType
-		skip := true
-	loop:
-		for _, simAccount = range accs {
-			for _, airdrop = range airdrops {
-				var found bool
-				claimRecord, found = k.GetClaimRecordByRecipient(ctx, airdrop.Id, simAccount.Address)
-				if !found {
-					continue
-				}
+		airdrop := setAirdrop(r, ctx, bk, k, accs)
 
-				conditions := unclaimedConditions(airdrop, claimRecord)
-				for _, cond = range conditions {
-					if err := k.ValidateCondition(ctx, simAccount.Address, cond); err == nil {
-						skip = false
-						break loop
-					}
-				}
+		// Look for an account that has token with liquid bond denom
+		var simAccount simtypes.Account
+		skip := true
+		for _, acc := range accs {
+			params := lk.GetParams(ctx)
+			spendable := bk.SpendableCoins(ctx, acc.Address)
+			bTokenBalance := spendable.AmountOf(params.LiquidBondDenom)
+			if !bTokenBalance.IsZero() {
+				simAccount = acc
+				skip = false
+				break
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "no account to claim"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "no recipient that has executed LIQUID_STAKE condition"), nil, nil
 		}
 
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-		msg := types.NewMsgClaim(airdrop.Id, simAccount.Address, cond)
+		recipient := simAccount.Address
+		spendable := bk.SpendableCoins(ctx, recipient)
+
+		_, found := k.GetClaimRecordByRecipient(ctx, airdrop.Id, recipient)
+		if found {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "recipient already has claim record"), nil, nil
+		}
+
+		initialClaimableCoins := sdk.NewCoins(
+			sdk.NewInt64Coin(airdropDenom, int64(simtypes.RandIntBetween(r, 100_000_000, 1_000_000_000))))
+
+		// Set new claim record for the recipient
+		record := types.ClaimRecord{
+			AirdropId:             airdrop.Id,
+			Recipient:             recipient.String(),
+			InitialClaimableCoins: initialClaimableCoins,
+			ClaimableCoins:        initialClaimableCoins,
+			ClaimedConditions:     []types.ConditionType{},
+		}
+		k.SetClaimRecord(ctx, record)
+
+		msg := types.NewMsgClaim(airdrop.Id, simAccount.Address, types.ConditionTypeLiquidStake)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -101,21 +114,32 @@ func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keep
 	}
 }
 
-func unclaimedConditions(airdrop types.Airdrop, claimRecord types.ClaimRecord) []types.ConditionType {
-	conditionSet := map[types.ConditionType]struct{}{}
-	for _, cond := range airdrop.Conditions {
-		conditionSet[cond] = struct{}{}
+func setAirdrop(r *rand.Rand, ctx sdk.Context, bk types.BankKeeper, k keeper.Keeper, accs []simtypes.Account) types.Airdrop {
+	sourceAddr := accs[r.Intn(len(accs))].Address
+	coins := sdk.NewCoins(sdk.NewInt64Coin(airdropDenom, 10_000_000_000_000))
+
+	if err := bk.MintCoins(ctx, minttypes.ModuleName, coins); err != nil {
+		panic(err)
 	}
-	for _, cond := range claimRecord.ClaimedConditions {
-		delete(conditionSet, cond)
+
+	if err := bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sourceAddr, coins); err != nil {
+		panic(err)
 	}
-	var conditions []types.ConditionType
-	for cond := range conditionSet {
-		conditions = append(conditions, cond)
+
+	airdrop := types.Airdrop{
+		Id:            1,
+		SourceAddress: sourceAddr.String(),
+		Conditions: []types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
+		},
+		StartTime: ctx.BlockTime(),
+		EndTime:   ctx.BlockTime().AddDate(0, simtypes.RandIntBetween(r, 1, 24), 0),
 	}
-	// Sort conditions for deterministic simulation, since map keys are not sorted.
-	sort.Slice(conditions, func(i, j int) bool {
-		return conditions[i] < conditions[j]
-	})
-	return conditions
+
+	k.SetAirdrop(ctx, airdrop)
+
+	return airdrop
 }
