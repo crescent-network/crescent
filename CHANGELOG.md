@@ -35,3 +35,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 <!-- markdown-link-check-disable -->
 
 # Changelog
+
+## [Unreleased]
+
+## [v1.0.0] - 2022-04-12
+
+### Features
+
+* (crescentd) feat: add `x/liquidity` module
+* (crescentd) feat: add `x/liquidstaking` module
+* (crescentd) feat: add `x/farming` module
+* (crescentd) feat: add `x/mint`(constant inflation) module
+* (crescentd) feat: add `x/claim` module
+* (sdk) Crescent Core uses a customized Cosmos SDK [v1.0.2-sdk-0.44.5](https://github.com/crescent-network/cosmos-sdk/releases/v1.0.2-sdk-0.44.5). Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
+  * `x/staking` fix: allow delegate only spendable coins
+  * `x/gov` feat: add additional voting powers hook on tally (liquid governance)
+  * `x/vesting` feat: periodic vesting msg
+  * `x/bank` feat: Add dynamic blockedAddrs
+  
+[Unreleased]: https://github.com/crescent-network/crescent/compare/v1.0.0...HEAD
+[v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
