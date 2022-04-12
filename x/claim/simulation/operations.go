@@ -102,7 +102,7 @@ func SimulateMsgClaim(
 			})
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "no recipient that has executed LIQUID_STAKE condition"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "no recipient that has executed any condition"), nil, nil
 		}
 
 		recipient := simAccount.Address
