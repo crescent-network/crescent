@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	appparams "github.com/crescent-network/crescent/app/params"
@@ -32,7 +33,8 @@ var (
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec,
 	ak types.AccountKeeper, bk types.BankKeeper,
-	lk types.LiquidStakingKeeper, k keeper.Keeper,
+	lk types.LiquidityKeeper, lsk types.LiquidStakingKeeper,
+	gk types.GovKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgClaim int
 	appParams.GetOrGenerate(cdc, OpWeightMsgClaim, &weightMsgClaim, nil, func(_ *rand.Rand) {
@@ -42,12 +44,16 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgClaim,
-			SimulateMsgClaim(ak, bk, lk, k),
+			SimulateMsgClaim(ak, bk, lk, lsk, gk, k),
 		),
 	}
 }
 
-func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, lk types.LiquidStakingKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgClaim(
+	ak types.AccountKeeper, bk types.BankKeeper,
+	lk types.LiquidityKeeper, lsk types.LiquidStakingKeeper,
+	gk types.GovKeeper, k keeper.Keeper,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -56,18 +62,44 @@ func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, lk types.Liqu
 
 		airdrop := setAirdrop(r, ctx, bk, k, accs)
 
-		// Look for an account that has token with liquid bond denom
+		// Look for an account that has executed any condition
 		var simAccount simtypes.Account
+		var cond types.ConditionType
 		skip := true
 		for _, acc := range accs {
-			params := lk.GetParams(ctx)
+			if len(lk.GetDepositRequestsByDepositor(ctx, acc.Address)) != 0 {
+				simAccount = acc
+				skip = false
+				cond = types.ConditionTypeDeposit
+				break
+			}
+
+			if len(lk.GetOrdersByOrderer(ctx, acc.Address)) != 0 {
+				simAccount = acc
+				skip = false
+				cond = types.ConditionTypeSwap
+				break
+			}
+
+			params := lsk.GetParams(ctx)
 			spendable := bk.SpendableCoins(ctx, acc.Address)
 			bTokenBalance := spendable.AmountOf(params.LiquidBondDenom)
 			if !bTokenBalance.IsZero() {
 				simAccount = acc
 				skip = false
+				cond = types.ConditionTypeLiquidStake
 				break
 			}
+
+			gk.IterateAllVotes(ctx, func(vote govtypes.Vote) (stop bool) {
+				if vote.Voter == acc.Address.String() {
+					simAccount = acc
+					skip = false
+					cond = types.ConditionTypeVote
+					return true
+				}
+				return false
+			})
 		}
 		if skip {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "no recipient that has executed LIQUID_STAKE condition"), nil, nil
@@ -76,6 +108,7 @@ func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, lk types.Liqu
 		recipient := simAccount.Address
 		spendable := bk.SpendableCoins(ctx, recipient)
 
+		// To reduce complexity, skip if the recipient has already claim record
 		_, found := k.GetClaimRecordByRecipient(ctx, airdrop.Id, recipient)
 		if found {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "recipient already has claim record"), nil, nil
@@ -94,7 +127,7 @@ func SimulateMsgClaim(ak types.AccountKeeper, bk types.BankKeeper, lk types.Liqu
 		}
 		k.SetClaimRecord(ctx, record)
 
-		msg := types.NewMsgClaim(airdrop.Id, simAccount.Address, types.ConditionTypeLiquidStake)
+		msg := types.NewMsgClaim(airdrop.Id, simAccount.Address, cond)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
