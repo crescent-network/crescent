@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	appparams "github.com/crescent-network/crescent/app/params"
@@ -66,40 +65,19 @@ func SimulateMsgClaim(
 		var simAccount simtypes.Account
 		var cond types.ConditionType
 		skip := true
-		for _, acc := range accs {
-			if len(lk.GetDepositRequestsByDepositor(ctx, acc.Address)) != 0 {
-				simAccount = acc
-				skip = false
-				cond = types.ConditionTypeDeposit
-				break
-			}
-
-			if len(lk.GetOrdersByOrderer(ctx, acc.Address)) != 0 {
-				simAccount = acc
-				skip = false
-				cond = types.ConditionTypeSwap
-				break
-			}
-
-			params := lsk.GetParams(ctx)
-			spendable := bk.SpendableCoins(ctx, acc.Address)
-			bTokenBalance := spendable.AmountOf(params.LiquidBondDenom)
-			if !bTokenBalance.IsZero() {
-				simAccount = acc
-				skip = false
-				cond = types.ConditionTypeLiquidStake
-				break
-			}
-
-			gk.IterateAllVotes(ctx, func(vote govtypes.Vote) (stop bool) {
-				if vote.Voter == acc.Address.String() {
-					simAccount = acc
+	loop:
+		for _, simAccount = range accs {
+			for _, cond = range []types.ConditionType{
+				types.ConditionTypeDeposit,
+				types.ConditionTypeSwap,
+				types.ConditionTypeLiquidStake,
+				types.ConditionTypeVote,
+			} {
+				if err := k.ValidateCondition(ctx, simAccount.Address, cond); err == nil {
 					skip = false
-					cond = types.ConditionTypeVote
-					return true
+					break loop
 				}
-				return false
-			})
+			}
 		}
 		if skip {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgClaim, "no recipient that has executed any condition"), nil, nil
