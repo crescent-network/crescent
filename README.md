@@ -45,11 +45,11 @@ If you haven't already, install Go by following the [official docs](https://gola
 
 **Step 2. Get Crescent Core source code**
 
-Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v1.0.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
+Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v1.1.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
-cd crescent && git checkout release/v1.0.x
+cd crescent && git checkout release/v1.1.x
 make install
 ```
 
@@ -73,6 +73,9 @@ Crescent Core uses a customized Cosmos SDK. Please check the differences on [her
 ## Documentation
 
 The documentation is available in [docs](docs) directory. If you are a developer interested in technical specification, see inside each `x/{module}`'s `spec` directory.
+
+* [Crescent Official Docs](https://docs.crescent.network/)
+* [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent)
 
 ## Community
 
