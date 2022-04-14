@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	v1_1_0 "github.com/crescent-network/crescent/app/upgrades/mainnet/v1.1.0"
 	"github.com/crescent-network/crescent/x/claim/types"
 )
 
@@ -88,16 +89,29 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 		}
 
 	case types.ConditionTypeVote:
-		k.govKeeper.IterateProposals(ctx, func(proposal govtypes.Proposal) (stop bool) {
-			if proposal.Status == govtypes.StatusVotingPeriod {
-				_, found := k.govKeeper.GetVote(ctx, proposal.ProposalId, recipient)
-				if found {
+		// IterateAllVotes consumes more gas as a number of votes increase.
+		// To prevent from letting some airdrop recipients experience out of gas issue,
+		// an upgrade is inevitable after the UpgradeHeight.
+		if ctx.BlockHeight() < v1_1_0.UpgradeHeight {
+			k.govKeeper.IterateAllVotes(ctx, func(vote govtypes.Vote) (stop bool) {
+				if vote.Voter == recipient.String() {
 					ok = true
 					return true
 				}
-			}
-			return false
-		})
+				return false
+			})
+		} else {
+			k.govKeeper.IterateProposals(ctx, func(proposal govtypes.Proposal) (stop bool) {
+				if proposal.Status == govtypes.StatusVotingPeriod {
+					_, found := k.govKeeper.GetVote(ctx, proposal.ProposalId, recipient)
+					if found {
+						ok = true
+						return true
+					}
+				}
+				return false
+			})
+		}
 	}
 
 	if !ok {
