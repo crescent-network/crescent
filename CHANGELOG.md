@@ -38,6 +38,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v1.1.0] - 2022-04-14
+
+### State Machine Breaking
+
+Running a full node will encounter wrong app hash issue if it doesn't upgrade to this version prior to `UpgradeHeight (48000)`. Instead of going through on-chain governance proposal by using `UpgradeProposal`, this upgrade mechanism is chosen as it is security hot fix that is better to be fixed as soon as it can and also it is directly related to governance proposal.
+
+* (x/claim) [\#23](https://github.com/crescent-network/crescent/pull/23) Fix gas consumption issue for `ConditionTypeVote`. `UpgradeHeight` is set as `48000`.
+
 ## [v1.0.0] - 2022-04-12
 
 ### Features
@@ -55,3 +63,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
   
 [Unreleased]: https://github.com/crescent-network/crescent/compare/v1.0.0...HEAD
 [v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
+[v1.1.0]: https://github.com/crescent-network/crescent/releases/tag/v1.1.0
