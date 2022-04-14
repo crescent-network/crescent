@@ -542,8 +542,14 @@ func (s *KeeperTestSuite) TestSimulateGasUsage_VoteCondition() {
 		s.vote(recipient, 1, govtypes.OptionYes)
 	}
 
+	// Set upgrade height
+	s.ctx = s.ctx.WithBlockHeight(v1_1_0.UpgradeHeight)
+
+	// Expected gas threshold
+	expConsumedGasLimit := sdk.Gas(100_000)
+
 	// Vote proposal and claim condition
-	for i, recipient := range recipients[5000:] {
+	for _, recipient := range recipients[5000:] {
 		gasConsumedBefore := s.ctx.GasMeter().GasConsumed()
 
 		s.vote(recipient, 2, govtypes.OptionYes)
@@ -553,7 +559,7 @@ func (s *KeeperTestSuite) TestSimulateGasUsage_VoteCondition() {
 
 		gasConsumed := s.ctx.GasMeter().GasConsumed()
 		gasConsumed = gasConsumed - gasConsumedBefore
-		s.T().Logf("[%d] GasConsumed: %d\n", i+1, gasConsumed)
+		s.Require().LessOrEqual(gasConsumed, expConsumedGasLimit)
 	}
 }
 
@@ -580,7 +586,7 @@ func (s *KeeperTestSuite) TestGasConsumption_Upgrade_v1_0_0() {
 	s.createTextProposal(sourceAddr, "Text2", "Description")
 
 	recipients := []sdk.AccAddress{}
-	numRecipients := 100100
+	numRecipients := 10100
 
 	// Claim records for all recipients
 	for i := 1; i <= numRecipients; i++ {
@@ -599,7 +605,7 @@ func (s *KeeperTestSuite) TestGasConsumption_Upgrade_v1_0_0() {
 		s.Require().True(found)
 	}
 
-	for _, recipient := range recipients[:100000] {
+	for _, recipient := range recipients[:10000] {
 		s.vote(recipient, 1, govtypes.OptionYes)
 	}
 
@@ -607,7 +613,7 @@ func (s *KeeperTestSuite) TestGasConsumption_Upgrade_v1_0_0() {
 	expConsumedGasLimit := sdk.Gas(100_000)
 
 	// Vote proposal and claim condition
-	for _, recipient := range recipients[100000:100050] {
+	for _, recipient := range recipients[10000:10050] {
 		gasConsumedBefore := s.ctx.GasMeter().GasConsumed()
 
 		s.vote(recipient, 2, govtypes.OptionYes)
@@ -624,7 +630,7 @@ func (s *KeeperTestSuite) TestGasConsumption_Upgrade_v1_0_0() {
 	s.ctx = s.ctx.WithBlockHeight(v1_1_0.UpgradeHeight)
 
 	// Vote proposal and claim condition
-	for _, recipient := range recipients[100050:100100] {
+	for _, recipient := range recipients[10050:10100] {
 		gasConsumedBefore := s.ctx.GasMeter().GasConsumed()
 
 		s.vote(recipient, 2, govtypes.OptionYes)
