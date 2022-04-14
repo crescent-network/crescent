@@ -66,11 +66,15 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 
 	switch ct {
 	case types.ConditionTypeDeposit:
+		// Expect this condition to be executed with multiple messages (MsgDeposit + MsgClaim)
+		// in a single transaction because deposit request gets deleted at the begin blocker
 		if len(k.liquidityKeeper.GetDepositRequestsByDepositor(ctx, recipient)) != 0 {
 			ok = true
 		}
 
 	case types.ConditionTypeSwap:
+		// Expect this condition to be executed with multiple messages (MsgLimitOrder or MsgMarketOrder + MsgClaim)
+		// in a single transaction because order request gets deleted at the begin blocker after order lifespan
 		if len(k.liquidityKeeper.GetOrdersByOrderer(ctx, recipient)) != 0 {
 			ok = true
 		}
@@ -84,10 +88,13 @@ func (k Keeper) ValidateCondition(ctx sdk.Context, recipient sdk.AccAddress, ct 
 		}
 
 	case types.ConditionTypeVote:
-		k.govKeeper.IterateAllVotes(ctx, func(vote govtypes.Vote) (stop bool) {
-			if vote.Voter == recipient.String() {
-				ok = true
-				return true
+		k.govKeeper.IterateProposals(ctx, func(proposal govtypes.Proposal) (stop bool) {
+			if proposal.Status == govtypes.StatusVotingPeriod {
+				_, found := k.govKeeper.GetVote(ctx, proposal.ProposalId, recipient)
+				if found {
+					ok = true
+					return true
+				}
 			}
 			return false
 		})

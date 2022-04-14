@@ -26,7 +26,8 @@ type DistrKeeper interface {
 }
 
 type GovKeeper interface {
-	IterateAllVotes(ctx sdk.Context, cb func(vote govtypes.Vote) (stop bool))
+	IterateProposals(ctx sdk.Context, cb func(proposal govtypes.Proposal) (stop bool))
+	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govtypes.Vote, found bool)
 }
 
 // LiquidityKeeper defines the expected interface needed to check the condition.

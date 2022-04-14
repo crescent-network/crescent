@@ -494,3 +494,64 @@ func (s *KeeperTestSuite) TestClaim_Partial_TerminatAirdrop() {
 	feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
 	s.Require().False(feePool.CommunityPool.IsZero())
 }
+
+func (s *KeeperTestSuite) TestSimulateGasUsage_VoteCondition() {
+	// Create an airdrop
+	sourceAddr := s.addr(0)
+	airdrop := s.createAirdrop(
+		1,
+		sourceAddr,
+		utils.ParseCoins("100000000000denom1"),
+		[]types.ConditionType{
+			types.ConditionTypeDeposit,
+			types.ConditionTypeSwap,
+			types.ConditionTypeLiquidStake,
+			types.ConditionTypeVote,
+		},
+		s.ctx.BlockTime(),
+		s.ctx.BlockTime().AddDate(0, 6, 0),
+		true,
+	)
+
+	// Submit governance proposals
+	s.createTextProposal(sourceAddr, "Text1", "Description")
+	s.createTextProposal(sourceAddr, "Text2", "Description")
+
+	recipients := []sdk.AccAddress{}
+	numRecipients := 10000
+
+	// Claim records for all recipients
+	for i := 1; i <= numRecipients; i++ {
+		recipient := s.addr(i)
+		recipients = append(recipients, recipient)
+
+		s.createClaimRecord(
+			airdrop.Id,
+			recipient,
+			utils.ParseCoins("1000000denom1"),
+			utils.ParseCoins("1000000denom1"),
+			[]types.ConditionType{},
+		)
+
+		_, found := s.keeper.GetClaimRecordByRecipient(s.ctx, airdrop.Id, recipient)
+		s.Require().True(found)
+	}
+
+	for _, recipient := range recipients[:5000] {
+		s.vote(recipient, 1, govtypes.OptionYes)
+	}
+
+	// Vote proposal and claim condition
+	for i, recipient := range recipients[5000:] {
+		gasConsumedBefore := s.ctx.GasMeter().GasConsumed()
+
+		s.vote(recipient, 2, govtypes.OptionYes)
+
+		_, err := s.keeper.Claim(s.ctx, types.NewMsgClaim(airdrop.Id, recipient, types.ConditionTypeVote))
+		s.Require().NoError(err)
+
+		gasConsumed := s.ctx.GasMeter().GasConsumed()
+		gasConsumed = gasConsumed - gasConsumedBefore
+		s.T().Logf("[%d] GasConsumed: %d\n", i+1, gasConsumed)
+	}
+}
