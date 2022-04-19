@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity"
@@ -113,6 +114,23 @@ func (s *KeeperTestSuite) TestLimitOrder() {
 	}
 }
 
+func (s *KeeperTestSuite) TestLimitOrderInsufficientOfferCoin() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	orderer := s.addr(1)
+	s.fundAddr(orderer, utils.ParseCoins("1000000denom2"))
+	_, err := s.keeper.LimitOrder(s.ctx, types.NewMsgLimitOrder(
+		orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1000001denom2"), "denom1",
+		utils.ParseDec("1.0"), sdk.NewInt(1000000), 0))
+	s.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+
+	s.fundAddr(orderer, utils.ParseCoins("1000000denom1"))
+	_, err = s.keeper.LimitOrder(s.ctx, types.NewMsgLimitOrder(
+		orderer, pair.Id, types.OrderDirectionSell, utils.ParseCoin("1000001denom1"), "denom2",
+		utils.ParseDec("1.0"), sdk.NewInt(1000000), 0))
+	s.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+}
+
 func (s *KeeperTestSuite) TestLimitOrderRefund() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	orderer := s.addr(1)
@@ -194,6 +212,23 @@ func (s *KeeperTestSuite) TestMarketOrder() {
 	// Check the result.
 	s.Require().True(coinEq(utils.ParseCoin("10000denom1"), s.getBalance(s.addr(3), "denom1")))
 	s.Require().True(coinsEq(utils.ParseCoins("10800denom2"), s.getBalances(s.addr(4))))
+}
+
+func (s *KeeperTestSuite) TestMarketOrderInsufficientOfferCoin() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	orderer := s.addr(1)
+	s.fundAddr(orderer, utils.ParseCoins("1000000denom2"))
+	_, err := s.keeper.MarketOrder(s.ctx, types.NewMsgMarketOrder(
+		orderer, pair.Id, types.OrderDirectionBuy, utils.ParseCoin("1000001denom2"), "denom1",
+		sdk.NewInt(1000000), 0))
+	s.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+
+	s.fundAddr(orderer, utils.ParseCoins("1000000denom1"))
+	_, err = s.keeper.MarketOrder(s.ctx, types.NewMsgMarketOrder(
+		orderer, pair.Id, types.OrderDirectionSell, utils.ParseCoin("1000001denom1"), "denom2",
+		sdk.NewInt(1000000), 0))
+	s.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
 }
 
 func (s *KeeperTestSuite) TestMarketOrderRefund() {
