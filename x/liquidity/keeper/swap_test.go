@@ -399,6 +399,31 @@ func (s *KeeperTestSuite) TestCancelAllOrders() {
 	s.Require().True(coinsEq(utils.ParseCoins("10000denom2,10000denom1"), s.getBalances(s.addr(2))))
 }
 
+func (s *KeeperTestSuite) TestCancelAllOrdersGasUsage() {
+	// Ensure that the number of other orders in pairs doesn't affect
+	// the msg's gas usage.
+
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	// 1000 other users make orders.
+	for i := 1; i <= 1000; i++ {
+		s.buyLimitOrder(s.addr(i), pair.Id, utils.ParseDec("0.9"), sdk.NewInt(10000), time.Minute, true)
+		s.sellLimitOrder(s.addr(i), pair.Id, utils.ParseDec("1.1"), sdk.NewInt(10000), time.Minute, true)
+	}
+
+	// The orderer makes an order.
+	orderer := s.addr(1001)
+	s.sellLimitOrder(orderer, pair.Id, utils.ParseDec("1.1"), sdk.NewInt(10000), time.Minute, true)
+
+	// New batch begins, now the orderer can cancel his/her order.
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	liquidity.BeginBlocker(s.ctx, s.keeper)
+
+	s.ctx = s.ctx.WithGasMeter(sdk.NewInfiniteGasMeter()) // to record gas consumption
+	s.cancelAllOrders(orderer, nil)                       // cancel all orders in all pairs
+	s.Require().Less(s.ctx.GasMeter().GasConsumed(), sdk.Gas(50000))
+}
+
 func (s *KeeperTestSuite) TestDustCollector() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
