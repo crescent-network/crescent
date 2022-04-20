@@ -214,7 +214,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.O
 			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(msg.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderDirection, msg.Direction.String()),
-			sdk.NewAttribute(types.AttributeKeyOfferCoin, msg.OfferCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyOfferCoin, offerCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
 			sdk.NewAttribute(types.AttributeKeyPrice, price.String()),
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
