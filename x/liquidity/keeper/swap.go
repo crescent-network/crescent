@@ -260,19 +260,20 @@ func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 
 // CancelAllOrders handles types.MsgCancelAllOrders and cancels all orders.
 func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) error {
-	pairIdSet := map[uint64]struct{}{} // set of pairs where to cancel orders
-	var pairIds []string               // needed to emit an event
+	orderPairCache := map[uint64]types.Pair{} // maps order's pair id to pair, to cache the result
+	pairIdSet := map[uint64]struct{}{}        // set of pairs where to cancel orders
+	var pairIds []string                      // needed to emit an event
 	for _, pairId := range msg.PairIds {
-		if _, found := k.GetPair(ctx, pairId); !found { // check if the pair exists
+		pair, found := k.GetPair(ctx, pairId)
+		if !found { // check if the pair exists
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
 		}
 		pairIdSet[pairId] = struct{}{} // add pair id to the set
 		pairIds = append(pairIds, strconv.FormatUint(pairId, 10))
+		orderPairCache[pairId] = pair // also cache the pair to use at below
 	}
 
-	orderPairCache := map[uint64]types.Pair{} // maps order's pair id to pair, to cache the result
 	var canceledOrderIds []string
-
 	if err := k.IterateOrdersByOrderer(ctx, msg.GetOrderer(), func(order types.Order) (stop bool, err error) {
 		_, ok := pairIdSet[order.PairId] // is the pair included in the pair set?
 		if len(pairIdSet) == 0 || ok {   // pair ids not specified(cancel all), or the pair is in the set
