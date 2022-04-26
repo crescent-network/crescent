@@ -1,0 +1,18 @@
+name: "Lint PR"
+# Lint PR workflow is helpful since we're using semantic-release with the Conventional Commits preset.
+# It ensures that PR title matches the Conventional Commits spec.
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  main:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
