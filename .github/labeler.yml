@@ -1,0 +1,26 @@
+"x/claim":
+  - x/claim/**/*
+"x/farming":
+  - x/farming/**/*
+"x/liquidity":
+  - x/liquidity/**/*
+"x/liquidstaking":
+  - x/liquidstaking/**/*
+"x/mint":
+  - x/mint/**/*
+"c-sync"
+  - x/claim/**/*
+  - x/farming/**/*
+  - x/liquidity/**/*
+  - x/liquidstaking/**/*
+  - x/mint/**/*
+  - docs/**/*
+  - Makefile
+"documentation"
+  - docs/**/*
+"build":
+  - Makefile
+  - scripts/*
+"ci":
+  - buf.yaml
+  - .golangci.yml

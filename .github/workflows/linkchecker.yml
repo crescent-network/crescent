@@ -1,5 +1,5 @@
 name: Check Markdown links
-
+# Linkchecker workflow action checks all markdown files in the repository for broken links
 on:
   pull_request:
   push:
