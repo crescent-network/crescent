@@ -8,14 +8,6 @@
   - x/liquidstaking/**/*
 "x/mint":
   - x/mint/**/*
-"c-sync"
-  - x/claim/**/*
-  - x/farming/**/*
-  - x/liquidity/**/*
-  - x/liquidstaking/**/*
-  - x/mint/**/*
-  - docs/**/*
-  - Makefile
 "documentation"
   - docs/**/*
 "build":
