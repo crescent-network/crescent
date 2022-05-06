@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	utils "github.com/crescent-network/crescent/types"
@@ -15,8 +16,19 @@ import (
 // Parameter store keys
 var (
 	KeyMintDenom          = []byte("MintDenom")
+	KeyMintPoolAddress    = []byte("MintPoolAddress")
 	KeyBlockTimeThreshold = []byte("BlockTimeThreshold")
 	KeyInflationSchedules = []byte("InflationSchedules")
+
+	DefaultBlockTimeThreshold = 10 * time.Second
+
+	// DefaultMintPoolAddress is the fee collector of the auth module such as the mint module of the original cosmos-sdk
+	DefaultMintPoolAddress = authtypes.NewModuleAddress(authtypes.FeeCollectorName)
+	// MintModuleAcc is customized mint pool, If the fee collector as default mint pool is used,
+	// there is a problem that the fee and inflation are mixed with the fee collector.
+	// In order to solve this problem, mint pool can be set to CustomMintPoolAddress
+	// and staking reward can be sent to the fee collector through Budget module functionality
+	MintModuleAcc = authtypes.NewModuleAddress(ModuleName)
 
 	// DefaultInflationSchedules is example of inflation schedules, It could be rearranged on genesis or gov
 	DefaultInflationSchedules = []InflationSchedule{
@@ -31,7 +43,6 @@ var (
 			Amount:    sdk.NewInt(200000000000000),
 		},
 	}
-	DefaultBlockTimeThreshold = 10 * time.Second
 )
 
 // ParamTable for mint module.
@@ -43,6 +54,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func DefaultParams() Params {
 	return Params{
 		MintDenom:          sdk.DefaultBondDenom,
+		MintPoolAddress:    DefaultMintPoolAddress.String(),
 		BlockTimeThreshold: DefaultBlockTimeThreshold,
 		InflationSchedules: DefaultInflationSchedules,
 	}
@@ -51,6 +63,9 @@ func DefaultParams() Params {
 // validate params
 func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
+		return err
+	}
+	if err := validateMintPoolAddress(p.MintPoolAddress); err != nil {
 		return err
 	}
 	if err := validateBlockTimeThreshold(p.BlockTimeThreshold); err != nil {
@@ -67,6 +82,7 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
+		paramtypes.NewParamSetPair(KeyMintPoolAddress, &p.MintPoolAddress, validateMintPoolAddress),
 		paramtypes.NewParamSetPair(KeyBlockTimeThreshold, &p.BlockTimeThreshold, validateBlockTimeThreshold),
 		paramtypes.NewParamSetPair(KeyInflationSchedules, &p.InflationSchedules, validateInflationSchedules),
 	}
@@ -83,6 +99,19 @@ func validateMintDenom(i interface{}) error {
 	}
 	if err := sdk.ValidateDenom(v); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func validateMintPoolAddress(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if _, err := sdk.AccAddressFromBech32(v); err != nil {
+		return fmt.Errorf("invalid mint pool address: %w", err)
 	}
 
 	return nil

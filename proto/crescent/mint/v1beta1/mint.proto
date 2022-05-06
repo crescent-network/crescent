@@ -12,12 +12,17 @@ message Params {
   // mint_denom defines denomination of coin to be minted
   string mint_denom = 1;
 
+  // mint_pool_address defines the address where inflation will be minted, The default is FeeCollector,
+  // but if it set FeeCollector, it could mix the minted inflation with the collected tx fee,
+  // Therefore, it is recommended to specify a separate address depending on the chain
+  string mint_pool_address = 2;
+
   // block_time_threshold defines block time threshold to prevent from any inflationary manipulation attacks
   // it is used for maximum block duration when calculating block inflation
-  google.protobuf.Duration block_time_threshold = 2 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+  google.protobuf.Duration block_time_threshold = 3 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 
   // inflation_schedules defines a list of inflation schedules
-  repeated InflationSchedule inflation_schedules = 3 [(gogoproto.nullable) = false];
+  repeated InflationSchedule inflation_schedules = 4 [(gogoproto.nullable) = false];
 }
 
 // InflationSchedule defines the start and end time of the inflation period, and the amount of inflation during that

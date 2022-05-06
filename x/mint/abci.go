@@ -49,8 +49,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 
-		// send the minted coins to the fee collector account
-		err = k.AddInflationToFeeCollector(ctx, mintedCoins)
+		// send the minted coins to the mint pool
+		err = k.SendInflationToMintPool(ctx, mintedCoins)
 		if err != nil {
 			panic(err)
 		}

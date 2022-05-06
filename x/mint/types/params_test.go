@@ -4,12 +4,12 @@ import (
 	"reflect"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	utils "github.com/crescent-network/crescent/types"
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/mint/types"
 )
 
@@ -18,7 +18,7 @@ func TestParams(t *testing.T) {
 
 	defaultParams := types.DefaultParams()
 
-	paramsStr := `mint_denom:"stake" block_time_threshold:<seconds:10 > inflation_schedules:<start_time:<seconds:1640995200 > end_time:<seconds:1672531200 > amount:"300000000000000" > inflation_schedules:<start_time:<seconds:1672531200 > end_time:<seconds:1704067200 > amount:"200000000000000" > `
+	paramsStr := `mint_denom:"stake" mint_pool_address:"cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta" block_time_threshold:<seconds:10 > inflation_schedules:<start_time:<seconds:1640995200 > end_time:<seconds:1672531200 > amount:"300000000000000" > inflation_schedules:<start_time:<seconds:1672531200 > end_time:<seconds:1704067200 > amount:"200000000000000" > `
 	require.Equal(t, paramsStr, defaultParams.String())
 }
 
@@ -160,6 +160,27 @@ func TestParamsValidate(t *testing.T) {
 						Amount:    sdk.NewInt(31536000),
 					},
 				}
+			},
+			"",
+		},
+		{
+			"empty mint pool",
+			func(params *types.Params) {
+				params.MintPoolAddress = ""
+			},
+			"invalid mint pool address: empty address string is not allowed",
+		},
+		{
+			"invalid mint pool",
+			func(params *types.Params) {
+				params.MintPoolAddress = "abc123"
+			},
+			"invalid mint pool address: decoding bech32 failed: invalid bech32 string length 6",
+		},
+		{
+			"valid mint pool",
+			func(params *types.Params) {
+				params.MintPoolAddress = "cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta"
 			},
 			"",
 		},

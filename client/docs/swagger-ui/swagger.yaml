@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Crescent REST and gRPC Gateway docs
   description: 'A REST interface for state queries, transactions'
-  version: 1.1.0
+  version: 1.2.0
 paths:
   /node_info:
     get:
@@ -26350,6 +26350,17 @@ paths:
                   mint_denom:
                     type: string
                     title: mint_denom defines denomination of coin to be minted
+                  mint_pool_address:
+                    type: string
+                    title: >-
+                      mint_pool_address defines the address where inflation will
+                      be minted, The default is FeeCollector,
+
+                      but if it set FeeCollector, it could mix the minted
+                      inflation with the collected tx fee,
+
+                      Therefore, it is recommended to specify a separate address
+                      depending on the chain
                   block_time_threshold:
                     type: string
                     title: >-
@@ -46129,6 +46140,17 @@ definitions:
       mint_denom:
         type: string
         title: mint_denom defines denomination of coin to be minted
+      mint_pool_address:
+        type: string
+        title: >-
+          mint_pool_address defines the address where inflation will be minted,
+          The default is FeeCollector,
+
+          but if it set FeeCollector, it could mix the minted inflation with the
+          collected tx fee,
+
+          Therefore, it is recommended to specify a separate address depending
+          on the chain
       block_time_threshold:
         type: string
         title: >-
@@ -46171,6 +46193,17 @@ definitions:
           mint_denom:
             type: string
             title: mint_denom defines denomination of coin to be minted
+          mint_pool_address:
+            type: string
+            title: >-
+              mint_pool_address defines the address where inflation will be
+              minted, The default is FeeCollector,
+
+              but if it set FeeCollector, it could mix the minted inflation with
+              the collected tx fee,
+
+              Therefore, it is recommended to specify a separate address
+              depending on the chain
           block_time_threshold:
             type: string
             title: >-
