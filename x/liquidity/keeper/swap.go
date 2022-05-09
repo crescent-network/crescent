@@ -390,7 +390,6 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	pair.CurrentBatchId++
 	k.SetPair(ctx, pair)
 
-	// TODO: emit an event?
 	return nil
 }
 
@@ -415,10 +414,15 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		}
 		switch order := order.(type) {
 		case *types.UserOrder:
+			filledAmt := order.Amount.Sub(order.OpenAmount)
+			paidCoin := order.OfferCoin.Sub(order.RemainingOfferCoin)
+			receivedCoin := order.ReceivedDemandCoin
+
 			o, _ := k.GetOrder(ctx, pair.Id, order.OrderId)
-			o.OpenAmount = o.OpenAmount.Sub(order.Amount.Sub(order.OpenAmount))
-			o.RemainingOfferCoin = o.RemainingOfferCoin.Sub(order.OfferCoin.Sub(order.RemainingOfferCoin))
-			o.ReceivedCoin = o.ReceivedCoin.Add(order.ReceivedDemandCoin)
+			o.OpenAmount = o.OpenAmount.Sub(filledAmt)
+			o.RemainingOfferCoin = o.RemainingOfferCoin.Sub(paidCoin)
+			o.ReceivedCoin = o.ReceivedCoin.Add(receivedCoin)
+
 			if o.OpenAmount.IsZero() {
 				if err := k.FinishOrder(ctx, o, types.OrderStatusCompleted); err != nil {
 					return err
@@ -426,11 +430,39 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			} else {
 				o.SetStatus(types.OrderStatusPartiallyMatched)
 				k.SetOrder(ctx, o)
-				// TODO: emit an event?
 			}
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(order.ReceivedDemandCoin))
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypeUserOrderFilled,
+					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
+					sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer.String()),
+					sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.OrderId, 10)),
+					sdk.NewAttribute(types.AttributeKeyFilledAmount, filledAmt.String()),
+					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
+					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
+				),
+			})
 		case *types.PoolOrder:
-			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(order.ReceivedDemandCoin))
+			filledAmt := order.Amount.Sub(order.OpenAmount)
+			paidCoin := order.OfferCoin.Sub(order.RemainingOfferCoin)
+			receivedCoin := order.ReceivedDemandCoin
+
+			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(receivedCoin))
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypePoolOrderFilled,
+					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
+					sdk.NewAttribute(types.AttributeKeyOrderer, order.ReserveAddress.String()),
+					sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(order.PoolId, 10)),
+					sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
+					sdk.NewAttribute(types.AttributeKeyFilledAmount, filledAmt.String()),
+					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
+					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
+				),
+			})
 		}
 	}
 	params := k.GetParams(ctx)

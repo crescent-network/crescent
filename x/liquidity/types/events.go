@@ -13,6 +13,8 @@ const (
 	EventTypeDepositResult    = "deposit_result"
 	EventTypeWithdrawalResult = "withdrawal_result"
 	EventTypeOrderResult      = "order_result"
+	EventTypeUserOrderFilled  = "user_order_filled"
+	EventTypePoolOrderFilled  = "pool_order_filled"
 
 	AttributeKeyCreator            = "creator"
 	AttributeKeyDepositor          = "depositor"
@@ -44,4 +46,6 @@ const (
 	AttributeKeyPairIds            = "pair_ids"
 	AttributeKeyCanceledOrderIds   = "canceled_order_ids"
 	AttributeKeyStatus             = "status"
+	AttributeKeyFilledAmount       = "filled_amount"
+	AttributeKeyPaidCoin           = "paid_coin"
 )
