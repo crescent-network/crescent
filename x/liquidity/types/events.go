@@ -13,8 +13,8 @@ const (
 	EventTypeDepositResult    = "deposit_result"
 	EventTypeWithdrawalResult = "withdrawal_result"
 	EventTypeOrderResult      = "order_result"
-	EventTypeUserOrderFilled  = "user_order_filled"
-	EventTypePoolOrderFilled  = "pool_order_filled"
+	EventTypeUserOrderMatched = "user_order_matched"
+	EventTypePoolOrderMatched = "pool_order_matched"
 
 	AttributeKeyCreator            = "creator"
 	AttributeKeyDepositor          = "depositor"
