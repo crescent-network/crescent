@@ -490,15 +490,13 @@ func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, status types.Ord
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeOrderResult,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(order.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
 			sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(order.PairId, 10)),
-			sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
-			// TODO: include these attributes?
-			//sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
-			//sdk.NewAttribute(types.AttributeKeyAmount, order.Amount.String()),
-			//sdk.NewAttribute(types.AttributeKeyOpenAmount, order.OpenAmount.String()),
-			//sdk.NewAttribute(types.AttributeKeyPrice, order.Price.String()),
+			sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyAmount, order.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyOpenAmount, order.OpenAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, order.RemainingOfferCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyReceivedCoin, order.ReceivedCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyStatus, order.Status.String()),
