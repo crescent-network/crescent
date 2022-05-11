@@ -457,7 +457,6 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
 					sdk.NewAttribute(types.AttributeKeyOrderer, order.ReserveAddress.String()),
 					sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(order.PoolId, 10)),
-					sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
 					sdk.NewAttribute(types.AttributeKeyFilledAmount, filledAmt.String()),
 					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
 					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
