@@ -436,7 +436,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
-					types.EventTypeUserOrderFilled,
+					types.EventTypeUserOrderMatched,
 					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
 					sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer.String()),
 					sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(o.PairId, 10)),
@@ -451,7 +451,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
-					types.EventTypePoolOrderFilled,
+					types.EventTypePoolOrderMatched,
 					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
 					sdk.NewAttribute(types.AttributeKeyReserveAddress, order.ReserveAddress.String()),
 					sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(order.PoolId, 10)),
