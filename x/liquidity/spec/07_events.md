@@ -149,10 +149,13 @@ The `liquidity` module emits the following events:
 
 | Type               | Attribute Key        | Attribute Value      |
 |--------------------|----------------------|----------------------|
-| order_result       | request_id           | {orderId}            |
+| order_result       | order_direction      | {direction}          |
 | order_result       | orderer              | {orderer}            |
 | order_result       | pair_id              | {pairId}             |
-| order_result       | order_direction      | {direction}          |
+| order_result       | order_id             | {orderId}            |
+| order_result       | amount               | {amount}             |
+| order_result       | open_amount          | {openAmount}         |
+| order_result       | offer_coin           | {offerCoin}          |
 | order_result       | remaining_offer_coin | {remainingOfferCoin} |
 | order_result       | received_coin        | {receivedCoin}       |
 | order_result       | status               | {status}             |

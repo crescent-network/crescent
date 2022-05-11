@@ -40,6 +40,7 @@ const (
 	AttributeKeyDemandCoinDenom    = "demand_coin_denom"
 	AttributeKeyPrice              = "price"
 	AttributeKeyAmount             = "amount"
+	AttributeKeyOpenAmount         = "open_amount"
 	AttributeKeyExpireAt           = "expire_at"
 	AttributeKeyRemainingOfferCoin = "remaining_offer_coin"
 	AttributeKeyReceivedCoin       = "received_coin"
