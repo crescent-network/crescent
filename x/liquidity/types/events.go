@@ -46,6 +46,6 @@ const (
 	AttributeKeyPairIds            = "pair_ids"
 	AttributeKeyCanceledOrderIds   = "canceled_order_ids"
 	AttributeKeyStatus             = "status"
-	AttributeKeyFilledAmount       = "filled_amount"
+	AttributeKeyMatchedAmount      = "matched_amount"
 	AttributeKeyPaidCoin           = "paid_coin"
 )

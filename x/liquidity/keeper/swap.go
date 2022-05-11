@@ -412,14 +412,15 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		if !order.IsMatched() {
 			continue
 		}
+
+		matchedAmt := order.GetAmount().Sub(order.GetOpenAmount())
+		paidCoin := order.GetOfferCoin().Sub(order.GetRemainingOfferCoin())
+		receivedCoin := order.GetReceivedDemandCoin()
+
 		switch order := order.(type) {
 		case *types.UserOrder:
-			filledAmt := order.Amount.Sub(order.OpenAmount)
-			paidCoin := order.OfferCoin.Sub(order.RemainingOfferCoin)
-			receivedCoin := order.ReceivedDemandCoin
-
 			o, _ := k.GetOrder(ctx, pair.Id, order.OrderId)
-			o.OpenAmount = o.OpenAmount.Sub(filledAmt)
+			o.OpenAmount = o.OpenAmount.Sub(matchedAmt)
 			o.RemainingOfferCoin = o.RemainingOfferCoin.Sub(paidCoin)
 			o.ReceivedCoin = o.ReceivedCoin.Add(receivedCoin)
 
@@ -438,26 +439,23 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 					types.EventTypeUserOrderFilled,
 					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
 					sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer.String()),
+					sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(o.PairId, 10)),
 					sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.OrderId, 10)),
-					sdk.NewAttribute(types.AttributeKeyFilledAmount, filledAmt.String()),
+					sdk.NewAttribute(types.AttributeKeyMatchedAmount, matchedAmt.String()),
 					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
 					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
 				),
 			})
 		case *types.PoolOrder:
-			filledAmt := order.Amount.Sub(order.OpenAmount)
-			paidCoin := order.OfferCoin.Sub(order.RemainingOfferCoin)
-			receivedCoin := order.ReceivedDemandCoin
-
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(receivedCoin))
 
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.EventTypePoolOrderFilled,
 					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
-					sdk.NewAttribute(types.AttributeKeyOrderer, order.ReserveAddress.String()),
+					sdk.NewAttribute(types.AttributeKeyReserveAddress, order.ReserveAddress.String()),
 					sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(order.PoolId, 10)),
-					sdk.NewAttribute(types.AttributeKeyFilledAmount, filledAmt.String()),
+					sdk.NewAttribute(types.AttributeKeyMatchedAmount, matchedAmt.String()),
 					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
 					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
 				),
