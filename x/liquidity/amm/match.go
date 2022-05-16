@@ -8,12 +8,12 @@ import (
 
 // FindMatchPrice returns the best match price for given order sources.
 // If there is no matchable orders, found will be false.
-func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
-	highestBuyPrice, found := os.HighestBuyPrice()
+func FindMatchPrice(ov OrderView, tickPrec int) (matchPrice sdk.Dec, found bool) {
+	highestBuyPrice, found := ov.HighestBuyPrice()
 	if !found {
 		return sdk.Dec{}, false
 	}
-	lowestSellPrice, found := os.LowestSellPrice()
+	lowestSellPrice, found := ov.LowestSellPrice()
 	if !found {
 		return sdk.Dec{}, false
 	}
@@ -26,13 +26,13 @@ func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found boo
 	highestTickIdx := prec.TickToIndex(prec.HighestTick())
 	var i, j int
 	i, found = findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
-		return os.BuyAmountOver(prec.TickFromIndex(i + 1)).LTE(os.SellAmountUnder(prec.TickFromIndex(i)))
+		return ov.BuyAmountOver(prec.TickFromIndex(i + 1)).LTE(ov.SellAmountUnder(prec.TickFromIndex(i)))
 	})
 	if !found {
 		return sdk.Dec{}, false
 	}
 	j, found = findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
-		return os.BuyAmountOver(prec.TickFromIndex(i)).GTE(os.SellAmountUnder(prec.TickFromIndex(i - 1)))
+		return ov.BuyAmountOver(prec.TickFromIndex(i)).GTE(ov.SellAmountUnder(prec.TickFromIndex(i - 1)))
 	})
 	if !found {
 		return sdk.Dec{}, false

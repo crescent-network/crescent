@@ -146,13 +146,13 @@ func (ob *OrderBook) stringRepresentation(prices []sdk.Dec) string {
 		return prices[i].GT(prices[j])
 	})
 	var b strings.Builder
-	b.WriteString("+--------buy---------+------------price-------------+--------sell--------+\n")
+	b.WriteString("+--------sell---------------------price----------------------buy---------+\n")
 	for _, price := range prices {
 		buyAmt := TotalOpenAmount(ob.BuyOrdersAt(price))
 		sellAmt := TotalOpenAmount(ob.SellOrdersAt(price))
-		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", buyAmt, price.String(), sellAmt)
+		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", sellAmt, price.String(), buyAmt)
 	}
-	b.WriteString("+--------------------+------------------------------+--------------------+")
+	b.WriteString("+------------------------------------------------------------------------+")
 	return b.String()
 }
 
@@ -175,9 +175,13 @@ func (ob *OrderBook) FullString(tickPrec int) string {
 // String returns a compact string representation of the order book.
 // String includes a tick only when there is at least one order on it.
 func (ob *OrderBook) String() string {
-	var prices []sdk.Dec
+	priceSet := map[string]sdk.Dec{}
 	for _, tick := range append(ob.buys, ob.sells...) {
-		prices = append(prices, tick.price)
+		priceSet[tick.price.String()] = tick.price
+	}
+	var prices []sdk.Dec
+	for _, price := range priceSet {
+		prices = append(prices, price)
 	}
 	return ob.stringRepresentation(prices)
 }

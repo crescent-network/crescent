@@ -183,49 +183,6 @@ func (pool *BasicPool) ProvidableYAmountUnder(price sdk.Dec) sdk.Int {
 	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
 }
 
-// PoolsOrderBook returns an order book with orders made by pools.
-// Use Ticks or EvenTicks to generate ticks where pools put orders.
-// ticks should have more than 1 element.
-// The orders in the order book are just mocks, so the rest fields
-// other than Direction, Price and Amount of BaseOrder will have no
-// special meaning.
-func PoolsOrderBook(pools []Pool, ticks []sdk.Dec) *OrderBook {
-	sortTicks(ticks)
-	highestTick := ticks[0]
-	lowestTick := ticks[len(ticks)-1]
-	gap := ticks[0].Sub(ticks[1])
-	ob := NewOrderBook()
-	for _, pool := range pools {
-		poolPrice := pool.Price()
-		if poolPrice.GT(lowestTick) { // Buy orders
-			accAmtX := pool.ProvidableXAmountOver(highestTick.Add(gap))
-			for _, tick := range ticks {
-				amtX := pool.ProvidableXAmountOver(tick).Sub(accAmtX)
-				if amtX.IsPositive() {
-					amt := amtX.ToDec().QuoTruncate(tick).TruncateInt()
-					if amt.IsPositive() {
-						ob.Add(NewBaseOrder(
-							Buy, tick, amt, sdk.NewCoin("quote", OfferCoinAmount(Buy, tick, amt)), "base"))
-					}
-					accAmtX = accAmtX.Add(amtX)
-				}
-			}
-		}
-		if poolPrice.LT(highestTick) { // Sell orders
-			accAmt := pool.SellAmountUnder(lowestTick.Sub(gap))
-			for i := len(ticks) - 1; i >= 0; i-- {
-				tick := ticks[i]
-				amt := pool.SellAmountUnder(tick).Sub(accAmt)
-				if amt.IsPositive() {
-					ob.Add(NewBaseOrder(Sell, tick, amt, sdk.NewCoin("base", amt), "quote"))
-					accAmt = accAmt.Add(amt)
-				}
-			}
-		}
-	}
-	return ob
-}
-
 // InitialPoolCoinSupply returns ideal initial pool coin minting amount.
 func InitialPoolCoinSupply(x, y sdk.Int) sdk.Int {
 	cx := len(x.BigInt().Text(10)) - 1 // characteristic of x

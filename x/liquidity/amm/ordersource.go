@@ -4,7 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ OrderSource = (*mergedOrderSource)(nil)
+var (
+	_ OrderView = (*mergedOrderView)(nil)
+	_ OrderSource = (*mergedOrderSource)(nil)
+)
 
 // OrderView is the interface which provides a view of orders.
 type OrderView interface {
@@ -22,13 +25,60 @@ type OrderSource interface {
 	SellOrdersUnder(price sdk.Dec) []Order // Includes the price
 }
 
+// mergedOrderView is a merged order view of multiple views.
+type mergedOrderView struct {
+	views []OrderView
+}
+
+func MergeOrderViews(views ...OrderView) *mergedOrderView {
+	return &mergedOrderView{views: views}
+}
+
+func (ov *mergedOrderView) HighestBuyPrice() (price sdk.Dec, found bool) {
+	for _, source := range ov.views {
+		p, f := source.HighestBuyPrice()
+		if f && (price.IsNil() || p.GT(price)) {
+			price = p
+			found = true
+		}
+	}
+	return
+}
+
+func (ov *mergedOrderView) LowestSellPrice() (price sdk.Dec, found bool) {
+	for _, source := range ov.views {
+		p, f := source.LowestSellPrice()
+		if f && (price.IsNil() || p.LT(price)) {
+			price = p
+			found = true
+		}
+	}
+	return
+}
+
+func (ov *mergedOrderView) BuyAmountOver(price sdk.Dec) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, source := range ov.views {
+		amt = amt.Add(source.BuyAmountOver(price))
+	}
+	return amt
+}
+
+func (ov *mergedOrderView) SellAmountUnder(price sdk.Dec) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, source := range ov.views {
+		amt = amt.Add(source.SellAmountUnder(price))
+	}
+	return amt
+}
+
 // mergedOrderSource is a merged order source of multiple sources.
 type mergedOrderSource struct {
 	sources []OrderSource
 }
 
 // MergeOrderSources returns a merged order source of multiple sources.
-func MergeOrderSources(sources ...OrderSource) OrderSource {
+func MergeOrderSources(sources ...OrderSource) *mergedOrderSource {
 	return &mergedOrderSource{sources: sources}
 }
 

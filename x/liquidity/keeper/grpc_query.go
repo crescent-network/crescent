@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -11,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/crescent-network/crescent/x/liquidity/amm"
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
@@ -524,4 +526,94 @@ func (k Querier) OrdersByOrderer(c context.Context, req *types.QueryOrdersByOrde
 	}
 
 	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
+}
+
+// OrderBooks queries virtual order books from user orders and pools.
+func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest) (*types.QueryOrderBooksResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.PairId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pair id must not be 0")
+	}
+
+	if req.NumTicks == 0 {
+		return nil, status.Error(codes.InvalidArgument, "number of ticks must not be 0")
+	}
+
+	if len(req.TickPrecisions) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "tick precisions must not be empty")
+	}
+
+	tickPrecSet := map[uint32]struct{}{}
+	for _, tickPrec := range req.TickPrecisions {
+		if _, ok := tickPrecSet[tickPrec]; ok {
+			return nil, status.Errorf(codes.InvalidArgument, "duplicate tick precision: %d", tickPrec)
+		}
+		tickPrecSet[tickPrec] = struct{}{}
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	pair, found := k.GetPair(ctx, req.PairId)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "pair %d doesn't exist", req.PairId)
+	}
+
+	ob := amm.NewOrderBook()
+	if err := k.IterateOrdersByPair(ctx, pair.Id, func(order types.Order) (stop bool, err error) {
+		switch order.Status {
+		case types.OrderStatusNotExecuted,
+			types.OrderStatusNotMatched,
+			types.OrderStatusPartiallyMatched:
+			ob.Add(types.NewUserOrder(order))
+		case types.OrderStatusCanceled,
+			types.OrderStatusExpired,
+			types.OrderStatusCompleted:
+		default:
+			return false, fmt.Errorf("invalid order status: %s", order.Status)
+		}
+		return false, nil
+	}); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var poolOrderViews []amm.OrderView
+	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
+		if pool.Disabled {
+			return false, nil
+		}
+		rx, ry := k.getPoolBalances(ctx, pool, pair)
+		ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.Int{})
+		poolOrderViews = append(poolOrderViews, ammPool)
+		return false, nil
+	})
+
+	ov := amm.MergeOrderViews(append(poolOrderViews, ob)...)
+
+	var obs []types.OrderBookResponse
+	params := k.GetParams(ctx)
+	basePrice, found := types.OrderBookBasePrice(ov, int(params.TickPrecision))
+	if !found {
+		for _, tickPrec := range req.TickPrecisions {
+			obs = append(obs, types.OrderBookResponse{
+				TickPrecision: tickPrec,
+				Buys:          nil,
+				Sells:         nil,
+			})
+		}
+		return &types.QueryOrderBooksResponse{
+			BasePrice:  sdk.Dec{},
+			OrderBooks: obs,
+		}, nil
+	}
+
+	for _, tickPrec := range req.TickPrecisions {
+		obs = append(obs, types.MakeOrderBookResponse(ov, basePrice, int(tickPrec), int(req.NumTicks)))
+	}
+	return &types.QueryOrderBooksResponse{
+		BasePrice:  basePrice,
+		OrderBooks: obs,
+	}, nil
 }

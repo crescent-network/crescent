@@ -23250,6 +23250,93 @@ paths:
           format: uint64
       tags:
         - Query
+  '/crescent/liquidity/v1beta1/pairs/{pair_id}/order_books':
+    get:
+      operationId: OrderBooks
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              base_price:
+                type: string
+              order_books:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    tick_precision:
+                      type: integer
+                      format: int64
+                    buys:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          price:
+                            type: string
+                          user_order_amount:
+                            type: string
+                          pool_order_amount:
+                            type: string
+                    sells:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          price:
+                            type: string
+                          user_order_amount:
+                            type: string
+                          pool_order_amount:
+                            type: string
+            description: >-
+              QueryOrderBooksResponse is response type for Query/OrderBooks RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pair_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: num_ticks
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: tick_precisions
+          in: query
+          required: false
+          type: array
+          items:
+            type: integer
+            format: int64
+          collectionFormat: multi
+      tags:
+        - Query
   '/crescent/liquidity/v1beta1/pairs/{pair_id}/orders':
     get:
       summary: Orders returns all orders within the pair.
@@ -43197,6 +43284,43 @@ definitions:
            - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
            - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
     description: Order defines an order.
+  crescent.liquidity.v1beta1.OrderBookResponse:
+    type: object
+    properties:
+      tick_precision:
+        type: integer
+        format: int64
+      buys:
+        type: array
+        items:
+          type: object
+          properties:
+            price:
+              type: string
+            user_order_amount:
+              type: string
+            pool_order_amount:
+              type: string
+      sells:
+        type: array
+        items:
+          type: object
+          properties:
+            price:
+              type: string
+            user_order_amount:
+              type: string
+            pool_order_amount:
+              type: string
+  crescent.liquidity.v1beta1.OrderBookTickResponse:
+    type: object
+    properties:
+      price:
+        type: string
+      user_order_amount:
+        type: string
+      pool_order_amount:
+        type: string
   crescent.liquidity.v1beta1.OrderDirection:
     type: string
     enum:
@@ -43566,6 +43690,42 @@ definitions:
     description: >-
       QueryDepositRequestsResponse is response type for the
       Query/DepositRequests RPC method.
+  crescent.liquidity.v1beta1.QueryOrderBooksResponse:
+    type: object
+    properties:
+      base_price:
+        type: string
+      order_books:
+        type: array
+        items:
+          type: object
+          properties:
+            tick_precision:
+              type: integer
+              format: int64
+            buys:
+              type: array
+              items:
+                type: object
+                properties:
+                  price:
+                    type: string
+                  user_order_amount:
+                    type: string
+                  pool_order_amount:
+                    type: string
+            sells:
+              type: array
+              items:
+                type: object
+                properties:
+                  price:
+                    type: string
+                  user_order_amount:
+                    type: string
+                  pool_order_amount:
+                    type: string
+    description: QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.
   crescent.liquidity.v1beta1.QueryOrderResponse:
     type: object
     properties:

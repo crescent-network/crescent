@@ -836,3 +836,77 @@ func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestEmptyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairId:         pair.Id,
+		NumTicks:       20,
+		TickPrecisions: []uint32{1, 2, 3},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.OrderBooks, 3)
+
+	for i, ob := range resp.OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Empty(ob.Buys)
+		s.Require().Empty(ob.Sells)
+	}
+}
+
+func (s *KeeperTestSuite) TestBuyOrdersOnlyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("987.6"), sdk.NewInt(1000), time.Minute, true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairId:         pair.Id,
+		NumTicks:       20,
+		TickPrecisions: []uint32{1, 2, 3},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.OrderBooks, 3)
+
+	for i, ob := range resp.OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Len(ob.Buys, 1)
+		switch ob.TickPrecision {
+		case 1:
+			s.Require().True(decEq(utils.ParseDec("900"), ob.Buys[0].Price))
+		case 2:
+			s.Require().True(decEq(utils.ParseDec("980"), ob.Buys[0].Price))
+		case 3:
+			s.Require().True(decEq(utils.ParseDec("987.6"), ob.Buys[0].Price))
+		}
+		s.Require().Empty(ob.Sells)
+	}
+}
+
+func (s *KeeperTestSuite) TestSellOrdersOnly() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("987.6"), sdk.NewInt(1000), time.Minute, true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairId:         pair.Id,
+		NumTicks:       20,
+		TickPrecisions: []uint32{1, 2, 3},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.OrderBooks, 3)
+
+	for i, ob := range resp.OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Empty(ob.Buys)
+		s.Require().Len(ob.Sells, 1)
+		switch ob.TickPrecision {
+		case 1:
+			s.Require().True(decEq(utils.ParseDec("1000"), ob.Sells[0].Price))
+		case 2:
+			s.Require().True(decEq(utils.ParseDec("990"), ob.Sells[0].Price))
+		case 3:
+			s.Require().True(decEq(utils.ParseDec("987.6"), ob.Sells[0].Price))
+		}
+	}
+}
