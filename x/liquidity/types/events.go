@@ -13,6 +13,8 @@ const (
 	EventTypeDepositResult    = "deposit_result"
 	EventTypeWithdrawalResult = "withdrawal_result"
 	EventTypeOrderResult      = "order_result"
+	EventTypeUserOrderMatched = "user_order_matched"
+	EventTypePoolOrderMatched = "pool_order_matched"
 
 	AttributeKeyCreator            = "creator"
 	AttributeKeyDepositor          = "depositor"
@@ -38,10 +40,13 @@ const (
 	AttributeKeyDemandCoinDenom    = "demand_coin_denom"
 	AttributeKeyPrice              = "price"
 	AttributeKeyAmount             = "amount"
+	AttributeKeyOpenAmount         = "open_amount"
 	AttributeKeyExpireAt           = "expire_at"
 	AttributeKeyRemainingOfferCoin = "remaining_offer_coin"
 	AttributeKeyReceivedCoin       = "received_coin"
 	AttributeKeyPairIds            = "pair_ids"
 	AttributeKeyCanceledOrderIds   = "canceled_order_ids"
 	AttributeKeyStatus             = "status"
+	AttributeKeyMatchedAmount      = "matched_amount"
+	AttributeKeyPaidCoin           = "paid_coin"
 )

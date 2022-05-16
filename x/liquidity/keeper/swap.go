@@ -390,7 +390,6 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	pair.CurrentBatchId++
 	k.SetPair(ctx, pair)
 
-	// TODO: emit an event?
 	return nil
 }
 
@@ -413,12 +412,18 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		if !order.IsMatched() {
 			continue
 		}
+
+		matchedAmt := order.GetAmount().Sub(order.GetOpenAmount())
+		paidCoin := order.GetOfferCoin().Sub(order.GetRemainingOfferCoin())
+		receivedCoin := order.GetReceivedDemandCoin()
+
 		switch order := order.(type) {
 		case *types.UserOrder:
 			o, _ := k.GetOrder(ctx, pair.Id, order.OrderId)
-			o.OpenAmount = o.OpenAmount.Sub(order.Amount.Sub(order.OpenAmount))
-			o.RemainingOfferCoin = o.RemainingOfferCoin.Sub(order.OfferCoin.Sub(order.RemainingOfferCoin))
-			o.ReceivedCoin = o.ReceivedCoin.Add(order.ReceivedDemandCoin)
+			o.OpenAmount = o.OpenAmount.Sub(matchedAmt)
+			o.RemainingOfferCoin = o.RemainingOfferCoin.Sub(paidCoin)
+			o.ReceivedCoin = o.ReceivedCoin.Add(receivedCoin)
+
 			if o.OpenAmount.IsZero() {
 				if err := k.FinishOrder(ctx, o, types.OrderStatusCompleted); err != nil {
 					return err
@@ -426,11 +431,36 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			} else {
 				o.SetStatus(types.OrderStatusPartiallyMatched)
 				k.SetOrder(ctx, o)
-				// TODO: emit an event?
 			}
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(order.ReceivedDemandCoin))
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypeUserOrderMatched,
+					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
+					sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer.String()),
+					sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(pair.Id, 10)),
+					sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.OrderId, 10)),
+					sdk.NewAttribute(types.AttributeKeyMatchedAmount, matchedAmt.String()),
+					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
+					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
+				),
+			})
 		case *types.PoolOrder:
-			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(order.ReceivedDemandCoin))
+			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(receivedCoin))
+
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypePoolOrderMatched,
+					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
+					sdk.NewAttribute(types.AttributeKeyReserveAddress, order.ReserveAddress.String()),
+					sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(pair.Id, 10)),
+					sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(order.PoolId, 10)),
+					sdk.NewAttribute(types.AttributeKeyMatchedAmount, matchedAmt.String()),
+					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
+					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
+				),
+			})
 		}
 	}
 	params := k.GetParams(ctx)
@@ -460,15 +490,13 @@ func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, status types.Ord
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeOrderResult,
-			sdk.NewAttribute(types.AttributeKeyRequestId, strconv.FormatUint(order.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
 			sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer),
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(order.PairId, 10)),
-			sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
-			// TODO: include these attributes?
-			//sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
-			//sdk.NewAttribute(types.AttributeKeyAmount, order.Amount.String()),
-			//sdk.NewAttribute(types.AttributeKeyOpenAmount, order.OpenAmount.String()),
-			//sdk.NewAttribute(types.AttributeKeyPrice, order.Price.String()),
+			sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.Id, 10)),
+			sdk.NewAttribute(types.AttributeKeyAmount, order.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyOpenAmount, order.OpenAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, order.RemainingOfferCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyReceivedCoin, order.ReceivedCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyStatus, order.Status.String()),

@@ -147,12 +147,29 @@ The `liquidity` module emits the following events:
 
 ### Batch Result for MsgLimitOrder, MsgMarketOrder
 
-| Type         | Attribute Key        | Attribute Value      |
-|--------------|----------------------|----------------------|
-| order_result | request_id           | {reqId}              |
-| order_result | orderer              | {orderer}            |
-| order_result | pair_id              | {pairId}             |
-| order_result | order_direction      | {direction}          |
-| order_result | remaining_offer_coin | {remainingOfferCoin} |
-| order_result | received_coin        | {receivedCoin}       |
-| order_result | status               | {status}             |
+| Type               | Attribute Key        | Attribute Value      |
+|--------------------|----------------------|----------------------|
+| order_result       | order_direction      | {direction}          |
+| order_result       | orderer              | {orderer}            |
+| order_result       | pair_id              | {pairId}             |
+| order_result       | order_id             | {orderId}            |
+| order_result       | amount               | {amount}             |
+| order_result       | open_amount          | {openAmount}         |
+| order_result       | offer_coin           | {offerCoin}          |
+| order_result       | remaining_offer_coin | {remainingOfferCoin} |
+| order_result       | received_coin        | {receivedCoin}       |
+| order_result       | status               | {status}             |
+| user_order_matched | order_direction      | {orderDirection}     |
+| user_order_matched | orderer              | {orderer}            |
+| user_order_matched | pair_id              | {pairId}             |
+| user_order_matched | order_id             | {orderId}            |
+| user_order_matched | matched_amount       | {matchedAmount}      |
+| user_order_matched | paid_coin            | {paidCoin}           |
+| user_order_matched | received_coin        | {receivedCoin}       |
+| pool_order_matched | order_direction      | {orderDirection}     |
+| pool_order_matched | orderer              | {reserveAddress}     |
+| pool_order_matched | pair_id              | {pairId}             |
+| pool_order_matched | pool_id              | {poolId}             |
+| pool_order_matched | matched_amount       | {matchedAmount}      |
+| pool_order_matched | paid_coin            | {paidCoin}           |
+| pool_order_matched | received_coin        | {receivedCoin}       |
