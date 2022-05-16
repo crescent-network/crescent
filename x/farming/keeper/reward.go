@@ -177,6 +177,67 @@ func (k Keeper) DecreaseOutstandingRewards(ctx sdk.Context, stakingCoinDenom str
 	k.SetOutstandingRewards(ctx, stakingCoinDenom, outstanding)
 }
 
+// GetUnharvestedRewards returns unharvested rewards of the farmer.
+func (k Keeper) GetUnharvestedRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) (rewards types.UnharvestedRewards, found bool) {
+	bz := ctx.KVStore(k.storeKey).Get(types.GetUnharvestedRewardsKey(farmerAcc, stakingCoinDenom))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &rewards)
+	return rewards, true
+}
+
+// SetUnharvestedRewards sets unharvested rewards of the farmer.
+func (k Keeper) SetUnharvestedRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, rewards types.UnharvestedRewards) {
+	bz := k.cdc.MustMarshal(&rewards)
+	ctx.KVStore(k.storeKey).Set(types.GetUnharvestedRewardsKey(farmerAcc, stakingCoinDenom), bz)
+}
+
+// DeleteUnharvestedRewards deletes unharvested rewards of the farmer.
+func (k Keeper) DeleteUnharvestedRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) {
+	ctx.KVStore(k.storeKey).Delete(types.GetUnharvestedRewardsKey(farmerAcc, stakingCoinDenom))
+}
+
+// IterateAllUnharvestedRewards iterates through all unharvested rewards
+// stored in the store and invokes callback function for each item.
+// Stops the iteration when the callback function returns true.
+func (k Keeper) IterateAllUnharvestedRewards(ctx sdk.Context, cb func(farmerAcc sdk.AccAddress, stakingCoinDenom string, rewards types.UnharvestedRewards) (stop bool)) {
+	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.UnharvestedRewardsKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var rewards types.UnharvestedRewards
+		k.cdc.MustUnmarshal(iter.Value(), &rewards)
+		farmerAcc, stakingCoinDenom := types.ParseUnharvestedRewardsKey(iter.Key())
+		if cb(farmerAcc, stakingCoinDenom, rewards) {
+			break
+		}
+	}
+}
+
+// IterateUnharvestedRewardsByFarmer iterates through all the unharvested rewards
+// by a farmer and invokes callback function for each item.
+// Stops the iteration when the callback function returns true.
+func (k Keeper) IterateUnharvestedRewardsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, rewards types.UnharvestedRewards) (stop bool)) {
+	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.GetUnharvestedRewardsPrefix(farmerAcc))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var rewards types.UnharvestedRewards
+		k.cdc.MustUnmarshal(iter.Value(), &rewards)
+		_, stakingCoinDenom := types.ParseUnharvestedRewardsKey(iter.Key())
+		if cb(stakingCoinDenom, rewards) {
+			break
+		}
+	}
+}
+
+// IncreaseUnharvestedRewards increases unharvested rewards for a farmer and
+// a staking coin denom by given amount.
+func (k Keeper) IncreaseUnharvestedRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, amount sdk.Coins) {
+	rewards, _ := k.GetUnharvestedRewards(ctx, farmerAcc, stakingCoinDenom)
+	rewards.Rewards = rewards.Rewards.Add(amount...)
+	k.SetUnharvestedRewards(ctx, farmerAcc, stakingCoinDenom, rewards)
+}
+
 // CalculateRewards returns rewards accumulated until endingEpoch
 // for a farmer for a given staking coin denom.
 func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, endingEpoch uint64) (rewards sdk.DecCoins) {
@@ -185,8 +246,14 @@ func (k Keeper) CalculateRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stak
 		return sdk.NewDecCoins()
 	}
 
-	starting, _ := k.GetHistoricalRewards(ctx, stakingCoinDenom, staking.StartingEpoch-1)
-	ending, _ := k.GetHistoricalRewards(ctx, stakingCoinDenom, endingEpoch)
+	starting, found := k.GetHistoricalRewards(ctx, stakingCoinDenom, staking.StartingEpoch-1)
+	if !found {
+		panic("historical rewards for starting epoch not found")
+	}
+	ending, found := k.GetHistoricalRewards(ctx, stakingCoinDenom, endingEpoch)
+	if !found {
+		panic("historical rewards for ending epoch not found")
+	}
 	diff := ending.CumulativeUnitRewards.Sub(starting.CumulativeUnitRewards)
 	rewards = diff.MulDecTruncate(staking.Amount.ToDec())
 	return
@@ -214,11 +281,21 @@ func (k Keeper) AllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins 
 	return totalRewards
 }
 
+// AllUnharvestedRewards returns all unharvested rewards of a farmer.
+func (k Keeper) AllUnharvestedRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins {
+	totalRewards := sdk.Coins{}
+	k.IterateUnharvestedRewardsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, rewards types.UnharvestedRewards) (stop bool) {
+		totalRewards = totalRewards.Add(rewards.Rewards...)
+		return false
+	})
+	return totalRewards
+}
+
 // WithdrawRewards withdraws accumulated rewards for a farmer for a given
 // staking coin denom.
 // It decreases outstanding rewards and set the starting epoch of a
 // staking.
-func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) (sdk.Coins, error) {
+func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, harvest bool) (sdk.Coins, error) {
 	staking, found := k.GetStaking(ctx, stakingCoinDenom, farmerAcc)
 	if !found {
 		return nil, types.ErrStakingNotExists
@@ -230,8 +307,15 @@ func (k Keeper) WithdrawRewards(ctx sdk.Context, farmerAcc sdk.AccAddress, staki
 
 	if !rewards.IsZero() {
 		if !truncatedRewards.IsZero() {
-			if err := k.bankKeeper.SendCoins(ctx, types.RewardsReserveAcc, farmerAcc, truncatedRewards); err != nil {
-				return nil, err
+			if harvest {
+				if err := k.bankKeeper.SendCoins(ctx, types.RewardsReserveAcc, farmerAcc, truncatedRewards); err != nil {
+					return nil, err
+				}
+			} else {
+				if err := k.bankKeeper.SendCoins(ctx, types.RewardsReserveAcc, types.UnharvestedRewardsReserveAcc, truncatedRewards); err != nil {
+					return nil, err
+				}
+				k.IncreaseUnharvestedRewards(ctx, farmerAcc, stakingCoinDenom, truncatedRewards)
 			}
 
 			ctx.EventManager().EmitEvents(sdk.Events{
@@ -284,13 +368,24 @@ func (k Keeper) WithdrawAllRewards(ctx sdk.Context, farmerAcc sdk.AccAddress) (s
 // Harvest claims farming rewards from the reward pool.
 func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenoms []string) error {
 	totalRewards := sdk.NewCoins()
+	totalUnharvestedRewards := sdk.Coins{}
 
 	for _, denom := range stakingCoinDenoms {
-		rewards, err := k.WithdrawRewards(ctx, farmerAcc, denom)
+		rewards, err := k.WithdrawRewards(ctx, farmerAcc, denom, true)
 		if err != nil {
 			return err
 		}
 		totalRewards = totalRewards.Add(rewards...)
+
+		unharvested, found := k.GetUnharvestedRewards(ctx, farmerAcc, denom)
+		if found {
+			totalUnharvestedRewards = totalUnharvestedRewards.Add(unharvested.Rewards...)
+			k.DeleteUnharvestedRewards(ctx, farmerAcc, denom)
+		}
+	}
+
+	if err := k.bankKeeper.SendCoins(ctx, types.UnharvestedRewardsReserveAcc, farmerAcc, totalUnharvestedRewards); err != nil {
+		return err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -298,7 +393,7 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDe
 			types.EventTypeHarvest,
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmerAcc.String()),
 			sdk.NewAttribute(types.AttributeKeyStakingCoinDenoms, strings.Join(stakingCoinDenoms, ",")),
-			sdk.NewAttribute(types.AttributeKeyRewardCoins, totalRewards.String()),
+			sdk.NewAttribute(types.AttributeKeyRewardCoins, totalRewards.Add(totalUnharvestedRewards...).String()),
 		),
 	})
 
@@ -548,6 +643,25 @@ func (k Keeper) ValidateOutstandingRewardsAmount(ctx sdk.Context) error {
 	_, hasNeg := rewardsReservePoolBalances.SafeSub(totalOutstandingRewards)
 	if hasNeg {
 		return types.ErrInvalidOutstandingRewardsAmount
+	}
+
+	return nil
+}
+
+// ValidateUnharvestedRewardsAmount checks that the balance of the
+// unharvested rewards reserve pool is greater than(or equal to) the total
+// amount of unharvested rewards.
+func (k Keeper) ValidateUnharvestedRewardsAmount(ctx sdk.Context) error {
+	totalUnharvestedRewards := sdk.Coins{}
+	k.IterateAllUnharvestedRewards(ctx, func(farmerAcc sdk.AccAddress, stakingCoinDenom string, rewards types.UnharvestedRewards) (stop bool) {
+		totalUnharvestedRewards = totalUnharvestedRewards.Add(rewards.Rewards...)
+		return false
+	})
+
+	reserveBalances := k.bankKeeper.SpendableCoins(ctx, types.UnharvestedRewardsReserveAcc)
+	_, hasNeg := reserveBalances.SafeSub(totalUnharvestedRewards)
+	if hasNeg {
+		return types.ErrInvalidUnharvestedRewardsAmount
 	}
 
 	return nil

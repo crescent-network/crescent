@@ -73,7 +73,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		k.SetQueuedStaking(ctx, record.StakingCoinDenom, farmerAcc, record.QueuedStaking)
+		k.SetQueuedStaking(ctx, record.EndTime, record.StakingCoinDenom, farmerAcc, record.QueuedStaking)
 	}
 
 	for _, record := range genState.HistoricalRewardsRecords {
@@ -82,6 +82,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	for _, record := range genState.OutstandingRewardsRecords {
 		k.SetOutstandingRewards(ctx, record.StakingCoinDenom, record.OutstandingRewards)
+	}
+
+	for _, record := range genState.UnharvestedRewardsRecords {
+		farmerAcc, err := sdk.AccAddressFromBech32(record.Farmer)
+		if err != nil {
+			panic(err)
+		}
+		k.SetUnharvestedRewards(ctx, farmerAcc, record.StakingCoinDenom, record.UnharvestedRewards)
 	}
 
 	for _, record := range genState.CurrentEpochRecords {
@@ -108,6 +116,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 
 	if err := k.ValidateOutstandingRewardsAmount(ctx); err != nil {
+		panic(err)
+	}
+
+	if err := k.ValidateUnharvestedRewardsAmount(ctx); err != nil {
 		panic(err)
 	}
 
@@ -141,8 +153,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	})
 
 	queuedStakings := []types.QueuedStakingRecord{}
-	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+	k.IterateQueuedStakings(ctx, func(endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
 		queuedStakings = append(queuedStakings, types.QueuedStakingRecord{
+			EndTime:          endTime,
 			StakingCoinDenom: stakingCoinDenom,
 			Farmer:           farmerAcc.String(),
 			QueuedStaking:    queuedStaking,
@@ -179,6 +192,16 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
+	unharvestedRewards := []types.UnharvestedRewardsRecord{}
+	k.IterateAllUnharvestedRewards(ctx, func(farmerAcc sdk.AccAddress, stakingCoinDenom string, rewards types.UnharvestedRewards) (stop bool) {
+		unharvestedRewards = append(unharvestedRewards, types.UnharvestedRewardsRecord{
+			Farmer:             farmerAcc.String(),
+			StakingCoinDenom:   stakingCoinDenom,
+			UnharvestedRewards: rewards,
+		})
+		return false
+	})
+
 	currentEpochs := []types.CurrentEpochRecord{}
 	k.IterateCurrentEpochs(ctx, func(stakingCoinDenom string, currentEpoch uint64) (stop bool) {
 		currentEpochs = append(currentEpochs, types.CurrentEpochRecord{
@@ -203,6 +226,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		totalStakings,
 		historicalRewards,
 		outstandingRewards,
+		unharvestedRewards,
 		currentEpochs,
 		k.bankKeeper.GetAllBalances(ctx, types.RewardsReserveAcc),
 		epochTime,

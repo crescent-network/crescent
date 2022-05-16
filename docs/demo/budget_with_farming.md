@@ -11,7 +11,7 @@
 
 The budget module is a Cosmos SDK module that implements budget functionality. It is an independent module from other SDK modules and core functionality is to enable anyone to create a budget plan through governance param change proposal. After it is agreed within the community, voted, and passed, it uses the budget source address to distribute amount of coins by the rate that is defined in the plan to the destination address. Collecting all budgets and distribution take place every epoch blocks that can be modified by a governance proposal.
 
-One use case is the Gravity DEX farming plan. The budget module can be used to create a budget plan that defines the Cosmos Hub FeeCollector module account where transaction gas fees and part of ATOM inflation are collected as budget source address and uses a custom module account (created by budget creator) as the collection address. 
+One use case is the farming plan. The budget module can be used to create a budget plan that defines the Cosmos Hub FeeCollector module account where transaction gas fees and part of ATOM inflation are collected as budget source address and uses a custom module account (created by budget creator) as the collection address.
 
 ## What does the farming module do?
 
@@ -70,20 +70,20 @@ fi
 # Enable API and swagger docs and modify parameters for the governance proposal and
 # inflation rate from 13% to 33%
 if [ $platform = 'linux' ]; then
-	sed -i 's/enable = false/enable = true/g' $HOME_APP/config/app.toml
-	sed -i 's/swagger = false/swagger = true/g' $HOME_APP/config/app.toml
-	sed -i 's%"amount": "10000000"%"amount": "1"%g' $HOME_APP/config/genesis.json
-	sed -i 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
-	sed -i 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
-	sed -i 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_APP/config/genesis.json
+  sed -i 's/enable = false/enable = true/g' $HOME_APP/config/app.toml
+  sed -i 's/swagger = false/swagger = true/g' $HOME_APP/config/app.toml
+  sed -i 's%"amount": "10000000"%"amount": "1"%g' $HOME_APP/config/genesis.json
+  sed -i 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+  sed -i 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+  sed -i 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_APP/config/genesis.json
   sed -i 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_APP/config/genesis.json
 else
-	sed -i '' 's/enable = false/enable = true/g' $HOME_APP/config/app.toml
-	sed -i '' 's/swagger = false/swagger = true/g' $HOME_APP/config/app.toml
-	sed -i '' 's%"amount": "10000000"%"amount": "1"%g' $HOME_APP/config/genesis.json
-	sed -i '' 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
-	sed -i '' 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
-	sed -i '' 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_APP/config/genesis.json
+  sed -i '' 's/enable = false/enable = true/g' $HOME_APP/config/app.toml
+  sed -i '' 's/swagger = false/swagger = true/g' $HOME_APP/config/app.toml
+  sed -i '' 's%"amount": "10000000"%"amount": "1"%g' $HOME_APP/config/genesis.json
+  sed -i '' 's%"quorum": "0.334000000000000000",%"quorum": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+  sed -i '' 's%"threshold": "0.500000000000000000",%"threshold": "0.000000000000000001",%g' $HOME_APP/config/genesis.json
+  sed -i '' 's%"voting_period": "172800s"%"voting_period": "30s"%g' $HOME_APP/config/genesis.json
   sed -i '' 's%"inflation": "0.130000000000000000",%"inflation": "0.330000000000000000",%g' $HOME_APP/config/genesis.json
 fi
 
@@ -95,19 +95,19 @@ $BINARY start
 
 Create the `budget-proposal.json` file and copy the following JSON contents into the file. Depending on what budget plan you create, you can customize values of the fields. 
 
-In this demo, you create a budget plan that distributes partial amount of coins from the [FeeCollector module account](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/keys.go#L15) that collects gas fees and ATOM inflation in Cosmos Hub. This budget plan will be used for Gravity DEX farming plan to `GravityDEXFarmingBudget` account. 
+In this demo, you create a budget plan that distributes partial amount of coins from the [FeeCollector module account](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/keys.go#L15) that collects gas fees and ATOM inflation in Cosmos Hub. This budget plan will be used to fund the `FarmingPool` account.
 
-The `GravityDEXFarmingBudget` account is derived using the following query.
+The `FarmingPool` account is derived using the following query.
 ```bash
-$BINARY query budget address GravityDEXFarmingBudget --module-name farming
-# > address: cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx
+$BINARY query budget address FarmingPool --module-name farming
+# > address: cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62
 ```
 
 This code snippet is how the module derives the account.
 
 ```go
-// cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx
-sdk.AccAddress(address.Module("farming", []byte("GravityDEXFarmingBudget")))
+// cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62
+sdk.AccAddress(address.Module("farming", []byte("FarmingPool")))
 ```
 
 where the fields in the JSON file are:
@@ -125,19 +125,19 @@ Use the following values for the fields:
 ```json
 {
   "title": "Create a Budget Plan",
-  "description": "An example of Budget Plan for Gravtiy DEX Farming",
+  "description": "An example budget plan for farming",
   "changes": [
     {
       "subspace": "budget",
       "key": "Budgets",
       "value": [
         {
-          "name": "gravity-dex-farming-20213Q-20313Q",
+          "name": "farming-budget",
           "rate": "0.500000000000000000",
           "source_address": "cre17xpfvakm2amg962yls6f84z3kell8c5l53s97s",
-          "destination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
-          "start_time": "2021-09-01T00:00:00Z",
-          "end_time": "2031-09-30T00:00:00Z"
+          "destination_address": "cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62",
+          "start_time": "0001-01-01T00:00:00Z",
+          "end_time": "9999-12-31T00:00:00Z"
         }
       ]
     }
@@ -181,19 +181,19 @@ $BINARY q gov proposals --output json | jq
 $BINARY q budget params --output json | jq
 ```
 
-### Step 4. Query `GravityDEXFarmingBudget` account to see if coins are accrued
+### Step 4. Query `FarmingPool` account to see if coins are accrued
 
 ```bash
-# Query balances of the Gravity DEX budget collector account address
-$BINARY q bank balances cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx \
+# Query balances of the budget collector account address
+$BINARY q bank balances cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62 \
 --output json | jq
 ```
 
-### Step 5. Send a governance proposal to create a public ratio amount plan
+### Step 5. Send a governance proposal to create a public fixed amount plan
 
-Now, create the `public-ratio-plan-proposal.json` file and copy the following JSON contents into the file. 
+Now, create the `public-fixed-amount-plan-proposal.json` file and copy the following JSON contents into the file.
 
-In this demo, you create a public farming ratio plan to distribute 90% of of the balance of the farming pool address to the accounts who stake the coins that are defined in staking coin weights, the time period is from Sept. 01, 2021 to Sept. 24, 2021. 
+In this demo, you create a public farming fixed amount plan to distribute `1000000stake` from the farming pool address to the accounts who stake the coins that are defined in staking coin weights.
 
 where the fields in the JSON file are:
 
@@ -203,9 +203,7 @@ where the fields in the JSON file are:
 - `staking_coin_weights`: are the coin weights for the plan. The weights must add up to 1
 - `start_time`: is start time of the farming plan
 - `end_time`: is start time of the farming plan
-- `epoch_ratio`: is the distributing amount by ratio per epoch
-
-where the fields in the JSON file are:
+- `epoch_amount`: is the distributing rewards amount per epoch
 
 ```json
 {
@@ -213,9 +211,9 @@ where the fields in the JSON file are:
   "description": "Are you ready to farm?",
   "add_plan_requests": [
     {
-      "name": "First Public Ratio Plan",
-      "farming_pool_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
-      "termination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
+      "name": "First Public Fixed Amount Plan",
+      "farming_pool_address": "cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62",
+      "termination_address": "cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62",
       "staking_coin_weights": [
         {
           "denom": "pool1",
@@ -226,19 +224,24 @@ where the fields in the JSON file are:
           "amount": "0.500000000000000000"
         }
       ],
-      "start_time": "2021-09-01T00:00:00Z",
-      "end_time": "2031-09-30T00:00:00Z",
-      "epoch_ratio": "0.900000000000000000"
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
+      "epoch_amount": [
+        {
+          "denom": "stake",
+          "amount": "1000000"
+        }
+      ]
     }
   ]
 }
 ```
 
-Now, run each command one at a time. You can copy and paste each command in the command line in your terminal:
+Now, run each command once at a time. You can copy and paste each command in the command line in your terminal:
 
 ```bash
-# Submit a public ratio plan governance proposal
-$BINARY tx gov submit-proposal public-farming-plan public-ratio-plan-proposal.json \
+# Submit a public fixed amount plan governance proposal
+$BINARY tx gov submit-proposal public-farming-plan public-fixed-amount-plan-proposal.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -286,13 +289,13 @@ $BINARY tx farming stake 5000000pool1 \
 --yes \
 --output json | jq
 
-# Query for all stakings by a staker address
-$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+# Query for farming position by a staker address
+$BINARY q farming position cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # You can also query using the following command
-# Query for all stakings by a staker address with the given staking coin denom
-$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+# Query for farming position by a staker address with the given staking coin denom
+$BINARY q farming position cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --staking-coin-denom pool1 \
 --output json | jq
 ```
@@ -303,10 +306,12 @@ To simulate reward distribution for this demo, enable a custom transaction messa
 
 When you send the `AdvanceEpoch` message to the network, it increases epoch by day 1.
 
-In this step, you might wonder why you need to increase 2 epochs by sending two transactions to the network. The reason is to ensure fairness of distribution. The global parameter called `next_epoch_days` can be updated through a param change governance proposal. If the value of `next_epoch_days` is changed, it can lead to an edge case. Let's say `next_epoch_days` is 7 and it is changed to 1 although it hasn't proceeded up to 7 days before it is changed. Therefore, the internal state `current_epoch_days` is used to process staking and reward distribution in an end blocker. This technical decision has been made by the Gravity DEX team. To understand more about this decision, feel free to jump right into `x/farming/abci.go`.
+> `AdvanceEpoch` immediately makes queued coins to be staked, and runs rewards allocation logic.
+> It is similar to fast-forwarding the chain by one day(depending on `CurrentEpochDays` parameter).
 
 ```bash
 # Increase epoch by 1 
+# This will make queued coins to be staked, and distribute rewards for those coins
 $BINARY tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \
@@ -315,18 +320,9 @@ $BINARY tx farming advance-epoch \
 --yes \
 --output json | jq
 
-# Query for all stakings by a staker address
+# Query for farming position by a staker address
 # Queued coins should have been moved to staked coins 
-$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
---output json | jq
-
-# Increase epoch by 1 again to distribute rewards
-$BINARY tx farming advance-epoch \
---chain-id localnet \
---from user2 \
---keyring-backend test \
---broadcast-mode block \
---yes \
+$BINARY q farming position cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
 # Query rewards
@@ -334,7 +330,42 @@ $BINARY q farming rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 ```
 
-### Step 8. Harvest farming rewards
+### Step 8. Stake more coins
+
+When staking more coins, the accumulated rewards are automatically sent(withdrawn) to a
+separate module account `UnharvestedRewardsReserveAcc` and a new `UnharvestedRewards` object
+is created which holds the amount of unharvested rewards.
+These unharvested rewards can be claimed later with `Harvest` command.
+
+```bash
+# Stake more pool coin
+$BINARY tx farming stake 5000000pool1 \
+--chain-id localnet \
+--from user2 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Increase epoch by 1
+# This will make queued coins to be staked, and distribute rewards for those coins
+$BINARY tx farming advance-epoch \
+--chain-id localnet \
+--from user2 \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Query for unharvested rewards for a staker address
+$BINARY q farming unharvested-rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+--output json | jq
+```
+
+### Step 9. Harvest farming rewards
+
+When harvesting rewards using `Harvest` command, all rewards accumulated until the last epoch
+and all existing unharvested rewards are claimed and sent to the farmer.
 
 ```bash
 # Query balance of user2 account 
@@ -367,31 +398,31 @@ $BINARY tx farming harvest pool1 \
 --output json | jq
 ```
 
-### Step 9. Modify the public farming ratio plan
+### Step 10. Modify the public farming ratio plan
 
-Now create the `multiple-public-ratio-plan-proposals.json` file and copy the JSON contents into the file. 
+Now create the `multiple-public-fixed-amount-plan-proposals.json` file and copy the JSON contents into the file.
 
-This step is intended to demonstrate the fact that you don't need to create another public ratio plan by sending another governance proposal. You can just modify the existing proposal and add another ratio plan.
+This step is intended to demonstrate the fact that you don't need to create another public fixed amount plan by sending another governance proposal. You can just modify the existing proposal and add another plan.
 
 Update the following values of the fields:
 
 - `plan_id`: 1
 - `staking_coin_weights`
     - `pool1` weight 50% → 100%
-    - `pool2` weight 50% → 0% ( deleted)
-- `epoch_ratio`: 0.500000000000000000 (50%)
+    - `pool2` weight 50% → 0% (deleted)
+- `epoch_amount`: 2000000stake
 
 Add a second public ratio plan proposal:
 
-- `name`: Second Public Ratio Plan
-- `farming_pool_address`: the Gravity DEX budget collector account address
-- `termination_address`: the Gravity DEX budget collector account address
+- `name`: Second Public Fixed Amount Plan
+- `farming_pool_address`: the budget collector account address
+- `termination_address`: the budget collector account address
 - `staking_coin_weights`
     - `pool3`
     - `pool4`
-- `start_time`: 2021-09-11T00:00:00Z
-- `end_time`: 2031-09-30T00:00:00Z
-- `epoch_ratio`: 0.500000000000000000 (50%)
+- `start_time`: 0001-01-01T00:00:00Z
+- `end_time`: 9999-12-31T00:00:00Z
+- `epoch_amount`: 3000000stake
 
 ```json
 {
@@ -400,25 +431,30 @@ Add a second public ratio plan proposal:
   "modify_plan_requests": [
     {
       "plan_id": 1,
-      "name": "First Public Ratio Plan",
-      "farming_pool_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
-      "termination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
+      "name": "First Public Fixed Amount Plan",
+      "farming_pool_address": "cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62",
+      "termination_address": "cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62",
       "staking_coin_weights": [
         {
           "denom": "pool1",
           "amount": "1.000000000000000000"
         }
       ],
-      "start_time": "2021-09-01T00:00:00Z",
-      "end_time": "2031-09-30T00:00:00Z",
-      "epoch_ratio": "0.500000000000000000"
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
+      "epoch_amount": [
+        {
+          "denom": "stake",
+          "amount": "2000000"
+        }
+      ]
     }
   ],
   "add_plan_requests": [
     {
-      "name": "Second Public Ratio Plan",
-      "farming_pool_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
-      "termination_address": "cre1228ryjucdpdv3t87rxle0ew76a56ulvnfst0hq0sscd3nafgjpqq6tjyrx",
+      "name": "Second Public Fixed Amount Plan",
+      "farming_pool_address": "cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62",
+      "termination_address": "cre138yhdyvjlk669vhmggkazg6cyuszsrm4glql4mqavcrl3w4xe5xsf36r62",
       "staking_coin_weights": [
         {
           "denom": "pool3",
@@ -429,9 +465,14 @@ Add a second public ratio plan proposal:
           "amount": "0.500000000000000000"
         }
       ],
-      "start_time": "2021-09-11T00:00:00Z",
-      "end_time": "2031-09-30T00:00:00Z",
-      "epoch_ratio": "0.500000000000000000"
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
+      "epoch_amount": [
+        {
+          "denom": "stake",
+          "amount": "3000000"
+        }
+      ]
     }
   ]
 }
@@ -439,7 +480,7 @@ Add a second public ratio plan proposal:
 
 ```bash
 # Submit a public plan governance proposal
-$BINARY tx gov submit-proposal public-farming-plan multiple-public-ratio-plan-proposals.json \
+$BINARY tx gov submit-proposal public-farming-plan multiple-public-fixed-amount-plan-proposals.json \
 --chain-id localnet \
 --from user1 \
 --keyring-backend test \
@@ -500,18 +541,10 @@ $BINARY tx farming stake 5000000pool3 \
 --output json | jq
 
 # Query what user2 is staking
-$BINARY q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+$BINARY q farming position cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --output json | jq
 
-# Increase epoch by 2 again to distribute rewards
-$BINARY tx farming advance-epoch \
---chain-id localnet \
---from user2 \
---keyring-backend test \
---broadcast-mode block \
---yes \
---output json | jq
-
+# Increase epoch by 1 again to distribute rewards
 $BINARY tx farming advance-epoch \
 --chain-id localnet \
 --from user2 \

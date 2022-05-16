@@ -184,6 +184,16 @@ message OutstandingRewards {
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
+// UnharvestedRewards represents unharvested rewards of a farmer for a
+// staking coin denom, which increases when there was an automatic withdrawal
+// of rewards due to changes in staked coin amount.
+message UnharvestedRewards {
+  option (gogoproto.goproto_getters) = false;
+
+  repeated cosmos.base.v1beta1.Coin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
 // AddressType enumerates the available types of a address.
 enum AddressType {
   option (gogoproto.goproto_enum_prefix) = false;

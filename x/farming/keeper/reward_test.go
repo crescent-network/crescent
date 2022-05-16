@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	chain "github.com/crescent-network/crescent/app"
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/farming"
 	"github.com/crescent-network/crescent/x/farming/types"
 
@@ -223,7 +224,7 @@ func (suite *KeeperTestSuite) TestAllocateRewards() {
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
-	suite.keeper.ProcessQueuedCoins(suite.ctx)
+	suite.advanceEpochDays()
 
 	prevDistrCoins := map[uint64]sdk.Coins{}
 
@@ -262,10 +263,10 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanAllBalances() {
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
-	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
+	rewards := suite.AllRewards(suite.addrs[0])
 	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
 }
 
@@ -280,10 +281,10 @@ func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanAllBalances() {
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
-	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
+	rewards := suite.AllRewards(suite.addrs[0])
 	suite.Require().True(coinsEq(sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)), rewards))
 }
 
@@ -299,10 +300,10 @@ func (suite *KeeperTestSuite) TestAllocateRewards_FixedAmountPlanOverBalances() 
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
-	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
+	rewards := suite.AllRewards(suite.addrs[0])
 	suite.Require().True(rewards.IsZero())
 }
 
@@ -317,10 +318,10 @@ func (suite *KeeperTestSuite) TestAllocateRewards_RatioPlanOverBalances() {
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
 
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
-	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
+	rewards := suite.AllRewards(suite.addrs[0])
 	suite.Require().True(rewards.IsZero())
 }
 
@@ -339,8 +340,8 @@ func (suite *KeeperTestSuite) TestOutstandingRewards() {
 	_, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
 	suite.Require().False(found)
 
-	suite.AdvanceEpoch() // Queued staking coins have now staked.
-	suite.AdvanceEpoch() // Allocate rewards for staked coins.
+	suite.advanceEpochDays() // Queued staking coins have now staked.
+	suite.advanceEpochDays() // Allocate rewards for staked coins.
 
 	// After the first allocation of rewards, the outstanding rewards should be 1000denom3.
 	outstanding, found := suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
@@ -366,14 +367,14 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	suite.Require().EqualError(types.ErrStakingNotExists, err.Error())
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1_000_000)))
-	suite.keeper.ProcessQueuedCoins(suite.ctx)
+	suite.advanceEpochDays()
 
 	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-05T00:00:00Z"))
 	err = suite.keeper.AllocateRewards(suite.ctx)
 	suite.Require().NoError(err)
 
-	rewards := suite.keeper.AllRewards(suite.ctx, suite.addrs[0])
+	rewards := suite.AllRewards(suite.addrs[0])
 
 	err = suite.keeper.Harvest(suite.ctx, suite.addrs[0], []string{denom1})
 	suite.Require().NoError(err)
@@ -381,7 +382,7 @@ func (suite *KeeperTestSuite) TestHarvest() {
 	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 	suite.Require().True(coinsEq(balancesBefore.Add(rewards...), balancesAfter))
 	suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, types.RewardsReserveAcc).IsZero())
-	suite.Require().True(suite.keeper.AllRewards(suite.ctx, suite.addrs[0]).IsZero())
+	suite.Require().True(suite.AllRewards(suite.addrs[0]).IsZero())
 }
 
 func (suite *KeeperTestSuite) TestMultipleHarvest() {
@@ -389,8 +390,8 @@ func (suite *KeeperTestSuite) TestMultipleHarvest() {
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
 	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 	suite.Harvest(suite.addrs[0], []string{denom1})
@@ -412,8 +413,8 @@ func (suite *KeeperTestSuite) TestHistoricalRewards() {
 	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 
 	// Advancing epoch(s) before any staking is made doesn't create any historical rewards records.
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 	count := 0
 	suite.keeper.IterateHistoricalRewards(suite.ctx, func(stakingCoinDenom string, epoch uint64, rewards types.HistoricalRewards) (stop bool) {
 		count++
@@ -422,14 +423,16 @@ func (suite *KeeperTestSuite) TestHistoricalRewards() {
 	suite.Equal(count, 0)
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	// Advancing epoch here marks queued staking coins as staked.
-	suite.AdvanceEpoch()
+	// Advancing epoch here marks queued staking coins as staked,
+	// and the farmer is eligible to get rewards.
+	// This will create 1 historical rewards records.
+	suite.advanceEpochDays()
 
-	// After a farmer has staked(not queued) coins, historical rewards records will be created for each epoch.
-	// Here we advance epoch three times, and this will create 3 historical rewards records.
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	// After the farmer has staked(not queued) coins, historical rewards records
+	// will be created for each epoch.
+	// Here we advance epoch two times, and this will create 2 historical rewards records.
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
 	// First, ensure that we have only 3 entries in the store.
 	count = 0
@@ -461,7 +464,7 @@ func (suite *KeeperTestSuite) TestInitializeAndPruneStakingCoinInfo() {
 	_, found = suite.keeper.GetOutstandingRewards(suite.ctx, denom1)
 	suite.Require().False(found)
 
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
 
 	suite.Require().Equal(uint64(1), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
 	historical, found := suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 0)
@@ -471,7 +474,7 @@ func (suite *KeeperTestSuite) TestInitializeAndPruneStakingCoinInfo() {
 	suite.Require().True(found)
 	suite.Require().True(decCoinsEq(sdk.DecCoins{}, outstanding.Rewards))
 
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
 
 	suite.Require().Equal(uint64(2), suite.keeper.GetCurrentEpoch(suite.ctx, denom1))
 	historical, found = suite.keeper.GetHistoricalRewards(suite.ctx, denom1, 1)
@@ -508,16 +511,108 @@ func (suite *KeeperTestSuite) TestAllocateRewardsZeroTotalStakings() {
 	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
 	suite.Unstake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	suite.AdvanceEpoch() // This should not cause a panic.
-	totalStakings, found := suite.keeper.GetTotalStakings(suite.ctx, denom1)
-	suite.Require().True(found)
-	suite.Require().True(totalStakings.Amount.IsZero())
+	suite.advanceEpochDays()
+
+	_, found := suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	suite.Require().False(found)
+}
+
+func (suite *KeeperTestSuite) TestManualHarvestForWithdrawnRewards() {
+	_, err := suite.createPublicFixedAmountPlan(
+		suite.addrs[4], suite.addrs[4], parseDecCoins("1denom1"),
+		sampleStartTime, sampleEndTime, utils.ParseCoins("1000000denom3"))
+	suite.Require().NoError(err)
+
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-01T13:00:00Z"))
+	suite.Stake(suite.addrs[0], utils.ParseCoins("1000000denom1"))
+	suite.Stake(suite.addrs[1], utils.ParseCoins("1000000denom1"))
+
+	// Queued coins -> staked
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-02T13:00:00Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper)
 
-	_, found = suite.keeper.GetTotalStakings(suite.ctx, denom1)
+	// Rewards distribution
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-03T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	// More queued coins
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-03T21:00:00Z"))
+	suite.Stake(suite.addrs[0], utils.ParseCoins("2000000denom1"))
+
+	// Rewards distribution for original staked coins(1000000denom1)
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-04T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	// Queued coins -> staked
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-04T21:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	unharvested, found := suite.keeper.GetUnharvestedRewards(suite.ctx, suite.addrs[0], "denom1")
+	suite.Require().True(found)
+	suite.Require().True(coinsEq(utils.ParseCoins("1000000denom3"), unharvested.Rewards))
+
+	// Rewards distribution
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-05T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	unharvested, found = suite.keeper.GetUnharvestedRewards(suite.ctx, suite.addrs[0], "denom1")
+	suite.Require().True(found)
+	suite.Require().True(coinsEq(utils.ParseCoins("1000000denom3"), unharvested.Rewards))
+
+	rewards := suite.AllRewards(suite.addrs[0])
+	suite.Require().True(coinsEq(utils.ParseCoins("750000denom3"), rewards))
+
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2022-04-05T09:00:00Z"))
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Harvest(suite.addrs[0], []string{"denom1"})
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(utils.ParseCoins("1750000denom3"), balancesAfter.Sub(balancesBefore)))
+
+	_, found = suite.keeper.GetUnharvestedRewards(suite.ctx, suite.addrs[0], "denom1")
 	suite.Require().False(found)
+}
+
+func (suite *KeeperTestSuite) TestWholeUnstakeHarvest() {
+	_, err := suite.createPublicFixedAmountPlan(
+		suite.addrs[4], suite.addrs[4], parseDecCoins("0.5denom1,0.5denom2"),
+		sampleStartTime, sampleEndTime, utils.ParseCoins("1000000denom3"))
+	suite.Require().NoError(err)
+
+	suite.Stake(suite.addrs[0], utils.ParseCoins("1000000denom1,1000000denom2"))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+	suite.advanceEpochDays() // queued -> staked, rewards distribution
+
+	suite.Stake(suite.addrs[0], utils.ParseCoins("1000000denom1,1000000denom2"))
+	suite.advanceEpochDays() // queued -> staked(new UnharvestedRewards), rewards distribution
+	suite.advanceEpochDays() // Rewards distribution
+
+	rewards := suite.AllRewards(suite.addrs[0])
+	suite.Require().True(coinsEq(utils.ParseCoins("2000000denom3"), rewards))
+	unharvested := suite.allUnharvestedRewards(suite.addrs[0])
+	suite.Require().True(coinsEq(utils.ParseCoins("1000000denom3"), unharvested))
+
+	// Not unstaking whole staked amount.
+	suite.Unstake(suite.addrs[0], utils.ParseCoins("1500000denom1"))
+
+	u, found := suite.keeper.GetUnharvestedRewards(suite.ctx, suite.addrs[0], "denom1")
+	suite.Require().True(found)
+	suite.Require().True(coinsEq(utils.ParseCoins("1500000denom3"), u.Rewards))
+	unharvested = suite.allUnharvestedRewards(suite.addrs[0])
+	suite.Require().True(coinsEq(utils.ParseCoins("2000000denom3"), unharvested))
+
+	suite.advanceEpochDays() // Rewards distribution
+	// Unstaking whole remaining staked amount.
+	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Unstake(suite.addrs[0], utils.ParseCoins("500000denom1"))
+	balancesAfter := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(utils.ParseCoins("500000denom1,2000000denom3"), balancesAfter.Sub(balancesBefore)))
+
+	balancesBefore = suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Unstake(suite.addrs[0], utils.ParseCoins("2000000denom2"))
+	balancesAfter = suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
+	suite.Require().True(coinsEq(utils.ParseCoins("2000000denom2,2000000denom3"), balancesAfter.Sub(balancesBefore)))
 }

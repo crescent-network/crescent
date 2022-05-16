@@ -3,6 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/farming"
 	farmingkeeper "github.com/crescent-network/crescent/x/farming/keeper"
 	"github.com/crescent-network/crescent/x/farming/types"
 )
@@ -38,22 +40,24 @@ func (suite *KeeperTestSuite) TestPositiveStakingAmountInvariant() {
 func (suite *KeeperTestSuite) TestPositiveQueuedStakingAmountInvariant() {
 	k, ctx := suite.keeper, suite.ctx
 
+	endTime := ctx.BlockTime().Add(types.Day)
+
 	// Normal queued staking
-	k.SetQueuedStaking(ctx, denom1, suite.addrs[0], types.QueuedStaking{
+	k.SetQueuedStaking(ctx, endTime, denom1, suite.addrs[0], types.QueuedStaking{
 		Amount: sdk.NewInt(1000000),
 	})
 	_, broken := farmingkeeper.PositiveQueuedStakingAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
 
 	// Zero-amount queued staking
-	k.SetQueuedStaking(ctx, denom1, suite.addrs[1], types.QueuedStaking{
+	k.SetQueuedStaking(ctx, endTime, denom1, suite.addrs[1], types.QueuedStaking{
 		Amount: sdk.ZeroInt(),
 	})
 	_, broken = farmingkeeper.PositiveQueuedStakingAmountInvariant(k)(ctx)
 	suite.Require().True(broken)
 
 	// Negative-amount queued staking
-	k.SetQueuedStaking(ctx, denom1, suite.addrs[1], types.QueuedStaking{
+	k.SetQueuedStaking(ctx, endTime, denom1, suite.addrs[1], types.QueuedStaking{
 		Amount: sdk.NewInt(-1),
 	})
 	_, broken = farmingkeeper.PositiveQueuedStakingAmountInvariant(k)(ctx)
@@ -64,7 +68,7 @@ func (suite *KeeperTestSuite) TestStakingReservedAmountInvariant() {
 	k, ctx := suite.keeper, suite.ctx
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000)))
 
 	// Check staked/queued coin amounts.
@@ -124,9 +128,9 @@ func (suite *KeeperTestSuite) TestRemainingRewardsAmountInvariant() {
 	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
 	_, broken := farmingkeeper.RemainingRewardsAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
@@ -206,8 +210,8 @@ func (suite *KeeperTestSuite) TestOutstandingRewardsAmountInvariant() {
 	suite.CreateFixedAmountPlan(suite.addrs[4], map[string]string{denom1: "1"}, map[string]int64{denom3: 1000000})
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
-	suite.AdvanceEpoch()
-	suite.AdvanceEpoch()
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
 	_, broken := farmingkeeper.OutstandingRewardsAmountInvariant(k)(ctx)
 	suite.Require().False(broken)
@@ -247,6 +251,65 @@ func (suite *KeeperTestSuite) TestOutstandingRewardsAmountInvariant() {
 		ctx, types.RewardsReserveAcc, suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom3, 2)))
 	suite.Require().NoError(err)
 	_, broken = farmingkeeper.OutstandingRewardsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
+}
+
+func (suite *KeeperTestSuite) TestUnharvestedRewardsAmountInvariant() {
+	k, ctx := suite.keeper, suite.ctx
+
+	_, err := suite.createPublicFixedAmountPlan(
+		suite.addrs[4], suite.addrs[4], parseDecCoins("1denom1"),
+		sampleStartTime, sampleEndTime, utils.ParseCoins("1000000denom3"))
+	suite.Require().NoError(err)
+
+	suite.Stake(suite.addrs[0], utils.ParseCoins("1000000denom1"))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+	suite.advanceEpochDays() // rewards distribution
+
+	suite.Stake(suite.addrs[0], utils.ParseCoins("1000000denom1"))
+	suite.advanceEpochDays() // rewards distribution
+
+	suite.Require().True(coinsEq(utils.ParseCoins("1000000denom3"), suite.AllRewards(suite.addrs[0])))
+	suite.Require().True(coinsEq(utils.ParseCoins("1000000denom3"), suite.allUnharvestedRewards(suite.addrs[0])))
+
+	_, broken := farmingkeeper.UnharvestedRewardsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Unharvested rewards amount > balances of unharvested rewards reserve account.
+	// Should not be OK.
+	k.SetUnharvestedRewards(ctx, suite.addrs[0], denom1, types.UnharvestedRewards{
+		Rewards: utils.ParseCoins("1000001denom3"),
+	})
+	_, broken = farmingkeeper.UnharvestedRewardsAmountInvariant(k)(ctx)
+	suite.Require().True(broken)
+
+	// Unharvested rewards amount <= balances of unharvested rewards reserve account.
+	// Should be OK.
+	k.SetUnharvestedRewards(ctx, suite.addrs[0], denom1, types.UnharvestedRewards{
+		Rewards: utils.ParseCoins("999999denom3"),
+	})
+	_, broken = farmingkeeper.UnharvestedRewardsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Reset.
+	k.SetUnharvestedRewards(ctx, suite.addrs[0], denom1, types.UnharvestedRewards{
+		Rewards: utils.ParseCoins("1000000denom3"),
+	})
+	_, broken = farmingkeeper.UnharvestedRewardsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Send coins into the unharvested rewards reserve account. Should be OK.
+	err = suite.app.BankKeeper.SendCoins(
+		ctx, suite.addrs[1], types.UnharvestedRewardsReserveAcc, utils.ParseCoins("1denom3"))
+	suite.Require().NoError(err)
+	_, broken = farmingkeeper.UnharvestedRewardsAmountInvariant(k)(ctx)
+	suite.Require().False(broken)
+
+	// Send coins from the unharvested rewards reserve account to another acc. Should not be OK.
+	err = suite.app.BankKeeper.SendCoins(
+		ctx, types.UnharvestedRewardsReserveAcc, suite.addrs[1], utils.ParseCoins("2denom3"))
+	suite.Require().NoError(err)
+	_, broken = farmingkeeper.UnharvestedRewardsAmountInvariant(k)(ctx)
 	suite.Require().True(broken)
 }
 

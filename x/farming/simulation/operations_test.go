@@ -14,6 +14,7 @@ import (
 
 	chain "github.com/crescent-network/crescent/app"
 	"github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/x/farming"
 	"github.com/crescent-network/crescent/x/farming/keeper"
 	"github.com/crescent-network/crescent/x/farming/simulation"
 	"github.com/crescent-network/crescent/x/farming/types"
@@ -252,13 +253,13 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	err = app.FarmingKeeper.Stake(ctx, accounts[1].Address, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)))
 	require.NoError(t, err)
 
-	_, qsf := app.FarmingKeeper.GetQueuedStaking(ctx, sdk.DefaultBondDenom, accounts[1].Address)
-	require.True(t, qsf)
+	queuedStakingAmt := app.FarmingKeeper.GetAllQueuedStakingAmountByFarmerAndDenom(ctx, accounts[1].Address, sdk.DefaultBondDenom)
+	require.True(t, queuedStakingAmt.IsPositive())
 
 	// begin a new block and advance epoch
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
-	err = app.FarmingKeeper.AdvanceEpoch(ctx)
-	require.NoError(t, err)
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(types.Day))
+	farming.EndBlocker(ctx, app.FarmingKeeper)
 
 	// check that queue coins are moved to staked coins
 	_, sf := app.FarmingKeeper.GetStaking(ctx, sdk.DefaultBondDenom, accounts[1].Address)

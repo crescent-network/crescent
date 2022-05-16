@@ -39,14 +39,22 @@ func (k Keeper) SetLastEpochTime(ctx sdk.Context, t time.Time) {
 	store.Set(types.LastEpochTimeKey, bz)
 }
 
-// AdvanceEpoch ends the current epoch. When an epoch ends, rewards
-// are distributed and queued staking coins become staked.
+// AdvanceEpoch allocates rewards and advances epoch by one.
+// AdvanceEpoch also forcefully makes queued stakings to be staked.
+// Use this only for simulation and testing purpose.
 func (k Keeper) AdvanceEpoch(ctx sdk.Context) error {
+	currentEpochDays := k.GetCurrentEpochDays(ctx)
+	k.ProcessQueuedCoins(ctx, ctx.BlockTime().Add(time.Duration(currentEpochDays)*types.Day))
+	if err := k.TerminateEndedPlans(ctx); err != nil {
+		return err
+	}
 	if err := k.AllocateRewards(ctx); err != nil {
 		return err
 	}
-	k.ProcessQueuedCoins(ctx)
 	k.SetLastEpochTime(ctx, ctx.BlockTime())
+	if params := k.GetParams(ctx); params.NextEpochDays != currentEpochDays {
+		k.SetCurrentEpochDays(ctx, params.NextEpochDays)
+	}
 
 	return nil
 }

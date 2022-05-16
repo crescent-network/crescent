@@ -12,8 +12,8 @@ func NewGenesisState(
 	params Params, globalPlanId uint64, plans []PlanRecord,
 	stakings []StakingRecord, queuedStakings []QueuedStakingRecord, totalStakings []TotalStakingsRecord,
 	historicalRewards []HistoricalRewardsRecord, outstandingRewards []OutstandingRewardsRecord,
-	currentEpochs []CurrentEpochRecord, rewardPoolCoins sdk.Coins,
-	lastEpochTime *time.Time, currentEpochDays uint32,
+	unharvestedRewards []UnharvestedRewardsRecord, currentEpochs []CurrentEpochRecord,
+	rewardPoolCoins sdk.Coins, lastEpochTime *time.Time, currentEpochDays uint32,
 ) *GenesisState {
 	return &GenesisState{
 		Params:                    params,
@@ -24,6 +24,7 @@ func NewGenesisState(
 		TotalStakingsRecords:      totalStakings,
 		HistoricalRewardsRecords:  historicalRewards,
 		OutstandingRewardsRecords: outstandingRewards,
+		UnharvestedRewardsRecords: unharvestedRewards,
 		CurrentEpochRecords:       currentEpochs,
 		RewardPoolCoins:           rewardPoolCoins,
 		LastEpochTime:             lastEpochTime,
@@ -42,6 +43,7 @@ func DefaultGenesisState() *GenesisState {
 		[]TotalStakingsRecord{},
 		[]HistoricalRewardsRecord{},
 		[]OutstandingRewardsRecord{},
+		[]UnharvestedRewardsRecord{},
 		[]CurrentEpochRecord{},
 		sdk.Coins{},
 		nil,
@@ -96,6 +98,12 @@ func ValidateGenesis(data GenesisState) error {
 	}
 
 	for _, record := range data.OutstandingRewardsRecords {
+		if err := record.Validate(); err != nil {
+			return err
+		}
+	}
+
+	for _, record := range data.UnharvestedRewardsRecords {
 		if err := record.Validate(); err != nil {
 			return err
 		}
@@ -192,6 +200,20 @@ func (record OutstandingRewardsRecord) Validate() error {
 		return err
 	}
 	if err := record.OutstandingRewards.Rewards.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Validate validates UnharvestedRewardsRecord.
+func (record UnharvestedRewardsRecord) Validate() error {
+	if _, err := sdk.AccAddressFromBech32(record.Farmer); err != nil {
+		return err
+	}
+	if err := sdk.ValidateDenom(record.StakingCoinDenom); err != nil {
+		return err
+	}
+	if err := record.UnharvestedRewards.Rewards.Validate(); err != nil {
 		return err
 	}
 	return nil

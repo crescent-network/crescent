@@ -8,6 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
@@ -121,11 +122,60 @@ key:
 };
 }
 
+rpc Position(QueryPositionRequest) returns (QueryPositionResponse) {
+  option (google.api.http).get = "/crescent/farming/v1beta1/positions/{farmer}";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns the farming position of the farmer";
+external_docs: {
+url:
+  "https://github.com/crescent-network/crescent/tree/main/docs";
+description:
+  "Find out more about the query and error codes";
+}
+responses: {
+key:
+  "400" value: {
+  description:
+    "Bad Request" examples: {
+    key:
+      "application/json"
+      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+    }
+  }
+}
+};
+}
+
 // Stakings returns all stakings by a farmer.
 rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/stakings/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns all stakings (staked and queued coins) that corresponds to the farmer";
+external_docs: {
+url:
+  "https://github.com/crescent-network/crescent/tree/main/docs";
+description:
+  "Find out more about the query and error codes";
+}
+responses: {
+key:
+  "400" value: {
+  description:
+    "Bad Request" examples: {
+    key:
+      "application/json"
+      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+    }
+  }
+}
+};
+}
+
+// QueryStakings returns all queued stakings by a farmer.
+rpc QueuedStakings(QueryQueuedStakingsRequest) returns (QueryQueuedStakingsResponse) {
+  option (google.api.http).get = "/crescent/farming/v1beta1/queued_stakings/{farmer}";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns all queued stakings that corresponds to the farmer";
 external_docs: {
 url:
   "https://github.com/crescent-network/crescent/tree/main/docs";
@@ -176,6 +226,31 @@ rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
   option (google.api.http).get                                           = "/crescent/farming/v1beta1/rewards/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns all rewards coins that corresponds to the farmer";
+external_docs: {
+url:
+  "https://github.com/crescent-network/crescent/tree/main/docs";
+description:
+  "Find out more about the query and error codes";
+}
+responses: {
+key:
+  "400" value: {
+  description:
+    "Bad Request" examples: {
+    key:
+      "application/json"
+      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+    }
+  }
+}
+};
+}
+
+// UnharvestedRewards returns unharvested rewards for a farmer
+rpc UnharvestedRewards(QueryUnharvestedRewardsRequest) returns (QueryUnharvestedRewardsResponse) {
+  option (google.api.http).get = "/crescent/farming/v1beta1/unharvested_rewards/{farmer}";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns all unharvested rewards that corresponds to the farmer";
 external_docs: {
 url:
   "https://github.com/crescent-network/crescent/tree/main/docs";
@@ -259,18 +334,46 @@ message QueryPlanResponse {
   google.protobuf.Any plan = 1 [(cosmos_proto.accepts_interface) = "PlanI"];
 }
 
-// QueryStakingsRequest is the request type for the Query/Stakings RPC method.
-message QueryStakingsRequest {
+// QueryPositionRequest is the request type for the Query/Position RPC method.
+message QueryPositionRequest {
   string farmer             = 1;
   string staking_coin_denom = 2;
 }
 
-// QueryStakingsResponse is the response type for the Query/Stakings RPC method.
-message QueryStakingsResponse {
+// QueryPositionResponse is the response type for the Query/Position RPC method.
+message QueryPositionResponse {
   repeated cosmos.base.v1beta1.Coin staked_coins = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
   repeated cosmos.base.v1beta1.Coin queued_coins = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin rewards = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// QueryStakingsRequest is the request type for the Query/Stakings RPC method.
+message QueryStakingsRequest {
+  string                                farmer             = 1;
+  string                                staking_coin_denom = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
+}
+
+// QueryStakingsResponse is the response type for the Query/Stakings RPC method.
+message QueryStakingsResponse {
+  repeated StakingResponse               stakings   = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryQueuedStakingsRequest is the request type for the Query/QueuedStakings RPC method.
+message QueryQueuedStakingsRequest {
+  string                                farmer             = 1;
+  string                                staking_coin_denom = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
+}
+
+// QueryQueuedStakingsResponse is the response type for the Query/QueuedStakings RPC method.
+message QueryQueuedStakingsResponse {
+  repeated QueuedStakingResponse         queued_stakings = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination      = 2;
 }
 
 // QueryTotalStakingsRequest is the request type for the Query/TotalStakings RPC method.
@@ -285,20 +388,64 @@ message QueryTotalStakingsResponse {
 
 // QueryRewardsRequest is the request type for the Query/Rewards RPC method.
 message QueryRewardsRequest {
-  string farmer             = 1;
-  string staking_coin_denom = 2;
+  string                                farmer             = 1;
+  string                                staking_coin_denom = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
 }
 
 // QueryRewardsResponse is the response type for the Query/Rewards RPC method.
 message QueryRewardsResponse {
-  repeated cosmos.base.v1beta1.Coin rewards = 1
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated RewardsResponse               rewards    = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryUnharvestedRewardsRequest is the request type for the Query/UnharvestedRewards RPC method.
+message QueryUnharvestedRewardsRequest {
+  string                                farmer             = 1;
+  string                                staking_coin_denom = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
+}
+
+// QueryUnharvestedRewardsResponse is the response type for the Query/UnharvestedRewards RPC method.
+message QueryUnharvestedRewardsResponse {
+  repeated UnharvestedRewardsResponse    unharvested_rewards = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination          = 2;
 }
 
 // QueryCurrentEpochDaysRequest is the request type for the Query/CurrentEpochDays RPC method.
 message QueryCurrentEpochDaysRequest {}
 
-// QuerCurrentEpochDaysResponse is the response type for the Query/CurrentEpochDays RPC method.
+// QueryCurrentEpochDaysResponse is the response type for the Query/CurrentEpochDays RPC method.
 message QueryCurrentEpochDaysResponse {
   uint32 current_epoch_days = 1;
+}
+
+message StakingResponse {
+  string staking_coin_denom = 1;
+
+  string amount = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  uint64 starting_epoch = 3;
+}
+
+message QueuedStakingResponse {
+  string staking_coin_denom = 1;
+
+  string amount = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  google.protobuf.Timestamp end_time = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message RewardsResponse {
+  string staking_coin_denom = 1;
+
+  repeated cosmos.base.v1beta1.Coin rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message UnharvestedRewardsResponse {
+  string staking_coin_denom = 1;
+
+  repeated cosmos.base.v1beta1.Coin rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }

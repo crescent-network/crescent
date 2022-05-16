@@ -22,9 +22,12 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - [Params](#Params)
 - [Plans](#Plans)
 - [Plan](#Plan)
+- [Position](#Position)
 - [Stakings](#Stakings)
+- [QueuedStakings](#QueuedStakings)
 - [TotalStakings](#TotalStakings)
 - [Rewards](#Rewards)
+- [UnharvestedRewards](#UnharvestedRewards)
 - [CurrentEpochDays](#CurrentEpochDays)
 
 ### Params
@@ -35,7 +38,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/params
+http://localhost:1317/crescent/farming/v1beta1/params
 ```
 
 
@@ -63,7 +66,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/plans
+http://localhost:1317/crescent/farming/v1beta1/plans
 ```
 
 ```json
@@ -117,7 +120,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/plans/1
+http://localhost:1317/crescent/farming/v1beta1/plans/1
 ```
 
 ```json
@@ -156,16 +159,16 @@ http://localhost:1317/cosmos/farming/v1beta1/plans/1
 }
 ```
 
-### Stakings
+### Position
 
-Query for all stakings by a farmer: 
+Query for farming position of a farmer:
 
 
 Example Request 
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
+http://localhost:1317/crescent/farming/v1beta1/position/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
 
 ```json
@@ -177,31 +180,160 @@ http://localhost:1317/cosmos/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7
     }
   ],
   "queued_coins": [
+  ],
+  "rewards": [
+    {
+      "denom": "stake",
+      "amount": "1000000"
+    }
   ]
+}
+```
+
+Query for farming position of a farmer with the given staking coin denom
+
+Example Request 
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/farming/v1beta1/position/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1
+```
+
+```json
+{
+  "staked_coins": [
+    {
+      "denom": "pool1",
+      "amount": "2500000"
+    }
+  ],
+  "queued_coins": [
+  ],
+  "rewards": [
+    {
+      "denom": "stake",
+      "amount": "1000000"
+    }
+  ]
+}
+```
+
+### Stakings
+
+Query for all stakings by a farmer:
+
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
+```
+
+```json
+{
+  "stakings": [
+    {
+      "staking_coin_denom": "pool1",
+      "amount": "1000000",
+      "starting_epoch": "1"
+    },
+    {
+      "staking_coin_denom": "pool2",
+      "amount": "50000000",
+      "starting_epoch": "2"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
 }
 ```
 
 Query for all stakings by a farmer with the given staking coin denom
 
-Example Request 
+Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1 
+http://localhost:1317/crescent/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
 ```
 
 ```json
 {
-  "staked_coins": [
+  "stakings": [
     {
-      "denom": "pool1",
-      "amount": "2500000"
+      "staking_coin_denom": "pool2",
+      "amount": "50000000",
+      "starting_epoch": "2"
     }
   ],
-  "queued_coins": [
-  ]
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
 }
 ```
+
+### QueuedStakings
+
+Query for all queued stakings by a farmer:
+
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/farming/v1beta1/queued_stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
+```
+
+```json
+{
+  "queued_stakings": [
+    {
+      "staking_coin_denom": "pool1",
+      "amount": "2000000",
+      "end_time": "2022-05-05T03:03:38.108665Z"
+    },
+    {
+      "staking_coin_denom": "pool2",
+      "amount": "10000000",
+      "end_time": "2022-05-05T09:30:12.559128Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+Query for queued stakings by a farmer with the given staking coin denom
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/farming/v1beta1/queued_stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
+```
+
+```json
+{
+  "queued_stakings": [
+    {
+      "staking_coin_denom": "pool2",
+      "amount": "10000000",
+      "end_time": "2022-05-05T09:30:12.559128Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
 ### TotalStakings
 
 Query for total stakings by a staking coin denom: 
@@ -211,7 +343,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/total_stakings/pool1 
+http://localhost:1317/crescent/farming/v1beta1/total_stakings/pool1
 ```
 
 ```json
@@ -228,17 +360,35 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
+http://localhost:1317/crescent/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
 
 ```json
 {
   "rewards": [
     {
-      "denom": "stake",
-      "amount": "2346201014138"
+      "staking_coin_denom": "pool1",
+      "rewards": [
+        {
+          "denom": "stake",
+          "amount": "2346201014138"
+        }
+      ]
+    },
+    {
+      "staking_coin_denom": "pool2",
+      "rewards": [
+        {
+          "denom": "stake",
+          "amount": "2346201014138"
+        }
+      ]
     }
-  ]
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
 }
 ```
 
@@ -249,17 +399,95 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1
+http://localhost:1317/crescent/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1
 ```
 
 ```json
 {
   "rewards": [
     {
-      "denom": "stake",
-      "amount": "2346201014138"
+      "staking_coin_denom": "pool1",
+      "rewards": [
+        {
+          "denom": "stake",
+          "amount": "2346201014138"
+        }
+      ]
     }
-  ]
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+### UnharvestedRewards
+
+Query for unharvested rewards for a farmer:
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/farming/v1beta1/unharvested_rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
+```
+
+```json
+{
+  "unharvested_rewards": [
+    {
+      "staking_coin_denom": "pool1",
+      "rewards": [
+        {
+          "denom": "stake",
+          "amount": "2346201014138"
+        }
+      ]
+    },
+    {
+      "staking_coin_denom": "pool2",
+      "rewards": [
+        {
+          "denom": "stake",
+          "amount": "2346201014138"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+Query for unharvested rewards for a farmer with the given staking coin denom
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/farming/v1beta1/unharvested_rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
+```
+
+```json
+{
+  "unharvested_rewards": [
+    {
+      "staking_coin_denom": "pool2",
+      "rewards": [
+        {
+          "denom": "stake",
+          "amount": "2346201014138"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
 }
 ```
 
@@ -271,7 +499,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/cosmos/farming/v1beta1/current_epoch_days
+http://localhost:1317/crescent/farming/v1beta1/current_epoch_days
 ```
 
 ```json

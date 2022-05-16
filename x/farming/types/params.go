@@ -17,6 +17,9 @@ const (
 	// PublicPlanMaxNumDenoms is the maximum number of denoms in a public plan's
 	// staking coin weights and epoch amount.
 	PublicPlanMaxNumDenoms = 500
+
+	RewardReserveAccName             string = "RewardsReserveAcc"
+	UnharvestedRewardsReserveAccName string = "UnharvestedRewardsReserveAcc"
 )
 
 // Parameter store keys
@@ -38,8 +41,9 @@ var (
 	// The module uses the address type of 32 bytes length, but it can be changed depending on Cosmos SDK's direction.
 	// The discussion around this issue can be found in this link.
 	// https://github.com/tendermint/farming/issues/200
-	ReserveAddressType = AddressType32Bytes
-	RewardsReserveAcc  = DeriveAddress(ReserveAddressType, ModuleName, RewardReserveAccPrefix)
+	ReserveAddressType           = AddressType32Bytes
+	RewardsReserveAcc            = DeriveAddress(ReserveAddressType, ModuleName, RewardReserveAccName)
+	UnharvestedRewardsReserveAcc = DeriveAddress(ReserveAddressType, ModuleName, UnharvestedRewardsReserveAccName)
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
