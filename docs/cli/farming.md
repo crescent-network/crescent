@@ -24,9 +24,12 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
     * [Params](#Params)
     * [Plans](#Plans)
     * [Plan](#Plan)
+    * [Position](#Position)
     * [Stakings](#Stakings)
+    * [QueuedStakings](#QueuedStakings)
     * [TotalStakings](#TotalStakings)
     * [Rewards](#Rewards)
+    * [UnharvestedRewards](#UnharvestedRewards)
     * [CurrentEpochDays](#CurrentEpochDays)
 
 # Transaction
@@ -319,9 +322,29 @@ Example
 crescentd q farming plan 1 --output json | jq
 ```
 
-## Stakings 
+## Position
 
-Usage 
+Usage
+
+```bash
+position [farmer]
+```
+
+Example
+
+```bash
+# Query for farming position of a farmer
+crescentd q farming position cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output json | jq
+
+# Query for farming position of a farmer with the given staking coin denom
+crescentd q farming position cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+--staking-coin-denom pool1 \
+--output json | jq
+```
+
+## Stakings
+
+Usage
 
 ```bash
 stakings [farmer]
@@ -330,11 +353,31 @@ stakings [farmer]
 Example
 
 ```bash
-# Query for all stakings by a farmer 
+# Query for all stakings by a farmer
 crescentd q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output json | jq
 
 # Query for all stakings by a farmer with the given staking coin denom
 crescentd q farming stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+--staking-coin-denom pool1 \
+--output json | jq
+```
+
+## QueuedStakings
+
+Usage
+
+```bash
+queued-stakings [farmer]
+```
+
+Example
+
+```bash
+# Query for all queued stakings by a farmer
+crescentd q farming queued-stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output json | jq
+
+# Query for all queued stakings by a farmer with the given staking coin denom
+crescentd q farming queued-stakings cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --staking-coin-denom pool1 \
 --output json | jq
 ```
@@ -353,6 +396,7 @@ Example
 # Query for total stakings by a staking coin denom 
 crescentd q farming total-stakings pool1 --output json | jq
 ```
+
 ### Rewards
 
 Usage
@@ -369,6 +413,26 @@ crescentd q farming rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output 
 
 # Query for all rewards by a farmer with the staking coin denom
 crescentd q farming rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
+--staking-coin-denom pool1 \
+--output json | jq
+```
+
+### UnharvestedRewards
+
+Usage
+
+```bash
+unharvested-rewards [farmer]
+```
+
+Example
+
+```bash
+# Query for unharvested rewards for a farmer
+crescentd q farming unharvested-rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf --output json | jq
+
+# Query for unharvested rewards for a farmer with the staking coin denom
+crescentd q farming unharvested-rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf \
 --staking-coin-denom pool1 \
 --output json | jq
 ```

@@ -8,6 +8,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -170,9 +171,14 @@ func (suite *KeeperTestSuite) AllRewards(farmerAcc sdk.AccAddress) sdk.Coins {
 	return suite.keeper.AllRewards(suite.ctx, farmerAcc)
 }
 
-func (suite *KeeperTestSuite) AdvanceEpoch() {
-	err := suite.keeper.AdvanceEpoch(suite.ctx)
-	suite.Require().NoError(err)
+func (suite *KeeperTestSuite) allUnharvestedRewards(farmerAcc sdk.AccAddress) sdk.Coins {
+	return suite.keeper.AllUnharvestedRewards(suite.ctx, farmerAcc)
+}
+
+func (suite *KeeperTestSuite) advanceEpochDays() {
+	currentEpochDays := suite.keeper.GetCurrentEpochDays(suite.ctx)
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Duration(currentEpochDays) * types.Day))
+	farming.EndBlocker(suite.ctx, suite.keeper)
 }
 
 func (suite *KeeperTestSuite) createPrivateFixedAmountPlan(
@@ -325,6 +331,16 @@ func (suite *KeeperTestSuite) addDenomsFromDecCoins(coins sdk.DecCoins) {
 		denoms = append(denoms, coin.Denom)
 	}
 	suite.addDenoms(denoms...)
+}
+
+func (suite *KeeperTestSuite) executeBlock(blockTime time.Time, f func()) {
+	suite.T().Helper()
+	suite.ctx = suite.ctx.WithBlockTime(blockTime)
+	suite.app.BeginBlocker(suite.ctx, abcitypes.RequestBeginBlock{})
+	if f != nil {
+		f()
+	}
+	suite.app.EndBlocker(suite.ctx, abcitypes.RequestEndBlock{})
 }
 
 func intEq(exp, got sdk.Int) (bool, string, string, string) {

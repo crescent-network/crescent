@@ -8,6 +8,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
+const Day = 24 * time.Hour
+
 // ParseTime parses string time to time in RFC3339 format.
 // This is used only for internal testing purpose.
 func ParseTime(s string) time.Time {

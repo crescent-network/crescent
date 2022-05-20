@@ -106,8 +106,8 @@ Create `public-fixed-plan-proposal.json` file in your local directory and copy t
           "amount": "0.200000000000000000"
         }
       ],
-      "start_time": "2021-08-06T09:00:00Z",
-      "end_time": "2021-08-13T09:00:00Z",
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
       "epoch_amount": [
         {
           "denom": "uatom",
@@ -157,8 +157,8 @@ Create `public-ratio-plan-proposal.json` file in your local directory and copy t
           "amount": "1.000000000000000000"
         }
       ],
-      "start_time": "2021-08-06T09:00:00Z",
-      "end_time": "2021-08-13T09:00:00Z",
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
       "epoch_ratio": "0.100000000000000000"
     }
   ]
@@ -203,8 +203,8 @@ Create `public-multiple-plans-proposal.json` file in your local directory and co
           "amount": "1.000000000000000000"
         }
       ],
-      "start_time": "2021-08-06T09:00:00Z",
-      "end_time": "2021-08-13T09:00:00Z",
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
       "epoch_amount": [
         {
           "denom": "uatom",
@@ -222,8 +222,8 @@ Create `public-multiple-plans-proposal.json` file in your local directory and co
           "amount": "1.000000000000000000"
         }
       ],
-      "start_time": "2021-08-06T09:00:00Z",
-      "end_time": "2021-08-13T09:00:00Z",
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
       "epoch_ratio": "0.100000000000000000"
     }
   ]
@@ -268,8 +268,8 @@ Create `update-plan-proposal.json` file in your local directory and copy the bel
           "amount": "1.000000000000000000"
         }
       ],
-      "start_time": "2021-08-06T09:00:00Z",
-      "end_time": "2021-08-13T09:00:00Z",
+      "start_time": "0001-01-01T00:00:00Z",
+      "end_time": "9999-12-31T00:00:00Z",
       "epoch_amount": [
         {
           "denom": "uatom",
@@ -358,8 +358,8 @@ Create `private-fixed-plan.json` file in your local directory and copy the below
       "amount": "0.400000000000000000"
     }
   ],
-  "start_time": "2021-08-06T09:00:00Z",
-  "end_time": "2021-08-13T09:00:00Z",
+  "start_time": "0001-01-01T00:00:00Z",
+  "end_time": "9999-12-31T00:00:00Z",
   "epoch_amount": [
     {
       "denom": "uatom",
@@ -399,8 +399,8 @@ Create `private-ratio-plan.json` file in your local directory and copy the below
       "amount": "0.400000000000000000"
     }
   ],
-  "start_time": "2021-08-06T09:00:00Z",
-  "end_time": "2021-08-13T09:00:00Z",
+  "start_time": "0001-01-01T00:00:00Z",
+  "end_time": "9999-12-31T00:00:00Z",
   "epoch_ratio": "1.000000000000000000"
 }
 ```

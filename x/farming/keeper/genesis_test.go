@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	chain "github.com/crescent-network/crescent/app"
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/farming"
 	"github.com/crescent-network/crescent/x/farming/types"
 
@@ -77,22 +78,20 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Stake(suite.addrs[1], sdk.NewCoins(
 		sdk.NewInt64Coin(denom1, 1_000_000),
 		sdk.NewInt64Coin(denom2, 1_000_000)))
-	suite.keeper.ProcessQueuedCoins(suite.ctx)
+	suite.advanceEpochDays()
 
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-07-31T00:00:00Z"))
 
 	// Advance 2 epochs
-	err := suite.keeper.AdvanceEpoch(suite.ctx)
-	suite.Require().NoError(err)
-	err = suite.keeper.AdvanceEpoch(suite.ctx)
-	suite.Require().NoError(err)
+	suite.advanceEpochDays()
+	suite.advanceEpochDays()
 
 	var genState *types.GenesisState
 	suite.Require().NotPanics(func() {
 		genState = suite.keeper.ExportGenesis(suite.ctx)
 	})
 
-	err = types.ValidateGenesis(*genState)
+	err := types.ValidateGenesis(*genState)
 	suite.Require().NoError(err)
 
 	suite.Require().NotPanics(func() {
@@ -105,24 +104,30 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 func (suite *KeeperTestSuite) TestInitGenesisPanics() {
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-06T00:00:00Z"))
 
-	cacheCtx, _ := suite.ctx.CacheContext()
-
 	for _, plan := range suite.samplePlans {
-		suite.keeper.SetPlan(cacheCtx, plan)
+		suite.keeper.SetPlan(suite.ctx, plan)
 	}
-	suite.keeper.SetGlobalPlanId(cacheCtx, 4)
+	suite.keeper.SetGlobalPlanId(suite.ctx, 4)
 
-	err := suite.keeper.Stake(cacheCtx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
+	err := suite.keeper.Stake(suite.ctx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000)))
 	suite.Require().NoError(err)
-	err = suite.keeper.Stake(cacheCtx, suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 700000), sdk.NewInt64Coin(denom2, 500000)))
-	suite.Require().NoError(err)
-
-	err = suite.keeper.AdvanceEpoch(cacheCtx)
-	suite.Require().NoError(err)
-	err = suite.keeper.AdvanceEpoch(cacheCtx)
+	err = suite.keeper.Stake(suite.ctx, suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 700000), sdk.NewInt64Coin(denom2, 500000)))
 	suite.Require().NoError(err)
 
-	err = suite.keeper.Stake(cacheCtx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom2, 800000)))
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(types.Day))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(types.Day))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	err = suite.keeper.Stake(suite.ctx, suite.addrs[0], utils.ParseCoins("100000denom1,800000denom2"))
+	suite.Require().NoError(err)
+
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(types.Day))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(types.Day))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	err = suite.keeper.Stake(suite.ctx, suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom2, 800000)))
 	suite.Require().NoError(err)
 
 	for _, tc := range []struct {
@@ -173,6 +178,14 @@ func (suite *KeeperTestSuite) TestInitGenesisPanics() {
 			true,
 		},
 		{
+			"invalid unharvested rewards records",
+			func(genState *types.GenesisState) {
+				genState.UnharvestedRewardsRecords[0].UnharvestedRewards.Rewards = genState.UnharvestedRewardsRecords[0].UnharvestedRewards.Rewards.Add(
+					utils.ParseCoin("1000000denom3"))
+			},
+			true,
+		},
+		{
 			"invalid current epoch days",
 			func(genState *types.GenesisState) {
 				genState.CurrentEpochDays = 0
@@ -181,17 +194,17 @@ func (suite *KeeperTestSuite) TestInitGenesisPanics() {
 		},
 	} {
 		suite.Run(tc.name, func() {
-			genState := suite.keeper.ExportGenesis(cacheCtx)
+			genState := suite.keeper.ExportGenesis(suite.ctx)
 			tc.malleate(genState)
 
-			cacheCtx2, _ := cacheCtx.CacheContext()
+			cacheCtx, _ := suite.ctx.CacheContext()
 
 			fn := suite.Require().NotPanics
 			if tc.expectPanic {
 				fn = suite.Require().Panics
 			}
 			fn(func() {
-				suite.keeper.InitGenesis(cacheCtx2, *genState)
+				suite.keeper.InitGenesis(cacheCtx, *genState)
 			})
 		})
 	}
@@ -222,15 +235,35 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 	}
 
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-04T23:00:00Z"))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 500000)))
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1500000)))
 	farming.EndBlocker(suite.ctx, suite.keeper)
-	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 800000)))
-	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 500000), sdk.NewInt64Coin(denom2, 700000)))
+
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-05T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper) // next epoch
+
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-05T23:00:00Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper) // queued coins => staked coins
+
 	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-06T00:00:00Z"))
 	farming.EndBlocker(suite.ctx, suite.keeper) // allocate rewards
-	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 2000000), sdk.NewInt64Coin(denom2, 1200000)))
-	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1500000), sdk.NewInt64Coin(denom2, 300000)))
+
+	suite.ctx = suite.ctx.WithBlockTime(utils.ParseTime("2021-08-06T03:00:00Z"))
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 2000000), sdk.NewInt64Coin(denom2, 1500000)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 500000)))
+	farming.EndBlocker(suite.ctx, suite.keeper)
+
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-07T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper) // allocated rewards
+
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-07T03:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper) // queued coins => staked coins
+
+	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2021-08-08T00:00:00Z"))
+	farming.EndBlocker(suite.ctx, suite.keeper) // allocate rewards
+
+	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000000), sdk.NewInt64Coin(denom2, 1000000)))
+	suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 2000000), sdk.NewInt64Coin(denom2, 1000000)))
 
 	genState := suite.keeper.ExportGenesis(suite.ctx)
 	bz, err := suite.app.AppCodec().MarshalJSON(genState)
@@ -272,16 +305,16 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 					case suite.addrs[0].String():
 						switch record.StakingCoinDenom {
 						case denom1:
-							suite.Require().True(intEq(record.Staking.Amount, sdk.NewInt(500000)))
+							suite.Require().True(intEq(sdk.NewInt(3000000), record.Staking.Amount))
 						case denom2:
-							suite.Require().True(intEq(record.Staking.Amount, sdk.NewInt(700000)))
+							suite.Require().True(intEq(sdk.NewInt(3000000), record.Staking.Amount))
 						}
 					case suite.addrs[1].String():
 						switch record.StakingCoinDenom {
 						case denom1:
-							suite.Require().True(intEq(record.Staking.Amount, sdk.NewInt(1000000)))
+							suite.Require().True(intEq(sdk.NewInt(2000000), record.Staking.Amount))
 						case denom2:
-							suite.Require().True(intEq(record.Staking.Amount, sdk.NewInt(800000)))
+							suite.Require().True(intEq(sdk.NewInt(1000000), record.Staking.Amount))
 						}
 					}
 				}
@@ -296,16 +329,16 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 					case suite.addrs[0].String():
 						switch record.StakingCoinDenom {
 						case denom1:
-							suite.Require().True(intEq(record.QueuedStaking.Amount, sdk.NewInt(2000000)))
+							suite.Require().True(intEq(sdk.NewInt(1000000), record.QueuedStaking.Amount))
 						case denom2:
-							suite.Require().True(intEq(record.QueuedStaking.Amount, sdk.NewInt(1200000)))
+							suite.Require().True(intEq(sdk.NewInt(1000000), record.QueuedStaking.Amount))
 						}
 					case suite.addrs[1].String():
 						switch record.StakingCoinDenom {
 						case denom1:
-							suite.Require().True(intEq(record.QueuedStaking.Amount, sdk.NewInt(1500000)))
+							suite.Require().True(intEq(sdk.NewInt(2000000), record.QueuedStaking.Amount))
 						case denom2:
-							suite.Require().True(intEq(record.QueuedStaking.Amount, sdk.NewInt(300000)))
+							suite.Require().True(intEq(sdk.NewInt(1000000), record.QueuedStaking.Amount))
 						}
 					}
 				}
@@ -318,14 +351,14 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 				for _, record := range genState.TotalStakingsRecords {
 					switch record.StakingCoinDenom {
 					case denom1:
-						suite.Require().True(intEq(record.Amount, sdk.NewInt(1500000)))
+						suite.Require().True(intEq(sdk.NewInt(5000000), record.Amount))
 						suite.Require().True(coinsEq(
-							sdk.NewCoins(sdk.NewInt64Coin(denom1, 5000000)),
+							sdk.NewCoins(sdk.NewInt64Coin(denom1, 8000000)),
 							record.StakingReserveCoins))
 					case denom2:
-						suite.Require().True(intEq(record.Amount, sdk.NewInt(1500000)))
+						suite.Require().True(intEq(sdk.NewInt(4000000), record.Amount))
 						suite.Require().True(coinsEq(
-							sdk.NewCoins(sdk.NewInt64Coin(denom2, 3000000)),
+							sdk.NewCoins(sdk.NewInt64Coin(denom2, 6000000)),
 							record.StakingReserveCoins))
 					}
 				}
@@ -334,13 +367,13 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 		{
 			"HistoricalRewards",
 			func() {
-				suite.Require().Len(genState.HistoricalRewardsRecords, 4)
+				suite.Require().Len(genState.HistoricalRewardsRecords, 8)
 				for _, record := range genState.HistoricalRewardsRecords {
 					suite.Require().Contains([]string{denom1, denom2}, record.StakingCoinDenom)
 					switch record.Epoch {
 					case 0:
 						suite.Require().True(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
-					case 1:
+					case 1, 2, 3:
 						suite.Require().False(record.HistoricalRewards.CumulativeUnitRewards.IsZero())
 					default:
 						panic(fmt.Sprintf("unexpected epoch %d", record.Epoch))
@@ -367,11 +400,35 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 			},
 		},
 		{
+			"UnharvestedRewards",
+			func() {
+				suite.Require().Len(genState.UnharvestedRewardsRecords, 4)
+				for _, record := range genState.UnharvestedRewardsRecords {
+					switch record.Farmer {
+					case suite.addrs[0].String():
+						switch record.StakingCoinDenom {
+						case denom1:
+							suite.Require().True(coinsEq(utils.ParseCoins("2300000denom3"), record.UnharvestedRewards.Rewards))
+						case denom2:
+							suite.Require().True(coinsEq(utils.ParseCoins("1050000denom3"), record.UnharvestedRewards.Rewards))
+						}
+					case suite.addrs[1].String():
+						switch record.StakingCoinDenom {
+						case denom1:
+							suite.Require().True(coinsEq(utils.ParseCoins("2300000denom3"), record.UnharvestedRewards.Rewards))
+						case denom2:
+							suite.Require().True(coinsEq(utils.ParseCoins("350000denom3"), record.UnharvestedRewards.Rewards))
+						}
+					}
+				}
+			},
+		},
+		{
 			"CurrentEpochRecords",
 			func() {
 				suite.Require().Len(genState.CurrentEpochRecords, 2)
 				for _, record := range genState.CurrentEpochRecords {
-					suite.Require().Equal(uint64(2), record.CurrentEpoch)
+					suite.Require().Equal(uint64(4), record.CurrentEpoch)
 				}
 			},
 		},
@@ -387,7 +444,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 			"LastEpochTime",
 			func() {
 				suite.Require().NotNil(genState.LastEpochTime)
-				suite.Require().Equal(types.ParseTime("2021-08-06T00:00:00Z"), *genState.LastEpochTime)
+				suite.Require().Equal(types.ParseTime("2021-08-08T00:00:00Z"), *genState.LastEpochTime)
 			},
 		},
 		{

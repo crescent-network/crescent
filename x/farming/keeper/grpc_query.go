@@ -146,8 +146,8 @@ func (k Querier) Plan(c context.Context, req *types.QueryPlanRequest) (*types.Qu
 	return &types.QueryPlanResponse{Plan: planAny}, nil
 }
 
-// Stakings queries stakings for a farmer.
-func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*types.QueryStakingsResponse, error) {
+// Position queries farming position for a farmer.
+func (k Querier) Position(c context.Context, req *types.QueryPositionRequest) (*types.QueryPositionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -165,25 +165,110 @@ func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	resp := &types.QueryStakingsResponse{
-		StakedCoins: sdk.NewCoins(),
-		QueuedCoins: sdk.NewCoins(),
+	resp := &types.QueryPositionResponse{
+		StakedCoins: sdk.Coins{},
+		QueuedCoins: sdk.Coins{},
+		Rewards:     sdk.Coins{},
 	}
 	if req.StakingCoinDenom == "" {
 		resp.StakedCoins = k.Keeper.GetAllStakedCoinsByFarmer(ctx, farmerAcc)
 		resp.QueuedCoins = k.Keeper.GetAllQueuedCoinsByFarmer(ctx, farmerAcc)
+		resp.Rewards = k.Keeper.AllRewards(ctx, farmerAcc).Add(k.Keeper.AllUnharvestedRewards(ctx, farmerAcc)...)
 	} else {
 		staking, found := k.Keeper.GetStaking(ctx, req.StakingCoinDenom, farmerAcc)
 		if found {
 			resp.StakedCoins = resp.StakedCoins.Add(sdk.NewCoin(req.StakingCoinDenom, staking.Amount))
 		}
-		queuedStaking, found := k.Keeper.GetQueuedStaking(ctx, req.StakingCoinDenom, farmerAcc)
-		if found {
-			resp.QueuedCoins = resp.QueuedCoins.Add(sdk.NewCoin(req.StakingCoinDenom, queuedStaking.Amount))
+		queuedStakingAmt := k.Keeper.GetAllQueuedStakingAmountByFarmerAndDenom(ctx, farmerAcc, req.StakingCoinDenom)
+		if queuedStakingAmt.IsPositive() {
+			resp.QueuedCoins = resp.QueuedCoins.Add(sdk.NewCoin(req.StakingCoinDenom, queuedStakingAmt))
 		}
+		unharvested, _ := k.Keeper.GetUnharvestedRewards(ctx, farmerAcc, req.StakingCoinDenom)
+		resp.Rewards = k.Keeper.Rewards(ctx, farmerAcc, req.StakingCoinDenom).Add(unharvested.Rewards...)
 	}
 
 	return resp, nil
+}
+
+// Stakings queries all stakings of the farmer.
+func (k Querier) Stakings(c context.Context, req *types.QueryStakingsRequest) (*types.QueryStakingsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	farmerAcc, err := sdk.AccAddressFromBech32(req.Farmer)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	keyPrefix := types.GetStakingsByFarmerPrefix(farmerAcc)
+	stakingStore := prefix.NewStore(store, keyPrefix)
+	var stakings []types.StakingResponse
+
+	pageRes, _ := query.FilteredPaginate(stakingStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		_, stakingCoinDenom := types.ParseStakingIndexKey(append(keyPrefix, key...))
+
+		if req.StakingCoinDenom != "" && stakingCoinDenom != req.StakingCoinDenom {
+			return false, nil
+		}
+
+		staking, _ := k.GetStaking(ctx, stakingCoinDenom, farmerAcc)
+
+		if accumulate {
+			stakings = append(stakings, types.StakingResponse{
+				StakingCoinDenom: stakingCoinDenom,
+				Amount:           staking.Amount,
+				StartingEpoch:    staking.StartingEpoch,
+			})
+		}
+
+		return true, nil
+	})
+
+	return &types.QueryStakingsResponse{Stakings: stakings, Pagination: pageRes}, nil
+}
+
+// QueuedStakings queries all queued stakings of the farmer.
+func (k Querier) QueuedStakings(c context.Context, req *types.QueryQueuedStakingsRequest) (*types.QueryQueuedStakingsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	farmerAcc, err := sdk.AccAddressFromBech32(req.Farmer)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	var keyPrefix []byte
+	if req.StakingCoinDenom != "" {
+		keyPrefix = types.GetQueuedStakingsByFarmerAndDenomPrefix(farmerAcc, req.StakingCoinDenom)
+	} else {
+		keyPrefix = types.GetQueuedStakingsByFarmerPrefix(farmerAcc)
+	}
+	queuedStakingStore := prefix.NewStore(store, keyPrefix)
+	var queuedStakings []types.QueuedStakingResponse
+
+	pageRes, _ := query.FilteredPaginate(queuedStakingStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		_, stakingCoinDenom, endTime := types.ParseQueuedStakingIndexKey(append(keyPrefix, key...))
+
+		queuedStaking, _ := k.GetQueuedStaking(ctx, endTime, stakingCoinDenom, farmerAcc)
+
+		if accumulate {
+			queuedStakings = append(queuedStakings, types.QueuedStakingResponse{
+				StakingCoinDenom: stakingCoinDenom,
+				Amount:           queuedStaking.Amount,
+				EndTime:          endTime,
+			})
+		}
+
+		return true, nil
+	})
+
+	return &types.QueryQueuedStakingsResponse{QueuedStakings: queuedStakings, Pagination: pageRes}, nil
 }
 
 // TotalStakings queries total staking coin amount for a specific staking coin denom.
@@ -208,7 +293,7 @@ func (k Querier) TotalStakings(c context.Context, req *types.QueryTotalStakingsR
 	}, nil
 }
 
-// Rewards queries accumulated rewards for a farmer.
+// Rewards queries all accumulated rewards for a farmer.
 func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -226,20 +311,72 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	resp := &types.QueryRewardsResponse{
-		Rewards: sdk.NewCoins(),
-	}
-
-	var rewards sdk.Coins
-	if req.StakingCoinDenom == "" {
-		rewards = k.Keeper.AllRewards(ctx, farmerAcc)
+	store := ctx.KVStore(k.storeKey)
+	var keyPrefix []byte
+	if req.StakingCoinDenom != "" {
+		keyPrefix = types.GetStakingIndexKey(farmerAcc, req.StakingCoinDenom)
 	} else {
-		rewards = k.Keeper.Rewards(ctx, farmerAcc, req.StakingCoinDenom)
+		keyPrefix = types.GetStakingsByFarmerPrefix(farmerAcc)
 	}
-	resp.Rewards = rewards
+	stakingStore := prefix.NewStore(store, keyPrefix)
+	var rewards []types.RewardsResponse
 
-	return resp, nil
+	pageRes, _ := query.FilteredPaginate(stakingStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		_, stakingCoinDenom := types.ParseStakingIndexKey(append(keyPrefix, key...))
+
+		r := k.Keeper.Rewards(ctx, farmerAcc, stakingCoinDenom)
+
+		if accumulate {
+			rewards = append(rewards, types.RewardsResponse{
+				StakingCoinDenom: stakingCoinDenom,
+				Rewards:          r,
+			})
+		}
+
+		return true, nil
+	})
+
+	return &types.QueryRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
+}
+
+// UnharvestedRewards queries all unharvested rewards for the farmer.
+func (k Querier) UnharvestedRewards(c context.Context, req *types.QueryUnharvestedRewardsRequest) (*types.QueryUnharvestedRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	farmerAcc, err := sdk.AccAddressFromBech32(req.Farmer)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	var keyPrefix []byte
+	if req.StakingCoinDenom != "" {
+		keyPrefix = types.GetUnharvestedRewardsKey(farmerAcc, req.StakingCoinDenom)
+	} else {
+		keyPrefix = types.GetUnharvestedRewardsPrefix(farmerAcc)
+	}
+	unharvestedRewardsStore := prefix.NewStore(store, keyPrefix)
+	var unharvestedRewards []types.UnharvestedRewardsResponse
+
+	pageRes, _ := query.FilteredPaginate(unharvestedRewardsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		_, stakingCoinDenom := types.ParseUnharvestedRewardsKey(append(keyPrefix, key...))
+
+		unharvested, _ := k.GetUnharvestedRewards(ctx, farmerAcc, stakingCoinDenom)
+
+		if accumulate {
+			unharvestedRewards = append(unharvestedRewards, types.UnharvestedRewardsResponse{
+				StakingCoinDenom: stakingCoinDenom,
+				Rewards:          unharvested.Rewards,
+			})
+		}
+
+		return true, nil
+	})
+
+	return &types.QueryUnharvestedRewardsResponse{UnharvestedRewards: unharvestedRewards, Pagination: pageRes}, nil
 }
 
 // CurrentEpochDays queries current epoch days.

@@ -147,8 +147,8 @@ type QueuedStaking struct {
 }
 ```
 
-- QueuedStaking: `0x23 | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(QueuedStaking)`
-- QueuedStakingIndex: `0x24 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> nil`
+- QueuedStaking: `0x23 | EndTimeLen (1 byte) | sdk.FormatTimeBytes(EndTime) | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(QueuedStaking)`
+- QueuedStakingIndex: `0x24 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomLen (1 byte) | StakingCoinDenom | sdk.FormatTimeBytes(EndTime) -> nil`
 
 ```go
 type TotalStakings struct {
@@ -182,6 +182,20 @@ type OutstandingRewards struct {
 ```
 
 - OutstandingRewards: `0x33 | StakingCoinDenom -> ProtocolBuffer(OutstandingRewards)`
+
+## Unharvested Rewards
+
+The `UnharvestedRewards` struct holds unharvested rewards of a farmer for a staking coin denom.
+Unharvested rewards are accumulated when there was a change in staked coin amount, as a result of
+the withdrawal of previous rewards.
+
+```go
+type UnharvestedRewards struct {
+    Rewards          sdk.Coins
+}
+```
+
+- UnharvestedRewards: `0x34 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> ProtocolBuffer(UnharvestedRewards)`
 
 ## Examples
 

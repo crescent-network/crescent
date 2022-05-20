@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -22,6 +23,8 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 		NonNegativeOutstandingRewardsInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "outstanding-rewards-amount",
 		OutstandingRewardsAmountInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "unharvested-rewards-amount",
+		UnharvestedRewardsAmountInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "non-negative-historical-rewards",
 		NonNegativeHistoricalRewardsInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "positive-total-stakings-amount",
@@ -37,6 +40,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 			RemainingRewardsAmountInvariant,
 			NonNegativeOutstandingRewardsInvariant,
 			OutstandingRewardsAmountInvariant,
+			UnharvestedRewardsAmountInvariant,
 			NonNegativeHistoricalRewardsInvariant,
 			PositiveTotalStakingsAmountInvariant,
 		} {
@@ -75,7 +79,7 @@ func PositiveQueuedStakingAmountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg := ""
 		count := 0
-		k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+		k.IterateQueuedStakings(ctx, func(_ time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
 			if !queuedStaking.Amount.IsPositive() {
 				msg += fmt.Sprintf("\t%v has non-positive queued staking amount: %v\n",
 					farmerAcc, sdk.Coin{Denom: stakingCoinDenom, Amount: queuedStaking.Amount})
@@ -151,6 +155,28 @@ func OutstandingRewardsAmountInvariant(k Keeper) sdk.Invariant {
 			fmt.Sprintf("balance of rewards reserve pool is less than outstanding rewards\n"+
 				"\texpected minimum amount of balance: %s\n"+
 				"\tbalance: %s", totalRewards, balances,
+			),
+		), broken
+	}
+}
+
+// UnharvestedRewardsAmountInvariant checks that UnharvestedRewards are
+// consistent with rewards that can be withdrawn.
+func UnharvestedRewardsAmountInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		totalRewards := sdk.Coins{}
+		k.IterateAllUnharvestedRewards(ctx, func(_ sdk.AccAddress, _ string, rewards types.UnharvestedRewards) (stop bool) {
+			totalRewards = totalRewards.Add(rewards.Rewards...)
+			return false
+		})
+		balances := k.bankKeeper.SpendableCoins(ctx, types.UnharvestedRewardsReserveAcc)
+		_, hasNeg := balances.SafeSub(totalRewards)
+		broken := hasNeg
+		return sdk.FormatInvariant(
+			types.ModuleName, "wrong unharvested rewards amount",
+			fmt.Sprintf("balances of unharvested rewards reserve account is less than total unharvested rewards\n"+
+				"\texpected minimum balances: %s\n"+
+				"\tactual balances: %s", totalRewards, balances,
 			),
 		), broken
 	}

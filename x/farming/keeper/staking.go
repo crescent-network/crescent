@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"sort"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -80,9 +83,9 @@ func (k Keeper) GetAllStakedCoinsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddr
 
 // GetQueuedStaking returns a queued staking for given staking coin denom
 // and farmer.
-func (k Keeper) GetQueuedStaking(ctx sdk.Context, stakingCoinDenom string, farmerAcc sdk.AccAddress) (queuedStaking types.QueuedStaking, found bool) {
+func (k Keeper) GetQueuedStaking(ctx sdk.Context, endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress) (queuedStaking types.QueuedStaking, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetQueuedStakingKey(stakingCoinDenom, farmerAcc))
+	bz := store.Get(types.GetQueuedStakingKey(endTime, stakingCoinDenom, farmerAcc))
 	if bz == nil {
 		return
 	}
@@ -93,33 +96,50 @@ func (k Keeper) GetQueuedStaking(ctx sdk.Context, stakingCoinDenom string, farme
 
 // SetQueuedStaking sets a queued staking for given staking coin denom
 // and farmer.
-func (k Keeper) SetQueuedStaking(ctx sdk.Context, stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) {
+func (k Keeper) SetQueuedStaking(ctx sdk.Context, endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&queuedStaking)
-	store.Set(types.GetQueuedStakingKey(stakingCoinDenom, farmerAcc), bz)
-	store.Set(types.GetQueuedStakingIndexKey(farmerAcc, stakingCoinDenom), []byte{})
+	store.Set(types.GetQueuedStakingKey(endTime, stakingCoinDenom, farmerAcc), bz)
+	store.Set(types.GetQueuedStakingIndexKey(farmerAcc, stakingCoinDenom, endTime), []byte{})
 }
 
 // DeleteQueuedStaking deletes a queued staking for given staking coin denom
 // and farmer.
-func (k Keeper) DeleteQueuedStaking(ctx sdk.Context, stakingCoinDenom string, farmerAcc sdk.AccAddress) {
+func (k Keeper) DeleteQueuedStaking(ctx sdk.Context, endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetQueuedStakingKey(stakingCoinDenom, farmerAcc))
-	store.Delete(types.GetQueuedStakingIndexKey(farmerAcc, stakingCoinDenom))
+	store.Delete(types.GetQueuedStakingKey(endTime, stakingCoinDenom, farmerAcc))
+	store.Delete(types.GetQueuedStakingIndexKey(farmerAcc, stakingCoinDenom, endTime))
 }
 
 // IterateQueuedStakings iterates through all queued stakings stored in
 // the store and invokes callback function for each item.
 // Stops the iteration when the callback function returns true.
-func (k Keeper) IterateQueuedStakings(ctx sdk.Context, cb func(stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool)) {
+func (k Keeper) IterateQueuedStakings(ctx sdk.Context, cb func(endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.QueuedStakingKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var queuedStaking types.QueuedStaking
 		k.cdc.MustUnmarshal(iter.Value(), &queuedStaking)
-		stakingCoinDenom, farmerAcc := types.ParseQueuedStakingKey(iter.Key())
-		if cb(stakingCoinDenom, farmerAcc, queuedStaking) {
+		endTime, stakingCoinDenom, farmerAcc := types.ParseQueuedStakingKey(iter.Key())
+		if cb(endTime, stakingCoinDenom, farmerAcc, queuedStaking) {
+			break
+		}
+	}
+}
+
+// IterateMatureQueuedStakings iterates through all the queued stakings
+// that are mature at currTime.
+// Stops the iteration when the callback function returns true.
+func (k Keeper) IterateMatureQueuedStakings(ctx sdk.Context, currTime time.Time, cb func(endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator(types.QueuedStakingKeyPrefix, types.GetQueuedStakingEndBytes(currTime))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var queuedStaking types.QueuedStaking
+		k.cdc.MustUnmarshal(iter.Value(), &queuedStaking)
+		endTime, stakingCoinDenom, farmerAcc := types.ParseQueuedStakingKey(iter.Key())
+		if cb(endTime, stakingCoinDenom, farmerAcc, queuedStaking) {
 			break
 		}
 	}
@@ -128,25 +148,72 @@ func (k Keeper) IterateQueuedStakings(ctx sdk.Context, cb func(stakingCoinDenom 
 // IterateQueuedStakingsByFarmer iterates through all queued stakings
 // by farmer stored in the store and invokes callback function for each item.
 // Stops the iteration when the callback function returns true.
-func (k Keeper) IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool)) {
+func (k Keeper) IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, endTime time.Time, queuedStaking types.QueuedStaking) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetQueuedStakingByFarmerPrefix(farmerAcc))
+	iter := sdk.KVStorePrefixIterator(store, types.GetQueuedStakingsByFarmerPrefix(farmerAcc))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		farmerAcc, stakingCoinDenom := types.ParseQueuedStakingIndexKey(iter.Key())
-		queuedStaking, _ := k.GetQueuedStaking(ctx, stakingCoinDenom, farmerAcc)
-		if cb(stakingCoinDenom, queuedStaking) {
+		_, stakingCoinDenom, endTime := types.ParseQueuedStakingIndexKey(iter.Key())
+		queuedStaking, _ := k.GetQueuedStaking(ctx, endTime, stakingCoinDenom, farmerAcc)
+		if cb(stakingCoinDenom, endTime, queuedStaking) {
 			break
 		}
 	}
+}
+
+// IterateQueuedStakingsByFarmerAndDenom iterates through all the queued stakings
+// by farmer address and staking coin denom.
+// Stops the iteration when the callback function returns true.
+func (k Keeper) IterateQueuedStakingsByFarmerAndDenom(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, cb func(endTime time.Time, queuedStaking types.QueuedStaking) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetQueuedStakingsByFarmerAndDenomPrefix(farmerAcc, stakingCoinDenom))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, _, endTime := types.ParseQueuedStakingIndexKey(iter.Key())
+		queuedStaking, _ := k.GetQueuedStaking(ctx, endTime, stakingCoinDenom, farmerAcc)
+		if cb(endTime, queuedStaking) {
+			break
+		}
+	}
+}
+
+// IterateQueuedStakingsByFarmerAndDenomReverse iterates through all the queued
+// stakings by farmer address and staking coin denom, in reverse order.
+// Stops the iteration when the callback function returns true.
+func (k Keeper) IterateQueuedStakingsByFarmerAndDenomReverse(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string, cb func(endTime time.Time, queuedStaking types.QueuedStaking) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStoreReversePrefixIterator(store, types.GetQueuedStakingsByFarmerAndDenomPrefix(farmerAcc, stakingCoinDenom))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, _, endTime := types.ParseQueuedStakingIndexKey(iter.Key())
+		queuedStaking, _ := k.GetQueuedStaking(ctx, endTime, stakingCoinDenom, farmerAcc)
+		if cb(endTime, queuedStaking) {
+			break
+		}
+	}
+}
+
+// GetAllQueuedStakingAmountByFarmerAndDenom returns the amount of all queued
+// stakings by the farmer for given staking coin denom.
+func (k Keeper) GetAllQueuedStakingAmountByFarmerAndDenom(ctx sdk.Context, farmerAcc sdk.AccAddress, stakingCoinDenom string) sdk.Int {
+	amt := sdk.ZeroInt()
+	k.IterateQueuedStakingsByFarmerAndDenom(ctx, farmerAcc, stakingCoinDenom, func(endTime time.Time, queuedStaking types.QueuedStaking) (stop bool) {
+		if endTime.After(ctx.BlockTime()) { // sanity check
+			amt = amt.Add(queuedStaking.Amount)
+		}
+		return false
+	})
+	return amt
 }
 
 // GetAllQueuedCoinsByFarmer returns all coins that are queued for staking
 // by a farmer.
 func (k Keeper) GetAllQueuedCoinsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress) sdk.Coins {
 	stakedCoins := sdk.NewCoins()
-	k.IterateQueuedStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool) {
-		stakedCoins = stakedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
+	k.IterateQueuedStakingsByFarmer(ctx, farmerAcc, func(stakingCoinDenom string, endTime time.Time, queuedStaking types.QueuedStaking) (stop bool) {
+		if endTime.After(ctx.BlockTime()) { // sanity check
+			stakedCoins = stakedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
+		}
 		return false
 	})
 	return stakedCoins
@@ -201,8 +268,15 @@ func (k Keeper) DecreaseTotalStakings(ctx sdk.Context, stakingCoinDenom string, 
 	if totalStakings.Amount.LT(amount) {
 		panic("cannot set negative total stakings")
 	}
-	totalStakings.Amount = totalStakings.Amount.Sub(amount)
-	k.SetTotalStakings(ctx, stakingCoinDenom, totalStakings)
+	if amount.Equal(totalStakings.Amount) {
+		k.DeleteTotalStakings(ctx, stakingCoinDenom)
+		if err := k.afterStakingCoinRemoved(ctx, stakingCoinDenom); err != nil {
+			panic(err)
+		}
+	} else {
+		totalStakings.Amount = totalStakings.Amount.Sub(amount)
+		k.SetTotalStakings(ctx, stakingCoinDenom, totalStakings)
+	}
 }
 
 // IterateTotalStakings iterates through all total stakings
@@ -273,13 +347,12 @@ func (k Keeper) ReleaseStakingCoins(ctx sdk.Context, farmerAcc sdk.AccAddress, s
 // afterStakingCoinAdded is called after a new staking coin denom appeared
 // during ProcessQueuedCoins.
 func (k Keeper) afterStakingCoinAdded(ctx sdk.Context, stakingCoinDenom string) {
-	k.SetHistoricalRewards(ctx, stakingCoinDenom, 0, types.HistoricalRewards{CumulativeUnitRewards: sdk.DecCoins{}})
 	currentEpoch := k.GetCurrentEpoch(ctx, stakingCoinDenom)
 	if currentEpoch == 0 {
-		k.SetCurrentEpoch(ctx, stakingCoinDenom, 1)
-	} else {
-		k.SetCurrentEpoch(ctx, stakingCoinDenom, currentEpoch+1)
+		currentEpoch = 1
 	}
+	k.SetCurrentEpoch(ctx, stakingCoinDenom, currentEpoch)
+	k.SetHistoricalRewards(ctx, stakingCoinDenom, currentEpoch-1, types.HistoricalRewards{CumulativeUnitRewards: sdk.DecCoins{}})
 	k.SetOutstandingRewards(ctx, stakingCoinDenom, types.OutstandingRewards{Rewards: sdk.DecCoins{}})
 }
 
@@ -312,14 +385,17 @@ func (k Keeper) Stake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coin
 		return err
 	}
 
+	currentEpochDays := k.GetCurrentEpochDays(ctx)
+	endTime := ctx.BlockTime().Add(time.Duration(currentEpochDays) * types.Day)
+
 	numStakingCoinDenoms := 0
 	for _, coin := range amount {
-		queuedStaking, found := k.GetQueuedStaking(ctx, coin.Denom, farmerAcc)
+		queuedStaking, found := k.GetQueuedStaking(ctx, endTime, coin.Denom, farmerAcc)
 		if !found {
 			queuedStaking.Amount = sdk.ZeroInt()
 		}
 		queuedStaking.Amount = queuedStaking.Amount.Add(coin.Amount)
-		k.SetQueuedStaking(ctx, coin.Denom, farmerAcc, queuedStaking)
+		k.SetQueuedStaking(ctx, endTime, coin.Denom, farmerAcc, queuedStaking)
 
 		_, found = k.GetStaking(ctx, coin.Denom, farmerAcc)
 		if found {
@@ -346,31 +422,58 @@ func (k Keeper) Stake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coin
 // Unstake unstakes an amount of staking coins from the staking reserve account.
 // It causes accumulated rewards to be withdrawn to the farmer.
 func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Coins) error {
+	totalUnharvestedRewards := sdk.Coins{}
 	for _, coin := range amount {
-		staking, found := k.GetStaking(ctx, coin.Denom, farmerAcc)
-		if !found {
-			staking.Amount = sdk.ZeroInt()
-		}
+		unstaked := sdk.ZeroInt()
+		k.IterateQueuedStakingsByFarmerAndDenomReverse(ctx, farmerAcc, coin.Denom, func(endTime time.Time, queuedStaking types.QueuedStaking) (stop bool) {
+			if endTime.After(ctx.BlockTime()) { // sanity check
+				amtToUnstake := sdk.MinInt(coin.Amount.Sub(unstaked), queuedStaking.Amount)
+				queuedStaking.Amount = queuedStaking.Amount.Sub(amtToUnstake)
+				if queuedStaking.Amount.IsZero() {
+					k.DeleteQueuedStaking(ctx, endTime, coin.Denom, farmerAcc)
+				} else {
+					k.SetQueuedStaking(ctx, endTime, coin.Denom, farmerAcc, queuedStaking)
+				}
+				unstaked = unstaked.Add(amtToUnstake)
+				if unstaked.Equal(coin.Amount) { // Fully unstaked from queued stakings, so stop.
+					return true
+				}
+			}
+			return false
+		})
 
-		queuedStaking, found := k.GetQueuedStaking(ctx, coin.Denom, farmerAcc)
-		if !found {
-			queuedStaking.Amount = sdk.ZeroInt()
-		}
-
-		availableAmt := staking.Amount.Add(queuedStaking.Amount)
-		if availableAmt.LT(coin.Amount) {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInsufficientFunds, "%s%s is smaller than %s%s", availableAmt, coin.Denom, coin.Amount, coin.Denom)
-		}
-
-		queuedStaking.Amount = queuedStaking.Amount.Sub(coin.Amount)
-		if queuedStaking.Amount.IsNegative() {
-			if _, err := k.WithdrawRewards(ctx, farmerAcc, coin.Denom); err != nil {
-				return err
+		amtToUnstake := coin.Amount.Sub(unstaked)
+		if amtToUnstake.IsPositive() {
+			// If there is more to unstake, then unstake from staked coins.
+			staking, found := k.GetStaking(ctx, coin.Denom, farmerAcc)
+			if !found {
+				staking.Amount = sdk.ZeroInt()
+			}
+			if staking.Amount.LT(amtToUnstake) {
+				return sdkerrors.Wrapf(
+					sdkerrors.ErrInsufficientFunds, "not enough staked coins, %s%s is less than %s%s",
+					unstaked.Add(staking.Amount), coin.Denom, unstaked.Add(amtToUnstake), coin.Denom)
 			}
 
-			removedFromStaking := queuedStaking.Amount.Neg() // Make negative a positive
-			staking.Amount = staking.Amount.Sub(removedFromStaking)
+			if found {
+				// Harvest rewards(send rewards to the farmer) when unstaking
+				// whole staked coins.
+				harvest := amtToUnstake.Equal(staking.Amount)
+
+				if _, err := k.WithdrawRewards(ctx, farmerAcc, coin.Denom, harvest); err != nil {
+					return err
+				}
+
+				if harvest {
+					unharvested, found := k.GetUnharvestedRewards(ctx, farmerAcc, coin.Denom)
+					if found {
+						totalUnharvestedRewards = totalUnharvestedRewards.Add(unharvested.Rewards...)
+						k.DeleteUnharvestedRewards(ctx, farmerAcc, coin.Denom)
+					}
+				}
+			}
+
+			staking.Amount = staking.Amount.Sub(amtToUnstake)
 			if staking.Amount.IsPositive() {
 				currentEpoch := k.GetCurrentEpoch(ctx, coin.Denom)
 				staking.StartingEpoch = currentEpoch
@@ -379,13 +482,12 @@ func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Co
 				k.DeleteStaking(ctx, coin.Denom, farmerAcc)
 			}
 
-			k.DeleteQueuedStaking(ctx, coin.Denom, farmerAcc)
-			k.DecreaseTotalStakings(ctx, coin.Denom, removedFromStaking)
-		} else if queuedStaking.Amount.IsPositive() {
-			k.SetQueuedStaking(ctx, coin.Denom, farmerAcc, queuedStaking)
-		} else {
-			k.DeleteQueuedStaking(ctx, coin.Denom, farmerAcc)
+			k.DecreaseTotalStakings(ctx, coin.Denom, amtToUnstake)
 		}
+	}
+
+	if err := k.bankKeeper.SendCoins(ctx, types.UnharvestedRewardsReserveAcc, farmerAcc, totalUnharvestedRewards); err != nil {
+		return err
 	}
 
 	if err := k.ReleaseStakingCoins(ctx, farmerAcc, amount); err != nil {
@@ -404,41 +506,80 @@ func (k Keeper) Unstake(ctx sdk.Context, farmerAcc sdk.AccAddress, amount sdk.Co
 }
 
 // ProcessQueuedCoins moves queued coins into staked coins.
-// It causes accumulated rewards to be withdrawn to the farmer.
-func (k Keeper) ProcessQueuedCoins(ctx sdk.Context) {
-	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+// It causes accumulated rewards to be withdrawn as UnharvestedRewards,
+// which can be claimed later by the farmer.
+func (k Keeper) ProcessQueuedCoins(ctx sdk.Context, currTime time.Time) {
+	type farmerDenomPair struct {
+		farmerAcc        string
+		stakingCoinDenom string
+	}
+	newStakingMap := map[farmerDenomPair]sdk.Int{} // (farmerAcc, stakingCoinDenom) => newStakingAmt
+	newTotalStakingsMap := map[string]sdk.Int{}    // stakingCoinDenom => newTotalStakingsAmt
+
+	k.IterateMatureQueuedStakings(ctx, currTime, func(endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+		newStakingKey := farmerDenomPair{farmerAcc.String(), stakingCoinDenom}
+		newStakingAmt, ok := newStakingMap[newStakingKey]
+		if !ok {
+			newStakingAmt = sdk.ZeroInt()
+		}
+		newStakingMap[newStakingKey] = newStakingAmt.Add(queuedStaking.Amount)
+
+		newTotalStakingAmt, ok := newTotalStakingsMap[stakingCoinDenom]
+		if !ok {
+			newTotalStakingAmt = sdk.ZeroInt()
+		}
+		newTotalStakingsMap[stakingCoinDenom] = newTotalStakingAmt.Add(queuedStaking.Amount)
+
+		k.DeleteQueuedStaking(ctx, endTime, stakingCoinDenom, farmerAcc)
+
+		return false
+	})
+
+	// Sort newTotalStakingsMap keys.
+	var newTotalStakingsKeys []string
+	for key := range newTotalStakingsMap {
+		newTotalStakingsKeys = append(newTotalStakingsKeys, key)
+	}
+	sort.Strings(newTotalStakingsKeys)
+
+	// Increase total stakings first.
+	for _, key := range newTotalStakingsKeys {
+		k.IncreaseTotalStakings(ctx, key, newTotalStakingsMap[key])
+	}
+
+	// Sort newStakingMap keys.
+	var newStakingKeys []farmerDenomPair
+	for key := range newStakingMap {
+		newStakingKeys = append(newStakingKeys, key)
+	}
+	sort.Slice(newStakingKeys, func(i, j int) bool {
+		if newStakingKeys[i].farmerAcc == newStakingKeys[j].farmerAcc {
+			return newStakingKeys[i].stakingCoinDenom < newStakingKeys[j].stakingCoinDenom
+		}
+		return newStakingKeys[i].farmerAcc < newStakingKeys[j].farmerAcc
+	})
+
+	// Increase staking amount and withdraw rewards if there was already
+	// a staking.
+	for _, key := range newStakingKeys {
+		stakingCoinDenom := key.stakingCoinDenom
+		farmerAcc, _ := sdk.AccAddressFromBech32(key.farmerAcc)
+		newStakingAmt := newStakingMap[key]
+
 		staking, found := k.GetStaking(ctx, stakingCoinDenom, farmerAcc)
 		if found {
-			if _, err := k.WithdrawRewards(ctx, farmerAcc, stakingCoinDenom); err != nil {
+			if _, err := k.WithdrawRewards(ctx, farmerAcc, stakingCoinDenom, false); err != nil {
 				panic(err)
 			}
 		} else {
 			staking.Amount = sdk.ZeroInt()
 		}
 
-		k.DeleteQueuedStaking(ctx, stakingCoinDenom, farmerAcc)
-		k.IncreaseTotalStakings(ctx, stakingCoinDenom, queuedStaking.Amount)
 		k.SetStaking(ctx, stakingCoinDenom, farmerAcc, types.Staking{
-			Amount:        staking.Amount.Add(queuedStaking.Amount),
+			Amount:        staking.Amount.Add(newStakingAmt),
 			StartingEpoch: k.GetCurrentEpoch(ctx, stakingCoinDenom),
 		})
-
-		return false
-	})
-}
-
-// PruneTotalStakings deletes total stakings with amount of zero and calls
-// cleanup logic for each staking coin denom.
-func (k Keeper) PruneTotalStakings(ctx sdk.Context) {
-	k.IterateTotalStakings(ctx, func(stakingCoinDenom string, totalStakings types.TotalStakings) (stop bool) {
-		if totalStakings.Amount.IsZero() {
-			k.DeleteTotalStakings(ctx, stakingCoinDenom)
-			if err := k.afterStakingCoinRemoved(ctx, stakingCoinDenom); err != nil {
-				panic(err)
-			}
-		}
-		return false
-	})
+	}
 }
 
 // ValidateStakingReservedAmount checks that the balance of
@@ -450,7 +591,7 @@ func (k Keeper) ValidateStakingReservedAmount(ctx sdk.Context) error {
 		reservedCoins = reservedCoins.Add(sdk.NewCoin(stakingCoinDenom, staking.Amount))
 		return false
 	})
-	k.IterateQueuedStakings(ctx, func(stakingCoinDenom string, _ sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
+	k.IterateQueuedStakings(ctx, func(_ time.Time, stakingCoinDenom string, _ sdk.AccAddress, queuedStaking types.QueuedStaking) (stop bool) {
 		reservedCoins = reservedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
 		return false
 	})

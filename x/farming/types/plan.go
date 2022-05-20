@@ -16,7 +16,6 @@ const (
 	MaxNameLength                   int    = 140
 	PrivatePlanFarmingPoolAccPrefix string = "PrivatePlan"
 	StakingReserveAccPrefix         string = "StakingReserveAcc"
-	RewardReserveAccPrefix          string = "RewardsReserveAcc"
 	AccNameSplitter                 string = "|"
 )
 

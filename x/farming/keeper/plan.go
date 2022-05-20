@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -315,6 +316,18 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.PlanI) error {
 		),
 	})
 
+	return nil
+}
+
+// TerminateEndedPlans terminates plans that have been ended.
+func (k Keeper) TerminateEndedPlans(ctx sdk.Context) error {
+	for _, plan := range k.GetPlans(ctx) {
+		if !plan.IsTerminated() && !ctx.BlockTime().Before(plan.GetEndTime()) {
+			if err := k.TerminatePlan(ctx, plan); err != nil {
+				return fmt.Errorf("terminate plan %d: %w", plan.GetId(), err)
+			}
+		}
+	}
 	return nil
 }
 

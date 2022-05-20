@@ -38,6 +38,40 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Client Breaking Changes
+
+* (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Rename existing `Stakings` endpoint to `Position` and add three new endpoints:
+  * `Stakings`: `/crescent/farming/v1beta1/stakings/{farmer}`
+  * `QueuedStakings`: `/crescent/farming/v1beta1/queued_stakings/{farmer}`
+  * `UnharvestedRewards`: `/crescent/farming/v1beta1/unharvested_reward/{farmer}`
+
+### CLI Breaking Changes
+
+* (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Rename existing `stakings` query to `position` and add three new queries:
+  * `stakings [farmer]`
+  * `queued-stakings [farmer]`
+  * `unharvested-rewards [farmer]`
+
+### State Machine Breaking
+
+* (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Time-based queued staking and new UnharvestedRewards struct
+  * Changed/added kv-store keys:
+    * QueuedStaking: `0x23 | EndTimeLen (1 byte) | sdk.FormatTimeBytes(EndTime) | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(QueuedStaking)`
+    * QueuedStakingIndex: `0x24 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomLen (1 byte) | StakingCoinDenom | sdk.FormatTimeBytes(EndTime) -> nil`
+    * UnharvestedRewards: `0x34 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> ProtocolBuffer(UnharvestedRewards)`
+
+* [\#31](https://github.com/crescent-network/crescent/pull/31) build!: bump cosmos-sdk to v0.45.3, tendermint v0.34.19, ibc-go v2.2.0, budget v1.2.0, go 1.17
+
+### Improvements
+
+* (x/liquidity) [\#32](https://github.com/crescent-network/crescent/pull/32) feat: add emit events for order trading volume
+
+### Bug Fixes
+
+* (x/liquidity) [\#32](https://github.com/crescent-network/crescent/pull/29) fix: optimize CancelAllOrders gas usage, fix offer coin checking #296 #299
+* (x/claim) [\#28](https://github.com/crescent-network/crescent/pull/29) fix: fix simulation for the claim module #292 #304
+* [\#25](https://github.com/crescent-network/crescent/pull/25) fix: fix to use query context #298
+
 ## [v1.1.0] - 2022-04-14
 
 ### State Machine Breaking

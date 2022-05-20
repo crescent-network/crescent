@@ -15,14 +15,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	logger := k.Logger(ctx)
 
-	k.PruneTotalStakings(ctx)
+	k.ProcessQueuedCoins(ctx, ctx.BlockTime())
 
-	for _, plan := range k.GetPlans(ctx) {
-		if !plan.IsTerminated() && !ctx.BlockTime().Before(plan.GetEndTime()) {
-			if err := k.TerminatePlan(ctx, plan); err != nil {
-				logger.Error("failed to terminate plan", "plan_id", plan.GetId())
-			}
-		}
+	if err := k.TerminateEndedPlans(ctx); err != nil {
+		logger.Error("failed to terminate plan", "err", err.Error())
 	}
 
 	// CurrentEpochDays is initialized with the value of NextEpochDays in genesis, and
@@ -39,12 +35,15 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		y, m, d := lastEpochTime.AddDate(0, 0, int(currentEpochDays)).Date()
 		y2, m2, d2 := ctx.BlockTime().Date()
 		if !time.Date(y2, m2, d2, 0, 0, 0, 0, time.UTC).Before(time.Date(y, m, d, 0, 0, 0, 0, time.UTC)) {
-			if err := k.AdvanceEpoch(ctx); err != nil {
+			if err := k.AllocateRewards(ctx); err != nil {
 				panic(err)
 			}
+			k.SetLastEpochTime(ctx, ctx.BlockTime())
+
 			if params := k.GetParams(ctx); params.NextEpochDays != currentEpochDays {
 				k.SetCurrentEpochDays(ctx, params.NextEpochDays)
 			}
 		}
 	}
+
 }

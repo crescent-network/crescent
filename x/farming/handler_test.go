@@ -77,25 +77,13 @@ func (suite *ModuleTestSuite) TestMsgStake() {
 	_, err := handler(suite.ctx, msg)
 	suite.Require().NoError(err)
 
-	_, found := suite.keeper.GetQueuedStaking(suite.ctx, denom1, suite.addrs[0])
-	suite.Require().Equal(true, found)
-
-	queuedCoins := sdk.NewCoins()
-	suite.keeper.IterateQueuedStakingsByFarmer(suite.ctx, suite.addrs[0],
-		func(stakingCoinDenom string, queuedStaking types.QueuedStaking) (stop bool) {
-			queuedCoins = queuedCoins.Add(sdk.NewCoin(stakingCoinDenom, queuedStaking.Amount))
-			return false
-		},
-	)
+	queuedCoins := suite.keeper.GetAllQueuedCoinsByFarmer(suite.ctx, suite.addrs[0])
 	suite.Require().Equal(msg.StakingCoins, queuedCoins)
 }
 
 func (suite *ModuleTestSuite) TestMsgUnstake() {
 	stakeCoin := sdk.NewInt64Coin(denom1, 10_000_000)
 	suite.Stake(suite.addrs[0], sdk.NewCoins(stakeCoin))
-
-	_, found := suite.keeper.GetQueuedStaking(suite.ctx, denom1, suite.addrs[0])
-	suite.Require().Equal(true, found)
 
 	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 
@@ -116,7 +104,8 @@ func (suite *ModuleTestSuite) TestMsgHarvest() {
 	}
 
 	suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom2, 10_000_000)))
-	suite.keeper.ProcessQueuedCoins(suite.ctx)
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(types.Day))
+	farming.EndBlocker(suite.ctx, suite.keeper)
 
 	balancesBefore := suite.app.BankKeeper.GetAllBalances(suite.ctx, suite.addrs[0])
 

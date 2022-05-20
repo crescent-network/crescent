@@ -320,7 +320,7 @@ $ %s tx %s harvest --all --from mykey
 				}
 
 				queryClient := types.NewQueryClient(clientCtx)
-				resp, err := queryClient.Stakings(cmd.Context(), &types.QueryStakingsRequest{
+				resp, err := queryClient.Position(cmd.Context(), &types.QueryPositionRequest{
 					Farmer: farmer.String(),
 				})
 				if err != nil {

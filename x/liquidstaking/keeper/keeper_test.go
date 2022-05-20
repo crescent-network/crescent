@@ -23,6 +23,7 @@ import (
 
 	chain "github.com/crescent-network/crescent/app"
 	utils "github.com/crescent-network/crescent/types"
+	"github.com/crescent-network/crescent/x/farming"
 	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/x/liquidity/types"
 	"github.com/crescent-network/crescent/x/liquidstaking"
@@ -365,9 +366,10 @@ func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depo
 
 // farming module keeper utils for liquid staking combine test
 
-func (s *KeeperTestSuite) AdvanceEpoch() {
-	err := s.app.FarmingKeeper.AdvanceEpoch(s.ctx)
-	s.Require().NoError(err)
+func (s *KeeperTestSuite) advanceEpochDays() {
+	currentEpochDays := s.app.FarmingKeeper.GetCurrentEpochDays(s.ctx)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(currentEpochDays) * farmingtypes.Day))
+	farming.EndBlocker(s.ctx, s.app.FarmingKeeper)
 }
 
 func (s *KeeperTestSuite) CreateFixedAmountPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {

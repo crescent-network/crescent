@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/farming/types"
 )
 
@@ -41,6 +42,9 @@ func TestValidateGenesis(t *testing.T) {
 	}
 	validOutstandingRewards := types.OutstandingRewards{
 		Rewards: sdk.NewDecCoins(sdk.NewInt64DecCoin("denom3", 1000000)),
+	}
+	validUnharvestedRewards := types.UnharvestedRewards{
+		Rewards: utils.ParseCoins("1000000denom3"),
 	}
 
 	testCases := []struct {
@@ -377,6 +381,47 @@ func TestValidateGenesis(t *testing.T) {
 				}
 			},
 			"coin 0.000000000000000000denom3 amount is not positive",
+		},
+		{
+			"invalid unharvested rewards records - invalid farmer address",
+			func(genState *types.GenesisState) {
+				genState.UnharvestedRewardsRecords = []types.UnharvestedRewardsRecord{
+					{
+						Farmer:             "invalid",
+						StakingCoinDenom:   validStakingCoinDenom,
+						UnharvestedRewards: validUnharvestedRewards,
+					},
+				}
+			},
+			"decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			"invalid unharvested rewards records - invalid staking coin denom",
+			func(genState *types.GenesisState) {
+				genState.UnharvestedRewardsRecords = []types.UnharvestedRewardsRecord{
+					{
+						Farmer:             validAcc.String(),
+						StakingCoinDenom:   "!",
+						UnharvestedRewards: validUnharvestedRewards,
+					},
+				}
+			},
+			"invalid denom: !",
+		},
+		{
+			"invalid unharvested rewards records - invalid rewards",
+			func(genState *types.GenesisState) {
+				genState.UnharvestedRewardsRecords = []types.UnharvestedRewardsRecord{
+					{
+						Farmer:           validAcc.String(),
+						StakingCoinDenom: validStakingCoinDenom,
+						UnharvestedRewards: types.UnharvestedRewards{
+							Rewards: sdk.Coins{sdk.Coin{Denom: "denom3", Amount: sdk.ZeroInt()}},
+						},
+					},
+				}
+			},
+			"coin 0denom3 amount is not positive",
 		},
 		{
 			"invalid current epoch records - invalid staking coin denom",

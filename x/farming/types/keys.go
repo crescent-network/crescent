@@ -2,6 +2,8 @@ package types
 
 import (
 	"bytes"
+	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -38,6 +40,7 @@ var (
 	HistoricalRewardsKeyPrefix  = []byte{0x31}
 	CurrentEpochKeyPrefix       = []byte{0x32}
 	OutstandingRewardsKeyPrefix = []byte{0x33}
+	UnharvestedRewardsKeyPrefix = []byte{0x34}
 )
 
 // GetPlanKey returns kv indexing key of the plan
@@ -62,19 +65,44 @@ func GetStakingsByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
 }
 
 // GetQueuedStakingKey returns a key for a queued staking.
-func GetQueuedStakingKey(stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
-	return append(append(QueuedStakingKeyPrefix, LengthPrefixString(stakingCoinDenom)...), farmerAcc...)
+func GetQueuedStakingKey(endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress) []byte {
+	return append(
+		append(
+			append(QueuedStakingKeyPrefix, LengthPrefixTimeBytes(endTime)...),
+			LengthPrefixString(stakingCoinDenom)...),
+		farmerAcc...)
 }
 
-// GetQueuedStakingIndexKey returns an indexing key for a queuded staking.
-func GetQueuedStakingIndexKey(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
-	return append(append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...), []byte(stakingCoinDenom)...)
+// GetQueuedStakingIndexKey returns an indexing key for a queued staking.
+func GetQueuedStakingIndexKey(farmerAcc sdk.AccAddress, stakingCoinDenom string, endTime time.Time) []byte {
+	return append(
+		append(
+			append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...),
+			LengthPrefixString(stakingCoinDenom)...),
+		sdk.FormatTimeBytes(endTime)...)
 }
 
-// GetQueuedStakingByFarmerPrefix returns a key prefix used to iterate
+// GetQueuedStakingsByFarmerPrefix returns a key prefix used to iterate
 // queued stakings by a farmer.
-func GetQueuedStakingByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
+func GetQueuedStakingsByFarmerPrefix(farmerAcc sdk.AccAddress) []byte {
 	return append(QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...)
+}
+
+// GetQueuedStakingsByFarmerAndDenomPrefix returns a key prefix used to
+// iterate queued stakings by farmer address and staking coin denom.
+func GetQueuedStakingsByFarmerAndDenomPrefix(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
+	return append(
+		append(
+			QueuedStakingIndexKeyPrefix, address.MustLengthPrefix(farmerAcc)...),
+		LengthPrefixString(stakingCoinDenom)...)
+}
+
+// GetQueuedStakingEndBytes returns end bytes for iteration of queued stakings.
+// The returned end bytes should be used directly, not through
+// sdk.InclusiveEndBytes.
+// The range this end bytes form includes queued stakings with same endTime.
+func GetQueuedStakingEndBytes(endTime time.Time) []byte {
+	return append(QueuedStakingKeyPrefix, LengthPrefixTimeBytes(endTime.Add(1))...)
 }
 
 // GetTotalStakingsKey returns a key for a total stakings info.
@@ -103,6 +131,17 @@ func GetOutstandingRewardsKey(stakingCoinDenom string) []byte {
 	return append(OutstandingRewardsKeyPrefix, []byte(stakingCoinDenom)...)
 }
 
+// GetUnharvestedRewardsKey returns a key for unharvested rewards.
+func GetUnharvestedRewardsKey(farmerAcc sdk.AccAddress, stakingCoinDenom string) []byte {
+	return append(append(UnharvestedRewardsKeyPrefix, address.MustLengthPrefix(farmerAcc)...), stakingCoinDenom...)
+}
+
+// GetUnharvestedRewardsPrefix returns a key to iterate unharvested rewards
+// by a farmer.
+func GetUnharvestedRewardsPrefix(farmerAcc sdk.AccAddress) []byte {
+	return append(UnharvestedRewardsKeyPrefix, address.MustLengthPrefix(farmerAcc)...)
+}
+
 // ParseStakingKey parses a staking key.
 func ParseStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
 	if !bytes.HasPrefix(key, StakingKeyPrefix) {
@@ -126,24 +165,36 @@ func ParseStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDeno
 }
 
 // ParseQueuedStakingKey parses a queued staking key.
-func ParseQueuedStakingKey(key []byte) (stakingCoinDenom string, farmerAcc sdk.AccAddress) {
+func ParseQueuedStakingKey(key []byte) (endTime time.Time, stakingCoinDenom string, farmerAcc sdk.AccAddress) {
 	if !bytes.HasPrefix(key, QueuedStakingKeyPrefix) {
 		panic("key does not have proper prefix")
 	}
-	denomLen := key[1]
-	stakingCoinDenom = string(key[2 : 2+denomLen])
-	farmerAcc = key[2+denomLen:]
+	timeLen := key[1]
+	var err error
+	endTime, err = sdk.ParseTimeBytes(key[2 : 2+timeLen])
+	if err != nil {
+		panic(fmt.Errorf("parse end time: %w", err))
+	}
+	denomLen := key[2+timeLen]
+	stakingCoinDenom = string(key[3+timeLen : 3+timeLen+denomLen])
+	farmerAcc = key[3+timeLen+denomLen:]
 	return
 }
 
 // ParseQueuedStakingIndexKey parses a queued staking index key.
-func ParseQueuedStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
+func ParseQueuedStakingIndexKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string, endTime time.Time) {
 	if !bytes.HasPrefix(key, QueuedStakingIndexKeyPrefix) {
 		panic("key does not have proper prefix")
 	}
 	addrLen := key[1]
 	farmerAcc = key[2 : 2+addrLen]
-	stakingCoinDenom = string(key[2+addrLen:])
+	denomLen := key[2+addrLen]
+	stakingCoinDenom = string(key[3+addrLen : 3+addrLen+denomLen])
+	var err error
+	endTime, err = sdk.ParseTimeBytes(key[3+addrLen+denomLen:])
+	if err != nil {
+		panic(fmt.Errorf("parse end time: %w", err))
+	}
 	return
 }
 
@@ -185,6 +236,16 @@ func ParseOutstandingRewardsKey(key []byte) (stakingCoinDenom string) {
 	return
 }
 
+func ParseUnharvestedRewardsKey(key []byte) (farmerAcc sdk.AccAddress, stakingCoinDenom string) {
+	if !bytes.HasPrefix(key, UnharvestedRewardsKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	addrLen := key[1]
+	farmerAcc = key[2 : 2+addrLen]
+	stakingCoinDenom = string(key[2+addrLen:])
+	return
+}
+
 // LengthPrefixString returns length-prefixed bytes representation
 // of a string.
 func LengthPrefixString(s string) []byte {
@@ -194,4 +255,11 @@ func LengthPrefixString(s string) []byte {
 		return bz
 	}
 	return append([]byte{byte(bzLen)}, bz...)
+}
+
+// LengthPrefixTimeBytes returns length-prefixed bytes representation
+// of time.Time.
+func LengthPrefixTimeBytes(t time.Time) []byte {
+	bz := sdk.FormatTimeBytes(t)
+	return append([]byte{byte(len(bz))}, bz...)
 }

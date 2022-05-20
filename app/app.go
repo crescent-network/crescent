@@ -97,6 +97,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	farmingparams "github.com/crescent-network/crescent/app/params"
+	"github.com/crescent-network/crescent/app/upgrades/mainnet/v2.0.0"
 	"github.com/crescent-network/crescent/app/upgrades/testnet/rc4"
 	"github.com/crescent-network/crescent/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/x/claim/keeper"
@@ -697,7 +698,7 @@ func NewApp(
 	app.SetEndBlocker(app.EndBlocker)
 
 	app.SetUpgradeStoreLoaders()
-	app.SetUpgradeHandlers()
+	app.SetUpgradeHandlers(app.mm, app.configurator)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -884,10 +885,19 @@ func (app *App) SetUpgradeStoreLoaders() {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &rc4.StoreUpgrades))
 	}
+	// mainnet upgrade state loaders
+	if upgradeInfo.Name == v2_0_0.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v2_0_0.StoreUpgrades))
+	}
 }
 
-func (app *App) SetUpgradeHandlers() {
+func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Configurator) {
 	// testnet upgrade handlers
 	app.UpgradeKeeper.SetUpgradeHandler(
 		rc4.UpgradeName, rc4.UpgradeHandler)
+
+	// mainnet upgrade handlers
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v2_0_0.UpgradeName, v2_0_0.UpgradeHandler(mm, configurator))
 }

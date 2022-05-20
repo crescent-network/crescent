@@ -109,7 +109,7 @@ type LiquidityKeeper interface {
 // FarmingKeeper expected farming keeper (noalias)
 type FarmingKeeper interface {
 	IterateStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, staking farmintypes.Staking) (stop bool))
-	IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, queuedStaking farmintypes.QueuedStaking) (stop bool))
+	IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, endTime time.Time, queuedStaking farmintypes.QueuedStaking) (stop bool))
 }
 
 // SlashingKeeper expected slashing keeper (noalias)

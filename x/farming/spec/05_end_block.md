@@ -6,12 +6,14 @@ At each end-block call, the `farming` module operations are specified to execute
 At the end of each block:
 
 - Terminates plans if their end time has passed over the current block time. 
-
   - Sends all remaining coins in the plan's farming pool account `FarmingPoolAddress` to the termination address `TerminationAddress`.
-  - Marks the plan as terminated by making `Terminated` true. 
-  - Allocates farming rewards.
-  - Processes `QueueStaking` to be staked.
-  - Sets `LastEpochTime` to track in case of chain upgrade.
+  - Marks the plan as terminated by making `Terminated` true.
+- Moves `QueuedStaking` to `Staking` when its end-time has passed.
+
+At the end of each epoch:
+
+- Allocates farming rewards.
+- Updates `LastEpochTime` to the current block time.
 
 ## Internal state CurrentEpochDays
 

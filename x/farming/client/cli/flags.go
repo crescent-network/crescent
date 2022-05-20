@@ -28,15 +28,6 @@ func flagSetPlans() *flag.FlagSet {
 	return fs
 }
 
-// flagSetStakings returns the FlagSet used for farmer's staking coin denom.
-func flagSetStakings() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.String(FlagStakingCoinDenom, "", "The staking coin denom")
-
-	return fs
-}
-
 // flagSetRewards returns the FlagSet used for farmer's rewards.
 func flagSetRewards() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
