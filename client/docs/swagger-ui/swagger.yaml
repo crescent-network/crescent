@@ -26352,15 +26352,15 @@ paths:
                     title: mint_denom defines denomination of coin to be minted
                   mint_pool_address:
                     type: string
-                    title: >-
+                    description: >-
                       mint_pool_address defines the address where inflation will
-                      be minted, The default is FeeCollector,
+                      be minted. The default is FeeCollector,
 
-                      but if it set FeeCollector, it could mix the minted
-                      inflation with the collected tx fee,
+                      but if it is set to FeeCollector, minted inflation could
+                      be mixed together with collected tx fees.
 
                       Therefore, it is recommended to specify a separate address
-                      depending on the chain
+                      depending on usage.
                   block_time_threshold:
                     type: string
                     title: >-
@@ -46142,15 +46142,15 @@ definitions:
         title: mint_denom defines denomination of coin to be minted
       mint_pool_address:
         type: string
-        title: >-
-          mint_pool_address defines the address where inflation will be minted,
+        description: >-
+          mint_pool_address defines the address where inflation will be minted.
           The default is FeeCollector,
 
-          but if it set FeeCollector, it could mix the minted inflation with the
-          collected tx fee,
+          but if it is set to FeeCollector, minted inflation could be mixed
+          together with collected tx fees.
 
           Therefore, it is recommended to specify a separate address depending
-          on the chain
+          on usage.
       block_time_threshold:
         type: string
         title: >-
@@ -46195,15 +46195,15 @@ definitions:
             title: mint_denom defines denomination of coin to be minted
           mint_pool_address:
             type: string
-            title: >-
+            description: >-
               mint_pool_address defines the address where inflation will be
-              minted, The default is FeeCollector,
+              minted. The default is FeeCollector,
 
-              but if it set FeeCollector, it could mix the minted inflation with
-              the collected tx fee,
+              but if it is set to FeeCollector, minted inflation could be mixed
+              together with collected tx fees.
 
               Therefore, it is recommended to specify a separate address
-              depending on the chain
+              depending on usage.
           block_time_threshold:
             type: string
             title: >-

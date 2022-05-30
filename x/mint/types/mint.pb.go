@@ -33,9 +33,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Params struct {
 	// mint_denom defines denomination of coin to be minted
 	MintDenom string `protobuf:"bytes,1,opt,name=mint_denom,json=mintDenom,proto3" json:"mint_denom,omitempty"`
-	// mint_pool_address defines the address where inflation will be minted, The default is FeeCollector,
-	// but if it set FeeCollector, it could mix the minted inflation with the collected tx fee,
-	// Therefore, it is recommended to specify a separate address depending on the chain
+	// mint_pool_address defines the address where inflation will be minted. The default is FeeCollector,
+	// but if it is set to FeeCollector, minted inflation could be mixed together with collected tx fees.
+	// Therefore, it is recommended to specify a separate address depending on usage.
 	MintPoolAddress string `protobuf:"bytes,2,opt,name=mint_pool_address,json=mintPoolAddress,proto3" json:"mint_pool_address,omitempty"`
 	// block_time_threshold defines block time threshold to prevent from any inflationary manipulation attacks
 	// it is used for maximum block duration when calculating block inflation
