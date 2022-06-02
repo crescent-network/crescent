@@ -112,26 +112,41 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		} else {
 			remainingAmt = matchAmt.Sub(sums[lastIdx-1])
 		}
-		lastOrders := ticks[lastIdx].orders()
-		if ctx.TotalOpenAmount(lastOrders).Equal(remainingAmt) {
-			ctx.MatchOrdersFull(lastOrders, lastPrice)
-		} else {
-			DistributeOrderAmount(ctx, lastOrders, lastPrice, remainingAmt)
-		}
+		DistributeOrderAmountToTick(ctx, ticks[lastIdx], remainingAmt, lastPrice)
 	}
 	distributeAmtToTicks(buyTicks, buySums, bi)
 	distributeAmtToTicks(sellTicks, sellSums, si)
 	return true
 }
 
-// DistributeOrderAmount distributes the given order amount to the orders
+func DistributeOrderAmountToTick(ctx MatchContext, tick *orderBookTick, amt sdk.Int, price sdk.Dec) {
+	remainingAmt := amt
+	for _, group := range tick.orderGroups {
+		openAmt := ctx.TotalOpenAmount(group.orders)
+		if openAmt.IsZero() {
+			continue
+		}
+		if remainingAmt.GTE(openAmt) {
+			ctx.MatchOrdersFull(group.orders, price)
+			remainingAmt = remainingAmt.Sub(openAmt)
+		} else {
+			DistributeOrderAmountToOrders(ctx, group.orders, remainingAmt, price)
+			remainingAmt = sdk.ZeroInt()
+		}
+		if remainingAmt.IsZero() {
+			break
+		}
+	}
+}
+
+// DistributeOrderAmountToOrders distributes the given order amount to the orders
 // proportional to each order's amount.
 // After distributing the amount based on each order's proportion,
 // remaining amount due to the decimal truncation is distributed
 // to the orders again, by priority.
 // This time, the proportion is not considered and each order takes up
 // the amount as much as possible.
-func DistributeOrderAmount(ctx MatchContext, orders []Order, matchPrice sdk.Dec, amt sdk.Int) {
+func DistributeOrderAmountToOrders(ctx MatchContext, orders []Order, amt sdk.Int, price sdk.Dec) {
 	totalAmt := TotalAmount(orders)
 	totalMatchedAmt := sdk.ZeroInt()
 	matchedAmtByOrder := map[Order]sdk.Int{}
@@ -171,7 +186,7 @@ func DistributeOrderAmount(ctx MatchContext, orders []Order, matchPrice sdk.Dec,
 		if !ok {
 			matchedAmt = sdk.ZeroInt()
 		}
-		if !matchedAmt.IsZero() && (order.GetDirection() == Buy || matchPrice.MulInt(matchedAmt).TruncateInt().IsPositive()) {
+		if !matchedAmt.IsZero() && (order.GetDirection() == Buy || price.MulInt(matchedAmt).TruncateInt().IsPositive()) {
 			matchedOrders = append(matchedOrders, order)
 		} else {
 			notMatchedOrders = append(notMatchedOrders, order)
@@ -179,12 +194,12 @@ func DistributeOrderAmount(ctx MatchContext, orders []Order, matchPrice sdk.Dec,
 	}
 
 	if len(notMatchedOrders) > 0 {
-		DistributeOrderAmount(ctx, matchedOrders, matchPrice, amt)
+		DistributeOrderAmountToOrders(ctx, matchedOrders, amt, price)
 		return
 	}
 
 	for order, matchedAmt := range matchedAmtByOrder {
-		ctx.MatchOrder(order, matchedAmt, matchPrice)
+		ctx.MatchOrder(order, matchedAmt, price)
 	}
 }
 
