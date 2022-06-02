@@ -9,8 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
-	utils "github.com/crescent-network/crescent/types"
 )
 
 func parseOrders(s string) []Order {
@@ -56,14 +54,14 @@ func parseOrders(s string) []Order {
 
 func TestInstantMatch(t *testing.T) {
 	orders := parseOrders(`
-          | 1.2 | 5(1) 7
-5         | 0.9 | 3
-6(2) 3(1) | 0.8 |
-4         | 0.7 |
+    | 1.2 | 5 7
+5   | 0.9 | 3
+6 3 | 0.8 |
+4   | 0.7 |
 `)
 	ob := NewOrderBook(orders...)
 	ctx := NewMatchContext()
-	matched := ob.InstantMatch(ctx, utils.ParseDec("1.0"))
+	matched := ob.Match(ctx)
 	require.True(t, matched)
 	for _, order := range orders {
 		fmt.Printf("%s %s at %s\n", order.GetDirection(), order.GetAmount(), order.GetPrice())

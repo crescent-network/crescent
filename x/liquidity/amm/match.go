@@ -118,6 +118,32 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 	return true
 }
 
+func (ob *OrderBook) Match(ctx MatchContext) (matched bool) {
+	if len(ob.buys.ticks) == 0 || len(ob.sells.ticks) == 0 {
+		return false
+	}
+	bi, si := 0, 0
+	for bi < len(ob.buys.ticks) && si < len(ob.sells.ticks) && ob.buys.ticks[bi].price.GTE(ob.sells.ticks[si].price) {
+		buyTick := ob.buys.ticks[bi]
+		sellTick := ob.sells.ticks[si]
+		buyTickOpenAmt := ctx.TotalOpenAmount(buyTick.orders())
+		sellTickOpenAmt := ctx.TotalOpenAmount(sellTick.orders())
+		if buyTickOpenAmt.LTE(sellTickOpenAmt) {
+			DistributeOrderAmountToTick(ctx, buyTick, buyTickOpenAmt, buyTick.price) // TODO: correct price
+			bi++
+		} else {
+			DistributeOrderAmountToTick(ctx, buyTick, sellTickOpenAmt, buyTick.price) // TODO: correct price
+		}
+		if sellTickOpenAmt.LTE(buyTickOpenAmt) {
+			DistributeOrderAmountToTick(ctx, sellTick, sellTickOpenAmt, sellTick.price) // TODO: correct price
+			si++
+		} else {
+			DistributeOrderAmountToTick(ctx, sellTick, buyTickOpenAmt, sellTick.price) // TODO: correct price
+		}
+	}
+	return true
+}
+
 func DistributeOrderAmountToTick(ctx MatchContext, tick *orderBookTick, amt sdk.Int, price sdk.Dec) {
 	remainingAmt := amt
 	for _, group := range tick.orderGroups {
