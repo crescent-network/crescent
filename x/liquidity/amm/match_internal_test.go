@@ -2,6 +2,8 @@ package amm
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -12,6 +14,7 @@ import (
 )
 
 func parseOrders(s string) []Order {
+	orderRe := regexp.MustCompile(`(\d+)(?:\((\d+)\))?`)
 	var orders []Order
 	for _, line := range strings.Split(s, "\n") {
 		if strings.TrimSpace(line) == "" {
@@ -22,37 +25,41 @@ func parseOrders(s string) []Order {
 			panic(fmt.Errorf("wrong number of chunks in %q: %d", line, len(chunks)))
 		}
 		price := sdk.MustNewDecFromStr(strings.TrimSpace(chunks[1]))
-		parseAmounts := func(s string) []sdk.Int {
-			var amounts []sdk.Int
-			for _, amtChunk := range strings.Split(s, " ") {
-				amtChunk = strings.TrimSpace(amtChunk)
-				if amtChunk == "" {
-					continue
-				}
-				amt, ok := sdk.NewIntFromString(amtChunk)
+		parseSide := func(dir OrderDirection, s string) []Order {
+			var orders []Order
+			for _, chunks := range orderRe.FindAllStringSubmatch(s, -1) {
+				amt, ok := sdk.NewIntFromString(chunks[1])
 				if !ok {
-					panic(fmt.Errorf("invalid amount: %s", amtChunk))
+					panic(fmt.Errorf("invalid amount: %s", chunks[1]))
 				}
-				amounts = append(amounts, amt)
+				batchId, err := strconv.ParseUint(chunks[2], 10, 64)
+				if err != nil {
+					if chunks[2] == "" {
+						batchId = 0
+					} else {
+						panic(fmt.Errorf("invalid batch id: %s", chunks[2]))
+					}
+				}
+				orders = append(orders, &UserOrder{
+					BaseOrder: *newOrder(dir, price, amt),
+					OrderId:   0,
+					BatchId:   batchId,
+				})
 			}
-			return amounts
+			return orders
 		}
-		for _, amt := range parseAmounts(chunks[0]) {
-			orders = append(orders, newOrder(Sell, price, amt))
-		}
-		for _, amt := range parseAmounts(chunks[2]) {
-			orders = append(orders, newOrder(Buy, price, amt))
-		}
+		orders = append(orders, parseSide(Sell, chunks[0])...)
+		orders = append(orders, parseSide(Buy, chunks[2])...)
 	}
 	return orders
 }
 
 func TestInstantMatch(t *testing.T) {
 	orders := parseOrders(`
-        | 1.2 | 5 7
-5       | 0.9 |
-6 3     | 0.8 | 
-4       | 0.7 |
+          | 1.2 | 5(1) 7
+5         | 0.9 |
+6(2) 3(1) | 0.8 |
+4         | 0.7 |
 `)
 	ob := NewOrderBook(orders...)
 	ctx := NewMatchContext()

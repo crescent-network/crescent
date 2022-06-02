@@ -273,29 +273,3 @@ func (ctx MatchContext) MatchedAmount(order Order) sdk.Int {
 	}
 	return order.GetAmount().Sub(mr.OpenAmount)
 }
-
-// SortOrdersByBatchId returns orders grouped and sorted by batch id.
-func SortOrdersByBatchId(orders []Order) [][]Order {
-	ordersByBatchId := map[uint64][]Order{}
-	for _, order := range orders {
-		ordersByBatchId[order.GetBatchId()] = append(ordersByBatchId[order.GetBatchId()], order)
-	}
-	batchIds := make([]uint64, 0, len(ordersByBatchId))
-	for batchId := range ordersByBatchId {
-		batchIds = append(batchIds, batchId)
-	}
-	sort.Slice(batchIds, func(i, j int) bool {
-		if batchIds[i] == 0 {
-			return false
-		}
-		if batchIds[j] == 0 {
-			return true
-		}
-		return batchIds[i] < batchIds[j]
-	})
-	groups := make([][]Order, 0, len(batchIds))
-	for _, batchId := range batchIds {
-		groups = append(groups, ordersByBatchId[batchId])
-	}
-	return groups
-}
