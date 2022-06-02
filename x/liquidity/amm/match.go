@@ -77,6 +77,9 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		}
 		buySums = append(buySums, sum)
 	}
+	if len(buySums) == 0 {
+		return false
+	}
 	sellSums := make([]sdk.Int, 0, len(ob.sells.ticks))
 	for i, sellTick := range ob.sells.ticks {
 		if sellTick.price.GT(lastPrice) {
@@ -88,7 +91,7 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		}
 		sellSums = append(sellSums, sum)
 	}
-	if len(buySums) == 0 || len(sellSums) == 0 {
+	if len(sellSums) == 0 {
 		return false
 	}
 	matchAmt := sdk.MinInt(buySums[len(buySums)-1], sellSums[len(sellSums)-1])
