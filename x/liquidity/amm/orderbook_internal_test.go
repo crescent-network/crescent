@@ -35,7 +35,7 @@ func TestOrderBookTicks_add(t *testing.T) {
 	}
 	var ticks orderBookTicks
 	for _, price := range prices {
-		ticks.add(newOrder(Buy, price, sdk.NewInt(10000)))
+		ticks.addOrder(newOrder(Buy, price, sdk.NewInt(10000)))
 	}
 	pricesSet := map[string]struct{}{}
 	for _, price := range prices {
@@ -49,6 +49,6 @@ func TestOrderBookTicks_add(t *testing.T) {
 		return prices[i].GT(prices[j])
 	})
 	for i, price := range prices {
-		require.True(sdk.DecEq(t, price, ticks[i].price))
+		require.True(sdk.DecEq(t, price, ticks.ticks[i].price))
 	}
 }

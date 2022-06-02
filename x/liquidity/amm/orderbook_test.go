@@ -3,9 +3,8 @@ package amm_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity/amm"
@@ -40,31 +39,4 @@ func TestOrderBook(t *testing.T) {
 	lowest, found := ob.LowestSellPrice()
 	require.True(t, found)
 	require.True(sdk.DecEq(t, utils.ParseDec("9.996"), lowest))
-
-	for _, tc := range []struct {
-		price                 sdk.Dec
-		expectedBuyAmt        int64
-		expectedSellAmt       int64
-		expectedNumBuyOrders  int
-		expectedNumSellOrders int
-	}{
-		{utils.ParseDec("10.02"), 0, 40000, 0, 4},
-		{utils.ParseDec("10.01"), 10000, 40000, 1, 4},
-		{utils.ParseDec("10.00"), 20000, 40000, 2, 4},
-		{utils.ParseDec("9.999"), 30000, 40000, 3, 4},
-		{utils.ParseDec("9.998"), 40000, 30000, 4, 3},
-		{utils.ParseDec("9.997"), 40000, 20000, 4, 2},
-		{utils.ParseDec("9.996"), 40000, 10000, 4, 1},
-		{utils.ParseDec("9.995"), 40000, 0, 4, 0},
-	} {
-		t.Run("", func(t *testing.T) {
-			buyAmt := ob.BuyAmountOver(tc.price)
-			require.True(sdk.IntEq(t, sdk.NewInt(tc.expectedBuyAmt), buyAmt))
-			sellAmt := ob.SellAmountUnder(tc.price)
-			require.True(sdk.IntEq(t, sdk.NewInt(tc.expectedSellAmt), sellAmt))
-
-			require.Len(t, ob.BuyOrdersOver(tc.price), tc.expectedNumBuyOrders)
-			require.Len(t, ob.SellOrdersUnder(tc.price), tc.expectedNumSellOrders)
-		})
-	}
 }

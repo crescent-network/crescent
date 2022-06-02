@@ -6,7 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Order = (*BaseOrder)(nil)
+var (
+	_ Order = (*BaseOrder)(nil)
+	_ Order = (*UserOrder)(nil)
+	_ Order = (*PoolOrder)(nil)
+)
 
 // OrderDirection specifies an order direction, either buy or sell.
 type OrderDirection int
@@ -31,26 +35,14 @@ func (dir OrderDirection) String() string {
 // Order is the universal interface of an order.
 type Order interface {
 	GetDirection() OrderDirection
+	// GetBatchId returns the batch id where the order was created.
+	// Batch id of 0 means the current batch.
+	GetBatchId() uint64
 	GetPrice() sdk.Dec
 	GetAmount() sdk.Int // The original order amount
-	GetOpenAmount() sdk.Int
-	SetOpenAmount(amt sdk.Int)
-	GetOfferCoin() sdk.Coin
-	GetRemainingOfferCoin() sdk.Coin
-	DecrRemainingOfferCoin(amt sdk.Int) // Decrement remaining offer coin amount
-	GetReceivedDemandCoin() sdk.Coin
-	IncrReceivedDemandCoin(amt sdk.Int) // Increment received demand coin amount
-	IsMatched() bool
-	SetMatched(matched bool)
-}
-
-// TotalOpenAmount returns total open amount of orders.
-func TotalOpenAmount(orders []Order) sdk.Int {
-	amt := sdk.ZeroInt()
-	for _, order := range orders {
-		amt = amt.Add(order.GetOpenAmount())
-	}
-	return amt
+	// HasPriority returns true if the order has higher priority
+	// than the other order.
+	HasPriority(other Order) bool
 }
 
 // BaseOrder is the base struct for an Order.
@@ -83,6 +75,10 @@ func (order *BaseOrder) GetDirection() OrderDirection {
 	return order.Direction
 }
 
+func (order *BaseOrder) GetBatchId() uint64 {
+	return 0
+}
+
 // GetPrice returns the order price.
 func (order *BaseOrder) GetPrice() sdk.Dec {
 	return order.Price
@@ -91,6 +87,12 @@ func (order *BaseOrder) GetPrice() sdk.Dec {
 // GetAmount returns the order amount.
 func (order *BaseOrder) GetAmount() sdk.Int {
 	return order.Amount
+}
+
+// HasPriority returns whether the order has higher priority than
+// the other order.
+func (order *BaseOrder) HasPriority(other Order) bool {
+	return order.Amount.GT(other.GetAmount())
 }
 
 // GetOpenAmount returns open(not matched) amount of the order.
@@ -135,4 +137,27 @@ func (order *BaseOrder) IsMatched() bool {
 // SetMatched sets whether the order is matched or not.
 func (order *BaseOrder) SetMatched(matched bool) {
 	order.Matched = matched
+}
+
+type UserOrder struct {
+	BaseOrder
+	OrderId uint64
+	BatchId uint64
+}
+
+func (order *UserOrder) GetBatchId() uint64 {
+	return order.BatchId
+}
+
+type PoolOrder struct {
+	BaseOrder
+	PoolId uint64
+}
+
+func TotalAmount(orders []Order) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, order := range orders {
+		amt = amt.Add(order.GetAmount())
+	}
+	return amt
 }

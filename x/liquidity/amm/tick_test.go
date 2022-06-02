@@ -498,3 +498,39 @@ func TestEvenTicks(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkPoolOrders(b *testing.B) {
+	tickPrec := defTickPrec
+	n := sdk.NewInt(100)
+	pool := amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
+	lastPriceTick := tickPrec.PriceToDownTick(pool.Price())
+	highestTick := tickPrec.PriceToDownTick(lastPriceTick.MulTruncate(sdk.NewDecWithPrec(11, 1)))
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		pool = amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
+		for {
+			rx, ry := pool.Balances()
+			if ry.LTE(n) {
+				break
+			}
+			tick := tickPrec.PriceToUpTick(sdk.MaxDec(
+				rx.Add(sdk.OneInt()).ToDec().QuoInt(ry),
+				rx.ToDec().QuoInt(ry.Sub(n)),
+			))
+			if tick.GT(highestTick) {
+				break
+			}
+			dy := pool.SellAmountUnder(tick)
+			if dy.IsZero() {
+				panic("!")
+			}
+
+			dx := tick.MulInt(dy).TruncateInt()
+			rx = rx.Add(dx)
+			ry = ry.Sub(dy)
+
+			pool = amm.NewBasicPool(rx, ry, sdk.Int{})
+		}
+	}
+}

@@ -334,7 +334,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				}
 				return false, nil
 			}
-			ob.Add(types.NewUserOrder(order))
+			ob.AddOrder(types.NewUserOrder(order))
 			if order.Status == types.OrderStatusNotExecuted {
 				order.SetStatus(types.OrderStatusNotMatched)
 				k.SetOrder(ctx, order)

@@ -204,7 +204,7 @@ func PoolsOrderBook(pools []Pool, ticks []sdk.Dec) *OrderBook {
 				if amtX.IsPositive() {
 					amt := amtX.ToDec().QuoTruncate(tick).TruncateInt()
 					if amt.IsPositive() {
-						ob.Add(NewBaseOrder(
+						ob.AddOrder(NewBaseOrder(
 							Buy, tick, amt, sdk.NewCoin("quote", OfferCoinAmount(Buy, tick, amt)), "base"))
 					}
 					accAmtX = accAmtX.Add(amtX)
@@ -217,7 +217,7 @@ func PoolsOrderBook(pools []Pool, ticks []sdk.Dec) *OrderBook {
 				tick := ticks[i]
 				amt := pool.SellAmountUnder(tick).Sub(accAmt)
 				if amt.IsPositive() {
-					ob.Add(NewBaseOrder(Sell, tick, amt, sdk.NewCoin("base", amt), "quote"))
+					ob.AddOrder(NewBaseOrder(Sell, tick, amt, sdk.NewCoin("base", amt), "quote"))
 					accAmt = accAmt.Add(amt)
 				}
 			}

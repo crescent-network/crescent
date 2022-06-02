@@ -1,6 +1,7 @@
 package amm
 
 import (
+	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -64,120 +65,222 @@ func findFirstTrueCondition(start, end int, f func(i int) bool) (i int, found bo
 	return i, true
 }
 
-// FindLastMatchableOrders returns the last matchable order indexes for
-// each buy/sell side.
-// lastBuyPartialMatchAmt and lastSellPartialMatchAmt are
-// the amount of partially matched portion of the last orders.
-// FindLastMatchableOrders drops(ignores) an order if the orderer
-// receives zero demand coin after truncation when the order is either
-// fully matched or partially matched.
-func FindLastMatchableOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (lastBuyIdx, lastSellIdx int, lastBuyPartialMatchAmt, lastSellPartialMatchAmt sdk.Int, found bool) {
-	if len(buyOrders) == 0 || len(sellOrders) == 0 {
-		return 0, 0, sdk.Int{}, sdk.Int{}, false
-	}
-	type Side struct {
-		orders          []Order
-		totalOpenAmt    sdk.Int
-		i               int
-		partialMatchAmt sdk.Int
-	}
-	buySide := &Side{buyOrders, TotalOpenAmount(buyOrders), len(buyOrders) - 1, sdk.Int{}}
-	sellSide := &Side{sellOrders, TotalOpenAmount(sellOrders), len(sellOrders) - 1, sdk.Int{}}
-	sides := map[OrderDirection]*Side{
-		Buy:  buySide,
-		Sell: sellSide,
-	}
-	// Repeatedly check both buy/sell side to see if there is an order to drop.
-	// If there is not, then the loop is finished.
-	for {
-		ok := true
-		for _, dir := range []OrderDirection{Buy, Sell} {
-			side := sides[dir]
-			i := side.i
-			order := side.orders[i]
-			matchAmt := sdk.MinInt(buySide.totalOpenAmt, sellSide.totalOpenAmt)
-			otherOrdersAmt := side.totalOpenAmt.Sub(order.GetOpenAmount())
-			// side.partialMatchAmt can be negative at this moment, but
-			// FindLastMatchableOrders won't return a negative amount because
-			// the if-block below would set ok = false if otherOrdersAmt >= matchAmt
-			// and the loop would be continued.
-			side.partialMatchAmt = matchAmt.Sub(otherOrdersAmt)
-			if otherOrdersAmt.GTE(matchAmt) ||
-				(dir == Sell && matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero()) {
-				if i == 0 { // There's no orders left, which means orders are not matchable.
-					return 0, 0, sdk.Int{}, sdk.Int{}, false
-				}
-				side.totalOpenAmt = side.totalOpenAmt.Sub(order.GetOpenAmount())
-				side.i--
-				ok = false
-			}
+func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched bool) {
+	buyTicks := make([]*orderBookTick, 0, len(ob.buys.ticks))
+	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))
+	for i, buyTick := range ob.buys.ticks {
+		if buyTick.price.LT(lastPrice) {
+			break
 		}
-		if ok {
-			return buySide.i, sellSide.i, buySide.partialMatchAmt, sellSide.partialMatchAmt, true
+		sum := ctx.TotalOpenAmount(buyTick.orders())
+		if i > 0 {
+			sum = buySums[i-1].Add(sum)
+		}
+		buyTicks = append(buyTicks, buyTick)
+		buySums = append(buySums, sum)
+	}
+	sellTicks := make([]*orderBookTick, 0, len(ob.sells.ticks))
+	sellSums := make([]sdk.Int, 0, len(ob.sells.ticks))
+	for i, sellTick := range ob.sells.ticks {
+		if sellTick.price.GT(lastPrice) {
+			break
+		}
+		sum := ctx.TotalOpenAmount(sellTick.orders())
+		if i > 0 {
+			sum = sellSums[i-1].Add(sum)
+		}
+		sellTicks = append(sellTicks, sellTick)
+		sellSums = append(sellSums, sum)
+	}
+	if len(buyTicks) == 0 || len(sellTicks) == 0 {
+		return false
+	}
+	matchAmt := sdk.MinInt(buySums[len(buySums)-1], sellSums[len(sellSums)-1])
+	bi := sort.Search(len(buySums), func(i int) bool {
+		return buySums[i].GTE(matchAmt)
+	})
+	si := sort.Search(len(sellSums), func(i int) bool {
+		return sellSums[i].GTE(matchAmt)
+	})
+	distributeAmtToTicks := func(ticks []*orderBookTick, sums []sdk.Int, lastIdx int) {
+		for _, tick := range ticks[:lastIdx] {
+			ctx.MatchOrdersFull(tick.orders(), lastPrice)
+		}
+		var remainingAmt sdk.Int
+		if lastIdx == 0 {
+			remainingAmt = matchAmt
+		} else {
+			remainingAmt = matchAmt.Sub(sums[lastIdx-1])
+		}
+		lastOrders := ticks[lastIdx].orders()
+		if ctx.TotalOpenAmount(lastOrders).Equal(remainingAmt) {
+			ctx.MatchOrdersFull(lastOrders, lastPrice)
+		} else {
+			DistributeOrderAmount(ctx, lastOrders, lastPrice, remainingAmt)
 		}
 	}
+	distributeAmtToTicks(buyTicks, buySums, bi)
+	distributeAmtToTicks(sellTicks, sellSums, si)
+	return true
 }
 
-// MatchOrders matches orders at given matchPrice if matchable.
-// Note that MatchOrders modifies the orders in the parameters.
-// quoteCoinDust is the difference between total paid quote coin and total
-// received quote coin.
-// quoteCoinDust can be positive because of the decimal truncation.
-func MatchOrders(buyOrders, sellOrders []Order, matchPrice sdk.Dec) (quoteCoinDust sdk.Int, matched bool) {
-	buyOrders = DropSmallOrders(buyOrders, matchPrice)
-	sellOrders = DropSmallOrders(sellOrders, matchPrice)
+// DistributeOrderAmount distributes the given order amount to the orders
+// proportional to each order's amount.
+// After distributing the amount based on each order's proportion,
+// remaining amount due to the decimal truncation is distributed
+// to the orders again, by priority.
+// This time, the proportion is not considered and each order takes up
+// the amount as much as possible.
+func DistributeOrderAmount(ctx MatchContext, orders []Order, matchPrice sdk.Dec, amt sdk.Int) {
+	totalAmt := TotalAmount(orders)
+	totalMatchedAmt := sdk.ZeroInt()
+	matchedAmtByOrder := map[Order]sdk.Int{}
 
-	bi, si, pmb, pms, found := FindLastMatchableOrders(buyOrders, sellOrders, matchPrice)
-	if !found {
-		return sdk.Int{}, false
-	}
-
-	quoteCoinDust = sdk.ZeroInt()
-
-	for i := 0; i <= bi; i++ {
-		buyOrder := buyOrders[i]
-		var receivedBaseCoinAmt sdk.Int
-		if i < bi {
-			receivedBaseCoinAmt = buyOrder.GetOpenAmount()
-		} else {
-			receivedBaseCoinAmt = pmb
-		}
-		paidQuoteCoinAmt := matchPrice.MulInt(receivedBaseCoinAmt).Ceil().TruncateInt()
-		buyOrder.SetOpenAmount(buyOrder.GetOpenAmount().Sub(receivedBaseCoinAmt))
-		buyOrder.DecrRemainingOfferCoin(paidQuoteCoinAmt)
-		buyOrder.IncrReceivedDemandCoin(receivedBaseCoinAmt)
-		buyOrder.SetMatched(true)
-		quoteCoinDust = quoteCoinDust.Add(paidQuoteCoinAmt)
-	}
-
-	for i := 0; i <= si; i++ {
-		sellOrder := sellOrders[i]
-		var paidBaseCoinAmt sdk.Int
-		if i < si {
-			paidBaseCoinAmt = sellOrder.GetOpenAmount()
-		} else {
-			paidBaseCoinAmt = pms
-		}
-		receivedQuoteCoinAmt := matchPrice.MulInt(paidBaseCoinAmt).TruncateInt()
-		sellOrder.SetOpenAmount(sellOrder.GetOpenAmount().Sub(paidBaseCoinAmt))
-		sellOrder.DecrRemainingOfferCoin(paidBaseCoinAmt)
-		sellOrder.IncrReceivedDemandCoin(receivedQuoteCoinAmt)
-		sellOrder.SetMatched(true)
-		quoteCoinDust = quoteCoinDust.Sub(receivedQuoteCoinAmt)
-	}
-
-	return quoteCoinDust, true
-}
-
-// DropSmallOrders returns filtered orders, where orders with too small amount
-// are dropped.
-func DropSmallOrders(orders []Order, matchPrice sdk.Dec) []Order {
-	var res []Order
 	for _, order := range orders {
-		openAmt := order.GetOpenAmount()
-		if openAmt.GTE(MinCoinAmount) && matchPrice.MulInt(openAmt).TruncateInt().GTE(MinCoinAmount) {
-			res = append(res, order)
+		openAmt := ctx.OpenAmount(order)
+		if openAmt.IsZero() {
+			continue
+		}
+		orderAmt := order.GetAmount().ToDec()
+		proportion := orderAmt.QuoTruncate(totalAmt.ToDec())
+		matchedAmt := sdk.MinInt(openAmt, proportion.MulInt(amt).TruncateInt())
+		if matchedAmt.IsPositive() {
+			matchedAmtByOrder[order] = matchedAmt
+			totalMatchedAmt = totalMatchedAmt.Add(matchedAmt)
 		}
 	}
-	return res
+
+	remainingAmt := amt.Sub(totalMatchedAmt)
+	for _, order := range orders {
+		if remainingAmt.IsZero() {
+			break
+		}
+		openAmt := ctx.OpenAmount(order)
+		matchedAmt := sdk.MinInt(remainingAmt, sdk.MinInt(openAmt, order.GetAmount()))
+		prevMatchedAmt, ok := matchedAmtByOrder[order]
+		if !ok { // TODO: is it possible?
+			prevMatchedAmt = sdk.ZeroInt()
+		}
+		matchedAmtByOrder[order] = prevMatchedAmt.Add(matchedAmt)
+		remainingAmt = remainingAmt.Sub(matchedAmt)
+	}
+
+	var matchedOrders, notMatchedOrders []Order
+	for _, order := range orders {
+		matchedAmt, ok := matchedAmtByOrder[order]
+		if !ok {
+			matchedAmt = sdk.ZeroInt()
+		}
+		if !matchedAmt.IsZero() && (order.GetDirection() == Buy || matchPrice.MulInt(matchedAmt).TruncateInt().IsPositive()) {
+			matchedOrders = append(matchedOrders, order)
+		} else {
+			notMatchedOrders = append(notMatchedOrders, order)
+		}
+	}
+
+	if len(notMatchedOrders) > 0 {
+		DistributeOrderAmount(ctx, matchedOrders, matchPrice, amt)
+		return
+	}
+
+	for order, matchedAmt := range matchedAmtByOrder {
+		ctx.MatchOrder(order, matchedAmt, matchPrice)
+	}
+}
+
+type MatchRecord struct {
+	Amount sdk.Int
+	Price  sdk.Dec
+}
+
+type MatchResult struct {
+	OpenAmount   sdk.Int
+	MatchRecords []MatchRecord
+}
+
+type MatchContext map[Order]*MatchResult
+
+func NewMatchContext() MatchContext {
+	return MatchContext{}
+}
+
+func (ctx MatchContext) MatchOrder(order Order, amt sdk.Int, price sdk.Dec) {
+	if openAmt := ctx.OpenAmount(order); amt.GT(openAmt) {
+		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, openAmt))
+	}
+	mr, ok := ctx[order]
+	if !ok {
+		mr = &MatchResult{
+			OpenAmount: order.GetAmount(),
+		}
+		ctx[order] = mr
+	}
+	mr.OpenAmount = mr.OpenAmount.Sub(amt)
+	mr.MatchRecords = append(mr.MatchRecords, MatchRecord{
+		Amount: amt,
+		Price:  price,
+	})
+}
+
+func (ctx MatchContext) MatchOrderFull(order Order, price sdk.Dec) {
+	openAmt := ctx.OpenAmount(order)
+	if openAmt.IsPositive() {
+		ctx.MatchOrder(order, ctx.OpenAmount(order), price)
+	}
+}
+
+func (ctx MatchContext) MatchOrdersFull(orders []Order, price sdk.Dec) {
+	for _, order := range orders {
+		ctx.MatchOrderFull(order, price)
+	}
+}
+
+func (ctx MatchContext) OpenAmount(order Order) sdk.Int {
+	mr, ok := ctx[order]
+	if !ok {
+		return order.GetAmount()
+	}
+	return mr.OpenAmount
+}
+
+func (ctx MatchContext) TotalOpenAmount(orders []Order) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, order := range orders {
+		amt = amt.Add(ctx.OpenAmount(order))
+	}
+	return amt
+}
+
+func (ctx MatchContext) MatchedAmount(order Order) sdk.Int {
+	mr, ok := ctx[order]
+	if !ok {
+		return sdk.ZeroInt()
+	}
+	return order.GetAmount().Sub(mr.OpenAmount)
+}
+
+// SortOrdersByBatchId returns orders grouped and sorted by batch id.
+func SortOrdersByBatchId(orders []Order) [][]Order {
+	ordersByBatchId := map[uint64][]Order{}
+	for _, order := range orders {
+		ordersByBatchId[order.GetBatchId()] = append(ordersByBatchId[order.GetBatchId()], order)
+	}
+	batchIds := make([]uint64, 0, len(ordersByBatchId))
+	for batchId := range ordersByBatchId {
+		batchIds = append(batchIds, batchId)
+	}
+	sort.Slice(batchIds, func(i, j int) bool {
+		if batchIds[i] == 0 {
+			return false
+		}
+		if batchIds[j] == 0 {
+			return true
+		}
+		return batchIds[i] < batchIds[j]
+	})
+	groups := make([][]Order, 0, len(batchIds))
+	for _, batchId := range batchIds {
+		groups = append(groups, ordersByBatchId[batchId])
+	}
+	return groups
 }
