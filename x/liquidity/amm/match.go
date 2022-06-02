@@ -66,7 +66,6 @@ func findFirstTrueCondition(start, end int, f func(i int) bool) (i int, found bo
 }
 
 func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched bool) {
-	buyTicks := make([]*orderBookTick, 0, len(ob.buys.ticks))
 	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))
 	for i, buyTick := range ob.buys.ticks {
 		if buyTick.price.LT(lastPrice) {
@@ -76,10 +75,8 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		if i > 0 {
 			sum = buySums[i-1].Add(sum)
 		}
-		buyTicks = append(buyTicks, buyTick)
 		buySums = append(buySums, sum)
 	}
-	sellTicks := make([]*orderBookTick, 0, len(ob.sells.ticks))
 	sellSums := make([]sdk.Int, 0, len(ob.sells.ticks))
 	for i, sellTick := range ob.sells.ticks {
 		if sellTick.price.GT(lastPrice) {
@@ -89,10 +86,9 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		if i > 0 {
 			sum = sellSums[i-1].Add(sum)
 		}
-		sellTicks = append(sellTicks, sellTick)
 		sellSums = append(sellSums, sum)
 	}
-	if len(buyTicks) == 0 || len(sellTicks) == 0 {
+	if len(buySums) == 0 || len(sellSums) == 0 {
 		return false
 	}
 	matchAmt := sdk.MinInt(buySums[len(buySums)-1], sellSums[len(sellSums)-1])
@@ -114,8 +110,8 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		}
 		DistributeOrderAmountToTick(ctx, ticks[lastIdx], remainingAmt, lastPrice)
 	}
-	distributeAmtToTicks(buyTicks, buySums, bi)
-	distributeAmtToTicks(sellTicks, sellSums, si)
+	distributeAmtToTicks(ob.buys.ticks, buySums, bi)
+	distributeAmtToTicks(ob.sells.ticks, sellSums, si)
 	return true
 }
 

@@ -57,7 +57,7 @@ func parseOrders(s string) []Order {
 func TestInstantMatch(t *testing.T) {
 	orders := parseOrders(`
           | 1.2 | 5(1) 7
-5         | 0.9 |
+5         | 0.9 | 3
 6(2) 3(1) | 0.8 |
 4         | 0.7 |
 `)
