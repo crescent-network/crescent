@@ -288,7 +288,11 @@ func DistributeOrderAmountToOrders(ctx MatchContext, orders []Order, amt sdk.Int
 	}
 
 	if len(notMatchedOrders) > 0 {
-		DistributeOrderAmountToOrders(ctx, matchedOrders, amt, price)
+		if len(matchedOrders) == 0 {
+			DistributeOrderAmountToOrders(ctx, orders[:len(orders)-1], amt, price)
+		} else {
+			DistributeOrderAmountToOrders(ctx, matchedOrders, amt, price)
+		}
 		return
 	}
 
