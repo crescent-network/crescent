@@ -7,6 +7,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type PriceDirection int
+
+const (
+	PriceStaying PriceDirection = iota + 1
+	PriceIncreasing
+	PriceDecreasing
+)
+
+func (dir PriceDirection) String() string {
+	switch dir {
+	case PriceStaying:
+		return "PriceStaying"
+	case PriceIncreasing:
+		return "PriceIncreasing"
+	case PriceDecreasing:
+		return "PriceDecreasing"
+	default:
+		return fmt.Sprintf("PriceDirection(%d)", dir)
+	}
+}
+
 // FindMatchPrice returns the best match price for given order sources.
 // If there is no matchable orders, found will be false.
 func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
@@ -118,27 +139,75 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 	return true
 }
 
-func (ob *OrderBook) Match(ctx MatchContext) (matched bool) {
+func (ob *OrderBook) PriceDirection(ctx MatchContext, lastPrice sdk.Dec) PriceDirection {
+	buyAmtOverLastPrice := sdk.ZeroInt()
+	buyAmtAtLastPrice := sdk.ZeroInt()
+	for _, tick := range ob.buys.ticks {
+		if tick.price.LT(lastPrice) {
+			break
+		}
+		amt := ctx.TotalOpenAmount(tick.orders())
+		if tick.price.Equal(lastPrice) {
+			buyAmtAtLastPrice = amt
+			break
+		}
+		buyAmtOverLastPrice = buyAmtOverLastPrice.Add(amt)
+	}
+	sellAmtUnderLastPrice := sdk.ZeroInt()
+	sellAmtAtLastPrice := sdk.ZeroInt()
+	for _, tick := range ob.sells.ticks {
+		if tick.price.GT(lastPrice) {
+			break
+		}
+		amt := ctx.TotalOpenAmount(tick.orders())
+		if tick.price.Equal(lastPrice) {
+			sellAmtAtLastPrice = amt
+			break
+		}
+		sellAmtUnderLastPrice = sellAmtUnderLastPrice.Add(amt)
+	}
+	switch {
+	case buyAmtOverLastPrice.GT(sellAmtAtLastPrice.Add(sellAmtUnderLastPrice)):
+		return PriceIncreasing
+	case sellAmtUnderLastPrice.GT(buyAmtAtLastPrice.Add(buyAmtOverLastPrice)):
+		return PriceDecreasing
+	default:
+		return PriceStaying
+	}
+}
+
+func (ob *OrderBook) Match(ctx MatchContext, lastPrice sdk.Dec) (matched bool) {
 	if len(ob.buys.ticks) == 0 || len(ob.sells.ticks) == 0 {
+		return false
+	}
+	dir := ob.PriceDirection(ctx, lastPrice)
+	if dir == PriceStaying {
 		return false
 	}
 	bi, si := 0, 0
 	for bi < len(ob.buys.ticks) && si < len(ob.sells.ticks) && ob.buys.ticks[bi].price.GTE(ob.sells.ticks[si].price) {
 		buyTick := ob.buys.ticks[bi]
 		sellTick := ob.sells.ticks[si]
+		var matchPrice sdk.Dec
+		switch dir {
+		case PriceIncreasing:
+			matchPrice = sellTick.price
+		case PriceDecreasing:
+			matchPrice = buyTick.price
+		}
 		buyTickOpenAmt := ctx.TotalOpenAmount(buyTick.orders())
 		sellTickOpenAmt := ctx.TotalOpenAmount(sellTick.orders())
 		if buyTickOpenAmt.LTE(sellTickOpenAmt) {
-			DistributeOrderAmountToTick(ctx, buyTick, buyTickOpenAmt, buyTick.price) // TODO: correct price
+			DistributeOrderAmountToTick(ctx, buyTick, buyTickOpenAmt, matchPrice)
 			bi++
 		} else {
-			DistributeOrderAmountToTick(ctx, buyTick, sellTickOpenAmt, buyTick.price) // TODO: correct price
+			DistributeOrderAmountToTick(ctx, buyTick, sellTickOpenAmt, matchPrice)
 		}
 		if sellTickOpenAmt.LTE(buyTickOpenAmt) {
-			DistributeOrderAmountToTick(ctx, sellTick, sellTickOpenAmt, sellTick.price) // TODO: correct price
+			DistributeOrderAmountToTick(ctx, sellTick, sellTickOpenAmt, matchPrice)
 			si++
 		} else {
-			DistributeOrderAmountToTick(ctx, sellTick, buyTickOpenAmt, sellTick.price) // TODO: correct price
+			DistributeOrderAmountToTick(ctx, sellTick, buyTickOpenAmt, matchPrice)
 		}
 	}
 	return true
