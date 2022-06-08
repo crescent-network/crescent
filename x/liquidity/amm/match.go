@@ -264,12 +264,11 @@ func DistributeOrderAmountToOrders(ctx MatchContext, orders []Order, amt sdk.Int
 		if remainingAmt.IsZero() {
 			break
 		}
-		openAmt := ctx.OpenAmount(order)
-		matchedAmt := sdk.MinInt(remainingAmt, sdk.MinInt(openAmt, order.GetAmount()))
 		prevMatchedAmt, ok := matchedAmtByOrder[order]
 		if !ok { // TODO: is it possible?
 			prevMatchedAmt = sdk.ZeroInt()
 		}
+		matchedAmt := sdk.MinInt(remainingAmt, ctx.OpenAmount(order).Sub(prevMatchedAmt))
 		matchedAmtByOrder[order] = prevMatchedAmt.Add(matchedAmt)
 		remainingAmt = remainingAmt.Sub(matchedAmt)
 	}
