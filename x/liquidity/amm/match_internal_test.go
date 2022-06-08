@@ -9,6 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	utils "github.com/cosmosquad-labs/squad/types"
 )
 
 func parseOrders(s string) []Order {
@@ -61,7 +63,7 @@ func TestInstantMatch(t *testing.T) {
 `)
 	ob := NewOrderBook(orders...)
 	ctx := NewMatchContext()
-	matched := ob.Match(ctx)
+	matched := ob.InstantMatch(ctx, utils.ParseDec("1.0"))
 	require.True(t, matched)
 	for _, order := range orders {
 		fmt.Printf("%s %s at %s\n", order.GetDirection(), order.GetAmount(), order.GetPrice())
