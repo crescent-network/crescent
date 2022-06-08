@@ -149,9 +149,37 @@ func (order *UserOrder) GetBatchId() uint64 {
 	return order.BatchId
 }
 
+func (order *UserOrder) HasPriority(other Order) bool {
+	if !order.Amount.Equal(other.GetAmount()) {
+		return order.Amount.GT(other.GetAmount())
+	}
+	switch other := other.(type) {
+	case *UserOrder:
+		return order.OrderId < other.OrderId
+	case *PoolOrder:
+		return true
+	default:
+		panic(fmt.Errorf("invalid order type: %T", other))
+	}
+}
+
 type PoolOrder struct {
 	BaseOrder
 	PoolId uint64
+}
+
+func (order *PoolOrder) HasPriority(other Order) bool {
+	if !order.Amount.Equal(other.GetAmount()) {
+		return order.Amount.GT(other.GetAmount())
+	}
+	switch other := other.(type) {
+	case *UserOrder:
+		return false
+	case *PoolOrder:
+		return order.PoolId < other.PoolId
+	default:
+		panic(fmt.Errorf("invalid order type: %T", other))
+	}
 }
 
 func TotalAmount(orders []Order) sdk.Int {
