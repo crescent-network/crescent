@@ -176,19 +176,18 @@ func (ob *OrderBook) PriceDirection(ctx MatchContext, lastPrice sdk.Dec) PriceDi
 	}
 }
 
-func (ob *OrderBook) Match(ctx MatchContext, lastPrice sdk.Dec) (matched bool) {
+func (ob *OrderBook) Match(ctx MatchContext, lastPrice sdk.Dec) (matchPrice sdk.Dec, matched bool) {
 	if len(ob.buys.ticks) == 0 || len(ob.sells.ticks) == 0 {
-		return false
+		return sdk.Dec{}, false
 	}
 	dir := ob.PriceDirection(ctx, lastPrice)
 	if dir == PriceStaying {
-		return false
+		return sdk.Dec{}, false
 	}
 	bi, si := 0, 0
 	for bi < len(ob.buys.ticks) && si < len(ob.sells.ticks) && ob.buys.ticks[bi].price.GTE(ob.sells.ticks[si].price) {
 		buyTick := ob.buys.ticks[bi]
 		sellTick := ob.sells.ticks[si]
-		var matchPrice sdk.Dec
 		switch dir {
 		case PriceIncreasing:
 			matchPrice = sellTick.price
@@ -209,8 +208,9 @@ func (ob *OrderBook) Match(ctx MatchContext, lastPrice sdk.Dec) (matched bool) {
 		} else {
 			DistributeOrderAmountToTick(ctx, sellTick, buyTickOpenAmt, matchPrice)
 		}
+		matched = true
 	}
-	return true
+	return
 }
 
 func DistributeOrderAmountToTick(ctx MatchContext, tick *orderBookTick, amt sdk.Int, price sdk.Dec) {
