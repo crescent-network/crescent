@@ -1,6 +1,7 @@
 package amm_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestBasicPool(t *testing.T) {
 	r := rand.New(rand.NewSource(0))
 	for i := 0; i < 1000; i++ {
 		rx, ry := sdk.NewInt(1+r.Int63n(100000000)), sdk.NewInt(1+r.Int63n(100000000))
-		pool := amm.NewBasicPool(1, rx, ry, sdk.Int{})
+		pool := amm.NewBasicPool(rx, ry, sdk.Int{})
 
 		highest, found := pool.HighestBuyPrice()
 		require.True(t, found)
@@ -50,7 +51,7 @@ func TestBasicPool_Price(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := amm.NewBasicPool(1, sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
+			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
 			require.True(sdk.DecEq(t, tc.p, pool.Price()))
 		})
 	}
@@ -73,7 +74,7 @@ func TestBasicPool_Price(t *testing.T) {
 	} {
 		t.Run("panics", func(t *testing.T) {
 			require.Panics(t, func() {
-				pool := amm.NewBasicPool(1, sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
+				pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
 				pool.Price()
 			})
 		})
@@ -124,7 +125,7 @@ func TestBasicPool_IsDepleted(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := amm.NewBasicPool(1, sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
+			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
 			require.Equal(t, tc.isDepleted, pool.IsDepleted())
 		})
 	}
@@ -229,7 +230,7 @@ func TestBasicPool_Deposit(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := amm.NewBasicPool(1, sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
+			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
 			ax, ay, pc := pool.Deposit(sdk.NewInt(tc.x), sdk.NewInt(tc.y))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.ax), ax))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.ay), ay))
@@ -304,7 +305,7 @@ func TestBasicPool_Withdraw(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := amm.NewBasicPool(1, sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
+			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
 			x, y := pool.Withdraw(sdk.NewInt(tc.pc), tc.feeRate)
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.x), x))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.y), y))
@@ -351,13 +352,21 @@ func TestInitialPoolCoinSupply(t *testing.T) {
 //	require.True(sdk.IntEq(t, amm.MaxCoinAmount, amt))
 //}
 
+func TestBasicPoolOrders(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{})
+	lastPrice := utils.ParseDec("1")
+	lowestPrice := lastPrice.Mul(sdk.NewDecWithPrec(9, 1))
+	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
+	fmt.Println(amm.PoolOrders(pool, lowestPrice, highestPrice, int(defTickPrec)))
+}
+
 func BenchmarkBasicPoolOrders(b *testing.B) {
-	pool := amm.NewBasicPool(1, sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{})
+	pool := amm.NewBasicPool(sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{})
 	lastPrice := utils.ParseDec("1")
 	lowestPrice := lastPrice.Mul(sdk.NewDecWithPrec(9, 1))
 	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pool.Orders(lowestPrice, highestPrice, int(defTickPrec))
+		amm.PoolOrders(pool, lowestPrice, highestPrice, int(defTickPrec))
 	}
 }

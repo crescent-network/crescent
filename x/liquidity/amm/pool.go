@@ -15,19 +15,21 @@ var (
 // Pool is the interface of a pool.
 // It also satisfies OrderView interface.
 type Pool interface {
-	Id() uint64
+	NewOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order
 	Balances() (rx, ry sdk.Int)
 	PoolCoinSupply() sdk.Int
 	Price() sdk.Dec
 	IsDepleted() bool
 	Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int)
 	Withdraw(pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int)
-	Orders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order
+	BuyAmount(price sdk.Dec) sdk.Int
+	SellAmount(price sdk.Dec) sdk.Int
+	BuyAmountTo(price sdk.Dec) sdk.Int
+	SellAmountTo(price sdk.Dec) sdk.Int
 }
 
 // BasicPool is the basic pool type.
 type BasicPool struct {
-	id uint64
 	// rx and ry are the pool's reserve balance of each x/y coin.
 	// In perspective of a pair, x coin is the quote coin and
 	// y coin is the base coin.
@@ -38,17 +40,16 @@ type BasicPool struct {
 
 // NewBasicPool returns a new BasicPool.
 // It is OK to pass an empty sdk.Int to ps when ps is not going to be used.
-func NewBasicPool(id uint64, rx, ry, ps sdk.Int) *BasicPool {
+func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 	return &BasicPool{
-		id: id,
 		rx: rx,
 		ry: ry,
 		ps: ps,
 	}
 }
 
-func (pool *BasicPool) Id() uint64 {
-	return pool.id
+func (pool *BasicPool) NewOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order {
+	return NewPoolOrder(0, nil, dir, price, amt)
 }
 
 // Balances returns the balances of the pool.
@@ -138,83 +139,124 @@ func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 	return pool.Price(), true
 }
 
-func (pool *BasicPool) Orders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
-	return append(
-		pool.BuyOrders(lowestPrice, highestPrice, tickPrec),
-		pool.SellOrders(lowestPrice, highestPrice, tickPrec)...)
+func (pool *BasicPool) BuyAmount(price sdk.Dec) (amt sdk.Int) {
+	if price.GTE(pool.Price()) {
+		return sdk.ZeroInt()
+	}
+	utils.SafeMath(func() {
+		amt = pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
+		if amt.GT(MaxCoinAmount) {
+			amt = MaxCoinAmount
+		}
+	}, func() {
+		amt = MaxCoinAmount
+	})
+	return
 }
 
-func (pool *BasicPool) BuyOrders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
-	rx, ry := pool.Balances()
-	var orders []Order
-	if pool.Price().GT(highestPrice) {
-		rxSqrt, err := rx.ToDec().ApproxSqrt()
-		if err != nil {
-			panic(err) // TODO: prevent panic
-		}
-		rySqrt, err := ry.ToDec().ApproxSqrt()
-		if err != nil {
-			panic(err)
-		}
-		highestPriceSqrt, err := highestPrice.ApproxSqrt()
-		if err != nil {
-			panic(err)
-		}
-		dx := rx.ToDec().Sub(highestPriceSqrt.Mul(rxSqrt.Mul(rySqrt))) // dx = rx - sqrt(P * rx * ry)
-		dy := dx.QuoTruncate(highestPrice).TruncateInt()               // dy = dx / P
-		orders = append(orders, NewPoolOrder(pool.id, Buy, highestPrice, dy))
-		rx = rx.Sub(highestPrice.MulInt(dy).Ceil().TruncateInt()) // buy side quote coin ceiling
-		ry = ry.Add(dy)
+func (pool *BasicPool) SellAmount(price sdk.Dec) sdk.Int {
+	if price.LTE(pool.Price()) {
+		return sdk.ZeroInt()
 	}
-	for rx.IsPositive() {
-		tick := PriceToDownTick(rx.ToDec().QuoInt(ry.Add(MinCoinAmount)), tickPrec)
+	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
+}
+
+func (pool *BasicPool) BuyAmountTo(price sdk.Dec) sdk.Int {
+	rxSqrt, err := pool.rx.ToDec().ApproxSqrt()
+	if err != nil {
+		panic(err) // TODO: prevent panic
+	}
+	rySqrt, err := pool.ry.ToDec().ApproxSqrt()
+	if err != nil {
+		panic(err)
+	}
+	priceSqrt, err := price.ApproxSqrt()
+	if err != nil {
+		panic(err)
+	}
+	// TODO: optimize formula
+	dx := pool.rx.ToDec().Sub(priceSqrt.Mul(rxSqrt.Mul(rySqrt))) // dx = rx - sqrt(P * rx * ry)
+	// TODO: possible overflow?
+	return dx.QuoTruncate(price).TruncateInt() // dy = dx / P
+}
+
+func (pool *BasicPool) SellAmountTo(price sdk.Dec) sdk.Int {
+	rxSqrt, err := pool.rx.ToDec().ApproxSqrt()
+	if err != nil {
+		panic(err) // TODO: prevent panic
+	}
+	rySqrt, err := pool.ry.ToDec().ApproxSqrt()
+	if err != nil {
+		panic(err)
+	}
+	priceSqrt, err := price.ApproxSqrt()
+	if err != nil {
+		panic(err)
+	}
+	return pool.ry.ToDec().Sub(rxSqrt.Mul(rySqrt).Quo(priceSqrt)).TruncateInt() // dy = ry - sqrt(rx * ry / P)
+}
+
+func PoolBuyOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	tmpPool := pool
+	var orders []Order
+	placeOrder := func(price sdk.Dec, amt sdk.Int) {
+		orders = append(orders, pool.NewOrder(Buy, price, amt))
+		rx, ry := tmpPool.Balances()
+		rx = rx.Sub(price.MulInt(amt).Ceil().TruncateInt()) // quote coin ceiling
+		ry = ry.Add(amt)
+		tmpPool = NewBasicPool(rx, ry, sdk.Int{})
+	}
+	if pool.Price().GT(highestPrice) {
+		placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
+	}
+	for {
+		rx, ry := tmpPool.Balances()
+		if !rx.IsPositive() {
+			break
+		}
+		tick := PriceToDownTick(rx.ToDec().QuoInt(ry.Add(MinCoinAmount)), tickPrec) // TODO: generalize
 		if tick.LT(lowestPrice) {
 			break
 		}
-		dx := rx.ToDec().Sub(tick.MulInt(ry))    // dx = rx - P * ry
-		dy := dx.QuoTruncate(tick).TruncateInt() // dy = dx / P
-		orders = append(orders, NewPoolOrder(pool.id, Buy, tick, dy))
-		rx = rx.Sub(tick.MulInt(dy).Ceil().TruncateInt())
-		ry = ry.Add(dy)
+		placeOrder(tick, tmpPool.BuyAmount(tick))
 	}
 	return orders
 }
 
-func (pool *BasicPool) SellOrders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
-	rx, ry := pool.Balances()
+func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	tmpPool := pool
 	var orders []Order
-	if pool.Price().LT(lowestPrice) {
-		rxSqrt, err := rx.ToDec().ApproxSqrt()
-		if err != nil {
-			panic(err) // TODO: prevent panic
-		}
-		rySqrt, err := ry.ToDec().ApproxSqrt()
-		if err != nil {
-			panic(err)
-		}
-		lowestPriceSqrt, err := lowestPrice.ApproxSqrt()
-		if err != nil {
-			panic(err)
-		}
-		dy := ry.ToDec().Sub(rxSqrt.Mul(rySqrt).Quo(lowestPriceSqrt)).TruncateInt() // dy = ry - sqrt(rx * ry / P)
-		orders = append(orders, NewPoolOrder(pool.id, Sell, lowestPrice, dy))
-		rx = rx.Add(lowestPrice.MulInt(dy).TruncateInt()) // sell side quote coin truncation
-		ry = ry.Sub(dy)
+	placeOrder := func(price sdk.Dec, amt sdk.Int) {
+		orders = append(orders, pool.NewOrder(Sell, price, amt))
+		rx, ry := tmpPool.Balances()
+		rx = rx.Add(price.MulInt(amt).TruncateInt()) // quote coin truncation
+		ry = ry.Sub(amt)
+		tmpPool = NewBasicPool(rx, ry, sdk.Int{})
 	}
-	for ry.GT(MinCoinAmount) {
+	if pool.Price().LT(lowestPrice) {
+		placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
+	}
+	for {
+		rx, ry := tmpPool.Balances()
+		if !ry.GT(MinCoinAmount) {
+			break
+		}
 		tick := PriceToUpTick(sdk.MaxDec(
 			rx.Add(sdk.OneInt()).ToDec().QuoInt(ry),
 			rx.ToDec().QuoInt(ry.Sub(MinCoinAmount)),
-		), tickPrec)
+		), tickPrec) // TODO: generalize
 		if tick.GT(highestPrice) {
 			break
 		}
-		dy := ry.ToDec().Sub(rx.ToDec().QuoRoundUp(tick)).TruncateInt() // dy = ry - rx / P
-		orders = append(orders, NewPoolOrder(pool.id, Sell, tick, dy))
-		rx = rx.Add(tick.MulInt(dy).TruncateInt())
-		ry = ry.Sub(dy)
+		placeOrder(tick, tmpPool.SellAmount(tick))
 	}
 	return orders
+}
+
+func PoolOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	return append(
+		PoolBuyOrders(pool, lowestPrice, highestPrice, tickPrec),
+		PoolSellOrders(pool, lowestPrice, highestPrice, tickPrec)...)
 }
 
 // InitialPoolCoinSupply returns ideal initial pool coin minting amount.

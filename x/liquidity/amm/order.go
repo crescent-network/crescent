@@ -40,10 +40,15 @@ type Order interface {
 	GetBatchId() uint64
 	GetPrice() sdk.Dec
 	GetAmount() sdk.Int // The original order amount
+	GetPaidOfferCoinAmount() sdk.Int
+	SetPaidOfferCoinAmount(amt sdk.Int)
+	GetReceivedDemandCoinAmount() sdk.Int
+	SetReceivedDemandCoinAmount(amt sdk.Int)
 	GetOpenAmount() sdk.Int
 	SetOpenAmount(amt sdk.Int)
 	GetMatchRecords() []MatchRecord
 	AddMatchRecord(record MatchRecord)
+	IsMatched() bool
 	// HasPriority returns true if the order has higher priority
 	// than the other order.
 	HasPriority(other Order) bool
@@ -52,9 +57,11 @@ type Order interface {
 
 // BaseOrder is the base struct for an Order.
 type BaseOrder struct {
-	Direction OrderDirection
-	Price     sdk.Dec
-	Amount    sdk.Int
+	Direction                OrderDirection
+	Price                    sdk.Dec
+	Amount                   sdk.Int
+	PaidOfferCoinAmount      sdk.Int
+	ReceivedDemandCoinAmount sdk.Int
 
 	// Match info
 	OpenAmount   sdk.Int
@@ -63,10 +70,12 @@ type BaseOrder struct {
 
 func newBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) BaseOrder {
 	return BaseOrder{
-		Direction:  dir,
-		Price:      price,
-		Amount:     amt,
-		OpenAmount: amt,
+		Direction:                dir,
+		Price:                    price,
+		Amount:                   amt,
+		OpenAmount:               amt,
+		PaidOfferCoinAmount:      sdk.ZeroInt(),
+		ReceivedDemandCoinAmount: sdk.ZeroInt(),
 	}
 }
 
@@ -95,6 +104,22 @@ func (order *BaseOrder) GetAmount() sdk.Int {
 	return order.Amount
 }
 
+func (order *BaseOrder) GetPaidOfferCoinAmount() sdk.Int {
+	return order.PaidOfferCoinAmount
+}
+
+func (order *BaseOrder) SetPaidOfferCoinAmount(amt sdk.Int) {
+	order.PaidOfferCoinAmount = amt
+}
+
+func (order *BaseOrder) GetReceivedDemandCoinAmount() sdk.Int {
+	return order.ReceivedDemandCoinAmount
+}
+
+func (order *BaseOrder) SetReceivedDemandCoinAmount(amt sdk.Int) {
+	order.ReceivedDemandCoinAmount = amt
+}
+
 func (order *BaseOrder) GetOpenAmount() sdk.Int {
 	return order.OpenAmount
 }
@@ -109,6 +134,10 @@ func (order *BaseOrder) GetMatchRecords() []MatchRecord {
 
 func (order *BaseOrder) AddMatchRecord(record MatchRecord) {
 	order.MatchRecords = append(order.MatchRecords, record)
+}
+
+func (order *BaseOrder) IsMatched() bool {
+	return len(order.MatchRecords) != 0
 }
 
 // HasPriority returns whether the order has higher priority than
@@ -160,13 +189,15 @@ func (order *UserOrder) String() string {
 
 type PoolOrder struct {
 	BaseOrder
-	PoolId uint64
+	PoolId         uint64
+	ReserveAddress sdk.AccAddress
 }
 
-func NewPoolOrder(poolId uint64, dir OrderDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
+func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir OrderDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
 	return &PoolOrder{
-		BaseOrder: newBaseOrder(dir, price, amt),
-		PoolId:    poolId,
+		BaseOrder:      newBaseOrder(dir, price, amt),
+		PoolId:         poolId,
+		ReserveAddress: reserveAddr,
 	}
 }
 

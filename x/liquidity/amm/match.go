@@ -28,6 +28,45 @@ func (dir PriceDirection) String() string {
 	}
 }
 
+type MatchRecord struct {
+	Amount sdk.Int
+	Price  sdk.Dec
+}
+
+func FillOrder(order Order, amt sdk.Int, price sdk.Dec) {
+	if amt.GT(order.GetOpenAmount()) {
+		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, order.GetOpenAmount()))
+	}
+	var paid, received sdk.Int
+	switch order.GetDirection() {
+	case Buy:
+		paid = price.MulInt(amt).Ceil().TruncateInt()
+		received = amt
+	case Sell:
+		paid = amt
+		received = price.MulInt(amt).TruncateInt()
+	}
+	order.SetPaidOfferCoinAmount(order.GetPaidOfferCoinAmount().Add(paid))
+	order.SetReceivedDemandCoinAmount(order.GetReceivedDemandCoinAmount().Add(received))
+	order.SetOpenAmount(order.GetOpenAmount().Sub(amt))
+	order.AddMatchRecord(MatchRecord{
+		Amount: amt,
+		Price:  price,
+	})
+}
+
+func FulfillOrder(order Order, price sdk.Dec) {
+	if order.GetOpenAmount().IsPositive() {
+		FillOrder(order, order.GetOpenAmount(), price)
+	}
+}
+
+func FulfillOrders(orders []Order, price sdk.Dec) {
+	for _, order := range orders {
+		FulfillOrder(order, price)
+	}
+}
+
 //// FindMatchPrice returns the best match price for given order sources.
 //// If there is no matchable orders, found will be false.
 //func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
@@ -296,33 +335,5 @@ func DistributeOrderAmountToOrders(orders []Order, amt sdk.Int, price sdk.Dec) {
 
 	for order, matchedAmt := range matchedAmtByOrder {
 		FillOrder(order, matchedAmt, price)
-	}
-}
-
-type MatchRecord struct {
-	Amount sdk.Int
-	Price  sdk.Dec
-}
-
-func FillOrder(order Order, amt sdk.Int, price sdk.Dec) {
-	if amt.GT(order.GetOpenAmount()) {
-		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, order.GetOpenAmount()))
-	}
-	order.SetOpenAmount(order.GetOpenAmount().Sub(amt))
-	order.AddMatchRecord(MatchRecord{
-		Amount: amt,
-		Price:  price,
-	})
-}
-
-func FulfillOrder(order Order, price sdk.Dec) {
-	if order.GetOpenAmount().IsPositive() {
-		FillOrder(order, order.GetOpenAmount(), price)
-	}
-}
-
-func FulfillOrders(orders []Order, price sdk.Dec) {
-	for _, order := range orders {
-		FulfillOrder(order, price)
 	}
 }
