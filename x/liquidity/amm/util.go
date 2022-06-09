@@ -2,7 +2,6 @@ package amm
 
 import (
 	"fmt"
-	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,11 +17,4 @@ func OfferCoinAmount(dir OrderDirection, price sdk.Dec, amt sdk.Int) sdk.Int {
 	default:
 		panic(fmt.Sprintf("invalid order direction: %s", dir))
 	}
-}
-
-// sortTicks sorts given ticks in descending order.
-func sortTicks(ticks []sdk.Dec) {
-	sort.Slice(ticks, func(i, j int) bool {
-		return ticks[i].GT(ticks[j])
-	})
 }
