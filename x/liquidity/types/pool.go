@@ -10,12 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
-	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
 var (
-	_ amm.OrderSource = (*BasicPoolOrderSource)(nil)
-
 	poolCoinDenomRegexp = regexp.MustCompile(`^pool([1-9]\d*)$`)
 )
 
@@ -82,45 +79,6 @@ func (pool Pool) Validate() error {
 		return fmt.Errorf("invalid pool coin denom: %w", err)
 	}
 	return nil
-}
-
-// BasicPoolOrderSource is the order source for a pool which implements
-// amm.OrderSource.
-type BasicPoolOrderSource struct {
-	amm.Pool
-	PoolId                        uint64
-	PoolReserveAddress            sdk.AccAddress
-	BaseCoinDenom, QuoteCoinDenom string
-}
-
-// NewBasicPoolOrderSource returns a new BasicPoolOrderSource.
-func NewBasicPoolOrderSource(
-	pool amm.Pool, poolId uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) *BasicPoolOrderSource {
-	return &BasicPoolOrderSource{
-		Pool:               pool,
-		PoolId:             poolId,
-		PoolReserveAddress: reserveAddr,
-		BaseCoinDenom:      baseCoinDenom,
-		QuoteCoinDenom:     quoteCoinDenom,
-	}
-}
-
-func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
-	amt := os.BuyAmountOver(price)
-	if IsTooSmallOrderAmount(amt, price) {
-		return nil
-	}
-	quoteCoin := sdk.NewCoin(os.QuoteCoinDenom, amm.OfferCoinAmount(amm.Buy, price, amt))
-	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Buy, price, amt, quoteCoin, os.BaseCoinDenom)}
-}
-
-func (os *BasicPoolOrderSource) SellOrdersUnder(price sdk.Dec) []amm.Order {
-	amt := os.SellAmountUnder(price)
-	if IsTooSmallOrderAmount(amt, price) {
-		return nil
-	}
-	baseCoin := sdk.NewCoin(os.BaseCoinDenom, amt)
-	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Sell, price, amt, baseCoin, os.QuoteCoinDenom)}
 }
 
 // MustMarshalPool returns the pool bytes.
