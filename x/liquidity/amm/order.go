@@ -8,8 +8,6 @@ import (
 
 var (
 	_ Order = (*BaseOrder)(nil)
-	_ Order = (*UserOrder)(nil)
-	_ Order = (*PoolOrder)(nil)
 )
 
 // OrderDirection specifies an order direction, either buy or sell.
@@ -68,8 +66,9 @@ type BaseOrder struct {
 	MatchRecords []MatchRecord
 }
 
-func newBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) BaseOrder {
-	return BaseOrder{
+// NewBaseOrder returns a new BaseOrder.
+func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
+	return &BaseOrder{
 		Direction:                dir,
 		Price:                    price,
 		Amount:                   amt,
@@ -77,12 +76,6 @@ func newBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) BaseOrder {
 		PaidOfferCoinAmount:      sdk.ZeroInt(),
 		ReceivedDemandCoinAmount: sdk.ZeroInt(),
 	}
-}
-
-// NewBaseOrder returns a new BaseOrder.
-func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
-	order := newBaseOrder(dir, price, amt)
-	return &order
 }
 
 // GetDirection returns the order direction.
@@ -148,76 +141,6 @@ func (order *BaseOrder) HasPriority(other Order) bool {
 
 func (order *BaseOrder) String() string {
 	return fmt.Sprintf("BaseOrder(%s,%s,%s)", order.Direction, order.Price, order.Amount)
-}
-
-type UserOrder struct {
-	BaseOrder
-	OrderId uint64
-	BatchId uint64
-}
-
-func NewUserOrder(orderId, batchId uint64, dir OrderDirection, price sdk.Dec, amt sdk.Int) *UserOrder {
-	return &UserOrder{
-		BaseOrder: newBaseOrder(dir, price, amt),
-		OrderId:   orderId,
-		BatchId:   batchId,
-	}
-}
-
-func (order *UserOrder) GetBatchId() uint64 {
-	return order.BatchId
-}
-
-func (order *UserOrder) HasPriority(other Order) bool {
-	if !order.Amount.Equal(other.GetAmount()) {
-		return order.Amount.GT(other.GetAmount())
-	}
-	switch other := other.(type) {
-	case *UserOrder:
-		return order.OrderId < other.OrderId
-	case *PoolOrder:
-		return true
-	default:
-		panic(fmt.Errorf("invalid order type: %T", other))
-	}
-}
-
-func (order *UserOrder) String() string {
-	return fmt.Sprintf("UserOrder(%d,%d,%s,%s,%s)",
-		order.OrderId, order.BatchId, order.Direction, order.Price, order.Amount)
-}
-
-type PoolOrder struct {
-	BaseOrder
-	PoolId         uint64
-	ReserveAddress sdk.AccAddress
-}
-
-func NewPoolOrder(poolId uint64, reserveAddr sdk.AccAddress, dir OrderDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
-	return &PoolOrder{
-		BaseOrder:      newBaseOrder(dir, price, amt),
-		PoolId:         poolId,
-		ReserveAddress: reserveAddr,
-	}
-}
-
-func (order *PoolOrder) HasPriority(other Order) bool {
-	if !order.Amount.Equal(other.GetAmount()) {
-		return order.Amount.GT(other.GetAmount())
-	}
-	switch other := other.(type) {
-	case *UserOrder:
-		return false
-	case *PoolOrder:
-		return order.PoolId < other.PoolId
-	default:
-		panic(fmt.Errorf("invalid order type: %T", other))
-	}
-}
-
-func (order *PoolOrder) String() string {
-	return fmt.Sprintf("PoolOrder(%d,%s,%s,%s)",
-		order.PoolId, order.Direction, order.Price, order.Amount)
 }
 
 func TotalAmount(orders []Order) sdk.Int {

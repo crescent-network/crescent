@@ -48,8 +48,10 @@ func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 	}
 }
 
+// NewOrder returns new pool order.
+// Users should override this method to return proper order type.
 func (pool *BasicPool) NewOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order {
-	return NewPoolOrder(0, nil, dir, price, amt)
+	return NewBaseOrder(dir, price, amt)
 }
 
 // Balances returns the balances of the pool.
