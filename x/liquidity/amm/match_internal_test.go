@@ -58,15 +58,14 @@ func TestInstantMatch(t *testing.T) {
 4   | 0.7 |
 `)
 	ob := NewOrderBook(orders...)
-	ctx := NewMatchContext()
-	matched := ob.InstantMatch(ctx, utils.ParseDec("1.0"))
+	matched := ob.InstantMatch(utils.ParseDec("1.0"))
 	require.True(t, matched)
 	for _, order := range orders {
 		fmt.Printf("%s %s at %s\n", order.GetDirection(), order.GetAmount(), order.GetPrice())
-		if _, ok := ctx[order]; !ok {
+		if len(order.GetMatchRecords()) == 0 {
 			continue
 		}
-		for _, record := range ctx[order].MatchRecords {
+		for _, record := range order.GetMatchRecords() {
 			fmt.Printf("  match %s at %s\n", record.Amount, record.Price)
 		}
 	}

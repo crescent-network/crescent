@@ -40,6 +40,10 @@ type Order interface {
 	GetBatchId() uint64
 	GetPrice() sdk.Dec
 	GetAmount() sdk.Int // The original order amount
+	GetOpenAmount() sdk.Int
+	SetOpenAmount(amt sdk.Int)
+	GetMatchRecords() []MatchRecord
+	AddMatchRecord(record MatchRecord)
 	// HasPriority returns true if the order has higher priority
 	// than the other order.
 	HasPriority(other Order) bool
@@ -51,15 +55,25 @@ type BaseOrder struct {
 	Direction OrderDirection
 	Price     sdk.Dec
 	Amount    sdk.Int
+
+	// Match info
+	OpenAmount   sdk.Int
+	MatchRecords []MatchRecord
+}
+
+func newBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) BaseOrder {
+	return BaseOrder{
+		Direction:  dir,
+		Price:      price,
+		Amount:     amt,
+		OpenAmount: amt,
+	}
 }
 
 // NewBaseOrder returns a new BaseOrder.
 func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
-	return &BaseOrder{
-		Direction: dir,
-		Price:     price,
-		Amount:    amt,
-	}
+	order := newBaseOrder(dir, price, amt)
+	return &order
 }
 
 // GetDirection returns the order direction.
@@ -81,6 +95,22 @@ func (order *BaseOrder) GetAmount() sdk.Int {
 	return order.Amount
 }
 
+func (order *BaseOrder) GetOpenAmount() sdk.Int {
+	return order.OpenAmount
+}
+
+func (order *BaseOrder) SetOpenAmount(amt sdk.Int) {
+	order.OpenAmount = amt
+}
+
+func (order *BaseOrder) GetMatchRecords() []MatchRecord {
+	return order.MatchRecords
+}
+
+func (order *BaseOrder) AddMatchRecord(record MatchRecord) {
+	order.MatchRecords = append(order.MatchRecords, record)
+}
+
 // HasPriority returns whether the order has higher priority than
 // the other order.
 func (order *BaseOrder) HasPriority(other Order) bool {
@@ -99,13 +129,9 @@ type UserOrder struct {
 
 func NewUserOrder(orderId, batchId uint64, dir OrderDirection, price sdk.Dec, amt sdk.Int) *UserOrder {
 	return &UserOrder{
-		BaseOrder: BaseOrder{
-			Direction: dir,
-			Price:     price,
-			Amount:    amt,
-		},
-		OrderId: orderId,
-		BatchId: batchId,
+		BaseOrder: newBaseOrder(dir, price, amt),
+		OrderId:   orderId,
+		BatchId:   batchId,
 	}
 }
 
@@ -139,12 +165,8 @@ type PoolOrder struct {
 
 func NewPoolOrder(poolId uint64, dir OrderDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
 	return &PoolOrder{
-		BaseOrder: BaseOrder{
-			Direction: dir,
-			Price:     price,
-			Amount:    amt,
-		},
-		PoolId: poolId,
+		BaseOrder: newBaseOrder(dir, price, amt),
+		PoolId:    poolId,
 	}
 }
 
@@ -171,6 +193,14 @@ func TotalAmount(orders []Order) sdk.Int {
 	amt := sdk.ZeroInt()
 	for _, order := range orders {
 		amt = amt.Add(order.GetAmount())
+	}
+	return amt
+}
+
+func TotalOpenAmount(orders []Order) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, order := range orders {
+		amt = amt.Add(order.GetOpenAmount())
 	}
 	return amt
 }

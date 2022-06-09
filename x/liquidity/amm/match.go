@@ -86,13 +86,13 @@ func (dir PriceDirection) String() string {
 //	return i, true
 //}
 
-func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched bool) {
+func (ob *OrderBook) InstantMatch(lastPrice sdk.Dec) (matched bool) {
 	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))
 	for i, buyTick := range ob.buys.ticks {
 		if buyTick.price.LT(lastPrice) {
 			break
 		}
-		sum := ctx.TotalOpenAmount(buyTick.orders())
+		sum := TotalOpenAmount(buyTick.orders())
 		if i > 0 {
 			sum = buySums[i-1].Add(sum)
 		}
@@ -106,7 +106,7 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		if sellTick.price.GT(lastPrice) {
 			break
 		}
-		sum := ctx.TotalOpenAmount(sellTick.orders())
+		sum := TotalOpenAmount(sellTick.orders())
 		if i > 0 {
 			sum = sellSums[i-1].Add(sum)
 		}
@@ -124,7 +124,7 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 	})
 	distributeAmtToTicks := func(ticks []*orderBookTick, sums []sdk.Int, lastIdx int) {
 		for _, tick := range ticks[:lastIdx] {
-			ctx.MatchOrdersFull(tick.orders(), lastPrice)
+			FulfillOrders(tick.orders(), lastPrice)
 		}
 		var remainingAmt sdk.Int
 		if lastIdx == 0 {
@@ -132,21 +132,21 @@ func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched 
 		} else {
 			remainingAmt = matchAmt.Sub(sums[lastIdx-1])
 		}
-		DistributeOrderAmountToTick(ctx, ticks[lastIdx], remainingAmt, lastPrice)
+		DistributeOrderAmountToTick(ticks[lastIdx], remainingAmt, lastPrice)
 	}
 	distributeAmtToTicks(ob.buys.ticks, buySums, bi)
 	distributeAmtToTicks(ob.sells.ticks, sellSums, si)
 	return true
 }
 
-func (ob *OrderBook) PriceDirection(ctx MatchContext, lastPrice sdk.Dec) PriceDirection {
+func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 	buyAmtOverLastPrice := sdk.ZeroInt()
 	buyAmtAtLastPrice := sdk.ZeroInt()
 	for _, tick := range ob.buys.ticks {
 		if tick.price.LT(lastPrice) {
 			break
 		}
-		amt := ctx.TotalOpenAmount(tick.orders())
+		amt := TotalOpenAmount(tick.orders())
 		if tick.price.Equal(lastPrice) {
 			buyAmtAtLastPrice = amt
 			break
@@ -159,7 +159,7 @@ func (ob *OrderBook) PriceDirection(ctx MatchContext, lastPrice sdk.Dec) PriceDi
 		if tick.price.GT(lastPrice) {
 			break
 		}
-		amt := ctx.TotalOpenAmount(tick.orders())
+		amt := TotalOpenAmount(tick.orders())
 		if tick.price.Equal(lastPrice) {
 			sellAmtAtLastPrice = amt
 			break
@@ -176,11 +176,11 @@ func (ob *OrderBook) PriceDirection(ctx MatchContext, lastPrice sdk.Dec) PriceDi
 	}
 }
 
-func (ob *OrderBook) Match(ctx MatchContext, lastPrice sdk.Dec) (matchPrice sdk.Dec, matched bool) {
+func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, matched bool) {
 	if len(ob.buys.ticks) == 0 || len(ob.sells.ticks) == 0 {
 		return sdk.Dec{}, false
 	}
-	dir := ob.PriceDirection(ctx, lastPrice)
+	dir := ob.PriceDirection(lastPrice)
 	if dir == PriceStaying {
 		return sdk.Dec{}, false
 	}
@@ -194,37 +194,37 @@ func (ob *OrderBook) Match(ctx MatchContext, lastPrice sdk.Dec) (matchPrice sdk.
 		case PriceDecreasing:
 			matchPrice = buyTick.price
 		}
-		buyTickOpenAmt := ctx.TotalOpenAmount(buyTick.orders())
-		sellTickOpenAmt := ctx.TotalOpenAmount(sellTick.orders())
+		buyTickOpenAmt := TotalOpenAmount(buyTick.orders())
+		sellTickOpenAmt := TotalOpenAmount(sellTick.orders())
 		if buyTickOpenAmt.LTE(sellTickOpenAmt) {
-			DistributeOrderAmountToTick(ctx, buyTick, buyTickOpenAmt, matchPrice)
+			DistributeOrderAmountToTick(buyTick, buyTickOpenAmt, matchPrice)
 			bi++
 		} else {
-			DistributeOrderAmountToTick(ctx, buyTick, sellTickOpenAmt, matchPrice)
+			DistributeOrderAmountToTick(buyTick, sellTickOpenAmt, matchPrice)
 		}
 		if sellTickOpenAmt.LTE(buyTickOpenAmt) {
-			DistributeOrderAmountToTick(ctx, sellTick, sellTickOpenAmt, matchPrice)
+			DistributeOrderAmountToTick(sellTick, sellTickOpenAmt, matchPrice)
 			si++
 		} else {
-			DistributeOrderAmountToTick(ctx, sellTick, buyTickOpenAmt, matchPrice)
+			DistributeOrderAmountToTick(sellTick, buyTickOpenAmt, matchPrice)
 		}
 		matched = true
 	}
 	return
 }
 
-func DistributeOrderAmountToTick(ctx MatchContext, tick *orderBookTick, amt sdk.Int, price sdk.Dec) {
+func DistributeOrderAmountToTick(tick *orderBookTick, amt sdk.Int, price sdk.Dec) {
 	remainingAmt := amt
 	for _, group := range tick.orderGroups {
-		openAmt := ctx.TotalOpenAmount(group.orders)
+		openAmt := TotalOpenAmount(group.orders)
 		if openAmt.IsZero() {
 			continue
 		}
 		if remainingAmt.GTE(openAmt) {
-			ctx.MatchOrdersFull(group.orders, price)
+			FulfillOrders(group.orders, price)
 			remainingAmt = remainingAmt.Sub(openAmt)
 		} else {
-			DistributeOrderAmountToOrders(ctx, group.orders, remainingAmt, price)
+			DistributeOrderAmountToOrders(group.orders, remainingAmt, price)
 			remainingAmt = sdk.ZeroInt()
 		}
 		if remainingAmt.IsZero() {
@@ -240,19 +240,18 @@ func DistributeOrderAmountToTick(ctx MatchContext, tick *orderBookTick, amt sdk.
 // to the orders again, by priority.
 // This time, the proportion is not considered and each order takes up
 // the amount as much as possible.
-func DistributeOrderAmountToOrders(ctx MatchContext, orders []Order, amt sdk.Int, price sdk.Dec) {
+func DistributeOrderAmountToOrders(orders []Order, amt sdk.Int, price sdk.Dec) {
 	totalAmt := TotalAmount(orders)
 	totalMatchedAmt := sdk.ZeroInt()
 	matchedAmtByOrder := map[Order]sdk.Int{}
 
 	for _, order := range orders {
-		openAmt := ctx.OpenAmount(order)
-		if openAmt.IsZero() {
+		if order.GetOpenAmount().IsZero() {
 			continue
 		}
 		orderAmt := order.GetAmount().ToDec()
 		proportion := orderAmt.QuoTruncate(totalAmt.ToDec())
-		matchedAmt := sdk.MinInt(openAmt, proportion.MulInt(amt).TruncateInt())
+		matchedAmt := sdk.MinInt(order.GetOpenAmount(), proportion.MulInt(amt).TruncateInt())
 		if matchedAmt.IsPositive() {
 			matchedAmtByOrder[order] = matchedAmt
 			totalMatchedAmt = totalMatchedAmt.Add(matchedAmt)
@@ -268,7 +267,7 @@ func DistributeOrderAmountToOrders(ctx MatchContext, orders []Order, amt sdk.Int
 		if !ok { // TODO: is it possible?
 			prevMatchedAmt = sdk.ZeroInt()
 		}
-		matchedAmt := sdk.MinInt(remainingAmt, ctx.OpenAmount(order).Sub(prevMatchedAmt))
+		matchedAmt := sdk.MinInt(remainingAmt, order.GetOpenAmount().Sub(prevMatchedAmt))
 		matchedAmtByOrder[order] = prevMatchedAmt.Add(matchedAmt)
 		remainingAmt = remainingAmt.Sub(matchedAmt)
 	}
@@ -288,15 +287,15 @@ func DistributeOrderAmountToOrders(ctx MatchContext, orders []Order, amt sdk.Int
 
 	if len(notMatchedOrders) > 0 {
 		if len(matchedOrders) == 0 {
-			DistributeOrderAmountToOrders(ctx, orders[:len(orders)-1], amt, price)
+			DistributeOrderAmountToOrders(orders[:len(orders)-1], amt, price)
 		} else {
-			DistributeOrderAmountToOrders(ctx, matchedOrders, amt, price)
+			DistributeOrderAmountToOrders(matchedOrders, amt, price)
 		}
 		return
 	}
 
 	for order, matchedAmt := range matchedAmtByOrder {
-		ctx.MatchOrder(order, matchedAmt, price)
+		FillOrder(order, matchedAmt, price)
 	}
 }
 
@@ -305,68 +304,25 @@ type MatchRecord struct {
 	Price  sdk.Dec
 }
 
-type MatchResult struct {
-	OpenAmount   sdk.Int
-	MatchRecords []MatchRecord
-}
-
-type MatchContext map[Order]*MatchResult
-
-func NewMatchContext() MatchContext {
-	return MatchContext{}
-}
-
-func (ctx MatchContext) MatchOrder(order Order, amt sdk.Int, price sdk.Dec) {
-	if openAmt := ctx.OpenAmount(order); amt.GT(openAmt) {
-		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, openAmt))
+func FillOrder(order Order, amt sdk.Int, price sdk.Dec) {
+	if amt.GT(order.GetOpenAmount()) {
+		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, order.GetOpenAmount()))
 	}
-	mr, ok := ctx[order]
-	if !ok {
-		mr = &MatchResult{
-			OpenAmount: order.GetAmount(),
-		}
-		ctx[order] = mr
-	}
-	mr.OpenAmount = mr.OpenAmount.Sub(amt)
-	mr.MatchRecords = append(mr.MatchRecords, MatchRecord{
+	order.SetOpenAmount(order.GetOpenAmount().Sub(amt))
+	order.AddMatchRecord(MatchRecord{
 		Amount: amt,
 		Price:  price,
 	})
 }
 
-func (ctx MatchContext) MatchOrderFull(order Order, price sdk.Dec) {
-	openAmt := ctx.OpenAmount(order)
-	if openAmt.IsPositive() {
-		ctx.MatchOrder(order, ctx.OpenAmount(order), price)
+func FulfillOrder(order Order, price sdk.Dec) {
+	if order.GetOpenAmount().IsPositive() {
+		FillOrder(order, order.GetOpenAmount(), price)
 	}
 }
 
-func (ctx MatchContext) MatchOrdersFull(orders []Order, price sdk.Dec) {
+func FulfillOrders(orders []Order, price sdk.Dec) {
 	for _, order := range orders {
-		ctx.MatchOrderFull(order, price)
+		FulfillOrder(order, price)
 	}
-}
-
-func (ctx MatchContext) OpenAmount(order Order) sdk.Int {
-	mr, ok := ctx[order]
-	if !ok {
-		return order.GetAmount()
-	}
-	return mr.OpenAmount
-}
-
-func (ctx MatchContext) TotalOpenAmount(orders []Order) sdk.Int {
-	amt := sdk.ZeroInt()
-	for _, order := range orders {
-		amt = amt.Add(ctx.OpenAmount(order))
-	}
-	return amt
-}
-
-func (ctx MatchContext) MatchedAmount(order Order) sdk.Int {
-	mr, ok := ctx[order]
-	if !ok {
-		return sdk.ZeroInt()
-	}
-	return order.GetAmount().Sub(mr.OpenAmount)
 }
