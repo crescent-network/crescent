@@ -35,12 +35,6 @@ func (ob *OrderBook) AddOrder(orders ...Order) {
 	}
 }
 
-// OrdersAt returns orders at given price in the order book.
-// Note that the orders are not sorted.
-func (ob *OrderBook) OrdersAt(price sdk.Dec) []Order {
-	return append(ob.BuyOrdersAt(price), ob.SellOrdersAt(price)...)
-}
-
 // BuyOrdersAt returns buy orders at given price in the order book.
 // Note that the orders are not sorted.
 func (ob *OrderBook) BuyOrdersAt(price sdk.Dec) []Order {
@@ -51,18 +45,6 @@ func (ob *OrderBook) BuyOrdersAt(price sdk.Dec) []Order {
 // Note that the orders are not sorted.
 func (ob *OrderBook) SellOrdersAt(price sdk.Dec) []Order {
 	return ob.sells.ordersAt(price)
-}
-
-// HighestBuyPrice returns the highest buy price in the order book.
-func (ob *OrderBook) HighestBuyPrice() (sdk.Dec, bool) {
-	price, _, found := ob.buys.highestPrice()
-	return price, found
-}
-
-// LowestSellPrice returns the lowest sell price in the order book.
-func (ob *OrderBook) LowestSellPrice() (sdk.Dec, bool) {
-	price, _, found := ob.sells.lowestPrice()
-	return price, found
 }
 
 func (ob *OrderBook) HighestPrice() (sdk.Dec, bool) {

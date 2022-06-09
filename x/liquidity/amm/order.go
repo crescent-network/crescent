@@ -43,30 +43,22 @@ type Order interface {
 	// HasPriority returns true if the order has higher priority
 	// than the other order.
 	HasPriority(other Order) bool
+	String() string
 }
 
 // BaseOrder is the base struct for an Order.
 type BaseOrder struct {
-	Direction          OrderDirection
-	Price              sdk.Dec
-	Amount             sdk.Int
-	OpenAmount         sdk.Int
-	OfferCoin          sdk.Coin
-	RemainingOfferCoin sdk.Coin
-	ReceivedDemandCoin sdk.Coin
-	Matched            bool
+	Direction OrderDirection
+	Price     sdk.Dec
+	Amount    sdk.Int
 }
 
 // NewBaseOrder returns a new BaseOrder.
-func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int, offerCoin sdk.Coin, demandCoinDenom string) *BaseOrder {
+func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
 	return &BaseOrder{
-		Direction:          dir,
-		Price:              price,
-		Amount:             amt,
-		OpenAmount:         amt,
-		OfferCoin:          offerCoin,
-		RemainingOfferCoin: offerCoin,
-		ReceivedDemandCoin: sdk.NewCoin(demandCoinDenom, sdk.ZeroInt()),
+		Direction: dir,
+		Price:     price,
+		Amount:    amt,
 	}
 }
 
@@ -95,54 +87,26 @@ func (order *BaseOrder) HasPriority(other Order) bool {
 	return order.Amount.GT(other.GetAmount())
 }
 
-// GetOpenAmount returns open(not matched) amount of the order.
-func (order *BaseOrder) GetOpenAmount() sdk.Int {
-	return order.OpenAmount
-}
-
-// SetOpenAmount sets open amount of the order.
-func (order *BaseOrder) SetOpenAmount(amt sdk.Int) {
-	order.OpenAmount = amt
-}
-
-func (order *BaseOrder) GetOfferCoin() sdk.Coin {
-	return order.OfferCoin
-}
-
-// GetRemainingOfferCoin returns remaining offer coin of the order.
-func (order *BaseOrder) GetRemainingOfferCoin() sdk.Coin {
-	return order.RemainingOfferCoin
-}
-
-// DecrRemainingOfferCoin decrements remaining offer coin amount of the order.
-func (order *BaseOrder) DecrRemainingOfferCoin(amt sdk.Int) {
-	order.RemainingOfferCoin = order.RemainingOfferCoin.SubAmount(amt)
-}
-
-// GetReceivedDemandCoin returns received demand coin of the order.
-func (order *BaseOrder) GetReceivedDemandCoin() sdk.Coin {
-	return order.ReceivedDemandCoin
-}
-
-// IncrReceivedDemandCoin increments received demand coin amount of the order.
-func (order *BaseOrder) IncrReceivedDemandCoin(amt sdk.Int) {
-	order.ReceivedDemandCoin = order.ReceivedDemandCoin.AddAmount(amt)
-}
-
-// IsMatched returns whether the order is matched or not.
-func (order *BaseOrder) IsMatched() bool {
-	return order.Matched
-}
-
-// SetMatched sets whether the order is matched or not.
-func (order *BaseOrder) SetMatched(matched bool) {
-	order.Matched = matched
+func (order *BaseOrder) String() string {
+	return fmt.Sprintf("BaseOrder(%s,%s,%s)", order.Direction, order.Price, order.Amount)
 }
 
 type UserOrder struct {
 	BaseOrder
 	OrderId uint64
 	BatchId uint64
+}
+
+func NewUserOrder(orderId, batchId uint64, dir OrderDirection, price sdk.Dec, amt sdk.Int) *UserOrder {
+	return &UserOrder{
+		BaseOrder: BaseOrder{
+			Direction: dir,
+			Price:     price,
+			Amount:    amt,
+		},
+		OrderId: orderId,
+		BatchId: batchId,
+	}
 }
 
 func (order *UserOrder) GetBatchId() uint64 {
@@ -163,9 +127,25 @@ func (order *UserOrder) HasPriority(other Order) bool {
 	}
 }
 
+func (order *UserOrder) String() string {
+	return fmt.Sprintf("UserOrder(%d,%d,%s,%s,%s)",
+		order.OrderId, order.BatchId, order.Direction, order.Price, order.Amount)
+}
+
 type PoolOrder struct {
 	BaseOrder
 	PoolId uint64
+}
+
+func NewPoolOrder(poolId uint64, dir OrderDirection, price sdk.Dec, amt sdk.Int) *PoolOrder {
+	return &PoolOrder{
+		BaseOrder: BaseOrder{
+			Direction: dir,
+			Price:     price,
+			Amount:    amt,
+		},
+		PoolId: poolId,
+	}
 }
 
 func (order *PoolOrder) HasPriority(other Order) bool {
@@ -180,6 +160,11 @@ func (order *PoolOrder) HasPriority(other Order) bool {
 	default:
 		panic(fmt.Errorf("invalid order type: %T", other))
 	}
+}
+
+func (order *PoolOrder) String() string {
+	return fmt.Sprintf("PoolOrder(%d,%s,%s,%s)",
+		order.PoolId, order.Direction, order.Price, order.Amount)
 }
 
 func TotalAmount(orders []Order) sdk.Int {

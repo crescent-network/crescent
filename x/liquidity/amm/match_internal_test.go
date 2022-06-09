@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	utils "github.com/cosmosquad-labs/squad/types"
+	utils "github.com/crescent-network/crescent/types"
 )
 
 func parseOrders(s string) []Order {
@@ -40,11 +40,7 @@ func parseOrders(s string) []Order {
 						panic(fmt.Errorf("invalid batch id: %s", chunks[2]))
 					}
 				}
-				orders = append(orders, &UserOrder{
-					BaseOrder: *newOrder(dir, price, amt),
-					OrderId:   0,
-					BatchId:   batchId,
-				})
+				orders = append(orders, NewUserOrder(0, batchId, dir, price, amt))
 			}
 			return orders
 		}

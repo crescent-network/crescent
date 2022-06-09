@@ -28,63 +28,63 @@ func (dir PriceDirection) String() string {
 	}
 }
 
-// FindMatchPrice returns the best match price for given order sources.
-// If there is no matchable orders, found will be false.
-func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
-	highestBuyPrice, found := os.HighestBuyPrice()
-	if !found {
-		return sdk.Dec{}, false
-	}
-	lowestSellPrice, found := os.LowestSellPrice()
-	if !found {
-		return sdk.Dec{}, false
-	}
-	if highestBuyPrice.LT(lowestSellPrice) {
-		return sdk.Dec{}, false
-	}
-
-	prec := TickPrecision(tickPrec)
-	lowestTickIdx := prec.TickToIndex(prec.LowestTick())
-	highestTickIdx := prec.TickToIndex(prec.HighestTick())
-	var i, j int
-	i, found = findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
-		return os.BuyAmountOver(prec.TickFromIndex(i + 1)).LTE(os.SellAmountUnder(prec.TickFromIndex(i)))
-	})
-	if !found {
-		return sdk.Dec{}, false
-	}
-	j, found = findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
-		return os.BuyAmountOver(prec.TickFromIndex(i)).GTE(os.SellAmountUnder(prec.TickFromIndex(i - 1)))
-	})
-	if !found {
-		return sdk.Dec{}, false
-	}
-	midTick := TickFromIndex(i, tickPrec).Add(TickFromIndex(j, tickPrec)).QuoInt64(2)
-	return RoundPrice(midTick, tickPrec), true
-}
-
-// findFirstTrueCondition uses the binary search to find the first index
-// where f(i) is true, while searching in range [start, end].
-// It assumes that f(j) == false where j < i and f(j) == true where j >= i.
-// start can be greater than end.
-func findFirstTrueCondition(start, end int, f func(i int) bool) (i int, found bool) {
-	if start < end {
-		i = start + sort.Search(end-start+1, func(i int) bool {
-			return f(start + i)
-		})
-		if i > end {
-			return 0, false
-		}
-		return i, true
-	}
-	i = start - sort.Search(start-end+1, func(i int) bool {
-		return f(start - i)
-	})
-	if i < end {
-		return 0, false
-	}
-	return i, true
-}
+//// FindMatchPrice returns the best match price for given order sources.
+//// If there is no matchable orders, found will be false.
+//func FindMatchPrice(os OrderSource, tickPrec int) (matchPrice sdk.Dec, found bool) {
+//	highestBuyPrice, found := os.HighestBuyPrice()
+//	if !found {
+//		return sdk.Dec{}, false
+//	}
+//	lowestSellPrice, found := os.LowestSellPrice()
+//	if !found {
+//		return sdk.Dec{}, false
+//	}
+//	if highestBuyPrice.LT(lowestSellPrice) {
+//		return sdk.Dec{}, false
+//	}
+//
+//	prec := TickPrecision(tickPrec)
+//	lowestTickIdx := prec.TickToIndex(prec.LowestTick())
+//	highestTickIdx := prec.TickToIndex(prec.HighestTick())
+//	var i, j int
+//	i, found = findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
+//		return os.BuyAmountOver(prec.TickFromIndex(i + 1)).LTE(os.SellAmountUnder(prec.TickFromIndex(i)))
+//	})
+//	if !found {
+//		return sdk.Dec{}, false
+//	}
+//	j, found = findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
+//		return os.BuyAmountOver(prec.TickFromIndex(i)).GTE(os.SellAmountUnder(prec.TickFromIndex(i - 1)))
+//	})
+//	if !found {
+//		return sdk.Dec{}, false
+//	}
+//	midTick := TickFromIndex(i, tickPrec).Add(TickFromIndex(j, tickPrec)).QuoInt64(2)
+//	return RoundPrice(midTick, tickPrec), true
+//}
+//
+//// findFirstTrueCondition uses the binary search to find the first index
+//// where f(i) is true, while searching in range [start, end].
+//// It assumes that f(j) == false where j < i and f(j) == true where j >= i.
+//// start can be greater than end.
+//func findFirstTrueCondition(start, end int, f func(i int) bool) (i int, found bool) {
+//	if start < end {
+//		i = start + sort.Search(end-start+1, func(i int) bool {
+//			return f(start + i)
+//		})
+//		if i > end {
+//			return 0, false
+//		}
+//		return i, true
+//	}
+//	i = start - sort.Search(start-end+1, func(i int) bool {
+//		return f(start - i)
+//	})
+//	if i < end {
+//		return 0, false
+//	}
+//	return i, true
+//}
 
 func (ob *OrderBook) InstantMatch(ctx MatchContext, lastPrice sdk.Dec) (matched bool) {
 	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))

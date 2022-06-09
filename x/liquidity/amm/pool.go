@@ -9,26 +9,25 @@ import (
 )
 
 var (
-	_ Pool        = (*BasicPool)(nil)
-	_ OrderSource = (*MockPoolOrderSource)(nil)
+	_ Pool = (*BasicPool)(nil)
 )
 
 // Pool is the interface of a pool.
 // It also satisfies OrderView interface.
 type Pool interface {
-	OrderView
+	Id() uint64
 	Balances() (rx, ry sdk.Int)
 	PoolCoinSupply() sdk.Int
 	Price() sdk.Dec
 	IsDepleted() bool
 	Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int)
 	Withdraw(pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int)
-	ProvidableXAmountOver(price sdk.Dec) sdk.Int
-	ProvidableYAmountUnder(price sdk.Dec) sdk.Int
+	Orders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order
 }
 
 // BasicPool is the basic pool type.
 type BasicPool struct {
+	id uint64
 	// rx and ry are the pool's reserve balance of each x/y coin.
 	// In perspective of a pair, x coin is the quote coin and
 	// y coin is the base coin.
@@ -39,12 +38,17 @@ type BasicPool struct {
 
 // NewBasicPool returns a new BasicPool.
 // It is OK to pass an empty sdk.Int to ps when ps is not going to be used.
-func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
+func NewBasicPool(id uint64, rx, ry, ps sdk.Int) *BasicPool {
 	return &BasicPool{
+		id: id,
 		rx: rx,
 		ry: ry,
 		ps: ps,
 	}
+}
+
+func (pool *BasicPool) Id() uint64 {
+	return pool.id
 }
 
 // Balances returns the balances of the pool.
@@ -134,96 +138,83 @@ func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 	return pool.Price(), true
 }
 
-// BuyAmountOver returns the amount of buy orders for price greater than
-// or equal to given price.
-func (pool *BasicPool) BuyAmountOver(price sdk.Dec) (amt sdk.Int) {
-	if price.GTE(pool.Price()) {
-		return sdk.ZeroInt()
-	}
-	utils.SafeMath(func() {
-		amt = pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
-		if amt.GT(MaxCoinAmount) {
-			amt = MaxCoinAmount
-		}
-	}, func() {
-		amt = MaxCoinAmount
-	})
-	return
+func (pool *BasicPool) Orders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	return append(
+		pool.BuyOrders(lowestPrice, highestPrice, tickPrec),
+		pool.SellOrders(lowestPrice, highestPrice, tickPrec)...)
 }
 
-// SellAmountUnder returns the amount of sell orders for price less than
-// or equal to given price.
-func (pool *BasicPool) SellAmountUnder(price sdk.Dec) sdk.Int {
-	return pool.ProvidableYAmountUnder(price)
+func (pool *BasicPool) BuyOrders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	rx, ry := pool.Balances()
+	var orders []Order
+	if pool.Price().GT(highestPrice) {
+		rxSqrt, err := rx.ToDec().ApproxSqrt()
+		if err != nil {
+			panic(err) // TODO: prevent panic
+		}
+		rySqrt, err := ry.ToDec().ApproxSqrt()
+		if err != nil {
+			panic(err)
+		}
+		highestPriceSqrt, err := highestPrice.ApproxSqrt()
+		if err != nil {
+			panic(err)
+		}
+		dx := rx.ToDec().Sub(highestPriceSqrt.Mul(rxSqrt.Mul(rySqrt))) // dx = rx - sqrt(P * rx * ry)
+		dy := dx.QuoTruncate(highestPrice).TruncateInt()               // dy = dx / P
+		orders = append(orders, NewPoolOrder(pool.id, Buy, highestPrice, dy))
+		rx = rx.Sub(highestPrice.MulInt(dy).Ceil().TruncateInt()) // buy side quote coin ceiling
+		ry = ry.Add(dy)
+	}
+	for rx.IsPositive() {
+		tick := PriceToDownTick(rx.ToDec().QuoInt(ry.Add(MinCoinAmount)), tickPrec)
+		if tick.LT(lowestPrice) {
+			break
+		}
+		dx := rx.ToDec().Sub(tick.MulInt(ry))    // dx = rx - P * ry
+		dy := dx.QuoTruncate(tick).TruncateInt() // dy = dx / P
+		orders = append(orders, NewPoolOrder(pool.id, Buy, tick, dy))
+		rx = rx.Sub(tick.MulInt(dy).Ceil().TruncateInt())
+		ry = ry.Add(dy)
+	}
+	return orders
 }
 
-// ProvidableXAmountOver returns the amount of x coin the pool would provide
-// for price greater than or equal to given price.
-func (pool *BasicPool) ProvidableXAmountOver(price sdk.Dec) (amt sdk.Int) {
-	if price.GTE(pool.Price()) {
-		return sdk.ZeroInt()
-	}
-	utils.SafeMath(func() {
-		amt = pool.rx.ToDec().Sub(pool.ry.ToDec().Mul(price)).TruncateInt()
-		if amt.GT(MaxCoinAmount) {
-			amt = MaxCoinAmount
+func (pool *BasicPool) SellOrders(lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	rx, ry := pool.Balances()
+	var orders []Order
+	if pool.Price().LT(lowestPrice) {
+		rxSqrt, err := rx.ToDec().ApproxSqrt()
+		if err != nil {
+			panic(err) // TODO: prevent panic
 		}
-	}, func() {
-		amt = MaxCoinAmount
-	})
-	return
-}
-
-// ProvidableYAmountUnder returns the amount of y coin the pool would provide
-// for price less than or equal to given price.
-func (pool *BasicPool) ProvidableYAmountUnder(price sdk.Dec) sdk.Int {
-	if price.LTE(pool.Price()) {
-		return sdk.ZeroInt()
-	}
-	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
-}
-
-// PoolsOrderBook returns an order book with orders made by pools.
-// Use Ticks or EvenTicks to generate ticks where pools put orders.
-// ticks should have more than 1 element.
-// The orders in the order book are just mocks, so the rest fields
-// other than Direction, Price and Amount of BaseOrder will have no
-// special meaning.
-func PoolsOrderBook(pools []Pool, ticks []sdk.Dec) *OrderBook {
-	sortTicks(ticks)
-	highestTick := ticks[0]
-	lowestTick := ticks[len(ticks)-1]
-	gap := ticks[0].Sub(ticks[1])
-	ob := NewOrderBook()
-	for _, pool := range pools {
-		poolPrice := pool.Price()
-		if poolPrice.GT(lowestTick) { // Buy orders
-			accAmtX := pool.ProvidableXAmountOver(highestTick.Add(gap))
-			for _, tick := range ticks {
-				amtX := pool.ProvidableXAmountOver(tick).Sub(accAmtX)
-				if amtX.IsPositive() {
-					amt := amtX.ToDec().QuoTruncate(tick).TruncateInt()
-					if amt.IsPositive() {
-						ob.AddOrder(NewBaseOrder(
-							Buy, tick, amt, sdk.NewCoin("quote", OfferCoinAmount(Buy, tick, amt)), "base"))
-					}
-					accAmtX = accAmtX.Add(amtX)
-				}
-			}
+		rySqrt, err := ry.ToDec().ApproxSqrt()
+		if err != nil {
+			panic(err)
 		}
-		if poolPrice.LT(highestTick) { // Sell orders
-			accAmt := pool.SellAmountUnder(lowestTick.Sub(gap))
-			for i := len(ticks) - 1; i >= 0; i-- {
-				tick := ticks[i]
-				amt := pool.SellAmountUnder(tick).Sub(accAmt)
-				if amt.IsPositive() {
-					ob.AddOrder(NewBaseOrder(Sell, tick, amt, sdk.NewCoin("base", amt), "quote"))
-					accAmt = accAmt.Add(amt)
-				}
-			}
+		lowestPriceSqrt, err := lowestPrice.ApproxSqrt()
+		if err != nil {
+			panic(err)
 		}
+		dy := ry.ToDec().Sub(rxSqrt.Mul(rySqrt).Quo(lowestPriceSqrt)).TruncateInt() // dy = ry - sqrt(rx * ry / P)
+		orders = append(orders, NewPoolOrder(pool.id, Sell, lowestPrice, dy))
+		rx = rx.Add(lowestPrice.MulInt(dy).TruncateInt()) // sell side quote coin truncation
+		ry = ry.Sub(dy)
 	}
-	return ob
+	for ry.GT(MinCoinAmount) {
+		tick := PriceToUpTick(sdk.MaxDec(
+			rx.Add(sdk.OneInt()).ToDec().QuoInt(ry),
+			rx.ToDec().QuoInt(ry.Sub(MinCoinAmount)),
+		), tickPrec)
+		if tick.GT(highestPrice) {
+			break
+		}
+		dy := ry.ToDec().Sub(rx.ToDec().QuoRoundUp(tick)).TruncateInt() // dy = ry - rx / P
+		orders = append(orders, NewPoolOrder(pool.id, Sell, tick, dy))
+		rx = rx.Add(tick.MulInt(dy).TruncateInt())
+		ry = ry.Sub(dy)
+	}
+	return orders
 }
 
 // InitialPoolCoinSupply returns ideal initial pool coin minting amount.
@@ -234,39 +225,4 @@ func InitialPoolCoinSupply(x, y sdk.Int) sdk.Int {
 	res := big.NewInt(10)
 	res.Exp(res, big.NewInt(int64(c)), nil) // 10^c
 	return sdk.NewIntFromBigInt(res)
-}
-
-// MockPoolOrderSource demonstrates how to implement a pool OrderSource.
-type MockPoolOrderSource struct {
-	Pool
-	baseCoinDenom, quoteCoinDenom string
-}
-
-// NewMockPoolOrderSource returns a new MockPoolOrderSource for testing.
-func NewMockPoolOrderSource(pool Pool, baseCoinDenom, quoteCoinDenom string) *MockPoolOrderSource {
-	return &MockPoolOrderSource{
-		Pool:           pool,
-		baseCoinDenom:  baseCoinDenom,
-		quoteCoinDenom: quoteCoinDenom,
-	}
-}
-
-// BuyOrdersOver returns buy orders for price greater or equal than given price.
-func (os *MockPoolOrderSource) BuyOrdersOver(price sdk.Dec) []Order {
-	amt := os.BuyAmountOver(price)
-	if amt.IsZero() {
-		return nil
-	}
-	quoteCoin := sdk.NewCoin(os.quoteCoinDenom, OfferCoinAmount(Buy, price, amt))
-	return []Order{NewBaseOrder(Buy, price, amt, quoteCoin, os.baseCoinDenom)}
-}
-
-// SellOrdersUnder returns sell orders for price less or equal than given price.
-func (os *MockPoolOrderSource) SellOrdersUnder(price sdk.Dec) []Order {
-	amt := os.SellAmountUnder(price)
-	if amt.IsZero() {
-		return nil
-	}
-	baseCoin := sdk.NewCoin(os.baseCoinDenom, amt)
-	return []Order{NewBaseOrder(Sell, price, amt, baseCoin, os.quoteCoinDenom)}
 }

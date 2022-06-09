@@ -11,18 +11,6 @@ import (
 	utils "github.com/crescent-network/crescent/types"
 )
 
-// Copied from orderbook_test.go
-func newOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
-	var offerCoinDenom, demandCoinDenom string
-	switch dir {
-	case Buy:
-		offerCoinDenom, demandCoinDenom = "denom2", "denom1"
-	case Sell:
-		offerCoinDenom, demandCoinDenom = "denom1", "denom2"
-	}
-	return NewBaseOrder(dir, price, amt, sdk.NewCoin(offerCoinDenom, OfferCoinAmount(dir, price, amt)), demandCoinDenom)
-}
-
 func TestOrderBookTicks_add(t *testing.T) {
 	prices := []sdk.Dec{
 		utils.ParseDec("1.0"),
@@ -35,7 +23,7 @@ func TestOrderBookTicks_add(t *testing.T) {
 	}
 	var ticks orderBookTicks
 	for _, price := range prices {
-		ticks.addOrder(newOrder(Buy, price, sdk.NewInt(10000)))
+		ticks.addOrder(NewBaseOrder(Buy, price, sdk.NewInt(10000)))
 	}
 	pricesSet := map[string]struct{}{}
 	for _, price := range prices {

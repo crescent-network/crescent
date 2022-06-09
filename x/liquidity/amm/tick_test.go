@@ -1,7 +1,6 @@
 package amm_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -242,295 +241,38 @@ func BenchmarkDownTick(b *testing.B) {
 	})
 }
 
-func TestTicks(t *testing.T) {
-	dec := utils.ParseDec
-	for i, tc := range []struct {
-		basePrice sdk.Dec
-		numTicks  int
-		ticks     []sdk.Dec
-	}{
-		{
-			dec("999.9"), 3,
-			[]sdk.Dec{
-				dec("1002"),
-				dec("1001"),
-				dec("1000"),
-				dec("999.9"),
-				dec("999.8"),
-				dec("999.7"),
-				dec("999.6"),
-			},
-		},
-		{
-			dec("2.0"), 3,
-			[]sdk.Dec{
-				dec("2.003"),
-				dec("2.002"),
-				dec("2.001"),
-				dec("2.000"),
-				dec("1.999"),
-				dec("1.998"),
-				dec("1.997"),
-			},
-		},
-		{
-			dec("1.000001"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-			},
-		},
-		{
-			dec("1.0"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-			},
-		},
-		{
-			dec("0.99999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-			},
-		},
-		{
-			dec("0.9999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-			},
-		},
-		{
-			dec("0.99985"), 3,
-			[]sdk.Dec{
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-			},
-		},
-		{
-			dec("0.9998"), 3,
-			[]sdk.Dec{
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-			},
-		},
-		{
-			dec("0.99975"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-			},
-		},
-		{
-			dec("0.9997"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-				dec("0.9994"),
-			},
-		},
-	} {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			require.Equal(t, tc.ticks, amm.Ticks(tc.basePrice, tc.numTicks, int(defTickPrec)))
-		})
-	}
-}
-
-func TestEvenTicks(t *testing.T) {
-	dec := utils.ParseDec
-	for i, tc := range []struct {
-		basePrice sdk.Dec
-		numTicks  int
-		ticks     []sdk.Dec
-	}{
-		{
-			dec("999.9"), 3,
-			[]sdk.Dec{
-				dec("1002"),
-				dec("1001"),
-				dec("1000"),
-				dec("999.0"),
-				dec("998.0"),
-				dec("997.0"),
-			},
-		},
-		{
-			dec("2.0"), 3,
-			[]sdk.Dec{
-				dec("2.003"),
-				dec("2.002"),
-				dec("2.001"),
-				dec("2.000"),
-				dec("1.999"),
-				dec("1.998"),
-				dec("1.997"),
-			},
-		},
-		{
-			dec("1.000001"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-			},
-		},
-		{
-			dec("1.0"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.9999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99985"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.9998"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99975"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-			},
-		},
-		{
-			dec("0.9997"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-				dec("0.9994"),
-			},
-		},
-	} {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			require.Equal(t, tc.ticks, amm.EvenTicks(tc.basePrice, tc.numTicks, int(defTickPrec)))
-		})
-	}
-}
-
-func BenchmarkPoolOrders(b *testing.B) {
-	tickPrec := defTickPrec
-	n := sdk.NewInt(100)
-	pool := amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
-	lastPriceTick := tickPrec.PriceToDownTick(pool.Price())
-	highestTick := tickPrec.PriceToDownTick(lastPriceTick.MulTruncate(sdk.NewDecWithPrec(11, 1)))
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		pool = amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
-		for {
-			rx, ry := pool.Balances()
-			if ry.LTE(n) {
-				break
-			}
-			tick := tickPrec.PriceToUpTick(sdk.MaxDec(
-				rx.Add(sdk.OneInt()).ToDec().QuoInt(ry),
-				rx.ToDec().QuoInt(ry.Sub(n)),
-			))
-			if tick.GT(highestTick) {
-				break
-			}
-			dy := pool.SellAmountUnder(tick)
-			if dy.IsZero() {
-				panic("!")
-			}
-
-			dx := tick.MulInt(dy).TruncateInt()
-			rx = rx.Add(dx)
-			ry = ry.Sub(dy)
-
-			pool = amm.NewBasicPool(rx, ry, sdk.Int{})
-		}
-	}
-}
+//func BenchmarkPoolOrders(b *testing.B) {
+//	tickPrec := defTickPrec
+//	n := sdk.NewInt(100)
+//	pool := amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
+//	lastPriceTick := tickPrec.PriceToDownTick(pool.Price())
+//	highestTick := tickPrec.PriceToDownTick(lastPriceTick.MulTruncate(sdk.NewDecWithPrec(11, 1)))
+//	b.ResetTimer()
+//
+//	for i := 0; i < b.N; i++ {
+//		pool = amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
+//		for {
+//			rx, ry := pool.Balances()
+//			if ry.LTE(n) {
+//				break
+//			}
+//			tick := tickPrec.PriceToUpTick(sdk.MaxDec(
+//				rx.Add(sdk.OneInt()).ToDec().QuoInt(ry),
+//				rx.ToDec().QuoInt(ry.Sub(n)),
+//			))
+//			if tick.GT(highestTick) {
+//				break
+//			}
+//			dy := pool.SellAmountUnder(tick)
+//			if dy.IsZero() {
+//				panic("!")
+//			}
+//
+//			dx := tick.MulInt(dy).TruncateInt()
+//			rx = rx.Add(dx)
+//			ry = ry.Sub(dy)
+//
+//			pool = amm.NewBasicPool(rx, ry, sdk.Int{})
+//		}
+//	}
+//}
