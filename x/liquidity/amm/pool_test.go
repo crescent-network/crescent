@@ -1,7 +1,6 @@
 package amm_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -351,11 +350,6 @@ func TestInitialPoolCoinSupply(t *testing.T) {
 //	amt := pool.BuyAmountOver(defTickPrec.LowestTick())
 //	require.True(sdk.IntEq(t, amm.MaxCoinAmount, amt))
 //}
-
-func TestBasicPoolBuyOrders(t *testing.T) {
-	pool := amm.NewBasicPool(1, sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
-	fmt.Println(pool.SellOrders(utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3))
-}
 
 func BenchmarkBasicPoolOrders(b *testing.B) {
 	pool := amm.NewBasicPool(1, sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{})

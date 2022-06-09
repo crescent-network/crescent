@@ -334,6 +334,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				}
 				return false, nil
 			}
+			// TODO: add orders only when price is in the range?
 			ob.AddOrder(types.NewUserOrder(order))
 			if order.Status == types.OrderStatusNotExecuted {
 				order.SetStatus(types.OrderStatusNotMatched)
@@ -353,17 +354,18 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return nil
 	}
 
-	var poolOrderSources []amm.OrderSource
+
 	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
+		if pool.Disabled {
+			return false, nil
+		}
 		rx, ry := k.getPoolBalances(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
-		ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, ps)
+		ammPool := amm.NewBasicPool(pool.Id, rx.Amount, ry.Amount, ps)
 		if ammPool.IsDepleted() {
 			k.MarkPoolAsDisabled(ctx, pool)
 			return false, nil
 		}
-		poolOrderSource := types.NewBasicPoolOrderSource(ammPool, pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
-		poolOrderSources = append(poolOrderSources, poolOrderSource)
 		return false, nil
 	})
 

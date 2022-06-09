@@ -85,11 +85,11 @@ func (ob *OrderBook) stringRepresentation(prices []sdk.Dec) string {
 		return prices[i].GT(prices[j])
 	})
 	var b strings.Builder
-	b.WriteString("+--------buy---------+------------price-------------+--------sell--------+\n")
+	b.WriteString("+--------sell--------+------------price-------------+--------buy---------+\n")
 	for _, price := range prices {
 		buyAmt := TotalAmount(ob.BuyOrdersAt(price))
 		sellAmt := TotalAmount(ob.SellOrdersAt(price))
-		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", buyAmt, price.String(), sellAmt)
+		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", sellAmt, price.String(), buyAmt)
 	}
 	b.WriteString("+--------------------+------------------------------+--------------------+")
 	return b.String()
