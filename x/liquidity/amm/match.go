@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// PriceDirection specifies estimated price direction within this batch.
 type PriceDirection int
 
 const (
@@ -28,11 +29,13 @@ func (dir PriceDirection) String() string {
 	}
 }
 
+// MatchRecord holds a single match record.
 type MatchRecord struct {
 	Amount sdk.Int
 	Price  sdk.Dec
 }
 
+// FillOrder fills the order by given amount and price.
 func FillOrder(order Order, amt sdk.Int, price sdk.Dec) {
 	if amt.GT(order.GetOpenAmount()) {
 		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, order.GetOpenAmount()))
@@ -55,12 +58,15 @@ func FillOrder(order Order, amt sdk.Int, price sdk.Dec) {
 	})
 }
 
+// FulfillOrder fills the order by its remaining open amount at given price.
 func FulfillOrder(order Order, price sdk.Dec) {
 	if order.GetOpenAmount().IsPositive() {
 		FillOrder(order, order.GetOpenAmount(), price)
 	}
 }
 
+// FulfillOrders fills multiple orders by their remaining open amount
+// at given price.
 func FulfillOrders(orders []Order, price sdk.Dec) {
 	for _, order := range orders {
 		FulfillOrder(order, price)
@@ -125,6 +131,9 @@ func FulfillOrders(orders []Order, price sdk.Dec) {
 //	return i, true
 //}
 
+// InstantMatch matches all matchable orders(buy orders with higher(or equal) price
+// than the last price and sell orders with lower(or equal) price than the last price)
+// at the last price.
 func (ob *OrderBook) InstantMatch(lastPrice sdk.Dec) (matched bool) {
 	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))
 	for i, buyTick := range ob.buys.ticks {
@@ -178,6 +187,8 @@ func (ob *OrderBook) InstantMatch(lastPrice sdk.Dec) (matched bool) {
 	return true
 }
 
+// PriceDirection returns the estimated price direction within this batch
+// considering the last price.
 func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 	buyAmtOverLastPrice := sdk.ZeroInt()
 	buyAmtAtLastPrice := sdk.ZeroInt()
@@ -215,6 +226,9 @@ func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 	}
 }
 
+// Match matches orders sequentially, starting from buy orders with the highest price
+// and sell orders with the lowest price.
+// The matching continues until there's no more matchable orders.
 func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, matched bool) {
 	if len(ob.buys.ticks) == 0 || len(ob.sells.ticks) == 0 {
 		return sdk.Dec{}, false
@@ -252,6 +266,10 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, matched bool)
 	return
 }
 
+// DistributeOrderAmountToTick distributes the given order amount to the orders
+// at the tick.
+// Orders with higher priority(have lower batch id) get matched first,
+// then the remaining amount is distributed to the remaining orders.
 func DistributeOrderAmountToTick(tick *orderBookTick, amt sdk.Int, price sdk.Dec) {
 	remainingAmt := amt
 	for _, group := range tick.orderGroups {
