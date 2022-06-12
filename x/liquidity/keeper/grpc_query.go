@@ -525,3 +525,42 @@ func (k Querier) OrdersByOrderer(c context.Context, req *types.QueryOrdersByOrde
 
 	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
+
+// OrderBooks queries virtual order books from user orders and pools.
+func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest) (*types.QueryOrderBooksResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.PairIds) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pair ids must not be empty")
+	}
+
+	if len(req.TickPrecisions) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "tick precisions must not be empty")
+	}
+
+	if req.NumTicks == 0 {
+		return nil, status.Error(codes.InvalidArgument, "number of ticks must not be 0")
+	}
+
+	pairIdSet := map[uint64]struct{}{}
+	for _, pairId := range req.PairIds {
+		if _, ok := pairIdSet[pairId]; ok {
+			return nil, status.Errorf(codes.InvalidArgument, "duplicate pair id: %d", pairId)
+		}
+		pairIdSet[pairId] = struct{}{}
+	}
+
+	tickPrecSet := map[uint32]struct{}{}
+	for _, tickPrec := range req.TickPrecisions {
+		if _, ok := tickPrecSet[tickPrec]; ok {
+			return nil, status.Errorf(codes.InvalidArgument, "duplicate tick precision: %d", tickPrec)
+		}
+		tickPrecSet[tickPrec] = struct{}{}
+	}
+
+	//ctx := sdk.UnwrapSDKContext(c)
+
+	panic("not implemented")
+}
