@@ -50,7 +50,7 @@ func ExampleMakeOrderBookResponse() {
 
 func BenchmarkMakeOrderBookResponse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		makeOrderBookPairResponse(1000, 10, 20, 4)
+		makeOrderBookPairResponse(100, 10, 20, 4)
 	}
 }
 
