@@ -251,7 +251,7 @@ func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) 
 	tick := PriceToUpTick(tmpPool.Price(), tickPrec)
 	for tick.LTE(highestPrice) {
 		amt := tmpPool.SellAmount(tick)
-		if amt.LT(MinCoinAmount) {
+		if amt.LT(MinCoinAmount) || tick.MulInt(amt).TruncateInt().IsZero() {
 			tick = UpTick(tick, tickPrec)
 			continue
 		}
