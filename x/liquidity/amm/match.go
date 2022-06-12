@@ -131,10 +131,10 @@ func FulfillOrders(orders []Order, price sdk.Dec) {
 //	return i, true
 //}
 
-// InstantMatch matches all matchable orders(buy orders with higher(or equal) price
+// MatchAtLastPrice matches all matchable orders(buy orders with higher(or equal) price
 // than the last price and sell orders with lower(or equal) price than the last price)
 // at the last price.
-func (ob *OrderBook) InstantMatch(lastPrice sdk.Dec) (matched bool) {
+func (ob *OrderBook) MatchAtLastPrice(lastPrice sdk.Dec) (matched bool) {
 	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))
 	for i, buyTick := range ob.buys.ticks {
 		if buyTick.price.LT(lastPrice) {
@@ -234,8 +234,12 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, matched bool)
 		return sdk.Dec{}, false
 	}
 	dir := ob.PriceDirection(lastPrice)
+	matched = ob.MatchAtLastPrice(lastPrice)
+	if matched {
+		matchPrice = lastPrice
+	}
 	if dir == PriceStaying {
-		return sdk.Dec{}, false
+		return matchPrice, matched
 	}
 	bi, si := 0, 0
 	for bi < len(ob.buys.ticks) && si < len(ob.sells.ticks) && ob.buys.ticks[bi].price.GTE(ob.sells.ticks[si].price) {

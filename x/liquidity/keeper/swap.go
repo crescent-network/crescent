@@ -368,13 +368,16 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	lastPrice := *pair.LastPrice // TODO: what if there's no last price?
 	lowestPrice, highestPrice := k.PriceLimits(ctx, lastPrice)
 	tickPrec := k.GetTickPrecision(ctx)
+	var pools []amm.Pool
 	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 		if pool.Disabled {
 			return false, nil
 		}
 		rx, ry := k.getPoolBalances(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
-		ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, ps)
+		ammPool := types.NewOrderablePool(
+			amm.NewBasicPool(rx.Amount, ry.Amount, ps),
+			pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		if ammPool.IsDepleted() {
 			k.MarkPoolAsDisabled(ctx, pool)
 			return false, nil
@@ -382,13 +385,13 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		poolOrders := amm.PoolOrders(ammPool, lowestPrice, highestPrice, int(tickPrec))
 		ob.AddOrder(poolOrders...)
 		orders = append(orders, poolOrders...)
+		pools = append(pools, ammPool)
 		return false, nil
 	})
 
-	matched := ob.InstantMatch(lastPrice)
-	lastPrice, matched2 := ob.Match(lastPrice)
-	if matched || matched2 {
-		if err := k.ApplyMatchResult(ctx, pair, orders); err != nil {
+	lastPrice, matched := ob.Match(lastPrice)
+	if matched {
+		if err := k.ApplyMatchResult(ctx, pair, orders, pools); err != nil {
 			return err
 		}
 		pair.LastPrice = &lastPrice
@@ -400,9 +403,9 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	return nil
 }
 
-func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.Order) error {
+func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.Order, pools []amm.Pool) error {
 	bulkOp := types.NewBulkSendCoinsOperation()
-	for _, order := range orders { // TODO: need optimization
+	for _, order := range orders { // TODO: need optimization to filter matched orders only
 		order, ok := order.(*types.PoolOrder)
 		if !ok {
 			continue
@@ -417,6 +420,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		return err
 	}
 	bulkOp = types.NewBulkSendCoinsOperation()
+	quoteCoinDiff := sdk.ZeroInt()
 	for _, order := range orders {
 		if !order.IsMatched() {
 			continue
@@ -444,6 +448,13 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			}
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(receivedCoin))
 
+			switch order.Direction {
+			case amm.Buy:
+				quoteCoinDiff = quoteCoinDiff.Add(order.PaidOfferCoinAmount)
+			case amm.Sell:
+				quoteCoinDiff = quoteCoinDiff.Sub(order.ReceivedDemandCoinAmount)
+			}
+
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.EventTypeUserOrderMatched,
@@ -462,6 +473,13 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(receivedCoin))
 
+			switch order.Direction {
+			case amm.Buy:
+				quoteCoinDiff = quoteCoinDiff.Add(order.PaidOfferCoinAmount)
+			case amm.Sell:
+				quoteCoinDiff = quoteCoinDiff.Sub(order.ReceivedDemandCoinAmount)
+			}
+
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.EventTypePoolOrderMatched,
@@ -474,6 +492,8 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
 				),
 			})
+		default:
+			panic(fmt.Errorf("invalid order type: %T", order))
 		}
 	}
 	// TODO: send dust

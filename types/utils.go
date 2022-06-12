@@ -58,6 +58,12 @@ func ParseDec(s string) sdk.Dec {
 	return sdk.MustNewDecFromStr(s)
 }
 
+// ParseDecP is like ParseDec, but it returns a pointer to sdk.Dec.
+func ParseDecP(s string) *sdk.Dec {
+	d := ParseDec(s)
+	return &d
+}
+
 // ParseCoin parses and returns sdk.Coin.
 func ParseCoin(s string) sdk.Coin {
 	coin, err := sdk.ParseCoinNormalized(s)

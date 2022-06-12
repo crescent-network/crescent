@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
+	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
 var (
@@ -79,6 +80,34 @@ func (pool Pool) Validate() error {
 		return fmt.Errorf("invalid pool coin denom: %w", err)
 	}
 	return nil
+}
+
+type OrderablePool struct {
+	amm.Pool
+	Id                            uint64
+	ReserveAddress                sdk.AccAddress
+	BaseCoinDenom, QuoteCoinDenom string
+}
+
+func NewOrderablePool(pool amm.Pool, id uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) OrderablePool {
+	return OrderablePool{
+		Pool:           pool,
+		Id:             id,
+		ReserveAddress: reserveAddr,
+		BaseCoinDenom:  baseCoinDenom,
+		QuoteCoinDenom: quoteCoinDenom,
+	}
+}
+
+func (pool OrderablePool) NewOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
+	var offerCoinDenom, demandCoinDenom string
+	switch dir {
+	case amm.Buy:
+		offerCoinDenom, demandCoinDenom = pool.QuoteCoinDenom, pool.BaseCoinDenom
+	case amm.Sell:
+		offerCoinDenom, demandCoinDenom = pool.BaseCoinDenom, pool.QuoteCoinDenom
+	}
+	return NewPoolOrder(pool.Id, pool.ReserveAddress, dir, price, amt, offerCoinDenom, demandCoinDenom)
 }
 
 // MustMarshalPool returns the pool bytes.

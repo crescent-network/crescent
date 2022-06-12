@@ -52,7 +52,7 @@ func (order *UserOrder) GetBatchId() uint64 {
 
 func (order *UserOrder) HasPriority(other amm.Order) bool {
 	if !order.Amount.Equal(other.GetAmount()) {
-		return order.Amount.GT(other.GetAmount())
+		return order.BaseOrder.HasPriority(other)
 	}
 	switch other := other.(type) {
 	case *UserOrder:
@@ -90,7 +90,7 @@ func NewPoolOrder(
 
 func (order *PoolOrder) HasPriority(other amm.Order) bool {
 	if !order.Amount.Equal(other.GetAmount()) {
-		return order.Amount.GT(other.GetAmount())
+		return order.BaseOrder.HasPriority(other)
 	}
 	switch other := other.(type) {
 	case *UserOrder:
