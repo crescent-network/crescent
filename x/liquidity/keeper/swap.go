@@ -389,7 +389,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return false, nil
 	})
 
-	lastPrice, matched := ob.Match(lastPrice)
+	lastPrice, _, matched := ob.Match(lastPrice)
 	if matched {
 		if err := k.ApplyMatchResult(ctx, pair, orders, pools); err != nil {
 			return err
