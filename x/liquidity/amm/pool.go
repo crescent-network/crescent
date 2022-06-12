@@ -199,6 +199,7 @@ func (pool *BasicPool) SellAmountTo(price sdk.Dec) sdk.Int {
 }
 
 func PoolBuyOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	minPriceGap := pool.Price().Mul(MinPoolOrderPriceGapRatio)
 	tmpPool := pool
 	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
@@ -208,24 +209,29 @@ func PoolBuyOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) [
 		ry = ry.Add(amt)
 		tmpPool = NewBasicPool(rx, ry, sdk.Int{})
 	}
-	if pool.Price().GT(highestPrice) {
-		placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
-	}
-	for {
-		rx, ry := tmpPool.Balances()
+	// TODO: handle this case
+	//if pool.Price().GT(highestPrice) {
+	//	placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
+	//}
+	tick := PriceToDownTick(tmpPool.Price(), tickPrec)
+	for tick.GTE(lowestPrice) {
+		amt := tmpPool.BuyAmount(tick)
+		if amt.LT(MinCoinAmount) {
+			tick = DownTick(tick, tickPrec) // TODO: check if the tick is the lowest possible tick
+			continue
+		}
+		placeOrder(tick, amt)
+		rx, _ := tmpPool.Balances()
 		if !rx.IsPositive() {
 			break
 		}
-		tick := PriceToDownTick(rx.ToDec().QuoInt(ry.Add(MinCoinAmount)), tickPrec) // TODO: generalize
-		if tick.LT(lowestPrice) {
-			break
-		}
-		placeOrder(tick, tmpPool.BuyAmount(tick))
+		tick = PriceToDownTick(tick.Sub(minPriceGap), tickPrec)
 	}
 	return orders
 }
 
 func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	minPriceGap := pool.Price().Mul(MinPoolOrderPriceGapRatio)
 	tmpPool := pool
 	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
@@ -235,22 +241,23 @@ func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) 
 		ry = ry.Sub(amt)
 		tmpPool = NewBasicPool(rx, ry, sdk.Int{})
 	}
-	if pool.Price().LT(lowestPrice) {
-		placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
-	}
-	for {
-		rx, ry := tmpPool.Balances()
+	// TODO: handle this case
+	//if pool.Price().LT(lowestPrice) {
+	//	placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
+	//}
+	tick := PriceToUpTick(tmpPool.Price(), tickPrec)
+	for tick.LTE(highestPrice) {
+		amt := tmpPool.SellAmount(tick)
+		if amt.LT(MinCoinAmount) {
+			tick = UpTick(tick, tickPrec)
+			continue
+		}
+		placeOrder(tick, amt)
+		_, ry := tmpPool.Balances()
 		if !ry.GT(MinCoinAmount) {
 			break
 		}
-		tick := PriceToUpTick(sdk.MaxDec(
-			rx.Add(sdk.OneInt()).ToDec().QuoInt(ry),
-			rx.ToDec().QuoInt(ry.Sub(MinCoinAmount)),
-		), tickPrec) // TODO: generalize
-		if tick.GT(highestPrice) {
-			break
-		}
-		placeOrder(tick, tmpPool.SellAmount(tick))
+		tick = PriceToUpTick(tick.Add(minPriceGap), tickPrec)
 	}
 	return orders
 }

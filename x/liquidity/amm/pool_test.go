@@ -367,6 +367,6 @@ func BenchmarkBasicPoolOrders(b *testing.B) {
 	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		amm.PoolOrders(pool, lowestPrice, highestPrice, int(defTickPrec))
+		amm.PoolOrders(pool, lowestPrice, highestPrice, 4)
 	}
 }
