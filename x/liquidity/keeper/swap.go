@@ -365,9 +365,6 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return nil
 	}
 
-	lastPrice := *pair.LastPrice // TODO: what if there's no last price?
-	lowestPrice, highestPrice := k.PriceLimits(ctx, lastPrice)
-	tickPrec := k.GetTickPrecision(ctx)
 	var pools []amm.Pool
 	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 		if pool.Disabled {
@@ -382,19 +379,55 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 			k.MarkPoolAsDisabled(ctx, pool)
 			return false, nil
 		}
-		poolOrders := amm.PoolOrders(ammPool, lowestPrice, highestPrice, int(tickPrec))
-		ob.AddOrder(poolOrders...)
-		orders = append(orders, poolOrders...)
 		pools = append(pools, ammPool)
 		return false, nil
 	})
 
-	lastPrice, _, matched := ob.Match(lastPrice)
-	if matched {
-		if err := k.ApplyMatchResult(ctx, pair, orders, pools); err != nil {
-			return err
+	tickPrec := int(k.GetTickPrecision(ctx))
+
+	if pair.LastPrice == nil {
+		ov := amm.MultipleOrderViews{ob.MakeView()}
+		for _, pool := range pools {
+			ov = append(ov, pool)
 		}
-		pair.LastPrice = &lastPrice
+		matchPrice, found := amm.FindMatchPrice(ov, tickPrec)
+		if found {
+			for _, pool := range pools {
+				buyAmt := pool.BuyAmountOver(matchPrice, true)
+				if buyAmt.IsPositive() {
+					order := pool.NewOrder(amm.Buy, matchPrice, buyAmt)
+					ob.AddOrder(order)
+					orders = append(orders, order)
+				}
+				sellAmt := pool.SellAmountUnder(matchPrice, true)
+				if sellAmt.IsPositive() {
+					order := pool.NewOrder(amm.Sell, matchPrice, sellAmt)
+					ob.AddOrder(order)
+					orders = append(orders, order)
+				}
+			}
+			_, matched := ob.MatchAtSinglePrice(matchPrice)
+			if matched {
+				if err := k.ApplyMatchResult(ctx, pair, orders); err != nil {
+					return err
+				}
+				pair.LastPrice = &matchPrice
+			}
+		}
+	} else {
+		lowestPrice, highestPrice := k.PriceLimits(ctx, *pair.LastPrice)
+		for _, pool := range pools {
+			poolOrders := amm.PoolOrders(pool, lowestPrice, highestPrice, tickPrec)
+			ob.AddOrder(poolOrders...)
+			orders = append(orders, poolOrders...)
+		}
+		matchPrice, _, matched := ob.Match(*pair.LastPrice)
+		if matched {
+			if err := k.ApplyMatchResult(ctx, pair, orders); err != nil {
+				return err
+			}
+			pair.LastPrice = &matchPrice
+		}
 	}
 
 	pair.CurrentBatchId++
@@ -403,7 +436,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	return nil
 }
 
-func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.Order, pools []amm.Pool) error {
+func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.Order) error {
 	bulkOp := types.NewBulkSendCoinsOperation()
 	for _, order := range orders { // TODO: need optimization to filter matched orders only
 		order, ok := order.(*types.PoolOrder)
@@ -420,7 +453,6 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		return err
 	}
 	bulkOp = types.NewBulkSendCoinsOperation()
-	quoteCoinDiff := sdk.ZeroInt()
 	for _, order := range orders {
 		if !order.IsMatched() {
 			continue
@@ -448,13 +480,6 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			}
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(receivedCoin))
 
-			switch order.Direction {
-			case amm.Buy:
-				quoteCoinDiff = quoteCoinDiff.Add(order.PaidOfferCoinAmount)
-			case amm.Sell:
-				quoteCoinDiff = quoteCoinDiff.Sub(order.ReceivedDemandCoinAmount)
-			}
-
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.EventTypeUserOrderMatched,
@@ -472,13 +497,6 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			receivedCoin := sdk.NewCoin(order.DemandCoinDenom, order.ReceivedDemandCoinAmount)
 
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(receivedCoin))
-
-			switch order.Direction {
-			case amm.Buy:
-				quoteCoinDiff = quoteCoinDiff.Add(order.PaidOfferCoinAmount)
-			case amm.Sell:
-				quoteCoinDiff = quoteCoinDiff.Sub(order.ReceivedDemandCoinAmount)
-			}
 
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(

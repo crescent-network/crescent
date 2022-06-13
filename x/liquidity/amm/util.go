@@ -2,6 +2,7 @@ package amm
 
 import (
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -25,4 +26,27 @@ func PoolOrderPriceGapRatio(min, max, priceDiffRatio, maxPriceLimitRatio sdk.Dec
 	}
 	a := max.Sub(min).Quo(maxPriceLimitRatio)
 	return a.Mul(priceDiffRatio).Add(min)
+}
+
+// findFirstTrueCondition uses the binary search to find the first index
+// where f(i) is true, while searching in range [start, end].
+// It assumes that f(j) == false where j < i and f(j) == true where j >= i.
+// start can be greater than end.
+func findFirstTrueCondition(start, end int, f func(i int) bool) (i int, found bool) {
+	if start < end {
+		i = start + sort.Search(end-start+1, func(i int) bool {
+			return f(start + i)
+		})
+		if i > end {
+			return 0, false
+		}
+		return i, true
+	}
+	i = start - sort.Search(start-end+1, func(i int) bool {
+		return f(start - i)
+	})
+	if i < end {
+		return 0, false
+	}
+	return i, true
 }

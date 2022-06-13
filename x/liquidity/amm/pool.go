@@ -22,8 +22,10 @@ type Pool interface {
 	IsDepleted() bool
 	Deposit(x, y sdk.Int) (ax, ay, pc sdk.Int)
 	Withdraw(pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int)
-	BuyAmount(price sdk.Dec) sdk.Int
-	SellAmount(price sdk.Dec) sdk.Int
+	HighestBuyPrice() (sdk.Dec, bool)
+	LowestSellPrice() (sdk.Dec, bool)
+	BuyAmountOver(price sdk.Dec, inclusive bool) sdk.Int
+	SellAmountUnder(price sdk.Dec, inclusive bool) sdk.Int
 	BuyAmountTo(price sdk.Dec) sdk.Int
 	SellAmountTo(price sdk.Dec) sdk.Int
 }
@@ -141,7 +143,7 @@ func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 	return pool.Price(), true
 }
 
-func (pool *BasicPool) BuyAmount(price sdk.Dec) (amt sdk.Int) {
+func (pool *BasicPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
@@ -156,7 +158,7 @@ func (pool *BasicPool) BuyAmount(price sdk.Dec) (amt sdk.Int) {
 	return
 }
 
-func (pool *BasicPool) SellAmount(price sdk.Dec) sdk.Int {
+func (pool *BasicPool) SellAmountUnder(price sdk.Dec, _ bool) sdk.Int {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
@@ -214,7 +216,7 @@ func PoolBuyOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) [
 	}
 	tick := PriceToDownTick(tmpPool.Price(), tickPrec)
 	for tick.GTE(lowestPrice) {
-		amt := tmpPool.BuyAmount(tick)
+		amt := tmpPool.BuyAmountOver(tick, true)
 		if amt.LT(MinCoinAmount) {
 			tick = DownTick(tick, tickPrec) // TODO: check if the tick is the lowest possible tick
 			continue
@@ -248,7 +250,7 @@ func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) 
 	}
 	tick := PriceToUpTick(tmpPool.Price(), tickPrec)
 	for tick.LTE(highestPrice) {
-		amt := tmpPool.SellAmount(tick)
+		amt := tmpPool.SellAmountUnder(tick, true)
 		if amt.LT(MinCoinAmount) || tick.MulInt(amt).TruncateInt().IsZero() {
 			tick = UpTick(tick, tickPrec)
 			continue

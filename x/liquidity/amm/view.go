@@ -6,6 +6,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var (
+	_ OrderView = (*OrderBookView)(nil)
+	_ OrderView = Pool(nil)
+	_ OrderView = MultipleOrderViews(nil)
+)
+
+type OrderView interface {
+	HighestBuyPrice() (sdk.Dec, bool)
+	LowestSellPrice() (sdk.Dec, bool)
+	BuyAmountOver(price sdk.Dec, inclusive bool) sdk.Int
+	SellAmountUnder(price sdk.Dec, inclusive bool) sdk.Int
+}
+
 type OrderBookView struct {
 	buyAmtAccSums, sellAmtAccSums []amtAccSum
 }
@@ -24,7 +37,7 @@ func (ob *OrderBook) MakeView() *OrderBookView {
 		}
 		view.buyAmtAccSums[i] = amtAccSum{
 			price: tick.price,
-			sum:   prevSum.Add(TotalAmount(tick.orders())),
+			sum:   prevSum.Add(TotalOpenAmount(tick.orders())),
 		}
 	}
 	for i, tick := range ob.sells.ticks {
@@ -36,7 +49,7 @@ func (ob *OrderBook) MakeView() *OrderBookView {
 		}
 		view.sellAmtAccSums[i] = amtAccSum{
 			price: tick.price,
-			sum:   prevSum.Add(TotalAmount(tick.orders())),
+			sum:   prevSum.Add(TotalOpenAmount(tick.orders())),
 		}
 	}
 	return view
@@ -124,4 +137,48 @@ func (view *OrderBookView) SellAmountUnder(price sdk.Dec, inclusive bool) sdk.In
 type amtAccSum struct {
 	price sdk.Dec
 	sum   sdk.Int
+}
+
+type MultipleOrderViews []OrderView
+
+func MergeOrderViews(views ...OrderView) MultipleOrderViews {
+	return MultipleOrderViews(views)
+}
+
+func (views MultipleOrderViews) HighestBuyPrice() (price sdk.Dec, found bool) {
+	for _, view := range views {
+		p, f := view.HighestBuyPrice()
+		if f && (price.IsNil() || p.GT(price)) {
+			price = p
+			found = true
+		}
+	}
+	return
+}
+
+func (views MultipleOrderViews) LowestSellPrice() (price sdk.Dec, found bool) {
+	for _, view := range views {
+		p, f := view.LowestSellPrice()
+		if f && (price.IsNil() || p.LT(price)) {
+			price = p
+			found = true
+		}
+	}
+	return
+}
+
+func (views MultipleOrderViews) BuyAmountOver(price sdk.Dec, inclusive bool) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, view := range views {
+		amt = amt.Add(view.BuyAmountOver(price, inclusive))
+	}
+	return amt
+}
+
+func (views MultipleOrderViews) SellAmountUnder(price sdk.Dec, inclusive bool) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, view := range views {
+		amt = amt.Add(view.SellAmountUnder(price, inclusive))
+	}
+	return amt
 }

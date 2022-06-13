@@ -80,13 +80,47 @@ func FulfillOrders(orders []Order, price sdk.Dec) (quoteCoinDiff sdk.Int) {
 	return
 }
 
-// MatchAtLastPrice matches all matchable orders(buy orders with higher(or equal) price
-// than the last price and sell orders with lower(or equal) price than the last price)
-// at the last price.
-func (ob *OrderBook) MatchAtLastPrice(lastPrice sdk.Dec) (quoteCoinDiff sdk.Int, matched bool) {
+func FindMatchPrice(ov OrderView, tickPrec int) (matchPrice sdk.Dec, found bool) {
+	highestBuyPrice, found := ov.HighestBuyPrice()
+	if !found {
+		return sdk.Dec{}, false
+	}
+	lowestSellPrice, found := ov.LowestSellPrice()
+	if !found {
+		return sdk.Dec{}, false
+	}
+	if highestBuyPrice.LT(lowestSellPrice) {
+		return sdk.Dec{}, false
+	}
+
+	prec := TickPrecision(tickPrec)
+	lowestTickIdx := prec.TickToIndex(prec.LowestTick())
+	highestTickIdx := prec.TickToIndex(prec.HighestTick())
+	var i, j int
+	i, found = findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
+		return ov.BuyAmountOver(prec.TickFromIndex(i+1), true).LTE(ov.SellAmountUnder(prec.TickFromIndex(i), true))
+	})
+	if !found {
+		return sdk.Dec{}, false
+	}
+	j, found = findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
+		return ov.BuyAmountOver(prec.TickFromIndex(i), true).GTE(ov.SellAmountUnder(prec.TickFromIndex(i-1), true))
+	})
+	if !found {
+		return sdk.Dec{}, false
+	}
+	midTick := TickFromIndex(i, tickPrec).Add(TickFromIndex(j, tickPrec)).QuoInt64(2)
+	return RoundPrice(midTick, tickPrec), true
+}
+
+// MatchAtSinglePrice matches all matchable orders(buy orders with higher(or equal) price
+// than the price and sell orders with lower(or equal) price than the price)
+// at the price.
+func (ob *OrderBook) MatchAtSinglePrice(matchPrice sdk.Dec) (quoteCoinDiff sdk.Int, matched bool) {
+	// TODO: use OrderBookView to optimize?
 	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))
 	for i, buyTick := range ob.buys.ticks {
-		if buyTick.price.LT(lastPrice) {
+		if buyTick.price.LT(matchPrice) {
 			break
 		}
 		sum := TotalOpenAmount(buyTick.orders())
@@ -100,7 +134,7 @@ func (ob *OrderBook) MatchAtLastPrice(lastPrice sdk.Dec) (quoteCoinDiff sdk.Int,
 	}
 	sellSums := make([]sdk.Int, 0, len(ob.sells.ticks))
 	for i, sellTick := range ob.sells.ticks {
-		if sellTick.price.GT(lastPrice) {
+		if sellTick.price.GT(matchPrice) {
 			break
 		}
 		sum := TotalOpenAmount(sellTick.orders())
@@ -122,7 +156,7 @@ func (ob *OrderBook) MatchAtLastPrice(lastPrice sdk.Dec) (quoteCoinDiff sdk.Int,
 	quoteCoinDiff = sdk.ZeroInt()
 	distributeAmtToTicks := func(ticks []*orderBookTick, sums []sdk.Int, lastIdx int) {
 		for _, tick := range ticks[:lastIdx] {
-			quoteCoinDiff = quoteCoinDiff.Add(FulfillOrders(tick.orders(), lastPrice))
+			quoteCoinDiff = quoteCoinDiff.Add(FulfillOrders(tick.orders(), matchPrice))
 		}
 		var remainingAmt sdk.Int
 		if lastIdx == 0 {
@@ -130,7 +164,7 @@ func (ob *OrderBook) MatchAtLastPrice(lastPrice sdk.Dec) (quoteCoinDiff sdk.Int,
 		} else {
 			remainingAmt = matchAmt.Sub(sums[lastIdx-1])
 		}
-		quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(ticks[lastIdx], remainingAmt, lastPrice))
+		quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(ticks[lastIdx], remainingAmt, matchPrice))
 	}
 	distributeAmtToTicks(ob.buys.ticks, buySums, bi)
 	distributeAmtToTicks(ob.sells.ticks, sellSums, si)
@@ -140,6 +174,7 @@ func (ob *OrderBook) MatchAtLastPrice(lastPrice sdk.Dec) (quoteCoinDiff sdk.Int,
 // PriceDirection returns the estimated price direction within this batch
 // considering the last price.
 func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
+	// TODO: use OrderBookView
 	buyAmtOverLastPrice := sdk.ZeroInt()
 	buyAmtAtLastPrice := sdk.ZeroInt()
 	for _, tick := range ob.buys.ticks {
@@ -185,7 +220,7 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff
 	}
 	matchPrice = lastPrice
 	dir := ob.PriceDirection(lastPrice)
-	quoteCoinDiff, matched = ob.MatchAtLastPrice(lastPrice)
+	quoteCoinDiff, matched = ob.MatchAtSinglePrice(lastPrice)
 	if dir == PriceStaying {
 		return matchPrice, sdk.Int{}, matched
 	}
