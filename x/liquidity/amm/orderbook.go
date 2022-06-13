@@ -35,6 +35,14 @@ func (ob *OrderBook) AddOrder(orders ...Order) {
 	}
 }
 
+func (ob *OrderBook) Orders() []Order {
+	var orders []Order
+	for _, tick := range append(ob.buys.ticks, ob.sells.ticks...) {
+		orders = append(orders, tick.orders()...)
+	}
+	return orders
+}
+
 // BuyOrdersAt returns buy orders at given price in the order book.
 // Note that the orders are not sorted.
 func (ob *OrderBook) BuyOrdersAt(price sdk.Dec) []Order {

@@ -329,7 +329,6 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) 
 
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	ob := amm.NewOrderBook()
-	var orders []amm.Order
 
 	skip := true // Whether to skip the matching since there is no orders.
 	if err := k.IterateOrdersByPair(ctx, pair.Id, func(order types.Order) (stop bool, err error) {
@@ -344,9 +343,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				return false, nil
 			}
 			// TODO: add orders only when price is in the range?
-			userOrder := types.NewUserOrder(order)
-			ob.AddOrder(userOrder)
-			orders = append(orders, userOrder)
+			ob.AddOrder(types.NewUserOrder(order))
 			if order.Status == types.OrderStatusNotExecuted {
 				order.SetStatus(types.OrderStatusNotMatched)
 				k.SetOrder(ctx, order)
@@ -383,57 +380,53 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return false, nil
 	})
 
-	tickPrec := int(k.GetTickPrecision(ctx))
-
-	if pair.LastPrice == nil {
-		ov := amm.MultipleOrderViews{ob.MakeView()}
-		for _, pool := range pools {
-			ov = append(ov, pool)
+	matchPrice, _, matched := k.Match(ctx, ob, pools, pair.LastPrice)
+	if matched {
+		orders := ob.Orders()
+		if err := k.ApplyMatchResult(ctx, pair, orders); err != nil {
+			return err
 		}
-		matchPrice, found := amm.FindMatchPrice(ov, tickPrec)
-		if found {
-			for _, pool := range pools {
-				buyAmt := pool.BuyAmountOver(matchPrice, true)
-				if buyAmt.IsPositive() {
-					order := pool.NewOrder(amm.Buy, matchPrice, buyAmt)
-					ob.AddOrder(order)
-					orders = append(orders, order)
-				}
-				sellAmt := pool.SellAmountUnder(matchPrice, true)
-				if sellAmt.IsPositive() {
-					order := pool.NewOrder(amm.Sell, matchPrice, sellAmt)
-					ob.AddOrder(order)
-					orders = append(orders, order)
-				}
-			}
-			_, matched := ob.MatchAtSinglePrice(matchPrice)
-			if matched {
-				if err := k.ApplyMatchResult(ctx, pair, orders); err != nil {
-					return err
-				}
-				pair.LastPrice = &matchPrice
-			}
-		}
-	} else {
-		lowestPrice, highestPrice := k.PriceLimits(ctx, *pair.LastPrice)
-		for _, pool := range pools {
-			poolOrders := amm.PoolOrders(pool, lowestPrice, highestPrice, tickPrec)
-			ob.AddOrder(poolOrders...)
-			orders = append(orders, poolOrders...)
-		}
-		matchPrice, _, matched := ob.Match(*pair.LastPrice)
-		if matched {
-			if err := k.ApplyMatchResult(ctx, pair, orders); err != nil {
-				return err
-			}
-			pair.LastPrice = &matchPrice
-		}
+		pair.LastPrice = &matchPrice
 	}
 
 	pair.CurrentBatchId++
 	k.SetPair(ctx, pair)
 
 	return nil
+}
+
+func (k Keeper) Match(ctx sdk.Context, ob *amm.OrderBook, pools []amm.Pool, lastPrice *sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff sdk.Int, matched bool) {
+	tickPrec := int(k.GetTickPrecision(ctx))
+	if lastPrice == nil {
+		ov := amm.MultipleOrderViews{ob.MakeView()}
+		for _, pool := range pools {
+			ov = append(ov, pool)
+		}
+		var found bool
+		matchPrice, found = amm.FindMatchPrice(ov, tickPrec)
+		if !found {
+			return sdk.Dec{}, sdk.Int{}, false
+		}
+		for _, pool := range pools {
+			buyAmt := pool.BuyAmountOver(matchPrice, true)
+			if buyAmt.IsPositive() {
+				ob.AddOrder(pool.NewOrder(amm.Buy, matchPrice, buyAmt))
+			}
+			sellAmt := pool.SellAmountUnder(matchPrice, true)
+			if sellAmt.IsPositive() {
+				ob.AddOrder(pool.NewOrder(amm.Sell, matchPrice, sellAmt))
+			}
+		}
+		quoteCoinDiff, matched = ob.MatchAtSinglePrice(matchPrice)
+	} else {
+		lowestPrice, highestPrice := k.PriceLimits(ctx, *lastPrice)
+		for _, pool := range pools {
+			poolOrders := amm.PoolOrders(pool, lowestPrice, highestPrice, tickPrec)
+			ob.AddOrder(poolOrders...)
+		}
+		matchPrice, quoteCoinDiff, matched = ob.Match(*lastPrice)
+	}
+	return
 }
 
 func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.Order) error {
