@@ -209,10 +209,9 @@ func PoolBuyOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) [
 		ry = ry.Add(amt)
 		tmpPool = NewBasicPool(rx, ry, sdk.Int{})
 	}
-	// TODO: handle this case
-	//if pool.Price().GT(highestPrice) {
-	//	placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
-	//}
+	if pool.Price().GT(highestPrice) {
+		placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
+	}
 	tick := PriceToDownTick(tmpPool.Price(), tickPrec)
 	for tick.GTE(lowestPrice) {
 		amt := tmpPool.BuyAmount(tick)
@@ -244,10 +243,9 @@ func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) 
 		ry = ry.Sub(amt)
 		tmpPool = NewBasicPool(rx, ry, sdk.Int{})
 	}
-	// TODO: handle this case
-	//if pool.Price().LT(lowestPrice) {
-	//	placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
-	//}
+	if pool.Price().LT(lowestPrice) {
+		placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
+	}
 	tick := PriceToUpTick(tmpPool.Price(), tickPrec)
 	for tick.LTE(highestPrice) {
 		amt := tmpPool.SellAmount(tick)
