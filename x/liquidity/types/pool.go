@@ -82,15 +82,15 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
-type OrderablePool struct {
+type PoolOrderer struct {
 	amm.Pool
 	Id                            uint64
 	ReserveAddress                sdk.AccAddress
 	BaseCoinDenom, QuoteCoinDenom string
 }
 
-func NewOrderablePool(pool amm.Pool, id uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) OrderablePool {
-	return OrderablePool{
+func NewPoolOrderer(pool amm.Pool, id uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) PoolOrderer {
+	return PoolOrderer{
 		Pool:           pool,
 		Id:             id,
 		ReserveAddress: reserveAddr,
@@ -99,15 +99,15 @@ func NewOrderablePool(pool amm.Pool, id uint64, reserveAddr sdk.AccAddress, base
 	}
 }
 
-func (pool OrderablePool) NewOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
+func (orderer PoolOrderer) NewOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
 	var offerCoinDenom, demandCoinDenom string
 	switch dir {
 	case amm.Buy:
-		offerCoinDenom, demandCoinDenom = pool.QuoteCoinDenom, pool.BaseCoinDenom
+		offerCoinDenom, demandCoinDenom = orderer.QuoteCoinDenom, orderer.BaseCoinDenom
 	case amm.Sell:
-		offerCoinDenom, demandCoinDenom = pool.BaseCoinDenom, pool.QuoteCoinDenom
+		offerCoinDenom, demandCoinDenom = orderer.BaseCoinDenom, orderer.QuoteCoinDenom
 	}
-	return NewPoolOrder(pool.Id, pool.ReserveAddress, dir, price, amt, offerCoinDenom, demandCoinDenom)
+	return NewPoolOrder(orderer.Id, orderer.ReserveAddress, dir, price, amt, offerCoinDenom, demandCoinDenom)
 }
 
 // MustMarshalPool returns the pool bytes.

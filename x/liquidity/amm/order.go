@@ -44,8 +44,8 @@ type Order interface {
 	SetReceivedDemandCoinAmount(amt sdk.Int)
 	GetOpenAmount() sdk.Int
 	SetOpenAmount(amt sdk.Int)
-	GetMatchRecords() []MatchRecord
-	AddMatchRecord(record MatchRecord)
+	GetMatchRecords() []MatchRecord    // TODO: remove
+	AddMatchRecord(record MatchRecord) // TODO: remove
 	IsMatched() bool
 	// HasPriority returns true if the order has higher priority
 	// than the other order.
@@ -55,15 +55,15 @@ type Order interface {
 
 // BaseOrder is the base struct for an Order.
 type BaseOrder struct {
-	Direction                OrderDirection
-	Price                    sdk.Dec
-	Amount                   sdk.Int
-	PaidOfferCoinAmount      sdk.Int
-	ReceivedDemandCoinAmount sdk.Int
+	Direction OrderDirection
+	Price     sdk.Dec
+	Amount    sdk.Int
 
 	// Match info
-	OpenAmount   sdk.Int
-	MatchRecords []MatchRecord
+	OpenAmount               sdk.Int
+	PaidOfferCoinAmount      sdk.Int
+	ReceivedDemandCoinAmount sdk.Int
+	MatchRecords             []MatchRecord
 }
 
 // NewBaseOrder returns a new BaseOrder.
@@ -130,7 +130,7 @@ func (order *BaseOrder) AddMatchRecord(record MatchRecord) {
 }
 
 func (order *BaseOrder) IsMatched() bool {
-	return len(order.MatchRecords) != 0
+	return order.OpenAmount.IsZero()
 }
 
 // HasPriority returns whether the order has higher priority than

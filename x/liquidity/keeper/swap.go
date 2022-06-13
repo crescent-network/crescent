@@ -369,7 +369,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		}
 		rx, ry := k.getPoolBalances(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
-		ammPool := types.NewOrderablePool(
+		ammPool := types.NewPoolOrderer(
 			amm.NewBasicPool(rx.Amount, ry.Amount, ps),
 			pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		if ammPool.IsDepleted() {
