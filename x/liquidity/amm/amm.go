@@ -6,8 +6,7 @@ import (
 
 // The minimum and maximum coin amount used in the amm package.
 var (
-	MinCoinAmount             = sdk.NewInt(100)
-	MaxCoinAmount             = sdk.NewIntWithDecimal(1, 40)
-	MinPoolOrderPriceGapRatio = sdk.NewDecWithPrec(5, 4) // 5bp(0.05%)
-	MaxPoolOrderPriceGapRatio = sdk.NewDecWithPrec(5, 3) // 50bp(0.5%)
+	MinCoinAmount           = sdk.NewInt(100)
+	MaxCoinAmount           = sdk.NewIntWithDecimal(1, 40)
+	PoolOrderPriceDiffRatio = sdk.NewDecWithPrec(5, 4) // 5bp(0.05%)
 )

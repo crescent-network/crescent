@@ -20,14 +20,6 @@ func OfferCoinAmount(dir OrderDirection, price sdk.Dec, amt sdk.Int) sdk.Int {
 	}
 }
 
-func PoolOrderPriceGapRatio(min, max, priceDiffRatio, maxPriceLimitRatio sdk.Dec) sdk.Dec {
-	if priceDiffRatio.IsZero() {
-		return min
-	}
-	a := max.Sub(min).Quo(maxPriceLimitRatio)
-	return a.Mul(priceDiffRatio).Add(min)
-}
-
 // findFirstTrueCondition uses the binary search to find the first index
 // where f(i) is true, while searching in range [start, end].
 // It assumes that f(j) == false where j < i and f(j) == true where j >= i.
