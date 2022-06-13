@@ -222,7 +222,7 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff
 	dir := ob.PriceDirection(lastPrice)
 	quoteCoinDiff, matched = ob.MatchAtSinglePrice(lastPrice)
 	if dir == PriceStaying {
-		return matchPrice, sdk.Int{}, matched
+		return matchPrice, quoteCoinDiff, matched
 	}
 	if !matched {
 		quoteCoinDiff = sdk.ZeroInt()

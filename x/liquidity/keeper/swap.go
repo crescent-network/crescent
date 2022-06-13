@@ -380,10 +380,10 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return false, nil
 	})
 
-	matchPrice, _, matched := k.Match(ctx, ob, pools, pair.LastPrice)
+	matchPrice, quoteCoinDiff, matched := k.Match(ctx, ob, pools, pair.LastPrice)
 	if matched {
 		orders := ob.Orders()
-		if err := k.ApplyMatchResult(ctx, pair, orders); err != nil {
+		if err := k.ApplyMatchResult(ctx, pair, orders, quoteCoinDiff); err != nil {
 			return err
 		}
 		pair.LastPrice = &matchPrice
@@ -429,7 +429,7 @@ func (k Keeper) Match(ctx sdk.Context, ob *amm.OrderBook, pools []amm.Pool, last
 	return
 }
 
-func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.Order) error {
+func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.Order, quoteCoinDiff sdk.Int) error {
 	bulkOp := types.NewBulkSendCoinsOperation()
 	for _, order := range orders { // TODO: need optimization to filter matched orders only
 		order, ok := order.(*types.PoolOrder)
@@ -507,10 +507,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			panic(fmt.Errorf("invalid order type: %T", order))
 		}
 	}
-	// TODO: send dust
-	//params := k.GetParams(ctx)
-	//dustCollectorAddr, _ := sdk.AccAddressFromBech32(params.DustCollectorAddress)
-	//bulkOp.QueueSendCoins(pair.GetEscrowAddress(), dustCollectorAddr, sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDust)))
+	bulkOp.QueueSendCoins(pair.GetEscrowAddress(), k.GetDustCollector(ctx), sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDiff)))
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
 	}

@@ -130,7 +130,7 @@ func (order *BaseOrder) AddMatchRecord(record MatchRecord) {
 }
 
 func (order *BaseOrder) IsMatched() bool {
-	return order.OpenAmount.IsZero()
+	return order.OpenAmount.LT(order.Amount)
 }
 
 // HasPriority returns whether the order has higher priority than

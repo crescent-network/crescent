@@ -67,3 +67,13 @@ func (k Keeper) GetTickPrecision(ctx sdk.Context) (tickPrec uint32) {
 	k.paramSpace.Get(ctx, types.KeyTickPrecision, &tickPrec)
 	return
 }
+
+func (k Keeper) GetDustCollector(ctx sdk.Context) sdk.AccAddress {
+	var dustCollectorAddr string
+	k.paramSpace.Get(ctx, types.KeyDustCollectorAddress, &dustCollectorAddr)
+	addr, err := sdk.AccAddressFromBech32(dustCollectorAddr)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
