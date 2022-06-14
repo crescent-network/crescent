@@ -836,3 +836,86 @@ func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestEmptyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("1.0") // manually set last price
+	s.keeper.SetPair(s.ctx, pair)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairIds:        []uint64{pair.Id},
+		TickPrecisions: []uint32{1, 2, 3},
+		NumTicks:       20,
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Pairs, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 3)
+
+	for i, ob := range resp.Pairs[0].OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Empty(ob.Buys)
+		s.Require().Empty(ob.Sells)
+	}
+}
+
+func (s *KeeperTestSuite) TestBuyOrdersOnlyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("987")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("987.6"), sdk.NewInt(1000), time.Minute, true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairIds:        []uint64{pair.Id},
+		NumTicks:       20,
+		TickPrecisions: []uint32{1, 2, 3},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Pairs, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 3)
+
+	for i, ob := range resp.Pairs[0].OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Len(ob.Buys, 1)
+		switch ob.TickPrecision {
+		case 1:
+			s.Require().True(decEq(utils.ParseDec("900"), ob.Buys[0].Price))
+		case 2:
+			s.Require().True(decEq(utils.ParseDec("980"), ob.Buys[0].Price))
+		case 3:
+			s.Require().True(decEq(utils.ParseDec("987.6"), ob.Buys[0].Price))
+		}
+		s.Require().Empty(ob.Sells)
+	}
+}
+
+func (s *KeeperTestSuite) TestSellOrdersOnlyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("987")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("987.6"), sdk.NewInt(1000), time.Minute, true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairIds:        []uint64{pair.Id},
+		NumTicks:       20,
+		TickPrecisions: []uint32{1, 2, 3},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Pairs, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 3)
+
+	for i, ob := range resp.Pairs[0].OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Empty(ob.Buys)
+		s.Require().Len(ob.Sells, 1)
+		switch ob.TickPrecision {
+		case 1:
+			s.Require().True(decEq(utils.ParseDec("1000"), ob.Sells[0].Price))
+		case 2:
+			s.Require().True(decEq(utils.ParseDec("990"), ob.Sells[0].Price))
+		case 3:
+			s.Require().True(decEq(utils.ParseDec("987.6"), ob.Sells[0].Price))
+		}
+	}
+}

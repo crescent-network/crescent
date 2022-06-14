@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/crescent-network/crescent/x/liquidity/amm"
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
@@ -560,7 +561,78 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		tickPrecSet[tickPrec] = struct{}{}
 	}
 
-	//ctx := sdk.UnwrapSDKContext(c)
+	ctx := sdk.UnwrapSDKContext(c)
 
-	panic("not implemented")
+	params := k.GetParams(ctx)
+
+	var pairs []types.OrderBookPairResponse
+	for _, pairId := range req.PairIds {
+		pair, found := k.GetPair(ctx, pairId)
+		if !found {
+			return nil, status.Errorf(codes.NotFound, "pair %d doesn't exist", pairId)
+		}
+
+		if pair.LastPrice == nil {
+			return nil, status.Errorf(codes.Unavailable, "pair %d does not have last price", pairId)
+		}
+
+		ob := amm.NewOrderBook()
+		_ = k.IterateOrdersByPair(ctx, pairId, func(order types.Order) (stop bool, err error) {
+			switch order.Status {
+			case types.OrderStatusNotExecuted,
+				types.OrderStatusNotMatched,
+				types.OrderStatusPartiallyMatched:
+				ob.AddOrder(types.NewUserOrder(order))
+			}
+			return false, nil
+		})
+
+		lowestPrice, highestPrice := k.PriceLimits(ctx, *pair.LastPrice)
+		tickPrec := int(k.GetTickPrecision(ctx))
+		_ = k.IteratePoolsByPair(ctx, pairId, func(pool types.Pool) (stop bool, err error) {
+			if pool.Disabled {
+				return false, nil
+			}
+			rx, ry := k.getPoolBalances(ctx, pool, pair)
+			ammPool := types.NewPoolOrderer(
+				amm.NewBasicPool(rx.Amount, ry.Amount, sdk.Int{}),
+				pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
+			ob.AddOrder(amm.PoolOrders(ammPool, lowestPrice, highestPrice, tickPrec)...)
+			return false, nil
+		})
+
+		ov := ob.MakeView()
+		ov.Match()
+
+		var obs []types.OrderBookResponse
+		basePrice, found := types.OrderBookBasePrice(ov, int(params.TickPrecision))
+		if !found {
+			for _, tickPrec := range req.TickPrecisions {
+				obs = append(obs, types.OrderBookResponse{
+					TickPrecision: tickPrec,
+					Buys:          nil,
+					Sells:         nil,
+				})
+			}
+			pairs = append(pairs, types.OrderBookPairResponse{
+				PairId:     pairId,
+				BasePrice:  sdk.Dec{},
+				OrderBooks: obs,
+			})
+			continue
+		}
+
+		for _, tickPrec := range req.TickPrecisions {
+			obs = append(obs, types.MakeOrderBookResponse(ov, int(tickPrec), int(req.NumTicks)))
+		}
+		pairs = append(pairs, types.OrderBookPairResponse{
+			PairId:     pairId,
+			BasePrice:  basePrice,
+			OrderBooks: obs,
+		})
+	}
+
+	return &types.QueryOrderBooksResponse{
+		Pairs: pairs,
+	}, nil
 }
