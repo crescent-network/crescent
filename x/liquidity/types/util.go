@@ -7,32 +7,54 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
+type sendCoinsTxKey struct {
+	from, to string
+}
+
+type sendCoinsTx struct {
+	from, to sdk.AccAddress
+	amt      sdk.Coins
+}
+
 // BulkSendCoinsOperation holds a list of SendCoins operations for bulk execution.
 type BulkSendCoinsOperation struct {
-	Inputs  []banktypes.Input
-	Outputs []banktypes.Output
+	txSet map[sendCoinsTxKey]*sendCoinsTx
+	txs   []*sendCoinsTx
 }
 
 // NewBulkSendCoinsOperation returns an empty BulkSendCoinsOperation.
 func NewBulkSendCoinsOperation() *BulkSendCoinsOperation {
 	return &BulkSendCoinsOperation{
-		Inputs:  []banktypes.Input{},
-		Outputs: []banktypes.Output{},
+		txSet: map[sendCoinsTxKey]*sendCoinsTx{},
 	}
 }
 
 // QueueSendCoins queues a BankKeeper.SendCoins operation for later execution.
 func (op *BulkSendCoinsOperation) QueueSendCoins(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
 	if amt.IsValid() && !amt.IsZero() {
-		op.Inputs = append(op.Inputs, banktypes.NewInput(fromAddr, amt))
-		op.Outputs = append(op.Outputs, banktypes.NewOutput(toAddr, amt))
+		txKey := sendCoinsTxKey{fromAddr.String(), toAddr.String()}
+		tx, ok := op.txSet[txKey]
+		if !ok {
+			tx = &sendCoinsTx{fromAddr, toAddr, sdk.Coins{}}
+			op.txSet[txKey] = tx
+			op.txs = append(op.txs, tx)
+		}
+		tx.amt = tx.amt.Add(amt...)
 	}
 }
 
 // Run runs BankKeeper.InputOutputCoins once for queued operations.
 func (op *BulkSendCoinsOperation) Run(ctx sdk.Context, bankKeeper BankKeeper) error {
-	if len(op.Inputs) > 0 && len(op.Outputs) > 0 {
-		return bankKeeper.InputOutputCoins(ctx, op.Inputs, op.Outputs)
+	if len(op.txs) > 0 {
+		var (
+			inputs  []banktypes.Input
+			outputs []banktypes.Output
+		)
+		for _, tx := range op.txs {
+			inputs = append(inputs, banktypes.NewInput(tx.from, tx.amt))
+			outputs = append(outputs, banktypes.NewOutput(tx.to, tx.amt))
+		}
+		return bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 	}
 	return nil
 }
