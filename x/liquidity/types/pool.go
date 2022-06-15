@@ -26,19 +26,6 @@ func PoolReserveAddress(poolId uint64) sdk.AccAddress {
 	)
 }
 
-// NewPool returns a new pool object.
-func NewPool(id, pairId uint64) Pool {
-	return Pool{
-		Id:                    id,
-		PairId:                pairId,
-		ReserveAddress:        PoolReserveAddress(id).String(),
-		PoolCoinDenom:         PoolCoinDenom(id),
-		LastDepositRequestId:  0,
-		LastWithdrawRequestId: 0,
-		Disabled:              false,
-	}
-}
-
 // PoolCoinDenom returns a unique pool coin denom for a pool.
 func PoolCoinDenom(poolId uint64) string {
 	return fmt.Sprintf("pool%d", poolId)
@@ -55,6 +42,48 @@ func ParsePoolCoinDenom(denom string) (poolId uint64, err error) {
 		return 0, fmt.Errorf("parse pool id: %w", err)
 	}
 	return poolId, nil
+}
+
+// NewBasicPool returns a new basic pool object.
+func NewBasicPool(id, pairId uint64, creator sdk.AccAddress) Pool {
+	return Pool{
+		Type:                  PoolTypeBasic,
+		Id:                    id,
+		PairId:                pairId,
+		Creator:               creator.String(),
+		ReserveAddress:        PoolReserveAddress(id).String(),
+		PoolCoinDenom:         PoolCoinDenom(id),
+		TranslationX:          nil,
+		TranslationY:          nil,
+		LastDepositRequestId:  0,
+		LastWithdrawRequestId: 0,
+		Disabled:              false,
+	}
+}
+
+// NewRangedPool returns a new ranged pool object.
+func NewRangedPool(id, pairId uint64, creator sdk.AccAddress, transX, transY *sdk.Dec) Pool {
+	return Pool{
+		Type:                  PoolTypeRanged,
+		Id:                    id,
+		PairId:                pairId,
+		Creator:               creator.String(),
+		ReserveAddress:        PoolReserveAddress(id).String(),
+		PoolCoinDenom:         PoolCoinDenom(id),
+		TranslationX:          transX,
+		TranslationY:          transY,
+		LastDepositRequestId:  0,
+		LastWithdrawRequestId: 0,
+		Disabled:              false,
+	}
+}
+
+func (pool Pool) GetCreator() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(pool.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return addr
 }
 
 func (pool Pool) GetReserveAddress() sdk.AccAddress {

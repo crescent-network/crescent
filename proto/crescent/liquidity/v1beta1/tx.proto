@@ -17,6 +17,9 @@ service Msg {
   // CreatePool defines a method for creating a pool
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
 
+  // CreateRangePool defines a method for creating a ranged pool
+  rpc CreateRangedPool(MsgCreateRangedPool) returns (MsgCreateRangedPoolResponse);
+
   // Deposit defines a method for depositing coins to the pool
   rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
 
@@ -65,6 +68,29 @@ message MsgCreatePool {
 
 // MsgCreatePoolResponse defines the Msg/CreatePool response type.
 message MsgCreatePoolResponse {}
+
+// MsgCreateRangedPool defines an SDK message for creating a ranged pool.
+message MsgCreateRangedPool {
+  // creator specifies the bech32-encoded address that is the pool creator
+  string creator = 1;
+
+  // pair_id specifies the pair id.
+  uint64 pair_id = 2;
+
+  // deposit_coins specifies the amount of coins to deposit.
+  repeated cosmos.base.v1beta1.Coin deposit_coins = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  string initial_price = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string min_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string max_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+}
+
+// MsgCreateRangedPoolResponse defines the Msg/CreateRangedPool response type.
+message MsgCreateRangedPoolResponse {}
 
 // MsgDeposit defines an SDK message for depositing coins to the pool
 message MsgDeposit {

@@ -66,7 +66,7 @@ func ParseDecP(s string) *sdk.Dec {
 
 // ParseCoin parses and returns sdk.Coin.
 func ParseCoin(s string) sdk.Coin {
-	coin, err := sdk.ParseCoinNormalized(s)
+	coin, err := sdk.ParseCoinNormalized(strings.ReplaceAll(s, "_", ""))
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +75,7 @@ func ParseCoin(s string) sdk.Coin {
 
 // ParseCoins parses and returns sdk.Coins.
 func ParseCoins(s string) sdk.Coins {
-	coins, err := sdk.ParseCoinsNormalized(s)
+	coins, err := sdk.ParseCoinsNormalized(strings.ReplaceAll(s, "_", ""))
 	if err != nil {
 		panic(err)
 	}

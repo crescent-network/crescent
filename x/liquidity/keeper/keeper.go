@@ -57,23 +57,3 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
-
-func (k Keeper) GetMaxPriceLimitRatio(ctx sdk.Context) (ratio sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeyMaxPriceLimitRatio, &ratio)
-	return
-}
-
-func (k Keeper) GetTickPrecision(ctx sdk.Context) (tickPrec uint32) {
-	k.paramSpace.Get(ctx, types.KeyTickPrecision, &tickPrec)
-	return
-}
-
-func (k Keeper) GetDustCollector(ctx sdk.Context) sdk.AccAddress {
-	var dustCollectorAddr string
-	k.paramSpace.Get(ctx, types.KeyDustCollectorAddress, &dustCollectorAddr)
-	addr, err := sdk.AccAddressFromBech32(dustCollectorAddr)
-	if err != nil {
-		panic(err)
-	}
-	return addr
-}

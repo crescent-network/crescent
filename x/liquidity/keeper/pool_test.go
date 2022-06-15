@@ -29,6 +29,95 @@ func (s *KeeperTestSuite) TestCreatePool() {
 	s.Require().False(pool.Disabled)
 }
 
+func (s *KeeperTestSuite) TestCreateRangedPool() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	poolCreator := s.addr(1)
+	s.fundAddr(poolCreator, utils.ParseCoins("1000000denom1,1000000denom2,1000000denom3,1000000stake"))
+	poolCreatorWithNoFee := s.addr(2)
+	s.fundAddr(poolCreatorWithNoFee, utils.ParseCoins("1000000denom1,1000000denom2"))
+
+	validDepositCoins := utils.ParseCoins("1000000denom1,1000000denom2")
+
+	for _, tc := range []struct {
+		name        string
+		msg         *types.MsgCreateRangedPool
+		postRun     func(ctx sdk.Context, pool types.Pool)
+		expectedErr string
+	}{
+		{
+			"happy case",
+			types.NewMsgCreateRangedPool(
+				poolCreator, pair.Id, validDepositCoins,
+				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+			func(ctx sdk.Context, pool types.Pool) {
+				s.Require().Equal(types.PoolTypeRanged, pool.Type)
+				s.Require().NotNil(pool.MinPrice)
+				s.Require().True(decEq(utils.ParseDec("0.9"), *pool.MinPrice))
+				s.Require().NotNil(pool.MaxPrice)
+				s.Require().True(decEq(utils.ParseDec("1.1"), *pool.MaxPrice))
+				s.Require().Equal(poolCreator.String(), pool.Creator)
+				s.Require().Equal(types.PoolCoinDenom(pool.Id), pool.PoolCoinDenom)
+				s.Require().Equal(types.PoolReserveAddress(pool.Id).String(), pool.ReserveAddress)
+				s.Require().False(pool.Disabled)
+				s.Require().True(coinsEq(
+					utils.ParseCoins("909091denom1,1000000denom2"),
+					s.app.BankKeeper.GetAllBalances(ctx, pool.GetReserveAddress())))
+				s.Require().True(coinEq(
+					utils.ParseCoin("1000000000000pool1"),
+					s.app.BankKeeper.GetBalance(ctx, pool.GetCreator(), pool.PoolCoinDenom)))
+			},
+			"",
+		},
+		{
+			"pair not found",
+			types.NewMsgCreateRangedPool(
+				poolCreator, 2, validDepositCoins,
+				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+			nil,
+			"pair 2 not found: not found",
+		},
+		{
+			"wrong deposit coin denoms",
+			types.NewMsgCreateRangedPool(
+				poolCreator, pair.Id, utils.ParseCoins("1000000denom2,1000000denom3"),
+				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+			nil,
+			"coin denom denom3 is not in the pair: invalid coin denom",
+		},
+		{
+			"insufficient deposit amount",
+			types.NewMsgCreateRangedPool(
+				poolCreator, pair.Id, utils.ParseCoins("999999denom1,1000000denom2"),
+				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+			nil,
+			"999999denom1 is smaller than 1000000denom1: insufficient deposit amount",
+		},
+		{
+			"insufficient pool creation fee",
+			types.NewMsgCreateRangedPool(
+				poolCreatorWithNoFee, pair.Id, validDepositCoins,
+				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+			nil,
+			"insufficient pool creation fee: 0stake is smaller than 1000000stake: insufficient funds",
+		},
+	} {
+		s.Run(tc.name, func() {
+			s.Require().NoError(tc.msg.ValidateBasic())
+			cacheCtx, _ := s.ctx.CacheContext()
+			pool, err := s.keeper.CreateRangedPool(cacheCtx, tc.msg)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				pool, found := s.keeper.GetPool(cacheCtx, pool.Id)
+				s.Require().True(found)
+				tc.postRun(cacheCtx, pool)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestPoolCreationFee() {
 	k, ctx := s.keeper, s.ctx
 
@@ -62,26 +151,14 @@ func (s *KeeperTestSuite) TestCreatePoolWithInsufficientDepositAmount() {
 }
 
 func (s *KeeperTestSuite) TestCreateSamePool() {
-	k, ctx := s.keeper, s.ctx
-
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	pair2 := s.createPair(s.addr(0), "denom2", "denom1", true)
 
 	// Create a pool with denom1 and denom2.
 	s.createPool(s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 
-	// A user tries to create a pool with same denom pair that already exists,
-	// this will fail.
-	poolCreator := s.addr(2)
-	depositCoins := utils.ParseCoins("1000000denom1,1000000denom2")
-	params := k.GetParams(ctx)
-	s.fundAddr(poolCreator, depositCoins.Add(params.PoolCreationFee...))
-	_, err := k.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, pair.Id, depositCoins))
-	s.Require().ErrorIs(err, types.ErrPoolAlreadyExists)
-
-	// Since the order of denom pair is important, it's ok to create a pool
-	// with reversed denom pair:
-	s.createPool(poolCreator, pair2.Id, utils.ParseCoins("1000000denom2,1000000denom1"), true)
+	// this will not fail anymore since ranged pools are enabled.
+	// Pool price can be set arbitrarily - the creator should be careful.
+	s.createPool(s.addr(2), pair.Id, utils.ParseCoins("2000000denom1,1000000denom2"), true)
 }
 
 func (s *KeeperTestSuite) TestDisabledPool() {

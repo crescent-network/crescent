@@ -100,6 +100,19 @@ func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depo
 	return pool
 }
 
+func (s *KeeperTestSuite) createRangedPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, initialPrice sdk.Dec, minPrice, maxPrice *sdk.Dec, fund bool) types.Pool {
+	s.T().Helper()
+	params := s.keeper.GetParams(s.ctx)
+	if fund {
+		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+	}
+	msg := types.NewMsgCreateRangedPool(creator, pairId, depositCoins, initialPrice, minPrice, maxPrice)
+	s.Require().NoError(msg.ValidateBasic())
+	pool, err := s.keeper.CreateRangedPool(s.ctx, msg)
+	s.Require().NoError(err)
+	return pool
+}
+
 func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) types.DepositRequest {
 	s.T().Helper()
 	if fund {
