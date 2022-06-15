@@ -597,7 +597,7 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 			ammPool := types.NewPoolOrderer(
 				amm.NewBasicPool(rx.Amount, ry.Amount, sdk.Int{}),
 				pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
-			ob.AddOrder(amm.PoolOrders(ammPool, lowestPrice, highestPrice, tickPrec)...)
+			ob.AddOrder(amm.PoolOrders(ammPool, amm.DefaultOrderer, lowestPrice, highestPrice, tickPrec)...)
 			return false, nil
 		})
 

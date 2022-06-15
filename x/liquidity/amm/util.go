@@ -7,6 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var (
+	zeroInt = sdk.ZeroInt()
+	zeroDec = sdk.ZeroDec()
+	oneDec  = sdk.OneDec()
+)
+
 // OfferCoinAmount returns the minimum offer coin amount for
 // given order direction, price and order amount.
 func OfferCoinAmount(dir OrderDirection, price sdk.Dec, amt sdk.Int) sdk.Int {
@@ -41,4 +47,10 @@ func findFirstTrueCondition(start, end int, f func(i int) bool) (i int, found bo
 		return 0, false
 	}
 	return i, true
+}
+
+// inv returns the inverse of x.
+func inv(x sdk.Dec) (r sdk.Dec) {
+	r = oneDec.Quo(x)
+	return
 }

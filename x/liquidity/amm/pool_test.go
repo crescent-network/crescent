@@ -231,7 +231,7 @@ func TestBasicPool_Deposit(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
-			ax, ay, pc := pool.Deposit(sdk.NewInt(tc.x), sdk.NewInt(tc.y))
+			ax, ay, pc := amm.Deposit(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps), sdk.NewInt(tc.x), sdk.NewInt(tc.y))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.ax), ax))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.ay), ay))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.pc), pc))
@@ -305,8 +305,7 @@ func TestBasicPool_Withdraw(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
-			x, y := pool.Withdraw(sdk.NewInt(tc.pc), tc.feeRate)
+			x, y := amm.Withdraw(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps), sdk.NewInt(tc.pc), tc.feeRate)
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.x), x))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.y), y))
 			// Additional assertions
@@ -357,7 +356,7 @@ func TestBasicPoolOrders(t *testing.T) {
 	lastPrice := utils.ParseDec("1")
 	lowestPrice := lastPrice.Mul(sdk.NewDecWithPrec(9, 1))
 	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
-	fmt.Println(amm.PoolOrders(pool, lowestPrice, highestPrice, int(defTickPrec)))
+	fmt.Println(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, int(defTickPrec)))
 }
 
 func BenchmarkBasicPoolOrders(b *testing.B) {
@@ -367,6 +366,6 @@ func BenchmarkBasicPoolOrders(b *testing.B) {
 	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		amm.PoolOrders(pool, lowestPrice, highestPrice, 4)
+		amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4)
 	}
 }

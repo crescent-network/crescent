@@ -8,6 +8,8 @@ import (
 
 var (
 	_ Order = (*BaseOrder)(nil)
+
+	DefaultOrderer = BaseOrderer{}
 )
 
 // OrderDirection specifies an order direction, either buy or sell.
@@ -28,6 +30,16 @@ func (dir OrderDirection) String() string {
 	default:
 		return fmt.Sprintf("OrderDirection(%d)", dir)
 	}
+}
+
+type Orderer interface {
+	Order(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order
+}
+
+type BaseOrderer struct{}
+
+func (orderer BaseOrderer) Order(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order {
+	return NewBaseOrder(dir, price, amt)
 }
 
 // Order is the universal interface of an order.

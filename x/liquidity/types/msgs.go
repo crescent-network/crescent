@@ -179,20 +179,8 @@ func (msg MsgCreateRangedPool) ValidateBasic() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "deposit coin %s is bigger than the max amount %s", coin, amm.MaxCoinAmount)
 		}
 	}
-	if !msg.InitialPrice.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "initial price must be positive: %s", msg.InitialPrice)
-	}
-	if msg.MinPrice == nil && msg.MaxPrice == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min price and max price must not be nil at the same time")
-	}
-	if msg.MinPrice != nil && !msg.MinPrice.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min price must be positive: %s", *msg.MinPrice)
-	}
-	if msg.MaxPrice != nil && !msg.MaxPrice.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "max price must be positive: %s", *msg.MaxPrice)
-	}
-	if msg.MinPrice != nil && msg.MaxPrice != nil && !msg.MaxPrice.GT(*msg.MinPrice) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price must be greater than min price")
+	if err := amm.ValidateRangedPoolParams(msg.InitialPrice, msg.MinPrice, msg.MaxPrice); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	return nil
 }

@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) TestCreateRangedPool() {
 				s.Require().Equal(types.PoolReserveAddress(pool.Id).String(), pool.ReserveAddress)
 				s.Require().False(pool.Disabled)
 				s.Require().True(coinsEq(
-					utils.ParseCoins("909091denom1,1000000denom2"),
+					utils.ParseCoins("906867denom1,1000000denom2"),
 					s.app.BankKeeper.GetAllBalances(ctx, pool.GetReserveAddress())))
 				s.Require().True(coinEq(
 					utils.ParseCoin("1000000000000pool1"),
@@ -156,9 +156,23 @@ func (s *KeeperTestSuite) TestCreateSamePool() {
 	// Create a pool with denom1 and denom2.
 	s.createPool(s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
 
-	// this will not fail anymore since ranged pools are enabled.
-	// Pool price can be set arbitrarily - the creator should be careful.
-	s.createPool(s.addr(2), pair.Id, utils.ParseCoins("2000000denom1,1000000denom2"), true)
+	// This will fail since there's already a basic pool.
+	depositCoins := utils.ParseCoins("2000000denom1,1000000denom2")
+	s.fundAddr(s.addr(2), depositCoins.Add(s.keeper.GetPoolCreationFee(s.ctx)...))
+	msg := types.NewMsgCreatePool(s.addr(2), pair.Id, depositCoins)
+	s.Require().NoError(msg.ValidateBasic())
+	_, err := s.keeper.CreatePool(s.ctx, msg)
+	s.Require().ErrorIs(err, types.ErrPoolAlreadyExists)
+
+	// However, this will not fail since it's creating a ranged pool.
+	s.createRangedPool(
+		s.addr(3), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+		utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1"), true)
+
+	// Creation of multiple ranged pools with same parameters is allowed.
+	s.createRangedPool(
+		s.addr(4), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+		utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1"), true)
 }
 
 func (s *KeeperTestSuite) TestDisabledPool() {
@@ -478,4 +492,27 @@ func (s *KeeperTestSuite) TestPoolOrderOverflow_ExternalFunds() {
 		liquidity.EndBlocker(s.ctx, s.keeper)
 	})
 	liquidity.BeginBlocker(s.ctx, s.keeper)
+}
+
+func (s *KeeperTestSuite) TestRangedPoolDepositWithdraw() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createRangedPool(
+		s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+		utils.ParseDec("1.0"), utils.ParseDecP("0.5"), utils.ParseDecP("2.0"), true)
+	rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+	ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+	s.Require().True(utils.DecApproxEqual(ammPool.Price(), utils.ParseDec("1.0")))
+
+	s.deposit(s.addr(2), pool.Id, utils.ParseCoins("400000denom1,1000000denom2"), true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	rx, ry = s.keeper.GetPoolBalances(s.ctx, pool)
+	ammPool = pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+	s.Require().True(utils.DecApproxEqual(ammPool.Price(), utils.ParseDec("1.0")))
+
+	poolCoin := s.getBalance(s.addr(2), pool.PoolCoinDenom)
+	s.withdraw(s.addr(2), pool.Id, poolCoin.SubAmount(poolCoin.Amount.QuoRaw(3))) // withdraw 2/3 pool coin
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	rx, ry = s.keeper.GetPoolBalances(s.ctx, pool)
+	ammPool = pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+	s.Require().True(utils.DecApproxEqual(ammPool.Price(), utils.ParseDec("1.0")))
 }

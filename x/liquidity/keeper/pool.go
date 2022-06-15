@@ -198,7 +198,8 @@ func (k Keeper) CreateRangedPool(ctx sdk.Context, msg *types.MsgCreateRangedPool
 
 	// Create and save the new pool object.
 	poolId := k.getNextPoolIdWithUpdate(ctx)
-	pool := types.NewRangedPool(poolId, pair.Id, msg.GetCreator(), msg.MinPrice, msg.MaxPrice)
+	transX, transY := ammPool.Translation()
+	pool := types.NewRangedPool(poolId, pair.Id, msg.GetCreator(), msg.MinPrice, msg.MaxPrice, transX, transY)
 	k.SetPool(ctx, pool)
 	k.SetPoolByReserveIndex(ctx, pool)
 	k.SetPoolsByPairIndex(ctx, pool)
@@ -367,7 +368,7 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 	pair, _ := k.GetPair(ctx, pool.PairId)
 	rx, ry := k.getPoolBalances(ctx, pool, pair)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, ps)
+	ammPool := pool.AMMPool(rx.Amount, ry.Amount, ps)
 	if ammPool.IsDepleted() {
 		k.MarkPoolAsDisabled(ctx, pool)
 		if err := k.FinishDepositRequest(ctx, req, types.RequestStatusFailed); err != nil {
@@ -376,13 +377,21 @@ func (k Keeper) ExecuteDepositRequest(ctx sdk.Context, req types.DepositRequest)
 		return nil
 	}
 
-	ax, ay, pc := ammPool.Deposit(req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
+	ax, ay, pc := amm.Deposit(rx.Amount, ry.Amount, ps, req.DepositCoins.AmountOf(pair.QuoteCoinDenom), req.DepositCoins.AmountOf(pair.BaseCoinDenom))
 
 	if pc.IsZero() {
 		if err := k.FinishDepositRequest(ctx, req, types.RequestStatusFailed); err != nil {
 			return err
 		}
 		return nil
+	}
+
+	if pool.Type == types.PoolTypeRanged {
+		transX := pool.TranslationX.Mul(rx.Amount.Add(ax).ToDec().QuoInt(rx.Amount))
+		pool.TranslationX = &transX
+		transY := pool.TranslationY.Mul(ry.Amount.Add(ay).ToDec().QuoInt(ry.Amount))
+		pool.TranslationY = &transY
+		k.SetPool(ctx, pool)
 	}
 
 	mintedPoolCoin := sdk.NewCoin(pool.PoolCoinDenom, pc)
@@ -453,7 +462,7 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	pair, _ := k.GetPair(ctx, pool.PairId)
 	rx, ry := k.getPoolBalances(ctx, pool, pair)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, ps)
+	ammPool := pool.AMMPool(rx.Amount, ry.Amount, ps)
 	if ammPool.IsDepleted() {
 		k.MarkPoolAsDisabled(ctx, pool)
 		if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed); err != nil {
@@ -463,12 +472,20 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 	}
 
 	params := k.GetParams(ctx)
-	x, y := ammPool.Withdraw(req.PoolCoin.Amount, params.WithdrawFeeRate)
+	x, y := amm.Withdraw(rx.Amount, ry.Amount, ps, req.PoolCoin.Amount, params.WithdrawFeeRate)
 	if x.IsZero() && y.IsZero() {
 		if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed); err != nil {
 			return err
 		}
 		return nil
+	}
+
+	if pool.Type == types.PoolTypeRanged {
+		transX := pool.TranslationX.Mul(rx.Amount.Sub(x).ToDec().QuoInt(rx.Amount))
+		pool.TranslationX = &transX
+		transY := pool.TranslationY.Mul(ry.Amount.Sub(y).ToDec().QuoInt(ry.Amount))
+		pool.TranslationY = &transY
+		k.SetPool(ctx, pool)
 	}
 
 	withdrawnCoins := sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, x), sdk.NewCoin(pair.BaseCoinDenom, y))

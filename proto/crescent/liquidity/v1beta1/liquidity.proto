@@ -84,15 +84,19 @@ message Pool {
 
   string pool_coin_denom = 6;
 
-  string translation_x = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string min_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  string translation_y = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  uint64 last_deposit_request_id = 9;
+  string translation_x = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  uint64 last_withdraw_request_id = 10;
+  string translation_y = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  bool disabled = 11;
+  uint64 last_deposit_request_id = 11;
+
+  uint64 last_withdraw_request_id = 12;
+
+  bool disabled = 13;
 }
 
 // DepositRequest defines a deposit request.

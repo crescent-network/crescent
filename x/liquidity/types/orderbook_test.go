@@ -74,7 +74,7 @@ func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) *typ
 		rx := utils.RandomInt(r, sdk.NewInt(10000_000000), sdk.NewInt(11000_000000))
 		ry := utils.RandomInt(r, sdk.NewInt(10000_000000), sdk.NewInt(11000_000000))
 		pool := amm.NewBasicPool(rx, ry, sdk.Int{})
-		ob.AddOrder(amm.PoolOrders(pool, utils.ParseDec("0.9"), utils.ParseDec("1.1"), tickPrec)...)
+		ob.AddOrder(amm.PoolOrders(pool, amm.DefaultOrderer, utils.ParseDec("0.9"), utils.ParseDec("1.1"), tickPrec)...)
 	}
 
 	ov := ob.MakeView()

@@ -16,7 +16,6 @@ var (
 
 // Pool is the interface of a pool.
 type Pool interface {
-	NewOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order
 	Balances() (rx, ry sdk.Int)
 	PoolCoinSupply() sdk.Int
 	Price() sdk.Dec
@@ -48,12 +47,6 @@ func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 		ry: ry,
 		ps: ps,
 	}
-}
-
-// NewOrder returns new pool order.
-// Users should override this method to return proper order type.
-func (pool *BasicPool) NewOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order {
-	return NewBaseOrder(dir, price, amt)
 }
 
 // Balances returns the balances of the pool.
@@ -97,6 +90,10 @@ func (pool *BasicPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
+	dx := pool.rx.ToDec().Sub(price.MulInt(pool.ry)).TruncateInt()
+	if dx.IsZero() {
+		return sdk.ZeroInt()
+	}
 	utils.SafeMath(func() {
 		amt = pool.rx.ToDec().QuoTruncate(price).Sub(pool.ry.ToDec()).TruncateInt()
 		if amt.GT(MaxCoinAmount) {
@@ -115,127 +112,242 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec, _ bool) sdk.Int {
 	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
 }
 
-func (pool *BasicPool) BuyAmountTo(price sdk.Dec) sdk.Int {
-	rxSqrt, err := pool.rx.ToDec().ApproxSqrt()
-	if err != nil {
-		panic(err) // TODO: prevent panic
+func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
+	if price.GTE(pool.Price()) {
+		return sdk.ZeroInt()
 	}
-	rySqrt, err := pool.ry.ToDec().ApproxSqrt()
-	if err != nil {
-		panic(err)
+	sqrtRx := utils.DecApproxSqrt(pool.rx.ToDec())
+	sqrtRy := utils.DecApproxSqrt(pool.ry.ToDec())
+	sqrtPrice := utils.DecApproxSqrt(price)
+	dx := pool.rx.ToDec().Sub(sqrtPrice.Mul(sqrtRx.Mul(sqrtRy))) // dx = rx - sqrt(P * rx * ry)
+	if dx.IsZero() {
+		return sdk.ZeroInt()
 	}
-	priceSqrt, err := price.ApproxSqrt()
-	if err != nil {
-		panic(err)
-	}
-	// TODO: optimize formula
-	dx := pool.rx.ToDec().Sub(priceSqrt.Mul(rxSqrt.Mul(rySqrt))) // dx = rx - sqrt(P * rx * ry)
-	// TODO: possible overflow?
-	return dx.QuoTruncate(price).TruncateInt() // dy = dx / P
+	utils.SafeMath(func() {
+		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
+		if amt.GT(MaxCoinAmount) {
+			amt = MaxCoinAmount
+		}
+	}, func() {
+		amt = MaxCoinAmount
+	})
+	return
 }
 
 func (pool *BasicPool) SellAmountTo(price sdk.Dec) sdk.Int {
-	rxSqrt, err := pool.rx.ToDec().ApproxSqrt()
-	if err != nil {
-		panic(err) // TODO: prevent panic
+	if price.LTE(pool.Price()) {
+		return sdk.ZeroInt()
 	}
-	rySqrt, err := pool.ry.ToDec().ApproxSqrt()
-	if err != nil {
-		panic(err)
-	}
-	priceSqrt, err := price.ApproxSqrt()
-	if err != nil {
-		panic(err)
-	}
-	return pool.ry.ToDec().Sub(rxSqrt.Mul(rySqrt).Quo(priceSqrt)).TruncateInt() // dy = ry - sqrt(rx * ry / P)
+	sqrtRx := utils.DecApproxSqrt(pool.rx.ToDec())
+	sqrtRy := utils.DecApproxSqrt(pool.ry.ToDec())
+	sqrtPrice := utils.DecApproxSqrt(price)
+	// dy = ry - sqrt(rx * ry / P)
+	return pool.ry.ToDec().Sub(sqrtRx.Mul(sqrtRy).Quo(sqrtPrice)).TruncateInt()
 }
 
 type RangedPool struct {
-	rx, ry         sdk.Int
-	ps             sdk.Int
-	transX, transY *sdk.Dec
+	rx, ry             sdk.Int
+	ps                 sdk.Int
+	transX, transY     sdk.Dec
+	xComp, yComp       sdk.Dec
+	minPrice, maxPrice *sdk.Dec
 }
 
 // NewRangedPool returns a new RangedPool.
-func NewRangedPool(rx, ry, ps sdk.Int, transX, transY *sdk.Dec) *RangedPool {
+func NewRangedPool(rx, ry, ps sdk.Int, transX, transY sdk.Dec, minPrice, maxPrice *sdk.Dec) *RangedPool {
 	return &RangedPool{
-		rx:     rx,
-		ry:     ry,
-		ps:     ps,
-		transX: transX,
-		transY: transY,
+		rx:       rx,
+		ry:       ry,
+		ps:       ps,
+		transX:   transX,
+		transY:   transY,
+		xComp:    rx.ToDec().Add(transX),
+		yComp:    ry.ToDec().Add(transY),
+		minPrice: minPrice,
+		maxPrice: maxPrice,
 	}
 }
 
 // CreateRangedPool creates new RangedPool from given inputs, while validating
 // the inputs and using only needed amount of x/y coins(the rest should be refunded).
 func CreateRangedPool(x, y sdk.Int, initialPrice sdk.Dec, minPrice, maxPrice *sdk.Dec) (pool *RangedPool, err error) {
-	if !x.IsPositive() && !y.IsPositive() {
-		return nil, fmt.Errorf("either x or y must be positive")
+	ax, ay, transX, transY, err := createRangedPool(x, y, initialPrice, minPrice, maxPrice)
+	if err != nil {
+		return nil, err
 	}
+	return NewRangedPool(ax, ay, InitialPoolCoinSupply(ax, ay), transX, transY, minPrice, maxPrice), nil
+}
+
+func ValidateRangedPoolParams(initialPrice sdk.Dec, minPrice, maxPrice *sdk.Dec) error {
 	if !initialPrice.IsPositive() {
-		return nil, fmt.Errorf("initial price must be positive: %s", initialPrice)
+		return fmt.Errorf("initial price must be positive: %s", initialPrice)
 	}
 	if minPrice == nil && maxPrice == nil {
-		return nil, fmt.Errorf("min price and max price must not be nil at the same time")
+		return fmt.Errorf("min price and max price must not be nil at the same time")
 	}
 	if minPrice != nil && !minPrice.IsPositive() {
-		return nil, fmt.Errorf("min price must be positive: %s", minPrice)
+		return fmt.Errorf("min price must be positive: %s", minPrice)
 	}
 	if maxPrice != nil && !maxPrice.IsPositive() {
-		return nil, fmt.Errorf("max price must be positive: %s", maxPrice)
+		return fmt.Errorf("max price must be positive: %s", maxPrice)
 	}
 	if minPrice != nil && maxPrice != nil && !maxPrice.GT(*minPrice) {
-		return nil, fmt.Errorf("max price must be greater than min price")
+		return fmt.Errorf("max price must be greater than min price")
 	}
+	return nil
+}
 
+func createRangedPool(x, y sdk.Int, initialPrice sdk.Dec, minPrice, maxPrice *sdk.Dec) (ax, ay sdk.Int, transX, transY sdk.Dec, err error) {
+	if !x.IsPositive() && !y.IsPositive() {
+		err = fmt.Errorf("either x or y must be positive")
+		return
+	}
+	if err = ValidateRangedPoolParams(initialPrice, minPrice, maxPrice); err != nil {
+		return
+	}
+	sqrt := utils.DecApproxSqrt
+	// P = initialPrice, M = minPrice, L = maxPrice
 	switch {
 	case minPrice != nil && initialPrice.LTE(*minPrice):
-		// single y asset pool
 		if y.IsZero() {
-			return nil, fmt.Errorf("y coin amount must not be 0 for single asset pool")
+			err = fmt.Errorf("y amount must be positive")
+			return
 		}
-		ax, ay := sdk.ZeroInt(), y
-		return NewRangedPool(ax, ay, InitialPoolCoinSupply(ax, ay), minPrice, maxPrice), nil
+		ax = zeroInt
+		ay = y
+		if maxPrice == nil {
+			// transX = ay * M
+			transX = ay.ToDec().Mul(*minPrice)
+			// transY = 0
+			transY = zeroDec
+			return
+		}
+		sqrtM := sqrt(*minPrice)
+		sqrtL := sqrt(*maxPrice)
+		// sqrtK = sqrt(k) = ay / (1/sqrt(M) - 1/sqrt(L))
+		sqrtK := ay.ToDec().Quo(inv(sqrtM).Sub(inv(sqrtL)))
+		// transX = sqrt(k) * sqrt(M)
+		transX = sqrtK.Mul(sqrtM)
+		// transY = sqrt(k) / sqrt(L)
+		transY = sqrtK.Quo(sqrtL)
+		return
 	case maxPrice != nil && initialPrice.GTE(*maxPrice):
-		// single x asset pool
 		if x.IsZero() {
-			return nil, fmt.Errorf("x coin amount must not be 0 for single asset pool")
+			err = fmt.Errorf("x amount must be positive")
+			return
 		}
-		ax, ay := x, sdk.ZeroInt()
-		return NewRangedPool(ax, ay, InitialPoolCoinSupply(ax, ay), minPrice, maxPrice), nil
-	}
-
-	m := sdk.ZeroDec()
-	if minPrice != nil {
-		m = *minPrice
-	}
-
-	var ax, ay sdk.Int
-	if maxPrice != nil {
-		l := *maxPrice
-		r := l.Sub(initialPrice).Quo(l.Mul(initialPrice.Sub(m))) // r = (transY-p)/(transY*(p-transX)))
-
-		ay = x.ToDec().Mul(r).Ceil().TruncateInt() // ay = ceil(x * r)
-		if ay.GT(y) {
-			ax = y.ToDec().Quo(r).Ceil().TruncateInt() // ax = ceil(y / r)
-			ay = y
-		} else {
-			ax = x
+		ax = x
+		ay = zeroInt
+		if minPrice == nil {
+			// transX = 0
+			transX = zeroDec
+			// transY = ax / L
+			transY = ax.ToDec().Quo(*maxPrice)
+			return
 		}
-	} else {
-		r := initialPrice.Sub(m) // r = p - transX
-
-		ay = x.ToDec().QuoRoundUp(r).Ceil().TruncateInt() // ay = ceil(x / r)
-		if ay.GT(y) {
-			ax = y.ToDec().Mul(r).Ceil().TruncateInt() // ax = ceil(y * r)
-			ay = y
-		} else {
-			ax = x
+		sqrtM := sqrt(*minPrice)
+		sqrtL := sqrt(*maxPrice)
+		// sqrtK = sqrt(K) = ax / (sqrt(L) - sqrt(M))
+		sqrtK := ax.ToDec().Quo(sqrtL.Sub(sqrtM))
+		// transX = sqrt(k) * sqrt(M)
+		transX = sqrtK.Mul(sqrtM)
+		// transY = sqrt(k) / sqrt(L)
+		transY = sqrtK.Quo(sqrtL)
+		return
+	}
+	if x.IsZero() || y.IsZero() {
+		err = fmt.Errorf("x and y amount must be positve")
+		return
+	}
+	// Assume that we can accept all x
+	ax = x
+	switch {
+	case minPrice == nil:
+		sqrtPL := sqrt(initialPrice.Mul(*maxPrice))
+		// ay = ax * (1/P - 1/sqrt(P * L))
+		ay = ax.ToDec().Mul(inv(initialPrice).Sub(inv(sqrtPL))).Ceil().TruncateInt()
+		if ay.LTE(y) {
+			// transX = 0
+			transX = zeroDec
+			// transY = ax / sqrt(P * L)
+			transY = ax.ToDec().Quo(sqrtPL)
+			return
+		}
+	case maxPrice == nil:
+		sqrtPM := sqrt(initialPrice.Mul(*minPrice))
+		// ay = ax / (P - sqrt(P * M))
+		ay = ax.ToDec().Quo(initialPrice.Sub(sqrtPM)).Ceil().TruncateInt()
+		if ay.LTE(y) {
+			// transX = ay * sqrt(P * M)
+			transX = ay.ToDec().Mul(sqrtPM)
+			// transY = 0
+			transY = zeroDec
+			return
+		}
+	default:
+		sqrtP := sqrt(initialPrice)
+		sqrtM := sqrt(*minPrice)
+		sqrtL := sqrt(*maxPrice)
+		// sqrtK = sqrt(k) = ax / (sqrt(P) - sqrt(M))
+		sqrtK := ax.ToDec().Quo(sqrtP.Sub(sqrtM))
+		// ay = sqrt(k) * (1/sqrt(P) - 1/sqrt(L))
+		ay = sqrtK.Mul(
+			inv(sqrtP).Sub(inv(sqrtL)),
+		).Ceil().TruncateInt()
+		if ay.LTE(y) {
+			// transX = sqrt(k) * sqrt(M)
+			transX = sqrtK.Mul(sqrtM)
+			// transY = sqrt(k) / sqrt(L)
+			transY = sqrtK.Quo(sqrtL)
+			return
 		}
 	}
-
-	return NewRangedPool(ax, ay, InitialPoolCoinSupply(ax, ay), minPrice, maxPrice), nil
+	// We accept all y
+	ay = y
+	switch {
+	case minPrice == nil:
+		sqrtP := sqrt(initialPrice)
+		sqrtL := sqrt(*maxPrice)
+		// ax = {ay / (1/sqrt(P) - 1/sqrt(L))} * sqrt(P)
+		ax = ay.ToDec().Quo(inv(sqrtP).Sub(inv(sqrtL))).Mul(sqrtP).Ceil().TruncateInt()
+		if ax.GT(x) {
+			err = fmt.Errorf("invalid pool")
+			return
+		}
+		// transX = 0
+		transX = zeroDec
+		// transY = (ay*sqrt(P)) / (sqrt(L) - sqrt(P))
+		transY = ay.ToDec().Mul(sqrtP).Quo(sqrtL.Sub(sqrtP))
+	case maxPrice == nil:
+		sqrtPM := sqrt(initialPrice.Mul(*minPrice))
+		// ax = ay * (P - sqrt(P * M))
+		ax = ay.ToDec().Mul(initialPrice.Sub(sqrtPM)).Ceil().TruncateInt()
+		if ax.GT(x) {
+			err = fmt.Errorf("invalid pool")
+			return
+		}
+		// transX = ay * sqrt(P * M)
+		transX = ay.ToDec().Mul(sqrtPM)
+		// transY = 0
+		transY = zeroDec
+	default:
+		sqrtP := sqrt(initialPrice)
+		sqrtM := sqrt(*minPrice)
+		sqrtL := sqrt(*maxPrice)
+		// sqrtK = sqrt(k) = ay / (1/sqrt(P) - 1/sqrt(L))
+		sqrtK := ay.ToDec().Quo(inv(sqrtP).Sub(inv(sqrtL)))
+		// ax = sqrt(k) * (sqrt(P) - sqrt(M))
+		ax = sqrtK.Mul(sqrtP.Sub(sqrtM)).Ceil().TruncateInt()
+		if ax.GT(x) {
+			err = fmt.Errorf("invalid pool")
+			return
+		}
+		// transX = sqrt(k) * sqrt(M)
+		transX = sqrtK.Mul(sqrtM)
+		// transY = sqrt(k) / sqrt(L)
+		transY = sqrtK.Quo(sqrtL)
+	}
+	return
 }
 
 // Balances returns the balances of the pool.
@@ -248,17 +360,21 @@ func (pool *RangedPool) PoolCoinSupply() sdk.Int {
 	return pool.ps
 }
 
+func (pool *RangedPool) Translation() (transX, transY sdk.Dec) {
+	return pool.transX, pool.transY
+}
+
 // Price returns the pool price.
 func (pool *RangedPool) Price() sdk.Dec {
-	if pool.rx.ToDec().Add(a).IsZero() || pool.ry.ToDec().Add(b).IsZero() {
+	if pool.rx.IsZero() && pool.ry.IsZero() {
 		panic("pool price is not defined for a depleted pool")
 	}
-	return pool.rx.ToDec().Add(a).Quo(pool.ry.ToDec().Add(b)) // (rx + a) / (ry + b)
+	return pool.xComp.Quo(pool.yComp) // (rx + transX) / (ry + transY)
 }
 
 // IsDepleted returns whether the pool is depleted or not.
 func (pool *RangedPool) IsDepleted() bool {
-	return pool.ps.IsZero() || pool.rx.ToDec().Add(a).IsZero() || pool.ry.ToDec().Add(b).IsZero()
+	return pool.ps.IsZero() || pool.rx.IsZero() || pool.ry.IsZero()
 }
 
 // HighestBuyPrice returns the highest buy price of the pool.
@@ -277,34 +393,78 @@ func (pool *RangedPool) LowestSellPrice() (price sdk.Dec, found bool) {
 
 // BuyAmountOver returns the amount of buy orders for price greater than
 // or equal to given price.
-func (pool *RangedPool) BuyAmountOver(price sdk.Dec) (amt sdk.Int) {
+func (pool *RangedPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
-	if pool.transX != nil && price.LT(*pool.transX) {
-		price = *pool.transX
+	if pool.minPrice != nil && price.LT(*pool.minPrice) {
+		price = *pool.minPrice
 	}
-	a, b := pool.ab()
+	// dx = (rx + transX) - P * (ry + transY)
+	dx := pool.xComp.Sub(price.Mul(pool.yComp))
+	if dx.IsZero() {
+		return sdk.ZeroInt()
+	}
 	utils.SafeMath(func() {
-		amt = pool.rx.ToDec().Add(a).QuoTruncate(price).Sub(pool.ry.ToDec().Add(b)).TruncateInt()
+		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
 		if amt.GT(MaxCoinAmount) {
 			amt = MaxCoinAmount
-		} // It also satisfies OrderView interface.
+		}
 	}, func() {
 		amt = MaxCoinAmount
 	})
 	return
 }
 
-func (pool *RangedPool) ProvidableYAmountUnder(price sdk.Dec) sdk.Int {
+func (pool *RangedPool) SellAmountUnder(price sdk.Dec, _ bool) sdk.Int {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
-	if pool.transY != nil && price.GT(*pool.transY) {
-		price = *pool.transY
+	if pool.maxPrice != nil && price.GT(*pool.maxPrice) {
+		price = *pool.maxPrice
 	}
-	a, b := pool.ab()
-	return pool.ry.ToDec().Add(b).Sub(pool.rx.ToDec().Add(a).QuoRoundUp(price)).TruncateInt()
+	// dy = (ry + transY) - (rx + transX) / P
+	return pool.yComp.Sub(pool.xComp.QuoRoundUp(price)).TruncateInt()
+}
+
+func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
+	if price.GTE(pool.Price()) {
+		return sdk.ZeroInt()
+	}
+	if pool.minPrice != nil && price.LT(*pool.minPrice) {
+		price = *pool.minPrice
+	}
+	sqrtXComp := utils.DecApproxSqrt(pool.xComp)
+	sqrtYComp := utils.DecApproxSqrt(pool.yComp)
+	sqrtPrice := utils.DecApproxSqrt(price)
+	// dx = rx - (sqrt(P * (rx + transX) * (ry + transY)) - transX)
+	dx := pool.rx.ToDec().Sub(sqrtPrice.Mul(sqrtXComp.Mul(sqrtYComp)).Sub(pool.transX))
+	if dx.IsZero() {
+		return sdk.ZeroInt()
+	}
+	utils.SafeMath(func() {
+		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
+		if amt.GT(MaxCoinAmount) {
+			amt = MaxCoinAmount
+		}
+	}, func() {
+		amt = MaxCoinAmount
+	})
+	return
+}
+
+func (pool *RangedPool) SellAmountTo(price sdk.Dec) sdk.Int {
+	if price.LTE(pool.Price()) {
+		return sdk.ZeroInt()
+	}
+	if pool.maxPrice != nil && price.GT(*pool.maxPrice) {
+		price = *pool.maxPrice
+	}
+	sqrtXComp := utils.DecApproxSqrt(pool.xComp)
+	sqrtYComp := utils.DecApproxSqrt(pool.yComp)
+	sqrtPrice := utils.DecApproxSqrt(price)
+	// dy = ry - (sqrt((x + transX) * (y + transY) / P) - b)
+	return pool.ry.ToDec().Sub(sqrtXComp.Mul(sqrtYComp).QuoRoundUp(sqrtPrice).Sub(pool.transY)).TruncateInt()
 }
 
 // Deposit returns accepted x and y coin amount and minted pool coin amount
@@ -357,11 +517,11 @@ func Withdraw(rx, ry, ps, pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
 	return
 }
 
-func PoolBuyOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
 	tmpPool := pool
 	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
-		orders = append(orders, pool.NewOrder(Buy, price, amt))
+		orders = append(orders, orderer.Order(Buy, price, amt))
 		rx, ry := tmpPool.Balances()
 		rx = rx.Sub(price.MulInt(amt).Ceil().TruncateInt()) // quote coin ceiling
 		ry = ry.Add(amt)
@@ -388,11 +548,11 @@ func PoolBuyOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) [
 	return orders
 }
 
-func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
 	tmpPool := pool
 	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
-		orders = append(orders, pool.NewOrder(Sell, price, amt))
+		orders = append(orders, orderer.Order(Sell, price, amt))
 		rx, ry := tmpPool.Balances()
 		rx = rx.Add(price.MulInt(amt).TruncateInt()) // quote coin truncation
 		ry = ry.Sub(amt)
@@ -419,10 +579,10 @@ func PoolSellOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) 
 	return orders
 }
 
-func PoolOrders(pool Pool, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+func PoolOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
 	return append(
-		PoolBuyOrders(pool, lowestPrice, highestPrice, tickPrec),
-		PoolSellOrders(pool, lowestPrice, highestPrice, tickPrec)...)
+		PoolBuyOrders(pool, orderer, lowestPrice, highestPrice, tickPrec),
+		PoolSellOrders(pool, orderer, lowestPrice, highestPrice, tickPrec)...)
 }
 
 // InitialPoolCoinSupply returns ideal initial pool coin minting amount.

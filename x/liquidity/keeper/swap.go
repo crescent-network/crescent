@@ -330,7 +330,6 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) 
 func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	ob := amm.NewOrderBook()
 
-	skip := true // Whether to skip the matching since there is no orders.
 	if err := k.IterateOrdersByPair(ctx, pair.Id, func(order types.Order) (stop bool, err error) {
 		switch order.Status {
 		case types.OrderStatusNotExecuted,
@@ -348,7 +347,6 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				order.SetStatus(types.OrderStatusNotMatched)
 				k.SetOrder(ctx, order)
 			}
-			skip = false
 		case types.OrderStatusCanceled:
 		default:
 			return false, fmt.Errorf("invalid order status: %s", order.Status)
@@ -358,11 +356,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return err
 	}
 
-	if skip { // TODO: update this when there are more than one pools
-		return nil
-	}
-
-	var pools []amm.Pool
+	var pools []*types.PoolOrderer
 	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 		if pool.Disabled {
 			return false, nil
@@ -370,7 +364,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		rx, ry := k.getPoolBalances(ctx, pool, pair)
 		ps := k.GetPoolCoinSupply(ctx, pool)
 		ammPool := types.NewPoolOrderer(
-			amm.NewBasicPool(rx.Amount, ry.Amount, ps),
+			pool.AMMPool(rx.Amount, ry.Amount, ps),
 			pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		if ammPool.IsDepleted() {
 			k.MarkPoolAsDisabled(ctx, pool)
@@ -395,7 +389,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	return nil
 }
 
-func (k Keeper) Match(ctx sdk.Context, ob *amm.OrderBook, pools []amm.Pool, lastPrice *sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff sdk.Int, matched bool) {
+func (k Keeper) Match(ctx sdk.Context, ob *amm.OrderBook, pools []*types.PoolOrderer, lastPrice *sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff sdk.Int, matched bool) {
 	tickPrec := int(k.GetTickPrecision(ctx))
 	if lastPrice == nil {
 		ov := amm.MultipleOrderViews{ob.MakeView()}
@@ -410,18 +404,18 @@ func (k Keeper) Match(ctx sdk.Context, ob *amm.OrderBook, pools []amm.Pool, last
 		for _, pool := range pools {
 			buyAmt := pool.BuyAmountOver(matchPrice, true)
 			if buyAmt.IsPositive() {
-				ob.AddOrder(pool.NewOrder(amm.Buy, matchPrice, buyAmt))
+				ob.AddOrder(pool.Order(amm.Buy, matchPrice, buyAmt))
 			}
 			sellAmt := pool.SellAmountUnder(matchPrice, true)
 			if sellAmt.IsPositive() {
-				ob.AddOrder(pool.NewOrder(amm.Sell, matchPrice, sellAmt))
+				ob.AddOrder(pool.Order(amm.Sell, matchPrice, sellAmt))
 			}
 		}
 		quoteCoinDiff, matched = ob.MatchAtSinglePrice(matchPrice)
 	} else {
 		lowestPrice, highestPrice := k.PriceLimits(ctx, *lastPrice)
 		for _, pool := range pools {
-			poolOrders := amm.PoolOrders(pool, lowestPrice, highestPrice, tickPrec)
+			poolOrders := amm.PoolOrders(pool, pool, lowestPrice, highestPrice, tickPrec)
 			ob.AddOrder(poolOrders...)
 		}
 		matchPrice, quoteCoinDiff, matched = ob.Match(*lastPrice)

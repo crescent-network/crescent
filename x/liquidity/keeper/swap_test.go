@@ -710,15 +710,3 @@ func (s *KeeperTestSuite) TestPoolOrderOverflow() {
 		liquidity.EndBlocker(s.ctx, s.keeper)
 	})
 }
-
-func (s *KeeperTestSuite) TestSwapWithPool() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	pair.LastPrice = utils.ParseDecP("1.0") // manually set last price TODO: modify
-	s.keeper.SetPair(s.ctx, pair)
-
-	s.createPool(s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
-
-	s.fundAddr(s.addr(2), utils.ParseCoins("11000denom2"))
-	s.buyLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.010"), sdk.NewInt(10000), 0, false)
-	liquidity.EndBlocker(s.ctx, s.keeper)
-}

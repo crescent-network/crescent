@@ -110,7 +110,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.NewPool(1, 1)
+			pool := types.NewBasicPool(1, 1, testAddr)
 			depositor := sdk.AccAddress(crypto.AddressHash([]byte("depositor")))
 			msg := types.NewMsgDeposit(depositor, 1, utils.ParseCoins("1000000denom1,1000000denom2"))
 			req := types.NewDepositRequest(msg, pool, 1, 1)
