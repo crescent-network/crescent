@@ -710,3 +710,66 @@ func (s *KeeperTestSuite) TestPoolOrderOverflow() {
 		liquidity.EndBlocker(s.ctx, s.keeper)
 	})
 }
+
+func (s *KeeperTestSuite) TestRangedLiquidity() {
+	orderPrice := utils.ParseDec("1.05")
+	orderAmt := sdk.NewInt(100000)
+
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("1.0")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.createPool(s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+
+	order := s.buyLimitOrder(s.addr(2), pair.Id, orderPrice, orderAmt, 0, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	order, _ = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	paid := order.OfferCoin.Sub(order.RemainingOfferCoin).Amount
+	received := order.ReceivedCoin.Amount
+	s.Require().True(received.LT(orderAmt))
+	s.Require().True(paid.ToDec().QuoInt(received).LTE(orderPrice))
+	liquidity.BeginBlocker(s.ctx, s.keeper)
+
+	pair = s.createPair(s.addr(0), "denom3", "denom4", true)
+	pair.LastPrice = utils.ParseDecP("1.0")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.createRangedPool(
+		s.addr(1), pair.Id, utils.ParseCoins("1000000denom3,1000000denom4"),
+		utils.ParseDec("1.0"), utils.ParseDecP("0.8"), utils.ParseDecP("1.3"), true)
+	order = s.buyLimitOrder(s.addr(2), pair.Id, orderPrice, orderAmt, 0, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	order, _ = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	paid = order.OfferCoin.Sub(order.RemainingOfferCoin).Amount
+	received = order.ReceivedCoin.Amount
+	s.Require().True(intEq(orderAmt, received))
+	s.Require().True(paid.ToDec().QuoInt(received).LTE(orderPrice))
+}
+
+func (s *KeeperTestSuite) TestOneSidedRangedPool() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("1.0")
+	s.keeper.SetPair(s.ctx, pair)
+
+	pool := s.createRangedPool(
+		s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+		utils.ParseDec("1.0"), utils.ParseDecP("1.0"), utils.ParseDecP("1.2"), true)
+	rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+	ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+	s.Require().True(utils.DecApproxEqual(utils.ParseDec("1.0"), ammPool.Price()))
+	s.Require().True(intEq(sdk.ZeroInt(), rx.Amount))
+	s.Require().True(intEq(sdk.NewInt(1000000), ry.Amount))
+
+	orderPrice := utils.ParseDec("1.1")
+	orderAmt := sdk.NewInt(100000)
+	order := s.buyLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.1"), sdk.NewInt(100000), 0, true)
+	liquidity.EndBlocker(s.ctx, s.keeper)
+	order, _ = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	paid := order.OfferCoin.Sub(order.RemainingOfferCoin).Amount
+	received := order.ReceivedCoin.Amount
+	s.Require().True(intEq(orderAmt, received))
+	s.Require().True(paid.ToDec().QuoInt(received).LTE(orderPrice))
+
+	rx, _ = s.keeper.GetPoolBalances(s.ctx, pool)
+	s.Require().True(rx.IsPositive())
+}
