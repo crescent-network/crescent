@@ -102,7 +102,7 @@ $ %s tx %s create-pool 1 1000000000uatom,50000000000stake --from mykey
 
 			depositCoins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("invalid deposit coints: %w", err)
+				return fmt.Errorf("invalid deposit coins: %w", err)
 			}
 
 			msg := types.NewMsgCreatePool(clientCtx.GetFromAddress(), pairId, depositCoins)
@@ -148,7 +148,7 @@ $ %s tx %s create-ranged-pool 1 1000000000uatom,10000000000stake 1.5 --min-price
 
 			depositCoins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("invalid deposit coints: %w", err)
+				return fmt.Errorf("invalid deposit coins: %w", err)
 			}
 
 			initialPrice, err := sdk.NewDecFromStr(args[2])
