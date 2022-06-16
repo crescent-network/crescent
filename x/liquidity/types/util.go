@@ -59,6 +59,26 @@ func (op *BulkSendCoinsOperation) Run(ctx sdk.Context, bankKeeper BankKeeper) er
 	return nil
 }
 
+// NewPoolResponse returns a new PoolResponse from Pool and its balances.
+func NewPoolResponse(pool Pool, balances sdk.Coins) PoolResponse {
+	return PoolResponse{
+		Type:                  pool.Type,
+		Id:                    pool.Id,
+		PairId:                pool.PairId,
+		Creator:               pool.Creator,
+		ReserveAddress:        pool.ReserveAddress,
+		PoolCoinDenom:         pool.PoolCoinDenom,
+		MinPrice:              pool.MinPrice,
+		MaxPrice:              pool.MaxPrice,
+		TranslationX:          pool.TranslationX,
+		TranslationY:          pool.TranslationY,
+		Balances:              balances,
+		LastDepositRequestId:  pool.LastDepositRequestId,
+		LastWithdrawRequestId: pool.LastWithdrawRequestId,
+		Disabled:              pool.Disabled,
+	}
+}
+
 // IsTooSmallOrderAmount returns whether the order amount is too small for
 // matching, based on the order price.
 func IsTooSmallOrderAmount(amt sdk.Int, price sdk.Dec) bool {

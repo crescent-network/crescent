@@ -18,6 +18,135 @@ func (s *KeeperTestSuite) TestGRPCParams() {
 	s.Require().Equal(s.keeper.GetParams(s.ctx), resp.Params)
 }
 
+func (s *KeeperTestSuite) TestGRPCPairs() {
+	creator := s.addr(0)
+	s.createPair(creator, "denom1", "denom2", true)
+	s.createPair(creator, "denom1", "denom3", true)
+	s.createPair(creator, "denom2", "denom3", true)
+	s.createPair(creator, "denom3", "denom4", true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryPairsRequest
+		expectErr bool
+		postRun   func(*types.QueryPairsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"query all",
+			&types.QueryPairsRequest{},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 4)
+			},
+		},
+		{
+			"query all with a single denom",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom1"},
+			},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 2)
+			},
+		},
+		{
+			"query all with a single denom",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom3"},
+			},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 3)
+			},
+		},
+		{
+			"query all with two denoms",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom3", "denom4"},
+			},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 1)
+			},
+		},
+		{
+			"query all with more than two denoms",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom1", "denom3", "denom4"},
+			},
+			true,
+			nil,
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Pairs(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGRPCPair() {
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryPairRequest
+		expectErr bool
+		postRun   func(*types.QueryPairResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryPairRequest{},
+			true,
+			nil,
+		},
+		{
+			"query all pool with pair id",
+			&types.QueryPairRequest{
+				PairId: 1,
+			},
+			false,
+			func(resp *types.QueryPairResponse) {
+				s.Require().Equal(pair.Id, resp.Pair.Id)
+				s.Require().Equal(pair.BaseCoinDenom, resp.Pair.BaseCoinDenom)
+				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
+				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
+				s.Require().Equal(pair.LastOrderId, resp.Pair.LastOrderId)
+				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
+				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Pair(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestGRPCPools() {
 	creator := s.addr(0)
 	s.createPair(creator, "denom1", "denom2", true)
@@ -251,135 +380,6 @@ func (s *KeeperTestSuite) TestGRPCPoolByPoolCoinDenom() {
 	} {
 		s.Run(tc.name, func() {
 			resp, err := s.querier.PoolByPoolCoinDenom(sdk.WrapSDKContext(s.ctx), tc.req)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				tc.postRun(resp)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestGRPCPairs() {
-	creator := s.addr(0)
-	s.createPair(creator, "denom1", "denom2", true)
-	s.createPair(creator, "denom1", "denom3", true)
-	s.createPair(creator, "denom2", "denom3", true)
-	s.createPair(creator, "denom3", "denom4", true)
-
-	for _, tc := range []struct {
-		name      string
-		req       *types.QueryPairsRequest
-		expectErr bool
-		postRun   func(*types.QueryPairsResponse)
-	}{
-		{
-			"nil request",
-			nil,
-			true,
-			nil,
-		},
-		{
-			"query all",
-			&types.QueryPairsRequest{},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 4)
-			},
-		},
-		{
-			"query all with a single denom",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom1"},
-			},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 2)
-			},
-		},
-		{
-			"query all with a single denom",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom3"},
-			},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 3)
-			},
-		},
-		{
-			"query all with two denoms",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom3", "denom4"},
-			},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 1)
-			},
-		},
-		{
-			"query all with more than two denoms",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom1", "denom3", "denom4"},
-			},
-			true,
-			nil,
-		},
-	} {
-		s.Run(tc.name, func() {
-			resp, err := s.querier.Pairs(sdk.WrapSDKContext(s.ctx), tc.req)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				tc.postRun(resp)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestGRPCPair() {
-	creator := s.addr(0)
-	pair := s.createPair(creator, "denom1", "denom2", true)
-
-	for _, tc := range []struct {
-		name      string
-		req       *types.QueryPairRequest
-		expectErr bool
-		postRun   func(*types.QueryPairResponse)
-	}{
-		{
-			"nil request",
-			nil,
-			true,
-			nil,
-		},
-		{
-			"invalid request",
-			&types.QueryPairRequest{},
-			true,
-			nil,
-		},
-		{
-			"query all pool with pair id",
-			&types.QueryPairRequest{
-				PairId: 1,
-			},
-			false,
-			func(resp *types.QueryPairResponse) {
-				s.Require().Equal(pair.Id, resp.Pair.Id)
-				s.Require().Equal(pair.BaseCoinDenom, resp.Pair.BaseCoinDenom)
-				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
-				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
-				s.Require().Equal(pair.LastOrderId, resp.Pair.LastOrderId)
-				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
-				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
-			},
-		},
-	} {
-		s.Run(tc.name, func() {
-			resp, err := s.querier.Pair(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

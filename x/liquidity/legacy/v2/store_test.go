@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	chain "github.com/cosmosquad-labs/squad/app"
-	utils "github.com/cosmosquad-labs/squad/types"
-	v1liquidity "github.com/cosmosquad-labs/squad/x/liquidity/legacy/v1"
-	v2liquidity "github.com/cosmosquad-labs/squad/x/liquidity/legacy/v2"
-	"github.com/cosmosquad-labs/squad/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/app"
+	utils "github.com/crescent-network/crescent/types"
+	v1liquidity "github.com/crescent-network/crescent/x/liquidity/legacy/v1"
+	v2liquidity "github.com/crescent-network/crescent/x/liquidity/legacy/v2"
+	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
 func TestMigratePool(t *testing.T) {

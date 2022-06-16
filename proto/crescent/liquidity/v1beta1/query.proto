@@ -254,20 +254,34 @@ message QueryOrderBooksResponse {
 
 // PoolResponse defines a custom pool response message.
 message PoolResponse {
-  uint64 id = 1;
+  PoolType type = 1;
 
-  uint64 pair_id = 2;
+  uint64 id = 2;
 
-  string reserve_address = 3;
+  uint64 pair_id = 3;
 
-  string pool_coin_denom = 4;
+  string creator = 4;
 
-  repeated cosmos.base.v1beta1.Coin balances = 5
+  string reserve_address = 5;
+
+  string pool_coin_denom = 6;
+
+  string min_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string translation_x = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string translation_y = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  repeated cosmos.base.v1beta1.Coin balances = 11
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  uint64 last_deposit_request_id = 6;
+  uint64 last_deposit_request_id = 12;
 
-  uint64 last_withdraw_request_id = 7;
+  uint64 last_withdraw_request_id = 13;
+
+  bool disabled = 14;
 }
 
 message OrderBookPairResponse {
