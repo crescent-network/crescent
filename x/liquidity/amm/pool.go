@@ -413,6 +413,8 @@ func (pool *RangedPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	dx := pool.xComp.Sub(price.Mul(pool.yComp))
 	if dx.IsZero() {
 		return sdk.ZeroInt()
+	} else if dx.GT(pool.rx.ToDec()) {
+		dx = pool.rx.ToDec()
 	}
 	utils.SafeMath(func() {
 		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
@@ -425,7 +427,7 @@ func (pool *RangedPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	return
 }
 
-func (pool *RangedPool) SellAmountUnder(price sdk.Dec, _ bool) sdk.Int {
+func (pool *RangedPool) SellAmountUnder(price sdk.Dec, _ bool) (amt sdk.Int) {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
@@ -433,7 +435,11 @@ func (pool *RangedPool) SellAmountUnder(price sdk.Dec, _ bool) sdk.Int {
 		price = *pool.maxPrice
 	}
 	// dy = (ry + transY) - (rx + transX) / P
-	return pool.yComp.Sub(pool.xComp.QuoRoundUp(price)).TruncateInt()
+	amt = pool.yComp.Sub(pool.xComp.QuoRoundUp(price)).TruncateInt()
+	if amt.GT(pool.ry) {
+		amt = pool.ry
+	}
+	return
 }
 
 func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
@@ -450,6 +456,8 @@ func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 	dx := pool.rx.ToDec().Sub(sqrtPrice.Mul(sqrtXComp.Mul(sqrtYComp)).Sub(pool.transX))
 	if dx.IsZero() {
 		return sdk.ZeroInt()
+	} else if dx.GT(pool.rx.ToDec()) {
+		dx = pool.rx.ToDec()
 	}
 	utils.SafeMath(func() {
 		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
@@ -462,7 +470,7 @@ func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 	return
 }
 
-func (pool *RangedPool) SellAmountTo(price sdk.Dec) sdk.Int {
+func (pool *RangedPool) SellAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
@@ -473,7 +481,11 @@ func (pool *RangedPool) SellAmountTo(price sdk.Dec) sdk.Int {
 	sqrtYComp := utils.DecApproxSqrt(pool.yComp)
 	sqrtPrice := utils.DecApproxSqrt(price)
 	// dy = ry - (sqrt((x + transX) * (y + transY) / P) - b)
-	return pool.ry.ToDec().Sub(sqrtXComp.Mul(sqrtYComp).QuoRoundUp(sqrtPrice).Sub(pool.transY)).TruncateInt()
+	amt = pool.ry.ToDec().Sub(sqrtXComp.Mul(sqrtYComp).QuoRoundUp(sqrtPrice).Sub(pool.transY)).TruncateInt()
+	if amt.GT(pool.ry) {
+		amt = pool.ry
+	}
+	return
 }
 
 // Deposit returns accepted x and y coin amount and minted pool coin amount
