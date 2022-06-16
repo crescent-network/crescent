@@ -554,9 +554,7 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 				return false, nil
 			}
 			rx, ry := k.getPoolBalances(ctx, pool, pair)
-			ammPool := types.NewPoolOrderer(
-				amm.NewBasicPool(rx.Amount, ry.Amount, sdk.Int{}),
-				pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
+			ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 			ob.AddOrder(amm.PoolOrders(ammPool, amm.DefaultOrderer, lowestPrice, highestPrice, tickPrec)...)
 			return false, nil
 		})
