@@ -34,6 +34,20 @@ The `liquidity` module emits the following events:
 | message     | action           | create_pool      |
 | message     | sender           | {senderAddress}  |
 
+### MsgCreateRangedPool
+
+| Type               | Attribute Key    | Attribute Value    |
+|--------------------|------------------|--------------------|
+| create_ranged_pool | creator          | {creator}          |
+| create_ranged_pool | pair_id          | {pairId}           |
+| create_ranged_pool | deposit_coins    | {depositCoins}     |
+| create_ranged_pool | pool_id          | {poolId}           |
+| create_ranged_pool | reserve_address  | {reserveAddress}   |
+| create_ranged_pool | minted_pool_coin | {poolCoin}         |
+| message            | module           | liquidity          |
+| message            | action           | create_ranged_pool |
+| message            | sender           | {senderAddress}    |
+
 ### MsgDeposit
 
 | Type      | Attribute Key | Attribute Value |

@@ -30,14 +30,32 @@ Pool stores information about the liquidity pool.
 Pool type has the following structure.
 
 ```go
+// PoolType enumerates pool types.
+type PoolType int32
+
+const (
+    // POOL_TYPE_UNSPECIFIED specifies unknown pool type
+    PoolTypeUnspecified PoolType = 0
+    // POOL_TYPE_BASIC specifies the basic pool type
+    PoolTypeBasic PoolType = 1
+    // POOL_TYPE_RANGED specifies the ranged pool type
+    PoolTypeRanged PoolType = 2
+)
+
 type Pool struct {
-    Id                    uint64  // id of the liquidity pool
-    PairId                uint64  // id of the coin pair constituting this pool
-    ReserveAddress        string  // reserve account address for the liquidity pool to store reserve coins
-    PoolCoinDenom         string  // denom of the pool coin
-    LastDepositRequestId  uint64  // id of the last deposit request for the pool
-    LastWithdrawRequestId uint64  // id of the last withdraw request for the pool
-    Disabled              bool    // true if pool is disabled, false if not disabled
+    Type                  PoolTye  // type of the pool
+    Id                    uint64   // id of the liquidity pool
+    PairId                uint64   // id of the coin pair constituting this pool
+    Creator               string   // the pool creator address
+    ReserveAddress        string   // reserve account address for the liquidity pool to store reserve coins
+    PoolCoinDenom         string   // denom of the pool coin
+    MinPrice              *sdk.Dec // the minimum price of ranged pool, nil for basic pools
+    MaxPrice              *sdk.Dec // the maximum price of ranged pool, nil for basic pools
+    TranslationX          *sdk.Dec // x-axis translation value for ranged pool. denoted as 'a' in some documents
+    TranslationY          *sdk.Dec // y-axis translation value for ranged pool. denoted as 'b' in some documents
+    LastDepositRequestId  uint64   // id of the last deposit request for the pool
+    LastWithdrawRequestId uint64   // id of the last withdraw request for the pool
+    Disabled              bool     // true if pool is disabled, false if not disabled
 }
 ```
 
