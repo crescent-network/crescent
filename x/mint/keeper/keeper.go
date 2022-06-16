@@ -14,6 +14,7 @@ type Keeper struct {
 	cdc              codec.BinaryCodec
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
+	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
 }
@@ -36,6 +37,7 @@ func NewKeeper(
 		cdc:              cdc,
 		storeKey:         key,
 		paramSpace:       paramSpace,
+		accountKeeper:    ak,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 	}
@@ -68,14 +70,27 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// AddInflationToFeeCollector implements an alias call to the underlying supply keeper's
-// AddInflationToFeeCollector to be used in BeginBlocker.
-func (k Keeper) AddInflationToFeeCollector(ctx sdk.Context, fees sdk.Coins) error {
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+// SendInflationToMintPool sends inflation to params.MintPoolAddress, It to be used in BeginBlocker.
+func (k Keeper) SendInflationToMintPool(ctx sdk.Context, inflation sdk.Coins) error {
+	return k.bankKeeper.SendCoins(ctx,
+		k.accountKeeper.GetModuleAddress(types.ModuleName),
+		k.GetMintPoolAddress(ctx),
+		inflation)
 }
 
 // GetInflationSchedules return inflation schedules set on app
 func (k Keeper) GetInflationSchedules(ctx sdk.Context) (res []types.InflationSchedule) {
 	k.paramSpace.Get(ctx, types.KeyInflationSchedules, &res)
+	return
+}
+
+// GetMintPoolAddress return mint pool address on app
+func (k Keeper) GetMintPoolAddress(ctx sdk.Context) (acc sdk.AccAddress) {
+	var addr string
+	k.paramSpace.Get(ctx, types.KeyMintPoolAddress, &addr)
+	acc, err := sdk.AccAddressFromBech32(addr)
+	if err != nil {
+		panic(err)
+	}
 	return
 }

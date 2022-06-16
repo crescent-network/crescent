@@ -899,5 +899,5 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 
 	// mainnet upgrade handlers
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v2_0_0.UpgradeName, v2_0_0.UpgradeHandler(mm, configurator))
+		v2_0_0.UpgradeName, v2_0_0.UpgradeHandler(mm, configurator, app.MintKeeper, app.BudgetKeeper))
 }

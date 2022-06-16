@@ -169,6 +169,52 @@ func TestConstantInflation(t *testing.T) {
 	require.True(t, advanceHeight().IsZero())
 }
 
+func TestChangeMintPool(t *testing.T) {
+	app := chain.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.InitChain(
+		abcitypes.RequestInitChain{
+			AppStateBytes: []byte("{}"),
+			ChainId:       "test-chain-id",
+		},
+	)
+
+	blockTime := 5 * time.Second
+	params := app.MintKeeper.GetParams(ctx)
+	require.EqualValues(t, params.MintPoolAddress, types.DefaultMintPoolAddress.String())
+	require.EqualValues(t, params.MintPoolAddress, app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String())
+
+	advanceHeight := func(mintPool sdk.AccAddress) sdk.Int {
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(blockTime))
+		beforeBalance := app.BankKeeper.GetBalance(ctx, mintPool, sdk.DefaultBondDenom)
+		mint.BeginBlocker(ctx, app.MintKeeper)
+		afterBalance := app.BankKeeper.GetBalance(ctx, mintPool, sdk.DefaultBondDenom)
+		mintedAmt := afterBalance.Sub(beforeBalance)
+		require.False(t, mintedAmt.IsNegative())
+		return mintedAmt.Amount
+	}
+
+	ctx = ctx.WithBlockHeight(0).WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
+
+	// skip first block inflation, not set LastBlockTime
+	require.EqualValues(t, advanceHeight(types.DefaultMintPoolAddress), sdk.NewInt(0))
+
+	require.EqualValues(t, advanceHeight(types.DefaultMintPoolAddress), sdk.NewInt(47564687))
+	require.EqualValues(t, advanceHeight(types.DefaultMintPoolAddress), sdk.NewInt(47564687))
+	require.EqualValues(t, advanceHeight(types.MintModuleAcc).String(), sdk.NewInt(0).String())
+	require.EqualValues(t, advanceHeight(types.MintModuleAcc).String(), sdk.NewInt(0).String())
+
+	// change mint pool address to mint module account from fee collector
+	params.MintPoolAddress = types.MintModuleAcc.String()
+	app.MintKeeper.SetParams(ctx, params)
+
+	require.EqualValues(t, advanceHeight(types.DefaultMintPoolAddress).String(), sdk.NewInt(0).String())
+	require.EqualValues(t, advanceHeight(types.DefaultMintPoolAddress).String(), sdk.NewInt(0).String())
+	require.EqualValues(t, advanceHeight(types.MintModuleAcc), sdk.NewInt(47564687))
+	require.EqualValues(t, advanceHeight(types.MintModuleAcc), sdk.NewInt(47564687))
+}
+
 func (s *ModuleTestSuite) TestDefaultGenesis() {
 	genState := *types.DefaultGenesisState()
 
