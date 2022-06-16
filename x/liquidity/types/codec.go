@@ -13,6 +13,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreatePair{}, "liquidity/MsgCreatePair", nil)
 	cdc.RegisterConcrete(&MsgCreatePool{}, "liquidity/MsgCreatePool", nil)
+	cdc.RegisterConcrete(&MsgCreateRangedPool{}, "liquidity/MsgCreateRangedPool", nil)
 	cdc.RegisterConcrete(&MsgDeposit{}, "liquidity/MsgDeposit", nil)
 	cdc.RegisterConcrete(&MsgWithdraw{}, "liquidity/MsgWithdraw", nil)
 	cdc.RegisterConcrete(&MsgLimitOrder{}, "liquidity/MsgLimitOrder", nil)
@@ -28,6 +29,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreatePair{},
 		&MsgCreatePool{},
+		&MsgCreateRangedPool{},
 		&MsgDeposit{},
 		&MsgWithdraw{},
 		&MsgLimitOrder{},
