@@ -279,12 +279,13 @@ func createRangedPool(x, y sdk.Int, initialPrice sdk.Dec, minPrice, maxPrice *sd
 			return
 		}
 	case maxPrice == nil:
-		sqrtPM := sqrt(initialPrice.Mul(*minPrice))
 		// ay = ax / (P - sqrt(P * M))
-		ay = ax.ToDec().Quo(initialPrice.Sub(sqrtPM)).Ceil().TruncateInt()
+		ay = ax.ToDec().Quo(
+			initialPrice.Sub(sqrt(initialPrice.Mul(*minPrice))),
+		).Ceil().TruncateInt()
 		if ay.LTE(y) {
-			// transX = ay * sqrt(P * M)
-			transX = ay.ToDec().Mul(sqrtPM)
+			// transX = ax / (sqrt(P / M) - 1)
+			transX = ax.ToDec().Quo(sqrt(initialPrice.Quo(*minPrice)).Sub(oneDec))
 			// transY = 0
 			transY = zeroDec
 			return
@@ -300,8 +301,8 @@ func createRangedPool(x, y sdk.Int, initialPrice sdk.Dec, minPrice, maxPrice *sd
 			inv(sqrtP).Sub(inv(sqrtL)),
 		).Ceil().TruncateInt()
 		if ay.LTE(y) {
-			// transX = sqrt(k) * sqrt(M)
-			transX = sqrtK.Mul(sqrtM)
+			// transX = ax / (sqrt(P / M) - 1)
+			transX = ax.ToDec().Quo(sqrt(initialPrice.Quo(*minPrice)).Sub(oneDec))
 			// transY = sqrt(k) / sqrt(L)
 			transY = sqrtK.Quo(sqrtL)
 			return
@@ -311,18 +312,18 @@ func createRangedPool(x, y sdk.Int, initialPrice sdk.Dec, minPrice, maxPrice *sd
 	ay = y
 	switch {
 	case minPrice == nil:
-		sqrtP := sqrt(initialPrice)
-		sqrtL := sqrt(*maxPrice)
-		// ax = {ay / (1/sqrt(P) - 1/sqrt(L))} * sqrt(P)
-		ax = ay.ToDec().Quo(inv(sqrtP).Sub(inv(sqrtL))).Mul(sqrtP).Ceil().TruncateInt()
+		// ax = ay / (1/P - 1/sqrt(P * L))
+		ax = ay.ToDec().Quo(
+			inv(initialPrice).Sub(inv(sqrt(initialPrice.Mul(*maxPrice)))),
+		).Ceil().TruncateInt()
 		if ax.GT(x) {
 			err = fmt.Errorf("invalid pool")
 			return
 		}
 		// transX = 0
 		transX = zeroDec
-		// transY = (ay*sqrt(P)) / (sqrt(L) - sqrt(P))
-		transY = ay.ToDec().Mul(sqrtP).Quo(sqrtL.Sub(sqrtP))
+		// transY = ay / (sqrt(L / P) - 1)
+		transY = ay.ToDec().Quo(sqrt(maxPrice.Quo(initialPrice)).Sub(oneDec))
 	case maxPrice == nil:
 		sqrtPM := sqrt(initialPrice.Mul(*minPrice))
 		// ax = ay * (P - sqrt(P * M))
@@ -338,9 +339,8 @@ func createRangedPool(x, y sdk.Int, initialPrice sdk.Dec, minPrice, maxPrice *sd
 	default:
 		sqrtP := sqrt(initialPrice)
 		sqrtM := sqrt(*minPrice)
-		sqrtL := sqrt(*maxPrice)
 		// sqrtK = sqrt(k) = ay / (1/sqrt(P) - 1/sqrt(L))
-		sqrtK := ay.ToDec().Quo(inv(sqrtP).Sub(inv(sqrtL)))
+		sqrtK := ay.ToDec().Quo(inv(sqrtP).Sub(inv(sqrt(*maxPrice))))
 		// ax = sqrt(k) * (sqrt(P) - sqrt(M))
 		ax = sqrtK.Mul(sqrtP.Sub(sqrtM)).Ceil().TruncateInt()
 		if ax.GT(x) {
@@ -349,8 +349,8 @@ func createRangedPool(x, y sdk.Int, initialPrice sdk.Dec, minPrice, maxPrice *sd
 		}
 		// transX = sqrt(k) * sqrt(M)
 		transX = sqrtK.Mul(sqrtM)
-		// transY = sqrt(k) / sqrt(L)
-		transY = sqrtK.Quo(sqrtL)
+		// transY = ay / (sqrt(L / P) - 1)
+		transY = ay.ToDec().Quo(sqrt(maxPrice.Quo(initialPrice)).Sub(oneDec))
 	}
 	return
 }
