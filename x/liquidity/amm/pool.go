@@ -17,6 +17,7 @@ var (
 // Pool is the interface of a pool.
 type Pool interface {
 	Balances() (rx, ry sdk.Int)
+	WithBalances(rx, ry sdk.Int) Pool
 	PoolCoinSupply() sdk.Int
 	Price() sdk.Dec
 	IsDepleted() bool
@@ -52,6 +53,10 @@ func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 // Balances returns the balances of the pool.
 func (pool *BasicPool) Balances() (rx, ry sdk.Int) {
 	return pool.rx, pool.ry
+}
+
+func (pool *BasicPool) WithBalances(rx, ry sdk.Int) Pool {
+	return NewBasicPool(rx, ry, pool.ps)
 }
 
 // PoolCoinSupply returns the pool coin supply.
@@ -355,6 +360,10 @@ func (pool *RangedPool) Balances() (rx, ry sdk.Int) {
 	return pool.rx, pool.ry
 }
 
+func (pool *RangedPool) WithBalances(rx, ry sdk.Int) Pool {
+	return NewRangedPool(rx, ry, pool.ps, pool.transX, pool.transY, pool.minPrice, pool.maxPrice)
+}
+
 // PoolCoinSupply returns the pool coin supply.
 func (pool *RangedPool) PoolCoinSupply() sdk.Int {
 	return pool.ps
@@ -374,7 +383,7 @@ func (pool *RangedPool) Price() sdk.Dec {
 
 // IsDepleted returns whether the pool is depleted or not.
 func (pool *RangedPool) IsDepleted() bool {
-	return pool.ps.IsZero() || pool.rx.IsZero() || pool.ry.IsZero()
+	return pool.ps.IsZero() || (pool.rx.IsZero() && pool.ry.IsZero())
 }
 
 // HighestBuyPrice returns the highest buy price of the pool.
@@ -556,7 +565,7 @@ func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.De
 		rx, ry := tmpPool.Balances()
 		rx = rx.Add(price.MulInt(amt).TruncateInt()) // quote coin truncation
 		ry = ry.Sub(amt)
-		tmpPool = NewBasicPool(rx, ry, sdk.Int{})
+		tmpPool = pool.WithBalances(rx, ry)
 	}
 	if pool.Price().LT(lowestPrice) {
 		placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
