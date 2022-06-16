@@ -29,6 +29,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewCreatePairCmd(),
 		NewCreatePoolCmd(),
+		NewCreateRangedPoolCmd(),
 		NewDepositCmd(),
 		NewWithdrawCmd(),
 		NewLimitOrderCmd(),
@@ -47,6 +48,7 @@ func NewCreatePairCmd() *cobra.Command {
 		Short: "Create a pair(market) for trading",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a pair(market) for trading.
+
 Example:
 $ %s tx %s create-pair uatom stake --from mykey
 `,
@@ -77,9 +79,10 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pool [pair-id] [deposit-coins]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Create a liquidity pool",
+		Short: "Create a basic liquidity pool",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a liquidity pool with coins.
+			fmt.Sprintf(`Create a basic liquidity pool with coins.
+
 Example:
 $ %s tx %s create-pool 1 1000000000uatom,50000000000stake --from mykey
 `,
@@ -109,6 +112,79 @@ $ %s tx %s create-pool 1 1000000000uatom,50000000000stake --from mykey
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCreateRangedPoolCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-ranged-pool [pair-id] [deposit-coins] [initial-price]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Create a ranged liquidity pool",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Create a ranged liquidity pool with coins.
+min-price and max-price are optional flags, but at least one of them must be specified.
+
+Example:
+$ %s tx %s create-ranged-pool 1 1000000000uatom,10000000000stake 1.0 --max-price 100.0 --from mykey
+$ %s tx %s create-ranged-pool 1 1000000000uatom,10000000000stake 1.0 --min-price 0.9 --from mykey
+$ %s tx %s create-ranged-pool 1 1000000000uatom,10000000000stake 1.5 --min-price 1.3 --max-price 2.5 --from mykey
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse pair id: %w", err)
+			}
+
+			depositCoins, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid deposit coints: %w", err)
+			}
+
+			initialPrice, err := sdk.NewDecFromStr(args[2])
+			if err != nil {
+				return fmt.Errorf("invalid initial price: %w", err)
+			}
+
+			minPriceStr, _ := cmd.Flags().GetString(FlagMinPrice)
+			var minPrice, maxPrice *sdk.Dec
+			if minPriceStr != "" {
+				p, err := sdk.NewDecFromStr(minPriceStr)
+				if err != nil {
+					return fmt.Errorf("invalid minimum price: %w", err)
+				}
+				minPrice = &p
+			}
+			maxPriceStr, _ := cmd.Flags().GetString(FlagMaxPrice)
+			if maxPriceStr != "" {
+				p, err := sdk.NewDecFromStr(maxPriceStr)
+				if err != nil {
+					return fmt.Errorf("invalid maximum price: %w", err)
+				}
+				maxPrice = &p
+			}
+
+			msg := types.NewMsgCreateRangedPool(
+				clientCtx.GetFromAddress(), pairId, depositCoins,
+				initialPrice, minPrice, maxPrice)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(FlagMinPrice, "", "The minimum price of the ranged pool")
+	cmd.Flags().String(FlagMaxPrice, "", "The maximum price of the ranged pool")
 
 	return cmd
 }

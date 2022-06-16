@@ -14,6 +14,8 @@ const (
 	FlagDenoms         = "denoms"
 	FlagOrderLifespan  = "order-lifespan"
 	FlagNumTicks       = "num-ticks"
+	FlagMinPrice       = "min-price"
+	FlagMaxPrice       = "max-price"
 )
 
 func flagSetPools() *flag.FlagSet {
