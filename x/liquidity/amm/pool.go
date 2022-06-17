@@ -539,6 +539,7 @@ func Withdraw(rx, ry, ps, pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
 }
 
 func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	poolPrice := pool.Price()
 	tmpPool := pool
 	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
@@ -552,7 +553,6 @@ func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec
 		placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
 	}
 	tick := PriceToDownTick(tmpPool.Price(), tickPrec)
-	priceMultiplier := sdk.OneDec().Sub(PoolOrderPriceDiffRatio)
 	for tick.GTE(lowestPrice) {
 		amt := tmpPool.BuyAmountOver(tick, true)
 		if amt.LT(MinCoinAmount) {
@@ -564,12 +564,13 @@ func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec
 		if !rx.IsPositive() {
 			break
 		}
-		tick = PriceToDownTick(tick.Mul(priceMultiplier), tickPrec)
+		tick = PriceToDownTick(tick.Mul(oneDec.Sub(poolOrderPriceGapRatio(poolPrice, tick))), tickPrec)
 	}
 	return orders
 }
 
 func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+	poolPrice := pool.Price()
 	tmpPool := pool
 	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
@@ -583,7 +584,6 @@ func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.De
 		placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
 	}
 	tick := PriceToUpTick(tmpPool.Price(), tickPrec)
-	priceMultiplier := sdk.OneDec().Add(PoolOrderPriceDiffRatio)
 	for tick.LTE(highestPrice) {
 		amt := tmpPool.SellAmountUnder(tick, true)
 		if amt.LT(MinCoinAmount) || tick.MulInt(amt).TruncateInt().IsZero() {
@@ -595,7 +595,7 @@ func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.De
 		if !ry.GT(MinCoinAmount) {
 			break
 		}
-		tick = PriceToUpTick(tick.Mul(priceMultiplier), tickPrec)
+		tick = PriceToUpTick(tick.Mul(oneDec.Add(poolOrderPriceGapRatio(poolPrice, tick))), tickPrec)
 	}
 	return orders
 }

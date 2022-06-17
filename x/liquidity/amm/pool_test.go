@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
@@ -352,18 +351,18 @@ func TestInitialPoolCoinSupply(t *testing.T) {
 //}
 
 func TestBasicPoolOrders(t *testing.T) {
-	pool := amm.NewBasicPool(sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{})
-	lastPrice := utils.ParseDec("1")
-	lowestPrice := lastPrice.Mul(sdk.NewDecWithPrec(9, 1))
-	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
-	fmt.Println(len(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, int(defTickPrec))))
+	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
+	poolPrice := pool.Price()
+	lowestPrice := poolPrice.Mul(sdk.NewDecWithPrec(9, 1))
+	highestPrice := poolPrice.Mul(sdk.NewDecWithPrec(11, 1))
+	fmt.Println(len(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4)))
 }
 
 func BenchmarkBasicPoolOrders(b *testing.B) {
-	pool := amm.NewBasicPool(sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{})
-	lastPrice := utils.ParseDec("1")
-	lowestPrice := lastPrice.Mul(sdk.NewDecWithPrec(9, 1))
-	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
+	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
+	poolPrice := pool.Price()
+	lowestPrice := poolPrice.Mul(sdk.NewDecWithPrec(9, 1))
+	highestPrice := poolPrice.Mul(sdk.NewDecWithPrec(11, 1))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4)

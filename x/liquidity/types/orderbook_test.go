@@ -52,6 +52,24 @@ func ExampleMakeOrderBookResponse() {
 	// +------------------------------------------------------------------------+
 }
 
+func TestMakeOrderBookResponse(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
+	lowestPrice := pool.Price().Mul(sdk.NewDecWithPrec(9, 1))
+	highestPrice := pool.Price().Mul(sdk.NewDecWithPrec(11, 1))
+
+	ob := amm.NewOrderBook()
+	ob.AddOrder(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4)...)
+
+	ov := ob.MakeView()
+	basePrice, found := types.OrderBookBasePrice(ov, 4)
+	if !found {
+		panic("base price not found")
+	}
+
+	resp := types.MakeOrderBookResponse(ov, 3, 20)
+	types.PrintOrderBookResponse(resp, basePrice)
+}
+
 func BenchmarkMakeOrderBookResponse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		makeOrderBookPairResponse(100, 10, 20, 4)
