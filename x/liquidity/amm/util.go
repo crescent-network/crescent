@@ -26,6 +26,22 @@ func OfferCoinAmount(dir OrderDirection, price sdk.Dec, amt sdk.Int) sdk.Int {
 	}
 }
 
+// MatchableAmount returns matchable amount of an order considering
+// remaining offer coin and price.
+func MatchableAmount(order Order, price sdk.Dec) (matchableAmt sdk.Int) {
+	switch order.GetDirection() {
+	case Buy:
+		remainingOfferCoinAmt := order.GetOfferCoinAmount().Sub(order.GetPaidOfferCoinAmount())
+		matchableAmt = sdk.MinInt(
+			order.GetOpenAmount(),
+			remainingOfferCoinAmt.ToDec().QuoTruncate(price).TruncateInt(),
+		)
+	case Sell:
+		matchableAmt = order.GetOpenAmount()
+	}
+	return
+}
+
 // findFirstTrueCondition uses the binary search to find the first index
 // where f(i) is true, while searching in range [start, end].
 // It assumes that f(j) == false where j < i and f(j) == true where j >= i.

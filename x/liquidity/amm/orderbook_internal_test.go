@@ -11,6 +11,10 @@ import (
 	utils "github.com/crescent-network/crescent/types"
 )
 
+func newOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
+	return NewBaseOrder(dir, price, amt, OfferCoinAmount(dir, price, amt))
+}
+
 func TestOrderBookTicks_add(t *testing.T) {
 	prices := []sdk.Dec{
 		utils.ParseDec("1.0"),
@@ -23,7 +27,7 @@ func TestOrderBookTicks_add(t *testing.T) {
 	}
 	var ticks orderBookTicks
 	for _, price := range prices {
-		ticks.addOrder(NewBaseOrder(Buy, price, sdk.NewInt(10000)))
+		ticks.addOrder(newOrder(Buy, price, sdk.NewInt(10000)))
 	}
 	pricesSet := map[string]struct{}{}
 	for _, price := range prices {

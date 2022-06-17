@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	_ Order = (*BaseOrder)(nil)
+	_ Order   = (*BaseOrder)(nil)
+	_ Orderer = (*BaseOrderer)(nil)
 
 	DefaultOrderer = BaseOrderer{}
 )
@@ -39,7 +40,7 @@ type Orderer interface {
 type BaseOrderer struct{}
 
 func (orderer BaseOrderer) Order(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order {
-	return NewBaseOrder(dir, price, amt)
+	return NewBaseOrder(dir, price, amt, OfferCoinAmount(dir, price, amt))
 }
 
 // Order is the universal interface of an order.
@@ -50,6 +51,7 @@ type Order interface {
 	GetBatchId() uint64
 	GetPrice() sdk.Dec
 	GetAmount() sdk.Int // The original order amount
+	GetOfferCoinAmount() sdk.Int
 	GetPaidOfferCoinAmount() sdk.Int
 	SetPaidOfferCoinAmount(amt sdk.Int)
 	GetReceivedDemandCoinAmount() sdk.Int
@@ -67,9 +69,10 @@ type Order interface {
 
 // BaseOrder is the base struct for an Order.
 type BaseOrder struct {
-	Direction OrderDirection
-	Price     sdk.Dec
-	Amount    sdk.Int
+	Direction       OrderDirection
+	Price           sdk.Dec
+	Amount          sdk.Int
+	OfferCoinAmount sdk.Int
 
 	// Match info
 	OpenAmount               sdk.Int
@@ -79,11 +82,12 @@ type BaseOrder struct {
 }
 
 // NewBaseOrder returns a new BaseOrder.
-func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt sdk.Int) *BaseOrder {
+func NewBaseOrder(dir OrderDirection, price sdk.Dec, amt, offerCoinAmt sdk.Int) *BaseOrder {
 	return &BaseOrder{
 		Direction:                dir,
 		Price:                    price,
 		Amount:                   amt,
+		OfferCoinAmount:          offerCoinAmt,
 		OpenAmount:               amt,
 		PaidOfferCoinAmount:      sdk.ZeroInt(),
 		ReceivedDemandCoinAmount: sdk.ZeroInt(),
@@ -107,6 +111,10 @@ func (order *BaseOrder) GetPrice() sdk.Dec {
 // GetAmount returns the order amount.
 func (order *BaseOrder) GetAmount() sdk.Int {
 	return order.Amount
+}
+
+func (order *BaseOrder) GetOfferCoinAmount() sdk.Int {
+	return order.OfferCoinAmount
 }
 
 func (order *BaseOrder) GetPaidOfferCoinAmount() sdk.Int {
@@ -163,10 +171,10 @@ func TotalAmount(orders []Order) sdk.Int {
 	return amt
 }
 
-func TotalOpenAmount(orders []Order) sdk.Int {
-	amt := sdk.ZeroInt()
+func TotalMatchableAmount(orders []Order, price sdk.Dec) (amt sdk.Int) {
+	amt = sdk.ZeroInt()
 	for _, order := range orders {
-		amt = amt.Add(order.GetOpenAmount())
+		amt = amt.Add(MatchableAmount(order, price))
 	}
-	return amt
+	return
 }

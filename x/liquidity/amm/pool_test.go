@@ -356,7 +356,7 @@ func TestBasicPoolOrders(t *testing.T) {
 	lastPrice := utils.ParseDec("1")
 	lowestPrice := lastPrice.Mul(sdk.NewDecWithPrec(9, 1))
 	highestPrice := lastPrice.Mul(sdk.NewDecWithPrec(11, 1))
-	fmt.Println(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, int(defTickPrec)))
+	fmt.Println(len(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, int(defTickPrec))))
 }
 
 func BenchmarkBasicPoolOrders(b *testing.B) {

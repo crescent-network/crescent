@@ -14,6 +14,8 @@ import (
 )
 
 var (
+	_ amm.Orderer = (*PoolOrderer)(nil)
+
 	poolCoinDenomRegexp = regexp.MustCompile(`^pool([1-9]\d*)$`)
 )
 

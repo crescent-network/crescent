@@ -37,8 +37,9 @@ type MatchRecord struct {
 
 // FillOrder fills the order by given amount and price.
 func FillOrder(order Order, amt sdk.Int, price sdk.Dec) (quoteCoinDiff sdk.Int) {
-	if amt.GT(order.GetOpenAmount()) {
-		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, order.GetOpenAmount()))
+	matchableAmt := MatchableAmount(order, price)
+	if amt.GT(matchableAmt) {
+		panic(fmt.Errorf("cannot match more than open amount; %s > %s", amt, matchableAmt))
 	}
 	var paid, received sdk.Int
 	switch order.GetDirection() {
@@ -65,7 +66,7 @@ func FillOrder(order Order, amt sdk.Int, price sdk.Dec) (quoteCoinDiff sdk.Int) 
 func FulfillOrder(order Order, price sdk.Dec) (quoteCoinDiff sdk.Int) {
 	quoteCoinDiff = sdk.ZeroInt()
 	if order.GetOpenAmount().IsPositive() {
-		quoteCoinDiff = quoteCoinDiff.Add(FillOrder(order, order.GetOpenAmount(), price))
+		quoteCoinDiff = quoteCoinDiff.Add(FillOrder(order, MatchableAmount(order, price), price))
 	}
 	return
 }
@@ -123,7 +124,7 @@ func (ob *OrderBook) MatchAtSinglePrice(matchPrice sdk.Dec) (quoteCoinDiff sdk.I
 		if buyTick.price.LT(matchPrice) {
 			break
 		}
-		sum := TotalOpenAmount(buyTick.orders())
+		sum := TotalMatchableAmount(buyTick.orders(), buyTick.price)
 		if i > 0 {
 			sum = buySums[i-1].Add(sum)
 		}
@@ -137,7 +138,7 @@ func (ob *OrderBook) MatchAtSinglePrice(matchPrice sdk.Dec) (quoteCoinDiff sdk.I
 		if sellTick.price.GT(matchPrice) {
 			break
 		}
-		sum := TotalOpenAmount(sellTick.orders())
+		sum := TotalMatchableAmount(sellTick.orders(), sellTick.price)
 		if i > 0 {
 			sum = sellSums[i-1].Add(sum)
 		}
@@ -181,7 +182,7 @@ func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 		if tick.price.LT(lastPrice) {
 			break
 		}
-		amt := TotalOpenAmount(tick.orders())
+		amt := TotalMatchableAmount(tick.orders(), tick.price)
 		if tick.price.Equal(lastPrice) {
 			buyAmtAtLastPrice = amt
 			break
@@ -194,7 +195,7 @@ func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 		if tick.price.GT(lastPrice) {
 			break
 		}
-		amt := TotalOpenAmount(tick.orders())
+		amt := TotalMatchableAmount(tick.orders(), tick.price)
 		if tick.price.Equal(lastPrice) {
 			sellAmtAtLastPrice = amt
 			break
@@ -237,8 +238,8 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff
 		case PriceDecreasing:
 			matchPrice = buyTick.price
 		}
-		buyTickOpenAmt := TotalOpenAmount(buyTick.orders())
-		sellTickOpenAmt := TotalOpenAmount(sellTick.orders())
+		buyTickOpenAmt := TotalMatchableAmount(buyTick.orders(), matchPrice)
+		sellTickOpenAmt := TotalMatchableAmount(sellTick.orders(), matchPrice)
 		if buyTickOpenAmt.LTE(sellTickOpenAmt) {
 			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, buyTickOpenAmt, matchPrice))
 			bi++
@@ -264,7 +265,7 @@ func DistributeOrderAmountToTick(tick *orderBookTick, amt sdk.Int, price sdk.Dec
 	remainingAmt := amt
 	quoteCoinDiff = sdk.ZeroInt()
 	for _, group := range tick.orderGroups {
-		openAmt := TotalOpenAmount(group.orders)
+		openAmt := TotalMatchableAmount(group.orders, price)
 		if openAmt.IsZero() {
 			continue
 		}

@@ -37,7 +37,7 @@ func NewUserOrder(order Order) *UserOrder {
 		amt = order.OpenAmount
 	}
 	return &UserOrder{
-		BaseOrder:       amm.NewBaseOrder(dir, order.Price, amt),
+		BaseOrder:       amm.NewBaseOrder(dir, order.Price, amt, order.RemainingOfferCoin.Amount),
 		Orderer:         order.GetOrderer(),
 		OrderId:         order.Id,
 		BatchId:         order.BatchId,
@@ -80,7 +80,7 @@ func NewPoolOrder(
 	poolId uint64, reserveAddr sdk.AccAddress, dir amm.OrderDirection, price sdk.Dec, amt sdk.Int,
 	offerCoinDenom, demandCoinDenom string) *PoolOrder {
 	return &PoolOrder{
-		BaseOrder:       amm.NewBaseOrder(dir, price, amt),
+		BaseOrder:       amm.NewBaseOrder(dir, price, amt, amm.OfferCoinAmount(dir, price, amt)),
 		PoolId:          poolId,
 		ReserveAddress:  reserveAddr,
 		OfferCoinDenom:  offerCoinDenom,

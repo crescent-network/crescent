@@ -10,6 +10,10 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
+func newOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
+	return amm.DefaultOrderer.Order(dir, price, amt)
+}
+
 func TestFindMatchPrice(t *testing.T) {
 	for _, tc := range []struct {
 		name       string
@@ -20,8 +24,8 @@ func TestFindMatchPrice(t *testing.T) {
 		{
 			"happy case",
 			amm.NewOrderBook(
-				amm.NewBaseOrder(amm.Buy, utils.ParseDec("1.1"), sdk.NewInt(10000)),
-				amm.NewBaseOrder(amm.Sell, utils.ParseDec("0.9"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("1.1"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9"), sdk.NewInt(10000)),
 			).MakeView(),
 			true,
 			utils.ParseDec("1.0"),
@@ -29,7 +33,7 @@ func TestFindMatchPrice(t *testing.T) {
 		{
 			"buy order only",
 			amm.NewOrderBook(
-				amm.NewBaseOrder(amm.Buy, utils.ParseDec("1.0"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("1.0"), sdk.NewInt(10000)),
 			).MakeView(),
 			false,
 			sdk.Dec{},
@@ -37,7 +41,7 @@ func TestFindMatchPrice(t *testing.T) {
 		{
 			"sell order only",
 			amm.NewOrderBook(
-				amm.NewBaseOrder(amm.Sell, utils.ParseDec("1.0"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("1.0"), sdk.NewInt(10000)),
 			).MakeView(),
 			false,
 			sdk.Dec{},
@@ -45,8 +49,8 @@ func TestFindMatchPrice(t *testing.T) {
 		{
 			"highest buy price is lower than lowest sell price",
 			amm.NewOrderBook(
-				amm.NewBaseOrder(amm.Buy, utils.ParseDec("0.9"), sdk.NewInt(10000)),
-				amm.NewBaseOrder(amm.Sell, utils.ParseDec("1.1"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("0.9"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("1.1"), sdk.NewInt(10000)),
 			).MakeView(),
 			false,
 			sdk.Dec{},
@@ -67,10 +71,10 @@ func TestFindMatchPrice_Rounding(t *testing.T) {
 
 	for i := 0; i < 50; i++ {
 		ob := amm.NewOrderBook(
-			amm.NewBaseOrder(amm.Buy, defTickPrec.UpTick(defTickPrec.UpTick(basePrice)), sdk.NewInt(80)),
-			amm.NewBaseOrder(amm.Sell, defTickPrec.UpTick(basePrice), sdk.NewInt(20)),
-			amm.NewBaseOrder(amm.Buy, basePrice, sdk.NewInt(10)), amm.NewBaseOrder(amm.Sell, basePrice, sdk.NewInt(10)),
-			amm.NewBaseOrder(amm.Sell, defTickPrec.DownTick(basePrice), sdk.NewInt(70)),
+			newOrder(amm.Buy, defTickPrec.UpTick(defTickPrec.UpTick(basePrice)), sdk.NewInt(80)),
+			newOrder(amm.Sell, defTickPrec.UpTick(basePrice), sdk.NewInt(20)),
+			newOrder(amm.Buy, basePrice, sdk.NewInt(10)), newOrder(amm.Sell, basePrice, sdk.NewInt(10)),
+			newOrder(amm.Sell, defTickPrec.DownTick(basePrice), sdk.NewInt(70)),
 		)
 		matchPrice, found := amm.FindMatchPrice(ob.MakeView(), int(defTickPrec))
 		require.True(t, found)
@@ -97,8 +101,8 @@ func TestMatchOrders(t *testing.T) {
 		{
 			"happy case",
 			amm.NewOrderBook(
-				amm.NewBaseOrder(amm.Buy, utils.ParseDec("1.0"), sdk.NewInt(10000)),
-				amm.NewBaseOrder(amm.Sell, utils.ParseDec("1.0"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("1.0"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("1.0"), sdk.NewInt(10000)),
 			),
 			utils.ParseDec("1.0"),
 			true,
@@ -108,8 +112,8 @@ func TestMatchOrders(t *testing.T) {
 		{
 			"happy case #2",
 			amm.NewOrderBook(
-				amm.NewBaseOrder(amm.Buy, utils.ParseDec("1.1"), sdk.NewInt(10000)),
-				amm.NewBaseOrder(amm.Sell, utils.ParseDec("0.9"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("1.1"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9"), sdk.NewInt(10000)),
 			),
 			utils.ParseDec("1.0"),
 			true,
@@ -119,10 +123,10 @@ func TestMatchOrders(t *testing.T) {
 		{
 			"positive quote coin dust",
 			amm.NewOrderBook(
-				amm.NewBaseOrder(amm.Buy, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
-				amm.NewBaseOrder(amm.Buy, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
-				amm.NewBaseOrder(amm.Sell, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
-				amm.NewBaseOrder(amm.Sell, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Buy, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Buy, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
+				newOrder(amm.Sell, utils.ParseDec("0.9999"), sdk.NewInt(1000)),
 			),
 			utils.ParseDec("0.9999"),
 			true,

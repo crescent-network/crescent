@@ -11,17 +11,21 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/types"
 )
 
+func newOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
+	return amm.DefaultOrderer.Order(dir, price, amt)
+}
+
 func ExampleMakeOrderBookResponse() {
 	ob := amm.NewOrderBook(
-		amm.NewBaseOrder(amm.Sell, utils.ParseDec("15.0"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Sell, utils.ParseDec("13.0"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Sell, utils.ParseDec("10.01"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Sell, utils.ParseDec("10.0"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Buy, utils.ParseDec("10.01"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Buy, utils.ParseDec("10.0"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Buy, utils.ParseDec("9.0"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Buy, utils.ParseDec("3.0"), sdk.NewInt(10000)),
-		amm.NewBaseOrder(amm.Buy, utils.ParseDec("0.1"), sdk.NewInt(10000)),
+		newOrder(amm.Sell, utils.ParseDec("15.0"), sdk.NewInt(10000)),
+		newOrder(amm.Sell, utils.ParseDec("13.0"), sdk.NewInt(10000)),
+		newOrder(amm.Sell, utils.ParseDec("10.01"), sdk.NewInt(10000)),
+		newOrder(amm.Sell, utils.ParseDec("10.0"), sdk.NewInt(10000)),
+		newOrder(amm.Buy, utils.ParseDec("10.01"), sdk.NewInt(10000)),
+		newOrder(amm.Buy, utils.ParseDec("10.0"), sdk.NewInt(10000)),
+		newOrder(amm.Buy, utils.ParseDec("9.0"), sdk.NewInt(10000)),
+		newOrder(amm.Buy, utils.ParseDec("3.0"), sdk.NewInt(10000)),
+		newOrder(amm.Buy, utils.ParseDec("0.1"), sdk.NewInt(10000)),
 	)
 	ov := ob.MakeView()
 	ov.Match()
@@ -67,7 +71,7 @@ func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) *typ
 		price := amm.PriceToDownTick(
 			utils.RandomDec(r, utils.ParseDec("0.5"), utils.ParseDec("1.5")), tickPrec)
 		amt := utils.RandomInt(r, sdk.NewInt(1000), sdk.NewInt(100000))
-		ob.AddOrder(amm.NewBaseOrder(dir, price, amt))
+		ob.AddOrder(newOrder(dir, price, amt))
 	}
 
 	for i := 0; i < numPools; i++ {
