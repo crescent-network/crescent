@@ -37,6 +37,8 @@ type Orderer interface {
 	Order(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order
 }
 
+// BaseOrderer creates new BaseOrder with sufficient offer coin amount
+// considering price and amount.
 type BaseOrderer struct{}
 
 func (orderer BaseOrderer) Order(dir OrderDirection, price sdk.Dec, amt sdk.Int) Order {
@@ -58,8 +60,6 @@ type Order interface {
 	SetReceivedDemandCoinAmount(amt sdk.Int)
 	GetOpenAmount() sdk.Int
 	SetOpenAmount(amt sdk.Int)
-	GetMatchRecords() []MatchRecord    // TODO: remove
-	AddMatchRecord(record MatchRecord) // TODO: remove
 	IsMatched() bool
 	// HasPriority returns true if the order has higher priority
 	// than the other order.
@@ -78,7 +78,6 @@ type BaseOrder struct {
 	OpenAmount               sdk.Int
 	PaidOfferCoinAmount      sdk.Int
 	ReceivedDemandCoinAmount sdk.Int
-	MatchRecords             []MatchRecord
 }
 
 // NewBaseOrder returns a new BaseOrder.
@@ -139,14 +138,6 @@ func (order *BaseOrder) GetOpenAmount() sdk.Int {
 
 func (order *BaseOrder) SetOpenAmount(amt sdk.Int) {
 	order.OpenAmount = amt
-}
-
-func (order *BaseOrder) GetMatchRecords() []MatchRecord {
-	return order.MatchRecords
-}
-
-func (order *BaseOrder) AddMatchRecord(record MatchRecord) {
-	order.MatchRecords = append(order.MatchRecords, record)
 }
 
 func (order *BaseOrder) IsMatched() bool {

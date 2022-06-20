@@ -29,12 +29,6 @@ func (dir PriceDirection) String() string {
 	}
 }
 
-// MatchRecord holds a single match record.
-type MatchRecord struct {
-	Amount sdk.Int
-	Price  sdk.Dec
-}
-
 // FillOrder fills the order by given amount and price.
 func FillOrder(order Order, amt sdk.Int, price sdk.Dec) (quoteCoinDiff sdk.Int) {
 	matchableAmt := MatchableAmount(order, price)
@@ -55,10 +49,6 @@ func FillOrder(order Order, amt sdk.Int, price sdk.Dec) (quoteCoinDiff sdk.Int) 
 	order.SetPaidOfferCoinAmount(order.GetPaidOfferCoinAmount().Add(paid))
 	order.SetReceivedDemandCoinAmount(order.GetReceivedDemandCoinAmount().Add(received))
 	order.SetOpenAmount(order.GetOpenAmount().Sub(amt))
-	order.AddMatchRecord(MatchRecord{
-		Amount: amt,
-		Price:  price,
-	})
 	return
 }
 
