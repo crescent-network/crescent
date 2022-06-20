@@ -13,10 +13,6 @@ var (
 	zeroInt = sdk.ZeroInt()
 	zeroDec = sdk.ZeroDec()
 	oneDec  = sdk.OneDec()
-
-	twoPercentDec = sdk.NewDecWithPrec(2, 2) // 2%
-	tenPercentDec = sdk.NewDecWithPrec(1, 1) // 10%
-	fiftyBPDec    = sdk.NewDecWithPrec(5, 3) // 50bp, 0.005
 )
 
 // OfferCoinAmount returns the minimum offer coin amount for

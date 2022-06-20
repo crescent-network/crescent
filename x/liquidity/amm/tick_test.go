@@ -71,6 +71,8 @@ func TestUpTick(t *testing.T) {
 		{utils.ParseDec("0.1000"), 3, utils.ParseDec("0.1001")},
 		{utils.ParseDec("0.09999"), 3, utils.ParseDec("0.1000")},
 		{utils.ParseDec("0.09997"), 3, utils.ParseDec("0.09998")},
+		{utils.ParseDec("1000.1"), 3, utils.ParseDec("1001")},
+		{utils.ParseDec("1000.9"), 3, utils.ParseDec("1001")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.UpTick(tc.price, tc.prec)))
@@ -94,6 +96,8 @@ func TestDownTick(t *testing.T) {
 		{utils.ParseDec("0.1"), 3, utils.ParseDec("0.09999")},
 		{utils.ParseDec("0.00000000000001000"), 3, utils.ParseDec("0.000000000000009999")},
 		{utils.ParseDec("0.000000000000001001"), 3, utils.ParseDec("0.000000000000001000")},
+		{utils.ParseDec("1000.1"), 3, utils.ParseDec("1000")},
+		{utils.ParseDec("1000.9"), 3, utils.ParseDec("1000")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.DownTick(tc.price, tc.prec)))
@@ -200,6 +204,25 @@ func TestRoundPrice(t *testing.T) {
 	}
 }
 
+func TestTickGap(t *testing.T) {
+	for _, tc := range []struct {
+		price    sdk.Dec
+		tickPrec int
+		expected sdk.Dec
+	}{
+		{utils.ParseDec("1.0"), 3, utils.ParseDec("0.001")},
+		{utils.ParseDec("1234"), 3, utils.ParseDec("1")},
+		{utils.ParseDec("9999"), 3, utils.ParseDec("1")},
+		{utils.ParseDec("10000"), 3, utils.ParseDec("10")},
+		{utils.ParseDec("10009"), 3, utils.ParseDec("10")},
+		{utils.ParseDec("0.00000000009"), 3, utils.ParseDec("0.00000000000001")},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.True(sdk.DecEq(t, tc.expected, amm.TickGap(tc.price, tc.tickPrec)))
+		})
+	}
+}
+
 func BenchmarkUpTick(b *testing.B) {
 	b.Run("price fit in ticks", func(b *testing.B) {
 		price := utils.ParseDec("0.9999")
@@ -240,39 +263,3 @@ func BenchmarkDownTick(b *testing.B) {
 		}
 	})
 }
-
-//func BenchmarkPoolOrders(b *testing.B) {
-//	tickPrec := defTickPrec
-//	n := sdk.NewInt(100)
-//	pool := amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
-//	lastPriceTick := tickPrec.PriceToDownTick(pool.Price())
-//	highestTick := tickPrec.PriceToDownTick(lastPriceTick.MulTruncate(sdk.NewDecWithPrec(11, 1)))
-//	b.ResetTimer()
-//
-//	for i := 0; i < b.N; i++ {
-//		pool = amm.NewBasicPool(sdk.NewInt(10000000_000000), sdk.NewInt(100000000000_000000), sdk.Int{})
-//		for {
-//			rx, ry := pool.Balances()
-//			if ry.LTE(n) {
-//				break
-//			}
-//			tick := tickPrec.PriceToUpTick(sdk.MaxDec(
-//				rx.Add(sdk.OneInt()).ToDec().QuoInt(ry),
-//				rx.ToDec().QuoInt(ry.Sub(n)),
-//			))
-//			if tick.GT(highestTick) {
-//				break
-//			}
-//			dy := pool.SellAmountUnder(tick)
-//			if dy.IsZero() {
-//				panic("!")
-//			}
-//
-//			dx := tick.MulInt(dy).TruncateInt()
-//			rx = rx.Add(dx)
-//			ry = ry.Sub(dy)
-//
-//			pool = amm.NewBasicPool(rx, ry, sdk.Int{})
-//		}
-//	}
-//}

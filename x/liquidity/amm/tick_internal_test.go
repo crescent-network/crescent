@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	utils "github.com/cosmosquad-labs/squad/types"
 )
 
 func Test_char(t *testing.T) {
@@ -49,6 +51,28 @@ func Test_pow10(t *testing.T) {
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, pow10(tc.power)))
+		})
+	}
+}
+
+func Test_isPow10(t *testing.T) {
+	for _, tc := range []struct {
+		x        sdk.Dec
+		expected bool
+	}{
+		{utils.ParseDec("100"), true},
+		{utils.ParseDec("101"), false},
+		{utils.ParseDec("10"), true},
+		{utils.ParseDec("1"), true},
+		{utils.ParseDec("1.000000000000000001"), false},
+		{utils.ParseDec("0.11"), false},
+		{utils.ParseDec("0.000000000000000001"), true},
+		{utils.ParseDec("10000000000000000000000000001"), false},
+		{utils.ParseDec("10000000000000000000000000000"), true},
+		{utils.ParseDec("123456789"), false},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.Equal(t, tc.expected, isPow10(tc.x))
 		})
 	}
 }
