@@ -32,11 +32,12 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 			sdk.NewCoin(msg.OfferCoin.Denom, spendableAmt), msg.OfferCoin)
 	}
 
-	params := k.GetParams(ctx)
+	tickPrec := k.GetTickPrecision(ctx)
+	maxOrderLifespan := k.GetMaxOrderLifespan(ctx)
 
-	if msg.OrderLifespan > params.MaxOrderLifespan {
+	if msg.OrderLifespan > maxOrderLifespan {
 		return sdk.Coin{}, sdk.Dec{},
-			sdkerrors.Wrapf(types.ErrTooLongOrderLifespan, "%s is longer than %s", msg.OrderLifespan, params.MaxOrderLifespan)
+			sdkerrors.Wrapf(types.ErrTooLongOrderLifespan, "%s is longer than %s", msg.OrderLifespan, maxOrderLifespan)
 	}
 
 	pair, found := k.GetPair(ctx, msg.PairId)
@@ -48,8 +49,8 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 	if pair.LastPrice != nil {
 		lowerPriceLimit, upperPriceLimit = k.PriceLimits(ctx, *pair.LastPrice)
 	} else {
-		upperPriceLimit = amm.HighestTick(int(params.TickPrecision))
-		lowerPriceLimit = amm.LowestTick(int(params.TickPrecision))
+		upperPriceLimit = amm.HighestTick(int(tickPrec))
+		lowerPriceLimit = amm.LowestTick(int(tickPrec))
 	}
 	switch {
 	case msg.Price.GT(upperPriceLimit):
@@ -65,7 +66,7 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = amm.PriceToDownTick(msg.Price, int(params.TickPrecision))
+		price = amm.PriceToDownTick(msg.Price, int(tickPrec))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, price, msg.Amount))
 		if msg.OfferCoin.IsLT(offerCoin) {
 			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
@@ -77,7 +78,7 @@ func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder)
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = amm.PriceToUpTick(msg.Price, int(params.TickPrecision))
+		price = amm.PriceToUpTick(msg.Price, int(tickPrec))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount)
 		if msg.OfferCoin.Amount.LT(msg.Amount) {
 			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
@@ -110,8 +111,7 @@ func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.Ord
 	k.SetOrder(ctx, order)
 	k.SetOrderIndex(ctx, order)
 
-	params := k.GetParams(ctx)
-	ctx.GasMeter().ConsumeGas(params.OrderExtraGas, "OrderExtraGas")
+	ctx.GasMeter().ConsumeGas(k.GetOrderExtraGas(ctx), "OrderExtraGas")
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -143,11 +143,13 @@ func (k Keeper) ValidateMsgMarketOrder(ctx sdk.Context, msg *types.MsgMarketOrde
 			sdk.NewCoin(msg.OfferCoin.Denom, spendableAmt), msg.OfferCoin)
 	}
 
-	params := k.GetParams(ctx)
+	maxOrderLifespan := k.GetMaxOrderLifespan(ctx)
+	maxPriceLimitRatio := k.GetMaxPriceLimitRatio(ctx)
+	tickPrec := k.GetTickPrecision(ctx)
 
-	if msg.OrderLifespan > params.MaxOrderLifespan {
+	if msg.OrderLifespan > maxOrderLifespan {
 		return sdk.Coin{}, sdk.Dec{},
-			sdkerrors.Wrapf(types.ErrTooLongOrderLifespan, "%s is longer than %s", msg.OrderLifespan, params.MaxOrderLifespan)
+			sdkerrors.Wrapf(types.ErrTooLongOrderLifespan, "%s is longer than %s", msg.OrderLifespan, maxOrderLifespan)
 	}
 
 	pair, found := k.GetPair(ctx, msg.PairId)
@@ -167,7 +169,7 @@ func (k Keeper) ValidateMsgMarketOrder(ctx sdk.Context, msg *types.MsgMarketOrde
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = amm.PriceToDownTick(lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio)), int(params.TickPrecision))
+		price = amm.PriceToDownTick(lastPrice.Mul(sdk.OneDec().Add(maxPriceLimitRatio)), int(tickPrec))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, price, msg.Amount))
 		if msg.OfferCoin.IsLT(offerCoin) {
 			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
@@ -179,7 +181,7 @@ func (k Keeper) ValidateMsgMarketOrder(ctx sdk.Context, msg *types.MsgMarketOrde
 				sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
 					msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 		}
-		price = amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(params.MaxPriceLimitRatio)), int(params.TickPrecision))
+		price = amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(maxPriceLimitRatio)), int(tickPrec))
 		offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount)
 		if msg.OfferCoin.Amount.LT(msg.Amount) {
 			return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
@@ -212,8 +214,7 @@ func (k Keeper) MarketOrder(ctx sdk.Context, msg *types.MsgMarketOrder) (types.O
 	k.SetOrder(ctx, order)
 	k.SetOrderIndex(ctx, order)
 
-	params := k.GetParams(ctx)
-	ctx.GasMeter().ConsumeGas(params.OrderExtraGas, "OrderExtraGas")
+	ctx.GasMeter().ConsumeGas(k.GetOrderExtraGas(ctx), "OrderExtraGas")
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -485,6 +486,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(receivedCoin))
 
+			// TODO: reduce number of events
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.EventTypePoolOrderMatched,

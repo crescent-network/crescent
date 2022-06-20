@@ -76,9 +76,8 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 
 func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) types.Pair {
 	s.T().Helper()
-	params := s.keeper.GetParams(s.ctx)
 	if fund {
-		s.fundAddr(creator, params.PairCreationFee)
+		s.fundAddr(creator, s.keeper.GetPairCreationFee(s.ctx))
 	}
 	msg := types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom)
 	s.Require().NoError(msg.ValidateBasic())
@@ -89,9 +88,8 @@ func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quot
 
 func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) types.Pool {
 	s.T().Helper()
-	params := s.keeper.GetParams(s.ctx)
 	if fund {
-		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+		s.fundAddr(creator, depositCoins.Add(s.keeper.GetPoolCreationFee(s.ctx)...))
 	}
 	msg := types.NewMsgCreatePool(creator, pairId, depositCoins)
 	s.Require().NoError(msg.ValidateBasic())
@@ -102,9 +100,8 @@ func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depo
 
 func (s *KeeperTestSuite) createRangedPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, initialPrice sdk.Dec, minPrice, maxPrice *sdk.Dec, fund bool) types.Pool {
 	s.T().Helper()
-	params := s.keeper.GetParams(s.ctx)
 	if fund {
-		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+		s.fundAddr(creator, depositCoins.Add(s.keeper.GetPoolCreationFee(s.ctx)...))
 	}
 	msg := types.NewMsgCreateRangedPool(creator, pairId, depositCoins, initialPrice, minPrice, maxPrice)
 	s.Require().NoError(msg.ValidateBasic())
@@ -183,12 +180,11 @@ func (s *KeeperTestSuite) marketOrder(
 	s.Require().True(found)
 	s.Require().NotNil(pair.LastPrice)
 	lastPrice := *pair.LastPrice
-	params := s.keeper.GetParams(s.ctx)
 	var offerCoin sdk.Coin
 	var demandCoinDenom string
 	switch dir {
 	case types.OrderDirectionBuy:
-		maxPrice := lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio))
+		maxPrice := lastPrice.Mul(sdk.OneDec().Add(s.keeper.GetMaxPriceLimitRatio(s.ctx)))
 		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, amm.OfferCoinAmount(amm.Buy, maxPrice, amt))
 		demandCoinDenom = pair.BaseCoinDenom
 	case types.OrderDirectionSell:

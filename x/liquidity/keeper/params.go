@@ -82,6 +82,12 @@ func (k Keeper) GetMaxOrderLifespan(ctx sdk.Context) (maxLifespan time.Duration)
 	return
 }
 
+// GetWithdrawFeeRate returns the current withdraw fee rate parameter.
+func (k Keeper) GetWithdrawFeeRate(ctx sdk.Context) (feeRate sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeyWithdrawFeeRate, &feeRate)
+	return
+}
+
 // GetDepositExtraGas returns the current deposit extra gas parameter.
 func (k Keeper) GetDepositExtraGas(ctx sdk.Context) (gas sdk.Gas) {
 	k.paramSpace.Get(ctx, types.KeyDepositExtraGas, &gas)

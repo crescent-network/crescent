@@ -141,11 +141,10 @@ func (s *KeeperTestSuite) TestCreatePoolWithInsufficientDepositAmount() {
 	// than the minimum initial deposit amount.
 	// This should fail.
 	poolCreator := s.addr(1)
-	params := k.GetParams(ctx)
-	minDepositAmount := params.MinInitialDepositAmount
+	minDepositAmount := k.GetMinInitialDepositAmount(ctx)
 	xCoin := sdk.NewCoin("denom1", minDepositAmount.Sub(sdk.OneInt()))
 	yCoin := sdk.NewCoin("denom2", minDepositAmount)
-	s.fundAddr(poolCreator, sdk.NewCoins(xCoin, yCoin).Add(params.PoolCreationFee...))
+	s.fundAddr(poolCreator, sdk.NewCoins(xCoin, yCoin).Add(k.GetPoolCreationFee(ctx)...))
 	_, err := k.CreatePool(ctx, types.NewMsgCreatePool(poolCreator, pair.Id, sdk.NewCoins(xCoin, yCoin)))
 	s.Require().ErrorIs(err, types.ErrInsufficientDepositAmount)
 }
@@ -232,13 +231,11 @@ func (s *KeeperTestSuite) TestCreatePoolAfterDisabled() {
 }
 
 func (s *KeeperTestSuite) TestCreatePoolInitialPoolCoinSupply() {
-	params := s.keeper.GetParams(s.ctx)
-
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	poolCreator := s.addr(1)
 	pool := s.createPool(poolCreator, pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
-	s.Require().True(intEq(params.MinInitialPoolCoinSupply, s.getBalance(poolCreator, pool.PoolCoinDenom).Amount))
+	s.Require().True(intEq(s.keeper.GetMinInitialPoolCoinSupply(s.ctx), s.getBalance(poolCreator, pool.PoolCoinDenom).Amount))
 
 	pair = s.createPair(s.addr(0), "denom2", "denom3", true)
 

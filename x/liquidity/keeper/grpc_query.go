@@ -523,7 +523,7 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	params := k.GetParams(ctx)
+	tickPrec := k.GetTickPrecision(ctx)
 
 	var pairs []types.OrderBookPairResponse
 	for _, pairId := range req.PairIds {
@@ -548,14 +548,13 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		})
 
 		lowestPrice, highestPrice := k.PriceLimits(ctx, *pair.LastPrice)
-		tickPrec := int(k.GetTickPrecision(ctx))
 		_ = k.IteratePoolsByPair(ctx, pairId, func(pool types.Pool) (stop bool, err error) {
 			if pool.Disabled {
 				return false, nil
 			}
 			rx, ry := k.getPoolBalances(ctx, pool, pair)
 			ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
-			ob.AddOrder(amm.PoolOrders(ammPool, amm.DefaultOrderer, lowestPrice, highestPrice, tickPrec)...)
+			ob.AddOrder(amm.PoolOrders(ammPool, amm.DefaultOrderer, lowestPrice, highestPrice, int(tickPrec))...)
 			return false, nil
 		})
 
@@ -563,7 +562,7 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		ov.Match()
 
 		var obs []types.OrderBookResponse
-		basePrice, found := types.OrderBookBasePrice(ov, int(params.TickPrecision))
+		basePrice, found := types.OrderBookBasePrice(ov, int(tickPrec))
 		if !found {
 			for _, tickPrec := range req.TickPrecisions {
 				obs = append(obs, types.OrderBookResponse{

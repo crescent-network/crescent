@@ -74,12 +74,12 @@ func (k Keeper) ValidateMsgCreatePool(ctx sdk.Context, msg *types.MsgCreatePool)
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", msg.PairId)
 	}
 
-	params := k.GetParams(ctx)
+	minInitDepositAmt := k.GetMinInitialDepositAmount(ctx)
 	for _, coin := range msg.DepositCoins {
 		if coin.Denom != pair.BaseCoinDenom && coin.Denom != pair.QuoteCoinDenom {
 			return sdkerrors.Wrapf(types.ErrInvalidCoinDenom, "coin denom %s is not in the pair", coin.Denom)
 		}
-		minDepositCoin := sdk.NewCoin(coin.Denom, params.MinInitialDepositAmount)
+		minDepositCoin := sdk.NewCoin(coin.Denom, minInitDepositAmt)
 		if coin.IsLT(minDepositCoin) {
 			return sdkerrors.Wrapf(
 				types.ErrInsufficientDepositAmount, "%s is smaller than %s", coin, minDepositCoin)
@@ -166,12 +166,12 @@ func (k Keeper) ValidateMsgCreateRangedPool(ctx sdk.Context, msg *types.MsgCreat
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", msg.PairId)
 	}
 
-	params := k.GetParams(ctx)
+	minInitDepositAmt := k.GetMinInitialDepositAmount(ctx)
 	for _, coin := range msg.DepositCoins {
 		if coin.Denom != pair.BaseCoinDenom && coin.Denom != pair.QuoteCoinDenom {
 			return sdkerrors.Wrapf(types.ErrInvalidCoinDenom, "coin denom %s is not in the pair", coin.Denom)
 		}
-		minDepositCoin := sdk.NewCoin(coin.Denom, params.MinInitialDepositAmount)
+		minDepositCoin := sdk.NewCoin(coin.Denom, minInitDepositAmt)
 		if coin.IsLT(minDepositCoin) {
 			return sdkerrors.Wrapf(
 				types.ErrInsufficientDepositAmount, "%s is smaller than %s", coin, minDepositCoin)
@@ -213,15 +213,15 @@ func (k Keeper) CreateRangedPool(ctx sdk.Context, msg *types.MsgCreateRangedPool
 	}
 
 	// Send the pool creation fee to the fee collector.
-	params := k.GetParams(ctx)
-	feeCollectorAddr, _ := sdk.AccAddressFromBech32(params.FeeCollectorAddress)
-	if err := k.bankKeeper.SendCoins(ctx, creator, feeCollectorAddr, params.PoolCreationFee); err != nil {
+	feeCollector := k.GetFeeCollector(ctx)
+	poolCreationFee := k.GetPoolCreationFee(ctx)
+	if err := k.bankKeeper.SendCoins(ctx, creator, feeCollector, poolCreationFee); err != nil {
 		return types.Pool{}, sdkerrors.Wrap(err, "insufficient pool creation fee")
 	}
 
 	// Mint and send pool coin to the creator.
 	// Minimum minting amount is params.MinInitialPoolCoinSupply.
-	ps := sdk.MaxInt(ammPool.PoolCoinSupply(), params.MinInitialPoolCoinSupply)
+	ps := sdk.MaxInt(ammPool.PoolCoinSupply(), k.GetMinInitialPoolCoinSupply(ctx))
 	poolCoin := sdk.NewCoin(pool.PoolCoinDenom, ps)
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(poolCoin)); err != nil {
 		return types.Pool{}, err
@@ -290,8 +290,7 @@ func (k Keeper) Deposit(ctx sdk.Context, msg *types.MsgDeposit) (types.DepositRe
 	k.SetDepositRequest(ctx, req)
 	k.SetDepositRequestIndex(ctx, req)
 
-	params := k.GetParams(ctx)
-	ctx.GasMeter().ConsumeGas(params.DepositExtraGas, "DepositExtraGas")
+	ctx.GasMeter().ConsumeGas(k.GetDepositExtraGas(ctx), "DepositExtraGas")
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -339,8 +338,7 @@ func (k Keeper) Withdraw(ctx sdk.Context, msg *types.MsgWithdraw) (types.Withdra
 	k.SetWithdrawRequest(ctx, req)
 	k.SetWithdrawRequestIndex(ctx, req)
 
-	params := k.GetParams(ctx)
-	ctx.GasMeter().ConsumeGas(params.WithdrawExtraGas, "WithdrawExtraGas")
+	ctx.GasMeter().ConsumeGas(k.GetWithdrawExtraGas(ctx), "WithdrawExtraGas")
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -471,8 +469,7 @@ func (k Keeper) ExecuteWithdrawRequest(ctx sdk.Context, req types.WithdrawReques
 		return nil
 	}
 
-	params := k.GetParams(ctx)
-	x, y := amm.Withdraw(rx.Amount, ry.Amount, ps, req.PoolCoin.Amount, params.WithdrawFeeRate)
+	x, y := amm.Withdraw(rx.Amount, ry.Amount, ps, req.PoolCoin.Amount, k.GetWithdrawFeeRate(ctx))
 	if x.IsZero() && y.IsZero() {
 		if err := k.FinishWithdrawRequest(ctx, req, types.RequestStatusFailed); err != nil {
 			return err

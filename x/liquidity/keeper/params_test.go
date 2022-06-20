@@ -44,6 +44,10 @@ func (s *KeeperTestSuite) TestGetMaxOrderLifespan() {
 	s.Require().EqualValues(types.DefaultMaxOrderLifespan, s.keeper.GetMaxOrderLifespan(s.ctx))
 }
 
+func (s *KeeperTestSuite) TestGetWithdrawFeeRate() {
+	s.Require().EqualValues(types.DefaultWithdrawFeeRate, s.keeper.GetWithdrawFeeRate(s.ctx))
+}
+
 func (s *KeeperTestSuite) TestGetDepositExtraGas() {
 	s.Require().EqualValues(types.DefaultDepositExtraGas, s.keeper.GetDepositExtraGas(s.ctx))
 }

@@ -520,13 +520,11 @@ func (s *KeeperTestSuite) TestGRPCDepositRequest() {
 }
 
 func (s *KeeperTestSuite) TestGRPCWithdrawRequests() {
-	params := s.keeper.GetParams(s.ctx)
-
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 	pool := s.createPool(creator, pair.Id, utils.ParseCoins("5000000denom1,5000000denom2"), true)
 	poolCoinBalance := s.app.BankKeeper.GetBalance(s.ctx, creator, pool.PoolCoinDenom)
-	s.Require().Equal(params.MinInitialPoolCoinSupply, poolCoinBalance.Amount)
+	s.Require().Equal(s.keeper.GetMinInitialPoolCoinSupply(s.ctx), poolCoinBalance.Amount)
 
 	s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 1000))
 	s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 2500))
