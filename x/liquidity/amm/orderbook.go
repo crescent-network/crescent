@@ -35,10 +35,11 @@ func (ob *OrderBook) AddOrder(orders ...Order) {
 	}
 }
 
+// Orders returns all orders in the order book.
 func (ob *OrderBook) Orders() []Order {
 	var orders []Order
 	for _, tick := range append(ob.buys.ticks, ob.sells.ticks...) {
-		orders = append(orders, tick.orders()...)
+		orders = append(orders, tick.orders...)
 	}
 	return orders
 }
@@ -186,10 +187,10 @@ func (ticks *orderBookTicks) ordersAt(price sdk.Dec) []Order {
 	if !exact {
 		return nil
 	}
-	return ticks.ticks[i].orders()
+	return ticks.ticks[i].orders
 }
 
-func (ticks orderBookTicks) highestPrice() (sdk.Dec, int, bool) {
+func (ticks *orderBookTicks) highestPrice() (sdk.Dec, int, bool) {
 	if len(ticks.ticks) == 0 {
 		return sdk.Dec{}, 0, false
 	}
@@ -200,7 +201,7 @@ func (ticks orderBookTicks) highestPrice() (sdk.Dec, int, bool) {
 	}
 }
 
-func (ticks orderBookTicks) lowestPrice() (sdk.Dec, int, bool) {
+func (ticks *orderBookTicks) lowestPrice() (sdk.Dec, int, bool) {
 	if len(ticks.ticks) == 0 {
 		return sdk.Dec{}, 0, false
 	}
@@ -213,58 +214,17 @@ func (ticks orderBookTicks) lowestPrice() (sdk.Dec, int, bool) {
 
 // orderBookTick represents a tick in OrderBook.
 type orderBookTick struct {
-	price       sdk.Dec
-	orderGroups []*orderGroup
+	price  sdk.Dec
+	orders []Order
 }
 
 func newOrderBookTick(order Order) *orderBookTick {
 	return &orderBookTick{
-		price:       order.GetPrice(),
-		orderGroups: []*orderGroup{newOrderGroup(order)},
+		price:  order.GetPrice(),
+		orders: []Order{order},
 	}
 }
 
 func (tick *orderBookTick) addOrder(order Order) {
-	i := sort.Search(len(tick.orderGroups), func(i int) bool {
-		if order.GetBatchId() == 0 {
-			return tick.orderGroups[i].batchId == 0
-		}
-		if tick.orderGroups[i].batchId == 0 {
-			return true
-		}
-		return order.GetBatchId() <= tick.orderGroups[i].batchId
-	})
-	if i < len(tick.orderGroups) && tick.orderGroups[i].batchId == order.GetBatchId() {
-		tick.orderGroups[i].addOrder(order)
-	} else {
-		tick.orderGroups = append(tick.orderGroups[:i],
-			append([]*orderGroup{newOrderGroup(order)}, tick.orderGroups[i:]...)...)
-	}
-}
-
-func (tick *orderBookTick) orders() []Order {
-	var orders []Order
-	for _, group := range tick.orderGroups {
-		orders = append(orders, group.orders...)
-	}
-	return orders
-}
-
-type orderGroup struct {
-	batchId uint64
-	orders  []Order
-}
-
-func newOrderGroup(order Order) *orderGroup {
-	return &orderGroup{
-		batchId: order.GetBatchId(),
-		orders:  []Order{order},
-	}
-}
-
-func (group *orderGroup) addOrder(order Order) {
-	i := sort.Search(len(group.orders), func(i int) bool {
-		return order.HasPriority(group.orders[i])
-	})
-	group.orders = append(group.orders[:i], append([]Order{order}, group.orders[i:]...)...)
+	tick.orders = append(tick.orders, order)
 }

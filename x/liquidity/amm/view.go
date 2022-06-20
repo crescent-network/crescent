@@ -37,7 +37,7 @@ func (ob *OrderBook) MakeView() *OrderBookView {
 		}
 		view.buyAmtAccSums[i] = amtAccSum{
 			price: tick.price,
-			sum:   prevSum.Add(TotalMatchableAmount(tick.orders(), tick.price)),
+			sum:   prevSum.Add(TotalMatchableAmount(tick.orders, tick.price)),
 		}
 	}
 	for i, tick := range ob.sells.ticks {
@@ -49,7 +49,7 @@ func (ob *OrderBook) MakeView() *OrderBookView {
 		}
 		view.sellAmtAccSums[i] = amtAccSum{
 			price: tick.price,
-			sum:   prevSum.Add(TotalMatchableAmount(tick.orders(), tick.price)),
+			sum:   prevSum.Add(TotalMatchableAmount(tick.orders, tick.price)),
 		}
 	}
 	return view

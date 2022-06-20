@@ -62,6 +62,44 @@ func TotalMatchableAmount(orders []Order, price sdk.Dec) (amt sdk.Int) {
 	return
 }
 
+// OrderGroup represents a group of orders with same batch id.
+type OrderGroup struct {
+	BatchId uint64
+	Orders  []Order
+}
+
+// GroupOrdersByBatchId groups orders by their batch id and returns a
+// slice of OrderGroup.
+func GroupOrdersByBatchId(orders []Order) (groups []*OrderGroup) {
+	groupByBatchId := map[uint64]*OrderGroup{}
+	for _, order := range orders {
+		group, ok := groupByBatchId[order.GetBatchId()]
+		if !ok {
+			i := sort.Search(len(groups), func(i int) bool {
+				if order.GetBatchId() == 0 {
+					return groups[i].BatchId == 0
+				}
+				if groups[i].BatchId == 0 {
+					return true
+				}
+				return order.GetBatchId() <= groups[i].BatchId
+			})
+			group = &OrderGroup{BatchId: order.GetBatchId()}
+			groupByBatchId[order.GetBatchId()] = group
+			groups = append(groups[:i], append([]*OrderGroup{group}, groups[i:]...)...)
+		}
+		group.Orders = append(group.Orders, order)
+	}
+	return
+}
+
+// SortOrders sorts orders using its HasPriority condition.
+func SortOrders(orders []Order) {
+	sort.SliceStable(orders, func(i, j int) bool {
+		return orders[i].HasPriority(orders[j])
+	})
+}
+
 // findFirstTrueCondition uses the binary search to find the first index
 // where f(i) is true, while searching in range [start, end].
 // It assumes that f(j) == false where j < i and f(j) == true where j >= i.

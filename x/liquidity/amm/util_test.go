@@ -29,3 +29,45 @@ func TestMatchableAmount(t *testing.T) {
 		})
 	}
 }
+
+type batchIdOrderer struct {
+	batchId uint64
+}
+
+func (orderer *batchIdOrderer) Order(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
+	return &batchIdOrder{newOrder(dir, price, amt), orderer.batchId}
+}
+
+type batchIdOrder struct {
+	amm.Order
+	batchId uint64
+}
+
+func (order *batchIdOrder) GetBatchId() uint64 {
+	return order.batchId
+}
+
+func TestGroupOrdersByBatchId(t *testing.T) {
+	price := utils.ParseDec("1.0")
+	newOrder := func(amt sdk.Int, batchId uint64) amm.Order {
+		return (&batchIdOrderer{batchId}).Order(amm.Buy, price, amt)
+	}
+	orders := []amm.Order{
+		newOrder(sdk.NewInt(32000), 0),
+		newOrder(sdk.NewInt(8000), 4),
+		newOrder(sdk.NewInt(1000), 1),
+		newOrder(sdk.NewInt(16000), 4),
+		newOrder(sdk.NewInt(4000), 2),
+		newOrder(sdk.NewInt(2000), 1),
+		newOrder(sdk.NewInt(64000), 0),
+	}
+	groups := amm.GroupOrdersByBatchId(orders)
+	require.EqualValues(t, 1, groups[0].BatchId)
+	require.True(sdk.IntEq(t, sdk.NewInt(3000), amm.TotalAmount(groups[0].Orders)))
+	require.EqualValues(t, 2, groups[1].BatchId)
+	require.True(sdk.IntEq(t, sdk.NewInt(4000), amm.TotalAmount(groups[1].Orders)))
+	require.EqualValues(t, 4, groups[2].BatchId)
+	require.True(sdk.IntEq(t, sdk.NewInt(24000), amm.TotalAmount(groups[2].Orders)))
+	require.EqualValues(t, 0, groups[3].BatchId)
+	require.True(sdk.IntEq(t, sdk.NewInt(96000), amm.TotalAmount(groups[3].Orders)))
+}

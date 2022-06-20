@@ -34,12 +34,21 @@ func TestOrderBook(t *testing.T) {
 
 func BenchmarkOrderBook_AddOrder(b *testing.B) {
 	/*
+		Before optimization:
 		BenchmarkOrderBook_AddOrder/1000_orders
 		BenchmarkOrderBook_AddOrder/1000_orders-8         	    2983	    419432 ns/op
 		BenchmarkOrderBook_AddOrder/5000_orders
 		BenchmarkOrderBook_AddOrder/5000_orders-8         	     463	   2851024 ns/op
 		BenchmarkOrderBook_AddOrder/10000_orders
 		BenchmarkOrderBook_AddOrder/10000_orders-8        	     204	   6380550 ns/op
+
+		After optimization:
+		BenchmarkOrderBook_AddOrder/1000_orders
+		BenchmarkOrderBook_AddOrder/1000_orders-8         	    5949	    203521 ns/op
+		BenchmarkOrderBook_AddOrder/5000_orders
+		BenchmarkOrderBook_AddOrder/5000_orders-8         	     745	   1714147 ns/op
+		BenchmarkOrderBook_AddOrder/10000_orders
+		BenchmarkOrderBook_AddOrder/10000_orders-8        	     252	   4121103 ns/op
 	*/
 	r := rand.New(rand.NewSource(0))
 	orders := make([]amm.Order, 10000)

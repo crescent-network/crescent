@@ -21,11 +21,11 @@ func Test_findFirstTrueCondition(t *testing.T) {
 	})
 	require.True(t, found)
 	require.Equal(t, 1, i)
-	i, found = findFirstTrueCondition(0, len(arr)-1, func(i int) bool {
+	_, found = findFirstTrueCondition(0, len(arr)-1, func(i int) bool {
 		return arr[i] > 25
 	})
 	require.False(t, found)
-	i, found = findFirstTrueCondition(len(arr)-1, 0, func(i int) bool {
+	_, found = findFirstTrueCondition(len(arr)-1, 0, func(i int) bool {
 		return arr[i] < 1
 	})
 	require.False(t, found)
@@ -33,9 +33,9 @@ func Test_findFirstTrueCondition(t *testing.T) {
 
 func Test_poolOrderPriceGapRatio(t *testing.T) {
 	for _, tc := range []struct {
-		poolPrice sdk.Dec
+		poolPrice    sdk.Dec
 		currentPrice sdk.Dec
-		expected sdk.Dec
+		expected     sdk.Dec
 	}{
 		{utils.ParseDec("1"), utils.ParseDec("1"), utils.ParseDec("0.00003")},
 		{utils.ParseDec("1"), utils.ParseDec("1.005"), utils.ParseDec("0.000065")},
