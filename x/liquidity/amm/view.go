@@ -141,10 +141,6 @@ type amtAccSum struct {
 
 type MultipleOrderViews []OrderView
 
-func MergeOrderViews(views ...OrderView) MultipleOrderViews {
-	return MultipleOrderViews(views)
-}
-
 func (views MultipleOrderViews) HighestBuyPrice() (price sdk.Dec, found bool) {
 	for _, view := range views {
 		p, f := view.HighestBuyPrice()

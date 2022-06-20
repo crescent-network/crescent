@@ -44,6 +44,24 @@ func MatchableAmount(order Order, price sdk.Dec) (matchableAmt sdk.Int) {
 	return
 }
 
+// TotalAmount returns total amount of orders.
+func TotalAmount(orders []Order) sdk.Int {
+	amt := sdk.ZeroInt()
+	for _, order := range orders {
+		amt = amt.Add(order.GetAmount())
+	}
+	return amt
+}
+
+// TotalMatchableAmount returns total matchable amount of orders.
+func TotalMatchableAmount(orders []Order, price sdk.Dec) (amt sdk.Int) {
+	amt = sdk.ZeroInt()
+	for _, order := range orders {
+		amt = amt.Add(MatchableAmount(order, price))
+	}
+	return
+}
+
 // findFirstTrueCondition uses the binary search to find the first index
 // where f(i) is true, while searching in range [start, end].
 // It assumes that f(j) == false where j < i and f(j) == true where j >= i.
@@ -83,7 +101,7 @@ var (
 	a1, b1 = utils.ParseDec("0.007"), utils.ParseDec("0.00003")
 	a2, b2 = utils.ParseDec("0.09"), utils.ParseDec("-0.0008")
 	a3     = utils.ParseDec("0.05")
-	b4     = utils.ParseDec("0.0005")
+	b4     = utils.ParseDec("0.005")
 )
 
 func poolOrderPriceGapRatio(poolPrice, currentPrice sdk.Dec) (r sdk.Dec) {

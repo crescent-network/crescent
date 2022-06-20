@@ -153,19 +153,3 @@ func (order *BaseOrder) HasPriority(other Order) bool {
 func (order *BaseOrder) String() string {
 	return fmt.Sprintf("BaseOrder(%s,%s,%s)", order.Direction, order.Price, order.Amount)
 }
-
-func TotalAmount(orders []Order) sdk.Int {
-	amt := sdk.ZeroInt()
-	for _, order := range orders {
-		amt = amt.Add(order.GetAmount())
-	}
-	return amt
-}
-
-func TotalMatchableAmount(orders []Order, price sdk.Dec) (amt sdk.Int) {
-	amt = sdk.ZeroInt()
-	for _, order := range orders {
-		amt = amt.Add(MatchableAmount(order, price))
-	}
-	return
-}
