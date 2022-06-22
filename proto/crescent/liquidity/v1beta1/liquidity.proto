@@ -88,15 +88,11 @@ message Pool {
 
   string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  string translation_x = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  uint64 last_deposit_request_id = 9;
 
-  string translation_y = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  uint64 last_withdraw_request_id = 10;
 
-  uint64 last_deposit_request_id = 11;
-
-  uint64 last_withdraw_request_id = 12;
-
-  bool disabled = 13;
+  bool disabled = 11;
 }
 
 // DepositRequest defines a deposit request.

@@ -44,8 +44,6 @@ func TestMigratePool(t *testing.T) {
 		PoolCoinDenom:         "pool1",
 		MinPrice:              nil,
 		MaxPrice:              nil,
-		TranslationX:          nil,
-		TranslationY:          nil,
 		LastDepositRequestId:  2,
 		LastWithdrawRequestId: 3,
 		Disabled:              true,

@@ -143,17 +143,17 @@ func NewMsgCreateRangedPool(
 	creator sdk.AccAddress,
 	pairId uint64,
 	depositCoins sdk.Coins,
+	minPrice sdk.Dec,
+	maxPrice sdk.Dec,
 	initialPrice sdk.Dec,
-	minPrice *sdk.Dec,
-	maxPrice *sdk.Dec,
 ) *MsgCreateRangedPool {
 	return &MsgCreateRangedPool{
 		Creator:      creator.String(),
 		PairId:       pairId,
 		DepositCoins: depositCoins,
-		InitialPrice: initialPrice,
 		MinPrice:     minPrice,
 		MaxPrice:     maxPrice,
+		InitialPrice: initialPrice,
 	}
 }
 
@@ -179,7 +179,7 @@ func (msg MsgCreateRangedPool) ValidateBasic() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "deposit coin %s is bigger than the max amount %s", coin, amm.MaxCoinAmount)
 		}
 	}
-	if err := amm.ValidateRangedPoolParams(msg.InitialPrice, msg.MinPrice, msg.MaxPrice); err != nil {
+	if err := amm.ValidateRangedPoolParams(msg.MinPrice, msg.MaxPrice, msg.InitialPrice); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	return nil

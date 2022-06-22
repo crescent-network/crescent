@@ -70,8 +70,6 @@ func NewPoolResponse(pool Pool, balances sdk.Coins) PoolResponse {
 		PoolCoinDenom:         pool.PoolCoinDenom,
 		MinPrice:              pool.MinPrice,
 		MaxPrice:              pool.MaxPrice,
-		TranslationX:          pool.TranslationX,
-		TranslationY:          pool.TranslationY,
 		Balances:              balances,
 		LastDepositRequestId:  pool.LastDepositRequestId,
 		LastWithdrawRequestId: pool.LastWithdrawRequestId,

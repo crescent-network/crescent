@@ -1,7 +1,6 @@
 package amm_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -331,31 +330,19 @@ func TestInitialPoolCoinSupply(t *testing.T) {
 	}
 }
 
-//
-//func TestMockPoolOrderSource_Orders(t *testing.T) {
-//	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
-//	os := amm.NewMockPoolOrderSource(pool, "denom1", "denom2")
-//	buyOrders := os.BuyOrdersOver(defTickPrec.LowestTick())
-//	require.Len(t, buyOrders, 1)
-//	require.True(sdk.IntEq(t, os.BuyAmountOver(defTickPrec.LowestTick()), buyOrders[0].GetOpenAmount()))
-//	sellOrders := os.SellOrdersUnder(defTickPrec.HighestTick())
-//	require.Len(t, sellOrders, 1)
-//	require.True(sdk.IntEq(t, os.SellAmountUnder(defTickPrec.HighestTick()), sellOrders[0].GetOpenAmount()))
-//}
-//
-//func TestBasicPool_BuyAmountOverOverflow(t *testing.T) {
-//	n, _ := sdk.NewIntFromString("10000000000000000000000000000000000000000000")
-//	pool := amm.NewBasicPool(n, sdk.NewInt(1000), sdk.Int{})
-//	amt := pool.BuyAmountOver(defTickPrec.LowestTick())
-//	require.True(sdk.IntEq(t, amm.MaxCoinAmount, amt))
-//}
+func TestBasicPool_BuyAmountOverOverflow(t *testing.T) {
+	n, _ := sdk.NewIntFromString("10000000000000000000000000000000000000000000")
+	pool := amm.NewBasicPool(n, sdk.NewInt(1000), sdk.Int{})
+	amt := pool.BuyAmountOver(defTickPrec.LowestTick(), true)
+	require.True(sdk.IntEq(t, amm.MaxCoinAmount, amt))
+}
 
 func TestBasicPoolOrders(t *testing.T) {
 	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
 	poolPrice := pool.Price()
 	lowestPrice := poolPrice.Mul(sdk.NewDecWithPrec(9, 1))
 	highestPrice := poolPrice.Mul(sdk.NewDecWithPrec(11, 1))
-	fmt.Println(len(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4)))
+	require.Len(t, amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4), 375)
 }
 
 func BenchmarkBasicPoolOrders(b *testing.B) {

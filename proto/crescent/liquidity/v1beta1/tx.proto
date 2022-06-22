@@ -81,12 +81,14 @@ message MsgCreateRangedPool {
   repeated cosmos.base.v1beta1.Coin deposit_coins = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  string initial_price = 4
+  string min_price = 4
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string min_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string max_price = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string max_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string initial_price = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // MsgCreateRangedPoolResponse defines the Msg/CreateRangedPool response type.

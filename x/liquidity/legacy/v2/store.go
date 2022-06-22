@@ -27,8 +27,6 @@ func MigratePool(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			PoolCoinDenom:         oldPool.PoolCoinDenom,
 			MinPrice:              nil,
 			MaxPrice:              nil,
-			TranslationX:          nil,
-			TranslationY:          nil,
 			LastDepositRequestId:  oldPool.LastDepositRequestId,
 			LastWithdrawRequestId: oldPool.LastWithdrawRequestId,
 			Disabled:              oldPool.Disabled,

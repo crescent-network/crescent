@@ -55,8 +55,6 @@ func NewBasicPool(id, pairId uint64, creator sdk.AccAddress) Pool {
 		Creator:               creator.String(),
 		ReserveAddress:        PoolReserveAddress(id).String(),
 		PoolCoinDenom:         PoolCoinDenom(id),
-		TranslationX:          nil,
-		TranslationY:          nil,
 		LastDepositRequestId:  0,
 		LastWithdrawRequestId: 0,
 		Disabled:              false,
@@ -64,7 +62,7 @@ func NewBasicPool(id, pairId uint64, creator sdk.AccAddress) Pool {
 }
 
 // NewRangedPool returns a new ranged pool object.
-func NewRangedPool(id, pairId uint64, creator sdk.AccAddress, minPrice, maxPrice *sdk.Dec, transX, transY sdk.Dec) Pool {
+func NewRangedPool(id, pairId uint64, creator sdk.AccAddress, minPrice, maxPrice sdk.Dec) Pool {
 	return Pool{
 		Type:                  PoolTypeRanged,
 		Id:                    id,
@@ -72,10 +70,8 @@ func NewRangedPool(id, pairId uint64, creator sdk.AccAddress, minPrice, maxPrice
 		Creator:               creator.String(),
 		ReserveAddress:        PoolReserveAddress(id).String(),
 		PoolCoinDenom:         PoolCoinDenom(id),
-		MinPrice:              minPrice,
-		MaxPrice:              maxPrice,
-		TranslationX:          &transX,
-		TranslationY:          &transY,
+		MinPrice:              &minPrice,
+		MaxPrice:              &maxPrice,
 		LastDepositRequestId:  0,
 		LastWithdrawRequestId: 0,
 		Disabled:              false,
@@ -124,7 +120,7 @@ func (pool Pool) AMMPool(rx, ry, ps sdk.Int) amm.Pool {
 	case PoolTypeBasic:
 		return amm.NewBasicPool(rx, ry, ps)
 	case PoolTypeRanged:
-		return amm.NewRangedPool(rx, ry, ps, *pool.TranslationX, *pool.TranslationY, pool.MinPrice, pool.MaxPrice)
+		return amm.NewRangedPool(rx, ry, ps, *pool.MinPrice, *pool.MaxPrice)
 	default:
 		panic(fmt.Errorf("invalid pool type: %s", pool.Type))
 	}

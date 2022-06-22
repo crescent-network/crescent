@@ -25009,10 +25009,6 @@ paths:
                       type: string
                     max_price:
                       type: string
-                    translation_x:
-                      type: string
-                    translation_y:
-                      type: string
                     balances:
                       type: array
                       items:
@@ -25206,10 +25202,6 @@ paths:
                     type: string
                   max_price:
                     type: string
-                  translation_x:
-                    type: string
-                  translation_y:
-                    type: string
                   balances:
                     type: array
                     items:
@@ -25311,10 +25303,6 @@ paths:
                     type: string
                   max_price:
                     type: string
-                  translation_x:
-                    type: string
-                  translation_y:
-                    type: string
                   balances:
                     type: array
                     items:
@@ -25413,10 +25401,6 @@ paths:
                   min_price:
                     type: string
                   max_price:
-                    type: string
-                  translation_x:
-                    type: string
-                  translation_y:
                     type: string
                   balances:
                     type: array
@@ -44967,10 +44951,6 @@ definitions:
         type: string
       max_price:
         type: string
-      translation_x:
-        type: string
-      translation_y:
-        type: string
       balances:
         type: array
         items:
@@ -45725,10 +45705,6 @@ definitions:
             type: string
           max_price:
             type: string
-          translation_x:
-            type: string
-          translation_y:
-            type: string
           balances:
             type: array
             items:
@@ -45793,10 +45769,6 @@ definitions:
             min_price:
               type: string
             max_price:
-              type: string
-            translation_x:
-              type: string
-            translation_y:
               type: string
             balances:
               type: array

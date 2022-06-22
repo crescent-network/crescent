@@ -270,18 +270,14 @@ message PoolResponse {
 
   string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  string translation_x = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-
-  string translation_y = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-
-  repeated cosmos.base.v1beta1.Coin balances = 11
+  repeated cosmos.base.v1beta1.Coin balances = 9
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  uint64 last_deposit_request_id = 12;
+  uint64 last_deposit_request_id = 10;
 
-  uint64 last_withdraw_request_id = 13;
+  uint64 last_withdraw_request_id = 11;
 
-  bool disabled = 14;
+  bool disabled = 12;
 }
 
 message OrderBookPairResponse {

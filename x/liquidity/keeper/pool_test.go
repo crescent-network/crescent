@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestCreateRangedPool() {
 			"happy case",
 			types.NewMsgCreateRangedPool(
 				poolCreator, pair.Id, validDepositCoins,
-				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0")),
 			func(ctx sdk.Context, pool types.Pool) {
 				s.Require().Equal(types.PoolTypeRanged, pool.Type)
 				s.Require().NotNil(pool.MinPrice)
@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestCreateRangedPool() {
 			"pair not found",
 			types.NewMsgCreateRangedPool(
 				poolCreator, 2, validDepositCoins,
-				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0")),
 			nil,
 			"pair 2 not found: not found",
 		},
@@ -81,23 +81,23 @@ func (s *KeeperTestSuite) TestCreateRangedPool() {
 			"wrong deposit coin denoms",
 			types.NewMsgCreateRangedPool(
 				poolCreator, pair.Id, utils.ParseCoins("1000000denom2,1000000denom3"),
-				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0")),
 			nil,
 			"coin denom denom3 is not in the pair: invalid coin denom",
 		},
 		{
 			"insufficient deposit amount",
 			types.NewMsgCreateRangedPool(
-				poolCreator, pair.Id, utils.ParseCoins("999999denom1,1000000denom2"),
-				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+				poolCreator, pair.Id, utils.ParseCoins("999999denom1,999999denom2"),
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0")),
 			nil,
-			"999999denom1 is smaller than 1000000denom1: insufficient deposit amount",
+			"insufficient deposit amount",
 		},
 		{
 			"insufficient pool creation fee",
 			types.NewMsgCreateRangedPool(
 				poolCreatorWithNoFee, pair.Id, validDepositCoins,
-				utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1")),
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0")),
 			nil,
 			"insufficient pool creation fee: 0stake is smaller than 1000000stake: insufficient funds",
 		},
@@ -166,12 +166,12 @@ func (s *KeeperTestSuite) TestCreateSamePool() {
 	// However, this will not fail since it's creating a ranged pool.
 	s.createRangedPool(
 		s.addr(3), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
-		utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1"), true)
+		utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0"), true)
 
 	// Creation of multiple ranged pools with same parameters is allowed.
 	s.createRangedPool(
 		s.addr(4), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
-		utils.ParseDec("1.0"), utils.ParseDecP("0.9"), utils.ParseDecP("1.1"), true)
+		utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0"), true)
 }
 
 func (s *KeeperTestSuite) TestDisabledPool() {
@@ -495,7 +495,7 @@ func (s *KeeperTestSuite) TestRangedPoolDepositWithdraw() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createRangedPool(
 		s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
-		utils.ParseDec("1.0"), utils.ParseDecP("0.5"), utils.ParseDecP("2.0"), true)
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
 	rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
 	ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 	s.Require().True(utils.DecApproxEqual(ammPool.Price(), utils.ParseDec("1.0")))
