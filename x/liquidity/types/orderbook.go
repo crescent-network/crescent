@@ -24,7 +24,7 @@ func OrderBookBasePrice(ov *amm.OrderBookView, tickPrec int) (sdk.Dec, bool) {
 	}
 }
 
-func MakeOrderBookResponse(ov *amm.OrderBookView, tickPrec, numTicks int) OrderBookResponse {
+func MakeOrderBookResponse(ov amm.OrderView, tickPrec, numTicks int) OrderBookResponse {
 	ammTickPrec := amm.TickPrecision(tickPrec)
 	resp := OrderBookResponse{TickPrecision: uint32(tickPrec)}
 
