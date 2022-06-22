@@ -191,6 +191,7 @@ func CreateRangedPool(x, y sdk.Int, minPrice, maxPrice, initialPrice sdk.Dec) (p
 		return nil, err
 	}
 
+	// P = initialPrice, M = minPrice, L = maxPrice
 	var ax, ay sdk.Int
 	switch {
 	case initialPrice.Equal(minPrice): // single y asset pool
@@ -202,12 +203,16 @@ func CreateRangedPool(x, y sdk.Int, minPrice, maxPrice, initialPrice sdk.Dec) (p
 	default: // normal pool
 		sqrt := utils.DecApproxSqrt
 		xDec, yDec := x.ToDec(), y.ToDec()
-		sqrtP := sqrt(initialPrice)
-		sqrtM := sqrt(minPrice)
-		sqrtL := sqrt(maxPrice)
+		sqrtP := sqrt(initialPrice) // sqrt(P)
+		sqrtM := sqrt(minPrice) // sqrt(M)
+		sqrtL := sqrt(maxPrice) // sqrt(L)
+		// Assume that we can accept all x
 		ax = x
+		// ay = {x / (sqrt(P)-sqrt(M))} / (1/sqrt(P) - 1/sqrt(L))
 		ay = xDec.Quo(sqrtP.Sub(sqrtM)).Mul(inv(sqrtP).Sub(inv(sqrtL))).Ceil().TruncateInt()
 		if ay.GT(y) {
+			// Accept all y
+			// ax = {y / (1/sqrt(P) - 1/sqrt(L))} * (sqrt(P) - sqrt(M))
 			ax = yDec.Quo(inv(sqrtP).Sub(inv(sqrtL))).Mul(sqrtP.Sub(sqrtM)).Ceil().TruncateInt()
 			ay = y
 		}
@@ -440,6 +445,7 @@ func Withdraw(rx, ry, ps, pc sdk.Int, feeRate sdk.Dec) (x, y sdk.Int) {
 func DeriveTranslation(rx, ry sdk.Int, minPrice, maxPrice sdk.Dec) (transX, transY sdk.Dec) {
 	sqrt := utils.DecApproxSqrt
 
+	// M = minPrice, L = maxPrice
 	rxDec, ryDec := rx.ToDec(), ry.ToDec()
 	sqrtM := sqrt(minPrice)
 	sqrtL := sqrt(maxPrice)
@@ -477,10 +483,12 @@ func PoolOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, t
 		PoolSellOrders(pool, orderer, lowestPrice, highestPrice, tickPrec)...)
 }
 
-func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) (orders []Order) {
 	poolPrice := pool.Price()
+	if poolPrice.LTE(lowestPrice) {
+		return nil
+	}
 	tmpPool := pool.Clone()
-	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
 		orders = append(orders, orderer.Order(Buy, price, amt))
 		rx, ry := tmpPool.Balances()
@@ -488,7 +496,7 @@ func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec
 		ry = ry.Add(amt)
 		tmpPool.SetBalances(rx, ry)
 	}
-	if pool.Price().GT(highestPrice) {
+	if poolPrice.GT(highestPrice) {
 		placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
 	}
 	tick := PriceToDownTick(tmpPool.Price(), tickPrec)
@@ -508,10 +516,12 @@ func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec
 	return orders
 }
 
-func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) []Order {
+func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) (orders []Order) {
 	poolPrice := pool.Price()
+	if poolPrice.GTE(highestPrice) {
+		return nil
+	}
 	tmpPool := pool.Clone()
-	var orders []Order
 	placeOrder := func(price sdk.Dec, amt sdk.Int) {
 		orders = append(orders, orderer.Order(Sell, price, amt))
 		rx, ry := tmpPool.Balances()
@@ -519,7 +529,7 @@ func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.De
 		ry = ry.Sub(amt)
 		tmpPool.SetBalances(rx, ry)
 	}
-	if pool.Price().LT(lowestPrice) {
+	if poolPrice.LT(lowestPrice) {
 		placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
 	}
 	tick := PriceToUpTick(tmpPool.Price(), tickPrec)

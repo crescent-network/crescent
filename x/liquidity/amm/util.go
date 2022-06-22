@@ -143,6 +143,9 @@ var (
 )
 
 func poolOrderPriceGapRatio(poolPrice, currentPrice sdk.Dec) (r sdk.Dec) {
+	if poolPrice.IsZero() {
+		poolPrice = sdk.NewDecWithPrec(1, sdk.Precision) // lowest possible sdk.Dec
+	}
 	x := currentPrice.Sub(poolPrice).Abs().Quo(poolPrice)
 	switch {
 	case x.LTE(t1):
