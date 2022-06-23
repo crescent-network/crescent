@@ -513,6 +513,79 @@ func TestRangedPool_Deposit(t *testing.T) {
 	}
 }
 
+func TestRangedPool_Withdraw(t *testing.T) {
+	for _, tc := range []struct {
+		name               string
+		rx, ry             sdk.Int
+		ps                 sdk.Int
+		minPrice, maxPrice sdk.Dec
+		pc                 sdk.Int // redeeming pool coin amount
+		x, y               sdk.Int // withdrawn x and y coin amount
+	}{
+		{
+			"ideal case",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123),
+			sdk.NewInt(123000000), sdk.NewInt(123000000),
+		},
+		{
+			"single x asset pool",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(0),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123),
+			sdk.NewInt(123000000), sdk.NewInt(0),
+		},
+		{
+			"single y asset pool",
+			sdk.NewInt(0), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123),
+			sdk.NewInt(0), sdk.NewInt(123000000),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pool := amm.NewRangedPool(tc.rx, tc.ry, tc.ps, tc.minPrice, tc.maxPrice)
+			x, y := amm.Withdraw(tc.rx, tc.ry, tc.ps, tc.pc, sdk.ZeroDec())
+			require.True(sdk.IntEq(t, tc.x, x))
+			require.True(sdk.IntEq(t, tc.y, y))
+			newPool := amm.NewRangedPool(tc.rx.Sub(x), tc.ry.Sub(y), tc.ps.Sub(tc.pc), tc.minPrice, tc.maxPrice)
+
+			var reserveRatio sdk.Dec
+			switch {
+			case tc.rx.IsZero():
+				reserveRatio = y.ToDec().Quo(tc.ry.ToDec())
+			case tc.ry.IsZero():
+				reserveRatio = x.ToDec().Quo(tc.rx.ToDec())
+			default:
+				reserveRatio = x.ToDec().Quo(tc.rx.ToDec())
+				require.True(t, utils.DecApproxEqual(reserveRatio, y.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check x/y == rx/ry
+			if !tc.rx.IsZero() && !tc.ry.IsZero() {
+				require.True(t, utils.DecApproxEqual(x.ToDec().Quo(y.ToDec()), tc.rx.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check x/rx == y/ry == pc/ps
+			require.True(t, utils.DecApproxEqual(reserveRatio, tc.pc.ToDec().Quo(tc.ps.ToDec())))
+
+			// check pool price before == pool price after
+			require.True(t, utils.DecApproxEqual(pool.Price(), newPool.Price()))
+
+			transX, transY := pool.Translation()
+			transXPrime, transYPrime := newPool.Translation()
+			// alpha = reserveRatio
+			// check transX' == transX * (1+alpha), transY' == transY * (1+alpha)
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transXPrime.Quo(transX)))
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transYPrime.Quo(transY)))
+		})
+	}
+}
+
 func TestInitialPoolCoinSupply(t *testing.T) {
 	for _, tc := range []struct {
 		x, y sdk.Int
