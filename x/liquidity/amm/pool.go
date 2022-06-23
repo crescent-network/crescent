@@ -243,7 +243,7 @@ func ValidateRangedPoolParams(minPrice, maxPrice, initialPrice sdk.Dec) error {
 		return fmt.Errorf("initial price must not be less than min price")
 	}
 	if initialPrice.GT(maxPrice) {
-		return fmt.Errorf("initial price must not be greater thn max price")
+		return fmt.Errorf("initial price must not be greater than max price")
 	}
 	return nil
 }
