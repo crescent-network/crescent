@@ -11,8 +11,8 @@ import (
 
 var (
 	zeroInt = sdk.ZeroInt()
-	zeroDec = sdk.ZeroDec()
 	oneDec  = sdk.OneDec()
+	fourDec = sdk.NewDec(4)
 )
 
 // OfferCoinAmount returns the minimum offer coin amount for

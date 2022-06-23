@@ -204,8 +204,8 @@ func CreateRangedPool(x, y sdk.Int, minPrice, maxPrice, initialPrice sdk.Dec) (p
 		sqrt := utils.DecApproxSqrt
 		xDec, yDec := x.ToDec(), y.ToDec()
 		sqrtP := sqrt(initialPrice) // sqrt(P)
-		sqrtM := sqrt(minPrice) // sqrt(M)
-		sqrtL := sqrt(maxPrice) // sqrt(L)
+		sqrtM := sqrt(minPrice)     // sqrt(M)
+		sqrtL := sqrt(maxPrice)     // sqrt(L)
 		// Assume that we can accept all x
 		ax = x
 		// ay = {x / (sqrt(P)-sqrt(M))} / (1/sqrt(P) - 1/sqrt(L))
@@ -457,20 +457,28 @@ func DeriveTranslation(rx, ry sdk.Int, minPrice, maxPrice sdk.Dec) (transX, tran
 	case ryDec.Quo(rxDec).IsZero(): // x asset single pool
 		sqrtP = sqrtL
 	default: // normal pool
+		// sqrtXOverY = sqrt(rx/ry)
 		sqrtXOverY := sqrt(rxDec.Quo(ryDec))
+		// alpha = sqrt(M)/sqrt(rx/ry) - sqrt(rx/ry)/sqrt(L)
 		alpha := sqrtM.Quo(sqrtXOverY).Sub(sqrtXOverY.Quo(sqrtL))
-		sqrtP = alpha.Add(sqrt(alpha.Power(2).Add(sdk.NewDec(4)))).QuoInt64(2).Mul(sqrtXOverY)
+		// sqrtP = sqrt(P) = {(alpha + sqrt(alpha^2 + 4)) / 2} * sqrt(rx/ry)
+		sqrtP = alpha.Add(sqrt(alpha.Power(2).Add(fourDec))).QuoInt64(2).Mul(sqrtXOverY)
 	}
 
+	// sqrtML = sqrt(M) * sqrt(L)
 	sqrtML := sqrtM.Mul(sqrtL)
 	if sqrtP.Equal(sqrtM) {
+		// transX = ryl / (1/M - 1/sqrt(M*L))
 		transX = ryDec.Quo(inv(minPrice).Sub(inv(sqrtML)))
 	} else {
+		// transX = rx / (sqrt(P/M) - 1)
 		transX = rxDec.Quo(sqrtP.Quo(sqrtM).Sub(oneDec))
 	}
 	if sqrtP.Equal(sqrtL) {
+		// transY = rx / (L - sqrt(M*L))
 		transY = rxDec.Quo(maxPrice.Sub(sqrtML))
 	} else {
+		// transY = ry / (sqrt(L/P) - 1)
 		transY = ryDec.Quo(sqrtL.Quo(sqrtP).Sub(oneDec))
 	}
 
