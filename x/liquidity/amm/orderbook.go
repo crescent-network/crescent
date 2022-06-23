@@ -182,6 +182,13 @@ func (ticks *orderBookTicks) addOrder(order Order) {
 	}
 }
 
+func (ticks *orderBookTicks) orders() (orders []Order) {
+	for _, tick := range ticks.ticks {
+		orders = append(orders, tick.orders...)
+	}
+	return
+}
+
 func (ticks *orderBookTicks) ordersAt(price sdk.Dec) []Order {
 	i, exact := ticks.findPrice(price)
 	if !exact {

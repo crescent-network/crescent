@@ -1,6 +1,7 @@
 package amm_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -156,5 +157,63 @@ func TestMatchOrders(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestFindMatchableAmountAtSinglePrice(t *testing.T) {
+	for _, tc := range []struct {
+		orders       []amm.Order
+		matchPrice   sdk.Dec
+		found        bool
+		matchableAmt sdk.Int
+	}{
+		{
+			[]amm.Order{
+				newOrder(amm.Sell, utils.ParseDec("0.100"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("0.099"), sdk.NewInt(9995)),
+				newOrder(amm.Buy, utils.ParseDec("0.101"), sdk.NewInt(10000)),
+			},
+			utils.ParseDec("0.100"),
+			true,
+			sdk.NewInt(9995),
+		},
+		{
+			[]amm.Order{
+				newOrder(amm.Sell, utils.ParseDec("0.100"), sdk.NewInt(10000)),
+				newOrder(amm.Sell, utils.ParseDec("0.099"), sdk.NewInt(9995)),
+				newOrder(amm.Buy, utils.ParseDec("0.101"), sdk.NewInt(10000)),
+				newOrder(amm.Buy, utils.ParseDec("0.100"), sdk.NewInt(1000)),
+			},
+			utils.ParseDec("0.100"),
+			true,
+			sdk.NewInt(11000),
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			ob := amm.NewOrderBook(tc.orders...)
+			matchableAmt, found := ob.FindMatchableAmountAtSinglePrice(tc.matchPrice)
+			require.Equal(t, tc.found, found)
+			if found {
+				require.True(sdk.IntEq(t, tc.matchableAmt, matchableAmt))
+			}
+		})
+	}
+}
+
+func TestMatch_EdgeCase1(t *testing.T) {
+	orders := []amm.Order{
+		newOrder(amm.Sell, utils.ParseDec("0.100"), sdk.NewInt(10000)),
+		newOrder(amm.Sell, utils.ParseDec("0.099"), sdk.NewInt(9995)),
+		newOrder(amm.Buy, utils.ParseDec("0.101"), sdk.NewInt(10000)),
+		newOrder(amm.Buy, utils.ParseDec("0.100"), sdk.NewInt(5000)),
+	}
+	ob := amm.NewOrderBook(orders...)
+	_, _, matched := ob.Match(utils.ParseDec("0.098"))
+	require.True(t, matched)
+	for _, order := range orders {
+		fmt.Printf(
+			"%s %s (%s/%s) paid=%s, received=%s\n",
+			order.GetDirection(), order.GetPrice(), order.GetOpenAmount(), order.GetAmount(),
+			order.GetPaidOfferCoinAmount(), order.GetReceivedDemandCoinAmount())
 	}
 }

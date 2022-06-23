@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -770,4 +772,86 @@ func (s *KeeperTestSuite) TestOneSidedRangedPool() {
 
 	rx, _ = s.keeper.GetPoolBalances(s.ctx, pool)
 	s.Require().True(rx.IsPositive())
+}
+
+func (s *KeeperTestSuite) TestExhaustRangedPool() {
+	r := rand.New(rand.NewSource(0))
+
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	minPrice, maxPrice := utils.ParseDec("0.5"), utils.ParseDec("2.0")
+	initialPrice := utils.ParseDec("1.0")
+	pool := s.createRangedPool(
+		s.addr(1), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+		minPrice, maxPrice, initialPrice, true)
+
+	orderer := s.addr(2)
+	s.fundAddr(orderer, utils.ParseCoins("10000000denom1,10000000denom2"))
+
+	// Buy
+	for {
+		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+		poolPrice := ammPool.Price()
+		if ry.Amount.IsZero() {
+			s.Require().True(utils.DecApproxEqual(maxPrice, poolPrice))
+			break
+		}
+		orderPrice := utils.RandomDec(r, poolPrice, poolPrice.Mul(sdk.NewDecWithPrec(105, 2)))
+		amt := utils.RandomInt(r, sdk.NewInt(1000), sdk.NewInt(5000))
+		s.buyLimitOrder(orderer, pair.Id, orderPrice, amt, 0, false)
+		s.nextBlock()
+	}
+
+	// Sell
+	for {
+		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+		poolPrice := ammPool.Price()
+		if rx.Amount.IsZero() {
+			s.Require().True(utils.DecApproxEqual(minPrice, poolPrice))
+			break
+		}
+		orderPrice := utils.RandomDec(r, poolPrice.Mul(sdk.NewDecWithPrec(95, 2)), poolPrice)
+		amt := utils.RandomInt(r, sdk.NewInt(1000), sdk.NewInt(5000))
+		s.sellLimitOrder(orderer, pair.Id, orderPrice, amt, 0, false)
+		s.nextBlock()
+	}
+
+	// Buy again
+	for {
+		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+		poolPrice := ammPool.Price()
+		if initialPrice.Sub(poolPrice).Abs().Quo(initialPrice).LTE(sdk.NewDecWithPrec(1, 3)) {
+			break
+		}
+		orderPrice := utils.RandomDec(r, poolPrice, poolPrice.Mul(sdk.NewDecWithPrec(105, 2)))
+		amt := utils.RandomInt(r, sdk.NewInt(1000), sdk.NewInt(5000))
+		s.buyLimitOrder(orderer, pair.Id, orderPrice, amt, 0, false)
+		s.nextBlock()
+	}
+
+	rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+	ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+	fmt.Println(rx, ry, ammPool.Price())
+
+	fmt.Println(s.getBalances(s.keeper.GetDustCollector(s.ctx)))
+	fmt.Println(s.getBalances(orderer))
+}
+
+func (s *KeeperTestSuite) TestSwap_EdgeCase() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.102"), sdk.NewInt(10000), 0, true)
+	s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("0.101"), sdk.NewInt(9995), 0, true)
+	s.buyLimitOrder(s.addr(4), pair.Id, utils.ParseDec("0.102"), sdk.NewInt(10000), 0, true)
+	s.nextBlock()
+	pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
+	s.Require().True(decEq(utils.ParseDec("0.102"), *pair.LastPrice))
+
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.102"), sdk.NewInt(10000), 0, true)
+	s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("0.101"), sdk.NewInt(9995), 0, true)
+	s.buyLimitOrder(s.addr(4), pair.Id, utils.ParseDec("0.102"), sdk.NewInt(10000), 0, true)
+	s.nextBlock()
 }

@@ -2,7 +2,6 @@ package amm
 
 import (
 	"fmt"
-	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -105,62 +104,101 @@ func FindMatchPrice(ov OrderView, tickPrec int) (matchPrice sdk.Dec, found bool)
 	return RoundPrice(midTick, tickPrec), true
 }
 
+// FindMatchableAmountAtSinglePrice returns the largest matchable amount of orders
+// when matching orders at single price(batch auction).
+func (ob *OrderBook) FindMatchableAmountAtSinglePrice(matchPrice sdk.Dec) (matchableAmt sdk.Int, found bool) {
+	type Side struct {
+		ticks             []*orderBookTick
+		totalMatchableAmt sdk.Int
+		i                 int
+		partialMatchAmt   sdk.Int
+	}
+	buildSide := func(ticks []*orderBookTick, priceIncreasing bool) (side *Side) {
+		side = &Side{totalMatchableAmt: zeroInt}
+		for i, tick := range ticks {
+			if (priceIncreasing && tick.price.GT(matchPrice)) ||
+				(!priceIncreasing && tick.price.LT(matchPrice)) {
+				break
+			}
+			side.ticks = ticks[:i+1]
+			side.totalMatchableAmt = side.totalMatchableAmt.Add(TotalMatchableAmount(tick.orders, matchPrice))
+		}
+		side.i = len(side.ticks) - 1
+		return
+	}
+	buySide := buildSide(ob.buys.ticks, ob.buys.priceIncreasing)
+	if len(buySide.ticks) == 0 {
+		return sdk.Int{}, false
+	}
+	sellSide := buildSide(ob.sells.ticks, ob.sells.priceIncreasing)
+	if len(sellSide.ticks) == 0 {
+		return sdk.Int{}, false
+	}
+	sides := map[OrderDirection]*Side{
+		Buy:  buySide,
+		Sell: sellSide,
+	}
+	// Repeatedly check both buy/sell side to see if there is an order to drop.
+	// If there is not, then the loop is finished.
+	for {
+		ok := true
+		for _, dir := range []OrderDirection{Buy, Sell} {
+			side := sides[dir]
+			i := side.i
+			tick := side.ticks[i]
+			tickAmt := TotalMatchableAmount(tick.orders, matchPrice)
+			// side.partialMatchAmt can be negative at this moment, but
+			// FindMatchableAmountAtSinglePrice won't return a negative amount because
+			// the if-block below would set ok = false if otherTicksAmt >= matchAmt
+			// and the loop would be continued.
+			matchableAmt = sdk.MinInt(buySide.totalMatchableAmt, sellSide.totalMatchableAmt)
+			otherTicksAmt := side.totalMatchableAmt.Sub(tickAmt)
+			side.partialMatchAmt = matchableAmt.Sub(otherTicksAmt)
+			if otherTicksAmt.GTE(matchableAmt) ||
+				(dir == Sell && matchPrice.MulInt(side.partialMatchAmt).TruncateInt().IsZero()) {
+				if i == 0 { // There's no orders left, which means orders are not matchable.
+					return sdk.Int{}, false
+				}
+				side.totalMatchableAmt = side.totalMatchableAmt.Sub(tickAmt)
+				side.i--
+				ok = false
+			}
+		}
+		if ok {
+			return matchableAmt, true
+		}
+	}
+}
+
 // MatchAtSinglePrice matches all matchable orders(buy orders with higher(or equal) price
 // than the price and sell orders with lower(or equal) price than the price)
 // at the price.
 func (ob *OrderBook) MatchAtSinglePrice(matchPrice sdk.Dec) (quoteCoinDiff sdk.Int, matched bool) {
-	// TODO: use OrderBookView to optimize?
-	buySums := make([]sdk.Int, 0, len(ob.buys.ticks))
-	for i, buyTick := range ob.buys.ticks {
-		if buyTick.price.LT(matchPrice) {
-			break
-		}
-		sum := TotalMatchableAmount(buyTick.orders, buyTick.price)
-		if i > 0 {
-			sum = buySums[i-1].Add(sum)
-		}
-		buySums = append(buySums, sum)
-	}
-	if len(buySums) == 0 {
+	matchableAmt, found := ob.FindMatchableAmountAtSinglePrice(matchPrice)
+	if !found {
 		return sdk.Int{}, false
 	}
-	sellSums := make([]sdk.Int, 0, len(ob.sells.ticks))
-	for i, sellTick := range ob.sells.ticks {
-		if sellTick.price.GT(matchPrice) {
-			break
-		}
-		sum := TotalMatchableAmount(sellTick.orders, sellTick.price)
-		if i > 0 {
-			sum = sellSums[i-1].Add(sum)
-		}
-		sellSums = append(sellSums, sum)
-	}
-	if len(sellSums) == 0 {
-		return sdk.Int{}, false
-	}
-	matchAmt := sdk.MinInt(buySums[len(buySums)-1], sellSums[len(sellSums)-1])
-	bi := sort.Search(len(buySums), func(i int) bool {
-		return buySums[i].GTE(matchAmt)
-	})
-	si := sort.Search(len(sellSums), func(i int) bool {
-		return sellSums[i].GTE(matchAmt)
-	})
 	quoteCoinDiff = sdk.ZeroInt()
-	distributeAmtToTicks := func(ticks []*orderBookTick, sums []sdk.Int, lastIdx int) {
-		for _, tick := range ticks[:lastIdx] {
-			quoteCoinDiff = quoteCoinDiff.Add(FulfillOrders(tick.orders, matchPrice))
+	distributeToTicks := func(ticks []*orderBookTick) {
+		remainingAmt := matchableAmt
+		for _, tick := range ticks {
+			tickAmt := TotalMatchableAmount(tick.orders, matchPrice)
+			if tickAmt.LTE(remainingAmt) {
+				quoteCoinDiff = quoteCoinDiff.Add(FulfillOrders(tick.orders, matchPrice))
+				remainingAmt = remainingAmt.Sub(tickAmt)
+				if remainingAmt.IsZero() {
+					break
+				}
+			} else {
+				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(tick, remainingAmt, matchPrice))
+				break
+			}
 		}
-		var remainingAmt sdk.Int
-		if lastIdx == 0 {
-			remainingAmt = matchAmt
-		} else {
-			remainingAmt = matchAmt.Sub(sums[lastIdx-1])
-		}
-		quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(ticks[lastIdx], remainingAmt, matchPrice))
 	}
-	distributeAmtToTicks(ob.buys.ticks, buySums, bi)
-	distributeAmtToTicks(ob.sells.ticks, sellSums, si)
-	return quoteCoinDiff, true
+	distributeToTicks(ob.buys.ticks)
+	distributeToTicks(ob.sells.ticks)
+	matched = true
+	return
 }
 
 // PriceDirection returns the estimated price direction within this batch
@@ -232,16 +270,24 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff
 		buyTickOpenAmt := TotalMatchableAmount(buyTick.orders, matchPrice)
 		sellTickOpenAmt := TotalMatchableAmount(sellTick.orders, matchPrice)
 		if buyTickOpenAmt.LTE(sellTickOpenAmt) {
-			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, buyTickOpenAmt, matchPrice))
+			if buyTickOpenAmt.IsPositive() {
+				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, buyTickOpenAmt, matchPrice))
+			}
 			bi++
 		} else {
-			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, sellTickOpenAmt, matchPrice))
+			if sellTickOpenAmt.IsPositive() {
+				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, sellTickOpenAmt, matchPrice))
+			}
 		}
 		if sellTickOpenAmt.LTE(buyTickOpenAmt) {
-			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, sellTickOpenAmt, matchPrice))
+			if sellTickOpenAmt.IsPositive() {
+				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, sellTickOpenAmt, matchPrice))
+			}
 			si++
 		} else {
-			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, buyTickOpenAmt, matchPrice))
+			if buyTickOpenAmt.IsPositive() {
+				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, buyTickOpenAmt, matchPrice))
+			}
 		}
 		matched = true
 	}

@@ -41,6 +41,9 @@ func MatchableAmount(order Order, price sdk.Dec) (matchableAmt sdk.Int) {
 	case Sell:
 		matchableAmt = order.GetOpenAmount()
 	}
+	if price.MulInt(matchableAmt).TruncateInt().IsZero() {
+		matchableAmt = zeroInt
+	}
 	return
 }
 
