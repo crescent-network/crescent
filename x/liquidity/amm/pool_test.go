@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
@@ -309,6 +310,205 @@ func TestBasicPool_Withdraw(t *testing.T) {
 			// Additional assertions
 			require.True(t, (tc.pc*tc.rx) >= (x.Int64()*tc.ps))
 			require.True(t, (tc.pc*tc.ry) >= (y.Int64()*tc.ps))
+		})
+	}
+}
+
+func TestCreateRangedPool(t *testing.T) {
+	intApproxEq := func(exp, got sdk.Int) (*testing.T, bool, string, string, string) {
+		c := exp.Sub(got).Abs().LTE(sdk.OneInt())
+		if c && !exp.IsZero() {
+			c = exp.ToDec().Sub(got.ToDec()).Abs().Quo(exp.ToDec()).LTE(sdk.NewDecWithPrec(1, 3))
+		}
+		return t, c, "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+	}
+
+	for _, tc := range []struct {
+		name               string
+		x, y               sdk.Int
+		minPrice, maxPrice sdk.Dec
+		initialPrice       sdk.Dec
+		expectedErr        string
+		ax, ay             sdk.Int
+	}{
+		{
+			"basic case",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+		},
+		{
+			"basic case 2",
+			sdk.NewInt(500000), sdk.NewInt(1_000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(500000), sdk.NewInt(500000),
+		},
+		{
+			"basic case 3",
+			sdk.NewInt(1_000000), sdk.NewInt(500000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(500000), sdk.NewInt(500000),
+		},
+		{
+			"invalid pool",
+			sdk.ZeroInt(), sdk.ZeroInt(),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"either x or y must be positive",
+			sdk.Int{}, sdk.Int{},
+		},
+		{
+			"single asset x pool",
+			sdk.NewInt(1_000000), sdk.ZeroInt(),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("2.0"),
+			"",
+			sdk.NewInt(1_000000), sdk.ZeroInt(),
+		},
+		{
+			"single asset x pool - refund",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("2.0"),
+			"",
+			sdk.NewInt(1_000000), sdk.ZeroInt(),
+		},
+		{
+			"single asset y pool",
+			sdk.ZeroInt(), sdk.NewInt(1_000000),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.ZeroInt(), sdk.NewInt(1_000000),
+		},
+		{
+			"single asset y pool - refund",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.ZeroInt(), sdk.NewInt(1_000000),
+		},
+		{
+			"small min price",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			sdk.NewDecWithPrec(1, 15), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(292893228075549596),
+		},
+		{
+			"large max price",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			utils.ParseDec("1.0"), sdk.NewIntWithDecimal(1, 20).ToDec(),
+			utils.ParseDec("2.0"),
+			"",
+			sdk.NewInt(585786437709747665), sdk.NewInt(1_000000000000000000),
+		},
+		{
+			"close min price and max price",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			utils.ParseDec("1.0"), utils.ParseDec("1.001"),
+			utils.ParseDec("1.0005"),
+			"",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(999000936633614182),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pool, err := amm.CreateRangedPool(tc.x, tc.y, tc.minPrice, tc.maxPrice, tc.initialPrice)
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				ax, ay := pool.Balances()
+				require.True(intApproxEq(tc.ax, ax))
+				require.True(intApproxEq(tc.ay, ay))
+				require.True(t, utils.DecApproxEqual(tc.initialPrice, pool.Price()))
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestRangedPool_Deposit(t *testing.T) {
+	for _, tc := range []struct {
+		name               string
+		rx, ry             sdk.Int
+		ps                 sdk.Int
+		minPrice, maxPrice sdk.Dec
+		x, y               sdk.Int // depositing x and y coin amount
+		ax, ay             sdk.Int // accepted x and y coin amount
+		pc                 sdk.Int // expected minted pool coin amount
+	}{
+		{
+			"ideal case",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123456789), sdk.NewInt(123456789),
+			sdk.NewInt(123000000), sdk.NewInt(123000000),
+			sdk.NewInt(123),
+		},
+		{
+			"single x asset pool",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(0),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123456789), sdk.NewInt(0),
+			sdk.NewInt(123000000), sdk.NewInt(0),
+			sdk.NewInt(123),
+		},
+		{
+			"single y asset pool",
+			sdk.NewInt(0), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(0), sdk.NewInt(123456789),
+			sdk.NewInt(0), sdk.NewInt(123000000),
+			sdk.NewInt(123),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pool := amm.NewRangedPool(tc.rx, tc.ry, tc.ps, tc.minPrice, tc.maxPrice)
+			ax, ay, pc := amm.Deposit(tc.rx, tc.ry, tc.ps, tc.x, tc.y)
+			require.True(sdk.IntEq(t, tc.ax, ax))
+			require.True(sdk.IntEq(t, tc.ay, ay))
+			require.True(sdk.IntEq(t, tc.pc, pc))
+			newPool := amm.NewRangedPool(tc.rx.Add(ax), tc.ry.Add(ay), tc.ps.Add(pc), tc.minPrice, tc.maxPrice)
+
+			var reserveRatio sdk.Dec
+			switch {
+			case tc.rx.IsZero():
+				reserveRatio = ay.ToDec().Quo(tc.ry.ToDec())
+			case tc.ry.IsZero():
+				reserveRatio = ax.ToDec().Quo(tc.rx.ToDec())
+			default:
+				reserveRatio = ax.ToDec().Quo(tc.rx.ToDec())
+				require.True(t, utils.DecApproxEqual(reserveRatio, ay.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check ax/ay == rx/ry
+			if !tc.rx.IsZero() && !tc.ry.IsZero() {
+				require.True(t, utils.DecApproxEqual(ax.ToDec().Quo(ay.ToDec()), tc.rx.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check ax/rx == ay/ry == pc/ps
+			require.True(t, utils.DecApproxEqual(reserveRatio, pc.ToDec().Quo(tc.ps.ToDec())))
+
+			// check pool price before == pool price after
+			require.True(t, utils.DecApproxEqual(pool.Price(), newPool.Price()))
+
+			transX, transY := pool.Translation()
+			transXPrime, transYPrime := newPool.Translation()
+			// alpha = reserveRatio
+			// check transX' == transX * (1+alpha), transY' == transY * (1+alpha)
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transXPrime.Quo(transX)))
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transYPrime.Quo(transY)))
 		})
 	}
 }

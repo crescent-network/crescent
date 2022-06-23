@@ -410,10 +410,19 @@ func Deposit(rx, ry, ps, x, y sdk.Int) (ax, ay, pc sdk.Int) {
 		ps := ps.ToDec()
 
 		// pc = floor(ps * min(x / rx, y / ry))
-		pc = ps.MulTruncate(sdk.MinDec(
-			x.ToDec().QuoTruncate(rx),
-			y.ToDec().QuoTruncate(ry),
-		)).TruncateInt()
+		var ratio sdk.Dec
+		switch {
+		case rx.IsZero():
+			ratio = y.ToDec().QuoTruncate(ry)
+		case ry.IsZero():
+			ratio = x.ToDec().QuoTruncate(rx)
+		default:
+			ratio = sdk.MinDec(
+				x.ToDec().QuoTruncate(rx),
+				y.ToDec().QuoTruncate(ry),
+			)
+		}
+		pc = ps.MulTruncate(ratio).TruncateInt()
 
 		mintProportion := pc.ToDec().Quo(ps)             // pc / ps
 		ax = rx.Mul(mintProportion).Ceil().TruncateInt() // ceil(rx * mintProportion)
@@ -458,6 +467,10 @@ func DeriveTranslation(rx, ry sdk.Int, minPrice, maxPrice sdk.Dec) (transX, tran
 
 	var sqrtP sdk.Dec
 	switch {
+	case rxDec.IsZero(): // y asset single pool
+		sqrtP = sqrtM
+	case ryDec.IsZero(): // x asset single pool
+		sqrtP = sqrtL
 	case rxDec.Quo(ryDec).IsZero(): // y asset single pool
 		sqrtP = sqrtM
 	case ryDec.Quo(rxDec).IsZero(): // x asset single pool
