@@ -419,6 +419,22 @@ func TestCreateRangedPool(t *testing.T) {
 			"",
 			sdk.NewInt(1_000000000000000000), sdk.NewInt(999000936633614182),
 		},
+		{
+			"small x asset",
+			sdk.NewInt(9), sdk.NewInt(9_000000000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("0.5000001"),
+			"",
+			sdk.NewInt(9), sdk.NewInt(89999987),
+		},
+		{
+			"small y asset",
+			sdk.NewInt(9_000000000000000000), sdk.NewInt(9),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.9999999"),
+			"",
+			sdk.NewInt(359999969), sdk.NewInt(9),
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pool, err := amm.CreateRangedPool(tc.x, tc.y, tc.minPrice, tc.maxPrice, tc.initialPrice)

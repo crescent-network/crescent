@@ -208,7 +208,7 @@ func CreateRangedPool(x, y sdk.Int, minPrice, maxPrice, initialPrice sdk.Dec) (p
 		sqrtL := sqrt(maxPrice)     // sqrt(L)
 		// Assume that we can accept all x
 		ax = x
-		// ay = {x / (sqrt(P)-sqrt(M))} / (1/sqrt(P) - 1/sqrt(L))
+		// ay = {x / (sqrt(P)-sqrt(M))} * (1/sqrt(P) - 1/sqrt(L))
 		ay = xDec.Quo(sqrtP.Sub(sqrtM)).Mul(inv(sqrtP).Sub(inv(sqrtL))).Ceil().TruncateInt()
 		if ay.GT(y) {
 			// Accept all y
