@@ -225,13 +225,13 @@ func ValidateRangedPoolParams(minPrice, maxPrice, initialPrice sdk.Dec) error {
 		return fmt.Errorf("initial price must be positive: %s", initialPrice)
 	}
 	if minPrice.LT(MinRangedPoolPrice) {
-		return fmt.Errorf("min price must be greater than %s", MinRangedPoolPrice)
+		return fmt.Errorf("min price must not be less than %s", MinRangedPoolPrice)
 	}
 	if !maxPrice.IsPositive() {
 		return fmt.Errorf("max price must be positive: %s", maxPrice)
 	}
 	if maxPrice.GT(MaxRangedPoolPrice) {
-		return fmt.Errorf("max price must be less than %s", MaxRangedPoolPrice)
+		return fmt.Errorf("max price must not be greater than %s", MaxRangedPoolPrice)
 	}
 	if !maxPrice.GT(minPrice) {
 		return fmt.Errorf("max price must be greater than min price")

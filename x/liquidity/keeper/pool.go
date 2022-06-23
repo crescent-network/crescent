@@ -172,6 +172,12 @@ func (k Keeper) ValidateMsgCreateRangedPool(ctx sdk.Context, msg *types.MsgCreat
 		}
 	}
 
+	tickPrec := k.GetTickPrecision(ctx)
+	lowestTick := amm.LowestTick(int(tickPrec))
+	if msg.MinPrice.LT(lowestTick) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min price must not be less than %s", lowestTick)
+	}
+
 	return nil
 }
 

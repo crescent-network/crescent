@@ -30,6 +30,10 @@ func (s *KeeperTestSuite) TestCreatePool() {
 }
 
 func (s *KeeperTestSuite) TestCreateRangedPool() {
+	params := s.keeper.GetParams(s.ctx)
+	params.TickPrecision = 5 // to test too small min price case
+	s.keeper.SetParams(s.ctx, params)
+
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	poolCreator := s.addr(1)
@@ -100,6 +104,14 @@ func (s *KeeperTestSuite) TestCreateRangedPool() {
 				utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.0")),
 			nil,
 			"insufficient pool creation fee: 0stake is smaller than 1000000stake: insufficient funds",
+		},
+		{
+			"too small min price",
+			types.NewMsgCreateRangedPool(
+				poolCreator, pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+				sdk.NewDecWithPrec(1, 15), utils.ParseDec("1.1"), utils.ParseDec("1.0")),
+			nil,
+			"min price must not be less than 0.000000000000100000: invalid request",
 		},
 	} {
 		s.Run(tc.name, func() {
