@@ -112,6 +112,9 @@ func (pool *BasicPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
+	if price.LT(MinPoolPrice) {
+		price = MinPoolPrice
+	}
 	dx := pool.rx.ToDec().Sub(price.MulInt(pool.ry)).TruncateInt()
 	if dx.IsZero() {
 		return sdk.ZeroInt()
@@ -131,12 +134,18 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec, _ bool) sdk.Int {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
 	}
+	if price.GT(MaxPoolPrice) {
+		price = MaxPoolPrice
+	}
 	return pool.ry.ToDec().Sub(pool.rx.ToDec().QuoRoundUp(price)).TruncateInt()
 }
 
 func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.GTE(pool.Price()) {
 		return sdk.ZeroInt()
+	}
+	if price.LT(MinPoolPrice) {
+		price = MinPoolPrice
 	}
 	sqrtRx := utils.DecApproxSqrt(pool.rx.ToDec())
 	sqrtRy := utils.DecApproxSqrt(pool.ry.ToDec())
@@ -159,6 +168,9 @@ func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 func (pool *BasicPool) SellAmountTo(price sdk.Dec) sdk.Int {
 	if price.LTE(pool.Price()) {
 		return sdk.ZeroInt()
+	}
+	if price.GT(MaxPoolPrice) {
+		price = MaxPoolPrice
 	}
 	sqrtRx := utils.DecApproxSqrt(pool.rx.ToDec())
 	sqrtRy := utils.DecApproxSqrt(pool.ry.ToDec())
