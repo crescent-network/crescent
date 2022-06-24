@@ -66,7 +66,6 @@ func (view *OrderBookView) Match() {
 	if buyIdx >= len(view.buyAmtAccSums) { // not found
 		buyIdx--
 	}
-	buyAmt := view.buyAmtAccSums[buyIdx].sum
 	sellIdx := sort.Search(len(view.sellAmtAccSums), func(i int) bool {
 		return view.SellAmountUnder(view.sellAmtAccSums[i].price, true).GTE(
 			view.BuyAmountOver(view.sellAmtAccSums[i].price, false))
@@ -74,6 +73,10 @@ func (view *OrderBookView) Match() {
 	if sellIdx >= len(view.sellAmtAccSums) { // not found
 		sellIdx--
 	}
+	if view.buyAmtAccSums[buyIdx].price.LT(view.sellAmtAccSums[sellIdx].price) {
+		return
+	}
+	buyAmt := view.buyAmtAccSums[buyIdx].sum
 	sellAmt := view.sellAmtAccSums[sellIdx].sum
 	matchAmt := sdk.MinInt(buyAmt, sellAmt)
 	view.buyAmtAccSums = view.buyAmtAccSums[buyIdx:]
