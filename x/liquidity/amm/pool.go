@@ -525,6 +525,11 @@ func PoolOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, t
 }
 
 func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) (orders []Order) {
+	defer func() {
+		if r := recover(); r != nil {
+			orders = nil
+		}
+	}()
 	poolPrice := pool.Price()
 	if poolPrice.LTE(lowestPrice) {
 		return nil
@@ -558,6 +563,11 @@ func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec
 }
 
 func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec, tickPrec int) (orders []Order) {
+	defer func() {
+		if r := recover(); r != nil {
+			orders = nil
+		}
+	}()
 	poolPrice := pool.Price()
 	if poolPrice.GTE(highestPrice) {
 		return nil
