@@ -10,6 +10,7 @@ import (
 
 	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity"
+	"github.com/crescent-network/crescent/x/liquidity/amm"
 	"github.com/crescent-network/crescent/x/liquidity/types"
 
 	_ "github.com/stretchr/testify/suite"
@@ -854,4 +855,61 @@ func (s *KeeperTestSuite) TestSwap_EdgeCase() {
 	s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("0.101"), sdk.NewInt(9995), 0, true)
 	s.buyLimitOrder(s.addr(4), pair.Id, utils.ParseDec("0.102"), sdk.NewInt(10000), 0, true)
 	s.nextBlock()
+}
+
+func (s *KeeperTestSuite) TestPoolPreserveK() {
+	r := rand.New(rand.NewSource(0))
+
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+	for i := 0; i < 10; i++ {
+		minPrice := utils.RandomDec(r, utils.ParseDec("0.001"), utils.ParseDec("10.0"))
+		maxPrice := utils.RandomDec(r, minPrice.Mul(utils.ParseDec("1.01")), utils.ParseDec("100.0"))
+		initialPrice := utils.RandomDec(r, minPrice, maxPrice)
+		s.createRangedPool(
+			s.addr(1), pair.Id, utils.ParseCoins("1_000000000000denom1,1_000000000000denom2"),
+			minPrice, maxPrice, initialPrice, true)
+	}
+
+	pools := s.keeper.GetAllPools(s.ctx)
+
+	ks := map[uint64]sdk.Dec{}
+	for _, pool := range pools {
+		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{}).(*amm.RangedPool)
+		transX, transY := ammPool.Translation()
+		ks[pool.Id] = rx.Amount.ToDec().Add(transX).Mul(ry.Amount.ToDec().Add(transY))
+	}
+
+	for i := 0; i < 20; i++ {
+		pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
+		for j := 0; j < 50; j++ {
+			var price sdk.Dec
+			if pair.LastPrice == nil {
+				price = utils.RandomDec(r, utils.ParseDec("0.001"), utils.ParseDec("100.0"))
+			} else {
+				price = utils.RandomDec(r, utils.ParseDec("0.91"), utils.ParseDec("1.09")).Mul(*pair.LastPrice)
+			}
+			amt := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000000))
+			lifespan := time.Duration(r.Intn(60)) * time.Second
+			if r.Intn(2) == 0 {
+				s.buyLimitOrder(s.addr(j+2), pair.Id, price, amt, lifespan, true)
+			} else {
+				s.buyLimitOrder(s.addr(j+2), pair.Id, price, amt, lifespan, true)
+			}
+		}
+
+		liquidity.EndBlocker(s.ctx, s.keeper)
+		s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(3 * time.Second))
+		liquidity.BeginBlocker(s.ctx, s.keeper)
+
+		for _, pool := range pools {
+			rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+			ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{}).(*amm.RangedPool)
+			transX, transY := ammPool.Translation()
+			k := rx.Amount.ToDec().Add(transX).Mul(ry.Amount.ToDec().Add(transY))
+			s.Require().True(k.GTE(ks[pool.Id].Mul(utils.ParseDec("0.99999")))) // there may be a small error
+			ks[pool.Id] = k
+		}
+	}
 }

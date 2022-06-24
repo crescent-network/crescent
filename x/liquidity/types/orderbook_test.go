@@ -52,6 +52,60 @@ func ExampleMakeOrderBookResponse() {
 	// +------------------------------------------------------------------------+
 }
 
+func ExampleMakeOrderBookResponse_pool() {
+	pool1 := amm.NewBasicPool(sdk.NewInt(1050_000000), sdk.NewInt(1000_000000), sdk.Int{})
+	pool2, err := amm.CreateRangedPool(
+		sdk.NewInt(1000_000000), sdk.NewInt(1000_000000),
+		utils.ParseDec("0.1"), utils.ParseDec("5.0"), utils.ParseDec("0.95"))
+	if err != nil {
+		panic(err)
+	}
+
+	lastPrice := utils.ParseDec("1.0")
+	lowestPrice := lastPrice.Mul(utils.ParseDec("0.9"))
+	highestPrice := lastPrice.Mul(utils.ParseDec("1.1"))
+	ob := amm.NewOrderBook()
+	ob.AddOrder(amm.PoolOrders(pool1, amm.DefaultOrderer, lowestPrice, highestPrice, 4)...)
+	ob.AddOrder(amm.PoolOrders(pool2, amm.DefaultOrderer, lowestPrice, highestPrice, 4)...)
+
+	ov := ob.MakeView()
+	ov.Match()
+	tickPrec := 2
+	resp := types.MakeOrderBookResponse(ov, tickPrec, 20)
+	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
+	if !found {
+		panic("base price not found")
+	}
+	types.PrintOrderBookResponse(resp, basePrice)
+
+	// Output:
+	// +------------------------------------------------------------------------+
+	// |           12482141 |         1.100000000000000000 |                    |
+	// |           11488898 |         1.090000000000000000 |                    |
+	// |            8280038 |         1.080000000000000000 |                    |
+	// |           12100493 |         1.070000000000000000 |                    |
+	// |           12139873 |         1.060000000000000000 |                    |
+	// |            7381973 |         1.050000000000000000 |                    |
+	// |            6623054 |         1.040000000000000000 |                    |
+	// |            8863846 |         1.030000000000000000 |                    |
+	// |            7489932 |         1.020000000000000000 |                    |
+	// |            6572362 |         1.010000000000000000 |                    |
+	// |            8736758 |         1.000000000000000000 |                    |
+	// |------------------------------------------------------------------------|
+	// |                              0.990000000000000000                      |
+	// |------------------------------------------------------------------------|
+	// |                    |         0.980000000000000000 | 3406177            |
+	// |                    |         0.970000000000000000 | 5349384            |
+	// |                    |         0.960000000000000000 | 6256722            |
+	// |                    |         0.950000000000000000 | 4655698            |
+	// |                    |         0.940000000000000000 | 13393535           |
+	// |                    |         0.930000000000000000 | 13541701           |
+	// |                    |         0.920000000000000000 | 17097505           |
+	// |                    |         0.910000000000000000 | 14039668           |
+	// |                    |         0.900000000000000000 | 14822646           |
+	// +------------------------------------------------------------------------+
+}
+
 func TestMakeOrderBookResponse(t *testing.T) {
 	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
 	lowestPrice := pool.Price().Mul(sdk.NewDecWithPrec(9, 1))
