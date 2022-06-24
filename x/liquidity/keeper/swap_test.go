@@ -363,7 +363,7 @@ func (s *KeeperTestSuite) TestPartialMatch() {
 func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	// Create a pool with very low price.
-	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("10000000000000000000000000000000000000000denom1,1000000denom2"), true)
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100000000000000000denom1,1000000denom2"), true)
 	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(100000000000000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
@@ -703,7 +703,7 @@ func (s *KeeperTestSuite) TestExpireSmallOrders() {
 
 func (s *KeeperTestSuite) TestPoolOrderOverflow() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	i, _ := sdk.NewIntFromString("10000000000000000000000000000000000000000")
+	i, _ := sdk.NewIntFromString("10000000000000000000000000")
 	s.createPool(s.addr(0), pair.Id, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1e6), sdk.NewCoin("denom2", i)), true)
 
 	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(1e17), 0, true)

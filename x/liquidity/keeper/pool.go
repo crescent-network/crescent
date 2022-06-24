@@ -111,6 +111,12 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 
 	pair, _ := k.GetPair(ctx, msg.PairId)
 
+	x, y := msg.DepositCoins.AmountOf(pair.QuoteCoinDenom), msg.DepositCoins.AmountOf(pair.BaseCoinDenom)
+	ammPool, err := amm.CreateBasicPool(x, y)
+	if err != nil {
+		return types.Pool{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
 	// Create and save the new pool object.
 	poolId := k.getNextPoolIdWithUpdate(ctx)
 	pool := types.NewBasicPool(poolId, pair.Id, msg.GetCreator())
@@ -132,10 +138,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 	// Mint and send pool coin to the creator.
 	// Minting pool coin amount is calculated based on two coins' amount.
 	// Minimum minting amount is params.MinInitialPoolCoinSupply.
-	ps := sdk.MaxInt(
-		amm.InitialPoolCoinSupply(msg.DepositCoins[0].Amount, msg.DepositCoins[1].Amount),
-		k.GetMinInitialPoolCoinSupply(ctx),
-	)
+	ps := sdk.MaxInt(ammPool.PoolCoinSupply(), k.GetMinInitialPoolCoinSupply(ctx))
 	poolCoin := sdk.NewCoin(pool.PoolCoinDenom, ps)
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(poolCoin)); err != nil {
 		return types.Pool{}, err

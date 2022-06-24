@@ -52,6 +52,20 @@ func NewBasicPool(rx, ry, ps sdk.Int) *BasicPool {
 	}
 }
 
+func CreateBasicPool(rx, ry sdk.Int) (*BasicPool, error) {
+	if rx.IsZero() || ry.IsZero() {
+		return nil, fmt.Errorf("cannot create basic pool with zero reserve amount")
+	}
+	p := rx.ToDec().Quo(ry.ToDec())
+	if p.LT(MinPoolPrice) {
+		return nil, fmt.Errorf("pool price is lower than min price %s", MinPoolPrice)
+	}
+	if p.GT(MaxPoolPrice) {
+		return nil, fmt.Errorf("pool price is greater than max price %s", MaxPoolPrice)
+	}
+	return NewBasicPool(rx, ry, InitialPoolCoinSupply(rx, ry)), nil
+}
+
 // Balances returns the balances of the pool.
 func (pool *BasicPool) Balances() (rx, ry sdk.Int) {
 	return pool.rx, pool.ry
@@ -224,14 +238,14 @@ func ValidateRangedPoolParams(minPrice, maxPrice, initialPrice sdk.Dec) error {
 	if !initialPrice.IsPositive() {
 		return fmt.Errorf("initial price must be positive: %s", initialPrice)
 	}
-	if minPrice.LT(MinRangedPoolPrice) {
-		return fmt.Errorf("min price must not be less than %s", MinRangedPoolPrice)
+	if minPrice.LT(MinPoolPrice) {
+		return fmt.Errorf("min price must not be less than %s", MinPoolPrice)
 	}
 	if !maxPrice.IsPositive() {
 		return fmt.Errorf("max price must be positive: %s", maxPrice)
 	}
-	if maxPrice.GT(MaxRangedPoolPrice) {
-		return fmt.Errorf("max price must not be greater than %s", MaxRangedPoolPrice)
+	if maxPrice.GT(MaxPoolPrice) {
+		return fmt.Errorf("max price must not be greater than %s", MaxPoolPrice)
 	}
 	if !maxPrice.GT(minPrice) {
 		return fmt.Errorf("max price must be greater than min price")
