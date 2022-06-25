@@ -60,38 +60,33 @@ func (view *OrderBookView) Match() {
 		return
 	}
 	buyIdx := sort.Search(len(view.buyAmtAccSums), func(i int) bool {
-		return view.BuyAmountOver(view.buyAmtAccSums[i].price, true).GTE(
-			view.SellAmountUnder(view.buyAmtAccSums[i].price, false))
+		return view.BuyAmountOver(view.buyAmtAccSums[i].price, true).GT(
+			view.SellAmountUnder(view.buyAmtAccSums[i].price, true))
 	})
-	if buyIdx >= len(view.buyAmtAccSums) { // not found
-		buyIdx--
-	}
 	sellIdx := sort.Search(len(view.sellAmtAccSums), func(i int) bool {
-		return view.SellAmountUnder(view.sellAmtAccSums[i].price, true).GTE(
-			view.BuyAmountOver(view.sellAmtAccSums[i].price, false))
+		return view.SellAmountUnder(view.sellAmtAccSums[i].price, true).GT(
+			view.BuyAmountOver(view.sellAmtAccSums[i].price, true))
 	})
-	if sellIdx >= len(view.sellAmtAccSums) { // not found
-		sellIdx--
+	matchAmt := sdk.ZeroInt()
+	if buyIdx > 0 {
+		matchAmt = view.buyAmtAccSums[buyIdx-1].sum
 	}
-	if view.buyAmtAccSums[buyIdx].price.LT(view.sellAmtAccSums[sellIdx].price) {
-		return
-	}
-	buyAmt := view.buyAmtAccSums[buyIdx].sum
-	sellAmt := view.sellAmtAccSums[sellIdx].sum
-	matchAmt := sdk.MinInt(buyAmt, sellAmt)
-	view.buyAmtAccSums = view.buyAmtAccSums[buyIdx:]
-	if view.buyAmtAccSums[0].sum.Equal(matchAmt) {
-		view.buyAmtAccSums = view.buyAmtAccSums[1:]
-	}
-	view.sellAmtAccSums = view.sellAmtAccSums[sellIdx:]
-	if view.sellAmtAccSums[0].sum.Equal(matchAmt) {
-		view.sellAmtAccSums = view.sellAmtAccSums[1:]
+	if sellIdx > 0 {
+		matchAmt = sdk.MaxInt(matchAmt, view.sellAmtAccSums[sellIdx-1].sum)
 	}
 	for i, accSum := range view.buyAmtAccSums {
-		view.buyAmtAccSums[i].sum = accSum.sum.Sub(matchAmt)
+		if i < buyIdx {
+			view.buyAmtAccSums[i].sum = zeroInt
+		} else {
+			view.buyAmtAccSums[i].sum = accSum.sum.Sub(matchAmt)
+		}
 	}
 	for i, accSum := range view.sellAmtAccSums {
-		view.sellAmtAccSums[i].sum = accSum.sum.Sub(matchAmt)
+		if i < sellIdx {
+			view.sellAmtAccSums[i].sum = zeroInt
+		} else {
+			view.sellAmtAccSums[i].sum = accSum.sum.Sub(matchAmt)
+		}
 	}
 }
 
@@ -99,14 +94,26 @@ func (view *OrderBookView) HighestBuyPrice() (sdk.Dec, bool) {
 	if len(view.buyAmtAccSums) == 0 {
 		return sdk.Dec{}, false
 	}
-	return view.buyAmtAccSums[0].price, true
+	i := sort.Search(len(view.buyAmtAccSums), func(i int) bool {
+		return view.buyAmtAccSums[i].sum.IsPositive()
+	})
+	if i >= len(view.buyAmtAccSums) {
+		return sdk.Dec{}, false
+	}
+	return view.buyAmtAccSums[i].price, true
 }
 
 func (view *OrderBookView) LowestSellPrice() (sdk.Dec, bool) {
 	if len(view.sellAmtAccSums) == 0 {
 		return sdk.Dec{}, false
 	}
-	return view.sellAmtAccSums[0].price, true
+	i := sort.Search(len(view.sellAmtAccSums), func(i int) bool {
+		return view.sellAmtAccSums[i].sum.IsPositive()
+	})
+	if i >= len(view.sellAmtAccSums) {
+		return sdk.Dec{}, false
+	}
+	return view.sellAmtAccSums[i].price, true
 }
 
 func (view *OrderBookView) BuyAmountOver(price sdk.Dec, inclusive bool) sdk.Int {

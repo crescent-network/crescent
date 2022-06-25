@@ -8,7 +8,7 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
-func OrderBookBasePrice(ov *amm.OrderBookView, tickPrec int) (sdk.Dec, bool) {
+func OrderBookBasePrice(ov amm.OrderView, tickPrec int) (sdk.Dec, bool) {
 	highestBuyPrice, foundHighestBuyPrice := ov.HighestBuyPrice()
 	lowestSellPrice, foundLowestSellPrice := ov.LowestSellPrice()
 
