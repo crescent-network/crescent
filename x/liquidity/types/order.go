@@ -9,6 +9,19 @@ import (
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 )
 
+// OrderDirectionFromAMM converts amm.OrderDirection to liquidity module's
+// OrderDirection.
+func OrderDirectionFromAMM(dir amm.OrderDirection) OrderDirection {
+	switch dir {
+	case amm.Buy:
+		return OrderDirectionBuy
+	case amm.Sell:
+		return OrderDirectionSell
+	default:
+		panic(fmt.Errorf("invalid order direction: %s", dir))
+	}
+}
+
 type UserOrder struct {
 	*amm.BaseOrder
 	Orderer                         sdk.AccAddress

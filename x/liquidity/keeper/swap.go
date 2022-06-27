@@ -441,6 +441,15 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 		return err
 	}
 	bulkOp = types.NewBulkSendCoinsOperation()
+	type PoolMatchResult struct {
+		PoolId         uint64
+		OrderDirection types.OrderDirection
+		PaidCoin       sdk.Coin
+		ReceivedCoin   sdk.Coin
+		MatchedAmount  sdk.Int
+	}
+	poolMatchResultById := map[uint64]*PoolMatchResult{}
+	var poolMatchResults []*PoolMatchResult
 	for _, order := range orders {
 		if !order.IsMatched() {
 			continue
@@ -471,7 +480,7 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.EventTypeUserOrderMatched,
-					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
+					sdk.NewAttribute(types.AttributeKeyOrderDirection, types.OrderDirectionFromAMM(order.Direction).String()),
 					sdk.NewAttribute(types.AttributeKeyOrderer, order.Orderer.String()),
 					sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(pair.Id, 10)),
 					sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.OrderId, 10)),
@@ -486,19 +495,25 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.ReserveAddress, sdk.NewCoins(receivedCoin))
 
-			// TODO: reduce number of events
-			ctx.EventManager().EmitEvents(sdk.Events{
-				sdk.NewEvent(
-					types.EventTypePoolOrderMatched,
-					sdk.NewAttribute(types.AttributeKeyOrderDirection, order.Direction.String()),
-					sdk.NewAttribute(types.AttributeKeyReserveAddress, order.ReserveAddress.String()),
-					sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(pair.Id, 10)),
-					sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(order.PoolId, 10)),
-					sdk.NewAttribute(types.AttributeKeyMatchedAmount, matchedAmt.String()),
-					sdk.NewAttribute(types.AttributeKeyPaidCoin, paidCoin.String()),
-					sdk.NewAttribute(types.AttributeKeyReceivedCoin, receivedCoin.String()),
-				),
-			})
+			r, ok := poolMatchResultById[order.PoolId]
+			if !ok {
+				r = &PoolMatchResult{
+					PoolId:         order.PoolId,
+					OrderDirection: types.OrderDirectionFromAMM(order.Direction),
+					PaidCoin:       sdk.NewCoin(paidCoin.Denom, sdk.ZeroInt()),
+					ReceivedCoin:   sdk.NewCoin(receivedCoin.Denom, sdk.ZeroInt()),
+					MatchedAmount:  sdk.ZeroInt(),
+				}
+				poolMatchResultById[order.PoolId] = r
+				poolMatchResults = append(poolMatchResults, r)
+			}
+			dir := types.OrderDirectionFromAMM(order.Direction)
+			if r.OrderDirection != dir {
+				panic(fmt.Errorf("wrong order direction: %s != %s", dir, r.OrderDirection))
+			}
+			r.PaidCoin = r.PaidCoin.Add(paidCoin)
+			r.ReceivedCoin = r.ReceivedCoin.Add(receivedCoin)
+			r.MatchedAmount = r.MatchedAmount.Add(matchedAmt)
 		default:
 			panic(fmt.Errorf("invalid order type: %T", order))
 		}
@@ -506,6 +521,19 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 	bulkOp.QueueSendCoins(pair.GetEscrowAddress(), k.GetDustCollector(ctx), sdk.NewCoins(sdk.NewCoin(pair.QuoteCoinDenom, quoteCoinDiff)))
 	if err := bulkOp.Run(ctx, k.bankKeeper); err != nil {
 		return err
+	}
+	for _, r := range poolMatchResults {
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.EventTypePoolOrderMatched,
+				sdk.NewAttribute(types.AttributeKeyOrderDirection, r.OrderDirection.String()),
+				sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(pair.Id, 10)),
+				sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(r.PoolId, 10)),
+				sdk.NewAttribute(types.AttributeKeyMatchedAmount, r.MatchedAmount.String()),
+				sdk.NewAttribute(types.AttributeKeyPaidCoin, r.PaidCoin.String()),
+				sdk.NewAttribute(types.AttributeKeyReceivedCoin, r.ReceivedCoin.String()),
+			),
+		})
 	}
 	return nil
 }
