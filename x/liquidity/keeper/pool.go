@@ -261,6 +261,9 @@ func (k Keeper) ValidateMsgDeposit(ctx sdk.Context, msg *types.MsgDeposit) error
 	if pool.Disabled {
 		return types.ErrDisabledPool
 	}
+	if pool.Type == types.PoolTypeBasic && len(msg.DepositCoins) != 2 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
+	}
 
 	pair, _ := k.GetPair(ctx, pool.PairId)
 
