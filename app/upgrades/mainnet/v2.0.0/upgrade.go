@@ -5,18 +5,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
 
-	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
-
 	utils "github.com/crescent-network/crescent/types"
+	liquiditykeeper "github.com/crescent-network/crescent/x/liquidity/keeper"
 	mintkeeper "github.com/crescent-network/crescent/x/mint/keeper"
 	minttypes "github.com/crescent-network/crescent/x/mint/types"
 )
 
 const UpgradeName = "v2.0.0"
 
-func UpgradeHandler(mm *module.Manager, configurator module.Configurator, mintKeeper mintkeeper.Keeper, budgetKeeper budgetkeeper.Keeper) upgradetypes.UpgradeHandler {
+func UpgradeHandler(
+	mm *module.Manager, configurator module.Configurator,
+	mintKeeper mintkeeper.Keeper, budgetKeeper budgetkeeper.Keeper, liquidityKeeper liquiditykeeper.Keeper) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		newVM, err := mm.RunMigrations(ctx, configurator, vm)
 		if err != nil {
@@ -48,6 +50,11 @@ func UpgradeHandler(mm *module.Manager, configurator module.Configurator, mintKe
 		}
 		budgetparams.Budgets = append([]budgettypes.Budget{budgetStakingRewardCommFund}, budgetparams.Budgets...)
 		budgetKeeper.SetParams(ctx, budgetparams)
+
+		// Increment tick precision to 4.
+		liquidityParams := liquidityKeeper.GetParams(ctx)
+		liquidityParams.TickPrecision = 4
+		liquidityKeeper.SetParams(ctx, liquidityParams)
 
 		return newVM, err
 	}
