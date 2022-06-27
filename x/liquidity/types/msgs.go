@@ -171,7 +171,7 @@ func (msg MsgCreateRangedPool) ValidateBasic() error {
 	if err := msg.DepositCoins.Validate(); err != nil {
 		return err
 	}
-	if len(msg.DepositCoins) != 2 {
+	if len(msg.DepositCoins) == 0 || len(msg.DepositCoins) > 2 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
 	}
 	for _, coin := range msg.DepositCoins {
@@ -232,7 +232,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 	if err := msg.DepositCoins.Validate(); err != nil {
 		return err
 	}
-	if len(msg.DepositCoins) != 2 {
+	if len(msg.DepositCoins) == 0 || len(msg.DepositCoins) > 2 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
 	}
 	return nil

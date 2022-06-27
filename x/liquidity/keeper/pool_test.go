@@ -525,3 +525,73 @@ func (s *KeeperTestSuite) TestRangedPoolDepositWithdraw() {
 	ammPool = pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 	s.Require().True(utils.DecApproxEqual(ammPool.Price(), utils.ParseDec("1.0")))
 }
+
+func (s *KeeperTestSuite) TestRangedPoolDepositWithdraw_single_side() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createRangedPool(
+		s.addr(1), pair.Id, utils.ParseCoins("1000000denom1"),
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("0.5"), true)
+
+	rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+	s.Require().True(intEq(sdk.ZeroInt(), rx.Amount))
+	s.Require().True(intEq(sdk.NewInt(1000000), ry.Amount))
+	ps := s.keeper.GetPoolCoinSupply(s.ctx, pool)
+
+	s.deposit(s.addr(2), pool.Id, utils.ParseCoins("50000denom1"), true)
+	s.nextBlock()
+
+	pc := s.getBalance(s.addr(2), pool.PoolCoinDenom)
+
+	rx, ry = s.keeper.GetPoolBalances(s.ctx, pool)
+	s.Require().True(intEq(sdk.ZeroInt(), rx.Amount))
+	s.Require().True(intEq(sdk.NewInt(1050000), ry.Amount))
+	s.Require().True(intEq(ps.QuoRaw(20), pc.Amount))
+
+	balanceBefore := s.getBalance(s.addr(2), "denom1")
+	s.withdraw(s.addr(2), pool.Id, sdk.NewCoin(pool.PoolCoinDenom, pc.Amount))
+	s.nextBlock()
+	balanceAfter := s.getBalance(s.addr(2), "denom1")
+
+	s.Require().True(balanceAfter.Sub(balanceBefore).Amount.Sub(sdk.NewInt(50000)).LTE(sdk.OneInt()))
+
+	s.deposit(s.addr(3), pool.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.nextBlock()
+
+	s.Require().True(intEq(sdk.ZeroInt(), s.getBalance(s.addr(3), "denom1").Amount))
+	s.Require().True(intEq(sdk.NewInt(1000000), s.getBalance(s.addr(3), "denom2").Amount))
+}
+
+func (s *KeeperTestSuite) TestRangedPoolDepositWithdraw_single_side2() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pool := s.createRangedPool(
+		s.addr(1), pair.Id, utils.ParseCoins("1000000denom2"),
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("2.0"), true)
+
+	rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
+	s.Require().True(intEq(sdk.NewInt(1000000), rx.Amount))
+	s.Require().True(intEq(sdk.ZeroInt(), ry.Amount))
+	ps := s.keeper.GetPoolCoinSupply(s.ctx, pool)
+
+	s.deposit(s.addr(2), pool.Id, utils.ParseCoins("50000denom2"), true)
+	s.nextBlock()
+
+	pc := s.getBalance(s.addr(2), pool.PoolCoinDenom)
+
+	rx, ry = s.keeper.GetPoolBalances(s.ctx, pool)
+	s.Require().True(intEq(sdk.NewInt(1050000), rx.Amount))
+	s.Require().True(intEq(sdk.ZeroInt(), ry.Amount))
+	s.Require().True(intEq(ps.QuoRaw(20), pc.Amount))
+
+	balanceBefore := s.getBalance(s.addr(2), "denom2")
+	s.withdraw(s.addr(2), pool.Id, sdk.NewCoin(pool.PoolCoinDenom, pc.Amount))
+	s.nextBlock()
+	balanceAfter := s.getBalance(s.addr(2), "denom2")
+
+	s.Require().True(balanceAfter.Sub(balanceBefore).Amount.Sub(sdk.NewInt(50000)).LTE(sdk.OneInt()))
+
+	s.deposit(s.addr(3), pool.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+	s.nextBlock()
+
+	s.Require().True(intEq(sdk.ZeroInt(), s.getBalance(s.addr(3), "denom2").Amount))
+	s.Require().True(intEq(sdk.NewInt(1000000), s.getBalance(s.addr(3), "denom1").Amount))
+}
