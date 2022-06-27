@@ -251,25 +251,25 @@ func ValidateRangedPoolParams(minPrice, maxPrice, initialPrice sdk.Dec) error {
 		return fmt.Errorf("initial price must be positive: %s", initialPrice)
 	}
 	if minPrice.LT(MinPoolPrice) {
-		return fmt.Errorf("min price must not be less than %s", MinPoolPrice)
+		return fmt.Errorf("min price must not be lower than %s", MinPoolPrice)
 	}
 	if !maxPrice.IsPositive() {
 		return fmt.Errorf("max price must be positive: %s", maxPrice)
 	}
 	if maxPrice.GT(MaxPoolPrice) {
-		return fmt.Errorf("max price must not be greater than %s", MaxPoolPrice)
+		return fmt.Errorf("max price must not be higher than %s", MaxPoolPrice)
 	}
 	if !maxPrice.GT(minPrice) {
-		return fmt.Errorf("max price must be greater than min price")
+		return fmt.Errorf("max price must be higher than min price")
 	}
 	if maxPrice.Sub(minPrice).Quo(minPrice).LT(MinRangedPoolPriceGapRatio) {
 		return fmt.Errorf("min price and max price are too close")
 	}
 	if initialPrice.LT(minPrice) {
-		return fmt.Errorf("initial price must not be less than min price")
+		return fmt.Errorf("initial price must not be lower than min price")
 	}
 	if initialPrice.GT(maxPrice) {
-		return fmt.Errorf("initial price must not be greater than max price")
+		return fmt.Errorf("initial price must not be higher than max price")
 	}
 	return nil
 }
@@ -279,6 +279,8 @@ func (pool *RangedPool) Balances() (rx, ry sdk.Int) {
 	return pool.rx, pool.ry
 }
 
+// SetBalances sets RangedPool's balances without recalculating
+// transX and transY.
 func (pool *RangedPool) SetBalances(rx, ry sdk.Int) {
 	pool.rx = rx
 	pool.ry = ry

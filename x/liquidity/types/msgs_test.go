@@ -194,21 +194,21 @@ func TestMsgCreateRangedPool(t *testing.T) {
 			func(msg *types.MsgCreateRangedPool) {
 				msg.MinPrice = sdk.NewDecWithPrec(1, 16)
 			},
-			"min price must not be less than 0.000000000000001000: invalid request",
+			"min price must not be lower than 0.000000000000001000: invalid request",
 		},
 		{
 			"too large max price",
 			func(msg *types.MsgCreateRangedPool) {
 				msg.MaxPrice = sdk.NewIntWithDecimal(1, 25).ToDec()
 			},
-			"max price must not be greater than 100000000000000000000.000000000000000000: invalid request",
+			"max price must not be higher than 100000000000000000000.000000000000000000: invalid request",
 		},
 		{
-			"max price not greater than min price",
+			"max price not higher than min price",
 			func(msg *types.MsgCreateRangedPool) {
 				msg.MaxPrice = utils.ParseDec("0.5")
 			},
-			"max price must be greater than min price: invalid request",
+			"max price must be higher than min price: invalid request",
 		},
 		{
 			"too close min price and max price",
@@ -222,7 +222,7 @@ func TestMsgCreateRangedPool(t *testing.T) {
 			func(msg *types.MsgCreateRangedPool) {
 				msg.InitialPrice = utils.ParseDec("2.01")
 			},
-			"initial price must not be greater than max price: invalid request",
+			"initial price must not be higher than max price: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
