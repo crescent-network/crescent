@@ -302,7 +302,7 @@ func (pool *RangedPool) PoolCoinSupply() sdk.Int {
 }
 
 func (pool *RangedPool) Translation() (transX, transY sdk.Dec) {
-	return DeriveTranslation(pool.rx, pool.ry, pool.minPrice, pool.maxPrice)
+	return pool.transX, pool.transY
 }
 
 func (pool *RangedPool) MinPrice() sdk.Dec {
