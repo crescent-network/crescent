@@ -293,47 +293,43 @@ func (s *KeeperTestSuite) TestMarketOrderWithNoLastPrice() {
 }
 
 func (s *KeeperTestSuite) TestSingleOrderNoMatch() {
-	k, ctx := s.keeper, s.ctx
-
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), 10*time.Second, true)
 	// Execute matching
-	liquidity.EndBlocker(ctx, k)
+	liquidity.EndBlocker(s.ctx, s.keeper)
 
-	order, found := k.GetOrder(ctx, order.PairId, order.Id)
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.OrderStatusNotMatched, order.Status)
 
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(10 * time.Second))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(10 * time.Second))
 	// Expire the order, here BeginBlocker is not called to check
 	// the request's changed status
-	liquidity.EndBlocker(ctx, k)
+	liquidity.EndBlocker(s.ctx, s.keeper)
 
-	order, _ = k.GetOrder(ctx, order.PairId, order.Id)
+	order, _ = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().Equal(types.OrderStatusExpired, order.Status)
 
 	s.Require().True(coinsEq(utils.ParseCoins("1000000denom2"), s.getBalances(s.addr(1))))
 }
 
 func (s *KeeperTestSuite) TestTwoOrderExactMatch() {
-	k, ctx := s.keeper, s.ctx
-
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	req1 := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), newInt(10000), time.Hour, true)
 	req2 := s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.0"), newInt(10000), time.Hour, true)
-	liquidity.EndBlocker(ctx, k)
+	liquidity.EndBlocker(s.ctx, s.keeper)
 
-	req1, _ = k.GetOrder(ctx, req1.PairId, req1.Id)
+	req1, _ = s.keeper.GetOrder(s.ctx, req1.PairId, req1.Id)
 	s.Require().Equal(types.OrderStatusCompleted, req1.Status)
-	req2, _ = k.GetOrder(ctx, req2.PairId, req2.Id)
+	req2, _ = s.keeper.GetOrder(s.ctx, req2.PairId, req2.Id)
 	s.Require().Equal(types.OrderStatusCompleted, req2.Status)
 
 	s.Require().True(coinsEq(utils.ParseCoins("10000denom1"), s.getBalances(s.addr(1))))
 	s.Require().True(coinsEq(utils.ParseCoins("10000denom2"), s.getBalances(s.addr(2))))
 
-	pair, _ = k.GetPair(ctx, pair.Id)
+	pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
 	s.Require().NotNil(pair.LastPrice)
 	s.Require().True(decEq(utils.ParseDec("1.0"), *pair.LastPrice))
 }
@@ -372,23 +368,21 @@ func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
 }
 
 func (s *KeeperTestSuite) TestCancelOrder() {
-	k, ctx := s.keeper, s.ctx
-
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), newInt(10000), types.DefaultMaxOrderLifespan, true)
 
 	// Cannot cancel an order within a same batch
-	err := k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), order.PairId, order.Id))
+	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(s.addr(1), order.PairId, order.Id))
 	s.Require().ErrorIs(err, types.ErrSameBatch)
 
 	s.nextBlock()
 
 	// Now an order can be canceled
-	err = k.CancelOrder(ctx, types.NewMsgCancelOrder(s.addr(1), order.PairId, order.Id))
+	err = s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(s.addr(1), order.PairId, order.Id))
 	s.Require().NoError(err)
 
-	order, found := k.GetOrder(ctx, order.PairId, order.Id)
+	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.OrderStatusCanceled, order.Status)
 
@@ -398,7 +392,7 @@ func (s *KeeperTestSuite) TestCancelOrder() {
 	s.nextBlock()
 
 	// Order is deleted
-	_, found = k.GetOrder(ctx, order.PairId, order.Id)
+	_, found = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().False(found)
 }
 

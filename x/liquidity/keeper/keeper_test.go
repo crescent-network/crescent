@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	chain "github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/x/liquidity"
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 	"github.com/crescent-network/crescent/x/liquidity/keeper"
 	"github.com/crescent-network/crescent/x/liquidity/types"
@@ -33,7 +34,13 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = chain.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	hdr := tmproto.Header{
+		Height: 1,
+		Time:   utils.ParseTime("2022-01-01T00:00:00Z"),
+	}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
+	s.ctx = s.app.BaseApp.NewContext(false, hdr)
+	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{Header: hdr})
 	s.keeper = s.app.LiquidityKeeper
 	s.querier = keeper.Querier{Keeper: s.keeper}
 	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
@@ -55,8 +62,16 @@ func (s *KeeperTestSuite) sendCoins(fromAddr, toAddr sdk.AccAddress, amt sdk.Coi
 }
 
 func (s *KeeperTestSuite) nextBlock() {
-	liquidity.EndBlocker(s.ctx, s.keeper)
-	liquidity.BeginBlocker(s.ctx, s.keeper)
+	s.T().Helper()
+	s.app.EndBlock(abci.RequestEndBlock{})
+	s.app.Commit()
+	hdr := tmproto.Header{
+		Height: s.app.LastBlockHeight() + 1,
+		Time:   s.ctx.BlockTime().Add(5 * time.Second),
+	}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
+	s.ctx = s.app.BaseApp.NewContext(false, hdr)
+	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{Header: hdr})
 }
 
 // Below are useful helpers to write test code easily.

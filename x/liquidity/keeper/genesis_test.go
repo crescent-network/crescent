@@ -20,7 +20,6 @@ func (s *KeeperTestSuite) TestDefaultGenesis() {
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
-	k, ctx := s.keeper, s.ctx
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
@@ -40,42 +39,40 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	withdrawReq := s.withdraw(s.addr(1), pool.Id, poolCoin)
 	order := s.sellLimitOrder(s.addr(3), pair.Id, utils.ParseDec("1.0"), newInt(1000), 0, true)
 
-	genState := k.ExportGenesis(ctx)
+	genState := s.keeper.ExportGenesis(s.ctx)
 
 	bz := s.app.AppCodec().MustMarshalJSON(genState)
 
 	s.SetupTest()
 	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(utils.ParseTime("2022-01-01T00:00:00Z"))
-	k, ctx = s.keeper, s.ctx
 
 	var genState2 types.GenesisState
 	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
-	k.InitGenesis(ctx, genState2)
-	genState3 := k.ExportGenesis(ctx)
+	s.keeper.InitGenesis(s.ctx, genState2)
+	genState3 := s.keeper.ExportGenesis(s.ctx)
 
 	s.Require().Equal(*genState, *genState3)
 
-	depositReq2, found := k.GetDepositRequest(ctx, depositReq.PoolId, depositReq.Id)
+	depositReq2, found := s.keeper.GetDepositRequest(s.ctx, depositReq.PoolId, depositReq.Id)
 	s.Require().True(found)
 	s.Require().Equal(depositReq, depositReq2)
-	withdrawReq2, found := k.GetWithdrawRequest(ctx, withdrawReq.PoolId, withdrawReq.Id)
+	withdrawReq2, found := s.keeper.GetWithdrawRequest(s.ctx, withdrawReq.PoolId, withdrawReq.Id)
 	s.Require().True(found)
 	s.Require().Equal(withdrawReq, withdrawReq2)
-	order2, found := k.GetOrder(ctx, order.PairId, order.Id)
+	order2, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
 	s.Require().Equal(order, order2)
 }
 
 func (s *KeeperTestSuite) TestImportExportGenesisEmpty() {
-	k, ctx := s.keeper, s.ctx
-	genState := k.ExportGenesis(ctx)
+	genState := s.keeper.ExportGenesis(s.ctx)
 
 	var genState2 types.GenesisState
 	bz := s.app.AppCodec().MustMarshalJSON(genState)
 	s.app.AppCodec().MustUnmarshalJSON(bz, &genState2)
-	k.InitGenesis(ctx, genState2)
+	s.keeper.InitGenesis(s.ctx, genState2)
 
-	genState3 := k.ExportGenesis(ctx)
+	genState3 := s.keeper.ExportGenesis(s.ctx)
 	s.Require().Equal(*genState, genState2)
 	s.Require().Equal(genState2, *genState3)
 }

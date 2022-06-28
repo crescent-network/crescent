@@ -856,6 +856,14 @@ func TestRangedPool_BuyAmountTo(t *testing.T) {
 		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
 		{pool, utils.ParseDec("0.8"), sdk.NewInt(450560)},
 		{pool, utils.ParseDec("0.7"), sdk.NewInt(796682)},
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(957322), sdk.NewInt(3351038710333311), sdk.Int{},
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"),
+			),
+			utils.ParseDec("0.899580000000000000"),
+			sdk.NewInt(0),
+		},
 	} {
 		t.Run("", func(t *testing.T) {
 			amt := tc.pool.BuyAmountTo(tc.price)

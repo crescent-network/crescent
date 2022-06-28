@@ -200,7 +200,7 @@ func TestFindMatchableAmountAtSinglePrice(t *testing.T) {
 	}
 }
 
-func TestMatch_EdgeCase1(t *testing.T) {
+func TestMatch_edgecase1(t *testing.T) {
 	orders := []amm.Order{
 		newOrder(amm.Sell, utils.ParseDec("0.100"), sdk.NewInt(10000)),
 		newOrder(amm.Sell, utils.ParseDec("0.099"), sdk.NewInt(9995)),
