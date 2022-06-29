@@ -360,7 +360,7 @@ func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	// Create a pool with very low price.
 	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100000000000000000denom1,1000000denom2"), true)
-	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(100000000000000000), 10*time.Second, true)
+	order := s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000010000"), sdk.NewInt(100000000000000000), 10*time.Second, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	order, found := s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
@@ -631,7 +631,7 @@ func (s *KeeperTestSuite) TestRejectSmallOrders() {
 	// Too small orders.
 	msg = types.NewMsgLimitOrder(
 		s.addr(1), pair.Id, types.OrderDirectionBuy, utils.ParseCoin("101denom2"),
-		"denom1", utils.ParseDec("0.00010001"), sdk.NewInt(999999), 0)
+		"denom1", utils.ParseDec("0.00010001"), sdk.NewInt(999000), 0)
 	s.Require().NoError(msg.ValidateBasic())
 	_, err := s.keeper.LimitOrder(s.ctx, msg)
 	s.Require().ErrorIs(err, types.ErrTooSmallOrder)
@@ -700,7 +700,7 @@ func (s *KeeperTestSuite) TestPoolOrderOverflow() {
 	i, _ := sdk.NewIntFromString("10000000000000000000000000")
 	s.createPool(s.addr(0), pair.Id, sdk.NewCoins(sdk.NewInt64Coin("denom1", 1e6), sdk.NewCoin("denom2", i)), true)
 
-	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000001000"), sdk.NewInt(1e17), 0, true)
+	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.000000000000010000"), sdk.NewInt(1e17), 0, true)
 	s.Require().NotPanics(func() {
 		liquidity.EndBlocker(s.ctx, s.keeper)
 	})
@@ -788,7 +788,7 @@ func (s *KeeperTestSuite) TestExhaustRangedPool() {
 		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
 		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 		poolPrice := ammPool.Price()
-		if ry.Amount.IsZero() {
+		if ry.Amount.LT(sdk.NewInt(100)) {
 			s.Require().True(utils.DecApproxEqual(maxPrice, poolPrice))
 			break
 		}
@@ -803,7 +803,7 @@ func (s *KeeperTestSuite) TestExhaustRangedPool() {
 		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
 		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 		poolPrice := ammPool.Price()
-		if rx.Amount.IsZero() {
+		if rx.Amount.LT(sdk.NewInt(100)) {
 			s.Require().True(utils.DecApproxEqual(minPrice, poolPrice))
 			break
 		}
@@ -856,10 +856,11 @@ func (s *KeeperTestSuite) TestPoolPreserveK() {
 
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
+	tickPrec := s.keeper.GetTickPrecision(s.ctx)
 	for i := 0; i < 10; i++ {
-		minPrice := utils.RandomDec(r, utils.ParseDec("0.001"), utils.ParseDec("10.0"))
-		maxPrice := utils.RandomDec(r, minPrice.Mul(utils.ParseDec("1.01")), utils.ParseDec("100.0"))
-		initialPrice := utils.RandomDec(r, minPrice, maxPrice)
+		minPrice := amm.RandomTick(r, utils.ParseDec("0.001"), utils.ParseDec("10.0"), int(tickPrec))
+		maxPrice := amm.RandomTick(r, minPrice.Mul(utils.ParseDec("1.01")), utils.ParseDec("100.0"), int(tickPrec))
+		initialPrice := amm.RandomTick(r, minPrice, maxPrice, int(tickPrec))
 		s.createRangedPool(
 			s.addr(1), pair.Id, utils.ParseCoins("1_000000000000denom1,1_000000000000denom2"),
 			minPrice, maxPrice, initialPrice, true)

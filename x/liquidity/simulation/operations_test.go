@@ -104,10 +104,10 @@ func (s *SimTestSuite) TestSimulateMsgCreateRangedPool() {
 	s.Require().Equal(types.ModuleName, msg.Route())
 	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Creator)
 	s.Require().Equal(pair.Id, msg.PairId)
-	s.Require().Equal("674244795773782denom1,105889151stake", msg.DepositCoins.String())
-	s.Require().Equal("0.921152906927713733", msg.MinPrice.String())
-	s.Require().Equal("82.569984959368152283", msg.MaxPrice.String())
-	s.Require().Equal("13.706038631138651848", msg.InitialPrice.String())
+	s.Require().Equal("130275595denom1,169567169stake", msg.DepositCoins.String())
+	s.Require().Equal("0.030928000000000000", msg.MinPrice.String())
+	s.Require().Equal("92.378000000000000000", msg.MaxPrice.String())
+	s.Require().Equal("0.040475000000000000", msg.InitialPrice.String())
 }
 
 func (s *SimTestSuite) TestSimulateMsgDeposit() {
@@ -184,7 +184,7 @@ func (s *SimTestSuite) TestSimulateMsgLimitOrder() {
 	s.Require().Equal(types.OrderDirectionSell, msg.Direction)
 	s.Require().Equal("6010denom1", msg.OfferCoin.String())
 	s.Require().Equal("stake", msg.DemandCoinDenom)
-	s.Require().Equal("1.228000000000000000", msg.Price.String())
+	s.Require().Equal("1.228200000000000000", msg.Price.String())
 	s.Require().Equal("6010", msg.Amount.String())
 	s.Require().Equal("9h14m25.122290029s", msg.OrderLifespan.String())
 }

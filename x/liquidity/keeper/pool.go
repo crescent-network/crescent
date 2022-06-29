@@ -164,6 +164,22 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 
 // ValidateMsgCreateRangedPool validates types.MsgCreateRangedPool.
 func (k Keeper) ValidateMsgCreateRangedPool(ctx sdk.Context, msg *types.MsgCreateRangedPool) error {
+	tickPrec := k.GetTickPrecision(ctx)
+	if !amm.PriceToDownTick(msg.MinPrice, int(tickPrec)).Equal(msg.MinPrice) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min price is not on ticks")
+	}
+	if !amm.PriceToDownTick(msg.MaxPrice, int(tickPrec)).Equal(msg.MaxPrice) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price is not on ticks")
+	}
+	if !amm.PriceToDownTick(msg.InitialPrice, int(tickPrec)).Equal(msg.InitialPrice) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "initial price is not on ticks")
+	}
+
+	lowestTick := amm.LowestTick(int(tickPrec))
+	if msg.MinPrice.LT(lowestTick) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min price must not be less than %s", lowestTick)
+	}
+
 	pair, found := k.GetPair(ctx, msg.PairId)
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", msg.PairId)
@@ -173,12 +189,6 @@ func (k Keeper) ValidateMsgCreateRangedPool(ctx sdk.Context, msg *types.MsgCreat
 		if coin.Denom != pair.BaseCoinDenom && coin.Denom != pair.QuoteCoinDenom {
 			return sdkerrors.Wrapf(types.ErrInvalidCoinDenom, "coin denom %s is not in the pair", coin.Denom)
 		}
-	}
-
-	tickPrec := k.GetTickPrecision(ctx)
-	lowestTick := amm.LowestTick(int(tickPrec))
-	if msg.MinPrice.LT(lowestTick) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min price must not be less than %s", lowestTick)
 	}
 
 	return nil

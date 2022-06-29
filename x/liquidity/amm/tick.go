@@ -3,6 +3,7 @@ package amm
 import (
 	"math"
 	"math/big"
+	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -48,6 +49,10 @@ func (prec TickPrecision) RoundPrice(price sdk.Dec) sdk.Dec {
 
 func (prec TickPrecision) TickGap(price sdk.Dec) sdk.Dec {
 	return TickGap(price, int(prec))
+}
+
+func (prec TickPrecision) RandomTick(r *rand.Rand, minPrice, maxPrice sdk.Dec) sdk.Dec {
+	return RandomTick(r, minPrice, maxPrice, int(prec))
 }
 
 // char returns the characteristic(integral part) of
@@ -198,4 +203,15 @@ func TickGap(price sdk.Dec, prec int) sdk.Dec {
 	tick := PriceToDownTick(price, prec)
 	l := char(tick)
 	return pow10(l - prec)
+}
+
+// RandomTick returns a random tick within range [minPrice, maxPrice].
+// If prices are not on ticks, then prices are adjusted to the nearest
+// ticks.
+func RandomTick(r *rand.Rand, minPrice, maxPrice sdk.Dec, prec int) sdk.Dec {
+	minPrice = PriceToUpTick(minPrice, prec)
+	maxPrice = PriceToDownTick(maxPrice, prec)
+	minPriceIdx := TickToIndex(minPrice, prec)
+	maxPriceIdx := TickToIndex(maxPrice, prec)
+	return TickFromIndex(minPriceIdx+r.Intn(maxPriceIdx-minPriceIdx), prec)
 }

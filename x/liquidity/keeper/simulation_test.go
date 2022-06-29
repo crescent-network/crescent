@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestSimulation1() {
 
 	dustCollector := s.keeper.GetDustCollector(s.ctx)
 
-	const numBlocks, numOrders, numDeposits, numWithdraws = 100, 10, 2, 2
+	const numBlocks, numOrders, numDeposits, numWithdraws = 20, 10, 2, 2
 	fuzz := func() {
 		for i := 0; i < numBlocks; i++ {
 			pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
@@ -133,10 +133,10 @@ func (s *KeeperTestSuite) TestSimulation1() {
 		utils.ParseDec("0.999"), utils.ParseDec("1.001"), utils.ParseDec("1.0"), true)
 	fuzz()
 
-	// Add a ranged pool with price in range [10^-15, 2-(10^-15)].
+	// Add a ranged pool with price in range [10^-14, 2-(10^-4)].
 	s.createRangedPool(
 		s.addr(10000), pair.Id, utils.ParseCoins("1000000000denom1,1000000000denom2"),
-		sdk.NewDecWithPrec(1, 15), sdk.NewDec(2).Sub(sdk.NewDecWithPrec(1, 15)), utils.ParseDec("1.0"), true)
+		sdk.NewDecWithPrec(1, 14), sdk.NewDec(2).Sub(sdk.NewDecWithPrec(1, 4)), utils.ParseDec("1.0"), true)
 	fuzz()
 
 	// Add a ranged pool with price in range [10^-8, 10^20].

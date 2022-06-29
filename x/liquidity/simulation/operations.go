@@ -272,26 +272,34 @@ func SimulateMsgCreateRangedPool(ak types.AccountKeeper, bk types.BankKeeper, k 
 
 		poolCreationFee := k.GetPoolCreationFee(ctx)
 		minDepositAmt := k.GetMinInitialDepositAmount(ctx)
-		depositBaseCoin := sdk.NewCoin(
-			pair.BaseCoinDenom,
-			utils.RandomInt(r, sdk.ZeroInt(), spendable.Sub(poolCreationFee).AmountOf(pair.BaseCoinDenom)))
-		var depositQuoteCoin sdk.Coin
-		if depositBaseCoin.Amount.LT(minDepositAmt) {
-			depositQuoteCoin = sdk.NewCoin(
-				pair.QuoteCoinDenom,
-				utils.RandomInt(r, minDepositAmt, spendable.Sub(poolCreationFee).AmountOf(pair.QuoteCoinDenom)))
-		} else {
-			depositQuoteCoin = sdk.NewCoin(
-				pair.QuoteCoinDenom,
-				utils.RandomInt(r, sdk.ZeroInt(), spendable.Sub(poolCreationFee).AmountOf(pair.QuoteCoinDenom)))
+		tickPrec := amm.TickPrecision(k.GetTickPrecision(ctx))
+		var (
+			x, y                             sdk.Int
+			minPrice, maxPrice, initialPrice sdk.Dec
+		)
+		depositableCoins := spendable.Sub(poolCreationFee)
+		for {
+			x = utils.RandomInt(r, sdk.ZeroInt(), depositableCoins.AmountOf(pair.QuoteCoinDenom))
+			if x.LT(minDepositAmt) {
+				y = utils.RandomInt(r, minDepositAmt, depositableCoins.AmountOf(pair.BaseCoinDenom))
+			} else {
+				y = utils.RandomInt(r, sdk.ZeroInt(), depositableCoins.AmountOf(pair.BaseCoinDenom))
+			}
+			minPrice = amm.RandomTick(r, utils.ParseDec("0.00001"), utils.ParseDec("1"), int(tickPrec))
+			maxPrice = amm.RandomTick(r, minPrice.Mul(utils.ParseDec("1.01")), utils.ParseDec("10000"), int(tickPrec))
+			initialPrice = amm.RandomTick(r, minPrice, maxPrice, int(tickPrec))
+			pool, err := amm.CreateRangedPool(x, y, minPrice, maxPrice, initialPrice)
+			ax, ay := pool.Balances()
+			if err == nil && (ax.GTE(minDepositAmt) || ay.GTE(minDepositAmt)) {
+				break
+			}
 		}
 
-		minPrice := utils.RandomDec(r, utils.ParseDec("0.01"), utils.ParseDec("1"))
-		maxPrice := utils.RandomDec(r, minPrice, utils.ParseDec("100.0"))
-		initialPrice := utils.RandomDec(r, minPrice, maxPrice)
-
+		depositCoins := sdk.NewCoins(
+			sdk.NewCoin(pair.BaseCoinDenom, y),
+			sdk.NewCoin(pair.QuoteCoinDenom, x))
 		msg := types.NewMsgCreateRangedPool(
-			simAccount.Address, pair.Id, sdk.NewCoins(depositBaseCoin, depositQuoteCoin),
+			simAccount.Address, pair.Id, depositCoins,
 			minPrice, maxPrice, initialPrice)
 
 		txCtx := simulation.OperationInput{
