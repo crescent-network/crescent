@@ -477,7 +477,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		} else {
 			if pool != (types.Pool{}) {
 				rx, ry := k.GetPoolBalances(ctx, pool)
-				ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.ZeroInt())
+				ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 				minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
 			} else {
 				minPrice, maxPrice = utils.ParseDec("0.5"), utils.ParseDec("5.0")
