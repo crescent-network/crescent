@@ -534,22 +534,27 @@ func DeriveTranslation(rx, ry sdk.Int, minPrice, maxPrice sdk.Dec) (transX, tran
 		sqrtP = alpha.Add(sqrt(alpha.Power(2).Add(fourDec))).QuoInt64(2).Mul(sqrtXOverY)
 	}
 
-	// sqrtML = sqrt(M) * sqrt(L)
-	sqrtML := sqrtM.Mul(sqrtL)
-	if sqrtP.Equal(sqrtM) {
-		// transX = ryl / (1/M - 1/sqrt(M*L))
-		transX = ryDec.Quo(inv(minPrice).Sub(inv(sqrtML)))
-	} else {
-		// transX = rx / (sqrt(P/M) - 1)
-		transX = rxDec.Quo(sqrtP.Quo(sqrtM).Sub(oneDec))
+	var sqrtK sdk.Dec
+	if !sqrtP.Equal(sqrtM) {
+		// sqrtK = sqrt(K) = rx / (sqrt(P) - sqrt(M))
+		sqrtK = rxDec.Quo(sqrtP.Sub(sqrtM))
 	}
-	if sqrtP.Equal(sqrtL) {
-		// transY = rx / (L - sqrt(M*L))
-		transY = rxDec.Quo(maxPrice.Sub(sqrtML))
-	} else {
-		// transY = ry / (sqrt(L/P) - 1)
-		transY = ryDec.Quo(sqrtL.Quo(sqrtP).Sub(oneDec))
+	if !sqrtP.Equal(sqrtL) {
+		// sqrtK2 = sqrt(K') = ry / (1/sqrt(P) - 1/sqrt(L))
+		sqrtK2 := ryDec.Quo(inv(sqrtP).Sub(inv(sqrtL)))
+		if sqrtK.IsNil() { // P == M
+			sqrtK = sqrtK2
+		} else {
+			p := sqrtP.Power(2)
+			p1 := rxDec.Add(sqrtK.Mul(sqrtM)).Quo(ryDec.Add(sqrtK.Quo(sqrtL)))
+			p2 := rxDec.Add(sqrtK2.Mul(sqrtM)).Quo(ryDec.Add(sqrtK2.Quo(sqrtL)))
+			if p.Sub(p1).Abs().GT(p.Sub(p2).Abs()) {
+				sqrtK = sqrtK2
+			}
+		}
 	}
+	transX = sqrtK.Mul(sqrtM)
+	transY = sqrtK.Quo(sqrtL)
 
 	return
 }

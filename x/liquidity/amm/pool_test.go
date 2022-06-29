@@ -862,7 +862,7 @@ func TestRangedPool_BuyAmountTo(t *testing.T) {
 				utils.ParseDec("0.9"), utils.ParseDec("1.1"),
 			),
 			utils.ParseDec("0.899580000000000000"),
-			sdk.NewInt(0),
+			sdk.NewInt(1063691),
 		},
 	} {
 		t.Run("", func(t *testing.T) {
