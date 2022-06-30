@@ -63,7 +63,7 @@ crescentd version --long
 
 ## Dependency
 
-Crescent Core uses a customized Cosmos SDK. Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.44.5...v1.0.2-sdk-0.44.5).
+Crescent Core uses a customized Cosmos SDK. Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.45.3...v1.1.0-sdk-0.45.3).
 
 | Requirement           | Notes             |
 |-----------------------|-------------------|
@@ -75,7 +75,7 @@ Crescent Core uses a customized Cosmos SDK. Please check the differences on [her
 The documentation is available in [docs](docs) directory. If you are a developer interested in technical specification, see inside each `x/{module}`'s `spec` directory.
 
 * [Crescent Official Docs](https://docs.crescent.network/)
-* [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent)
+* [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent/2.0.0)
 
 ## Community
 
