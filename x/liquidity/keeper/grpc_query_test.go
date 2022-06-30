@@ -870,6 +870,56 @@ func (s *KeeperTestSuite) TestGRPCOrderBooks() {
 			},
 		},
 		{
+			"empty pair ids",
+			&types.QueryOrderBooksRequest{
+				PairIds:        nil,
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"empty tick precisions",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: nil,
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"zero num ticks",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       0,
+			},
+			true,
+			nil,
+		},
+		{
+			"duplicate pair ids",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id, pair.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"duplicate tick precisions",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: []uint32{3, 3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
 			"pair id not found",
 			&types.QueryOrderBooksRequest{
 				PairIds:        []uint64{3},
