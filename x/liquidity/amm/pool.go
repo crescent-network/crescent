@@ -108,6 +108,9 @@ func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 	return pool.Price(), true
 }
 
+// BuyAmountOver returns the amount of buy orders for price greater than
+// or equal to given price.
+// amt = (X - P*Y)/P
 func (pool *BasicPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	if price.LT(MinPoolPrice) {
 		price = MinPoolPrice
@@ -144,6 +147,9 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec, _ bool) (amt sdk.Int) {
 	return
 }
 
+// BuyAmountTo returns the amount of buy orders of the pool for price,
+// where BuyAmountTo is used when the pool price is higher than the highest
+// price of the orderbook.
 func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.LT(MinPoolPrice) {
 		price = MinPoolPrice
@@ -169,6 +175,9 @@ func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 	return
 }
 
+// SellAmountTo returns the amount of sell orders of the pool for price,
+// where SellAmountTo is used when the pool price is lower than the lowest
+// price of the orderbook.
 func (pool *BasicPool) SellAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.GT(MaxPoolPrice) {
 		price = MaxPoolPrice
@@ -367,6 +376,8 @@ func (pool *RangedPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 	return
 }
 
+// SellAmountUnder returns the amount of sell orders for price less than
+// or equal to given price.
 func (pool *RangedPool) SellAmountUnder(price sdk.Dec, _ bool) (amt sdk.Int) {
 	if price.GT(pool.maxPrice) {
 		price = pool.maxPrice
@@ -385,6 +396,9 @@ func (pool *RangedPool) SellAmountUnder(price sdk.Dec, _ bool) (amt sdk.Int) {
 	return
 }
 
+// BuyAmountTo returns the amount of buy orders of the pool for price,
+// where BuyAmountTo is used when the pool price is higher than the highest
+// price of the orderbook.
 func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.LT(pool.minPrice) {
 		price = pool.minPrice
@@ -413,6 +427,9 @@ func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 	return
 }
 
+// SellAmountTo returns the amount of sell orders of the pool for price,
+// where SellAmountTo is used when the pool price is lower than the lowest
+// price of the orderbook.
 func (pool *RangedPool) SellAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.GT(pool.maxPrice) {
 		price = pool.maxPrice
