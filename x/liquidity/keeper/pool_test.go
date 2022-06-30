@@ -111,6 +111,14 @@ func (s *KeeperTestSuite) TestCreateRangedPool() {
 			nil,
 			"min price must not be less than 0.000000000000100000: invalid request",
 		},
+		{
+			"too small deposit amount",
+			types.NewMsgCreateRangedPool(
+				poolCreator, pair.Id, utils.ParseCoins("1000000denom1,10denom2"),
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"), utils.ParseDec("1.1")),
+			nil,
+			"insufficient deposit amount",
+		},
 	} {
 		s.Run(tc.name, func() {
 			s.Require().NoError(tc.msg.ValidateBasic())

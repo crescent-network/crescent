@@ -835,6 +835,73 @@ func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 	}
 }
 
+func (s *KeeperTestSuite) TestGRPCOrderBooks() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("1.0")
+	s.keeper.SetPair(s.ctx, pair)
+
+	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
+
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.02"), sdk.NewInt(1000000), time.Minute, true)
+
+	s.buyLimitOrder(s.addr(3), pair2.Id, utils.ParseDec("1.02"), sdk.NewInt(10000), time.Minute, true)
+	s.sellLimitOrder(s.addr(4), pair2.Id, utils.ParseDec("1.08"), sdk.NewInt(10000), time.Minute, true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryOrderBooksRequest
+		expectErr bool
+		postRun   func(*types.QueryOrderBooksResponse)
+	}{
+		{
+			"basic case",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			false,
+			func(resp *types.QueryOrderBooksResponse) {
+				s.Require().Len(resp.Pairs, 1)
+				s.Require().EqualValues(pair.Id, resp.Pairs[0].PairId)
+				s.Require().True(decEq(utils.ParseDec("1.01"), resp.Pairs[0].BasePrice))
+				s.Require().Len(resp.Pairs[0].OrderBooks, 1)
+			},
+		},
+		{
+			"pair id not found",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{3},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"pair does not have last price",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair2.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestEmptyOrderBook() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pair.LastPrice = utils.ParseDecP("1.0") // manually set last price
