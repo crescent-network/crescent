@@ -40,6 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking Changes
 
+* (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `OrderBooks` query endpoint:
+  * `OrderBooks`: `/crescent/liquidity/v1beta1/order_books`
 * (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Rename existing `Stakings` endpoint to `Position` and add three new endpoints:
   * `Stakings`: `/crescent/farming/v1beta1/stakings/{farmer}`
   * `QueuedStakings`: `/crescent/farming/v1beta1/queued_stakings/{farmer}`
@@ -47,6 +49,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `create-ranged-pool` tx cmd and `order-books` query cmd:
+  * `create-ranged-pool [pair-id] [deposit-coins] [min-price] [max-price] [initial-price]`
+  * `order-books [pair-ids] [tick-precisions]`
 * (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Rename existing `stakings` query to `position` and add three new queries:
   * `stakings [farmer]`
   * `queued-stakings [farmer]`
@@ -54,6 +59,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Change `Pool` struct for ranged pools and refactor matching logic
+  * Add `type`, `creator`, `min_price` and `max_price` fields to `Pool` struct
+  * Refactor matching logic both for fairness of matching and efficiency of pool order placement
 * (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Time-based queued staking and new UnharvestedRewards struct
   * Changed/added kv-store keys:
     * QueuedStaking: `0x23 | EndTimeLen (1 byte) | sdk.FormatTimeBytes(EndTime) | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(QueuedStaking)`
