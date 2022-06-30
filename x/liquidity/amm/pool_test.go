@@ -894,6 +894,45 @@ func TestRangedPool_SellAmountTo(t *testing.T) {
 	}
 }
 
+func TestRangedPool_exhaust(t *testing.T) {
+	for _, tc := range []struct {
+		pool *amm.RangedPool
+	}{
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{},
+				utils.ParseDec("0.5"), utils.ParseDec("2.0")),
+		},
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(1_000000000000000000), sdk.NewInt(9_000000000000000000), sdk.Int{},
+				utils.ParseDec("0.1001"), utils.ParseDec("10.05")),
+		},
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(123456789), sdk.NewInt(987654321), sdk.Int{},
+				utils.ParseDec("0.05"), utils.ParseDec("20.1")),
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			rx, ry := tc.pool.Balances()
+			minPrice := tc.pool.MinPrice()
+			maxPrice := tc.pool.MaxPrice()
+			orders := amm.PoolSellOrders(tc.pool, amm.DefaultOrderer, minPrice, maxPrice, 4)
+			amt := amm.TotalAmount(orders)
+			require.True(t, amt.LTE(ry))
+			require.True(t, amt.GTE(ry.ToDec().Mul(utils.ParseDec("0.99")).TruncateInt()))
+			orders = amm.PoolBuyOrders(tc.pool, amm.DefaultOrderer, minPrice, maxPrice, 4)
+			x := sdk.ZeroInt()
+			for _, order := range orders {
+				x = x.Add(order.GetPrice().MulInt(order.GetAmount()).TruncateInt())
+			}
+			require.True(t, x.LTE(rx))
+			require.True(t, x.GTE(rx.ToDec().Mul(utils.ParseDec("0.99")).TruncateInt()))
+		})
+	}
+}
+
 func TestInitialPoolCoinSupply(t *testing.T) {
 	for _, tc := range []struct {
 		x, y sdk.Int
