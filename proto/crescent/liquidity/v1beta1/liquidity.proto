@@ -69,21 +69,30 @@ message Pair {
   uint64 current_batch_id = 7;
 }
 
-// Pool defines a basic liquidity pool with no min-price and max-price.
+// Pool defines generic liquidity pool object which can be either a basic pool or a
+// ranged pool.
 message Pool {
-  uint64 id = 1;
+  PoolType type = 1;
 
-  uint64 pair_id = 2;
+  uint64 id = 2;
 
-  string reserve_address = 3;
+  uint64 pair_id = 3;
 
-  string pool_coin_denom = 4;
+  string creator = 4;
 
-  uint64 last_deposit_request_id = 5;
+  string reserve_address = 5;
 
-  uint64 last_withdraw_request_id = 6;
+  string pool_coin_denom = 6;
 
-  bool disabled = 7;
+  string min_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  uint64 last_deposit_request_id = 9;
+
+  uint64 last_withdraw_request_id = 10;
+
+  bool disabled = 11;
 }
 
 // DepositRequest defines a deposit request.
@@ -176,6 +185,20 @@ message Order {
   google.protobuf.Timestamp expire_at = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
   OrderStatus status = 14;
+}
+
+// PoolType enumerates pool types.
+enum PoolType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // POOL_TYPE_UNSPECIFIED specifies unknown pool type
+  POOL_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "PoolTypeUnspecified"];
+
+  // POOL_TYPE_BASIC specifies the basic pool type
+  POOL_TYPE_BASIC = 1 [(gogoproto.enumvalue_customname) = "PoolTypeBasic"];
+
+  // POOL_TYPE_RANGED specifies the ranged pool type
+  POOL_TYPE_RANGED = 2 [(gogoproto.enumvalue_customname) = "PoolTypeRanged"];
 }
 
 // OrderDirection enumerates order directions.

@@ -80,6 +80,10 @@ service Query {
   rpc OrdersByOrderer(QueryOrdersByOrdererRequest) returns (QueryOrdersResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/orders/{orderer}";
   }
+
+  rpc OrderBooks(QueryOrderBooksRequest) returns (QueryOrderBooksResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/order_books";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -232,24 +236,67 @@ message QueryOrdersByOrdererRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
+// QueryOrderBooksRequest is request type for the Query/OrderBooks RPC method.
+message QueryOrderBooksRequest {
+  repeated uint64 pair_ids        = 1;
+  repeated uint32 tick_precisions = 2;
+  uint32          num_ticks       = 3;
+}
+
+// QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.
+message QueryOrderBooksResponse {
+  repeated OrderBookPairResponse pairs = 2 [(gogoproto.nullable) = false];
+}
+
 //
 // Custom response messages
 //
 
 // PoolResponse defines a custom pool response message.
 message PoolResponse {
-  uint64 id = 1;
+  PoolType type = 1;
 
-  uint64 pair_id = 2;
+  uint64 id = 2;
 
-  string reserve_address = 3;
+  uint64 pair_id = 3;
 
-  string pool_coin_denom = 4;
+  string creator = 4;
 
-  repeated cosmos.base.v1beta1.Coin balances = 5
+  string reserve_address = 5;
+
+  string pool_coin_denom = 6;
+
+  string min_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  repeated cosmos.base.v1beta1.Coin balances = 9
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  uint64 last_deposit_request_id = 6;
+  uint64 last_deposit_request_id = 10;
 
-  uint64 last_withdraw_request_id = 7;
+  uint64 last_withdraw_request_id = 11;
+
+  bool disabled = 12;
+}
+
+message OrderBookPairResponse {
+  uint64 pair_id    = 1;
+  string base_price = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated OrderBookResponse order_books = 3 [(gogoproto.nullable) = false];
+}
+
+message OrderBookResponse {
+  uint32                         tick_precision = 1;
+  repeated OrderBookTickResponse buys           = 2 [(gogoproto.nullable) = false];
+  repeated OrderBookTickResponse sells          = 3 [(gogoproto.nullable) = false];
+}
+
+message OrderBookTickResponse {
+  string price = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string user_order_amount = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string pool_order_amount = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }

@@ -36,6 +36,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryWithdrawRequestCmd(),
 		NewQueryOrdersCmd(),
 		NewQueryOrderCmd(),
+		NewQueryOrderBooksCmd(),
 	)
 
 	return cmd
@@ -49,6 +50,7 @@ func NewQueryParamsCmd() *cobra.Command {
 		Short: "Query the current liquidity parameters information",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query values set as liquidity parameters.
+
 Example:
 $ %s query %s params
 `,
@@ -85,6 +87,7 @@ func NewQueryPairsCmd() *cobra.Command {
 		Short: "Query for all pairs",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all existing pairs on a network.
+
 Example:
 $ %s query %s pairs
 $ %s query %s pairs --denoms=uatom
@@ -135,6 +138,7 @@ func NewQueryPairCmd() *cobra.Command {
 		Short: "Query details of the pair",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details of the pair.
+
 Example:
 $ %s query %s pair 1
 `,
@@ -178,6 +182,7 @@ func NewQueryPoolsCmd() *cobra.Command {
 		Short: "Query for all liquidity pools",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all existing liquidity pools on a network.
+
 Example:
 $ %s query %s pools
 $ %s query %s pools --pair-id=1
@@ -244,6 +249,7 @@ func NewQueryPoolCmd() *cobra.Command {
 		Short: "Query details of the liquidity pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details of the liquidity pool
+
 Example:
 $ %s query %s pool 1
 $ %s query %s pool --pool-coin-denom=pool1
@@ -317,6 +323,7 @@ func NewQueryDepositRequestsCmd() *cobra.Command {
 		Short: "Query for all deposit requests in the pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all deposit requests in the pool.
+
 Example:
 $ %s query %s deposit-requests 1
 `,
@@ -368,6 +375,7 @@ func NewQueryDepositRequestCmd() *cobra.Command {
 		Short: "Query details of the specific deposit request",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details of the specific deposit request.
+
 Example:
 $ %s query %s deposit-requests 1 1
 `,
@@ -419,6 +427,7 @@ func NewQueryWithdrawRequestsCmd() *cobra.Command {
 		Short: "Query for all withdraw requests in the pool.",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all withdraw requests in the pool.
+
 Example:
 $ %s query %s withdraw-requests 1
 `,
@@ -470,6 +479,7 @@ func NewQueryWithdrawRequestCmd() *cobra.Command {
 		Short: "Query details of the specific withdraw request",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details of the specific withdraw request.
+
 Example:
 $ %s query %s withdraw-requests 1 1
 `,
@@ -521,6 +531,7 @@ func NewQueryOrdersCmd() *cobra.Command {
 		Short: "Query for all orders in the pair",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for all orders in the pair.
+
 Example:
 $ %s query %s orders cre1...
 $ %s query %s orders --pair-id=1 cre1...
@@ -598,6 +609,7 @@ func NewQueryOrderCmd() *cobra.Command {
 		Short: "Query details of the specific order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query details of the specific order.
+
 Example:
 $ %s query %s order 1 1
 `,
@@ -636,6 +648,74 @@ $ %s query %s order 1 1
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewQueryOrderBooksCmd implements the order books query command.
+func NewQueryOrderBooksCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "order-books [pair-ids] [tick-precisions]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Query order books",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query order books of specified pairs and tick precisions.
+
+Example:
+$ %s query %s order-books 1 1,2,3 --num-ticks=10
+$ %s query %s order-books 2,3 3
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			numTicks, _ := cmd.Flags().GetUint32(FlagNumTicks)
+
+			pairIdStrings := strings.Split(args[0], ",")
+			var pairIds []uint64
+			for _, pairIdStr := range pairIdStrings {
+				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("parse pair id: %w", err)
+				}
+				pairIds = append(pairIds, pairId)
+			}
+
+			tickPrecStrings := strings.Split(args[1], ",")
+			var tickPrecisions []uint32
+			for _, tickPrecStr := range tickPrecStrings {
+				tickPrec, err := strconv.ParseUint(tickPrecStr, 10, 32)
+				if err != nil {
+					return fmt.Errorf("parse tick precision: %w", err)
+				}
+				tickPrecisions = append(tickPrecisions, uint32(tickPrec))
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.OrderBooks(
+				cmd.Context(),
+				&types.QueryOrderBooksRequest{
+					PairIds:        pairIds,
+					TickPrecisions: tickPrecisions,
+					NumTicks:       numTicks,
+				})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	cmd.Flags().Uint32P(FlagNumTicks, "n", 20, "maximum number of ticks displayed on each buy/sell side")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

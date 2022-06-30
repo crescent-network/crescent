@@ -4,6 +4,7 @@ package types
 const (
 	EventTypeCreatePair       = "create_pair"
 	EventTypeCreatePool       = "create_pool"
+	EventTypeCreateRangedPool = "create_ranged_pool"
 	EventTypeDeposit          = "deposit"
 	EventTypeWithdraw         = "withdraw"
 	EventTypeLimitOrder       = "limit_order"

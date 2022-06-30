@@ -3,6 +3,7 @@ package amm
 import (
 	"math"
 	"math/big"
+	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -44,6 +45,14 @@ func (prec TickPrecision) TickFromIndex(i int) sdk.Dec {
 
 func (prec TickPrecision) RoundPrice(price sdk.Dec) sdk.Dec {
 	return RoundPrice(price, int(prec))
+}
+
+func (prec TickPrecision) TickGap(price sdk.Dec) sdk.Dec {
+	return TickGap(price, int(prec))
+}
+
+func (prec TickPrecision) RandomTick(r *rand.Rand, minPrice, maxPrice sdk.Dec) sdk.Dec {
+	return RandomTick(r, minPrice, maxPrice, int(prec))
 }
 
 // char returns the characteristic(integral part) of
@@ -189,58 +198,20 @@ func RoundPrice(price sdk.Dec, prec int) sdk.Dec {
 	return TickFromIndex(RoundTickIndex(TickToIndex(tick, prec)), prec)
 }
 
-// Ticks returns ticks around basePrice with maximum number of numTicks*2+1.
-// If basePrice fits in tick system, then the number of ticks will be numTicks*2+1.
-// Else, the number will be numTicks*2.
-func Ticks(basePrice sdk.Dec, numTicks, tickPrec int) []sdk.Dec {
-	prec := TickPrecision(tickPrec)
-	baseTick := prec.PriceToDownTick(basePrice)
-	i := prec.TickToIndex(baseTick)
-	highestTick := prec.TickFromIndex(i + numTicks)
-	var lowestTick sdk.Dec
-	if baseTick.Equal(basePrice) {
-		lowestTick = prec.TickFromIndex(i - numTicks)
-	} else {
-		lowestTick = prec.TickFromIndex(i - numTicks + 1)
-	}
-	var ticks []sdk.Dec
-	for tick := lowestTick; tick.LTE(highestTick); tick = prec.UpTick(tick) {
-		ticks = append(ticks, tick)
-	}
-	sortTicks(ticks)
-	return ticks
+// TickGap returns tick gap at given price.
+func TickGap(price sdk.Dec, prec int) sdk.Dec {
+	tick := PriceToDownTick(price, prec)
+	l := char(tick)
+	return pow10(l - prec)
 }
 
-// EvenTicks returns ticks around basePrice with maximum number of numTicks*2+1.
-// The gap is the same across all ticks.
-// If basePrice fits in tick system, then the number of ticks will be numTicks*2+1.
-// Else, the number will be numTicks*2.
-func EvenTicks(basePrice sdk.Dec, numTicks, tickPrec int) []sdk.Dec {
-	prec := TickPrecision(tickPrec)
-	baseTick := prec.PriceToDownTick(basePrice)
-	highestTick := prec.TickFromIndex(prec.TickToIndex(baseTick) + numTicks)
-	highestGap := highestTick.Sub(prec.DownTick(highestTick))
-	currentGap := prec.UpTick(baseTick).Sub(baseTick)
-	var (
-		start         sdk.Dec
-		numTotalTicks int
-	)
-	if !currentGap.Equal(highestGap) {
-		start = pow10(char(highestTick)).Sub(highestGap)
-		numTotalTicks = 2 * numTicks
-	} else {
-		start = baseTick
-		if baseTick.Equal(basePrice) {
-			numTotalTicks = 2*numTicks + 1
-		} else {
-			numTotalTicks = 2 * numTicks
-		}
-	}
-	highestTick = start.Add(highestGap.MulInt64(int64(numTicks)))
-	var ticks []sdk.Dec
-	for i, tick := 0, highestTick; i < numTotalTicks; i, tick = i+1, tick.Sub(highestGap) {
-		ticks = append(ticks, tick)
-	}
-	sortTicks(ticks)
-	return ticks
+// RandomTick returns a random tick within range [minPrice, maxPrice].
+// If prices are not on ticks, then prices are adjusted to the nearest
+// ticks.
+func RandomTick(r *rand.Rand, minPrice, maxPrice sdk.Dec, prec int) sdk.Dec {
+	minPrice = PriceToUpTick(minPrice, prec)
+	maxPrice = PriceToDownTick(maxPrice, prec)
+	minPriceIdx := TickToIndex(minPrice, prec)
+	maxPriceIdx := TickToIndex(maxPrice, prec)
+	return TickFromIndex(minPriceIdx+r.Intn(maxPriceIdx-minPriceIdx), prec)
 }

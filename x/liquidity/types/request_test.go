@@ -61,9 +61,9 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of deposit coins",
 			func(req *types.DepositRequest) {
-				req.DepositCoins = utils.ParseCoins("1000000denom1")
+				req.DepositCoins = utils.ParseCoins("1000000denom1,1000000denom2,1000000denom3")
 			},
-			"wrong number of deposit coins: 1",
+			"wrong number of deposit coins: 3",
 		},
 		{
 			"invalid accepted coins",
@@ -75,9 +75,9 @@ func TestDepositRequest_Validate(t *testing.T) {
 		{
 			"wrong number of accepted coins",
 			func(req *types.DepositRequest) {
-				req.AcceptedCoins = utils.ParseCoins("1000000denom1")
+				req.AcceptedCoins = utils.ParseCoins("1000000denom1,1000000denom2,1000000denom3")
 			},
-			"wrong number of accepted coins: 1",
+			"wrong number of accepted coins: 3",
 		},
 		{
 			"wrong denom pair",
@@ -110,7 +110,7 @@ func TestDepositRequest_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.NewPool(1, 1)
+			pool := types.NewBasicPool(1, 1, testAddr)
 			depositor := sdk.AccAddress(crypto.AddressHash([]byte("depositor")))
 			msg := types.NewMsgDeposit(depositor, 1, utils.ParseCoins("1000000denom1,1000000denom2"))
 			req := types.NewDepositRequest(msg, pool, 1, 1)

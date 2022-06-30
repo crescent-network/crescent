@@ -136,6 +136,115 @@ func TestMsgCreatePool(t *testing.T) {
 	}
 }
 
+func TestMsgCreateRangedPool(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		malleate    func(msg *types.MsgCreateRangedPool)
+		expectedErr string
+	}{
+		{
+			"happy case",
+			func(msg *types.MsgCreateRangedPool) {},
+			"", // empty means no error expected
+		},
+		{
+			"invalid pair id",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.PairId = 0
+			},
+			"pair id must not be 0: invalid request",
+		},
+		{
+			"invalid creator",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.Creator = "invalidaddr"
+			},
+			"invalid creator address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid deposit coins",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.DepositCoins = sdk.Coins{utils.ParseCoin("0denom1"), utils.ParseCoin("1000000denom2")}
+			},
+			"coin 0denom1 amount is not positive",
+		},
+		{
+			"invalid deposit coins",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.DepositCoins = sdk.Coins{utils.ParseCoin("1000000denom1"), utils.ParseCoin("0denom2")}
+			},
+			"coin denom2 amount is not positive",
+		},
+		{
+			"invalid deposit coins",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.DepositCoins = utils.ParseCoins("1000000denom1,1000000denom2,1000000denom3")
+			},
+			"wrong number of deposit coins: 3: invalid request",
+		},
+		{
+			"too large deposit coins",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.DepositCoins = utils.ParseCoins("100000000000000000000000000000000000000000denom1,100000000000000000000000000000000000000000denom2")
+			},
+			"deposit coin 100000000000000000000000000000000000000000denom1 is bigger than the max amount 10000000000000000000000000000000000000000: invalid request",
+		},
+		{
+			"too small min price",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.MinPrice = sdk.NewDecWithPrec(1, 16)
+			},
+			"min price must not be lower than 0.000000000000001000: invalid request",
+		},
+		{
+			"too large max price",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.MaxPrice = sdk.NewIntWithDecimal(1, 25).ToDec()
+			},
+			"max price must not be higher than 100000000000000000000.000000000000000000: invalid request",
+		},
+		{
+			"max price not higher than min price",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.MaxPrice = utils.ParseDec("0.5")
+			},
+			"max price must be higher than min price: invalid request",
+		},
+		{
+			"too close min price and max price",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.MaxPrice = utils.ParseDec("0.500005")
+			},
+			"min price and max price are too close: invalid request",
+		},
+		{
+			"initial price out of range",
+			func(msg *types.MsgCreateRangedPool) {
+				msg.InitialPrice = utils.ParseDec("2.01")
+			},
+			"initial price must not be higher than max price: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgCreateRangedPool(
+				testAddr, 1, utils.ParseCoins("1000000denom1,1000000denom2"),
+				utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"))
+			tc.malleate(msg)
+			require.Equal(t, types.TypeMsgCreateRangedPool, msg.Type())
+			require.Equal(t, types.RouterKey, msg.Route())
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				signers := msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, msg.GetCreator(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func TestMsgDeposit(t *testing.T) {
 	testCases := []struct {
 		name        string

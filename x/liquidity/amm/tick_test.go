@@ -1,7 +1,6 @@
 package amm_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -72,6 +71,8 @@ func TestUpTick(t *testing.T) {
 		{utils.ParseDec("0.1000"), 3, utils.ParseDec("0.1001")},
 		{utils.ParseDec("0.09999"), 3, utils.ParseDec("0.1000")},
 		{utils.ParseDec("0.09997"), 3, utils.ParseDec("0.09998")},
+		{utils.ParseDec("1000.1"), 3, utils.ParseDec("1001")},
+		{utils.ParseDec("1000.9"), 3, utils.ParseDec("1001")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.UpTick(tc.price, tc.prec)))
@@ -95,6 +96,8 @@ func TestDownTick(t *testing.T) {
 		{utils.ParseDec("0.1"), 3, utils.ParseDec("0.09999")},
 		{utils.ParseDec("0.00000000000001000"), 3, utils.ParseDec("0.000000000000009999")},
 		{utils.ParseDec("0.000000000000001001"), 3, utils.ParseDec("0.000000000000001000")},
+		{utils.ParseDec("1000.1"), 3, utils.ParseDec("1000")},
+		{utils.ParseDec("1000.9"), 3, utils.ParseDec("1000")},
 	} {
 		t.Run("", func(t *testing.T) {
 			require.True(sdk.DecEq(t, tc.expected, amm.DownTick(tc.price, tc.prec)))
@@ -201,6 +204,25 @@ func TestRoundPrice(t *testing.T) {
 	}
 }
 
+func TestTickGap(t *testing.T) {
+	for _, tc := range []struct {
+		price    sdk.Dec
+		tickPrec int
+		expected sdk.Dec
+	}{
+		{utils.ParseDec("1.0"), 3, utils.ParseDec("0.001")},
+		{utils.ParseDec("1234"), 3, utils.ParseDec("1")},
+		{utils.ParseDec("9999"), 3, utils.ParseDec("1")},
+		{utils.ParseDec("10000"), 3, utils.ParseDec("10")},
+		{utils.ParseDec("10009"), 3, utils.ParseDec("10")},
+		{utils.ParseDec("0.00000000009"), 3, utils.ParseDec("0.00000000000001")},
+	} {
+		t.Run("", func(t *testing.T) {
+			require.True(sdk.DecEq(t, tc.expected, amm.TickGap(tc.price, tc.tickPrec)))
+		})
+	}
+}
+
 func BenchmarkUpTick(b *testing.B) {
 	b.Run("price fit in ticks", func(b *testing.B) {
 		price := utils.ParseDec("0.9999")
@@ -240,261 +262,4 @@ func BenchmarkDownTick(b *testing.B) {
 			amm.DownTick(price, 3)
 		}
 	})
-}
-
-func TestTicks(t *testing.T) {
-	dec := utils.ParseDec
-	for i, tc := range []struct {
-		basePrice sdk.Dec
-		numTicks  int
-		ticks     []sdk.Dec
-	}{
-		{
-			dec("999.9"), 3,
-			[]sdk.Dec{
-				dec("1002"),
-				dec("1001"),
-				dec("1000"),
-				dec("999.9"),
-				dec("999.8"),
-				dec("999.7"),
-				dec("999.6"),
-			},
-		},
-		{
-			dec("2.0"), 3,
-			[]sdk.Dec{
-				dec("2.003"),
-				dec("2.002"),
-				dec("2.001"),
-				dec("2.000"),
-				dec("1.999"),
-				dec("1.998"),
-				dec("1.997"),
-			},
-		},
-		{
-			dec("1.000001"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-			},
-		},
-		{
-			dec("1.0"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-			},
-		},
-		{
-			dec("0.99999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-			},
-		},
-		{
-			dec("0.9999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-			},
-		},
-		{
-			dec("0.99985"), 3,
-			[]sdk.Dec{
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-			},
-		},
-		{
-			dec("0.9998"), 3,
-			[]sdk.Dec{
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-			},
-		},
-		{
-			dec("0.99975"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-			},
-		},
-		{
-			dec("0.9997"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-				dec("0.9994"),
-			},
-		},
-	} {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			require.Equal(t, tc.ticks, amm.Ticks(tc.basePrice, tc.numTicks, int(defTickPrec)))
-		})
-	}
-}
-
-func TestEvenTicks(t *testing.T) {
-	dec := utils.ParseDec
-	for i, tc := range []struct {
-		basePrice sdk.Dec
-		numTicks  int
-		ticks     []sdk.Dec
-	}{
-		{
-			dec("999.9"), 3,
-			[]sdk.Dec{
-				dec("1002"),
-				dec("1001"),
-				dec("1000"),
-				dec("999.0"),
-				dec("998.0"),
-				dec("997.0"),
-			},
-		},
-		{
-			dec("2.0"), 3,
-			[]sdk.Dec{
-				dec("2.003"),
-				dec("2.002"),
-				dec("2.001"),
-				dec("2.000"),
-				dec("1.999"),
-				dec("1.998"),
-				dec("1.997"),
-			},
-		},
-		{
-			dec("1.000001"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-			},
-		},
-		{
-			dec("1.0"), 3,
-			[]sdk.Dec{
-				dec("1.003"),
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.9999"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99985"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.9998"), 3,
-			[]sdk.Dec{
-				dec("1.002"),
-				dec("1.001"),
-				dec("1.000"),
-				dec("0.999"),
-				dec("0.998"),
-				dec("0.997"),
-			},
-		},
-		{
-			dec("0.99975"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-			},
-		},
-		{
-			dec("0.9997"), 3,
-			[]sdk.Dec{
-				dec("1.000"),
-				dec("0.9999"),
-				dec("0.9998"),
-				dec("0.9997"),
-				dec("0.9996"),
-				dec("0.9995"),
-				dec("0.9994"),
-			},
-		},
-	} {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			require.Equal(t, tc.ticks, amm.EvenTicks(tc.basePrice, tc.numTicks, int(defTickPrec)))
-		})
-	}
 }

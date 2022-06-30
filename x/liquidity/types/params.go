@@ -13,7 +13,7 @@ import (
 // Liquidity params default values
 const (
 	DefaultBatchSize        uint32 = 1
-	DefaultTickPrecision    uint32 = 3
+	DefaultTickPrecision    uint32 = 4
 	DefaultMaxOrderLifespan        = 24 * time.Hour
 )
 

@@ -47,13 +47,13 @@ func (req DepositRequest) Validate() error {
 	if err := req.DepositCoins.Validate(); err != nil {
 		return fmt.Errorf("invalid deposit coins: %w", err)
 	}
-	if len(req.DepositCoins) != 2 {
+	if len(req.DepositCoins) == 0 || len(req.DepositCoins) > 2 {
 		return fmt.Errorf("wrong number of deposit coins: %d", len(req.DepositCoins))
 	}
 	if err := req.AcceptedCoins.Validate(); err != nil {
 		return fmt.Errorf("invalid accepted coins: %w", err)
 	}
-	if len(req.AcceptedCoins) != 0 && len(req.AcceptedCoins) != 2 {
+	if len(req.AcceptedCoins) > 2 {
 		return fmt.Errorf("wrong number of accepted coins: %d", len(req.AcceptedCoins))
 	}
 	for _, coin := range req.AcceptedCoins {

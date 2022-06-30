@@ -21,14 +21,15 @@ import (
 
 // Simulation operation weights constants.
 const (
-	OpWeightMsgCreatePair      = "op_weight_msg_create_pair"
-	OpWeightMsgCreatePool      = "op_weight_msg_create_pool"
-	OpWeightMsgDeposit         = "op_weight_msg_deposit"
-	OpWeightMsgWithdraw        = "op_weight_msg_withdraw"
-	OpWeightMsgLimitOrder      = "op_weight_msg_limit_order"
-	OpWeightMsgMarketOrder     = "op_weight_msg_market_order"
-	OpWeightMsgCancelOrder     = "op_weight_msg_cancel_order"
-	OpWeightMsgCancelAllOrders = "op_weight_msg_cancel_all_orders"
+	OpWeightMsgCreatePair       = "op_weight_msg_create_pair"
+	OpWeightMsgCreatePool       = "op_weight_msg_create_pool"
+	OpWeightMsgCreateRangedPool = "op_weight_msg_create_ranged_pool"
+	OpWeightMsgDeposit          = "op_weight_msg_deposit"
+	OpWeightMsgWithdraw         = "op_weight_msg_withdraw"
+	OpWeightMsgLimitOrder       = "op_weight_msg_limit_order"
+	OpWeightMsgMarketOrder      = "op_weight_msg_market_order"
+	OpWeightMsgCancelOrder      = "op_weight_msg_cancel_order"
+	OpWeightMsgCancelAllOrders  = "op_weight_msg_cancel_all_orders"
 )
 
 var (
@@ -54,6 +55,11 @@ func WeightedOperations(
 	var weightMsgCreatePool int
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePool, &weightMsgCreatePool, nil, func(_ *rand.Rand) {
 		weightMsgCreatePool = appparams.DefaultWeightMsgCreatePool
+	})
+
+	var weightMsgCreateRangedPool int
+	appParams.GetOrGenerate(cdc, OpWeightMsgCreateRangedPool, &weightMsgCreateRangedPool, nil, func(_ *rand.Rand) {
+		weightMsgCreateRangedPool = appparams.DefaultWeightMsgCreateRangedPool
 	})
 
 	var weightMsgDeposit int
@@ -94,6 +100,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgCreatePool,
 			SimulateMsgCreatePool(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCreateRangedPool,
+			SimulateMsgCreateRangedPool(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgDeposit,
@@ -214,6 +224,83 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		)
 
 		msg := types.NewMsgCreatePool(simAccount.Address, pair.Id, depositCoins)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
+	}
+}
+
+func SimulateMsgCreateRangedPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		fundAccountsOnce(r, ctx, bk, accs)
+
+		accs = utils.ShuffleSimAccounts(r, accs)
+
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var pair types.Pair
+		skip := true
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+
+			var found bool
+			pair, found = findPairToCreateRangedPool(r, k, ctx, spendable)
+			if found {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "no account to create a pool"), nil, nil
+		}
+
+		poolCreationFee := k.GetPoolCreationFee(ctx)
+		minDepositAmt := k.GetMinInitialDepositAmount(ctx)
+		tickPrec := amm.TickPrecision(k.GetTickPrecision(ctx))
+		var (
+			x, y                             sdk.Int
+			minPrice, maxPrice, initialPrice sdk.Dec
+		)
+		depositableCoins := spendable.Sub(poolCreationFee)
+		for {
+			x = utils.RandomInt(r, sdk.ZeroInt(), depositableCoins.AmountOf(pair.QuoteCoinDenom))
+			if x.LT(minDepositAmt) {
+				y = utils.RandomInt(r, minDepositAmt, depositableCoins.AmountOf(pair.BaseCoinDenom))
+			} else {
+				y = utils.RandomInt(r, sdk.ZeroInt(), depositableCoins.AmountOf(pair.BaseCoinDenom))
+			}
+			minPrice = amm.RandomTick(r, utils.ParseDec("0.00001"), utils.ParseDec("1"), int(tickPrec))
+			maxPrice = amm.RandomTick(r, minPrice.Mul(utils.ParseDec("1.01")), utils.ParseDec("10000"), int(tickPrec))
+			initialPrice = amm.RandomTick(r, minPrice, maxPrice, int(tickPrec))
+			pool, err := amm.CreateRangedPool(x, y, minPrice, maxPrice, initialPrice)
+			ax, ay := pool.Balances()
+			if err == nil && (ax.GTE(minDepositAmt) || ay.GTE(minDepositAmt)) {
+				break
+			}
+		}
+
+		depositCoins := sdk.NewCoins(
+			sdk.NewCoin(pair.BaseCoinDenom, y),
+			sdk.NewCoin(pair.QuoteCoinDenom, x))
+		msg := types.NewMsgCreateRangedPool(
+			simAccount.Address, pair.Id, depositCoins,
+			minPrice, maxPrice, initialPrice)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -390,7 +477,7 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		} else {
 			if pool != (types.Pool{}) {
 				rx, ry := k.GetPoolBalances(ctx, pool)
-				ammPool := amm.NewBasicPool(rx.Amount, ry.Amount, sdk.ZeroInt())
+				ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 				minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
 			} else {
 				minPrice, maxPrice = utils.ParseDec("0.5"), utils.ParseDec("5.0")
@@ -716,6 +803,33 @@ func findPairToCreatePool(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, spenda
 			sdk.NewCoin(pair.QuoteCoinDenom, params.MinInitialDepositAmount),
 		)
 		if minDepositCoins.Add(params.PoolCreationFee...).IsAllLTE(spendable) {
+			return pair, true
+		}
+	}
+
+	return types.Pair{}, false
+}
+
+func findPairToCreateRangedPool(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, spendable sdk.Coins) (types.Pair, bool) {
+	var hasNeg bool
+	spendable, hasNeg = spendable.SafeSub(k.GetPoolCreationFee(ctx))
+	if hasNeg {
+		return types.Pair{}, false
+	}
+
+	var pairs []types.Pair
+	_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
+		pairs = append(pairs, pair)
+		return false, nil
+	})
+	r.Shuffle(len(pairs), func(i, j int) {
+		pairs[i], pairs[j] = pairs[j], pairs[i]
+	})
+
+	minDepositAmt := k.GetMinInitialDepositAmount(ctx)
+	for _, pair := range pairs {
+		if spendable.AmountOf(pair.BaseCoinDenom).GTE(minDepositAmt) &&
+			spendable.AmountOf(pair.QuoteCoinDenom).GTE(minDepositAmt) {
 			return pair, true
 		}
 	}

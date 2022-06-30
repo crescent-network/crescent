@@ -83,6 +83,33 @@ func (s *SimTestSuite) TestSimulateMsgCreatePool() {
 	s.Require().Equal("170567169denom1,131275595stake", msg.DepositCoins.String())
 }
 
+func (s *SimTestSuite) TestSimulateMsgCreateRangedPool() {
+	r := rand.New(rand.NewSource(0))
+	accs := s.getTestingAccounts(r, 1)
+
+	pair := s.createPair(accs[0].Address, "denom1", "stake")
+
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+
+	op := simulation.SimulateMsgCreateRangedPool(s.app.AccountKeeper, s.app.BankKeeper, s.app.LiquidityKeeper)
+	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	s.Require().NoError(err)
+	s.Require().True(opMsg.OK)
+	s.Require().Len(futureOps, 0)
+
+	var msg types.MsgCreateRangedPool
+	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
+
+	s.Require().Equal(types.TypeMsgCreateRangedPool, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Creator)
+	s.Require().Equal(pair.Id, msg.PairId)
+	s.Require().Equal("130275595denom1,169567169stake", msg.DepositCoins.String())
+	s.Require().Equal("0.030928000000000000", msg.MinPrice.String())
+	s.Require().Equal("92.378000000000000000", msg.MaxPrice.String())
+	s.Require().Equal("0.040475000000000000", msg.InitialPrice.String())
+}
+
 func (s *SimTestSuite) TestSimulateMsgDeposit() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 1)
@@ -157,7 +184,7 @@ func (s *SimTestSuite) TestSimulateMsgLimitOrder() {
 	s.Require().Equal(types.OrderDirectionSell, msg.Direction)
 	s.Require().Equal("6010denom1", msg.OfferCoin.String())
 	s.Require().Equal("stake", msg.DemandCoinDenom)
-	s.Require().Equal("1.228000000000000000", msg.Price.String())
+	s.Require().Equal("1.228200000000000000", msg.Price.String())
 	s.Require().Equal("6010", msg.Amount.String())
 	s.Require().Equal("9h14m25.122290029s", msg.OrderLifespan.String())
 }

@@ -58,9 +58,15 @@ func ParseDec(s string) sdk.Dec {
 	return sdk.MustNewDecFromStr(s)
 }
 
+// ParseDecP is like ParseDec, but it returns a pointer to sdk.Dec.
+func ParseDecP(s string) *sdk.Dec {
+	d := ParseDec(s)
+	return &d
+}
+
 // ParseCoin parses and returns sdk.Coin.
 func ParseCoin(s string) sdk.Coin {
-	coin, err := sdk.ParseCoinNormalized(s)
+	coin, err := sdk.ParseCoinNormalized(strings.ReplaceAll(s, "_", ""))
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +75,7 @@ func ParseCoin(s string) sdk.Coin {
 
 // ParseCoins parses and returns sdk.Coins.
 func ParseCoins(s string) sdk.Coins {
-	coins, err := sdk.ParseCoinsNormalized(s)
+	coins, err := sdk.ParseCoinsNormalized(strings.ReplaceAll(s, "_", ""))
 	if err != nil {
 		panic(err)
 	}
@@ -92,6 +98,16 @@ func DecApproxEqual(a, b sdk.Dec) bool {
 		a, b = b, a
 	}
 	return a.Sub(b).Quo(a).LTE(sdk.NewDecWithPrec(1, 3))
+}
+
+// DecApproxSqrt returns an approximate estimation of x's square root.
+func DecApproxSqrt(x sdk.Dec) (r sdk.Dec) {
+	var err error
+	r, err = x.ApproxSqrt()
+	if err != nil {
+		panic(err)
+	}
+	return
 }
 
 // RandomInt returns a random integer in the half-open interval [min, max).

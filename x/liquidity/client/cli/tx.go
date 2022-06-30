@@ -29,6 +29,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewCreatePairCmd(),
 		NewCreatePoolCmd(),
+		NewCreateRangedPoolCmd(),
 		NewDepositCmd(),
 		NewWithdrawCmd(),
 		NewLimitOrderCmd(),
@@ -47,6 +48,7 @@ func NewCreatePairCmd() *cobra.Command {
 		Short: "Create a pair(market) for trading",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a pair(market) for trading.
+
 Example:
 $ %s tx %s create-pair uatom stake --from mykey
 `,
@@ -77,9 +79,10 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pool [pair-id] [deposit-coins]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Create a liquidity pool",
+		Short: "Create a basic liquidity pool",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create a liquidity pool with coins.
+			fmt.Sprintf(`Create a basic liquidity pool with coins.
+
 Example:
 $ %s tx %s create-pool 1 1000000000uatom,50000000000stake --from mykey
 `,
@@ -99,10 +102,72 @@ $ %s tx %s create-pool 1 1000000000uatom,50000000000stake --from mykey
 
 			depositCoins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("invalid deposit coints: %w", err)
+				return fmt.Errorf("invalid deposit coins: %w", err)
 			}
 
 			msg := types.NewMsgCreatePool(clientCtx.GetFromAddress(), pairId, depositCoins)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCreateRangedPoolCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-ranged-pool [pair-id] [deposit-coins] [min-price] [max-price] [initial-price]",
+		Args:  cobra.ExactArgs(5),
+		Short: "Create a ranged liquidity pool",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Create a ranged liquidity pool with coins.
+
+Example:
+$ %s tx %s create-ranged-pool 1 1000000000uatom,10000000000stake 0.001 100 1.0 --from mykey
+$ %s tx %s create-ranged-pool 1 1000000000uatom,10000000000stake 0.9 10000 1.0 --from mykey
+$ %s tx %s create-ranged-pool 1 1000000000uatom,10000000000stake 1.3 2.5 1.5 --from mykey
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse pair id: %w", err)
+			}
+
+			depositCoins, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid deposit coins: %w", err)
+			}
+
+			minPrice, err := sdk.NewDecFromStr(args[2])
+			if err != nil {
+				return fmt.Errorf("invalid min price: %w", err)
+			}
+
+			maxPrice, err := sdk.NewDecFromStr(args[3])
+			if err != nil {
+				return fmt.Errorf("invalid max price: %w", err)
+			}
+
+			initialPrice, err := sdk.NewDecFromStr(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid initial price: %w", err)
+			}
+
+			msg := types.NewMsgCreateRangedPool(
+				clientCtx.GetFromAddress(), pairId, depositCoins,
+				minPrice, maxPrice, initialPrice)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

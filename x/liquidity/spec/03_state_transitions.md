@@ -17,6 +17,10 @@ for that coin pair or request a swap order.
 
 Create a pool in existing pair so that users can deposit reserve coins or withdraw pool coin.
 
+### MsgCreateRangedPool
+
+Create a ranged liquidity pool in existing pair.
+
 ## Coin Escrow for Liquidity Module Messages
 
 Transaction confirmation causes state transition on the bank module.

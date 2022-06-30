@@ -28,6 +28,7 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - [Orders](#Orders)
 - [Order](#Order)
 - [OrdersByOrderer](#OrdersByOrderer)
+- [OrderBooks](#OrderBooks)
 
 ## Params
 
@@ -371,7 +372,7 @@ Example Response
 }
 ```
 
-## WithdraRequests
+## WithdrawRequests
 
 Example Request 
 
@@ -583,5 +584,136 @@ Example Response
     "next_key": null,
     "total": "1"
   }
+}
+```
+
+## OrderBooks
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/liquidity/v1beta1/order_books?pair_ids=1&tick_precisions=3&num_ticks=10
+```
+
+Example Response
+
+```json
+{
+  "pairs": [
+    {
+      "pair_id": "1",
+      "base_price": "1.181500000000000000",
+      "order_books": [
+        {
+          "tick_precision": 3,
+          "buys": [
+            {
+              "price": "1.181000000000000000",
+              "user_order_amount": "138",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.180000000000000000",
+              "user_order_amount": "485",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.179000000000000000",
+              "user_order_amount": "312",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.178000000000000000",
+              "user_order_amount": "450",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.177000000000000000",
+              "user_order_amount": "313",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.176000000000000000",
+              "user_order_amount": "488",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.175000000000000000",
+              "user_order_amount": "313",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.174000000000000000",
+              "user_order_amount": "453",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.173000000000000000",
+              "user_order_amount": "314",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.172000000000000000",
+              "user_order_amount": "490",
+              "pool_order_amount": "0"
+            }
+          ],
+          "sells": [
+            {
+              "price": "1.191000000000000000",
+              "user_order_amount": "449",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.190000000000000000",
+              "user_order_amount": "309",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.189000000000000000",
+              "user_order_amount": "477",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.188000000000000000",
+              "user_order_amount": "310",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.187000000000000000",
+              "user_order_amount": "450",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.186000000000000000",
+              "user_order_amount": "311",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.185000000000000000",
+              "user_order_amount": "482",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.184000000000000000",
+              "user_order_amount": "311",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.183000000000000000",
+              "user_order_amount": "451",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.182000000000000000",
+              "user_order_amount": "172",
+              "pool_order_amount": "0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
 ```

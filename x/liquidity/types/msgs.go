@@ -12,6 +12,7 @@ import (
 var (
 	_ sdk.Msg = (*MsgCreatePair)(nil)
 	_ sdk.Msg = (*MsgCreatePool)(nil)
+	_ sdk.Msg = (*MsgCreateRangedPool)(nil)
 	_ sdk.Msg = (*MsgDeposit)(nil)
 	_ sdk.Msg = (*MsgWithdraw)(nil)
 	_ sdk.Msg = (*MsgLimitOrder)(nil)
@@ -22,14 +23,15 @@ var (
 
 // Message types for the liquidity module
 const (
-	TypeMsgCreatePair      = "create_pair"
-	TypeMsgCreatePool      = "create_pool"
-	TypeMsgDeposit         = "deposit"
-	TypeMsgWithdraw        = "withdraw"
-	TypeMsgLimitOrder      = "limit_order"
-	TypeMsgMarketOrder     = "market_order"
-	TypeMsgCancelOrder     = "cancel_order"
-	TypeMsgCancelAllOrders = "cancel_all_orders"
+	TypeMsgCreatePair       = "create_pair"
+	TypeMsgCreatePool       = "create_pool"
+	TypeMsgCreateRangedPool = "create_ranged_pool"
+	TypeMsgDeposit          = "deposit"
+	TypeMsgWithdraw         = "withdraw"
+	TypeMsgLimitOrder       = "limit_order"
+	TypeMsgMarketOrder      = "market_order"
+	TypeMsgCancelOrder      = "cancel_order"
+	TypeMsgCancelAllOrders  = "cancel_all_orders"
 )
 
 // NewMsgCreatePair returns a new MsgCreatePair.
@@ -136,6 +138,73 @@ func (msg MsgCreatePool) GetCreator() sdk.AccAddress {
 	return addr
 }
 
+// NewMsgCreateRangedPool creates a new MsgCreateRangedPool.
+func NewMsgCreateRangedPool(
+	creator sdk.AccAddress,
+	pairId uint64,
+	depositCoins sdk.Coins,
+	minPrice sdk.Dec,
+	maxPrice sdk.Dec,
+	initialPrice sdk.Dec,
+) *MsgCreateRangedPool {
+	return &MsgCreateRangedPool{
+		Creator:      creator.String(),
+		PairId:       pairId,
+		DepositCoins: depositCoins,
+		MinPrice:     minPrice,
+		MaxPrice:     maxPrice,
+		InitialPrice: initialPrice,
+	}
+}
+
+func (msg MsgCreateRangedPool) Route() string { return RouterKey }
+
+func (msg MsgCreateRangedPool) Type() string { return TypeMsgCreateRangedPool }
+
+func (msg MsgCreateRangedPool) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address: %v", err)
+	}
+	if msg.PairId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be 0")
+	}
+	if err := msg.DepositCoins.Validate(); err != nil {
+		return err
+	}
+	if len(msg.DepositCoins) == 0 || len(msg.DepositCoins) > 2 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
+	}
+	for _, coin := range msg.DepositCoins {
+		if coin.Amount.GT(amm.MaxCoinAmount) {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "deposit coin %s is bigger than the max amount %s", coin, amm.MaxCoinAmount)
+		}
+	}
+	if err := amm.ValidateRangedPoolParams(msg.MinPrice, msg.MaxPrice, msg.InitialPrice); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	return nil
+}
+
+func (msg MsgCreateRangedPool) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreateRangedPool) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCreateRangedPool) GetCreator() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 // NewMsgDeposit creates a new MsgDeposit.
 func NewMsgDeposit(
 	depositor sdk.AccAddress,
@@ -163,7 +232,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 	if err := msg.DepositCoins.Validate(); err != nil {
 		return err
 	}
-	if len(msg.DepositCoins) != 2 {
+	if len(msg.DepositCoins) == 0 || len(msg.DepositCoins) > 2 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "wrong number of deposit coins: %d", len(msg.DepositCoins))
 	}
 	return nil

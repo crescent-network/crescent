@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	chain "github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/x/liquidity"
+	utils "github.com/crescent-network/crescent/types"
 	"github.com/crescent-network/crescent/x/liquidity/amm"
 	"github.com/crescent-network/crescent/x/liquidity/keeper"
 	"github.com/crescent-network/crescent/x/liquidity/types"
@@ -33,7 +34,13 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = chain.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	hdr := tmproto.Header{
+		Height: 1,
+		Time:   utils.ParseTime("2022-01-01T00:00:00Z"),
+	}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
+	s.ctx = s.app.BaseApp.NewContext(false, hdr)
+	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{Header: hdr})
 	s.keeper = s.app.LiquidityKeeper
 	s.querier = keeper.Querier{Keeper: s.keeper}
 	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
@@ -55,8 +62,16 @@ func (s *KeeperTestSuite) sendCoins(fromAddr, toAddr sdk.AccAddress, amt sdk.Coi
 }
 
 func (s *KeeperTestSuite) nextBlock() {
-	liquidity.EndBlocker(s.ctx, s.keeper)
-	liquidity.BeginBlocker(s.ctx, s.keeper)
+	s.T().Helper()
+	s.app.EndBlock(abci.RequestEndBlock{})
+	s.app.Commit()
+	hdr := tmproto.Header{
+		Height: s.app.LastBlockHeight() + 1,
+		Time:   s.ctx.BlockTime().Add(5 * time.Second),
+	}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
+	s.ctx = s.app.BaseApp.NewContext(false, hdr)
+	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{Header: hdr})
 }
 
 // Below are useful helpers to write test code easily.
@@ -76,9 +91,8 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 
 func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) types.Pair {
 	s.T().Helper()
-	params := s.keeper.GetParams(s.ctx)
 	if fund {
-		s.fundAddr(creator, params.PairCreationFee)
+		s.fundAddr(creator, s.keeper.GetPairCreationFee(s.ctx))
 	}
 	msg := types.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom)
 	s.Require().NoError(msg.ValidateBasic())
@@ -89,13 +103,24 @@ func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quot
 
 func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) types.Pool {
 	s.T().Helper()
-	params := s.keeper.GetParams(s.ctx)
 	if fund {
-		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
+		s.fundAddr(creator, depositCoins.Add(s.keeper.GetPoolCreationFee(s.ctx)...))
 	}
 	msg := types.NewMsgCreatePool(creator, pairId, depositCoins)
 	s.Require().NoError(msg.ValidateBasic())
 	pool, err := s.keeper.CreatePool(s.ctx, msg)
+	s.Require().NoError(err)
+	return pool
+}
+
+func (s *KeeperTestSuite) createRangedPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, minPrice, maxPrice, initialPrice sdk.Dec, fund bool) types.Pool {
+	s.T().Helper()
+	if fund {
+		s.fundAddr(creator, depositCoins.Add(s.keeper.GetPoolCreationFee(s.ctx)...))
+	}
+	msg := types.NewMsgCreateRangedPool(creator, pairId, depositCoins, minPrice, maxPrice, initialPrice)
+	s.Require().NoError(msg.ValidateBasic())
+	pool, err := s.keeper.CreateRangedPool(s.ctx, msg)
 	s.Require().NoError(err)
 	return pool
 }
@@ -170,12 +195,11 @@ func (s *KeeperTestSuite) marketOrder(
 	s.Require().True(found)
 	s.Require().NotNil(pair.LastPrice)
 	lastPrice := *pair.LastPrice
-	params := s.keeper.GetParams(s.ctx)
 	var offerCoin sdk.Coin
 	var demandCoinDenom string
 	switch dir {
 	case types.OrderDirectionBuy:
-		maxPrice := lastPrice.Mul(sdk.OneDec().Add(params.MaxPriceLimitRatio))
+		maxPrice := lastPrice.Mul(sdk.OneDec().Add(s.keeper.GetMaxPriceLimitRatio(s.ctx)))
 		offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, amm.OfferCoinAmount(amm.Buy, maxPrice, amt))
 		demandCoinDenom = pair.BaseCoinDenom
 	case types.OrderDirectionSell:

@@ -1,7 +1,6 @@
 package v2_0_0_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -13,7 +12,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/app/upgrades/mainnet/v2.0.0"
+	v2_0_0 "github.com/crescent-network/crescent/app/upgrades/mainnet/v2.0.0"
 	"github.com/crescent-network/crescent/cmd/crescentd/cmd"
 	utils "github.com/crescent-network/crescent/types"
 )
@@ -50,7 +49,6 @@ func (suite *UpgradeTestSuite) TestUpgradeV2() {
 	testCases := []struct {
 		title   string
 		before  func()
-		upgrade func()
 		after   func()
 		expPass bool
 	}{
@@ -158,28 +156,8 @@ func (suite *UpgradeTestSuite) TestUpgradeV2() {
 				suite.Require().Len(budgetparams.Budgets, 11)
 			},
 			func() {
-				// add test upgrade plan
-				suite.ctx = suite.ctx.WithBlockHeight(testUpgradeHeight - 1)
-				plan := upgradetypes.Plan{Name: v2_0_0.UpgradeName, Height: testUpgradeHeight}
-				err := suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
-				suite.Require().NoError(err)
-				_, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
-				suite.Require().True(exists)
-
-				suite.ctx = suite.ctx.WithBlockHeight(testUpgradeHeight)
-				suite.Require().NotPanics(func() {
-					beginBlockRequest := abci.RequestBeginBlock{}
-					suite.app.BeginBlocker(suite.ctx, beginBlockRequest)
-				})
-			},
-			func() {
 				mintparams := suite.app.MintKeeper.GetParams(suite.ctx)
 				budgetparams := suite.app.BudgetKeeper.GetParams(suite.ctx)
-				budgetparamsJson, _ := json.Marshal(budgetparams)
-
-				// TODO: remove debug logging
-				fmt.Println(mintparams)
-				fmt.Println(string(budgetparamsJson))
 
 				totalRateOfMintPool := sdk.ZeroDec()
 				for _, budget := range budgetparams.Budgets {
@@ -195,6 +173,21 @@ func (suite *UpgradeTestSuite) TestUpgradeV2() {
 			},
 			true,
 		},
+		{
+			"v2 upgrade liquidity tick precision",
+			func() {
+				// Prior to mainnet v2, the tick precision was by default 3,
+				// but codebase now has 4 as the default tick precision so
+				// manually set tick precision to 3 before testing this upgrade.
+				params := suite.app.LiquidityKeeper.GetParams(suite.ctx)
+				params.TickPrecision = 3
+				suite.app.LiquidityKeeper.SetParams(suite.ctx, params)
+			},
+			func() {
+				suite.Require().EqualValues(4, suite.app.LiquidityKeeper.GetTickPrecision(suite.ctx))
+			},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -202,7 +195,19 @@ func (suite *UpgradeTestSuite) TestUpgradeV2() {
 			suite.SetupTest()
 
 			tc.before()
-			tc.upgrade()
+
+			suite.ctx = suite.ctx.WithBlockHeight(testUpgradeHeight - 1)
+			plan := upgradetypes.Plan{Name: v2_0_0.UpgradeName, Height: testUpgradeHeight}
+			err := suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+			suite.Require().NoError(err)
+			_, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
+			suite.Require().True(exists)
+
+			suite.ctx = suite.ctx.WithBlockHeight(testUpgradeHeight)
+			suite.Require().NotPanics(func() {
+				suite.app.BeginBlocker(suite.ctx, abci.RequestBeginBlock{})
+			})
+
 			tc.after()
 		})
 	}

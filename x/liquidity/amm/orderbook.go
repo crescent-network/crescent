@@ -8,54 +8,40 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ OrderSource = (*OrderBook)(nil)
-
 // OrderBook is an order book.
 type OrderBook struct {
-	buys, sells orderBookTicks
+	buys, sells *orderBookTicks
 }
 
 // NewOrderBook returns a new OrderBook.
 func NewOrderBook(orders ...Order) *OrderBook {
-	ob := &OrderBook{}
-	ob.Add(orders...)
+	ob := &OrderBook{
+		buys:  newOrderBookBuyTicks(),
+		sells: newOrderBookSellTicks(),
+	}
+	ob.AddOrder(orders...)
 	return ob
 }
 
-// Add adds orders to the order book.
-func (ob *OrderBook) Add(orders ...Order) {
+// AddOrder adds orders to the order book.
+func (ob *OrderBook) AddOrder(orders ...Order) {
 	for _, order := range orders {
 		switch order.GetDirection() {
 		case Buy:
-			ob.buys.add(order)
+			ob.buys.addOrder(order)
 		case Sell:
-			ob.sells.add(order)
+			ob.sells.addOrder(order)
 		}
 	}
 }
 
 // Orders returns all orders in the order book.
-// Note that the orders are not sorted.
 func (ob *OrderBook) Orders() []Order {
-	return append(ob.BuyOrders(), ob.SellOrders()...)
-}
-
-// OrdersAt returns orders at given price in the order book.
-// Note that the orders are not sorted.
-func (ob *OrderBook) OrdersAt(price sdk.Dec) []Order {
-	return append(ob.BuyOrdersAt(price), ob.SellOrdersAt(price)...)
-}
-
-// BuyOrders returns all buy orders in the order book.
-// Note that the orders are not sorted.
-func (ob *OrderBook) BuyOrders() []Order {
-	return ob.buys.orders()
-}
-
-// SellOrders returns all sell orders in the order book.
-// Note that the orders are not sorted.
-func (ob *OrderBook) SellOrders() []Order {
-	return ob.sells.orders()
+	var orders []Order
+	for _, tick := range append(ob.buys.ticks, ob.sells.ticks...) {
+		orders = append(orders, tick.orders...)
+	}
+	return orders
 }
 
 // BuyOrdersAt returns buy orders at given price in the order book.
@@ -68,44 +54,6 @@ func (ob *OrderBook) BuyOrdersAt(price sdk.Dec) []Order {
 // Note that the orders are not sorted.
 func (ob *OrderBook) SellOrdersAt(price sdk.Dec) []Order {
 	return ob.sells.ordersAt(price)
-}
-
-// HighestBuyPrice returns the highest buy price in the order book.
-func (ob *OrderBook) HighestBuyPrice() (sdk.Dec, bool) {
-	price, _, found := ob.buys.highestPrice()
-	return price, found
-}
-
-// LowestSellPrice returns the lowest sell price in the order book.
-func (ob *OrderBook) LowestSellPrice() (sdk.Dec, bool) {
-	price, _, found := ob.sells.lowestPrice()
-	return price, found
-}
-
-// BuyAmountOver returns the amount of buy orders in the order book
-// for price greater or equal than given price.
-func (ob *OrderBook) BuyAmountOver(price sdk.Dec) sdk.Int {
-	return ob.buys.amountOver(price)
-}
-
-// SellAmountUnder returns the amount of sell orders in the order book
-// for price less or equal than given price.
-func (ob *OrderBook) SellAmountUnder(price sdk.Dec) sdk.Int {
-	return ob.sells.amountUnder(price)
-}
-
-// BuyOrdersOver returns buy orders in the order book for price greater
-// or equal than given price.
-// Note that the orders are not sorted.
-func (ob *OrderBook) BuyOrdersOver(price sdk.Dec) []Order {
-	return ob.buys.ordersOver(price)
-}
-
-// SellOrdersUnder returns sell orders in the order book for price less
-// or equal than given price.
-// Note that the orders are not sorted.
-func (ob *OrderBook) SellOrdersUnder(price sdk.Dec) []Order {
-	return ob.sells.ordersUnder(price)
 }
 
 func (ob *OrderBook) HighestPrice() (sdk.Dec, bool) {
@@ -146,11 +94,11 @@ func (ob *OrderBook) stringRepresentation(prices []sdk.Dec) string {
 		return prices[i].GT(prices[j])
 	})
 	var b strings.Builder
-	b.WriteString("+--------buy---------+------------price-------------+--------sell--------+\n")
+	b.WriteString("+--------sell--------+------------price-------------+--------buy---------+\n")
 	for _, price := range prices {
-		buyAmt := TotalOpenAmount(ob.BuyOrdersAt(price))
-		sellAmt := TotalOpenAmount(ob.SellOrdersAt(price))
-		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", buyAmt, price.String(), sellAmt)
+		buyAmt := TotalMatchableAmount(ob.BuyOrdersAt(price), price)
+		sellAmt := TotalMatchableAmount(ob.SellOrdersAt(price), price)
+		_, _ = fmt.Fprintf(&b, "| %18s | %28s | %-18s |\n", sellAmt, price.String(), buyAmt)
 	}
 	b.WriteString("+--------------------+------------------------------+--------------------+")
 	return b.String()
@@ -175,122 +123,93 @@ func (ob *OrderBook) FullString(tickPrec int) string {
 // String returns a compact string representation of the order book.
 // String includes a tick only when there is at least one order on it.
 func (ob *OrderBook) String() string {
-	var prices []sdk.Dec
-	for _, tick := range append(ob.buys, ob.sells...) {
-		prices = append(prices, tick.price)
+	priceSet := map[string]sdk.Dec{}
+	for _, tick := range append(ob.buys.ticks, ob.sells.ticks...) {
+		priceSet[tick.price.String()] = tick.price
+	}
+	prices := make([]sdk.Dec, 0, len(priceSet))
+	for _, price := range priceSet {
+		prices = append(prices, price)
 	}
 	return ob.stringRepresentation(prices)
 }
 
 // orderBookTicks represents a list of orderBookTick.
 // This type is used for both buy/sell sides of OrderBook.
-type orderBookTicks []*orderBookTick
+type orderBookTicks struct {
+	ticks           []*orderBookTick
+	priceIncreasing bool
+}
 
-func (ticks orderBookTicks) findPrice(price sdk.Dec) (i int, exact bool) {
-	i = sort.Search(len(ticks), func(i int) bool {
-		return ticks[i].price.LTE(price)
+func newOrderBookBuyTicks() *orderBookTicks {
+	return &orderBookTicks{
+		priceIncreasing: false,
+	}
+}
+
+func newOrderBookSellTicks() *orderBookTicks {
+	return &orderBookTicks{
+		priceIncreasing: true,
+	}
+}
+
+func (ticks *orderBookTicks) findPrice(price sdk.Dec) (i int, exact bool) {
+	i = sort.Search(len(ticks.ticks), func(i int) bool {
+		if ticks.priceIncreasing {
+			return ticks.ticks[i].price.GTE(price)
+		} else {
+			return ticks.ticks[i].price.LTE(price)
+		}
 	})
-	if i < len(ticks) && ticks[i].price.Equal(price) {
+	if i < len(ticks.ticks) && ticks.ticks[i].price.Equal(price) {
 		exact = true
 	}
 	return
 }
 
-func (ticks *orderBookTicks) add(order Order) {
+func (ticks *orderBookTicks) addOrder(order Order) {
 	i, exact := ticks.findPrice(order.GetPrice())
 	if exact {
-		(*ticks)[i].add(order)
+		ticks.ticks[i].addOrder(order)
 	} else {
-		if i < len(*ticks) {
+		if i < len(ticks.ticks) {
 			// Insert a new order book tick at index i.
-			*ticks = append((*ticks)[:i], append([]*orderBookTick{newOrderBookTick(order)}, (*ticks)[i:]...)...)
+			ticks.ticks = append(ticks.ticks[:i], append([]*orderBookTick{newOrderBookTick(order)}, ticks.ticks[i:]...)...)
 		} else {
 			// Append a new order book tick at the end.
-			*ticks = append(*ticks, newOrderBookTick(order))
+			ticks.ticks = append(ticks.ticks, newOrderBookTick(order))
 		}
 	}
 }
 
-func (ticks orderBookTicks) orders() []Order {
-	var orders []Order
-	for _, tick := range ticks {
-		orders = append(orders, tick.orders...)
-	}
-	return orders
-}
-
-func (ticks orderBookTicks) ordersAt(price sdk.Dec) []Order {
+func (ticks *orderBookTicks) ordersAt(price sdk.Dec) []Order {
 	i, exact := ticks.findPrice(price)
 	if !exact {
 		return nil
 	}
-	return ticks[i].orders
+	return ticks.ticks[i].orders
 }
 
-func (ticks orderBookTicks) highestPrice() (sdk.Dec, int, bool) {
-	if len(ticks) == 0 {
+func (ticks *orderBookTicks) highestPrice() (sdk.Dec, int, bool) {
+	if len(ticks.ticks) == 0 {
 		return sdk.Dec{}, 0, false
 	}
-	for i, tick := range ticks {
-		if TotalOpenAmount(tick.orders).IsPositive() {
-			return tick.price, i, true
-		}
+	if ticks.priceIncreasing {
+		return ticks.ticks[len(ticks.ticks)-1].price, len(ticks.ticks) - 1, true
+	} else {
+		return ticks.ticks[0].price, 0, true
 	}
-	return sdk.Dec{}, 0, false
 }
 
-func (ticks orderBookTicks) lowestPrice() (sdk.Dec, int, bool) {
-	if len(ticks) == 0 {
+func (ticks *orderBookTicks) lowestPrice() (sdk.Dec, int, bool) {
+	if len(ticks.ticks) == 0 {
 		return sdk.Dec{}, 0, false
 	}
-	for i := len(ticks) - 1; i >= 0; i-- {
-		if TotalOpenAmount(ticks[i].orders).IsPositive() {
-			return ticks[i].price, i, true
-		}
+	if ticks.priceIncreasing {
+		return ticks.ticks[0].price, 0, true
+	} else {
+		return ticks.ticks[len(ticks.ticks)-1].price, len(ticks.ticks) - 1, true
 	}
-	return sdk.Dec{}, 0, false
-}
-
-func (ticks orderBookTicks) amountOver(price sdk.Dec) sdk.Int {
-	i, exact := ticks.findPrice(price)
-	if !exact {
-		i--
-	}
-	amt := sdk.ZeroInt()
-	for ; i >= 0; i-- {
-		amt = amt.Add(TotalOpenAmount(ticks[i].orders))
-	}
-	return amt
-}
-
-func (ticks orderBookTicks) amountUnder(price sdk.Dec) sdk.Int {
-	i, _ := ticks.findPrice(price)
-	amt := sdk.ZeroInt()
-	for ; i < len(ticks); i++ {
-		amt = amt.Add(TotalOpenAmount(ticks[i].orders))
-	}
-	return amt
-}
-
-func (ticks orderBookTicks) ordersOver(price sdk.Dec) []Order {
-	i, exact := ticks.findPrice(price)
-	if !exact {
-		i--
-	}
-	var orders []Order
-	for ; i >= 0; i-- {
-		orders = append(orders, ticks[i].orders...)
-	}
-	return orders
-}
-
-func (ticks orderBookTicks) ordersUnder(price sdk.Dec) []Order {
-	i, _ := ticks.findPrice(price)
-	var orders []Order
-	for ; i < len(ticks); i++ {
-		orders = append(orders, ticks[i].orders...)
-	}
-	return orders
 }
 
 // orderBookTick represents a tick in OrderBook.
@@ -306,12 +225,6 @@ func newOrderBookTick(order Order) *orderBookTick {
 	}
 }
 
-func (tick *orderBookTick) add(order Order) {
-	if !order.GetPrice().Equal(tick.price) {
-		panic(fmt.Sprintf("order price %q != tick price %q", order.GetPrice(), tick.price))
-	}
-	if first := tick.orders[0]; first.GetDirection() != order.GetDirection() {
-		panic(fmt.Sprintf("order direction %q != tick direction %q", order.GetDirection(), first.GetDirection()))
-	}
+func (tick *orderBookTick) addOrder(order Order) {
 	tick.orders = append(tick.orders, order)
 }

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	_ amm.OrderSource = (*BasicPoolOrderSource)(nil)
+	_ amm.Orderer = (*PoolOrderer)(nil)
 
 	poolCoinDenomRegexp = regexp.MustCompile(`^pool([1-9]\d*)$`)
 )
@@ -26,19 +26,6 @@ func PoolReserveAddress(poolId uint64) sdk.AccAddress {
 		ModuleName,
 		strings.Join([]string{PoolReserveAddressPrefix, strconv.FormatUint(poolId, 10)}, ModuleAddressNameSplitter),
 	)
-}
-
-// NewPool returns a new pool object.
-func NewPool(id, pairId uint64) Pool {
-	return Pool{
-		Id:                    id,
-		PairId:                pairId,
-		ReserveAddress:        PoolReserveAddress(id).String(),
-		PoolCoinDenom:         PoolCoinDenom(id),
-		LastDepositRequestId:  0,
-		LastWithdrawRequestId: 0,
-		Disabled:              false,
-	}
 }
 
 // PoolCoinDenom returns a unique pool coin denom for a pool.
@@ -57,6 +44,49 @@ func ParsePoolCoinDenom(denom string) (poolId uint64, err error) {
 		return 0, fmt.Errorf("parse pool id: %w", err)
 	}
 	return poolId, nil
+}
+
+// NewBasicPool returns a new basic pool object.
+func NewBasicPool(id, pairId uint64, creator sdk.AccAddress) Pool {
+	return Pool{
+		Type:                  PoolTypeBasic,
+		Id:                    id,
+		PairId:                pairId,
+		Creator:               creator.String(),
+		ReserveAddress:        PoolReserveAddress(id).String(),
+		PoolCoinDenom:         PoolCoinDenom(id),
+		LastDepositRequestId:  0,
+		LastWithdrawRequestId: 0,
+		Disabled:              false,
+	}
+}
+
+// NewRangedPool returns a new ranged pool object.
+func NewRangedPool(id, pairId uint64, creator sdk.AccAddress, minPrice, maxPrice sdk.Dec) Pool {
+	return Pool{
+		Type:                  PoolTypeRanged,
+		Id:                    id,
+		PairId:                pairId,
+		Creator:               creator.String(),
+		ReserveAddress:        PoolReserveAddress(id).String(),
+		PoolCoinDenom:         PoolCoinDenom(id),
+		MinPrice:              &minPrice,
+		MaxPrice:              &maxPrice,
+		LastDepositRequestId:  0,
+		LastWithdrawRequestId: 0,
+		Disabled:              false,
+	}
+}
+
+func (pool Pool) GetCreator() sdk.AccAddress {
+	if pool.Creator == "" {
+		return nil
+	}
+	addr, err := sdk.AccAddressFromBech32(pool.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return addr
 }
 
 func (pool Pool) GetReserveAddress() sdk.AccAddress {
@@ -84,43 +114,44 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
-// BasicPoolOrderSource is the order source for a pool which implements
-// amm.OrderSource.
-type BasicPoolOrderSource struct {
+// AMMPool constructs amm.Pool interface from Pool.
+func (pool Pool) AMMPool(rx, ry, ps sdk.Int) amm.Pool {
+	switch pool.Type {
+	case PoolTypeBasic:
+		return amm.NewBasicPool(rx, ry, ps)
+	case PoolTypeRanged:
+		return amm.NewRangedPool(rx, ry, ps, *pool.MinPrice, *pool.MaxPrice)
+	default:
+		panic(fmt.Errorf("invalid pool type: %s", pool.Type))
+	}
+}
+
+type PoolOrderer struct {
 	amm.Pool
-	PoolId                        uint64
-	PoolReserveAddress            sdk.AccAddress
+	Id                            uint64
+	ReserveAddress                sdk.AccAddress
 	BaseCoinDenom, QuoteCoinDenom string
 }
 
-// NewBasicPoolOrderSource returns a new BasicPoolOrderSource.
-func NewBasicPoolOrderSource(
-	pool amm.Pool, poolId uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) *BasicPoolOrderSource {
-	return &BasicPoolOrderSource{
-		Pool:               pool,
-		PoolId:             poolId,
-		PoolReserveAddress: reserveAddr,
-		BaseCoinDenom:      baseCoinDenom,
-		QuoteCoinDenom:     quoteCoinDenom,
+func NewPoolOrderer(pool amm.Pool, id uint64, reserveAddr sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) *PoolOrderer {
+	return &PoolOrderer{
+		Pool:           pool,
+		Id:             id,
+		ReserveAddress: reserveAddr,
+		BaseCoinDenom:  baseCoinDenom,
+		QuoteCoinDenom: quoteCoinDenom,
 	}
 }
 
-func (os *BasicPoolOrderSource) BuyOrdersOver(price sdk.Dec) []amm.Order {
-	amt := os.BuyAmountOver(price)
-	if IsTooSmallOrderAmount(amt, price) {
-		return nil
+func (orderer *PoolOrderer) Order(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
+	var offerCoinDenom, demandCoinDenom string
+	switch dir {
+	case amm.Buy:
+		offerCoinDenom, demandCoinDenom = orderer.QuoteCoinDenom, orderer.BaseCoinDenom
+	case amm.Sell:
+		offerCoinDenom, demandCoinDenom = orderer.BaseCoinDenom, orderer.QuoteCoinDenom
 	}
-	quoteCoin := sdk.NewCoin(os.QuoteCoinDenom, amm.OfferCoinAmount(amm.Buy, price, amt))
-	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Buy, price, amt, quoteCoin, os.BaseCoinDenom)}
-}
-
-func (os *BasicPoolOrderSource) SellOrdersUnder(price sdk.Dec) []amm.Order {
-	amt := os.SellAmountUnder(price)
-	if IsTooSmallOrderAmount(amt, price) {
-		return nil
-	}
-	baseCoin := sdk.NewCoin(os.BaseCoinDenom, amt)
-	return []amm.Order{NewPoolOrder(os.PoolId, os.PoolReserveAddress, amm.Sell, price, amt, baseCoin, os.QuoteCoinDenom)}
+	return NewPoolOrder(orderer.Id, orderer.ReserveAddress, dir, price, amt, offerCoinDenom, demandCoinDenom)
 }
 
 // MustMarshalPool returns the pool bytes.

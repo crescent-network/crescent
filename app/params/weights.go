@@ -9,14 +9,15 @@ const (
 	DefaultWeightMsgHarvest               int = 30
 	DefaultWeightMsgRemovePlan            int = 10
 
-	DefaultWeightMsgCreatePair      int = 10
-	DefaultWeightMsgCreatePool      int = 15
-	DefaultWeightMsgDeposit         int = 20
-	DefaultWeightMsgWithdraw        int = 20
-	DefaultWeightMsgLimitOrder      int = 80
-	DefaultWeightMsgMarketOrder     int = 60
-	DefaultWeightMsgCancelOrder     int = 20
-	DefaultWeightMsgCancelAllOrders int = 20
+	DefaultWeightMsgCreatePair       int = 10
+	DefaultWeightMsgCreatePool       int = 15
+	DefaultWeightMsgCreateRangedPool int = 20
+	DefaultWeightMsgDeposit          int = 20
+	DefaultWeightMsgWithdraw         int = 20
+	DefaultWeightMsgLimitOrder       int = 80
+	DefaultWeightMsgMarketOrder      int = 60
+	DefaultWeightMsgCancelOrder      int = 20
+	DefaultWeightMsgCancelAllOrders  int = 20
 
 	DefaultWeightAddPublicPlanProposal    int = 5
 	DefaultWeightUpdatePublicPlanProposal int = 5

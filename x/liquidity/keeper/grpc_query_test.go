@@ -18,6 +18,135 @@ func (s *KeeperTestSuite) TestGRPCParams() {
 	s.Require().Equal(s.keeper.GetParams(s.ctx), resp.Params)
 }
 
+func (s *KeeperTestSuite) TestGRPCPairs() {
+	creator := s.addr(0)
+	s.createPair(creator, "denom1", "denom2", true)
+	s.createPair(creator, "denom1", "denom3", true)
+	s.createPair(creator, "denom2", "denom3", true)
+	s.createPair(creator, "denom3", "denom4", true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryPairsRequest
+		expectErr bool
+		postRun   func(*types.QueryPairsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"query all",
+			&types.QueryPairsRequest{},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 4)
+			},
+		},
+		{
+			"query all with a single denom",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom1"},
+			},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 2)
+			},
+		},
+		{
+			"query all with a single denom",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom3"},
+			},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 3)
+			},
+		},
+		{
+			"query all with two denoms",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom3", "denom4"},
+			},
+			false,
+			func(resp *types.QueryPairsResponse) {
+				s.Require().Len(resp.Pairs, 1)
+			},
+		},
+		{
+			"query all with more than two denoms",
+			&types.QueryPairsRequest{
+				Denoms: []string{"denom1", "denom3", "denom4"},
+			},
+			true,
+			nil,
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Pairs(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGRPCPair() {
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryPairRequest
+		expectErr bool
+		postRun   func(*types.QueryPairResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryPairRequest{},
+			true,
+			nil,
+		},
+		{
+			"query all pool with pair id",
+			&types.QueryPairRequest{
+				PairId: 1,
+			},
+			false,
+			func(resp *types.QueryPairResponse) {
+				s.Require().Equal(pair.Id, resp.Pair.Id)
+				s.Require().Equal(pair.BaseCoinDenom, resp.Pair.BaseCoinDenom)
+				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
+				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
+				s.Require().Equal(pair.LastOrderId, resp.Pair.LastOrderId)
+				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
+				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Pair(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestGRPCPools() {
 	creator := s.addr(0)
 	s.createPair(creator, "denom1", "denom2", true)
@@ -261,135 +390,6 @@ func (s *KeeperTestSuite) TestGRPCPoolByPoolCoinDenom() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGRPCPairs() {
-	creator := s.addr(0)
-	s.createPair(creator, "denom1", "denom2", true)
-	s.createPair(creator, "denom1", "denom3", true)
-	s.createPair(creator, "denom2", "denom3", true)
-	s.createPair(creator, "denom3", "denom4", true)
-
-	for _, tc := range []struct {
-		name      string
-		req       *types.QueryPairsRequest
-		expectErr bool
-		postRun   func(*types.QueryPairsResponse)
-	}{
-		{
-			"nil request",
-			nil,
-			true,
-			nil,
-		},
-		{
-			"query all",
-			&types.QueryPairsRequest{},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 4)
-			},
-		},
-		{
-			"query all with a single denom",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom1"},
-			},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 2)
-			},
-		},
-		{
-			"query all with a single denom",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom3"},
-			},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 3)
-			},
-		},
-		{
-			"query all with two denoms",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom3", "denom4"},
-			},
-			false,
-			func(resp *types.QueryPairsResponse) {
-				s.Require().Len(resp.Pairs, 1)
-			},
-		},
-		{
-			"query all with more than two denoms",
-			&types.QueryPairsRequest{
-				Denoms: []string{"denom1", "denom3", "denom4"},
-			},
-			true,
-			nil,
-		},
-	} {
-		s.Run(tc.name, func() {
-			resp, err := s.querier.Pairs(sdk.WrapSDKContext(s.ctx), tc.req)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				tc.postRun(resp)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestGRPCPair() {
-	creator := s.addr(0)
-	pair := s.createPair(creator, "denom1", "denom2", true)
-
-	for _, tc := range []struct {
-		name      string
-		req       *types.QueryPairRequest
-		expectErr bool
-		postRun   func(*types.QueryPairResponse)
-	}{
-		{
-			"nil request",
-			nil,
-			true,
-			nil,
-		},
-		{
-			"invalid request",
-			&types.QueryPairRequest{},
-			true,
-			nil,
-		},
-		{
-			"query all pool with pair id",
-			&types.QueryPairRequest{
-				PairId: 1,
-			},
-			false,
-			func(resp *types.QueryPairResponse) {
-				s.Require().Equal(pair.Id, resp.Pair.Id)
-				s.Require().Equal(pair.BaseCoinDenom, resp.Pair.BaseCoinDenom)
-				s.Require().Equal(pair.QuoteCoinDenom, resp.Pair.QuoteCoinDenom)
-				s.Require().Equal(pair.EscrowAddress, resp.Pair.EscrowAddress)
-				s.Require().Equal(pair.LastOrderId, resp.Pair.LastOrderId)
-				s.Require().Equal(pair.LastPrice, resp.Pair.LastPrice)
-				s.Require().Equal(pair.CurrentBatchId, resp.Pair.CurrentBatchId)
-			},
-		},
-	} {
-		s.Run(tc.name, func() {
-			resp, err := s.querier.Pair(sdk.WrapSDKContext(s.ctx), tc.req)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				tc.postRun(resp)
-			}
-		})
-	}
-}
-
 func (s *KeeperTestSuite) TestGRPCDepositRequests() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
@@ -520,13 +520,11 @@ func (s *KeeperTestSuite) TestGRPCDepositRequest() {
 }
 
 func (s *KeeperTestSuite) TestGRPCWithdrawRequests() {
-	params := s.keeper.GetParams(s.ctx)
-
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 	pool := s.createPool(creator, pair.Id, utils.ParseCoins("5000000denom1,5000000denom2"), true)
 	poolCoinBalance := s.app.BankKeeper.GetBalance(s.ctx, creator, pool.PoolCoinDenom)
-	s.Require().Equal(params.MinInitialPoolCoinSupply, poolCoinBalance.Amount)
+	s.Require().Equal(s.keeper.GetMinInitialPoolCoinSupply(s.ctx), poolCoinBalance.Amount)
 
 	s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 1000))
 	s.withdraw(creator, pool.Id, sdk.NewInt64Coin(pool.PoolCoinDenom, 2500))
@@ -834,5 +832,205 @@ func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 				tc.postRun(resp)
 			}
 		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGRPCOrderBooks() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("1.0")
+	s.keeper.SetPair(s.ctx, pair)
+
+	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
+
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Minute, true)
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.02"), sdk.NewInt(1000000), time.Minute, true)
+
+	s.buyLimitOrder(s.addr(3), pair2.Id, utils.ParseDec("1.02"), sdk.NewInt(10000), time.Minute, true)
+	s.sellLimitOrder(s.addr(4), pair2.Id, utils.ParseDec("1.08"), sdk.NewInt(10000), time.Minute, true)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryOrderBooksRequest
+		expectErr bool
+		postRun   func(*types.QueryOrderBooksResponse)
+	}{
+		{
+			"basic case",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			false,
+			func(resp *types.QueryOrderBooksResponse) {
+				s.Require().Len(resp.Pairs, 1)
+				s.Require().EqualValues(pair.Id, resp.Pairs[0].PairId)
+				s.Require().True(decEq(utils.ParseDec("1.01"), resp.Pairs[0].BasePrice))
+				s.Require().Len(resp.Pairs[0].OrderBooks, 1)
+			},
+		},
+		{
+			"empty pair ids",
+			&types.QueryOrderBooksRequest{
+				PairIds:        nil,
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"empty tick precisions",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: nil,
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"zero num ticks",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       0,
+			},
+			true,
+			nil,
+		},
+		{
+			"duplicate pair ids",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id, pair.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"duplicate tick precisions",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair.Id},
+				TickPrecisions: []uint32{3, 3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"pair id not found",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{3},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+		{
+			"pair does not have last price",
+			&types.QueryOrderBooksRequest{
+				PairIds:        []uint64{pair2.Id},
+				TickPrecisions: []uint32{3},
+				NumTicks:       10,
+			},
+			true,
+			nil,
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestEmptyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("1.0") // manually set last price
+	s.keeper.SetPair(s.ctx, pair)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairIds:        []uint64{pair.Id},
+		TickPrecisions: []uint32{1, 2, 3},
+		NumTicks:       20,
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Pairs, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 3)
+
+	for i, ob := range resp.Pairs[0].OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Empty(ob.Buys)
+		s.Require().Empty(ob.Sells)
+	}
+}
+
+func (s *KeeperTestSuite) TestBuyOrdersOnlyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("987")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("987.6"), sdk.NewInt(1000), time.Minute, true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairIds:        []uint64{pair.Id},
+		NumTicks:       20,
+		TickPrecisions: []uint32{1, 2, 3},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Pairs, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 3)
+
+	for i, ob := range resp.Pairs[0].OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Len(ob.Buys, 1)
+		switch ob.TickPrecision {
+		case 1:
+			s.Require().True(decEq(utils.ParseDec("900"), ob.Buys[0].Price))
+		case 2:
+			s.Require().True(decEq(utils.ParseDec("980"), ob.Buys[0].Price))
+		case 3:
+			s.Require().True(decEq(utils.ParseDec("987.6"), ob.Buys[0].Price))
+		}
+		s.Require().Empty(ob.Sells)
+	}
+}
+
+func (s *KeeperTestSuite) TestSellOrdersOnlyOrderBook() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("987")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("987.6"), sdk.NewInt(1000), time.Minute, true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairIds:        []uint64{pair.Id},
+		NumTicks:       20,
+		TickPrecisions: []uint32{1, 2, 3},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Pairs, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 3)
+
+	for i, ob := range resp.Pairs[0].OrderBooks {
+		s.Require().EqualValues(i+1, ob.TickPrecision)
+		s.Require().Empty(ob.Buys)
+		s.Require().Len(ob.Sells, 1)
+		switch ob.TickPrecision {
+		case 1:
+			s.Require().True(decEq(utils.ParseDec("1000"), ob.Sells[0].Price))
+		case 2:
+			s.Require().True(decEq(utils.ParseDec("990"), ob.Sells[0].Price))
+		case 3:
+			s.Require().True(decEq(utils.ParseDec("987.6"), ob.Sells[0].Price))
+		}
 	}
 }

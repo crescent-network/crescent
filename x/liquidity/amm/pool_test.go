@@ -1,7 +1,6 @@
 package amm_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -25,14 +24,49 @@ func TestBasicPool(t *testing.T) {
 		lowest, found := pool.LowestSellPrice()
 		require.True(t, found)
 		require.True(sdk.DecEq(t, pool.Price(), lowest))
+	}
+}
 
-		lowest = defTickPrec.LowestTick()
-		buyAmt := pool.BuyAmountOver(lowest)
-		expected := rx.ToDec().QuoRoundUp(lowest)
-		require.True(t, utils.DecApproxEqual(expected, buyAmt.ToDec()))
-		highest = defTickPrec.HighestTick()
-		sellAmt := pool.SellAmountUnder(highest)
-		require.True(t, ry.Sub(sellAmt).LTE(sdk.OneInt()))
+func TestCreateBasicPool(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		rx, ry      sdk.Int
+		expectedErr string
+	}{
+		{
+			"both zero amount",
+			sdk.NewInt(0), sdk.NewInt(0),
+			"cannot create basic pool with zero reserve amount",
+		},
+		{
+			"zero y amount",
+			sdk.NewInt(1000000), sdk.NewInt(0),
+			"cannot create basic pool with zero reserve amount",
+		},
+		{
+			"zero x amount",
+			sdk.NewInt(0), sdk.NewInt(1000000),
+			"cannot create basic pool with zero reserve amount",
+		},
+		{
+			"too low price",
+			sdk.NewInt(1000000), sdk.NewIntWithDecimal(1, 26),
+			"pool price is lower than min price 0.000000000000001000",
+		},
+		{
+			"too high price",
+			sdk.NewIntWithDecimal(1, 48), sdk.NewInt(1000000),
+			"pool price is greater than max price 100000000000000000000.000000000000000000",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := amm.CreateBasicPool(tc.rx, tc.ry)
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
 	}
 }
 
@@ -239,7 +273,7 @@ func TestBasicPool_Deposit(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
-			ax, ay, pc := pool.Deposit(sdk.NewInt(tc.x), sdk.NewInt(tc.y))
+			ax, ay, pc := amm.Deposit(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps), sdk.NewInt(tc.x), sdk.NewInt(tc.y))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.ax), ax))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.ay), ay))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.pc), pc))
@@ -313,8 +347,7 @@ func TestBasicPool_Withdraw(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := amm.NewBasicPool(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps))
-			x, y := pool.Withdraw(sdk.NewInt(tc.pc), tc.feeRate)
+			x, y := amm.Withdraw(sdk.NewInt(tc.rx), sdk.NewInt(tc.ry), sdk.NewInt(tc.ps), sdk.NewInt(tc.pc), tc.feeRate)
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.x), x))
 			require.True(sdk.IntEq(t, sdk.NewInt(tc.y), y))
 			// Additional assertions
@@ -324,79 +357,580 @@ func TestBasicPool_Withdraw(t *testing.T) {
 	}
 }
 
-func TestBasicPool_Amount(t *testing.T) {
+func TestBasicPool_BuyAmountOver(t *testing.T) {
 	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
-	require.True(t, utils.DecApproxEqual(
-		utils.ParseDec("1000000"),
-		pool.BuyAmountOver(defTickPrec.LowestTick()).ToDec().Mul(defTickPrec.LowestTick()),
-	))
-	require.True(t, utils.DecApproxEqual(
-		utils.ParseDec("1000000"),
-		pool.SellAmountUnder(defTickPrec.HighestTick()).ToDec()),
-	)
+
+	for _, tc := range []struct {
+		pool  *amm.BasicPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("1.1"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("0.9"), sdk.NewInt(111111)},
+		{pool, utils.ParseDec("0.8"), sdk.NewInt(250000)},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.BuyAmountOver(tc.price, true)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
 }
 
-func ExamplePoolsOrderBook() {
-	pools := []amm.Pool{
-		amm.NewBasicPool(sdk.NewInt(1000000000), sdk.NewInt(1000000000), sdk.Int{}),
-	}
-	ob := amm.PoolsOrderBook(pools, amm.Ticks(utils.ParseDec("1.0"), 6, int(defTickPrec)))
-	fmt.Println(ob.FullString(int(defTickPrec)))
-	ob = amm.PoolsOrderBook(pools, amm.EvenTicks(utils.ParseDec("1.0"), 3, int(defTickPrec)))
-	fmt.Println(ob.FullString(int(defTickPrec)))
+func TestBasicPool_SellAmountUnder(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
 
-	// Output:
-	// +--------buy---------+------------price-------------+--------sell--------+
-	// |                  0 |         1.006000000000000000 | 989090             |
-	// |                  0 |         1.005000000000000000 | 991061             |
-	// |                  0 |         1.004000000000000000 | 993037             |
-	// |                  0 |         1.003000000000000000 | 995019             |
-	// |                  0 |         1.002000000000000000 | 997007             |
-	// |                  0 |         1.001000000000000000 | 999000             |
-	// |                  0 |         1.000000000000000000 | 0                  |
-	// |             100010 |         0.999900000000000000 | 0                  |
-	// |             100020 |         0.999800000000000000 | 0                  |
-	// |             100030 |         0.999700000000000000 | 0                  |
-	// |             100040 |         0.999600000000000000 | 0                  |
-	// |             100050 |         0.999500000000000000 | 0                  |
-	// |             100060 |         0.999400000000000000 | 0                  |
-	// +--------------------+------------------------------+--------------------+
-	// +--------buy---------+------------price-------------+--------sell--------+
-	// |                  0 |         1.003000000000000000 | 995019             |
-	// |                  0 |         1.002000000000000000 | 997007             |
-	// |                  0 |         1.001000000000000000 | 999000             |
-	// |                  0 |         1.000000000000000000 | 0                  |
-	// |                  0 |         0.999900000000000000 | 0                  |
-	// |                  0 |         0.999800000000000000 | 0                  |
-	// |                  0 |         0.999700000000000000 | 0                  |
-	// |                  0 |         0.999600000000000000 | 0                  |
-	// |                  0 |         0.999500000000000000 | 0                  |
-	// |                  0 |         0.999400000000000000 | 0                  |
-	// |                  0 |         0.999300000000000000 | 0                  |
-	// |                  0 |         0.999200000000000000 | 0                  |
-	// |                  0 |         0.999100000000000000 | 0                  |
-	// |            1001001 |         0.999000000000000000 | 0                  |
-	// |                  0 |         0.998900000000000000 | 0                  |
-	// |                  0 |         0.998800000000000000 | 0                  |
-	// |                  0 |         0.998700000000000000 | 0                  |
-	// |                  0 |         0.998600000000000000 | 0                  |
-	// |                  0 |         0.998500000000000000 | 0                  |
-	// |                  0 |         0.998400000000000000 | 0                  |
-	// |                  0 |         0.998300000000000000 | 0                  |
-	// |                  0 |         0.998200000000000000 | 0                  |
-	// |                  0 |         0.998100000000000000 | 0                  |
-	// |            1002004 |         0.998000000000000000 | 0                  |
-	// |                  0 |         0.997900000000000000 | 0                  |
-	// |                  0 |         0.997800000000000000 | 0                  |
-	// |                  0 |         0.997700000000000000 | 0                  |
-	// |                  0 |         0.997600000000000000 | 0                  |
-	// |                  0 |         0.997500000000000000 | 0                  |
-	// |                  0 |         0.997400000000000000 | 0                  |
-	// |                  0 |         0.997300000000000000 | 0                  |
-	// |                  0 |         0.997200000000000000 | 0                  |
-	// |                  0 |         0.997100000000000000 | 0                  |
-	// |            1003009 |         0.997000000000000000 | 0                  |
-	// +--------------------+------------------------------+--------------------+
+	for _, tc := range []struct {
+		pool  *amm.BasicPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("0.9"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.1"), sdk.NewInt(90909)},
+		{pool, utils.ParseDec("1.2"), sdk.NewInt(166666)},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.SellAmountUnder(tc.price, true)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
+}
+
+func TestBasicPool_BuyAmountTo(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
+
+	for _, tc := range []struct {
+		pool  *amm.BasicPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("1.1"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("0.5"), sdk.NewInt(585786)},
+		{pool, utils.ParseDec("0.4"), sdk.NewInt(918861)},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.BuyAmountTo(tc.price)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
+}
+
+func TestBasicPool_SellAmountTo(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
+
+	for _, tc := range []struct {
+		pool  *amm.BasicPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("0.9"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.4"), sdk.NewInt(154845)},
+		{pool, utils.ParseDec("1.5"), sdk.NewInt(183503)},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.SellAmountTo(tc.price)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
+}
+
+func TestValidateRangedPoolParams(t *testing.T) {
+	for _, tc := range []struct {
+		name               string
+		minPrice, maxPrice sdk.Dec
+		initialPrice       sdk.Dec
+		expectedErr        string
+	}{
+		{
+			"happy case",
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+		},
+		{
+			"single y asset pool",
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("0.5"),
+			"",
+		},
+		{
+			"single x asset pool",
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("2.0"),
+			"",
+		},
+		{
+			"too low min price",
+			sdk.NewDecWithPrec(1, 16), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"min price must not be lower than 0.000000000000001000",
+		},
+		{
+			"too high max price",
+			utils.ParseDec("0.5"), sdk.NewIntWithDecimal(1, 25).ToDec(),
+			utils.ParseDec("1.0"),
+			"max price must not be higher than 100000000000000000000.000000000000000000",
+		},
+		{
+			"too low initial price",
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("0.499"),
+			"initial price must not be lower than min price",
+		},
+		{
+			"too high initial price",
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("2.001"),
+			"initial price must not be higher than max price",
+		},
+		{
+			"max price lower than min price",
+			utils.ParseDec("2.0"), utils.ParseDec("0.5"),
+			utils.ParseDec("1.0"),
+			"max price must be higher than min price",
+		},
+		{
+			"too close min price and max price",
+			utils.ParseDec("0.9999"), utils.ParseDec("1.0001"),
+			utils.ParseDec("1.0"),
+			"min price and max price are too close",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := amm.ValidateRangedPoolParams(tc.minPrice, tc.maxPrice, tc.initialPrice)
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestCreateRangedPool(t *testing.T) {
+	intApproxEq := func(exp, got sdk.Int) (*testing.T, bool, string, string, string) {
+		c := exp.Sub(got).Abs().LTE(sdk.OneInt())
+		if c && !exp.IsZero() {
+			c = exp.ToDec().Sub(got.ToDec()).Abs().Quo(exp.ToDec()).LTE(sdk.NewDecWithPrec(1, 3))
+		}
+		return t, c, "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+	}
+
+	for _, tc := range []struct {
+		name               string
+		x, y               sdk.Int
+		minPrice, maxPrice sdk.Dec
+		initialPrice       sdk.Dec
+		expectedErr        string
+		ax, ay             sdk.Int
+	}{
+		{
+			"basic case",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+		},
+		{
+			"basic case 2",
+			sdk.NewInt(500000), sdk.NewInt(1_000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(500000), sdk.NewInt(500000),
+		},
+		{
+			"basic case 3",
+			sdk.NewInt(1_000000), sdk.NewInt(500000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(500000), sdk.NewInt(500000),
+		},
+		{
+			"invalid pool",
+			sdk.ZeroInt(), sdk.ZeroInt(),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"either x or y must be positive",
+			sdk.Int{}, sdk.Int{},
+		},
+		{
+			"single asset x pool",
+			sdk.NewInt(1_000000), sdk.ZeroInt(),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("2.0"),
+			"",
+			sdk.NewInt(1_000000), sdk.ZeroInt(),
+		},
+		{
+			"single asset x pool - refund",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("2.0"),
+			"",
+			sdk.NewInt(1_000000), sdk.ZeroInt(),
+		},
+		{
+			"single asset y pool",
+			sdk.ZeroInt(), sdk.NewInt(1_000000),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.ZeroInt(), sdk.NewInt(1_000000),
+		},
+		{
+			"single asset y pool - refund",
+			sdk.NewInt(1_000000), sdk.NewInt(1_000000),
+			utils.ParseDec("1.0"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.ZeroInt(), sdk.NewInt(1_000000),
+		},
+		{
+			"small min price",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			sdk.NewDecWithPrec(1, 15), utils.ParseDec("2.0"),
+			utils.ParseDec("1.0"),
+			"",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(292893228075549596),
+		},
+		{
+			"large max price",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			utils.ParseDec("1.0"), sdk.NewIntWithDecimal(1, 20).ToDec(),
+			utils.ParseDec("2.0"),
+			"",
+			sdk.NewInt(585786437709747665), sdk.NewInt(1_000000000000000000),
+		},
+		{
+			"close min price and max price",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			utils.ParseDec("1.0"), utils.ParseDec("1.001"),
+			utils.ParseDec("1.0005"),
+			"",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(999000936633614182),
+		},
+		{
+			"small x asset",
+			sdk.NewInt(9), sdk.NewInt(9_000000000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("0.5000001"),
+			"",
+			sdk.NewInt(9), sdk.NewInt(89999987),
+		},
+		{
+			"small y asset",
+			sdk.NewInt(9_000000000000000000), sdk.NewInt(9),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			utils.ParseDec("1.9999999"),
+			"",
+			sdk.NewInt(359999969), sdk.NewInt(9),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pool, err := amm.CreateRangedPool(tc.x, tc.y, tc.minPrice, tc.maxPrice, tc.initialPrice)
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				ax, ay := pool.Balances()
+				require.True(intApproxEq(tc.ax, ax))
+				require.True(intApproxEq(tc.ay, ay))
+				require.True(t, utils.DecApproxEqual(tc.initialPrice, pool.Price()))
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestRangedPool_Deposit(t *testing.T) {
+	for _, tc := range []struct {
+		name               string
+		rx, ry             sdk.Int
+		ps                 sdk.Int
+		minPrice, maxPrice sdk.Dec
+		x, y               sdk.Int // depositing x and y coin amount
+		ax, ay             sdk.Int // accepted x and y coin amount
+		pc                 sdk.Int // expected minted pool coin amount
+	}{
+		{
+			"ideal case",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123456789), sdk.NewInt(123456789),
+			sdk.NewInt(123000000), sdk.NewInt(123000000),
+			sdk.NewInt(123),
+		},
+		{
+			"single x asset pool",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(0),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123456789), sdk.NewInt(0),
+			sdk.NewInt(123000000), sdk.NewInt(0),
+			sdk.NewInt(123),
+		},
+		{
+			"single y asset pool",
+			sdk.NewInt(0), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(0), sdk.NewInt(123456789),
+			sdk.NewInt(0), sdk.NewInt(123000000),
+			sdk.NewInt(123),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pool := amm.NewRangedPool(tc.rx, tc.ry, tc.ps, tc.minPrice, tc.maxPrice)
+			ax, ay, pc := amm.Deposit(tc.rx, tc.ry, tc.ps, tc.x, tc.y)
+			require.True(sdk.IntEq(t, tc.ax, ax))
+			require.True(sdk.IntEq(t, tc.ay, ay))
+			require.True(sdk.IntEq(t, tc.pc, pc))
+			newPool := amm.NewRangedPool(tc.rx.Add(ax), tc.ry.Add(ay), tc.ps.Add(pc), tc.minPrice, tc.maxPrice)
+
+			var reserveRatio sdk.Dec
+			switch {
+			case tc.rx.IsZero():
+				reserveRatio = ay.ToDec().Quo(tc.ry.ToDec())
+			case tc.ry.IsZero():
+				reserveRatio = ax.ToDec().Quo(tc.rx.ToDec())
+			default:
+				reserveRatio = ax.ToDec().Quo(tc.rx.ToDec())
+				require.True(t, utils.DecApproxEqual(reserveRatio, ay.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check ax/ay == rx/ry
+			if !tc.rx.IsZero() && !tc.ry.IsZero() {
+				require.True(t, utils.DecApproxEqual(ax.ToDec().Quo(ay.ToDec()), tc.rx.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check ax/rx == ay/ry == pc/ps
+			require.True(t, utils.DecApproxEqual(reserveRatio, pc.ToDec().Quo(tc.ps.ToDec())))
+
+			// check pool price before == pool price after
+			require.True(t, utils.DecApproxEqual(pool.Price(), newPool.Price()))
+
+			transX, transY := pool.Translation()
+			transXPrime, transYPrime := newPool.Translation()
+			// alpha = reserveRatio
+			// check transX' == transX * (1+alpha), transY' == transY * (1+alpha)
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transXPrime.Quo(transX)))
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transYPrime.Quo(transY)))
+		})
+	}
+}
+
+func TestRangedPool_Withdraw(t *testing.T) {
+	for _, tc := range []struct {
+		name               string
+		rx, ry             sdk.Int
+		ps                 sdk.Int
+		minPrice, maxPrice sdk.Dec
+		pc                 sdk.Int // redeeming pool coin amount
+		x, y               sdk.Int // withdrawn x and y coin amount
+	}{
+		{
+			"ideal case",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123),
+			sdk.NewInt(123000000), sdk.NewInt(123000000),
+		},
+		{
+			"single x asset pool",
+			sdk.NewInt(1_000000000000000000), sdk.NewInt(0),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123),
+			sdk.NewInt(123000000), sdk.NewInt(0),
+		},
+		{
+			"single y asset pool",
+			sdk.NewInt(0), sdk.NewInt(1_000000000000000000),
+			sdk.NewInt(1_000000000000),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"),
+			sdk.NewInt(123),
+			sdk.NewInt(0), sdk.NewInt(123000000),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pool := amm.NewRangedPool(tc.rx, tc.ry, tc.ps, tc.minPrice, tc.maxPrice)
+			x, y := amm.Withdraw(tc.rx, tc.ry, tc.ps, tc.pc, sdk.ZeroDec())
+			require.True(sdk.IntEq(t, tc.x, x))
+			require.True(sdk.IntEq(t, tc.y, y))
+			newPool := amm.NewRangedPool(tc.rx.Sub(x), tc.ry.Sub(y), tc.ps.Sub(tc.pc), tc.minPrice, tc.maxPrice)
+
+			var reserveRatio sdk.Dec
+			switch {
+			case tc.rx.IsZero():
+				reserveRatio = y.ToDec().Quo(tc.ry.ToDec())
+			case tc.ry.IsZero():
+				reserveRatio = x.ToDec().Quo(tc.rx.ToDec())
+			default:
+				reserveRatio = x.ToDec().Quo(tc.rx.ToDec())
+				require.True(t, utils.DecApproxEqual(reserveRatio, y.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check x/y == rx/ry
+			if !tc.rx.IsZero() && !tc.ry.IsZero() {
+				require.True(t, utils.DecApproxEqual(x.ToDec().Quo(y.ToDec()), tc.rx.ToDec().Quo(tc.ry.ToDec())))
+			}
+
+			// check x/rx == y/ry == pc/ps
+			require.True(t, utils.DecApproxEqual(reserveRatio, tc.pc.ToDec().Quo(tc.ps.ToDec())))
+
+			// check pool price before == pool price after
+			require.True(t, utils.DecApproxEqual(pool.Price(), newPool.Price()))
+
+			transX, transY := pool.Translation()
+			transXPrime, transYPrime := newPool.Translation()
+			// alpha = reserveRatio
+			// check transX' == transX * (1+alpha), transY' == transY * (1+alpha)
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transXPrime.Quo(transX)))
+			require.True(t, utils.DecApproxEqual(reserveRatio.Add(sdk.OneDec()), transYPrime.Quo(transY)))
+		})
+	}
+}
+
+func TestRangedPool_BuyAmountOver(t *testing.T) {
+	pool := amm.NewRangedPool(
+		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{},
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"))
+
+	for _, tc := range []struct {
+		pool  *amm.RangedPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("1.1"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("0.9"), sdk.NewInt(379357)},
+		{pool, utils.ParseDec("0.8"), sdk.NewInt(853553)},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.BuyAmountOver(tc.price, true)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
+}
+
+func TestRangedPool_SellAmountUnder(t *testing.T) {
+	pool := amm.NewRangedPool(
+		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{},
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"))
+
+	for _, tc := range []struct {
+		pool  *amm.RangedPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("0.9"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.1"), sdk.NewInt(310383)},
+		{pool, utils.ParseDec("1.2"), sdk.NewInt(569035)},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.SellAmountUnder(tc.price, true)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
+}
+
+func TestRangedPool_BuyAmountTo(t *testing.T) {
+	pool := amm.NewRangedPool(
+		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{},
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"))
+
+	for _, tc := range []struct {
+		pool  *amm.RangedPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("1.1"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("0.8"), sdk.NewInt(450560)},
+		{pool, utils.ParseDec("0.7"), sdk.NewInt(796682)},
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(957322), sdk.NewInt(3351038710333311), sdk.Int{},
+				utils.ParseDec("0.9"), utils.ParseDec("1.1"),
+			),
+			utils.ParseDec("0.899580000000000000"),
+			sdk.NewInt(1063691),
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.BuyAmountTo(tc.price)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
+}
+
+func TestRangedPool_SellAmountTo(t *testing.T) {
+	pool := amm.NewRangedPool(
+		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{},
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"))
+
+	for _, tc := range []struct {
+		pool  *amm.RangedPool
+		price sdk.Dec
+		amt   sdk.Int
+	}{
+		{pool, utils.ParseDec("0.9"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.0"), sdk.ZeroInt()},
+		{pool, utils.ParseDec("1.4"), sdk.NewInt(528676)},
+		{pool, utils.ParseDec("1.5"), sdk.NewInt(626519)},
+	} {
+		t.Run("", func(t *testing.T) {
+			amt := tc.pool.SellAmountTo(tc.price)
+			require.True(sdk.IntEq(t, tc.amt, amt))
+		})
+	}
+}
+
+func TestRangedPool_exhaust(t *testing.T) {
+	for _, tc := range []struct {
+		pool *amm.RangedPool
+	}{
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{},
+				utils.ParseDec("0.5"), utils.ParseDec("2.0")),
+		},
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(1_000000000000000000), sdk.NewInt(9_000000000000000000), sdk.Int{},
+				utils.ParseDec("0.1001"), utils.ParseDec("10.05")),
+		},
+		{
+			amm.NewRangedPool(
+				sdk.NewInt(123456789), sdk.NewInt(987654321), sdk.Int{},
+				utils.ParseDec("0.05"), utils.ParseDec("20.1")),
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			rx, ry := tc.pool.Balances()
+			minPrice := tc.pool.MinPrice()
+			maxPrice := tc.pool.MaxPrice()
+			orders := amm.PoolSellOrders(tc.pool, amm.DefaultOrderer, minPrice, maxPrice, 4)
+			amt := amm.TotalAmount(orders)
+			require.True(t, amt.LTE(ry))
+			require.True(t, amt.GTE(ry.ToDec().Mul(utils.ParseDec("0.99")).TruncateInt()))
+			orders = amm.PoolBuyOrders(tc.pool, amm.DefaultOrderer, minPrice, maxPrice, 4)
+			x := sdk.ZeroInt()
+			for _, order := range orders {
+				x = x.Add(order.GetPrice().MulInt(order.GetAmount()).TruncateInt())
+			}
+			require.True(t, x.LTE(rx))
+			require.True(t, x.GTE(rx.ToDec().Mul(utils.ParseDec("0.99")).TruncateInt()))
+		})
+	}
 }
 
 func TestInitialPoolCoinSupply(t *testing.T) {
@@ -416,20 +950,28 @@ func TestInitialPoolCoinSupply(t *testing.T) {
 	}
 }
 
-func TestMockPoolOrderSource_Orders(t *testing.T) {
-	pool := amm.NewBasicPool(sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.Int{})
-	os := amm.NewMockPoolOrderSource(pool, "denom1", "denom2")
-	buyOrders := os.BuyOrdersOver(defTickPrec.LowestTick())
-	require.Len(t, buyOrders, 1)
-	require.True(sdk.IntEq(t, os.BuyAmountOver(defTickPrec.LowestTick()), buyOrders[0].GetOpenAmount()))
-	sellOrders := os.SellOrdersUnder(defTickPrec.HighestTick())
-	require.Len(t, sellOrders, 1)
-	require.True(sdk.IntEq(t, os.SellAmountUnder(defTickPrec.HighestTick()), sellOrders[0].GetOpenAmount()))
-}
-
 func TestBasicPool_BuyAmountOverOverflow(t *testing.T) {
 	n, _ := sdk.NewIntFromString("10000000000000000000000000000000000000000000")
 	pool := amm.NewBasicPool(n, sdk.NewInt(1000), sdk.Int{})
-	amt := pool.BuyAmountOver(defTickPrec.LowestTick())
+	amt := pool.BuyAmountOver(defTickPrec.LowestTick(), true)
 	require.True(sdk.IntEq(t, amm.MaxCoinAmount, amt))
+}
+
+func TestBasicPoolOrders(t *testing.T) {
+	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
+	poolPrice := pool.Price()
+	lowestPrice := poolPrice.Mul(sdk.NewDecWithPrec(9, 1))
+	highestPrice := poolPrice.Mul(sdk.NewDecWithPrec(11, 1))
+	require.Len(t, amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4), 375)
+}
+
+func BenchmarkBasicPoolOrders(b *testing.B) {
+	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
+	poolPrice := pool.Price()
+	lowestPrice := poolPrice.Mul(sdk.NewDecWithPrec(9, 1))
+	highestPrice := poolPrice.Mul(sdk.NewDecWithPrec(11, 1))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4)
+	}
 }

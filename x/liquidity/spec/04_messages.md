@@ -46,9 +46,36 @@ The transaction that is triggered with `MsgCreatePool` fails if:
 - Pair with `PairId` does not exist
 - Coin denoms from `DepositCoins` aren't equal to coin pair with `PairID`
 - Amount of one of `DepositCoins` is less than `MinInitialDepositAmount`
-- Active(not disabled) `Pool` with same pair already exists
+- Active(not disabled) basic pool with same pair already exists
 - The balance of `Creator` does not have enough amount of coins for `DepositCoins`
 - The balance of `Creator` does not have enough coins for `PoolCreationFee`
+
+## MsgCreateRangedPool
+
+A ranged liquidity pool is created and initial coins are deposited with the `MsgCreateRangedPool` message.
+
+```go
+type MsgCreateRangedPool struct {
+    Creator      string    // the bech32-encoded address of the pool creator
+    PairId       uint64    // the pair id; pool(s) belong to a single pair
+    DepositCoins sdk.Coins // the amount of coins to deposit
+    InitialPrice sdk.Dec   // the initial pool price
+    MinPrice     *sdk.Dec  // the minimum price of the ranged pool
+    MaxPrice     *sdk.Dec  // the maximum price of the ranged pool
+}
+```
+
+### Validity Checks
+
+Validity checks are performed for `MsgCreateRangedPool` messages.
+The transaction that is triggered with `MsgCreateRangedPool` fails if:
+- `Creator` address is invalid
+- Pair with `PairId` does not exist
+- Coin denoms from `DepositCoins` aren't equal to coin pair with `PairID`
+- Amount of one of `DepositCoins` is less than `MinInitialDepositAmount`
+- The balance of `Creator` does not have enough amount of coins for `DepositCoins`
+- The balance of `Creator` does not have enough coins for `PoolCreationFee`
+- Relationship among `InitialPrice`, `MinPrice` and `MaxPrice` is invalid.
 
 ## MsgDeposit
 

@@ -23862,6 +23862,104 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  /crescent/liquidity/v1beta1/order_books:
+    get:
+      operationId: OrderBooks
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              pairs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pair_id:
+                      type: string
+                      format: uint64
+                    base_price:
+                      type: string
+                    order_books:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          tick_precision:
+                            type: integer
+                            format: int64
+                          buys:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                price:
+                                  type: string
+                                user_order_amount:
+                                  type: string
+                                pool_order_amount:
+                                  type: string
+                          sells:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                price:
+                                  type: string
+                                user_order_amount:
+                                  type: string
+                                pool_order_amount:
+                                  type: string
+            description: >-
+              QueryOrderBooksResponse is response type for Query/OrderBooks RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pair_ids
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+        - name: tick_precisions
+          in: query
+          required: false
+          type: array
+          items:
+            type: integer
+            format: int64
+          collectionFormat: multi
+        - name: num_ticks
+          in: query
+          required: false
+          type: integer
+          format: int64
+      tags:
+        - Query
   '/crescent/liquidity/v1beta1/orders/{orderer}':
     get:
       summary: OrdersByOrderer returns orders made by an orderer.
@@ -24882,15 +24980,34 @@ paths:
                 items:
                   type: object
                   properties:
+                    type:
+                      type: string
+                      enum:
+                        - POOL_TYPE_UNSPECIFIED
+                        - POOL_TYPE_BASIC
+                        - POOL_TYPE_RANGED
+                      default: POOL_TYPE_UNSPECIFIED
+                      description: |-
+                        PoolType enumerates pool types.
+
+                         - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+                         - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+                         - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
                     id:
                       type: string
                       format: uint64
                     pair_id:
                       type: string
                       format: uint64
+                    creator:
+                      type: string
                     reserve_address:
                       type: string
                     pool_coin_denom:
+                      type: string
+                    min_price:
+                      type: string
+                    max_price:
                       type: string
                     balances:
                       type: array
@@ -24916,6 +25033,9 @@ paths:
                     last_withdraw_request_id:
                       type: string
                       format: uint64
+                    disabled:
+                      type: boolean
+                      format: boolean
                   description: PoolResponse defines a custom pool response message.
               pagination:
                 type: object
@@ -25053,15 +25173,34 @@ paths:
               pool:
                 type: object
                 properties:
+                  type:
+                    type: string
+                    enum:
+                      - POOL_TYPE_UNSPECIFIED
+                      - POOL_TYPE_BASIC
+                      - POOL_TYPE_RANGED
+                    default: POOL_TYPE_UNSPECIFIED
+                    description: |-
+                      PoolType enumerates pool types.
+
+                       - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+                       - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+                       - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
                   id:
                     type: string
                     format: uint64
                   pair_id:
                     type: string
                     format: uint64
+                  creator:
+                    type: string
                   reserve_address:
                     type: string
                   pool_coin_denom:
+                    type: string
+                  min_price:
+                    type: string
+                  max_price:
                     type: string
                   balances:
                     type: array
@@ -25086,6 +25225,9 @@ paths:
                   last_withdraw_request_id:
                     type: string
                     format: uint64
+                  disabled:
+                    type: boolean
+                    format: boolean
                 description: PoolResponse defines a custom pool response message.
             description: QueryPoolResponse is response type for the Query/Pool RPC method.
         default:
@@ -25132,15 +25274,34 @@ paths:
               pool:
                 type: object
                 properties:
+                  type:
+                    type: string
+                    enum:
+                      - POOL_TYPE_UNSPECIFIED
+                      - POOL_TYPE_BASIC
+                      - POOL_TYPE_RANGED
+                    default: POOL_TYPE_UNSPECIFIED
+                    description: |-
+                      PoolType enumerates pool types.
+
+                       - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+                       - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+                       - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
                   id:
                     type: string
                     format: uint64
                   pair_id:
                     type: string
                     format: uint64
+                  creator:
+                    type: string
                   reserve_address:
                     type: string
                   pool_coin_denom:
+                    type: string
+                  min_price:
+                    type: string
+                  max_price:
                     type: string
                   balances:
                     type: array
@@ -25165,6 +25326,9 @@ paths:
                   last_withdraw_request_id:
                     type: string
                     format: uint64
+                  disabled:
+                    type: boolean
+                    format: boolean
                 description: PoolResponse defines a custom pool response message.
             description: QueryPoolResponse is response type for the Query/Pool RPC method.
         default:
@@ -25209,15 +25373,34 @@ paths:
               pool:
                 type: object
                 properties:
+                  type:
+                    type: string
+                    enum:
+                      - POOL_TYPE_UNSPECIFIED
+                      - POOL_TYPE_BASIC
+                      - POOL_TYPE_RANGED
+                    default: POOL_TYPE_UNSPECIFIED
+                    description: |-
+                      PoolType enumerates pool types.
+
+                       - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+                       - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+                       - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
                   id:
                     type: string
                     format: uint64
                   pair_id:
                     type: string
                     format: uint64
+                  creator:
+                    type: string
                   reserve_address:
                     type: string
                   pool_coin_denom:
+                    type: string
+                  min_price:
+                    type: string
+                  max_price:
                     type: string
                   balances:
                     type: array
@@ -25242,6 +25425,9 @@ paths:
                   last_withdraw_request_id:
                     type: string
                     format: uint64
+                  disabled:
+                    type: boolean
+                    format: boolean
                 description: PoolResponse defines a custom pool response message.
             description: QueryPoolResponse is response type for the Query/Pool RPC method.
         default:
@@ -44540,6 +44726,81 @@ definitions:
            - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
            - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
     description: Order defines an order.
+  crescent.liquidity.v1beta1.OrderBookPairResponse:
+    type: object
+    properties:
+      pair_id:
+        type: string
+        format: uint64
+      base_price:
+        type: string
+      order_books:
+        type: array
+        items:
+          type: object
+          properties:
+            tick_precision:
+              type: integer
+              format: int64
+            buys:
+              type: array
+              items:
+                type: object
+                properties:
+                  price:
+                    type: string
+                  user_order_amount:
+                    type: string
+                  pool_order_amount:
+                    type: string
+            sells:
+              type: array
+              items:
+                type: object
+                properties:
+                  price:
+                    type: string
+                  user_order_amount:
+                    type: string
+                  pool_order_amount:
+                    type: string
+  crescent.liquidity.v1beta1.OrderBookResponse:
+    type: object
+    properties:
+      tick_precision:
+        type: integer
+        format: int64
+      buys:
+        type: array
+        items:
+          type: object
+          properties:
+            price:
+              type: string
+            user_order_amount:
+              type: string
+            pool_order_amount:
+              type: string
+      sells:
+        type: array
+        items:
+          type: object
+          properties:
+            price:
+              type: string
+            user_order_amount:
+              type: string
+            pool_order_amount:
+              type: string
+  crescent.liquidity.v1beta1.OrderBookTickResponse:
+    type: object
+    properties:
+      price:
+        type: string
+      user_order_amount:
+        type: string
+      pool_order_amount:
+        type: string
   crescent.liquidity.v1beta1.OrderDirection:
     type: string
     enum:
@@ -44661,15 +44922,34 @@ definitions:
   crescent.liquidity.v1beta1.PoolResponse:
     type: object
     properties:
+      type:
+        type: string
+        enum:
+          - POOL_TYPE_UNSPECIFIED
+          - POOL_TYPE_BASIC
+          - POOL_TYPE_RANGED
+        default: POOL_TYPE_UNSPECIFIED
+        description: |-
+          PoolType enumerates pool types.
+
+           - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+           - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+           - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
       id:
         type: string
         format: uint64
       pair_id:
         type: string
         format: uint64
+      creator:
+        type: string
       reserve_address:
         type: string
       pool_coin_denom:
+        type: string
+      min_price:
+        type: string
+      max_price:
         type: string
       balances:
         type: array
@@ -44691,7 +44971,23 @@ definitions:
       last_withdraw_request_id:
         type: string
         format: uint64
+      disabled:
+        type: boolean
+        format: boolean
     description: PoolResponse defines a custom pool response message.
+  crescent.liquidity.v1beta1.PoolType:
+    type: string
+    enum:
+      - POOL_TYPE_UNSPECIFIED
+      - POOL_TYPE_BASIC
+      - POOL_TYPE_RANGED
+    default: POOL_TYPE_UNSPECIFIED
+    description: |-
+      PoolType enumerates pool types.
+
+       - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+       - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+       - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
   crescent.liquidity.v1beta1.QueryDepositRequestResponse:
     type: object
     properties:
@@ -44909,6 +45205,50 @@ definitions:
     description: >-
       QueryDepositRequestsResponse is response type for the
       Query/DepositRequests RPC method.
+  crescent.liquidity.v1beta1.QueryOrderBooksResponse:
+    type: object
+    properties:
+      pairs:
+        type: array
+        items:
+          type: object
+          properties:
+            pair_id:
+              type: string
+              format: uint64
+            base_price:
+              type: string
+            order_books:
+              type: array
+              items:
+                type: object
+                properties:
+                  tick_precision:
+                    type: integer
+                    format: int64
+                  buys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        price:
+                          type: string
+                        user_order_amount:
+                          type: string
+                        pool_order_amount:
+                          type: string
+                  sells:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        price:
+                          type: string
+                        user_order_amount:
+                          type: string
+                        pool_order_amount:
+                          type: string
+    description: QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.
   crescent.liquidity.v1beta1.QueryOrderResponse:
     type: object
     properties:
@@ -45336,15 +45676,34 @@ definitions:
       pool:
         type: object
         properties:
+          type:
+            type: string
+            enum:
+              - POOL_TYPE_UNSPECIFIED
+              - POOL_TYPE_BASIC
+              - POOL_TYPE_RANGED
+            default: POOL_TYPE_UNSPECIFIED
+            description: |-
+              PoolType enumerates pool types.
+
+               - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+               - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+               - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
           id:
             type: string
             format: uint64
           pair_id:
             type: string
             format: uint64
+          creator:
+            type: string
           reserve_address:
             type: string
           pool_coin_denom:
+            type: string
+          min_price:
+            type: string
+          max_price:
             type: string
           balances:
             type: array
@@ -45369,6 +45728,9 @@ definitions:
           last_withdraw_request_id:
             type: string
             format: uint64
+          disabled:
+            type: boolean
+            format: boolean
         description: PoolResponse defines a custom pool response message.
     description: QueryPoolResponse is response type for the Query/Pool RPC method.
   crescent.liquidity.v1beta1.QueryPoolsResponse:
@@ -45379,15 +45741,34 @@ definitions:
         items:
           type: object
           properties:
+            type:
+              type: string
+              enum:
+                - POOL_TYPE_UNSPECIFIED
+                - POOL_TYPE_BASIC
+                - POOL_TYPE_RANGED
+              default: POOL_TYPE_UNSPECIFIED
+              description: |-
+                PoolType enumerates pool types.
+
+                 - POOL_TYPE_UNSPECIFIED: POOL_TYPE_UNSPECIFIED specifies unknown pool type
+                 - POOL_TYPE_BASIC: POOL_TYPE_BASIC specifies the basic pool type
+                 - POOL_TYPE_RANGED: POOL_TYPE_RANGED specifies the ranged pool type
             id:
               type: string
               format: uint64
             pair_id:
               type: string
               format: uint64
+            creator:
+              type: string
             reserve_address:
               type: string
             pool_coin_denom:
+              type: string
+            min_price:
+              type: string
+            max_price:
               type: string
             balances:
               type: array
@@ -45412,6 +45793,9 @@ definitions:
             last_withdraw_request_id:
               type: string
               format: uint64
+            disabled:
+              type: boolean
+              format: boolean
           description: PoolResponse defines a custom pool response message.
       pagination:
         type: object

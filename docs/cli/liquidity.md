@@ -16,6 +16,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
 - [Transaction](#Transaction)
     * [CreatePair](#CreatePair)
     * [CreatePool](#CreatePool)
+    * [CreateRangedPool](#CreateRangedPool)
     * [Deposit](#Deposit)
     * [Withdraw](#Withdraw)
     * [LimitOrder](#LimitOrder)
@@ -32,8 +33,9 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
     * [DepositRequest](#DepositRequest)
     * [WithdrawRequests](#WithdrawRequests)
     * [WithdrawRequest](#WithdrawRequest)
-    * [Orders](#Orrers)
+    * [Orders](#Orders)
     * [Order](#Order)
+    * [OrderBooks](#OrderBooks)
 
 # Transaction
 
@@ -95,6 +97,46 @@ Example
 ```bash
 # Create a pool 1000ATOM/3000UST
 crescentd tx liquidity create-pool 1 1000000000uatom,3000000000uusd \
+--chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+#
+# Tips
+#
+# You can query pools using the following command
+crescentd q liquidity pools -o json | jq
+```
+
+## CreateRangedPool
+
+Create a ranged liquidity pool in existing pair.
+
+Pool(s) belong to a pair. Therefore, a pair must exist in order to create a pool. Anyone can create a pool by paying a fee PoolCreationFee (default is 1000000stake).
+
+Usage
+
+```bash
+create-ranged-pool [pair-id] [deposit-coins] [min-price] [max-price] [initial-price]
+```
+
+| **Argument**  | **Description**                        |
+|:--------------|:---------------------------------------|
+| pair-id       | pair id                                |
+| deposit-coins | deposit amount of base and quote coins |
+| min-price     | minimum price of the pool              |
+| max-price     | maximum price of the pool              |
+| initial-price | initial pool price                     |
+
+Example
+
+```bash
+# Create a ranged pool with 1000ATOM/1000UST with price range of [2.5, 10.0],
+# with initial price set to 3.0
+crescentd tx liquidity create-ranged-pool 1 1000000000uatom,1000000000uusd 2.5 10.0 3.0 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -565,6 +607,22 @@ Example
 
 ```bash
 crescentd q liquidity order 1 1
+```
+
+## OrderBooks
+
+Query order books for given pairs and tick precisions.
+
+Usage
+
+```bash
+order-books [pair-ids] [tick-precisions]
+```
+
+Example
+
+```bash
+crescentd order-books 1 3,4 --num-ticks=10
 ```
 
 
