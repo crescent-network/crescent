@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/app"
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/liquidity/amm"
-	"github.com/crescent-network/crescent/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/v2/app"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v2/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
 
 type KeeperTestSuite struct {

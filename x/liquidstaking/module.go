@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/crescent-network/crescent/x/liquidstaking/client/cli"
-	"github.com/crescent-network/crescent/x/liquidstaking/keeper"
-	"github.com/crescent-network/crescent/x/liquidstaking/simulation"
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v2/x/liquidstaking/client/cli"
+	"github.com/crescent-network/crescent/v2/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/v2/x/liquidstaking/simulation"
+	"github.com/crescent-network/crescent/v2/x/liquidstaking/types"
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
 
 // excConditions returns true when exactly one condition is true.

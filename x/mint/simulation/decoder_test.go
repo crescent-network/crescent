@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/mint/simulation"
-	"github.com/crescent-network/crescent/x/mint/types"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/mint/simulation"
+	"github.com/crescent-network/crescent/v2/x/mint/types"
 )
 
 func TestDecodeLastBlockTimeStore(t *testing.T) {

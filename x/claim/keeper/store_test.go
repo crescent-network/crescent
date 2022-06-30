@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/claim/types"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/claim/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

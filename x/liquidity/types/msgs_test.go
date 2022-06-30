@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
 
 func TestMsgCreatePair(t *testing.T) {

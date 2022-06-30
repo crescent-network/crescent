@@ -10,7 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	utils "github.com/crescent-network/crescent/types"
+	utils "github.com/crescent-network/crescent/v2/types"
 )
 
 // Parameter store keys

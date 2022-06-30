@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	chain "github.com/crescent-network/crescent/app"
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/liquidity/simulation"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/v2/app"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity/simulation"
+	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
 
 func TestDecodeLiquidityStore(t *testing.T) {

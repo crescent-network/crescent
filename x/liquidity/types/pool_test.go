@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
 
 func TestPoolReserveAddress(t *testing.T) {

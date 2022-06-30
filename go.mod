@@ -1,4 +1,4 @@
-module github.com/crescent-network/crescent
+module github.com/crescent-network/crescent/v2
 
 go 1.17
 

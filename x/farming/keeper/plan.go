@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/x/farming/types"
+	"github.com/crescent-network/crescent/v2/x/farming/types"
 )
 
 // GetPlan returns a plan for a given plan id.

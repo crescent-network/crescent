@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/crescent-network/crescent/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v2/x/liquidstaking/types"
 )
 
 func (k Keeper) LiquidBondDenom(ctx sdk.Context) (res string) {

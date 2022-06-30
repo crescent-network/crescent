@@ -9,8 +9,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/claim/types"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/claim/types"
 )
 
 // GenAirdrops randomly generates airdrops.
