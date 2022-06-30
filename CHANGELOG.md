@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v2.0.0
+
 ### Client Breaking Changes
 
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `OrderBooks` query endpoint:
@@ -62,11 +64,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Change `Pool` struct for ranged pools and refactor matching logic
   * Add `type`, `creator`, `min_price` and `max_price` fields to `Pool` struct
   * Refactor matching logic both for fairness of matching and efficiency of pool order placement
+  * Change the liquidity module's `TickPrecisions` param from 3 to 4
 * (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Time-based queued staking and new UnharvestedRewards struct
   * Changed/added kv-store keys:
     * QueuedStaking: `0x23 | EndTimeLen (1 byte) | sdk.FormatTimeBytes(EndTime) | StakingCoinDenomLen (1 byte) | StakingCoinDenom | FarmerAddr -> ProtocolBuffer(QueuedStaking)`
     * QueuedStakingIndex: `0x24 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenomLen (1 byte) | StakingCoinDenom | sdk.FormatTimeBytes(EndTime) -> nil`
     * UnharvestedRewards: `0x34 | FarmerAddrLen (1 byte) | FarmerAddr | StakingCoinDenom -> ProtocolBuffer(UnharvestedRewards)`
+* (x/mint, x/budget) [\#35](https://github.com/crescent-network/crescent/pull/35) feat!: add mint pool address for mint module #316
+  * Add `params.MintPoolAddress` on the mint module `cre1m3h30wlvsf8llruxtpukdvsy0km2kum8ve5ajd`
+  * Change Mint Pool from default `cre17xpfvakm2amg962yls6f84z3kell8c5l53s97s` (fee_collector) to `cre1m3h30wlvsf8llruxtpukdvsy0km2kum8ve5ajd` (params.MintPoolAddress) to prevent mixing of inflation and tx fee
+  * Change the source address of Budgets whose source address is `cre17xpfvakm2amg962yls6f84z3kell8c5l53s97s` to `cre1m3h30wlvsf8llruxtpukdvsy0km2kum8ve5ajd`
+  * Add Budget to sending staking reward, and community fund to `cre17xpfvakm2amg962yls6f84z3kell8c5l53s97s` from `cre1m3h30wlvsf8llruxtpukdvsy0km2kum8ve5ajd`
 
 * [\#31](https://github.com/crescent-network/crescent/pull/31) build!: bump cosmos-sdk to v0.45.3, tendermint v0.34.19, ibc-go v2.2.0, budget v1.2.0, go 1.17
 
