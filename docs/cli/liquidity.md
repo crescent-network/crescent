@@ -35,6 +35,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
     * [WithdrawRequest](#WithdrawRequest)
     * [Orders](#Orders)
     * [Order](#Order)
+    * [OrderBooks](#OrderBooks)
 
 # Transaction
 
@@ -606,6 +607,22 @@ Example
 
 ```bash
 crescentd q liquidity order 1 1
+```
+
+## OrderBooks
+
+Query order books for given pairs and tick precisions.
+
+Usage
+
+```bash
+order-books [pair-ids] [tick-precisions]
+```
+
+Example
+
+```bash
+crescentd order-books 1 3,4 --num-ticks=10
 ```
 
 

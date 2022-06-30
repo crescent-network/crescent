@@ -36,6 +36,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryWithdrawRequestCmd(),
 		NewQueryOrdersCmd(),
 		NewQueryOrderCmd(),
+		NewQueryOrderBooksCmd(),
 	)
 
 	return cmd
