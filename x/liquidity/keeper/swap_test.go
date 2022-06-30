@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/liquidity"
-	"github.com/crescent-network/crescent/x/liquidity/amm"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity"
+	"github.com/crescent-network/crescent/v2/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

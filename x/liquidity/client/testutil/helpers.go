@@ -11,8 +11,8 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/x/liquidity/client/cli"
-	"github.com/crescent-network/crescent/x/liquidity/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity/client/cli"
+	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
 
 var commonArgs = []string{

@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	farmingtypes "github.com/crescent-network/crescent/x/farming/types"
-	"github.com/crescent-network/crescent/x/liquidity/amm"
+	farmingtypes "github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v2/x/liquidity/amm"
 )
 
 var (

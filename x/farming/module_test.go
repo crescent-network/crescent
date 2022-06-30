@@ -8,9 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	chain "github.com/crescent-network/crescent/app"
-	"github.com/crescent-network/crescent/x/farming/keeper"
-	"github.com/crescent-network/crescent/x/farming/types"
+	chain "github.com/crescent-network/crescent/v2/app"
+	"github.com/crescent-network/crescent/v2/x/farming/keeper"
+	"github.com/crescent-network/crescent/v2/x/farming/types"
 )
 
 const (

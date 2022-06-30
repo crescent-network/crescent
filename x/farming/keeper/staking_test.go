@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	chain "github.com/crescent-network/crescent/app"
-	utils "github.com/crescent-network/crescent/types"
-	"github.com/crescent-network/crescent/x/farming"
-	"github.com/crescent-network/crescent/x/farming/types"
+	chain "github.com/crescent-network/crescent/v2/app"
+	utils "github.com/crescent-network/crescent/v2/types"
+	"github.com/crescent-network/crescent/v2/x/farming"
+	"github.com/crescent-network/crescent/v2/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

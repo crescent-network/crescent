@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/x/claim/types"
+	"github.com/crescent-network/crescent/v2/x/claim/types"
 )
 
 type msgServer struct {
