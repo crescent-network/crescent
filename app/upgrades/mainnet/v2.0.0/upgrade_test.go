@@ -176,7 +176,12 @@ func (suite *UpgradeTestSuite) TestUpgradeV2() {
 		{
 			"v2 upgrade liquidity tick precision",
 			func() {
-				suite.Require().EqualValues(3, suite.app.LiquidityKeeper.GetTickPrecision(suite.ctx))
+				// Prior to mainnet v2, the tick precision was by default 3,
+				// but codebase now has 4 as the default tick precision so
+				// manually set tick precision to 3 before testing this upgrade.
+				params := suite.app.LiquidityKeeper.GetParams(suite.ctx)
+				params.TickPrecision = 3
+				suite.app.LiquidityKeeper.SetParams(suite.ctx, params)
 			},
 			func() {
 				suite.Require().EqualValues(4, suite.app.LiquidityKeeper.GetTickPrecision(suite.ctx))
