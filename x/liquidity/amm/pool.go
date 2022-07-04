@@ -17,7 +17,7 @@ var (
 // Pool is the interface of a pool.
 type Pool interface {
 	Balances() (rx, ry sdk.Int)
-	SetBalances(rx, ry sdk.Int)
+	SetBalances(rx, ry sdk.Int, derive bool)
 	PoolCoinSupply() sdk.Int
 	Price() sdk.Dec
 	IsDepleted() bool
@@ -71,7 +71,7 @@ func (pool *BasicPool) Balances() (rx, ry sdk.Int) {
 	return pool.rx, pool.ry
 }
 
-func (pool *BasicPool) SetBalances(rx, ry sdk.Int) {
+func (pool *BasicPool) SetBalances(rx, ry sdk.Int, _ bool) {
 	pool.rx = rx
 	pool.ry = ry
 }
@@ -112,6 +112,7 @@ func (pool *BasicPool) LowestSellPrice() (price sdk.Dec, found bool) {
 // or equal to given price.
 // amt = (X - P*Y)/P
 func (pool *BasicPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
+	origPrice := price
 	if price.LT(MinPoolPrice) {
 		price = MinPoolPrice
 	}
@@ -123,7 +124,7 @@ func (pool *BasicPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 		return zeroInt
 	}
 	utils.SafeMath(func() {
-		amt = dx.QuoTruncate(price).TruncateInt()
+		amt = dx.QuoTruncate(origPrice).TruncateInt()
 		if amt.GT(MaxCoinAmount) {
 			amt = MaxCoinAmount
 		}
@@ -149,8 +150,9 @@ func (pool *BasicPool) SellAmountUnder(price sdk.Dec, _ bool) (amt sdk.Int) {
 
 // BuyAmountTo returns the amount of buy orders of the pool for price,
 // where BuyAmountTo is used when the pool price is higher than the highest
-// price of the orderbook.
+// price of the order book.
 func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
+	origPrice := price
 	if price.LT(MinPoolPrice) {
 		price = MinPoolPrice
 	}
@@ -165,7 +167,7 @@ func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 		return zeroInt
 	}
 	utils.SafeMath(func() {
-		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
+		amt = dx.QuoTruncate(origPrice).TruncateInt() // dy = dx / P
 		if amt.GT(MaxCoinAmount) {
 			amt = MaxCoinAmount
 		}
@@ -177,7 +179,7 @@ func (pool *BasicPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 
 // SellAmountTo returns the amount of sell orders of the pool for price,
 // where SellAmountTo is used when the pool price is lower than the lowest
-// price of the orderbook.
+// price of the order book.
 func (pool *BasicPool) SellAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.GT(MaxPoolPrice) {
 		price = MaxPoolPrice
@@ -298,7 +300,10 @@ func (pool *RangedPool) Balances() (rx, ry sdk.Int) {
 
 // SetBalances sets RangedPool's balances without recalculating
 // transX and transY.
-func (pool *RangedPool) SetBalances(rx, ry sdk.Int) {
+func (pool *RangedPool) SetBalances(rx, ry sdk.Int, derive bool) {
+	if derive {
+		pool.transX, pool.transY = DeriveTranslation(rx, ry, pool.minPrice, pool.maxPrice)
+	}
 	pool.rx = rx
 	pool.ry = ry
 	pool.xComp = pool.rx.ToDec().Add(pool.transX)
@@ -352,6 +357,7 @@ func (pool *RangedPool) LowestSellPrice() (price sdk.Dec, found bool) {
 // BuyAmountOver returns the amount of buy orders for price greater than
 // or equal to given price.
 func (pool *RangedPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
+	origPrice := price
 	if price.LT(pool.minPrice) {
 		price = pool.minPrice
 	}
@@ -366,7 +372,7 @@ func (pool *RangedPool) BuyAmountOver(price sdk.Dec, _ bool) (amt sdk.Int) {
 		dx = pool.rx.ToDec()
 	}
 	utils.SafeMath(func() {
-		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
+		amt = dx.QuoTruncate(origPrice).TruncateInt() // dy = dx / P
 		if amt.GT(MaxCoinAmount) {
 			amt = MaxCoinAmount
 		}
@@ -398,8 +404,9 @@ func (pool *RangedPool) SellAmountUnder(price sdk.Dec, _ bool) (amt sdk.Int) {
 
 // BuyAmountTo returns the amount of buy orders of the pool for price,
 // where BuyAmountTo is used when the pool price is higher than the highest
-// price of the orderbook.
+// price of the order book.
 func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
+	origPrice := price
 	if price.LT(pool.minPrice) {
 		price = pool.minPrice
 	}
@@ -417,7 +424,7 @@ func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 		dx = pool.rx.ToDec()
 	}
 	utils.SafeMath(func() {
-		amt = dx.QuoTruncate(price).TruncateInt() // dy = dx / P
+		amt = dx.QuoTruncate(origPrice).TruncateInt() // dy = dx / P
 		if amt.GT(MaxCoinAmount) {
 			amt = MaxCoinAmount
 		}
@@ -429,7 +436,7 @@ func (pool *RangedPool) BuyAmountTo(price sdk.Dec) (amt sdk.Int) {
 
 // SellAmountTo returns the amount of sell orders of the pool for price,
 // where SellAmountTo is used when the pool price is lower than the lowest
-// price of the orderbook.
+// price of the order book.
 func (pool *RangedPool) SellAmountTo(price sdk.Dec) (amt sdk.Int) {
 	if price.GT(pool.maxPrice) {
 		price = pool.maxPrice
@@ -593,27 +600,27 @@ func PoolBuyOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.Dec
 		return nil
 	}
 	tmpPool := pool.Clone()
-	placeOrder := func(price sdk.Dec, amt sdk.Int) {
+	placeOrder := func(price sdk.Dec, amt sdk.Int, derive bool) {
 		orders = append(orders, orderer.Order(Buy, price, amt))
 		rx, ry := tmpPool.Balances()
 		rx = rx.Sub(price.MulInt(amt).Ceil().TruncateInt()) // quote coin ceiling
 		ry = ry.Add(amt)
-		tmpPool.SetBalances(rx, ry)
+		tmpPool.SetBalances(rx, ry, derive)
 	}
 	if poolPrice.GT(highestPrice) {
 		amt := tmpPool.BuyAmountTo(highestPrice)
-		if amt.IsPositive() {
-			placeOrder(highestPrice, tmpPool.BuyAmountTo(highestPrice))
+		if amt.GTE(MinCoinAmount) {
+			placeOrder(highestPrice, amt, true)
 		}
 	}
-	tick := PriceToDownTick(tmpPool.Price(), tickPrec)
+	tick := PriceToDownTick(sdk.MinDec(highestPrice, tmpPool.Price()), tickPrec)
 	for tick.GTE(lowestPrice) {
 		amt := tmpPool.BuyAmountOver(tick, true)
 		if amt.LT(MinCoinAmount) {
 			tick = DownTick(tick, tickPrec) // TODO: check if the tick is the lowest possible tick
 			continue
 		}
-		placeOrder(tick, amt)
+		placeOrder(tick, amt, false)
 		rx, _ := tmpPool.Balances()
 		if !rx.IsPositive() {
 			break
@@ -634,27 +641,27 @@ func PoolSellOrders(pool Pool, orderer Orderer, lowestPrice, highestPrice sdk.De
 		return nil
 	}
 	tmpPool := pool.Clone()
-	placeOrder := func(price sdk.Dec, amt sdk.Int) {
+	placeOrder := func(price sdk.Dec, amt sdk.Int, derive bool) {
 		orders = append(orders, orderer.Order(Sell, price, amt))
 		rx, ry := tmpPool.Balances()
 		rx = rx.Add(price.MulInt(amt).TruncateInt()) // quote coin truncation
 		ry = ry.Sub(amt)
-		tmpPool.SetBalances(rx, ry)
+		tmpPool.SetBalances(rx, ry, derive)
 	}
 	if poolPrice.LT(lowestPrice) {
 		amt := tmpPool.SellAmountTo(lowestPrice)
-		if amt.IsPositive() {
-			placeOrder(lowestPrice, tmpPool.SellAmountTo(lowestPrice))
+		if amt.GTE(MinCoinAmount) && lowestPrice.MulInt(amt).TruncateInt().IsPositive() {
+			placeOrder(lowestPrice, amt, true)
 		}
 	}
-	tick := PriceToUpTick(tmpPool.Price(), tickPrec)
+	tick := PriceToUpTick(sdk.MaxDec(lowestPrice, tmpPool.Price()), tickPrec)
 	for tick.LTE(highestPrice) {
 		amt := tmpPool.SellAmountUnder(tick, true)
 		if amt.LT(MinCoinAmount) || tick.MulInt(amt).TruncateInt().IsZero() {
 			tick = UpTick(tick, tickPrec)
 			continue
 		}
-		placeOrder(tick, amt)
+		placeOrder(tick, amt, false)
 		_, ry := tmpPool.Balances()
 		if !ry.GT(MinCoinAmount) {
 			break

@@ -881,6 +881,34 @@ func (s *KeeperTestSuite) TestSwap_edgecase2() {
 	s.Require().True(decEq(utils.ParseDec("1.6248"), *pair.LastPrice))
 }
 
+func (s *KeeperTestSuite) TestOrderBooks_edgecase1() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("0.57472")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("991883358661denom2,620800303846denom1"), true)
+	s.createRangedPool(
+		s.addr(0), pair.Id, utils.ParseCoins("155025981873denom2,4703143223denom1"),
+		utils.ParseDec("1.15"), utils.ParseDec("1.55"), utils.ParseDec("1.5308"), true)
+	s.createRangedPool(
+		s.addr(0), pair.Id, utils.ParseCoins("223122824634denom2,26528571912denom1"),
+		utils.ParseDec("1.25"), utils.ParseDec("1.45"), utils.ParseDec("1.4199"), true)
+
+	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
+		PairIds:        []uint64{pair.Id},
+		TickPrecisions: []uint32{3},
+		NumTicks:       10,
+	})
+	s.Require().NoError(err)
+	s.Require().Len(resp.Pairs, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 1)
+
+	s.Require().Len(resp.Pairs[0].OrderBooks[0].Buys, 1)
+	s.Require().True(decEq(utils.ParseDec("0.6321"), resp.Pairs[0].OrderBooks[0].Buys[0].Price))
+	s.Require().True(intEq(sdk.NewInt(1178846737645), resp.Pairs[0].OrderBooks[0].Buys[0].UserOrderAmount))
+	s.Require().Len(resp.Pairs[0].OrderBooks[0].Sells, 0)
+}
+
 func (s *KeeperTestSuite) TestPoolPreserveK() {
 	r := rand.New(rand.NewSource(0))
 
