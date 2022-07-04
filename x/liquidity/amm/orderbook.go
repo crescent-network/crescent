@@ -26,11 +26,13 @@ func NewOrderBook(orders ...Order) *OrderBook {
 // AddOrder adds orders to the order book.
 func (ob *OrderBook) AddOrder(orders ...Order) {
 	for _, order := range orders {
-		switch order.GetDirection() {
-		case Buy:
-			ob.buys.addOrder(order)
-		case Sell:
-			ob.sells.addOrder(order)
+		if MatchableAmount(order, order.GetPrice()).IsPositive() {
+			switch order.GetDirection() {
+			case Buy:
+				ob.buys.addOrder(order)
+			case Sell:
+				ob.sells.addOrder(order)
+			}
 		}
 	}
 }

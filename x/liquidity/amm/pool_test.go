@@ -862,7 +862,7 @@ func TestRangedPool_BuyAmountTo(t *testing.T) {
 				utils.ParseDec("0.9"), utils.ParseDec("1.1"),
 			),
 			utils.ParseDec("0.899580000000000000"),
-			sdk.NewInt(1063691),
+			sdk.NewInt(1064187),
 		},
 	} {
 		t.Run("", func(t *testing.T) {
@@ -930,6 +930,40 @@ func TestRangedPool_exhaust(t *testing.T) {
 			require.True(t, x.LTE(rx))
 			require.True(t, x.GTE(rx.ToDec().Mul(utils.ParseDec("0.99")).TruncateInt()))
 		})
+	}
+}
+
+func TestRangedPool_SwapPriceOutOfRange(t *testing.T) {
+	r := rand.New(rand.NewSource(0))
+
+	for i := 0; i < 1000; i++ {
+		rx := utils.RandomInt(r, sdk.NewInt(1_000000), sdk.NewInt(1000_00000))
+		ry := utils.RandomInt(r, sdk.NewInt(1_000000), sdk.NewInt(1000_00000))
+		minPrice := utils.RandomDec(r, utils.ParseDec("0.001"), utils.ParseDec("1"))
+		maxPrice := utils.RandomDec(r, minPrice.Mul(utils.ParseDec("1.01")), utils.ParseDec("1000"))
+		initialPrice := utils.RandomDec(r, minPrice, maxPrice)
+		pool, err := amm.CreateRangedPool(rx, ry,
+			minPrice, maxPrice, initialPrice)
+		require.NoError(t, err)
+		rx, ry = pool.Balances()
+
+		// Price lower than min price
+		p := utils.RandomDec(r, sdk.NewDecWithPrec(1, 5), minPrice.Mul(utils.ParseDec("0.99")))
+		amt := pool.BuyAmountTo(p)
+		nextRx := rx.Sub(p.MulInt(amt).Ceil().TruncateInt())
+		nextRy := ry.Add(amt)
+		require.True(t, nextRx.LTE(sdk.OneInt()))
+		nextPool := amm.NewRangedPool(nextRx, nextRy, sdk.Int{}, minPrice, maxPrice)
+		require.True(t, utils.DecApproxEqual(minPrice, nextPool.Price()))
+
+		// Price higher than min price
+		p = utils.RandomDec(r, maxPrice.Mul(utils.ParseDec("1.01")), utils.ParseDec("1000000"))
+		amt = pool.SellAmountTo(p)
+		nextRx = rx.Add(p.MulInt(amt).TruncateInt())
+		nextRy = ry.Sub(amt)
+		require.True(t, nextRy.LTE(sdk.OneInt()))
+		nextPool = amm.NewRangedPool(nextRx, nextRy, sdk.Int{}, minPrice, maxPrice)
+		require.True(t, utils.DecApproxEqual(maxPrice, nextPool.Price()))
 	}
 }
 
