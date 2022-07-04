@@ -272,24 +272,27 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff
 		if buyTickOpenAmt.LTE(sellTickOpenAmt) {
 			if buyTickOpenAmt.IsPositive() {
 				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, buyTickOpenAmt, matchPrice))
+				matched = true
 			}
 			bi++
 		} else {
 			if sellTickOpenAmt.IsPositive() {
 				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, sellTickOpenAmt, matchPrice))
+				matched = true
 			}
 		}
 		if sellTickOpenAmt.LTE(buyTickOpenAmt) {
 			if sellTickOpenAmt.IsPositive() {
 				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, sellTickOpenAmt, matchPrice))
+				matched = true
 			}
 			si++
 		} else {
 			if buyTickOpenAmt.IsPositive() {
 				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, buyTickOpenAmt, matchPrice))
+				matched = true
 			}
 		}
-		matched = true
 	}
 	return
 }
