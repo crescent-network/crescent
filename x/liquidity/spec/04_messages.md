@@ -59,11 +59,13 @@ type MsgCreateRangedPool struct {
     Creator      string    // the bech32-encoded address of the pool creator
     PairId       uint64    // the pair id; pool(s) belong to a single pair
     DepositCoins sdk.Coins // the amount of coins to deposit
+    MinPrice     sdk.Dec   // the minimum price of the ranged pool
+    MaxPrice     sdk.Dec   // the maximum price of the ranged pool
     InitialPrice sdk.Dec   // the initial pool price
-    MinPrice     *sdk.Dec  // the minimum price of the ranged pool
-    MaxPrice     *sdk.Dec  // the maximum price of the ranged pool
 }
 ```
+
+Read more about ranged pool creation in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/pool.md#creation-of-ranged-liquidity-pool).
 
 ### Validity Checks
 
@@ -99,6 +101,8 @@ The transaction that is triggered with the `MsgDeposit` message fails if:
 - The denoms of `DepositCoins` are different from the pair of the pool specified by `PoolId`
 - The balance of `Depositor` does not have enough coins for `DepositCoins`
 
+Read more about deposit and withdraw in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/pool.md#deposit-and-withdraw-ratio).
+
 ## MsgWithdraw
 
 Withdraw coins in batch from liquidity pool with the `MsgWithdraw` message.
@@ -110,6 +114,8 @@ type MsgWithdraw struct {
     PoolCoin   sdk.Coin // the amount of pool coin
 }
 ```
+
+Read more about deposit and withdraw in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/pool.md#deposit-and-withdraw-ratio).
 
 ### Validity Checks
 
