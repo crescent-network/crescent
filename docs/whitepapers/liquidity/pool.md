@@ -114,7 +114,7 @@ $$\frac{\Delta x}{\Delta y} = P.$$
 
 
 This `Sell Amount Over A Given Price` is how much a liquidity pool provides as a sell order for price less than or equal to given price.
-With this definition, the amount $\Delta x$ for the pool's buy order can be obtained by using
+With this definition, the amount $\Delta y$ for the pool's sell order can be obtained by using
 $$(X+a+\Delta x)(Y+b-\Delta y)=k$$
 and 
 $$\frac{\Delta x}{\Delta y} = P.$$
