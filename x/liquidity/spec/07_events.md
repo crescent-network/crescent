@@ -181,7 +181,6 @@ The `liquidity` module emits the following events:
 | user_order_matched | paid_coin            | {paidCoin}           |
 | user_order_matched | received_coin        | {receivedCoin}       |
 | pool_order_matched | order_direction      | {orderDirection}     |
-| pool_order_matched | orderer              | {reserveAddress}     |
 | pool_order_matched | pair_id              | {pairId}             |
 | pool_order_matched | pool_id              | {poolId}             |
 | pool_order_matched | matched_amount       | {matchedAmount}      |

@@ -51,8 +51,6 @@ type Pool struct {
     PoolCoinDenom         string   // denom of the pool coin
     MinPrice              *sdk.Dec // the minimum price of ranged pool, nil for basic pools
     MaxPrice              *sdk.Dec // the maximum price of ranged pool, nil for basic pools
-    TranslationX          *sdk.Dec // x-axis translation value for ranged pool. denoted as 'a' in some documents
-    TranslationY          *sdk.Dec // y-axis translation value for ranged pool. denoted as 'b' in some documents
     LastDepositRequestId  uint64   // id of the last deposit request for the pool
     LastWithdrawRequestId uint64   // id of the last withdraw request for the pool
     Disabled              bool     // true if pool is disabled, false if not disabled
