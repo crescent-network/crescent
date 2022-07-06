@@ -818,7 +818,7 @@ func (s *KeeperTestSuite) TestExhaustRangedPool() {
 		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
 		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 		poolPrice := ammPool.Price()
-		if initialPrice.Sub(poolPrice).Abs().Quo(initialPrice).LTE(sdk.NewDecWithPrec(1, 3)) {
+		if poolPrice.GTE(initialPrice) {
 			break
 		}
 		orderPrice := utils.RandomDec(r, poolPrice, poolPrice.Mul(sdk.NewDecWithPrec(105, 2)))
