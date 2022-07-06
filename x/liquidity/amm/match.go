@@ -211,7 +211,7 @@ func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 		if tick.price.LT(lastPrice) {
 			break
 		}
-		amt := TotalMatchableAmount(tick.orders, tick.price)
+		amt := TotalMatchableAmount(tick.orders, lastPrice)
 		if tick.price.Equal(lastPrice) {
 			buyAmtAtLastPrice = amt
 			break
@@ -224,7 +224,7 @@ func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 		if tick.price.GT(lastPrice) {
 			break
 		}
-		amt := TotalMatchableAmount(tick.orders, tick.price)
+		amt := TotalMatchableAmount(tick.orders, lastPrice)
 		if tick.price.Equal(lastPrice) {
 			sellAmtAtLastPrice = amt
 			break
@@ -261,38 +261,37 @@ func (ob *OrderBook) Match(lastPrice sdk.Dec) (matchPrice sdk.Dec, quoteCoinDiff
 	for bi < len(ob.buys.ticks) && si < len(ob.sells.ticks) && ob.buys.ticks[bi].price.GTE(ob.sells.ticks[si].price) {
 		buyTick := ob.buys.ticks[bi]
 		sellTick := ob.sells.ticks[si]
+		var p sdk.Dec
 		switch dir {
 		case PriceIncreasing:
-			matchPrice = sellTick.price
+			p = sellTick.price
 		case PriceDecreasing:
-			matchPrice = buyTick.price
+			p = buyTick.price
 		}
-		buyTickOpenAmt := TotalMatchableAmount(buyTick.orders, matchPrice)
-		sellTickOpenAmt := TotalMatchableAmount(sellTick.orders, matchPrice)
+		buyTickOpenAmt := TotalMatchableAmount(buyTick.orders, p)
+		sellTickOpenAmt := TotalMatchableAmount(sellTick.orders, p)
+		if !buyTickOpenAmt.IsPositive() {
+			bi++
+			continue
+		}
+		if !sellTickOpenAmt.IsPositive() {
+			si++
+			continue
+		}
 		if buyTickOpenAmt.LTE(sellTickOpenAmt) {
-			if buyTickOpenAmt.IsPositive() {
-				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, buyTickOpenAmt, matchPrice))
-				matched = true
-			}
+			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, buyTickOpenAmt, p))
 			bi++
 		} else {
-			if sellTickOpenAmt.IsPositive() {
-				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, sellTickOpenAmt, matchPrice))
-				matched = true
-			}
+			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(buyTick, sellTickOpenAmt, p))
 		}
 		if sellTickOpenAmt.LTE(buyTickOpenAmt) {
-			if sellTickOpenAmt.IsPositive() {
-				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, sellTickOpenAmt, matchPrice))
-				matched = true
-			}
+			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, sellTickOpenAmt, p))
 			si++
 		} else {
-			if buyTickOpenAmt.IsPositive() {
-				quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, buyTickOpenAmt, matchPrice))
-				matched = true
-			}
+			quoteCoinDiff = quoteCoinDiff.Add(DistributeOrderAmountToTick(sellTick, buyTickOpenAmt, p))
 		}
+		matchPrice = p
+		matched = true
 	}
 	return
 }

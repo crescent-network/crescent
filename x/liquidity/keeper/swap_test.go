@@ -818,7 +818,7 @@ func (s *KeeperTestSuite) TestExhaustRangedPool() {
 		rx, ry := s.keeper.GetPoolBalances(s.ctx, pool)
 		ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
 		poolPrice := ammPool.Price()
-		if initialPrice.Sub(poolPrice).Abs().Quo(initialPrice).LTE(sdk.NewDecWithPrec(1, 3)) {
+		if poolPrice.GTE(initialPrice) {
 			break
 		}
 		orderPrice := utils.RandomDec(r, poolPrice, poolPrice.Mul(sdk.NewDecWithPrec(105, 2)))
@@ -879,6 +879,41 @@ func (s *KeeperTestSuite) TestSwap_edgecase2() {
 
 	pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
 	s.Require().True(decEq(utils.ParseDec("1.6248"), *pair.LastPrice))
+}
+
+func (s *KeeperTestSuite) TestSwap_edgecase3() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("0.99992")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("110001546090denom2,110013588106denom1"), true)
+	s.createRangedPool(
+		s.addr(0), pair.Id, utils.ParseCoins("140913832254denom2,130634675302denom1"),
+		utils.ParseDec("0.92"), utils.ParseDec("1.08"), utils.ParseDec("0.99989"), true)
+
+	s.buyMarketOrder(s.addr(1), pair.Id, sdk.NewInt(30_000000), 0, true)
+	s.nextBlock()
+
+	pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
+	s.Require().True(decEq(utils.ParseDec("0.99992"), *pair.LastPrice))
+}
+
+func (s *KeeperTestSuite) TestSwap_edgecase4() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("0.99999")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000_000000denom1,100_000000denom2"), true)
+
+	s.createRangedPool(s.addr(0), pair.Id, utils.ParseCoins("1000_000000denom1,1000_000000denom2"),
+		utils.ParseDec("0.95"), utils.ParseDec("1.05"), utils.ParseDec("1.02"), true)
+	s.createRangedPool(s.addr(0), pair.Id, utils.ParseCoins("1000_000000denom1,1000_000000denom2"),
+		utils.ParseDec("0.9"), utils.ParseDec("1.2"), utils.ParseDec("0.98"), true)
+
+	s.sellLimitOrder(s.addr(1), pair.Id, utils.ParseDec("1.05"), sdk.NewInt(50_000000), 0, true)
+	s.buyLimitOrder(s.addr(1), pair.Id, utils.ParseDec("0.97"), sdk.NewInt(100_000000), 0, true)
+
+	s.nextBlock()
 }
 
 func (s *KeeperTestSuite) TestOrderBooks_edgecase1() {
