@@ -65,7 +65,7 @@ type MsgCreateRangedPool struct {
 }
 ```
 
-Read more about ranged pool creation at [Liquidity pool white paper](/docs/whitepapers/liquidity/pool.md#creation-of-ranged-liquidity-pool).
+Read more about ranged pool creation in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/pool.md#creation-of-ranged-liquidity-pool).
 
 ### Validity Checks
 
@@ -101,7 +101,7 @@ The transaction that is triggered with the `MsgDeposit` message fails if:
 - The denoms of `DepositCoins` are different from the pair of the pool specified by `PoolId`
 - The balance of `Depositor` does not have enough coins for `DepositCoins`
 
-Read more about deposit and withdraw at [Liquidity pool white paper](/docs/whitepapers/liquidity/pool.md#deposit-and-withdraw-ratio).
+Read more about deposit and withdraw in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/pool.md#deposit-and-withdraw-ratio).
 
 ## MsgWithdraw
 
@@ -115,7 +115,7 @@ type MsgWithdraw struct {
 }
 ```
 
-Read more about deposit and withdraw at [Liquidity pool white paper](/docs/whitepapers/liquidity/pool.md#deposit-and-withdraw-ratio).
+Read more about deposit and withdraw in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/pool.md#deposit-and-withdraw-ratio).
 
 ### Validity Checks
 

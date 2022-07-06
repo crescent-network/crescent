@@ -38,7 +38,7 @@ The pool share is represented as possession of pool coins.
 Liquidity pools locate limit orders on each tick with order amount
 which is calculated from its AMM equations.
 
-Read more about liquidity pool at [Liquidity pool white paper](/docs/whitepapers/liquidity/pool.md).
+Read more about liquidity pool in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/pool.md).
 
 ## Constant Product Model (CPM)
 
