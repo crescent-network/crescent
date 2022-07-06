@@ -211,7 +211,7 @@ func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 		if tick.price.LT(lastPrice) {
 			break
 		}
-		amt := TotalMatchableAmount(tick.orders, tick.price)
+		amt := TotalMatchableAmount(tick.orders, lastPrice)
 		if tick.price.Equal(lastPrice) {
 			buyAmtAtLastPrice = amt
 			break
@@ -224,7 +224,7 @@ func (ob *OrderBook) PriceDirection(lastPrice sdk.Dec) PriceDirection {
 		if tick.price.GT(lastPrice) {
 			break
 		}
-		amt := TotalMatchableAmount(tick.orders, tick.price)
+		amt := TotalMatchableAmount(tick.orders, lastPrice)
 		if tick.price.Equal(lastPrice) {
 			sellAmtAtLastPrice = amt
 			break
