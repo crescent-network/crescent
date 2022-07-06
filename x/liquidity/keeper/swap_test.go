@@ -881,6 +881,23 @@ func (s *KeeperTestSuite) TestSwap_edgecase2() {
 	s.Require().True(decEq(utils.ParseDec("1.6248"), *pair.LastPrice))
 }
 
+func (s *KeeperTestSuite) TestSwap_edgecase3() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+	pair.LastPrice = utils.ParseDecP("0.99992")
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.createPool(s.addr(0), pair.Id, utils.ParseCoins("110001546090denom2,110013588106denom1"), true)
+	s.createRangedPool(
+		s.addr(0), pair.Id, utils.ParseCoins("140913832254denom2,130634675302denom1"),
+		utils.ParseDec("0.92"), utils.ParseDec("1.08"), utils.ParseDec("0.99989"), true)
+
+	s.buyMarketOrder(s.addr(1), pair.Id, sdk.NewInt(30_000000), 0, true)
+	s.nextBlock()
+
+	pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
+	s.Require().True(decEq(utils.ParseDec("0.99992"), *pair.LastPrice))
+}
+
 func (s *KeeperTestSuite) TestOrderBooks_edgecase1() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pair.LastPrice = utils.ParseDecP("0.57472")
