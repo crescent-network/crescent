@@ -42,7 +42,7 @@ Differently from a basic liquidity pool that provides liquidity in all price ran
 A ranged liquidity pool locates limit orders on each price tick only between the minimum price and the maximum price of the ranged liquidity pool.
 The following equation is the baseline for the limit orders by a ranged liquidity pool:
 
-$$(X+a) \cdot (Y+b) = k,$$
+$$(X+a) (Y+b) = k,$$
 
 where $k$, $a$, $b$ are constants for any swap operations.
 When a user deposits two coins to the pool, then $k$, $a$, and $b$ increase while $k$, $a$, and $b$ decrease when a user withdraws its reserve from the pool.
@@ -54,8 +54,8 @@ The following steps are used to calculate the initial reserve amount $X_0$ and $
 
 - If the initial prices is equal to $P_{min}$, $X_0 = 0$ and $Y_0 = Y$.
 - If the initial prices is equal to $P_{max}$, $X_0 = X$ and $Y_0 = 0$.
-- If $\frac{X}{\sqrt{P_i} - \sqrt{P_{min}}}\cdot \left( \frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} \right) \leq Y$, $X_0 = X$ and $Y_0 = \frac{X}{\sqrt{P_i} - \sqrt{P_{min}}}\cdot \left( \frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} \right)$.
-- If $\frac{X}{\sqrt{P_i} - \sqrt{P_{min}}}\cdot \left( \frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} \right) > Y$, $X_0 = \frac{Y}{\frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} }\cdot \left( \sqrt{P_i} - \sqrt{P_{min}} \right)$ and $Y_0 = Y$. 
+- If $\frac{X}{\sqrt{P_i} - \sqrt{P_{min}}} \left( \frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} \right) \leq Y$, $X_0 = X$ and $Y_0 = \frac{X}{\sqrt{P_i} - \sqrt{P_{min}}} \left( \frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} \right)$.
+- If $\frac{X}{\sqrt{P_i} - \sqrt{P_{min}}} \left( \frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} \right) > Y$, $X_0 = \frac{Y}{\frac{1}{\sqrt{P_i}}-\frac{1}{\sqrt{P_{max}}} } \left( \sqrt{P_i} - \sqrt{P_{min}} \right)$ and $Y_0 = Y$. 
 
 When the pool price becomes either the minimum price or the maximum price, the ranged liquidity pool consists of only single kind of coins.
 
@@ -69,7 +69,7 @@ This pool price does not vary by deposit and withdraw operations but varies by s
 From the equations that the ranged liquidity pool should satisfy, the following relation can be derived.
 
 - $\sqrt{k} = \frac{X}{\sqrt{P}-\sqrt{P_{min}}} =\frac{Y}{\frac{1}{\sqrt{P}}-\frac{1}{\sqrt{P_{max}}}}$
-- $a=\sqrt{k}\cdot \sqrt{P_{min}}$
+- $a=\sqrt{k} \sqrt{P_{min}}$
 - $b=\frac{\sqrt{k}}{\sqrt{P_{max}}}$
 
 ### Deposit and Withdraw Ratio
@@ -77,3 +77,44 @@ From the equations that the ranged liquidity pool should satisfy, the following 
 A deposit to a pool is processed in a way that the deposit ratio of $X_d$ and $Y_d$ are the same as the ratio of $X$ and $Y$ of the pool reserve, where the remaining deposit coin is refunded.
 
 A withdraw from a pool is processed in a way that the withdraw ratio of $X_w$ and $Y_w$ are the same as the ratio of $X$ and $Y$ of the pool reserve.
+
+## Derivation of Pool's Order Amount for Orderbook
+
+In the following, it is explained based on a ranged liquidity pool, where those can also be applied to a basic pool by using $a=0$, $b=0$, $P_{min}=0$, and $P_{max}=\infty$.
+
+### Derivation of Buy Amount To A Given Price
+
+This `Buy Amount To A Given Price` is how much a liquidity pool provides as a buy order when the pool price is higher than the highest price of the order book.
+In otherwords, if this amount of the pool's buy order is matched, it is targeted to the pool price becomes the given price.
+With this definition, the amount $\Delta x$ for the pool's buy order can be obtained by using
+$$(X+a-\Delta x)(Y+b+\Delta y)=k$$
+and 
+$$\frac{X+a-\Delta x}{Y+b+\Delta y} = P.$$
+
+### Derivation of Sell Amount To A Given Price
+
+This `Sell Amount To A Given Price` is how much a liquidity pool provides as a sell order when the pool price is lower than the lowest price of the order book.
+In otherwords, if this amount of the pool's sell order is matched, it is targeted to the pool price becomes the given price.
+With this definition, the amount $\Delta y$ for the pool's sell order can be obtained by using
+$$(X+a+\Delta x)(Y+b-\Delta y)=k$$
+and 
+$$\frac{X+a+\Delta x}{Y+b-\Delta y} = P.$$
+
+
+### Derivation of Buy Amount Over A Given Price
+
+This `Buy Amount Over A Given Price` is how much a liquidity pool provides as a buy order for price greater than or equal to given price.
+With this definition, the amount $\Delta x$ for the pool's buy order can be obtained by using
+$$(X+a-\Delta x)(Y+b+\Delta y)=k$$
+and 
+$$\frac{\Delta x}{\Delta y} = P.$$
+
+
+### Derivation of Sell Amount Under A Given Price
+
+
+This `Sell Amount Over A Given Price` is how much a liquidity pool provides as a sell order for price less than or equal to given price.
+With this definition, the amount $\Delta x$ for the pool's buy order can be obtained by using
+$$(X+a+\Delta x)(Y+b-\Delta y)=k$$
+and 
+$$\frac{\Delta x}{\Delta y} = P.$$
