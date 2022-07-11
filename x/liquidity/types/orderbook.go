@@ -24,7 +24,7 @@ func OrderBookBasePrice(ov amm.OrderView, tickPrec int) (sdk.Dec, bool) {
 	}
 }
 
-func MakeOrderBookResponse(ov amm.OrderView, tickPrec, numTicks int) OrderBookResponse {
+func MakeOrderBookResponse(ov amm.OrderView, lowestPrice, highestPrice sdk.Dec, tickPrec, numTicks int) OrderBookResponse {
 	ammTickPrec := amm.TickPrecision(tickPrec)
 	resp := OrderBookResponse{TickPrecision: uint32(tickPrec)}
 
@@ -45,8 +45,7 @@ func MakeOrderBookResponse(ov amm.OrderView, tickPrec, numTicks int) OrderBookRe
 		startPrice := FitPriceToTickGap(highestBuyPrice, tickGap, true)
 		currentPrice := startPrice
 		accAmt := sdk.ZeroInt()
-		limit := startPrice.Mul(sdk.NewDecWithPrec(8, 1)) // 80% TODO: use parameter?
-		for i := 0; i < numTicks && currentPrice.GTE(limit) && !currentPrice.IsNegative(); {
+		for i := 0; i < numTicks && currentPrice.GTE(lowestPrice) && !currentPrice.IsNegative(); {
 			amt := ov.BuyAmountOver(currentPrice, true).Sub(accAmt)
 			if amt.IsPositive() {
 				resp.Buys = append(resp.Buys, OrderBookTickResponse{
@@ -64,8 +63,7 @@ func MakeOrderBookResponse(ov amm.OrderView, tickPrec, numTicks int) OrderBookRe
 		startPrice := FitPriceToTickGap(lowestSellPrice, tickGap, false)
 		currentPrice := startPrice
 		accAmt := sdk.ZeroInt()
-		limit := startPrice.Mul(sdk.NewDecWithPrec(11, 2)) // 120% TODO: use parameter?
-		for i := 0; i < numTicks && currentPrice.LTE(limit); {
+		for i := 0; i < numTicks && currentPrice.LTE(highestPrice); {
 			amt := ov.SellAmountUnder(currentPrice, true).Sub(accAmt)
 			if amt.IsPositive() {
 				resp.Sells = append(resp.Sells, OrderBookTickResponse{

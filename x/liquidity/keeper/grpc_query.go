@@ -580,7 +580,7 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		}
 
 		for _, tickPrec := range req.TickPrecisions {
-			obs = append(obs, types.MakeOrderBookResponse(ov, int(tickPrec), int(req.NumTicks)))
+			obs = append(obs, types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, int(tickPrec), int(req.NumTicks)))
 		}
 		pairs = append(pairs, types.OrderBookPairResponse{
 			PairId:     pairId,
