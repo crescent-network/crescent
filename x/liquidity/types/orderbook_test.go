@@ -35,7 +35,7 @@ func TestMakeOrderBookResponse(t *testing.T) {
 
 func BenchmarkMakeOrderBookResponse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		makeOrderBookPairResponse(100, 10, 20, 4)
+		makeOrderBookPairResponse(100, 2, 20, 4)
 	}
 }
 
@@ -74,7 +74,7 @@ func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) *typ
 		PairId:    1,
 		BasePrice: basePrice,
 	}
-	for _, tickPrec := range []int{1, 2, 3, 4} {
+	for _, tickPrec := range []int{2, 3, 4} {
 		resp.OrderBooks = append(resp.OrderBooks, types.MakeOrderBookResponse(ov, tickPrec, numTicks))
 	}
 	return resp
