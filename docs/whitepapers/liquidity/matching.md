@@ -1,8 +1,8 @@
 # Matching engine
 
 This document describes the matching algorithm of the liquidity module.
-Basically, matching is done in batch-style in the liquidity module.
-Which means the timing of the order is not important like in other exchanges.
+Basically, matching is done in batch-style in the liquidity module,
+which means the timing of the order is not important like in other exchanges.
 
 ## Matching type
 
@@ -24,7 +24,7 @@ When there's last price in the pair, *Two-stage matching* is done for that pair.
 
 The first stage is like *Single price auction*, but with the matching price set to
 the last price.
-If there's no orders to match at the last price, this stage is skipped.
+If there are no orders to match at the last price, this stage is skipped.
 
 In the second stage, buy orders with higher price are matched with sell orders with
 lower price, which is typical.
