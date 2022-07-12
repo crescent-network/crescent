@@ -266,18 +266,28 @@ message PoolResponse {
 
   string pool_coin_denom = 6;
 
-  string min_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string pool_coin_supply = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string min_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  repeated cosmos.base.v1beta1.Coin balances = 9
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  string max_price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  uint64 last_deposit_request_id = 10;
+  string price = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  uint64 last_withdraw_request_id = 11;
+  PoolBalances balances = 11 [(gogoproto.nullable) = false];
 
-  bool disabled = 12;
+  uint64 last_deposit_request_id = 12;
+
+  uint64 last_withdraw_request_id = 13;
+
+  bool disabled = 14;
+}
+
+message PoolBalances {
+  cosmos.base.v1beta1.Coin base_coin = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin quote_coin = 2 [(gogoproto.nullable) = false];
 }
 
 message OrderBookPairResponse {

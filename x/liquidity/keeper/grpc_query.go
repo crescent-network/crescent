@@ -175,7 +175,8 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 		if accumulate {
 			pair := pairGetter(pool.PairId)
 			rx, ry := k.getPoolBalances(ctx, pool, pair)
-			poolsRes = append(poolsRes, types.NewPoolResponse(pool, sdk.NewCoins(rx, ry)))
+			ps := k.GetPoolCoinSupply(ctx, pool)
+			poolsRes = append(poolsRes, types.NewPoolResponse(pool, rx, ry, ps))
 		}
 
 		return true, nil
@@ -205,8 +206,11 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 		return nil, status.Errorf(codes.NotFound, "pool %d doesn't exist", req.PoolId)
 	}
 
-	rx, ry := k.GetPoolBalances(ctx, pool)
-	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, sdk.NewCoins(rx, ry))}, nil
+	pair, _ := k.GetPair(ctx, pool.PairId)
+
+	rx, ry := k.getPoolBalances(ctx, pool, pair)
+	ps := k.GetPoolCoinSupply(ctx, pool)
+	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, rx, ry, ps)}, nil
 }
 
 // PoolByReserveAddress queries the specific pool by the reserve account address.
@@ -232,7 +236,8 @@ func (k Querier) PoolByReserveAddress(c context.Context, req *types.QueryPoolByR
 	}
 
 	rx, ry := k.GetPoolBalances(ctx, pool)
-	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, sdk.NewCoins(rx, ry))}, nil
+	ps := k.GetPoolCoinSupply(ctx, pool)
+	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, rx, ry, ps)}, nil
 }
 
 // PoolByPoolCoinDenom queries the specific pool by the pool coin denomination.
@@ -257,7 +262,8 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 	}
 
 	rx, ry := k.GetPoolBalances(ctx, pool)
-	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, sdk.NewCoins(rx, ry))}, nil
+	ps := k.GetPoolCoinSupply(ctx, pool)
+	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, rx, ry, ps)}, nil
 }
 
 // DepositRequests queries all deposit requests.

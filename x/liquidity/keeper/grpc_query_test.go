@@ -238,6 +238,14 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
 	pool := s.createPool(creator, pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+	rangedPool := s.createRangedPool(
+		creator, pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
+	disabledPool := s.createRangedPool(
+		creator, pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
+	s.withdraw(creator, disabledPool.Id, s.getBalance(creator, disabledPool.PoolCoinDenom))
+	s.nextBlock()
 
 	for _, tc := range []struct {
 		name      string
@@ -258,9 +266,9 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 			nil,
 		},
 		{
-			"query all pool with pool id",
+			"query a pool with pool id",
 			&types.QueryPoolRequest{
-				PoolId: 1,
+				PoolId: pool.Id,
 			},
 			false,
 			func(resp *types.QueryPoolResponse) {
@@ -268,9 +276,54 @@ func (s *KeeperTestSuite) TestGRPCPool() {
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
 				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
-				s.Require().Equal(utils.ParseCoins("1000000denom1,1000000denom2"), resp.Pool.Balances)
+				s.Require().True(intEq(sdk.NewInt(1000000000000), resp.Pool.PoolCoinSupply))
+				s.Require().Nil(resp.Pool.MinPrice)
+				s.Require().Nil(resp.Pool.MaxPrice)
+				s.Require().NotNil(resp.Pool.Price)
+				s.Require().True(decEq(utils.ParseDec("1.0"), *resp.Pool.Price))
+				s.Require().Equal(types.PoolBalances{
+					BaseCoin:  utils.ParseCoin("1000000denom1"),
+					QuoteCoin: utils.ParseCoin("1000000denom2"),
+				}, resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
+				s.Require().False(resp.Pool.Disabled)
+			},
+		},
+		{
+			"query a ranged pool with pool id",
+			&types.QueryPoolRequest{
+				PoolId: rangedPool.Id,
+			},
+			false,
+			func(resp *types.QueryPoolResponse) {
+				s.Require().Equal(rangedPool.Id, resp.Pool.Id)
+				s.Require().Equal(rangedPool.PairId, resp.Pool.PairId)
+				s.Require().Equal(rangedPool.ReserveAddress, resp.Pool.ReserveAddress)
+				s.Require().Equal(rangedPool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
+				s.Require().True(intEq(sdk.NewInt(1000000000000), resp.Pool.PoolCoinSupply))
+				s.Require().NotNil(resp.Pool.MinPrice)
+				s.Require().NotNil(resp.Pool.MaxPrice)
+				s.Require().NotNil(resp.Pool.Price)
+				s.Require().True(utils.DecApproxEqual(utils.ParseDec("1.0"), *resp.Pool.Price))
+				s.Require().Equal(types.PoolBalances{
+					BaseCoin:  utils.ParseCoin("1000000denom1"),
+					QuoteCoin: utils.ParseCoin("1000000denom2"),
+				}, resp.Pool.Balances)
+				s.Require().Equal(rangedPool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
+				s.Require().Equal(rangedPool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
+				s.Require().False(resp.Pool.Disabled)
+			},
+		},
+		{
+			"query disabled pool",
+			&types.QueryPoolRequest{
+				PoolId: disabledPool.Id,
+			},
+			false,
+			func(resp *types.QueryPoolResponse) {
+				s.Require().True(resp.Pool.Disabled)
+				s.Require().Nil(resp.Pool.Price)
 			},
 		},
 	} {
@@ -320,9 +373,18 @@ func (s *KeeperTestSuite) TestGRPCPoolByReserveAddress() {
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
 				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
-				s.Require().Equal(utils.ParseCoins("2000000denom1,2000000denom2"), resp.Pool.Balances)
+				s.Require().True(intEq(sdk.NewInt(1000000000000), resp.Pool.PoolCoinSupply))
+				s.Require().Nil(resp.Pool.MinPrice)
+				s.Require().Nil(resp.Pool.MaxPrice)
+				s.Require().NotNil(resp.Pool.Price)
+				s.Require().True(utils.DecApproxEqual(utils.ParseDec("1.0"), *resp.Pool.Price))
+				s.Require().Equal(types.PoolBalances{
+					BaseCoin:  utils.ParseCoin("2000000denom1"),
+					QuoteCoin: utils.ParseCoin("2000000denom2"),
+				}, resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
+				s.Require().False(resp.Pool.Disabled)
 			},
 		},
 	} {
@@ -372,9 +434,18 @@ func (s *KeeperTestSuite) TestGRPCPoolByPoolCoinDenom() {
 				s.Require().Equal(pool.PairId, resp.Pool.PairId)
 				s.Require().Equal(pool.ReserveAddress, resp.Pool.ReserveAddress)
 				s.Require().Equal(pool.PoolCoinDenom, resp.Pool.PoolCoinDenom)
-				s.Require().Equal(utils.ParseCoins("5000000denom1,5000000denom2"), resp.Pool.Balances)
+				s.Require().True(intEq(sdk.NewInt(1000000000000), resp.Pool.PoolCoinSupply))
+				s.Require().Nil(resp.Pool.MinPrice)
+				s.Require().Nil(resp.Pool.MaxPrice)
+				s.Require().NotNil(resp.Pool.Price)
+				s.Require().True(utils.DecApproxEqual(utils.ParseDec("1.0"), *resp.Pool.Price))
+				s.Require().Equal(types.PoolBalances{
+					BaseCoin:  utils.ParseCoin("5000000denom1"),
+					QuoteCoin: utils.ParseCoin("5000000denom2"),
+				}, resp.Pool.Balances)
 				s.Require().Equal(pool.LastDepositRequestId, resp.Pool.LastDepositRequestId)
 				s.Require().Equal(pool.LastWithdrawRequestId, resp.Pool.LastWithdrawRequestId)
+				s.Require().False(resp.Pool.Disabled)
 			},
 		},
 	} {
