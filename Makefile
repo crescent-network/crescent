@@ -62,9 +62,28 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=$(NAME) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 		  -X github.com/cosmos/cosmos-sdk/types.reDnmString=[a-zA-Z][a-zA-Z0-9/:]{2,127}
 
-ifeq ($(WITH_CLEVELDB),yes)
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
+# DB backend set
+ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
+  ldflags += -X 'github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb'
 endif
+ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
+  ldflags += -X 'github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb'
+  BUILD_TAGS += badgerdb
+endif
+ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  BUILD_TAGS += rocksdb
+  dflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
+endif
+ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
+  BUILD_TAGS += boltdb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
+endif
+
+ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
+  ldflags += -w -s
+endif
+
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
@@ -73,6 +92,10 @@ testing_ldflags = -X $(REPO)/x/farming/keeper.enableAdvanceEpoch=true \
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 TESTING_BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags) $(testing_ldflags)'
+
+ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
+  BUILD_FLAGS += -trimpath
+endif
 
 all: tools install lint
 
