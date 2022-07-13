@@ -38,9 +38,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v2.0.0
+
 ### Client Breaking Changes
 
-* (x/liquidity) [\#335](https://github.com/cosmosquad-labs/squad/pull/335) Modify `PoolResponse`:
+* (x/liquidity) [\#46](https://github.com/crescent-network/crescent/pull/46) Modify `PoolResponse`:
   * `balances` field has been modified to contain `base_coin` and `quote_coin` fields
   * `pool_coin_supply` field has been added
   * `price` field has been added
