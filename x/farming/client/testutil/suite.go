@@ -37,6 +37,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
 	keeper.EnableAdvanceEpoch = true
+	keeper.EnableRatioPlan = true
 
 	db := tmdb.NewMemDB()
 	cfg := chain.NewConfig(db)
