@@ -16,9 +16,10 @@ func newOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {
 }
 
 func TestMakeOrderBookResponse(t *testing.T) {
-	pool := amm.NewBasicPool(sdk.NewInt(862431695563), sdk.NewInt(37852851767), sdk.Int{})
-	lowestPrice := pool.Price().Mul(sdk.NewDecWithPrec(9, 1))
-	highestPrice := pool.Price().Mul(sdk.NewDecWithPrec(11, 1))
+	pool := amm.NewBasicPool(sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{})
+	lastPrice := utils.ParseDec("1")
+	lowestPrice := lastPrice.Mul(utils.ParseDec("0.9"))
+	highestPrice := lastPrice.Mul(utils.ParseDec("1.1"))
 
 	ob := amm.NewOrderBook()
 	ob.AddOrder(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, 4)...)
@@ -29,13 +30,13 @@ func TestMakeOrderBookResponse(t *testing.T) {
 		panic("base price not found")
 	}
 
-	resp := types.MakeOrderBookResponse(ov, 3, 20)
+	resp := types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, 4, 20)
 	types.PrintOrderBookResponse(resp, basePrice)
 }
 
 func BenchmarkMakeOrderBookResponse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		makeOrderBookPairResponse(100, 10, 20, 4)
+		makeOrderBookPairResponse(100, 2, 20, 4)
 	}
 }
 
@@ -55,11 +56,12 @@ func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) *typ
 		ob.AddOrder(newOrder(dir, price, amt))
 	}
 
+	lowestPrice, highestPrice := utils.ParseDec("0.9"), utils.ParseDec("1.1")
 	for i := 0; i < numPools; i++ {
 		rx := utils.RandomInt(r, sdk.NewInt(10000_000000), sdk.NewInt(11000_000000))
 		ry := utils.RandomInt(r, sdk.NewInt(10000_000000), sdk.NewInt(11000_000000))
 		pool := amm.NewBasicPool(rx, ry, sdk.Int{})
-		ob.AddOrder(amm.PoolOrders(pool, amm.DefaultOrderer, utils.ParseDec("0.9"), utils.ParseDec("1.1"), tickPrec)...)
+		ob.AddOrder(amm.PoolOrders(pool, amm.DefaultOrderer, lowestPrice, highestPrice, tickPrec)...)
 	}
 
 	ov := ob.MakeView()
@@ -74,8 +76,8 @@ func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) *typ
 		PairId:    1,
 		BasePrice: basePrice,
 	}
-	for _, tickPrec := range []int{1, 2, 3, 4} {
-		resp.OrderBooks = append(resp.OrderBooks, types.MakeOrderBookResponse(ov, tickPrec, numTicks))
+	for _, tickPrec := range []int{2, 3, 4} {
+		resp.OrderBooks = append(resp.OrderBooks, types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, tickPrec, numTicks))
 	}
 	return resp
 }

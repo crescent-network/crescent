@@ -938,9 +938,11 @@ func (s *KeeperTestSuite) TestOrderBooks_edgecase1() {
 	s.Require().Len(resp.Pairs, 1)
 	s.Require().Len(resp.Pairs[0].OrderBooks, 1)
 
-	s.Require().Len(resp.Pairs[0].OrderBooks[0].Buys, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks[0].Buys, 2)
 	s.Require().True(decEq(utils.ParseDec("0.6321"), resp.Pairs[0].OrderBooks[0].Buys[0].Price))
 	s.Require().True(intEq(sdk.NewInt(1178846737645), resp.Pairs[0].OrderBooks[0].Buys[0].UserOrderAmount))
+	s.Require().True(decEq(utils.ParseDec("0.5187"), resp.Pairs[0].OrderBooks[0].Buys[1].Price))
+	s.Require().True(intEq(sdk.NewInt(13340086), resp.Pairs[0].OrderBooks[0].Buys[1].UserOrderAmount))
 	s.Require().Len(resp.Pairs[0].OrderBooks[0].Sells, 0)
 }
 

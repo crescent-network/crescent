@@ -145,22 +145,29 @@ Example Response
 {
   "pools": [
     {
+      "type": "POOL_TYPE_BASIC",
       "id": "1",
       "pair_id": "1",
+      "creator": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
       "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
       "pool_coin_denom": "pool1",
-      "balances": [
-        {
+      "pool_coin_supply": "1000000000000",
+      "min_price": null,
+      "max_price": null,
+      "price": "0.291539059112751186",
+      "balances": {
+        "base_coin": {
           "denom": "uatom",
           "amount": "1636000001"
         },
-        {
+        "quote_coin": {
           "denom": "uusd",
           "amount": "476957901"
         }
-      ],
+      },
       "last_deposit_request_id": "1",
-      "last_withdraw_request_id": "1"
+      "last_withdraw_request_id": "1",
+      "disabled": false
     }
   ],
   "pagination": {
@@ -184,22 +191,29 @@ Example Response
 ```json
 {
   "pool": {
+    "type": "POOL_TYPE_BASIC",
     "id": "1",
     "pair_id": "1",
+    "creator": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
     "pool_coin_denom": "pool1",
-    "balances": [
-      {
+    "pool_coin_supply": "1000000000000",
+    "min_price": null,
+    "max_price": null,
+    "price": "0.291539059112751186",
+    "balances": {
+      "base_coin": {
         "denom": "uatom",
         "amount": "1636000001"
       },
-      {
+      "quote_coin": {
         "denom": "uusd",
         "amount": "476957901"
       }
-    ],
+    },
     "last_deposit_request_id": "1",
-    "last_withdraw_request_id": "1"
+    "last_withdraw_request_id": "1",
+    "disabled": false
   }
 }
 ```
@@ -218,22 +232,29 @@ Example Response
 ```json
 {
   "pool": {
+    "type": "POOL_TYPE_BASIC",
     "id": "1",
     "pair_id": "1",
+    "creator": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
     "pool_coin_denom": "pool1",
-    "balances": [
-      {
+    "pool_coin_supply": "1000000000000",
+    "min_price": null,
+    "max_price": null,
+    "price": "0.291539059112751186",
+    "balances": {
+      "base_coin": {
         "denom": "uatom",
         "amount": "1636000001"
       },
-      {
+      "quote_coin": {
         "denom": "uusd",
         "amount": "476957901"
       }
-    ],
+    },
     "last_deposit_request_id": "1",
-    "last_withdraw_request_id": "1"
+    "last_withdraw_request_id": "1",
+    "disabled": false
   }
 }
 ```
@@ -252,22 +273,29 @@ Example Response
 ```json
 {
   "pool": {
+    "type": "POOL_TYPE_BASIC",
     "id": "1",
     "pair_id": "1",
+    "creator": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "reserve_address": "cre1353ausz7n8arsyf6dp0mq7gvj4ry2c2ht284kzrrft2mx7rdvfnsxuuamx",
     "pool_coin_denom": "pool1",
-    "balances": [
-      {
+    "pool_coin_supply": "1000000000000",
+    "min_price": null,
+    "max_price": null,
+    "price": "0.291539059112751186",
+    "balances": {
+      "base_coin": {
         "denom": "uatom",
         "amount": "1636000001"
       },
-      {
+      "quote_coin": {
         "denom": "uusd",
         "amount": "476957901"
       }
-    ],
+    },
     "last_deposit_request_id": "1",
-    "last_withdraw_request_id": "1"
+    "last_withdraw_request_id": "1",
+    "disabled": false
   }
 }
 ```
