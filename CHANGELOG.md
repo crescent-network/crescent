@@ -38,15 +38,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Client Breaking Changes
-
-* (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `HistoricalRewards` query endpoint:
-  * `HistoricalRewards`: `/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}`
-
 ## v2.0.0
 
 ### Client Breaking Changes
 
+* (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `HistoricalRewards` query endpoint:
+  * `HistoricalRewards`: `/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}`
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `OrderBooks` query endpoint:
   * `OrderBooks`: `/crescent/liquidity/v1beta1/order_books`
 * (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Rename existing `Stakings` endpoint to `Position` and add three new endpoints:
@@ -56,6 +53,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `historical-rewards` query cmd:
+  * `historical-rewards [staking-coin-denom]`
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `create-ranged-pool` tx cmd and `order-books` query cmd:
   * `create-ranged-pool [pair-id] [deposit-coins] [min-price] [max-price] [initial-price]`
   * `order-books [pair-ids] [tick-precisions]`
