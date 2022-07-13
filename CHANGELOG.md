@@ -46,11 +46,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `balances` field has been modified to contain `base_coin` and `quote_coin` fields
   * `pool_coin_supply` field has been added
   * `price` field has been added
-
-## v2.0.0
-
-### Client Breaking Changes
-
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `OrderBooks` query endpoint:
   * `OrderBooks`: `/crescent/liquidity/v1beta1/order_books`
 * (x/farming) [\#33](https://github.com/crescent-network/crescent/pull/33) Rename existing `Stakings` endpoint to `Position` and add three new endpoints:
