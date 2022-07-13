@@ -390,3 +390,39 @@ func (k Querier) CurrentEpochDays(c context.Context, req *types.QueryCurrentEpoc
 
 	return &types.QueryCurrentEpochDaysResponse{CurrentEpochDays: currentEpochDays}, nil
 }
+
+// HistoricalRewards queries HistoricalRewards records for a staking coin denom.
+func (k Querier) HistoricalRewards(c context.Context, req *types.QueryHistoricalRewardsRequest) (*types.QueryHistoricalRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := sdk.ValidateDenom(req.StakingCoinDenom); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid staking coin denom: %v", err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	keyPrefix := types.GetHistoricalRewardsPrefix(req.StakingCoinDenom)
+	historicalRewardsStore := prefix.NewStore(store, keyPrefix)
+	var historicalRewards []types.HistoricalRewardsResponse
+
+	pageRes, _ := query.FilteredPaginate(historicalRewardsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		_, epoch := types.ParseHistoricalRewardsKey(append(keyPrefix, key...))
+
+		var rewards types.HistoricalRewards
+		k.cdc.MustUnmarshal(value, &rewards)
+
+		if accumulate {
+			historicalRewards = append(historicalRewards, types.HistoricalRewardsResponse{
+				Epoch:                 epoch,
+				CumulativeUnitRewards: rewards.CumulativeUnitRewards,
+			})
+		}
+
+		return true, nil
+	})
+
+	return &types.QueryHistoricalRewardsResponse{HistoricalRewards: historicalRewards, Pagination: pageRes}, nil
+
+}

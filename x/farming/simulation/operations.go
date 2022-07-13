@@ -53,10 +53,6 @@ var (
 	}
 )
 
-func init() {
-	farmingkeeper.EnableRatioPlan = true
-}
-
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak farmingtypes.AccountKeeper,
@@ -215,6 +211,8 @@ func SimulateMsgCreateRatioPlan(ak farmingtypes.AccountKeeper, bk farmingtypes.B
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		farmingkeeper.EnableRatioPlan = true
+
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, simAccount.Address)

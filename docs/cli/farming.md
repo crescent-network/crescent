@@ -31,6 +31,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
     * [Rewards](#Rewards)
     * [UnharvestedRewards](#UnharvestedRewards)
     * [CurrentEpochDays](#CurrentEpochDays)
+    * [HistoricalRewards](#HistoricalRewards)
 
 # Transaction
 
@@ -452,3 +453,17 @@ Example
 crescentd q farming current-epoch-days --output json | jq
 ```
 
+## HistoricalRewards
+
+Usage
+
+```bash
+historical-rewards [staking-coin-denom]
+```
+
+Example
+
+```bash
+# Query for historical rewards for pool1
+crescentd q farming staking-coin-denom pool1 --output json | jq
+```

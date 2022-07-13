@@ -4,7 +4,6 @@ package cli
 // client is excluded from test coverage in MVP version
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -41,6 +40,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryRewards(),
 		GetCmdQueryUnharvestedRewards(),
 		GetCmdQueryCurrentEpochDays(),
+		GetCmdQueryHistoricalRewards(),
 	)
 	return farmingQueryCmd
 }
@@ -67,7 +67,7 @@ $ %s query %s params
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			resp, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			resp, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}
@@ -529,7 +529,47 @@ $ %s query %s current-epoch-days
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			resp, err := queryClient.CurrentEpochDays(context.Background(), &types.QueryCurrentEpochDaysRequest{})
+			resp, err := queryClient.CurrentEpochDays(cmd.Context(), &types.QueryCurrentEpochDaysRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryHistoricalRewards implements the query historical rewards command.
+func GetCmdQueryHistoricalRewards() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "historical-rewards [staking-coin-denom]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query historical rewards for a staking coin denom",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query historical rewards for a staking coin denom.
+
+Example:
+$ %s query %s historical-rewards pool1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			stakingCoinDenom := args[0]
+
+			resp, err := queryClient.HistoricalRewards(cmd.Context(), &types.QueryHistoricalRewardsRequest{
+				StakingCoinDenom: stakingCoinDenom,
+			})
 			if err != nil {
 				return err
 			}
