@@ -42,6 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking Changes
 
+* (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `HistoricalRewards` query endpoint:
+  * `HistoricalRewards`: `/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}`
 * (x/liquidity) [\#46](https://github.com/crescent-network/crescent/pull/46) Modify `PoolResponse`:
   * `balances` field has been modified to contain `base_coin` and `quote_coin` fields
   * `pool_coin_supply` field has been added
@@ -55,6 +57,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `historical-rewards` query cmd:
+  * `historical-rewards [staking-coin-denom]`
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `create-ranged-pool` tx cmd and `order-books` query cmd:
   * `create-ranged-pool [pair-id] [deposit-coins] [min-price] [max-price] [initial-price]`
   * `order-books [pair-ids] [tick-precisions]`

@@ -43,6 +43,8 @@ func ProposalContents(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keep
 // SimulateAddPublicPlanProposal generates random public add plan proposal content.
 func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+		keeper.EnableRatioPlan = true
+
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -74,6 +76,8 @@ func SimulateAddPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, 
 // SimulateModifyPublicPlanProposal generates random public modify plan proposal content.
 func SimulateModifyPublicPlanProposal(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+		keeper.EnableRatioPlan = true
+
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, simAccount.Address)

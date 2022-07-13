@@ -2,7 +2,7 @@
 
 NAME=crescent
 APPNAME=crescentd
-REPO=github.com/crescent-network/crescent
+REPO=github.com/crescent-network/crescent/v2
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')

@@ -29,6 +29,7 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - [Rewards](#Rewards)
 - [UnharvestedRewards](#UnharvestedRewards)
 - [CurrentEpochDays](#CurrentEpochDays)
+- [HistoricalRewards](#HistoricalRewards)
 
 ### Params
 
@@ -505,5 +506,50 @@ http://localhost:1317/crescent/farming/v1beta1/current_epoch_days
 ```json
 {
   "current_epoch_days": 1
+}
+```
+
+### HistoricalRewards
+
+Query for historical rewards for a staking coin denom:
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+```bash
+http://localhost:1317/crescent/farming/v1beta1/historical_rewards
+```
+
+```json
+{
+  "historical_rewards": [
+    {
+      "epoch": "0",
+      "cumulative_unit_rewards": [
+      ]
+    },
+    {
+      "epoch": "1",
+      "cumulative_unit_rewards": [
+        {
+          "denom": "stake",
+          "amount": "100.000000000000000000"
+        }
+      ]
+    },
+    {
+      "epoch": "2",
+      "cumulative_unit_rewards": [
+        {
+          "denom": "stake",
+          "amount": "200.000000000000000000"
+        }
+      ]
+    },
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "3"
+  }
 }
 ```

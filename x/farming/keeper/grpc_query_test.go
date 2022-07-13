@@ -725,3 +725,80 @@ func (suite *KeeperTestSuite) TestGRPCUnharvestedRewards() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGRPCHistoricalRewards() {
+	for _, plan := range suite.sampleFixedAmtPlans {
+		suite.keeper.SetPlan(suite.ctx, plan)
+	}
+
+	suite.executeBlock(utils.ParseTime("2021-08-04T23:00:00Z"), func() {
+		suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
+		suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000)))
+	})
+
+	suite.executeBlock(utils.ParseTime("2021-08-05T00:00:00Z"), nil) // next epoch
+	suite.executeBlock(utils.ParseTime("2021-08-05T23:00:00Z"), nil) // queued -> staked
+
+	// Stake more.
+	suite.executeBlock(utils.ParseTime("2021-08-05T23:30:00Z"), func() {
+		suite.Stake(suite.addrs[0], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000), sdk.NewInt64Coin(denom2, 1500)))
+		suite.Stake(suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin(denom1, 1000)))
+	})
+
+	suite.executeBlock(utils.ParseTime("2021-08-06T00:00:00Z"), nil) // rewards distribution
+	suite.executeBlock(utils.ParseTime("2021-08-06T23:30:00Z"), nil) // queued -> staked
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryHistoricalRewardsRequest
+		expectErr bool
+		postRun   func(response *types.QueryHistoricalRewardsResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"empty request",
+			&types.QueryHistoricalRewardsRequest{},
+			true,
+			nil,
+		},
+		{
+			"query for a staking coin denom",
+			&types.QueryHistoricalRewardsRequest{StakingCoinDenom: denom1},
+			false,
+			func(resp *types.QueryHistoricalRewardsResponse) {
+				suite.Require().Len(resp.HistoricalRewards, 2)
+				suite.Require().EqualValues(0, resp.HistoricalRewards[0].Epoch)
+				suite.Require().True(decCoinsEq(sdk.DecCoins{}, resp.HistoricalRewards[0].CumulativeUnitRewards))
+				suite.Require().EqualValues(1, resp.HistoricalRewards[1].Epoch)
+				suite.Require().True(decCoinsEq(utils.ParseDecCoins("1150denom3"), resp.HistoricalRewards[1].CumulativeUnitRewards))
+			},
+		},
+		{
+			"query for a staking coin denom 2",
+			&types.QueryHistoricalRewardsRequest{StakingCoinDenom: denom2},
+			false,
+			func(resp *types.QueryHistoricalRewardsResponse) {
+				suite.Require().Len(resp.HistoricalRewards, 2)
+				suite.Require().EqualValues(0, resp.HistoricalRewards[0].Epoch)
+				suite.Require().True(decCoinsEq(sdk.DecCoins{}, resp.HistoricalRewards[0].CumulativeUnitRewards))
+				suite.Require().EqualValues(1, resp.HistoricalRewards[1].Epoch)
+				suite.Require().True(decCoinsEq(utils.ParseDecCoins("466.666666666666666666denom3"), resp.HistoricalRewards[1].CumulativeUnitRewards))
+			},
+		},
+	} {
+		suite.Run(tc.name, func() {
+			resp, err := suite.querier.HistoricalRewards(sdk.WrapSDKContext(suite.ctx), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}

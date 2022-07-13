@@ -82,6 +82,15 @@ func ParseCoins(s string) sdk.Coins {
 	return coins
 }
 
+// ParseDecCoins parses and returns sdk.DecCoins.
+func ParseDecCoins(s string) sdk.DecCoins {
+	coins, err := sdk.ParseDecCoins(strings.ReplaceAll(s, "_", ""))
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}
+
 // ParseTime parses and returns time.Time in time.RFC3339 format.
 func ParseTime(s string) time.Time {
 	t, err := time.Parse(time.RFC3339, s)

@@ -295,6 +295,31 @@ key:
 }
 };
 }
+
+// HistoricalRewards returns HistoricalRewards records for a staking coin denom.
+rpc HistoricalRewards(QueryHistoricalRewardsRequest) returns (QueryHistoricalRewardsResponse) {
+  option (google.api.http).get = "/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns HistoricalRewards records for a staking coin denom";
+external_docs: {
+url:
+  "https://github.com/crescent-network/crescent/tree/main/docs";
+description:
+  "Find out more about the query and error codes";
+}
+responses: {
+key:
+  "400" value: {
+  description:
+    "Bad Request" examples: {
+    key:
+      "application/json"
+      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+    }
+  }
+}
+};
+}
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -420,6 +445,18 @@ message QueryCurrentEpochDaysResponse {
   uint32 current_epoch_days = 1;
 }
 
+// QueryHistoricalRewardsRequest is the request type for the Query/HistoricalRewards RPC method.
+message QueryHistoricalRewardsRequest {
+  string                                staking_coin_denom = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination         = 2;
+}
+
+// QueryHistoricalRewardsResponse is the response type for the Query/HistoricalRewards RPC method.
+message QueryHistoricalRewardsResponse {
+  repeated HistoricalRewardsResponse     historical_rewards = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination         = 2;
+}
+
 message StakingResponse {
   string staking_coin_denom = 1;
 
@@ -448,4 +485,11 @@ message UnharvestedRewardsResponse {
 
   repeated cosmos.base.v1beta1.Coin rewards = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message HistoricalRewardsResponse {
+  uint64 epoch = 1;
+
+  repeated cosmos.base.v1beta1.DecCoin cumulative_unit_rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }

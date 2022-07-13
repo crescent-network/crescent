@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   title: Crescent REST and gRPC Gateway docs
-  description: A REST interface for state queries, transactions
+  description: 'A REST interface for state queries, transactions'
   version: 2.0.0
 paths:
   /node_info:
@@ -59,7 +59,7 @@ paths:
                     type: string
                   listen_addr:
                     type: string
-                    example: 192.168.56.1:26656
+                    example: '192.168.56.1:26656'
                   version:
                     description: Tendermint version
                     type: string
@@ -73,7 +73,7 @@ paths:
                         example: 'on'
                       rpc_address:
                         type: string
-                        example: tcp://0.0.0.0:26657
+                        example: 'tcp://0.0.0.0:26657'
         '500':
           description: Failed to query node status
   /syncing:
@@ -337,7 +337,7 @@ paths:
                                 7uTC74QlknqYWEwg7Vn6M8Om7FuZ0EO4bjvuj6rwH1mTUJrRuMMZvAAqT9VjNgP0RA/TDp6u/92AqrZfXJSpBQ==
         '500':
           description: Server internal error
-  /blocks/{height}:
+  '/blocks/{height}':
     get:
       summary: Get a block at a certain height
       tags:
@@ -627,7 +627,7 @@ paths:
                       example: '1000'
         '500':
           description: Server internal error
-  /validatorsets/{height}:
+  '/validatorsets/{height}':
     get:
       summary: Get a validator set a certain height
       tags:
@@ -674,7 +674,7 @@ paths:
           description: Block at height not available
         '500':
           description: Server internal error
-  /txs/{hash}:
+  '/txs/{hash}':
     get:
       deprecated: false
       summary: Get a Tx by hash
@@ -1689,7 +1689,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/auth/v1beta1/accounts/{address}:
+  '/cosmos/auth/v1beta1/accounts/{address}':
     get:
       summary: Account returns account details based on address.
       operationId: Account
@@ -2293,7 +2293,7 @@ paths:
                         }
       tags:
         - Query
-  /cosmos/bank/v1beta1/balances/{address}:
+  '/cosmos/bank/v1beta1/balances/{address}':
     get:
       summary: AllBalances queries the balance of all coins for a single account.
       operationId: AllBalances
@@ -2429,7 +2429,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/balances/{address}/{denom}:
+  '/cosmos/bank/v1beta1/balances/{address}/{denom}':
     get:
       summary: Balance queries the balance of a single coin for a single account.
       operationId: Balance
@@ -2492,7 +2492,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/bank/v1beta1/denom_owners/{denom}:
+  '/cosmos/bank/v1beta1/denom_owners/{denom}':
     get:
       summary: >-
         DenomOwners queries for all account addresses that own a particular
@@ -2846,7 +2846,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/denoms_metadata/{denom}:
+  '/cosmos/bank/v1beta1/denoms_metadata/{denom}':
     get:
       summary: DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: DenomMetadata
@@ -3160,7 +3160,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/supply/{denom}:
+  '/cosmos/bank/v1beta1/supply/{denom}':
     get:
       summary: SupplyOf queries the supply of a single coin.
       operationId: SupplyOf
@@ -3976,7 +3976,7 @@ paths:
                         }
       tags:
         - Service
-  /cosmos/base/tendermint/v1beta1/blocks/{height}:
+  '/cosmos/base/tendermint/v1beta1/blocks/{height}':
     get:
       summary: GetBlockByHeight queries block for given height.
       operationId: GetBlockByHeight
@@ -5691,7 +5691,7 @@ paths:
           format: boolean
       tags:
         - Service
-  /cosmos/base/tendermint/v1beta1/validatorsets/{height}:
+  '/cosmos/base/tendermint/v1beta1/validatorsets/{height}':
     get:
       summary: GetValidatorSetByHeight queries validator-set at a given height.
       operationId: GetValidatorSetByHeight
@@ -6226,7 +6226,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards':
     get:
       summary: |-
         DelegationTotalRewards queries the total rewards accrued by a each
@@ -6319,7 +6319,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}':
     get:
       summary: DelegationRewards queries the total rewards accrued by a delegation.
       operationId: DelegationRewards
@@ -6386,7 +6386,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/validators:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators':
     get:
       summary: DelegatorValidators queries the validators of a delegator.
       operationId: DelegatorValidators
@@ -6436,7 +6436,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address':
     get:
       summary: DelegatorWithdrawAddress queries withdraw address of a delegator.
       operationId: DelegatorWithdrawAddress
@@ -6532,7 +6532,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/commission:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/commission':
     get:
       summary: ValidatorCommission queries accumulated commission for a validator.
       operationId: ValidatorCommission
@@ -6597,7 +6597,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards':
     get:
       summary: ValidatorOutstandingRewards queries rewards of a validator address.
       operationId: ValidatorOutstandingRewards
@@ -6669,7 +6669,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/slashes:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/slashes':
     get:
       summary: ValidatorSlashes queries slash events of a validator.
       operationId: ValidatorSlashes
@@ -7280,7 +7280,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/evidence/v1beta1/evidence/{evidence_hash}:
+  '/cosmos/evidence/v1beta1/evidence/{evidence_hash}':
     get:
       summary: Evidence queries evidence based on evidence hash.
       operationId: Evidence
@@ -7662,7 +7662,7 @@ paths:
           format: byte
       tags:
         - Query
-  /cosmos/gov/v1beta1/params/{params_type}:
+  '/cosmos/gov/v1beta1/params/{params_type}':
     get:
       summary: Params queries all parameters of the gov module.
       operationId: GovParams
@@ -8508,7 +8508,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}':
     get:
       summary: Proposal queries proposal details based on ProposalID.
       operationId: Proposal
@@ -8971,7 +8971,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits':
     get:
       summary: Deposits queries all deposits of a single proposal.
       operationId: Deposits
@@ -9288,7 +9288,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}':
     get:
       summary: >-
         Deposit queries single deposit information based proposalID,
@@ -9536,7 +9536,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/tally:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/tally':
     get:
       summary: TallyResult queries the tally of a proposal vote.
       operationId: TallyResult
@@ -9761,7 +9761,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/votes:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes':
     get:
       summary: Votes queries votes of a given proposal.
       operationId: Votes
@@ -10107,9 +10107,9 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}':
     get:
-      summary: Vote queries voted information based on proposalID, voterAddr.
+      summary: 'Vote queries voted information based on proposalID, voterAddr.'
       operationId: Vote
       responses:
         '200':
@@ -10675,7 +10675,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/slashing/v1beta1/signing_infos/{cons_address}:
+  '/cosmos/slashing/v1beta1/signing_infos/{cons_address}':
     get:
       summary: SigningInfo queries the signing info of given cons address
       operationId: SigningInfo
@@ -10774,7 +10774,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegations/{delegator_addr}:
+  '/cosmos/staking/v1beta1/delegations/{delegator_addr}':
     get:
       summary: >-
         DelegatorDelegations queries all delegations of a given delegator
@@ -11112,7 +11112,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations':
     get:
       summary: Redelegations queries redelegations of given address.
       operationId: Redelegations
@@ -11520,7 +11520,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations':
     get:
       summary: >-
         DelegatorUnbondingDelegations queries all unbonding delegations of a
@@ -11860,7 +11860,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators':
     get:
       summary: |-
         DelegatorValidators queries all validators info for given delegator
@@ -12459,7 +12459,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}':
     get:
       summary: |-
         DelegatorValidator queries validator info for given delegator validator
@@ -12984,7 +12984,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/historical_info/{height}:
+  '/cosmos/staking/v1beta1/historical_info/{height}':
     get:
       summary: HistoricalInfo queries the historical info for given height.
       operationId: HistoricalInfo
@@ -14630,7 +14630,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}':
     get:
       summary: Validator queries validator info for given validator address.
       operationId: Validator
@@ -15148,7 +15148,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations':
     get:
       summary: ValidatorDelegations queries delegate info for given validator.
       operationId: ValidatorDelegations
@@ -15481,7 +15481,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}':
     get:
       summary: Delegation queries delegate info for given validator delegator pair.
       operationId: Delegation
@@ -15744,7 +15744,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation':
     get:
       summary: |-
         UnbondingDelegation queries unbonding info for given validator delegator
@@ -16010,7 +16010,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations':
     get:
       summary: >-
         ValidatorUnbondingDelegations queries unbonding delegations of a
@@ -16932,7 +16932,7 @@ paths:
                     description: Response code.
                   data:
                     type: string
-                    description: Result bytes, if any.
+                    description: 'Result bytes, if any.'
                   raw_log:
                     type: string
                     description: >-
@@ -17418,7 +17418,7 @@ paths:
               RPC method.
       tags:
         - Service
-  /cosmos/tx/v1beta1/txs/{hash}:
+  '/cosmos/tx/v1beta1/txs/{hash}':
     get:
       summary: GetTx fetches a tx by hash.
       operationId: GetTx
@@ -17618,13 +17618,13 @@ paths:
                         }
       parameters:
         - name: hash
-          description: hash is the tx hash to query, encoded as a hex string.
+          description: 'hash is the tx hash to query, encoded as a hex string.'
           in: path
           required: true
           type: string
       tags:
         - Service
-  /cosmos/upgrade/v1beta1/applied_plan/{name}:
+  '/cosmos/upgrade/v1beta1/applied_plan/{name}':
     get:
       summary: AppliedPlan queries a previously applied upgrade plan by its name.
       operationId: AppliedPlan
@@ -18502,7 +18502,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}:
+  '/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}':
     get:
       summary: |-
         UpgradedConsensusState queries the consensus state that will serve
@@ -18726,7 +18726,7 @@ paths:
         - Query
   /cosmos/authz/v1beta1/grants:
     get:
-      summary: Returns list of `Authorization`, granted to the grantee by the granter.
+      summary: 'Returns list of `Authorization`, granted to the grantee by the granter.'
       operationId: Grants
       responses:
         '200':
@@ -19208,7 +19208,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
+  '/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}':
     get:
       summary: Allowance returns fee granted to the grantee by the granter.
       operationId: Allowance
@@ -19512,7 +19512,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/allowances/{grantee}:
+  '/cosmos/feegrant/v1beta1/allowances/{grantee}':
     get:
       summary: Allowances returns all the grants for address.
       operationId: Allowances
@@ -19883,7 +19883,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /cosmos/budget/v1beta1/addresses/{name}:
+  '/cosmos/budget/v1beta1/addresses/{name}':
     get:
       summary: >-
         Addresses returns an address that can be used as source and destination
@@ -20879,7 +20879,340 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}':
+    get:
+      summary: >-
+        HistoricalRewards returns HistoricalRewards records for a staking coin
+        denom.
+      description: Returns HistoricalRewards records for a staking coin denom
+      operationId: HistoricalRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              historical_rewards:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    epoch:
+                      type: string
+                      format: uint64
+                    cumulative_unit_rewards:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          DecCoin defines a token with a denomination and a
+                          decimal amount.
+
+
+                          NOTE: The amount field is an Dec which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: >-
+              QueryHistoricalRewardsResponse is the response type for the
+              Query/HistoricalRewards RPC method.
+        '400':
+          description: Bad Request
+          schema: {}
+          examples:
+            application/json:
+              code: 3
+              message: 'rpc error: code = InvalidArgument desc = empty request'
+              details: []
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: staking_coin_denom
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending
+
+            order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the query and error codes
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   /crescent/farming/v1beta1/params:
     get:
       summary: Params returns parameters of the farming module.
@@ -21333,7 +21666,6 @@ paths:
                         }
                 title: plans are the existing plans
               pagination:
-                description: pagination defines the pagination in the response.
                 type: object
                 properties:
                   next_key:
@@ -21350,6 +21682,16 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
             description: >-
               QueryPlansResponse is the response type for the Query/Plans RPC
               method.
@@ -21642,8 +21984,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
-  /crescent/farming/v1beta1/plans/{plan_id}:
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/plans/{plan_id}':
     get:
       summary: Plan returns a specific plan.
       description: Returns the farming plan that corresponds to the plan_id.
@@ -22051,8 +22393,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
-  /crescent/farming/v1beta1/positions/{farmer}:
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/positions/{farmer}':
     get:
       description: Returns the farming position of the farmer
       operationId: Position
@@ -22326,8 +22668,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
-  /crescent/farming/v1beta1/queued_stakings/{farmer}:
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/queued_stakings/{farmer}':
     get:
       summary: QueryStakings returns all queued stakings by a farmer.
       description: Returns all queued stakings that corresponds to the farmer
@@ -22647,8 +22989,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
-  /crescent/farming/v1beta1/rewards/{farmer}:
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/rewards/{farmer}':
     get:
       summary: Rewards returns rewards for a farmer
       description: Returns all rewards coins that corresponds to the farmer
@@ -22981,8 +23323,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
-  /crescent/farming/v1beta1/stakings/{farmer}:
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/stakings/{farmer}':
     get:
       summary: Stakings returns all stakings by a farmer.
       description: >-
@@ -23304,8 +23646,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
-  /crescent/farming/v1beta1/total_stakings/{staking_coin_denom}:
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}':
     get:
       summary: TotalStakings returns total staking amount for a staking coin denom
       description: Returns total stakings that corresponds to the staking_coin_denom
@@ -23527,8 +23869,8 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
-  /crescent/farming/v1beta1/unharvested_rewards/{farmer}:
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/farming/v1beta1/unharvested_rewards/{farmer}':
     get:
       summary: UnharvestedRewards returns unharvested rewards for a farmer
       description: Returns all unharvested rewards that corresponds to the farmer
@@ -23861,7 +24203,7 @@ paths:
         - Query
       externalDocs:
         description: Find out more about the query and error codes
-        url: https://github.com/crescent-network/crescent/tree/main/docs
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
   /crescent/liquidity/v1beta1/order_books:
     get:
       operationId: OrderBooks
@@ -23960,7 +24302,7 @@ paths:
           format: int64
       tags:
         - Query
-  /crescent/liquidity/v1beta1/orders/{orderer}:
+  '/crescent/liquidity/v1beta1/orders/{orderer}':
     get:
       summary: OrdersByOrderer returns orders made by an orderer.
       operationId: OrdersByOrderer
@@ -24370,7 +24712,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pairs/{pair_id}:
+  '/crescent/liquidity/v1beta1/pairs/{pair_id}':
     get:
       summary: Pair returns the specific pair.
       operationId: Pair
@@ -24432,7 +24774,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pairs/{pair_id}/orders:
+  '/crescent/liquidity/v1beta1/pairs/{pair_id}/orders':
     get:
       summary: Orders returns all orders within the pair.
       operationId: Orders
@@ -24686,7 +25028,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pairs/{pair_id}/orders/{id}:
+  '/crescent/liquidity/v1beta1/pairs/{pair_id}/orders/{id}':
     get:
       summary: Order returns the specific order.
       operationId: Order
@@ -25179,7 +25521,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}:
+  '/crescent/liquidity/v1beta1/pools/pool_coin_denom/{pool_coin_denom}':
     get:
       summary: >-
         PoolByPoolCoinDenom returns all pools that correspond to the pool coin
@@ -25302,7 +25644,7 @@ paths:
           type: string
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pools/reserve_address/{reserve_address}:
+  '/crescent/liquidity/v1beta1/pools/reserve_address/{reserve_address}':
     get:
       summary: >-
         PoolByReserveAddress returns all pools that correspond to the reserve
@@ -25425,7 +25767,7 @@ paths:
           type: string
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pools/{pool_id}:
+  '/crescent/liquidity/v1beta1/pools/{pool_id}':
     get:
       summary: Pool returns the specific liquidity pool.
       operationId: LiquidityPool
@@ -25547,7 +25889,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests:
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests':
     get:
       summary: DepositRequests returns all deposit requests.
       operationId: DepositRequests
@@ -25769,7 +26111,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}:
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/deposit_requests/{id}':
     get:
       summary: DepositRequest returns the specific deposit request.
       operationId: DepositRequest
@@ -25908,7 +26250,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests:
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests':
     get:
       summary: WithdrawRequests returns all withdraw requests.
       operationId: WithdrawRequests
@@ -26114,7 +26456,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}:
+  '/crescent/liquidity/v1beta1/pools/{pool_id}/withdraw_requests/{id}':
     get:
       summary: WithdrawRequest returns the specific withdraw request.
       operationId: WithdrawRequest
@@ -26520,7 +26862,7 @@ paths:
         description: Find out more about the liquid validators
         url: >-
           https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec
-  /crescent/liquidstaking/v1beta1/voting_power/{voter}:
+  '/crescent/liquidstaking/v1beta1/voting_power/{voter}':
     get:
       summary: >-
         VotingPower returns voting power of staking and liquid staking module's
@@ -26865,7 +27207,7 @@ paths:
           format: boolean
       tags:
         - Query
-  /crescent/claim/v1beta1/airdrops/{airdrop_id}:
+  '/crescent/claim/v1beta1/airdrops/{airdrop_id}':
     get:
       summary: Airdrop returns the specific airdrop.
       operationId: Airdrop
@@ -26951,7 +27293,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /crescent/claim/v1beta1/airdrops/{airdrop_id}/claim_records/{recipient}:
+  '/crescent/claim/v1beta1/airdrops/{airdrop_id}/claim_records/{recipient}':
     get:
       summary: ClaimRecord returns the claim record for the recipient address.
       operationId: ClaimRecord
@@ -27990,7 +28332,7 @@ definitions:
         description: Sender address or Keybase name to generate a transaction
       memo:
         type: string
-        example: Sent via Cosmos Voyager 🚀
+        example: "Sent via Cosmos Voyager \U0001F680"
       chain_id:
         type: string
         example: Cosmos-Hub
@@ -36221,7 +36563,7 @@ definitions:
         properties:
           rate:
             type: string
-            description: rate is the commission rate charged to delegators, as a fraction.
+            description: 'rate is the commission rate charged to delegators, as a fraction.'
           max_rate:
             type: string
             description: >-
@@ -36242,7 +36584,7 @@ definitions:
     properties:
       rate:
         type: string
-        description: rate is the commission rate charged to delegators, as a fraction.
+        description: 'rate is the commission rate charged to delegators, as a fraction.'
       max_rate:
         type: string
         description: >-
@@ -39629,7 +39971,7 @@ definitions:
         description: Response code.
       data:
         type: string
-        description: Result bytes, if any.
+        description: 'Result bytes, if any.'
       raw_log:
         type: string
         description: |-
@@ -40052,7 +40394,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: Result bytes, if any.
+            description: 'Result bytes, if any.'
           raw_log:
             type: string
             description: |-
@@ -40379,7 +40721,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: Result bytes, if any.
+            description: 'Result bytes, if any.'
           raw_log:
             type: string
             description: |-
@@ -40654,7 +40996,7 @@ definitions:
               description: Response code.
             data:
               type: string
-              description: Result bytes, if any.
+              description: 'Result bytes, if any.'
             raw_log:
               type: string
               description: |-
@@ -42455,7 +42797,7 @@ definitions:
             index:
               type: boolean
               format: boolean
-          description: EventAttribute is a single key-value pair, associated with an event.
+          description: 'EventAttribute is a single key-value pair, associated with an event.'
     description: >-
       Event allows application developers to attach additional information to
 
@@ -42475,7 +42817,7 @@ definitions:
       index:
         type: boolean
         format: boolean
-    description: EventAttribute is a single key-value pair, associated with an event.
+    description: 'EventAttribute is a single key-value pair, associated with an event.'
   cosmos.upgrade.v1beta1.ModuleVersion:
     type: object
     properties:
@@ -43853,6 +44195,26 @@ definitions:
               parameter change governance proposal
         description: Params defines the parameters for the budget module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  crescent.farming.v1beta1.HistoricalRewardsResponse:
+    type: object
+    properties:
+      epoch:
+        type: string
+        format: uint64
+      cumulative_unit_rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
   crescent.farming.v1beta1.Params:
     type: object
     properties:
@@ -43908,6 +44270,63 @@ definitions:
     description: >-
       QueryCurrentEpochDaysResponse is the response type for the
       Query/CurrentEpochDays RPC method.
+  crescent.farming.v1beta1.QueryHistoricalRewardsResponse:
+    type: object
+    properties:
+      historical_rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            epoch:
+              type: string
+              format: uint64
+            cumulative_unit_rewards:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  DecCoin defines a token with a denomination and a decimal
+                  amount.
+
+
+                  NOTE: The amount field is an Dec which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: >-
+      QueryHistoricalRewardsResponse is the response type for the
+      Query/HistoricalRewards RPC method.
   crescent.farming.v1beta1.QueryParamsResponse:
     type: object
     properties:
@@ -44297,7 +44716,6 @@ definitions:
                 }
         title: plans are the existing plans
       pagination:
-        description: pagination defines the pagination in the response.
         type: object
         properties:
           next_key:
@@ -44314,6 +44732,14 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
     description: QueryPlansResponse is the response type for the Query/Plans RPC method.
   crescent.farming.v1beta1.QueryPositionResponse:
     type: object
@@ -46282,7 +46708,7 @@ definitions:
           encoded in JSON.
       weight:
         type: string
-        title: weight specifies the weight for liquid staking, unstaking amount
+        title: 'weight specifies the weight for liquid staking, unstaking amount'
       status:
         title: status is the liquid validator status
         type: string
@@ -46427,7 +46853,7 @@ definitions:
                 operator; bech encoded in JSON.
             weight:
               type: string
-              title: weight specifies the weight for liquid staking, unstaking amount
+              title: 'weight specifies the weight for liquid staking, unstaking amount'
             status:
               title: status is the liquid validator status
               type: string
