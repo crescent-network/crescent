@@ -70,36 +70,9 @@ of the targeted `Pool` and new pool coins are minted and sent to the depositor.
 After a successful withdraw transaction, escrowed pool coins are burned and
 corresponding amount of reserve coins are sent to the withdrawer from the liquidity `Pool`.
 
-## Swap Process
+## Matching Process
 
-### Matching Price Calculation
-
-- CX(i): Sum of all buy amount of orders with tick equal to or higher than tick(i)
-- CY(i): Sum of all sell amount of orders with tick equal to or lower than tick(i)
-- Check matchability
-    - for all tick i, if CX(i) == 0 or CY(i) == 0, there is no matchable order
-    - If i < j, for highest tick i with CX(i) > 0 and lowest tick j with CY(j) > 0, there is no matchable order
-- price discovery logic
-    - find tick(i) with CX(i+1) ≤ CY(i) and CX(i) ≥ CY(i-1)
-    - if there are two or more ticks that satisfies above condition
-        - tick(l): lowest tick with both conditions hold
-        - tick(h): highest tick with both conditions hold
-        - result = PriceToRoundedTick((tick(l)+tick(h))/2)
-
-### Matching Execution
-
-- Priority
-  1. price: buy order with high order price, sell order with low order price
-  2. amount: large amount → small amount
-  3. orderbook type: order from pool → order from user
-  4. id: small number id → large number id(pool id, order id)
-- Matching
-  1. line up buy orders with price greater than or equal to matching price and
-     sell orders with price less than or equal to matching price.
-     both are sorted by above priority, respectively.
-  2. Then match each other based on the shorter side.
-     Orders at the end of each side may be partially matched.
-     Sell orders which receive no quote coin due to decimal truncation will be dropped during this process.
+Read more about matching process in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/matching.md).
 
 ## Change states of orders with expired lifespan
 

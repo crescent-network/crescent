@@ -22,6 +22,8 @@ and participate in the transaction as a single entity.
 The matchable orders stacked in the orderbook are matched to the most reasonable price
 by mathematical logic and unmatched requests are removed or remained according to user’s choice.
 
+Read more about matching process in the [Liquidity pool white paper](../../../docs/whitepapers/liquidity/matching.md).
+
 ## Tick System
 
 We introduce tick system in DEX, alongside with enabling order book feature.
