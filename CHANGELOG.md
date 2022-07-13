@@ -38,6 +38,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Client Breaking Changes
+
+* (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `HistoricalRewards` query endpoint:
+  * `HistoricalRewards`: `/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}`
+
 ## v2.0.0
 
 ### Client Breaking Changes
