@@ -8,7 +8,7 @@ import (
 	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
 
-func ExampleMakeOrderBookResponse() {
+func ExampleMakeOrderBookPairResponse() {
 	ob := amm.NewOrderBook(
 		newOrder(amm.Sell, utils.ParseDec("15.0"), sdk.NewInt(10000)),
 		newOrder(amm.Sell, utils.ParseDec("13.0"), sdk.NewInt(10000)),
@@ -25,12 +25,8 @@ func ExampleMakeOrderBookResponse() {
 	tickPrec := 1
 	lowestPrice := utils.ParseDec("0")
 	highestPrice := utils.ParseDec("20")
-	resp := types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, tickPrec, 20)
-	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
-	if !found {
-		panic("base price not found")
-	}
-	types.PrintOrderBookResponse(resp, basePrice)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, 20)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+
@@ -47,7 +43,7 @@ func ExampleMakeOrderBookResponse() {
 	// +------------------------------------------------------------------------+
 }
 
-func ExampleMakeOrderBookResponse_pool() {
+func ExampleMakeOrderBookPairResponse_pool() {
 	pool1 := amm.NewBasicPool(sdk.NewInt(1050_000000), sdk.NewInt(1000_000000), sdk.Int{})
 	pool2, err := amm.CreateRangedPool(
 		sdk.NewInt(1000_000000), sdk.NewInt(1000_000000),
@@ -65,13 +61,9 @@ func ExampleMakeOrderBookResponse_pool() {
 
 	ov := ob.MakeView()
 	ov.Match()
-	tickPrec := 2
-	resp := types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, tickPrec, 10)
-	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
-	if !found {
-		panic("base price not found")
-	}
-	types.PrintOrderBookResponse(resp, basePrice)
+	tickPrec := 3
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, 10)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+
@@ -86,7 +78,7 @@ func ExampleMakeOrderBookResponse_pool() {
 	// |            1571324 |         0.991000000000000000 |                    |
 	// |            1307011 |         0.989000000000000000 |                    |
 	// |------------------------------------------------------------------------|
-	// |                              0.988000000000000000                      |
+	// |                              0.988400000000000000                      |
 	// |------------------------------------------------------------------------|
 	// |                    |         0.988000000000000000 | 1521174            |
 	// |                    |         0.985000000000000000 | 1520420            |
@@ -101,7 +93,7 @@ func ExampleMakeOrderBookResponse_pool() {
 	// +------------------------------------------------------------------------+
 }
 
-func ExampleMakeOrderBookResponse_userOrder() {
+func ExampleMakeOrderBookPairResponse_userOrder() {
 	pool := amm.NewBasicPool(sdk.NewInt(895590740832), sdk.NewInt(675897553075), sdk.Int{})
 
 	lastPrice := utils.ParseDec("1.325")
@@ -121,12 +113,12 @@ func ExampleMakeOrderBookResponse_userOrder() {
 	ov := ob.MakeView()
 	ov.Match()
 	tickPrec := 3
-	resp := types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, tickPrec, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, 10)
 	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
 	if !found {
 		panic("base price not found")
 	}
-	types.PrintOrderBookResponse(resp, basePrice)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+
@@ -156,7 +148,7 @@ func ExampleMakeOrderBookResponse_userOrder() {
 	// +------------------------------------------------------------------------+
 }
 
-func ExampleMakeOrderBookResponse_match() {
+func ExampleMakeOrderBookPairResponse_match() {
 	ob := amm.NewOrderBook(
 		newOrder(amm.Buy, utils.ParseDec("1.000"), sdk.NewInt(3000)),
 		newOrder(amm.Buy, utils.ParseDec("0.999"), sdk.NewInt(10000)),
@@ -167,12 +159,12 @@ func ExampleMakeOrderBookResponse_match() {
 	ov := ob.MakeView()
 	ov.Match()
 	tickPrec := 3
-	resp := types.MakeOrderBookResponse(ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), tickPrec, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), tickPrec, 10)
 	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
 	if !found {
 		panic("base price not found")
 	}
-	types.PrintOrderBookResponse(resp, basePrice)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+
@@ -185,7 +177,7 @@ func ExampleMakeOrderBookResponse_match() {
 	// +------------------------------------------------------------------------+
 }
 
-func ExampleMakeOrderBookResponse_zigzag() {
+func ExampleMakeOrderBookPairResponse_zigzag() {
 	ob := amm.NewOrderBook(
 		newOrder(amm.Sell, utils.ParseDec("1.002"), sdk.NewInt(10000)),
 		newOrder(amm.Buy, utils.ParseDec("1.001"), sdk.NewInt(5000)),
@@ -196,8 +188,8 @@ func ExampleMakeOrderBookResponse_zigzag() {
 	ov.Match()
 
 	basePrice, _ := types.OrderBookBasePrice(ov, 4)
-	resp := types.MakeOrderBookResponse(ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 20)
-	types.PrintOrderBookResponse(resp, basePrice)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 20)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+
@@ -210,7 +202,7 @@ func ExampleMakeOrderBookResponse_zigzag() {
 	// +------------------------------------------------------------------------+
 }
 
-func ExampleMakeOrderBookResponse_edgecase1() {
+func ExampleMakeOrderBookPairResponse_edgecase1() {
 	basicPool := amm.NewBasicPool(sdk.NewInt(2603170018), sdk.NewInt(2731547352), sdk.Int{})
 	rangedPool := amm.NewRangedPool(sdk.NewInt(9204969), sdk.NewInt(292104465), sdk.Int{}, utils.ParseDec("0.95"), utils.ParseDec("1.05"))
 	lastPrice := utils.ParseDec("0.95299")
@@ -225,8 +217,8 @@ func ExampleMakeOrderBookResponse_edgecase1() {
 	ov.Match()
 
 	basePrice, _ := types.OrderBookBasePrice(ov, 4)
-	resp := types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, 3, 10)
-	types.PrintOrderBookResponse(resp, basePrice)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 3, 10)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+
@@ -256,7 +248,7 @@ func ExampleMakeOrderBookResponse_edgecase1() {
 	// +------------------------------------------------------------------------+
 }
 
-func ExampleMakeOrderBookResponse_edgecase2() {
+func ExampleMakeOrderBookPairResponse_edgecase2() {
 	ob := amm.NewOrderBook(
 		newOrder(amm.Buy, utils.ParseDec("1.001"), sdk.NewInt(3000)),
 		newOrder(amm.Buy, utils.ParseDec("1.000"), sdk.NewInt(10000)),
@@ -268,9 +260,8 @@ func ExampleMakeOrderBookResponse_edgecase2() {
 	ov := ob.MakeView()
 	ov.Match()
 
-	basePrice, _ := types.OrderBookBasePrice(ov, 4)
-	resp := types.MakeOrderBookResponse(ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 10)
-	types.PrintOrderBookResponse(resp, basePrice)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 10)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+
@@ -281,7 +272,7 @@ func ExampleMakeOrderBookResponse_edgecase2() {
 	// +------------------------------------------------------------------------+
 }
 
-func ExampleMakeOrderBookResponse_edgecase3() {
+func ExampleMakeOrderBookPairResponse_edgecase3() {
 	ob := amm.NewOrderBook(
 		newOrder(amm.Sell, utils.ParseDec("1.001"), sdk.NewInt(2000)),
 		newOrder(amm.Sell, utils.ParseDec("1.000"), sdk.NewInt(2000)),
@@ -292,9 +283,8 @@ func ExampleMakeOrderBookResponse_edgecase3() {
 	ov := ob.MakeView()
 	ov.Match()
 
-	basePrice, _ := types.OrderBookBasePrice(ov, 4)
-	resp := types.MakeOrderBookResponse(ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 10)
-	types.PrintOrderBookResponse(resp, basePrice)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 10)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
 	// +------------------------------------------------------------------------+

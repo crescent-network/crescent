@@ -14,12 +14,7 @@ import (
 )
 
 func (k Keeper) PriceLimits(ctx sdk.Context, lastPrice sdk.Dec) (lowest, highest sdk.Dec) {
-	limitRatio := k.GetMaxPriceLimitRatio(ctx)
-	tickPrec := k.GetTickPrecision(ctx)
-	k.paramSpace.Get(ctx, types.KeyMaxPriceLimitRatio, &limitRatio)
-	lowest = amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(limitRatio)), int(tickPrec))
-	highest = amm.PriceToDownTick(lastPrice.Mul(sdk.OneDec().Add(limitRatio)), int(tickPrec))
-	return
+	return types.PriceLimits(lastPrice, k.GetMaxPriceLimitRatio(ctx), int(k.GetTickPrecision(ctx)))
 }
 
 // ValidateMsgLimitOrder validates types.MsgLimitOrder with state and returns

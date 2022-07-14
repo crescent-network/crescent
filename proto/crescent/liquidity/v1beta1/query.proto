@@ -238,9 +238,8 @@ message QueryOrdersByOrdererRequest {
 
 // QueryOrderBooksRequest is request type for the Query/OrderBooks RPC method.
 message QueryOrderBooksRequest {
-  repeated uint64 pair_ids        = 1;
-  repeated uint32 tick_precisions = 2;
-  uint32          num_ticks       = 3;
+  repeated uint64 pair_ids  = 1;
+  uint32          num_ticks = 2;
 }
 
 // QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.
@@ -298,9 +297,10 @@ message OrderBookPairResponse {
 }
 
 message OrderBookResponse {
-  uint32                         tick_precision = 1;
-  repeated OrderBookTickResponse buys           = 2 [(gogoproto.nullable) = false];
-  repeated OrderBookTickResponse sells          = 3 [(gogoproto.nullable) = false];
+  string price_unit = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated OrderBookTickResponse sells = 2 [(gogoproto.nullable) = false];
+  repeated OrderBookTickResponse buys  = 3 [(gogoproto.nullable) = false];
 }
 
 message OrderBookTickResponse {

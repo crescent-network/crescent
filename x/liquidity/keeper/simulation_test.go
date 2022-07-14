@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestSimulation1() {
 
 	dustCollector := s.keeper.GetDustCollector(s.ctx)
 
-	const numBlocks, numOrders, numDeposits, numWithdraws = 20, 10, 2, 2
+	const numBlocks, numOrders, numDeposits, numWithdraws = 10, 10, 2, 2
 	fuzz := func() {
 		for i := 0; i < numBlocks; i++ {
 			pair, _ = s.keeper.GetPair(s.ctx, pair.Id)

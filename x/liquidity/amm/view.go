@@ -67,6 +67,9 @@ func (view *OrderBookView) Match() {
 		return view.SellAmountUnder(view.sellAmtAccSums[i].price, true).GT(
 			view.BuyAmountOver(view.sellAmtAccSums[i].price, true))
 	})
+	if buyIdx == len(view.buyAmtAccSums) && sellIdx == len(view.sellAmtAccSums) {
+		return
+	}
 	matchAmt := sdk.ZeroInt()
 	if buyIdx > 0 {
 		matchAmt = view.buyAmtAccSums[buyIdx-1].sum
@@ -130,6 +133,20 @@ func (view *OrderBookView) BuyAmountOver(price sdk.Dec, inclusive bool) sdk.Int 
 	return view.buyAmtAccSums[i-1].sum
 }
 
+func (view *OrderBookView) BuyAmountUnder(price sdk.Dec, inclusive bool) sdk.Int {
+	i := sort.Search(len(view.buyAmtAccSums), func(i int) bool {
+		if inclusive {
+			return view.buyAmtAccSums[i].price.LTE(price)
+		} else {
+			return view.buyAmtAccSums[i].price.LT(price)
+		}
+	})
+	if i == 0 {
+		return view.buyAmtAccSums[len(view.buyAmtAccSums)-1].sum
+	}
+	return view.buyAmtAccSums[len(view.buyAmtAccSums)-1].sum.Sub(view.buyAmtAccSums[i-1].sum)
+}
+
 func (view *OrderBookView) SellAmountUnder(price sdk.Dec, inclusive bool) sdk.Int {
 	i := sort.Search(len(view.sellAmtAccSums), func(i int) bool {
 		if inclusive {
@@ -142,6 +159,20 @@ func (view *OrderBookView) SellAmountUnder(price sdk.Dec, inclusive bool) sdk.In
 		return sdk.ZeroInt()
 	}
 	return view.sellAmtAccSums[i-1].sum
+}
+
+func (view *OrderBookView) SellAmountOver(price sdk.Dec, inclusive bool) sdk.Int {
+	i := sort.Search(len(view.sellAmtAccSums), func(i int) bool {
+		if inclusive {
+			return view.sellAmtAccSums[i].price.GTE(price)
+		} else {
+			return view.sellAmtAccSums[i].price.GT(price)
+		}
+	})
+	if i == 0 {
+		return view.sellAmtAccSums[len(view.sellAmtAccSums)-1].sum
+	}
+	return view.sellAmtAccSums[len(view.sellAmtAccSums)-1].sum.Sub(view.sellAmtAccSums[i-1].sum)
 }
 
 type amtAccSum struct {

@@ -503,10 +503,6 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		return nil, status.Error(codes.InvalidArgument, "pair ids must not be empty")
 	}
 
-	if len(req.TickPrecisions) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "tick precisions must not be empty")
-	}
-
 	if req.NumTicks == 0 {
 		return nil, status.Error(codes.InvalidArgument, "number of ticks must not be 0")
 	}
@@ -517,14 +513,6 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 			return nil, status.Errorf(codes.InvalidArgument, "duplicate pair id: %d", pairId)
 		}
 		pairIdSet[pairId] = struct{}{}
-	}
-
-	tickPrecSet := map[uint32]struct{}{}
-	for _, tickPrec := range req.TickPrecisions {
-		if _, ok := tickPrecSet[tickPrec]; ok {
-			return nil, status.Errorf(codes.InvalidArgument, "duplicate tick precision: %d", tickPrec)
-		}
-		tickPrecSet[tickPrec] = struct{}{}
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -567,32 +555,7 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		ov := ob.MakeView()
 		ov.Match()
 
-		var obs []types.OrderBookResponse
-		basePrice, found := types.OrderBookBasePrice(ov, int(tickPrec))
-		if !found {
-			for _, tickPrec := range req.TickPrecisions {
-				obs = append(obs, types.OrderBookResponse{
-					TickPrecision: tickPrec,
-					Buys:          nil,
-					Sells:         nil,
-				})
-			}
-			pairs = append(pairs, types.OrderBookPairResponse{
-				PairId:     pairId,
-				BasePrice:  sdk.Dec{},
-				OrderBooks: obs,
-			})
-			continue
-		}
-
-		for _, tickPrec := range req.TickPrecisions {
-			obs = append(obs, types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, int(tickPrec), int(req.NumTicks)))
-		}
-		pairs = append(pairs, types.OrderBookPairResponse{
-			PairId:     pairId,
-			BasePrice:  basePrice,
-			OrderBooks: obs,
-		})
+		pairs = append(pairs, types.MakeOrderBookPairResponse(pair.Id, ov, lowestPrice, highestPrice, int(tickPrec), int(req.NumTicks)))
 	}
 
 	return &types.QueryOrderBooksResponse{

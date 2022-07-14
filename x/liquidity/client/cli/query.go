@@ -656,15 +656,15 @@ $ %s query %s order 1 1
 // NewQueryOrderBooksCmd implements the order books query command.
 func NewQueryOrderBooksCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "order-books [pair-ids] [tick-precisions]",
+		Use:   "order-books [pair-ids]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query order books",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query order books of specified pairs and tick precisions.
+			fmt.Sprintf(`Query order books of specified pairs.
 
 Example:
-$ %s query %s order-books 1 1,2,3 --num-ticks=10
-$ %s query %s order-books 2,3 3
+$ %s query %s order-books 1 --num-ticks=10
+$ %s query %s order-books 2,3
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -688,24 +688,13 @@ $ %s query %s order-books 2,3 3
 				pairIds = append(pairIds, pairId)
 			}
 
-			tickPrecStrings := strings.Split(args[1], ",")
-			var tickPrecisions []uint32
-			for _, tickPrecStr := range tickPrecStrings {
-				tickPrec, err := strconv.ParseUint(tickPrecStr, 10, 32)
-				if err != nil {
-					return fmt.Errorf("parse tick precision: %w", err)
-				}
-				tickPrecisions = append(tickPrecisions, uint32(tickPrec))
-			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.OrderBooks(
 				cmd.Context(),
 				&types.QueryOrderBooksRequest{
-					PairIds:        pairIds,
-					TickPrecisions: tickPrecisions,
-					NumTicks:       numTicks,
+					PairIds:  pairIds,
+					NumTicks: numTicks,
 				})
 			if err != nil {
 				return err

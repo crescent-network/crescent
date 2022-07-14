@@ -30,8 +30,8 @@ func TestMakeOrderBookResponse(t *testing.T) {
 		panic("base price not found")
 	}
 
-	resp := types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, 4, 20)
-	types.PrintOrderBookResponse(resp, basePrice)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4, 20)
+	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 }
 
 func BenchmarkMakeOrderBookResponse(b *testing.B) {
@@ -40,7 +40,7 @@ func BenchmarkMakeOrderBookResponse(b *testing.B) {
 	}
 }
 
-func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) *types.OrderBookPairResponse {
+func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) types.OrderBookPairResponse {
 	r := rand.New(rand.NewSource(0))
 	ob := amm.NewOrderBook()
 	for i := 0; i < numOrders; i++ {
@@ -67,17 +67,5 @@ func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) *typ
 	ov := ob.MakeView()
 	ov.Match()
 
-	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
-	if !found {
-		panic("base price not found")
-	}
-
-	resp := &types.OrderBookPairResponse{
-		PairId:    1,
-		BasePrice: basePrice,
-	}
-	for _, tickPrec := range []int{2, 3, 4} {
-		resp.OrderBooks = append(resp.OrderBooks, types.MakeOrderBookResponse(ov, lowestPrice, highestPrice, tickPrec, numTicks))
-	}
-	return resp
+	return types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4, numTicks)
 }

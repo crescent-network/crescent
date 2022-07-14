@@ -24,62 +24,100 @@ func OrderBookBasePrice(ov amm.OrderView, tickPrec int) (sdk.Dec, bool) {
 	}
 }
 
-func MakeOrderBookResponse(ov amm.OrderView, lowestPrice, highestPrice sdk.Dec, tickPrec, numTicks int) OrderBookResponse {
+func MakeOrderBookPairResponse(pairId uint64, ov *amm.OrderBookView, lowestPrice, highestPrice sdk.Dec, tickPrec, numTicks int) OrderBookPairResponse {
+	resp := OrderBookPairResponse{
+		PairId: pairId,
+	}
+	basePrice, found := OrderBookBasePrice(ov, tickPrec)
+	if !found {
+		return resp
+	}
+	resp.BasePrice = basePrice
 	ammTickPrec := amm.TickPrecision(tickPrec)
-	resp := OrderBookResponse{TickPrecision: uint32(tickPrec)}
 
 	highestBuyPrice, foundHighestBuyPrice := ov.HighestBuyPrice()
 	lowestSellPrice, foundLowestSellPrice := ov.LowestSellPrice()
 
-	var tickGapBasePrice sdk.Dec
+	var smallestPriceUnit sdk.Dec
 	if foundLowestSellPrice {
-		tickGapBasePrice = lowestSellPrice
-	} else {
-		tickGapBasePrice = highestBuyPrice
-	}
-	tickGap := ammTickPrec.TickGap(
-		ammTickPrec.TickFromIndex(
-			ammTickPrec.TickToIndex(tickGapBasePrice) + (numTicks - 1)))
-
-	if foundHighestBuyPrice {
-		startPrice := FitPriceToTickGap(highestBuyPrice, tickGap, true)
-		currentPrice := startPrice
-		accAmt := sdk.ZeroInt()
-		for i := 0; i < numTicks && currentPrice.GTE(lowestPrice) && !currentPrice.IsNegative(); {
-			amt := ov.BuyAmountOver(currentPrice, true).Sub(accAmt)
-			if amt.IsPositive() {
-				resp.Buys = append(resp.Buys, OrderBookTickResponse{
-					Price:           currentPrice,
-					UserOrderAmount: amt,
-					PoolOrderAmount: sdk.ZeroInt(),
-				})
-				accAmt = accAmt.Add(amt)
-				i++
-			}
-			currentPrice = currentPrice.Sub(tickGap)
-		}
-	}
-	if foundLowestSellPrice {
-		startPrice := FitPriceToTickGap(lowestSellPrice, tickGap, false)
-		currentPrice := startPrice
-		accAmt := sdk.ZeroInt()
+		currentPrice := lowestSellPrice
 		for i := 0; i < numTicks && currentPrice.LTE(highestPrice); {
-			amt := ov.SellAmountUnder(currentPrice, true).Sub(accAmt)
+			amtInclusive := ov.SellAmountOver(currentPrice, true)
+			amtExclusive := ov.SellAmountOver(currentPrice, false)
+			amt := amtInclusive.Sub(amtExclusive)
 			if amt.IsPositive() {
-				resp.Sells = append(resp.Sells, OrderBookTickResponse{
-					Price:           currentPrice,
-					UserOrderAmount: amt,
-					PoolOrderAmount: sdk.ZeroInt(),
-				})
-				accAmt = accAmt.Add(amt)
 				i++
+				if i == numTicks {
+					break
+				}
 			}
-			currentPrice = currentPrice.Add(tickGap)
+			if !amtExclusive.IsPositive() {
+				break
+			}
+			currentPrice = ammTickPrec.UpTick(currentPrice)
 		}
-		// Reverse sell ticks.
-		for l, r := 0, len(resp.Sells)-1; l < r; l, r = l+1, r-1 {
-			resp.Sells[l], resp.Sells[r] = resp.Sells[r], resp.Sells[l]
+		smallestPriceUnit = ammTickPrec.TickGap(currentPrice)
+	} else {
+		smallestPriceUnit = ammTickPrec.TickGap(highestBuyPrice)
+	}
+
+	for i := 0; i < 3; i++ {
+		priceUnit := smallestPriceUnit
+		for j := 0; j < i; j++ {
+			priceUnit = priceUnit.MulInt64(10)
 		}
+		ob := OrderBookResponse{
+			PriceUnit: priceUnit,
+			Buys:      nil,
+			Sells:     nil,
+		}
+		if foundLowestSellPrice {
+			startPrice := FitPriceToTickGap(lowestSellPrice, priceUnit, false)
+			currentPrice := startPrice
+			accAmt := sdk.ZeroInt()
+			for j := 0; j < numTicks && currentPrice.LTE(highestPrice); {
+				amt := ov.SellAmountUnder(currentPrice, true).Sub(accAmt)
+				if amt.IsPositive() {
+					ob.Sells = append(ob.Sells, OrderBookTickResponse{
+						Price:           currentPrice,
+						UserOrderAmount: amt,
+						PoolOrderAmount: sdk.ZeroInt(),
+					})
+					accAmt = accAmt.Add(amt)
+					j++
+				}
+				if !ov.SellAmountOver(currentPrice, false).IsPositive() {
+					break
+				}
+				currentPrice = currentPrice.Add(priceUnit)
+			}
+			// Reverse sell ticks.
+			for l, r := 0, len(ob.Sells)-1; l < r; l, r = l+1, r-1 {
+				ob.Sells[l], ob.Sells[r] = ob.Sells[r], ob.Sells[l]
+			}
+		}
+		if foundHighestBuyPrice {
+			startPrice := FitPriceToTickGap(highestBuyPrice, priceUnit, true)
+			currentPrice := startPrice
+			accAmt := sdk.ZeroInt()
+			for j := 0; j < numTicks && currentPrice.GTE(lowestPrice) && !currentPrice.IsNegative(); {
+				amt := ov.BuyAmountOver(currentPrice, true).Sub(accAmt)
+				if amt.IsPositive() {
+					ob.Buys = append(ob.Buys, OrderBookTickResponse{
+						Price:           currentPrice,
+						UserOrderAmount: amt,
+						PoolOrderAmount: sdk.ZeroInt(),
+					})
+					accAmt = accAmt.Add(amt)
+					j++
+				}
+				if !ov.BuyAmountUnder(currentPrice, false).IsPositive() {
+					break
+				}
+				currentPrice = currentPrice.Sub(priceUnit)
+			}
+		}
+		resp.OrderBooks = append(resp.OrderBooks, ob)
 	}
 
 	return resp
