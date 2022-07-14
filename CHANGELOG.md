@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking Changes
 
+* (x/liquidity) [\#48](https://github.com/crescent-network/crescent/pull/48) Refactor `OrderBooks` query:
+  * `tick_precisions` field has been removed from `QueryOrderBooksRequest`
+  * `tick_precision` field has been removed from `OrderBookResponse` and `price_unit` has been added instead
+  * The order between `sells` and `buys` has been changed
 * (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `HistoricalRewards` query endpoint:
   * `HistoricalRewards`: `/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}`
 * (x/liquidity) [\#46](https://github.com/crescent-network/crescent/pull/46) Modify `PoolResponse`:
@@ -57,6 +61,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* (x/liquidity) [\#48](https://github.com/crescent-network/crescent/pull/48) Refactor `order-books` query cmd:
+  * `[tick-precisions]` argument has been removed: `order-books [pair-ids]`
+  * Response structure has been changed
 * (x/farming) [\#45](https://github.com/crescent-network/crescent/pull/45) Add `historical-rewards` query cmd:
   * `historical-rewards [staking-coin-denom]`
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Add `create-ranged-pool` tx cmd and `order-books` query cmd:

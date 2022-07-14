@@ -622,7 +622,9 @@ order-books [pair-ids] [tick-precisions]
 Example
 
 ```bash
-crescentd order-books 1 3,4 --num-ticks=10
+crescentd order-books 1 --num-ticks=10
+
+crescentd order-books 1,2,3
 ```
 
 
