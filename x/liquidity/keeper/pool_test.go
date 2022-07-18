@@ -591,3 +591,55 @@ func (s *KeeperTestSuite) TestRangedPoolDepositWithdraw_single_side2() {
 	s.Require().True(intEq(sdk.ZeroInt(), s.getBalance(s.addr(3), "denom2").Amount))
 	s.Require().True(intEq(sdk.NewInt(1000000), s.getBalance(s.addr(3), "denom1").Amount))
 }
+
+func (s *KeeperTestSuite) TestMaxNumActivePoolsPerPair() {
+	s.Run("basic pool and ranged pools", func() {
+		s.SetupTest()
+		pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+		pool1 := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
+		for i := 0; i < types.MaxNumActivePoolsPerPair-1; i++ {
+			s.createRangedPool(
+				s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+				utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
+		}
+
+		s.fundAddr(s.addr(0), utils.ParseCoins("1000000denom1,1000000denom2"))
+		_, err := s.keeper.CreateRangedPool(s.ctx, types.NewMsgCreateRangedPool(
+			s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.5")))
+		s.Require().ErrorIs(err, types.ErrTooManyPools)
+
+		s.withdraw(s.addr(0), pool1.Id, sdk.NewCoin(pool1.PoolCoinDenom, s.keeper.GetPoolCoinSupply(s.ctx, pool1)))
+		s.nextBlock()
+
+		s.createRangedPool(
+			s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
+	})
+
+	s.Run("ranged pools only", func() {
+		s.SetupTest()
+		pair := s.createPair(s.addr(0), "denom1", "denom2", true)
+
+		for i := 0; i < types.MaxNumActivePoolsPerPair; i++ {
+			s.createRangedPool(
+				s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+				utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
+		}
+		pool1, _ := s.keeper.GetPool(s.ctx, 1)
+
+		s.fundAddr(s.addr(0), utils.ParseCoins("1000000denom1,1000000denom2"))
+		_, err := s.keeper.CreateRangedPool(s.ctx, types.NewMsgCreateRangedPool(
+			s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.5")))
+		s.Require().ErrorIs(err, types.ErrTooManyPools)
+
+		s.withdraw(s.addr(0), pool1.Id, sdk.NewCoin(pool1.PoolCoinDenom, s.keeper.GetPoolCoinSupply(s.ctx, pool1)))
+		s.nextBlock()
+
+		s.createRangedPool(
+			s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
+			utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
+	})
+}
