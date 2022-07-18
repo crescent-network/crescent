@@ -39,6 +39,10 @@ const (
 	PairEscrowAddressPrefix   = "PairEscrowAddress"
 	ModuleAddressNameSplitter = "|"
 	AddressType               = farmingtypes.AddressType32Bytes
+
+	// MaxNumActivePoolsPerPair is the maximum number of active(not disabled)
+	// pools per pair.
+	MaxNumActivePoolsPerPair = 50
 )
 
 var (

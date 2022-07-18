@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v2.0.0
+## v2.1.0
 
 ### Client Breaking Changes
 
@@ -76,6 +76,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (x/liquidity) [\#49](https://github.com/crescent-network/crescent/pull/49) Add `MaxNumActivePoolsPerPair` global constant
 * (x/liquidity) [\#37](https://github.com/crescent-network/crescent/pull/37) Change `Pool` struct for ranged pools and refactor matching logic
   * Add `type`, `creator`, `min_price` and `max_price` fields to `Pool` struct
   * Refactor matching logic both for fairness of matching and efficiency of pool order placement

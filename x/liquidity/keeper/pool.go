@@ -89,15 +89,22 @@ func (k Keeper) ValidateMsgCreatePool(ctx sdk.Context, msg *types.MsgCreatePool)
 	// Check if there is a basic pool in the pair.
 	// Creating multiple basic pools within the same pair is disallowed.
 	duplicate := false
+	numActivePools := 0
 	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
 		if pool.Type == types.PoolTypeBasic && !pool.Disabled {
 			duplicate = true
 			return true, nil
 		}
+		if !pool.Disabled {
+			numActivePools++
+		}
 		return false, nil
 	})
 	if duplicate {
 		return types.ErrPoolAlreadyExists
+	}
+	if numActivePools >= types.MaxNumActivePoolsPerPair {
+		return types.ErrTooManyPools
 	}
 
 	return nil
@@ -189,6 +196,17 @@ func (k Keeper) ValidateMsgCreateRangedPool(ctx sdk.Context, msg *types.MsgCreat
 		if coin.Denom != pair.BaseCoinDenom && coin.Denom != pair.QuoteCoinDenom {
 			return sdkerrors.Wrapf(types.ErrInvalidCoinDenom, "coin denom %s is not in the pair", coin.Denom)
 		}
+	}
+
+	numActivePools := 0
+	_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
+		if !pool.Disabled {
+			numActivePools++
+		}
+		return false, nil
+	})
+	if numActivePools >= types.MaxNumActivePoolsPerPair {
+		return types.ErrTooManyPools
 	}
 
 	return nil
