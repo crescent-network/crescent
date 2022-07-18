@@ -793,7 +793,7 @@ func (s *KeeperTestSuite) TestExhaustRangedPool() {
 			break
 		}
 		orderPrice := utils.RandomDec(r, poolPrice, poolPrice.Mul(sdk.NewDecWithPrec(105, 2)))
-		amt := utils.RandomInt(r, sdk.NewInt(1000), sdk.NewInt(5000))
+		amt := utils.RandomInt(r, sdk.NewInt(5000), sdk.NewInt(15000))
 		s.buyLimitOrder(orderer, pair.Id, orderPrice, amt, 0, false)
 		s.nextBlock()
 	}
@@ -808,7 +808,7 @@ func (s *KeeperTestSuite) TestExhaustRangedPool() {
 			break
 		}
 		orderPrice := utils.RandomDec(r, poolPrice.Mul(sdk.NewDecWithPrec(95, 2)), poolPrice)
-		amt := utils.RandomInt(r, sdk.NewInt(1000), sdk.NewInt(5000))
+		amt := utils.RandomInt(r, sdk.NewInt(5000), sdk.NewInt(15000))
 		s.sellLimitOrder(orderer, pair.Id, orderPrice, amt, 0, false)
 		s.nextBlock()
 	}
@@ -822,7 +822,7 @@ func (s *KeeperTestSuite) TestExhaustRangedPool() {
 			break
 		}
 		orderPrice := utils.RandomDec(r, poolPrice, poolPrice.Mul(sdk.NewDecWithPrec(105, 2)))
-		amt := utils.RandomInt(r, sdk.NewInt(1000), sdk.NewInt(5000))
+		amt := utils.RandomInt(r, sdk.NewInt(5000), sdk.NewInt(15000))
 		s.buyLimitOrder(orderer, pair.Id, orderPrice, amt, 0, false)
 		s.nextBlock()
 	}
@@ -930,16 +930,15 @@ func (s *KeeperTestSuite) TestOrderBooks_edgecase1() {
 		utils.ParseDec("1.25"), utils.ParseDec("1.45"), utils.ParseDec("1.4199"), true)
 
 	resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), &types.QueryOrderBooksRequest{
-		PairIds:        []uint64{pair.Id},
-		TickPrecisions: []uint32{3},
-		NumTicks:       10,
+		PairIds:  []uint64{pair.Id},
+		NumTicks: 10,
 	})
 	s.Require().NoError(err)
 	s.Require().Len(resp.Pairs, 1)
-	s.Require().Len(resp.Pairs[0].OrderBooks, 1)
+	s.Require().Len(resp.Pairs[0].OrderBooks, 3)
 
 	s.Require().Len(resp.Pairs[0].OrderBooks[0].Buys, 2)
-	s.Require().True(decEq(utils.ParseDec("0.6321"), resp.Pairs[0].OrderBooks[0].Buys[0].Price))
+	s.Require().True(decEq(utils.ParseDec("0.63219"), resp.Pairs[0].OrderBooks[0].Buys[0].Price))
 	s.Require().True(intEq(sdk.NewInt(1178846737645), resp.Pairs[0].OrderBooks[0].Buys[0].UserOrderAmount))
 	s.Require().True(decEq(utils.ParseDec("0.5187"), resp.Pairs[0].OrderBooks[0].Buys[1].Price))
 	s.Require().True(intEq(sdk.NewInt(13340086), resp.Pairs[0].OrderBooks[0].Buys[1].UserOrderAmount))

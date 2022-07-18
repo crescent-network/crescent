@@ -621,7 +621,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/crescent/liquidity/v1beta1/order_books?pair_ids=1&tick_precisions=3&num_ticks=10
+http://localhost:1317/crescent/liquidity/v1beta1/order_books?pair_ids=1&num_ticks=5
 ```
 
 Example Response
@@ -631,111 +631,175 @@ Example Response
   "pairs": [
     {
       "pair_id": "1",
-      "base_price": "1.181500000000000000",
+      "base_price": "1.180000000000000000",
       "order_books": [
         {
-          "tick_precision": 3,
-          "buys": [
+          "price_unit": "0.000100000000000000",
+          "sells": [
             {
-              "price": "1.181000000000000000",
-              "user_order_amount": "138",
+              "price": "1.180500000000000000",
+              "user_order_amount": "64712",
               "pool_order_amount": "0"
             },
             {
-              "price": "1.180000000000000000",
-              "user_order_amount": "485",
+              "price": "1.180400000000000000",
+              "user_order_amount": "19985",
               "pool_order_amount": "0"
             },
             {
-              "price": "1.179000000000000000",
-              "user_order_amount": "312",
+              "price": "1.180300000000000000",
+              "user_order_amount": "64725",
               "pool_order_amount": "0"
             },
             {
-              "price": "1.178000000000000000",
-              "user_order_amount": "450",
+              "price": "1.180200000000000000",
+              "user_order_amount": "19993",
               "pool_order_amount": "0"
             },
             {
-              "price": "1.177000000000000000",
-              "user_order_amount": "313",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.176000000000000000",
-              "user_order_amount": "488",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.175000000000000000",
-              "user_order_amount": "313",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.174000000000000000",
-              "user_order_amount": "453",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.173000000000000000",
-              "user_order_amount": "314",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.172000000000000000",
-              "user_order_amount": "490",
+              "price": "1.180100000000000000",
+              "user_order_amount": "64738",
               "pool_order_amount": "0"
             }
           ],
+          "buys": [
+            {
+              "price": "1.180000000000000000",
+              "user_order_amount": "20000",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.179900000000000000",
+              "user_order_amount": "64752",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.179800000000000000",
+              "user_order_amount": "20009",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.179700000000000000",
+              "user_order_amount": "64765",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.179600000000000000",
+              "user_order_amount": "20017",
+              "pool_order_amount": "0"
+            }
+          ]
+        },
+        {
+          "price_unit": "0.001000000000000000",
           "sells": [
             {
-              "price": "1.191000000000000000",
-              "user_order_amount": "449",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.190000000000000000",
-              "user_order_amount": "309",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.189000000000000000",
-              "user_order_amount": "477",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.188000000000000000",
-              "user_order_amount": "310",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.187000000000000000",
-              "user_order_amount": "450",
-              "pool_order_amount": "0"
-            },
-            {
-              "price": "1.186000000000000000",
-              "user_order_amount": "311",
-              "pool_order_amount": "0"
-            },
-            {
               "price": "1.185000000000000000",
-              "user_order_amount": "482",
+              "user_order_amount": "421298",
               "pool_order_amount": "0"
             },
             {
               "price": "1.184000000000000000",
-              "user_order_amount": "311",
+              "user_order_amount": "421830",
               "pool_order_amount": "0"
             },
             {
               "price": "1.183000000000000000",
-              "user_order_amount": "451",
+              "user_order_amount": "422365",
               "pool_order_amount": "0"
             },
             {
               "price": "1.182000000000000000",
-              "user_order_amount": "172",
+              "user_order_amount": "422901",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.181000000000000000",
+              "user_order_amount": "423440",
+              "pool_order_amount": "0"
+            }
+          ],
+          "buys": [
+            {
+              "price": "1.180000000000000000",
+              "user_order_amount": "20000",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.179000000000000000",
+              "user_order_amount": "424020",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.178000000000000000",
+              "user_order_amount": "424558",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.177000000000000000",
+              "user_order_amount": "425099",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.176000000000000000",
+              "user_order_amount": "425640",
+              "pool_order_amount": "0"
+            }
+          ]
+        },
+        {
+          "price_unit": "0.010000000000000000",
+          "sells": [
+            {
+              "price": "1.230000000000000000",
+              "user_order_amount": "3763074",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.220000000000000000",
+              "user_order_amount": "4377452",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.210000000000000000",
+              "user_order_amount": "4106019",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.200000000000000000",
+              "user_order_amount": "4157434",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.190000000000000000",
+              "user_order_amount": "4210331",
+              "pool_order_amount": "0"
+            }
+          ],
+          "buys": [
+            {
+              "price": "1.180000000000000000",
+              "user_order_amount": "20000",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.170000000000000000",
+              "user_order_amount": "4329993",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.160000000000000000",
+              "user_order_amount": "4320112",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.150000000000000000",
+              "user_order_amount": "4111940",
+              "pool_order_amount": "0"
+            },
+            {
+              "price": "1.140000000000000000",
+              "user_order_amount": "4430076",
               "pool_order_amount": "0"
             }
           ]

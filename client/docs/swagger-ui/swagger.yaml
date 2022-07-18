@@ -24228,10 +24228,9 @@ paths:
                       items:
                         type: object
                         properties:
-                          tick_precision:
-                            type: integer
-                            format: int64
-                          buys:
+                          price_unit:
+                            type: string
+                          sells:
                             type: array
                             items:
                               type: object
@@ -24242,7 +24241,7 @@ paths:
                                   type: string
                                 pool_order_amount:
                                   type: string
-                          sells:
+                          buys:
                             type: array
                             items:
                               type: object
@@ -24286,14 +24285,6 @@ paths:
           items:
             type: string
             format: uint64
-          collectionFormat: multi
-        - name: tick_precisions
-          in: query
-          required: false
-          type: array
-          items:
-            type: integer
-            format: int64
           collectionFormat: multi
         - name: num_ticks
           in: query
@@ -45252,10 +45243,9 @@ definitions:
         items:
           type: object
           properties:
-            tick_precision:
-              type: integer
-              format: int64
-            buys:
+            price_unit:
+              type: string
+            sells:
               type: array
               items:
                 type: object
@@ -45266,7 +45256,7 @@ definitions:
                     type: string
                   pool_order_amount:
                     type: string
-            sells:
+            buys:
               type: array
               items:
                 type: object
@@ -45280,10 +45270,9 @@ definitions:
   crescent.liquidity.v1beta1.OrderBookResponse:
     type: object
     properties:
-      tick_precision:
-        type: integer
-        format: int64
-      buys:
+      price_unit:
+        type: string
+      sells:
         type: array
         items:
           type: object
@@ -45294,7 +45283,7 @@ definitions:
               type: string
             pool_order_amount:
               type: string
-      sells:
+      buys:
         type: array
         items:
           type: object
@@ -45786,10 +45775,9 @@ definitions:
               items:
                 type: object
                 properties:
-                  tick_precision:
-                    type: integer
-                    format: int64
-                  buys:
+                  price_unit:
+                    type: string
+                  sells:
                     type: array
                     items:
                       type: object
@@ -45800,7 +45788,7 @@ definitions:
                           type: string
                         pool_order_amount:
                           type: string
-                  sells:
+                  buys:
                     type: array
                     items:
                       type: object
