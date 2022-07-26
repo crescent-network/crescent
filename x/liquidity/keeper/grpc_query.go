@@ -555,7 +555,21 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		ov := ob.MakeView()
 		ov.Match()
 
-		pairs = append(pairs, types.MakeOrderBookPairResponse(pair.Id, ov, lowestPrice, highestPrice, int(tickPrec), int(req.NumTicks)))
+		pairs = append(
+			pairs, types.MakeOrderBookPairResponse(
+				pair.Id, ov, lowestPrice, highestPrice, int(tickPrec),
+				types.OrderBookConfig{
+					PriceUnitPower: 0,
+					MaxNumTicks:    int(req.NumTicks),
+				},
+				types.OrderBookConfig{
+					PriceUnitPower: 1,
+					MaxNumTicks:    int(req.NumTicks),
+				},
+				types.OrderBookConfig{
+					PriceUnitPower: 2,
+					MaxNumTicks:    int(req.NumTicks),
+				}))
 	}
 
 	return &types.QueryOrderBooksResponse{

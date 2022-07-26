@@ -25,7 +25,10 @@ func ExampleMakeOrderBookPairResponse() {
 	tickPrec := 1
 	lowestPrice := utils.ParseDec("0")
 	highestPrice := utils.ParseDec("20")
-	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, 20)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    20,
+	})
 	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
@@ -62,7 +65,10 @@ func ExampleMakeOrderBookPairResponse_pool() {
 	ov := ob.MakeView()
 	ov.Match()
 	tickPrec := 3
-	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    10,
+	})
 	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
@@ -113,7 +119,10 @@ func ExampleMakeOrderBookPairResponse_userOrder() {
 	ov := ob.MakeView()
 	ov.Match()
 	tickPrec := 3
-	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, tickPrec, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    10,
+	})
 	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
 	if !found {
 		panic("base price not found")
@@ -159,7 +168,10 @@ func ExampleMakeOrderBookPairResponse_match() {
 	ov := ob.MakeView()
 	ov.Match()
 	tickPrec := 3
-	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), tickPrec, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), tickPrec, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    10,
+	})
 	basePrice, found := types.OrderBookBasePrice(ov, tickPrec)
 	if !found {
 		panic("base price not found")
@@ -188,7 +200,10 @@ func ExampleMakeOrderBookPairResponse_zigzag() {
 	ov.Match()
 
 	basePrice, _ := types.OrderBookBasePrice(ov, 4)
-	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 20)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    20,
+	})
 	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 
 	// Output:
@@ -217,7 +232,10 @@ func ExampleMakeOrderBookPairResponse_edgecase1() {
 	ov.Match()
 
 	basePrice, _ := types.OrderBookBasePrice(ov, 4)
-	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 3, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 3, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    10,
+	})
 	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 
 	// Output:
@@ -260,7 +278,10 @@ func ExampleMakeOrderBookPairResponse_edgecase2() {
 	ov := ob.MakeView()
 	ov.Match()
 
-	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    10,
+	})
 	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
@@ -283,7 +304,10 @@ func ExampleMakeOrderBookPairResponse_edgecase3() {
 	ov := ob.MakeView()
 	ov.Match()
 
-	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, utils.ParseDec("0.9"), utils.ParseDec("1.1"), 3, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    10,
+	})
 	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 
 	// Output:
@@ -307,7 +331,20 @@ func ExampleMakeOrderBookPairResponse_priceUnits1() {
 	ov := ob.MakeView()
 	ov.Match()
 
-	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4,
+		types.OrderBookConfig{
+			PriceUnitPower: 0,
+			MaxNumTicks:    10,
+		},
+		types.OrderBookConfig{
+			PriceUnitPower: 1,
+			MaxNumTicks:    10,
+		},
+		types.OrderBookConfig{
+			PriceUnitPower: 2,
+			MaxNumTicks:    10,
+		},
+	)
 	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 	types.PrintOrderBookResponse(resp.OrderBooks[1], resp.BasePrice)
 	types.PrintOrderBookResponse(resp.OrderBooks[2], resp.BasePrice)
@@ -401,7 +438,20 @@ func ExampleMakeOrderBookPairResponse_priceUnits2() {
 	ov := ob.MakeView()
 	ov.Match()
 
-	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4, 10)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4,
+		types.OrderBookConfig{
+			PriceUnitPower: 0,
+			MaxNumTicks:    10,
+		},
+		types.OrderBookConfig{
+			PriceUnitPower: 1,
+			MaxNumTicks:    10,
+		},
+		types.OrderBookConfig{
+			PriceUnitPower: 2,
+			MaxNumTicks:    10,
+		},
+	)
 	types.PrintOrderBookResponse(resp.OrderBooks[0], resp.BasePrice)
 	types.PrintOrderBookResponse(resp.OrderBooks[1], resp.BasePrice)
 	types.PrintOrderBookResponse(resp.OrderBooks[2], resp.BasePrice)

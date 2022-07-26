@@ -30,7 +30,10 @@ func TestMakeOrderBookResponse(t *testing.T) {
 		panic("base price not found")
 	}
 
-	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4, 20)
+	resp := types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4, types.OrderBookConfig{
+		PriceUnitPower: 0,
+		MaxNumTicks:    20,
+	})
 	types.PrintOrderBookResponse(resp.OrderBooks[0], basePrice)
 }
 
@@ -67,5 +70,18 @@ func makeOrderBookPairResponse(numOrders, numPools, numTicks, tickPrec int) type
 	ov := ob.MakeView()
 	ov.Match()
 
-	return types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4, numTicks)
+	return types.MakeOrderBookPairResponse(1, ov, lowestPrice, highestPrice, 4,
+		types.OrderBookConfig{
+			PriceUnitPower: 0,
+			MaxNumTicks:    numTicks,
+		},
+		types.OrderBookConfig{
+			PriceUnitPower: 1,
+			MaxNumTicks:    numTicks,
+		},
+		types.OrderBookConfig{
+			PriceUnitPower: 2,
+			MaxNumTicks:    numTicks,
+		},
+	)
 }
