@@ -104,6 +104,7 @@ type LiquidityKeeper interface {
 	GetPool(ctx sdk.Context, id uint64) (pool liquiditytypes.Pool, found bool)
 	GetPoolBalances(ctx sdk.Context, pool liquiditytypes.Pool) (rx sdk.Coin, ry sdk.Coin)
 	GetPoolCoinSupply(ctx sdk.Context, pool liquiditytypes.Pool) sdk.Int
+	IterateAllPools(ctx sdk.Context, cb func(pool liquiditytypes.Pool) (stop bool, err error)) error
 }
 
 // FarmingKeeper expected farming keeper (noalias)
