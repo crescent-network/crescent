@@ -238,8 +238,9 @@ message QueryOrdersByOrdererRequest {
 
 // QueryOrderBooksRequest is request type for the Query/OrderBooks RPC method.
 message QueryOrderBooksRequest {
-  repeated uint64 pair_ids  = 1;
-  uint32          num_ticks = 2;
+  repeated uint64 pair_ids          = 1;
+  repeated uint32 price_unit_powers = 2;
+  uint32          num_ticks         = 3;
 }
 
 // QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.

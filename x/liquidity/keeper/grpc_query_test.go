@@ -984,6 +984,20 @@ func (s *KeeperTestSuite) TestGRPCOrderBooks() {
 			true,
 			nil,
 		},
+		{
+			"only one price unit power",
+			&types.QueryOrderBooksRequest{
+				PairIds:         []uint64{pair.Id},
+				PriceUnitPowers: []uint32{0},
+				NumTicks:        10,
+			},
+			false,
+			func(resp *types.QueryOrderBooksResponse) {
+				s.Require().Len(resp.Pairs, 1)
+				s.Require().Len(resp.Pairs[0].OrderBooks, 1)
+				s.Require().True(decEq(utils.ParseDec("0.0001"), resp.Pairs[0].OrderBooks[0].PriceUnit))
+			},
+		},
 	} {
 		s.Run(tc.name, func() {
 			resp, err := s.querier.OrderBooks(sdk.WrapSDKContext(s.ctx), tc.req)

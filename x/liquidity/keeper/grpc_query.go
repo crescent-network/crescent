@@ -503,6 +503,10 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		return nil, status.Error(codes.InvalidArgument, "pair ids must not be empty")
 	}
 
+	if len(req.PriceUnitPowers) == 0 {
+		req.PriceUnitPowers = []uint32{0, 1, 2}
+	}
+
 	if req.NumTicks == 0 {
 		return nil, status.Error(codes.InvalidArgument, "number of ticks must not be 0")
 	}
@@ -513,6 +517,14 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 			return nil, status.Errorf(codes.InvalidArgument, "duplicate pair id: %d", pairId)
 		}
 		pairIdSet[pairId] = struct{}{}
+	}
+
+	priceUnitPowerSet := map[uint32]struct{}{}
+	for _, p := range req.PriceUnitPowers {
+		if _, ok := priceUnitPowerSet[p]; ok {
+			return nil, status.Errorf(codes.InvalidArgument, "duplicate price unit power: %d", p)
+		}
+		priceUnitPowerSet[p] = struct{}{}
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -555,21 +567,17 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 		ov := ob.MakeView()
 		ov.Match()
 
+		var configs []types.OrderBookConfig
+		for _, p := range req.PriceUnitPowers {
+			configs = append(configs, types.OrderBookConfig{
+				PriceUnitPower: int(p),
+				MaxNumTicks:    int(req.NumTicks),
+			})
+		}
+
 		pairs = append(
 			pairs, types.MakeOrderBookPairResponse(
-				pair.Id, ov, lowestPrice, highestPrice, int(tickPrec),
-				types.OrderBookConfig{
-					PriceUnitPower: 0,
-					MaxNumTicks:    int(req.NumTicks),
-				},
-				types.OrderBookConfig{
-					PriceUnitPower: 1,
-					MaxNumTicks:    int(req.NumTicks),
-				},
-				types.OrderBookConfig{
-					PriceUnitPower: 2,
-					MaxNumTicks:    int(req.NumTicks),
-				}))
+				pair.Id, ov, lowestPrice, highestPrice, int(tickPrec), configs...))
 	}
 
 	return &types.QueryOrderBooksResponse{
