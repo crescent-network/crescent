@@ -42,7 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (x/liquidity) [\#50](https://github.com/crescent-network/crescent/pull/50) Enable detailed configuration for order book responses
+* (x/liquidity) [\#52](https://github.com/crescent-network/crescent/pull/52), [\#50](https://github.com/crescent-network/crescent/pull/50) Enable detailed configuration for order book responses
 
 ### Bug Fixes
 * (x/liquidstaking) [\#51](https://github.com/crescent-network/crescent/pull/51) fix: calculation bug of liquidstaking voting_power gRPC endpoint
