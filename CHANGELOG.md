@@ -38,6 +38,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v2.1.1
+
+### Improvements
+
+* (x/liquidity) [\#50](https://github.com/crescent-network/crescent/pull/50) Enable detailed configuration for order book responses
+
 ## v2.1.0
 
 ### Client Breaking Changes

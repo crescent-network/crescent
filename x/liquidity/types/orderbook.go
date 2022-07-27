@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -24,7 +25,13 @@ func OrderBookBasePrice(ov amm.OrderView, tickPrec int) (sdk.Dec, bool) {
 	}
 }
 
-func MakeOrderBookPairResponse(pairId uint64, ov *amm.OrderBookView, lowestPrice, highestPrice sdk.Dec, tickPrec, numTicks int) OrderBookPairResponse {
+// OrderBookConfig defines configuration parameter for an order book response.
+type OrderBookConfig struct {
+	PriceUnitPower int
+	MaxNumTicks    int
+}
+
+func MakeOrderBookPairResponse(pairId uint64, ov *amm.OrderBookView, lowestPrice, highestPrice sdk.Dec, tickPrec int, configs ...OrderBookConfig) OrderBookPairResponse {
 	resp := OrderBookPairResponse{
 		PairId: pairId,
 	}
@@ -35,19 +42,24 @@ func MakeOrderBookPairResponse(pairId uint64, ov *amm.OrderBookView, lowestPrice
 	resp.BasePrice = basePrice
 	ammTickPrec := amm.TickPrecision(tickPrec)
 
+	sort.Slice(configs, func(i, j int) bool {
+		return configs[i].PriceUnitPower < configs[j].PriceUnitPower
+	})
+	lowestPriceUnitMaxNumTicks := configs[0].MaxNumTicks
+
 	highestBuyPrice, foundHighestBuyPrice := ov.HighestBuyPrice()
 	lowestSellPrice, foundLowestSellPrice := ov.LowestSellPrice()
 
 	var smallestPriceUnit sdk.Dec
 	if foundLowestSellPrice {
 		currentPrice := lowestSellPrice
-		for i := 0; i < numTicks && currentPrice.LTE(highestPrice); {
+		for i := 0; i < lowestPriceUnitMaxNumTicks && currentPrice.LTE(highestPrice); {
 			amtInclusive := ov.SellAmountOver(currentPrice, true)
 			amtExclusive := ov.SellAmountOver(currentPrice, false)
 			amt := amtInclusive.Sub(amtExclusive)
 			if amt.IsPositive() {
 				i++
-				if i == numTicks {
+				if i == lowestPriceUnitMaxNumTicks {
 					break
 				}
 			}
@@ -61,9 +73,9 @@ func MakeOrderBookPairResponse(pairId uint64, ov *amm.OrderBookView, lowestPrice
 		smallestPriceUnit = ammTickPrec.TickGap(highestBuyPrice)
 	}
 
-	for i := 0; i < 3; i++ {
+	for _, config := range configs {
 		priceUnit := smallestPriceUnit
-		for j := 0; j < i; j++ {
+		for j := 0; j < config.PriceUnitPower; j++ {
 			priceUnit = priceUnit.MulInt64(10)
 		}
 		ob := OrderBookResponse{
@@ -75,7 +87,7 @@ func MakeOrderBookPairResponse(pairId uint64, ov *amm.OrderBookView, lowestPrice
 			startPrice := FitPriceToTickGap(lowestSellPrice, priceUnit, false)
 			currentPrice := startPrice
 			accAmt := sdk.ZeroInt()
-			for j := 0; j < numTicks && currentPrice.LTE(highestPrice); {
+			for j := 0; j < config.MaxNumTicks && currentPrice.LTE(highestPrice); {
 				amt := ov.SellAmountUnder(currentPrice, true).Sub(accAmt)
 				if amt.IsPositive() {
 					ob.Sells = append(ob.Sells, OrderBookTickResponse{
@@ -100,7 +112,7 @@ func MakeOrderBookPairResponse(pairId uint64, ov *amm.OrderBookView, lowestPrice
 			startPrice := FitPriceToTickGap(highestBuyPrice, priceUnit, true)
 			currentPrice := startPrice
 			accAmt := sdk.ZeroInt()
-			for j := 0; j < numTicks && currentPrice.GTE(lowestPrice) && !currentPrice.IsNegative(); {
+			for j := 0; j < config.MaxNumTicks && currentPrice.GTE(lowestPrice) && !currentPrice.IsNegative(); {
 				amt := ov.BuyAmountOver(currentPrice, true).Sub(accAmt)
 				if amt.IsPositive() {
 					ob.Buys = append(ob.Buys, OrderBookTickResponse{
