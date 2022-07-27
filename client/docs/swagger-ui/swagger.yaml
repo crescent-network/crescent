@@ -24286,6 +24286,14 @@ paths:
             type: string
             format: uint64
           collectionFormat: multi
+        - name: price_unit_powers
+          in: query
+          required: false
+          type: array
+          items:
+            type: integer
+            format: int64
+          collectionFormat: multi
         - name: num_ticks
           in: query
           required: false
