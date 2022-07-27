@@ -212,6 +212,140 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 	setLiquidStakingVotingPowers()
 }
 
+// test Liquid Staking gov voting power for the address
+func (s *KeeperTestSuite) TestGetVotingPower() {
+	params := types.DefaultParams()
+	liquidBondDenom := s.keeper.LiquidBondDenom(s.ctx)
+
+	// v1, v2, v3, v4
+	vals, valOpers, _ := s.CreateValidators([]int64{10000000, 10000000, 10000000, 10000000, 10000000})
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[2].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[3].String(), TargetWeight: sdk.NewInt(10)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	val4, _ := s.app.StakingKeeper.GetValidator(s.ctx, valOpers[3])
+
+	delA := s.addrs[0] // zero power case
+	delB := s.addrs[1] // Balance of bToken case
+	delC := s.addrs[2] // Balance of PoolCoins including bToken, Farming position of PoolCoins that include bToken
+	delD := s.addrs[3] // Farming position of bToken case
+	delE := s.addrs[6] // normal staking case, balance of bToken case
+
+	s.assertVotingPower(delA, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
+	s.assertVotingPower(delE, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
+	s.assertVotingPower(vals[3], sdk.ZeroInt(), sdk.ZeroInt(), sdk.NewInt(10000000))
+
+	_, err := s.app.StakingKeeper.Delegate(s.ctx, delE, sdk.NewInt(60000000), stakingtypes.Unbonded, val4, true)
+	s.Require().NoError(err)
+
+	s.assertVotingPower(delE, sdk.NewInt(60000000), sdk.ZeroInt(), sdk.ZeroInt())
+	s.assertVotingPower(vals[3], sdk.ZeroInt(), sdk.ZeroInt(), sdk.NewInt(70000000))
+
+	delBbToken := sdk.NewInt(80000000)
+	delCbToken := sdk.NewInt(60000000)
+	delDbToken := sdk.NewInt(20000000)
+	delEbToken := sdk.NewInt(80000000)
+
+	newShares, bToken, err := s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, delB, sdk.NewCoin(sdk.DefaultBondDenom, delBbToken))
+	s.Require().NoError(err)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delB, liquidBondDenom).Amount, delBbToken)
+	s.assertVotingPower(delB, sdk.ZeroInt(), delBbToken, sdk.ZeroInt())
+
+	newShares, bToken, err = s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, delC, sdk.NewCoin(sdk.DefaultBondDenom, delCbToken))
+	s.Require().NoError(err)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delC, liquidBondDenom).Amount, delCbToken)
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	newShares, bToken, err = s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, delD, sdk.NewCoin(sdk.DefaultBondDenom, delDbToken))
+	s.Require().NoError(err)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delD, liquidBondDenom).Amount, delDbToken)
+	s.assertVotingPower(delD, sdk.ZeroInt(), delDbToken, sdk.ZeroInt())
+
+	newShares, bToken, err = s.keeper.LiquidStake(s.ctx, types.LiquidStakingProxyAcc, delE, sdk.NewCoin(sdk.DefaultBondDenom, delEbToken))
+	s.Require().NoError(err)
+	s.Require().EqualValues(newShares.TruncateInt(), bToken, s.app.BankKeeper.GetBalance(s.ctx, delE, liquidBondDenom).Amount, delEbToken)
+	s.assertVotingPower(delE, sdk.NewInt(60000000), delEbToken, sdk.ZeroInt())
+
+	s.assertVotingPower(vals[3], sdk.ZeroInt(), sdk.ZeroInt(), sdk.NewInt(130000000)) // self bonding 10000000 + normal staking 60000000 + liquid staking 240000000/4
+
+	// Test balance of PoolTokens including bToken
+	pair1 := s.createPair(delB, params.LiquidBondDenom, sdk.DefaultBondDenom, false)
+	pool1 := s.createPool(delB, pair1.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
+	s.assertVotingPower(delB, sdk.ZeroInt(), delBbToken, sdk.ZeroInt())
+
+	pair2 := s.createPair(delC, sdk.DefaultBondDenom, params.LiquidBondDenom, false)
+	pool2 := s.createPool(delC, pair2.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(60000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	// Test Farming Queued Staking of bToken
+	s.CreateFixedAmountPlan(s.addrs[0], map[string]string{params.LiquidBondDenom: "0.4", pool1.PoolCoinDenom: "0.3", pool2.PoolCoinDenom: "0.3"}, map[string]int64{"stake": 1})
+	s.Stake(delD, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(10000000))))
+	queuedStakingAmt := s.app.FarmingKeeper.GetAllQueuedStakingAmountByFarmerAndDenom(s.ctx, delD, params.LiquidBondDenom)
+	s.Equal(queuedStakingAmt, sdk.NewInt(10000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	// Test Farming Staking Position Staking of bToken without balance
+	s.advanceEpochDays()
+	staking, found := s.app.FarmingKeeper.GetStaking(s.ctx, params.LiquidBondDenom, delD)
+	s.True(found)
+	s.Equal(staking.Amount, sdk.NewInt(10000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	// Test Farming Queued Staking of bToken
+	s.CreateFixedAmountPlan(s.addrs[0], map[string]string{params.LiquidBondDenom: "0.4", pool1.PoolCoinDenom: "0.3", pool2.PoolCoinDenom: "0.3"}, map[string]int64{"stake": 1})
+	s.Stake(delD, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(10000000))))
+	queuedStakingAmt = s.app.FarmingKeeper.GetAllQueuedStakingAmountByFarmerAndDenom(s.ctx, delD, params.LiquidBondDenom)
+	s.Equal(queuedStakingAmt, sdk.NewInt(10000000))
+	s.assertVotingPower(delD, sdk.ZeroInt(), delDbToken, sdk.ZeroInt())
+
+	// Test Farming Staking Position Staking of bToken without balance
+	s.advanceEpochDays()
+	staking, found = s.app.FarmingKeeper.GetStaking(s.ctx, params.LiquidBondDenom, delD)
+	s.True(found)
+	s.Equal(staking.Amount, sdk.NewInt(20000000))
+	s.assertVotingPower(delD, sdk.ZeroInt(), delDbToken, sdk.ZeroInt())
+
+	// Test Farming Queued Staking of PoolTokens including bToken
+	s.Stake(delC, sdk.NewCoins(sdk.NewCoin(pool2.PoolCoinDenom, sdk.NewInt(500000000000))))
+	queuedStakingAmt = s.app.FarmingKeeper.GetAllQueuedStakingAmountByFarmerAndDenom(s.ctx, delC, pool2.PoolCoinDenom)
+	s.Equal(queuedStakingAmt, sdk.NewInt(500000000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	// Test Farming Staking Position of PoolTokens including bToken
+	s.advanceEpochDays()
+	staking, found = s.app.FarmingKeeper.GetStaking(s.ctx, pool2.PoolCoinDenom, delC)
+	s.True(found)
+	s.Equal(staking.Amount, sdk.NewInt(500000000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	// Test Farming Queued Staking of PoolTokens including bToken without balance
+	s.Stake(delC, sdk.NewCoins(sdk.NewCoin(pool2.PoolCoinDenom, sdk.NewInt(500000000000))))
+	queuedStakingAmt = s.app.FarmingKeeper.GetAllQueuedStakingAmountByFarmerAndDenom(s.ctx, delC, pool2.PoolCoinDenom)
+	s.Equal(queuedStakingAmt, sdk.NewInt(500000000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	// Test Farming Staking Position of PoolTokens including bToken
+	s.advanceEpochDays()
+	staking, found = s.app.FarmingKeeper.GetStaking(s.ctx, pool2.PoolCoinDenom, delC)
+	s.True(found)
+	s.Equal(staking.Amount, sdk.NewInt(1000000000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+
+	s.assertVotingPower(delA, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
+	s.assertVotingPower(delE, sdk.NewInt(60000000), delEbToken, sdk.ZeroInt())
+
+	// send bToken of E to vals[3]
+	err = s.app.BankKeeper.SendCoins(s.ctx, delE, vals[3], sdk.NewCoins(sdk.NewCoin(liquidBondDenom, delEbToken)))
+	s.Require().NoError(err)
+	s.assertVotingPower(delE, sdk.NewInt(60000000), sdk.ZeroInt(), sdk.ZeroInt())
+	s.assertVotingPower(vals[3], sdk.ZeroInt(), delEbToken, sdk.NewInt(130000000)) // self bonding 10000000 + normal staking 60000000 + liquid staking 240000000/4
+}
+
 // test Liquid Staking gov power
 func (s *KeeperTestSuite) TestTallyLiquidStakingGov2() {
 	params := types.DefaultParams()

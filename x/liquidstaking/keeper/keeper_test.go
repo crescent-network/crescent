@@ -404,3 +404,10 @@ func (s *KeeperTestSuite) Unstake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
 	err := s.app.FarmingKeeper.Unstake(s.ctx, farmerAcc, amt)
 	s.Require().NoError(err)
 }
+
+func (s *KeeperTestSuite) assertVotingPower(addr sdk.AccAddress, stakingVotingPower, liquidStakingVotingPower, validatorVotingPower sdk.Int) {
+	vp := s.keeper.GetVotingPower(s.ctx, addr)
+	s.Require().Equal(stakingVotingPower, vp.StakingVotingPower)
+	s.Require().Equal(liquidStakingVotingPower, vp.LiquidStakingVotingPower)
+	s.Require().Equal(validatorVotingPower, vp.ValidatorVotingPower)
+}

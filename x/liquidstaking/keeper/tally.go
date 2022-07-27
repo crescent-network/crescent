@@ -35,6 +35,19 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes govtypes.Votes) ma
 	return denomAddrBalanceMap
 }
 
+// GetBTokenSharePerPoolCoinMap creates bTokenSharePerPoolCoinMap of pool coins which is containing target denom to calculate target denom value of farming positions
+func (k Keeper) GetBTokenSharePerPoolCoinMap(ctx sdk.Context, targetDenom string) map[string]sdk.Dec {
+	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
+	_ = k.liquidityKeeper.IterateAllPools(ctx, func(pool liquiditytypes.Pool) (stop bool, err error) {
+		bTokenSharePerPoolCoin := k.TokenSharePerPoolCoin(ctx, targetDenom, pool.PoolCoinDenom)
+		if bTokenSharePerPoolCoin.IsPositive() {
+			bTokenSharePerPoolCoinMap[pool.PoolCoinDenom] = bTokenSharePerPoolCoin
+		}
+		return false, nil
+	})
+	return bTokenSharePerPoolCoinMap
+}
+
 // TokenAmountFromFarmingPositions returns worth of staked tokens amount of exist farming positions including queued of the addr
 func (k Keeper) TokenAmountFromFarmingPositions(ctx sdk.Context, addr sdk.AccAddress, targetDenom string, tokenSharePerPoolCoinMap map[string]sdk.Dec) sdk.Int {
 	tokenAmount := sdk.ZeroInt()
@@ -158,7 +171,8 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 	}
 
 	bTokenAmount := sdk.ZeroInt()
-	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
+	bTokenSharePerPoolCoinMap := k.GetBTokenSharePerPoolCoinMap(ctx, liquidBondDenom)
+
 	balances := k.bankKeeper.SpendableCoins(ctx, addr)
 	for _, coin := range balances {
 		// add balance of bToken
@@ -167,9 +181,7 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 		}
 
 		// check if the denom is pool coin
-		bTokenSharePerPoolCoin := k.TokenSharePerPoolCoin(ctx, liquidBondDenom, coin.Denom)
-		if bTokenSharePerPoolCoin.IsPositive() {
-			bTokenSharePerPoolCoinMap[coin.Denom] = bTokenSharePerPoolCoin
+		if bTokenSharePerPoolCoin, ok := bTokenSharePerPoolCoinMap[coin.Denom]; ok && bTokenSharePerPoolCoin.IsPositive() {
 			bTokenAmount = bTokenAmount.Add(utils.GetShareValue(coin.Amount, bTokenSharePerPoolCoin))
 		}
 	}
