@@ -250,6 +250,7 @@ func init() {
 func NewApp(
 	logger log.Logger,
 	db dbm.DB,
+	offChainDB dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
 	skipUpgradeHeights map[int64]bool,
@@ -426,6 +427,7 @@ func NewApp(
 		appCodec,
 		keys[liquiditytypes.StoreKey],
 		app.GetSubspace(liquiditytypes.ModuleName),
+		offChainDB,
 		app.AccountKeeper,
 		app.BankKeeper,
 	)

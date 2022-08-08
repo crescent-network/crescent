@@ -73,7 +73,7 @@ func MakeTestEncodingConfig() simappparams.EncodingConfig {
 func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := NewApp(log.NewNopLogger(), db, nil, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
@@ -500,7 +500,7 @@ func NewConfig(dbm *dbm.MemDB) network.Config {
 func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB) network.AppConstructor {
 	return func(val network.Validator) types.Application {
 		return NewApp(
-			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			val.Ctx.Logger, db, nil, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
 			bam.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),

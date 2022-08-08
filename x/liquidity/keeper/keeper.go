@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/crescent-network/crescent/v2/x/liquidity/types"
 )
@@ -16,6 +17,7 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
 	paramSpace paramstypes.Subspace
+	offChainDB dbm.DB
 
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -26,6 +28,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
 	paramSpace paramstypes.Subspace,
+	offChainDB dbm.DB,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 ) Keeper {
@@ -37,6 +40,7 @@ func NewKeeper(
 		cdc:           cdc,
 		storeKey:      storeKey,
 		paramSpace:    paramSpace,
+		offChainDB:    offChainDB,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 	}

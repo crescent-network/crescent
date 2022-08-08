@@ -71,6 +71,10 @@ service Query {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders";
   }
 
+  rpc Orders2(QueryOrdersRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders2";
+  }
+
   // Order returns the specific order.
   rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders/{id}";
@@ -79,6 +83,11 @@ service Query {
   // OrdersByOrderer returns orders made by an orderer.
   rpc OrdersByOrderer(QueryOrdersByOrdererRequest) returns (QueryOrdersResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/orders/{orderer}";
+  }
+
+  // OrdersByOrderer returns orders made by an orderer.
+  rpc OrdersByOrderer2(QueryOrdersByOrdererRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/orders2/{orderer}";
   }
 
   rpc OrderBooks(QueryOrderBooksRequest) returns (QueryOrderBooksResponse) {

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -422,15 +423,44 @@ func (k Keeper) GetOrder(ctx sdk.Context, pairId, id uint64) (order types.Order,
 	return order, true
 }
 
+// GetOrderOffChain returns the particular order.
+func (k Keeper) GetOrderOffChain(ctx sdk.Context, pairId, id uint64) (order types.Order, found bool) {
+	store := dbadapter.Store{DB: k.offChainDB}
+	bz := store.Get(types.GetOrderKey(pairId, id))
+	if bz == nil {
+		return
+	}
+	order = types.MustUnmarshalOrder(k.cdc, bz)
+	return order, true
+}
+
 // SetOrder stores an order for the batch execution.
 func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
+	bz := types.MustMarshaOrder(k.cdc, order)
+	store.Set(types.GetOrderKey(order.PairId, order.Id), bz)
+	if k.offChainDB != nil {
+		k.SetOrderOffChain(ctx, order)
+	}
+}
+
+// SetOrderOffChain stores an order for the batch execution.
+func (k Keeper) SetOrderOffChain(ctx sdk.Context, order types.Order) {
+	store := dbadapter.Store{DB: k.offChainDB}
 	bz := types.MustMarshaOrder(k.cdc, order)
 	store.Set(types.GetOrderKey(order.PairId, order.Id), bz)
 }
 
 func (k Keeper) SetOrderIndex(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id), []byte{})
+	if k.offChainDB != nil {
+		k.SetOrderIndexOffChain(ctx, order)
+	}
+}
+
+func (k Keeper) SetOrderIndexOffChain(ctx sdk.Context, order types.Order) {
+	store := dbadapter.Store{DB: k.offChainDB}
 	store.Set(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id), []byte{})
 }
 

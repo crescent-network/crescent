@@ -39,7 +39,7 @@ type IntegrationTestSuite struct {
 func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
 		return chain.NewApp(
-			val.Ctx.Logger, tmdb.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			val.Ctx.Logger, tmdb.NewMemDB(), nil, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
 			baseapp.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),

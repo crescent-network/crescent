@@ -279,8 +279,14 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
+	offChainDBDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+	offChainDB, err := sdk.NewLevelDB("offchain", offChainDBDir)
+	if err != nil {
+		panic(err)
+	}
+
 	return chain.NewApp(
-		logger, db, traceStore, true, skipUpgradeHeights,
+		logger, db, offChainDB, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
@@ -312,13 +318,13 @@ func (a appCreator) appExport(
 	}
 
 	if height != -1 {
-		app = chain.NewApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		app = chain.NewApp(logger, db, nil, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 
 		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		app = chain.NewApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		app = chain.NewApp(logger, db, nil, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
