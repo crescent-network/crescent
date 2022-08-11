@@ -405,6 +405,15 @@ func (s *KeeperTestSuite) Unstake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
 	s.Require().NoError(err)
 }
 
+func (s *KeeperTestSuite) assertTallyResult(yes, no, vito, abstain int64, proposal govtypes.Proposal) {
+	cachedCtx, _ := s.ctx.CacheContext()
+	_, _, result := s.app.GovKeeper.Tally(cachedCtx, proposal)
+	s.Require().Equal(sdk.NewInt(yes), result.Yes)
+	s.Require().Equal(sdk.NewInt(no), result.No)
+	s.Require().Equal(sdk.NewInt(vito), result.NoWithVeto)
+	s.Require().Equal(sdk.NewInt(abstain), result.Abstain)
+}
+
 func (s *KeeperTestSuite) assertVotingPower(addr sdk.AccAddress, stakingVotingPower, liquidStakingVotingPower, validatorVotingPower sdk.Int) {
 	vp := s.keeper.GetVotingPower(s.ctx, addr)
 	s.Require().Equal(stakingVotingPower, vp.StakingVotingPower)
