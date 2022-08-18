@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package crescent.marketmaker.v1beta1;
+
+import "crescent/marketmaker/v1beta1/marketmaker.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/marketmaker/types";
+
+// Query defines the gRPC query service for the marketmaker module.
+service Query {
+  // Params returns parameters of the marketmaker module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get                                           = "/crescent/marketmaker/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns all parameters of the marketmaker module.";
+  external_docs: {
+  url:
+    "https://github.com/crescent-network/crescent/blob/main/x/marketmaker/spec/07_params.md";
+  description:
+    "Find out more about the params";
+  }
+  };
+}
+
+// MarketMakers returns all market makers.
+rpc MarketMakers(QueryMarketMakersRequest) returns (QueryMarketMakersResponse) {
+  option (google.api.http).get                                           = "/crescent/marketmaker/v1beta1/marketmakers";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns a list of all market makers with pagination result.";
+external_docs: {
+url:
+  "https://github.com/crescent-network/crescent/tree/main/docs";
+description:
+  "Find out more about the query and error codes";
+}
+responses: {
+key:
+  "400" value: {
+  description:
+    "Bad Request" examples: {
+    key:
+      "application/json"
+      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+    }
+  }
+}
+responses: {
+key:
+  "500" value: {
+  description:
+    "Internal Server Error" examples: {
+    key:
+      "application/json" value: '{"code":13,"message":"rpc error: code = Internal desc = error","details":[]}'
+    }
+  }
+}
+};
+}
+
+// Incentive returns a specific incentive.
+rpc Incentive(QueryIncentiveRequest) returns (QueryIncentiveResponse) {
+  option (google.api.http).get = "/crescent/marketmaker/v1beta1/incentive/{address}";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns the marketmaker's claimable incentive.";
+external_docs: {
+url:
+  "https://github.com/crescent-network/crescent/tree/main/docs";
+description:
+  "Find out more about the query and error codes";
+}
+responses: {
+key:
+  "400" value: {
+  description:
+    "Bad Request" examples: {
+    key:
+      "application/json"
+      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+    }
+  }
+}
+responses: {
+key:
+  "404" value: {
+  description:
+    "Bad Request" examples: {
+    key:
+      "application/json"
+      value: '{"code":5,"message":"rpc error: code = NotFound desc = incentive address not found","details":[]}'
+    }
+  }
+}
+responses: {
+key:
+  "500" value: {
+  description:
+    "Internal Server Error" examples: {
+    key:
+      "application/json" value: '{"code":13,"message":"rpc error: code = Internal desc = error","details":[]}'
+    }
+  }
+}
+};
+}
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryMarketMakersRequest is the request type for the Query/MarketMakers RPC method.
+message QueryMarketMakersRequest {
+  string                                address    = 1;
+  uint64                                pair_id    = 2;
+  string                                eligible   = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+// QueryMarketMakersResponse is the response type for the Query/MarketMakers RPC method.
+message QueryMarketMakersResponse {
+  repeated MarketMaker marketmakers = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryIncentiveRequest is the request type for the Query/Incentive RPC method.
+message QueryIncentiveRequest {
+  string address = 1;
+}
+
+// QueryIncentiveResponse is the response type for the Query/Incentive RPC method.
+message QueryIncentiveResponse {
+  Incentive incentive = 1 [(gogoproto.nullable) = false];
+}

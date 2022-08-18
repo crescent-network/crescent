@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package crescent.marketmaker.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/marketmaker/types";
+
+// Msg defines the marketmaker Msg service.
+service Msg {
+
+  rpc ApplyMarketMaker(MsgApplyMarketMaker) returns (MsgApplyMarketMakerResponse);
+
+  rpc ClaimIncentives(MsgClaimIncentives) returns (MsgClaimIncentivesResponse);
+}
+
+message MsgApplyMarketMaker {
+  option (gogoproto.goproto_getters) = false;
+
+  string address = 1;
+
+  repeated uint64 pair_ids = 2 [(gogoproto.moretags) = "yaml:\"pair_ids\""];
+}
+
+message MsgApplyMarketMakerResponse {}
+
+message MsgClaimIncentives {
+  option (gogoproto.goproto_getters) = false;
+
+  string address = 1;
+}
+
+message MsgClaimIncentivesResponse {}
