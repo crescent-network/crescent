@@ -24,8 +24,8 @@ deposit_amount:
 - denom: stake
   amount: "1000000000"
 common:
-  open_threshold: "0.500000000000000000"
-  abs_open_threshold: "0.100000000000000000"
+  min_open_ratio: "0.500000000000000000"
+  min_open_depth_ratio: "0.100000000000000000"
   max_downtime: 20
   max_total_downtime: 100
   min_hours: 16

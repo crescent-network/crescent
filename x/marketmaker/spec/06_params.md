@@ -10,7 +10,7 @@ The `marketmaker` module contains the following parameters:
 |------------------------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | IncentiveBudgetAddress | string             | cre1ddn66jv0sjpmck0ptegmhmqtn35qsg2vxyk2hn9sqf4qxtzqz3sq3qhhde                                                                                                                                   |
 | DepositAmount          | string (sdk.Coins) | [{"denom":"ucre","amount":"1000000000"}]                                                                                                                                                         |
-| Common                 | Common             | {"open_threshold":"0.500000000000000000","abs_open_threshold":"0.100000000000000000","max_downtime":20,"max_total_downtime":100,"min_hours":16,"min_days":22}                                    |
+| Common                 | Common             | {"min_open_ratio":"0.500000000000000000","min_open_depth_ratio":"0.100000000000000000","max_downtime":20,"max_total_downtime":100,"min_hours":16,"min_days":22}                                    |
 | IncentivePairs         | []IncentivePair    | [{"pair_id":"20","update_time":"2022-12-01T00:00:00Z","incentive_weight":"0.100000000000000000","max_spread":"0.012000000000000000","min_width":"0.002000000000000000","min_depth":"100000000"}] |
 
 ## IncentiveBudgetAddress
@@ -27,17 +27,17 @@ Common variables used in market maker scoring system
 
 ```go
 types Common struct {
-    // Proportion of open amount against original
-    OpenThreshold sdk.Dec
-    // Absolute number of open amount
-    AbsOpenThreshold uint32
-    // Threshold of outage
+    // Minimum ratio to maintain the tick order
+	MinOpenRatio sdk.Dec
+    // Minimum ratio of open amount to MinDepth
+	MinOpenDepthRatio sdk.Dec
+    // Maximum allowable consecutive blocks of outage
     MaxDowntime uint32
-    // Sum of outage time in an hour
+    // Maximum allowable sum of blocks in an hour
     MaxTotalDowntime uint32
-    // Minimum live hours to be recognized as live day
+    // Minimum value of LiveHour to achieve LiveDay
     MinHours uint32
-    // Minimum live days to be qualified for incentives
+    // Minimum value of LiveDay to maintain MM eligibility
     MinDays uint32
 }
 ```
@@ -54,11 +54,11 @@ type IncentivePair struct {
     UpdateTime time.Time
     // Incentive weights for each pair
     IncentiveWeight sdk.Dec
-    // Price difference btw low ask & high bid
+    // Maximum allowable spread between bid and ask
     MaxSpread sdk.Dec
-    // Price difference btw high & low
+    // Minimum allowable price difference of high and low on both side of orders
     MinWidth sdk.Dec
-    // Total amount of order
+    // Minimum allowable order depth on each side
     MinDepth sdk.Int
 }
 ```

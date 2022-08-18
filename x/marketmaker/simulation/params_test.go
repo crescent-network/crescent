@@ -21,7 +21,7 @@ func TestParamChanges(t *testing.T) {
 	}{
 		{"marketmaker/DepositAmount", "DepositAmount", "[{\"denom\":\"stake\",\"amount\":\"98498081\"}]", "marketmaker"},
 		{"marketmaker/IncentiveBudgetAddress", "IncentiveBudgetAddress", "\"cosmos1ddn66jv0sjpmck0ptegmhmqtn35qsg2vxyk2hn9sqf4qxtzqz3sqanrtcm\"", "marketmaker"},
-		{"marketmaker/Common", "Common", "{\"open_threshold\":\"0.500000000000000000\",\"abs_open_threshold\":\"0.100000000000000000\",\"max_downtime\":20,\"max_total_downtime\":100,\"min_hours\":16,\"min_days\":22}", "marketmaker"},
+		{"marketmaker/Common", "Common", "{\"min_open_ratio\":\"0.500000000000000000\",\"min_open_depth_ratio\":\"0.100000000000000000\",\"max_downtime\":20,\"max_total_downtime\":100,\"min_hours\":16,\"min_days\":22}", "marketmaker"},
 		{"marketmaker/IncentivePairs", "IncentivePairs", "[{\"pair_id\":\"2\",\"update_time\":\"0001-01-01T00:00:00Z\",\"incentive_weight\":\"0.000000000000000000\",\"max_spread\":\"0.000000000000000000\",\"min_width\":\"0.000000000000000000\",\"min_depth\":\"0\"},{\"pair_id\":\"3\",\"update_time\":\"0001-01-01T00:00:00Z\",\"incentive_weight\":\"0.000000000000000000\",\"max_spread\":\"0.000000000000000000\",\"min_width\":\"0.000000000000000000\",\"min_depth\":\"0\"},{\"pair_id\":\"4\",\"update_time\":\"0001-01-01T00:00:00Z\",\"incentive_weight\":\"0.000000000000000000\",\"max_spread\":\"0.000000000000000000\",\"min_width\":\"0.000000000000000000\",\"min_depth\":\"0\"}]", "marketmaker"},
 	}
 

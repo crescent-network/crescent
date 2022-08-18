@@ -37,30 +37,30 @@ message Params {
 message Common {
   option (gogoproto.goproto_getters) = false;
 
-  // Proportion of open amount against original
-  string open_threshold = 1 [
-    (gogoproto.moretags)   = "yaml:\"open_threshold\"",
+  // Minimum ratio to maintain the tick order
+  string min_open_ratio = 1 [
+    (gogoproto.moretags)   = "yaml:\"min_open_ratio\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
 
-  // Absolute number of open amount
-  string abs_open_threshold = 2 [
-    (gogoproto.moretags)   = "yaml:\"abs_open_threshold\"",
+  // Minimum ratio of open amount to MinDepth
+  string min_open_depth_ratio = 2 [
+    (gogoproto.moretags)   = "yaml:\"min_open_depth_ratio\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
 
-  // Threshold of outage
+  // Maximum allowable consecutive blocks of outage
   uint32 max_downtime = 3 [(gogoproto.moretags) = "yaml:\"max_downtime\""];
 
-  // Sum of outage time in an hour
+  // Maximum allowable sum of blocks in an hour
   uint32 max_total_downtime = 4 [(gogoproto.moretags) = "yaml:\"max_total_downtime\""];
 
-  // Minimum live hours to be recognized as live day
+  // Minimum value of LiveHour to achieve LiveDay
   uint32 min_hours = 5 [(gogoproto.moretags) = "yaml:\"min_hours\""];
 
-  // Minimum live days to be qualified for incentives
+  // Minimum value of LiveDay to maintain MM eligibility
   uint32 min_days = 6 [(gogoproto.moretags) = "yaml:\"min_days\""];
 }
 
@@ -81,21 +81,21 @@ message IncentivePair {
     (gogoproto.nullable)   = false
   ];
 
-  // Price difference btw low ask & high bid
+  // Maximum allowable spread between bid and ask
   string max_spread = 4 [
     (gogoproto.moretags)   = "yaml:\"max_spread\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
 
-  // Price difference btw high & low
+  // Minimum allowable price difference of high and low on both side of orders
   string min_width = 5 [
     (gogoproto.moretags)   = "yaml:\"min_width\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
 
-  // Total amount of order
+  // Minimum allowable order depth on each side
   string min_depth = 6 [
     (gogoproto.moretags)   = "yaml:\"min_depth\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

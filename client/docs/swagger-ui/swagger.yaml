@@ -28057,28 +28057,28 @@ paths:
                     title: Common variables used in market maker scoring system
                     type: object
                     properties:
-                      open_threshold:
+                      min_open_ratio:
                         type: string
-                        title: Proportion of open amount against original
-                      abs_open_threshold:
+                        title: Minimum ratio to maintain the tick order
+                      min_open_depth_ratio:
                         type: string
-                        title: Absolute number of open amount
+                        title: Minimum ratio of open amount to MinDepth
                       max_downtime:
                         type: integer
                         format: int64
-                        title: Threshold of outage
+                        title: Maximum allowable consecutive blocks of outage
                       max_total_downtime:
                         type: integer
                         format: int64
-                        title: Sum of outage time in an hour
+                        title: Maximum allowable sum of blocks in an hour
                       min_hours:
                         type: integer
                         format: int64
-                        title: Minimum live hours to be recognized as live day
+                        title: Minimum value of LiveHour to achieve LiveDay
                       min_days:
                         type: integer
                         format: int64
-                        title: Minimum live days to be qualified for incentives
+                        title: Minimum value of LiveDay to maintain MM eligibility
                   incentive_pairs:
                     type: array
                     items:
@@ -28099,13 +28099,15 @@ paths:
                           title: Incentive weights for each pair
                         max_spread:
                           type: string
-                          title: Price difference btw low ask & high bid
+                          title: Maximum allowable spread between bid and ask
                         min_width:
                           type: string
-                          title: Price difference btw high & low
+                          title: >-
+                            Minimum allowable price difference of high and low
+                            on both side of orders
                         min_depth:
                           type: string
-                          title: Total amount of order
+                          title: Minimum allowable order depth on each side
                     title: >-
                       Include the pairs that are incentive target pairs and the
                       variables used in market maker scoring system
@@ -48444,28 +48446,28 @@ definitions:
   crescent.marketmaker.v1beta1.Common:
     type: object
     properties:
-      open_threshold:
+      min_open_ratio:
         type: string
-        title: Proportion of open amount against original
-      abs_open_threshold:
+        title: Minimum ratio to maintain the tick order
+      min_open_depth_ratio:
         type: string
-        title: Absolute number of open amount
+        title: Minimum ratio of open amount to MinDepth
       max_downtime:
         type: integer
         format: int64
-        title: Threshold of outage
+        title: Maximum allowable consecutive blocks of outage
       max_total_downtime:
         type: integer
         format: int64
-        title: Sum of outage time in an hour
+        title: Maximum allowable sum of blocks in an hour
       min_hours:
         type: integer
         format: int64
-        title: Minimum live hours to be recognized as live day
+        title: Minimum value of LiveHour to achieve LiveDay
       min_days:
         type: integer
         format: int64
-        title: Minimum live days to be qualified for incentives
+        title: Minimum value of LiveDay to maintain MM eligibility
   crescent.marketmaker.v1beta1.Incentive:
     type: object
     properties:
@@ -48506,13 +48508,15 @@ definitions:
         title: Incentive weights for each pair
       max_spread:
         type: string
-        title: Price difference btw low ask & high bid
+        title: Maximum allowable spread between bid and ask
       min_width:
         type: string
-        title: Price difference btw high & low
+        title: >-
+          Minimum allowable price difference of high and low on both side of
+          orders
       min_depth:
         type: string
-        title: Total amount of order
+        title: Minimum allowable order depth on each side
   crescent.marketmaker.v1beta1.MarketMaker:
     type: object
     properties:
@@ -48558,28 +48562,28 @@ definitions:
         title: Common variables used in market maker scoring system
         type: object
         properties:
-          open_threshold:
+          min_open_ratio:
             type: string
-            title: Proportion of open amount against original
-          abs_open_threshold:
+            title: Minimum ratio to maintain the tick order
+          min_open_depth_ratio:
             type: string
-            title: Absolute number of open amount
+            title: Minimum ratio of open amount to MinDepth
           max_downtime:
             type: integer
             format: int64
-            title: Threshold of outage
+            title: Maximum allowable consecutive blocks of outage
           max_total_downtime:
             type: integer
             format: int64
-            title: Sum of outage time in an hour
+            title: Maximum allowable sum of blocks in an hour
           min_hours:
             type: integer
             format: int64
-            title: Minimum live hours to be recognized as live day
+            title: Minimum value of LiveHour to achieve LiveDay
           min_days:
             type: integer
             format: int64
-            title: Minimum live days to be qualified for incentives
+            title: Minimum value of LiveDay to maintain MM eligibility
       incentive_pairs:
         type: array
         items:
@@ -48600,13 +48604,15 @@ definitions:
               title: Incentive weights for each pair
             max_spread:
               type: string
-              title: Price difference btw low ask & high bid
+              title: Maximum allowable spread between bid and ask
             min_width:
               type: string
-              title: Price difference btw high & low
+              title: >-
+                Minimum allowable price difference of high and low on both side
+                of orders
             min_depth:
               type: string
-              title: Total amount of order
+              title: Minimum allowable order depth on each side
         title: >-
           Include the pairs that are incentive target pairs and the variables
           used in market maker scoring system
@@ -48721,28 +48727,28 @@ definitions:
             title: Common variables used in market maker scoring system
             type: object
             properties:
-              open_threshold:
+              min_open_ratio:
                 type: string
-                title: Proportion of open amount against original
-              abs_open_threshold:
+                title: Minimum ratio to maintain the tick order
+              min_open_depth_ratio:
                 type: string
-                title: Absolute number of open amount
+                title: Minimum ratio of open amount to MinDepth
               max_downtime:
                 type: integer
                 format: int64
-                title: Threshold of outage
+                title: Maximum allowable consecutive blocks of outage
               max_total_downtime:
                 type: integer
                 format: int64
-                title: Sum of outage time in an hour
+                title: Maximum allowable sum of blocks in an hour
               min_hours:
                 type: integer
                 format: int64
-                title: Minimum live hours to be recognized as live day
+                title: Minimum value of LiveHour to achieve LiveDay
               min_days:
                 type: integer
                 format: int64
-                title: Minimum live days to be qualified for incentives
+                title: Minimum value of LiveDay to maintain MM eligibility
           incentive_pairs:
             type: array
             items:
@@ -48763,13 +48769,15 @@ definitions:
                   title: Incentive weights for each pair
                 max_spread:
                   type: string
-                  title: Price difference btw low ask & high bid
+                  title: Maximum allowable spread between bid and ask
                 min_width:
                   type: string
-                  title: Price difference btw high & low
+                  title: >-
+                    Minimum allowable price difference of high and low on both
+                    side of orders
                 min_depth:
                   type: string
-                  title: Total amount of order
+                  title: Minimum allowable order depth on each side
             title: >-
               Include the pairs that are incentive target pairs and the
               variables used in market maker scoring system

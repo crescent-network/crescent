@@ -27,12 +27,12 @@ var (
 	DefaultIncentiveBudgetAddress = farmingtypes.DeriveAddress(AddressType, farmingtypes.ModuleName, "ecosystem_incentive_mm")
 	DefaultDepositAmount          = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000)))
 	DefaultCommon                 = Common{
-		OpenThreshold:    sdk.MustNewDecFromStr("0.5"),
-		AbsOpenThreshold: sdk.MustNewDecFromStr("0.1"),
-		MaxDowntime:      uint32(20),
-		MaxTotalDowntime: uint32(100),
-		MinHours:         uint32(16),
-		MinDays:          uint32(22),
+		MinOpenRatio:      sdk.MustNewDecFromStr("0.5"),
+		MinOpenDepthRatio: sdk.MustNewDecFromStr("0.1"),
+		MaxDowntime:       uint32(20),
+		MaxTotalDowntime:  uint32(100),
+		MinHours:          uint32(16),
+		MinDays:           uint32(22),
 	}
 
 	ClaimableIncentiveReserveAcc = farmingtypes.DeriveAddress(AddressType, ModuleName, ClaimableIncentiveReserveAccName)
