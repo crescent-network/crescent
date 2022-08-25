@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* (x/liquidstaking) [\#53](https://github.com/crescent-network/crescent/pull/53) fix: calculation bug of liquidstaking voting_power
+
 ## v2.1.1
 
 ### Improvements
