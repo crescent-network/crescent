@@ -8,7 +8,7 @@ Market makers provide liquidity to the exchange by placing orders which are not 
 
 ## Market Maker Incentives
 
-Market makers can earn CRE as incentives for providing liquidity. These incentives are calculated for each month by the off-chain market maker scoring system and distribute incentives based on the allocation suggested by governance proposals.
+Market makers can earn CRE as incentives for providing liquidity. These incentives are calculated for each month by the off-chain market maker [scoring system](../../../docs/whitepapers/marketmaker/scoring.md) and distribute incentives based on the allocation suggested by governance proposals.
 
 ## Inclusion of Market Maker
 

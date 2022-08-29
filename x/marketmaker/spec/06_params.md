@@ -10,7 +10,7 @@ The `marketmaker` module contains the following parameters:
 |------------------------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | IncentiveBudgetAddress | string             | cre1ddn66jv0sjpmck0ptegmhmqtn35qsg2vxyk2hn9sqf4qxtzqz3sq3qhhde                                                                                                                                   |
 | DepositAmount          | string (sdk.Coins) | [{"denom":"ucre","amount":"1000000000"}]                                                                                                                                                         |
-| Common                 | Common             | {"min_open_ratio":"0.500000000000000000","min_open_depth_ratio":"0.100000000000000000","max_downtime":20,"max_total_downtime":100,"min_hours":16,"min_days":22}                                    |
+| Common                 | Common             | {"min_open_ratio":"0.500000000000000000","min_open_depth_ratio":"0.100000000000000000","max_downtime":20,"max_total_downtime":100,"min_hours":16,"min_days":22}                                  |
 | IncentivePairs         | []IncentivePair    | [{"pair_id":"20","update_time":"2022-12-01T00:00:00Z","incentive_weight":"0.100000000000000000","max_spread":"0.012000000000000000","min_width":"0.002000000000000000","min_depth":"100000000"}] |
 
 ## IncentiveBudgetAddress
@@ -23,14 +23,14 @@ The amount of deposit to be applied to the market maker, which is calculated per
 
 ## Common
 
-Common variables used in market maker scoring system
+Common variables used in market maker [scoring system](../../../docs/whitepapers/marketmaker/scoring.md)
 
 ```go
 types Common struct {
     // Minimum ratio to maintain the tick order
-	MinOpenRatio sdk.Dec
+    MinOpenRatio sdk.Dec
     // Minimum ratio of open amount to MinDepth
-	MinOpenDepthRatio sdk.Dec
+    MinOpenDepthRatio sdk.Dec
     // Maximum allowable consecutive blocks of outage
     MaxDowntime uint32
     // Maximum allowable sum of blocks in an hour
@@ -44,7 +44,7 @@ types Common struct {
 
 ## IncentivePairs
 
-Include the pairs that are incentive target pairs and the variables used in market maker scoring system
+Include the pairs that are incentive target pairs and the variables used in market maker [scoring system](../../../docs/whitepapers/marketmaker/scoring.md)
 
 ```go
 type IncentivePair struct {
