@@ -14,12 +14,12 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get                                           = "/crescent/liquidstaking/v1beta1/params";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "Returns all parameters of the liquid staking module.";
+      description: "Returns all parameters of the liquid staking module."
   external_docs: {
   url:
-    "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec";
+    "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec"
   description:
-    "Find out more about the params";
+    "Find out more about the params"
   }
   };
 }
@@ -27,12 +27,12 @@ service Query {
 rpc LiquidValidators(QueryLiquidValidatorsRequest) returns (QueryLiquidValidatorsResponse) {
   option (google.api.http).get                                           = "/crescent/liquidstaking/v1beta1/validators";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all liquid validators of the liquid staking module.";
+    description: "Returns all liquid validators of the liquid staking module."
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec";
+  "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec"
 description:
-  "Find out more about the liquid validators";
+  "Find out more about the liquid validators"
 }
 };
 }
@@ -40,12 +40,12 @@ description:
 rpc VotingPower(QueryVotingPowerRequest) returns (QueryVotingPowerResponse) {
   option (google.api.http).get = "/crescent/liquidstaking/v1beta1/voting_power/{voter}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns voting power of staking and liquid staking module's of the voter that can be exercised.";
+    description: "Returns voting power of staking and liquid staking module's of the voter that can be exercised."
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec";
+  "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec"
 description:
-  "Find out more about the liquid validators";
+  "Find out more about the liquid validators"
 }
 };
 }
@@ -54,12 +54,12 @@ description:
 rpc States(QueryStatesRequest) returns (QueryStatesResponse) {
   option (google.api.http).get                                           = "/crescent/liquidstaking/v1beta1/states";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns states of the liquid staking module.";
+    description: "Returns states of the liquid staking module."
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec";
+  "https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec"
 description:
-  "Find out more about the liquid staking";
+  "Find out more about the liquid staking"
 }
 };
 }

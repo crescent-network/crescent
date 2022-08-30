@@ -20,12 +20,12 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get                                           = "/crescent/farming/v1beta1/params";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "Returns all parameters of the farming module.";
+      description: "Returns all parameters of the farming module."
   external_docs: {
   url:
-    "https://github.com/crescent-network/crescent/blob/main/x/farming/spec/07_params.md";
+    "https://github.com/crescent-network/crescent/blob/main/x/farming/spec/07_params.md"
   description:
-    "Find out more about the params";
+    "Find out more about the params"
   }
   };
 }
@@ -34,12 +34,12 @@ service Query {
 rpc Plans(QueryPlansRequest) returns (QueryPlansResponse) {
   option (google.api.http).get                                           = "/crescent/farming/v1beta1/plans";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns a list of all farming plans with pagination result.";
+    description: "Returns a list of all farming plans with pagination result."
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -80,12 +80,12 @@ key:
 rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
   option (google.api.http).get                                           = "/crescent/farming/v1beta1/plans/{plan_id}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns the farming plan that corresponds to the plan_id.";
+    description: "Returns the farming plan that corresponds to the plan_id."
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -125,12 +125,12 @@ key:
 rpc Position(QueryPositionRequest) returns (QueryPositionResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/positions/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns the farming position of the farmer";
+    description: "Returns the farming position of the farmer"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -150,12 +150,12 @@ key:
 rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/stakings/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all stakings (staked and queued coins) that corresponds to the farmer";
+    description: "Returns all stakings (staked and queued coins) that corresponds to the farmer"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -175,12 +175,12 @@ key:
 rpc QueuedStakings(QueryQueuedStakingsRequest) returns (QueryQueuedStakingsResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/queued_stakings/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all queued stakings that corresponds to the farmer";
+    description: "Returns all queued stakings that corresponds to the farmer"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -200,12 +200,12 @@ key:
 rpc TotalStakings(QueryTotalStakingsRequest) returns (QueryTotalStakingsResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns total stakings that corresponds to the staking_coin_denom";
+    description: "Returns total stakings that corresponds to the staking_coin_denom"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -225,12 +225,12 @@ key:
 rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
   option (google.api.http).get                                           = "/crescent/farming/v1beta1/rewards/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all rewards coins that corresponds to the farmer";
+    description: "Returns all rewards coins that corresponds to the farmer"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -250,12 +250,12 @@ key:
 rpc UnharvestedRewards(QueryUnharvestedRewardsRequest) returns (QueryUnharvestedRewardsResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/unharvested_rewards/{farmer}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all unharvested rewards that corresponds to the farmer";
+    description: "Returns all unharvested rewards that corresponds to the farmer"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -275,12 +275,12 @@ key:
 rpc CurrentEpochDays(QueryCurrentEpochDaysRequest) returns (QueryCurrentEpochDaysResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/current_epoch_days";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns the current epoch days";
+    description: "Returns the current epoch days"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
@@ -300,12 +300,12 @@ key:
 rpc HistoricalRewards(QueryHistoricalRewardsRequest) returns (QueryHistoricalRewardsResponse) {
   option (google.api.http).get = "/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns HistoricalRewards records for a staking coin denom";
+    description: "Returns HistoricalRewards records for a staking coin denom"
 external_docs: {
 url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
+  "https://github.com/crescent-network/crescent/tree/main/docs"
 description:
-  "Find out more about the query and error codes";
+  "Find out more about the query and error codes"
 }
 responses: {
 key:
