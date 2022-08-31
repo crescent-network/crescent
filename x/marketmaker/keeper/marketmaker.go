@@ -248,10 +248,9 @@ func (k Keeper) ApplyMarketMaker(ctx sdk.Context, mmAddr sdk.AccAddress, pairIds
 		if _, ok := incentivePairsMap[pairId]; !ok {
 			return types.ErrUnregisteredPairId
 		}
-
 	}
 
-	// deposit deposit amount * number of pairs
+	// total deposit amount = deposit amount * number of pairs
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, mmAddr, types.ModuleName, totalDepositAmt)
 	if err != nil {
 		return err
@@ -335,9 +334,11 @@ func (k Keeper) ValidateDepositReservedAmount(ctx sdk.Context) error {
 		return fmt.Errorf("market maker number differs from the actual value; have %d, want %d", mmCount, depositCount)
 	}
 
-	reserveBalance := k.bankKeeper.GetAllBalances(ctx, types.DepositReserveAcc)
-	if !totalAmt.Empty() && reserveBalance.IsAllLT(totalAmt) {
-		return fmt.Errorf("DepositReserveAcc differs from the actual value; have %s, want %s", reserveBalance, totalAmt)
+	if !totalAmt.Empty() {
+		reserveBalance := k.bankKeeper.GetAllBalances(ctx, types.DepositReserveAcc)
+		if reserveBalance.IsAllLT(totalAmt) {
+			return fmt.Errorf("DepositReserveAcc differs from the actual value; have %s, want %s", reserveBalance, totalAmt)
+		}
 	}
 	return nil
 }

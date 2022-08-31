@@ -162,7 +162,6 @@ func (k Keeper) DistributionMarketMakerIncentives(ctx sdk.Context, proposals []t
 		if !mm.Eligible {
 			return types.ErrNotEligibleMarketMaker
 		}
-
 	}
 
 	budgetAcc := params.IncentiveBudgetAcc()
@@ -172,17 +171,13 @@ func (k Keeper) DistributionMarketMakerIncentives(ctx sdk.Context, proposals []t
 	}
 
 	for _, p := range proposals {
-		var amount sdk.Coins
-		// add and set if already claimable incentive exist
-		incentive, found := k.GetIncentive(ctx, p.GetAccAddress())
-		if found {
-			amount = incentive.Claimable.Add(p.Amount...)
-		} else {
-			amount = p.Amount
+                incentive, found := k.GetIncentive(ctx, p.GetAccAddress())
+		if !found {
+			incentive.Claimable = sdk.Coins{}
 		}
 		k.SetIncentive(ctx, types.Incentive{
 			Address:   p.Address,
-			Claimable: amount,
+			Claimable: incentive.Claimable.Add(p.Amount...),
 		})
 	}
 

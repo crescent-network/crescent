@@ -47,8 +47,7 @@ func NewApplyMarketMaker() *cobra.Command {
 		Short: "Apply to be a market maker",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`
-Apply to be a market maker for given pair_ids
-for each pair, the params.deposit_amount will be deposited, which will be refunded when included or rejected as a market maker through proposal
+Apply to be a market maker for a number of pairs. The deposit amount defined in params is required to deposit, and the amount is expected to be refunded when you are either included or rejected by the community (through a governance proposal).
 
 Example:
 $ %s tx %s apply 1 --from mykey
@@ -101,6 +100,7 @@ func NewClaimIncentives() *cobra.Command {
 		Short: "Claim all claimable incentives",
 		Long: fmt.Sprintf(`
 Claim all market making incentives distributed through governance
+
 Example:
 $ %s tx %s claim --from mykey`,
 			version.AppName, types.ModuleName,
@@ -139,38 +139,33 @@ $ %s tx gov submit-proposal market-maker-proposal <path/to/proposal.json> --from
 Where proposal.json contains:
 
 {
-    "title": "Market Maker Proposal",
-    "description": "Are you ready to market making?",
-    "inclusions":
-    [
+  "title": "Market Maker Proposal",
+  "description": "Are you ready to market making?",
+  "inclusions": [
+    {
+      "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
+      "pair_id": "1"
+    }
+  ],
+  "exclusions": [],
+  "rejections": [
+    {
+      "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
+      "pair_id": "2"
+    }
+  ],
+  "distributions": [
+    {
+      "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
+      "pair_id": "1",
+      "amount": [
         {
-            "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
-            "pair_id": "1"
+          "denom": "stake",
+          "amount": "100000000"
         }
-    ],
-    "exclusions":
-    [],
-    "rejections":
-    [
-        {
-            "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
-            "pair_id": "2"
-        }
-    ],
-    "distributions":
-    [
-        {
-            "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
-            "pair_id": "1",
-            "amount":
-            [
-                {
-                    "denom": "stake",
-                    "amount": "100000000"
-                }
-            ]
-        }
-    ]
+      ]
+    }
+  ]
 }
 `,
 				version.AppName,
