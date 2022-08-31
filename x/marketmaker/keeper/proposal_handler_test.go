@@ -138,7 +138,6 @@ func (suite *KeeperTestSuite) TestMarketMakerProposal() {
 	proposal = types.NewMarketMakerProposal("title", "description", []types.MarketMakerHandle{{Address: mmAddr.String(), PairId: 2}}, []types.MarketMakerHandle{{Address: mmAddr.String(), PairId: 2}}, nil, nil)
 	err = proposal.ValidateBasic()
 	suite.Require().Error(err)
-
 }
 
 func (suite *KeeperTestSuite) TestMarketMakerProposalDistribution() {
@@ -274,6 +273,21 @@ func (suite *KeeperTestSuite) TestMarketMakerProposalDistribution() {
 	// claimed all incentives, no object
 	_, found = k.GetIncentive(ctx, mmAddr)
 	suite.False(found)
+
+	// claim after exclusion
+	proposal = types.NewMarketMakerProposal("title", "description", nil, nil, nil,
+		[]types.IncentiveDistribution{
+			{
+				Address: mmAddr.String(),
+				PairId:  2,
+				Amount:  incentiveCoins,
+			},
+		})
+	suite.handleProposal(proposal)
+	proposal = types.NewMarketMakerProposal("title", "description", nil, []types.MarketMakerHandle{{Address: mmAddr.String(), PairId: 2}}, nil, nil)
+	suite.handleProposal(proposal)
+	err = k.ClaimIncentives(ctx, mmAddr)
+	suite.NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestMarketMakerProposalHugeCase() {
@@ -338,6 +352,68 @@ func (suite *KeeperTestSuite) TestMarketMakerProposalHugeCase() {
 		_, found := k.GetIncentive(ctx, suite.addrs[i])
 		suite.False(found)
 	}
+}
+
+func (suite *KeeperTestSuite) TestMarketMakerProposalAfterResetIncentivePair() {
+	ctx := suite.ctx
+	k := suite.keeper
+	mmAddr := suite.addrs[0]
+
+	// set incentive budget
+	params := k.GetParams(ctx)
+	params.IncentiveBudgetAddress = suite.addrs[29].String()
+	k.SetParams(ctx, params)
+
+	// apply market maker
+	err := k.ApplyMarketMaker(ctx, mmAddr, []uint64{1, 2, 3})
+	suite.Require().NoError(err)
+
+	// reset incentive pairs after applied
+	suite.ResetIncentivePairs()
+
+	mm, found := k.GetMarketMaker(ctx, mmAddr, 1)
+	suite.True(found)
+	suite.False(mm.Eligible)
+
+	// include market maker
+	proposal := types.NewMarketMakerProposal("title", "description", []types.MarketMakerHandle{{Address: mmAddr.String(), PairId: 1}}, nil, nil, nil)
+	suite.handleProposal(proposal)
+
+	mm, found = k.GetMarketMaker(ctx, mmAddr, 1)
+	suite.True(found)
+	suite.True(mm.Eligible)
+
+	// distribute market maker incentive
+	incentiveAmount := sdk.NewInt(500000000)
+	incentiveCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, incentiveAmount))
+
+	proposal = types.NewMarketMakerProposal("title", "description", nil, nil, nil,
+		[]types.IncentiveDistribution{
+			{
+				Address: mmAddr.String(),
+				PairId:  1,
+				Amount:  incentiveCoins,
+			},
+		})
+	suite.handleProposal(proposal)
+
+	incentive, found := k.GetIncentive(ctx, mmAddr)
+	suite.True(found)
+	suite.Equal(mmAddr.String(), incentive.Address)
+
+	// claim incentives
+	err = k.ClaimIncentives(ctx, mmAddr)
+	suite.NoError(err)
+
+	// exclude market maker
+	proposal = types.NewMarketMakerProposal("title", "description", nil, []types.MarketMakerHandle{{Address: mmAddr.String(), PairId: 1}}, nil, nil)
+	suite.handleProposal(proposal)
+	_, found = k.GetMarketMaker(ctx, mmAddr, 1)
+	suite.False(found)
+
+	// reject market maker
+	proposal = types.NewMarketMakerProposal("title", "description", nil, nil, []types.MarketMakerHandle{{Address: mmAddr.String(), PairId: 2}}, nil)
+	suite.handleProposal(proposal)
 }
 
 func (suite *KeeperTestSuite) TestRefundDepositWhenAmountChanged() {
