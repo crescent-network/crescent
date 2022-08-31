@@ -256,13 +256,9 @@ func (k Keeper) ApplyMarketMaker(ctx sdk.Context, mmAddr sdk.AccAddress, pairIds
 		return err
 	}
 
-	// create deposit object for refund when inclusion or exclusion
+	// create market maker, deposit object for each pair
 	for _, pairId := range pairIds {
 		k.SetDeposit(ctx, mmAddr, pairId, params.DepositAmount)
-	}
-
-	// create market maker object for each pair
-	for _, pairId := range pairIds {
 		k.SetMarketMaker(ctx, types.MarketMaker{
 			Address:  mmAddr.String(),
 			PairId:   pairId,
@@ -348,10 +344,11 @@ func (k Keeper) ValidateIncentiveReservedAmount(ctx sdk.Context, incentives []ty
 	for _, record := range incentives {
 		totalClaimable = totalClaimable.Add(record.Claimable...)
 	}
-
-	reserveBalance := k.bankKeeper.GetAllBalances(ctx, types.ClaimableIncentiveReserveAcc)
-	if !totalClaimable.Empty() && reserveBalance.IsAllLT(totalClaimable) {
-		return fmt.Errorf("ClaimableIncentiveReserveAcc differs from the actual value; have %s, want %s", reserveBalance, totalClaimable)
+	if !totalClaimable.Empty() {
+		reserveBalance := k.bankKeeper.GetAllBalances(ctx, types.ClaimableIncentiveReserveAcc)
+		if reserveBalance.IsAllLT(totalClaimable) {
+			return fmt.Errorf("ClaimableIncentiveReserveAcc differs from the actual value; have %s, want %s", reserveBalance, totalClaimable)
+		}
 	}
 	return nil
 }

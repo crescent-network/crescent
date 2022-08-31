@@ -12,25 +12,25 @@ import (
 // HandleMarketMakerProposal is a handler for executing a market maker proposal.
 func HandleMarketMakerProposal(ctx sdk.Context, k Keeper, proposal *types.MarketMakerProposal) error {
 	if proposal.Inclusions != nil {
-		if err := k.InclusionMarketMakers(ctx, proposal.Inclusions); err != nil {
+		if err := k.IncludeMarketMakers(ctx, proposal.Inclusions); err != nil {
 			return err
 		}
 	}
 
 	if proposal.Distributions != nil {
-		if err := k.DistributionMarketMakerIncentives(ctx, proposal.Distributions); err != nil {
+		if err := k.DistributeMarketMakerIncentives(ctx, proposal.Distributions); err != nil {
 			return err
 		}
 	}
 
 	if proposal.Exclusions != nil {
-		if err := k.ExclusionMarketMakers(ctx, proposal.Exclusions); err != nil {
+		if err := k.ExcludeMarketMakers(ctx, proposal.Exclusions); err != nil {
 			return err
 		}
 	}
 
 	if proposal.Rejections != nil {
-		if err := k.RejectionMarketMakers(ctx, proposal.Rejections); err != nil {
+		if err := k.RejectMarketMakers(ctx, proposal.Rejections); err != nil {
 			return err
 		}
 	}
@@ -38,8 +38,8 @@ func HandleMarketMakerProposal(ctx sdk.Context, k Keeper, proposal *types.Market
 	return nil
 }
 
-// InclusionMarketMakers is a handler for include applied and not eligible market makers.
-func (k Keeper) InclusionMarketMakers(ctx sdk.Context, proposals []types.MarketMakerHandle) error {
+// IncludeMarketMakers is a handler for include applied and not eligible market makers.
+func (k Keeper) IncludeMarketMakers(ctx sdk.Context, proposals []types.MarketMakerHandle) error {
 	for _, p := range proposals {
 		mmAddr, err := sdk.AccAddressFromBech32(p.Address)
 		if err != nil {
@@ -49,23 +49,18 @@ func (k Keeper) InclusionMarketMakers(ctx sdk.Context, proposals []types.MarketM
 		if !found {
 			return sdkerrors.Wrapf(types.ErrNotExistMarketMaker, "%s is not a applied market maker", p.Address)
 		}
-		// pass already eligible market maker
+		// fail when already eligible market maker
 		if mm.Eligible {
 			return sdkerrors.Wrapf(types.ErrInvalidInclusion, "%s is already eligible market maker", p.Address)
 		}
 		mm.Eligible = true
 		k.SetMarketMaker(ctx, mm)
 
-		// refund Deposit amount
-		deposit, found := k.GetDeposit(ctx, mmAddr, p.PairId)
-		if !found {
-			return types.ErrInvalidDeposit
-		}
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mmAddr, deposit.Amount)
+		// refund deposit amount
+		err = k.RefundDeposit(ctx, mmAddr, p.PairId)
 		if err != nil {
 			return err
 		}
-		k.DeleteDeposit(ctx, mmAddr, p.PairId)
 
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
@@ -78,8 +73,8 @@ func (k Keeper) InclusionMarketMakers(ctx sdk.Context, proposals []types.MarketM
 	return nil
 }
 
-// ExclusionMarketMakers is a handler for exclude eligible market makers.
-func (k Keeper) ExclusionMarketMakers(ctx sdk.Context, proposals []types.MarketMakerHandle) error {
+// ExcludeMarketMakers is a handler for exclude eligible market makers.
+func (k Keeper) ExcludeMarketMakers(ctx sdk.Context, proposals []types.MarketMakerHandle) error {
 	for _, p := range proposals {
 		mmAddr, err := sdk.AccAddressFromBech32(p.Address)
 		if err != nil {
@@ -107,8 +102,8 @@ func (k Keeper) ExclusionMarketMakers(ctx sdk.Context, proposals []types.MarketM
 	return nil
 }
 
-// RejectionMarketMakers is a handler for reject applied and not eligible market makers.
-func (k Keeper) RejectionMarketMakers(ctx sdk.Context, proposals []types.MarketMakerHandle) error {
+// RejectMarketMakers is a handler for reject applied and not eligible market makers.
+func (k Keeper) RejectMarketMakers(ctx sdk.Context, proposals []types.MarketMakerHandle) error {
 	for _, p := range proposals {
 		mmAddr, err := sdk.AccAddressFromBech32(p.Address)
 		if err != nil {
@@ -126,16 +121,11 @@ func (k Keeper) RejectionMarketMakers(ctx sdk.Context, proposals []types.MarketM
 
 		k.DeleteMarketMaker(ctx, mmAddr, p.PairId)
 
-		// refund DepositAmount
-		deposit, found := k.GetDeposit(ctx, mmAddr, p.PairId)
-		if !found {
-			return types.ErrInvalidDeposit
-		}
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mmAddr, deposit.Amount)
+		// refund deposit amount
+		err = k.RefundDeposit(ctx, mmAddr, p.PairId)
 		if err != nil {
 			return err
 		}
-		k.DeleteDeposit(ctx, mmAddr, p.PairId)
 
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
@@ -148,8 +138,8 @@ func (k Keeper) RejectionMarketMakers(ctx sdk.Context, proposals []types.MarketM
 	return nil
 }
 
-// DistributionMarketMakerIncentives is a handler for distribute incentives to eligible market makers.
-func (k Keeper) DistributionMarketMakerIncentives(ctx sdk.Context, proposals []types.IncentiveDistribution) error {
+// DistributeMarketMakerIncentives is a handler for distribute incentives to eligible market makers.
+func (k Keeper) DistributeMarketMakerIncentives(ctx sdk.Context, proposals []types.IncentiveDistribution) error {
 	params := k.GetParams(ctx)
 	totalIncentives := sdk.Coins{}
 	for _, p := range proposals {
@@ -171,7 +161,7 @@ func (k Keeper) DistributionMarketMakerIncentives(ctx sdk.Context, proposals []t
 	}
 
 	for _, p := range proposals {
-                incentive, found := k.GetIncentive(ctx, p.GetAccAddress())
+		incentive, found := k.GetIncentive(ctx, p.GetAccAddress())
 		if !found {
 			incentive.Claimable = sdk.Coins{}
 		}
@@ -188,5 +178,19 @@ func (k Keeper) DistributionMarketMakerIncentives(ctx sdk.Context, proposals []t
 			sdk.NewAttribute(types.AttributeKeyTotalIncentives, totalIncentives.String()),
 		),
 	})
+	return nil
+}
+
+// RefundDeposit is a handler for refund deposit amount and delete deposit object.
+func (k Keeper) RefundDeposit(ctx sdk.Context, mmAddr sdk.AccAddress, pairId uint64) error {
+	deposit, found := k.GetDeposit(ctx, mmAddr, pairId)
+	if !found {
+		return types.ErrInvalidDeposit
+	}
+	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mmAddr, deposit.Amount)
+	if err != nil {
+		return err
+	}
+	k.DeleteDeposit(ctx, mmAddr, pairId)
 	return nil
 }

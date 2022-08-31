@@ -114,7 +114,7 @@ func TestSimulateMsgClaimIncentives(t *testing.T) {
 		Eligible: true,
 	})
 
-	err := app.MarketMakerKeeper.DistributionMarketMakerIncentives(ctx, []types.IncentiveDistribution{
+	err := app.MarketMakerKeeper.DistributeMarketMakerIncentives(ctx, []types.IncentiveDistribution{
 		{
 			Address: accounts[0].Address.String(),
 			PairId:  1,
