@@ -20,306 +20,272 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get                                           = "/crescent/farming/v1beta1/params";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "Returns all parameters of the farming module.";
-  external_docs: {
-  url:
-    "https://github.com/crescent-network/crescent/blob/main/x/farming/spec/07_params.md";
-  description:
-    "Find out more about the params";
+      description: "Returns all parameters of the farming module."
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/blob/main/x/farming/spec/07_params.md"
+        description: "Find out more about the params"
+      }
+    };
   }
-  };
-}
 
-// Plans returns all plans.
-rpc Plans(QueryPlansRequest) returns (QueryPlansResponse) {
-  option (google.api.http).get                                           = "/crescent/farming/v1beta1/plans";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns a list of all farming plans with pagination result.";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // Plans returns all plans.
+  rpc Plans(QueryPlansRequest) returns (QueryPlansResponse) {
+    option (google.api.http).get                                           = "/crescent/farming/v1beta1/plans";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns a list of all farming plans with pagination result."
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = invalid plan type PLAN_TYPE","details":[]}'
+          }
+        }
+      }
+      responses: {
+        key: "500"
+        value: {
+          description: "Internal Server Error"
+          examples: {
+            key: "application/json"
+            value: '{"code":13,"message":"rpc error: code = Internal desc = error","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = invalid plan type PLAN_TYPE","details":[]}'
-    }
-  }
-}
-responses: {
-key:
-  "500" value: {
-  description:
-    "Internal Server Error" examples: {
-    key:
-      "application/json" value: '{"code":13,"message":"rpc error: code = Internal desc = error","details":[]}'
-    }
-  }
-}
-};
-}
 
-// Plan returns a specific plan.
-rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
-  option (google.api.http).get                                           = "/crescent/farming/v1beta1/plans/{plan_id}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns the farming plan that corresponds to the plan_id.";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // Plan returns a specific plan.
+  rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/plans/{plan_id}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns the farming plan that corresponds to the plan_id."
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+      responses: {
+        key: "404"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":5,"message":"rpc error: code = NotFound desc = plan plan_id not found","details":[]}'
+          }
+        }
+      }
+      responses: {
+        key: "500"
+        value: {
+          description: "Internal Server Error"
+          examples: {
+            key: "application/json"
+            value: '{"code":13,"message":"rpc error: code = Internal desc = error","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-responses: {
-key:
-  "404" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":5,"message":"rpc error: code = NotFound desc = plan plan_id not found","details":[]}'
-    }
-  }
-}
-responses: {
-key:
-  "500" value: {
-  description:
-    "Internal Server Error" examples: {
-    key:
-      "application/json" value: '{"code":13,"message":"rpc error: code = Internal desc = error","details":[]}'
-    }
-  }
-}
-};
-}
 
-rpc Position(QueryPositionRequest) returns (QueryPositionResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/positions/{farmer}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns the farming position of the farmer";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  rpc Position(QueryPositionRequest) returns (QueryPositionResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/positions/{farmer}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns the farming position of the farmer"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 
-// Stakings returns all stakings by a farmer.
-rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/stakings/{farmer}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all stakings (staked and queued coins) that corresponds to the farmer";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // Stakings returns all stakings by a farmer.
+  rpc Stakings(QueryStakingsRequest) returns (QueryStakingsResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/stakings/{farmer}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns all stakings (staked and queued coins) that corresponds to the farmer"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 
-// QueryStakings returns all queued stakings by a farmer.
-rpc QueuedStakings(QueryQueuedStakingsRequest) returns (QueryQueuedStakingsResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/queued_stakings/{farmer}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all queued stakings that corresponds to the farmer";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // QueryStakings returns all queued stakings by a farmer.
+  rpc QueuedStakings(QueryQueuedStakingsRequest) returns (QueryQueuedStakingsResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/queued_stakings/{farmer}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns all queued stakings that corresponds to the farmer"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 
-// TotalStakings returns total staking amount for a staking coin denom
-rpc TotalStakings(QueryTotalStakingsRequest) returns (QueryTotalStakingsResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns total stakings that corresponds to the staking_coin_denom";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // TotalStakings returns total staking amount for a staking coin denom
+  rpc TotalStakings(QueryTotalStakingsRequest) returns (QueryTotalStakingsResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/total_stakings/{staking_coin_denom}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns total stakings that corresponds to the staking_coin_denom"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 
-// Rewards returns rewards for a farmer
-rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
-  option (google.api.http).get                                           = "/crescent/farming/v1beta1/rewards/{farmer}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all rewards coins that corresponds to the farmer";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // Rewards returns rewards for a farmer
+  rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/rewards/{farmer}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns all rewards coins that corresponds to the farmer"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 
-// UnharvestedRewards returns unharvested rewards for a farmer
-rpc UnharvestedRewards(QueryUnharvestedRewardsRequest) returns (QueryUnharvestedRewardsResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/unharvested_rewards/{farmer}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns all unharvested rewards that corresponds to the farmer";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // UnharvestedRewards returns unharvested rewards for a farmer
+  rpc UnharvestedRewards(QueryUnharvestedRewardsRequest) returns (QueryUnharvestedRewardsResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/unharvested_rewards/{farmer}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns all unharvested rewards that corresponds to the farmer"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 
-// CurrentEpochDays returns current epoch days.
-rpc CurrentEpochDays(QueryCurrentEpochDaysRequest) returns (QueryCurrentEpochDaysResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/current_epoch_days";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns the current epoch days";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // CurrentEpochDays returns current epoch days.
+  rpc CurrentEpochDays(QueryCurrentEpochDaysRequest) returns (QueryCurrentEpochDaysResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/current_epoch_days";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns the current epoch days"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 
-// HistoricalRewards returns HistoricalRewards records for a staking coin denom.
-rpc HistoricalRewards(QueryHistoricalRewardsRequest) returns (QueryHistoricalRewardsResponse) {
-  option (google.api.http).get = "/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}";
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    description: "Returns HistoricalRewards records for a staking coin denom";
-external_docs: {
-url:
-  "https://github.com/crescent-network/crescent/tree/main/docs";
-description:
-  "Find out more about the query and error codes";
-}
-responses: {
-key:
-  "400" value: {
-  description:
-    "Bad Request" examples: {
-    key:
-      "application/json"
-      value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
-    }
+  // HistoricalRewards returns HistoricalRewards records for a staking coin denom.
+  rpc HistoricalRewards(QueryHistoricalRewardsRequest) returns (QueryHistoricalRewardsResponse) {
+    option (google.api.http).get = "/crescent/farming/v1beta1/historical_rewards/{staking_coin_denom}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns HistoricalRewards records for a staking coin denom"
+      external_docs: {
+        url: "https://github.com/crescent-network/crescent/tree/main/docs"
+        description: "Find out more about the query and error codes"
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Bad Request"
+          examples: {
+            key: "application/json"
+            value: '{"code":3,"message":"rpc error: code = InvalidArgument desc = empty request","details":[]}'
+          }
+        }
+      }
+    };
   }
-}
-};
-}
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
