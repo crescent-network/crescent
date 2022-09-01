@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package crescent.marketmaker.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/marketmaker/types";
+
+// Params defines the set of params for the marketmaker module.
+message Params {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  // Address containing the funds used to distribute incentives
+  string incentive_budget_address = 1 [(gogoproto.moretags) = "yaml:\"incentive_budget_address\""];
+
+  // The amount of deposit to be applied to the market maker, which is calculated per pair and is refunded when the
+  // market maker included or rejected through the MarketMaker Proposal
+  repeated cosmos.base.v1beta1.Coin deposit_amount = 2 [
+    (gogoproto.moretags)     = "yaml:\"deposit_amount\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+
+  // Common variables used in market maker scoring system
+  Common common = 3 [(gogoproto.moretags) = "yaml:\"common\"", (gogoproto.nullable) = false];
+
+  // Include the pairs that are incentive target pairs and the variables used in market maker scoring system
+  repeated IncentivePair incentive_pairs = 4
+      [(gogoproto.moretags) = "yaml:\"incentive_pairs\"", (gogoproto.nullable) = false];
+  ;
+}
+
+message Common {
+  option (gogoproto.goproto_getters) = false;
+
+  // Minimum ratio to maintain the tick order
+  string min_open_ratio = 1 [
+    (gogoproto.moretags)   = "yaml:\"min_open_ratio\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Minimum ratio of open amount to MinDepth
+  string min_open_depth_ratio = 2 [
+    (gogoproto.moretags)   = "yaml:\"min_open_depth_ratio\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Maximum allowable consecutive blocks of outage
+  uint32 max_downtime = 3 [(gogoproto.moretags) = "yaml:\"max_downtime\""];
+
+  // Maximum allowable sum of blocks in an hour
+  uint32 max_total_downtime = 4 [(gogoproto.moretags) = "yaml:\"max_total_downtime\""];
+
+  // Minimum value of LiveHour to achieve LiveDay
+  uint32 min_hours = 5 [(gogoproto.moretags) = "yaml:\"min_hours\""];
+
+  // Minimum value of LiveDay to maintain MM eligibility
+  uint32 min_days = 6 [(gogoproto.moretags) = "yaml:\"min_days\""];
+}
+
+message IncentivePair {
+  option (gogoproto.goproto_getters) = false;
+
+  // Pair id of liquidity module
+  uint64 pair_id = 1 [(gogoproto.moretags) = "yaml:\"pair_id\""];
+
+  // Time the pair variables start to be applied to the scoring system
+  google.protobuf.Timestamp update_time = 2
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"update_time\""];
+
+  // Incentive weights for each pair
+  string incentive_weight = 3 [
+    (gogoproto.moretags)   = "yaml:\"incentive_weight\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Maximum allowable spread between bid and ask
+  string max_spread = 4 [
+    (gogoproto.moretags)   = "yaml:\"max_spread\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Minimum allowable price difference of high and low on both side of orders
+  string min_width = 5 [
+    (gogoproto.moretags)   = "yaml:\"min_width\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Minimum allowable order depth on each side
+  string min_depth = 6 [
+    (gogoproto.moretags)   = "yaml:\"min_depth\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// Store the total amount of incentives distributed through `MarketMakerProposal`, and it can be claimed at once through
+// `MsgClaimIncentives`
+message Incentive {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+
+  repeated cosmos.base.v1beta1.Coin claimable = 2 [
+    (gogoproto.moretags)     = "yaml:\"claimable\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+// Market maker object created by applying, if included through `MarketMakerProposal`, eligible becomes true and is
+// deleted if rejected or excluded
+message MarketMaker {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+
+  uint64 pair_id = 2 [(gogoproto.moretags) = "yaml:\"pair_id\""];
+
+  bool eligible = 3 [(gogoproto.moretags) = "yaml:\"eligible\""];
+}
+
+// stores apply deposit amount for a future refund
+message Deposit {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.moretags)     = "yaml:\"amount\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+message DepositRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+
+  uint64 pair_id = 2 [(gogoproto.moretags) = "yaml:\"pair_id\""];
+
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.moretags)     = "yaml:\"amount\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
