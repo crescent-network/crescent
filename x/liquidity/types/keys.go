@@ -39,6 +39,7 @@ var (
 	WithdrawRequestIndexKeyPrefix = []byte{0xb5}
 	OrderKeyPrefix                = []byte{0xb2}
 	OrderIndexKeyPrefix           = []byte{0xb3}
+	MMOrderIndexKeyPrefix         = []byte{0xb6}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
@@ -142,6 +143,12 @@ func GetOrderIndexKey(orderer sdk.AccAddress, pairId, orderId uint64) []byte {
 // by an orderer.
 func GetOrderIndexKeyPrefix(orderer sdk.AccAddress) []byte {
 	return append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...)
+}
+
+// GetMMOrderIndexKey returns the store key to retrieve MMOrderIndex object by
+// orderer and pair id.
+func GetMMOrderIndexKey(orderer sdk.AccAddress, pairId uint64) []byte {
+	return append(append(MMOrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...), sdk.Uint64ToBigEndian(pairId)...)
 }
 
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.

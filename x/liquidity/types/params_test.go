@@ -85,6 +85,13 @@ func TestParams_Validate(t *testing.T) {
 			"max price limit ratio must not be negative: -1.000000000000000000",
 		},
 		{
+			"zero MaxNumMarketMakingOrderTicks",
+			func(params *types.Params) {
+				params.MaxNumMarketMakingOrderTicks = 0
+			},
+			"max number of market making order ticks must be positive: 0",
+		},
+		{
 			"negative MaxOrderLifespan",
 			func(params *types.Params) {
 				params.MaxOrderLifespan = -1

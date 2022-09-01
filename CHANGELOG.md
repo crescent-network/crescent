@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (x/marketmaker) [\#55](https://github.com/crescent-network/crescent/pull/55) feat: add marketmaker module
+* (x/liquidity) [\#57](https://github.com/crescent-network/crescent/pull/57) feat: add market making order type
 
 ### Bug Fixes
 

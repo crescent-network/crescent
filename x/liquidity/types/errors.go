@@ -25,4 +25,5 @@ var (
 	ErrTooSmallOrder             = sdkerrors.Register(ModuleName, 17, "too small order")
 	ErrTooLargePool              = sdkerrors.Register(ModuleName, 18, "too large pool")
 	ErrTooManyPools              = sdkerrors.Register(ModuleName, 19, "too many pools in the pair")
+	ErrPriceNotOnTicks           = sdkerrors.Register(ModuleName, 20, "price is not on ticks")
 )

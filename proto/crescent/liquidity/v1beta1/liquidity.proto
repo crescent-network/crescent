@@ -34,21 +34,23 @@ message Params {
   string max_price_limit_ratio = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  google.protobuf.Duration max_order_lifespan = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  uint32 max_num_market_making_order_ticks = 10;
 
-  string swap_fee_rate = 11
+  google.protobuf.Duration max_order_lifespan = 11 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+
+  string swap_fee_rate = 12
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string withdraw_fee_rate = 12
+  string withdraw_fee_rate = 13
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  uint64 deposit_extra_gas = 13
+  uint64 deposit_extra_gas = 14
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
 
-  uint64 withdraw_extra_gas = 14
+  uint64 withdraw_extra_gas = 15
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
 
-  uint64 order_extra_gas = 15
+  uint64 order_extra_gas = 16
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
 }
 
@@ -148,43 +150,56 @@ message WithdrawRequest {
 
 // Order defines an order.
 message Order {
-  // id specifies the id for the request
-  uint64 id = 1;
+  // type specifies the typo of the order
+  OrderType type = 1;
+
+  // id specifies the id of the order
+  uint64 id = 2;
 
   // pair_id specifies the pair id
-  uint64 pair_id = 2;
+  uint64 pair_id = 3;
 
-  // msg_height specifies the block height when the request is stored for the batch execution
-  int64 msg_height = 3;
+  // msg_height specifies the block height when the order is stored for the batch execution
+  int64 msg_height = 4;
 
   // orderer specifies the bech32-encoded address that makes an order
-  string orderer = 4;
+  string orderer = 5;
 
   // direction specifies the order direction; either buy or sell
-  OrderDirection direction = 5;
+  OrderDirection direction = 6;
 
-  cosmos.base.v1beta1.Coin offer_coin = 6 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin offer_coin = 7 [(gogoproto.nullable) = false];
 
   // remaining_offer_coin specifies the remaining offer coin
-  cosmos.base.v1beta1.Coin remaining_offer_coin = 7 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin remaining_offer_coin = 8 [(gogoproto.nullable) = false];
 
   // received_coin specifies the received coin after the swap
-  cosmos.base.v1beta1.Coin received_coin = 8 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received_coin = 9 [(gogoproto.nullable) = false];
 
   // price specifies the price that an orderer is willing to swap
-  string price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string price = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string amount = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string amount = 11 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  string open_amount = 11
+  string open_amount = 12
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // batch_id specifies the pair's batch id when the request is stored
-  uint64 batch_id = 12;
+  uint64 batch_id = 13;
 
-  google.protobuf.Timestamp expire_at = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp expire_at = 14 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
-  OrderStatus status = 14;
+  OrderStatus status = 15;
+}
+
+// MMOrderIndex defines an index type to quickly find market making orders
+// from an orderer.
+message MMOrderIndex {
+  string orderer = 1;
+
+  uint64 pair_id = 2;
+
+  repeated uint64 order_ids = 3;
 }
 
 // PoolType enumerates pool types.
@@ -199,6 +214,23 @@ enum PoolType {
 
   // POOL_TYPE_RANGED specifies the ranged pool type
   POOL_TYPE_RANGED = 2 [(gogoproto.enumvalue_customname) = "PoolTypeRanged"];
+}
+
+// OrderType enumerates order types.
+enum OrderType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // ORDER_TYPE_UNSPECIFIED specifies unknown order type.
+  ORDER_TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OrderTypeUnspecified"];
+
+  // ORDER_TYPE_LIMIT specifies limit order type.
+  ORDER_TYPE_LIMIT = 1 [(gogoproto.enumvalue_customname) = "OrderTypeLimit"];
+
+  // ORDER_TYPE_MARKET specifies market order type.
+  ORDER_TYPE_MARKET = 2 [(gogoproto.enumvalue_customname) = "OrderTypeMarket"];
+
+  // ORDER_TYPE_MM specifies MM(market making) order type.
+  ORDER_TYPE_MM = 3 [(gogoproto.enumvalue_customname) = "OrderTypeMM"];
 }
 
 // OrderDirection enumerates order directions.

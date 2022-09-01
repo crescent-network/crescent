@@ -202,6 +202,32 @@ The transaction that is triggered with the `MsgMarketOrder` message fails if:
 - Denom of `OfferCoin` and `DemandCoinDenom` are not entered properly according to the `Direction`
 - The balance of `Orderer` does not have enough coins for `OfferCoin`
 
+## MsgMMOrder
+
+Make an MM(market making) order, which places multiple limit orders at once based
+on the parameters.
+
+```go
+type MsgMMOrder struct {
+    Orderer       string
+    PairId        uint64
+    MaxSellPrice  sdk.Dec
+    MinSellPrice  sdk.Dec
+    SellAmount    sdk.Int
+    MaxBuyPrice   sdk.Dec
+    MinBuyPrice   sdk.Dec
+    BuyAmount     sdk.Int
+    OrderLifespan time.Duration
+}
+```
+
+Limit orders are created at even intervals, for each buy/sell side.
+If the amount is zero, then no orders are made for that order direction.
+The maximum number of orders for each side is limited by the `MaxNumMarketMakingOrderTicks`
+parameter.
+At any point, there can be only one MM order from an orderer.
+If the orderer makes another MM order, then the previous order will be canceled.
+
 ## MsgCancelOrder
 
 Cancel an order with `MsgCancelOrder` message.
@@ -246,3 +272,16 @@ Validity checks are performed for `MsgCancelAllOrders` messages.
 The transaction that is triggered with the `MsgCancelAllOrders` message fails if:
 - `Orderer` address is invalid
 - Pair with `PairId` in `PairIds` does not exist
+
+## MsgCancelMMOrder
+
+Cancel an MM(market making) order.
+
+```go
+type MsgCancelMMOrder struct {
+    Orderer string
+    PairId  uint64
+}
+```
+
+Cancel previously made MM order by specifying the pair id.

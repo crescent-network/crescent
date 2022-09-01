@@ -4,6 +4,7 @@
 
 The `liquidity` module contains the following parameters:
 
+<<<<<<< HEAD
 | Key                      | Type               | Example                                                           |
 |--------------------------|--------------------|-------------------------------------------------------------------|
 | BatchSize                | uint32             | 1                                                                 |
@@ -21,6 +22,26 @@ The `liquidity` module contains the following parameters:
 | DepositExtraGas          | uint64 (sdk.Gas)   | 60000                                                             |
 | WithdrawExtraGas         | uint64 (sdk.Gas)   | 64000                                                             |
 | OrderExtraGas            | uint64 (sdk.Gas)   | 37000                                                             |
+=======
+| Key                          | Type               | Example                                                           |
+|------------------------------|--------------------|-------------------------------------------------------------------|
+| BatchSize                    | uint32             | 1                                                                 |
+| TickPrecision                | uint32             | 3                                                                 |
+| FeeCollectorAddress          | string             | cosmos1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvqau9aj0 |
+| DustCollectorAddress         | string             | cosmos1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0se4s8xs |
+| MinInitialPoolCoinSupply     | string (sdk.Int)   | "1000000000000"                                                   |
+| PairCreationFee              | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                            |
+| PoolCreationFee              | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                            |
+| MinInitialDepositAmount      | string (sdk.Int)   | "1000000"                                                         |
+| MaxPriceLimitRatio           | string (sdk.Dec)   | "0.100000000000000000"                                            |
+| MaxNumMarketMakingOrderTicks | uint32             | 10                                                                |
+| MaxOrderLifespan             | time.Duration      | 24hours                                                           |
+| SwapFeeRate                  | string (sdk.Dec)   | "0.000000000000000000"                                            |
+| WithdrawFeeRate              | string (sdk.Dec)   | "0.000000000000000000"                                            |
+| DepositExtraGas              | uint64 (sdk.Gas)   | 60000                                                             |
+| WithdrawExtraGas             | uint64 (sdk.Gas)   | 64000                                                             |
+| OrderExtraGas                | uint64 (sdk.Gas)   | 37000                                                             |
+>>>>>>> 5d2ec129 (feat: add market making order type on liquidity)
 
 ## BatchSize
 
@@ -70,6 +91,11 @@ Currently, the MaxPriceLimitRatio is 0.1 which means that the range of
 valid swap order price is (1-0.1)*lastPrice ~(1+0.1)*lastPrice of each pair.
 If a swap order with price outside that range is requested,
 the module will reject the order.
+
+## MaxNumMarketMakingOrderTicks
+
+The maximum number of limit orders made from the `MsgMMOrder` message on each
+side(buy/sell).
 
 ## MaxOrderLifespan
 

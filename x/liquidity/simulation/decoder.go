@@ -43,6 +43,12 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &reqB)
 			return fmt.Sprintf("%v\n%v", reqA, reqB)
 
+		case bytes.Equal(kvA.Key[:1], types.MMOrderIndexKeyPrefix):
+			var indexA, indexB types.MMOrderIndex
+			cdc.MustUnmarshal(kvA.Value, &indexA)
+			cdc.MustUnmarshal(kvB.Value, &indexB)
+			return fmt.Sprintf("%v\n%v", indexA, indexB)
+
 		default:
 			panic(fmt.Sprintf("invalid liquidity key prefix %X", kvA.Key[:1]))
 		}
