@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Crescent REST and gRPC Gateway docs
   description: 'A REST interface for state queries, transactions'
-  version: 2.0.0
+  version: 3.0.0
 paths:
   /node_info:
     get:
@@ -27418,6 +27418,898 @@ paths:
           type: string
       tags:
         - Query
+  '/crescent/marketmaker/v1beta1/incentive/{address}':
+    get:
+      summary: Incentive returns a specific incentive.
+      description: Returns the marketmaker's claimable incentive.
+      operationId: Incentive
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              incentive:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  claimable:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                title: >-
+                  Store the total amount of incentives distributed through
+                  `MarketMakerProposal`, and it can be claimed at once through
+
+                  `MsgClaimIncentives`
+            description: >-
+              QueryIncentiveResponse is the response type for the
+              Query/Incentive RPC method.
+        '400':
+          description: Bad Request
+          schema: {}
+          examples:
+            application/json:
+              code: 3
+              message: 'rpc error: code = InvalidArgument desc = empty request'
+              details: []
+        '404':
+          description: Bad Request
+          schema: {}
+          examples:
+            application/json:
+              code: 5
+              message: 'rpc error: code = NotFound desc = incentive address not found'
+              details: []
+        '500':
+          description: Internal Server Error
+          schema: {}
+          examples:
+            application/json:
+              code: 13
+              message: 'rpc error: code = Internal desc = error'
+              details: []
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the query and error codes
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  /crescent/marketmaker/v1beta1/marketmakers:
+    get:
+      summary: MarketMakers returns all market makers.
+      description: Returns a list of all market makers with pagination result.
+      operationId: MarketMakers
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              marketmakers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    pair_id:
+                      type: string
+                      format: uint64
+                    eligible:
+                      type: boolean
+                      format: boolean
+                  title: >-
+                    Market maker object created by applying, if included through
+                    `MarketMakerProposal`, eligible becomes true and is
+
+                    deleted if rejected or excluded
+              pagination:
+                description: pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryMarketMakersResponse is the response type for the
+              Query/MarketMakers RPC method.
+        '400':
+          description: Bad Request
+          schema: {}
+          examples:
+            application/json:
+              code: 3
+              message: 'rpc error: code = InvalidArgument desc = empty request'
+              details: []
+        '500':
+          description: Internal Server Error
+          schema: {}
+          examples:
+            application/json:
+              code: 13
+              message: 'rpc error: code = Internal desc = error'
+              details: []
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+        - name: pair_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: eligible
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending
+
+            order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the query and error codes
+        url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  /crescent/marketmaker/v1beta1/params:
+    get:
+      summary: Params returns parameters of the marketmaker module.
+      description: Returns all parameters of the marketmaker module.
+      operationId: MarketMakerParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  incentive_budget_address:
+                    type: string
+                    title: Address containing the funds used to distribute incentives
+                  deposit_amount:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    title: >-
+                      The amount of deposit to be applied to the market maker,
+                      which is calculated per pair and is refunded when the
+
+                      market maker included or rejected through the MarketMaker
+                      Proposal
+                  common:
+                    title: Common variables used in market maker scoring system
+                    type: object
+                    properties:
+                      min_open_ratio:
+                        type: string
+                        title: Minimum ratio to maintain the tick order
+                      min_open_depth_ratio:
+                        type: string
+                        title: Minimum ratio of open amount to MinDepth
+                      max_downtime:
+                        type: integer
+                        format: int64
+                        title: Maximum allowable consecutive blocks of outage
+                      max_total_downtime:
+                        type: integer
+                        format: int64
+                        title: Maximum allowable sum of blocks in an hour
+                      min_hours:
+                        type: integer
+                        format: int64
+                        title: Minimum value of LiveHour to achieve LiveDay
+                      min_days:
+                        type: integer
+                        format: int64
+                        title: Minimum value of LiveDay to maintain MM eligibility
+                  incentive_pairs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pair_id:
+                          type: string
+                          format: uint64
+                          title: Pair id of liquidity module
+                        update_time:
+                          type: string
+                          format: date-time
+                          title: >-
+                            Time the pair variables start to be applied to the
+                            scoring system
+                        incentive_weight:
+                          type: string
+                          title: Incentive weights for each pair
+                        max_spread:
+                          type: string
+                          title: Maximum allowable spread between bid and ask
+                        min_width:
+                          type: string
+                          title: >-
+                            Minimum allowable price difference of high and low
+                            on both side of orders
+                        min_depth:
+                          type: string
+                          title: Minimum allowable order depth on each side
+                    title: >-
+                      Include the pairs that are incentive target pairs and the
+                      variables used in market maker scoring system
+                description: Params defines the set of params for the marketmaker module.
+            description: >-
+              QueryParamsResponse is the response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      tags:
+        - Query
+      externalDocs:
+        description: Find out more about the params
+        url: >-
+          https://github.com/crescent-network/crescent/blob/main/x/marketmaker/spec/07_params.md
 securityDefinitions:
   kms:
     type: basic
@@ -47551,3 +48443,343 @@ definitions:
     description: >-
       QueryClaimRecordResponse is response type for the Query/ClaimRecord RPC
       method.
+  crescent.marketmaker.v1beta1.Common:
+    type: object
+    properties:
+      min_open_ratio:
+        type: string
+        title: Minimum ratio to maintain the tick order
+      min_open_depth_ratio:
+        type: string
+        title: Minimum ratio of open amount to MinDepth
+      max_downtime:
+        type: integer
+        format: int64
+        title: Maximum allowable consecutive blocks of outage
+      max_total_downtime:
+        type: integer
+        format: int64
+        title: Maximum allowable sum of blocks in an hour
+      min_hours:
+        type: integer
+        format: int64
+        title: Minimum value of LiveHour to achieve LiveDay
+      min_days:
+        type: integer
+        format: int64
+        title: Minimum value of LiveDay to maintain MM eligibility
+  crescent.marketmaker.v1beta1.Incentive:
+    type: object
+    properties:
+      address:
+        type: string
+      claimable:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    title: >-
+      Store the total amount of incentives distributed through
+      `MarketMakerProposal`, and it can be claimed at once through
+
+      `MsgClaimIncentives`
+  crescent.marketmaker.v1beta1.IncentivePair:
+    type: object
+    properties:
+      pair_id:
+        type: string
+        format: uint64
+        title: Pair id of liquidity module
+      update_time:
+        type: string
+        format: date-time
+        title: Time the pair variables start to be applied to the scoring system
+      incentive_weight:
+        type: string
+        title: Incentive weights for each pair
+      max_spread:
+        type: string
+        title: Maximum allowable spread between bid and ask
+      min_width:
+        type: string
+        title: >-
+          Minimum allowable price difference of high and low on both side of
+          orders
+      min_depth:
+        type: string
+        title: Minimum allowable order depth on each side
+  crescent.marketmaker.v1beta1.MarketMaker:
+    type: object
+    properties:
+      address:
+        type: string
+      pair_id:
+        type: string
+        format: uint64
+      eligible:
+        type: boolean
+        format: boolean
+    title: >-
+      Market maker object created by applying, if included through
+      `MarketMakerProposal`, eligible becomes true and is
+
+      deleted if rejected or excluded
+  crescent.marketmaker.v1beta1.Params:
+    type: object
+    properties:
+      incentive_budget_address:
+        type: string
+        title: Address containing the funds used to distribute incentives
+      deposit_amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+        title: >-
+          The amount of deposit to be applied to the market maker, which is
+          calculated per pair and is refunded when the
+
+          market maker included or rejected through the MarketMaker Proposal
+      common:
+        title: Common variables used in market maker scoring system
+        type: object
+        properties:
+          min_open_ratio:
+            type: string
+            title: Minimum ratio to maintain the tick order
+          min_open_depth_ratio:
+            type: string
+            title: Minimum ratio of open amount to MinDepth
+          max_downtime:
+            type: integer
+            format: int64
+            title: Maximum allowable consecutive blocks of outage
+          max_total_downtime:
+            type: integer
+            format: int64
+            title: Maximum allowable sum of blocks in an hour
+          min_hours:
+            type: integer
+            format: int64
+            title: Minimum value of LiveHour to achieve LiveDay
+          min_days:
+            type: integer
+            format: int64
+            title: Minimum value of LiveDay to maintain MM eligibility
+      incentive_pairs:
+        type: array
+        items:
+          type: object
+          properties:
+            pair_id:
+              type: string
+              format: uint64
+              title: Pair id of liquidity module
+            update_time:
+              type: string
+              format: date-time
+              title: >-
+                Time the pair variables start to be applied to the scoring
+                system
+            incentive_weight:
+              type: string
+              title: Incentive weights for each pair
+            max_spread:
+              type: string
+              title: Maximum allowable spread between bid and ask
+            min_width:
+              type: string
+              title: >-
+                Minimum allowable price difference of high and low on both side
+                of orders
+            min_depth:
+              type: string
+              title: Minimum allowable order depth on each side
+        title: >-
+          Include the pairs that are incentive target pairs and the variables
+          used in market maker scoring system
+    description: Params defines the set of params for the marketmaker module.
+  crescent.marketmaker.v1beta1.QueryIncentiveResponse:
+    type: object
+    properties:
+      incentive:
+        type: object
+        properties:
+          address:
+            type: string
+          claimable:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+        title: >-
+          Store the total amount of incentives distributed through
+          `MarketMakerProposal`, and it can be claimed at once through
+
+          `MsgClaimIncentives`
+    description: >-
+      QueryIncentiveResponse is the response type for the Query/Incentive RPC
+      method.
+  crescent.marketmaker.v1beta1.QueryMarketMakersResponse:
+    type: object
+    properties:
+      marketmakers:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            pair_id:
+              type: string
+              format: uint64
+            eligible:
+              type: boolean
+              format: boolean
+          title: >-
+            Market maker object created by applying, if included through
+            `MarketMakerProposal`, eligible becomes true and is
+
+            deleted if rejected or excluded
+      pagination:
+        description: pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryMarketMakersResponse is the response type for the Query/MarketMakers
+      RPC method.
+  crescent.marketmaker.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          incentive_budget_address:
+            type: string
+            title: Address containing the funds used to distribute incentives
+          deposit_amount:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            title: >-
+              The amount of deposit to be applied to the market maker, which is
+              calculated per pair and is refunded when the
+
+              market maker included or rejected through the MarketMaker Proposal
+          common:
+            title: Common variables used in market maker scoring system
+            type: object
+            properties:
+              min_open_ratio:
+                type: string
+                title: Minimum ratio to maintain the tick order
+              min_open_depth_ratio:
+                type: string
+                title: Minimum ratio of open amount to MinDepth
+              max_downtime:
+                type: integer
+                format: int64
+                title: Maximum allowable consecutive blocks of outage
+              max_total_downtime:
+                type: integer
+                format: int64
+                title: Maximum allowable sum of blocks in an hour
+              min_hours:
+                type: integer
+                format: int64
+                title: Minimum value of LiveHour to achieve LiveDay
+              min_days:
+                type: integer
+                format: int64
+                title: Minimum value of LiveDay to maintain MM eligibility
+          incentive_pairs:
+            type: array
+            items:
+              type: object
+              properties:
+                pair_id:
+                  type: string
+                  format: uint64
+                  title: Pair id of liquidity module
+                update_time:
+                  type: string
+                  format: date-time
+                  title: >-
+                    Time the pair variables start to be applied to the scoring
+                    system
+                incentive_weight:
+                  type: string
+                  title: Incentive weights for each pair
+                max_spread:
+                  type: string
+                  title: Maximum allowable spread between bid and ask
+                min_width:
+                  type: string
+                  title: >-
+                    Minimum allowable price difference of high and low on both
+                    side of orders
+                min_depth:
+                  type: string
+                  title: Minimum allowable order depth on each side
+            title: >-
+              Include the pairs that are incentive target pairs and the
+              variables used in market maker scoring system
+        description: Params defines the set of params for the marketmaker module.
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.

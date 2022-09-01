@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (ibc) [\#56](https://github.com/crescent-network/crescent/pull/56) fix!: upgrade ibc-go for pool coin blacklisting
 
+### Features
+
+* (x/marketmaker) [\#55](https://github.com/crescent-network/crescent/pull/55) feat: add marketmaker module
+
 ### Bug Fixes
 
 * (x/liquidstaking) [\#53](https://github.com/crescent-network/crescent/pull/53) fix: calculation bug of liquidstaking voting_power

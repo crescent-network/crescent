@@ -33,4 +33,11 @@ const (
 	DefaultWeightTallyWithLiquidStaking            int = 30
 
 	DefaultWeightMsgClaim int = 50
+
+	DefaultWeightMsgApplyMarketMaker int = 20
+	DefaultWeightMsgClaimIncentives  int = 10
+
+	DefaultWeightMarketMakerProposal  int = 20
+	DefaultWeightChangeIncentivePairs int = 5
+	DefaultWeightChangeDepositAmount  int = 2
 )

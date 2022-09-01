@@ -112,6 +112,10 @@ import (
 	"github.com/crescent-network/crescent/v2/x/liquidstaking"
 	liquidstakingkeeper "github.com/crescent-network/crescent/v2/x/liquidstaking/keeper"
 	liquidstakingtypes "github.com/crescent-network/crescent/v2/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v2/x/marketmaker"
+	marketmakerclient "github.com/crescent-network/crescent/v2/x/marketmaker/client"
+	marketmakerkeeper "github.com/crescent-network/crescent/v2/x/marketmaker/keeper"
+	marketmakertypes "github.com/crescent-network/crescent/v2/x/marketmaker/types"
 	"github.com/crescent-network/crescent/v2/x/mint"
 	mintkeeper "github.com/crescent-network/crescent/v2/x/mint/keeper"
 	minttypes "github.com/crescent-network/crescent/v2/x/mint/types"
@@ -143,6 +147,7 @@ var (
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
 			farmingclient.ProposalHandler,
+			marketmakerclient.ProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -159,6 +164,7 @@ var (
 		liquidity.AppModuleBasic{},
 		liquidstaking.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		marketmaker.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -175,6 +181,7 @@ var (
 		liquidstakingtypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
 		claimtypes.ModuleName:          nil,
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		marketmakertypes.ModuleName:    nil,
 	}
 )
 
@@ -222,6 +229,7 @@ type App struct {
 	LiquidityKeeper     liquiditykeeper.Keeper
 	LiquidStakingKeeper liquidstakingkeeper.Keeper
 	ClaimKeeper         claimkeeper.Keeper
+	MarketMakerKeeper   marketmakerkeeper.Keeper
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -289,6 +297,7 @@ func NewApp(
 		liquiditytypes.StoreKey,
 		liquidstakingtypes.StoreKey,
 		claimtypes.StoreKey,
+		marketmakertypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -429,6 +438,13 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
+	app.MarketMakerKeeper = marketmakerkeeper.NewKeeper(
+		appCodec,
+		keys[marketmakertypes.StoreKey],
+		app.GetSubspace(marketmakertypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+	)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -438,7 +454,8 @@ func NewApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposalHandler(app.FarmingKeeper))
+		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposalHandler(app.FarmingKeeper)).
+		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,
@@ -538,6 +555,7 @@ func NewApp(
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GovKeeper),
 		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.GovKeeper, app.LiquidityKeeper, app.LiquidStakingKeeper),
+		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		app.transferModule,
 	)
 
@@ -571,6 +589,7 @@ func NewApp(
 		ibctransfertypes.ModuleName,
 		farmingtypes.ModuleName,
 		claimtypes.ModuleName,
+		marketmakertypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		// EndBlocker of crisis module called AssertInvariants
@@ -599,6 +618,7 @@ func NewApp(
 		ibctransfertypes.ModuleName,
 		claimtypes.ModuleName,
 		budgettypes.ModuleName,
+		marketmakertypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -626,6 +646,7 @@ func NewApp(
 		liquiditytypes.ModuleName,
 		liquidstakingtypes.ModuleName,
 		claimtypes.ModuleName,
+		marketmakertypes.ModuleName,
 
 		// empty logic modules
 		paramstypes.ModuleName,
@@ -665,6 +686,7 @@ func NewApp(
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GovKeeper),
 		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.GovKeeper, app.LiquidityKeeper, app.LiquidStakingKeeper),
+		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		app.transferModule,
 	)
@@ -869,6 +891,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(farmingtypes.ModuleName)
 	paramsKeeper.Subspace(liquiditytypes.ModuleName)
 	paramsKeeper.Subspace(liquidstakingtypes.ModuleName)
+	paramsKeeper.Subspace(marketmakertypes.ModuleName)
 
 	return paramsKeeper
 }
