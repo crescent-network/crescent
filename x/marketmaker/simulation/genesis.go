@@ -97,7 +97,7 @@ func GenIncentivePairs(r *rand.Rand) []types.IncentivePair {
 	}
 }
 
-// RandomizedGenState generates a random GenesisState for farming.
+// RandomizedGenState generates a random GenesisState for marketmaker.
 func RandomizedGenState(simState *module.SimulationState) {
 	var depositAmount sdk.Coins
 	simState.AppParams.GetOrGenerate(

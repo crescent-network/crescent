@@ -43,7 +43,7 @@ func GetTxCmd() *cobra.Command {
 func NewApplyMarketMaker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply [pool-ids]",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Short: "Apply to be a market maker",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -66,19 +66,14 @@ $ %s tx %s apply 1,2 --from mykey
 
 			farmer := clientCtx.GetFromAddress()
 			pairIds := []uint64{}
-			switch len(args) {
-			case 1:
-				pairIdsStr := strings.Split(args[0], ",")
+			pairIdsStr := strings.Split(args[0], ",")
 
-				for _, i := range pairIdsStr {
-					pairId, err := strconv.ParseUint(i, 10, 64)
-					if err != nil {
-						return fmt.Errorf("parse pair id: %w", err)
-					}
-					pairIds = append(pairIds, pairId)
+			for _, i := range pairIdsStr {
+				pairId, err := strconv.ParseUint(i, 10, 64)
+				if err != nil {
+					return fmt.Errorf("parse pair id: %w", err)
 				}
-			default:
-				return fmt.Errorf("only pool-ids flag must be specified")
+				pairIds = append(pairIds, pairId)
 			}
 
 			msg := types.NewMsgApplyMarketMaker(farmer, pairIds)

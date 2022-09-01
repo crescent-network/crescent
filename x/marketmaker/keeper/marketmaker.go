@@ -332,7 +332,7 @@ func (k Keeper) ValidateDepositReservedAmount(ctx sdk.Context) error {
 
 	if !totalAmt.Empty() {
 		reserveBalance := k.bankKeeper.GetAllBalances(ctx, types.DepositReserveAcc)
-		if reserveBalance.IsAllLT(totalAmt) {
+		if !reserveBalance.IsAllGTE(totalAmt) {
 			return fmt.Errorf("DepositReserveAcc differs from the actual value; have %s, want %s", reserveBalance, totalAmt)
 		}
 	}
@@ -346,7 +346,7 @@ func (k Keeper) ValidateIncentiveReservedAmount(ctx sdk.Context, incentives []ty
 	}
 	if !totalClaimable.Empty() {
 		reserveBalance := k.bankKeeper.GetAllBalances(ctx, types.ClaimableIncentiveReserveAcc)
-		if reserveBalance.IsAllLT(totalClaimable) {
+		if !reserveBalance.IsAllGTE(totalClaimable) {
 			return fmt.Errorf("ClaimableIncentiveReserveAcc differs from the actual value; have %s, want %s", reserveBalance, totalClaimable)
 		}
 	}

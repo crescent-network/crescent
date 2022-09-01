@@ -13,7 +13,7 @@ import (
 	"github.com/crescent-network/crescent/v2/x/marketmaker/types"
 )
 
-func TestDecodeFarmingStore(t *testing.T) {
+func TestDecodeMarketMakerStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 

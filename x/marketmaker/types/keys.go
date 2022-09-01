@@ -21,7 +21,7 @@ const (
 	QuerierRoute = ModuleName
 )
 
-// keys for farming store prefixes
+// keys for marketmaker store prefixes
 var (
 	MarketMakerKeyPrefix              = []byte{0xc0}
 	MarketMakerIndexByPairIdKeyPrefix = []byte{0xc1}

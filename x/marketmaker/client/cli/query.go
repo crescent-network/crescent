@@ -20,7 +20,7 @@ import (
 
 // GetQueryCmd returns a root CLI command handler for all x/marketmaker query commands.
 func GetQueryCmd() *cobra.Command {
-	farmingQueryCmd := &cobra.Command{
+	mmQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the marketmaker module",
 		DisableFlagParsing:         true,
@@ -28,12 +28,12 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	farmingQueryCmd.AddCommand(
+	mmQueryCmd.AddCommand(
 		GetCmdQueryParams(),
-		GetQueryMarketMakerCmd(),
+		GetQueryMarketMakersCmd(),
 		GetCmdQueryIncentive(),
 	)
-	return farmingQueryCmd
+	return mmQueryCmd
 }
 
 // GetCmdQueryParams implements the query params command.
@@ -44,6 +44,7 @@ func GetCmdQueryParams() *cobra.Command {
 		Short: "Query the current market maker parameters information",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query values set as market maker parameters.
+
 Example:
 $ %s query %s params
 `,
@@ -72,18 +73,19 @@ $ %s query %s params
 	return cmd
 }
 
-// GetQueryMarketMakerCmd implements the market maker query command.
-func GetQueryMarketMakerCmd() *cobra.Command {
+// GetQueryMarketMakersCmd implements the market maker query command.
+func GetQueryMarketMakersCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "marketmaker",
+		Use:   "marketmakers",
 		Args:  cobra.MaximumNArgs(0),
-		Short: "Query details of the market maker",
+		Short: "Query details of the market makers",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query details of the liquidity pool
+			fmt.Sprintf(`Query details of the market makers
+
 Example:
-$ %s query %s marketmaker --pair-id=1
-$ %s query %s marketmaker --address=cosmos1...
-$ %s query %s marketmaker --eligible=true...
+$ %s query %s marketmakers --pair-id=1
+$ %s query %s marketmakers --address=...
+$ %s query %s marketmakers --eligible=true...
 `,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -102,7 +104,6 @@ $ %s query %s marketmaker --eligible=true...
 
 			queryClient := types.NewQueryClient(clientCtx)
 			req := &types.QueryMarketMakersRequest{}
-			//var res *types.QueryMarketMakersResponse
 			switch {
 			case pairIdStr != "":
 				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
@@ -134,7 +135,7 @@ $ %s query %s marketmaker --eligible=true...
 	return cmd
 }
 
-// GetCmdQueryIncentive implements the query farming position command.
+// GetCmdQueryIncentive implements the query market maker claimable incentive command.
 func GetCmdQueryIncentive() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 

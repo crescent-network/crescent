@@ -32,7 +32,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			return fmt.Sprintf("%v\n%v", iA, iB)
 
 		default:
-			panic(fmt.Sprintf("invalid farming key prefix %X", kvA.Key[:1]))
+			panic(fmt.Sprintf("invalid marketmaker key prefix %X", kvA.Key[:1]))
 		}
 	}
 }
