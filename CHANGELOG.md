@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### State Machine Breaking
+
+* (ibc) [\#56](https://github.com/crescent-network/crescent/pull/56) fix!: upgrade ibc-go for pool coin blacklisting
+
 ### Bug Fixes
 
 * (x/liquidstaking) [\#53](https://github.com/crescent-network/crescent/pull/53) fix: calculation bug of liquidstaking voting_power

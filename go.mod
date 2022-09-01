@@ -123,7 +123,7 @@ require (
 
 replace (
 	github.com/cosmos/cosmos-sdk => github.com/crescent-network/cosmos-sdk v1.1.0-sdk-0.45.3
-	github.com/cosmos/ibc-go/v2 => github.com/crescent-network/ibc-go/v2 v2.2.0-crescent
+	github.com/cosmos/ibc-go/v2 => github.com/crescent-network/ibc-go/v2 v2.2.0-crescent-v3
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
