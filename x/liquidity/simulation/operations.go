@@ -12,11 +12,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/crescent-network/crescent/v2/app/params"
-	utils "github.com/crescent-network/crescent/v2/types"
-	"github.com/crescent-network/crescent/v2/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v2/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/v2/x/liquidity/types"
+	appparams "github.com/crescent-network/crescent/v3/app/params"
+	utils "github.com/crescent-network/crescent/v3/types"
+	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v3/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 // Simulation operation weights constants.

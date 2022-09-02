@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
 )
 
 func TestParams(t *testing.T) {

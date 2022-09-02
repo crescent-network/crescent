@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
 )
 
 // InitGenesis initializes the liquidstaking module's state from a given genesis state.

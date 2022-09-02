@@ -8,9 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 
-	"github.com/crescent-network/crescent/v2/app/params"
+	"github.com/crescent-network/crescent/v3/app/params"
 
-	"github.com/crescent-network/crescent/v2/x/marketmaker/client/cli"
+	"github.com/crescent-network/crescent/v3/x/marketmaker/client/cli"
 )
 
 func TestParseMarketMakerProposal(t *testing.T) {

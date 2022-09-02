@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v2 "github.com/crescent-network/crescent/v2/x/mint/legacy/v2"
+	v2 "github.com/crescent-network/crescent/v3/x/mint/legacy/v2"
 )
 
 // Migrator is a struct for handling in-place store migrations.

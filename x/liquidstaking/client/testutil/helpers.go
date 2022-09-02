@@ -11,7 +11,7 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	paramscli "github.com/cosmos/cosmos-sdk/x/params/client/cli"
 
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/client/cli"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/client/cli"
 )
 
 var commonArgs = []string{

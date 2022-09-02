@@ -1,4 +1,4 @@
-swagger: '2.0'
+swagger: '3.0'
 info:
   title: Crescent REST and gRPC Gateway docs
   description: 'A REST interface for state queries, transactions'

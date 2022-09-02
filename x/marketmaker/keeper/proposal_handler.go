@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/v2/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
 )
 
 // HandleMarketMakerProposal is a handler for executing a market maker proposal.

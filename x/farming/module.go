@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/crescent-network/crescent/v2/x/farming/client/cli"
-	"github.com/crescent-network/crescent/v2/x/farming/keeper"
-	"github.com/crescent-network/crescent/v2/x/farming/simulation"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming/client/cli"
+	"github.com/crescent-network/crescent/v3/x/farming/keeper"
+	"github.com/crescent-network/crescent/v3/x/farming/simulation"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 var (

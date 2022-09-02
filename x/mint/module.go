@@ -18,10 +18,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/crescent-network/crescent/v2/x/mint/client/cli"
-	"github.com/crescent-network/crescent/v2/x/mint/keeper"
-	"github.com/crescent-network/crescent/v2/x/mint/simulation"
-	"github.com/crescent-network/crescent/v2/x/mint/types"
+	"github.com/crescent-network/crescent/v3/x/mint/client/cli"
+	"github.com/crescent-network/crescent/v3/x/mint/keeper"
+	"github.com/crescent-network/crescent/v3/x/mint/simulation"
+	"github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 var (

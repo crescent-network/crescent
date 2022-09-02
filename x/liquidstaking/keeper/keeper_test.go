@@ -21,15 +21,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v2/app"
-	utils "github.com/crescent-network/crescent/v2/types"
-	"github.com/crescent-network/crescent/v2/x/farming"
-	farmingtypes "github.com/crescent-network/crescent/v2/x/farming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v2/x/liquidity/types"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/keeper"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/types"
-	"github.com/crescent-network/crescent/v2/x/mint"
+	chain "github.com/crescent-network/crescent/v3/app"
+	utils "github.com/crescent-network/crescent/v3/types"
+	"github.com/crescent-network/crescent/v3/x/farming"
+	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v3/x/mint"
 )
 
 var (
