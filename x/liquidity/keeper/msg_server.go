@@ -74,7 +74,7 @@ func (m msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdraw) (*typ
 	return &types.MsgWithdrawResponse{}, nil
 }
 
-// LimitOrder defines a method to making a limit order.
+// LimitOrder defines a method to make a limit order.
 func (m msgServer) LimitOrder(goCtx context.Context, msg *types.MsgLimitOrder) (*types.MsgLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -85,7 +85,7 @@ func (m msgServer) LimitOrder(goCtx context.Context, msg *types.MsgLimitOrder) (
 	return &types.MsgLimitOrderResponse{}, nil
 }
 
-// MarketOrder defines a method to making a market order.
+// MarketOrder defines a method to make a market order.
 func (m msgServer) MarketOrder(goCtx context.Context, msg *types.MsgMarketOrder) (*types.MsgMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -94,6 +94,17 @@ func (m msgServer) MarketOrder(goCtx context.Context, msg *types.MsgMarketOrder)
 	}
 
 	return &types.MsgMarketOrderResponse{}, nil
+}
+
+// MMOrder defines a method to make a MM(market making) order.
+func (m msgServer) MMOrder(goCtx context.Context, msg *types.MsgMMOrder) (*types.MsgMMOrderResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.MMOrder(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgMMOrderResponse{}, nil
 }
 
 // CancelOrder defines a method to cancel an order.
@@ -116,4 +127,15 @@ func (m msgServer) CancelAllOrders(goCtx context.Context, msg *types.MsgCancelAl
 	}
 
 	return &types.MsgCancelAllOrdersResponse{}, nil
+}
+
+// CancelMMOrder defines a method to cancel all previous market making orders.
+func (m msgServer) CancelMMOrder(goCtx context.Context, msg *types.MsgCancelMMOrder) (*types.MsgCancelMMOrderResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if _, err := m.Keeper.CancelMMOrder(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelMMOrderResponse{}, nil
 }

@@ -138,6 +138,7 @@ func (req *WithdrawRequest) SetStatus(status RequestStatus) {
 // NewOrderForLimitOrder returns a new Order from MsgLimitOrder.
 func NewOrderForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
 	return Order{
+		Type:               OrderTypeLimit,
 		Id:                 id,
 		PairId:             pair.Id,
 		MsgHeight:          msgHeight,
@@ -158,6 +159,7 @@ func NewOrderForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin s
 // NewOrderForMarketOrder returns a new Order from MsgMarketOrder.
 func NewOrderForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
 	return Order{
+		Type:               OrderTypeMarket,
 		Id:                 id,
 		PairId:             pair.Id,
 		MsgHeight:          msgHeight,
@@ -169,6 +171,39 @@ func NewOrderForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin
 		Price:              price,
 		Amount:             msg.Amount,
 		OpenAmount:         msg.Amount,
+		BatchId:            pair.CurrentBatchId,
+		ExpireAt:           expireAt,
+		Status:             OrderStatusNotExecuted,
+	}
+}
+
+func NewOrder(
+	typ OrderType, id uint64, pair Pair, orderer sdk.AccAddress,
+	offerCoin sdk.Coin, price sdk.Dec, amt sdk.Int, expireAt time.Time, msgHeight int64) Order {
+	var (
+		dir             OrderDirection
+		demandCoinDenom string
+	)
+	if offerCoin.Denom == pair.BaseCoinDenom {
+		dir = OrderDirectionSell
+		demandCoinDenom = pair.QuoteCoinDenom
+	} else {
+		dir = OrderDirectionBuy
+		demandCoinDenom = pair.BaseCoinDenom
+	}
+	return Order{
+		Type:               typ,
+		Id:                 id,
+		PairId:             pair.Id,
+		MsgHeight:          msgHeight,
+		Orderer:            orderer.String(),
+		Direction:          dir,
+		OfferCoin:          offerCoin,
+		RemainingOfferCoin: offerCoin,
+		ReceivedCoin:       sdk.NewCoin(demandCoinDenom, sdk.ZeroInt()),
+		Price:              price,
+		Amount:             amt,
+		OpenAmount:         amt,
 		BatchId:            pair.CurrentBatchId,
 		ExpireAt:           expireAt,
 		Status:             OrderStatusNotExecuted,
@@ -296,6 +331,17 @@ func (status OrderStatus) IsMatchable() bool {
 // CanBeExpired has the same condition as IsMatchable.
 func (status OrderStatus) CanBeExpired() bool {
 	return status.IsMatchable()
+}
+
+// CanBeCanceled returns true if the OrderStatus is one of:
+// OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched.
+func (status OrderStatus) CanBeCanceled() bool {
+	switch status {
+	case OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched:
+		return true
+	default:
+		return false
+	}
 }
 
 // IsCanceledOrExpired returns true if the OrderStatus is one of:

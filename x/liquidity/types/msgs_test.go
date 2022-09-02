@@ -587,6 +587,149 @@ func TestMsgMarketOrder(t *testing.T) {
 	}
 }
 
+func TestMsgMMOrder(t *testing.T) {
+	orderLifespan := 20 * time.Second
+	for _, tc := range []struct {
+		name        string
+		malleate    func(msg *types.MsgMMOrder)
+		expectedErr string
+	}{
+		{
+			"happy case",
+			func(msg *types.MsgMMOrder) {},
+			"", // empty means no error expected
+		},
+		{
+			"invalid orderer",
+			func(msg *types.MsgMMOrder) {
+				msg.Orderer = "invalidaddr"
+			},
+			"invalid orderer address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid pair id",
+			func(msg *types.MsgMMOrder) {
+				msg.PairId = 0
+			},
+			"pair id must not be 0: invalid request",
+		},
+		{
+			"non-positive max sell price",
+			func(msg *types.MsgMMOrder) {
+				msg.MaxSellPrice = sdk.ZeroDec()
+			},
+			"max sell price must be positive: 0.000000000000000000: invalid request",
+		},
+		{
+			"non-positive min sell price",
+			func(msg *types.MsgMMOrder) {
+				msg.MinSellPrice = sdk.ZeroDec()
+			},
+			"min sell price must be positive: 0.000000000000000000: invalid request",
+		},
+		{
+			"min sell price > max sell price",
+			func(msg *types.MsgMMOrder) {
+				msg.MaxSellPrice = utils.ParseDec("1.1")
+				msg.MinSellPrice = utils.ParseDec("1.2")
+			},
+			"max sell price must not be lower than min sell price: invalid request",
+		},
+		{
+			"too small sell amount",
+			func(msg *types.MsgMMOrder) {
+				msg.SellAmount = sdk.NewInt(99)
+			},
+			"sell amount 99 is smaller than the min amount 100: invalid request",
+		},
+		{
+			"non-positive max buy price",
+			func(msg *types.MsgMMOrder) {
+				msg.MaxBuyPrice = sdk.ZeroDec()
+			},
+			"max buy price must be positive: 0.000000000000000000: invalid request",
+		},
+		{
+			"non-positive min buy price",
+			func(msg *types.MsgMMOrder) {
+				msg.MinBuyPrice = sdk.ZeroDec()
+			},
+			"min buy price must be positive: 0.000000000000000000: invalid request",
+		},
+		{
+			"min buy price > max buy price",
+			func(msg *types.MsgMMOrder) {
+				msg.MaxBuyPrice = utils.ParseDec("0.8")
+				msg.MinBuyPrice = utils.ParseDec("0.9")
+			},
+			"max buy price must not be lower than min buy price: invalid request",
+		},
+		{
+			"too small buy amount",
+			func(msg *types.MsgMMOrder) {
+				msg.BuyAmount = sdk.NewInt(99)
+			},
+			"buy amount 99 is smaller than the min amount 100: invalid request",
+		},
+		{
+			"zero buy amount",
+			func(msg *types.MsgMMOrder) {
+				msg.BuyAmount = sdk.ZeroInt()
+			},
+			"",
+		},
+		{
+			"too small sell amount",
+			func(msg *types.MsgMMOrder) {
+				msg.SellAmount = sdk.NewInt(99)
+			},
+			"sell amount 99 is smaller than the min amount 100: invalid request",
+		},
+		{
+			"zero sell amount",
+			func(msg *types.MsgMMOrder) {
+				msg.SellAmount = sdk.ZeroInt()
+			},
+			"",
+		},
+		{
+			"both zero amount",
+			func(msg *types.MsgMMOrder) {
+				msg.SellAmount = sdk.ZeroInt()
+				msg.BuyAmount = sdk.ZeroInt()
+			},
+			"sell amount and buy amount must not be zero at the same time: invalid request",
+		},
+		{
+			"invalid order lifespan",
+			func(msg *types.MsgMMOrder) {
+				msg.OrderLifespan = -1
+			},
+			"order lifespan must not be negative: -1ns: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgMMOrder(
+				testAddr, 1,
+				utils.ParseDec("1.5"), utils.ParseDec("1.1"), sdk.NewInt(1000000),
+				utils.ParseDec("0.9"), utils.ParseDec("0.5"), sdk.NewInt(1000000),
+				orderLifespan)
+			tc.malleate(msg)
+			require.Equal(t, types.TypeMsgMMOrder, msg.Type())
+			require.Equal(t, types.RouterKey, msg.Route())
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				signers := msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, msg.GetOrderer(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func TestMsgCancelOrder(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
@@ -675,6 +818,50 @@ func TestMsgCancelAllOrders(t *testing.T) {
 			msg := types.NewMsgCancelAllOrders(sdk.AccAddress(crypto.AddressHash([]byte("orderer"))), []uint64{1, 2, 3})
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgCancelAllOrders, msg.Type())
+			require.Equal(t, types.RouterKey, msg.Route())
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				signers := msg.GetSigners()
+				require.Len(t, signers, 1)
+				require.Equal(t, msg.GetOrderer(), signers[0])
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestMsgCancelMMOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		malleate    func(msg *types.MsgCancelMMOrder)
+		expectedErr string
+	}{
+		{
+			"happy case",
+			func(msg *types.MsgCancelMMOrder) {},
+			"", // empty means no error expected
+		},
+		{
+			"invalid orderer",
+			func(msg *types.MsgCancelMMOrder) {
+				msg.Orderer = "invalidaddr"
+			},
+			"invalid orderer address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid pair id",
+			func(msg *types.MsgCancelMMOrder) {
+				msg.PairId = 0
+			},
+			"pair id must not be 0: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgCancelMMOrder(testAddr, 1)
+			tc.malleate(msg)
+			require.Equal(t, types.TypeMsgCancelMMOrder, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {

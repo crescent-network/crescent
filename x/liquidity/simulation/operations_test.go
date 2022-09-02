@@ -189,6 +189,39 @@ func (s *SimTestSuite) TestSimulateMsgLimitOrder() {
 	s.Require().Equal("9h14m25.122290029s", msg.OrderLifespan.String())
 }
 
+func (s *SimTestSuite) TestSimulateMsgMMOrder() {
+	r := rand.New(rand.NewSource(0))
+	accs := s.getTestingAccounts(r, 1)
+
+	pair := s.createPair(accs[0].Address, "denom1", "stake")
+	p := utils.ParseDec("1.0")
+	pair.LastPrice = &p
+	s.keeper.SetPair(s.ctx, pair)
+
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+
+	op := simulation.SimulateMsgMMOrder(s.app.AccountKeeper, s.app.BankKeeper, s.app.LiquidityKeeper)
+	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	s.Require().NoError(err)
+	s.Require().True(opMsg.OK)
+	s.Require().Len(futureOps, 0)
+
+	var msg types.MsgMMOrder
+	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
+
+	s.Require().Equal(types.TypeMsgMMOrder, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Orderer)
+	s.Require().Equal(pair.Id, msg.PairId)
+	s.Require().Equal("1.078400000000000000", msg.MaxSellPrice.String())
+	s.Require().Equal("0.987370000000000000", msg.MinSellPrice.String())
+	s.Require().Equal("1121499", msg.SellAmount.String())
+	s.Require().Equal("1.002500000000000000", msg.MaxBuyPrice.String())
+	s.Require().Equal("0.989400000000000000", msg.MinBuyPrice.String())
+	s.Require().Equal("1764492", msg.BuyAmount.String())
+	s.Require().Equal("14h1m33.53664265s", msg.OrderLifespan.String())
+}
+
 func (s *SimTestSuite) TestSimulateMsgMarketOrder() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 1)

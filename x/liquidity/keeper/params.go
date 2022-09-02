@@ -75,6 +75,13 @@ func (k Keeper) GetMaxPriceLimitRatio(ctx sdk.Context) (ratio sdk.Dec) {
 	return
 }
 
+// GetMaxNumMarketMakingOrderTicks returns the current maximum number of
+// market making order ticks.
+func (k Keeper) GetMaxNumMarketMakingOrderTicks(ctx sdk.Context) (i uint32) {
+	k.paramSpace.Get(ctx, types.KeyMaxNumMarketMakingOrderTicks, &i)
+	return
+}
+
 // GetMaxOrderLifespan returns the current maximum order lifespan
 // parameter.
 func (k Keeper) GetMaxOrderLifespan(ctx sdk.Context) (maxLifespan time.Duration) {

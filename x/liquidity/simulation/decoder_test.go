@@ -53,6 +53,11 @@ func TestDecodeLiquidityStore(t *testing.T) {
 		ExpireAt:           utils.ParseTime("2022-02-01T00:00:00Z"),
 		Status:             types.OrderStatusPartiallyMatched,
 	}
+	mmOrderIndex := types.MMOrderIndex{
+		Orderer:  sdk.AccAddress(crypto.AddressHash([]byte("orderer"))).String(),
+		PairId:   1,
+		OrderIds: []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+	}
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
@@ -61,6 +66,7 @@ func TestDecodeLiquidityStore(t *testing.T) {
 			{Key: types.DepositRequestKeyPrefix, Value: cdc.MustMarshal(&depositReq)},
 			{Key: types.WithdrawRequestKeyPrefix, Value: cdc.MustMarshal(&withdrawReq)},
 			{Key: types.OrderKeyPrefix, Value: cdc.MustMarshal(&order)},
+			{Key: types.MMOrderIndexKeyPrefix, Value: cdc.MustMarshal(&mmOrderIndex)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}
@@ -74,6 +80,7 @@ func TestDecodeLiquidityStore(t *testing.T) {
 		{"DepositRequest", fmt.Sprintf("%v\n%v", depositReq, depositReq)},
 		{"WithdrawRequest", fmt.Sprintf("%v\n%v", withdrawReq, withdrawReq)},
 		{"OrderRequest", fmt.Sprintf("%v\n%v", order, order)},
+		{"MMOrderIndex", fmt.Sprintf("%v\n%v", mmOrderIndex, mmOrderIndex)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

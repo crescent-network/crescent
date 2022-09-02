@@ -531,3 +531,57 @@ func (k Keeper) DeleteOrderIndex(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id))
 }
+
+// GetMMOrderIndex returns the market making order index.
+func (k Keeper) GetMMOrderIndex(ctx sdk.Context, orderer sdk.AccAddress, pairId uint64) (index types.MMOrderIndex, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetMMOrderIndexKey(orderer, pairId))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &index)
+	return index, true
+}
+
+// SetMMOrderIndex stores a market making order index.
+func (k Keeper) SetMMOrderIndex(ctx sdk.Context, index types.MMOrderIndex) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&index)
+	store.Set(types.GetMMOrderIndexKey(index.GetOrderer(), index.PairId), bz)
+}
+
+// IterateAllMMOrderIndexes iterates through all market making order indexes
+// in the store and call cb for each order.
+func (k Keeper) IterateAllMMOrderIndexes(ctx sdk.Context, cb func(index types.MMOrderIndex) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.MMOrderIndexKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var index types.MMOrderIndex
+		k.cdc.MustUnmarshal(iter.Value(), &index)
+		stop, err := cb(index)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
+// GetAllMMOrderIndexes returns all market making order indexes in the store.
+func (k Keeper) GetAllMMOrderIndexes(ctx sdk.Context) (indexes []types.MMOrderIndex) {
+	indexes = []types.MMOrderIndex{}
+	_ = k.IterateAllMMOrderIndexes(ctx, func(index types.MMOrderIndex) (stop bool, err error) {
+		indexes = append(indexes, index)
+		return false, nil
+	})
+	return
+}
+
+// DeleteMMOrderIndex deletes a market making order index.
+func (k Keeper) DeleteMMOrderIndex(ctx sdk.Context, index types.MMOrderIndex) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetMMOrderIndexKey(index.GetOrderer(), index.PairId))
+}

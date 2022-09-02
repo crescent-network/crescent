@@ -12,9 +12,10 @@ import (
 
 // Liquidity params default values
 const (
-	DefaultBatchSize        uint32 = 1
-	DefaultTickPrecision    uint32 = 4
-	DefaultMaxOrderLifespan        = 24 * time.Hour
+	DefaultBatchSize                    uint32 = 1
+	DefaultTickPrecision                uint32 = 4
+	DefaultMaxNumMarketMakingOrderTicks        = 10
+	DefaultMaxOrderLifespan                    = 24 * time.Hour
 )
 
 // Liquidity params default values
@@ -51,21 +52,22 @@ var (
 )
 
 var (
-	KeyBatchSize                = []byte("BatchSize")
-	KeyTickPrecision            = []byte("TickPrecision")
-	KeyFeeCollectorAddress      = []byte("FeeCollectorAddress")
-	KeyDustCollectorAddress     = []byte("DustCollectorAddress")
-	KeyMinInitialPoolCoinSupply = []byte("MinInitialPoolCoinSupply")
-	KeyPairCreationFee          = []byte("PairCreationFee")
-	KeyPoolCreationFee          = []byte("PoolCreationFee")
-	KeyMinInitialDepositAmount  = []byte("MinInitialDepositAmount")
-	KeyMaxPriceLimitRatio       = []byte("MaxPriceLimitRatio")
-	KeyMaxOrderLifespan         = []byte("MaxOrderLifespan")
-	KeySwapFeeRate              = []byte("SwapFeeRate")
-	KeyWithdrawFeeRate          = []byte("WithdrawFeeRate")
-	KeyDepositExtraGas          = []byte("DepositExtraGas")
-	KeyWithdrawExtraGas         = []byte("WithdrawExtraGas")
-	KeyOrderExtraGas            = []byte("OrderExtraGas")
+	KeyBatchSize                    = []byte("BatchSize")
+	KeyTickPrecision                = []byte("TickPrecision")
+	KeyFeeCollectorAddress          = []byte("FeeCollectorAddress")
+	KeyDustCollectorAddress         = []byte("DustCollectorAddress")
+	KeyMinInitialPoolCoinSupply     = []byte("MinInitialPoolCoinSupply")
+	KeyPairCreationFee              = []byte("PairCreationFee")
+	KeyPoolCreationFee              = []byte("PoolCreationFee")
+	KeyMinInitialDepositAmount      = []byte("MinInitialDepositAmount")
+	KeyMaxPriceLimitRatio           = []byte("MaxPriceLimitRatio")
+	KeyMaxNumMarketMakingOrderTicks = []byte("MaxNumMarketMakingOrderTicks")
+	KeyMaxOrderLifespan             = []byte("MaxOrderLifespan")
+	KeySwapFeeRate                  = []byte("SwapFeeRate")
+	KeyWithdrawFeeRate              = []byte("WithdrawFeeRate")
+	KeyDepositExtraGas              = []byte("DepositExtraGas")
+	KeyWithdrawExtraGas             = []byte("WithdrawExtraGas")
+	KeyOrderExtraGas                = []byte("OrderExtraGas")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -77,21 +79,22 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns a default params for the liquidity module.
 func DefaultParams() Params {
 	return Params{
-		BatchSize:                DefaultBatchSize,
-		TickPrecision:            DefaultTickPrecision,
-		FeeCollectorAddress:      DefaultFeeCollectorAddress.String(),
-		DustCollectorAddress:     DefaultDustCollectorAddress.String(),
-		MinInitialPoolCoinSupply: DefaultMinInitialPoolCoinSupply,
-		PairCreationFee:          DefaultPairCreationFee,
-		PoolCreationFee:          DefaultPoolCreationFee,
-		MinInitialDepositAmount:  DefaultMinInitialDepositAmount,
-		MaxPriceLimitRatio:       DefaultMaxPriceLimitRatio,
-		MaxOrderLifespan:         DefaultMaxOrderLifespan,
-		SwapFeeRate:              DefaultSwapFeeRate,
-		WithdrawFeeRate:          DefaultWithdrawFeeRate,
-		DepositExtraGas:          DefaultDepositExtraGas,
-		WithdrawExtraGas:         DefaultWithdrawExtraGas,
-		OrderExtraGas:            DefaultOrderExtraGas,
+		BatchSize:                    DefaultBatchSize,
+		TickPrecision:                DefaultTickPrecision,
+		FeeCollectorAddress:          DefaultFeeCollectorAddress.String(),
+		DustCollectorAddress:         DefaultDustCollectorAddress.String(),
+		MinInitialPoolCoinSupply:     DefaultMinInitialPoolCoinSupply,
+		PairCreationFee:              DefaultPairCreationFee,
+		PoolCreationFee:              DefaultPoolCreationFee,
+		MinInitialDepositAmount:      DefaultMinInitialDepositAmount,
+		MaxPriceLimitRatio:           DefaultMaxPriceLimitRatio,
+		MaxNumMarketMakingOrderTicks: DefaultMaxNumMarketMakingOrderTicks,
+		MaxOrderLifespan:             DefaultMaxOrderLifespan,
+		SwapFeeRate:                  DefaultSwapFeeRate,
+		WithdrawFeeRate:              DefaultWithdrawFeeRate,
+		DepositExtraGas:              DefaultDepositExtraGas,
+		WithdrawExtraGas:             DefaultWithdrawExtraGas,
+		OrderExtraGas:                DefaultOrderExtraGas,
 	}
 }
 
@@ -107,6 +110,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyPoolCreationFee, &params.PoolCreationFee, validatePoolCreationFee),
 		paramstypes.NewParamSetPair(KeyMinInitialDepositAmount, &params.MinInitialDepositAmount, validateMinInitialDepositAmount),
 		paramstypes.NewParamSetPair(KeyMaxPriceLimitRatio, &params.MaxPriceLimitRatio, validateMaxPriceLimitRatio),
+		paramstypes.NewParamSetPair(KeyMaxNumMarketMakingOrderTicks, &params.MaxNumMarketMakingOrderTicks, validateMaxNumMarketMakingOrderTicks),
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 		paramstypes.NewParamSetPair(KeySwapFeeRate, &params.SwapFeeRate, validateSwapFeeRate),
 		paramstypes.NewParamSetPair(KeyWithdrawFeeRate, &params.WithdrawFeeRate, validateWithdrawFeeRate),
@@ -131,6 +135,7 @@ func (params Params) Validate() error {
 		{params.PoolCreationFee, validatePoolCreationFee},
 		{params.MinInitialDepositAmount, validateMinInitialDepositAmount},
 		{params.MaxPriceLimitRatio, validateMaxPriceLimitRatio},
+		{params.MaxNumMarketMakingOrderTicks, validateMaxNumMarketMakingOrderTicks},
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 		{params.SwapFeeRate, validateSwapFeeRate},
 		{params.WithdrawFeeRate, validateWithdrawFeeRate},
@@ -257,6 +262,19 @@ func validateMaxPriceLimitRatio(i interface{}) error {
 
 	if v.IsNegative() {
 		return fmt.Errorf("max price limit ratio must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxNumMarketMakingOrderTicks(i interface{}) error {
+	v, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max number of market making order ticks must be positive: %d", v)
 	}
 
 	return nil
