@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v3.0.0
+
 ### State Machine Breaking
 
 * (ibc) [\#56](https://github.com/crescent-network/crescent/pull/56) fix!: upgrade ibc-go for pool coin blacklisting

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/crescent-network/crescent/v2/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
 )
 
 func TestMsgApplyMarketMaker(t *testing.T) {

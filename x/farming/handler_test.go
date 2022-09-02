@@ -3,8 +3,8 @@ package farming_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/farming"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 
 	_ "github.com/stretchr/testify/suite"
 )

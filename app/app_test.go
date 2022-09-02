@@ -35,12 +35,12 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/crescent-network/crescent/v2/x/claim"
-	"github.com/crescent-network/crescent/v2/x/farming"
-	"github.com/crescent-network/crescent/v2/x/liquidity"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking"
-	"github.com/crescent-network/crescent/v2/x/marketmaker"
-	"github.com/crescent-network/crescent/v2/x/mint"
+	"github.com/crescent-network/crescent/v3/x/claim"
+	"github.com/crescent-network/crescent/v3/x/farming"
+	"github.com/crescent-network/crescent/v3/x/liquidity"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking"
+	"github.com/crescent-network/crescent/v3/x/marketmaker"
+	"github.com/crescent-network/crescent/v3/x/mint"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

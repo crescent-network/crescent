@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/crescent-network/crescent/v2/x/mint/types"
+	"github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 //NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
