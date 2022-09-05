@@ -53,7 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/liquidstaking) [\#53](https://github.com/crescent-network/crescent/pull/53) fix: calculation bug of liquidstaking voting_power
 
-## v2.1.1
+## [v2.1.1] - 2022-07-29
 
 ### Improvements
 
@@ -155,3 +155,4 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
 [v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
 [v1.1.0]: https://github.com/crescent-network/crescent/releases/tag/v1.1.0
 [v2.1.0]: https://github.com/crescent-network/crescent/releases/tag/v2.1.0
+[v2.1.1]: https://github.com/crescent-network/crescent/releases/tag/v2.1.1

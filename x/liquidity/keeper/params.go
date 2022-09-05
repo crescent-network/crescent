@@ -112,3 +112,8 @@ func (k Keeper) GetOrderExtraGas(ctx sdk.Context) (gas sdk.Gas) {
 	k.paramSpace.Get(ctx, types.KeyOrderExtraGas, &gas)
 	return
 }
+
+// SetMaxNumMarketMakingOrderTicks sets max num market making order ticks
+func (k Keeper) SetMaxNumMarketMakingOrderTicks(ctx sdk.Context, input uint32) {
+	k.paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrderTicks, input)
+}
