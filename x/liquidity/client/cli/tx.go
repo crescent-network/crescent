@@ -34,8 +34,10 @@ func GetTxCmd() *cobra.Command {
 		NewWithdrawCmd(),
 		NewLimitOrderCmd(),
 		NewMarketOrderCmd(),
+		NewMMOrderCmd(),
 		NewCancelOrderCmd(),
 		NewCancelAllOrdersCmd(),
+		NewCancelMMOrderCmd(),
 	)
 
 	return cmd
@@ -185,6 +187,7 @@ func NewDepositCmd() *cobra.Command {
 		Short: "Deposit coins to a liquidity pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Deposit coins to a liquidity pool.
+
 Example:
 $ %s tx %s deposit 1 1000000000uatom,50000000000stake --from mykey
 `,
@@ -225,6 +228,7 @@ func NewWithdrawCmd() *cobra.Command {
 		Short: "Withdraw coins from the specified liquidity pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Withdraw coins from the specified liquidity pool.
+
 Example:
 $ %s tx %s withdraw 1 10000pool1 --from mykey
 `,
@@ -269,6 +273,7 @@ func NewLimitOrderCmd() *cobra.Command {
 		Short: "Make a limit order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a limit order.
+
 Example:
 $ %s tx %s limit-order 1 buy 5000stake uatom 0.5 10000 --from mykey
 $ %s tx %s limit-order 1 b 5000stake uatom 0.5 10000 --from mykey
@@ -354,6 +359,7 @@ func NewMarketOrderCmd() *cobra.Command {
 		Short: "Make a market order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a market order.
+
 Example:
 $ %s tx %s market-order 1 buy 5000stake uatom 10000 --from mykey
 $ %s tx %s market-order 1 b 5000stake uatom 10000 --from mykey
@@ -425,6 +431,95 @@ $ %s tx %s market-order 1 s 10000uatom stake 10000 --order-lifespan=10m --from m
 	return cmd
 }
 
+func NewMMOrderCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "mm-order [pair-id] [max-sell-price] [min-sell-price] [sell-amount] [max-buy-price] [min-buy-price] [buy-amount]",
+		Args:  cobra.ExactArgs(7),
+		Short: "Make a market making order",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Make a market making order.
+A market making order is a set of limit orders for each buy/sell side.
+You can leave one side(but not both) empty by passing 0 as its arguments.
+
+Example:
+$ %s tx %s mm-order 1 102 101 10000 100 99 10000 --from mykey
+$ %s tx %s mm-order 1 0 0 0 100 99 10000 --from mykey
+$ %s tx %s mm-order 1 102 101 10000 0 0 0 --from mykey
+
+[pair-id]: pair id to make order
+[max-sell-price]: maximum price of sell orders
+[min-sell-price]]: minimum price of sell orders
+[sell-amount]: total amount of sell orders
+[max-buy-price]: maximum price of buy orders
+[min-buy-price]: minimum price of buy orders
+[buy-amount]: the total amount of buy orders
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse pair id: %w", err)
+			}
+
+			maxSellPrice, err := sdk.NewDecFromStr(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid max sell price: %w", err)
+			}
+
+			minSellPrice, err := sdk.NewDecFromStr(args[2])
+			if err != nil {
+				return fmt.Errorf("invalid min sell price: %w", err)
+			}
+
+			sellAmt, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid sell amount: %s", args[3])
+			}
+
+			maxBuyPrice, err := sdk.NewDecFromStr(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid max buy price: %w", err)
+			}
+
+			minBuyPrice, err := sdk.NewDecFromStr(args[5])
+			if err != nil {
+				return fmt.Errorf("invalid min buy price: %w", err)
+			}
+
+			buyAmt, ok := sdk.NewIntFromString(args[6])
+			if !ok {
+				return fmt.Errorf("invalid buy amount: %s", args[3])
+			}
+
+			orderLifespan, _ := cmd.Flags().GetDuration(FlagOrderLifespan)
+
+			msg := types.NewMsgMMOrder(
+				clientCtx.GetFromAddress(),
+				pairId,
+				maxSellPrice, minSellPrice, sellAmt,
+				maxBuyPrice, minBuyPrice, buyAmt,
+				orderLifespan,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(flagSetOrder())
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
 func NewCancelOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-order [pair-id] [order-id]",
@@ -432,6 +527,7 @@ func NewCancelOrderCmd() *cobra.Command {
 		Short: "Cancel an order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Cancel an order.
+
 Example:
 $ %s tx %s cancel-order 1 1 --from mykey
 `,
@@ -476,6 +572,7 @@ func NewCancelAllOrdersCmd() *cobra.Command {
 		Short: "Cancel all orders",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Cancel all orders.
+
 Example:
 $ %s tx %s cancel-all-orders --from mykey
 $ %s tx %s cancel-all-orders 1,3 --from mykey
@@ -500,6 +597,43 @@ $ %s tx %s cancel-all-orders 1,3 --from mykey
 			}
 
 			msg := types.NewMsgCancelAllOrders(clientCtx.GetFromAddress(), pairIds)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCancelMMOrderCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-mm-order [pair-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Cancel the mm order in a pair",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Cancel the mm order in a pair.
+This will cancel all limit orders in the pair made by the mm order.
+
+Example:
+$ %s tx %s cancel-mm-order 1 --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pairId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgCancelMMOrder(clientCtx.GetFromAddress(), pairId)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

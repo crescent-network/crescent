@@ -21,8 +21,10 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
     * [Withdraw](#Withdraw)
     * [LimitOrder](#LimitOrder)
     * [MarketOrder](#MarketOrder)
+    * [MMOrder](#MMOrder)
     * [CancelOrder](#CancelOrder)
     * [CancelAllOrders](#CancelAllOrders)
+    * [CancelMMOrder](#CancelMMOrder)
 - [Query](#Query)
     * [Params](#Params)
     * [Pairs](#Pairs)
@@ -348,6 +350,57 @@ crescentd tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
+## MMOrder
+
+Make an MM(market making) order.
+An MM order is a group of multiple buy/sell limit orders which are distributed
+evenly based on its parameters.
+
+Usage
+
+```bash
+mm-order [pair-id] [max-sell-price] [min-sell-price] [sell-amount] [max-buy-price] [min-buy-price] [buy-amount]
+```
+
+| **Argument**   | **Description**              |
+|:---------------|:-----------------------------|
+| pair-id        | pair id                      |
+| max-sell-price | maximum price of sell orders |
+| min-sell-price | minimum price of sell orders |
+| sell-amount    | total amount of sell orders  |
+| max-buy-price  | maximum price of buy orders  |
+| min-buy-price  | minimum price of buy orders  |
+| buy-amount     | total amount of buy orders   |
+
+| **Optional Flag** | **Description**                                                                                                                                         |
+|:------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| order-lifespan    | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns |us|ms|s|m|h|
+
+Example
+
+```bash
+# Make a market making order in pair 1 with following parameters:
+# Sell: total 1000000 with price range from 102 to 101
+# Buy: total 1000000 with price range from 100 to 99
+crescentd tx liquidity mm-order 1 102 101 1000000 100 99 1000000  \
+--chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Make the same order with order-lifespan flag
+crescentd tx liquidity mm-order 1 102 101 1000000 100 99 1000000  \
+--order-lifespan 30s \
+--chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+```
+
 ## CancelOrder
 
 Cancel an order.
@@ -396,6 +449,33 @@ Example
 
 ```bash
 crescentd tx liquidity cancel-all-orders 1,2,3 \
+--chain-id localnet \
+--from alice \
+--keyring-backend=test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+```
+
+## CancelMMOrder
+
+Cancel a market making order in a pair.
+This will cancel all limit orders in the pair made by the mm order.
+
+Usage
+
+```bash
+cancel-mm-order [pair-id]
+```
+
+| **Argument** | **Description** |
+|:-------------|:----------------|
+| pair-id      | pair id         |
+
+Example
+
+```bash
+crescentd tx liquidity cancel-mm-order 1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend=test \
@@ -626,5 +706,3 @@ crescentd order-books 1 --num-ticks=10
 
 crescentd order-books 1,2,3
 ```
-
-
