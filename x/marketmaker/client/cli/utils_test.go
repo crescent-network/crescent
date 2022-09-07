@@ -18,38 +18,33 @@ func TestParseMarketMakerProposal(t *testing.T) {
 
 	okJSON := testutil.WriteToNewTempFile(t, `
 {
-    "title": "Market Maker Proposal",
-    "description": "Are you ready to market making?",
-    "inclusions":
-    [
+  "title": "Market Maker Proposal",
+  "description": "Are you ready to market making?",
+  "inclusions": [
+    {
+      "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
+      "pair_id": "1"
+    }
+  ],
+  "exclusions": [],
+  "rejections": [
+    {
+      "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
+      "pair_id": "2"
+    }
+  ],
+  "distributions": [
+    {
+      "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
+      "pair_id": "1",
+      "amount": [
         {
-            "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
-            "pair_id": "1"
+          "denom": "stake",
+          "amount": "100000000"
         }
-    ],
-    "exclusions":
-    [],
-    "rejections":
-    [
-        {
-            "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
-            "pair_id": "2"
-        }
-    ],
-    "distributions":
-    [
-        {
-            "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
-            "pair_id": "1",
-            "amount":
-            [
-                {
-                    "denom": "stake",
-                    "amount": "100000000"
-                }
-            ]
-        }
-    ]
+      ]
+    }
+  ]
 }
 `)
 

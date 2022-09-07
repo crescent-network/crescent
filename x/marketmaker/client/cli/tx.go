@@ -125,7 +125,7 @@ func GetCmdSubmitMarketMakerProposal() *cobra.Command {
 		Short: "Submit a market maker proposal",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a market maker proposal along with an initial deposit. You can submit this governance proposal
-to inclusion, exclusion, rejection, and incentive distribution for market maker. The proposal details must be supplied via a JSON file. A JSON file to add request proposal is 
+to include, exclude, reject, and incentivize distribution for market makers. The proposal details must be supplied via a JSON file. A JSON file to add request proposal is 
 provided below.
 
 Example:
@@ -135,7 +135,7 @@ Where proposal.json contains:
 
 {
   "title": "Market Maker Proposal",
-  "description": "Are you ready to market making?",
+  "description": "Include, reject, and incentivize market makers",
   "inclusions": [
     {
       "address": "cosmos1vqac3p8fl4kez7ehjz8eltugd2fm67pckpl7pn",
