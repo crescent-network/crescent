@@ -50,8 +50,17 @@ func (suite *UpgradeTestSuite) TestUpgradeV2() {
 				marketmakerparams := suite.app.MarketMakerKeeper.GetParams(suite.ctx)
 				suite.Require().EqualValues(liquidityparams.MaxNumMarketMakingOrderTicks, liquiditytypes.DefaultMaxNumMarketMakingOrderTicks)
 				suite.Require().EqualValues(marketmakerparams.IncentivePairs, []marketmakertypes.IncentivePair(nil))
-				marketmakerparams.IncentivePairs = []marketmakertypes.IncentivePair{}
-				suite.Require().EqualValues(marketmakerparams, marketmakertypes.DefaultParams())
+				suite.Require().EqualValues(marketmakerparams.DepositAmount, sdk.NewCoins(sdk.NewCoin("ucre", sdk.NewInt(1000000000))))
+				suite.Require().EqualValues(marketmakerparams.IncentiveBudgetAddress, "cre1ddn66jv0sjpmck0ptegmhmqtn35qsg2vxyk2hn9sqf4qxtzqz3sq3qhhde")
+				suite.Require().EqualValues(marketmakerparams.Common, marketmakertypes.Common{
+					MinOpenRatio:      sdk.MustNewDecFromStr("0.5"),
+					MinOpenDepthRatio: sdk.MustNewDecFromStr("0.1"),
+					MaxDowntime:       uint32(20),
+					MaxTotalDowntime:  uint32(100),
+					MinHours:          uint32(16),
+					MinDays:           uint32(22),
+				})
+
 			},
 			true,
 		},
