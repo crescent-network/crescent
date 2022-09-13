@@ -33,11 +33,11 @@ Market makers are provided a special order type so that they can place and cance
 1. First step (within a block)
     - Calculate 2-sided contribution score and take minimum value
 
-      C = min [ `AskQ1`/`AskD1`^2 + `AskQ2`/`AskD2`^2 +… , `BidQ1`/`BidD1`^2 + `BidQ2`/`BidD2`^2 +… ]
+      $C = min \lbrack{ {AskQ1}\over{AskD1^2} }+ { {AskQ2}\over{AskD2^2} } + ... , { {BidQ1}\over{BidD1^2} }+ { {BidQ2}\over{BidD2^2} } + ... \rbrack$
 
-        - `AskQ(n)`/`BidQ(n)` : Number of token remaining (after trade) in n-th tick
-        - `AskD(n)`/`BidD(n)` : Price difference of n-th tick and mid-price divide with mid-price
-        - Calculate C when the market maker order satisfy `MaxSpread`, `MinWidth`, `MinDepth` conditions. If the order doesn’t satisfy these conditions, C is 0.
+       - `AskQ(n)`, `BidQ(n)` : Number of token remaining (after trade) in n-th tick
+       - `AskD(n)`, `BidD(n)` : Price difference of n-th tick and mid-price divide with mid-price
+       - Calculate C when the market maker order satisfy `MaxSpread`, `MinWidth`, `MinDepth` conditions. If the order doesn’t satisfy these conditions, C is 0.
 2. Second step (within a block)
     - Calculate each market maker’s contribution score and obtain proportion of it $C_m \over \sum_i C_i$
 
@@ -53,7 +53,7 @@ Market makers are provided a special order type so that they can place and cance
     - Final score of market maker “m” is as following :
 
 $$
-S_m = {U_m} ^3 \sum ^{B}_{t=1} \lbrack { C_{mt} \over \sum_i C_{it} }\rbrack
+S_m = {U_m} ^3 \sum_{t=1}^{B} \lbrack { C_{mt} \over \sum_i C_{it} }\rbrack
 $$
 
 - $U_m$ is % of Market maker m’s `Uptime` in the month
@@ -83,44 +83,44 @@ $$
   Initial order is intact in Block1 and partially filled in next block. Let’s calculate breaths each :
 
     - Block1
-        - `MidPrice` : 9.945 = (9.96 + 9.93) / 2
-        - `Spread` : 0.0030 = (9.96 - 9.93) / 9.945
-        - `AskWidth` : 0.0030 = (9.99-9.96) / 9.945
-        - `BidWidth` : 0.0030 = (9.93-9.90) / 9.945
-        - `AskD(1)` : 0.0015 = (9.96-9.945) / 9.945
+        - `MidPrice` : 9.945 = (9.96+9.93) / 2
+        - `Spread` : 0.0030.. = (9.96-9.93) / 9.945
+        - `AskWidth` : 0.0030.. = (9.99-9.96) / 9.945
+        - `BidWidth` : 0.0030.. = (9.93-9.90) / 9.945
+        - `AskD(1)` : 0.0015.. = (9.96-9.945) / 9.945
 
-          `AskD(2)` : 0.0025 = (9.97-9.945) / 9.945
+          `AskD(2)` : 0.0025.. = (9.97-9.945) / 9.945
 
-          `AskD(3)` : 0.0035 = (9.98-9.945) / 9.945
+          `AskD(3)` : 0.0035.. = (9.98-9.945) / 9.945
 
-          `AskD(4)` : 0.0045 = (9.99-9.945) / 9.945
+          `AskD(4)` : 0.0045.. = (9.99-9.945) / 9.945
 
-          `BidD(1)` : 0.0015 = (9.945-9.93) / 9.945
+          `BidD(1)` : 0.0015.. = (9.945-9.93) / 9.945
 
-          `BidD(2)` : 0.0025 = (9.945-9.92) / 9.945
+          `BidD(2)` : 0.0025.. = (9.945-9.92) / 9.945
 
-          `BidD(3)` : 0.0035 = (9.945-9.91) / 9.945
+          `BidD(3)` : 0.0035.. = (9.945-9.91) / 9.945
 
-          `BidD(4)` : 0.0045 = (9.945-9.90) / 9.945
+          `BidD(4)` : 0.0045.. = (9.945-9.90) / 9.945
 
     - Block2
         - Lowest ask order of 9.96 is valid reference point because `AskQ(1)` is 80% of its original order, which is larger than `MinOpenRatio` of 50%.
         - Highest bid order of 9.92 is not valid reference point because `BidQ(2)` is not as large as `MinOpenRatio` of original order nor `MinOpenDepthRatio` of `MinDepth`. Therefore highest bid price is 9.91 at this time.
-        - `MidPrice` : 9.935 = (9.96 + 9.91) / 2
-        - `Spread` : 0.0050 = (9.96 - 9.91) / 9.935
-        - `AskWidth` : 0.0030 = (9.99-9.96) / 9.935
-        - `BidWidth` : 0.0010 = (9.91-9.90) / 9.935
-        - `AskD(1)` : 0.0025 = (9.96-9.935) / 9.935
+        - `MidPrice` : 9.935 = (9.96+9.91) / 2
+        - `Spread` : 0.0050.. = (9.96-9.91) / 9.935
+        - `AskWidth` : 0.0030.. = (9.99-9.96) / 9.935
+        - `BidWidth` : 0.0010.. = (9.91-9.90) / 9.935
+        - `AskD(1)` : 0.0025.. = (9.96-9.935) / 9.935
 
-          `AskD(2)` : 0.0035 = (9.97-9.935) / 9.935
+          `AskD(2)` : 0.0035.. = (9.97-9.935) / 9.935
 
-          `AskD(3)` : 0.0045 = (9.98-9.935) / 9.935
+          `AskD(3)` : 0.0045.. = (9.98-9.935) / 9.935
 
-          `AskD(4)` : 0.0055 = (9.99-9.935) / 9.935
+          `AskD(4)` : 0.0055.. = (9.99-9.935) / 9.935
 
-          `BidD(3)` : 0.0025 = (9.935-9.91) / 9.935
+          `BidD(3)` : 0.0025.. = (9.935-9.91) / 9.935
 
-          `BidD(4)` : 0.0035 = (9.935-9.90) / 9.935
+          `BidD(4)` : 0.0035.. = (9.935-9.90) / 9.935
 
 ## Depth(Quantity)
 
@@ -159,22 +159,22 @@ $$
 
     - Block1
         - All the condition is met
-            - Spread (0.0030) < MaxSpread (0.012)
-            - AskWidth(0.0030), BidWidth(0.0030) > MinWidth (0.002)
+            - Spread (0.0030..) < MaxSpread (0.012)
+            - AskWidth(0.0030..), BidWidth(0.0030..) > MinWidth (0.002)
             - AskDepth(200), BidDepth(160) > MinDepth (100)
         - Contribution Score is as follows,
 
-          C = min [ `AskQ1`/`AskD1`^2 + `AskQ2`/`AskD2`^2 +… , `BidQ1`/`BidD1`^2 + `BidQ2`/`BidD2`^2 +… ]
+          $C = min \lbrack{ {AskQ1}\over{AskD1^2} }+ { {AskQ2}\over{AskD2^2} } + ... , { {BidQ1}\over{BidD1^2} }+ { {BidQ2}\over{BidD2^2} } + ... \rbrack$
 
-          $C = min \lbrack{ {50}\over{0.0015^2} }+ {{50}\over{0.0025^2} } + {{50}\over{0.0035^2} }+ {{50}\over{0.0045^2} }, {{40}\over{0.0015^2} }+ {{40}\over{0.0025^2} } + {{40}\over{0.0035^2}}+ {{40}\over{0.0035^2} }\rbrack$
+          $C = min \lbrack{ {50}\over{0.0015..^2} }+ {{50}\over{0.0025..^2} } + {{50}\over{0.0035..^2} }+ {{50}\over{0.0045..^2} }, {{40}\over{0.0015..^2} }+ {{40}\over{0.0025..^2} } + {{40}\over{0.0035..^2}}+ {{40}\over{0.0035..^2} }\rbrack$
 
           $C = min \lbrack36772991, 29418393\rbrack = 29,418,393$
 
     - Block2
         - Bid side failed to meet the requirement,
-            - Spread (0.0050) < MaxSpread (0.012)
-            - AskWidth(0.0030) > MinWidth (0.002)
-            - `BidWidth(0.0010) < MinWidth (0.002)`
+            - Spread (0.0050..) < MaxSpread (0.012)
+            - AskWidth(0.0030..) > MinWidth (0.002)
+            - `BidWidth(0.0010..) < MinWidth (0.002)`
             - AskDepth(190) > MinDepth (100)
             - `BidDepth(80) < MinDepth (100)`
         - Because it failed to meet the minimum requirement of market maker order, the contribution score is 0 in Block 2
