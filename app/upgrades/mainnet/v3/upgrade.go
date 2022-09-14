@@ -25,8 +25,10 @@ func UpgradeHandler(
 		// Set newly added liquidity param
 		liquiditykeeper.SetMaxNumMarketMakingOrderTicks(ctx, liquiditytypes.DefaultMaxNumMarketMakingOrderTicks)
 
-		// Set Default param for new market maker module
-		marketmakerkeeper.SetParams(ctx, marketmakertypes.DefaultParams())
+		// Set param for new market maker module
+		marketmakerparams := marketmakertypes.DefaultParams()
+		marketmakerparams.DepositAmount = sdk.NewCoins(sdk.NewCoin("ucre", sdk.NewInt(1000000000)))
+		marketmakerkeeper.SetParams(ctx, marketmakerparams)
 		return newVM, err
 
 	}
