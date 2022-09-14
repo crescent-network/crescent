@@ -1,6 +1,6 @@
-## Abstract
+# Abstract
 
-This program is for off-chain evaluation of market maker performance from on-chain data stored in Crescent Network
+The scoring system is for off-chain evaluation of market maker performance from on-chain data stored in Crescent Network
 
 # Concepts
 
@@ -190,7 +190,7 @@ $$
 
 ## Parameters
 
-Scoring module contains following parameters :
+Scoring system references the following parameters of the market maker module :
 
 ### Common Parameters
 
