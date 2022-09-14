@@ -168,7 +168,7 @@ $$
 
           $C = min \lbrack{ {50}\over{0.0015..^2} }+ {{50}\over{0.0025..^2} } + {{50}\over{0.0035..^2} }+ {{50}\over{0.0045..^2} }, {{40}\over{0.0015..^2} }+ {{40}\over{0.0025..^2} } + {{40}\over{0.0035..^2}}+ {{40}\over{0.0035..^2} }\rbrack$
 
-          $C = min \lbrack36772991, 29418393\rbrack = 29,418,393$
+          $C = min \lbrack36369600.., 29095680..\rbrack = 29,095,680..$
 
     - Block2
         - Bid side failed to meet the requirement,
