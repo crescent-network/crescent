@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package crescent.farm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "crescent/farm/v1beta1/farm.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/farm/types";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/params";
+  }
+  rpc Plans(QueryPlansRequest) returns (QueryPlansResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/plans";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryPlansRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPlansResponse {
+  repeated Plan                          plans      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
