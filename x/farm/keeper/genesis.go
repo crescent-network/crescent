@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v3/x/farm/types"
@@ -28,6 +30,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 	for _, hist := range genState.HistoricalRewards {
 		k.SetHistoricalRewards(ctx, hist.Denom, hist.Period, hist.HistoricalRewards)
+	}
+	if genState.LastBlockTime != nil {
+		k.SetLastBlockTime(ctx, *genState.LastBlockTime)
 	}
 }
 
@@ -66,6 +71,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
+	var lastBlockTimePtr *time.Time
+	lastBlockTime, found := k.GetLastBlockTime(ctx)
+	if found {
+		lastBlockTimePtr = &lastBlockTime
+	}
+
 	return types.NewGenesisState(
-		k.GetParams(ctx), lastPlanId, plans, farms, positions, hists)
+		k.GetParams(ctx), lastPlanId, plans, farms, positions, hists, lastBlockTimePtr)
 }

@@ -4,6 +4,7 @@ package crescent.farm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "crescent/farm/v1beta1/farm.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/x/farm/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -15,6 +16,7 @@ message GenesisState {
   repeated FarmRecord              farms              = 4 [(gogoproto.nullable) = false];
   repeated Position                positions          = 5 [(gogoproto.nullable) = false];
   repeated HistoricalRewardsRecord historical_rewards = 6 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp        last_block_time    = 7 [(gogoproto.stdtime) = true];
 }
 
 message FarmRecord {

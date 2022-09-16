@@ -29,6 +29,7 @@ var (
 	FarmKeyPrefix              = []byte{0xd2}
 	PositionKeyPrefix          = []byte{0xd3}
 	HistoricalRewardsKeyPrefix = []byte{0xd4}
+	LastBlockTimeKey           = []byte{0xd5}
 )
 
 func GetPlanKey(id uint64) []byte {

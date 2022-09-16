@@ -46,7 +46,7 @@ func (k msgServer) CreatePrivatePlan(goCtx context.Context, msg *types.MsgCreate
 
 	return &types.MsgCreatePrivatePlanResponse{
 		Id:                 plan.Id,
-		FarmingPoolAddress: plan.SourceAddress,
+		FarmingPoolAddress: plan.FarmingPoolAddress,
 	}, nil
 }
 

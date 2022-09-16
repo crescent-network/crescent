@@ -1,9 +1,13 @@
 package types
 
+import (
+	"time"
+)
+
 // NewGenesisState returns a new GenesisState.
 func NewGenesisState(
 	params Params, lastPlanId uint64, plans []Plan, farms []FarmRecord, positions []Position,
-	hists []HistoricalRewardsRecord,
+	hists []HistoricalRewardsRecord, lastBlockTime *time.Time,
 ) *GenesisState {
 	return &GenesisState{
 		Params:            params,
@@ -12,12 +16,13 @@ func NewGenesisState(
 		Farms:             farms,
 		Positions:         positions,
 		HistoricalRewards: hists,
+		LastBlockTime:     lastBlockTime,
 	}
 }
 
 // DefaultGenesis returns the default genesis state for the module.
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(DefaultParams(), 0, nil, nil, nil, nil)
+	return NewGenesisState(DefaultParams(), 0, nil, nil, nil, nil, nil)
 }
 
 // Validate performs basic genesis state validation returning an error upon any

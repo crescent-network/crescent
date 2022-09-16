@@ -1,10 +1,30 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v3/x/farm/types"
 )
+
+func (k Keeper) GetLastBlockTime(ctx sdk.Context) (t time.Time, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.LastBlockTimeKey)
+	if bz == nil {
+		return
+	}
+	t, err := sdk.ParseTimeBytes(bz)
+	if err != nil {
+		panic(err)
+	}
+	return t, true
+}
+
+func (k Keeper) SetLastBlockTime(ctx sdk.Context, t time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.LastBlockTimeKey, sdk.FormatTimeBytes(t))
+}
 
 func (k Keeper) GetLastPlanId(ctx sdk.Context) (id uint64, found bool) {
 	store := ctx.KVStore(k.storeKey)

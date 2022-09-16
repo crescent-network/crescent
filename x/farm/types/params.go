@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -14,15 +15,19 @@ var (
 	KeyPrivatePlanCreationFee = []byte("PrivatePlanCreationFee")
 	KeyFeeCollector           = []byte("FeeCollector")
 	KeyMaxNumPrivatePlans     = []byte("MaxNumPrivatePlans")
+	KeyMaxBlockDuration       = []byte("MaxBlockDuration")
 )
 
 const (
 	DefaultMaxNumPrivatePlans = 50
+	DefaultMaxBlockDuration   = 10 * time.Second
 )
 
 var (
 	DefaultPrivatePlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000000))
 	DefaultFeeCollector           = sdk.AccAddress(address.Module(ModuleName, []byte("FeeCollector"))).String()
+
+	RewardsPoolAddress = address.Module(ModuleName, []byte("RewardsPool"))
 )
 
 func ParamKeyTable() paramstypes.KeyTable {
@@ -35,6 +40,7 @@ func DefaultParams() Params {
 		PrivatePlanCreationFee: DefaultPrivatePlanCreationFee,
 		FeeCollector:           DefaultFeeCollector,
 		MaxNumPrivatePlans:     DefaultMaxNumPrivatePlans,
+		MaxBlockDuration:       DefaultMaxBlockDuration,
 	}
 }
 
@@ -44,6 +50,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyPrivatePlanCreationFee, &params.PrivatePlanCreationFee, validatePrivatePlanCreationFee),
 		paramstypes.NewParamSetPair(KeyFeeCollector, &params.FeeCollector, validateFeeCollector),
 		paramstypes.NewParamSetPair(KeyMaxNumPrivatePlans, &params.MaxNumPrivatePlans, validateMaxNumPrivatePlans),
+		paramstypes.NewParamSetPair(KeyMaxBlockDuration, &params.MaxBlockDuration, validateMaxBlockDuration),
 	}
 }
 
@@ -56,6 +63,7 @@ func (params Params) Validate() error {
 		{params.PrivatePlanCreationFee, validatePrivatePlanCreationFee},
 		{params.FeeCollector, validateFeeCollector},
 		{params.MaxNumPrivatePlans, validateMaxNumPrivatePlans},
+		{params.MaxBlockDuration, validateMaxBlockDuration},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -91,6 +99,17 @@ func validateMaxNumPrivatePlans(i interface{}) error {
 	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func validateMaxBlockDuration(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v == 0 {
+		return fmt.Errorf("max block duration must not be zero")
 	}
 	return nil
 }

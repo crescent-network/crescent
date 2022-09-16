@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v3/x/farm/types"
@@ -42,4 +44,13 @@ func (k Keeper) GetMaxNumPrivatePlans(ctx sdk.Context) (num uint32) {
 
 func (k Keeper) SetMaxNumPrivatePlans(ctx sdk.Context, num uint32) {
 	k.paramSpace.Set(ctx, types.KeyMaxNumPrivatePlans, num)
+}
+
+func (k Keeper) GetMaxBlockDuration(ctx sdk.Context) (d time.Duration) {
+	k.paramSpace.Get(ctx, types.KeyMaxBlockDuration, &d)
+	return
+}
+
+func (k Keeper) SetMaxBlockDuration(ctx sdk.Context, d time.Duration) {
+	k.paramSpace.Set(ctx, types.KeyMaxBlockDuration, d)
 }
