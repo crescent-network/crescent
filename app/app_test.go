@@ -37,6 +37,7 @@ import (
 
 	"github.com/crescent-network/crescent/v2/x/claim"
 	"github.com/crescent-network/crescent/v2/x/farming"
+	"github.com/crescent-network/crescent/v2/x/liquidfarming"
 	"github.com/crescent-network/crescent/v2/x/liquidity"
 	"github.com/crescent-network/crescent/v2/x/liquidstaking"
 	"github.com/crescent-network/crescent/v2/x/mint"
@@ -191,6 +192,7 @@ func TestRunMigrations(t *testing.T) {
 					"farming":       farming.AppModule{}.ConsensusVersion(),
 					"liquidity":     liquidity.AppModule{}.ConsensusVersion(),
 					"liquidstaking": liquidstaking.AppModule{}.ConsensusVersion(),
+					"liquidfarming": liquidfarming.AppModule{}.ConsensusVersion(),
 					"ibc":           ibc.AppModule{}.ConsensusVersion(),
 					"transfer":      transfer.AppModule{}.ConsensusVersion(),
 				},
