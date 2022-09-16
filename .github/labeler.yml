@@ -6,6 +6,8 @@
   - x/liquidity/**/*
 "x/liquidstaking":
   - x/liquidstaking/**/*
+"x/liquidfarming":
+  - x/liquidfarming/**/*
 "x/mint":
   - x/mint/**/*
 "documentation":
