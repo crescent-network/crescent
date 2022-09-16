@@ -33,4 +33,9 @@ const (
 	DefaultWeightTallyWithLiquidStaking            int = 30
 
 	DefaultWeightMsgClaim int = 50
+
+	DefaultWeightMsgFarm      int = 50
+	DefaultWeightMsgUnfarm    int = 10
+	DefaultWeightMsgPlaceBid  int = 20
+	DefaultWeightMsgRefundBid int = 5
 )

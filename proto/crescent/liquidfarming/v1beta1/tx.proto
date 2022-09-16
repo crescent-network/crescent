@@ -1,0 +1,98 @@
+syntax = "proto3";
+package crescent.liquidfarming.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/liquidfarming/types";
+
+// Msg defines the Msg service.
+service Msg {
+  // Farm defines a method for farming pool coin for a liquid farm
+  rpc Farm(MsgFarm) returns (MsgFarmResponse);
+
+  // Unfarm defines a method for unfarming amount of LFCoin
+  rpc Unfarm(MsgUnfarm) returns (MsgUnfarmResponse);
+
+  // UnfarmAndWithdraw defines a method for unfarming amount of LFCoin and withdraw pool coin from the pool
+  rpc UnfarmAndWithdraw(MsgUnfarmAndWithdraw) returns (MsgUnfarmAndWithdrawResponse);
+
+  // PlaceBid defines a method for placing a bid for a rewards auction
+  rpc PlaceBid(MsgPlaceBid) returns (MsgPlaceBidResponse);
+
+  // RefundBid defines a method for refunding the bid that is not winning for the auction
+  rpc RefundBid(MsgRefundBid) returns (MsgRefundBidResponse);
+}
+
+// MsgFarm defines a SDK message for farming pool coin for a liquid farm.
+message MsgFarm {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 pool_id = 1;
+
+  string farmer = 2;
+
+  cosmos.base.v1beta1.Coin farming_coin = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+}
+
+// MsgFarmResponse defines the MsgFarmResponse response type.
+message MsgFarmResponse {}
+
+// MsgUnfarm defines a SDK message for unfarming LFCoin.
+message MsgUnfarm {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 pool_id = 1;
+
+  string farmer = 2;
+
+  cosmos.base.v1beta1.Coin burning_coin = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+}
+
+// MsgUnfarmResponse defines the MsgUnfarmResponse response type.
+message MsgUnfarmResponse {}
+
+// MsgUnfarmAndWithdraw defines a SDK message for unfarming LFCoin.
+message MsgUnfarmAndWithdraw {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 pool_id = 1;
+
+  string farmer = 2;
+
+  cosmos.base.v1beta1.Coin unfarming_coin = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+}
+
+// MsgUnfarmAndWithdrawResponse defines the MsgUnfarmAndWithdrawResponse response type.
+message MsgUnfarmAndWithdrawResponse {}
+
+// MsgPlaceBid defines a SDK message for placing a bid for a rewards auction.
+message MsgPlaceBid {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 pool_id = 1;
+
+  string bidder = 2;
+
+  cosmos.base.v1beta1.Coin bidding_coin = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+}
+
+// MsgPlaceBidResponse defines the MsgPlaceBidResponse response type.
+message MsgPlaceBidResponse {}
+
+// MsgRefundBid defines a SDK message for refunding the bid that is not winning for the auction.
+message MsgRefundBid {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 pool_id = 1;
+
+  string bidder = 2;
+}
+
+// MsgRefundBidResponse defines the MsgRefundBidResponse response type.
+message MsgRefundBidResponse {}
