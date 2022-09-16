@@ -1,10 +1,10 @@
 <!-- order: 0 title: Liquidity Overview parent: title: "farming" -->
 
- # `farming`
+# `farming`
 
 ## Abstract
 
-This document specifies the farming module of the Cosmos SDK that serves farming feature. The farming module implements farming functionality that provides farming rewards to participants called farmers. 
+This document specifies the farming module of the Cosmos SDK that serves farming feature. The farming module implements farming functionality that provides farming rewards to participants called farmers.
 
 A primary use case of the farming module is to provide incentives for liquidity pool investors for their pool participation.
 
@@ -18,3 +18,4 @@ A primary use case of the farming module is to provide incentives for liquidity 
 6. **[Events](06_events.md)**
 7. **[Parameters](07_params.md)**
 8. **[Proposal](08_proposal.md)**
+9. **[Hooks](09_hooks.md)**
