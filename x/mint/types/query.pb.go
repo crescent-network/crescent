@@ -116,6 +116,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryLastBlockTimeRequest is the request type for the Query/LastBlockTime RPC method.
 type QueryLastBlockTimeRequest struct {
 }
 
@@ -152,6 +153,7 @@ func (m *QueryLastBlockTimeRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryLastBlockTimeRequest proto.InternalMessageInfo
 
+// QueryLastBlockTimeResponse is the response type for the Query/LastBlockTime RPC method.
 type QueryLastBlockTimeResponse struct {
 	LastBlockTime *time.Time `protobuf:"bytes,1,opt,name=last_block_time,json=lastBlockTime,proto3,stdtime" json:"last_block_time,omitempty" yaml:"last_block_time"`
 }
@@ -250,7 +252,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Params returns the total set of minting parameters.
+	// LastBlockTime returns the last block time.
 	LastBlockTime(ctx context.Context, in *QueryLastBlockTimeRequest, opts ...grpc.CallOption) (*QueryLastBlockTimeResponse, error)
 }
 
@@ -284,7 +286,7 @@ func (c *queryClient) LastBlockTime(ctx context.Context, in *QueryLastBlockTimeR
 type QueryServer interface {
 	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Params returns the total set of minting parameters.
+	// LastBlockTime returns the last block time.
 	LastBlockTime(context.Context, *QueryLastBlockTimeRequest) (*QueryLastBlockTimeResponse, error)
 }
 
