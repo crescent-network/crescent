@@ -158,6 +158,10 @@ func (s *KeeperTestSuite) rewards(farmerAddr sdk.AccAddress, denom string) sdk.D
 	if !found {
 		return nil
 	}
+	position, found := s.keeper.GetPosition(s.ctx, farmerAddr, denom)
+	if !found {
+		return nil
+	}
 	endPeriod := s.keeper.IncrementFarmPeriod(cacheCtx, denom)
-	return s.keeper.Rewards(cacheCtx, farmerAddr, denom, endPeriod)
+	return s.keeper.Rewards(cacheCtx, position, endPeriod)
 }

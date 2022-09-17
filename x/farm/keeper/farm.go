@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -10,9 +8,8 @@ import (
 )
 
 func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error) {
-	if err := k.bankKeeper.SendCoins(
-		ctx, farmerAddr, types.DeriveFarmingReserveAddress(coin.Denom), sdk.NewCoins(coin),
-	); err != nil {
+	farmingReserveAddr := types.DeriveFarmingReserveAddress(coin.Denom)
+	if err := k.bankKeeper.SendCoins(ctx, farmerAddr, farmingReserveAddr, sdk.NewCoins(coin)); err != nil {
 		return nil, err
 	}
 
@@ -23,10 +20,6 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 	farm.TotalFarmingAmount = farm.TotalFarmingAmount.Add(coin.Amount)
 	k.SetFarm(ctx, coin.Denom, farm)
 
-	prevPeriod := farm.Period - 1
-	k.incrementReferenceCount(ctx, coin.Denom, prevPeriod)
-	k.IncrementFarmPeriod(ctx, coin.Denom)
-
 	position, found := k.GetPosition(ctx, farmerAddr, coin.Denom)
 	if !found {
 		position = types.Position{
@@ -35,37 +28,75 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 			FarmingAmount: sdk.ZeroInt(),
 		}
 	} else {
-		withdrawnRewards, err = k.withdrawRewards(ctx, farmerAddr, coin.Denom)
+		withdrawnRewards, err = k.withdrawRewards(ctx, position)
 		if err != nil {
 			return nil, err
 		}
 	}
 	position.FarmingAmount = position.FarmingAmount.Add(coin.Amount)
-	position.PreviousPeriod = prevPeriod
-	position.StartingBlockHeight = ctx.BlockHeight()
-	k.SetPosition(ctx, position)
+	k.initializePosition(ctx, position)
+
+	// TODO: emit an event
 
 	return withdrawnRewards, nil
 }
 
-func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawRewards sdk.Coins, err error) {
-	return nil, nil
+func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error) {
+	position, found := k.GetPosition(ctx, farmerAddr, coin.Denom)
+	if !found {
+		// TODO: use sentinel error
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
+	}
+	if position.FarmingAmount.LT(coin.Amount) {
+		// TODO: use sentinel error
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "not enough farming amount")
+	}
+	farmingReserveAddr := types.DeriveFarmingReserveAddress(coin.Denom)
+	if err := k.bankKeeper.SendCoins(ctx, farmingReserveAddr, farmerAddr, sdk.NewCoins(coin)); err != nil {
+		return nil, err
+	}
+
+	withdrawnRewards, err = k.withdrawRewards(ctx, position)
+	if err != nil {
+		return nil, err
+	}
+
+	position.FarmingAmount = position.FarmingAmount.Sub(coin.Amount)
+	if position.FarmingAmount.IsZero() {
+		k.DeletePosition(ctx, farmerAddr, coin.Denom)
+	} else {
+		k.initializePosition(ctx, position)
+	}
+
+	// TODO: emit an event
+
+	return withdrawnRewards, nil
 }
 
 func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (withdrawnRewards sdk.Coins, err error) {
-	return nil, nil
-}
-
-func (k Keeper) Rewards(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string, endPeriod uint64) sdk.DecCoins {
 	position, found := k.GetPosition(ctx, farmerAddr, denom)
 	if !found {
-		return nil
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
+
+	withdrawnRewards, err = k.withdrawRewards(ctx, position)
+	if err != nil {
+		return nil, err
+	}
+
+	k.initializePosition(ctx, position)
+
+	// TODO: emit an event
+
+	return withdrawnRewards, nil
+}
+
+func (k Keeper) Rewards(ctx sdk.Context, position types.Position, endPeriod uint64) sdk.DecCoins {
 	if position.StartingBlockHeight == ctx.BlockHeight() {
 		return nil
 	}
 	startPeriod := position.PreviousPeriod
-	return k.rewardsBetweenPeriods(ctx, denom, startPeriod, endPeriod, position.FarmingAmount)
+	return k.rewardsBetweenPeriods(ctx, position.Denom, startPeriod, endPeriod, position.FarmingAmount)
 }
 
 func (k Keeper) initializeFarm(ctx sdk.Context, denom string) types.Farm {
@@ -83,10 +114,22 @@ func (k Keeper) initializeFarm(ctx sdk.Context, denom string) types.Farm {
 	return farm
 }
 
+func (k Keeper) initializePosition(ctx sdk.Context, position types.Position) {
+	farm, found := k.GetFarm(ctx, position.Denom)
+	if !found {
+		panic("farm not found")
+	}
+	prevPeriod := farm.Period - 1
+	k.incrementReferenceCount(ctx, position.Denom, prevPeriod)
+	position.PreviousPeriod = prevPeriod
+	position.StartingBlockHeight = ctx.BlockHeight()
+	k.SetPosition(ctx, position)
+}
+
 func (k Keeper) IncrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod uint64) {
 	farm, found := k.GetFarm(ctx, denom)
 	if !found { // Sanity check
-		panic(fmt.Errorf("farm %s not found", denom))
+		panic("farm not found")
 	}
 	unitRewards := sdk.DecCoins{}
 	if farm.TotalFarmingAmount.IsZero() {
@@ -96,7 +139,7 @@ func (k Keeper) IncrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod u
 	}
 	hist, found := k.GetHistoricalRewards(ctx, denom, farm.Period-1)
 	if !found { // Sanity check
-		panic(fmt.Errorf("historical rewards (%s, %d) not found", denom, farm.Period-1))
+		panic("historical rewards not found")
 	}
 	k.decrementReferenceCount(ctx, denom, farm.Period-1)
 	k.SetHistoricalRewards(ctx, denom, farm.Period, types.HistoricalRewards{
@@ -113,10 +156,10 @@ func (k Keeper) IncrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod u
 func (k Keeper) incrementReferenceCount(ctx sdk.Context, denom string, period uint64) {
 	hist, found := k.GetHistoricalRewards(ctx, denom, period)
 	if !found { // Sanity check
-		panic(fmt.Errorf("historical rewards (%s, %d) not found", denom, period))
+		panic("historical rewards not found")
 	}
-	if hist.ReferenceCount > 2 {
-		panic(fmt.Errorf("ref. count of historical rewards (%s, %d) must never exceed 2", denom, period))
+	if hist.ReferenceCount > 2 { // Sanity check
+		panic("reference count must never exceed 2")
 	}
 	hist.ReferenceCount++
 	k.SetHistoricalRewards(ctx, denom, period, hist)
@@ -125,10 +168,10 @@ func (k Keeper) incrementReferenceCount(ctx sdk.Context, denom string, period ui
 func (k Keeper) decrementReferenceCount(ctx sdk.Context, denom string, period uint64) {
 	hist, found := k.GetHistoricalRewards(ctx, denom, period)
 	if !found { // Sanity check
-		panic(fmt.Errorf("historical rewards (%s, %d) not found", denom, period))
+		panic("historical rewards not found")
 	}
 	if hist.ReferenceCount == 0 {
-		panic(fmt.Errorf("ref. count of historical rewards (%s, %d) must not be negative", denom, period))
+		panic("reference count must not be negative")
 	}
 	hist.ReferenceCount--
 	if hist.ReferenceCount == 0 {
@@ -141,37 +184,34 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, denom string, period ui
 func (k Keeper) rewardsBetweenPeriods(ctx sdk.Context, denom string, startPeriod, endPeriod uint64, amt sdk.Int) sdk.DecCoins {
 	start, found := k.GetHistoricalRewards(ctx, denom, startPeriod)
 	if !found {
-		panic(fmt.Errorf("historical rewards (%s, %d) not found", denom, startPeriod))
+		panic("historical rewards not found")
 	}
 	end, found := k.GetHistoricalRewards(ctx, denom, endPeriod)
 	if !found {
-		panic(fmt.Errorf("historical rewards (%s, %d) not found", denom, endPeriod))
+		panic("historical rewards not found")
 	}
 	diff := end.CumulativeUnitRewards.Sub(start.CumulativeUnitRewards)
 	return diff.MulDecTruncate(sdk.NewDecFromInt(amt))
 }
 
-func (k Keeper) withdrawRewards(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (sdk.Coins, error) {
-	position, found := k.GetPosition(ctx, farmerAddr, denom)
-	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
-	}
-	endPeriod := k.IncrementFarmPeriod(ctx, denom)
-	rewards := k.Rewards(ctx, farmerAddr, denom, endPeriod)
+func (k Keeper) withdrawRewards(ctx sdk.Context, position types.Position) (sdk.Coins, error) {
+	endPeriod := k.IncrementFarmPeriod(ctx, position.Denom)
+	rewards := k.Rewards(ctx, position, endPeriod)
 
 	truncatedRewards, _ := rewards.TruncateDecimal()
 	if !truncatedRewards.IsZero() {
+		farmerAddr, err := sdk.AccAddressFromBech32(position.Farmer)
+		if err != nil {
+			return nil, err
+		}
 		if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, farmerAddr, truncatedRewards); err != nil {
 			return nil, err
 		}
-		farm, found := k.GetFarm(ctx, denom)
-		if !found {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "farm not found")
-		}
+		farm, _ := k.GetFarm(ctx, position.Denom) // `found` has been already checked in k.IncrementFarmPeriod.
 		farm.OutstandingRewards = farm.OutstandingRewards.Sub(sdk.NewDecCoinsFromCoins(truncatedRewards...))
-		k.SetFarm(ctx, denom, farm)
+		k.SetFarm(ctx, position.Denom, farm)
 	}
 
-	k.decrementReferenceCount(ctx, denom, position.PreviousPeriod)
+	k.decrementReferenceCount(ctx, position.Denom, position.PreviousPeriod)
 	return truncatedRewards, nil
 }

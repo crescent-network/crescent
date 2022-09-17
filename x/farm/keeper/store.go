@@ -116,6 +116,11 @@ func (k Keeper) SetPosition(ctx sdk.Context, position types.Position) {
 	store.Set(types.GetPositionKey(farmerAddr, position.Denom), k.cdc.MustMarshal(&position))
 }
 
+func (k Keeper) DeletePosition(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPositionKey(farmerAddr, denom))
+}
+
 func (k Keeper) IterateAllPositions(ctx sdk.Context, cb func(position types.Position) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.PositionKeyPrefix)

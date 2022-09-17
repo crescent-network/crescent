@@ -39,6 +39,13 @@ func (s *KeeperTestSuite) TestFarm() {
 	s.Require().NoError(err)
 
 	s.nextBlock()
+	fmt.Println(s.rewards(farmerAddr, pool.PoolCoinDenom))
+	fmt.Println(s.rewards(farmerAddr2, pool.PoolCoinDenom))
+
+	withdrawnRewards, err := s.keeper.Harvest(s.ctx, farmerAddr, pool.PoolCoinDenom)
+	s.Require().NoError(err)
+	fmt.Println("withdrawn", withdrawnRewards)
+
 	s.nextBlock()
 	fmt.Println(s.rewards(farmerAddr, pool.PoolCoinDenom))
 	fmt.Println(s.rewards(farmerAddr2, pool.PoolCoinDenom))

@@ -35,15 +35,6 @@ func (k msgServer) CreatePrivatePlan(goCtx context.Context, msg *types.MsgCreate
 		return nil, err
 	}
 
-	// TODO: do we need below event?
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Creator),
-		),
-	)
-
 	return &types.MsgCreatePrivatePlanResponse{
 		Id:                 plan.Id,
 		FarmingPoolAddress: plan.FarmingPoolAddress,
@@ -64,14 +55,6 @@ func (k msgServer) Farm(goCtx context.Context, msg *types.MsgFarm) (*types.MsgFa
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Farmer),
-		),
-	)
-
 	return &types.MsgFarmResponse{
 		WithdrawnRewards: withdrawnRewards,
 	}, nil
@@ -91,14 +74,6 @@ func (k msgServer) Unfarm(goCtx context.Context, msg *types.MsgUnfarm) (*types.M
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Farmer),
-		),
-	)
-
 	return &types.MsgUnfarmResponse{
 		WithdrawnRewards: withdrawnRewards,
 	}, nil
@@ -117,14 +92,6 @@ func (k msgServer) Harvest(goCtx context.Context, msg *types.MsgHarvest) (*types
 	if err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Farmer),
-		),
-	)
 
 	return &types.MsgHarvestResponse{
 		WithdrawnRewards: withdrawnRewards,
