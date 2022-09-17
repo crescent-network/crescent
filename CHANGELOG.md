@@ -53,6 +53,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/liquidstaking) [\#53](https://github.com/crescent-network/crescent/pull/53) fix: calculation bug of liquidstaking voting_power
 
+### Improvements
+
+* (x/mint) [\#65](https://github.com/crescent-network/crescent/pull/65) feat: add last block time endpoint
+
 ## [v2.1.1] - 2022-07-29
 
 ### Improvements
