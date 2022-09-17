@@ -26998,6 +26998,43 @@ paths:
         description: Find out more about the liquid validators
         url: >-
           https://github.com/crescent-network/crescent/tree/main/x/liquidstaking/spec
+  /crescent/mint/v1beta1/last_block_time:
+    get:
+      summary: Params returns the total set of minting parameters.
+      operationId: LastBlockTime
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              last_block_time:
+                type: string
+                format: date-time
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /crescent/mint/v1beta1/params:
     get:
       summary: Params returns the total set of minting parameters.
@@ -48178,6 +48215,12 @@ definitions:
             period.
         title: inflation_schedules defines a list of inflation schedules
     description: Params holds parameters for the mint module.
+  crescent.mint.v1beta1.QueryLastBlockTimeResponse:
+    type: object
+    properties:
+      last_block_time:
+        type: string
+        format: date-time
   crescent.mint.v1beta1.QueryParamsResponse:
     type: object
     properties:
