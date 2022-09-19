@@ -17,3 +17,10 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
+
+// LastBlockTime returns last block time.
+func (k Keeper) LastBlockTime(c context.Context, _ *types.QueryLastBlockTimeRequest) (*types.QueryLastBlockTimeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	return &types.QueryLastBlockTimeResponse{LastBlockTime: k.GetLastBlockTime(ctx)}, nil
+}
