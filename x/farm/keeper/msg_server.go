@@ -47,7 +47,7 @@ func (k msgServer) Farm(goCtx context.Context, msg *types.MsgFarm) (*types.MsgFa
 
 	farmerAddr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	withdrawnRewards, err := k.Keeper.Farm(ctx, farmerAddr, msg.Coin)
@@ -66,7 +66,7 @@ func (k msgServer) Unfarm(goCtx context.Context, msg *types.MsgUnfarm) (*types.M
 
 	farmerAddr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	withdrawnRewards, err := k.Keeper.Unfarm(ctx, farmerAddr, msg.Coin)
@@ -85,7 +85,7 @@ func (k msgServer) Harvest(goCtx context.Context, msg *types.MsgHarvest) (*types
 
 	farmerAddr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	withdrawnRewards, err := k.Keeper.Harvest(ctx, farmerAddr, msg.Denom)

@@ -9,7 +9,8 @@ import (
 
 func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error) {
 	farmingReserveAddr := types.DeriveFarmingReserveAddress(coin.Denom)
-	if err := k.bankKeeper.SendCoins(ctx, farmerAddr, farmingReserveAddr, sdk.NewCoins(coin)); err != nil {
+	if err := k.bankKeeper.SendCoins(
+		ctx, farmerAddr, farmingReserveAddr, sdk.NewCoins(coin)); err != nil {
 		return nil, err
 	}
 
@@ -44,12 +45,10 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error) {
 	position, found := k.GetPosition(ctx, farmerAddr, coin.Denom)
 	if !found {
-		// TODO: use sentinel error
 		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 	if position.FarmingAmount.LT(coin.Amount) {
-		// TODO: use sentinel error
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "not enough farming amount")
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "not enough farming amount")
 	}
 
 	withdrawnRewards, err = k.withdrawRewards(ctx, position)
@@ -104,7 +103,8 @@ func (k Keeper) Rewards(ctx sdk.Context, position types.Position, endPeriod uint
 		return nil
 	}
 	startPeriod := position.PreviousPeriod
-	return k.rewardsBetweenPeriods(ctx, position.Denom, startPeriod, endPeriod, position.FarmingAmount)
+	return k.rewardsBetweenPeriods(
+		ctx, position.Denom, startPeriod, endPeriod, position.FarmingAmount)
 }
 
 func (k Keeper) initializeFarm(ctx sdk.Context, denom string) types.Farm {
@@ -212,11 +212,14 @@ func (k Keeper) withdrawRewards(ctx sdk.Context, position types.Position) (sdk.C
 		if err != nil {
 			return nil, err
 		}
-		if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, farmerAddr, truncatedRewards); err != nil {
+		if err := k.bankKeeper.SendCoins(
+			ctx, types.RewardsPoolAddress, farmerAddr, truncatedRewards); err != nil {
 			return nil, err
 		}
-		farm, _ := k.GetFarm(ctx, position.Denom) // `found` has been already checked in k.IncrementFarmPeriod.
-		farm.OutstandingRewards = farm.OutstandingRewards.Sub(sdk.NewDecCoinsFromCoins(truncatedRewards...))
+		// `found` has already been checked in k.IncrementFarmPeriod.
+		farm, _ := k.GetFarm(ctx, position.Denom)
+		farm.OutstandingRewards = farm.OutstandingRewards.
+			Sub(sdk.NewDecCoinsFromCoins(truncatedRewards...))
 		k.SetFarm(ctx, position.Denom, farm)
 	}
 

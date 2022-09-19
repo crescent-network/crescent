@@ -16,6 +16,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	k.SetParams(ctx, genState.Params)
 
+	if genState.LastBlockTime != nil {
+		k.SetLastBlockTime(ctx, *genState.LastBlockTime)
+	}
 	if genState.LastPlanId > 0 {
 		k.SetLastPlanId(ctx, genState.LastPlanId)
 	}
@@ -31,13 +34,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	for _, hist := range genState.HistoricalRewards {
 		k.SetHistoricalRewards(ctx, hist.Denom, hist.Period, hist.HistoricalRewards)
 	}
-	if genState.LastBlockTime != nil {
-		k.SetLastBlockTime(ctx, *genState.LastBlockTime)
-	}
 }
 
 // ExportGenesis returns the module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	var lastBlockTimePtr *time.Time
+	lastBlockTime, found := k.GetLastBlockTime(ctx)
+	if found {
+		lastBlockTimePtr = &lastBlockTime
+	}
+
 	lastPlanId, _ := k.GetLastPlanId(ctx)
 
 	plans := []types.Plan{}
@@ -62,21 +68,16 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	})
 
 	hists := []types.HistoricalRewardsRecord{}
-	k.IterateAllHistoricalRewards(ctx, func(denom string, period uint64, hist types.HistoricalRewards) (stop bool) {
-		hists = append(hists, types.HistoricalRewardsRecord{
-			Denom:             denom,
-			Period:            period,
-			HistoricalRewards: hist,
+	k.IterateAllHistoricalRewards(
+		ctx, func(denom string, period uint64, hist types.HistoricalRewards) (stop bool) {
+			hists = append(hists, types.HistoricalRewardsRecord{
+				Denom:             denom,
+				Period:            period,
+				HistoricalRewards: hist,
+			})
+			return false
 		})
-		return false
-	})
-
-	var lastBlockTimePtr *time.Time
-	lastBlockTime, found := k.GetLastBlockTime(ctx)
-	if found {
-		lastBlockTimePtr = &lastBlockTime
-	}
 
 	return types.NewGenesisState(
-		k.GetParams(ctx), lastPlanId, plans, farms, positions, hists, lastBlockTimePtr)
+		k.GetParams(ctx), lastBlockTimePtr, lastPlanId, plans, farms, positions, hists)
 }

@@ -21,6 +21,8 @@ var (
 const (
 	DefaultMaxNumPrivatePlans = 50
 	DefaultMaxBlockDuration   = 10 * time.Second
+
+	MaxPlanDescriptionLen = 200 // Maximum length of a plan's description
 )
 
 var (

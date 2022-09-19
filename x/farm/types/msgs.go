@@ -43,7 +43,15 @@ func (msg MsgCreatePrivatePlan) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address: %v", err)
 	}
-	// TODO: implement
+	// Create a dummy plan with valid fields and utilize Validate() method
+	// for user-provided data.
+	validAddr := RewardsPoolAddress // Chose random valid address
+	dummyPlan := NewPlan(
+		1, msg.Description, validAddr, validAddr,
+		msg.RewardAllocations, msg.StartTime, msg.EndTime, true)
+	if err := dummyPlan.Validate(); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 	return nil
 }
 
