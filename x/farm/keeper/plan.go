@@ -18,7 +18,7 @@ func (k Keeper) CreatePrivatePlan(
 	// Check if end time > block time
 	if !endTime.After(ctx.BlockTime()) {
 		return types.Plan{}, sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest, "block time is after end time")
+			sdkerrors.ErrInvalidRequest, "end time is past")
 	}
 
 	// Check if the number of non-terminated private plans is not greater than
@@ -66,6 +66,40 @@ func (k Keeper) CreatePrivatePlan(
 	k.SetPlan(ctx, plan)
 
 	return plan, nil
+}
+
+// TerminateEndedPlans iterates through all plans and terminate the plans
+// which should be ended by the current block time.
+func (k Keeper) TerminateEndedPlans(ctx sdk.Context) (err error) {
+	k.IterateAllPlans(ctx, func(plan types.Plan) (stop bool) {
+		if plan.IsTerminated {
+			return false
+		}
+		if !ctx.BlockTime().After(plan.EndTime) {
+			if err = k.TerminatePlan(ctx, plan); err != nil {
+				return true
+			}
+		}
+		return false
+	})
+	return err
+}
+
+// TerminatePlan mark the plan as terminated and send remaining balances
+// in the farming pool to the termination address.
+func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.Plan) error {
+	if plan.IsTerminated {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "already terminated plan")
+	}
+	farmingPoolAddr := plan.GetFarmingPoolAddress()
+	balances := k.bankKeeper.SpendableCoins(ctx, farmingPoolAddr)
+	if err := k.bankKeeper.SendCoins(
+		ctx, farmingPoolAddr, plan.GetTerminationAddress(), balances); err != nil {
+		return err
+	}
+	plan.IsTerminated = true
+	k.SetPlan(ctx, plan)
+	return nil
 }
 
 func (k Keeper) AllocateRewards(ctx sdk.Context) error {

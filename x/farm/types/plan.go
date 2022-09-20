@@ -55,6 +55,22 @@ func (plan Plan) Validate() error {
 	return nil
 }
 
+func (plan Plan) GetFarmingPoolAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(plan.FarmingPoolAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func (plan Plan) GetTerminationAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(plan.TerminationAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 // NewRewardAllocation returns a new RewardAllocation.
 func NewRewardAllocation(pairId uint64, rewardsPerDay sdk.Coins) RewardAllocation {
 	return RewardAllocation{
