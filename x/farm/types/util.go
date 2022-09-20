@@ -16,8 +16,8 @@ func DeriveFarmingReserveAddress(denom string) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("FarmingReserve/%s", denom)))
 }
 
-func RewardsForBlock(rewardsPerDay sdk.DecCoins, blockDuration time.Duration) sdk.DecCoins {
-	return rewardsPerDay.
+func RewardsForBlock(rewardsPerDay sdk.Coins, blockDuration time.Duration) sdk.DecCoins {
+	return sdk.NewDecCoinsFromCoins(rewardsPerDay...).
 		MulDecTruncate(sdk.NewDec(blockDuration.Milliseconds())).
 		QuoDecTruncate(sdk.NewDec(day.Milliseconds()))
 }

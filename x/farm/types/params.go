@@ -110,8 +110,8 @@ func validateMaxBlockDuration(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if v == 0 {
-		return fmt.Errorf("max block duration must not be zero")
+	if v <= 0 {
+		return fmt.Errorf("max block duration must be positive")
 	}
 	return nil
 }

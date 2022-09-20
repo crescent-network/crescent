@@ -82,6 +82,15 @@ func ParseCoins(s string) sdk.Coins {
 	return coins
 }
 
+// ParseDecCoin parses and returns sdk.DecCoin.
+func ParseDecCoin(s string) sdk.DecCoin {
+	coin, err := sdk.ParseDecCoin(strings.ReplaceAll(s, "_", ""))
+	if err != nil {
+		panic(err)
+	}
+	return coin
+}
+
 // ParseDecCoins parses and returns sdk.DecCoins.
 func ParseDecCoins(s string) sdk.DecCoins {
 	coins, err := sdk.ParseDecCoins(strings.ReplaceAll(s, "_", ""))

@@ -67,6 +67,14 @@ func (msg MsgCreatePrivatePlan) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+func (msg MsgCreatePrivatePlan) GetCreatorAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 // NewMsgFarm returns a new MsgFarm.
 func NewMsgFarm(farmerAddr sdk.AccAddress, coin sdk.Coin) *MsgFarm {
 	return &MsgFarm{
@@ -102,6 +110,14 @@ func (msg MsgFarm) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgFarm) GetFarmerAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
 }
 
 // NewMsgUnfarm returns a new MsgUnfarm.
@@ -141,6 +157,14 @@ func (msg MsgUnfarm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+func (msg MsgUnfarm) GetFarmerAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 // NewMsgHarvest returns a new MsgHarvest.
 func NewMsgHarvest(farmerAddr sdk.AccAddress, denom string) *MsgHarvest {
 	return &MsgHarvest{
@@ -173,4 +197,12 @@ func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgHarvest) GetFarmerAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
 }

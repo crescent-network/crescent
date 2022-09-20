@@ -56,7 +56,7 @@ func (plan Plan) Validate() error {
 }
 
 // NewRewardAllocation returns a new RewardAllocation.
-func NewRewardAllocation(pairId uint64, rewardsPerDay sdk.DecCoins) RewardAllocation {
+func NewRewardAllocation(pairId uint64, rewardsPerDay sdk.Coins) RewardAllocation {
 	return RewardAllocation{
 		PairId:        pairId,
 		RewardsPerDay: rewardsPerDay,
@@ -64,8 +64,14 @@ func NewRewardAllocation(pairId uint64, rewardsPerDay sdk.DecCoins) RewardAlloca
 }
 
 func ValidateRewardAllocations(rewardAllocs []RewardAllocation) error {
+	if len(rewardAllocs) == 0 {
+		return fmt.Errorf("empty reward allocations")
+	}
 	pairIdSet := map[uint64]struct{}{}
 	for _, rewardAlloc := range rewardAllocs {
+		if rewardAlloc.PairId == 0 {
+			return fmt.Errorf("pair id must not be zero")
+		}
 		if _, ok := pairIdSet[rewardAlloc.PairId]; ok {
 			return fmt.Errorf("duplicate pair id: %d", rewardAlloc.PairId)
 		}

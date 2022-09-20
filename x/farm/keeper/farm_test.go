@@ -17,7 +17,7 @@ func (s *KeeperTestSuite) TestFarm() {
 	plan := s.createPrivatePlan([]types.RewardAllocation{
 		{
 			PairId:        pair.Id,
-			RewardsPerDay: utils.ParseDecCoins("100_000000reward"),
+			RewardsPerDay: utils.ParseCoins("100_000000reward"),
 		},
 	})
 	farmingPoolAddr, _ := sdk.AccAddressFromBech32(plan.FarmingPoolAddress)

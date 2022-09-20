@@ -54,7 +54,7 @@ A reward allocation is specified in following format:
 <pair-id>:<rewards_per_day>
 
 Example:
-$ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-01T00:00:00Z 1:10000stake 2:5000.5stake,1000.75uatom --from mykey
+$ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-01T00:00:00Z 1:10000stake 2:5000stake,1000uatom --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -84,7 +84,7 @@ $ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-0
 				if err != nil {
 					return fmt.Errorf("invalid reward allocation: %s: %w", arg, err)
 				}
-				rewards, err := sdk.ParseDecCoins(rewardsStr)
+				rewards, err := sdk.ParseCoinsNormalized(rewardsStr)
 				if err != nil {
 					return fmt.Errorf("invalid reward allocation: %s: %w", arg, err)
 				}

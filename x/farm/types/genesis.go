@@ -33,11 +33,13 @@ func (genState GenesisState) Validate() error {
 		return err
 	}
 	for _, plan := range genState.Plans {
+		// TODO: check duplicate plan
 		if err := plan.Validate(); err != nil {
 			return fmt.Errorf("invalid plan: %w", err)
 		}
 	}
 	for _, farm := range genState.Farms {
+		// TODO: check duplicate farm
 		if err := sdk.ValidateDenom(farm.Denom); err != nil {
 			return fmt.Errorf("invalid farm denom: %s", err)
 		}
@@ -56,6 +58,7 @@ func (genState GenesisState) Validate() error {
 		}
 	}
 	for _, position := range genState.Positions {
+		// TODO: check duplicate position
 		if _, err := sdk.AccAddressFromBech32(position.Farmer); err != nil {
 			return fmt.Errorf("invalid farmer address: %w", err)
 		}
@@ -71,6 +74,7 @@ func (genState GenesisState) Validate() error {
 		}
 	}
 	for _, hist := range genState.HistoricalRewards {
+		// TODO: check duplicate historical rewards
 		if err := sdk.ValidateDenom(hist.Denom); err != nil {
 			return fmt.Errorf("invalid historical rewards denom: %s", err)
 		}

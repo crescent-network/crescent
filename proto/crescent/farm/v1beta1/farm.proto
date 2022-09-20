@@ -31,9 +31,9 @@ message Plan {
 }
 
 message RewardAllocation {
-  uint64   pair_id                                     = 1;
-  repeated cosmos.base.v1beta1.DecCoin rewards_per_day = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  uint64   pair_id                                  = 1;
+  repeated cosmos.base.v1beta1.Coin rewards_per_day = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 message Farm {
