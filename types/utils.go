@@ -55,7 +55,7 @@ func DateRangeIncludes(startTime, endTime, targetTime time.Time) bool {
 
 // ParseDec is a shortcut for sdk.MustNewDecFromStr.
 func ParseDec(s string) sdk.Dec {
-	return sdk.MustNewDecFromStr(s)
+	return sdk.MustNewDecFromStr(strings.ReplaceAll(s, "_", ""))
 }
 
 // ParseDecP is like ParseDec, but it returns a pointer to sdk.Dec.
