@@ -10,10 +10,10 @@ import (
 // CachedKeeper provides cached getters for gas optimization.
 // TODO: use generic with go1.18
 type CachedKeeper struct {
-	k             Keeper
-	pairCache     map[uint64]*liquiditytypes.Pair
-	farmCache     map[string]*types.Farm
-	balancesCache map[string]*sdk.Coins
+	k                   Keeper
+	pairCache           map[uint64]*liquiditytypes.Pair
+	farmCache           map[string]*types.Farm
+	spendableCoinsCache map[string]sdk.Coins
 }
 
 func NewCachedKeeper(k Keeper) *CachedKeeper {
@@ -56,12 +56,12 @@ func (cache *CachedKeeper) GetFarm(ctx sdk.Context, denom string) (farm types.Fa
 
 func (cache *CachedKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
 	addrStr := addr.String()
-	p, ok := cache.balancesCache[addrStr]
+	balances, ok := cache.spendableCoinsCache[addrStr]
 	if !ok {
-		balances := cache.k.bankKeeper.SpendableCoins(ctx, addr)
-		p = &balances
+		balances = cache.k.bankKeeper.SpendableCoins(ctx, addr)
+		cache.spendableCoinsCache[addrStr] = balances
 	}
-	return *p
+	return balances
 }
 
 // PoolRewardWeight returns the pool's reward weight.
