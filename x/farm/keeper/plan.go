@@ -75,7 +75,7 @@ func (k Keeper) TerminateEndedPlans(ctx sdk.Context) (err error) {
 		if plan.IsTerminated {
 			return false
 		}
-		if !ctx.BlockTime().After(plan.EndTime) {
+		if !ctx.BlockTime().Before(plan.EndTime) {
 			if err = k.TerminatePlan(ctx, plan); err != nil {
 				return true
 			}
