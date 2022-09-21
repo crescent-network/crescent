@@ -153,15 +153,9 @@ func (s *KeeperTestSuite) createPrivatePlan(rewardAllocs []types.RewardAllocatio
 }
 
 func (s *KeeperTestSuite) rewards(farmerAddr sdk.AccAddress, denom string) sdk.DecCoins {
-	cacheCtx, _ := s.ctx.CacheContext()
 	_, found := s.keeper.GetFarm(s.ctx, denom)
 	if !found {
 		return nil
 	}
-	position, found := s.keeper.GetPosition(s.ctx, farmerAddr, denom)
-	if !found {
-		return nil
-	}
-	endPeriod := s.keeper.IncrementFarmPeriod(cacheCtx, denom)
-	return s.keeper.Rewards(cacheCtx, position, endPeriod)
+	return s.keeper.Rewards(s.ctx, farmerAddr, denom)
 }

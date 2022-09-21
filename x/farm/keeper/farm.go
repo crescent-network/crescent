@@ -98,7 +98,18 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 	return withdrawnRewards, nil
 }
 
-func (k Keeper) Rewards(ctx sdk.Context, position types.Position, endPeriod uint64) sdk.DecCoins {
+// Rewards is a convenient query method for external modules.
+func (k Keeper) Rewards(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) sdk.DecCoins {
+	position, found := k.GetPosition(ctx, farmerAddr, denom)
+	if !found {
+		return nil
+	}
+	cacheCtx, _ := ctx.CacheContext()
+	endPeriod := k.incrementFarmPeriod(cacheCtx, denom)
+	return k.calculateRewards(cacheCtx, position, endPeriod)
+}
+
+func (k Keeper) calculateRewards(ctx sdk.Context, position types.Position, endPeriod uint64) sdk.DecCoins {
 	if position.StartingBlockHeight == ctx.BlockHeight() {
 		return nil
 	}
@@ -134,7 +145,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, position types.Position) {
 	k.SetPosition(ctx, position)
 }
 
-func (k Keeper) IncrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod uint64) {
+func (k Keeper) incrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod uint64) {
 	farm, found := k.GetFarm(ctx, denom)
 	if !found { // Sanity check
 		panic("farm not found")
@@ -203,8 +214,8 @@ func (k Keeper) rewardsBetweenPeriods(ctx sdk.Context, denom string, startPeriod
 }
 
 func (k Keeper) withdrawRewards(ctx sdk.Context, position types.Position) (sdk.Coins, error) {
-	endPeriod := k.IncrementFarmPeriod(ctx, position.Denom)
-	rewards := k.Rewards(ctx, position, endPeriod)
+	endPeriod := k.incrementFarmPeriod(ctx, position.Denom)
+	rewards := k.calculateRewards(ctx, position, endPeriod)
 
 	truncatedRewards, _ := rewards.TruncateDecimal()
 	if !truncatedRewards.IsZero() {
@@ -216,7 +227,7 @@ func (k Keeper) withdrawRewards(ctx sdk.Context, position types.Position) (sdk.C
 			ctx, types.RewardsPoolAddress, farmerAddr, truncatedRewards); err != nil {
 			return nil, err
 		}
-		// `found` has already been checked in k.IncrementFarmPeriod.
+		// `found` has already been checked in k.incrementFarmPeriod.
 		farm, _ := k.GetFarm(ctx, position.Denom)
 		farm.OutstandingRewards = farm.OutstandingRewards.
 			Sub(sdk.NewDecCoinsFromCoins(truncatedRewards...))
