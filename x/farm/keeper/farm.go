@@ -14,13 +14,6 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 		return nil, err
 	}
 
-	farm, found := k.GetFarm(ctx, coin.Denom)
-	if !found {
-		farm = k.initializeFarm(ctx, coin.Denom)
-	}
-	farm.TotalFarmingAmount = farm.TotalFarmingAmount.Add(coin.Amount)
-	k.SetFarm(ctx, coin.Denom, farm)
-
 	position, found := k.GetPosition(ctx, farmerAddr, coin.Denom)
 	if !found {
 		position = types.Position{
@@ -34,6 +27,14 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 			return nil, err
 		}
 	}
+
+	farm, found := k.GetFarm(ctx, coin.Denom)
+	if !found {
+		farm = k.initializeFarm(ctx, coin.Denom)
+	}
+	farm.TotalFarmingAmount = farm.TotalFarmingAmount.Add(coin.Amount)
+	k.SetFarm(ctx, coin.Denom, farm)
+
 	position.FarmingAmount = position.FarmingAmount.Add(coin.Amount)
 	k.updatePosition(ctx, position)
 
