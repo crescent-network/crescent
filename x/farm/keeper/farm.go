@@ -87,6 +87,7 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 
+	// TODO: prevent incrementing too many periods?
 	withdrawnRewards, err = k.withdrawRewards(ctx, position)
 	if err != nil {
 		return nil, err

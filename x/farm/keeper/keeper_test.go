@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -12,6 +13,7 @@ import (
 
 	chain "github.com/crescent-network/crescent/v3/app"
 	utils "github.com/crescent-network/crescent/v3/types"
+	"github.com/crescent-network/crescent/v3/x/farm"
 	"github.com/crescent-network/crescent/v3/x/farm/keeper"
 	"github.com/crescent-network/crescent/v3/x/farm/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
@@ -27,10 +29,12 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app    *chain.App
-	ctx    sdk.Context
-	keeper keeper.Keeper
-	hdr    tmproto.Header
+	app        *chain.App
+	ctx        sdk.Context
+	keeper     keeper.Keeper
+	querier    keeper.Querier
+	govHandler govtypes.Handler
+	hdr        tmproto.Header
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -40,6 +44,8 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = chain.Setup(false)
 	s.keeper = s.app.FarmKeeper
+	s.querier = keeper.Querier{Keeper: s.keeper}
+	s.govHandler = farm.NewFarmingPlanProposalHandler(s.keeper)
 	s.hdr = tmproto.Header{
 		Height: 1,
 		Time:   utils.ParseTime("2022-01-01T00:00:00Z"),
@@ -67,12 +73,17 @@ func (s *KeeperTestSuite) nextBlock() {
 	s.beginBlock()
 }
 
+func (s *KeeperTestSuite) handleProposal(content govtypes.Content) {
+	s.T().Helper()
+	s.Require().NoError(content.ValidateBasic())
+	s.Require().NoError(s.govHandler(s.ctx, content))
+}
+
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 	s.T().Helper()
-	err := s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amt)
-	s.Require().NoError(err)
-	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, addr, amt)
-	s.Require().NoError(err)
+	s.Require().NoError(s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amt))
+	s.Require().NoError(
+		s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, addr, amt))
 }
 
 func (s *KeeperTestSuite) assertEq(exp, got interface{}) {
@@ -160,10 +171,39 @@ func (s *KeeperTestSuite) createPrivatePlan(rewardAllocs []types.RewardAllocatio
 	return plan
 }
 
+//nolint
 func (s *KeeperTestSuite) rewards(farmerAddr sdk.AccAddress, denom string) sdk.DecCoins {
 	_, found := s.keeper.GetFarm(s.ctx, denom)
 	if !found {
 		return nil
 	}
 	return s.keeper.Rewards(s.ctx, farmerAddr, denom)
+}
+
+func (s *KeeperTestSuite) createSamplePlans() (privPlan, pubPlan types.Plan) {
+	s.T().Helper()
+	pair1 := s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+	pair2 := s.createPairWithLastPrice("denom2", "denom3", sdk.NewDec(1))
+	s.createPool(helperAddr, pair1.Id, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+	s.createPool(helperAddr, pair2.Id, utils.ParseCoins("100_000000denom2,100_000000denom3"))
+
+	privPlan = s.createPrivatePlan([]types.RewardAllocation{
+		types.NewRewardAllocation(pair1.Id, utils.ParseCoins("100_000000stake")),
+		types.NewRewardAllocation(pair2.Id, utils.ParseCoins("200_000000stake")),
+	})
+	s.fundAddr(privPlan.GetFarmingPoolAddress(), utils.ParseCoins("10000_000000stake"))
+	farmingPoolAddr := utils.TestAddress(100)
+	proposal := types.NewFarmingPlanProposal(
+		"Title", "Description",
+		[]types.CreatePlanRequest{
+			types.NewCreatePlanRequest(
+				"Farming Plan", farmingPoolAddr, farmingPoolAddr,
+				[]types.RewardAllocation{
+					types.NewRewardAllocation(pair1.Id, utils.ParseCoins("300_000000stake")),
+					types.NewRewardAllocation(pair2.Id, utils.ParseCoins("400_000000stake")),
+				}, sampleStartTime, sampleEndTime),
+		}, nil)
+	s.handleProposal(proposal)
+	pubPlan, _ = s.keeper.GetPlan(s.ctx, 2)
+	return
 }

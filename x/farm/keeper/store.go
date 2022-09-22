@@ -134,6 +134,19 @@ func (k Keeper) IterateAllPositions(ctx sdk.Context, cb func(position types.Posi
 	}
 }
 
+func (k Keeper) IteratePositionsByFarmer(ctx sdk.Context, farmerAddr sdk.AccAddress, cb func(position types.Position) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetPositionsByFarmerKeyPrefix(farmerAddr))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var position types.Position
+		k.cdc.MustUnmarshal(iter.Value(), &position)
+		if cb(position) {
+			break
+		}
+	}
+}
+
 func (k Keeper) GetHistoricalRewards(ctx sdk.Context, denom string, period uint64) (hist types.HistoricalRewards, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetHistoricalRewardsKey(denom, period))

@@ -18,9 +18,10 @@ type CachedKeeper struct {
 
 func NewCachedKeeper(k Keeper) *CachedKeeper {
 	return &CachedKeeper{
-		k:         k,
-		pairCache: map[uint64]*liquiditytypes.Pair{},
-		farmCache: map[string]*types.Farm{},
+		k:                   k,
+		pairCache:           map[uint64]*liquiditytypes.Pair{},
+		farmCache:           map[string]*types.Farm{},
+		spendableCoinsCache: map[string]sdk.Coins{},
 	}
 }
 

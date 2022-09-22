@@ -2,16 +2,22 @@ package simulation
 
 import (
 	"math/rand"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	appparams "github.com/crescent-network/crescent/v3/app/params"
 	utils "github.com/crescent-network/crescent/v3/types"
+	"github.com/crescent-network/crescent/v3/x/farm/keeper"
 	"github.com/crescent-network/crescent/v3/x/farm/types"
+	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
+	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 // Simulation operation weights constants.
@@ -34,8 +40,8 @@ var (
 
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
-	bk types.BankKeeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec,
+	ak types.AccountKeeper, bk types.BankKeeper, lk types.LiquidityKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreatePrivatePlan int
@@ -59,7 +65,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreatePrivatePlan,
-			SimulateMsgCreatePrivatePlan(ak, bk),
+			SimulateMsgCreatePrivatePlan(ak, bk, lk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgFarm,
@@ -67,39 +73,57 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUnfarm,
-			SimulateMsgUnfarm(ak, bk),
+			SimulateMsgUnfarm(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgHarvest,
-			SimulateMsgHarvest(ak, bk),
+			SimulateMsgHarvest(ak, bk, k),
 		),
 	}
 }
 
-func SimulateMsgCreatePrivatePlan(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
+func SimulateMsgCreatePrivatePlan(
+	ak types.AccountKeeper, bk types.BankKeeper, lk types.LiquidityKeeper, k keeper.Keeper,
+) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount := accs[0]
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-		msg := &types.MsgCreatePrivatePlan{}
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		fundAddr(ctx, bk, simAccount.Address, k.GetPrivatePlanCreationFee(ctx))
 
-		txCtx := simulation.OperationInput{
-			R:               r,
-			App:             app,
-			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
-			Msg:             msg,
-			MsgType:         msg.Type(),
-			Context:         ctx,
-			SimAccount:      simAccount,
-			AccountKeeper:   ak,
-			Bankkeeper:      bk,
-			ModuleName:      types.ModuleName,
-			CoinsSpentInMsg: spendable,
+		rewardAllocs := genRewardAllocs(r, ctx, lk)
+		msg := types.NewMsgCreatePrivatePlan(
+			simAccount.Address, "Farming Plan", rewardAllocs,
+			ctx.BlockTime().AddDate(0, 0, 1),
+			ctx.BlockTime().AddDate(0, 0, 2+r.Intn(5)))
+
+		acc := ak.GetAccount(ctx, simAccount.Address)
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
+			[]sdk.Msg{msg},
+			fees,
+			gas,
+			chainID,
+			[]uint64{acc.GetAccountNumber()},
+			[]uint64{acc.GetSequence()},
+			simAccount.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		}
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return utils.GenAndDeliverTxWithFees(txCtx, gas, fees)
+		// Fund the newly created private farming plan's farming pool
+		planId, _ := k.GetLastPlanId(ctx)
+		plan, _ := k.GetPlan(ctx, planId)
+		fundAddr(ctx, bk, plan.GetFarmingPoolAddress(), utils.ParseCoins("1000000_000000stake"))
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}
 }
 
@@ -108,9 +132,31 @@ func SimulateMsgFarm(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Opera
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount := accs[0]
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-		msg := &types.MsgFarm{}
+		accs = utils.ShuffleSimAccounts(r, accs)
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var coinToFarm sdk.Coin
+		skip := true
+		for _, simAccount = range accs {
+			spendable = bk.SpendableCoins(ctx, simAccount.Address)
+			poolCoins := sdk.Coins{}
+			for _, coin := range spendable {
+				if strings.HasPrefix(coin.Denom, "pool") {
+					poolCoins = poolCoins.Add(coin)
+				}
+			}
+			poolCoins = simtypes.RandSubsetCoins(r, poolCoins)
+			if len(poolCoins) > 0 {
+				coinToFarm = poolCoins[r.Intn(len(poolCoins))]
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFarm, "no account to farm"), nil, nil
+		}
+
+		msg := types.NewMsgFarm(simAccount.Address, coinToFarm)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -130,15 +176,38 @@ func SimulateMsgFarm(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Opera
 	}
 }
 
-func SimulateMsgUnfarm(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
+func SimulateMsgUnfarm(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount := accs[0]
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-		msg := &types.MsgUnfarm{}
+		accs = utils.ShuffleSimAccounts(r, accs)
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var coinToUnfarm sdk.Coin
+		skip := true
+		for _, simAccount = range accs {
+			var positions []types.Position
+			k.IteratePositionsByFarmer(ctx, simAccount.Address, func(position types.Position) (stop bool) {
+				positions = append(positions, position)
+				return false
+			})
+			if len(positions) > 0 {
+				position := positions[r.Intn(len(positions))]
+				coinToUnfarm = sdk.NewCoin(
+					position.Denom,
+					utils.RandomInt(r, sdk.OneInt(), position.FarmingAmount))
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnfarm, "no account to unfarm"), nil, nil
+		}
 
+		msg := types.NewMsgUnfarm(simAccount.Address, coinToUnfarm)
+
+		spendable = bk.SpendableCoins(ctx, simAccount.Address)
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
@@ -157,15 +226,35 @@ func SimulateMsgUnfarm(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Ope
 	}
 }
 
-func SimulateMsgHarvest(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
+func SimulateMsgHarvest(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount := accs[0]
-		spendable := bk.SpendableCoins(ctx, simAccount.Address)
-		msg := &types.MsgHarvest{}
+		accs = utils.ShuffleSimAccounts(r, accs)
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var denomToHarvest string
+		skip := true
+		for _, simAccount = range accs {
+			var positions []types.Position
+			k.IteratePositionsByFarmer(ctx, simAccount.Address, func(position types.Position) (stop bool) {
+				positions = append(positions, position)
+				return false
+			})
+			if len(positions) > 0 {
+				position := positions[r.Intn(len(positions))]
+				denomToHarvest = position.Denom
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgHarvest, "no account to harvest"), nil, nil
+		}
+		msg := types.NewMsgHarvest(simAccount.Address, denomToHarvest)
 
+		spendable = bk.SpendableCoins(ctx, simAccount.Address)
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
@@ -182,4 +271,27 @@ func SimulateMsgHarvest(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Op
 
 		return utils.GenAndDeliverTxWithFees(txCtx, gas, fees)
 	}
+}
+
+func fundAddr(ctx sdk.Context, bk types.BankKeeper, addr sdk.AccAddress, amt sdk.Coins) {
+	if err := bk.MintCoins(ctx, minttypes.ModuleName, amt); err != nil {
+		panic(err)
+	}
+	if err := bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amt); err != nil {
+		panic(err)
+	}
+}
+
+func genRewardAllocs(r *rand.Rand, ctx sdk.Context, lk types.LiquidityKeeper) (rewardAllocs []types.RewardAllocation) {
+	pairs := lk.GetAllPairs(ctx)
+	r.Shuffle(len(pairs), func(i, j int) {
+		pairs[i], pairs[j] = pairs[j], pairs[i]
+	})
+	n := r.Intn(len(pairs)) + 1 // Number of reward allocs
+	for i := 0; i < n; i++ {
+		pair := pairs[i]
+		rewardsPerDay := simtypes.RandSubsetCoins(r, utils.ParseCoins("1000_000000stake"))
+		rewardAllocs = append(rewardAllocs, types.NewRewardAllocation(pair.Id, rewardsPerDay))
+	}
+	return
 }

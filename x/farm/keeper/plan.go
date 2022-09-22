@@ -15,12 +15,6 @@ func (k Keeper) CreatePrivatePlan(
 	ctx sdk.Context, creatorAddr sdk.AccAddress, description string,
 	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
 ) (types.Plan, error) {
-	// Check if end time > block time
-	if !endTime.After(ctx.BlockTime()) {
-		return types.Plan{}, sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest, "end time is past")
-	}
-
 	// Check if the number of non-terminated private plans is not greater than
 	// the MaxNumPrivatePlans param.
 	// TODO: store the counter separately to optimize gas usage?
@@ -37,14 +31,6 @@ func (k Keeper) CreatePrivatePlan(
 			"maximum number of active private plans reached: %d", maxNum)
 	}
 
-	for _, rewardAlloc := range rewardAllocs {
-		_, found := k.liquidityKeeper.GetPair(ctx, rewardAlloc.PairId)
-		if !found {
-			return types.Plan{}, sdkerrors.Wrapf(
-				sdkerrors.ErrNotFound, "pair %d not found", rewardAlloc.PairId)
-		}
-	}
-
 	fee := k.GetPrivatePlanCreationFee(ctx)
 	feeCollectorAddr, err := sdk.AccAddressFromBech32(k.GetFeeCollector(ctx))
 	if err != nil {
@@ -54,15 +40,51 @@ func (k Keeper) CreatePrivatePlan(
 		return types.Plan{}, err
 	}
 
+	id, _ := k.GetLastPlanId(ctx)
+	farmingPoolAddr := types.DeriveFarmingPoolAddress(id + 1)
+
+	return k.createPlan(
+		ctx, description, farmingPoolAddr, creatorAddr,
+		rewardAllocs, startTime, endTime, true)
+}
+
+// CreatePublicPlan creates a new public farming plan.
+func (k Keeper) CreatePublicPlan(
+	ctx sdk.Context, description string,
+	farmingPoolAddr, termAddr sdk.AccAddress,
+	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
+) (types.Plan, error) {
+	return k.createPlan(
+		ctx, description, farmingPoolAddr, termAddr,
+		rewardAllocs, startTime, endTime, false)
+}
+
+func (k Keeper) createPlan(
+	ctx sdk.Context, description string, farmingPoolAddr, termAddr sdk.AccAddress,
+	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time, isPrivate bool,
+) (types.Plan, error) {
+	// Check if end time > block time
+	if !endTime.After(ctx.BlockTime()) {
+		return types.Plan{}, sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest, "end time is past")
+	}
+
+	for _, rewardAlloc := range rewardAllocs {
+		_, found := k.liquidityKeeper.GetPair(ctx, rewardAlloc.PairId)
+		if !found {
+			return types.Plan{}, sdkerrors.Wrapf(
+				sdkerrors.ErrNotFound, "pair %d not found", rewardAlloc.PairId)
+		}
+	}
+
 	// Generate the next plan id and update the last plan id.
 	id, _ := k.GetLastPlanId(ctx)
 	id++
 	k.SetLastPlanId(ctx, id)
 
-	farmingPoolAddr := types.DeriveFarmingPoolAddress(id)
 	plan := types.NewPlan(
-		id, description, farmingPoolAddr, creatorAddr, rewardAllocs,
-		startTime, endTime, true)
+		id, description, farmingPoolAddr, termAddr, rewardAllocs,
+		startTime, endTime, isPrivate)
 	k.SetPlan(ctx, plan)
 
 	return plan, nil
@@ -89,7 +111,7 @@ func (k Keeper) TerminateEndedPlans(ctx sdk.Context) (err error) {
 // in the farming pool to the termination address.
 func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.Plan) error {
 	if plan.IsTerminated {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "already terminated plan")
+		return types.ErrPlanAlreadyTerminated
 	}
 	farmingPoolAddr := plan.GetFarmingPoolAddress()
 	balances := k.bankKeeper.SpendableCoins(ctx, farmingPoolAddr)

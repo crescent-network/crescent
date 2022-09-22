@@ -25,5 +25,6 @@ type BankKeeper interface {
 
 type LiquidityKeeper interface {
 	GetPair(ctx sdk.Context, id uint64) (pair liquiditytypes.Pair, found bool)
+	GetAllPairs(ctx sdk.Context) (pairs []liquiditytypes.Pair)
 	IteratePoolsByPair(ctx sdk.Context, pairId uint64, cb func(pool liquiditytypes.Pool) (stop bool, err error)) error
 }
