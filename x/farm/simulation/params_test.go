@@ -22,7 +22,7 @@ func TestParamChanges(t *testing.T) {
 		subspace    string
 	}{
 		{"farm/FeeCollector", "FeeCollector", `"cosmos1stgwet7cl6tleugpqqqqqqqqqqqqqqqq9dhdq9"`, "farm"},
-		{"farm/MaxNumPrivatePlans", "MaxNumPrivatePlans", "15", "farm"},
+		{"farm/MaxNumPrivatePlans", "MaxNumPrivatePlans", "19", "farm"},
 	}
 
 	for i, p := range paramChanges {

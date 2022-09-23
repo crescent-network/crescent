@@ -15,20 +15,10 @@ func (k Keeper) CreatePrivatePlan(
 	ctx sdk.Context, creatorAddr sdk.AccAddress, description string,
 	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
 ) (types.Plan, error) {
-	// Check if the number of non-terminated private plans is not greater than
-	// the MaxNumPrivatePlans param.
-	// TODO: store the counter separately to optimize gas usage?
-	numPrivatePlans := 0
-	k.IterateAllPlans(ctx, func(plan types.Plan) (stop bool) {
-		if plan.IsPrivate && !plan.IsTerminated {
-			numPrivatePlans++
-		}
-		return false
-	})
-	if maxNum := k.GetMaxNumPrivatePlans(ctx); uint32(numPrivatePlans) >= maxNum {
+	if !k.CanCreatePrivatePlan(ctx) {
 		return types.Plan{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"maximum number of active private plans reached: %d", maxNum)
+			"maximum number of active private plans reached")
 	}
 
 	fee := k.GetPrivatePlanCreationFee(ctx)
@@ -148,8 +138,8 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	})
 
 	cache := NewCachedKeeper(k)
-	totalRewardsByFarmingPool := map[string]sdk.Coins{}
-	rewardsByPair := map[uint64]sdk.Coins{}
+	// farmingPool => (pairId => rewards)
+	allocsByFarmingPool := map[string]map[uint64]sdk.Coins{}
 	eligiblePoolsByPair := map[uint64][]liquiditytypes.Pool{}
 	for _, plan := range activePlans {
 		for _, rewardAlloc := range plan.RewardAllocations {
@@ -190,9 +180,12 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 				rewards := types.RewardsForBlock(rewardAlloc.RewardsPerDay, blockDuration)
 				// TODO: allocate sdk.DecCoins instead of sdk.Coins in future
 				truncatedRewards, _ := rewards.TruncateDecimal()
-				rewardsByPair[pair.Id] = rewardsByPair[pair.Id].Add(truncatedRewards...)
-				totalRewardsByFarmingPool[plan.FarmingPoolAddress] =
-					totalRewardsByFarmingPool[plan.FarmingPoolAddress].Add(truncatedRewards...)
+				allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
+				if !ok {
+					allocs = map[uint64]sdk.Coins{}
+					allocsByFarmingPool[plan.FarmingPoolAddress] = allocs
+				}
+				allocs[pair.Id] = allocs[pair.Id].Add(truncatedRewards...)
 			}
 		}
 	}
@@ -201,9 +194,17 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	// We keep this slice for deterministic iteration over the rewardsByDenom map.
 	var denomsWithRewards []string
 	for _, plan := range activePlans {
-		totalRewards := totalRewardsByFarmingPool[plan.FarmingPoolAddress]
+		allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
+		if !ok {
+			continue
+		}
+
+		totalRewards := sdk.Coins{}
+		for _, rewards := range allocs {
+			totalRewards = totalRewards.Add(rewards...)
+		}
 		balances := cache.SpendableCoins(ctx, plan.GetFarmingPoolAddress())
-		if !balances.IsAllGTE(totalRewardsByFarmingPool[plan.FarmingPoolAddress]) {
+		if !balances.IsAllGTE(totalRewards) {
 			continue
 		}
 		if err := k.bankKeeper.SendCoins(
@@ -224,7 +225,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 
 			for _, pool := range eligiblePoolsByPair[pair.Id] {
 				rewardProportion := rewardWeightByPool[pool.Id].QuoTruncate(totalRewardWeight)
-				rewards := sdk.NewDecCoinsFromCoins(rewardsByPair[pair.Id]...).
+				rewards := sdk.NewDecCoinsFromCoins(allocs[pair.Id]...).
 					MulDecTruncate(rewardProportion)
 
 				if _, ok := rewardsByDenom[pool.PoolCoinDenom]; !ok {
@@ -244,4 +245,19 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	}
 
 	return nil
+}
+
+// CanCreatePrivatePlan returns true if the current number of non-terminated
+// private plans is less than the limit.
+func (k Keeper) CanCreatePrivatePlan(ctx sdk.Context) bool {
+	// TODO: store the counter separately to optimize gas usage?
+	numPrivatePlans := 0
+	k.IterateAllPlans(ctx, func(plan types.Plan) (stop bool) {
+		if plan.IsPrivate && !plan.IsTerminated {
+			numPrivatePlans++
+		}
+		return false
+	})
+	maxNum := k.GetMaxNumPrivatePlans(ctx)
+	return uint32(numPrivatePlans) < maxNum
 }

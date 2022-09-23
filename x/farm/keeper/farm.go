@@ -14,8 +14,14 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 		return nil, err
 	}
 
+	farm, found := k.GetFarm(ctx, coin.Denom)
+	if !found {
+		farm = k.initializeFarm(ctx, coin.Denom)
+	}
+
 	position, found := k.GetPosition(ctx, farmerAddr, coin.Denom)
 	if !found {
+		k.incrementFarmPeriod(ctx, coin.Denom)
 		position = types.Position{
 			Farmer:        farmerAddr.String(),
 			Denom:         coin.Denom,
@@ -28,10 +34,7 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 		}
 	}
 
-	farm, found := k.GetFarm(ctx, coin.Denom)
-	if !found {
-		farm = k.initializeFarm(ctx, coin.Denom)
-	}
+	farm, _ = k.GetFarm(ctx, coin.Denom)
 	farm.TotalFarmingAmount = farm.TotalFarmingAmount.Add(coin.Amount)
 	k.SetFarm(ctx, coin.Denom, farm)
 
@@ -179,7 +182,7 @@ func (k Keeper) incrementReferenceCount(ctx sdk.Context, denom string, period ui
 	if !found { // Sanity check
 		panic("historical rewards not found")
 	}
-	if hist.ReferenceCount > 2 { // Sanity check
+	if hist.ReferenceCount >= 2 { // Sanity check
 		panic("reference count must never exceed 2")
 	}
 	hist.ReferenceCount++

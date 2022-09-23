@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestCreatePrivatePlan_TooManyPrivatePlans() {
 		utils.ParseTime("2022-01-01T00:00:00Z"),
 		utils.ParseTime("2023-01-01T00:00:00Z"))
 	s.Require().EqualError(
-		err, "maximum number of active private plans reached: 1: invalid request")
+		err, "maximum number of active private plans reached: invalid request")
 }
 
 func (s *KeeperTestSuite) TestCreatePrivatePlan_PairNotFound() {

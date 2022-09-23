@@ -16,7 +16,6 @@ import (
 	utils "github.com/crescent-network/crescent/v3/types"
 	"github.com/crescent-network/crescent/v3/x/farm/keeper"
 	"github.com/crescent-network/crescent/v3/x/farm/types"
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
 	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
@@ -89,15 +88,25 @@ func SimulateMsgCreatePrivatePlan(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-		fundAddr(ctx, bk, simAccount.Address, k.GetPrivatePlanCreationFee(ctx))
+		if !k.CanCreatePrivatePlan(ctx) {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgCreatePrivatePlan,
+				"cannot create more private plans"), nil, nil
+		}
 
-		rewardAllocs := genRewardAllocs(r, ctx, lk)
+		rewardAllocs, ok := genRewardAllocs(r, ctx, lk)
+		if !ok {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgCreatePrivatePlan, "no pairs"), nil, nil
+		}
+
+		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := types.NewMsgCreatePrivatePlan(
 			simAccount.Address, "Farming Plan", rewardAllocs,
 			ctx.BlockTime().AddDate(0, 0, 1),
 			ctx.BlockTime().AddDate(0, 0, 2+r.Intn(5)))
 
+		fundAddr(ctx, bk, simAccount.Address, k.GetPrivatePlanCreationFee(ctx))
 		acc := ak.GetAccount(ctx, simAccount.Address)
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
@@ -111,11 +120,12 @@ func SimulateMsgCreatePrivatePlan(
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(farmingtypes.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		// Fund the newly created private farming plan's farming pool
@@ -153,7 +163,8 @@ func SimulateMsgFarm(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Opera
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFarm, "no account to farm"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgFarm, "no account to farm"), nil, nil
 		}
 
 		msg := types.NewMsgFarm(simAccount.Address, coinToFarm)
@@ -202,7 +213,8 @@ func SimulateMsgUnfarm(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnfarm, "no account to unfarm"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgUnfarm, "no account to unfarm"), nil, nil
 		}
 
 		msg := types.NewMsgUnfarm(simAccount.Address, coinToUnfarm)
@@ -250,7 +262,8 @@ func SimulateMsgHarvest(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgHarvest, "no account to harvest"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgHarvest, "no account to harvest"), nil, nil
 		}
 		msg := types.NewMsgHarvest(simAccount.Address, denomToHarvest)
 
@@ -282,8 +295,11 @@ func fundAddr(ctx sdk.Context, bk types.BankKeeper, addr sdk.AccAddress, amt sdk
 	}
 }
 
-func genRewardAllocs(r *rand.Rand, ctx sdk.Context, lk types.LiquidityKeeper) (rewardAllocs []types.RewardAllocation) {
+func genRewardAllocs(r *rand.Rand, ctx sdk.Context, lk types.LiquidityKeeper) (rewardAllocs []types.RewardAllocation, ok bool) {
 	pairs := lk.GetAllPairs(ctx)
+	if len(pairs) == 0 {
+		return nil, false
+	}
 	r.Shuffle(len(pairs), func(i, j int) {
 		pairs[i], pairs[j] = pairs[j], pairs[i]
 	})
@@ -293,5 +309,5 @@ func genRewardAllocs(r *rand.Rand, ctx sdk.Context, lk types.LiquidityKeeper) (r
 		rewardsPerDay := simtypes.RandSubsetCoins(r, utils.ParseCoins("1000_000000stake"))
 		rewardAllocs = append(rewardAllocs, types.NewRewardAllocation(pair.Id, rewardsPerDay))
 	}
-	return
+	return rewardAllocs, true
 }

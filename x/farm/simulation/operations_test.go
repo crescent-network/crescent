@@ -78,7 +78,7 @@ func (s *SimTestSuite) TestSimulateMsgCreatePrivatePlan() {
 	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Creator)
 	s.Require().Equal("Farming Plan", msg.Description)
 	s.Require().Equal([]types.RewardAllocation{
-		types.NewRewardAllocation(1, utils.ParseCoins("826517536stake")),
+		types.NewRewardAllocation(1, utils.ParseCoins("169567170stake")),
 	}, msg.RewardAllocations)
 	s.Require().Equal(utils.ParseTime("2022-01-02T00:00:00Z"), msg.StartTime)
 	s.Require().Equal(utils.ParseTime("2022-01-06T00:00:00Z"), msg.EndTime)

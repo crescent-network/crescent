@@ -22,7 +22,7 @@ func GenFeeCollector(r *rand.Rand) string {
 }
 
 func GenMaxNumPrivatePlans(r *rand.Rand) uint32 {
-	return uint32(1 + r.Intn(100))
+	return uint32(5 + r.Intn(100))
 }
 
 // RandomizedGenState generates a random GenesisState for the module.

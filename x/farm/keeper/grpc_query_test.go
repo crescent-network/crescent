@@ -322,24 +322,15 @@ func (s *KeeperTestSuite) TestGRPCHistoricalRewards() {
 			},
 			"",
 			func(resp *types.QueryHistoricalRewardsResponse) {
-				s.Require().Len(resp.HistoricalRewards, 2)
-				hist, found := s.keeper.GetHistoricalRewards(s.ctx, "pool1", 0)
+				s.Require().Len(resp.HistoricalRewards, 1)
+				hist, found := s.keeper.GetHistoricalRewards(s.ctx, "pool1", 2)
 				s.Require().True(found)
-				s.Require().EqualValues(0, resp.HistoricalRewards[0].Period)
+				s.Require().EqualValues(2, resp.HistoricalRewards[0].Period)
 				s.Require().Equal(
 					hist.CumulativeUnitRewards,
 					resp.HistoricalRewards[0].CumulativeUnitRewards)
 				s.Require().Equal(
 					hist.ReferenceCount, resp.HistoricalRewards[0].ReferenceCount)
-
-				hist, found = s.keeper.GetHistoricalRewards(s.ctx, "pool1", 1)
-				s.Require().True(found)
-				s.Require().EqualValues(1, resp.HistoricalRewards[1].Period)
-				s.Require().Equal(
-					hist.CumulativeUnitRewards,
-					resp.HistoricalRewards[1].CumulativeUnitRewards)
-				s.Require().Equal(
-					hist.ReferenceCount, resp.HistoricalRewards[1].ReferenceCount)
 			},
 		},
 		{
@@ -350,9 +341,9 @@ func (s *KeeperTestSuite) TestGRPCHistoricalRewards() {
 			"",
 			func(resp *types.QueryHistoricalRewardsResponse) {
 				s.Require().Len(resp.HistoricalRewards, 1)
-				hist, found := s.keeper.GetHistoricalRewards(s.ctx, "pool2", 0)
+				hist, found := s.keeper.GetHistoricalRewards(s.ctx, "pool2", 1)
 				s.Require().True(found)
-				s.Require().EqualValues(0, resp.HistoricalRewards[0].Period)
+				s.Require().EqualValues(1, resp.HistoricalRewards[0].Period)
 				s.Require().Equal(
 					hist.CumulativeUnitRewards,
 					resp.HistoricalRewards[0].CumulativeUnitRewards)
@@ -420,7 +411,7 @@ func (s *KeeperTestSuite) TestGRPCAllRewards() {
 			},
 			"",
 			func(resp *types.QueryAllRewardsResponse) {
-				s.assertEq(utils.ParseDecCoins("115740stake"), resp.Rewards)
+				s.assertEq(utils.ParseDecCoins("28935stake"), resp.Rewards)
 			},
 		},
 		{
@@ -484,7 +475,7 @@ func (s *KeeperTestSuite) TestGRPCRewards() {
 			},
 			"",
 			func(resp *types.QueryRewardsResponse) {
-				s.assertEq(utils.ParseDecCoins("46296stake"), resp.Rewards)
+				s.assertEq(utils.ParseDecCoins("5787stake"), resp.Rewards)
 			},
 		},
 		{
@@ -495,7 +486,7 @@ func (s *KeeperTestSuite) TestGRPCRewards() {
 			},
 			"",
 			func(resp *types.QueryRewardsResponse) {
-				s.assertEq(utils.ParseDecCoins("69444stake"), resp.Rewards)
+				s.assertEq(utils.ParseDecCoins("23148stake"), resp.Rewards)
 			},
 		},
 		{
