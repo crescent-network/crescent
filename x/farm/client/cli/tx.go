@@ -76,7 +76,8 @@ $ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-0
 			}
 			var rewardAllocs []types.RewardAllocation
 			for _, arg := range args[3:] {
-				pairIdStr, rewardsStr, found := strings.Cut(arg, ":")
+				// TODO: use strings.Cut with go 1.18
+				pairIdStr, rewardsStr, found := cut(arg, ":")
 				if !found {
 					return fmt.Errorf("invalid reward allocation: %s", arg)
 				}
@@ -204,4 +205,11 @@ $ %s tx %s harvest stake --from mykey
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func cut(s, sep string) (before, after string, found bool) {
+	if i := strings.Index(s, sep); i >= 0 {
+		return s[:i], s[i+len(sep):], true
+	}
+	return s, "", false
 }
