@@ -83,3 +83,75 @@ func (s *SimTestSuite) TestSimulateMsgCreatePrivatePlan() {
 	s.Require().Equal(utils.ParseTime("2022-01-02T00:00:00Z"), msg.StartTime)
 	s.Require().Equal(utils.ParseTime("2022-01-06T00:00:00Z"), msg.EndTime)
 }
+
+func (s *SimTestSuite) TestSimulateMsgFarm() {
+	r := rand.New(rand.NewSource(0))
+	accs := s.getTestingAccounts(r, 1)
+
+	s.Require().NoError(
+		chain.FundAccount(
+			s.app.BankKeeper, s.ctx, accs[0].Address, utils.ParseCoins("1000_000000pool1")))
+	op := simulation.SimulateMsgFarm(s.app.AccountKeeper, s.app.BankKeeper)
+	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	s.Require().NoError(err)
+	s.Require().True(opMsg.OK)
+	s.Require().Len(futureOps, 0)
+
+	var msg types.MsgFarm
+	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
+
+	s.Require().Equal(types.TypeMsgFarm, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Farmer)
+	s.Require().Equal("505033207pool1", msg.Coin.String())
+}
+
+func (s *SimTestSuite) TestSimulateMsgUnfarm() {
+	r := rand.New(rand.NewSource(0))
+	accs := s.getTestingAccounts(r, 1)
+
+	s.Require().NoError(
+		chain.FundAccount(
+			s.app.BankKeeper, s.ctx, accs[0].Address, utils.ParseCoins("100_000000pool1")))
+	_, _ = s.keeper.Farm(s.ctx, accs[0].Address, utils.ParseCoin("100_000000pool1"))
+
+	op := simulation.SimulateMsgUnfarm(
+		s.app.AccountKeeper, s.app.BankKeeper, s.app.FarmKeeper)
+	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	s.Require().NoError(err)
+	s.Require().True(opMsg.OK)
+	s.Require().Len(futureOps, 0)
+
+	var msg types.MsgUnfarm
+	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
+
+	s.Require().Equal(types.TypeMsgUnfarm, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Farmer)
+	s.Require().Equal("21211168pool1", msg.Coin.String())
+}
+
+func (s *SimTestSuite) TestSimulateMsgHarvest() {
+	r := rand.New(rand.NewSource(0))
+	accs := s.getTestingAccounts(r, 1)
+
+	s.Require().NoError(
+		chain.FundAccount(
+			s.app.BankKeeper, s.ctx, accs[0].Address, utils.ParseCoins("100_000000pool1")))
+	_, _ = s.keeper.Farm(s.ctx, accs[0].Address, utils.ParseCoin("100_000000pool1"))
+
+	op := simulation.SimulateMsgHarvest(
+		s.app.AccountKeeper, s.app.BankKeeper, s.app.FarmKeeper)
+	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	s.Require().NoError(err)
+	s.Require().True(opMsg.OK)
+	s.Require().Len(futureOps, 0)
+
+	var msg types.MsgHarvest
+	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
+
+	s.Require().Equal(types.TypeMsgHarvest, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Farmer)
+	s.Require().Equal("pool1", msg.Denom)
+}
