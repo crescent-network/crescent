@@ -6,187 +6,201 @@ The scoring system is for off-chain evaluation of market maker performance from 
 
 ## Spread
 
-Spread(or Bid-ask spread) measures the distance of 2-sided liquidity provided by market maker. Spread is price difference between lowest ask and highest bid (average price of bid and ask).
+Spread(or Bid-ask spread) measures the distance of 2-sided liquidity. It represents the minimum cost of liquidity consumption. Spread is a price difference between the lowest ask and highest bid.
+
+## Width
+
+Width(ask or bid) indicates the difference between each side of the order’s maximum and minimum price. The market price does not stand still, so the proper width of maker orders helps stay stable.
 
 ## Depth
 
-Market depth is the quantity of bids and asks placed on an order book by market maker. If market depth is not enough to handle large amount of trade, market liquidity is insufficient despite its narrow spread.
+Depth(ask or bid) is the total order amount on each side. If market depth is insufficient enough to handle large trade amounts, market liquidity is low despite its narrow spread.
 
 ## Uptime
 
-Uptime measure the availability of the liquidity. Uptime is calculated as percentage of time a market maker provided orders which satisfy certain conditions.
+Uptime measures the availability of liquidity. High uptime ensures that users can trade at any time they want. Uptime is calculated as a percentage of time a market maker provides orders.
 
 ## Market Maker Order Type
 
-Market makers are provided a special order type so that they can place and cancel multiple market making orders by single transaction. Market maker order type supports to place the order amount into maximum 10 separate limit orders. This specific order type allows market makers atomic placement of group of limit orders, minimizing broadcasting failures and burdens.
+Market makers are provided a particular order type to place and cancel multiple market-making orders by a single transaction. This specific order type allows market makers atomic placement of a group of limit orders, minimizing broadcasting failures and burdens.
 
 # Scoring
 
 ## Methodology
 
-- Market maker score is calculated for each month.
-- The calculation is done off-chain based on on-chain blockchain data. Codebase is publicly available for any third party verification.
+- The evaluation objective is to reward market makers who consistently provide tight and deep liquidity for users.
+- Market makers earn points according to liquidity contribution, which means there is a score cap per block.
+- The calculation is done off-chain based on on-chain blockchain data. The codebase is publicly available for any third-party verification.
+
+## Market Maker Eligibility
+
+- Market maker eligibility is decided by governance every month.
+- Only registered market makers can earn incentives based on their scores. Market makers who fail to meet the uptime requirements are also given their month incentives.
+- New applicants are requested to submit ApplyMarketMaker transaction to be included in the uptime evaluation. Those who meet the uptime requirement will be included in eligible market makers through governance.
+- The governance can exclude existing market makers who fail to meet the requirements for 2 consecutive months or 3 months within the last 5 months.
+
+## Market Maker Orders Requirement
+
+- Orders satisfying following conditions can be recognized and evaluated:
+  - Use MMOrder from eligible MMAddress
+  - `Spread`equal or smaller than `MaxSpread`
+  - Min(`AskWidth`,`BidWidth`) equal or larger than `MinWidth`
+  - Min(`AskDepth`,`BidDepth`) equal or larger than `MinDepth`
+- Parameters (bottom of the document) are assigned differently for each pair depending on the market characteristics, and can be adjusted by governance
+
+## Uptime Requirement
+
+- Uptime requirement is measured in 2 stages:
+  - `LiveHour` is added as market maker provide valid orders for an hour. Following 1 out of 2 conditions, it fails:
+    - No valid orders longer than `MaxDowntime` in a row
+    - No valid orders longer than `MaxTotalDowntime` total in an hour
+  - `LiveDay` is added as `LiveHour` is equal or larger than `MinHours` in a day
+- Those who earn`LiveDay` equal or larger than `MinDays` satisfy the uptime requirement.
+- Parameters (bottom of the document) are decided and adjusted by governance.
 
 ## Formula
 
 - Following formula is used to compute how much incentives should be rewarded to each market maker per month. The amount of CRE earned is determined by the relative share of each market maker’s score.
+
 1. First step (within a block)
-    - Calculate 2-sided contribution score and take minimum value
-
-      $C = min \lbrack{ {AskQ1}\over{AskD1^2} }+ { {AskQ2}\over{AskD2^2} } + ... , { {BidQ1}\over{BidD1^2} }+ { {BidQ2}\over{BidD2^2} } + ... \rbrack$
-
-       - `AskQ(n)`, `BidQ(n)` : Number of token remaining (after trade) in n-th tick
-       - `AskD(n)`, `BidD(n)` : Price difference of n-th tick and mid-price divide with mid-price
-       - Calculate C when the market maker order satisfy `MaxSpread`, `MinWidth`, `MinDepth` conditions. If the order doesn’t satisfy these conditions, C is 0.
+   - Calculate 2-sided liquidity point and take minimum value (take integer part)
+     $P = min \lbrack{ {AskQ1}\over{AskD1^2} }+ { {AskQ2}\over{AskD2^2} } + ... , { {BidQ1}\over{BidD1^2} }+ { {BidQ2}\over{BidD2^2} } + ... \rbrack$
 2. Second step (within a block)
-    - Calculate each market maker’s contribution score and obtain proportion of it $C_m \over \sum_i C_i$
-
+   - Obtain contribution score by taking protportion of the point within the block
+     $P_m \over \sum_i P_i$
 3. Third step (within a month)
-    - Calculate `Uptime` within a month
-        - Obtain `LiveHour`
-            - `LiveHour` is added as market maker provide valid liquidity for each hour
-            - Following 1 out of 2 conditions, hour obligation failed
-                - No valid orders longer than `MaxDowntime` in a row
-                - No valid orders longer than `MaxTotalDowntime` total in an hour
-        - `Uptime` is calculated as follows : U = Total `LiveHour` / Total hours in a month
+   - Calculate `Uptime` by dividing `LiveHour` with total hours in a month
+     U = Total `LiveHour` / Total hours in a month
 4. Forth step (Final score)
-    - Final score of market maker “m” is as following :
+   - Final score of market maker “m” is as following :
 
 $$
-S_m = {U_m} ^3 \sum_{t=1}^{B} \lbrack { C_{mt} \over \sum_i C_{it} }\rbrack
+S_m = {U_m} ^3 \sum_{t=1}^{B} \lbrack { P_{mt} \over \sum_i P_{it} }\rbrack
 $$
 
-- $U_m$ is % of Market maker m’s `Uptime` in the month
-- $B$  is total number of blocks for the month
-- $C_{mt}$ is contribution score of market maker “m” at block “t”
+     U_m : % of Market maker m’s uptime in the month
+     B  : Total number of blocks for the month
+     P_mt : Liquidity point of market maker 'm' at block 't'
 
 ## Processing Order data
 
-- All variables are used as final values after the trade is done. In case order of m-th tick is partially filled, the tick can be a reference point(whether highest bid or lowest ask) of measures when one of following conditions is met. If not, those measures should be calculated in next (not-traded) tick, and tick is fall out in calculating the sum of depth.
-    - `AskQ(m)`/`BidQ(m)` is larger than `MinOpenRatio` of the original order amount of the tick
-    - `AskQ(m)`/`BidQ(m)` is larger than `MinOpenDepthRatio` of `MinDepth`
+- All variables are used as final values after the trade is made.
+- Even if the order of n-th tick is partially filled, the tick can still be a reference point(whether the highest bid or lowest ask) of measures when one of the following conditions is met. If not, the following tick becomes the reference point.
+- Min(`AskQ(n)`,`BidQ(n)`) is equal or larger than `MinOpenRatio` of the original order
+- Min(`AskQ(n)`,`BidQ(n)`) is equal or larger than `MinOpenDepthRatio` of `MinDepth`
 
 ![1](1.png)
 
-## Breadth of Liquidity
+## Measures
 
-- Basic Measure
-    - `MidPrice` is average price of lowest ask and highest bid
-    - `Spread` is price difference between lowest ask and highest bid divide by `MidPrice`
-    - `AskWidth` is price difference between highest ask and lowest ask divided by `MidPrice`, `BidWidth` is same with bid prices
-    - `AskD(n)` is price difference between `MidPrice` and n-th ask price divided by `MidPrice`, `BidD(n)` is same with bid prices
-    - The variables calculate at precision 3
-- Example
+- Breadth
+  - `MidPrice` : Average price of lowest ask and highest bid
+  - `Spread` : Price difference between lowest ask and highest bid divide by `MidPrice`
+  - `AskWidth` : Price difference between maximum and minimum ask divided by `MidPrice`. `BidWidth` is same with bid prices
+  - `AskD(n)` : Price difference between `MidPrice` and n-th ask price divided by `MidPrice`. `BidD(n)` is same with bid prices
+- Depth
+  - `AskQ(n)`,`BidQ(n)` : The amount of token remaining in n-th tick
+  - `AskDepth`,`BidDepth` : Total amount of token remaining in ask or bid side
 
-  ![2](2.png)
+## Example
 
-  Initial order is intact in Block1 and partially filled in next block. Let’s calculate breaths each :
+![2](2.png)
 
-    - Block1
-        - `MidPrice` : 9.945 = (9.96+9.93) / 2
-        - `Spread` : 0.0030.. = (9.96-9.93) / 9.945
-        - `AskWidth` : 0.0030.. = (9.99-9.96) / 9.945
-        - `BidWidth` : 0.0030.. = (9.93-9.90) / 9.945
-        - `AskD(1)` : 0.0015.. = (9.96-9.945) / 9.945
+- Assume `MaxSpread` 0.012, `MinWidth` 0.002, `MinDepth` 100, `MinOpenRatio` 0.5, `MinOpenDepthRatio` 0.1
 
-          `AskD(2)` : 0.0025.. = (9.97-9.945) / 9.945
+- Measure
 
-          `AskD(3)` : 0.0035.. = (9.98-9.945) / 9.945
+  - Block 1
 
-          `AskD(4)` : 0.0045.. = (9.99-9.945) / 9.945
+  |          | Market Maker A                       | Market Maker B                        |
+  | -------- | ------------------------------------ | ------------------------------------- |
+  | MidPrice | 9.945 = (9.96 + 9.93) / 2            | 9.945 = (9.97 + 9.92) / 2             |
+  | Spread   | 0.00301659.. = (9.96 - 9.93) / 9.945 | 0.00502765.. = (9.97 - 9.92) / 9.945  |
+  | AskWidth | 0.00301659.. = (9.99-9.96) / 9.945   | 0.00201106.. = (9.99 - 9.97) / 9.945  |
+  | BidWidth | 0.00301659.. = (9.93-9.90) / 9.945   | 0.00201106.. = (9.92 - 9.90) / 9.945  |
+  | AskD(1)  | 0.00150829.. = (9.96-9.945) / 9.945  | 0.00251382.. = (9.97 - 9.945) / 9.945 |
+  | AskD(2)  | 0.00251382.. = (9.97-9.945) / 9.945  | 0.00351935.. = (9.98 - 9.945) / 9.945 |
+  | AskD(3)  | 0.00351935.. = (9.98-9.945) / 9.945  | 0.00452488.. = (9.99 - 9.945) / 9.945 |
+  | AskD(4)  | 0.00452488.. = (9.99-9.945) / 9.945  | -                                     |
+  | BidD(1)  | 0.00150829.. = (9.945-9.93) / 9.945  | 0.00251382.. = (9.945 - 9.92) / 9.945 |
+  | BidD(2)  | 0.00251382.. = (9.945-9.92) / 9.945  | 0.00351935.. = (9.945 - 9.91) / 9.945 |
+  | BidD(3)  | 0.00351935.. = (9.945-9.91) / 9.945  | 0.00452488.. = (9.945 - 9.90) / 9.945 |
+  | BidD(4)  | 0.00452488.. = (9.945-9.90) / 9.945  | -                                     |
+  | AskDepth | 200                                  | 225                                   |
+  | BidDepth | 160                                  | 240                                   |
+  | AskQ(1)  | 50                                   | 75                                    |
+  | AskQ(2)  | 50                                   | 75                                    |
+  | AskQ(3)  | 50                                   | 75                                    |
+  | AskQ(4)  | 50                                   | -                                     |
+  | BidQ(1)  | 40                                   | 80                                    |
+  | BidQ(2)  | 40                                   | 80                                    |
+  | BidQ(3)  | 40                                   | 80                                    |
+  | BidQ(4)  | 40                                   | -                                     |
 
-          `BidD(1)` : 0.0015.. = (9.945-9.93) / 9.945
+  - Block 2
 
-          `BidD(2)` : 0.0025.. = (9.945-9.92) / 9.945
+  |          | Market Maker A                       | Market Maker B                        |
+  | -------- | ------------------------------------ | ------------------------------------- |
+  | MidPrice | 9.935 = (9.96 + 9.91) / 2            | 9.945 = (9.97 + 9.92) / 2             |
+  | Spread   | 0.00503271.. = (9.96 - 9.91) / 9.935 | 0.00502765.. = (9.97 - 9.92) / 9.945  |
+  | AskWidth | 0.00301962.. = (9.99-9.96) / 9.935   | 0.00201106.. = (9.99 - 9.97) / 9.945  |
+  | BidWidth | 0.00100654.. = (9.91-9.90) / 9.935   | 0.00201106.. = (9.92 - 9.90) / 9.945  |
+  | AskD(1)  | 0.00251635.. = (9.96-9.935) / 9.935  | 0.00251382.. = (9.97 - 9.945) / 9.945 |
+  | AskD(2)  | 0.00352289.. = (9.97-9.935) / 9.935  | 0.00351935.. = (9.98 - 9.945) / 9.945 |
+  | AskD(3)  | 0.00452944.. = (9.98-9.935) / 9.935  | 0.00452488.. = (9.99 - 9.945) / 9.945 |
+  | AskD(4)  | 0.00553598.. = (9.99-9.935) / 9.935  | -                                     |
+  | BidD(1)  | 0.00050327.. = (9.935-9.93) / 9.935  | 0.00251382.. = (9.945 - 9.92) / 9.945 |
+  | BidD(2)  | 0.00150981.. = (9.935-9.92) / 9.935  | 0.00351935.. = (9.945 - 9.91) / 9.945 |
+  | BidD(3)  | 0.00251635.. = (9.935-9.91) / 9.935  | 0.00452488.. = (9.945 - 9.90) / 9.945 |
+  | BidD(4)  | 0.00352289.. = (9.935-9.90) / 9.935  | -                                     |
+  | AskDepth | 190                                  | 225                                   |
+  | BidDepth | 80                                   | 180                                   |
+  | AskQ(1)  | 40                                   | 75                                    |
+  | AskQ(2)  | 50                                   | 75                                    |
+  | AskQ(3)  | 50                                   | 75                                    |
+  | AskQ(4)  | 50                                   | -                                     |
+  | BidQ(1)  | 0                                    | 20                                    |
+  | BidQ(2)  | 5                                    | 80                                    |
+  | BidQ(3)  | 40                                   | 80                                    |
+  | BidQ(4)  | 40                                   | -                                     |
 
-          `BidD(3)` : 0.0035.. = (9.945-9.91) / 9.945
+  - In case of market maker A, the highest bid has moved from 9.93 to 9.91 at block 2. BidQ(2) does not meet the either conditions of MinOpenRatio of original order amount (5/40 < 0.5) nor MinOpenDepthRatio ( 100(MinDepth) \* 0.1 = 10 ).
+  - For market maker B’s case, reference point haven’t changed on second block. `BidQ(1)` could not meet the `MinOpenRatio` (20/80 < 50)condition, but larger than `MinOpenDepthRatio`.
 
-          `BidD(4)` : 0.0045.. = (9.945-9.90) / 9.945
+- Liquidity Point
+  - Block 1
+    - Both market maker A and B meet the condition
+      - `Spread(A)`, `Spread(B)` < `MaxSpread` (0.012)
+      - `AskWidth(A)`, `BidWidth(A)`, `AskWidth(B)`, `BidWidth(B)` > `MinWidth` (0.002)
+      - `AskDepth(A)`, `BidDepth(A)`, `AskDepth(B)`, `BidDepth(B)` > `MinDepth` (100)
+    - Each point on Block 1 is as follows,
+      $P_{A1} = min \lbrack{ {50}\over{0.0015..^2} }+ {{50}\over{0.0025..^2} } + {{50}\over{0.0035..^2} }+ {{50}\over{0.0045..^2} }, {{40}\over{0.0015..^2} }+ {{40}\over{0.0025..^2} } + {{40}\over{0.0035..^2}}+ {{40}\over{0.0035..^2} }\rbrack$
+      $P_{A1} = min \lbrack36369600, 29095680\rbrack = 29,095,680$
+      $P_{B1} = min \lbrack{ {75}\over{0.0025..^2} }+ {{75}\over{0.0035..^2} } + {{75}\over{0.0045..^2} }, {{80}\over{0.0025..^2} }+ {{80}\over{0.0035..^2} } + {{80}\over{0.0045..^2}}\rbrack$
+      $P_{B1} = min \lbrack 21586725, 23025840\rbrack = 21,586,725$
+  - Block 2
+    - Only Market maker B meet the condition,
+      - `Spread(A)`, `Spread(B)` < `MaxSpread` (0.012)
+      - `AskWidth(A)`, `AskWidth(B)`, `BidWidth(B)` > `MinWidth` (0.002)
+      - `BidWidth(A) < MinWidth`
+      - `AskDepth(A)`, `AskDepth(B)`, `BidDepth(B)` > `MinDepth` (100)
+      - `BidDepth(A) < MinDepth`
+        $P_{A2} = min \lbrack 14414430,0\rbrack = 0$
+        $P_{B2} = min \lbrack{ {75}\over{0.0025..^2} }+ {{75}\over{0.0035..^2} } + {{75}\over{0.0045..^2} }, {{20}\over{0.0025..^2} }+ {{80}\over{0.0035..^2} } + {{80}\over{0.0045..^2}}\rbrack$
+        $P_{B2} = min \lbrack 21586725, 13531150\rbrack = 13,531,150$
+- Contribution Score
 
-    - Block2
-        - Lowest ask order of 9.96 is valid reference point because `AskQ(1)` is 80% of its original order, which is larger than `MinOpenRatio` of 50%.
-        - Highest bid order of 9.92 is not valid reference point because `BidQ(2)` is not as large as `MinOpenRatio` of original order nor `MinOpenDepthRatio` of `MinDepth`. Therefore highest bid price is 9.91 at this time.
-        - `MidPrice` : 9.935 = (9.96+9.91) / 2
-        - `Spread` : 0.0050.. = (9.96-9.91) / 9.935
-        - `AskWidth` : 0.0030.. = (9.99-9.96) / 9.935
-        - `BidWidth` : 0.0010.. = (9.91-9.90) / 9.935
-        - `AskD(1)` : 0.0025.. = (9.96-9.935) / 9.935
+  - Block 1
+    $C_{A1} = \frac{29095680}{29095680+21586725} = 0.574078..$
+    $C_{B1} = \frac{21586725}{29095680+21586725} = 0.425921..$
+  - Block 2
+    $C_{A2} = 0$
+    $C_{B2} = 1$
 
-          `AskD(2)` : 0.0035.. = (9.97-9.935) / 9.935
-
-          `AskD(3)` : 0.0045.. = (9.98-9.935) / 9.935
-
-          `AskD(4)` : 0.0055.. = (9.99-9.935) / 9.935
-
-          `BidD(3)` : 0.0025.. = (9.935-9.91) / 9.935
-
-          `BidD(4)` : 0.0035.. = (9.935-9.90) / 9.935
-
-## Depth(Quantity)
-
-- Basic Measure
-    - `AskQ(n)`/`BidQ(n)` is the number of token remaining in n-th tick
-    - `AskDepth`/`BidDepth` is total number of token remaining in ask/bid side
-- Example
-
-  Same example from above :
-
-    - Block1
-        - `AskDepth` : 200
-        - `AskQ(1)`~`AskQ(4)` : 50
-        - `BidDepth` : 160
-        - `BidQ(1)`~`BidQ(4)` : 40
-    - Block2
-        - Lowest ask order of 9.96 is valid, while highest bid order of 9.92 is not valid. We neglect `BidQ(2)` from calculating `BidDepth`
-        - `AskDepth` : 190
-        - `AskQ(1)` : 40
-        - `AskQ(2)`~`AskQ(4)` : 50
-        - `BidDepth` : 80
-        - `BidQ(1)`~`BidQ(2)` : 0
-        - `BidQ(3)`~`BidQ(4)` : 40
-
-## Requirements of Market Making Orders
-
-- Market makers should provide liquidity in specific manner(using Market-maker order type) in order to be recognized and evaluated
-- Orders satisfying following conditions only can obtain contribution scores, unless it will get 0 point in the block :
-    - `Spread` narrower than `MaxSpread` to ensure transaction cost to be as low as possible for traders
-    - Order `Width` of both side wider than `MinWidth` for quality liquidity in the market
-    - `Depth` larger than `MinDepth` in order to provide meaningful market depth to users
-- These parameters are assigned differently for each pair depending on the market characteristics, and can be adjusted by governance
-- Example
-
-  Assume `MaxSpread` 0.012, `MinWidth` 0.002, `MinDepth` 100 with same example above :
-
-    - Block1
-        - All the condition is met
-            - Spread (0.0030..) < MaxSpread (0.012)
-            - AskWidth(0.0030..), BidWidth(0.0030..) > MinWidth (0.002)
-            - AskDepth(200), BidDepth(160) > MinDepth (100)
-        - Contribution Score is as follows,
-
-          $C = min \lbrack{ {AskQ1}\over{AskD1^2} }+ { {AskQ2}\over{AskD2^2} } + ... , { {BidQ1}\over{BidD1^2} }+ { {BidQ2}\over{BidD2^2} } + ... \rbrack$
-
-          $C = min \lbrack{ {50}\over{0.0015..^2} }+ {{50}\over{0.0025..^2} } + {{50}\over{0.0035..^2} }+ {{50}\over{0.0045..^2} }, {{40}\over{0.0015..^2} }+ {{40}\over{0.0025..^2} } + {{40}\over{0.0035..^2}}+ {{40}\over{0.0035..^2} }\rbrack$
-
-          $C = min \lbrack36369600.., 29095680..\rbrack = 29,095,680..$
-
-    - Block2
-        - Bid side failed to meet the requirement,
-            - Spread (0.0050..) < MaxSpread (0.012)
-            - AskWidth(0.0030..) > MinWidth (0.002)
-            - `BidWidth(0.0010..) < MinWidth (0.002)`
-            - AskDepth(190) > MinDepth (100)
-            - `BidDepth(80) < MinDepth (100)`
-        - Because it failed to meet the minimum requirement of market maker order, the contribution score is 0 in Block 2
-
-## Market Maker Eligibility
-
-- Market maker applicants who achieve minimum requirement of uptime obtain eligibility. Requirements of uptime has 3 levels.
-    - Hourly obligation : `LiveHour` is added as market maker provide valid liquidity for an hour
-    - Daily obligation : `LiveDay` is added as `LiveHour` is larger than `MinHours` in a day
-    - Monthly obligation : `LiveDay` larger than `MinDays` complete the requirements
-- New applicants should meet monthly obligation and submit ApplyMarketMaker transaction to obtain eligibility in market maker incentives. Existing market makers are obliged to fulfill uptime conditions to maintain their eligibility. Market makers who fail to meet the requirements for 2 consecutive months or 3 months within the last 5 months can be excluded by governance.
-- Existing market makers who fail to meet the conditions can be given this month’s incentives according to the scores they earned.
+- Final Score
+  - Sum up all of the contribution scores for the month and product cube of uptime
+  - Market maker A : (Assuming uptime 70%) $S_A = (0.7)^3 *(0.5740.. + 0 +...)$
+  - Market maker B : (Assuming uptime 90%) : $S_B = (0.9)^3 *( 0.4259..+1+...)$
 
 ## Parameters
 
@@ -195,7 +209,7 @@ Scoring system references the following parameters of the market maker module :
 ### Common Parameters
 
 | Key               | Definition                                          | Example      |
-|-------------------|-----------------------------------------------------|--------------|
+| ----------------- | --------------------------------------------------- | ------------ |
 | MinOpenRatio      | Minimum ratio to maintain the tick order            | 0.5          |
 | MinOpenDepthRatio | Minimum ratio of open amount to MinDepth            | 0.1          |
 | MaxDowntime       | Maximum allowable consecutive blocks of outage      | 20 (blocks)  |
@@ -206,7 +220,7 @@ Scoring system references the following parameters of the market maker module :
 ### Parameters for each pair
 
 | Key             | Definition                                                                | Example                                                        |
-|-----------------|---------------------------------------------------------------------------|----------------------------------------------------------------|
+| --------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | PairId          | Pair id of liquidity module                                               | 20                                                             |
 | UpdateTime      | Time the pair variables start to be applied to the scoring system         | 2022-12-01T00:00:00Z                                           |
 | IncentiveWeight | Incentive weights for each pair                                           | 0.1                                                            |
