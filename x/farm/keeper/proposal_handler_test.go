@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestFarmingPlanProposalHandler() {
 
 	privPlan := s.createPrivatePlan([]types.RewardAllocation{
 		types.NewRewardAllocation(pair.Id, utils.ParseCoins("100_000000stake")),
-	})
+	}, utils.ParseCoins("10000_000000stake"))
 	terminatePlanReq = types.NewTerminatePlanRequest(privPlan.Id)
 	proposal = types.NewFarmingPlanProposal(
 		"Terminate a private farming plan", "Description",

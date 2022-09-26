@@ -104,15 +104,9 @@ func (s *KeeperTestSuite) assertEq(exp, got interface{}) {
 	s.Require().True(equal, "expected:\t%v\ngot:\t\t%v", exp, got)
 }
 
-//nolint
 func (s *KeeperTestSuite) getBalances(addr sdk.AccAddress) sdk.Coins {
 	s.T().Helper()
 	return s.app.BankKeeper.GetAllBalances(s.ctx, addr)
-}
-
-func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin {
-	s.T().Helper()
-	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
 }
 
 func (s *KeeperTestSuite) createPair(baseCoinDenom, quoteCoinDenom string) liquiditytypes.Pair {
@@ -132,16 +126,15 @@ func (s *KeeperTestSuite) createPairWithLastPrice(baseCoinDenom, quoteCoinDenom 
 	return pair
 }
 
-func (s *KeeperTestSuite) createPool(creatorAddr sdk.AccAddress, pairId uint64, depositCoins sdk.Coins) liquiditytypes.Pool {
+func (s *KeeperTestSuite) createPool(pairId uint64, depositCoins sdk.Coins) liquiditytypes.Pool {
 	s.T().Helper()
-	s.fundAddr(creatorAddr, s.app.LiquidityKeeper.GetPoolCreationFee(s.ctx).Add(depositCoins...))
+	s.fundAddr(helperAddr, s.app.LiquidityKeeper.GetPoolCreationFee(s.ctx).Add(depositCoins...))
 	pool, err := s.app.LiquidityKeeper.CreatePool(
-		s.ctx, liquiditytypes.NewMsgCreatePool(creatorAddr, pairId, depositCoins))
+		s.ctx, liquiditytypes.NewMsgCreatePool(helperAddr, pairId, depositCoins))
 	s.Require().NoError(err)
 	return pool
 }
 
-//nolint
 func (s *KeeperTestSuite) createRangedPool(
 	pairId uint64, depositCoins sdk.Coins, minPrice, maxPrice, initialPrice sdk.Dec,
 ) liquiditytypes.Pool {
@@ -154,24 +147,38 @@ func (s *KeeperTestSuite) createRangedPool(
 	return pool
 }
 
-func (s *KeeperTestSuite) deposit(depositorAddr sdk.AccAddress, poolId uint64, depositCoins sdk.Coins) {
-	s.T().Helper()
-	s.fundAddr(depositorAddr, depositCoins)
-	_, err := s.app.LiquidityKeeper.Deposit(
-		s.ctx, liquiditytypes.NewMsgDeposit(depositorAddr, poolId, depositCoins))
-	s.Require().NoError(err)
-}
-
-func (s *KeeperTestSuite) createPrivatePlan(rewardAllocs []types.RewardAllocation) types.Plan {
+func (s *KeeperTestSuite) createPrivatePlan(rewardAllocs []types.RewardAllocation, initialFunds sdk.Coins) types.Plan {
 	s.T().Helper()
 	s.fundAddr(helperAddr, s.keeper.GetPrivatePlanCreationFee(s.ctx))
 	plan, err := s.keeper.CreatePrivatePlan(
 		s.ctx, helperAddr, "", rewardAllocs, sampleStartTime, sampleEndTime)
 	s.Require().NoError(err)
+	s.fundAddr(plan.GetFarmingPoolAddress(), initialFunds)
 	return plan
 }
 
-//nolint
+func (s *KeeperTestSuite) farm(farmerAddr sdk.AccAddress, coin sdk.Coin) sdk.Coins {
+	s.T().Helper()
+	s.fundAddr(farmerAddr, sdk.NewCoins(coin))
+	withdrawnRewards, err := s.keeper.Farm(s.ctx, farmerAddr, coin)
+	s.Require().NoError(err)
+	return withdrawnRewards
+}
+
+func (s *KeeperTestSuite) unfarm(farmerAddr sdk.AccAddress, coin sdk.Coin) sdk.Coins {
+	s.T().Helper()
+	withdrawnRewards, err := s.keeper.Unfarm(s.ctx, farmerAddr, coin)
+	s.Require().NoError(err)
+	return withdrawnRewards
+}
+
+func (s *KeeperTestSuite) harvest(farmerAddr sdk.AccAddress, denom string) sdk.Coins {
+	s.T().Helper()
+	withdrawnRewards, err := s.keeper.Harvest(s.ctx, farmerAddr, denom)
+	s.Require().NoError(err)
+	return withdrawnRewards
+}
+
 func (s *KeeperTestSuite) rewards(farmerAddr sdk.AccAddress, denom string) sdk.DecCoins {
 	_, found := s.keeper.GetFarm(s.ctx, denom)
 	if !found {
@@ -180,18 +187,42 @@ func (s *KeeperTestSuite) rewards(farmerAddr sdk.AccAddress, denom string) sdk.D
 	return s.keeper.Rewards(s.ctx, farmerAddr, denom)
 }
 
+func (s *KeeperTestSuite) assertHistoricalRewards(exp map[string]map[uint64]types.HistoricalRewards) {
+	s.T().Helper()
+	got := map[string]map[uint64]types.HistoricalRewards{}
+	s.keeper.IterateAllHistoricalRewards(s.ctx, func(denom string, period uint64, hist types.HistoricalRewards) (stop bool) {
+		histsByPeriod, ok := got[denom]
+		if !ok {
+			histsByPeriod = map[uint64]types.HistoricalRewards{}
+			got[denom] = histsByPeriod
+		}
+		histsByPeriod[period] = hist
+		return false
+	})
+	s.Require().Len(got, len(exp))
+	for denom := range exp {
+		s.Require().Len(got[denom], len(exp[denom]))
+		for period := range exp[denom] {
+			_, ok := got[denom][period]
+			s.Require().True(ok)
+			exp, got := exp[denom][period], got[denom][period]
+			s.assertEq(exp.CumulativeUnitRewards, got.CumulativeUnitRewards)
+			s.Require().EqualValues(exp.ReferenceCount, got.ReferenceCount)
+		}
+	}
+}
+
 func (s *KeeperTestSuite) createSamplePlans() (privPlan, pubPlan types.Plan) {
 	s.T().Helper()
 	pair1 := s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
 	pair2 := s.createPairWithLastPrice("denom2", "denom3", sdk.NewDec(1))
-	s.createPool(helperAddr, pair1.Id, utils.ParseCoins("100_000000denom1,100_000000denom2"))
-	s.createPool(helperAddr, pair2.Id, utils.ParseCoins("100_000000denom2,100_000000denom3"))
+	s.createPool(pair1.Id, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+	s.createPool(pair2.Id, utils.ParseCoins("100_000000denom2,100_000000denom3"))
 
 	privPlan = s.createPrivatePlan([]types.RewardAllocation{
 		types.NewRewardAllocation(pair1.Id, utils.ParseCoins("100_000000stake")),
 		types.NewRewardAllocation(pair2.Id, utils.ParseCoins("200_000000stake")),
-	})
-	s.fundAddr(privPlan.GetFarmingPoolAddress(), utils.ParseCoins("10000_000000stake"))
+	}, utils.ParseCoins("10000_000000stake"))
 	farmingPoolAddr := utils.TestAddress(100)
 	proposal := types.NewFarmingPlanProposal(
 		"Title", "Description",

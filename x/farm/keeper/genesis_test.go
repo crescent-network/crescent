@@ -6,22 +6,19 @@ import (
 )
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {
-	pair := s.createPair("denom1", "denom2")
-	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("1000_000000denom1,1000_000000denom2"))
+	s.createPair("denom1", "denom2")
+	s.createPool(1, utils.ParseCoins("1000_000000denom1,1000_000000denom2"))
 	s.createPrivatePlan([]types.RewardAllocation{
 		{
-			PairId:        pair.Id,
+			PairId:        1,
 			RewardsPerDay: utils.ParseCoins("100_000000stake"),
 		},
-	})
+	}, utils.ParseCoins("10000_000000stake"))
+
 	farmerAddr := utils.TestAddress(0)
-	s.deposit(farmerAddr, pool.Id, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+	s.farm(farmerAddr, utils.ParseCoin("1_000000pool1"))
 	s.nextBlock()
-	_, err := s.keeper.Farm(s.ctx, farmerAddr, s.getBalance(farmerAddr, pool.PoolCoinDenom))
-	s.Require().NoError(err)
-	s.nextBlock()
-	_, err = s.keeper.Harvest(s.ctx, farmerAddr, pool.PoolCoinDenom)
-	s.Require().NoError(err)
+	s.harvest(farmerAddr, "pool1")
 	s.nextBlock()
 
 	genState := s.keeper.ExportGenesis(s.ctx)

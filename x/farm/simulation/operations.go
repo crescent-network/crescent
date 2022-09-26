@@ -29,7 +29,7 @@ const (
 	DefaultWeightCreatePrivatePlan = 10
 	DefaultWeightFarm              = 40
 	DefaultWeightUnfarm            = 50
-	DefaultWeightHarvest           = 30
+	DefaultWeightHarvest           = 20
 )
 
 var (
