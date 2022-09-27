@@ -10,6 +10,8 @@
   - x/mint/**/*
 "x/marketmaker":
   - x/marketmaker/**/*
+"x/farm":
+  - x/farm/**/*
 "documentation":
   - docs/**/*
 "build":
