@@ -187,6 +187,7 @@ var (
 		claimtypes.ModuleName:          nil,
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		marketmakertypes.ModuleName:    nil,
+		farmtypes.ModuleName:           nil,
 	}
 )
 
@@ -470,8 +471,8 @@ func NewApp(
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposalHandler(app.FarmingKeeper)).
-		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper))
-	// TODO: add x/farm proposal handler
+		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper)).
+		AddRoute(farmtypes.RouterKey, farm.NewFarmingPlanProposalHandler(app.FarmKeeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,
