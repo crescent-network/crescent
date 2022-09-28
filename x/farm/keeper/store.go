@@ -40,6 +40,20 @@ func (k Keeper) SetLastPlanId(ctx sdk.Context, id uint64) {
 	store.Set(types.LastPlanIdKey, sdk.Uint64ToBigEndian(id))
 }
 
+func (k Keeper) GetNumPrivatePlans(ctx sdk.Context) (num uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.NumPrivatePlansKey)
+	if bz == nil {
+		return 0
+	}
+	return sdk.BigEndianToUint64(bz)
+}
+
+func (k Keeper) SetNumPrivatePlans(ctx sdk.Context, num uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.NumPrivatePlansKey, sdk.Uint64ToBigEndian(num))
+}
+
 func (k Keeper) GetPlan(ctx sdk.Context, id uint64) (plan types.Plan, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPlanKey(id))

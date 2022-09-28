@@ -26,10 +26,11 @@ const (
 var (
 	LastPlanIdKey              = []byte{0xd0}
 	LastBlockTimeKey           = []byte{0xd1}
-	PlanKeyPrefix              = []byte{0xd2}
-	FarmKeyPrefix              = []byte{0xd3}
-	PositionKeyPrefix          = []byte{0xd4}
-	HistoricalRewardsKeyPrefix = []byte{0xd5}
+	NumPrivatePlansKey         = []byte{0xd2}
+	PlanKeyPrefix              = []byte{0xd3}
+	FarmKeyPrefix              = []byte{0xd4}
+	PositionKeyPrefix          = []byte{0xd5}
+	HistoricalRewardsKeyPrefix = []byte{0xd6}
 )
 
 func GetPlanKey(id uint64) []byte {

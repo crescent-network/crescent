@@ -90,6 +90,10 @@ func (k Keeper) createPlan(
 		startTime, endTime, isPrivate)
 	k.SetPlan(ctx, plan)
 
+	if plan.IsPrivate {
+		k.SetNumPrivatePlans(ctx, k.GetNumPrivatePlans(ctx)+1)
+	}
+
 	return plan, nil
 }
 
@@ -124,6 +128,9 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.Plan) error {
 	}
 	plan.IsTerminated = true
 	k.SetPlan(ctx, plan)
+	if plan.IsPrivate {
+		k.SetNumPrivatePlans(ctx, k.GetNumPrivatePlans(ctx)-1)
+	}
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventTerminatePlan{
 		PlanId: plan.Id,
 	}); err != nil {
@@ -268,14 +275,5 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 // CanCreatePrivatePlan returns true if the current number of non-terminated
 // private plans is less than the limit.
 func (k Keeper) CanCreatePrivatePlan(ctx sdk.Context) bool {
-	// TODO: store the counter separately to optimize gas usage?
-	numPrivatePlans := 0
-	k.IterateAllPlans(ctx, func(plan types.Plan) (stop bool) {
-		if plan.IsPrivate && !plan.IsTerminated {
-			numPrivatePlans++
-		}
-		return false
-	})
-	maxNum := k.GetMaxNumPrivatePlans(ctx)
-	return uint32(numPrivatePlans) < maxNum
+	return k.GetNumPrivatePlans(ctx) < uint64(k.GetMaxNumPrivatePlans(ctx))
 }

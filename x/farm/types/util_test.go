@@ -63,14 +63,14 @@ func TestPoolRewardWeight(t *testing.T) {
 			amm.NewRangedPool(
 				sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{},
 				utils.ParseDec("0.9"), utils.ParseDec("1.15")),
-			utils.ParseDec("16824065823.719412156326941740"),
+			utils.ParseDec("16824065823.719412156326951875"),
 		},
 		{
 			"#4",
 			amm.NewRangedPool(
 				sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.Int{},
 				utils.ParseDec("0.99"), utils.ParseDec("1.01")),
-			utils.ParseDec("200493749898.277059377702876726"),
+			utils.ParseDec("200493749898.277059377703066722"),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
