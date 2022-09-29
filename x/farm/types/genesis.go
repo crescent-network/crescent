@@ -9,13 +9,14 @@ import (
 
 // NewGenesisState returns a new GenesisState.
 func NewGenesisState(
-	params Params, lastBlockTime *time.Time, lastPlanId uint64,
+	params Params, lastBlockTime *time.Time, lastPlanId, numPrivatePlans uint64,
 	plans []Plan, farms []FarmRecord, positions []Position, hists []HistoricalRewardsRecord,
 ) *GenesisState {
 	return &GenesisState{
 		Params:            params,
 		LastBlockTime:     lastBlockTime,
 		LastPlanId:        lastPlanId,
+		NumPrivatePlans:   numPrivatePlans,
 		Plans:             plans,
 		Farms:             farms,
 		Positions:         positions,
@@ -25,7 +26,7 @@ func NewGenesisState(
 
 // DefaultGenesis returns the default genesis state for the module.
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(DefaultParams(), nil, 0, nil, nil, nil, nil)
+	return NewGenesisState(DefaultParams(), nil, 0, 0, nil, nil, nil, nil)
 }
 
 func (genState GenesisState) Validate() error {

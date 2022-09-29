@@ -18,6 +18,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	if genState.LastPlanId > 0 {
 		k.SetLastPlanId(ctx, genState.LastPlanId)
 	}
+	k.SetNumPrivatePlans(ctx, genState.NumPrivatePlans)
 	for _, plan := range genState.Plans {
 		k.SetPlan(ctx, plan)
 	}
@@ -75,5 +76,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 
 	return types.NewGenesisState(
-		k.GetParams(ctx), lastBlockTimePtr, lastPlanId, plans, farms, positions, hists)
+		k.GetParams(ctx), lastBlockTimePtr, lastPlanId, k.GetNumPrivatePlans(ctx),
+		plans, farms, positions, hists)
 }
