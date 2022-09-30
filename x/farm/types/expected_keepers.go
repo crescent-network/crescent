@@ -7,22 +7,24 @@ import (
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
-// AccountKeeper is the expected account keeper
+// AccountKeeper defines the expected keeper interface of the auth module.
+// Some methods are used only in simulation tests.
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 }
 
-// BankKeeper is the expected bank keeper
+// BankKeeper defines the expected keeper interface of the bank module.
+// Some methods are used only in simulation tests.
 type BankKeeper interface {
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+
+	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
+// LiquidityKeeper defines the expected keeper interface of the liquidity module.
 type LiquidityKeeper interface {
 	GetPair(ctx sdk.Context, id uint64) (pair liquiditytypes.Pair, found bool)
 	GetAllPairs(ctx sdk.Context) (pairs []liquiditytypes.Pair)

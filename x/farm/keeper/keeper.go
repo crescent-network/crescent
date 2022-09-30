@@ -11,7 +11,7 @@ import (
 	"github.com/crescent-network/crescent/v3/x/farm/types"
 )
 
-// Keeper of the lending store.
+// Keeper of the module's store.
 type Keeper struct {
 	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
@@ -22,7 +22,7 @@ type Keeper struct {
 	liquidityKeeper types.LiquidityKeeper
 }
 
-// NewKeeper creates a new lending Keeper instance.
+// NewKeeper creates a new Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,

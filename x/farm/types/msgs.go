@@ -22,7 +22,7 @@ const (
 	TypeMsgHarvest           = "harvest"
 )
 
-// NewMsgCreatePrivatePlan returns a new MsgCreatePrivatePlan.
+// NewMsgCreatePrivatePlan creates a new MsgCreatePrivatePlan.
 func NewMsgCreatePrivatePlan(
 	creatorAddr sdk.AccAddress, description string, rewardAllocations []RewardAllocation,
 	startTime, endTime time.Time) *MsgCreatePrivatePlan {
@@ -36,8 +36,19 @@ func NewMsgCreatePrivatePlan(
 }
 
 func (msg MsgCreatePrivatePlan) Route() string { return RouterKey }
+func (msg MsgCreatePrivatePlan) Type() string  { return TypeMsgCreatePrivatePlan }
 
-func (msg MsgCreatePrivatePlan) Type() string { return TypeMsgCreatePrivatePlan }
+func (msg MsgCreatePrivatePlan) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreatePrivatePlan) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
 
 func (msg MsgCreatePrivatePlan) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
@@ -52,20 +63,7 @@ func (msg MsgCreatePrivatePlan) ValidateBasic() error {
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	// TODO: reject too big rewardsPerDay which can cause an overflow
 	return nil
-}
-
-func (msg MsgCreatePrivatePlan) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgCreatePrivatePlan) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
 }
 
 func (msg MsgCreatePrivatePlan) GetCreatorAddress() sdk.AccAddress {
@@ -76,7 +74,7 @@ func (msg MsgCreatePrivatePlan) GetCreatorAddress() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgFarm returns a new MsgFarm.
+// NewMsgFarm creates a new MsgFarm.
 func NewMsgFarm(farmerAddr sdk.AccAddress, coin sdk.Coin) *MsgFarm {
 	return &MsgFarm{
 		Farmer: farmerAddr.String(),
@@ -85,8 +83,19 @@ func NewMsgFarm(farmerAddr sdk.AccAddress, coin sdk.Coin) *MsgFarm {
 }
 
 func (msg MsgFarm) Route() string { return RouterKey }
+func (msg MsgFarm) Type() string  { return TypeMsgFarm }
 
-func (msg MsgFarm) Type() string { return TypeMsgFarm }
+func (msg MsgFarm) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgFarm) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
 
 func (msg MsgFarm) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
@@ -101,18 +110,6 @@ func (msg MsgFarm) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgFarm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgFarm) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
 func (msg MsgFarm) GetFarmerAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
@@ -121,7 +118,7 @@ func (msg MsgFarm) GetFarmerAddress() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgUnfarm returns a new MsgUnfarm.
+// NewMsgUnfarm creates a new MsgUnfarm.
 func NewMsgUnfarm(farmerAddr sdk.AccAddress, coin sdk.Coin) *MsgUnfarm {
 	return &MsgUnfarm{
 		Farmer: farmerAddr.String(),
@@ -130,8 +127,19 @@ func NewMsgUnfarm(farmerAddr sdk.AccAddress, coin sdk.Coin) *MsgUnfarm {
 }
 
 func (msg MsgUnfarm) Route() string { return RouterKey }
+func (msg MsgUnfarm) Type() string  { return TypeMsgUnfarm }
 
-func (msg MsgUnfarm) Type() string { return TypeMsgUnfarm }
+func (msg MsgUnfarm) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnfarm) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
 
 func (msg MsgUnfarm) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
@@ -146,18 +154,6 @@ func (msg MsgUnfarm) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgUnfarm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgUnfarm) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
 func (msg MsgUnfarm) GetFarmerAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Farmer)
 	if err != nil {
@@ -166,7 +162,7 @@ func (msg MsgUnfarm) GetFarmerAddress() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgHarvest returns a new MsgHarvest.
+// NewMsgHarvest creates a new MsgHarvest.
 func NewMsgHarvest(farmerAddr sdk.AccAddress, denom string) *MsgHarvest {
 	return &MsgHarvest{
 		Farmer: farmerAddr.String(),
@@ -175,18 +171,7 @@ func NewMsgHarvest(farmerAddr sdk.AccAddress, denom string) *MsgHarvest {
 }
 
 func (msg MsgHarvest) Route() string { return RouterKey }
-
-func (msg MsgHarvest) Type() string { return TypeMsgHarvest }
-
-func (msg MsgHarvest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farmer address: %v", err)
-	}
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid denom: %v", err)
-	}
-	return nil
-}
+func (msg MsgHarvest) Type() string  { return TypeMsgHarvest }
 
 func (msg MsgHarvest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
@@ -198,6 +183,16 @@ func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgHarvest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Farmer); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farmer address: %v", err)
+	}
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid denom: %v", err)
+	}
+	return nil
 }
 
 func (msg MsgHarvest) GetFarmerAddress() sdk.AccAddress {

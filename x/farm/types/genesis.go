@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewGenesisState returns a new GenesisState.
 func NewGenesisState(
 	params Params, lastBlockTime *time.Time, lastPlanId, numPrivatePlans uint64,
 	plans []Plan, farms []FarmRecord, positions []Position, hists []HistoricalRewardsRecord,

@@ -12,6 +12,14 @@ import (
 
 func TestGenesisState_Validate(t *testing.T) {
 	// Valid structs.
+	validPlan := types.NewPlan(
+		1, "Farming Plan", utils.TestAddress(0), utils.TestAddress(1),
+		[]types.RewardAllocation{
+			types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+			types.NewRewardAllocation(2, utils.ParseCoins("200_000000stake")),
+		},
+		utils.ParseTime("2022-01-01T00:00:00Z"),
+		utils.ParseTime("2023-01-01T00:00:00Z"), true)
 	validFarm := types.Farm{
 		TotalFarmingAmount: sdk.NewInt(100_000000),
 		CurrentRewards:     utils.ParseDecCoins("10000stake"),
@@ -46,6 +54,15 @@ func TestGenesisState_Validate(t *testing.T) {
 				genState.Params.FeeCollector = "invalidaddr"
 			},
 			"invalid fee collector address: invalidaddr",
+		},
+		{
+			"duplicate plan",
+			func(genState *types.GenesisState) {
+				genState.Plans = []types.Plan{
+					validPlan, validPlan,
+				}
+			},
+			"duplicate plan: 1",
 		},
 		{
 			"invalid farm: invalid denom",
@@ -100,6 +117,22 @@ func TestGenesisState_Validate(t *testing.T) {
 			"period must be positive",
 		},
 		{
+			"duplicate farm",
+			func(genState *types.GenesisState) {
+				genState.Farms = []types.FarmRecord{
+					{
+						Denom: "pool1",
+						Farm:  validFarm,
+					},
+					{
+						Denom: "pool1",
+						Farm:  validFarm,
+					},
+				}
+			},
+			"duplicate farm: pool1",
+		},
+		{
 			"invalid position: invalid farmer",
 			func(genState *types.GenesisState) {
 				position := validPosition
@@ -136,6 +169,15 @@ func TestGenesisState_Validate(t *testing.T) {
 			"starting block height must be positive: 0",
 		},
 		{
+			"duplicate position",
+			func(genState *types.GenesisState) {
+				genState.Positions = []types.Position{
+					validPosition, validPosition,
+				}
+			},
+			"duplicate position: cosmos1qsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv4uhu3, pool1",
+		},
+		{
 			"invalid historical rewards: invalid denom",
 			func(genState *types.GenesisState) {
 				genState.HistoricalRewards = []types.HistoricalRewardsRecord{
@@ -166,6 +208,24 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			"reference count must not exceed 2",
 		},
+		{
+			"duplicate historical rewards",
+			func(genState *types.GenesisState) {
+				genState.HistoricalRewards = []types.HistoricalRewardsRecord{
+					{
+						Denom:             "pool1",
+						Period:            1,
+						HistoricalRewards: validHist,
+					},
+					{
+						Denom:             "pool1",
+						Period:            1,
+						HistoricalRewards: validHist,
+					},
+				}
+			},
+			"duplicate historical rewards: pool1, 1",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			lastBlockTime := utils.ParseTime("2022-01-01T00:00:00Z")
@@ -173,24 +233,9 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params:        types.DefaultParams(),
 				LastBlockTime: &lastBlockTime,
 				LastPlanId:    1,
-				Plans: []types.Plan{
-					types.NewPlan(
-						1, "Farming Plan", utils.TestAddress(0), utils.TestAddress(1),
-						[]types.RewardAllocation{
-							{
-								PairId:        1,
-								RewardsPerDay: utils.ParseCoins("100_000000stake"),
-							},
-							{
-								PairId:        2,
-								RewardsPerDay: utils.ParseCoins("200_000000stake"),
-							},
-						},
-						utils.ParseTime("2022-01-01T00:00:00Z"),
-						utils.ParseTime("2023-01-01T00:00:00Z"), true),
-				},
-				Farms:     []types.FarmRecord{{Denom: "pool1", Farm: validFarm}},
-				Positions: []types.Position{validPosition},
+				Plans:         []types.Plan{validPlan},
+				Farms:         []types.FarmRecord{{Denom: "pool1", Farm: validFarm}},
+				Positions:     []types.Position{validPosition},
 				HistoricalRewards: []types.HistoricalRewardsRecord{
 					{Denom: "pool1", Period: 0, HistoricalRewards: validHist},
 				},

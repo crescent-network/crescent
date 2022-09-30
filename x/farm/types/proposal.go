@@ -19,10 +19,9 @@ var (
 
 func init() {
 	gov.RegisterProposalType(ProposalTypeFarmingPlan)
-	// TODO: do we need to call gov.RegisterProposalTypeCodec too?
+	gov.RegisterProposalTypeCodec(&FarmingPlanProposal{}, "crescent/FarmingPlanProposal")
 }
 
-// NewFarmingPlanProposal returns a new FarmingPlanProposal.
 func NewFarmingPlanProposal(
 	title, description string,
 	createPlanReqs []CreatePlanRequest,

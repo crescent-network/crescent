@@ -33,6 +33,8 @@ func AllInvariants(k Keeper) sdk.Invariant {
 	}
 }
 
+// ReferenceCountInvariant checks that the all historical rewards object has
+// consistent reference counts with all farms and positions.
 func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		numFarms := uint64(0)
@@ -62,6 +64,9 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	}
 }
 
+// OutstandingRewardsInvariant checks that the outstanding rewards of all
+// farms are not smaller than the farm's current accrued rewards, and the reward
+// pool has sufficient balances for those rewards.
 func OutstandingRewardsInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		outstanding := sdk.DecCoins{}
@@ -99,6 +104,7 @@ func OutstandingRewardsInvariant(k Keeper) sdk.Invariant {
 	}
 }
 
+// CanWithdrawInvariant checks that all farmers can withdraw their rewards.
 func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (res string, broken bool) {
 		defer func() {
@@ -123,6 +129,8 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 	}
 }
 
+// TotalFarmingAmountInvariant checks that all farm's total farming amount are
+// equal to the sum of all the positions' farming amount which belong to the farm.
 func TotalFarmingAmountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		totalFarmingAmtByDenom := map[string]sdk.Int{}

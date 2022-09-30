@@ -7,6 +7,9 @@ import (
 	"github.com/crescent-network/crescent/v3/x/farm/types"
 )
 
+// Farm locks the coin.
+// The farmer's rewards accrued in the given coin's denom are sent to the farmer.
+// Farm creates a new farm object for the given coin's denom, if there wasn't.
 func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error) {
 	farmingReserveAddr := types.DeriveFarmingReserveAddress(coin.Denom)
 	if err := k.bankKeeper.SendCoins(
@@ -52,6 +55,10 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 	return withdrawnRewards, nil
 }
 
+// Unfarm unlocks the coin.
+// The farmer's rewards accrued in the given coin's denom are sent to the farmer.
+// If the remaining farming coin amount becomes zero, the farming position is
+// deleted.
 func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error) {
 	position, found := k.GetPosition(ctx, farmerAddr, coin.Denom)
 	if !found {
@@ -96,6 +103,7 @@ func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin
 	return withdrawnRewards, nil
 }
 
+// Harvest sends the farmer's rewards accrued in the denom to the farmer.
 func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (withdrawnRewards sdk.Coins, err error) {
 	position, found := k.GetPosition(ctx, farmerAddr, denom)
 	if !found {
@@ -120,7 +128,8 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 	return withdrawnRewards, nil
 }
 
-// Rewards is a convenient query method for external modules.
+// Rewards returns the farmer's rewards accrued in the denom so far.
+// Rewards is a convenient query method existing for external modules.
 func (k Keeper) Rewards(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) sdk.DecCoins {
 	position, found := k.GetPosition(ctx, farmerAddr, denom)
 	if !found {
@@ -140,6 +149,8 @@ func (k Keeper) calculateRewards(ctx sdk.Context, position types.Position, endPe
 		ctx, position.Denom, startPeriod, endPeriod, position.FarmingAmount)
 }
 
+// initializeFarm creates a new farm object in the store, along with historical
+// rewards for period 0.
 func (k Keeper) initializeFarm(ctx sdk.Context, denom string) types.Farm {
 	farm := types.Farm{
 		TotalFarmingAmount: sdk.ZeroInt(),
@@ -155,6 +166,7 @@ func (k Keeper) initializeFarm(ctx sdk.Context, denom string) types.Farm {
 	return farm
 }
 
+// updatePosition updates the position's starting info.
 func (k Keeper) updatePosition(ctx sdk.Context, position types.Position) {
 	farm, found := k.GetFarm(ctx, position.Denom)
 	if !found { // Sanity check
@@ -167,6 +179,8 @@ func (k Keeper) updatePosition(ctx sdk.Context, position types.Position) {
 	k.SetPosition(ctx, position)
 }
 
+// incrementFarmPeriod increments the farm object's period by settling
+// the historical rewards for the farm's current period.
 func (k Keeper) incrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod uint64) {
 	farm, found := k.GetFarm(ctx, denom)
 	if !found { // Sanity check
@@ -192,6 +206,8 @@ func (k Keeper) incrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod u
 	return prevPeriod
 }
 
+// incrementReferenceCount increments the reference count of the historical
+// rewards.
 func (k Keeper) incrementReferenceCount(ctx sdk.Context, denom string, period uint64) {
 	hist, found := k.GetHistoricalRewards(ctx, denom, period)
 	if !found { // Sanity check
@@ -204,6 +220,9 @@ func (k Keeper) incrementReferenceCount(ctx sdk.Context, denom string, period ui
 	k.SetHistoricalRewards(ctx, denom, period, hist)
 }
 
+// decrementReferenceCount decrements the reference count of the historical
+// rewards.
+// If the reference count goes down to 0, the object is deleted.
 func (k Keeper) decrementReferenceCount(ctx sdk.Context, denom string, period uint64) {
 	hist, found := k.GetHistoricalRewards(ctx, denom, period)
 	if !found { // Sanity check
@@ -233,6 +252,8 @@ func (k Keeper) rewardsBetweenPeriods(ctx sdk.Context, denom string, startPeriod
 	return diff.MulDecTruncate(sdk.NewDecFromInt(amt))
 }
 
+// withdrawRewards withdraws accrued rewards for the position and increments
+// the farm's period.
 func (k Keeper) withdrawRewards(ctx sdk.Context, position types.Position) (sdk.Coins, error) {
 	endPeriod := k.incrementFarmPeriod(ctx, position.Denom)
 	rewards := k.calculateRewards(ctx, position, endPeriod)

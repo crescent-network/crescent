@@ -9,7 +9,7 @@ import (
 
 const day = 24 * time.Hour
 
-// NewPlan returns a new Plan.
+// NewPlan creates a new Plan.
 func NewPlan(
 	id uint64, description string, farmingPoolAddr, termAddr sdk.AccAddress,
 	rewardAllocs []RewardAllocation, startTime, endTime time.Time,
@@ -71,7 +71,7 @@ func (plan Plan) GetTerminationAddress() sdk.AccAddress {
 	return addr
 }
 
-// NewRewardAllocation returns a new RewardAllocation.
+// NewRewardAllocation creates a new RewardAllocation.
 func NewRewardAllocation(pairId uint64, rewardsPerDay sdk.Coins) RewardAllocation {
 	return RewardAllocation{
 		PairId:        pairId,
@@ -79,6 +79,9 @@ func NewRewardAllocation(pairId uint64, rewardsPerDay sdk.Coins) RewardAllocatio
 	}
 }
 
+// ValidateRewardAllocations validates a slice of RewardAllocation.
+// It also checks whether there's any duplication of pair id among the
+// reward allocations.
 func ValidateRewardAllocations(rewardAllocs []RewardAllocation) error {
 	if len(rewardAllocs) == 0 {
 		return fmt.Errorf("empty reward allocations")
@@ -95,6 +98,7 @@ func ValidateRewardAllocations(rewardAllocs []RewardAllocation) error {
 		if err := rewardAlloc.RewardsPerDay.Validate(); err != nil {
 			return fmt.Errorf("invalid rewards per day: %w", err)
 		}
+		// TODO: reject too big rewardsPerDay which can cause an overflow
 	}
 	return nil
 }

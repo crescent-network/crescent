@@ -139,20 +139,23 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.Plan) error {
 	return nil
 }
 
+// AllocateRewards allocates the current block's rewards to the farms
+// based on active plans.
 func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	lastBlockTime, found := k.GetLastBlockTime(ctx)
 	if !found {
-		// Skip this block.
-		k.SetLastBlockTime(ctx, ctx.BlockTime())
+		// For the very first block, just skip it.
 		return nil
 	}
 
 	blockDuration := ctx.BlockTime().Sub(lastBlockTime)
+	// Constrain the block duration to the max block duration param.
 	if maxBlockDuration := k.GetMaxBlockDuration(ctx); blockDuration > maxBlockDuration {
-		// Constrain the block duration to the max block duration param.
 		blockDuration = maxBlockDuration
 	}
 
+	// An active plan means that the plan is not terminated and the current
+	// block's time is between the time range of the plan.
 	var activePlans []types.Plan
 	k.IterateAllPlans(ctx, func(plan types.Plan) (stop bool) {
 		if plan.IsTerminated || !plan.IsActiveAt(ctx.BlockTime()) {
@@ -162,9 +165,21 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 		return false
 	})
 
+	// CacheKeeper acts like a proxy to underlying keeper methods,
+	// but caches the result to avoid unnecessary gas consumptions and
+	// store read operations.
 	cache := NewCachedKeeper(k)
-	// farmingPool => (pairId => rewards)
+	// allocsByFarmingPool keeps track of the allocation information
+	// grouped by farming pool address.
+	// Each entry of the map is another map which holds mappings from
+	// pair id to rewards for this block.
 	allocsByFarmingPool := map[string]map[uint64]sdk.Coins{}
+	// eligiblePoolsByPairs maps pair id to pools belong to the pair,
+	// which are eligible for rewards allocation.
+	// An eligible pool means that:
+	// - The pool is not disabled
+	// - The pool's price range includes the pair's last price
+	// - Total farming amount of the pool's pool coin is positive
 	eligiblePoolsByPair := map[uint64][]liquiditytypes.Pool{}
 	for _, plan := range activePlans {
 		for _, rewardAlloc := range plan.RewardAllocations {
@@ -192,7 +207,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 					}
 
 					farm, found := cache.GetFarm(ctx, pool.PoolCoinDenom)
-					if !found || farm.TotalFarmingAmount.IsZero() {
+					if !found || !farm.TotalFarmingAmount.IsPositive() {
 						return false, nil
 					}
 
@@ -201,6 +216,8 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 				},
 			)
 
+			// Allocate rewards only when there is at least one eligible pool
+			// belonging to the pair.
 			if len(eligiblePoolsByPair[pair.Id]) > 0 {
 				rewards := types.RewardsForBlock(rewardAlloc.RewardsPerDay, blockDuration)
 				// TODO: allocate sdk.DecCoins instead of sdk.Coins in future
