@@ -657,7 +657,7 @@ $ %s query %s order 1 1
 func NewQueryOrderBooksCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "order-books [pair-ids]",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		Short: "Query order books",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query order books of specified pairs.

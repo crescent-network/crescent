@@ -61,6 +61,9 @@ func (msg MsgCreatePair) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.QuoteCoinDenom); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+	if msg.BaseCoinDenom == msg.QuoteCoinDenom {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot use same denom for both base coin and quote coin")
+	}
 	return nil
 }
 
