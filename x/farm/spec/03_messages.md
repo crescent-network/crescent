@@ -1,8 +1,11 @@
-<!-- order: 3 -->o
+<!-- order: 3 -->
 
 # Messages
 
 ## MsgCreatePrivatePlan
+
+A private farming plan can be created with `MsgCreatePrivatePlan`.
+See [Plan](02_state.md#plan) for more details about the fields.
 
 ```go
 type MsgCreatePrivatePlan struct {
@@ -21,6 +24,8 @@ type RewardAllocation struct {
 
 ## MsgFarm
 
+Farmers can start farming on their assets with `MsgFarm`.
+
 ```go
 type MsgFarm struct {
 	Farmer string
@@ -30,6 +35,8 @@ type MsgFarm struct {
 
 ## MsgUnfarm
 
+Farmers can withdraw their farming assets with `MsgUnfarm`.
+
 ```go
 type MsgUnfarm struct {
 	Farmer string
@@ -38,6 +45,8 @@ type MsgUnfarm struct {
 ```
 
 ## MsgHarvest
+
+Farmers can withdraw their farming rewards with `MsgHarvest`.
 
 ```go
 type MsgHarvest struct {

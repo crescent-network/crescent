@@ -45,9 +45,9 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 	k.updatePosition(ctx, position)
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventFarm{
-		Farmer:         farmerAddr.String(),
-		Coin:           coin,
-		WithdrawnCoins: withdrawnRewards,
+		Farmer:           farmerAddr.String(),
+		Coin:             coin,
+		WithdrawnRewards: withdrawnRewards,
 	}); err != nil {
 		return nil, err
 	}
@@ -93,9 +93,9 @@ func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin
 	}
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventUnfarm{
-		Farmer:         farmerAddr.String(),
-		Coin:           coin,
-		WithdrawnCoins: withdrawnRewards,
+		Farmer:           farmerAddr.String(),
+		Coin:             coin,
+		WithdrawnRewards: withdrawnRewards,
 	}); err != nil {
 		return nil, err
 	}
@@ -118,9 +118,9 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 	k.updatePosition(ctx, position)
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventHarvest{
-		Farmer:         farmerAddr.String(),
-		Denom:          denom,
-		WithdrawnCoins: withdrawnRewards,
+		Farmer:           farmerAddr.String(),
+		Denom:            denom,
+		WithdrawnRewards: withdrawnRewards,
 	}); err != nil {
 		return nil, err
 	}

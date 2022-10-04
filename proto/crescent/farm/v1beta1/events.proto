@@ -15,23 +15,23 @@ message EventCreatePrivatePlan {
 }
 
 message EventFarm {
-  string                   farmer                   = 1;
-  cosmos.base.v1beta1.Coin coin                     = 2 [(gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin withdrawn_coins = 3
+  string                   farmer                     = 1;
+  cosmos.base.v1beta1.Coin coin                       = 2 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin withdrawn_rewards = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 message EventUnfarm {
-  string                   farmer                   = 1;
-  cosmos.base.v1beta1.Coin coin                     = 2 [(gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin withdrawn_coins = 3
+  string                   farmer                     = 1;
+  cosmos.base.v1beta1.Coin coin                       = 2 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin withdrawn_rewards = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 message EventHarvest {
-  string   farmer                                   = 1;
-  string   denom                                    = 2;
-  repeated cosmos.base.v1beta1.Coin withdrawn_coins = 3
+  string   farmer                                     = 1;
+  string   denom                                      = 2;
+  repeated cosmos.base.v1beta1.Coin withdrawn_rewards = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 

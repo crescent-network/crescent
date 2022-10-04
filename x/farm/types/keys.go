@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	LastPlanIdKey              = []byte{0xd0}
-	LastBlockTimeKey           = []byte{0xd1}
+	LastBlockTimeKey           = []byte{0xd0}
+	LastPlanIdKey              = []byte{0xd1}
 	NumPrivatePlansKey         = []byte{0xd2}
 	PlanKeyPrefix              = []byte{0xd3}
 	FarmKeyPrefix              = []byte{0xd4}

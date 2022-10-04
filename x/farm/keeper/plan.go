@@ -122,9 +122,11 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.Plan) error {
 	}
 	farmingPoolAddr := plan.GetFarmingPoolAddress()
 	balances := k.bankKeeper.SpendableCoins(ctx, farmingPoolAddr)
-	if err := k.bankKeeper.SendCoins(
-		ctx, farmingPoolAddr, plan.GetTerminationAddress(), balances); err != nil {
-		return err
+	if !balances.IsZero() {
+		if err := k.bankKeeper.SendCoins(
+			ctx, farmingPoolAddr, plan.GetTerminationAddress(), balances); err != nil {
+			return err
+		}
 	}
 	plan.IsTerminated = true
 	k.SetPlan(ctx, plan)
@@ -222,12 +224,14 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 				rewards := types.RewardsForBlock(rewardAlloc.RewardsPerDay, blockDuration)
 				// TODO: allocate sdk.DecCoins instead of sdk.Coins in future
 				truncatedRewards, _ := rewards.TruncateDecimal()
-				allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
-				if !ok {
-					allocs = map[uint64]sdk.Coins{}
-					allocsByFarmingPool[plan.FarmingPoolAddress] = allocs
+				if truncatedRewards.IsAllPositive() {
+					allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
+					if !ok {
+						allocs = map[uint64]sdk.Coins{}
+						allocsByFarmingPool[plan.FarmingPoolAddress] = allocs
+					}
+					allocs[pair.Id] = allocs[pair.Id].Add(truncatedRewards...)
 				}
-				allocs[pair.Id] = allocs[pair.Id].Add(truncatedRewards...)
 			}
 		}
 	}
