@@ -44,8 +44,16 @@ func GetPositionKey(farmerAddr sdk.AccAddress, denom string) []byte {
 	return append(append(PositionKeyPrefix, address.MustLengthPrefix(farmerAddr)...), denom...)
 }
 
+func GetPositionsByFarmerKeyPrefix(farmerAddr sdk.AccAddress) []byte {
+	return append(PositionKeyPrefix, address.MustLengthPrefix(farmerAddr)...)
+}
+
 func GetHistoricalRewardsKey(denom string, period uint64) []byte {
 	return append(append(HistoricalRewardsKeyPrefix, utils.LengthPrefixString(denom)...), sdk.Uint64ToBigEndian(period)...)
+}
+
+func GetHistoricalRewardsByDenomKeyPrefix(denom string) []byte {
+	return append(HistoricalRewardsKeyPrefix, utils.LengthPrefixString(denom)...)
 }
 
 func ParseFarmKey(key []byte) (denom string) {
@@ -53,6 +61,16 @@ func ParseFarmKey(key []byte) (denom string) {
 		panic("key does not have proper prefix")
 	}
 	denom = string(key[1:])
+	return
+}
+
+func ParsePositionKey(key []byte) (farmerAddr sdk.AccAddress, denom string) {
+	if !bytes.HasPrefix(key, PositionKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+	farmerAddrLen := key[1]
+	farmerAddr = key[2 : 2+farmerAddrLen]
+	denom = string(key[2+farmerAddrLen:])
 	return
 }
 

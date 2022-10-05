@@ -18,7 +18,7 @@ service Query {
     option (google.api.http).get = "/crescent/farm/v1beta1/plans";
   }
   rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
-    option (google.api.http).get = "/crescent/farm/v1beta1/plan/{plan_id}";
+    option (google.api.http).get = "/crescent/farm/v1beta1/plans/{plan_id}";
   }
   rpc Farm(QueryFarmRequest) returns (QueryFarmResponse) {
     option (google.api.http).get = "/crescent/farm/v1beta1/farms/{denom}";
@@ -31,6 +31,12 @@ service Query {
   }
   rpc HistoricalRewards(QueryHistoricalRewardsRequest) returns (QueryHistoricalRewardsResponse) {
     option (google.api.http).get = "/crescent/farm/v1beta1/historical_rewards/{denom}";
+  }
+  rpc AllRewards(QueryAllRewardsRequest) returns (QueryAllRewardsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/rewards/{farmer}";
+  }
+  rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/rewards/{farmer}/{denom}";
   }
 }
 
@@ -71,7 +77,7 @@ message QueryPositionsRequest {
 }
 
 message QueryPositionsResponse {
-  repeated Farm                          farms      = 1 [(gogoproto.nullable) = false];
+  repeated Position                      positions  = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -81,7 +87,7 @@ message QueryPositionRequest {
 }
 
 message QueryPositionResponse {
-  Farm farm = 1 [(gogoproto.nullable) = false];
+  Position position = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryHistoricalRewardsRequest {
@@ -92,6 +98,25 @@ message QueryHistoricalRewardsRequest {
 message QueryHistoricalRewardsResponse {
   repeated HistoricalRewardsResponse     historical_rewards = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination         = 2;
+}
+
+message QueryAllRewardsRequest {
+  string farmer = 1;
+}
+
+message QueryAllRewardsResponse {
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+message QueryRewardsRequest {
+  string farmer = 1;
+  string denom  = 2;
+}
+
+message QueryRewardsResponse {
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 message HistoricalRewardsResponse {

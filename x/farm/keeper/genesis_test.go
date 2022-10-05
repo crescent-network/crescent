@@ -7,7 +7,7 @@ import (
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {
 	pair := s.createPair("denom1", "denom2")
-	pool := s.createPool(pair.Id, utils.ParseCoins("1000_000000denom1,1000_000000denom2"))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("1000_000000denom1,1000_000000denom2"))
 	s.createPrivatePlan([]types.RewardAllocation{
 		{
 			PairId:        pair.Id,

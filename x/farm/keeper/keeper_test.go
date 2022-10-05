@@ -113,11 +113,19 @@ func (s *KeeperTestSuite) createPair(baseCoinDenom, quoteCoinDenom string) liqui
 	return pair
 }
 
-func (s *KeeperTestSuite) createPool(pairId uint64, depositCoins sdk.Coins) liquiditytypes.Pool {
+func (s *KeeperTestSuite) createPairWithLastPrice(baseCoinDenom, quoteCoinDenom string, lastPrice sdk.Dec) liquiditytypes.Pair {
 	s.T().Helper()
-	s.fundAddr(helperAddr, s.app.LiquidityKeeper.GetPoolCreationFee(s.ctx).Add(depositCoins...))
+	pair := s.createPair(baseCoinDenom, quoteCoinDenom)
+	pair.LastPrice = &lastPrice
+	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
+	return pair
+}
+
+func (s *KeeperTestSuite) createPool(creatorAddr sdk.AccAddress, pairId uint64, depositCoins sdk.Coins) liquiditytypes.Pool {
+	s.T().Helper()
+	s.fundAddr(creatorAddr, s.app.LiquidityKeeper.GetPoolCreationFee(s.ctx).Add(depositCoins...))
 	pool, err := s.app.LiquidityKeeper.CreatePool(
-		s.ctx, liquiditytypes.NewMsgCreatePool(helperAddr, pairId, depositCoins))
+		s.ctx, liquiditytypes.NewMsgCreatePool(creatorAddr, pairId, depositCoins))
 	s.Require().NoError(err)
 	return pool
 }
