@@ -32,14 +32,18 @@ func (genState GenesisState) Validate() error {
 	if err := genState.Params.Validate(); err != nil {
 		return err
 	}
+	planIdSet := map[uint64]struct{}{}
 	for _, plan := range genState.Plans {
-		// TODO: check duplicate plan
 		if err := plan.Validate(); err != nil {
 			return fmt.Errorf("invalid plan: %w", err)
 		}
+		if _, ok := planIdSet[plan.Id]; ok {
+			return fmt.Errorf("duplicate plan: %d", plan.Id)
+		}
+		planIdSet[plan.Id] = struct{}{}
 	}
+	farmDenomSet := map[string]struct{}{}
 	for _, farm := range genState.Farms {
-		// TODO: check duplicate farm
 		if err := sdk.ValidateDenom(farm.Denom); err != nil {
 			return fmt.Errorf("invalid farm denom: %s", err)
 		}
@@ -56,9 +60,16 @@ func (genState GenesisState) Validate() error {
 		if farm.Farm.Period == 0 {
 			return fmt.Errorf("period must be positive")
 		}
+		if _, ok := farmDenomSet[farm.Denom]; ok {
+			return fmt.Errorf("duplicate farm: %s", farm.Denom)
+		}
+		farmDenomSet[farm.Denom] = struct{}{}
 	}
+	type positionKey struct {
+		farmer, denom string
+	}
+	positionKeySet := map[positionKey]struct{}{}
 	for _, position := range genState.Positions {
-		// TODO: check duplicate position
 		if _, err := sdk.AccAddressFromBech32(position.Farmer); err != nil {
 			return fmt.Errorf("invalid farmer address: %w", err)
 		}
@@ -72,9 +83,18 @@ func (genState GenesisState) Validate() error {
 			return fmt.Errorf(
 				"starting block height must be positive: %d", position.StartingBlockHeight)
 		}
+		key := positionKey{position.Farmer, position.Denom}
+		if _, ok := positionKeySet[key]; ok {
+			return fmt.Errorf("duplicate position: %s, %s", position.Farmer, position.Denom)
+		}
+		positionKeySet[key] = struct{}{}
 	}
+	type historicalRewardsKey struct {
+		denom  string
+		period uint64
+	}
+	histKeySet := map[historicalRewardsKey]struct{}{}
 	for _, hist := range genState.HistoricalRewards {
-		// TODO: check duplicate historical rewards
 		if err := sdk.ValidateDenom(hist.Denom); err != nil {
 			return fmt.Errorf("invalid historical rewards denom: %s", err)
 		}
@@ -87,6 +107,11 @@ func (genState GenesisState) Validate() error {
 		if hist.HistoricalRewards.ReferenceCount > 2 {
 			return fmt.Errorf("reference count must not exceed 2")
 		}
+		key := historicalRewardsKey{hist.Denom, hist.Period}
+		if _, ok := histKeySet[key]; ok {
+			return fmt.Errorf("duplicate historical rewards: %s, %d", hist.Denom, hist.Period)
+		}
+		histKeySet[key] = struct{}{}
 	}
 	return nil
 }

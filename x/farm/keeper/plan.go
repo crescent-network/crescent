@@ -33,9 +33,22 @@ func (k Keeper) CreatePrivatePlan(
 	id, _ := k.GetLastPlanId(ctx)
 	farmingPoolAddr := types.DeriveFarmingPoolAddress(id + 1)
 
-	return k.createPlan(
+	plan, err := k.createPlan(
 		ctx, description, farmingPoolAddr, creatorAddr,
 		rewardAllocs, startTime, endTime, true)
+	if err != nil {
+		return types.Plan{}, err
+	}
+
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventCreatePrivatePlan{
+		Creator:            creatorAddr.String(),
+		PlanId:             plan.Id,
+		FarmingPoolAddress: plan.FarmingPoolAddress,
+	}); err != nil {
+		return types.Plan{}, err
+	}
+
+	return plan, nil
 }
 
 // CreatePublicPlan creates a new public farming plan.
@@ -111,6 +124,11 @@ func (k Keeper) TerminatePlan(ctx sdk.Context, plan types.Plan) error {
 	}
 	plan.IsTerminated = true
 	k.SetPlan(ctx, plan)
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventTerminatePlan{
+		PlanId: plan.Id,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

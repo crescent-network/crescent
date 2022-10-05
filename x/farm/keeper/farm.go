@@ -41,7 +41,13 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 	position.FarmingAmount = position.FarmingAmount.Add(coin.Amount)
 	k.updatePosition(ctx, position)
 
-	// TODO: emit an event
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventFarm{
+		Farmer:         farmerAddr.String(),
+		Coin:           coin,
+		WithdrawnCoins: withdrawnRewards,
+	}); err != nil {
+		return nil, err
+	}
 
 	return withdrawnRewards, nil
 }
@@ -79,7 +85,13 @@ func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin
 		return nil, err
 	}
 
-	// TODO: emit an event
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventUnfarm{
+		Farmer:         farmerAddr.String(),
+		Coin:           coin,
+		WithdrawnCoins: withdrawnRewards,
+	}); err != nil {
+		return nil, err
+	}
 
 	return withdrawnRewards, nil
 }
@@ -90,7 +102,6 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 
-	// TODO: prevent incrementing too many periods?
 	withdrawnRewards, err = k.withdrawRewards(ctx, position)
 	if err != nil {
 		return nil, err
@@ -98,7 +109,13 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 
 	k.updatePosition(ctx, position)
 
-	// TODO: emit an event
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventHarvest{
+		Farmer:         farmerAddr.String(),
+		Denom:          denom,
+		WithdrawnCoins: withdrawnRewards,
+	}); err != nil {
+		return nil, err
+	}
 
 	return withdrawnRewards, nil
 }
@@ -156,9 +173,7 @@ func (k Keeper) incrementFarmPeriod(ctx sdk.Context, denom string) (prevPeriod u
 		panic("farm not found")
 	}
 	unitRewards := sdk.DecCoins{}
-	if farm.TotalFarmingAmount.IsZero() {
-		// TODO: do something special?
-	} else {
+	if farm.TotalFarmingAmount.IsPositive() {
 		unitRewards = farm.CurrentRewards.QuoDecTruncate(sdk.NewDecFromInt(farm.TotalFarmingAmount))
 	}
 	hist, found := k.GetHistoricalRewards(ctx, denom, farm.Period-1)

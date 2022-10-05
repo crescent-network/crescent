@@ -66,8 +66,11 @@ func (cache *CachedKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) 
 }
 
 // PoolRewardWeight returns the pool's reward weight.
-// TODO: check if last price is in price range for ranged pools
 func (k Keeper) PoolRewardWeight(ctx sdk.Context, pool liquiditytypes.Pool, pair liquiditytypes.Pair) sdk.Dec {
+	if pool.Type == liquiditytypes.PoolTypeRanged &&
+		(pair.LastPrice.LT(*pool.MinPrice) || pair.LastPrice.GT(*pool.MaxPrice)) {
+		return sdk.ZeroDec()
+	}
 	// TODO: further optimize gas usage by using BankKeeper.SpendableCoin()
 	spendable := k.bankKeeper.SpendableCoins(ctx, pool.GetReserveAddress())
 	rx := spendable.AmountOf(pair.QuoteCoinDenom)

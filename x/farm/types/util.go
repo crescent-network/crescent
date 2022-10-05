@@ -29,18 +29,14 @@ func RewardsForBlock(rewardsPerDay sdk.Coins, blockDuration time.Duration) sdk.D
 func PoolRewardWeight(pool amm.Pool) (weight sdk.Dec) {
 	rx, ry := pool.Balances()
 	sqrt := utils.DecApproxSqrt
-	utils.SafeMath(func() {
-		switch pool := pool.(type) {
-		case *amm.BasicPool:
-			weight = sqrt(sdk.NewDecFromInt(rx.Mul(ry)))
-		case *amm.RangedPool:
-			transX, transY := pool.Translation()
-			weight = sqrt(transX.Add(sdk.NewDecFromInt(rx)).Mul(transY.Add(sdk.NewDecFromInt(ry))))
-		default:
-			panic("invalid pool type")
-		}
-	}, func() {
-		weight = sdk.ZeroDec() // TODO: is it reasonable fallback value?
-	})
+	switch pool := pool.(type) {
+	case *amm.BasicPool:
+		weight = sqrt(sdk.NewDecFromInt(rx.Mul(ry)))
+	case *amm.RangedPool:
+		transX, transY := pool.Translation()
+		weight = sqrt(transX.Add(sdk.NewDecFromInt(rx))).Mul(sqrt(transY.Add(sdk.NewDecFromInt(ry))))
+	default:
+		panic("invalid pool type")
+	}
 	return
 }

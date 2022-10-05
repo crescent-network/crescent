@@ -26,7 +26,7 @@ message MsgCreatePrivatePlan {
 }
 
 message MsgCreatePrivatePlanResponse {
-  uint64 id                   = 1;
+  uint64 plan_id              = 1;
   string farming_pool_address = 2;
 }
 
