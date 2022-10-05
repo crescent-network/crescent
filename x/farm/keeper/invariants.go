@@ -12,6 +12,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "reference-count", ReferenceCountInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "current-rewards", OutstandingRewardsInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "can-withdraw", CanWithdrawInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "total-farming-amount", TotalFarmingAmountInvariant(k))
 }
 
 func AllInvariants(k Keeper) sdk.Invariant {
@@ -24,7 +25,11 @@ func AllInvariants(k Keeper) sdk.Invariant {
 		if broken {
 			return
 		}
-		return CanWithdrawInvariant(k)(ctx)
+		res, broken = CanWithdrawInvariant(k)(ctx)
+		if broken {
+			return
+		}
+		return TotalFarmingAmountInvariant(k)(ctx)
 	}
 }
 
@@ -115,5 +120,41 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 			return false
 		})
 		return
+	}
+}
+
+func TotalFarmingAmountInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		totalFarmingAmtByDenom := map[string]sdk.Int{}
+		farmingAmtSumByDenom := map[string]sdk.Int{}
+		k.IterateAllFarms(ctx, func(denom string, farm types.Farm) (stop bool) {
+			totalFarmingAmtByDenom[denom] = farm.TotalFarmingAmount
+			farmingAmtSumByDenom[denom] = sdk.ZeroInt()
+			return false
+		})
+		k.IterateAllPositions(ctx, func(position types.Position) (stop bool) {
+			farmingAmtSumByDenom[position.Denom] =
+				farmingAmtSumByDenom[position.Denom].Add(position.FarmingAmount)
+			return false
+		})
+		msg := ""
+		cnt := 0
+		for denom := range totalFarmingAmtByDenom {
+			if !totalFarmingAmtByDenom[denom].Equal(farmingAmtSumByDenom[denom]) {
+				msg += fmt.Sprintf(
+					"\tfarm %s total farming amount %s != sum %s\n",
+					denom, totalFarmingAmtByDenom[denom], farmingAmtSumByDenom[denom],
+				)
+				cnt++
+			}
+		}
+		broken := cnt != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "total farming amount",
+			fmt.Sprintf(
+				"found %d farm(s) with wrong total farming amount\n%s",
+				cnt, msg,
+			),
+		), broken
 	}
 }
