@@ -52,6 +52,7 @@ func (msg MsgCreatePrivatePlan) ValidateBasic() error {
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+	// TODO: reject too big rewardsPerDay which can cause an overflow
 	return nil
 }
 
