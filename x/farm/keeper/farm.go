@@ -34,7 +34,7 @@ func (k Keeper) Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) 
 		}
 	}
 	position.FarmingAmount = position.FarmingAmount.Add(coin.Amount)
-	k.initializePosition(ctx, position)
+	k.updatePosition(ctx, position)
 
 	// TODO: emit an event
 
@@ -51,10 +51,6 @@ func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin
 		// TODO: use sentinel error
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "not enough farming amount")
 	}
-	farmingReserveAddr := types.DeriveFarmingReserveAddress(coin.Denom)
-	if err := k.bankKeeper.SendCoins(ctx, farmingReserveAddr, farmerAddr, sdk.NewCoins(coin)); err != nil {
-		return nil, err
-	}
 
 	withdrawnRewards, err = k.withdrawRewards(ctx, position)
 	if err != nil {
@@ -65,7 +61,19 @@ func (k Keeper) Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin
 	if position.FarmingAmount.IsZero() {
 		k.DeletePosition(ctx, farmerAddr, coin.Denom)
 	} else {
-		k.initializePosition(ctx, position)
+		k.updatePosition(ctx, position)
+	}
+
+	farm, found := k.GetFarm(ctx, coin.Denom)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "farm not found")
+	}
+	farm.TotalFarmingAmount = farm.TotalFarmingAmount.Sub(coin.Amount)
+	k.SetFarm(ctx, coin.Denom, farm)
+
+	farmingReserveAddr := types.DeriveFarmingReserveAddress(coin.Denom)
+	if err := k.bankKeeper.SendCoins(ctx, farmingReserveAddr, farmerAddr, sdk.NewCoins(coin)); err != nil {
+		return nil, err
 	}
 
 	// TODO: emit an event
@@ -84,7 +92,7 @@ func (k Keeper) Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 		return nil, err
 	}
 
-	k.initializePosition(ctx, position)
+	k.updatePosition(ctx, position)
 
 	// TODO: emit an event
 
@@ -114,9 +122,9 @@ func (k Keeper) initializeFarm(ctx sdk.Context, denom string) types.Farm {
 	return farm
 }
 
-func (k Keeper) initializePosition(ctx sdk.Context, position types.Position) {
+func (k Keeper) updatePosition(ctx sdk.Context, position types.Position) {
 	farm, found := k.GetFarm(ctx, position.Denom)
-	if !found {
+	if !found { // Sanity check
 		panic("farm not found")
 	}
 	prevPeriod := farm.Period - 1

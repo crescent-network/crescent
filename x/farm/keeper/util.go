@@ -12,6 +12,7 @@ func (k Keeper) PoolRewardWeight(ctx sdk.Context, pool liquiditytypes.Pool, pair
 	spendable := k.bankKeeper.SpendableCoins(ctx, pool.GetReserveAddress())
 	rx := spendable.AmountOf(pair.QuoteCoinDenom)
 	ry := spendable.AmountOf(pair.BaseCoinDenom)
+	// TODO: use sqrt(k) instead of poolReserveAmtByX and ampFactor
 	poolReserveAmtByX := rx.Add(pair.LastPrice.MulInt(ry).TruncateInt())
 	var ampFactor sdk.Dec
 	oneDec := sdk.OneDec()

@@ -12,11 +12,11 @@ option (gogoproto.goproto_getters_all) = false;
 message GenesisState {
   Params                           params             = 1 [(gogoproto.nullable) = false];
   uint64                           last_plan_id       = 2;
-  repeated Plan                    plans              = 3 [(gogoproto.nullable) = false];
-  repeated FarmRecord              farms              = 4 [(gogoproto.nullable) = false];
-  repeated Position                positions          = 5 [(gogoproto.nullable) = false];
-  repeated HistoricalRewardsRecord historical_rewards = 6 [(gogoproto.nullable) = false];
-  google.protobuf.Timestamp        last_block_time    = 7 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp        last_block_time    = 3 [(gogoproto.stdtime) = true];
+  repeated Plan                    plans              = 4 [(gogoproto.nullable) = false];
+  repeated FarmRecord              farms              = 5 [(gogoproto.nullable) = false];
+  repeated Position                positions          = 6 [(gogoproto.nullable) = false];
+  repeated HistoricalRewardsRecord historical_rewards = 7 [(gogoproto.nullable) = false];
 }
 
 message FarmRecord {

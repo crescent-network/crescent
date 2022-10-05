@@ -16,6 +16,7 @@ func (k Keeper) CreatePrivatePlan(
 	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
 ) (types.Plan, error) {
 	// TODO: validate start/end time
+	// TODO: validate max number of private plans
 	for _, rewardAlloc := range rewardAllocs {
 		_, found := k.liquidityKeeper.GetPair(ctx, rewardAlloc.PairId)
 		if !found {
@@ -73,6 +74,12 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	allocsByFarmingPool := map[string]map[uint64]sdk.Coins{} // farmingPoolAddr => (pairId => rewards)
 	pairCache := map[uint64]liquiditytypes.Pair{}
 	for _, plan := range activePlans {
+		allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
+		if !ok {
+			allocs = map[uint64]sdk.Coins{}
+			allocsByFarmingPool[plan.FarmingPoolAddress] = allocs
+		}
+
 		for _, rewardAlloc := range plan.RewardAllocations {
 			pair, ok := pairCache[rewardAlloc.PairId]
 			if !ok {
@@ -86,22 +93,18 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 				continue
 			}
 
-			allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
-			if !ok {
-				allocs = map[uint64]sdk.Coins{}
-				allocsByFarmingPool[plan.FarmingPoolAddress] = allocs
-			}
 			rewards := types.RewardsForBlock(rewardAlloc.RewardsPerDay, blockDuration)
+			// TODO: allocate sdk.DecCoins instead of sdk.Coins?
 			truncatedRewards, _ := rewards.TruncateDecimal()
 			allocs[rewardAlloc.PairId] = allocs[rewardAlloc.PairId].Add(truncatedRewards...)
 		}
 	}
 
-	farmingPoolBalances := map[string]sdk.Coins{}
-	rewardsDeltaByDenom := map[string]sdk.DecCoins{}
+	farmingPoolBalancesCache := map[string]sdk.Coins{}
+	rewardsDiffByDenom := map[string]sdk.DecCoins{}
 	farmCache := map[string]*types.Farm{}
-	// We keep this slice for deterministic iteration over the rewardsDeltaByDenom map.
-	var denomsWithRewardsChanged []string
+	// We keep this slice for deterministic iteration over the rewardsDiffByDenom map.
+	var denomsWithRewardsDiff []string
 	for _, plan := range activePlans {
 		allocs := allocsByFarmingPool[plan.FarmingPoolAddress]
 		totalRewards := sdk.Coins{}
@@ -113,9 +116,10 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 		if err != nil { // It never happens
 			return err
 		}
-		balances, ok := farmingPoolBalances[plan.FarmingPoolAddress]
+		balances, ok := farmingPoolBalancesCache[plan.FarmingPoolAddress]
 		if !ok {
 			balances = k.bankKeeper.SpendableCoins(ctx, farmingPoolAddr)
+			farmingPoolBalancesCache[plan.FarmingPoolAddress] = balances
 		}
 		if !balances.IsAllGTE(totalRewards) {
 			continue
@@ -176,19 +180,19 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 				rewardProportion := rewardWeightByPool[pool.Id].QuoTruncate(totalRewardWeight)
 				rewards := sdk.NewDecCoinsFromCoins(allocs[rewardAlloc.PairId]...).MulDecTruncate(rewardProportion)
 
-				if _, ok := rewardsDeltaByDenom[pool.PoolCoinDenom]; !ok {
-					denomsWithRewardsChanged = append(denomsWithRewardsChanged, pool.PoolCoinDenom)
+				if _, ok := rewardsDiffByDenom[pool.PoolCoinDenom]; !ok {
+					denomsWithRewardsDiff = append(denomsWithRewardsDiff, pool.PoolCoinDenom)
 				}
-				rewardsDeltaByDenom[pool.PoolCoinDenom] =
-					rewardsDeltaByDenom[pool.PoolCoinDenom].Add(rewards...)
+				rewardsDiffByDenom[pool.PoolCoinDenom] =
+					rewardsDiffByDenom[pool.PoolCoinDenom].Add(rewards...)
 			}
 		}
 	}
 
-	for _, denom := range denomsWithRewardsChanged {
+	for _, denom := range denomsWithRewardsDiff {
 		farm := farmCache[denom]
-		farm.CurrentRewards = farm.CurrentRewards.Add(rewardsDeltaByDenom[denom]...)
-		farm.OutstandingRewards = farm.OutstandingRewards.Add(rewardsDeltaByDenom[denom]...)
+		farm.CurrentRewards = farm.CurrentRewards.Add(rewardsDiffByDenom[denom]...)
+		farm.OutstandingRewards = farm.OutstandingRewards.Add(rewardsDiffByDenom[denom]...)
 		k.SetFarm(ctx, denom, *farm)
 	}
 

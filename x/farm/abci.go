@@ -13,6 +13,7 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
+	// TODO: terminate ended plans
 	if err := k.AllocateRewards(ctx); err != nil {
 		panic(err)
 	}

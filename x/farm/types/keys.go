@@ -14,7 +14,7 @@ const (
 	ModuleName = "farm"
 
 	// StoreKey defines the primary module store key
-	StoreKey = "f4rm" // TODO: change module name entirely?
+	StoreKey = "f4rm" // To avoid store key collision with "farming"
 
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
@@ -25,11 +25,11 @@ const (
 
 var (
 	LastPlanIdKey              = []byte{0xd0}
-	PlanKeyPrefix              = []byte{0xd1}
-	FarmKeyPrefix              = []byte{0xd2}
-	PositionKeyPrefix          = []byte{0xd3}
-	HistoricalRewardsKeyPrefix = []byte{0xd4}
-	LastBlockTimeKey           = []byte{0xd5}
+	LastBlockTimeKey           = []byte{0xd1}
+	PlanKeyPrefix              = []byte{0xd2}
+	FarmKeyPrefix              = []byte{0xd3}
+	PositionKeyPrefix          = []byte{0xd4}
+	HistoricalRewardsKeyPrefix = []byte{0xd5}
 )
 
 func GetPlanKey(id uint64) []byte {
