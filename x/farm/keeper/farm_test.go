@@ -11,6 +11,8 @@ import (
 
 func (s *KeeperTestSuite) TestFarm() {
 	pair := s.createPair("denom1", "denom2")
+	pair.LastPrice = utils.ParseDecP("1")
+	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
 	pool := s.createPool(pair.Id, utils.ParseCoins("1000_000000denom1,1000_000000denom2"))
 	plan := s.createPrivatePlan([]types.RewardAllocation{
 		{

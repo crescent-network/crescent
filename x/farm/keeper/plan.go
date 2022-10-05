@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v3/x/farm/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
@@ -14,6 +15,14 @@ func (k Keeper) CreatePrivatePlan(
 	ctx sdk.Context, creatorAddr sdk.AccAddress, description string,
 	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
 ) (types.Plan, error) {
+	// TODO: validate start/end time
+	for _, rewardAlloc := range rewardAllocs {
+		_, found := k.liquidityKeeper.GetPair(ctx, rewardAlloc.PairId)
+		if !found {
+			return types.Plan{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", rewardAlloc.PairId)
+		}
+	}
+
 	fee := k.GetPrivatePlanCreationFee(ctx)
 	feeCollectorAddr, err := sdk.AccAddressFromBech32(k.GetFeeCollector(ctx))
 	if err != nil {
@@ -62,8 +71,21 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	})
 
 	allocsByFarmingPool := map[string]map[uint64]sdk.Coins{} // farmingPoolAddr => (pairId => rewards)
+	pairCache := map[uint64]liquiditytypes.Pair{}
 	for _, plan := range activePlans {
 		for _, rewardAlloc := range plan.RewardAllocations {
+			pair, ok := pairCache[rewardAlloc.PairId]
+			if !ok {
+				pair, found = k.liquidityKeeper.GetPair(ctx, rewardAlloc.PairId)
+				if !found { // It never happens
+					panic("pair not found")
+				}
+				pairCache[rewardAlloc.PairId] = pair
+			}
+			if pair.LastPrice == nil { // If the pair doesn't have the last price, skip.
+				continue
+			}
+
 			allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
 			if !ok {
 				allocs = map[uint64]sdk.Coins{}
@@ -88,8 +110,8 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 		}
 
 		farmingPoolAddr, err := sdk.AccAddressFromBech32(plan.FarmingPoolAddress)
-		if err != nil {
-			panic(err)
+		if err != nil { // It never happens
+			return err
 		}
 		balances, ok := farmingPoolBalances[plan.FarmingPoolAddress]
 		if !ok {
@@ -104,7 +126,28 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 		}
 
 		for _, rewardAlloc := range plan.RewardAllocations {
+			pair := pairCache[rewardAlloc.PairId]
+			if pair.LastPrice == nil {
+				continue
+			}
+
+			var poolCache []liquiditytypes.Pool
+			rewardWeightByPool := map[uint64]sdk.Dec{}
+			totalRewardWeight := sdk.ZeroDec()
 			_ = k.liquidityKeeper.IteratePoolsByPair(ctx, rewardAlloc.PairId, func(pool liquiditytypes.Pool) (stop bool, err error) {
+				if pool.Disabled {
+					return false, nil
+				}
+				// If the pool is a ranged pool and its pair's last price is out of
+				// its price range, skip the pool.
+				// This is because the amplification factor would be zero
+				// so its reward weight would eventually be zero, too.
+				if pool.Type == liquiditytypes.PoolTypeRanged &&
+					(pair.LastPrice.LT(*pool.MinPrice) || pair.LastPrice.GT(*pool.MaxPrice)) {
+					return false, nil
+				}
+
+				// Load the farm object either from the cache or the store.
 				farm, ok := farmCache[pool.PoolCoinDenom]
 				if !ok {
 					f, found := k.GetFarm(ctx, pool.PoolCoinDenom)
@@ -114,25 +157,31 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 					// If farm wasn't found, then nil will be set for the key.
 					farmCache[pool.PoolCoinDenom] = farm
 				}
+
 				// If there's no farm yet(which means there's no farmer yet),
 				// just skip this pool.
 				if farm == nil {
 					return false, nil
 				}
-				if _, found := k.GetFarm(ctx, pool.PoolCoinDenom); !found {
-					// If there's no Farm yet(which means there's no farmer for the denom),
-					// just skip this pool.
-					return false, nil
-				}
 				// TODO: what if the farm exists but has zero total farming amount?
-				rewards := sdk.NewDecCoinsFromCoins(allocs[rewardAlloc.PairId]...) // TODO: use weighted rewards
+
+				rewardWeight := k.PoolRewardWeight(ctx, pool, pair)
+				rewardWeightByPool[pool.Id] = rewardWeight
+				totalRewardWeight = totalRewardWeight.Add(rewardWeight)
+				poolCache = append(poolCache, pool)
+				return false, nil
+			})
+
+			for _, pool := range poolCache {
+				rewardProportion := rewardWeightByPool[pool.Id].QuoTruncate(totalRewardWeight)
+				rewards := sdk.NewDecCoinsFromCoins(allocs[rewardAlloc.PairId]...).MulDecTruncate(rewardProportion)
+
 				if _, ok := rewardsDeltaByDenom[pool.PoolCoinDenom]; !ok {
 					denomsWithRewardsChanged = append(denomsWithRewardsChanged, pool.PoolCoinDenom)
 				}
 				rewardsDeltaByDenom[pool.PoolCoinDenom] =
 					rewardsDeltaByDenom[pool.PoolCoinDenom].Add(rewards...)
-				return false, nil
-			})
+			}
 		}
 	}
 
