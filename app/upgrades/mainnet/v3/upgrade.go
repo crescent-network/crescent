@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
+	liquidfarmingtypes "github.com/crescent-network/crescent/v3/x/liquidfarming/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v3/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 	marketmakerkeeper "github.com/crescent-network/crescent/v3/x/marketmaker/keeper"
@@ -34,7 +36,11 @@ func UpgradeHandler(
 	}
 }
 
+// Add new modules
 var StoreUpgrades = store.StoreUpgrades{
-	// Add newly added market maker module
-	Added: []string{marketmakertypes.ModuleName},
+	Added: []string{
+		marketmakertypes.ModuleName,
+		farmtypes.ModuleName,
+		liquidfarmingtypes.ModuleName,
+	},
 }

@@ -8,6 +8,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -115,6 +116,8 @@ func (k msgServer) AdvanceEpoch(goCtx context.Context, msg *types.MsgAdvanceEpoc
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if EnableAdvanceEpoch {
+		currentEpochDays := k.GetCurrentEpochDays(ctx)
+		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(currentEpochDays) * types.Day))
 		if err := k.Keeper.AdvanceEpoch(ctx); err != nil {
 			return nil, err
 		}

@@ -44,7 +44,7 @@ func (k Keeper) SetLastEpochTime(ctx sdk.Context, t time.Time) {
 // Use this only for simulation and testing purpose.
 func (k Keeper) AdvanceEpoch(ctx sdk.Context) error {
 	currentEpochDays := k.GetCurrentEpochDays(ctx)
-	k.ProcessQueuedCoins(ctx, ctx.BlockTime().Add(time.Duration(currentEpochDays)*types.Day))
+	k.ProcessQueuedCoins(ctx, ctx.BlockTime()) // Caller must adjust the ctx's BlockTime to simulate the advance.
 	if err := k.TerminateEndedPlans(ctx); err != nil {
 		return err
 	}

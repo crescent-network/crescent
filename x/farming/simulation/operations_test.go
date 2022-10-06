@@ -3,6 +3,7 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -193,7 +194,8 @@ func TestSimulateMsgUnstake(t *testing.T) {
 
 	// begin a new block and advance epoch
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
-	err = app.FarmingKeeper.AdvanceEpoch(ctx)
+	currentEpochDays := app.FarmingKeeper.GetCurrentEpochDays(ctx)
+	err = app.FarmingKeeper.AdvanceEpoch(ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(currentEpochDays) * types.Day)))
 	require.NoError(t, err)
 
 	// execute operation
@@ -265,7 +267,8 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	_, sf := app.FarmingKeeper.GetStaking(ctx, sdk.DefaultBondDenom, accounts[1].Address)
 	require.True(t, sf)
 
-	err = app.FarmingKeeper.AdvanceEpoch(ctx)
+	currentEpochDays := app.FarmingKeeper.GetCurrentEpochDays(ctx)
+	err = app.FarmingKeeper.AdvanceEpoch(ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(currentEpochDays) * types.Day)))
 	require.NoError(t, err)
 
 	// execute operation
