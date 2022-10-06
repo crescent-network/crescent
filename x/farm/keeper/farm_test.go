@@ -124,6 +124,16 @@ func (s *KeeperTestSuite) TestFarm_WithdrawRewards() {
 	s.assertEq(sdk.DecCoins{}, s.rewards(farmerAddr, "pool1"))
 }
 
+func (s *KeeperTestSuite) TestFarm_MultipleTimes() {
+	farmerAddr := utils.TestAddress(0)
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool1"))
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool1"))
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool1"))
+
+	farm, _ := s.keeper.GetFarm(s.ctx, "pool1")
+	s.Require().EqualValues(4, farm.Period)
+}
+
 func (s *KeeperTestSuite) TestUnfarm() {
 	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
 	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
@@ -159,4 +169,44 @@ func (s *KeeperTestSuite) TestUnfarm() {
 	_, found := s.keeper.GetPosition(s.ctx, farmerAddr, "pool1")
 	s.Require().False(found)
 	s.assertEq(utils.ParseCoins("1_000000pool1,5787stake"), s.getBalances(farmerAddr))
+}
+
+func (s *KeeperTestSuite) TestUnfarm_MultipleTimes() {
+	farmerAddr := utils.TestAddress(0)
+	s.farm(farmerAddr, utils.ParseCoin("10_000000pool1"))
+
+	s.unfarm(farmerAddr, utils.ParseCoin("1000000pool1"))
+	s.unfarm(farmerAddr, utils.ParseCoin("1000000pool1"))
+	s.unfarm(farmerAddr, utils.ParseCoin("1000000pool1"))
+
+	farm, _ := s.keeper.GetFarm(s.ctx, "pool1")
+	s.Require().EqualValues(5, farm.Period)
+}
+
+func (s *KeeperTestSuite) TestHarvest_WithoutRewards() {
+	_, err := s.keeper.Harvest(s.ctx, utils.TestAddress(0), "pool1")
+	s.Require().ErrorIs(err, sdkerrors.ErrNotFound)
+}
+
+func (s *KeeperTestSuite) TestHarvest_MultipleTimes() {
+	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+	s.createPrivatePlan([]types.RewardAllocation{
+		types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+	}, utils.ParseCoins("10000_000000stake"))
+
+	farmerAddr := utils.TestAddress(0)
+
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool1"))
+
+	s.nextBlock()
+
+	withdrawnRewards := s.harvest(farmerAddr, "pool1")
+	s.assertEq(utils.ParseCoins("5787stake"), withdrawnRewards)
+	withdrawnRewards = s.harvest(farmerAddr, "pool1")
+	s.assertEq(sdk.Coins{}, withdrawnRewards)
+	s.harvest(farmerAddr, "pool1")
+
+	farm, _ := s.keeper.GetFarm(s.ctx, "pool1")
+	s.Require().EqualValues(5, farm.Period)
 }

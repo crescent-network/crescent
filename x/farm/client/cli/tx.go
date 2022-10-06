@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -44,6 +46,11 @@ func NewCreatePrivatePlanCmd() *cobra.Command {
 		Short: "Create a new private farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a new private farming plan.
+The newly created plan's farming pool address is automatically generated and
+will have no balances in the account initially.
+Manually send enough reward coins to the generated farming pool address to make
+sure that the rewards allocation happens.
+The plan's termination address is set to the plan creator.
 
 [description]: a brief description of the plan
 [start-time]: the time at which the plan begins, in RFC3339 format
@@ -113,7 +120,7 @@ func NewFarmCmd() *cobra.Command {
 			fmt.Sprintf(`Start farming coin.
 
 Example:
-$ %s tx %s farm 1000000stake --from mykey
+$ %s tx %s farm 1000000pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -149,7 +156,7 @@ func NewUnfarmCmd() *cobra.Command {
 			fmt.Sprintf(`Unfarm farming coin.
 
 Example:
-$ %s tx %s unfarm 1000000stake --from mykey
+$ %s tx %s unfarm 1000000pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -185,7 +192,7 @@ func NewHarvestCmd() *cobra.Command {
 			fmt.Sprintf(`Harvest farming rewards.
 
 Example:
-$ %s tx %s harvest stake --from mykey
+$ %s tx %s harvest pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -203,6 +210,100 @@ $ %s tx %s harvest stake --from mykey
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCmdSubmitFarmingPlanProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "farming-plan [proposal-file]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a farming plan proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a farming plan proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file.
+
+Example:
+$ %s tx gov submit-proposal farming-plan <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
+
+Where proposal.json contains:
+
+{
+  "title": "Farming Plan Proposal",
+  "description": "Let's start farming",
+  "create_plan_requests": [
+    {
+      "description": "New Farming Plan",
+      "farming_pool_address": "cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3",
+      "termination_address": "cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3",
+      "reward_allocations": [
+        {
+          "pair_id": "1",
+          "rewards_per_day": [
+            {
+              "denom": "stake",
+              "amount": "100000000"
+            }
+          ]
+        },
+        {
+          "pair_id": "2",
+          "rewards_per_day": [
+            {
+              "denom": "stake",
+              "amount": "200000000"
+            }
+          ]
+        }
+      ],
+      "start_time": "2022-01-01T00:00:00Z",
+      "end_time": "2023-01-01T00:00:00Z"
+    }
+  ],
+  "terminate_plan_requests": [
+    {
+      "plan_id": "1"
+    },
+    {
+      "plan_id": "2"
+    }
+  ]
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			content, err := ParseFarmingPlanProposal(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+			msg, err := gov.NewMsgSubmitProposal(&content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 
 	return cmd
 }
