@@ -36,6 +36,11 @@ const (
 
 	DefaultWeightMsgClaim int = 50
 
+	DefaultWeightMsgLiquidFarm   int = 50
+	DefaultWeightMsgLiquidUnfarm int = 10
+	DefaultWeightMsgPlaceBid     int = 20
+	DefaultWeightMsgRefundBid    int = 5
+
 	DefaultWeightMsgApplyMarketMaker int = 20
 	DefaultWeightMsgClaimIncentives  int = 10
 

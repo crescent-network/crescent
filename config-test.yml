@@ -86,6 +86,14 @@ genesis:
         whitelisted_validators:
           - validator_address: "crevaloper1zaavvzxez0elundtn32qnk9lkm8kmcszyvldht"
             target_weight: "100000000"
+    liquidfarming:
+      params:
+        rewards_auction_duration: "120s"
+        liquid_farms:
+          - pool_id: "1"
+            min_farm_amount: "1"
+            min_bid_amount: "1"
+            fee_rate: "0.000000000000000000"
     claim:
       airdrops:
         - id: "1"
