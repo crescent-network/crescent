@@ -45,6 +45,13 @@ func TestMsgCreatePair(t *testing.T) {
 			},
 			"invalid denom: invaliddenom!: invalid request",
 		},
+		{
+			"same denom",
+			func(msg *types.MsgCreatePair) {
+				msg.QuoteCoinDenom = "denom1"
+			},
+			"cannot use same denom for both base coin and quote coin: invalid request",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgCreatePair(testAddr, "denom1", "denom2")
