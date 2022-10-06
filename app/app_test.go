@@ -38,6 +38,7 @@ import (
 	"github.com/crescent-network/crescent/v3/x/claim"
 	"github.com/crescent-network/crescent/v3/x/farm"
 	"github.com/crescent-network/crescent/v3/x/farming"
+	"github.com/crescent-network/crescent/v3/x/liquidfarming"
 	"github.com/crescent-network/crescent/v3/x/liquidity"
 	"github.com/crescent-network/crescent/v3/x/liquidstaking"
 	"github.com/crescent-network/crescent/v3/x/marketmaker"
@@ -193,6 +194,7 @@ func TestRunMigrations(t *testing.T) {
 					"farming":       farming.AppModule{}.ConsensusVersion(),
 					"liquidity":     liquidity.AppModule{}.ConsensusVersion(),
 					"liquidstaking": liquidstaking.AppModule{}.ConsensusVersion(),
+					"liquidfarming": liquidfarming.AppModule{}.ConsensusVersion(),
 					"claim":         claim.AppModule{}.ConsensusVersion(),
 					"marketmaker":   marketmaker.AppModule{}.ConsensusVersion(),
 					"farm":          farm.AppModule{}.ConsensusVersion(),
@@ -254,6 +256,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"farming":       farming.AppModule{}.ConsensusVersion(),
 			"liquidity":     liquidity.AppModule{}.ConsensusVersion(),
 			"liquidstaking": liquidstaking.AppModule{}.ConsensusVersion(),
+			"liquidfarming": liquidfarming.AppModule{}.ConsensusVersion(),
 			"claim":         claim.AppModule{}.ConsensusVersion(),
 			"marketmaker":   marketmaker.AppModule{}.ConsensusVersion(),
 			"farm":          farm.AppModule{}.ConsensusVersion(),
