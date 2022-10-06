@@ -14,8 +14,8 @@ Run this command under the project root directory `$ ignite chain serve -c confi
 
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout the document.
 
-- [LiquidFarming Module](#Liquidfarming-Module)
-  - [Synopsis](#Synopsis)
+## Command Line Interfaces
+
 - [Transaction](#Transaction)
   - [LiquidFarm](#LiquidFarm)
   - [LiquidUnfarm](#LiquidUnfarm)
@@ -27,7 +27,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
   - [LiquidFarm](#LiquidFarm)
   - [RewardsAuctions](#RewardsAuctions)
   - [RewardsAuction](#RewardsAuction)
-  - [Bids](#bids)
+  - [Bids](#Bids)
 
 # Transaction
 

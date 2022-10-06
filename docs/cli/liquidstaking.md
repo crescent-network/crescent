@@ -11,14 +11,16 @@ This document provides a high-level overview of how the command line (CLI) inter
 
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout the document.
 
+## Command Line Interfaces
+
 - [Transaction](#Transaction)
-    * [LiquidStake](#LiquidStake)
-    * [LiquidUnstake](#LiquidUnstake)
+  - [LiquidStake](#LiquidStake)
+  - [LiquidUnstake](#LiquidUnstake)
 - [Query](#Query)
-    * [Params](#Params)
-    * [LiquidValidators](#LiquidValidators)
-    * [States](#States)
-    * [VotingPower](#VotingPower)
+  - [Params](#Params)
+  - [LiquidValidators](#LiquidValidators)
+  - [States](#States)
+  - [VotingPower](#VotingPower)
 
 # Transaction
 
