@@ -55,7 +55,7 @@ func DateRangeIncludes(startTime, endTime, targetTime time.Time) bool {
 
 // ParseDec is a shortcut for sdk.MustNewDecFromStr.
 func ParseDec(s string) sdk.Dec {
-	return sdk.MustNewDecFromStr(s)
+	return sdk.MustNewDecFromStr(strings.ReplaceAll(s, "_", ""))
 }
 
 // ParseDecP is like ParseDec, but it returns a pointer to sdk.Dec.
@@ -80,6 +80,15 @@ func ParseCoins(s string) sdk.Coins {
 		panic(err)
 	}
 	return coins
+}
+
+// ParseDecCoin parses and returns sdk.DecCoin.
+func ParseDecCoin(s string) sdk.DecCoin {
+	coin, err := sdk.ParseDecCoin(strings.ReplaceAll(s, "_", ""))
+	if err != nil {
+		panic(err)
+	}
+	return coin
 }
 
 // ParseDecCoins parses and returns sdk.DecCoins.
@@ -217,4 +226,11 @@ func IsOverflow(r interface{}) bool {
 		return strings.Contains(s, "overflow") || strings.HasSuffix(s, "out of bound")
 	}
 	return false
+}
+
+// LengthPrefixString returns length-prefixed bytes representation of a string.
+func LengthPrefixString(s string) []byte {
+	bz := []byte(s)
+	bzLen := len(bz)
+	return append([]byte{byte(bzLen)}, bz...)
 }

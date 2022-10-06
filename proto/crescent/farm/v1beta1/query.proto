@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package crescent.farm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "crescent/farm/v1beta1/farm.proto";
+
+option go_package = "github.com/crescent-network/crescent/x/farm/types";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/params";
+  }
+  rpc Plans(QueryPlansRequest) returns (QueryPlansResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/plans";
+  }
+  rpc Plan(QueryPlanRequest) returns (QueryPlanResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/plans/{plan_id}";
+  }
+  rpc Farm(QueryFarmRequest) returns (QueryFarmResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/farms/{denom}";
+  }
+  rpc Positions(QueryPositionsRequest) returns (QueryPositionsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/positions/{farmer}";
+  }
+  rpc Position(QueryPositionRequest) returns (QueryPositionResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/positions/{farmer}/{denom}";
+  }
+  rpc HistoricalRewards(QueryHistoricalRewardsRequest) returns (QueryHistoricalRewardsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/historical_rewards/{denom}";
+  }
+  rpc AllRewards(QueryAllRewardsRequest) returns (QueryAllRewardsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/rewards/{farmer}";
+  }
+  rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
+    option (google.api.http).get = "/crescent/farm/v1beta1/rewards/{farmer}/{denom}";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryPlansRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPlansResponse {
+  repeated Plan                          plans      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPlanRequest {
+  uint64 plan_id = 1;
+}
+
+message QueryPlanResponse {
+  Plan plan = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryFarmRequest {
+  string denom = 1;
+}
+
+message QueryFarmResponse {
+  Farm farm = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryPositionsRequest {
+  string                                farmer     = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryPositionsResponse {
+  repeated Position                      positions  = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPositionRequest {
+  string farmer = 1;
+  string denom  = 2;
+}
+
+message QueryPositionResponse {
+  Position position = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryHistoricalRewardsRequest {
+  string                                denom      = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryHistoricalRewardsResponse {
+  repeated HistoricalRewardsResponse     historical_rewards = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination         = 2;
+}
+
+message QueryAllRewardsRequest {
+  string farmer = 1;
+}
+
+message QueryAllRewardsResponse {
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+message QueryRewardsRequest {
+  string farmer = 1;
+  string denom  = 2;
+}
+
+message QueryRewardsResponse {
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+message HistoricalRewardsResponse {
+  uint64   period                                              = 1;
+  repeated cosmos.base.v1beta1.DecCoin cumulative_unit_rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  uint32 reference_count = 3;
+}
