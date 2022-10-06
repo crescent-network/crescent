@@ -115,7 +115,7 @@ func NewFarmCmd() *cobra.Command {
 			fmt.Sprintf(`Start farming coin.
 
 Example:
-$ %s tx %s farm 1000000stake --from mykey
+$ %s tx %s farm 1000000pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -151,7 +151,7 @@ func NewUnfarmCmd() *cobra.Command {
 			fmt.Sprintf(`Unfarm farming coin.
 
 Example:
-$ %s tx %s unfarm 1000000stake --from mykey
+$ %s tx %s unfarm 1000000pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -187,7 +187,7 @@ func NewHarvestCmd() *cobra.Command {
 			fmt.Sprintf(`Harvest farming rewards.
 
 Example:
-$ %s tx %s harvest stake --from mykey
+$ %s tx %s harvest pool1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -233,12 +233,22 @@ Where proposal.json contains:
       "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
       "reward_allocations": [
         {
-          "pair_id": 1,
-          "rewards_per_day": "100000000stake"
+          "pair_id": "1",
+          "rewards_per_day": [
+            {
+              "denom": "stake",
+              "amount": "100000000"
+            }
+          ]
         },
         {
-          "pair_id": 2,
-          "rewards_per_day": "50000000stake"
+          "pair_id": "2",
+          "rewards_per_day": [
+            {
+              "denom": "stake",
+              "amount": "200000000"
+            }
+          ]
         }
       ],
       "start_time": "2022-01-01T00:00:00Z",
@@ -247,10 +257,10 @@ Where proposal.json contains:
   ],
   "terminate_plan_requests": [
     {
-      "pair_id": 1
+      "plan_id": "1"
     },
     {
-      "pair_id": 2
+      "plan_id": "2"
     }
   ]
 }
