@@ -46,6 +46,11 @@ func NewCreatePrivatePlanCmd() *cobra.Command {
 		Short: "Create a new private farming plan",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Create a new private farming plan.
+The newly created plan's farming pool address is automatically generated and
+will have no balances in the account initially.
+Manually send enough reward coins to the generated farming pool address to make
+sure that the rewards allocation happens.
+The plan's termination address is set to the plan creator.
 
 [description]: a brief description of the plan
 [start-time]: the time at which the plan begins, in RFC3339 format

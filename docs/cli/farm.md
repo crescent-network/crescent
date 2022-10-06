@@ -16,6 +16,11 @@ directory
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout
 the document.
 
+Make sure that the pairs specified in the plan's reward allocations have the
+last price in order to create plans.
+You can make some orders to the pairs after creating pools in the pair to
+achieve this.
+
 ## Command Line Interfaces
 
 - [Transaction](#transaction)
@@ -39,6 +44,11 @@ the document.
 #### CreatePrivatePlan
 
 Create a new private farming plan.
+The newly created plan's farming pool address is automatically generated and
+will have no balances in the account initially.
+Manually send enough reward coins to the generated farming pool address to make
+sure that the rewards allocation happens.
+The plan's termination address is set to the plan creator.
 
 Usage:
 
@@ -55,6 +65,8 @@ create-private-plan [description] [start-time] [end-time] [reward-allocations...
 
 Where a reward allocation is represented in following format:
 `<pair-id>:<rewards-per-day>`
+
+Note that the example below assumes that pair 1 and pair 2 exist.
 
 Example:
 
@@ -95,7 +107,7 @@ farm [coin]
 Example:
 
 ```bash
-crescentd tx farm farm 1000000pool1
+crescentd tx farm farm 1000000pool1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -127,7 +139,7 @@ unfarm [coin]
 Example:
 
 ```bash
-crescentd tx farm unfarm 1000000pool1
+crescentd tx farm unfarm 1000000pool1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -159,7 +171,7 @@ harvest [denom]
 Example:
 
 ```bash
-crescentd tx farm harvest pool1
+crescentd tx farm harvest pool1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
