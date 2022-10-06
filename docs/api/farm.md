@@ -41,7 +41,7 @@ Example Response
         "amount": "100000000"
       }
     ],
-    "fee_collector": "cosmos1jclh5ymhug04qr2julz25m2yqv4ughnuuy65exx36mwurtcwnrzqum3ha3",
+    "fee_collector": "cre1jclh5ymhug04qr2julz25m2yqv4ughnuuy65exx36mwurtcwnrzqsg9tgn",
     "max_num_private_plans": 50,
     "max_block_duration": "10s"
   }
@@ -66,8 +66,8 @@ Example Response
     {
       "id": "1",
       "description": "New Farming Plan",
-      "farming_pool_address": "cosmos1gkvhlzmpxarqwk4jh7k7yemf60r50y55n8ax9kxcx8t28hm0e7cq687wz8",
-      "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
+      "farming_pool_address": "cre1gkvhlzmpxarqwk4jh7k7yemf60r50y55n8ax9kxcx8t28hm0e7cqk52jh9",
+      "termination_address": "cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3",
       "reward_allocations": [
         {
           "pair_id": "1",
@@ -118,8 +118,8 @@ Example Response
   "plan": {
     "id": "1",
     "description": "New Farming Plan",
-    "farming_pool_address": "cosmos1gkvhlzmpxarqwk4jh7k7yemf60r50y55n8ax9kxcx8t28hm0e7cq687wz8",
-    "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
+    "farming_pool_address": "cre1gkvhlzmpxarqwk4jh7k7yemf60r50y55n8ax9kxcx8t28hm0e7cqk52jh9",
+    "termination_address": "cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3",
     "reward_allocations": [
       {
         "pair_id": "1",
@@ -188,7 +188,7 @@ Example Request:
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/farm/v1beta1/positions/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
+http://localhost:1317/crescent/farm/v1beta1/positions/cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
 ```
 
 Example Response
@@ -197,7 +197,7 @@ Example Response
 {
   "positions": [
     {
-      "farmer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+      "farmer": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
       "denom": "pool1",
       "farming_amount": "1000000",
       "previous_period": "1",
@@ -218,7 +218,7 @@ Example Request:
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/farm/v1beta1/positions/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v/pool1
+http://localhost:1317/crescent/farm/v1beta1/positions/cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p/pool1
 ```
 
 Example Response
@@ -226,7 +226,7 @@ Example Response
 ```json
 {
   "position": {
-    "farmer": "cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v",
+    "farmer": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
     "denom": "pool1",
     "farming_amount": "1000000",
     "previous_period": "1",
@@ -275,7 +275,7 @@ Example Request:
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/farm/v1beta1/rewards/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
+http://localhost:1317/crescent/farm/v1beta1/rewards/cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
 ```
 
 Example Response
@@ -298,7 +298,7 @@ Example Request:
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/farm/v1beta1/rewards/cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v/pool1
+http://localhost:1317/crescent/farm/v1beta1/rewards/cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p/pool1
 ```
 
 Example Response

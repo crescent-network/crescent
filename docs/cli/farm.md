@@ -119,7 +119,7 @@ crescentd tx farm farm 1000000pool1 \
 # Tips
 #
 # You can query positions of the farmer using the following command
-crescentd q farm positions cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
+crescentd q farm positions cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 #### Unfarm
@@ -151,7 +151,7 @@ crescentd tx farm unfarm 1000000pool1 \
 # Tips
 #
 # You can query positions of the farmer using the following command
-crescentd q farm positions cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
+crescentd q farm positions cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 #### Harvest
@@ -183,7 +183,7 @@ crescentd tx farm harvest pool1 \
 # Tips
 #
 # You can query account balances using the following command
-crescentd q bank balances cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
+crescentd q bank balances cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 ### Query
@@ -265,7 +265,7 @@ positions [farmer]
 Example:
 
 ```bash
-crescentd q farm positions cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
+crescentd q farm positions cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 #### Position
@@ -281,7 +281,7 @@ position [farmer] [denom]
 Example:
 
 ```bash
-crescentd q farm position cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v pool1 -o json | jq
+crescentd q farm position cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p pool1 -o json | jq
 ```
 
 #### HistoricalRewards
@@ -313,7 +313,7 @@ all-rewards [farmer]
 Example:
 
 ```bash
-crescentd q farm all-rewards cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v -o json | jq
+crescentd q farm all-rewards cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 #### Rewards
@@ -329,5 +329,5 @@ rewards [farmer] [denom]
 Example:
 
 ```bash
-crescentd q farm rewards cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v pool1 -o json | jq
+crescentd q farm rewards cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p pool1 -o json | jq
 ```
