@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -203,6 +205,90 @@ $ %s tx %s harvest stake --from mykey
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewCmdSubmitFarmingPlanProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "farming-plan [proposal-file]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a farming plan proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a farming plan proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file.
+
+Example:
+$ %s tx gov submit-proposal farming-plan <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
+
+Where proposal.json contains:
+
+{
+  "title": "Farming Plan Proposal",
+  "description": "Let's start farming",
+  "create_plan_requests": [
+    {
+      "description": "New Farming Plan",
+      "farming_pool_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
+      "termination_address": "cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu",
+      "reward_allocations": [
+        {
+          "pair_id": 1,
+          "rewards_per_day": "100000000stake"
+        },
+        {
+          "pair_id": 2,
+          "rewards_per_day": "50000000stake"
+        }
+      ],
+      "start_time": "2022-01-01T00:00:00Z",
+      "end_time": "2023-01-01T00:00:00Z"
+    }
+  ],
+  "terminate_plan_requests": [
+    {
+      "pair_id": 1
+    },
+    {
+      "pair_id": 2
+    }
+  ]
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			content, err := ParseFarmingPlanProposal(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+			msg, err := gov.NewMsgSubmitProposal(&content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 
 	return cmd
 }
