@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"strings"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,118 +9,6 @@ import (
 	utils "github.com/crescent-network/crescent/v3/types"
 	"github.com/crescent-network/crescent/v3/x/farm/types"
 )
-
-func TestMsgCreatePrivatePlan(t *testing.T) {
-	for _, tc := range []struct {
-		name        string
-		malleate    func(msg *types.MsgCreatePrivatePlan)
-		expectedErr string // empty means no error
-	}{
-		{
-			"happy case",
-			func(msg *types.MsgCreatePrivatePlan) {},
-			"",
-		},
-		{
-			"invalid creator",
-			func(msg *types.MsgCreatePrivatePlan) {
-				msg.Creator = "invalidaddr"
-			},
-			"invalid creator address: decoding bech32 failed: invalid separator index -1: invalid address",
-		},
-		{
-			"too long description",
-			func(msg *types.MsgCreatePrivatePlan) {
-				msg.Description = strings.Repeat("x", types.MaxPlanDescriptionLen+1)
-			},
-			"too long plan description, maximum 200: invalid request",
-		},
-		{
-			"empty reward allocations",
-			func(msg *types.MsgCreatePrivatePlan) {
-				msg.RewardAllocations = []types.RewardAllocation{}
-			},
-			"invalid reward allocations: empty reward allocations: invalid request",
-		},
-		{
-			"zero pair id",
-			func(msg *types.MsgCreatePrivatePlan) {
-				msg.RewardAllocations = []types.RewardAllocation{
-					{
-						PairId:        0,
-						RewardsPerDay: utils.ParseCoins("1_000000stake"),
-					},
-				}
-			},
-			"invalid reward allocations: pair id must not be zero: invalid request",
-		},
-		{
-			"invalid rewards per day",
-			func(msg *types.MsgCreatePrivatePlan) {
-				msg.RewardAllocations = []types.RewardAllocation{
-					{
-						PairId:        1,
-						RewardsPerDay: sdk.Coins{utils.ParseCoin("0stake")},
-					},
-				}
-			},
-			"invalid reward allocations: invalid rewards per day: coin 0stake amount is not positive: invalid request",
-		},
-		{
-			"duplicate pair id",
-			func(msg *types.MsgCreatePrivatePlan) {
-				msg.RewardAllocations = []types.RewardAllocation{
-					{
-						PairId:        1,
-						RewardsPerDay: sdk.Coins{utils.ParseCoin("100_000000stake")},
-					},
-					{
-						PairId:        1,
-						RewardsPerDay: sdk.Coins{utils.ParseCoin("200_000000stake")},
-					},
-				}
-			},
-			"invalid reward allocations: duplicate pair id: 1: invalid request",
-		},
-		{
-			"invalid start/end time",
-			func(msg *types.MsgCreatePrivatePlan) {
-				msg.StartTime = utils.ParseTime("2023-01-01T00:00:00Z")
-				msg.EndTime = utils.ParseTime("2023-01-01T00:00:00Z")
-			},
-			"end time must be after start time: invalid request",
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCreatePrivatePlan(
-				utils.TestAddress(0), "Farming Plan",
-				[]types.RewardAllocation{
-					{
-						PairId:        1,
-						RewardsPerDay: utils.ParseCoins("100_000000stake"),
-					},
-					{
-						PairId:        2,
-						RewardsPerDay: utils.ParseCoins("200_000000stake"),
-					},
-				},
-				utils.ParseTime("2022-01-01T00:00:00Z"),
-				utils.ParseTime("2023-01-01T00:00:00Z"))
-			tc.malleate(msg)
-			require.Equal(t, types.TypeMsgCreatePrivatePlan, msg.Type())
-			require.Equal(t, types.RouterKey, msg.Route())
-			err := msg.ValidateBasic()
-			if tc.expectedErr == "" {
-				require.NoError(t, err)
-				signers := msg.GetSigners()
-				require.Len(t, signers, 1)
-				require.Equal(t, msg.GetCreatorAddress(), signers[0])
-			} else {
-				require.EqualError(t, err, tc.expectedErr)
-			}
-		})
-	}
-}
 
 func TestMsgFarm(t *testing.T) {
 	for _, tc := range []struct {

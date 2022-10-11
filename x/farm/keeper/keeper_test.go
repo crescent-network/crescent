@@ -228,8 +228,8 @@ func (s *KeeperTestSuite) createSamplePlans() (privPlan, pubPlan types.Plan) {
 	s.createPool(pair2.Id, utils.ParseCoins("100_000000denom2,100_000000denom3"))
 
 	privPlan = s.createPrivatePlan([]types.RewardAllocation{
-		types.NewRewardAllocation(pair1.Id, utils.ParseCoins("100_000000stake")),
-		types.NewRewardAllocation(pair2.Id, utils.ParseCoins("200_000000stake")),
+		types.NewPairRewardAllocation(pair1.Id, utils.ParseCoins("100_000000stake")),
+		types.NewPairRewardAllocation(pair2.Id, utils.ParseCoins("200_000000stake")),
 	}, utils.ParseCoins("10000_000000stake"))
 	farmingPoolAddr := utils.TestAddress(100)
 	proposal := types.NewFarmingPlanProposal(
@@ -238,8 +238,8 @@ func (s *KeeperTestSuite) createSamplePlans() (privPlan, pubPlan types.Plan) {
 			types.NewCreatePlanRequest(
 				"Farming Plan", farmingPoolAddr, farmingPoolAddr,
 				[]types.RewardAllocation{
-					types.NewRewardAllocation(pair1.Id, utils.ParseCoins("300_000000stake")),
-					types.NewRewardAllocation(pair2.Id, utils.ParseCoins("400_000000stake")),
+					types.NewPairRewardAllocation(pair1.Id, utils.ParseCoins("300_000000stake")),
+					types.NewPairRewardAllocation(pair2.Id, utils.ParseCoins("400_000000stake")),
 				}, sampleStartTime, sampleEndTime),
 		}, nil)
 	s.handleProposal(proposal)

@@ -96,7 +96,7 @@ $ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-0
 				if err != nil {
 					return fmt.Errorf("invalid reward allocation: %s: %w", arg, err)
 				}
-				rewardAllocs = append(rewardAllocs, types.NewRewardAllocation(pairId, rewards))
+				rewardAllocs = append(rewardAllocs, types.NewPairRewardAllocation(pairId, rewards))
 			}
 
 			msg := types.NewMsgCreatePrivatePlan(

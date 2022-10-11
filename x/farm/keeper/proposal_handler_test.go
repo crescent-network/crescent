@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestFarmingPlanProposalHandler() {
 	createPlanReq := types.NewCreatePlanRequest(
 		"Farming Plan #1", farmingPoolAddr, termAddr,
 		[]types.RewardAllocation{
-			types.NewRewardAllocation(pair.Id, utils.ParseCoins("100_000000stake")),
+			types.NewPairRewardAllocation(pair.Id, utils.ParseCoins("100_000000stake")),
 		}, sampleStartTime, sampleEndTime)
 	proposal := types.NewFarmingPlanProposal(
 		"Create a new public farming plan", "Description",
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestFarmingPlanProposalHandler() {
 	s.assertEq(utils.ParseCoins("100_000000stake"), s.getBalances(termAddr))
 
 	privPlan := s.createPrivatePlan([]types.RewardAllocation{
-		types.NewRewardAllocation(pair.Id, utils.ParseCoins("100_000000stake")),
+		types.NewPairRewardAllocation(pair.Id, utils.ParseCoins("100_000000stake")),
 	}, utils.ParseCoins("10000_000000stake"))
 	terminatePlanReq = types.NewTerminatePlanRequest(privPlan.Id)
 	proposal = types.NewFarmingPlanProposal(

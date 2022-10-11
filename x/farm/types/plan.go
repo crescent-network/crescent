@@ -71,10 +71,18 @@ func (plan Plan) GetTerminationAddress() sdk.AccAddress {
 	return addr
 }
 
-// NewRewardAllocation creates a new RewardAllocation.
-func NewRewardAllocation(pairId uint64, rewardsPerDay sdk.Coins) RewardAllocation {
+// NewPairRewardAllocation creates a new RewardAllocation for a pair.
+func NewPairRewardAllocation(pairId uint64, rewardsPerDay sdk.Coins) RewardAllocation {
 	return RewardAllocation{
 		PairId:        pairId,
+		RewardsPerDay: rewardsPerDay,
+	}
+}
+
+// NewDenomRewardAllocation creates a new RewardAllocation for a target denom.
+func NewDenomRewardAllocation(denom string, rewardsPerDay sdk.Coins) RewardAllocation {
+	return RewardAllocation{
+		Denom:         denom,
 		RewardsPerDay: rewardsPerDay,
 	}
 }
@@ -86,15 +94,28 @@ func ValidateRewardAllocations(rewardAllocs []RewardAllocation) error {
 	if len(rewardAllocs) == 0 {
 		return fmt.Errorf("empty reward allocations")
 	}
+	denomSet := map[string]struct{}{}
 	pairIdSet := map[uint64]struct{}{}
 	for _, rewardAlloc := range rewardAllocs {
-		if rewardAlloc.PairId == 0 {
-			return fmt.Errorf("pair id must not be zero")
+		if rewardAlloc.Denom == "" && rewardAlloc.PairId == 0 {
+			return fmt.Errorf("target denom or pair id must be specified")
+		} else if rewardAlloc.Denom != "" && rewardAlloc.PairId != 0 {
+			return fmt.Errorf("target denom and pair id cannot be specified together")
 		}
-		if _, ok := pairIdSet[rewardAlloc.PairId]; ok {
-			return fmt.Errorf("duplicate pair id: %d", rewardAlloc.PairId)
+		if rewardAlloc.Denom != "" {
+			if err := sdk.ValidateDenom(rewardAlloc.Denom); err != nil {
+				return fmt.Errorf("invalid target denom: %w", err)
+			}
+			if _, ok := denomSet[rewardAlloc.Denom]; ok {
+				return fmt.Errorf("duplicate target denom: %s", rewardAlloc.Denom)
+			}
+			denomSet[rewardAlloc.Denom] = struct{}{}
+		} else if rewardAlloc.PairId > 0 {
+			if _, ok := pairIdSet[rewardAlloc.PairId]; ok {
+				return fmt.Errorf("duplicate pair id: %d", rewardAlloc.PairId)
+			}
+			pairIdSet[rewardAlloc.PairId] = struct{}{}
 		}
-		pairIdSet[rewardAlloc.PairId] = struct{}{}
 		if err := rewardAlloc.RewardsPerDay.Validate(); err != nil {
 			return fmt.Errorf("invalid rewards per day: %w", err)
 		}
