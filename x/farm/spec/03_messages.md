@@ -7,6 +7,9 @@
 A private farming plan can be created with `MsgCreatePrivatePlan`.
 See [Plan](02_state.md#plan) for more details about the fields.
 
+Either `Denom` or `PairId` must be specified in a `RewardAllocation`, but not
+both.
+
 ```go
 type MsgCreatePrivatePlan struct {
     Creator           string
@@ -18,6 +21,7 @@ type MsgCreatePrivatePlan struct {
 
 type RewardAllocation struct {
     PairId        uint64
+    Denom         string
     RewardsPerDay sdk.DecCoins
 }
 ```
@@ -28,8 +32,8 @@ Farmers can start farming on their assets with `MsgFarm`.
 
 ```go
 type MsgFarm struct {
-	Farmer string
-	Coin   sdk.Coin
+    Farmer string
+    Coin   sdk.Coin
 }
 ```
 
@@ -39,8 +43,8 @@ Farmers can withdraw their farming assets with `MsgUnfarm`.
 
 ```go
 type MsgUnfarm struct {
-	Farmer string
-	Coin   sdk.Coin
+    Farmer string
+    Coin   sdk.Coin
 }
 ```
 
@@ -50,7 +54,7 @@ Farmers can withdraw their farming rewards with `MsgHarvest`.
 
 ```go
 type MsgHarvest struct {
-	Farmer string
-	Denom  string
+    Farmer string
+    Denom  string
 }
 ```

@@ -281,3 +281,57 @@ func (s *KeeperTestSuite) TestAllocatedRewards_Complicated() {
 	// -> 5,787stake(for farmer 3, has 100% shares)
 	s.assertEq(utils.ParseDecCoins("5787stake"), s.rewards(farmerAddr3, "pool6"))
 }
+
+func (s *KeeperTestSuite) TestAllocateRewards_ToDenom() {
+	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+	s.createRangedPool(
+		1, utils.ParseCoins("100_000000denom1,100_000000denom2"),
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"))
+
+	s.createPrivatePlan([]types.RewardAllocation{
+		types.NewDenomRewardAllocation("pool1", utils.ParseCoins("100_000000stake")),
+		types.NewDenomRewardAllocation("pool2", utils.ParseCoins("200_000000stake")),
+	}, utils.ParseCoins("10000_000000stake"))
+
+	farmerAddr1 := utils.TestAddress(0)
+	s.farm(farmerAddr1, utils.ParseCoin("1000000pool1"))
+	s.farm(farmerAddr1, utils.ParseCoin("1000000pool2"))
+
+	farmerAddr2 := utils.TestAddress(1)
+	s.farm(farmerAddr2, utils.ParseCoin("1000000pool2"))
+
+	s.nextBlock()
+
+	s.assertEq(utils.ParseDecCoins("5787stake"), s.rewards(farmerAddr1, "pool1"))
+	s.assertEq(utils.ParseDecCoins("5787stake"), s.rewards(farmerAddr1, "pool2"))
+	s.assertEq(utils.ParseDecCoins("5787stake"), s.rewards(farmerAddr2, "pool2"))
+}
+
+func (s *KeeperTestSuite) TestAllocateRewards_ToPairAndDenom() {
+	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+	s.createRangedPool(
+		1, utils.ParseCoins("100_000000denom1,100_000000denom2"),
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"))
+
+	s.createPrivatePlan([]types.RewardAllocation{
+		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+	}, utils.ParseCoins("10000_000000stake"))
+	s.createPrivatePlan([]types.RewardAllocation{
+		types.NewDenomRewardAllocation("pool1", utils.ParseCoins("100_000000stake")),
+	}, utils.ParseCoins("10000_000000stake"))
+
+	farmerAddr := utils.TestAddress(0)
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool1"))
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool2"))
+
+	s.nextBlock()
+
+	// 1310stake(from plan 1, pool 1 has 22.65% shares)
+	// + 5787stake(for pool 1 from plan 2)
+	// ~= 7097stake
+	s.assertEq(utils.ParseDecCoins("7097.992302078128stake"), s.rewards(farmerAddr, "pool1"))
+	// 4476stake(from plan 1, pool 2 has 77.35% shares)
+	s.assertEq(utils.ParseDecCoins("4476.007697921871stake"), s.rewards(farmerAddr, "pool2"))
+}

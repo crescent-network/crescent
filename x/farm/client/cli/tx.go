@@ -57,11 +57,12 @@ The plan's termination address is set to the plan creator.
 [end-time]: the time at which the plan ends, in RFC3339 format
 [reward-allocations...]: whitespace-separated list of the reward allocations
 
-A reward allocation is specified in following format:
-<pair-id>:<rewards_per_day>
+A reward allocation is specified in one of the following formats:
+1. <denom>:<rewards_per_day>
+2. pair<pair-id>:<rewards_per_day>
 
 Example:
-$ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-01T00:00:00Z 1:10000stake 2:5000stake,1000uatom --from mykey
+$ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-01T00:00:00Z pair1:10000stake,5000uatom pool2:5000stake --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -84,19 +85,25 @@ $ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-0
 			var rewardAllocs []types.RewardAllocation
 			for _, arg := range args[3:] {
 				// TODO: use strings.Cut with go 1.18
-				pairIdStr, rewardsStr, found := cut(arg, ":")
+				target, rewardsPerDayStr, found := cut(arg, ":")
 				if !found {
 					return fmt.Errorf("invalid reward allocation: %s", arg)
 				}
-				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
+				rewardsPerDay, err := sdk.ParseCoinsNormalized(rewardsPerDayStr)
 				if err != nil {
 					return fmt.Errorf("invalid reward allocation: %s: %w", arg, err)
 				}
-				rewards, err := sdk.ParseCoinsNormalized(rewardsStr)
-				if err != nil {
-					return fmt.Errorf("invalid reward allocation: %s: %w", arg, err)
+				var rewardAlloc types.RewardAllocation
+				if strings.HasPrefix(target, "pair") {
+					pairId, err := strconv.ParseUint(strings.TrimPrefix(target, "pair"), 10, 64)
+					if err != nil {
+						return fmt.Errorf("invalid reward allocation: %s: %w", arg, err)
+					}
+					rewardAlloc = types.NewPairRewardAllocation(pairId, rewardsPerDay)
+				} else {
+					rewardAlloc = types.NewDenomRewardAllocation(target, rewardsPerDay)
 				}
-				rewardAllocs = append(rewardAllocs, types.NewPairRewardAllocation(pairId, rewards))
+				rewardAllocs = append(rewardAllocs, rewardAlloc)
 			}
 
 			msg := types.NewMsgCreatePrivatePlan(
@@ -247,7 +254,7 @@ Where proposal.json contains:
           ]
         },
         {
-          "pair_id": "2",
+          "denom": "pool2",
           "rewards_per_day": [
             {
               "denom": "stake",
