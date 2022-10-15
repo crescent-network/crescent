@@ -29,7 +29,7 @@ write a little note why.
 - [ ] Appropriate labels applied
 - [ ] Targeted PR against correct branch
 - [ ] Linked to Github issue with discussion and accepted design OR link to spec that describes this work.
-- [ ] Code follows the [module structure standards](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/structure.md).
+- [ ] Code follows the [module structure standards](https://github.com/cosmos/cosmos-sdk/blob/v0.45.3/docs/building-modules/README.md).
 - [ ] Wrote unit and integration
 - [ ] Updated relevant documentation (`docs/`) or specification (`x/<module>/spec/`)
 - [ ] Added relevant `godoc` [comments](https://go.dev/blog/godoc).

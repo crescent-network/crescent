@@ -122,6 +122,7 @@ require (
 )
 
 replace (
+	github.com/confio/ics23/go => ./ics23 // dragonberry security patch
 	github.com/cosmos/cosmos-sdk => github.com/crescent-network/cosmos-sdk v1.1.0-sdk-0.45.3
 	github.com/cosmos/ibc-go/v2 => github.com/crescent-network/ibc-go/v2 v2.2.0-crescent
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
