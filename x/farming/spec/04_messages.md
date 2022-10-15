@@ -86,7 +86,7 @@ type MsgUnstake struct {
 ## MsgHarvest
 
 The farming rewards are automatically accumulated, but they are not automatically distributed. 
-A farmer must harvest their farming rewards. This mechanism is similar to the Cosmos SDK [distribution](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/spec/01_concepts.md) module.
+A farmer must harvest their farming rewards. This mechanism is similar to the Cosmos SDK [distribution](https://github.com/cosmos/cosmos-sdk/blob/v0.45.3/x/distribution/spec/01_concepts.md) module.
 Also, if there is `UnharvestedRewards`, unharvested rewards are also withdrawn and the object is deleted.
 
 ```go
