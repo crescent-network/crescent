@@ -126,6 +126,7 @@ require (
 )
 
 replace (
+	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/notional-labs/cosmos-sdk v0.45.4-0.20221016144805-05c5fd2d6af3
 	github.com/cosmos/ibc-go/v2 => github.com/crescent-network/ibc-go/v2 v2.2.0-crescent-v3
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
