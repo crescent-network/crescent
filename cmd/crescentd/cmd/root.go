@@ -36,16 +36,14 @@ import (
 	farmingparams "github.com/crescent-network/crescent/v3/app/params"
 )
 
-var (
-	// AddressVerifier address verifier
-	AddressVerifier = func(bz []byte) error {
-		if n := len(bz); n != 20 && n != 32 {
-			return fmt.Errorf("incorrect address length %d", n)
-		}
-
-		return nil
+// AddressVerifier address verifier
+var AddressVerifier = func(bz []byte) error {
+	if n := len(bz); n != 20 && n != 32 {
+		return fmt.Errorf("incorrect address length %d", n)
 	}
-)
+
+	return nil
+}
 
 func GetConfig() *sdk.Config {
 	sdkConfig := sdk.GetConfig()
@@ -144,6 +142,7 @@ func initAppConfig() (string, interface{}) {
 	//
 	// In simapp, we set the min gas prices to 0.
 	srvCfg.MinGasPrices = "0stake"
+	srvCfg.IAVLDisableFastNode = false
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
@@ -296,6 +295,8 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		baseapp.SetSnapshotStore(snapshotStore),
 		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
 		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagIAVLFastNode))),
 	)
 }
 
@@ -303,8 +304,8 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 // and exports state.
 func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
 	var app *chain.App
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
