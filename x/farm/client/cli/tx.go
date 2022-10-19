@@ -84,8 +84,7 @@ $ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-0
 			}
 			var rewardAllocs []types.RewardAllocation
 			for _, arg := range args[3:] {
-				// TODO: use strings.Cut with go 1.18
-				target, rewardsPerDayStr, found := cut(arg, ":")
+				target, rewardsPerDayStr, found := strings.Cut(arg, ":")
 				if !found {
 					return fmt.Errorf("invalid reward allocation: %s", arg)
 				}
@@ -313,11 +312,4 @@ Where proposal.json contains:
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 
 	return cmd
-}
-
-func cut(s, sep string) (before, after string, found bool) {
-	if i := strings.Index(s, sep); i >= 0 {
-		return s[:i], s[i+len(sep):], true
-	}
-	return s, "", false
 }
