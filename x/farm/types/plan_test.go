@@ -30,6 +30,29 @@ func TestPlan_Validate(t *testing.T) {
 			"too long plan description, maximum 200",
 		},
 		{
+			"invalid farming pool address",
+			func(plan *types.Plan) {
+				plan.FarmingPoolAddress = "invalidaddr"
+			},
+			"invalid farming pool address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"invalid termination address",
+			func(plan *types.Plan) {
+				plan.TerminationAddress = "invalidaddr"
+			},
+			"invalid termination address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"same farming pool address and termination address",
+			func(plan *types.Plan) {
+				plan.FarmingPoolAddress = utils.TestAddress(0).String()
+				plan.TerminationAddress = utils.TestAddress(1).String()
+				plan.IsPrivate = false
+			},
+			"farming pool address and termination address of a public plan must be same: cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a != cosmos1qgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqggwm7m",
+		},
+		{
 			"empty reward allocations",
 			func(plan *types.Plan) {
 				plan.RewardAllocations = []types.RewardAllocation{}
@@ -59,6 +82,18 @@ func TestPlan_Validate(t *testing.T) {
 				}
 			},
 			"invalid reward allocations: invalid rewards per day: coin 0stake amount is not positive",
+		},
+		{
+			"too much rewards per day",
+			func(plan *types.Plan) {
+				plan.RewardAllocations = []types.RewardAllocation{
+					{
+						PairId: 1,
+						RewardsPerDay: utils.ParseCoins("57896044618658097711785492504343953926634992332820282019728792003956564819967stake"),
+					},
+				}
+			},
+			"invalid reward allocations: too much rewards per day",
 		},
 		{
 			"duplicate pair id",
