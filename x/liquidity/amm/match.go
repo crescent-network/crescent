@@ -89,13 +89,15 @@ func FindMatchPrice(ov OrderView, tickPrec int) (matchPrice sdk.Dec, found bool)
 	highestTickIdx := prec.TickToIndex(prec.HighestTick())
 	var i, j int
 	i, found = findFirstTrueCondition(lowestTickIdx, highestTickIdx, func(i int) bool {
-		return ov.BuyAmountOver(prec.TickFromIndex(i+1), true).LTE(ov.SellAmountUnder(prec.TickFromIndex(i), true))
+		sellAmt := ov.SellAmountUnder(prec.TickFromIndex(i), true)
+		return sellAmt.IsPositive() && ov.BuyAmountOver(prec.TickFromIndex(i+1), true).LTE(sellAmt)
 	})
 	if !found {
 		return sdk.Dec{}, false
 	}
 	j, found = findFirstTrueCondition(highestTickIdx, lowestTickIdx, func(i int) bool {
-		return ov.BuyAmountOver(prec.TickFromIndex(i), true).GTE(ov.SellAmountUnder(prec.TickFromIndex(i-1), true))
+		buyAmt := ov.BuyAmountOver(prec.TickFromIndex(i), true)
+		return buyAmt.IsPositive() && buyAmt.GTE(ov.SellAmountUnder(prec.TickFromIndex(i-1), true))
 	})
 	if !found {
 		return sdk.Dec{}, false

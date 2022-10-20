@@ -236,9 +236,8 @@ localnet:
 ###############################################################################
 
 lint:
-	$(BINDIR)/golangci-lint run
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs gofmt -d -s
-	go mod verify
+	@echo "--> Running linter"
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 
 .PHONY: lint
 
