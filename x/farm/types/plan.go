@@ -5,6 +5,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	utils "github.com/crescent-network/crescent/v3/types"
 )
 
 const day = 24 * time.Hour
@@ -45,6 +47,13 @@ func (plan Plan) Validate() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(plan.TerminationAddress); err != nil {
 		return fmt.Errorf("invalid termination address: %w", err)
+	}
+	if !plan.IsPrivate {
+		if plan.FarmingPoolAddress != plan.TerminationAddress {
+			return fmt.Errorf(
+				"farming pool address and termination address of a public plan must be same: %s != %s",
+				plan.FarmingPoolAddress, plan.TerminationAddress)
+		}
 	}
 	if err := ValidateRewardAllocations(plan.RewardAllocations); err != nil {
 		return fmt.Errorf("invalid reward allocations: %w", err)
@@ -98,7 +107,15 @@ func ValidateRewardAllocations(rewardAllocs []RewardAllocation) error {
 		if err := rewardAlloc.RewardsPerDay.Validate(); err != nil {
 			return fmt.Errorf("invalid rewards per day: %w", err)
 		}
-		// TODO: reject too big rewardsPerDay which can cause an overflow
+		overflow := false
+		utils.SafeMath(func() {
+			RewardsForBlock(rewardAlloc.RewardsPerDay, day)
+		}, func() {
+			overflow = true
+		})
+		if overflow {
+			return fmt.Errorf("too much rewards per day")
+		}
 	}
 	return nil
 }
