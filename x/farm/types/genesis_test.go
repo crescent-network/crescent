@@ -15,8 +15,8 @@ func TestGenesisState_Validate(t *testing.T) {
 	validPlan := types.NewPlan(
 		1, "Farming Plan", utils.TestAddress(0), utils.TestAddress(1),
 		[]types.RewardAllocation{
-			types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
-			types.NewRewardAllocation(2, utils.ParseCoins("200_000000stake")),
+			types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+			types.NewPairRewardAllocation(2, utils.ParseCoins("200_000000stake")),
 		},
 		utils.ParseTime("2022-01-01T00:00:00Z"),
 		utils.ParseTime("2023-01-01T00:00:00Z"), true)

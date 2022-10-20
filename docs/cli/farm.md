@@ -63,8 +63,9 @@ create-private-plan [description] [start-time] [end-time] [reward-allocations...
 | end-time              | the time at which the plan ends, in RFC3339 format   |
 | reward-allocations... | whitespace-separated list of the reward allocations  |
 
-Where a reward allocation is represented in following format:
-`<pair-id>:<rewards-per-day>`
+A reward allocation is specified in one of the following formats:
+1. `<denom>:<rewards_per_day>`
+2. `pair<pair-id>:<rewards_per_day>`
 
 Note that the example below assumes that pair 1 and pair 2 exist.
 
@@ -75,7 +76,7 @@ crescentd tx farm create-private-plan \
 "New Farming Plan" \
 2022-01-01T00:00:00Z \
 2023-01-01T00:00:00Z \
-1:10000stake 2:5000stake,1000uatom \
+pair1:10000stake,5000uatom pool2:5000stake \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \

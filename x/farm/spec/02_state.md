@@ -19,7 +19,8 @@ If a plan's farming pool doesn't have enough balances for rewards allocation,
 then the plan is silently ignored for the current block.
 `TerminationAddress` is the address where all balances in the farming pool of
 a plan are moved to when the plan gets terminated.
-`RewardAllocations` describes how a pool allocates rewards to each market pair.
+`RewardAllocations` describes how a pool allocates rewards either to a specific
+farming asset denom or to pools within a pair.
 A plan is active(able to allocate rewards) when the current block time is
 between the plan's `StartTime` and `EndTime`.
 `IsPrivate` indicates whether the plan is private(created by individuals) or
@@ -39,20 +40,21 @@ to a plan creator.
 
 ```go
 type Plan struct {
-	Id                 uint64
-	Description        string
-	FarmingPoolAddress string
-	TerminationAddress string
-	RewardAllocations  []RewardAllocation
-	StartTime          time.Time
-	EndTime            time.Time
-	IsPrivate          bool
-	IsTerminated       bool
+    Id                 uint64
+    Description        string
+    FarmingPoolAddress string
+    TerminationAddress string
+    RewardAllocations  []RewardAllocation
+    StartTime          time.Time
+    EndTime            time.Time
+    IsPrivate          bool
+    IsTerminated       bool
 }
 
 type RewardAllocation struct {
-	PairId        uint64
-	RewardsPerDay sdk.DecCoins
+    Denom         string
+    PairId        uint64
+    RewardsPerDay sdk.DecCoins
 }
 ```
 
@@ -69,10 +71,10 @@ in the `RewardsPoolAddress`.
 
 ```go
 type Farm struct {
-	TotalFarmingAmount sdk.Int
-	CurrentRewards     sdk.DecCoins
-	OutstandingRewards sdk.DecCoins
-	Period             uint64
+    TotalFarmingAmount sdk.Int
+    CurrentRewards     sdk.DecCoins
+    OutstandingRewards sdk.DecCoins
+    Period             uint64
 }
 ```
 
@@ -89,11 +91,11 @@ farming.
 
 ```go
 type Position struct {
-	Farmer              string
-	Denom               string
-	FarmingAmount       sdk.Int
-	PreviousPeriod      uint64
-	StartingBlockHeight int64
+    Farmer              string
+    Denom               string
+    FarmingAmount       sdk.Int
+    PreviousPeriod      uint64
+    StartingBlockHeight int64
 }
 ```
 
@@ -109,7 +111,7 @@ When `ReferenceCount` goes down to zero, the object is safely deleted.
 
 ```go
 type HistoricalRewards struct {
-	CumulativeUnitRewards sdk.DecCoins
-	ReferenceCount        uint32
+    CumulativeUnitRewards sdk.DecCoins
+    ReferenceCount        uint32
 }
 ```

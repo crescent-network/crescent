@@ -31,7 +31,7 @@ func TestParseFarmingPlanProposal(t *testing.T) {
           ]
         },
         {
-          "pair_id": "2",
+          "denom": "pool2",
           "rewards_per_day": [
             {
               "denom": "stake",

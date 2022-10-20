@@ -307,7 +307,7 @@ func genRewardAllocs(r *rand.Rand, ctx sdk.Context, lk types.LiquidityKeeper) (r
 	for i := 0; i < n; i++ {
 		pair := pairs[i]
 		rewardsPerDay := simtypes.RandSubsetCoins(r, utils.ParseCoins("1000_000000stake"))
-		rewardAllocs = append(rewardAllocs, types.NewRewardAllocation(pair.Id, rewardsPerDay))
+		rewardAllocs = append(rewardAllocs, types.NewPairRewardAllocation(pair.Id, rewardsPerDay))
 	}
 	return rewardAllocs, true
 }

@@ -1,13 +1,13 @@
 package keeper
 
 import (
+	"sort"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v3/x/farm/types"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 // CreatePrivatePlan creates a new private farming plan.
@@ -73,10 +73,12 @@ func (k Keeper) createPlan(
 	}
 
 	for _, rewardAlloc := range rewardAllocs {
-		_, found := k.liquidityKeeper.GetPair(ctx, rewardAlloc.PairId)
-		if !found {
-			return types.Plan{}, sdkerrors.Wrapf(
-				sdkerrors.ErrNotFound, "pair %d not found", rewardAlloc.PairId)
+		if rewardAlloc.PairId > 0 {
+			_, found := k.liquidityKeeper.GetPair(ctx, rewardAlloc.PairId)
+			if !found {
+				return types.Plan{}, sdkerrors.Wrapf(
+					sdkerrors.ErrNotFound, "pair %d not found", rewardAlloc.PairId)
+			}
 		}
 	}
 
@@ -158,106 +160,41 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 		blockDuration = maxBlockDuration
 	}
 
-	// An active plan means that the plan is not terminated and the current
-	// block's time is between the time range of the plan.
-	var activePlans []types.Plan
+	ck := newCachingKeeper(k)
+	ra := newRewardAllocator(ctx, k, ck)
 	k.IterateAllPlans(ctx, func(plan types.Plan) (stop bool) {
 		if plan.IsTerminated || !plan.IsActiveAt(ctx.BlockTime()) {
 			return false // Skip
 		}
-		activePlans = append(activePlans, plan)
-		return false
-	})
-
-	// CacheKeeper acts like a proxy to underlying keeper methods,
-	// but caches the result to avoid unnecessary gas consumptions and
-	// store read operations.
-	cachedKeeper := NewCachedKeeper(k)
-	// allocsByFarmingPool keeps track of the allocation information
-	// grouped by farming pool address.
-	// Each entry of the map is another map which holds mappings from
-	// pair id to rewards for this block.
-	allocsByFarmingPool := map[string]map[uint64]sdk.Coins{}
-	var farmingPoolAddrs []sdk.AccAddress // For deterministic iteration
-	// eligiblePoolsByPairs maps pair id to pools belong to the pair,
-	// which are eligible for rewards allocation.
-	// An eligible pool means that:
-	// - The pool is not disabled
-	// - The pool's price range includes the pair's last price
-	// - Total farming amount of the pool's pool coin is positive
-	eligiblePoolsByPair := map[uint64][]liquiditytypes.Pool{}
-	for _, plan := range activePlans {
 		for _, rewardAlloc := range plan.RewardAllocations {
-			pair, found := cachedKeeper.GetPair(ctx, rewardAlloc.PairId)
-			if !found { // It should never happen
-				panic("pair not found")
-			}
-			if pair.LastPrice == nil { // If the pair doesn't have the last price, skip.
-				continue
-			}
-
-			eligiblePools, ok := eligiblePoolsByPair[pair.Id]
-			if !ok {
-				// Collect pools eligible for reward allocation.
-				_ = k.liquidityKeeper.IteratePoolsByPair(
-					ctx, pair.Id, func(pool liquiditytypes.Pool) (stop bool, err error) {
-						if pool.Disabled {
-							return false, nil
-						}
-						// If the pool is a ranged pool and its pair's last price is out of
-						// its price range, skip the pool.
-						// This is because the amplification factor would be zero
-						// so its reward weight would eventually be zero, too.
-						if pool.Type == liquiditytypes.PoolTypeRanged &&
-							(pair.LastPrice.LT(*pool.MinPrice) || pair.LastPrice.GT(*pool.MaxPrice)) {
-							return false, nil
-						}
-
-						farm, found := cachedKeeper.GetFarm(ctx, pool.PoolCoinDenom)
-						if !found || !farm.TotalFarmingAmount.IsPositive() {
-							return false, nil
-						}
-
-						eligiblePools = append(eligiblePools, pool)
-						return false, nil
-					},
-				)
-				eligiblePoolsByPair[pair.Id] = eligiblePools
-			}
-
-			// Allocate rewards only when there is at least one eligible pool
-			// belonging to the pair.
-			if len(eligiblePools) > 0 {
-				rewards := types.RewardsForBlock(rewardAlloc.RewardsPerDay, blockDuration)
-				// TODO: allocate sdk.DecCoins instead of sdk.Coins in future
-				truncatedRewards, _ := rewards.TruncateDecimal()
-				if truncatedRewards.IsAllPositive() {
-					allocs, ok := allocsByFarmingPool[plan.FarmingPoolAddress]
-					if !ok {
-						allocs = map[uint64]sdk.Coins{}
-						allocsByFarmingPool[plan.FarmingPoolAddress] = allocs
-						farmingPoolAddrs = append(farmingPoolAddrs, plan.GetFarmingPoolAddress())
+			rewards := types.RewardsForBlock(rewardAlloc.RewardsPerDay, blockDuration)
+			// TODO: allocate sdk.DecCoins instead of sdk.Coins in future
+			truncatedRewards, _ := rewards.TruncateDecimal()
+			if truncatedRewards.IsAllPositive() {
+				if rewardAlloc.Denom != "" {
+					ra.allocateRewardsToDenom(plan.GetFarmingPoolAddress(), rewardAlloc.Denom, truncatedRewards)
+				} else if rewardAlloc.PairId > 0 {
+					pair, found := ck.getPair(ctx, rewardAlloc.PairId)
+					if !found { // It should never happen
+						panic("pair not found")
 					}
-					allocs[pair.Id] = allocs[pair.Id].Add(truncatedRewards...)
+					if pair.LastPrice == nil { // If the pair doesn't have the last price, skip.
+						continue
+					}
+					ra.allocateRewardsToPair(plan.GetFarmingPoolAddress(), pair, truncatedRewards)
 				}
 			}
 		}
-	}
+		return false
+	})
 
-	rewardsByPairId := map[uint64]sdk.Coins{}
-	// We keep this slice for deterministic iteration over the rewardsByPairId map.
-	var pairIdsWithRewards []uint64
-	for _, farmingPoolAddr := range farmingPoolAddrs {
-		allocs, ok := allocsByFarmingPool[farmingPoolAddr.String()]
-		if !ok {
-			continue
-		}
-
-		totalRewards := sdk.Coins{}
-		for _, rewards := range allocs {
-			totalRewards = totalRewards.Add(rewards...)
-		}
-		balances := cachedKeeper.SpendableCoins(ctx, farmingPoolAddr)
+	rewardsByDenom := map[string]sdk.DecCoins{}
+	// We keep this slice for deterministic iteration over the rewardsByDenom map.
+	var denomsWithRewards []string
+	for _, farmingPoolAddr := range ra.farmingPoolAddrs {
+		farmingPool := farmingPoolAddr.String()
+		totalRewards := ra.totalRewardsByFarmingPool[farmingPool]
+		balances := k.bankKeeper.SpendableCoins(ctx, farmingPoolAddr)
 		if !balances.IsAllGTE(totalRewards) {
 			continue
 		}
@@ -265,45 +202,17 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			ctx, farmingPoolAddr, types.RewardsPoolAddress, totalRewards); err != nil {
 			return err
 		}
-
-		for pairId, rewards := range allocs {
-			if _, ok := rewardsByPairId[pairId]; !ok {
-				pairIdsWithRewards = append(pairIdsWithRewards, pairId)
+		for denom, rewards := range ra.allocatedRewards[farmingPool] {
+			if _, ok := rewardsByDenom[denom]; !ok {
+				denomsWithRewards = append(denomsWithRewards, denom)
 			}
-			rewardsByPairId[pairId] = rewardsByPairId[pairId].Add(rewards...)
+			rewardsByDenom[denom] = rewardsByDenom[denom].Add(rewards...)
 		}
 	}
 
-	rewardsByDenom := map[string]sdk.DecCoins{}
-	// We keep this slice for deterministic iteration over the rewardsByDenom map.
-	var denomsWithRewards []string
-	for _, pairId := range pairIdsWithRewards {
-		pair, _ := cachedKeeper.GetPair(ctx, pairId)
-		rewards := rewardsByPairId[pairId]
-
-		rewardWeightByPool := map[uint64]sdk.Dec{}
-		totalRewardWeight := sdk.ZeroDec()
-		for _, pool := range eligiblePoolsByPair[pairId] {
-			rewardWeight := k.PoolRewardWeight(ctx, pool, pair)
-			rewardWeightByPool[pool.Id] = rewardWeight
-			totalRewardWeight = totalRewardWeight.Add(rewardWeight)
-		}
-
-		for _, pool := range eligiblePoolsByPair[pairId] {
-			rewardProportion := rewardWeightByPool[pool.Id].QuoTruncate(totalRewardWeight)
-			rewards := sdk.NewDecCoinsFromCoins(rewards...).
-				MulDecTruncate(rewardProportion)
-
-			if _, ok := rewardsByDenom[pool.PoolCoinDenom]; !ok {
-				denomsWithRewards = append(denomsWithRewards, pool.PoolCoinDenom)
-			}
-			rewardsByDenom[pool.PoolCoinDenom] =
-				rewardsByDenom[pool.PoolCoinDenom].Add(rewards...)
-		}
-	}
-
+	sort.Strings(denomsWithRewards)
 	for _, denom := range denomsWithRewards {
-		farm, _ := cachedKeeper.GetFarm(ctx, denom)
+		farm, _ := ck.getFarm(ctx, denom)
 		farm.CurrentRewards = farm.CurrentRewards.Add(rewardsByDenom[denom]...)
 		farm.OutstandingRewards = farm.OutstandingRewards.Add(rewardsByDenom[denom]...)
 		k.SetFarm(ctx, denom, farm)

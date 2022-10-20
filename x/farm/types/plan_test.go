@@ -60,25 +60,34 @@ func TestPlan_Validate(t *testing.T) {
 			"invalid reward allocations: empty reward allocations",
 		},
 		{
-			"zero pair id",
+			"both target denom and pair id are set",
 			func(plan *types.Plan) {
 				plan.RewardAllocations = []types.RewardAllocation{
 					{
-						PairId:        0,
-						RewardsPerDay: utils.ParseCoins("1_000000stake"),
+						Denom:         "pool1",
+						PairId:        1,
+						RewardsPerDay: utils.ParseCoins("100_000000stake"),
 					},
 				}
 			},
-			"invalid reward allocations: pair id must not be zero",
+			"invalid reward allocations: target denom and pair id cannot be specified together",
+		},
+		{
+			"none of target denom pair id is set",
+			func(plan *types.Plan) {
+				plan.RewardAllocations = []types.RewardAllocation{
+					{
+						RewardsPerDay: utils.ParseCoins("100_000000stake"),
+					},
+				}
+			},
+			"invalid reward allocations: target denom or pair id must be specified",
 		},
 		{
 			"invalid rewards per day",
 			func(plan *types.Plan) {
 				plan.RewardAllocations = []types.RewardAllocation{
-					{
-						PairId:        1,
-						RewardsPerDay: sdk.Coins{utils.ParseCoin("0stake")},
-					},
+					types.NewPairRewardAllocation(1, sdk.Coins{utils.ParseCoin("0stake")}),
 				}
 			},
 			"invalid reward allocations: invalid rewards per day: coin 0stake amount is not positive",
@@ -99,17 +108,30 @@ func TestPlan_Validate(t *testing.T) {
 			"duplicate pair id",
 			func(plan *types.Plan) {
 				plan.RewardAllocations = []types.RewardAllocation{
-					{
-						PairId:        1,
-						RewardsPerDay: sdk.Coins{utils.ParseCoin("100_000000stake")},
-					},
-					{
-						PairId:        1,
-						RewardsPerDay: sdk.Coins{utils.ParseCoin("200_000000stake")},
-					},
+					types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+					types.NewPairRewardAllocation(1, utils.ParseCoins("200_000000stake")),
 				}
 			},
 			"invalid reward allocations: duplicate pair id: 1",
+		},
+		{
+			"duplicate target denom",
+			func(plan *types.Plan) {
+				plan.RewardAllocations = []types.RewardAllocation{
+					types.NewDenomRewardAllocation("pool1", utils.ParseCoins("100_000000stake")),
+					types.NewDenomRewardAllocation("pool1", utils.ParseCoins("200_000000stake")),
+				}
+			},
+			"invalid reward allocations: duplicate target denom: pool1",
+		},
+		{
+			"invalid target denom",
+			func(plan *types.Plan) {
+				plan.RewardAllocations = []types.RewardAllocation{
+					types.NewDenomRewardAllocation("invalid!", utils.ParseCoins("100_000000stake")),
+				}
+			},
+			"invalid reward allocations: invalid target denom: invalid denom: invalid!",
 		},
 		{
 			"invalid start/end time",
@@ -124,14 +146,8 @@ func TestPlan_Validate(t *testing.T) {
 			plan := types.NewPlan(
 				1, "Farming Plan", utils.TestAddress(0), utils.TestAddress(1),
 				[]types.RewardAllocation{
-					{
-						PairId:        1,
-						RewardsPerDay: utils.ParseCoins("100_000000stake"),
-					},
-					{
-						PairId:        2,
-						RewardsPerDay: utils.ParseCoins("200_000000stake"),
-					},
+					types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+					types.NewPairRewardAllocation(2, utils.ParseCoins("200_000000stake")),
 				},
 				utils.ParseTime("2022-01-01T00:00:00Z"),
 				utils.ParseTime("2023-01-01T00:00:00Z"), true)

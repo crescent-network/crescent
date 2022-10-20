@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) TestFarm() {
 func (s *KeeperTestSuite) TestFarm_ImmediateUnfarm() {
 	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
 	s.createPrivatePlan([]types.RewardAllocation{
-		types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 	}, utils.ParseCoins("10000_000000stake"))
 
 	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
@@ -107,7 +107,7 @@ func (s *KeeperTestSuite) TestFarm_WithdrawRewards() {
 	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
 	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
 	s.createPrivatePlan([]types.RewardAllocation{
-		types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 	}, utils.ParseCoins("10000_000000stake"))
 
 	farmerAddr := utils.TestAddress(0)
@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestUnfarm() {
 	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
 	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
 	s.createPrivatePlan([]types.RewardAllocation{
-		types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 	}, utils.ParseCoins("10000_000000stake"))
 
 	farmerAddr := utils.TestAddress(0)
@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestHarvest_MultipleTimes() {
 	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
 	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
 	s.createPrivatePlan([]types.RewardAllocation{
-		types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 	}, utils.ParseCoins("10000_000000stake"))
 
 	farmerAddr := utils.TestAddress(0)

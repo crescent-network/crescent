@@ -23,7 +23,7 @@ func TestDecodeStore(t *testing.T) {
 		1, "Farming Plan",
 		utils.TestAddress(0), utils.TestAddress(1),
 		[]types.RewardAllocation{
-			types.NewRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+			types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 		},
 		utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T23:59:59Z"), true)
 	farm := types.Farm{

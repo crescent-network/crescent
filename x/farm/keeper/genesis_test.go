@@ -9,10 +9,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.createPair("denom1", "denom2")
 	s.createPool(1, utils.ParseCoins("1000_000000denom1,1000_000000denom2"))
 	s.createPrivatePlan([]types.RewardAllocation{
-		{
-			PairId:        1,
-			RewardsPerDay: utils.ParseCoins("100_000000stake"),
-		},
+		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 	}, utils.ParseCoins("10000_000000stake"))
 
 	farmerAddr := utils.TestAddress(0)
