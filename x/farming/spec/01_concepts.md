@@ -48,7 +48,7 @@ In the farming module, farming rewards are calculated per epoch based on the dis
 
 To calculate the rewards for a single farmer, take the total rewards for the epoch before the staking started, minus the current total rewards. 
 
-The farming module takes references from [F1 Fee Distribution](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/fee_distribution/f1_fee_distr.pdf) that is used in the Cosmos SDK [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/v0.45.3/x/distribution/spec/01_concepts.md) module.
+The farming module takes references from [F1 Fee Distribution](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/fee_distribution/f1_fee_distr.pdf) that is used in the Cosmos SDK [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/v0.45.9/x/distribution/spec/01_concepts.md) module.
 
 ### Accumulated Unit Reward 
 
