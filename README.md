@@ -39,7 +39,7 @@ This is the easiest way to get started. Download a pre-built binary for your ope
 
 **Step 1. Install Golang**
 
-Go version [1.17](https://go.dev/doc/go1.17) or higher is required for Crescent Core.
+Go version [1.18](https://go.dev/doc/go1.18) or higher is required for Crescent Core.
 
 If you haven't already, install Go by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
