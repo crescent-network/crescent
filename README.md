@@ -39,17 +39,17 @@ This is the easiest way to get started. Download a pre-built binary for your ope
 
 **Step 1. Install Golang**
 
-Go version [1.17](https://go.dev/doc/go1.17) or higher is required for Crescent Core.
+Go version [1.18](https://go.dev/doc/go1.18) or higher is required for Crescent Core.
 
 If you haven't already, install Go by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
 **Step 2. Get Crescent Core source code**
 
-Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v2.0.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
+Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v2.3.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
-cd crescent && git checkout release/v2.0.x
+cd crescent && git checkout release/v2.3.x
 make install
 ```
 
