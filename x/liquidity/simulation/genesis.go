@@ -30,11 +30,11 @@ func GenBatchSize(r *rand.Rand) uint32 {
 }
 
 func GenTickPrecision(r *rand.Rand) uint32 {
-	return uint32(1 + r.Int31n(4))
+	return uint32(2 + r.Int31n(4))
 }
 
 func GenMaxPriceRatio(r *rand.Rand) sdk.Dec {
-	return utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("0.2"))
+	return utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("0.2"))
 }
 
 func GenWithdrawFeeRate(r *rand.Rand) sdk.Dec {
