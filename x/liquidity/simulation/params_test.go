@@ -22,10 +22,10 @@ func TestParamChanges(t *testing.T) {
 		subspace    string
 	}{
 		{"liquidity/BatchSize", "BatchSize", "5", "liquidity"},
-		{"liquidity/TickPrecision", "TickPrecision", "3", "liquidity"},
-		{"liquidity/MaxPriceLimitRatio", "MaxPriceLimitRatio", "\"0.187775771919630322\"", "liquidity"},
-		{"liquidity/WithdrawFeeRate", "WithdrawFeeRate", "\"0.001029277270893505\"", "liquidity"},
-		{"liquidity/MaxOrderLifespan", "MaxOrderLifespan", "\"87434677422456\"", "liquidity"},
+		{"liquidity/TickPrecision", "TickPrecision", "4", "liquidity"},
+		{"liquidity/MaxPriceLimitRatio", "MaxPriceLimitRatio", "\"0.107709506529800694\"", "liquidity"},
+		{"liquidity/WithdrawFeeRate", "WithdrawFeeRate", "\"0.009218100047625633\"", "liquidity"},
+		{"liquidity/MaxOrderLifespan", "MaxOrderLifespan", "\"74699420976708\"", "liquidity"},
 	}
 
 	for i, p := range paramChanges {
