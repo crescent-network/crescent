@@ -39,6 +39,11 @@ func (k Keeper) SetLastEpochTime(ctx sdk.Context, t time.Time) {
 	store.Set(types.LastEpochTimeKey, bz)
 }
 
+func (k Keeper) DeleteLastEpochTime(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastEpochTimeKey)
+}
+
 // AdvanceEpoch allocates rewards and advances epoch by one.
 // AdvanceEpoch also forcefully makes queued stakings to be staked.
 // Use this only for simulation and testing purpose.
@@ -82,4 +87,9 @@ func (k Keeper) SetCurrentEpochDays(ctx sdk.Context, epochDays uint32) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: epochDays})
 	store.Set(types.CurrentEpochDaysKey, bz)
+}
+
+func (k Keeper) DeleteCurrentEpochDays(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.CurrentEpochDaysKey)
 }
