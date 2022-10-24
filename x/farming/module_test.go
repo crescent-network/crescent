@@ -142,6 +142,6 @@ func (suite *ModuleTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
 	return rewards
 }
 
-func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
-	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
+//func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
+//	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+//}

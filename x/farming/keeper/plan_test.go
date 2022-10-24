@@ -135,27 +135,27 @@ func (suite *KeeperTestSuite) TestMaxNumPrivatePlans() {
 	suite.Require().ErrorIs(err, types.ErrNumPrivatePlansLimit)
 }
 
-func (suite *KeeperTestSuite) TestCreateExpiredPlan() {
-	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2022-01-01T00:00:00Z"))
-
-	msg := types.NewMsgCreateFixedAmountPlan(
-		"plan1", suite.addrs[4], sdk.NewDecCoins(sdk.NewInt64DecCoin(denom1, 1)),
-		types.ParseTime("2021-01-01T00:00:00Z"), types.ParseTime("2022-01-01T00:00:00Z"),
-		sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
-	msgServer := keeper.NewMsgServerImpl(suite.keeper)
-	_, err := msgServer.CreateFixedAmountPlan(sdk.WrapSDKContext(suite.ctx), msg)
-	suite.Require().ErrorIs(err, types.ErrInvalidPlanEndTime)
-
-	req := types.NewAddPlanRequest(
-		"plan2", suite.addrs[4].String(), suite.addrs[4].String(), parseDecCoins("1denom1"),
-		types.ParseTime("2021-01-01T00:00:00Z"), types.ParseTime("2022-01-01T00:00:00Z"),
-		nil, parseDec("0.3"))
-	proposal := types.NewPublicPlanProposal("title", "description", []types.AddPlanRequest{req}, nil, nil)
-	err = proposal.ValidateBasic()
-	suite.Require().NoError(err)
-	err = suite.govHandler(suite.ctx, proposal)
-	suite.Require().ErrorIs(err, types.ErrInvalidPlanEndTime)
-}
+//func (suite *KeeperTestSuite) TestCreateExpiredPlan() {
+//	suite.ctx = suite.ctx.WithBlockTime(types.ParseTime("2022-01-01T00:00:00Z"))
+//
+//	msg := types.NewMsgCreateFixedAmountPlan(
+//		"plan1", suite.addrs[4], sdk.NewDecCoins(sdk.NewInt64DecCoin(denom1, 1)),
+//		types.ParseTime("2021-01-01T00:00:00Z"), types.ParseTime("2022-01-01T00:00:00Z"),
+//		sdk.NewCoins(sdk.NewInt64Coin(denom3, 1000000)))
+//	msgServer := keeper.NewMsgServerImpl(suite.keeper)
+//	_, err := msgServer.CreateFixedAmountPlan(sdk.WrapSDKContext(suite.ctx), msg)
+//	suite.Require().ErrorIs(err, types.ErrInvalidPlanEndTime)
+//
+//	req := types.NewAddPlanRequest(
+//		"plan2", suite.addrs[4].String(), suite.addrs[4].String(), parseDecCoins("1denom1"),
+//		types.ParseTime("2021-01-01T00:00:00Z"), types.ParseTime("2022-01-01T00:00:00Z"),
+//		nil, parseDec("0.3"))
+//	proposal := types.NewPublicPlanProposal("title", "description", []types.AddPlanRequest{req}, nil, nil)
+//	err = proposal.ValidateBasic()
+//	suite.Require().NoError(err)
+//	err = suite.govHandler(suite.ctx, proposal)
+//	suite.Require().ErrorIs(err, types.ErrInvalidPlanEndTime)
+//}
 
 func (suite *KeeperTestSuite) TestPrivatePlanNumMaxDenoms() {
 	numDenoms := types.PrivatePlanMaxNumDenoms + 1 // Invalid number of denoms
@@ -254,39 +254,39 @@ func (suite *KeeperTestSuite) TestCreatePlanSupply() {
 	suite.Require().ErrorIs(err, types.ErrInvalidEpochAmount)
 }
 
-func (suite *KeeperTestSuite) TestRatioPlanDefaultDisabled() {
-	keeper.EnableRatioPlan = false
-	defer func() {
-		keeper.EnableRatioPlan = true // Rollback the change
-	}()
-
-	// Creating a ratio plan through the msg server will fail.
-	msg := types.NewMsgCreateRatioPlan(
-		"plan1", suite.addrs[0], parseDecCoins("1denom1"),
-		sampleStartTime, sampleEndTime, parseDec("0.01"))
-	_, err := suite.msgServer.CreateRatioPlan(sdk.WrapSDKContext(suite.ctx), msg)
-	suite.Require().ErrorIs(err, types.ErrRatioPlanDisabled)
-
-	// Adding a ratio plan through public plan proposal will fail.
-	addReq := types.NewAddPlanRequest(
-		"plan1", suite.addrs[1].String(), suite.addrs[1].String(),
-		parseDecCoins("1denom1"), sampleStartTime, sampleEndTime, nil, parseDec("0.01"))
-	proposal := types.NewPublicPlanProposal(
-		"title", "description", []types.AddPlanRequest{addReq}, nil, nil)
-	suite.Require().NoError(proposal.ValidateBasic())
-	err = suite.govHandler(suite.ctx, proposal)
-	suite.Require().ErrorIs(err, types.ErrRatioPlanDisabled)
-
-	// Modifying a plan type to ratio plan through proposal will fail, too.
-	plan, err := suite.createPublicFixedAmountPlan(
-		suite.addrs[2], suite.addrs[2], parseDecCoins("1denom1"),
-		sampleStartTime, sampleEndTime, parseCoins("1000000stake"))
-	suite.Require().NoError(err)
-	modifyReq := types.NewModifyPlanRequest(
-		plan.GetId(), "", "", "", nil, plan.GetStartTime(), plan.GetEndTime(), nil, parseDec("0.01"))
-	proposal = types.NewPublicPlanProposal(
-		"title", "description", nil, []types.ModifyPlanRequest{modifyReq}, nil)
-	suite.Require().NoError(proposal.ValidateBasic())
-	err = suite.govHandler(suite.ctx, proposal)
-	suite.Require().ErrorIs(err, types.ErrRatioPlanDisabled)
-}
+//func (suite *KeeperTestSuite) TestRatioPlanDefaultDisabled() {
+//	keeper.EnableRatioPlan = false
+//	defer func() {
+//		keeper.EnableRatioPlan = true // Rollback the change
+//	}()
+//
+//	// Creating a ratio plan through the msg server will fail.
+//	msg := types.NewMsgCreateRatioPlan(
+//		"plan1", suite.addrs[0], parseDecCoins("1denom1"),
+//		sampleStartTime, sampleEndTime, parseDec("0.01"))
+//	_, err := suite.msgServer.CreateRatioPlan(sdk.WrapSDKContext(suite.ctx), msg)
+//	suite.Require().ErrorIs(err, types.ErrRatioPlanDisabled)
+//
+//	// Adding a ratio plan through public plan proposal will fail.
+//	addReq := types.NewAddPlanRequest(
+//		"plan1", suite.addrs[1].String(), suite.addrs[1].String(),
+//		parseDecCoins("1denom1"), sampleStartTime, sampleEndTime, nil, parseDec("0.01"))
+//	proposal := types.NewPublicPlanProposal(
+//		"title", "description", []types.AddPlanRequest{addReq}, nil, nil)
+//	suite.Require().NoError(proposal.ValidateBasic())
+//	err = suite.govHandler(suite.ctx, proposal)
+//	suite.Require().ErrorIs(err, types.ErrRatioPlanDisabled)
+//
+//	// Modifying a plan type to ratio plan through proposal will fail, too.
+//	plan, err := suite.createPublicFixedAmountPlan(
+//		suite.addrs[2], suite.addrs[2], parseDecCoins("1denom1"),
+//		sampleStartTime, sampleEndTime, parseCoins("1000000stake"))
+//	suite.Require().NoError(err)
+//	modifyReq := types.NewModifyPlanRequest(
+//		plan.GetId(), "", "", "", nil, plan.GetStartTime(), plan.GetEndTime(), nil, parseDec("0.01"))
+//	proposal = types.NewPublicPlanProposal(
+//		"title", "description", nil, []types.ModifyPlanRequest{modifyReq}, nil)
+//	suite.Require().NoError(proposal.ValidateBasic())
+//	err = suite.govHandler(suite.ctx, proposal)
+//	suite.Require().ErrorIs(err, types.ErrRatioPlanDisabled)
+//}

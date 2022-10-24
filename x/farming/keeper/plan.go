@@ -102,6 +102,11 @@ func (k Keeper) GetGlobalPlanId(ctx sdk.Context) uint64 {
 	return id
 }
 
+func (k Keeper) DeleteGlobalPlanId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GlobalPlanIdKey)
+}
+
 func (k Keeper) decodePlan(bz []byte) types.PlanI {
 	acc, err := k.UnmarshalPlan(bz)
 	if err != nil {

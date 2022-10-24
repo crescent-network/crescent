@@ -299,13 +299,13 @@ func (suite *KeeperTestSuite) CreateRatioPlan(farmingPoolAcc sdk.AccAddress, sta
 	suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) handleProposal(content govtypes.Content) {
-	suite.T().Helper()
-	err := content.ValidateBasic()
-	suite.Require().NoError(err)
-	err = suite.govHandler(suite.ctx, content)
-	suite.Require().NoError(err)
-}
+//func (suite *KeeperTestSuite) handleProposal(content govtypes.Content) {
+//	suite.T().Helper()
+//	err := content.ValidateBasic()
+//	suite.Require().NoError(err)
+//	err = suite.govHandler(suite.ctx, content)
+//	suite.Require().NoError(err)
+//}
 
 func (suite *KeeperTestSuite) addDenoms(denoms ...string) {
 	suite.T().Helper()
@@ -347,9 +347,9 @@ func intEq(exp, got sdk.Int) (bool, string, string, string) {
 	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
-func decEq(exp, got sdk.Dec) (bool, string, string, string) {
-	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
+//func decEq(exp, got sdk.Dec) (bool, string, string, string) {
+//	return exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+//}
 
 func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
 	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
