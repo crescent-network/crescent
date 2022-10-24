@@ -49,12 +49,16 @@ func UpgradeHandler(
 				}
 				stakedCoinsByFarmer[farmer] = stakedCoinsByFarmer[farmer].
 					Add(sdk.NewCoin(denom, staking.Amount))
-				farmingKeeper.IterateQueuedStakingsByFarmer(
-					ctx, farmerAddr, func(_ string, _ time.Time, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
-						stakedCoinsByFarmer[farmer] = stakedCoinsByFarmer[farmer].
-							Add(sdk.NewCoin(denom, queuedStaking.Amount))
-						return false
-					})
+				return false
+			})
+		farmingKeeper.IterateQueuedStakings(
+			ctx, func(_ time.Time, denom string, farmerAddr sdk.AccAddress, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
+				farmer := farmerAddr.String()
+				if _, ok := stakedCoinsByFarmer[farmer]; !ok {
+					farmerAddrs = append(farmerAddrs, farmerAddr)
+				}
+				stakedCoinsByFarmer[farmer] = stakedCoinsByFarmer[farmer].
+					Add(sdk.NewCoin(denom, queuedStaking.Amount))
 				return false
 			})
 		for _, farmerAddr := range farmerAddrs {
