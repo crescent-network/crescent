@@ -36,7 +36,7 @@ achieve this.
   - [Positions](#positions)
   - [Position](#position)
   - [HistoricalRewards](#historicalrewards)
-  - [AllRewards](#allrewards)
+  - [TotalRewards](#totalrewards)
   - [Rewards](#rewards)
 
 ### Transaction
@@ -301,25 +301,25 @@ Example:
 crescentd q farm historical-rewards pool1 -o json | jq
 ```
 
-#### AllRewards
+#### TotalRewards
 
-Query all rewards accumulated for the farmer.
+Query total rewards accumulated in all farming assets of the farmer.
 
 Usage:
 
 ```bash
-all-rewards [farmer]
+total-rewards [farmer]
 ```
 
 Example:
 
 ```bash
-crescentd q farm all-rewards cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
+crescentd q farm total-rewards cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
 #### Rewards
 
-Query rewards accumulated for the farmer under the denom.
+Query rewards accumulated in a farming asset of the farmer.
 
 Usage:
 

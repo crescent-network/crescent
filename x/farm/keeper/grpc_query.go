@@ -160,7 +160,7 @@ func (k Querier) HistoricalRewards(c context.Context, req *types.QueryHistorical
 	return &types.QueryHistoricalRewardsResponse{HistoricalRewards: hists, Pagination: pageRes}, nil
 }
 
-func (k Querier) AllRewards(c context.Context, req *types.QueryAllRewardsRequest) (*types.QueryAllRewardsResponse, error) {
+func (k Querier) TotalRewards(c context.Context, req *types.QueryTotalRewardsRequest) (*types.QueryTotalRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -179,7 +179,7 @@ func (k Querier) AllRewards(c context.Context, req *types.QueryAllRewardsRequest
 		rewards = rewards.Add(k.Keeper.Rewards(ctx, farmerAddr, denom)...)
 	}
 
-	return &types.QueryAllRewardsResponse{Rewards: rewards}, nil
+	return &types.QueryTotalRewardsResponse{Rewards: rewards}, nil
 }
 
 func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
