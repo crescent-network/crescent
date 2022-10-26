@@ -79,6 +79,11 @@ func (k Keeper) createPlan(
 				return types.Plan{}, sdkerrors.Wrapf(
 					sdkerrors.ErrNotFound, "pair %d not found", rewardAlloc.PairId)
 			}
+		} else {
+			if !k.bankKeeper.HasSupply(ctx, rewardAlloc.Denom) {
+				return types.Plan{}, sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidRequest, "denom %s has no supply", rewardAlloc.Denom)
+			}
 		}
 	}
 
