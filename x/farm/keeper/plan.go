@@ -164,6 +164,10 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	if maxBlockDuration := k.GetMaxBlockDuration(ctx); blockDuration > maxBlockDuration {
 		blockDuration = maxBlockDuration
 	}
+	// If the block duration is 0, skip this block for rewards allocation.
+	if blockDuration == 0 {
+		return nil
+	}
 
 	ck := newCachingKeeper(k)
 	ra := newRewardAllocator(ctx, k, ck)
