@@ -212,7 +212,10 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 
 	sort.Strings(denomsWithRewards)
 	for _, denom := range denomsWithRewards {
-		farm, _ := ck.getFarm(ctx, denom)
+		farm, found := ck.getFarm(ctx, denom)
+		if !found { // Sanity check
+			panic("farm not found")
+		}
 		farm.CurrentRewards = farm.CurrentRewards.Add(rewardsByDenom[denom]...)
 		farm.OutstandingRewards = farm.OutstandingRewards.Add(rewardsByDenom[denom]...)
 		k.SetFarm(ctx, denom, farm)
