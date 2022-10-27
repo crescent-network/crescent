@@ -135,6 +135,10 @@ func (ra *rewardAllocator) allocateRewardsToPair(farmingPoolAddr sdk.AccAddress,
 }
 
 func (ra *rewardAllocator) allocateRewardsToDenom(farmingPoolAddr sdk.AccAddress, denom string, rewards sdk.Coins) {
+	farm, found := ra.ck.getFarm(ra.ctx, denom)
+	if !found || !farm.TotalFarmingAmount.IsPositive() {
+		return
+	}
 	farmingPool := farmingPoolAddr.String()
 	rewardsByDenom, ok := ra.allocatedRewards[farmingPool]
 	if !ok {
