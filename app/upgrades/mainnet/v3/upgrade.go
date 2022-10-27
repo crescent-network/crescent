@@ -6,6 +6,7 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	farmkeeper "github.com/crescent-network/crescent/v3/x/farm/keeper"
@@ -23,7 +24,8 @@ const UpgradeName = "v3"
 
 func UpgradeHandler(
 	mm *module.Manager, configurator module.Configurator, marketmakerKeeper marketmakerkeeper.Keeper,
-	liquidityKeeper liquiditykeeper.Keeper, farmKeeper farmkeeper.Keeper, farmingKeeper farmingkeeper.Keeper) upgradetypes.UpgradeHandler {
+	liquidityKeeper liquiditykeeper.Keeper, farmKeeper farmkeeper.Keeper, farmingKeeper farmingkeeper.Keeper,
+	bankKeeper bankkeeper.Keeper) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		newVM, err := mm.RunMigrations(ctx, configurator, vm)
 		if err != nil {
@@ -37,6 +39,19 @@ func UpgradeHandler(
 		marketmakerParams := marketmakertypes.DefaultParams()
 		marketmakerParams.DepositAmount = sdk.NewCoins(sdk.NewCoin("ucre", sdk.NewInt(1000000000)))
 		marketmakerKeeper.SetParams(ctx, marketmakerParams)
+
+		farmKeeper.SetPrivatePlanCreationFee(
+			ctx, sdk.NewCoins(sdk.NewInt64Coin("ucre", 100_000000)))
+		// Move fees collected in the farming module's fee collector.
+		farmingFeeCollector, _ := sdk.AccAddressFromBech32(farmingKeeper.GetParams(ctx).FarmingFeeCollector)
+		farmingFees := bankKeeper.SpendableCoins(ctx, farmingFeeCollector)
+		if farmingFees.IsAllPositive() {
+			farmFeeCollector, _ := sdk.AccAddressFromBech32(farmKeeper.GetFeeCollector(ctx))
+			if err := bankKeeper.SendCoins(
+				ctx, farmingFeeCollector, farmFeeCollector, farmingFees); err != nil {
+				return nil, err
+			}
+		}
 
 		// Unstake all staked coins from x/farming and start farming on x/farm.
 		stakedCoinsByFarmer := map[string]sdk.Coins{}
