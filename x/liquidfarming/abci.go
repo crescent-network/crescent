@@ -12,29 +12,28 @@ import (
 )
 
 // BeginBlocker compares all LiquidFarms stored in KVstore with all LiquidFarms registered in params.
-// Execute an appropriate operation when either new LiquidFarm is added or existing LiquidFarm is removed by
-// going through governance proposal.
+// Execute an appropriate operation when either new LiquidFarm is added or existing LiquidFarm is removed
+// by going through governance proposal.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	params := k.GetParams(ctx)
-	liquidFarmsInStore := k.GetAllLiquidFarms(ctx)
-	liquidFarmsInParams := params.LiquidFarms
+	liquidFarmsInStore := k.GetLiquidFarmsInStore(ctx)
+	liquidFarmsInParams := k.GetLiquidFarmsInParams(ctx)
 
 	liquidFarmByPoolId := map[uint64]types.LiquidFarm{} // PoolId => LiquidFarm
 	for _, liquidFarm := range liquidFarmsInStore {
 		liquidFarmByPoolId[liquidFarm.PoolId] = liquidFarm
 	}
 
-	// Compare all liquid farms stored in KVStore with the ones registered in params
-	// If new liquid farm is added through governance proposal, store it in KVStore.
-	// Otherwise, delete from the liquidFarmByPoolId
+	// Iterate through all liquid farms in params.
+	// Store new one or delete the existing one from liquidFarmByPoolId
+	// when it is added or removed in params by governance proposal.
 	for _, liquidFarm := range liquidFarmsInParams {
 		if _, found := liquidFarmByPoolId[liquidFarm.PoolId]; !found {
 			k.SetLiquidFarm(ctx, liquidFarm)
-			continue
+		} else {
+			delete(liquidFarmByPoolId, liquidFarm.PoolId)
 		}
-		delete(liquidFarmByPoolId, liquidFarm.PoolId)
 	}
 
 	// Sort map keys for deterministic execution
@@ -46,32 +45,37 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		return poolIds[i] < poolIds[j]
 	})
 
-	// Handle a case when LiquidFarm is removed in params by governance proposal
 	for _, poolId := range poolIds {
 		k.HandleRemovedLiquidFarm(ctx, liquidFarmByPoolId[poolId])
 	}
 
-	endTime := k.GetLastRewardsAuctionEndTime(ctx)
-	if endTime.IsZero() {
-		k.SetLastRewardsAuctionEndTime(ctx, ctx.BlockTime().Add(params.RewardsAuctionDuration))
-		return
-	}
+	y, m, d := ctx.BlockTime().Date()
 
-	// Iterate all LiquidFarms in KVStore to create rewards auction if it is not found.
-	// If there is an ongoing rewards auction, finish it.
-	if !ctx.BlockTime().Before(endTime) { // AuctionEndTime <= Current BlockTime
-		for _, liquidFarm := range liquidFarmsInStore {
-			auctionId := k.GetLastRewardsAuctionId(ctx, liquidFarm.PoolId)
-			auction, found := k.GetRewardsAuction(ctx, auctionId, liquidFarm.PoolId)
-			if found {
-				// Note that order matters in this logic.
-				// The module needs to finish the auction and create new one
-				if err := k.FinishRewardsAuction(ctx, auction, liquidFarm.FeeRate); err != nil {
-					panic(err)
-				}
+	endTime, found := k.GetLastRewardsAuctionEndTime(ctx)
+	if !found {
+		initialEndTime := time.Date(y, m, d+1, 0, 0, 0, 0, time.UTC) // the next day 00:00 UTC
+		k.SetLastRewardsAuctionEndTime(ctx, initialEndTime)
+	} else {
+		currentTime := ctx.BlockTime()
+		if !currentTime.Before(endTime) {
+			duration := k.GetRewardsAuctionDuration(ctx)
+			nextEndTime := endTime.Add(duration)
+
+			// Handle a case when a chain is halted for a long time
+			if !currentTime.Before(nextEndTime) {
+				nextEndTime = time.Date(y, m, d+1, 0, 0, 0, 0, time.UTC) // the next day 00:00 UTC
 			}
-			k.CreateRewardsAuction(ctx, liquidFarm.PoolId, params.RewardsAuctionDuration)
+
+			for _, l := range liquidFarmsInStore {
+				auction, found := k.GetLastRewardsAuction(ctx, l.PoolId)
+				if found {
+					if err := k.FinishRewardsAuction(ctx, auction, l.FeeRate); err != nil {
+						panic(err)
+					}
+				}
+				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
+			}
+			k.SetLastRewardsAuctionEndTime(ctx, nextEndTime)
 		}
-		k.SetLastRewardsAuctionEndTime(ctx, ctx.BlockTime().Add(params.RewardsAuctionDuration))
 	}
 }

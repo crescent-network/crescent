@@ -21,19 +21,22 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
   - [LiquidUnfarm](#LiquidUnfarm)
   - [PlaceBid](#PlaceBid)
   - [RefundBid](#RefundBid)
+  - [AdvanceAuction](#AdvanceAuction)
 - [Query](#Query)
   - [Params](#Params)
   - [LiquidFarms](#LiquidFarms)
   - [LiquidFarm](#LiquidFarm)
   - [RewardsAuctions](#RewardsAuctions)
   - [RewardsAuction](#RewardsAuction)
-  - [Bids](#bids)
+  - [Bids](#Bids)
+  - [Rewards](#Rewards)
+  - [ExchangeRate](#ExchangeRate)
 
 # Transaction
 
 ## LiquidFarm
 
-Farm pool coin for liquid farming. The module mints the corresponding amount of `LFCoin` and sends it to the farmer when the execution is complete.
+Farm pool coin to make it liquid. The module mints the corresponding amount of `LFCoin` and sends it to the farmer when the execution is complete.
 
 Usage
 
@@ -49,9 +52,23 @@ liquid-farm [pool-id] [amount]
 Example
 
 ```bash
-# Note that Alice must have some pool coin.
-# Reference docs/cli/liquidity.md page to get to know how to
-# create a pair, a pool, and deposit coins into the pool.
+# In order to fully test the module in your local network, the following testing environments must be set up. 
+#
+# 1. Register new LiquidFarm by param-change governance proposal
+#   - Unless you want to register new one, you do not have to do anything if you run a local network using `ignite` with config-test.yml.
+#   - LiquidFarm is already set up in config-test.yml file
+#
+# 2. Set up an account (e.g: alice) to have some pool coin
+#   - Create a new pool with X/Y coin
+#   - Send limit orders to set last price which needs to be set in order for the farm module to allocate rewards 
+#   - Reference docs/cli/liquidity.md document for a detailed information
+#
+# 3. Create a Farm plan to participate RewardsAuction to place a bid for farming rewards
+#   - Create a new private farm plan to allocate rewards per day
+#   - Reference docs/cli/farm.md document for a detailed information
+#
+# 4. Send some coins to the farming pool address that is generated when you create a farming plan
+#   - Farming pool address must have some coins to distribute farming rewards
 crescentd tx liquidfarming liquid-farm 1 500000000000pool1 \
 --chain-id localnet \
 --from alice \
@@ -64,7 +81,10 @@ crescentd tx liquidfarming liquid-farm 1 500000000000pool1 \
 #
 # Tips
 #
-# Query account balances
+# Query all the registered LiquidFarm objects
+crescentd q liquidfarming liquidfarms -o json | jq
+
+# Query account balances to see if Alice has lfcoin.
 crescentd q bank balances cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
@@ -153,6 +173,28 @@ Example
 
 ```bash
 crescentd tx liquidfarming refund-bid 1 1 \
+--chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+```
+
+## AdvanceAuction
+
+***This message is disabled by default, you have to build the binary with `make install-testing` to activate this message.***
+
+Usage
+
+```bash
+advance-auction
+```
+
+Example
+
+```bash
+crescentd tx liquidfarming advance-auction \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -274,4 +316,44 @@ Example
 
 ```bash
 crescentd query liquidfarming bids 1 -o json | jq
+```
+
+## Rewards
+
+Query current farming rewards for the particular liquid farm
+
+Usage
+
+```bash
+rewards [pool-id]
+```
+
+| **Argument** | **Description**           |
+| :----------- | :------------------------ |
+| pool-id      | pool id of the liquidfarm |
+
+Example
+
+```bash
+crescentd query liquidfarming rewards 1 -o json | jq
+```
+
+## ExchangeRate
+
+Query current exchange rate for mint and burn rates
+
+Usage
+
+```bash
+exchange-rate [pool-id]
+```
+
+| **Argument** | **Description**           |
+| :----------- | :------------------------ |
+| pool-id      | pool id of the liquidfarm |
+
+Example
+
+```bash
+crescentd query liquidfarming exchange-rate 1 -o json | jq
 ```

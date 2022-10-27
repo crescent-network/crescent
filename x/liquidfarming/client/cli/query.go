@@ -31,8 +31,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		NewQueryRewardsAuctionsCmd(),
 		NewQueryRewardsAuctionCmd(),
 		NewQueryBidsCmd(),
-		NewQueryMintRateCmd(),
-		NewQueryBurnRateCmd(),
+		NewQueryRewardsCmd(),
+		NewQueryExchangeRateCmd(),
 	)
 
 	return cmd
@@ -304,16 +304,16 @@ $ %s query %s bids 1
 	return cmd
 }
 
-func NewQueryMintRateCmd() *cobra.Command {
+func NewQueryRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mint-rate [pool-id]",
+		Use:   "rewards [pool-id]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query the current mint rate for liquid farm",
+		Short: "Query accumulated farming rewards for liquid farm",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current mint rate for liquid farm.
+			fmt.Sprintf(`Query accumulated farming rewards for liquid farm.
 
 Example:
-$ %s query %s mint-rate 1
+$ %s query %s rewards 1
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -331,7 +331,7 @@ $ %s query %s mint-rate 1
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.MintRate(cmd.Context(), &types.QueryMintRateRequest{
+			res, err := queryClient.Rewards(cmd.Context(), &types.QueryRewardsRequest{
 				PoolId: poolId,
 			})
 			if err != nil {
@@ -347,16 +347,16 @@ $ %s query %s mint-rate 1
 	return cmd
 }
 
-func NewQueryBurnRateCmd() *cobra.Command {
+func NewQueryExchangeRateCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "burn-rate [pool-id]",
+		Use:   "exchange-rate [pool-id]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query the current burn rate for liquid farm",
+		Short: "Query the exchange rate for liquid farm",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the current burn rate for liquid farm.
+			fmt.Sprintf(`Query the exchange rate, such as mint rate and burn rate for liquid farm.
 
 Example:
-$ %s query %s burn-rate 1
+$ %s query %s exchange-rate 1
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -374,7 +374,7 @@ $ %s query %s burn-rate 1
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.BurnRate(cmd.Context(), &types.QueryBurnRateRequest{
+			res, err := queryClient.ExchangeRate(cmd.Context(), &types.QueryExchangeRateRequest{
 				PoolId: poolId,
 			})
 			if err != nil {

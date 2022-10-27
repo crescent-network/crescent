@@ -210,6 +210,28 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuctions() {
 				s.Require().Len(resp.RewardAuctions, 3)
 			},
 		},
+		{
+			"query by pool id and AuctionStatusStarted status",
+			&types.QueryRewardsAuctionsRequest{
+				PoolId: pool.Id,
+				Status: types.AuctionStatusStarted.String(),
+			},
+			false,
+			func(resp *types.QueryRewardsAuctionsResponse) {
+				s.Require().Len(resp.RewardAuctions, 1)
+			},
+		},
+		{
+			"query by pool id and AuctionStatusFinished status",
+			&types.QueryRewardsAuctionsRequest{
+				PoolId: pool.Id,
+				Status: types.AuctionStatusFinished.String(),
+			},
+			false,
+			func(resp *types.QueryRewardsAuctionsResponse) {
+				s.Require().Len(resp.RewardAuctions, 2)
+			},
+		},
 	} {
 		s.Run(tc.name, func() {
 			resp, err := s.querier.RewardsAuctions(sdk.WrapSDKContext(s.ctx), tc.req)
@@ -382,45 +404,37 @@ func (s *KeeperTestSuite) TestGRPCBids() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGRPCMintRate() {
-	pair := s.createPairWithLastPrice(s.addr(0), "denom1", "denom2", sdk.NewDec(1))
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+func (s *KeeperTestSuite) TestRewards() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
-			RewardsPerDay: utils.ParseCoins("100_000_000denom3"),
+			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
 		},
 	})
-	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000denom3"))
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000stake"))
+
+	err := s.keeper.LiquidFarm(s.ctx, pool.Id, s.addr(0), utils.ParseCoin("1_000_000pool1"))
+	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
 
 	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
+
+	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(100_000_000)), true)
 	s.nextBlock()
 
-	s.liquidFarm(pool.Id, s.addr(1), utils.ParseCoin("200_000pool1"), true)
-	s.liquidFarm(pool.Id, s.addr(2), utils.ParseCoin("300_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(1), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(200_000_000)), true)
 	s.nextBlock()
 
-	s.nextAuction()
-
-	s.liquidFarm(pool.Id, s.addr(3), utils.ParseCoin("500_000pool1"), true)
-	s.nextBlock()
-
-	s.nextAuction()
-
-	s.placeBid(pool.Id, s.addr(10), utils.ParseCoin("100_000pool1"), true)
-	s.placeBid(pool.Id, s.addr(11), utils.ParseCoin("200_000pool1"), true)
-	s.nextBlock()
-
-	s.nextAuction()
-
-	s.liquidFarm(pool.Id, s.addr(4), utils.ParseCoin("500_000pool1"), true) // Mint rate is changed
+	s.liquidFarm(pool.Id, s.addr(2), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(300_000_000)), true)
 	s.nextBlock()
 
 	for _, tc := range []struct {
 		name      string
-		req       *types.QueryMintRateRequest
+		req       *types.QueryRewardsRequest
 		expectErr bool
-		postRun   func(*types.QueryMintRateResponse)
+		postRun   func(*types.QueryRewardsResponse)
 	}{
 		{
 			"nil request",
@@ -430,35 +444,25 @@ func (s *KeeperTestSuite) TestGRPCMintRate() {
 		},
 		{
 			"query by invalid pool id",
-			&types.QueryMintRateRequest{
+			&types.QueryRewardsRequest{
 				PoolId: 0,
 			},
 			true,
-			func(resp *types.QueryMintRateResponse) {},
-		},
-		{
-			"query by not found pool id",
-			&types.QueryMintRateRequest{
-				PoolId: 10,
-			},
-			false,
-			func(resp *types.QueryMintRateResponse) {
-				s.Require().True(resp.MintRate.IsZero())
-			},
+			func(resp *types.QueryRewardsResponse) {},
 		},
 		{
 			"query by valid pool id",
-			&types.QueryMintRateRequest{
+			&types.QueryRewardsRequest{
 				PoolId: 1,
 			},
 			false,
-			func(resp *types.QueryMintRateResponse) {
-				s.Require().True(resp.MintRate.LT(sdk.OneDec()))
+			func(resp *types.QueryRewardsResponse) {
+				s.Require().True(resp.Rewards.IsAllPositive())
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.MintRate(sdk.WrapSDKContext(s.ctx), tc.req)
+			resp, err := s.querier.Rewards(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -469,45 +473,37 @@ func (s *KeeperTestSuite) TestGRPCMintRate() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGRPCBurnRate() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+func (s *KeeperTestSuite) TestGRPCExchangeRate() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
-			RewardsPerDay: utils.ParseCoins("100_000_000denom3"),
+			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
 		},
 	})
-	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000denom3"))
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000stake"))
+
+	err := s.keeper.LiquidFarm(s.ctx, pool.Id, s.addr(0), utils.ParseCoin("1_000_000pool1"))
+	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
 
 	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
+
+	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(100_000_000)), true)
 	s.nextBlock()
 
-	s.liquidFarm(pool.Id, s.addr(1), utils.ParseCoin("200_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(1), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(200_000_000)), true)
 	s.nextBlock()
 
-	s.nextAuction()
-
-	s.placeBid(pool.Id, s.addr(10), utils.ParseCoin("100_000pool1"), true)
-	s.placeBid(pool.Id, s.addr(11), utils.ParseCoin("200_000pool1"), true)
-	s.nextBlock()
-
-	s.nextAuction()
-
-	s.liquidFarm(pool.Id, s.addr(2), utils.ParseCoin("200_000pool1"), true)
-	s.nextBlock()
-
-	s.liquidUnfarm(pool.Id, s.addr(2), utils.ParseCoin("100_000lf1"), true)
-	s.nextBlock()
-
-	s.liquidFarm(pool.Id, s.addr(3), utils.ParseCoin("200_000pool1"), true) // Burn rate is changed
+	s.liquidFarm(pool.Id, s.addr(2), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(300_000_000)), true)
 	s.nextBlock()
 
 	for _, tc := range []struct {
 		name      string
-		req       *types.QueryBurnRateRequest
+		req       *types.QueryExchangeRateRequest
 		expectErr bool
-		postRun   func(*types.QueryBurnRateResponse)
+		postRun   func(*types.QueryExchangeRateResponse)
 	}{
 		{
 			"nil request",
@@ -517,35 +513,26 @@ func (s *KeeperTestSuite) TestGRPCBurnRate() {
 		},
 		{
 			"query by invalid pool id",
-			&types.QueryBurnRateRequest{
+			&types.QueryExchangeRateRequest{
 				PoolId: 0,
 			},
 			true,
-			func(resp *types.QueryBurnRateResponse) {},
-		},
-		{
-			"query by not found pool id",
-			&types.QueryBurnRateRequest{
-				PoolId: 10,
-			},
-			false,
-			func(resp *types.QueryBurnRateResponse) {
-				s.Require().True(resp.BurnRate.IsZero())
-			},
+			func(resp *types.QueryExchangeRateResponse) {},
 		},
 		{
 			"query by valid pool id",
-			&types.QueryBurnRateRequest{
+			&types.QueryExchangeRateRequest{
 				PoolId: 1,
 			},
 			false,
-			func(resp *types.QueryBurnRateResponse) {
-				s.Require().True(resp.BurnRate.GT(sdk.OneDec()))
+			func(resp *types.QueryExchangeRateResponse) {
+				s.Require().True(resp.ExchangeRate.MintRate.Equal(sdk.OneDec()))
+				s.Require().True(resp.ExchangeRate.BurnRate.Equal(sdk.OneDec()))
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.BurnRate(sdk.WrapSDKContext(s.ctx), tc.req)
+			resp, err := s.querier.ExchangeRate(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

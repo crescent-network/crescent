@@ -179,30 +179,34 @@ func TestDeductFees(t *testing.T) {
 		feeRate  sdk.Dec
 		rewards  sdk.Coins
 		deducted sdk.Coins
+		fees     sdk.Coins
 	}{
 		{
 			name:     "zero fee rate",
 			feeRate:  sdk.ZeroDec(),
 			rewards:  utils.ParseCoins("100denom1"),
 			deducted: utils.ParseCoins("100denom1"),
+			fees:     sdk.Coins{},
 		},
 		{
 			name:     "fee rate - 10%",
 			feeRate:  sdk.MustNewDecFromStr("0.1"),
 			rewards:  utils.ParseCoins("100denom1"),
 			deducted: utils.ParseCoins("90denom1"),
+			fees:     utils.ParseCoins("10denom1"),
 		},
 		{
 			name:     "fee rate - 6.666666666666%",
 			feeRate:  sdk.MustNewDecFromStr("0.066666666666666"),
 			rewards:  utils.ParseCoins("100000denom1"),
 			deducted: utils.ParseCoins("93333denom1"),
+			fees:     utils.ParseCoins("6667denom1"),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			deducted, err := types.DeductFees(1, tc.rewards, tc.feeRate)
-			require.NoError(t, err)
+			deducted, fees := types.DeductFees(tc.rewards, tc.feeRate)
 			require.Equal(t, tc.deducted, deducted)
+			require.Equal(t, tc.fees, fees)
 		})
 	}
 }

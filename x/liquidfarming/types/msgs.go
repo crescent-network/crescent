@@ -13,6 +13,7 @@ var (
 	_ sdk.Msg = (*MsgLiquidUnfarmAndWithdraw)(nil)
 	_ sdk.Msg = (*MsgPlaceBid)(nil)
 	_ sdk.Msg = (*MsgRefundBid)(nil)
+	_ sdk.Msg = (*MsgAdvanceAuction)(nil)
 )
 
 // Message types for the module
@@ -22,6 +23,7 @@ const (
 	TypeMsgLiquidUnfarmAndWithdraw = "liquid_unfarm_and_withdraw"
 	TypeMsgPlaceBid                = "place_bid"
 	TypeMsgRefundBid               = "refund_bid"
+	TypeMsgAdvanceAuction          = "advance_auction"
 )
 
 // NewMsgLiquidFarm creates a new MsgLiquidFarm
@@ -284,4 +286,34 @@ func (msg MsgRefundBid) GetBidder() sdk.AccAddress {
 		panic(err)
 	}
 	return addr
+}
+
+// NewMsgAdvanceAuction creates a new MsgAdvanceAuction.
+func NewMsgAdvanceAuction(requesterAcc sdk.AccAddress) *MsgAdvanceAuction {
+	return &MsgAdvanceAuction{
+		Requester: requesterAcc.String(),
+	}
+}
+
+func (msg MsgAdvanceAuction) Route() string { return RouterKey }
+
+func (msg MsgAdvanceAuction) Type() string { return TypeMsgAdvanceAuction }
+
+func (msg MsgAdvanceAuction) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Requester); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid requester address %q: %v", msg.Requester, err)
+	}
+	return nil
+}
+
+func (msg MsgAdvanceAuction) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgAdvanceAuction) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Requester)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

@@ -27,14 +27,15 @@ service Query {
     option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}";
   }
 
-  // RewardsAuctions returns all rewards auctions
+  // RewardsAuctions returns all rewards auctions that correspond to the given pool id
   rpc RewardsAuctions(QueryRewardsAuctionsRequest) returns (QueryRewardsAuctionsResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/pools/{pool_id}/rewards_auctions";
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards_auctions";
   }
 
   // RewardsAuction returns the specific rewards auction
   rpc RewardsAuction(QueryRewardsAuctionRequest) returns (QueryRewardsAuctionResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/pools/{pool_id}/rewards_auctions/{auction_id}";
+    option (google.api.http).get =
+        "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards_auctions/{auction_id}";
   }
 
   // Bids returns all bids for the liquid farm
@@ -42,14 +43,14 @@ service Query {
     option (google.api.http).get = "/crescent/liquidfarming/v1beta1/pools/{pool_id}/bids";
   }
 
-  // MintRate returns the current mint rate.
-  rpc MintRate(QueryMintRateRequest) returns (QueryMintRateResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/pools/{pool_id}/mint_rate";
+  // Rewards returns all accumulated farming rewards for the liquid farm
+  rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards";
   }
 
-  // BurnRate returns the current burn rate.
-  rpc BurnRate(QueryBurnRateRequest) returns (QueryBurnRateResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/pools/{pool_id}/burn_rate";
+  // ExchangeRate returns exchange rates (mint rate and burn rate) for the liquid farm
+  rpc ExchangeRate(QueryExchangeRateRequest) returns (QueryExchangeRateResponse) {
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/exchange_rate";
   }
 }
 
@@ -84,7 +85,8 @@ message QueryParamsResponse {
 // QueryRewardsAuctionsRequest is request type for the Query/RewardsAuctions RPC method.
 message QueryRewardsAuctionsRequest {
   uint64                                pool_id    = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  string                                status     = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 // QueryRewardsAuctionsResponse is response type for the Query/RewardsAuctions RPC method.
@@ -116,26 +118,25 @@ message QueryBidsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryMintRateRequest is request type for the Query/MintRate RPC method.
-message QueryMintRateRequest {
+// QueryRewardsRequest is request type for the Query/Rewards RPC method.
+message QueryRewardsRequest {
   uint64 pool_id = 1;
 }
 
-// QueryMintRateResponse is response type for the Query/MintRate RPC method.
-message QueryMintRateResponse {
-  string mint_rate = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+// QueryRewardsResponse is response type for the Query/Rewards RPC method.
+message QueryRewardsResponse {
+  repeated cosmos.base.v1beta1.Coin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-// QueryBurnRateRequest is request type for the Query/BurnRate RPC method.
-message QueryBurnRateRequest {
+// QueryExchangeRateRequest is request type for the Query/ExchangeRate RPC method.
+message QueryExchangeRateRequest {
   uint64 pool_id = 1;
 }
 
-// QueryBurnRateResponse is response type for the Query/BurnRate RPC method.
-message QueryBurnRateResponse {
-  string burn_rate = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+// QueryExchangeRateResponse is response type for the Query/ExchangeRate RPC method.
+message QueryExchangeRateResponse {
+  ExchangeRateResponse exchange_rate = 1 [(gogoproto.nullable) = false];
 }
 
 //
@@ -158,4 +159,12 @@ message LiquidFarmResponse {
 
   string total_farming_amount = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message ExchangeRateResponse {
+  string mint_rate = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  string burn_rate = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

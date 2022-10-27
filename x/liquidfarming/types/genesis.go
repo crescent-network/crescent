@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 		RewardsAuctions:            []RewardsAuction{},
 		Bids:                       []Bid{},
 		WinningBidRecords:          []WinningBidRecord{},
+		LastRewardsAuctionEndTime:  nil,
 	}
 }
 

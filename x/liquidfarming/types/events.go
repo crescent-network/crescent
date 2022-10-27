@@ -16,6 +16,7 @@ const (
 	AttributeKeyBidder                   = "bidder"
 	AttributeKeyFarmingCoin              = "farming_coin"
 	AttributeKeyMintedCoin               = "minted_coin"
+	AttributeKeyWithdrawnRewards         = "withdrawn_rewards"
 	AttributeKeyBiddingCoin              = "bidding_coin"
 	AttributeKeyUnfarmingCoin            = "unfarming_coin"
 	AttributeKeyUnfarmedCoin             = "unfarmed_coin"

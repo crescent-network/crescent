@@ -7,7 +7,6 @@ import (
 	utils "github.com/crescent-network/crescent/v3/types"
 
 	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/keeper"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
 )
 
@@ -15,8 +14,8 @@ func (s *KeeperTestSuite) TestLiquidFarm_Validation() {
 	err := s.keeper.LiquidFarm(s.ctx, 1, s.addr(0), utils.ParseCoin("100_000_000pool1"))
 	s.Require().EqualError(err, "pool 1 not found: not found")
 
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 	s.createLiquidFarm(pool.Id, sdk.NewInt(100_000_000), sdk.NewInt(100_000_000), sdk.ZeroDec())
 
 	for _, tc := range []struct {
@@ -29,7 +28,7 @@ func (s *KeeperTestSuite) TestLiquidFarm_Validation() {
 			"happy case",
 			types.NewMsgLiquidFarm(
 				pool.Id,
-				s.addr(0).String(),
+				helperAddr.String(),
 				sdk.NewInt64Coin(pool.PoolCoinDenom, 1_000_000_000),
 			),
 			func(ctx sdk.Context, farmerAddr sdk.AccAddress) {
@@ -76,8 +75,8 @@ func (s *KeeperTestSuite) TestLiquidFarm_Validation() {
 }
 
 func (s *KeeperTestSuite) TestLiquidFarm() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 
 	err := s.keeper.LiquidFarm(s.ctx, pool.Id, s.addr(0), utils.ParseCoin("1_000_000pool1"))
 	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
@@ -107,12 +106,49 @@ func (s *KeeperTestSuite) TestLiquidFarm() {
 	s.Require().Equal(amount1.Add(amount2).Add(amount3), position.FarmingAmount)
 }
 
+func (s *KeeperTestSuite) TestLiquidFarm_WithFarmPlan() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
+		{
+			PairId:        pool.PairId,
+			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
+		},
+	})
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000stake"))
+
+	err := s.keeper.LiquidFarm(s.ctx, pool.Id, s.addr(0), utils.ParseCoin("1_000_000pool1"))
+	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
+
+	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(100_000_000)), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(200_000_000)), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(300_000_000)), true)
+	s.nextBlock()
+
+	// Check if the reserve account farmed the coin in the farm module
+	reserveAddr := types.LiquidFarmReserveAddress(pool.Id)
+	position, found := s.app.FarmKeeper.GetPosition(s.ctx, reserveAddr, pool.PoolCoinDenom)
+	s.Require().True(found)
+	s.Require().True(position.FarmingAmount.Equal(sdk.NewInt(600_000_000)))
+
+	// Auto withdrawn rewards are transferred to the WithdrawnRewardsReserveAddress
+	rewardsReserveAddr := types.WithdrawnRewardsReserveAddress(pool.Id)
+	s.Require().True(!s.getBalances(rewardsReserveAddr).IsZero())
+}
+
 func (s *KeeperTestSuite) TestLiquidUnfarm_Validation() {
 	_, err := s.keeper.LiquidUnfarm(s.ctx, 1, s.addr(0), utils.ParseCoin("100_000_000pool1"))
 	s.Require().EqualError(err, "pool 1 not found: not found")
 
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 
 	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.liquidFarm(pool.Id, s.addr(0), sdk.NewInt64Coin(pool.PoolCoinDenom, 1_000_000_000), true)
@@ -120,7 +156,7 @@ func (s *KeeperTestSuite) TestLiquidUnfarm_Validation() {
 	for _, tc := range []struct {
 		name        string
 		msg         *types.MsgLiquidUnfarm
-		postRun     func(ctx sdk.Context, unfarmInfo keeper.UnfarmInfo)
+		postRun     func(ctx sdk.Context, unfarmedCoin sdk.Coin)
 		expectedErr string
 	}{
 		{
@@ -130,8 +166,8 @@ func (s *KeeperTestSuite) TestLiquidUnfarm_Validation() {
 				s.addr(0).String(),
 				sdk.NewInt64Coin(types.LiquidFarmCoinDenom(pool.Id), 1_000_000_000),
 			),
-			func(ctx sdk.Context, unfarmInfo keeper.UnfarmInfo) {
-				s.Require().Equal(s.addr(0), unfarmInfo.Farmer)
+			func(ctx sdk.Context, unfarmedCoin sdk.Coin) {
+				s.Require().True(unfarmedCoin.Amount.Equal(sdk.NewInt(1_000_000_000)))
 			},
 			"",
 		},
@@ -161,8 +197,8 @@ func (s *KeeperTestSuite) TestLiquidUnfarm_Validation() {
 }
 
 func (s *KeeperTestSuite) TestLiquidUnfarm_All() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 
 	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
@@ -199,8 +235,8 @@ func (s *KeeperTestSuite) TestLiquidUnfarm_All() {
 }
 
 func (s *KeeperTestSuite) TestLiquidUnfarm_Partial() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 
 	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
@@ -262,10 +298,9 @@ func (s *KeeperTestSuite) TestLiquidUnfarm_Partial() {
 }
 
 func (s *KeeperTestSuite) TestLiquidUnfarm_RemoveLiquidFarm() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
@@ -277,10 +312,9 @@ func (s *KeeperTestSuite) TestLiquidUnfarm_RemoveLiquidFarm() {
 }
 
 func (s *KeeperTestSuite) TestLiquidUnfarm_Complex_WithRewards() {
-	pair := s.createPairWithLastPrice(s.addr(0), "denom1", "denom2", sdk.NewDec(1))
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
@@ -415,41 +449,83 @@ func (s *KeeperTestSuite) TestLiquidUnfarmAndWithdraw() {
 
 }
 
-func (s *KeeperTestSuite) TestDeleteLiquidFarm_Case1() {
-	pair1 := s.createPair(s.addr(0), "denom1", "denom2")
-	pool1 := s.createPool(s.addr(0), pair1.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	pair2 := s.createPair(s.addr(0), "denom3", "denom4")
-	pool2 := s.createPool(s.addr(0), pair2.Id, utils.ParseCoins("100_000_000denom3, 100_000_000denom4"))
+func (s *KeeperTestSuite) TestDeleteLiquidFarmInStore() {
+	pair1 := s.createPair(helperAddr, "denom1", "denom2")
+	pool1 := s.createPool(helperAddr, pair1.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair2 := s.createPair(helperAddr, "denom3", "denom4")
+	pool2 := s.createPool(helperAddr, pair2.Id, utils.ParseCoins("100_000_000denom3, 100_000_000denom4"))
 
 	liquidFarm1 := s.createLiquidFarm(pool1.Id, sdk.NewInt(100), sdk.NewInt(100), sdk.ZeroDec())
 	s.nextBlock()
 
-	s.createLiquidFarm(pool2.Id, sdk.NewInt(500), sdk.NewInt(500), sdk.ZeroDec())
+	s.createLiquidFarm(pool2.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
 	s.nextBlock()
 
 	// Ensure that the param and KVStore has the same length of liquid farms
-	s.Require().Len(s.keeper.GetAllLiquidFarms(s.ctx), 2)
+	s.Require().Len(s.keeper.GetLiquidFarmsInStore(s.ctx), 2)
 	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 2)
 
-	// Forcefully remove one liquid farm from the store
+	// Remove LiquidFarm1 from the store
 	s.keeper.DeleteLiquidFarm(s.ctx, liquidFarm1)
 
 	// Ensure that the liquid farm is deleted in KVStore
-	s.Require().Len(s.keeper.GetAllLiquidFarms(s.ctx), 1)
-	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 2)
+	s.Require().Len(s.keeper.GetLiquidFarmsInStore(s.ctx), 1)
+	s.Require().Len(s.keeper.GetLiquidFarmsInParams(s.ctx), 2)
 
 	// Synchronize LiquidFarms in begin blocker
 	s.nextBlock()
 
 	// Ensure the length of liquid farms in the param and KVstore is the same
-	s.Require().Len(s.keeper.GetAllLiquidFarms(s.ctx), 2)
+	s.Require().Len(s.keeper.GetLiquidFarmsInStore(s.ctx), 2)
 	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 2)
 }
 
-func (s *KeeperTestSuite) TestDeleteLiquidFarm_Case2() {
-	pair := s.createPairWithLastPrice(s.addr(0), "denom1", "denom2", sdk.NewDec(1))
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+func (s *KeeperTestSuite) TestDeleteLiquidFarmInParam() {
+	pair1 := s.createPair(helperAddr, "denom1", "denom2")
+	pool1 := s.createPool(helperAddr, pair1.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair2 := s.createPair(helperAddr, "denom3", "denom4")
+	pool2 := s.createPool(helperAddr, pair2.Id, utils.ParseCoins("100_000_000denom3, 100_000_000denom4"))
+
+	liquidFarm1 := s.createLiquidFarm(pool1.Id, sdk.NewInt(100), sdk.NewInt(100), sdk.ZeroDec())
+	s.nextBlock()
+
+	s.createLiquidFarm(pool2.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.nextBlock()
+
+	// Ensure that the param and KVStore has the same length of liquid farms
+	s.Require().Len(s.keeper.GetLiquidFarmsInStore(s.ctx), 2)
+	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 2)
+
+	// Remove the liquid farm object in params
+	params := s.keeper.GetParams(s.ctx)
+	params.LiquidFarms = []types.LiquidFarm{liquidFarm1}
+	s.keeper.SetParams(s.ctx, params)
+
+	// Ensure that the liquid farm is deleted in KVStore
+	s.Require().Len(s.keeper.GetLiquidFarmsInStore(s.ctx), 2)
+	s.Require().Len(s.keeper.GetLiquidFarmsInParams(s.ctx), 1)
+
+	// Synchronize LiquidFarms in begin blocker
+	s.nextBlock()
+
+	// Ensure the length of liquid farms in the param and KVstore is the same
+	s.Require().Len(s.keeper.GetLiquidFarmsInStore(s.ctx), 1)
+	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
+}
+
+// [Scenario]
+// There is a farming plan that allocates rewards per day
+// One RewardsAuction is finished for auto compounding rewards
+// While the next RewardsAuction is ongoing, LiquidFarm is removed
+//
+// [Expected results]
+// 1. Bidders for the second RewardsAuction must be refunded
+// 2. Send the accumulated farming rewards from the first to the second RewardsAuction to the fee collector
+// 3. The status of RewardsAuction must be AuctionStatusFinished
+func (s *KeeperTestSuite) TestDeleteLiquidFarm_EdgeCase1() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
@@ -457,17 +533,14 @@ func (s *KeeperTestSuite) TestDeleteLiquidFarm_Case2() {
 	})
 	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000stake"))
 
-	liquidFarm := s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
 
-	poolCoinBalance := s.getBalance(s.addr(0), pool.PoolCoinDenom)
-	s.liquidFarm(pool.Id, s.addr(0), poolCoinBalance, false)
+	farmCoin := utils.ParseCoin("100_000_000_000pool1")
+	s.liquidFarm(pool.Id, s.addr(0), farmCoin, true)
 	s.nextBlock()
 
 	// Create the first rewards auction
 	s.nextAuction()
-
-	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("100_000pool1"), true)
-	s.nextBlock()
 
 	s.placeBid(pool.Id, s.addr(6), utils.ParseCoin("200_000pool1"), true)
 	s.nextBlock()
@@ -475,19 +548,16 @@ func (s *KeeperTestSuite) TestDeleteLiquidFarm_Case2() {
 	// Ensure that the reserve account farmed the pool coin
 	farm, found := s.app.FarmKeeper.GetPosition(s.ctx, types.LiquidFarmReserveAddress(pool.Id), pool.PoolCoinDenom)
 	s.Require().True(found)
-	s.Require().Equal(poolCoinBalance.Amount, farm.FarmingAmount)
+	s.Require().Equal(farmCoin.Amount, farm.FarmingAmount)
 
 	s.nextAuction()
 
 	// Ensure that the total farming amount is increased
 	farm, found = s.app.FarmKeeper.GetPosition(s.ctx, types.LiquidFarmReserveAddress(pool.Id), pool.PoolCoinDenom)
 	s.Require().True(found)
-	s.Require().True(farm.FarmingAmount.GT(poolCoinBalance.Amount))
+	s.Require().True(farm.FarmingAmount.GT(farmCoin.Amount))
 
-	s.placeBid(pool.Id, s.addr(7), utils.ParseCoin("300_000pool1"), true)
-	s.nextBlock()
-
-	s.placeBid(pool.Id, s.addr(8), utils.ParseCoin("400_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(7), utils.ParseCoin("400_000pool1"), true)
 	s.nextBlock()
 
 	// Remove the liquid farm object in params
@@ -498,27 +568,34 @@ func (s *KeeperTestSuite) TestDeleteLiquidFarm_Case2() {
 	// Synchronize and handle the removed liquid farm
 	s.nextBlock()
 
-	// Unfarm all LFCoin
-	s.liquidUnfarm(liquidFarm.PoolId, s.addr(0), s.getBalance(s.addr(0), types.LiquidFarmCoinDenom(pool.Id)), false)
-	s.nextBlock()
-
-	// Ensure that the returned pool coin is increased
-	s.Require().True(s.getBalance(s.addr(0), pool.PoolCoinDenom).Amount.GT(poolCoinBalance.Amount))
+	// Ensure that the liquid farm is removed and synchronized
+	s.Require().Len(s.keeper.GetLiquidFarmsInStore(s.ctx), 0)
+	s.Require().Len(s.keeper.GetLiquidFarmsInParams(s.ctx), 0)
 
 	// Ensure the auction status
 	auction, found := s.keeper.GetRewardsAuction(s.ctx, 1, pool.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.AuctionStatusFinished, auction.Status)
 
-	// Ensure that bidders got their funds back
-	s.Require().Equal(utils.ParseCoin("300_000pool1"), s.getBalance(s.addr(7), pool.PoolCoinDenom))
-	s.Require().Equal(utils.ParseCoin("400_000pool1"), s.getBalance(s.addr(8), pool.PoolCoinDenom))
+	// Ensure that the fee collector is not empty
+	feeCollectorAddr, _ := sdk.AccAddressFromBech32(s.keeper.GetFeeCollector(s.ctx))
+	s.Require().True(!s.getBalances(feeCollectorAddr).IsZero())
+
+	// Unfarm all LFCoin
+	s.liquidUnfarm(pool.Id, s.addr(0), s.getBalance(s.addr(0), types.LiquidFarmCoinDenom(pool.Id)), false)
+	s.nextBlock()
+
+	// Ensure that the returned pool coin is increased
+	s.Require().True(s.getBalance(s.addr(0), pool.PoolCoinDenom).Amount.GT(farmCoin.Amount))
+
+	// Ensure that the bidder got their funds back
+	s.Require().Equal(utils.ParseCoin("400_000pool1"), s.getBalance(s.addr(7), pool.PoolCoinDenom))
 }
 
 func (s *KeeperTestSuite) TestMintRate() {
-	pair := s.createPairWithLastPrice(s.addr(0), "denom1", "denom2", sdk.NewDec(1))
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),

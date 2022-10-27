@@ -22,8 +22,8 @@ func (k Keeper) GetLiquidFarm(ctx sdk.Context, poolId uint64) (liquidFarm types.
 	return
 }
 
-// GetAllLiquidFarms returns all liquid farm objects stored in the store.
-func (k Keeper) GetAllLiquidFarms(ctx sdk.Context) (liquidFarms []types.LiquidFarm) {
+// GetLiquidFarmsInStore returns all liquid farm objects stored in the store.
+func (k Keeper) GetLiquidFarmsInStore(ctx sdk.Context) (liquidFarms []types.LiquidFarm) {
 	liquidFarms = []types.LiquidFarm{}
 	k.IterateLiquidFarms(ctx, func(liquidFarm types.LiquidFarm) (stop bool) {
 		liquidFarms = append(liquidFarms, liquidFarm)
@@ -61,43 +61,61 @@ func (k Keeper) GetLastRewardsAuctionId(ctx sdk.Context, poolId uint64) uint64 {
 }
 
 // SetLastRewardsAuctionId stores the last rewards auction id.
-func (k Keeper) SetLastRewardsAuctionId(ctx sdk.Context, id uint64, poolId uint64) {
+func (k Keeper) SetLastRewardsAuctionId(ctx sdk.Context, auctionId uint64, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: auctionId})
 	store.Set(types.GetLastRewardsAuctionIdKey(poolId), bz)
 }
 
 // GetLastRewardsAuctionEndTime returns the last rewards auction end time.
-func (k Keeper) GetLastRewardsAuctionEndTime(ctx sdk.Context) time.Time {
+func (k Keeper) GetLastRewardsAuctionEndTime(ctx sdk.Context) (t time.Time, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.RewardsAuctionTimeKey)
+	bz := store.Get(types.LastRewardsAuctionEndTimeKey)
 	if bz == nil {
-		return time.Time{}
+		return
 	}
-	ts, err := sdk.ParseTimeBytes(bz)
+	var ts gogotypes.Timestamp
+	k.cdc.MustUnmarshal(bz, &ts)
+	var err error
+	t, err = gogotypes.TimestampFromProto(&ts)
 	if err != nil {
 		panic(err)
 	}
-	return ts
+	found = true
+	return
 }
 
 // SetLastRewardsAuctionEndTime stores the last rewards auction end time.
-func (k Keeper) SetLastRewardsAuctionEndTime(ctx sdk.Context, auctionTime time.Time) {
+func (k Keeper) SetLastRewardsAuctionEndTime(ctx sdk.Context, t time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := sdk.FormatTimeBytes(auctionTime)
-	store.Set(types.RewardsAuctionTimeKey, bz)
+	ts, err := gogotypes.TimestampProto(t)
+	if err != nil {
+		panic(err)
+	}
+	bz := k.cdc.MustMarshal(ts)
+	store.Set(types.LastRewardsAuctionEndTimeKey, bz)
 }
 
-// GetRewardsAuction returns the reward auction object by the given pool id and auction id.
+// GetLastRewardsAuction is a convenient method to look up last rewards auction id and returns the reward auction object.
+func (k Keeper) GetLastRewardsAuction(ctx sdk.Context, poolId uint64) (auction types.RewardsAuction, found bool) {
+	auctionId := k.GetLastRewardsAuctionId(ctx, poolId)
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetRewardsAuctionKey(auctionId, poolId))
+	if bz == nil {
+		return auction, false
+	}
+	auction = types.MustUnmarshalRewardsAuction(k.cdc, bz)
+	return auction, true
+}
+
+// GetRewardsAuction returns the reward auction object by the given auction id pool id.
 func (k Keeper) GetRewardsAuction(ctx sdk.Context, auctionId uint64, poolId uint64) (auction types.RewardsAuction, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetRewardsAuctionKey(auctionId, poolId))
 	if bz == nil {
 		return auction, false
 	}
-
 	auction = types.MustUnmarshalRewardsAuction(k.cdc, bz)
-
 	return auction, true
 }
 
@@ -148,7 +166,7 @@ func (k Keeper) GetBid(ctx sdk.Context, poolId uint64, bidder sdk.AccAddress) (b
 	return bid, true
 }
 
-// SetBid stores a bid object.
+// SetBid stores a bid object with the given pool id.
 func (k Keeper) SetBid(ctx sdk.Context, bid types.Bid) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&bid)

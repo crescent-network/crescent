@@ -23,22 +23,19 @@ const (
 
 // keys for the store prefixes
 var (
-	LastRewardsAuctionIdKey = []byte{0xe1} // key to retrieve the last rewards auction id
-	RewardsAuctionTimeKey   = []byte{0xe2} // key to retrieve the last rewards auction end time
-
-	LiquidFarmKeyPrefix = []byte{0xe4}
-
-	CompoundingRewardsKeyPrefix = []byte{0xe7}
-	RewardsAuctionKeyPrefix     = []byte{0xe8}
-
-	BidKeyPrefix        = []byte{0xea}
-	WinningBidKeyPrefix = []byte{0xeb}
+	LastRewardsAuctionEndTimeKey  = []byte{0xe1} // key to retrieve the auction end time
+	LastRewardsAuctionIdKeyPrefix = []byte{0xe2}
+	LiquidFarmKeyPrefix           = []byte{0xe3}
+	CompoundingRewardsKeyPrefix   = []byte{0xe4}
+	RewardsAuctionKeyPrefix       = []byte{0xe5}
+	BidKeyPrefix                  = []byte{0xe6}
+	WinningBidKeyPrefix           = []byte{0xe7}
 )
 
 // GetLastRewardsAuctionIdKey returns the store key to retrieve the last rewards auction
 // by the given pool id.
 func GetLastRewardsAuctionIdKey(poolId uint64) []byte {
-	return append(LastRewardsAuctionIdKey, sdk.Uint64ToBigEndian(poolId)...)
+	return append(LastRewardsAuctionIdKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
 }
 
 // GetLiquidFarmKey returns the store key to retrieve the liquid farm object

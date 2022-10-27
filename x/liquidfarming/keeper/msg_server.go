@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -75,4 +76,35 @@ func (m msgServer) RefundBid(goCtx context.Context, msg *types.MsgRefundBid) (*t
 	}
 
 	return &types.MsgRefundBidResponse{}, nil
+}
+
+// AdvanceAuction defines a method for advancing rewards auction by one.
+// This message is just for testing purpose and it shouldn't be used in production.
+func (k msgServer) AdvanceAuction(goCtx context.Context, msg *types.MsgAdvanceAuction) (*types.MsgAdvanceAuctionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if EnableAdvanceAuction {
+		endTime, _ := k.GetLastRewardsAuctionEndTime(ctx)
+		ctx = ctx.WithBlockTime(endTime)
+
+		duration := k.GetRewardsAuctionDuration(ctx)
+		nextEndTime := endTime.Add(duration)
+
+		for _, l := range k.GetLiquidFarmsInStore(ctx) {
+			auction, found := k.GetLastRewardsAuction(ctx, l.PoolId)
+			if !found {
+				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
+			} else {
+				if err := k.FinishRewardsAuction(ctx, auction, l.FeeRate); err != nil {
+					panic(err)
+				}
+				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
+			}
+		}
+		k.SetLastRewardsAuctionEndTime(ctx, nextEndTime)
+	} else {
+		return nil, fmt.Errorf("AdvanceAuction is disabled")
+	}
+
+	return &types.MsgAdvanceAuctionResponse{}, nil
 }
