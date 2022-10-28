@@ -59,7 +59,7 @@ func TestDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"Pla", fmt.Sprintf("%v\n%v", plan, plan)},
+		{"Plan", fmt.Sprintf("%v\n%v", plan, plan)},
 		{"Farm", fmt.Sprintf("%v\n%v", farm, farm)},
 		{"Position", fmt.Sprintf("%v\n%v", position, position)},
 		{"HistoricalRewards", fmt.Sprintf("%v\n%v", hist, hist)},

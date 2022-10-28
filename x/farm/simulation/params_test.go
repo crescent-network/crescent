@@ -21,8 +21,8 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
-		{"farm/FeeCollector", "FeeCollector", `"cosmos1stgwet7cl6tleugpqqqqqqqqqqqqqqqq9dhdq9"`, "farm"},
-		{"farm/MaxNumPrivatePlans", "MaxNumPrivatePlans", "19", "farm"},
+		{"f4rm/FeeCollector", "FeeCollector", `"cosmos1stgwet7cl6tleugpqqqqqqqqqqqqqqqq9dhdq9"`, "f4rm"},
+		{"f4rm/MaxNumPrivatePlans", "MaxNumPrivatePlans", "19", "f4rm"},
 	}
 
 	for i, p := range paramChanges {
