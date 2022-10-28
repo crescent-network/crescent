@@ -42,6 +42,7 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/params
 ```
 
+Example Response
 
 ```json
 {
@@ -62,13 +63,14 @@ http://localhost:1317/crescent/farming/v1beta1/params
 
 Query all the farming plans exist in the network:
 
-
 Example Request 
 
 <!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/plans
 ```
+
+Example Response
 
 ```json
 {
@@ -116,13 +118,14 @@ http://localhost:1317/crescent/farming/v1beta1/plans
 
 Query a particular plan:
 
-
 Example Request 
 
 <!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/plans/1
 ```
+
+Example Response
 
 ```json
 {
@@ -172,6 +175,8 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/position/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
 
+Example Response
+
 ```json
 {
   "staked_coins": [
@@ -200,6 +205,8 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/position/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1
 ```
 
+Example Response
+
 ```json
 {
   "staked_coins": [
@@ -223,13 +230,14 @@ http://localhost:1317/crescent/farming/v1beta1/position/cre185fflsvwrz0cx46w6qad
 
 Query for all stakings by a farmer:
 
-
 Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
+
+Example Response
 
 ```json
 {
@@ -261,6 +269,8 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
 ```
 
+Example Response
+
 ```json
 {
   "stakings": [
@@ -288,6 +298,8 @@ Example Request
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/queued_stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
+
+Example Response
 
 ```json
 {
@@ -319,6 +331,8 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/queued_stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
 ```
 
+Example Response
+
 ```json
 {
   "queued_stakings": [
@@ -339,13 +353,14 @@ http://localhost:1317/crescent/farming/v1beta1/queued_stakings/cre185fflsvwrz0cx
 
 Query for total stakings by a staking coin denom: 
 
-
 Example Request 
 
 <!-- markdown-link-check-disable -->
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/total_stakings/pool1
 ```
+
+Example Response
 
 ```json
 {
@@ -363,6 +378,8 @@ Example Request
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
+
+Example Response
 
 ```json
 {
@@ -403,6 +420,8 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1
 ```
 
+Example Response
+
 ```json
 {
   "rewards": [
@@ -433,6 +452,8 @@ Example Request
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/unharvested_rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
+
+Example Response
 
 ```json
 {
@@ -472,6 +493,8 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/unharvested_rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
 ```
 
+Example Response
+
 ```json
 {
   "unharvested_rewards": [
@@ -503,6 +526,8 @@ Example Request
 http://localhost:1317/crescent/farming/v1beta1/current_epoch_days
 ```
 
+Example Response
+
 ```json
 {
   "current_epoch_days": 1
@@ -519,6 +544,8 @@ Example Request
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/historical_rewards
 ```
+
+Example Response
 
 ```json
 {

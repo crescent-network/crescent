@@ -31,6 +31,8 @@ Example Request
 http://localhost:1317/crescent/marketmaker/v1beta1/params
 ```
 
+Example Response
+
 ```json
 {
   "params": {
@@ -83,6 +85,8 @@ Example Request
 http://localhost:1317/crescent/marketmaker/v1beta1/marketmakers
 ```
 
+Example Response
+
 ```json
 {
   "marketmakers": [
@@ -110,6 +114,8 @@ Example Request
 ```bash
 http://localhost:1317/crescent/marketmaker/v1beta1/incentive/cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
 ```
+
+Example Response
 
 ```json
 {
