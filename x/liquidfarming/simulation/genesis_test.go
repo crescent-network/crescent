@@ -45,9 +45,9 @@ func TestRandomizedGenState(t *testing.T) {
 	expLiquidFarms := []types.LiquidFarm{
 		{
 			PoolId:        1,
-			MinFarmAmount: sdk.NewInt(807408),
-			MinBidAmount:  sdk.NewInt(713862),
-			FeeRate:       sdk.MustNewDecFromStr("0.004768816528183848"),
+			MinFarmAmount: sdk.NewInt(640732),
+			MinBidAmount:  sdk.NewInt(610856),
+			FeeRate:       sdk.MustNewDecFromStr("0.004728509433899850"),
 		},
 	}
 
