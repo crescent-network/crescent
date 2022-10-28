@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +12,23 @@ import (
 
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
 )
+
+var (
+	// Set this "true" using build flags to enable AdvanceAuction msg handling.
+	enableAdvanceAuction = "false"
+
+	// EnableAdvanceAuction indicates whether msgServer accepts MsgAdvanceAuction or not.
+	// Setting this true in production mode will expose unexpected vulnerability.
+	EnableAdvanceAuction = false
+)
+
+func init() {
+	var err error
+	EnableAdvanceAuction, err = strconv.ParseBool(enableAdvanceAuction)
+	if err != nil {
+		panic(err)
+	}
+}
 
 type Keeper struct {
 	cdc             codec.BinaryCodec
@@ -65,4 +84,19 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the parameters for the module.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+func (k Keeper) GetFeeCollector(ctx sdk.Context) (feeCollector string) {
+	k.paramSpace.Get(ctx, types.KeyFeeCollector, &feeCollector)
+	return
+}
+
+func (k Keeper) GetRewardsAuctionDuration(ctx sdk.Context) (duration time.Duration) {
+	k.paramSpace.Get(ctx, types.KeyRewardsAuctionDuration, &duration)
+	return
+}
+
+func (k Keeper) GetLiquidFarmsInParams(ctx sdk.Context) (liquidFarms []types.LiquidFarm) {
+	k.paramSpace.Get(ctx, types.KeyLiquidFarms, &liquidFarms)
+	return
 }

@@ -10,7 +10,7 @@ import (
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
-// LiquidFarm handles types.MsgLiquidFarm to liquid farm.
+// LiquidFarm handles types.MsgLiquidFarm to farm.
 func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress, farmingCoin sdk.Coin) error {
 	pool, found := k.liquidityKeeper.GetPool(ctx, poolId)
 	if !found {
@@ -37,7 +37,6 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 	if !found {
 		farm.TotalFarmingAmount = sdk.ZeroInt()
 	}
-
 	mintingAmt := types.CalculateLiquidFarmAmount(
 		lfCoinTotalSupplyAmt,
 		farm.TotalFarmingAmount,
@@ -45,6 +44,7 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 	)
 	mintingCoin := sdk.NewCoin(lfCoinDenom, mintingAmt)
 
+	// Mint new LFCoin amount and send it to the farmer
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintingCoin)); err != nil {
 		return err
 	}
@@ -52,8 +52,20 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 		return err
 	}
 
-	if _, err := k.farmKeeper.Farm(ctx, reserveAddr, farmingCoin); err != nil {
+	// Reserve account farms the farming coin amount for liquid farmer
+	withdrawnRewards, err := k.farmKeeper.Farm(ctx, reserveAddr, farmingCoin)
+	if err != nil {
 		return err
+	}
+
+	// As the farm module is designed with F1 fee distribution mechanism,
+	// Farming rewards are automatically withdrawn if the module account already has position.
+	// In order to keep in track of the rewards, the module reserves them in the WithdrawnRewardsReserveAddress.
+	if !withdrawnRewards.IsZero() {
+		withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(poolId)
+		if err := k.bankKeeper.SendCoins(ctx, reserveAddr, withdrawnRewardsReserveAddr, withdrawnRewards); err != nil {
+			return err
+		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -63,6 +75,7 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
 			sdk.NewAttribute(types.AttributeKeyFarmingCoin, farmingCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyMintedCoin, mintingCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyWithdrawnRewards, withdrawnRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyLiquidFarmReserveAddress, reserveAddr.String()),
 		),
 	})
@@ -70,19 +83,13 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 	return nil
 }
 
-// UnfarmInfo holds information about unfarm.
-type UnfarmInfo struct {
-	Farmer       sdk.AccAddress
-	UnfarmedCoin sdk.Coin
-}
-
 // LiquidUnfarm handles types.MsgLiquidUnfarm to unfarm LFCoin.
 // It doesn't validate if the liquid farm exists because farmers still need to be able to
 // unfarm their LFCoin in case the liquid farm object is removed in params by governance proposal.
-func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress, unfarmingCoin sdk.Coin) (UnfarmInfo, error) {
+func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress, unfarmingCoin sdk.Coin) (unfarmedCoin sdk.Coin, err error) {
 	pool, found := k.liquidityKeeper.GetPool(ctx, poolId)
 	if !found {
-		return UnfarmInfo{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", poolId)
+		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", poolId)
 	}
 
 	reserveAddr := types.LiquidFarmReserveAddress(pool.Id)
@@ -114,24 +121,37 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 		unfarmingCoin.Amount,
 		compoundingRewardsAmt,
 	)
-	unfarmedCoin := sdk.NewCoin(poolCoinDenom, unfarmingAmt)
+	unfarmedCoin = sdk.NewCoin(poolCoinDenom, unfarmingAmt)
 
+	withdrawnRewards := sdk.Coins{}
 	if found {
 		// Unfarm the farmed coin in the farm module and release it to the farmer
-		if _, err := k.farmKeeper.Unfarm(ctx, reserveAddr, unfarmedCoin); err != nil {
-			return UnfarmInfo{}, err
+		withdrawnRewards, err = k.farmKeeper.Unfarm(ctx, reserveAddr, unfarmedCoin)
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+	}
+
+	// As the farm module is designed with F1 fee distribution mechanism,
+	// Farming rewards are automatically withdrawn if the module account already has position.
+	// In order to keep in track of the rewards, the module reserves them in the WithdrawnRewardsReserveAddress.
+	if !withdrawnRewards.IsZero() {
+		withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(poolId)
+		if err := k.bankKeeper.SendCoins(ctx, reserveAddr, withdrawnRewardsReserveAddr, withdrawnRewards); err != nil {
+			return sdk.Coin{}, err
 		}
 	}
 
 	if err := k.bankKeeper.SendCoins(ctx, reserveAddr, farmer, sdk.NewCoins(unfarmedCoin)); err != nil {
-		return UnfarmInfo{}, err
+		return sdk.Coin{}, err
 	}
 
+	// Burn the LFCoin amount
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, farmer, types.ModuleName, sdk.NewCoins(unfarmingCoin)); err != nil {
-		return UnfarmInfo{}, err
+		return sdk.Coin{}, err
 	}
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(unfarmingCoin)); err != nil {
-		return UnfarmInfo{}, err
+		return sdk.Coin{}, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -144,12 +164,12 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 		),
 	})
 
-	return UnfarmInfo{Farmer: farmer, UnfarmedCoin: unfarmedCoin}, nil
+	return unfarmedCoin, nil
 }
 
 // LiquidUnfarmAndWithdraw handles types.MsgUnfarmAndWithdraw to unfarm LFCoin and withdraw pool coin from the pool.
 func (k Keeper) LiquidUnfarmAndWithdraw(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress, unfarmingCoin sdk.Coin) error {
-	unfarmInfo, err := k.LiquidUnfarm(ctx, poolId, farmer, unfarmingCoin)
+	unfarmedCoin, err := k.LiquidUnfarm(ctx, poolId, farmer, unfarmingCoin)
 	if err != nil {
 		return err
 	}
@@ -157,7 +177,7 @@ func (k Keeper) LiquidUnfarmAndWithdraw(ctx sdk.Context, poolId uint64, farmer s
 	_, err = k.liquidityKeeper.Withdraw(ctx, &liquiditytypes.MsgWithdraw{
 		PoolId:     poolId,
 		Withdrawer: farmer.String(),
-		PoolCoin:   unfarmInfo.UnfarmedCoin,
+		PoolCoin:   unfarmedCoin,
 	})
 	if err != nil {
 		return err
@@ -169,7 +189,7 @@ func (k Keeper) LiquidUnfarmAndWithdraw(ctx sdk.Context, poolId uint64, farmer s
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
 			sdk.NewAttribute(types.AttributeKeyUnfarmingCoin, unfarmingCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyUnfarmedCoin, unfarmInfo.UnfarmedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyUnfarmedCoin, unfarmedCoin.String()),
 		),
 	})
 
@@ -177,30 +197,46 @@ func (k Keeper) LiquidUnfarmAndWithdraw(ctx sdk.Context, poolId uint64, farmer s
 }
 
 // HandleRemovedLiquidFarm unfarms all farmed coin from the farm module to stop having
-// farming rewards accumulated and handle an ongoing rewards auction.
-// Then finally delete the LiquidFarm object in the store.
+// farming rewards accumulated and sends the harvested rewards to the fee collector.
+// It refunds all placed bids and updates an appropriate states.
 func (k Keeper) HandleRemovedLiquidFarm(ctx sdk.Context, liquidFarm types.LiquidFarm) {
+	feeCollectorAddr, _ := sdk.AccAddressFromBech32(k.GetFeeCollector(ctx))
 	reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
+	rewardsReserveAddr := types.WithdrawnRewardsReserveAddress(liquidFarm.PoolId)
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 
-	// Unstake all farmed coin to stop having rewards accumulated in the farm module
 	position, found := k.farmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 	if found {
-		if _, err := k.farmKeeper.Unfarm(ctx, reserveAddr, sdk.NewCoin(poolCoinDenom, position.FarmingAmount)); err != nil {
+		// Unfarm all farmed coin to stop having rewards accumulated in the farm module and
+		// send the farming rewards to the fee collector.
+		withdrawnRewards, err := k.farmKeeper.Unfarm(ctx, reserveAddr, sdk.NewCoin(poolCoinDenom, position.FarmingAmount))
+		if err != nil {
 			panic(err)
 		}
-		// TODO: rewards remain in the reserve account. How do we deal with them?
+
+		if !withdrawnRewards.IsZero() {
+			if err := k.bankKeeper.SendCoins(ctx, reserveAddr, feeCollectorAddr, withdrawnRewards); err != nil {
+				panic(err)
+			}
+		}
 	}
 
-	// Handle the ongoing rewards auction by refunding all bids and
-	// set status to AuctionStatusFinished
-	auctionId := k.GetLastRewardsAuctionId(ctx, liquidFarm.PoolId)
-	auction, found := k.GetRewardsAuction(ctx, auctionId, liquidFarm.PoolId)
-	if found {
-		if err := k.RefundAllBids(ctx, auction, true); err != nil {
+	// Send all auto withdrawn rewards by the farm module to the fee collector
+	rewardsReserveBalance := k.bankKeeper.SpendableCoins(ctx, rewardsReserveAddr)
+	if !rewardsReserveBalance.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, rewardsReserveAddr, feeCollectorAddr, rewardsReserveBalance); err != nil {
 			panic(err)
 		}
-		k.DeleteWinningBid(ctx, auctionId, liquidFarm.PoolId)
+	}
+
+	// Finish the ongoing rewards auction by refunding all bids and
+	// set status to AuctionStatusFinished
+	auction, found := k.GetLastRewardsAuction(ctx, liquidFarm.PoolId)
+	if found {
+		if err := k.refundAllBids(ctx, auction, true); err != nil {
+			panic(err)
+		}
+
 		auction.SetStatus(types.AuctionStatusFinished)
 		k.SetRewardsAuction(ctx, auction)
 	}

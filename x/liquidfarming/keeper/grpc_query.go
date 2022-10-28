@@ -31,7 +31,7 @@ func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*type
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-// LiquidFarms queries all liquidfarms.
+// LiquidFarms queries all LiquidFarm objects.
 func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsRequest) (*types.QueryLiquidFarmsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -39,8 +39,8 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	liquidFarmsRes := []types.LiquidFarmResponse{}
-	for _, liquidFarm := range k.GetAllLiquidFarms(ctx) {
+	res := []types.LiquidFarmResponse{}
+	for _, liquidFarm := range k.GetLiquidFarmsInStore(ctx) {
 		reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
 		poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 		lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
@@ -49,7 +49,7 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 			farm.TotalFarmingAmount = sdk.ZeroInt()
 		}
 
-		liquidFarmsRes = append(liquidFarmsRes, types.LiquidFarmResponse{
+		res = append(res, types.LiquidFarmResponse{
 			PoolId:                   liquidFarm.PoolId,
 			LiquidFarmReserveAddress: reserveAddr.String(),
 			LFCoinDenom:              lfCoinDenom,
@@ -59,10 +59,10 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 		})
 	}
 
-	return &types.QueryLiquidFarmsResponse{LiquidFarms: liquidFarmsRes}, nil
+	return &types.QueryLiquidFarmsResponse{LiquidFarms: res}, nil
 }
 
-// LiquidFarm queries the specific liquidfarm.
+// LiquidFarm queries the particular LiquidFarm object.
 func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest) (*types.QueryLiquidFarmResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -87,7 +87,7 @@ func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest
 		farm.TotalFarmingAmount = sdk.ZeroInt()
 	}
 
-	liquidFarmRes := types.LiquidFarmResponse{
+	res := types.LiquidFarmResponse{
 		PoolId:                   liquidFarm.PoolId,
 		LiquidFarmReserveAddress: reserveAddr.String(),
 		LFCoinDenom:              lfCoinDenom,
@@ -96,10 +96,10 @@ func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest
 		TotalFarmingAmount:       farm.TotalFarmingAmount,
 	}
 
-	return &types.QueryLiquidFarmResponse{LiquidFarm: liquidFarmRes}, nil
+	return &types.QueryLiquidFarmResponse{LiquidFarm: res}, nil
 }
 
-// RewardsAuctions queries all rewards auctions.
+// RewardsAuctions queries all RewardsAuction objects.
 func (k Querier) RewardsAuctions(c context.Context, req *types.QueryRewardsAuctionsRequest) (*types.QueryRewardsAuctionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -107,6 +107,12 @@ func (k Querier) RewardsAuctions(c context.Context, req *types.QueryRewardsAucti
 
 	if req.PoolId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	}
+
+	if req.Status != "" && !(req.Status == types.AuctionStatusStarted.String() ||
+		req.Status == types.AuctionStatusFinished.String() ||
+		req.Status == types.AuctionStatusSkipped.String()) {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid auction status %s", req.Status)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -129,6 +135,11 @@ func (k Querier) RewardsAuctions(c context.Context, req *types.QueryRewardsAucti
 			return false, err
 		}
 
+		// Return all rewards auctions by default
+		if req.Status != "" && auction.Status.String() != req.Status {
+			return false, err
+		}
+
 		if accumulate {
 			auctions = append(auctions, auction)
 		}
@@ -143,7 +154,7 @@ func (k Querier) RewardsAuctions(c context.Context, req *types.QueryRewardsAucti
 	return &types.QueryRewardsAuctionsResponse{RewardAuctions: auctions, Pagination: pageRes}, nil
 }
 
-// RewardsAuction queries rewards auction
+// RewardsAuction queries the particular RewardsAuction object.
 func (k Querier) RewardsAuction(c context.Context, req *types.QueryRewardsAuctionRequest) (*types.QueryRewardsAuctionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -161,13 +172,13 @@ func (k Querier) RewardsAuction(c context.Context, req *types.QueryRewardsAuctio
 
 	auction, found := k.GetRewardsAuction(ctx, req.AuctionId, req.PoolId)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "auction by pool %d and auction id %d not found", req.PoolId, req.AuctionId)
+		return nil, status.Errorf(codes.NotFound, "auction by auction %d and pool id %d not found", req.AuctionId, req.PoolId)
 	}
 
 	return &types.QueryRewardsAuctionResponse{RewardAuction: auction}, nil
 }
 
-// Bids queries all bids.
+// Bids queries all Bid objects.
 func (k Querier) Bids(c context.Context, req *types.QueryBidsRequest) (*types.QueryBidsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -206,8 +217,8 @@ func (k Querier) Bids(c context.Context, req *types.QueryBidsRequest) (*types.Qu
 	return &types.QueryBidsResponse{Bids: bids, Pagination: pageRes}, nil
 }
 
-// MintRate queries the current mint rate.
-func (k Querier) MintRate(c context.Context, req *types.QueryMintRateRequest) (*types.QueryMintRateResponse, error) {
+// Rewards queries all farming rewards accumulated for the liquid farm.
+func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -218,23 +229,19 @@ func (k Querier) MintRate(c context.Context, req *types.QueryMintRateRequest) (*
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	mintRate := sdk.ZeroDec()
-	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, types.LiquidFarmCoinDenom(req.PoolId)).Amount
-	if !lfCoinTotalSupplyAmt.IsZero() {
-		farm, found := k.farmKeeper.GetFarm(ctx, liquiditytypes.PoolCoinDenom(req.PoolId))
-		if !found {
-			farm.TotalFarmingAmount = sdk.ZeroInt()
-		}
+	// Currently accumulated rewards from the farm module + all withdrawn rewards in the WithdrawnRewardsReserve account
+	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(req.PoolId)
+	poolCoinDenom := liquiditytypes.PoolCoinDenom(req.PoolId)
+	withdrawnRewards := k.farmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
+	truncatedRewards, _ := withdrawnRewards.TruncateDecimal()
+	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(req.PoolId)
+	spendableCoins := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
 
-		// MintRate = LFCoinTotalSupply / LPCoinTotalFarmingAmount
-		mintRate = lfCoinTotalSupplyAmt.ToDec().Quo(farm.TotalFarmingAmount.ToDec())
-	}
-
-	return &types.QueryMintRateResponse{MintRate: mintRate}, nil
+	return &types.QueryRewardsResponse{Rewards: truncatedRewards.Add(spendableCoins...)}, nil
 }
 
-// BurnRate queries the current burn rate.
-func (k Querier) BurnRate(c context.Context, req *types.QueryBurnRateRequest) (*types.QueryBurnRateResponse, error) {
+// ExchangeRate queries exchange rate, such as mint rate and burn rate per 1 LFCoin.
+func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateRequest) (*types.QueryExchangeRateResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -245,8 +252,12 @@ func (k Querier) BurnRate(c context.Context, req *types.QueryBurnRateRequest) (*
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	burnRate := sdk.ZeroDec()
+	res := types.ExchangeRateResponse{
+		MintRate: sdk.ZeroDec(),
+		BurnRate: sdk.ZeroDec(),
+	}
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, types.LiquidFarmCoinDenom(req.PoolId)).Amount
+
 	if !lfCoinTotalSupplyAmt.IsZero() {
 		farm, found := k.farmKeeper.GetFarm(ctx, liquiditytypes.PoolCoinDenom(req.PoolId))
 		if !found {
@@ -258,10 +269,13 @@ func (k Querier) BurnRate(c context.Context, req *types.QueryBurnRateRequest) (*
 			compoundingRewards.Amount = sdk.ZeroInt()
 		}
 
+		// MintRate = LFCoinTotalSupply / LPCoinTotalFarmingAmount
+		res.MintRate = lfCoinTotalSupplyAmt.ToDec().Quo(farm.TotalFarmingAmount.ToDec())
+
 		// BurnRate = LPCoinTotalFarmingAmount - CompoundingRewards / LFCoinTotalSupply
 		lpCoinTotalFarmingAmt := farm.TotalFarmingAmount.Sub(compoundingRewards.Amount)
-		burnRate = lpCoinTotalFarmingAmt.ToDec().Quo(lfCoinTotalSupplyAmt.ToDec())
+		res.BurnRate = lpCoinTotalFarmingAmt.ToDec().Quo(lfCoinTotalSupplyAmt.ToDec())
 	}
 
-	return &types.QueryBurnRateResponse{BurnRate: burnRate}, nil
+	return &types.QueryExchangeRateResponse{ExchangeRate: res}, nil
 }

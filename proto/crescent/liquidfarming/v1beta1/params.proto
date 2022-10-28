@@ -12,9 +12,11 @@ option go_package = "github.com/crescent-network/crescent/x/liquidfarming/types"
 message Params {
   option (gogoproto.goproto_getters) = false;
 
-  repeated LiquidFarm liquid_farms = 1 [(gogoproto.nullable) = false];
+  string fee_collector = 1;
 
   google.protobuf.Duration rewards_auction_duration = 2 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+
+  repeated LiquidFarm liquid_farms = 3 [(gogoproto.nullable) = false];
 }
 
 // LiquidFarm defines liquid farm object that provides auto compounding functionality

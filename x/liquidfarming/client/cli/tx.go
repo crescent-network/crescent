@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	"github.com/crescent-network/crescent/v3/x/liquidfarming/keeper"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
 )
 
@@ -33,6 +34,10 @@ func GetTxCmd() *cobra.Command {
 		NewPlaceBidCmd(),
 		NewRefundBidCmd(),
 	)
+
+	if keeper.EnableAdvanceAuction {
+		cmd.AddCommand(NewAdvanceAuctionCmd())
+	}
 
 	return cmd
 
@@ -266,6 +271,41 @@ $ %s tx %s refund-bid 1 1 --from mykey
 				poolId,
 				clientCtx.GetFromAddress().String(),
 			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewAdvanceAuctionCmd implements the advance auction by 1 command handler.
+func NewAdvanceAuctionCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "advance-auction",
+		Args:  cobra.NoArgs,
+		Short: "Advance auction by 1 to simulate rewards auction",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Advance auction by 1 to simulate rewards auction.
+This message is available for testing purpose and it can only be enabled when you build the binary with "make install-testing" command. 
+
+Example:
+$ %s tx %s advance-auction --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			requesterAcc := clientCtx.GetFromAddress()
+
+			msg := types.NewMsgAdvanceAuction(requesterAcc)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

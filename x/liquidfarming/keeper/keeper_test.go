@@ -21,6 +21,7 @@ import (
 )
 
 var (
+	helperAddr      = utils.TestAddress(10000)
 	sampleStartTime = utils.ParseTime("0001-01-01T00:00:00Z")
 	sampleEndTime   = utils.ParseTime("9999-12-31T23:59:59Z")
 )
@@ -33,6 +34,7 @@ type KeeperTestSuite struct {
 	keeper    keeper.Keeper
 	querier   keeper.Querier
 	msgServer types.MsgServer
+	hdr       tmproto.Header
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -46,11 +48,35 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.querier = keeper.Querier{Keeper: s.keeper}
 	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
 	s.ctx = s.ctx.WithBlockTime(time.Now()) // set to current time
+	s.hdr = tmproto.Header{
+		Height: 1,
+		Time:   time.Now(),
+	}
 }
 
 //
 // Below are just shortcuts to frequently-used functions.
 //
+
+func (s *KeeperTestSuite) beginBlock() {
+	s.T().Helper()
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: s.hdr})
+	s.ctx = s.app.BaseApp.NewContext(false, s.hdr)
+}
+
+func (s *KeeperTestSuite) endBlock() {
+	s.T().Helper()
+	s.app.EndBlock(abci.RequestEndBlock{Height: s.ctx.BlockHeight()})
+	s.app.Commit()
+}
+
+func (s *KeeperTestSuite) nextBlock() {
+	s.T().Helper()
+	s.endBlock()
+	s.hdr.Height++
+	s.hdr.Time = s.hdr.Time.Add(5 * time.Second)
+	s.beginBlock()
+}
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 	s.T().Helper()
@@ -116,8 +142,8 @@ func (s *KeeperTestSuite) createLiquidFarm(poolId uint64, minFarmAmt, minBidAmt 
 
 func (s *KeeperTestSuite) createRewardsAuction(poolId uint64) {
 	s.T().Helper()
-	params := s.keeper.GetParams(s.ctx)
-	s.keeper.CreateRewardsAuction(s.ctx, poolId, params.RewardsAuctionDuration)
+	duration := s.keeper.GetRewardsAuctionDuration(s.ctx)
+	s.keeper.CreateRewardsAuction(s.ctx, poolId, s.ctx.BlockTime().Add(duration*time.Hour))
 }
 
 func (s *KeeperTestSuite) liquidFarm(poolId uint64, farmer sdk.AccAddress, lpCoin sdk.Coin, fund bool) {
@@ -169,22 +195,26 @@ func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin
 	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
 }
 
-func (s *KeeperTestSuite) nextBlock() {
-	s.T().Helper()
-	s.app.EndBlock(abci.RequestEndBlock{})
-	s.app.Commit()
-	hdr := tmproto.Header{
-		Height: s.app.LastBlockHeight() + 1,
-		Time:   s.ctx.BlockTime().Add(5 * time.Second),
-	}
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
-	s.ctx = s.app.BaseApp.NewContext(false, hdr)
-	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{Header: hdr})
-}
+// func (s *KeeperTestSuite) nextBlock() {
+// 	s.T().Helper()
+// 	s.app.EndBlock(abci.RequestEndBlock{})
+// 	s.app.Commit()
+// 	hdr := tmproto.Header{
+// 		Height: s.app.LastBlockHeight() + 1,
+// 		Time:   s.ctx.BlockTime().Add(5 * time.Second),
+// 	}
+// 	s.app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
+// 	s.ctx = s.app.BaseApp.NewContext(false, hdr)
+// 	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{Header: hdr})
+// }
 
 func (s *KeeperTestSuite) nextAuction() {
 	s.T().Helper()
-	auctionDuration := s.keeper.GetParams(s.ctx).RewardsAuctionDuration
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(auctionDuration))
+	endTime, found := s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	if !found {
+		duration := s.keeper.GetRewardsAuctionDuration(s.ctx)
+		endTime = s.ctx.BlockTime().Add(duration)
+	}
+	s.ctx = s.ctx.WithBlockTime(endTime)
 	liquidfarming.BeginBlocker(s.ctx, s.keeper)
 }

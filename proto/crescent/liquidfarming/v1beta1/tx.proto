@@ -23,6 +23,10 @@ service Msg {
 
   // RefundBid defines a method for refunding the bid that is not winning for the auction
   rpc RefundBid(MsgRefundBid) returns (MsgRefundBidResponse);
+
+  // AdvanceAuction defines a method for advancing rewards auction by one.
+  // This Msg is defined just for testing purpose and it shouldn't be used in production.
+  rpc AdvanceAuction(MsgAdvanceAuction) returns (MsgAdvanceAuctionResponse);
 }
 
 // MsgLiquidFarm defines a SDK message for farming pool coin for a liquid farm.
@@ -100,3 +104,14 @@ message MsgRefundBid {
 
 // MsgRefundBidResponse defines the MsgRefundBidResponse response type.
 message MsgRefundBidResponse {}
+
+// MsgAdvanceAuction defines a message to advance rewards auction by one.
+message MsgAdvanceAuction {
+  option (gogoproto.goproto_getters) = false;
+
+  // requester defines the bech32-encoded address of the requester
+  string requester = 1;
+}
+
+// MsgAdvanceAuctionResponse defines the Msg/AdvanceAuction response type.
+message MsgAdvanceAuctionResponse {}

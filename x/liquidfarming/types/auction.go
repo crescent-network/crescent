@@ -2,36 +2,25 @@ package types
 
 import (
 	fmt "fmt"
-	"strconv"
-	"strings"
 	time "time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
-)
-
-const (
-	PayingReserveAddressPrefix string = "PayingReserveAddress"
-	ModuleAddressNameSplitter  string = "|"
-
-	// The module uses the address type of 32 bytes length, but it can always be changed depending on Cosmos SDK's direction.
-	ReserveAddressType = farmingtypes.AddressType32Bytes
+	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 // NewRewardsAuction creates a new RewardsAuction.
 func NewRewardsAuction(
 	id uint64,
 	poolId uint64,
-	biddingCoinDenom string,
 	startTime time.Time,
 	endTime time.Time,
 ) RewardsAuction {
 	return RewardsAuction{
 		Id:                   id,
 		PoolId:               poolId,
-		BiddingCoinDenom:     biddingCoinDenom,
+		BiddingCoinDenom:     liquiditytypes.PoolCoinDenom(poolId),
 		PayingReserveAddress: PayingReserveAddress(poolId).String(),
 		StartTime:            startTime,
 		EndTime:              endTime,
@@ -155,14 +144,4 @@ func UnmarshalRewardsAuction(cdc codec.BinaryCodec, value []byte) (auction Rewar
 func UnmarshalBid(cdc codec.BinaryCodec, value []byte) (bid Bid, err error) {
 	err = cdc.Unmarshal(value, &bid)
 	return bid, err
-}
-
-// PayingReserveAddress creates the paying reserve address in the form of sdk.AccAddress
-// with the given pool id.
-func PayingReserveAddress(poolId uint64) sdk.AccAddress {
-	return farmingtypes.DeriveAddress(
-		ReserveAddressType,
-		ModuleName,
-		strings.Join([]string{PayingReserveAddressPrefix, strconv.FormatUint(poolId, 10)}, ModuleAddressNameSplitter),
-	)
 }

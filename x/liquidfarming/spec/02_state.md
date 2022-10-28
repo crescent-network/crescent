@@ -78,10 +78,10 @@ type Bid struct {
 
 ## Store
 
-- LastRewardsAuctionIdKey: `[]byte{0xe1} | PoolId -> Uint64Value(uint64)`
-- RewardsAuctionTimeKey: `[]byte{0xe2} -> Uint64Value(uint64)`
-- LiquidFarmKey: `[]byte{0xe4} | PoolId -> ProtocolBuffer(LiquidFarm)`
-- CompoundingRewardsKey: `[]byte{0xe7} | PoolId -> ProtocolBuffer(CompoundingRewards)`
-- RewardsAuctionKey: `[]byte{0xe8} | AuctionId | PoolId -> ProtocolBuffer(RewardsAuction)`
-- BidKey: `[]byte{0xea} | PoolId | BidderAddressLen (1 byte) | BidderAddress -> ProtocolBuffer(Bid)`
-- WinningBidKey: `[]byte{0xeb} | AuctionId | PoolId -> ProtocolBuffer(WinningBid)`
+- LastRewardsAuctionEndTimeKey: `[]byte{0xe1} -> Timestamp(time.Time)`
+- LastRewardsAuctionIdKey: `[]byte{0xe2} | PoolId -> Uint64Value(uint64)`
+- LiquidFarmKey: `[]byte{0xe3} | PoolId -> ProtocolBuffer(LiquidFarm)`
+- CompoundingRewardsKey: `[]byte{0xe4} | PoolId -> ProtocolBuffer(CompoundingRewards)`
+- RewardsAuctionKey: `[]byte{0xe5} | AuctionId | PoolId -> ProtocolBuffer(RewardsAuction)`
+- BidKey: `[]byte{0xe6} | PoolId | BidderAddressLen (1 byte) | BidderAddress -> ProtocolBuffer(Bid)`
+- WinningBidKey: `[]byte{0xe7} | AuctionId | PoolId -> ProtocolBuffer(Bid)`

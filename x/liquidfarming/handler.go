@@ -38,6 +38,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.RefundBid(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgAdvanceAuction:
+			res, err := msgServer.AdvanceAuction(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
 		}

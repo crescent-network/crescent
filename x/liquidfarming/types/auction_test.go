@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/tendermint/tendermint/crypto"
 
 	utils "github.com/crescent-network/crescent/v3/types"
@@ -81,7 +80,6 @@ func TestRewardsAuctionValidate(t *testing.T) {
 			auction := types.NewRewardsAuction(
 				1,
 				1,
-				"stake",
 				utils.ParseTime("0001-01-01T00:00:00Z"),
 				utils.ParseTime("9999-12-31T00:00:00Z"),
 			)
@@ -148,17 +146,4 @@ func TestBidValidate(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestPayingReserveAddress(t *testing.T) {
-	config := sdk.GetConfig()
-	addrPrefix := config.GetBech32AccountAddrPrefix()
-
-	testAcc1 := types.PayingReserveAddress(1)
-	require.Equal(t, testAcc1, sdk.AccAddress(address.Module(types.ModuleName, []byte("PayingReserveAddress|1"))))
-	require.Equal(t, addrPrefix+"1h72q3pkvsz537kj08hyv20tun3apampxhpgad97t3ls47nukgtxqeq6eu2", testAcc1.String())
-
-	testAcc2 := types.PayingReserveAddress(22)
-	require.Equal(t, testAcc2, sdk.AccAddress(address.Module(types.ModuleName, []byte("PayingReserveAddress|22"))))
-	require.Equal(t, addrPrefix+"1tepnmaep852l483ldnfxttgsua9j9ynpmelqmn3ywvwynr7s5acqr6sz4k", testAcc2.String())
 }

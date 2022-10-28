@@ -11,8 +11,8 @@ import (
 )
 
 func (s *KeeperTestSuite) TestPlaceBid_Validation() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 
 	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.NewInt(1_000_000), sdk.ZeroDec())
 
@@ -21,8 +21,7 @@ func (s *KeeperTestSuite) TestPlaceBid_Validation() {
 
 	s.createRewardsAuction(pool.Id)
 
-	auctionId := s.keeper.GetLastRewardsAuctionId(s.ctx, pool.Id)
-	auction, found := s.keeper.GetRewardsAuction(s.ctx, auctionId, pool.Id)
+	auction, found := s.keeper.GetLastRewardsAuction(s.ctx, pool.Id)
 	s.Require().True(found)
 
 	s.placeBid(pool.Id, s.addr(1), utils.ParseCoin("10_000_000pool1"), true)
@@ -46,12 +45,12 @@ func (s *KeeperTestSuite) TestPlaceBid_Validation() {
 			types.NewMsgPlaceBid(
 				auction.Id,
 				auction.PoolId,
-				s.addr(0).String(),
+				helperAddr.String(),
 				sdk.NewInt64Coin(pool.PoolCoinDenom, 30_000_000),
 			),
 			func(ctx sdk.Context, bid types.Bid) {
 				s.Require().Equal(pool.Id, bid.PoolId)
-				s.Require().Equal(s.addr(0), bid.GetBidder())
+				s.Require().Equal(helperAddr, bid.GetBidder())
 				s.Require().Equal(sdk.NewInt64Coin(pool.PoolCoinDenom, 30_000_000), bid.Amount)
 			},
 			"",
@@ -97,8 +96,8 @@ func (s *KeeperTestSuite) TestPlaceBid_Validation() {
 }
 
 func (s *KeeperTestSuite) TestPlaceBid() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 
 	_, err := s.keeper.PlaceBid(s.ctx, 1, pool.Id, s.addr(0), sdk.NewInt64Coin(pool.PoolCoinDenom, 100_000_000))
 	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
@@ -141,8 +140,8 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 }
 
 func (s *KeeperTestSuite) TestRefundBid() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2")
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 
 	s.createLiquidFarm(pool.Id, sdk.NewInt(10_000_000), sdk.NewInt(10_000_000), sdk.ZeroDec())
 	s.createRewardsAuction(pool.Id)
@@ -208,8 +207,8 @@ func (s *KeeperTestSuite) TestRefundBid() {
 }
 
 func (s *KeeperTestSuite) TestAfterAllocateRewards() {
-	pair := s.createPairWithLastPrice(s.addr(0), "denom1", "denom2", sdk.NewDec(1))
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
@@ -226,8 +225,7 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards() {
 	s.nextAuction()
 
 	// Ensure that the rewards auction is created
-	auctionId := s.keeper.GetLastRewardsAuctionId(s.ctx, pool.Id)
-	auction, found := s.keeper.GetRewardsAuction(s.ctx, auctionId, pool.Id)
+	auction, found := s.keeper.GetLastRewardsAuction(s.ctx, pool.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.AuctionStatusStarted, auction.Status)
 
@@ -257,8 +255,8 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards() {
 }
 
 func (s *KeeperTestSuite) TestAfterAllocateRewards_NoBid() {
-	pair := s.createPairWithLastPrice(s.addr(0), "denom1", "denom2", sdk.NewDec(1))
-	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
 	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
@@ -273,8 +271,7 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards_NoBid() {
 
 	s.nextAuction()
 
-	auctionId := s.keeper.GetLastRewardsAuctionId(s.ctx, pool.Id)
-	auction, found := s.keeper.GetRewardsAuction(s.ctx, auctionId, pool.Id)
+	auction, found := s.keeper.GetLastRewardsAuction(s.ctx, pool.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.AuctionStatusStarted, auction.Status)
 
@@ -283,4 +280,75 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards_NoBid() {
 	auction, found = s.keeper.GetRewardsAuction(s.ctx, auction.PoolId, auction.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.AuctionStatusSkipped, auction.Status)
+}
+
+// [scenario]
+// Chain is started and liquid farm is registered.
+// There is no one liquid farmed coin; therefore there is no farming rewards
+// Bidders either mistakenly or purposely place their bids
+//
+// [expected results]
+// 1. Winning bid amount is still going to be auto compounded
+// 2. Minting amount for LiquidFarm is still 1:1 although winning bid amount is auto compounded
+// 3. Bids other than the winning bid must be refunded
+func (s *KeeperTestSuite) TestFinishRewardsAuction_NoOneFarmed() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+		{
+			PairId:        pool.PairId,
+			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
+		},
+	})
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("100_000_000stake"))
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.nextBlock()
+
+	s.nextAuction()
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("2_000_000pool1"), true)
+	s.nextBlock()
+
+	s.placeBid(pool.Id, s.addr(6), utils.ParseCoin("3_000_000pool1"), true)
+	s.nextBlock()
+
+	s.placeBid(pool.Id, s.addr(7), utils.ParseCoin("4_000_000pool1"), true)
+	s.nextBlock()
+
+	// Ensure that there is no farming rewards accumulated
+	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(pool.Id)
+	farmingRewards := s.app.FarmKeeper.Rewards(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
+	s.Require().True(farmingRewards.IsZero())
+
+	s.nextAuction()
+
+	// Ensure that winning bid amount is auto compounded
+	position, found := s.app.FarmKeeper.GetPosition(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
+	s.Require().True(found)
+	s.Require().True(position.FarmingAmount.Equal(sdk.NewInt(4_000_000)))
+
+	// Ensure that bidders other than the winning bid is refunded
+	s.Require().True(s.getBalance(s.addr(5), "pool1").Amount.Equal(sdk.NewInt(2_000_000)))
+	s.Require().True(s.getBalance(s.addr(6), "pool1").Amount.Equal(sdk.NewInt(3_000_000)))
+
+	// Ensure the auction status
+	auction, found := s.keeper.GetRewardsAuction(s.ctx, 1, pool.Id)
+	s.Require().True(found)
+	s.Require().True(auction.Rewards.IsZero())
+	s.Require().Equal(types.AuctionStatusFinished, auction.Status)
+	s.Require().Equal(s.addr(7).String(), auction.Winner)
+	s.Require().Equal(sdk.NewInt(4_000_000), auction.WinningAmount.Amount)
+
+	s.liquidFarm(pool.Id, s.addr(1), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(50_000_000)), true)
+	s.nextBlock()
+
+	// Ensure that minting amount is still 1:1
+	s.Require().True(s.getBalance(s.addr(1), types.LiquidFarmCoinDenom(pool.Id)).Amount.Equal(sdk.NewInt(50_000_000)))
+
+	s.liquidUnfarm(pool.Id, s.addr(1), sdk.NewCoin(types.LiquidFarmCoinDenom(pool.Id), sdk.NewInt(50_000_000)), false)
+	s.nextBlock()
+
+	// Ensure that received pool coin amount is greater than the original liquid farm amount
+	s.Require().True(s.getBalance(s.addr(1), pool.PoolCoinDenom).Amount.GT(sdk.NewInt(50_000_000)))
 }
