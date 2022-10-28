@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v3/types"
-	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarms() {
 						s.Require().Equal(minBidAmt2, liquidFarm.MinBidAmount)
 					}
 					poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
-					farm, found := s.app.FarmKeeper.GetFarm(s.ctx, poolCoinDenom)
+					farm, found := s.app.LPFarmKeeper.GetFarm(s.ctx, poolCoinDenom)
 					if !found {
 						farm.TotalFarmingAmount = sdk.ZeroInt()
 					}
@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarm() {
 			false,
 			func(resp *types.QueryLiquidFarmResponse) {
 				poolCoinDenom := liquiditytypes.PoolCoinDenom(resp.LiquidFarm.PoolId)
-				farm, found := s.app.FarmKeeper.GetFarm(s.ctx, poolCoinDenom)
+				farm, found := s.app.LPFarmKeeper.GetFarm(s.ctx, poolCoinDenom)
 				if !found {
 					farm.TotalFarmingAmount = sdk.ZeroInt()
 				}
@@ -407,7 +407,7 @@ func (s *KeeperTestSuite) TestGRPCBids() {
 func (s *KeeperTestSuite) TestRewards() {
 	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
 	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
+	plan := s.createPrivatePlan(helperAddr, []lpfarmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
@@ -476,7 +476,7 @@ func (s *KeeperTestSuite) TestRewards() {
 func (s *KeeperTestSuite) TestGRPCExchangeRate() {
 	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
 	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(helperAddr, []farmtypes.RewardAllocation{
+	plan := s.createPrivatePlan(helperAddr, []lpfarmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),

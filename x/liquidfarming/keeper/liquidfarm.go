@@ -33,7 +33,7 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 
 	lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
-	farm, found := k.farmKeeper.GetFarm(ctx, farmingCoin.Denom)
+	farm, found := k.lpfarmKeeper.GetFarm(ctx, farmingCoin.Denom)
 	if !found {
 		farm.TotalFarmingAmount = sdk.ZeroInt()
 	}
@@ -53,7 +53,7 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 	}
 
 	// Reserve account farms the farming coin amount for liquid farmer
-	withdrawnRewards, err := k.farmKeeper.Farm(ctx, reserveAddr, farmingCoin)
+	withdrawnRewards, err := k.lpfarmKeeper.Farm(ctx, reserveAddr, farmingCoin)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 	lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
 	lpCoinTotalFarmingAmt := sdk.ZeroInt()
-	farm, found := k.farmKeeper.GetFarm(ctx, poolCoinDenom)
+	farm, found := k.lpfarmKeeper.GetFarm(ctx, poolCoinDenom)
 	if found {
 		lpCoinTotalFarmingAmt = farm.TotalFarmingAmount
 	}
@@ -126,7 +126,7 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 	withdrawnRewards := sdk.Coins{}
 	if found {
 		// Unfarm the farmed coin in the farm module and release it to the farmer
-		withdrawnRewards, err = k.farmKeeper.Unfarm(ctx, reserveAddr, unfarmedCoin)
+		withdrawnRewards, err = k.lpfarmKeeper.Unfarm(ctx, reserveAddr, unfarmedCoin)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
@@ -205,11 +205,11 @@ func (k Keeper) HandleRemovedLiquidFarm(ctx sdk.Context, liquidFarm types.Liquid
 	rewardsReserveAddr := types.WithdrawnRewardsReserveAddress(liquidFarm.PoolId)
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 
-	position, found := k.farmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
+	position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 	if found {
 		// Unfarm all farmed coin to stop having rewards accumulated in the farm module and
 		// send the farming rewards to the fee collector.
-		withdrawnRewards, err := k.farmKeeper.Unfarm(ctx, reserveAddr, sdk.NewCoin(poolCoinDenom, position.FarmingAmount))
+		withdrawnRewards, err := k.lpfarmKeeper.Unfarm(ctx, reserveAddr, sdk.NewCoin(poolCoinDenom, position.FarmingAmount))
 		if err != nil {
 			panic(err)
 		}

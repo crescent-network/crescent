@@ -65,7 +65,7 @@ Example
 #
 # 3. Create a Farm plan to participate RewardsAuction to place a bid for farming rewards
 #   - Create a new private farm plan to allocate rewards per day
-#   - Reference docs/cli/farm.md document for a detailed information
+#   - Reference docs/cli/lpfarm.md document for a detailed information
 #
 # 4. Send some coins to the farming pool address that is generated when you create a farming plan
 #   - Farming pool address must have some coins to distribute farming rewards

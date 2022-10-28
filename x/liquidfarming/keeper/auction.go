@@ -125,14 +125,14 @@ func (k Keeper) CreateRewardsAuction(ctx sdk.Context, poolId uint64, endTime tim
 func (k Keeper) FinishRewardsAuction(ctx sdk.Context, auction types.RewardsAuction, feeRate sdk.Dec) error {
 	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(auction.PoolId)
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(auction.PoolId)
-	farmingRewards := k.farmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
+	farmingRewards := k.lpfarmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
 	truncatedRewards, _ := farmingRewards.TruncateDecimal() // TODO: farm module may use sdk.DecCoins for sdk.Coins in the future
 
 	winningBid, found := k.GetWinningBid(ctx, auction.Id, auction.PoolId)
 	if !found {
 		k.skipRewardsAuction(ctx, truncatedRewards, auction)
 	} else {
-		_, found = k.farmKeeper.GetPosition(ctx, liquidFarmReserveAddr, poolCoinDenom)
+		_, found = k.lpfarmKeeper.GetPosition(ctx, liquidFarmReserveAddr, poolCoinDenom)
 		if found {
 			if err := k.payoutRewards(ctx, auction.PoolId, feeRate, liquidFarmReserveAddr, poolCoinDenom, winningBid); err != nil {
 				return err
@@ -219,7 +219,7 @@ func (k Keeper) payoutRewards(
 	poolCoinDenom string,
 	winningBid types.Bid,
 ) error {
-	withdrawnRewards, err := k.farmKeeper.Harvest(ctx, liquidFarmReserveAddr, poolCoinDenom)
+	withdrawnRewards, err := k.lpfarmKeeper.Harvest(ctx, liquidFarmReserveAddr, poolCoinDenom)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func (k Keeper) compoundRewards(ctx sdk.Context, auctionPayingReserveAddr, liqui
 	if err := k.bankKeeper.SendCoins(ctx, auctionPayingReserveAddr, liquidFarmReserveAddr, sdk.NewCoins(amount)); err != nil {
 		return err
 	}
-	if _, err := k.farmKeeper.Farm(ctx, liquidFarmReserveAddr, amount); err != nil {
+	if _, err := k.lpfarmKeeper.Farm(ctx, liquidFarmReserveAddr, amount); err != nil {
 		return err
 	}
 	return nil
