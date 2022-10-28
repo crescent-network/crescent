@@ -11,7 +11,7 @@ import (
 
 const (
 	// ModuleName defines the module name
-	ModuleName = "farm"
+	ModuleName = "f4rm"
 
 	// StoreKey defines the primary module store key
 	StoreKey = "f4rm" // To avoid store key collision with "farming"
