@@ -157,10 +157,10 @@ func (s *KeeperTestSuite) createPrivatePlan(rewardAllocs []types.RewardAllocatio
 	return plan
 }
 
-func (s *KeeperTestSuite) createPublicPlan(farmingPoolAddr, termAddr sdk.AccAddress, rewardAllocs []types.RewardAllocation) types.Plan {
+func (s *KeeperTestSuite) createPublicPlan(farmingPoolAddr sdk.AccAddress, rewardAllocs []types.RewardAllocation) types.Plan {
 	s.T().Helper()
 	plan, err := s.keeper.CreatePublicPlan(
-		s.ctx, "", farmingPoolAddr, termAddr, rewardAllocs, sampleStartTime, sampleEndTime)
+		s.ctx, "", farmingPoolAddr, rewardAllocs, sampleStartTime, sampleEndTime)
 	s.Require().NoError(err)
 	return plan
 }
@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) createSamplePlans() (privPlan, pubPlan types.Plan) {
 		"Title", "Description",
 		[]types.CreatePlanRequest{
 			types.NewCreatePlanRequest(
-				"Farming Plan", farmingPoolAddr, farmingPoolAddr,
+				"Farming Plan", farmingPoolAddr,
 				[]types.RewardAllocation{
 					types.NewPairRewardAllocation(pair1.Id, utils.ParseCoins("300_000000stake")),
 					types.NewPairRewardAllocation(pair2.Id, utils.ParseCoins("400_000000stake")),

@@ -149,10 +149,10 @@ func (s *KeeperTestSuite) TestAllocateRewards_InsufficientFunds() {
 
 	farmingPoolAddr := utils.TestAddress(100)
 	// Create two public plans sharing the same farming pool address.
-	s.createPublicPlan(farmingPoolAddr, farmingPoolAddr, []types.RewardAllocation{
+	s.createPublicPlan(farmingPoolAddr, []types.RewardAllocation{
 		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 	})
-	s.createPublicPlan(farmingPoolAddr, farmingPoolAddr, []types.RewardAllocation{
+	s.createPublicPlan(farmingPoolAddr, []types.RewardAllocation{
 		types.NewPairRewardAllocation(2, utils.ParseCoins("100_000000stake")),
 	})
 	s.fundAddr(farmingPoolAddr, utils.ParseCoins("17361stake"))
@@ -205,18 +205,18 @@ func (s *KeeperTestSuite) TestAllocatedRewards_Complicated() {
 		utils.ParseDec("0.8"), utils.ParseDec("1.25"), sdk.NewDec(1))
 
 	farmingPoolAddr1 := utils.TestAddress(100)
-	s.createPublicPlan(farmingPoolAddr1, farmingPoolAddr1, []types.RewardAllocation{
+	s.createPublicPlan(farmingPoolAddr1, []types.RewardAllocation{
 		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 		types.NewPairRewardAllocation(2, utils.ParseCoins("100_000000stake")),
 	})
-	s.createPublicPlan(farmingPoolAddr1, farmingPoolAddr1, []types.RewardAllocation{
+	s.createPublicPlan(farmingPoolAddr1, []types.RewardAllocation{
 		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 		types.NewPairRewardAllocation(3, utils.ParseCoins("100_000000stake")),
 	})
 	s.fundAddr(farmingPoolAddr1, utils.ParseCoins("10000_000000stake"))
 
 	farmingPoolAddr2 := utils.TestAddress(101)
-	s.createPublicPlan(farmingPoolAddr2, farmingPoolAddr2, []types.RewardAllocation{
+	s.createPublicPlan(farmingPoolAddr2, []types.RewardAllocation{
 		types.NewPairRewardAllocation(2, utils.ParseCoins("100_000000stake")),
 		types.NewPairRewardAllocation(4, utils.ParseCoins("100_000000stake")),
 	})

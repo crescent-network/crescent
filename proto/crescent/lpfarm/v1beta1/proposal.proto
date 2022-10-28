@@ -20,10 +20,9 @@ message FarmingPlanProposal {
 message CreatePlanRequest {
   string                    description          = 1;
   string                    farming_pool_address = 2;
-  string                    termination_address  = 3;
-  repeated RewardAllocation reward_allocations   = 4 [(gogoproto.nullable) = false];
-  google.protobuf.Timestamp start_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp end_time             = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  repeated RewardAllocation reward_allocations   = 3 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp start_time           = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp end_time             = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
 message TerminatePlanRequest {

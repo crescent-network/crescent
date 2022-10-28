@@ -11,7 +11,7 @@ func (s *KeeperTestSuite) TestFarmingPlanProposalHandler() {
 
 	pair := s.createPair("denom1", "denom2")
 	createPlanReq := types.NewCreatePlanRequest(
-		"Farming Plan #1", farmingPoolAddr, farmingPoolAddr,
+		"Farming Plan #1", farmingPoolAddr,
 		[]types.RewardAllocation{
 			types.NewPairRewardAllocation(pair.Id, utils.ParseCoins("100_000000stake")),
 		}, sampleStartTime, sampleEndTime)

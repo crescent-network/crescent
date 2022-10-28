@@ -11,9 +11,8 @@ import (
 func HandleFarmingPlanProposal(ctx sdk.Context, k Keeper, p *types.FarmingPlanProposal) error {
 	for _, req := range p.CreatePlanRequests {
 		farmingPoolAddr, _ := sdk.AccAddressFromBech32(req.FarmingPoolAddress)
-		termAddr, _ := sdk.AccAddressFromBech32(req.TerminationAddress)
 		if _, err := k.CreatePublicPlan(
-			ctx, req.Description, farmingPoolAddr, termAddr,
+			ctx, req.Description, farmingPoolAddr,
 			req.RewardAllocations, req.StartTime, req.EndTime); err != nil {
 			return err
 		}

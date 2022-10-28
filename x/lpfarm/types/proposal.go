@@ -63,12 +63,11 @@ func (p FarmingPlanProposal) String() string {
 }
 
 func NewCreatePlanRequest(
-	description string, farmingPoolAddr, termAddr sdk.AccAddress,
+	description string, farmingPoolAddr sdk.AccAddress,
 	rewardAllocs []RewardAllocation, startTime, endTime time.Time) CreatePlanRequest {
 	return CreatePlanRequest{
 		Description:        description,
 		FarmingPoolAddress: farmingPoolAddr.String(),
-		TerminationAddress: termAddr.String(),
 		RewardAllocations:  rewardAllocs,
 		StartTime:          startTime,
 		EndTime:            endTime,
@@ -80,12 +79,8 @@ func (req CreatePlanRequest) Validate() error {
 	if err != nil {
 		return err
 	}
-	termAddr, err := sdk.AccAddressFromBech32(req.TerminationAddress)
-	if err != nil {
-		return err
-	}
 	dummyPlan := NewPlan(
-		1, req.Description, farmingPoolAddr, termAddr,
+		1, req.Description, farmingPoolAddr, farmingPoolAddr,
 		req.RewardAllocations, req.StartTime, req.EndTime, false)
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())

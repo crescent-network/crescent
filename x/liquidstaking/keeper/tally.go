@@ -2,16 +2,15 @@ package keeper
 
 import (
 	"sort"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	utils "github.com/crescent-network/crescent/v3/types"
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 )
 
 // GetVoterBalanceByDenom return map of balance amount of voter by denom
@@ -52,25 +51,12 @@ func (k Keeper) GetBTokenSharePerPoolCoinMap(ctx sdk.Context, targetDenom string
 func (k Keeper) TokenAmountFromFarmingPositions(ctx sdk.Context, addr sdk.AccAddress, targetDenom string, tokenSharePerPoolCoinMap map[string]sdk.Dec) sdk.Int {
 	tokenAmount := sdk.ZeroInt()
 
-	// add worth of staked amount of Farming Staking Position of bToken and PoolTokens including bToken
-	k.farmingKeeper.IterateStakingsByFarmer(ctx, addr, func(stakingCoinDenom string, staking farmingtypes.Staking) (stop bool) {
-		if stakingCoinDenom == targetDenom {
-			tokenAmount = tokenAmount.Add(staking.Amount)
-		} else if ratio, ok := tokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-			tokenAmount = tokenAmount.Add(utils.GetShareValue(staking.Amount, ratio))
-		}
-		return false
-	})
-
-	// add worth of staked amount of Farming Queued Staking of bToken and PoolTokens including bToken
-	k.farmingKeeper.IterateQueuedStakingsByFarmer(ctx, addr, func(stakingCoinDenom string, endTime time.Time, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
-		if !endTime.After(ctx.BlockTime()) { // sanity check
-			return false
-		}
-		if stakingCoinDenom == targetDenom {
-			tokenAmount = tokenAmount.Add(queuedStaking.Amount)
-		} else if ratio, ok := tokenSharePerPoolCoinMap[stakingCoinDenom]; ok {
-			tokenAmount = tokenAmount.Add(utils.GetShareValue(queuedStaking.Amount, ratio))
+	k.lpfarmKeeper.GetPosition(ctx, addr, targetDenom)
+	k.lpfarmKeeper.IteratePositionsByFarmer(ctx, addr, func(position lpfarmtypes.Position) bool {
+		if position.Denom == targetDenom {
+			tokenAmount = tokenAmount.Add(position.FarmingAmount)
+		} else if ratio, ok := tokenSharePerPoolCoinMap[position.Denom]; ok {
+			tokenAmount = tokenAmount.Add(utils.GetShareValue(position.FarmingAmount, ratio))
 		}
 		return false
 	})

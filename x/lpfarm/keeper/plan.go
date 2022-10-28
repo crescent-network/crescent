@@ -54,11 +54,11 @@ func (k Keeper) CreatePrivatePlan(
 // CreatePublicPlan creates a new public farming plan.
 func (k Keeper) CreatePublicPlan(
 	ctx sdk.Context, description string,
-	farmingPoolAddr, termAddr sdk.AccAddress,
+	farmingPoolAddr sdk.AccAddress,
 	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
 ) (types.Plan, error) {
 	return k.createPlan(
-		ctx, description, farmingPoolAddr, termAddr,
+		ctx, description, farmingPoolAddr, farmingPoolAddr,
 		rewardAllocs, startTime, endTime, false)
 }
 
