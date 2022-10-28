@@ -18,7 +18,6 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - [Airdrop](#Airdrop)
 - [ClaimRecord](#ClaimRecord)
 
-
 ## Airdrops
 
 Example Request 
