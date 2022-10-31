@@ -3,11 +3,15 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	chain "github.com/crescent-network/crescent/v3/app"
@@ -31,6 +35,28 @@ func TestWeightedOperations(t *testing.T) {
 	s := rand.NewSource(2)
 	r := rand.New(s)
 	accs := getTestingAccounts(t, r, app, ctx, 10)
+
+	// setup accounts[0] as validator0 and accounts[1] as validator1
+	val0 := getTestingValidator0(t, app, ctx, accs)
+	val1 := getTestingValidator1(t, app, ctx, accs)
+
+	param := app.LiquidStakingKeeper.GetParams(ctx)
+	param.WhitelistedValidators = []types.WhitelistedValidator{
+		{
+			ValidatorAddress: val0.OperatorAddress,
+			TargetWeight:     sdk.OneInt(),
+		},
+		{
+			ValidatorAddress: val1.OperatorAddress,
+			TargetWeight:     sdk.OneInt(),
+		},
+	}
+	app.LiquidStakingKeeper.SetParams(ctx, param)
+
+	// begin a new block
+	blockTime := time.Now().UTC()
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
+	app.EndBlock(abci.RequestEndBlock{Height: app.LastBlockHeight() + 1})
 
 	expected := []struct {
 		weight     int
@@ -80,4 +106,30 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *chain.App, ctx sdk.Cont
 	}
 
 	return accounts
+}
+
+func getTestingValidator0(t *testing.T, app *chain.App, ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
+	commission0 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
+	return getTestingValidator(t, app, ctx, accounts, commission0, 0)
+}
+
+func getTestingValidator1(t *testing.T, app *chain.App, ctx sdk.Context, accounts []simtypes.Account) stakingtypes.Validator {
+	commission1 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	return getTestingValidator(t, app, ctx, accounts, commission1, 1)
+}
+
+func getTestingValidator(t *testing.T, app *chain.App, ctx sdk.Context, accounts []simtypes.Account, commission stakingtypes.Commission, n int) stakingtypes.Validator {
+	account := accounts[n]
+	valPubKey := account.PubKey
+	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
+	validator := teststaking.NewValidator(t, valAddr, valPubKey)
+	validator, err := validator.SetInitialCommission(commission)
+	require.NoError(t, err)
+
+	validator.DelegatorShares = sdk.NewDec(100)
+	validator.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
+
+	app.StakingKeeper.SetValidator(ctx, validator)
+
+	return validator
 }

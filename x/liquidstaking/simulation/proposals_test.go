@@ -3,11 +3,16 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/crescent-network/crescent/v3/app/params"
 	"github.com/crescent-network/crescent/v3/x/liquidstaking/simulation"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
 )
 
 func TestProposalContents(t *testing.T) {
@@ -17,6 +22,28 @@ func TestProposalContents(t *testing.T) {
 	r := rand.New(s)
 
 	accounts := getTestingAccounts(t, r, app, ctx, 10)
+
+	// setup accounts[0] as validator0 and accounts[1] as validator1
+	val0 := getTestingValidator0(t, app, ctx, accounts)
+	val1 := getTestingValidator1(t, app, ctx, accounts)
+
+	param := app.LiquidStakingKeeper.GetParams(ctx)
+	param.WhitelistedValidators = []types.WhitelistedValidator{
+		{
+			ValidatorAddress: val0.OperatorAddress,
+			TargetWeight:     sdk.OneInt(),
+		},
+		{
+			ValidatorAddress: val1.OperatorAddress,
+			TargetWeight:     sdk.OneInt(),
+		},
+	}
+	app.LiquidStakingKeeper.SetParams(ctx, param)
+
+	// begin a new block
+	blockTime := time.Now().UTC()
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
+	app.EndBlock(abci.RequestEndBlock{Height: app.LastBlockHeight() + 1})
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GovKeeper, app.LiquidStakingKeeper)
