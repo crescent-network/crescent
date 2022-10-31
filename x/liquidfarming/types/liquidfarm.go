@@ -11,19 +11,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
 )
 
 const (
-	LiquidFarmReserveAccPrefix    string = "LiquidFarmReserveAcc"
-	LiquidFarmFeeCollectorAccName string = "LiquidFarmFeeCollectorAcc"
+	LiquidFarmReserveAccPrefix string = "LiquidFarmReserveAcc"
 )
 
 var (
 	liquidFarmCoinDenomRegexp = regexp.MustCompile(`^lf([1-9]\d*)$`)
-
-	// LiquidFarmFeeCollectorAcc is the fee collector address for liquid farms that collects all fees generated from the module.
-	LiquidFarmFeeCollectorAcc = farmingtypes.DeriveAddress(farmingtypes.ReserveAddressType, types.ModuleName, LiquidFarmFeeCollectorAccName)
 )
 
 // NewLiquidFarm returns a new LiquidFarm.
@@ -123,11 +118,16 @@ func CalculateLiquidUnfarmAmount(
 	return totalFarmingAmt.Mul(unfarmingAmt).Quo(lfCoinTotalSupplyAmt)
 }
 
-// DeductFees deducts fee rates from the farming rewards.
-func DeductFees(poolId uint64, rewards sdk.Coins, feeRate sdk.Dec) (sdk.Coins, error) {
+// DeductFees deducts rewards by the fee rate.
+func DeductFees(rewards sdk.Coins, feeRate sdk.Dec) (deducted sdk.Coins, fees sdk.Coins) {
+	deducted = make(sdk.Coins, len(rewards))
 	for i, reward := range rewards {
-		multiplier := sdk.OneDec().Sub(feeRate)                                                     // 1 - feeRate
-		rewards[i] = sdk.NewCoin(reward.Denom, reward.Amount.ToDec().Mul(multiplier).TruncateInt()) // reward * multiplier
+		multiplier := sdk.OneDec().Sub(feeRate)                                                      // 1 - feeRate
+		deducted[i] = sdk.NewCoin(reward.Denom, reward.Amount.ToDec().Mul(multiplier).TruncateInt()) // RewardAmt * Multiplier
 	}
-	return rewards, nil
+	fees = rewards.Sub(deducted)
+	if fees.IsZero() {
+		fees = sdk.Coins{}
+	}
+	return deducted, fees
 }

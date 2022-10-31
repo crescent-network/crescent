@@ -14,12 +14,12 @@ import (
 	v3 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v3"
 	"github.com/crescent-network/crescent/v3/cmd/crescentd/cmd"
 	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/farm"
-	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
 	"github.com/crescent-network/crescent/v3/x/farming"
 	farmingkeeper "github.com/crescent-network/crescent/v3/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/lpfarm"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 	marketmakertypes "github.com/crescent-network/crescent/v3/x/marketmaker/types"
 )
 
@@ -247,21 +247,21 @@ func (s *UpgradeTestSuite) TestFarmingMigration() {
 		return false
 	})
 
-	s.Require().EqualValues(1, s.app.FarmKeeper.GetNumPrivatePlans(s.ctx))
-	lastPlanId, found := s.app.FarmKeeper.GetLastPlanId(s.ctx)
+	s.Require().EqualValues(1, s.app.LPFarmKeeper.GetNumPrivatePlans(s.ctx))
+	lastPlanId, found := s.app.LPFarmKeeper.GetLastPlanId(s.ctx)
 	s.Require().True(found)
 	s.Require().EqualValues(2, lastPlanId)
 
 	// Check the private plan.
-	plan, found := s.app.FarmKeeper.GetPlan(s.ctx, 1)
+	plan, found := s.app.LPFarmKeeper.GetPlan(s.ctx, 1)
 	s.Require().True(found)
 	s.Require().Equal("Private Farming Plan", plan.Description)
 	s.Require().EqualValues(farmingPoolAddr1.String(), plan.FarmingPoolAddress)
 	s.Require().EqualValues(creatorAddr.String(), plan.TerminationAddress)
 	s.Require().EqualValues(
-		[]farmtypes.RewardAllocation{
-			farmtypes.NewDenomRewardAllocation("pool1", utils.ParseCoins("30_000000stake")),
-			farmtypes.NewDenomRewardAllocation("pool2", utils.ParseCoins("70_000000stake")),
+		[]lpfarmtypes.RewardAllocation{
+			lpfarmtypes.NewDenomRewardAllocation("pool1", utils.ParseCoins("30_000000stake")),
+			lpfarmtypes.NewDenomRewardAllocation("pool2", utils.ParseCoins("70_000000stake")),
 		},
 		plan.RewardAllocations,
 	)
@@ -271,15 +271,15 @@ func (s *UpgradeTestSuite) TestFarmingMigration() {
 	s.Require().False(plan.IsTerminated)
 
 	// Check the public plan.
-	plan, found = s.app.FarmKeeper.GetPlan(s.ctx, 2)
+	plan, found = s.app.LPFarmKeeper.GetPlan(s.ctx, 2)
 	s.Require().True(found)
 	s.Require().Equal("Public Farming Plan", plan.Description)
 	s.Require().EqualValues(farmingPoolAddr2.String(), plan.FarmingPoolAddress)
 	s.Require().EqualValues(farmingPoolAddr2.String(), plan.TerminationAddress)
 	s.Require().EqualValues(
-		[]farmtypes.RewardAllocation{
-			farmtypes.NewDenomRewardAllocation("pool1", utils.ParseCoins("60_000000stake")),
-			farmtypes.NewDenomRewardAllocation("pool2", utils.ParseCoins("40_000000stake")),
+		[]lpfarmtypes.RewardAllocation{
+			lpfarmtypes.NewDenomRewardAllocation("pool1", utils.ParseCoins("60_000000stake")),
+			lpfarmtypes.NewDenomRewardAllocation("pool2", utils.ParseCoins("40_000000stake")),
 		},
 		plan.RewardAllocations,
 	)
@@ -289,50 +289,50 @@ func (s *UpgradeTestSuite) TestFarmingMigration() {
 	s.Require().False(plan.IsTerminated)
 
 	// Check farms.
-	f, found := s.app.FarmKeeper.GetFarm(s.ctx, "pool1")
+	f, found := s.app.LPFarmKeeper.GetFarm(s.ctx, "pool1")
 	s.Require().True(found)
 	s.Require().Equal("3000000", f.TotalFarmingAmount.String())
 	s.Require().Equal("", f.CurrentRewards.String())
 	s.Require().Equal("", f.OutstandingRewards.String())
-	f, found = s.app.FarmKeeper.GetFarm(s.ctx, "pool2")
+	f, found = s.app.LPFarmKeeper.GetFarm(s.ctx, "pool2")
 	s.Require().True(found)
 	s.Require().Equal("3000000", f.TotalFarmingAmount.String())
 	s.Require().Equal("", f.CurrentRewards.String())
 	s.Require().Equal("", f.OutstandingRewards.String())
 
 	// Check positions.
-	position, found := s.app.FarmKeeper.GetPosition(s.ctx, farmerAddr1, "pool1")
+	position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, farmerAddr1, "pool1")
 	s.Require().True(found)
 	s.Require().Equal("1000000", position.FarmingAmount.String())
-	position, found = s.app.FarmKeeper.GetPosition(s.ctx, farmerAddr1, "pool2")
+	position, found = s.app.LPFarmKeeper.GetPosition(s.ctx, farmerAddr1, "pool2")
 	s.Require().True(found)
 	s.Require().Equal("1000000", position.FarmingAmount.String())
-	position, found = s.app.FarmKeeper.GetPosition(s.ctx, farmerAddr2, "pool1")
+	position, found = s.app.LPFarmKeeper.GetPosition(s.ctx, farmerAddr2, "pool1")
 	s.Require().True(found)
 	s.Require().Equal("1000000", position.FarmingAmount.String())
-	position, found = s.app.FarmKeeper.GetPosition(s.ctx, farmerAddr2, "pool2")
+	position, found = s.app.LPFarmKeeper.GetPosition(s.ctx, farmerAddr2, "pool2")
 	s.Require().True(found)
 	s.Require().Equal("1000000", position.FarmingAmount.String())
-	position, found = s.app.FarmKeeper.GetPosition(s.ctx, farmerAddr3, "pool1")
+	position, found = s.app.LPFarmKeeper.GetPosition(s.ctx, farmerAddr3, "pool1")
 	s.Require().True(found)
 	s.Require().Equal("1000000", position.FarmingAmount.String())
-	position, found = s.app.FarmKeeper.GetPosition(s.ctx, farmerAddr3, "pool2")
+	position, found = s.app.LPFarmKeeper.GetPosition(s.ctx, farmerAddr3, "pool2")
 	s.Require().True(found)
 	s.Require().Equal("1000000", position.FarmingAmount.String())
 
-	farm.BeginBlocker(s.ctx, s.app.FarmKeeper)
+	lpfarm.BeginBlocker(s.ctx, s.app.LPFarmKeeper)
 	s.ctx = s.ctx.
 		WithBlockTime(s.ctx.BlockTime().Add(5 * time.Second)).
 		WithBlockHeight(s.ctx.BlockHeight() + 1)
-	farm.BeginBlocker(s.ctx, s.app.FarmKeeper)
+	lpfarm.BeginBlocker(s.ctx, s.app.LPFarmKeeper)
 
 	// Now all farmers receives same rewards per block.
 	for _, addr := range []sdk.AccAddress{farmerAddr1, farmerAddr2, farmerAddr3} {
 		s.Require().Equal(
 			"1736.000000000000000000stake",
-			s.app.FarmKeeper.Rewards(s.ctx, addr, "pool1").String())
+			s.app.LPFarmKeeper.Rewards(s.ctx, addr, "pool1").String())
 		s.Require().Equal(
 			"2121.333333333333000000stake",
-			s.app.FarmKeeper.Rewards(s.ctx, addr, "pool2").String())
+			s.app.LPFarmKeeper.Rewards(s.ctx, addr, "pool2").String())
 	}
 }

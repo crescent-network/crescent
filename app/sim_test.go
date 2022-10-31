@@ -36,10 +36,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	claimtypes "github.com/crescent-network/crescent/v3/x/claim/types"
-	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
 	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 	liquidstakingtypes "github.com/crescent-network/crescent/v3/x/liquidstaking/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 	marketmakertypes "github.com/crescent-network/crescent/v3/x/marketmaker/types"
 	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
 )
@@ -194,7 +194,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[liquiditytypes.StoreKey], newApp.keys[liquiditytypes.StoreKey], [][]byte{}},
 		{app.keys[claimtypes.StoreKey], newApp.keys[claimtypes.StoreKey], [][]byte{}},
 		{app.keys[marketmakertypes.StoreKey], newApp.keys[marketmakertypes.StoreKey], [][]byte{}},
-		{app.keys[farmtypes.StoreKey], newApp.keys[farmtypes.StoreKey], [][]byte{}},
+		{app.keys[lpfarmtypes.StoreKey], newApp.keys[lpfarmtypes.StoreKey], [][]byte{}},
 		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 	}

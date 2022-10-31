@@ -9,13 +9,13 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	farmkeeper "github.com/crescent-network/crescent/v3/x/farm/keeper"
-	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
 	farmingkeeper "github.com/crescent-network/crescent/v3/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
 	liquidfarmingtypes "github.com/crescent-network/crescent/v3/x/liquidfarming/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v3/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	lpfarmkeeper "github.com/crescent-network/crescent/v3/x/lpfarm/keeper"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 	marketmakerkeeper "github.com/crescent-network/crescent/v3/x/marketmaker/keeper"
 	marketmakertypes "github.com/crescent-network/crescent/v3/x/marketmaker/types"
 )
@@ -24,7 +24,7 @@ const UpgradeName = "v3"
 
 func UpgradeHandler(
 	mm *module.Manager, configurator module.Configurator, marketmakerKeeper marketmakerkeeper.Keeper,
-	liquidityKeeper liquiditykeeper.Keeper, farmKeeper farmkeeper.Keeper, farmingKeeper farmingkeeper.Keeper,
+	liquidityKeeper liquiditykeeper.Keeper, lpfarmKeeper lpfarmkeeper.Keeper, farmingKeeper farmingkeeper.Keeper,
 	bankKeeper bankkeeper.Keeper) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		newVM, err := mm.RunMigrations(ctx, configurator, vm)
@@ -40,13 +40,13 @@ func UpgradeHandler(
 		marketmakerParams.DepositAmount = sdk.NewCoins(sdk.NewCoin("ucre", sdk.NewInt(1000000000)))
 		marketmakerKeeper.SetParams(ctx, marketmakerParams)
 
-		farmKeeper.SetPrivatePlanCreationFee(
+		lpfarmKeeper.SetPrivatePlanCreationFee(
 			ctx, sdk.NewCoins(sdk.NewInt64Coin("ucre", 100_000000)))
 		// Move fees collected in the farming module's fee collector.
 		farmingFeeCollector, _ := sdk.AccAddressFromBech32(farmingKeeper.GetParams(ctx).FarmingFeeCollector)
 		farmingFees := bankKeeper.SpendableCoins(ctx, farmingFeeCollector)
 		if farmingFees.IsAllPositive() {
-			farmFeeCollector, _ := sdk.AccAddressFromBech32(farmKeeper.GetFeeCollector(ctx))
+			farmFeeCollector, _ := sdk.AccAddressFromBech32(lpfarmKeeper.GetFeeCollector(ctx))
 			if err := bankKeeper.SendCoins(
 				ctx, farmingFeeCollector, farmFeeCollector, farmingFees); err != nil {
 				return nil, err
@@ -81,7 +81,7 @@ func UpgradeHandler(
 				return nil, err
 			}
 			for _, stakedCoin := range stakedCoinsByFarmer[farmerAddr.String()] {
-				if _, err := farmKeeper.Farm(ctx, farmerAddr, stakedCoin); err != nil {
+				if _, err := lpfarmKeeper.Farm(ctx, farmerAddr, stakedCoin); err != nil {
 					return nil, err
 				}
 			}
@@ -90,14 +90,14 @@ func UpgradeHandler(
 		var lastPlanId, numPrivatePlans uint64
 		farmingKeeper.IteratePlans(ctx, func(plan farmingtypes.PlanI) (stop bool) {
 			epochAmt := sdk.NewDecCoinsFromCoins(plan.(*farmingtypes.FixedAmountPlan).EpochAmount...)
-			var rewardAllocs []farmtypes.RewardAllocation
+			var rewardAllocs []lpfarmtypes.RewardAllocation
 			for _, weight := range plan.GetStakingCoinWeights() {
 				rewardsPerDay, _ := epochAmt.MulDecTruncate(weight.Amount).TruncateDecimal()
 				rewardAllocs = append(
-					rewardAllocs, farmtypes.NewDenomRewardAllocation(
+					rewardAllocs, lpfarmtypes.NewDenomRewardAllocation(
 						weight.Denom, rewardsPerDay))
 			}
-			farmKeeper.SetPlan(ctx, farmtypes.Plan{
+			lpfarmKeeper.SetPlan(ctx, lpfarmtypes.Plan{
 				Id:                 plan.GetId(),
 				Description:        plan.GetName(),
 				FarmingPoolAddress: plan.GetFarmingPoolAddress().String(),
@@ -115,8 +115,8 @@ func UpgradeHandler(
 			}
 			return false
 		})
-		farmKeeper.SetLastPlanId(ctx, lastPlanId)
-		farmKeeper.SetNumPrivatePlans(ctx, numPrivatePlans)
+		lpfarmKeeper.SetLastPlanId(ctx, lastPlanId)
+		lpfarmKeeper.SetNumPrivatePlans(ctx, numPrivatePlans)
 		farmingKeeper.DeleteGlobalPlanId(ctx)
 		farmingKeeper.DeleteLastEpochTime(ctx)
 		farmingKeeper.DeleteCurrentEpochDays(ctx)
@@ -134,7 +134,7 @@ func UpgradeHandler(
 var StoreUpgrades = store.StoreUpgrades{
 	Added: []string{
 		marketmakertypes.ModuleName,
-		farmtypes.ModuleName,
+		lpfarmtypes.ModuleName,
 		liquidfarmingtypes.ModuleName,
 	},
 }

@@ -22,7 +22,7 @@ type Keeper struct {
 	stakingKeeper   types.StakingKeeper
 	distrKeeper     types.DistrKeeper
 	liquidityKeeper types.LiquidityKeeper
-	farmingKeeper   types.FarmingKeeper
+	lpfarmKeeper    types.LPFarmKeeper
 	slashingKeeper  types.SlashingKeeper
 }
 
@@ -33,7 +33,7 @@ type Keeper struct {
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
 	distrKeeper types.DistrKeeper, liquidityKeeper types.LiquidityKeeper,
-	farmingKeeper types.FarmingKeeper, slashingKeeper types.SlashingKeeper,
+	lpfarmKeeper types.LPFarmKeeper, slashingKeeper types.SlashingKeeper,
 ) Keeper {
 	// ensure liquidstaking module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -54,7 +54,7 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 		stakingKeeper:   stakingKeeper,
 		distrKeeper:     distrKeeper,
 		liquidityKeeper: liquidityKeeper,
-		farmingKeeper:   farmingKeeper,
+		lpfarmKeeper:    lpfarmKeeper,
 		slashingKeeper:  slashingKeeper,
 	}
 }

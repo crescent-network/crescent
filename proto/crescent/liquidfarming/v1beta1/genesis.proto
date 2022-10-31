@@ -24,6 +24,8 @@ message GenesisState {
   repeated Bid bids = 5 [(gogoproto.nullable) = false];
 
   repeated WinningBidRecord winning_bid_records = 6 [(gogoproto.nullable) = false];
+
+  google.protobuf.Timestamp last_rewards_auction_end_time = 7 [(gogoproto.stdtime) = true];
 }
 
 message LastRewardsAuctionIdRecord {

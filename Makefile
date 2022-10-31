@@ -88,7 +88,8 @@ ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
 testing_ldflags = -X $(REPO)/x/farming/keeper.enableAdvanceEpoch=true \
-                  -X $(REPO)/x/farming/keeper.enableRatioPlan=true
+                  -X $(REPO)/x/farming/keeper.enableRatioPlan=true \
+				  -X $(REPO)/x/liquidfarming/keeper.enableAdvanceAuction=true
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 TESTING_BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags) $(testing_ldflags)'

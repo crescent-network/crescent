@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
@@ -70,12 +72,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		}
 	}
 
+	var endTime *time.Time
+	tempEndTime, found := k.GetLastRewardsAuctionEndTime(ctx)
+	if found {
+		endTime = &tempEndTime
+	}
+
 	return &types.GenesisState{
 		Params:                     params,
 		LastRewardsAuctionIdRecord: lastRewardsAuctionIdRecords,
-		LiquidFarms:                k.GetAllLiquidFarms(ctx),
+		LiquidFarms:                k.GetLiquidFarmsInStore(ctx),
 		RewardsAuctions:            k.GetAllRewardsAuctions(ctx),
 		Bids:                       bids,
 		WinningBidRecords:          winningBidRecords,
+		LastRewardsAuctionEndTime:  endTime,
 	}
 }

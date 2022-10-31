@@ -22,7 +22,6 @@ func TestParamChanges(t *testing.T) {
 		subspace    string
 	}{
 		{"liquidfarming/RewardsAuctionDuration", "RewardsAuctionDuration", "\"43200000000000\"", "liquidfarming"},
-		// {"liquidfarming/LiquidFarms", "LiquidFarms", "[]", "liquidfarming"},
 	}
 
 	for i, p := range paramChanges {

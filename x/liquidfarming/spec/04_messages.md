@@ -104,3 +104,17 @@ Validity checks are performed for `MsgRefundBid` message. The transaction that i
 - The target liquid farm with the pool id does not exist
 - The target auction status is in invalid status
 - The bid by the bidder in the auction of the liquid farm with the pool id does not exist
+
+## MsgAdvanceAuction
+
+***This message is disabled by default, you have to build the binary with `make install-testing` to activate this message.***
+
+For testing purposes only, this custom message is used to advance auction.
+
+When you send the `MsgAdvanceAuction` message to the network, finish the ongoing rewards auction and create the next one.
+
+```go
+type MsgAdvanceAuction struct {
+	Requester string // requester defines the bech32-encoded address of the requester
+}
+```

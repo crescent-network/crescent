@@ -15,15 +15,14 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 
 ++https://github.com/crescent-network/crescent/blob/main/proto/crescent/liquidfarming/v1beta1/query.proto
 
-- [Liquidfarming Module](#liquidfarming-module)
-  - [Synopsis](#synopsis)
-  - [gRPC-gateway REST Routes](#grpc-gateway-rest-routes)
-  - [Params](#params)
-  - [LiquidFarms](#liquidfarms)
-  - [LiquidFarm](#liquidfarm)
-  - [RewardsAuctions](#rewardsauctions)
-  - [RewardsAuction](#rewardsauction)
-  - [Bids](#bids)
+- [Params](#Params)
+- [LiquidFarms](#Liquidfarms)
+- [LiquidFarm](#Liquidfarm)
+- [RewardsAuctions](#Rewardsauctions)
+- [RewardsAuction](#Rewardsauction)
+- [Bids](#Bids)
+- [Rewards](#Rewards)
+- [ExchangeRate](#ExchangeRate)
 
 ## Params
 
@@ -40,6 +39,8 @@ Example Response
 ```json
 {
   "params": {
+    "fee_collector": "cre1lsvtflq2gau8ha7zvlethfy85qus59eserphyhc3tumua7upx6eqckll2q",
+    "rewards_auction_duration": "120s",
     "liquid_farms": [
       {
         "pool_id": "1",
@@ -47,8 +48,7 @@ Example Response
         "min_bid_amount": "1",
         "fee_rate": "0.000000000000000000"
       }
-    ],
-    "rewards_auction_duration": "120s"
+    ]
   }
 }
 ```
@@ -112,7 +112,10 @@ Example Request
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/liquidfarming/v1beta1/pools/1/rewards_auctions
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/rewards_auctions
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/rewards_auctions?status=AUCTION_STATUS_STARTED
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/rewards_auctions?status=AUCTION_STATUS_FINISHED
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/rewards_auctions?status=AUCTION_STATUS_SKIPPED
 ```
 
 Example Response
@@ -129,7 +132,12 @@ Example Response
       "end_time": "2022-09-27T06:08:52.627872Z",
       "status": "AUCTION_STATUS_STARTED",
       "winner": "",
-      "rewards": []
+      "winning_amount": {
+        "denom": "",
+        "amount": "0"
+      },
+      "rewards": [
+      ]
     }
   ]
 }
@@ -142,7 +150,7 @@ Example Request
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/liquidfarming/v1beta1/pools/1/rewards_auctions/1
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/rewards_auctions/1
 ```
 
 Example Response
@@ -158,7 +166,16 @@ Example Response
     "end_time": "2022-08-06T08:56:22.237454Z",
     "status": "AUCTION_STATUS_FINISHED",
     "winner": "",
-    "rewards": []
+    "winning_amount": {
+      "denom": "",
+      "amount": "0"
+    },
+    "rewards": [
+      {
+        "denom": "stake",
+        "amount": "25369"
+      }
+    ]
   }
 }
 ```
@@ -170,7 +187,7 @@ Example Request
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/liquidfarming/v1beta1/pools/1/bids
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/bids
 ```
 
 Example Response
@@ -187,5 +204,49 @@ Example Response
       }
     }
   ]
+}
+```
+
+## Rewards
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+
+```bash
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/rewards
+```
+
+Example Response
+
+```json
+{
+  "rewards": [
+    {
+      "denom": "stake",
+      "amount": "1903"
+    }
+  ]
+}
+```
+
+## ExchangeRate
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+
+```bash
+http://localhost:1317/crescent/liquidfarming/v1beta1/liquidfarms/1/exchange_rate
+```
+
+Example Response
+
+```json
+{
+  "exchange_rate": {
+    "mint_rate": "1.000000000000000000",
+    "burn_rate": "1.000000000000000000"
+  }
 }
 ```

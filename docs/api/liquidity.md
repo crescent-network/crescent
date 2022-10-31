@@ -14,21 +14,21 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 <!-- markdown-link-check-disable -->
 ++https://github.com/crescent-network/crescent/blob/main/proto/crescent/liquidity/v1beta1/query.proto 
 
-- [Params](#Params)
-- [Pairs](#Pairs)
-- [Pair](#Pair)
-- [Pools](#Pools)
-- [Pool](#Pool)
-- [PoolByReserveAddress](#PoolByReserveAddress)
-- [PoolByPoolCoinDenom](#PoolByPoolCoinDenom)
-- [DepositRequests](#DepositRequests)
-- [DepositRequest](#DepositRequest)
-- [WithdrawRequests](#WithdrawRequests)
-- [WithdrawRequest](#WithdrawRequest)
-- [Orders](#Orders)
-- [Order](#Order)
-- [OrdersByOrderer](#OrdersByOrderer)
-- [OrderBooks](#OrderBooks)
+- [Params](#params)
+- [Pairs](#pairs)
+- [Pair](#pair)
+- [Pools](#pools)
+- [Pool](#pool)
+- [PoolByReserveAddress](#poolbyreserveaddress)
+- [PoolByPoolCoinDenom](#poolbypoolcoindenom)
+- [DepositRequests](#depositrequests)
+- [DepositRequest](#depositrequest)
+- [WithdrawRequests](#withdrawrequests)
+- [WithdrawRequest](#withdrawrequest)
+- [Orders](#orders)
+- [Order](#order)
+- [OrdersByOrderer](#ordersbyorderer)
+- [OrderBooks](#orderbooks)
 
 ## Params
 

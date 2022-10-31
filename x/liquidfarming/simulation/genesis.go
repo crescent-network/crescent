@@ -3,6 +3,8 @@ package simulation
 // DONTCOVER
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -16,9 +18,15 @@ import (
 
 // Simulation parameter constants.
 const (
+	FeeCollector           = "fee_collector"
 	RewardsAuctionDuration = "rewards_auction_duration"
 	LiquidFarms            = "liquid_farms"
 )
+
+// GenFeeCollector returns randomized test account for fee collector.
+func GenFeeCollector(r *rand.Rand) string {
+	return utils.TestAddress(r.Int()).String()
+}
 
 // GenRewardsAuctionDuration returns randomized rewards auction duration.
 func GenRewardsAuctionDuration(r *rand.Rand) time.Duration {
@@ -43,23 +51,24 @@ func GenLiquidFarms(r *rand.Rand) []types.LiquidFarm {
 
 // RandomizedGenState generates a random GenesisState.
 func RandomizedGenState(simState *module.SimulationState) {
-	var rewardsAuctionDuration time.Duration
+	genesis := types.DefaultGenesis()
+
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, RewardsAuctionDuration, &rewardsAuctionDuration, simState.Rand,
-		func(r *rand.Rand) { rewardsAuctionDuration = GenRewardsAuctionDuration(r) },
+		simState.Cdc, FeeCollector, &genesis.Params.FeeCollector, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.FeeCollector = GenFeeCollector(r) },
 	)
 
-	var liquidFarms []types.LiquidFarm
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, LiquidFarms, &liquidFarms, simState.Rand,
-		func(r *rand.Rand) { liquidFarms = GenLiquidFarms(r) },
+		simState.Cdc, RewardsAuctionDuration, &genesis.Params.RewardsAuctionDuration, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.RewardsAuctionDuration = GenRewardsAuctionDuration(r) },
 	)
 
-	genState := types.GenesisState{
-		Params: types.Params{
-			RewardsAuctionDuration: rewardsAuctionDuration,
-			LiquidFarms:            liquidFarms,
-		},
-	}
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&genState)
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, LiquidFarms, &genesis.Params.LiquidFarms, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.LiquidFarms = GenLiquidFarms(r) },
+	)
+
+	bz, _ := json.MarshalIndent(genesis, "", " ")
+	fmt.Printf("Selected randomly generated farm parameters:\n%s\n", bz)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 }
