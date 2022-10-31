@@ -978,5 +978,6 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 		v2_0_0.UpgradeName, v2_0_0.UpgradeHandler(mm, configurator, app.MintKeeper, app.BudgetKeeper, app.LiquidityKeeper))
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v3.UpgradeName, v3.UpgradeHandler(mm, configurator, app.MarketMakerKeeper, app.LiquidityKeeper))
+		v3.UpgradeName, v3.UpgradeHandler(
+			mm, configurator, app.MarketMakerKeeper, app.LiquidityKeeper, app.LPFarmKeeper, app.FarmingKeeper, app.BankKeeper))
 }
