@@ -63,6 +63,7 @@ func (s *KeeperTestSuite) TestCreatePrivatePlan_PairNotFound() {
 
 func (s *KeeperTestSuite) TestAllocateRewards_NoFarmer() {
 	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
 	plan := s.createPrivatePlan([]types.RewardAllocation{
 		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
 		types.NewDenomRewardAllocation("pool1", utils.ParseCoins("100_000000stake")),

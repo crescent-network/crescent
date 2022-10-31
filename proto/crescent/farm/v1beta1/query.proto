@@ -32,7 +32,7 @@ service Query {
   rpc HistoricalRewards(QueryHistoricalRewardsRequest) returns (QueryHistoricalRewardsResponse) {
     option (google.api.http).get = "/crescent/farm/v1beta1/historical_rewards/{denom}";
   }
-  rpc AllRewards(QueryAllRewardsRequest) returns (QueryAllRewardsResponse) {
+  rpc TotalRewards(QueryTotalRewardsRequest) returns (QueryTotalRewardsResponse) {
     option (google.api.http).get = "/crescent/farm/v1beta1/rewards/{farmer}";
   }
   rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
@@ -100,11 +100,11 @@ message QueryHistoricalRewardsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination         = 2;
 }
 
-message QueryAllRewardsRequest {
+message QueryTotalRewardsRequest {
   string farmer = 1;
 }
 
-message QueryAllRewardsResponse {
+message QueryTotalRewardsResponse {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }

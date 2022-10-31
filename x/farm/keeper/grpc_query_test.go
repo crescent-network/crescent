@@ -382,7 +382,7 @@ func (s *KeeperTestSuite) TestGRPCHistoricalRewards() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGRPCAllRewards() {
+func (s *KeeperTestSuite) TestGRPCTotalRewards() {
 	s.createSamplePlans()
 	farmerAddr := utils.TestAddress(0)
 	s.fundAddr(farmerAddr, utils.ParseCoins("1_000000pool1,1_000000pool2"))
@@ -394,9 +394,9 @@ func (s *KeeperTestSuite) TestGRPCAllRewards() {
 
 	for _, tc := range []struct {
 		name        string
-		req         *types.QueryAllRewardsRequest
+		req         *types.QueryTotalRewardsRequest
 		expectedErr string
-		postRun     func(resp *types.QueryAllRewardsResponse)
+		postRun     func(resp *types.QueryTotalRewardsResponse)
 	}{
 		{
 			"nil request",
@@ -405,28 +405,28 @@ func (s *KeeperTestSuite) TestGRPCAllRewards() {
 			nil,
 		},
 		{
-			"query all rewards",
-			&types.QueryAllRewardsRequest{
+			"query total rewards",
+			&types.QueryTotalRewardsRequest{
 				Farmer: farmerAddr.String(),
 			},
 			"",
-			func(resp *types.QueryAllRewardsResponse) {
+			func(resp *types.QueryTotalRewardsResponse) {
 				s.assertEq(utils.ParseDecCoins("28935stake"), resp.Rewards)
 			},
 		},
 		{
 			"query unknown farmer",
-			&types.QueryAllRewardsRequest{
+			&types.QueryTotalRewardsRequest{
 				Farmer: utils.TestAddress(1).String(),
 			},
 			"",
-			func(resp *types.QueryAllRewardsResponse) {
+			func(resp *types.QueryTotalRewardsResponse) {
 				s.assertEq(sdk.DecCoins{}, resp.Rewards)
 			},
 		},
 		{
 			"invalid farmer address",
-			&types.QueryAllRewardsRequest{
+			&types.QueryTotalRewardsRequest{
 				Farmer: "invalidaddr",
 			},
 			"rpc error: code = InvalidArgument desc = invalid farmer address: decoding bech32 failed: invalid separator index -1",
@@ -434,7 +434,7 @@ func (s *KeeperTestSuite) TestGRPCAllRewards() {
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.AllRewards(sdk.WrapSDKContext(s.ctx), tc.req)
+			resp, err := s.querier.TotalRewards(sdk.WrapSDKContext(s.ctx), tc.req)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 				tc.postRun(resp)

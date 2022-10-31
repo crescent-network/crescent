@@ -140,6 +140,18 @@ func (k Keeper) Rewards(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string
 	return k.calculateRewards(cacheCtx, position, endPeriod)
 }
 
+// TotalRewards returns the farmer's rewards accrued in all denoms so far.
+// TotalRewards is a convenient query method existing for external modules.
+func (k Keeper) TotalRewards(ctx sdk.Context, farmerAddr sdk.AccAddress) (rewards sdk.DecCoins) {
+	k.IteratePositionsByFarmer(ctx, farmerAddr, func(position types.Position) (stop bool) {
+		cacheCtx, _ := ctx.CacheContext()
+		endPeriod := k.incrementFarmPeriod(cacheCtx, position.Denom)
+		rewards = rewards.Add(k.calculateRewards(cacheCtx, position, endPeriod)...)
+		return false
+	})
+	return rewards
+}
+
 func (k Keeper) calculateRewards(ctx sdk.Context, position types.Position, endPeriod uint64) sdk.DecCoins {
 	if position.StartingBlockHeight == ctx.BlockHeight() {
 		return nil

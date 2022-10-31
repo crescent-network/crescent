@@ -15,15 +15,15 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 
 ++https://github.com/crescent-network/crescent/blob/main/proto/crescent/farm/v1beta1/query.proto
 
-- [Params](#Params)
-- [Plans](#Plans)
-- [Plan](#Plan)
-- [Farm](#Farm)
-- [Positions](#Positions)
-- [Position](#Position)
-- [HistoricalRewards](#HistoricalRewards)
-- [AllRewards](#AllRewards)
-- [Rewards](#Rewards)
+- [Params](#params)
+- [Plans](#plans)
+- [Plan](#plan)
+- [Farm](#farm)
+- [Positions](#positions)
+- [Position](#position)
+- [HistoricalRewards](#historicalrewards)
+- [TotalRewards](#totalrewards)
+- [Rewards](#rewards)
 
 ## Params
 
@@ -273,7 +273,7 @@ Example Response
 }
 ```
 
-## AllRewards
+## TotalRewards
 
 Example Request:
 

@@ -32,7 +32,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryPositionsCmd(),
 		NewQueryPositionCmd(),
 		NewQueryHistoricalRewardsCmd(),
-		NewQueryAllRewardsCmd(),
+		NewQueryTotalRewardsCmd(),
 		NewQueryRewardsCmd(),
 	)
 
@@ -289,14 +289,14 @@ $ %s query %s historical-rewards pool1
 	return cmd
 }
 
-// NewQueryAllRewardsCmd implements the all rewards query cmd.
-func NewQueryAllRewardsCmd() *cobra.Command {
+// NewQueryTotalRewardsCmd implements the total rewards query cmd.
+func NewQueryTotalRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "all-rewards [farmer]",
+		Use:   "total-rewards [farmer]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query all rewards accumulated for the farmer",
+		Short: "Query total rewards accumulated in all farming assets of the farmer",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all rewards accumulated for the farmer.
+			fmt.Sprintf(`Query total rewards accumulated in all farming assets of the farmer.
 
 Example:
 $ %s query %s all-rewards cosmos1...
@@ -310,7 +310,7 @@ $ %s query %s all-rewards cosmos1...
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.AllRewards(cmd.Context(), &types.QueryAllRewardsRequest{
+			res, err := queryClient.TotalRewards(cmd.Context(), &types.QueryTotalRewardsRequest{
 				Farmer: args[0],
 			})
 			if err != nil {
@@ -328,9 +328,9 @@ func NewQueryRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rewards [farmer] [denom]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Query rewards accumulated for the farmer under the denom",
+		Short: "Query rewards accumulated in a farming asset of the farmer",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query rewards accumulated for the farmer under the denom.
+			fmt.Sprintf(`Query rewards accumulated in a farming asset of the farmer.
 
 Example:
 $ %s query %s rewards cosmos1... pool1

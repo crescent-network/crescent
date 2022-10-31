@@ -79,6 +79,11 @@ func (k Keeper) createPlan(
 				return types.Plan{}, sdkerrors.Wrapf(
 					sdkerrors.ErrNotFound, "pair %d not found", rewardAlloc.PairId)
 			}
+		} else {
+			if !k.bankKeeper.HasSupply(ctx, rewardAlloc.Denom) {
+				return types.Plan{}, sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidRequest, "denom %s has no supply", rewardAlloc.Denom)
+			}
 		}
 	}
 
@@ -158,6 +163,10 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	// Constrain the block duration to the max block duration param.
 	if maxBlockDuration := k.GetMaxBlockDuration(ctx); blockDuration > maxBlockDuration {
 		blockDuration = maxBlockDuration
+	}
+	// If the block duration is 0, skip this block for rewards allocation.
+	if blockDuration == 0 {
+		return nil
 	}
 
 	ck := newCachingKeeper(k)
