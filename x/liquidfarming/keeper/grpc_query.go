@@ -44,7 +44,7 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 		reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
 		poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 		lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
-		farm, found := k.farmKeeper.GetFarm(ctx, poolCoinDenom)
+		farm, found := k.lpfarmKeeper.GetFarm(ctx, poolCoinDenom)
 		if !found {
 			farm.TotalFarmingAmount = sdk.ZeroInt()
 		}
@@ -82,7 +82,7 @@ func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest
 	reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 	lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
-	farm, found := k.farmKeeper.GetFarm(ctx, poolCoinDenom)
+	farm, found := k.lpfarmKeeper.GetFarm(ctx, poolCoinDenom)
 	if !found {
 		farm.TotalFarmingAmount = sdk.ZeroInt()
 	}
@@ -232,7 +232,7 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 	// Currently accumulated rewards from the farm module + all withdrawn rewards in the WithdrawnRewardsReserve account
 	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(req.PoolId)
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(req.PoolId)
-	withdrawnRewards := k.farmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
+	withdrawnRewards := k.lpfarmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
 	truncatedRewards, _ := withdrawnRewards.TruncateDecimal()
 	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(req.PoolId)
 	spendableCoins := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
@@ -259,7 +259,7 @@ func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateReq
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, types.LiquidFarmCoinDenom(req.PoolId)).Amount
 
 	if !lfCoinTotalSupplyAmt.IsZero() {
-		farm, found := k.farmKeeper.GetFarm(ctx, liquiditytypes.PoolCoinDenom(req.PoolId))
+		farm, found := k.lpfarmKeeper.GetFarm(ctx, liquiditytypes.PoolCoinDenom(req.PoolId))
 		if !found {
 			farm.TotalFarmingAmount = sdk.ZeroInt()
 		}

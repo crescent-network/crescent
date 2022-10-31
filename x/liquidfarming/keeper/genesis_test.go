@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.nextBlock()
 
 	// Ensure that the position is created and the amount of farmed coin
-	position, found := s.app.FarmKeeper.GetPosition(s.ctx, types.LiquidFarmReserveAddress(pool.Id), pool.PoolCoinDenom)
+	position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, types.LiquidFarmReserveAddress(pool.Id), pool.PoolCoinDenom)
 	s.Require().True(found)
 	s.Require().Equal(sdk.NewInt(900_000), position.FarmingAmount) // 100+300+500
 
@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.nextAuction()
 
 	// Ensure that the amount of farmed coin is increased due to the auction
-	position, found = s.app.FarmKeeper.GetPosition(s.ctx, types.LiquidFarmReserveAddress(pool.Id), pool.PoolCoinDenom)
+	position, found = s.app.LPFarmKeeper.GetPosition(s.ctx, types.LiquidFarmReserveAddress(pool.Id), pool.PoolCoinDenom)
 	s.Require().True(found)
 	s.Require().Equal(sdk.NewInt(1_100_000), position.FarmingAmount) // 100+300+500+200
 

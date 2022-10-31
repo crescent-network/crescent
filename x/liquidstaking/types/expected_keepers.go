@@ -9,8 +9,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	farmintypes "github.com/crescent-network/crescent/v3/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 )
 
 // BankKeeper defines the expected bank send keeper
@@ -107,10 +107,10 @@ type LiquidityKeeper interface {
 	IterateAllPools(ctx sdk.Context, cb func(pool liquiditytypes.Pool) (stop bool, err error)) error
 }
 
-// FarmingKeeper expected farming keeper (noalias)
-type FarmingKeeper interface {
-	IterateStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, staking farmintypes.Staking) (stop bool))
-	IterateQueuedStakingsByFarmer(ctx sdk.Context, farmerAcc sdk.AccAddress, cb func(stakingCoinDenom string, endTime time.Time, queuedStaking farmintypes.QueuedStaking) (stop bool))
+// LPFarmKeeper defines expected lpfarm keeper
+type LPFarmKeeper interface {
+	GetPosition(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (lpfarmtypes.Position, bool)
+	IteratePositionsByFarmer(ctx sdk.Context, farmerAddr sdk.AccAddress, cb func(position lpfarmtypes.Position) bool)
 }
 
 // SlashingKeeper expected slashing keeper (noalias)

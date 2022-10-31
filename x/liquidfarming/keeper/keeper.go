@@ -36,7 +36,7 @@ type Keeper struct {
 	paramSpace      paramtypes.Subspace
 	accountKeeper   types.AccountKeeper
 	bankKeeper      types.BankKeeper
-	farmKeeper      types.FarmKeeper
+	lpfarmKeeper    types.LPFarmKeeper
 	liquidityKeeper types.LiquidityKeeper
 }
 
@@ -46,7 +46,7 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	farmKeeper types.FarmKeeper,
+	lpfarmKeeper types.LPFarmKeeper,
 	liquidityKeeper types.LiquidityKeeper,
 ) Keeper {
 	// Ensure the module account is set
@@ -65,7 +65,7 @@ func NewKeeper(
 		paramSpace:      paramSpace,
 		accountKeeper:   accountKeeper,
 		bankKeeper:      bankKeeper,
-		farmKeeper:      farmKeeper,
+		lpfarmKeeper:    lpfarmKeeper,
 		liquidityKeeper: liquidityKeeper,
 	}
 }

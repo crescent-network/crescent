@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 )
 
 // AccountKeeper defines the expected interface needed for the module.
@@ -27,14 +27,14 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
-// FarmKeeper defines the expected interface needed for the module.
-type FarmKeeper interface {
+// LPFarmKeeper defines the expected interface needed for the module.
+type LPFarmKeeper interface {
 	Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error)
 	Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error)
 	Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (withdrawnRewards sdk.Coins, err error)
 	Rewards(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) sdk.DecCoins
-	GetFarm(ctx sdk.Context, denom string) (farm farmtypes.Farm, found bool)
-	GetPosition(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (position farmtypes.Position, found bool)
+	GetFarm(ctx sdk.Context, denom string) (farm lpfarmtypes.Farm, found bool)
+	GetPosition(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (position lpfarmtypes.Position, found bool)
 }
 
 // LiquidityKeeper defines the expected interface needed for the module.

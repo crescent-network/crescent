@@ -13,11 +13,11 @@ import (
 
 	chain "github.com/crescent-network/crescent/v3/app"
 	utils "github.com/crescent-network/crescent/v3/types"
-	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/keeper"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 )
 
 var (
@@ -86,10 +86,10 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) createPrivatePlan(creator sdk.AccAddress, rewardAllocs []farmtypes.RewardAllocation) farmtypes.Plan {
+func (s *KeeperTestSuite) createPrivatePlan(creator sdk.AccAddress, rewardAllocs []lpfarmtypes.RewardAllocation) lpfarmtypes.Plan {
 	s.T().Helper()
-	s.fundAddr(creator, s.app.FarmKeeper.GetPrivatePlanCreationFee(s.ctx))
-	plan, err := s.app.FarmKeeper.CreatePrivatePlan(s.ctx, creator, "", rewardAllocs, sampleStartTime, sampleEndTime)
+	s.fundAddr(creator, s.app.LPFarmKeeper.GetPrivatePlanCreationFee(s.ctx))
+	plan, err := s.app.LPFarmKeeper.CreatePrivatePlan(s.ctx, creator, "", rewardAllocs, sampleStartTime, sampleEndTime)
 	s.Require().NoError(err)
 	return plan
 }

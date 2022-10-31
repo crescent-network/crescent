@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v3/types"
-	farmtypes "github.com/crescent-network/crescent/v3/x/farm/types"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestRefundBid() {
 func (s *KeeperTestSuite) TestAfterAllocateRewards() {
 	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
 	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+	plan := s.createPrivatePlan(s.addr(0), []lpfarmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
@@ -249,7 +249,7 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards() {
 
 	// Ensure newly staked amount by the liquid farm reserve account
 	reserveAddr := types.LiquidFarmReserveAddress(pool.Id)
-	position, found := s.app.FarmKeeper.GetPosition(s.ctx, reserveAddr, pool.PoolCoinDenom)
+	position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, pool.PoolCoinDenom)
 	s.Require().True(found)
 	s.Require().Equal(sdk.NewInt(80_000_000), position.FarmingAmount)
 }
@@ -257,7 +257,7 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards() {
 func (s *KeeperTestSuite) TestAfterAllocateRewards_NoBid() {
 	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
 	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+	plan := s.createPrivatePlan(s.addr(0), []lpfarmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
@@ -294,7 +294,7 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards_NoBid() {
 func (s *KeeperTestSuite) TestFinishRewardsAuction_NoOneFarmed() {
 	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
 	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-	plan := s.createPrivatePlan(s.addr(0), []farmtypes.RewardAllocation{
+	plan := s.createPrivatePlan(s.addr(0), []lpfarmtypes.RewardAllocation{
 		{
 			PairId:        pool.PairId,
 			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
@@ -318,13 +318,13 @@ func (s *KeeperTestSuite) TestFinishRewardsAuction_NoOneFarmed() {
 
 	// Ensure that there is no farming rewards accumulated
 	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(pool.Id)
-	farmingRewards := s.app.FarmKeeper.Rewards(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
+	farmingRewards := s.app.LPFarmKeeper.Rewards(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
 	s.Require().True(farmingRewards.IsZero())
 
 	s.nextAuction()
 
 	// Ensure that winning bid amount is auto compounded
-	position, found := s.app.FarmKeeper.GetPosition(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
+	position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
 	s.Require().True(found)
 	s.Require().True(position.FarmingAmount.Equal(sdk.NewInt(4_000_000)))
 
