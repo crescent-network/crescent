@@ -72,9 +72,11 @@ Example Response
       "pool_id": "1",
       "liquid_farm_reserve_address": "cre1zyyf855slxure4c8dr06p00qjnkem95d2lgv8wgvry2rt437x6ts363hdt",
       "lf_coin_denom": "lf1",
+      "lf_coin_supply": "500000000000",
+      "pool_coin_denom": "pool1",
+      "pool_coin_farming_amount": "500000000000",
       "min_farm_amount": "1",
-      "min_bid_amount": "1",
-      "total_farming_amount": "500000000000"
+      "min_bid_amount": "1"
     }
   ]
 }
@@ -98,9 +100,11 @@ Example Response
     "pool_id": "1",
     "liquid_farm_reserve_address": "cre1zyyf855slxure4c8dr06p00qjnkem95d2lgv8wgvry2rt437x6ts363hdt",
     "lf_coin_denom": "lf1",
-    "minimum_farm_amount": "1",
-    "minimum_bid_amount": "1",
-    "total_farming_amount": "500000000000"
+    "lf_coin_supply": "500000000000",
+    "pool_coin_denom": "pool1",
+    "pool_coin_farming_amount": "500000000000",
+    "min_farm_amount": "1",
+    "min_bid_amount": "1"
   }
 }
 ```
