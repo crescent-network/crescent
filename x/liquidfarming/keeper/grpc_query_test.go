@@ -58,14 +58,14 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarms() {
 					}
 					reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
 					lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
-					lfCoinTotalSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
+					lfCoinSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
 					poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 					position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
 					if !found {
 						position.FarmingAmount = sdk.ZeroInt()
 					}
 					s.Require().Equal(lfCoinDenom, liquidFarm.LFCoinDenom)
-					s.Require().Equal(lfCoinTotalSupplyAmt, liquidFarm.LFCoinSupply)
+					s.Require().Equal(lfCoinSupplyAmt, liquidFarm.LFCoinSupply)
 					s.Require().Equal(poolCoinDenom, liquidFarm.PoolCoinDenom)
 					s.Require().Equal(position.FarmingAmount, liquidFarm.PoolCoinFarmingAmount)
 				}
@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarm() {
 			func(resp *types.QueryLiquidFarmResponse) {
 				reserveAddr := types.LiquidFarmReserveAddress(resp.LiquidFarm.PoolId)
 				lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
-				lfCoinTotalSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
+				lfCoinSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
 				poolCoinDenom := liquiditytypes.PoolCoinDenom(resp.LiquidFarm.PoolId)
 				position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
 				if !found {
@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarm() {
 				}
 				s.Require().Equal(types.LiquidFarmReserveAddress(pool.Id).String(), resp.LiquidFarm.LiquidFarmReserveAddress)
 				s.Require().Equal(lfCoinDenom, resp.LiquidFarm.LFCoinDenom)
-				s.Require().Equal(lfCoinTotalSupplyAmt, resp.LiquidFarm.LFCoinSupply)
+				s.Require().Equal(lfCoinSupplyAmt, resp.LiquidFarm.LFCoinSupply)
 				s.Require().Equal(poolCoinDenom, resp.LiquidFarm.PoolCoinDenom)
 				s.Require().Equal(position.FarmingAmount, resp.LiquidFarm.PoolCoinFarmingAmount)
 				s.Require().Equal(minFarmAmt, resp.LiquidFarm.MinFarmAmount)

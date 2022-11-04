@@ -98,7 +98,7 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
 	lpCoinTotalFarmingAmt := sdk.ZeroInt()
 	position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
-	if !found {
+	if found {
 		lpCoinTotalFarmingAmt = position.FarmingAmount
 	}
 	compoundingRewardsAmt := sdk.ZeroInt()
