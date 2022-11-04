@@ -731,7 +731,8 @@ func (s *KeeperTestSuite) TestMintAndBurnRate_EdgeCase() {
 	s.nextBlock()
 
 	// Farm directly in the lpfarm module
-	s.app.LPFarmKeeper.Farm(s.ctx, helperAddr, utils.ParseCoin("200000000pool1"))
+	_, err := s.app.LPFarmKeeper.Farm(s.ctx, helperAddr, utils.ParseCoin("200000000pool1"))
+	s.Require().NoError(err)
 
 	s.liquidFarm(pool.Id, s.addr(2), utils.ParseCoin("100000000pool1"), true)
 	s.nextBlock()
