@@ -56,12 +56,18 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarms() {
 						s.Require().Equal(minFarmAmt2, liquidFarm.MinFarmAmount)
 						s.Require().Equal(minBidAmt2, liquidFarm.MinBidAmount)
 					}
+					reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
+					lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
+					lfCoinTotalSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
 					poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
-					farm, found := s.app.LPFarmKeeper.GetFarm(s.ctx, poolCoinDenom)
+					position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
 					if !found {
-						farm.TotalFarmingAmount = sdk.ZeroInt()
+						position.FarmingAmount = sdk.ZeroInt()
 					}
-					s.Require().Equal(farm.TotalFarmingAmount, liquidFarm.TotalFarmingAmount)
+					s.Require().Equal(lfCoinDenom, liquidFarm.LFCoinDenom)
+					s.Require().Equal(lfCoinTotalSupplyAmt, liquidFarm.LFCoinSupply)
+					s.Require().Equal(poolCoinDenom, liquidFarm.PoolCoinDenom)
+					s.Require().Equal(position.FarmingAmount, liquidFarm.PoolCoinFarmingAmount)
 				}
 			},
 		},
@@ -103,14 +109,19 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarm() {
 			},
 			false,
 			func(resp *types.QueryLiquidFarmResponse) {
+				reserveAddr := types.LiquidFarmReserveAddress(resp.LiquidFarm.PoolId)
+				lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
+				lfCoinTotalSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
 				poolCoinDenom := liquiditytypes.PoolCoinDenom(resp.LiquidFarm.PoolId)
-				farm, found := s.app.LPFarmKeeper.GetFarm(s.ctx, poolCoinDenom)
+				position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
 				if !found {
-					farm.TotalFarmingAmount = sdk.ZeroInt()
+					position.FarmingAmount = sdk.ZeroInt()
 				}
-				s.Require().Equal(farm.TotalFarmingAmount, resp.LiquidFarm.TotalFarmingAmount)
-				s.Require().Equal(types.LiquidFarmCoinDenom(pool.Id), resp.LiquidFarm.LFCoinDenom)
 				s.Require().Equal(types.LiquidFarmReserveAddress(pool.Id).String(), resp.LiquidFarm.LiquidFarmReserveAddress)
+				s.Require().Equal(lfCoinDenom, resp.LiquidFarm.LFCoinDenom)
+				s.Require().Equal(lfCoinTotalSupplyAmt, resp.LiquidFarm.LFCoinSupply)
+				s.Require().Equal(poolCoinDenom, resp.LiquidFarm.PoolCoinDenom)
+				s.Require().Equal(position.FarmingAmount, resp.LiquidFarm.PoolCoinFarmingAmount)
 				s.Require().Equal(minFarmAmt, resp.LiquidFarm.MinFarmAmount)
 				s.Require().Equal(minBidAmt, resp.LiquidFarm.MinBidAmount)
 			},

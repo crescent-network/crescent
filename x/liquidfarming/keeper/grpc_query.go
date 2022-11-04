@@ -42,20 +42,23 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 	res := []types.LiquidFarmResponse{}
 	for _, liquidFarm := range k.GetLiquidFarmsInStore(ctx) {
 		reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
-		poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 		lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
-		farm, found := k.lpfarmKeeper.GetFarm(ctx, poolCoinDenom)
+		lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
+		poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
+		position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 		if !found {
-			farm.TotalFarmingAmount = sdk.ZeroInt()
+			position.FarmingAmount = sdk.ZeroInt()
 		}
 
 		res = append(res, types.LiquidFarmResponse{
 			PoolId:                   liquidFarm.PoolId,
 			LiquidFarmReserveAddress: reserveAddr.String(),
 			LFCoinDenom:              lfCoinDenom,
+			LFCoinSupply:             lfCoinTotalSupplyAmt,
+			PoolCoinDenom:            poolCoinDenom,
+			PoolCoinFarmingAmount:    position.FarmingAmount,
 			MinFarmAmount:            liquidFarm.MinFarmAmount,
 			MinBidAmount:             liquidFarm.MinBidAmount,
-			TotalFarmingAmount:       farm.TotalFarmingAmount,
 		})
 	}
 
@@ -80,20 +83,23 @@ func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest
 	}
 
 	reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
-	poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 	lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
-	farm, found := k.lpfarmKeeper.GetFarm(ctx, poolCoinDenom)
+	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
+	poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
+	position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 	if !found {
-		farm.TotalFarmingAmount = sdk.ZeroInt()
+		position.FarmingAmount = sdk.ZeroInt()
 	}
 
 	res := types.LiquidFarmResponse{
 		PoolId:                   liquidFarm.PoolId,
 		LiquidFarmReserveAddress: reserveAddr.String(),
 		LFCoinDenom:              lfCoinDenom,
+		LFCoinSupply:             lfCoinTotalSupplyAmt,
+		PoolCoinDenom:            poolCoinDenom,
+		PoolCoinFarmingAmount:    position.FarmingAmount,
 		MinFarmAmount:            liquidFarm.MinFarmAmount,
 		MinBidAmount:             liquidFarm.MinBidAmount,
-		TotalFarmingAmount:       farm.TotalFarmingAmount,
 	}
 
 	return &types.QueryLiquidFarmResponse{LiquidFarm: res}, nil
@@ -259,9 +265,11 @@ func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateReq
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, types.LiquidFarmCoinDenom(req.PoolId)).Amount
 
 	if !lfCoinTotalSupplyAmt.IsZero() {
-		farm, found := k.lpfarmKeeper.GetFarm(ctx, liquiditytypes.PoolCoinDenom(req.PoolId))
+		reserveAddr := types.LiquidFarmReserveAddress(req.PoolId)
+		poolCoinDenom := liquiditytypes.PoolCoinDenom(req.PoolId)
+		position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 		if !found {
-			farm.TotalFarmingAmount = sdk.ZeroInt()
+			position.FarmingAmount = sdk.ZeroInt()
 		}
 
 		compoundingRewards, found := k.GetCompoundingRewards(ctx, req.PoolId)
@@ -270,10 +278,10 @@ func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateReq
 		}
 
 		// MintRate = LFCoinTotalSupply / LPCoinTotalFarmingAmount
-		res.MintRate = lfCoinTotalSupplyAmt.ToDec().Quo(farm.TotalFarmingAmount.ToDec())
+		res.MintRate = lfCoinTotalSupplyAmt.ToDec().Quo(position.FarmingAmount.ToDec())
 
 		// BurnRate = LPCoinTotalFarmingAmount - CompoundingRewards / LFCoinTotalSupply
-		lpCoinTotalFarmingAmt := farm.TotalFarmingAmount.Sub(compoundingRewards.Amount)
+		lpCoinTotalFarmingAmt := position.FarmingAmount.Sub(compoundingRewards.Amount)
 		res.BurnRate = lpCoinTotalFarmingAmt.ToDec().Quo(lfCoinTotalSupplyAmt.ToDec())
 	}
 
