@@ -1,7 +1,7 @@
 <p>&nbsp;</p>
 <p align="center">
 
-<img src="crescent_core_image.png" width=700 height=280>
+<img src="assets/banner.png" width=700 height=280>
 
 </p>
 
