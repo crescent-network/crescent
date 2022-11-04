@@ -720,3 +720,10 @@ func (s *KeeperTestSuite) TestBurnRate() {
 	// Farmed + WinningBid (last one to unfarm)
 	s.Require().Equal(amount1.Add(amount2), s.getBalance(farmerAddr2, pool.PoolCoinDenom).Amount)
 }
+
+func (s *KeeperTestSuite) TestLiquidFarm_EdgeCase() {
+	// Change to use GetFarm() function and test this case
+	// Pair, Pool, Farm (lpfarm module)
+	// Check pool coin supply
+	// LPFarm to see if it is 1:1
+}
