@@ -83,10 +83,12 @@ func TestRewardsAuctionValidate(t *testing.T) {
 				utils.ParseTime("0001-01-01T00:00:00Z"),
 				utils.ParseTime("9999-12-31T00:00:00Z"),
 			)
-			auction.SetRewards(utils.ParseCoins("100000denom1"))
 			auction.SetStatus(types.AuctionStatusStarted)
 			auction.SetWinner("")
 			auction.SetWinningAmount(utils.ParseCoin("100000pool1"))
+			auction.SetRewards(utils.ParseCoins("100000denom1"))
+			auction.SetFees(utils.ParseCoins("10denom1"))
+			auction.SetFeeRate(utils.ParseDec("0.05"))
 			tc.malleate(&auction)
 			err := auction.Validate()
 			if tc.expectedErr == "" {

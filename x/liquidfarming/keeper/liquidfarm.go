@@ -238,6 +238,7 @@ func (k Keeper) HandleRemovedLiquidFarm(ctx sdk.Context, liquidFarm types.Liquid
 		}
 
 		auction.SetStatus(types.AuctionStatusFinished)
+		auction.SetFeeRate(liquidFarm.FeeRate)
 		k.SetRewardsAuction(ctx, auction)
 	}
 
