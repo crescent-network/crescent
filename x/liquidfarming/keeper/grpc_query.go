@@ -285,7 +285,7 @@ func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateReq
 		// MintRate = LFCoinTotalSupply / LPCoinTotalFarmingAmount
 		res.MintRate = lfCoinSupplyAmt.ToDec().Quo(position.FarmingAmount.ToDec())
 
-		// BurnRate = LPCoinTotalFarmingAmount - CompoundingRewards / LFCoinTotalSupply
+		// BurnRate = (LPCoinTotalFarmingAmount - CompoundingRewards) / LFCoinTotalSupply
 		lpCoinTotalFarmingAmt := position.FarmingAmount.Sub(compoundingRewards.Amount)
 		res.BurnRate = lpCoinTotalFarmingAmt.ToDec().Quo(lfCoinSupplyAmt.ToDec())
 	}
