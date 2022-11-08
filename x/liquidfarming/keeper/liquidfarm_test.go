@@ -720,3 +720,31 @@ func (s *KeeperTestSuite) TestBurnRate() {
 	// Farmed + WinningBid (last one to unfarm)
 	s.Require().Equal(amount1.Add(amount2), s.getBalance(farmerAddr2, pool.PoolCoinDenom).Amount)
 }
+
+// This case fixes invalid minting and burning amount when LiquidFarm and LiquidUnfarm used to use GetFarm function.
+func (s *KeeperTestSuite) TestMintAndBurnRate_EdgeCase() {
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+
+	s.liquidFarm(pool.Id, s.addr(1), utils.ParseCoin("100000000pool1"), true)
+	s.nextBlock()
+
+	// Farm directly in the lpfarm module
+	_, err := s.app.LPFarmKeeper.Farm(s.ctx, helperAddr, utils.ParseCoin("200000000pool1"))
+	s.Require().NoError(err)
+
+	s.liquidFarm(pool.Id, s.addr(2), utils.ParseCoin("100000000pool1"), true)
+	s.nextBlock()
+
+	// Addr1 and Addr2 must have the same amount
+	addr1LFCoinBalance := s.getBalance(s.addr(1), types.LiquidFarmCoinDenom(pool.Id))
+	addr2LFCoinBalance := s.getBalance(s.addr(2), types.LiquidFarmCoinDenom(pool.Id))
+	s.Require().True(addr1LFCoinBalance.IsEqual(addr2LFCoinBalance))
+
+	// Addr2 must receive the same amount
+	s.liquidUnfarm(pool.Id, s.addr(2), utils.ParseCoin("100000000lf1"), false)
+
+	addr2PoolCoinBalance := s.getBalance(s.addr(2), pool.PoolCoinDenom)
+	s.Require().True(addr2LFCoinBalance.Amount.Equal(addr2PoolCoinBalance.Amount))
+}
