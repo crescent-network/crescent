@@ -157,7 +157,7 @@ func (k Querier) RewardsAuctions(c context.Context, req *types.QueryRewardsAucti
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryRewardsAuctionsResponse{RewardAuctions: auctions, Pagination: pageRes}, nil
+	return &types.QueryRewardsAuctionsResponse{RewardsAuctions: auctions, Pagination: pageRes}, nil
 }
 
 // RewardsAuction queries the particular RewardsAuction object.
@@ -181,7 +181,7 @@ func (k Querier) RewardsAuction(c context.Context, req *types.QueryRewardsAuctio
 		return nil, status.Errorf(codes.NotFound, "auction by auction %d and pool id %d not found", req.AuctionId, req.PoolId)
 	}
 
-	return &types.QueryRewardsAuctionResponse{RewardAuction: auction}, nil
+	return &types.QueryRewardsAuctionResponse{RewardsAuction: auction}, nil
 }
 
 // Bids queries all Bid objects.

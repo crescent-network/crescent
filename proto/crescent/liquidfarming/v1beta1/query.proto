@@ -91,7 +91,7 @@ message QueryRewardsAuctionsRequest {
 
 // QueryRewardsAuctionsResponse is response type for the Query/RewardsAuctions RPC method.
 message QueryRewardsAuctionsResponse {
-  repeated RewardsAuction                reward_auctions = 1 [(gogoproto.nullable) = false];
+  repeated RewardsAuction                rewards_auctions = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination      = 2;
 }
 
@@ -103,7 +103,7 @@ message QueryRewardsAuctionRequest {
 
 // QueryRewardsAuctionResponse is response type for the Query/RewardsAuction RPC method.
 message QueryRewardsAuctionResponse {
-  RewardsAuction reward_auction = 1 [(gogoproto.nullable) = false];
+  RewardsAuction rewards_auction = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryBidsRequest is request type for the Query/Bids RPC method.

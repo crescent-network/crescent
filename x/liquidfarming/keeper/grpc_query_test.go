@@ -208,7 +208,7 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuctions() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionsResponse) {
-				s.Require().Len(resp.RewardAuctions, 0)
+				s.Require().Len(resp.RewardsAuctions, 0)
 			},
 		},
 		{
@@ -218,7 +218,7 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuctions() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionsResponse) {
-				s.Require().Len(resp.RewardAuctions, 3)
+				s.Require().Len(resp.RewardsAuctions, 3)
 			},
 		},
 		{
@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuctions() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionsResponse) {
-				s.Require().Len(resp.RewardAuctions, 1)
+				s.Require().Len(resp.RewardsAuctions, 1)
 			},
 		},
 		{
@@ -240,7 +240,7 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuctions() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionsResponse) {
-				s.Require().Len(resp.RewardAuctions, 2)
+				s.Require().Len(resp.RewardsAuctions, 2)
 			},
 		},
 	} {
@@ -319,9 +319,9 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuction() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionResponse) {
-				s.Require().Equal(pool.PoolCoinDenom, resp.RewardAuction.BiddingCoinDenom)
-				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardAuction.GetPayingReserveAddress())
-				s.Require().Equal(types.AuctionStatusFinished, resp.RewardAuction.Status)
+				s.Require().Equal(pool.PoolCoinDenom, resp.RewardsAuction.BiddingCoinDenom)
+				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
+				s.Require().Equal(types.AuctionStatusFinished, resp.RewardsAuction.Status)
 			},
 		},
 		{
@@ -332,9 +332,9 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuction() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionResponse) {
-				s.Require().Equal(pool.PoolCoinDenom, resp.RewardAuction.BiddingCoinDenom)
-				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardAuction.GetPayingReserveAddress())
-				s.Require().Equal(types.AuctionStatusStarted, resp.RewardAuction.Status)
+				s.Require().Equal(pool.PoolCoinDenom, resp.RewardsAuction.BiddingCoinDenom)
+				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
+				s.Require().Equal(types.AuctionStatusStarted, resp.RewardsAuction.Status)
 			},
 		},
 	} {
