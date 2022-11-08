@@ -46,6 +46,8 @@ type RewardsAuction struct {
 	Winner               string        // the bidder who won the auction
 	WinningAmount        sdk.Coin      // the winning amount placed by the winner
 	Rewards              sdk.Coins     // the farming rewards for are accumulated every block
+	Fees                 sdk.Coins     // the fees for the rewards by the fee rate
+	FeeRate              sdk.Dec       // the fee rate for the liquid farm
 }
 ```
 
