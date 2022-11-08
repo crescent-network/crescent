@@ -119,7 +119,7 @@ genesis:
           - pool_id: "1"
             min_farm_amount: "1"
             min_bid_amount: "1"
-            fee_rate: "0.000000000000000000"
+            fee_rate: "0.100000000000000000"
     claim:
       airdrops:
         - id: "1"

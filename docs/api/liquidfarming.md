@@ -126,7 +126,7 @@ Example Response
 
 ```json
 {
-  "reward_auctions": [
+  "rewards_auctions": [
     {
       "id": "1",
       "pool_id": "1",
@@ -141,7 +141,13 @@ Example Response
         "amount": "0"
       },
       "rewards": [
-      ]
+      {
+        "denom": "stake",
+        "amount": "25369"
+      }
+    ],
+    "fees": [],
+    "fee_rate": "0.000000000000000000"
     }
   ]
 }
@@ -161,7 +167,7 @@ Example Response
 
 ```json
 {
-  "reward_auction": {
+  "rewards_auction": {
     "id": "1",
     "pool_id": "1",
     "bidding_coin_denom": "pool1",
@@ -179,7 +185,9 @@ Example Response
         "denom": "stake",
         "amount": "25369"
       }
-    ]
+    ],
+    "fees": [],
+    "fee_rate": "0.000000000000000000"
   }
 }
 ```
