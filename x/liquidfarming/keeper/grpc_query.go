@@ -198,6 +198,11 @@ func (k Querier) Bids(c context.Context, req *types.QueryBidsRequest) (*types.Qu
 	store := ctx.KVStore(k.storeKey)
 	bidStore := prefix.NewStore(store, types.BidKeyPrefix)
 
+	// Filter bids by descending order to show the highest bid first
+	req.Pagination = &query.PageRequest{
+		Reverse: true,
+	}
+
 	var bids []types.Bid
 	pageRes, err := query.FilteredPaginate(bidStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		bid, err := types.UnmarshalBid(k.cdc, value)
