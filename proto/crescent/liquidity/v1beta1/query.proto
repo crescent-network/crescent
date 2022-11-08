@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/liquidity/v1beta1/liquidity.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/liquidity/types";
+option go_package = "github.com/crescent-network/crescent/v3/x/liquidity/types";
 
 // Query defines the gRPC querier service.
 service Query {

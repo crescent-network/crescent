@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/farming/types";
+option go_package = "github.com/crescent-network/crescent/v3/x/farming/types";
 
 // Params defines the set of params for the farming module.
 message Params {
