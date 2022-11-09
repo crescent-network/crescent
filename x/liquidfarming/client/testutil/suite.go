@@ -329,10 +329,10 @@ func (s *IntegrationTestSuite) TestNewQueryRewardsAuctionsCmd() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionsResponse) {
-				s.Require().Len(resp.RewardAuctions, 1)
-				s.Require().Equal(uint64(1), resp.RewardAuctions[0].Id)
-				s.Require().Equal(uint64(1), resp.RewardAuctions[0].PoolId)
-				s.Require().Equal(types.AuctionStatusStarted, resp.RewardAuctions[0].Status)
+				s.Require().Len(resp.RewardsAuctions, 1)
+				s.Require().Equal(uint64(1), resp.RewardsAuctions[0].Id)
+				s.Require().Equal(uint64(1), resp.RewardsAuctions[0].PoolId)
+				s.Require().Equal(types.AuctionStatusStarted, resp.RewardsAuctions[0].Status)
 			},
 		},
 	}
@@ -373,9 +373,9 @@ func (s *IntegrationTestSuite) TestNewQueryRewardsAuctionCmd() {
 			},
 			false,
 			func(resp *types.QueryRewardsAuctionResponse) {
-				s.Require().Equal(uint64(1), resp.RewardAuction.Id)
-				s.Require().Equal(uint64(1), resp.RewardAuction.PoolId)
-				s.Require().Equal(types.AuctionStatusStarted, resp.RewardAuction.Status)
+				s.Require().Equal(uint64(1), resp.RewardsAuction.Id)
+				s.Require().Equal(uint64(1), resp.RewardsAuction.PoolId)
+				s.Require().Equal(types.AuctionStatusStarted, resp.RewardsAuction.Status)
 			},
 		},
 	}

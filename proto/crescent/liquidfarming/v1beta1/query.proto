@@ -91,7 +91,7 @@ message QueryRewardsAuctionsRequest {
 
 // QueryRewardsAuctionsResponse is response type for the Query/RewardsAuctions RPC method.
 message QueryRewardsAuctionsResponse {
-  repeated RewardsAuction                reward_auctions = 1 [(gogoproto.nullable) = false];
+  repeated RewardsAuction                rewards_auctions = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination      = 2;
 }
 
@@ -103,7 +103,7 @@ message QueryRewardsAuctionRequest {
 
 // QueryRewardsAuctionResponse is response type for the Query/RewardsAuction RPC method.
 message QueryRewardsAuctionResponse {
-  RewardsAuction reward_auction = 1 [(gogoproto.nullable) = false];
+  RewardsAuction rewards_auction = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryBidsRequest is request type for the Query/Bids RPC method.
@@ -151,13 +151,18 @@ message LiquidFarmResponse {
 
   string lf_coin_denom = 3 [(gogoproto.customname) = "LFCoinDenom"];
 
-  string min_farm_amount = 4
+  string lf_coin_supply = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false, (gogoproto.customname) = "LFCoinSupply"];
+
+  string pool_coin_denom = 5;
+
+  string pool_coin_farming_amount = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  string min_bid_amount = 5
+  string min_farm_amount = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  string total_farming_amount = 6
+  string min_bid_amount = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 

@@ -33,13 +33,13 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 
 	lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
-	farm, found := k.lpfarmKeeper.GetFarm(ctx, farmingCoin.Denom)
+	position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, farmingCoin.Denom)
 	if !found {
-		farm.TotalFarmingAmount = sdk.ZeroInt()
+		position.FarmingAmount = sdk.ZeroInt()
 	}
 	mintingAmt := types.CalculateLiquidFarmAmount(
 		lfCoinTotalSupplyAmt,
-		farm.TotalFarmingAmount,
+		position.FarmingAmount,
 		farmingCoin.Amount,
 	)
 	mintingCoin := sdk.NewCoin(lfCoinDenom, mintingAmt)
@@ -97,9 +97,9 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 	lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
 	lfCoinTotalSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
 	lpCoinTotalFarmingAmt := sdk.ZeroInt()
-	farm, found := k.lpfarmKeeper.GetFarm(ctx, poolCoinDenom)
+	position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 	if found {
-		lpCoinTotalFarmingAmt = farm.TotalFarmingAmount
+		lpCoinTotalFarmingAmt = position.FarmingAmount
 	}
 	compoundingRewardsAmt := sdk.ZeroInt()
 	compoundingRewards, found := k.GetCompoundingRewards(ctx, pool.Id)
@@ -238,6 +238,7 @@ func (k Keeper) HandleRemovedLiquidFarm(ctx sdk.Context, liquidFarm types.Liquid
 		}
 
 		auction.SetStatus(types.AuctionStatusFinished)
+		auction.SetFeeRate(liquidFarm.FeeRate)
 		k.SetRewardsAuction(ctx, auction)
 	}
 

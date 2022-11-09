@@ -25,9 +25,11 @@ func NewRewardsAuction(
 		StartTime:            startTime,
 		EndTime:              endTime,
 		Status:               AuctionStatusStarted,
-		Winner:               "",          // the value is determined when the auction is finished
-		WinningAmount:        sdk.Coin{},  // the value is determined when the auction is finished
-		Rewards:              sdk.Coins{}, // the value is determined when the auction is finished
+		Winner:               "",            // the value is determined when the auction is finished
+		WinningAmount:        sdk.Coin{},    // the value is determined when the auction is finished
+		Rewards:              sdk.Coins{},   // the value is determined when the auction is finished
+		Fees:                 sdk.Coins{},   // the value is determined when the auction is finished
+		FeeRate:              sdk.ZeroDec(), // the value is determined when the auction is finished
 	}
 }
 
@@ -72,6 +74,16 @@ func (a *RewardsAuction) SetWinningAmount(winningAmount sdk.Coin) {
 // SetRewards sets auction rewards.
 func (a *RewardsAuction) SetRewards(rewards sdk.Coins) {
 	a.Rewards = rewards
+}
+
+// SetFees sets auction fees.
+func (a *RewardsAuction) SetFees(fees sdk.Coins) {
+	a.Fees = fees
+}
+
+// SetFeeRate sets auction fee rate.
+func (a *RewardsAuction) SetFeeRate(feeRate sdk.Dec) {
+	a.FeeRate = feeRate
 }
 
 // GetPayingReserveAddress returns the paying reserve address in the form of sdk.AccAddress.
