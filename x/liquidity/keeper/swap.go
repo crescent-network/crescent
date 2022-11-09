@@ -667,7 +667,18 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			}
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(receivedCoin))
 
-			// TODO: store
+			tradeId, _ := k.GetLastTradeId(ctx)
+			tradeId++
+			k.SetTrade(ctx, types.Trade{
+				Id:            tradeId,
+				Order:         o,
+				Height:        ctx.BlockHeight(),
+				MatchedAmount: matchedAmt,
+				PaidCoin:      paidCoin,
+				ReceivedCoin:  receivedCoin,
+			})
+			k.SetLastTradeId(ctx, tradeId)
+
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.EventTypeUserOrderMatched,

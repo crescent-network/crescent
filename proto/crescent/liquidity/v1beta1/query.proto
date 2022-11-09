@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/liquidity/v1beta1/liquidity.proto";
+import "crescent/liquidity/v1beta1/trade.proto";
 
 option go_package = "github.com/crescent-network/crescent/x/liquidity/types";
 
@@ -71,10 +72,6 @@ service Query {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders";
   }
 
-  rpc Orders2(QueryOrdersRequest) returns (QueryOrdersResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders2";
-  }
-
   // Order returns the specific order.
   rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/pairs/{pair_id}/orders/{id}";
@@ -85,13 +82,16 @@ service Query {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/orders/{orderer}";
   }
 
-  // OrdersByOrderer returns orders made by an orderer.
-  rpc OrdersByOrderer2(QueryOrdersByOrdererRequest) returns (QueryOrdersResponse) {
-    option (google.api.http).get = "/crescent/liquidity/v1beta1/orders2/{orderer}";
-  }
-
   rpc OrderBooks(QueryOrderBooksRequest) returns (QueryOrderBooksResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/order_books";
+  }
+
+  rpc Trades(QueryTradesRequest) returns (QueryTradesResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/trades";
+  }
+
+  rpc Trade(QueryTradeRequest) returns (QueryTradeResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/trades/{id}";
   }
 }
 
@@ -255,6 +255,26 @@ message QueryOrderBooksRequest {
 // QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.
 message QueryOrderBooksResponse {
   repeated OrderBookPairResponse pairs = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryTradesRequest {
+  uint64                                pair_id    = 1;
+  string                                orderer    = 2;
+  uint64                                order_id   = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryTradesResponse {
+  repeated Trade                         trades     = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTradeRequest {
+  uint64 id = 1;
+}
+
+message QueryTradeResponse {
+  Trade trade = 1 [(gogoproto.nullable) = false];
 }
 
 //

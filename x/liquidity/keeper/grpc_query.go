@@ -4,7 +4,6 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -432,46 +431,6 @@ func (k Querier) Orders(c context.Context, req *types.QueryOrdersRequest) (*type
 	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
 
-// Orders2 queries all orders.
-func (k Querier) Orders2(c context.Context, req *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if req.PairId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pair id cannot be 0")
-	}
-
-	//ctx := sdk.UnwrapSDKContext(c)
-	//store := ctx.KVStore(k.storeKey)
-	store := dbadapter.Store{DB: k.offChainDB}
-	drsStore := prefix.NewStore(store, types.OrderKeyPrefix)
-
-	var orders []types.Order
-	pageRes, err := query.FilteredPaginate(drsStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		order, err := types.UnmarshalOrder(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
-
-		if order.PairId != req.PairId {
-			return false, nil
-		}
-
-		if accumulate {
-			orders = append(orders, order)
-		}
-
-		return true, nil
-	})
-
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
-}
-
 // Order queries the specific order.
 func (k Querier) Order(c context.Context, req *types.QueryOrderRequest) (*types.QueryOrderResponse, error) {
 	if req == nil {
@@ -520,44 +479,6 @@ func (k Querier) OrdersByOrderer(c context.Context, req *types.QueryOrdersByOrde
 		}
 
 		order, _ := k.GetOrder(ctx, pairId, orderId)
-
-		if accumulate {
-			orders = append(orders, order)
-		}
-
-		return true, nil
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
-}
-
-// OrdersByOrderer2 returns orders made by an orderer.
-func (k Querier) OrdersByOrderer2(c context.Context, req *types.QueryOrdersByOrdererRequest) (*types.QueryOrdersResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	orderer, err := sdk.AccAddressFromBech32(req.Orderer)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "orderer address %s is invalid", req.Orderer)
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := dbadapter.Store{DB: k.offChainDB}
-
-	keyPrefix := types.GetOrderIndexKeyPrefix(orderer)
-	orderStore := prefix.NewStore(store, keyPrefix)
-	var orders []types.Order
-	pageRes, err := query.FilteredPaginate(orderStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		_, pairId, orderId := types.ParseOrderIndexKey(append(keyPrefix, key...))
-		if req.PairId != 0 && pairId != req.PairId {
-			return false, nil
-		}
-
-		order, _ := k.GetOrderOffChain(ctx, pairId, orderId)
 
 		if accumulate {
 			orders = append(orders, order)
