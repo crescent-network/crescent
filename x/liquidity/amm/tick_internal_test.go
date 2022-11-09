@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v2/types"
+	utils "github.com/crescent-network/crescent/v3/types"
 )
 
 func Test_char(t *testing.T) {

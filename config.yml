@@ -2,17 +2,35 @@ init:
   home: "~/.crescent"
 accounts:
   - name: alice # cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
-    mnemonic: "guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
-    coins: ["1500000000000stake", "1000000000000000uatom", "1000000000000000uusd"]
+    coins:
+      - 1500000000000stake
+      - 1000000000000000uatom
+      - 1000000000000000uusd
+    mnemonic:
+      guard cream sadness conduct invite crumble clock pudding hole grit liar
+      hotel maid produce squeeze return argue turtle know drive eight casino maze host
   - name: bob # cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3
-    mnemonic: "friend excite rough reopen cover wheel spoon convince island path clean monkey play snow number walnut pull lock shoot hurry dream divide concert discover"
-    coins: ["1000000000000stake", "1000000000000000uatom", "1000000000000000uusd"]
+    coins:
+      - 1000000000000stake
+      - 1000000000000000uatom
+      - 1000000000000000uusd
+    mnemonic:
+      friend excite rough reopen cover wheel spoon convince island path clean
+      monkey play snow number walnut pull lock shoot hurry dream divide concert discover
   - name: steve # cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
-    mnemonic: "fuel obscure melt april direct second usual hair leave hobby beef bacon solid drum used law mercy worry fat super must ritual bring faculty"
-    coins: ["1000000000000stake", "1000000000000000uatom", "1000000000000000uusd"]
+    coins:
+      - 1000000000000stake
+      - 1000000000000000uatom
+      - 1000000000000000uusd
+    mnemonic:
+      fuel obscure melt april direct second usual hair leave hobby beef bacon
+      solid drum used law mercy worry fat super must ritual bring faculty
   - name: source # cre15rz2rwnlgr7nf6eauz52usezffwrxc0mxajpmw
-    mnemonic: "diary behind allow lawn loop assault armor survey media toe rural mass skull way crater tobacco pair glare window soon lift pistol fitness annual"
-    coins: ["15000000000000airdrop"]
+    coins:
+      - 15000000000000airdrop
+    mnemonic:
+      diary behind allow lawn loop assault armor survey media toe rural mass
+      skull way crater tobacco pair glare window soon lift pistol fitness annual
 validator:
   name: alice
   staked: "500000000000stake"
@@ -33,6 +51,8 @@ genesis:
         min_deposit:
           - amount: "1"
             denom: "stake"
+      voting_params:
+        voting_period: "20s"
     farming:
       params:
         private_plan_creation_fee:
@@ -52,6 +72,14 @@ genesis:
         whitelisted_validators:
           - validator_address: "crevaloper1zaavvzxez0elundtn32qnk9lkm8kmcszyvldht"
             target_weight: "100000000"
+    liquidfarming:
+      params:
+        rewards_auction_duration: "120s"
+        liquid_farms:
+          - pool_id: "1"
+            min_farm_amount: "1"
+            min_bid_amount: "1"
+            fee_rate: "0.000000000000000000"
     claim:
       airdrops:
         - id: "1"

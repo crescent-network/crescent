@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package crescent.marketmaker.v1beta1;
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "crescent/marketmaker/v1beta1/marketmaker.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package            = "github.com/crescent-network/crescent/x/marketmaker/types";
+option (gogoproto.equal_all) = true;
+
+// GenesisState defines the marketmaker module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters for the marketmaker module
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  repeated MarketMaker market_makers = 2
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"market_makers\""];
+
+  repeated Incentive incentives = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"incentives\""];
+
+  repeated DepositRecord deposit_records = 4
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"deposit_records\""];
+}

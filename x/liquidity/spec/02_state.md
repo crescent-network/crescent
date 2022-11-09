@@ -171,6 +171,20 @@ type Order struct {
 }
 ```
 
+## MMOrderIndex
+
+`MMOrderIndex` holds the order IDs of a group of limit orders which are
+created by `MsgMMOrder`.
+This struct exists to cancel previous MM order quickly.
+
+```go
+type MMOrderIndex struct {
+    Orderer string
+    PairId uint64
+    OrderIds []uint64
+}
+```
+
 # Parameter
 
 - ModuleName: `liquidity`
@@ -238,3 +252,7 @@ The key to find the store is the first parameter in the list.
 ### The index key to get the order by orderer address, pair id and order id
 
 - OrderIndexKey: `[]byte{0xb3} | OrdererAddressLen (1 byte) | OrdererAddress | PairId | OrderId -> nil`
+
+### The key to get the MM order index by orderer address and pair id
+
+- MMOrderIndexKey: `[]byte{0xb6} | OrdererAddressLen (1 byte) | OrdererAddress | PairId`

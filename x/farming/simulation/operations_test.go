@@ -3,6 +3,7 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -12,13 +13,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v2/app"
-	"github.com/crescent-network/crescent/v2/app/params"
-	"github.com/crescent-network/crescent/v2/x/farming"
-	"github.com/crescent-network/crescent/v2/x/farming/keeper"
-	"github.com/crescent-network/crescent/v2/x/farming/simulation"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
-	minttypes "github.com/crescent-network/crescent/v2/x/mint/types"
+	chain "github.com/crescent-network/crescent/v3/app"
+	"github.com/crescent-network/crescent/v3/app/params"
+	"github.com/crescent-network/crescent/v3/x/farming"
+	"github.com/crescent-network/crescent/v3/x/farming/keeper"
+	"github.com/crescent-network/crescent/v3/x/farming/simulation"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
+	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -193,7 +194,8 @@ func TestSimulateMsgUnstake(t *testing.T) {
 
 	// begin a new block and advance epoch
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
-	err = app.FarmingKeeper.AdvanceEpoch(ctx)
+	currentEpochDays := app.FarmingKeeper.GetCurrentEpochDays(ctx)
+	err = app.FarmingKeeper.AdvanceEpoch(ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(currentEpochDays) * types.Day)))
 	require.NoError(t, err)
 
 	// execute operation
@@ -265,7 +267,8 @@ func TestSimulateMsgHarvest(t *testing.T) {
 	_, sf := app.FarmingKeeper.GetStaking(ctx, sdk.DefaultBondDenom, accounts[1].Address)
 	require.True(t, sf)
 
-	err = app.FarmingKeeper.AdvanceEpoch(ctx)
+	currentEpochDays := app.FarmingKeeper.GetCurrentEpochDays(ctx)
+	err = app.FarmingKeeper.AdvanceEpoch(ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(currentEpochDays) * types.Day)))
 	require.NoError(t, err)
 
 	// execute operation

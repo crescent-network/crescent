@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v1farming "github.com/crescent-network/crescent/v2/x/farming/legacy/v1"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	v1farming "github.com/crescent-network/crescent/v3/x/farming/legacy/v1"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 func MigrateQueuedStaking(store sdk.KVStore, endTime time.Time) {

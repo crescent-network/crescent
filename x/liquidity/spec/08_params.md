@@ -71,6 +71,11 @@ valid swap order price is (1-0.1)*lastPrice ~(1+0.1)*lastPrice of each pair.
 If a swap order with price outside that range is requested,
 the module will reject the order.
 
+## MaxNumMarketMakingOrderTicks
+
+The maximum number of limit orders made from the `MsgMMOrder` message on each
+side(buy/sell).
+
 ## MaxOrderLifespan
 
 Since our DEX allows partial execution of swap orders,

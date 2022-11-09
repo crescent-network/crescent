@@ -9,19 +9,23 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -112,33 +116,126 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryLastBlockTimeRequest is the request type for the Query/LastBlockTime RPC method.
+type QueryLastBlockTimeRequest struct {
+}
+
+func (m *QueryLastBlockTimeRequest) Reset()         { *m = QueryLastBlockTimeRequest{} }
+func (m *QueryLastBlockTimeRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLastBlockTimeRequest) ProtoMessage()    {}
+func (*QueryLastBlockTimeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d489ab0cf384bb65, []int{2}
+}
+func (m *QueryLastBlockTimeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastBlockTimeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastBlockTimeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastBlockTimeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastBlockTimeRequest.Merge(m, src)
+}
+func (m *QueryLastBlockTimeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastBlockTimeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastBlockTimeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastBlockTimeRequest proto.InternalMessageInfo
+
+// QueryLastBlockTimeResponse is the response type for the Query/LastBlockTime RPC method.
+type QueryLastBlockTimeResponse struct {
+	LastBlockTime *time.Time `protobuf:"bytes,1,opt,name=last_block_time,json=lastBlockTime,proto3,stdtime" json:"last_block_time,omitempty" yaml:"last_block_time"`
+}
+
+func (m *QueryLastBlockTimeResponse) Reset()         { *m = QueryLastBlockTimeResponse{} }
+func (m *QueryLastBlockTimeResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLastBlockTimeResponse) ProtoMessage()    {}
+func (*QueryLastBlockTimeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d489ab0cf384bb65, []int{3}
+}
+func (m *QueryLastBlockTimeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastBlockTimeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastBlockTimeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastBlockTimeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastBlockTimeResponse.Merge(m, src)
+}
+func (m *QueryLastBlockTimeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastBlockTimeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastBlockTimeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastBlockTimeResponse proto.InternalMessageInfo
+
+func (m *QueryLastBlockTimeResponse) GetLastBlockTime() *time.Time {
+	if m != nil {
+		return m.LastBlockTime
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "crescent.mint.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "crescent.mint.v1beta1.QueryParamsResponse")
+	proto.RegisterType((*QueryLastBlockTimeRequest)(nil), "crescent.mint.v1beta1.QueryLastBlockTimeRequest")
+	proto.RegisterType((*QueryLastBlockTimeResponse)(nil), "crescent.mint.v1beta1.QueryLastBlockTimeResponse")
 }
 
 func init() { proto.RegisterFile("crescent/mint/v1beta1/query.proto", fileDescriptor_d489ab0cf384bb65) }
 
 var fileDescriptor_d489ab0cf384bb65 = []byte{
-	// 287 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4c, 0x2e, 0x4a, 0x2d,
-	0x4e, 0x4e, 0xcd, 0x2b, 0xd1, 0xcf, 0xcd, 0xcc, 0x2b, 0xd1, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49,
-	0x34, 0xd4, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x85,
-	0x29, 0xd1, 0x03, 0x29, 0xd1, 0x83, 0x2a, 0x91, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0xab, 0xd0,
-	0x07, 0xb1, 0x20, 0x8a, 0xa5, 0x64, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b, 0x32,
-	0xf5, 0x13, 0xf3, 0xf2, 0xf2, 0x4b, 0x12, 0x4b, 0x32, 0xf3, 0xf3, 0x8a, 0xa1, 0xb2, 0x0a, 0xd8,
-	0x6d, 0x03, 0x9b, 0x0b, 0x56, 0xa1, 0x24, 0xc2, 0x25, 0x14, 0x08, 0xb2, 0x3b, 0x20, 0xb1, 0x28,
-	0x31, 0xb7, 0x38, 0x28, 0xb5, 0xb0, 0x34, 0xb5, 0xb8, 0x44, 0x29, 0x88, 0x4b, 0x18, 0x45, 0xb4,
-	0xb8, 0x20, 0x3f, 0xaf, 0x38, 0x55, 0xc8, 0x9a, 0x8b, 0xad, 0x00, 0x2c, 0x22, 0xc1, 0xa8, 0xc0,
-	0xa8, 0xc1, 0x6d, 0x24, 0xab, 0x87, 0xd5, 0xa9, 0x7a, 0x10, 0x6d, 0x4e, 0x2c, 0x27, 0xee, 0xc9,
-	0x33, 0x04, 0x41, 0xb5, 0x18, 0x4d, 0x60, 0xe4, 0x62, 0x05, 0x1b, 0x2a, 0xd4, 0xc6, 0xc8, 0xc5,
-	0x06, 0x51, 0x22, 0xa4, 0x89, 0xc3, 0x04, 0x4c, 0x37, 0x49, 0x69, 0x11, 0xa3, 0x14, 0xe2, 0x50,
-	0x25, 0xd5, 0xa6, 0xcb, 0x4f, 0x26, 0x33, 0xc9, 0x0b, 0xc9, 0xea, 0x63, 0x0f, 0x00, 0x88, 0x93,
-	0x9c, 0xbc, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09,
-	0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0xca, 0x30, 0x3d, 0xb3,
-	0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x17, 0x6e, 0x84, 0x6e, 0x5e, 0x6a, 0x49, 0x79, 0x7e,
-	0x51, 0x36, 0xc2, 0xcc, 0x0a, 0x88, 0xa9, 0x25, 0x95, 0x05, 0xa9, 0xc5, 0x49, 0x6c, 0xe0, 0x00,
-	0x35, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x1e, 0xae, 0xa1, 0x27, 0xe2, 0x01, 0x00, 0x00,
+	// 417 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x51, 0xbd, 0xae, 0xd3, 0x30,
+	0x14, 0x8e, 0x2b, 0xe8, 0x60, 0x54, 0x21, 0x99, 0x82, 0x20, 0xd0, 0xa4, 0x44, 0x02, 0x15, 0x24,
+	0x6c, 0x52, 0x36, 0xd8, 0xb2, 0xc2, 0x00, 0x51, 0x27, 0x96, 0xca, 0x89, 0x4c, 0x88, 0x9a, 0xc4,
+	0x69, 0xec, 0x00, 0xdd, 0x10, 0x03, 0x73, 0x25, 0x5e, 0x81, 0x77, 0xe0, 0x15, 0x3a, 0x56, 0x62,
+	0x61, 0x2a, 0xa8, 0xe5, 0x09, 0x78, 0x02, 0x14, 0xc7, 0x81, 0xdb, 0xde, 0xf4, 0xea, 0xde, 0x2d,
+	0xf1, 0xf9, 0xce, 0xf7, 0x77, 0xe0, 0xdd, 0xb0, 0x60, 0x22, 0x64, 0x99, 0x24, 0x69, 0x9c, 0x49,
+	0xf2, 0xce, 0x0d, 0x98, 0xa4, 0x2e, 0x99, 0x97, 0xac, 0x58, 0xe0, 0xbc, 0xe0, 0x92, 0xa3, 0xeb,
+	0x0d, 0x04, 0x57, 0x10, 0xac, 0x21, 0x66, 0x3f, 0xe2, 0x11, 0x57, 0x08, 0x52, 0x7d, 0xd5, 0x60,
+	0xf3, 0x4e, 0xc4, 0x79, 0x94, 0x30, 0x42, 0xf3, 0x98, 0xd0, 0x2c, 0xe3, 0x92, 0xca, 0x98, 0x67,
+	0x42, 0x4f, 0x6d, 0x3d, 0x55, 0x7f, 0x41, 0xf9, 0x86, 0xc8, 0x38, 0x65, 0x42, 0xd2, 0x34, 0xd7,
+	0x80, 0x61, 0xbb, 0x1d, 0x25, 0xac, 0x10, 0x4e, 0x1f, 0xa2, 0x57, 0x95, 0xb9, 0x97, 0xb4, 0xa0,
+	0xa9, 0xf0, 0xd9, 0xbc, 0x64, 0x42, 0x3a, 0x3e, 0xbc, 0xb6, 0xf7, 0x2a, 0x72, 0x9e, 0x09, 0x86,
+	0x9e, 0xc1, 0x6e, 0xae, 0x5e, 0x6e, 0x82, 0x21, 0x18, 0x5d, 0x19, 0x0f, 0x70, 0x6b, 0x16, 0x5c,
+	0xaf, 0x79, 0x97, 0x56, 0x1b, 0xdb, 0xf0, 0xf5, 0x8a, 0x73, 0x1b, 0xde, 0x52, 0x9c, 0x2f, 0xa8,
+	0x90, 0x5e, 0xc2, 0xc3, 0xd9, 0x24, 0x4e, 0x59, 0x23, 0xf8, 0x11, 0x40, 0xb3, 0x6d, 0xaa, 0x85,
+	0x03, 0x78, 0x35, 0xa1, 0x42, 0x4e, 0x83, 0x6a, 0x32, 0xad, 0x52, 0x6a, 0x07, 0x26, 0xae, 0x2b,
+	0xc0, 0x4d, 0x05, 0x78, 0xd2, 0x54, 0xe0, 0x59, 0x7f, 0x36, 0xf6, 0x8d, 0x05, 0x4d, 0x93, 0xa7,
+	0xce, 0xc1, 0xb2, 0xb3, 0xfc, 0x69, 0x03, 0xbf, 0x97, 0x9c, 0xd4, 0x1a, 0x7f, 0xeb, 0xc0, 0xcb,
+	0xca, 0x02, 0xfa, 0x0c, 0x60, 0xb7, 0x8e, 0x80, 0x1e, 0x1c, 0x49, 0x78, 0xba, 0x33, 0xf3, 0xe1,
+	0x79, 0xa0, 0x75, 0x1e, 0xe7, 0xde, 0xa7, 0xef, 0xbf, 0xbf, 0x74, 0x6c, 0x34, 0x20, 0xed, 0x07,
+	0xaa, 0x2b, 0x43, 0x5f, 0x01, 0xec, 0xed, 0x15, 0x82, 0x1e, 0x9f, 0x25, 0xd2, 0xd6, 0xac, 0xe9,
+	0x5e, 0x60, 0x43, 0xbb, 0xc3, 0xca, 0xdd, 0x08, 0xdd, 0x3f, 0xe2, 0xee, 0xa0, 0x4d, 0xef, 0xf9,
+	0x6a, 0x6b, 0x81, 0xf5, 0xd6, 0x02, 0xbf, 0xb6, 0x16, 0x58, 0xee, 0x2c, 0x63, 0xbd, 0xb3, 0x8c,
+	0x1f, 0x3b, 0xcb, 0x78, 0xed, 0x46, 0xb1, 0x7c, 0x5b, 0x06, 0x38, 0xe4, 0xe9, 0x3f, 0xae, 0x47,
+	0x19, 0x93, 0xef, 0x79, 0x31, 0xfb, 0x4f, 0xfe, 0xa1, 0xa6, 0x97, 0x8b, 0x9c, 0x89, 0xa0, 0xab,
+	0x2e, 0xf9, 0xe4, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xb4, 0x5e, 0xd7, 0x0a, 0x4a, 0x03, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -155,6 +252,8 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// LastBlockTime returns the last block time.
+	LastBlockTime(ctx context.Context, in *QueryLastBlockTimeRequest, opts ...grpc.CallOption) (*QueryLastBlockTimeResponse, error)
 }
 
 type queryClient struct {
@@ -174,10 +273,21 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) LastBlockTime(ctx context.Context, in *QueryLastBlockTimeRequest, opts ...grpc.CallOption) (*QueryLastBlockTimeResponse, error) {
+	out := new(QueryLastBlockTimeResponse)
+	err := c.cc.Invoke(ctx, "/crescent.mint.v1beta1.Query/LastBlockTime", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// LastBlockTime returns the last block time.
+	LastBlockTime(context.Context, *QueryLastBlockTimeRequest) (*QueryLastBlockTimeResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -186,6 +296,9 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) LastBlockTime(ctx context.Context, req *QueryLastBlockTimeRequest) (*QueryLastBlockTimeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastBlockTime not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -210,6 +323,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_LastBlockTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLastBlockTimeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LastBlockTime(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crescent.mint.v1beta1.Query/LastBlockTime",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LastBlockTime(ctx, req.(*QueryLastBlockTimeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "crescent.mint.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -217,6 +348,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "LastBlockTime",
+			Handler:    _Query_LastBlockTime_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -279,6 +414,62 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryLastBlockTimeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastBlockTimeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastBlockTimeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLastBlockTimeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastBlockTimeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastBlockTimeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.LastBlockTime != nil {
+		n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.LastBlockTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.LastBlockTime):])
+		if err2 != nil {
+			return 0, err2
+		}
+		i -= n2
+		i = encodeVarintQuery(dAtA, i, uint64(n2))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -307,6 +498,28 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryLastBlockTimeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryLastBlockTimeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.LastBlockTime != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.LastBlockTime)
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -425,6 +638,142 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLastBlockTimeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastBlockTimeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastBlockTimeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLastBlockTimeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastBlockTimeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastBlockTimeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastBlockTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.LastBlockTime == nil {
+				m.LastBlockTime = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.LastBlockTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

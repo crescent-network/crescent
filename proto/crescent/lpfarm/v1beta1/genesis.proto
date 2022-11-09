@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package crescent.lpfarm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/lpfarm/v1beta1/lpfarm.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/x/lpfarm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message GenesisState {
+  Params                           params             = 1 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp        last_block_time    = 2 [(gogoproto.stdtime) = true];
+  uint64                           last_plan_id       = 3;
+  uint64                           num_private_plans  = 4;
+  repeated Plan                    plans              = 5 [(gogoproto.nullable) = false];
+  repeated FarmRecord              farms              = 6 [(gogoproto.nullable) = false];
+  repeated Position                positions          = 7 [(gogoproto.nullable) = false];
+  repeated HistoricalRewardsRecord historical_rewards = 8 [(gogoproto.nullable) = false];
+}
+
+message FarmRecord {
+  string denom = 1;
+  Farm   farm  = 2 [(gogoproto.nullable) = false];
+}
+
+message HistoricalRewardsRecord {
+  string            denom              = 1;
+  uint64            period             = 2;
+  HistoricalRewards historical_rewards = 3 [(gogoproto.nullable) = false];
+}

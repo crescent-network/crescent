@@ -2,13 +2,13 @@ package cli
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 // PrivateFixedPlanRequest defines CLI request for a private fixed plan.
@@ -33,7 +33,7 @@ type PrivateRatioPlanRequest struct {
 func ParsePrivateFixedPlan(file string) (PrivateFixedPlanRequest, error) {
 	plan := PrivateFixedPlanRequest{}
 
-	contents, err := ioutil.ReadFile(file)
+	contents, err := os.ReadFile(file)
 	if err != nil {
 		return plan, err
 	}
@@ -49,7 +49,7 @@ func ParsePrivateFixedPlan(file string) (PrivateFixedPlanRequest, error) {
 func ParsePrivateRatioPlan(file string) (PrivateRatioPlanRequest, error) {
 	plan := PrivateRatioPlanRequest{}
 
-	contents, err := ioutil.ReadFile(file)
+	contents, err := os.ReadFile(file)
 	if err != nil {
 		return plan, err
 	}
@@ -65,7 +65,7 @@ func ParsePrivateRatioPlan(file string) (PrivateRatioPlanRequest, error) {
 func ParsePublicPlanProposal(cdc codec.JSONCodec, proposalFile string) (types.PublicPlanProposal, error) {
 	proposal := types.PublicPlanProposal{}
 
-	contents, err := ioutil.ReadFile(proposalFile)
+	contents, err := os.ReadFile(proposalFile)
 	if err != nil {
 		return proposal, err
 	}

@@ -7,35 +7,36 @@ Description: A high-level overview of how the command-line interfaces (CLI) work
 
 ## Synopsis
 
-This document provides a high-level overview of how the command line (CLI) interface works for the `farming` module. To set up a local testing environment, it requires the latest [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
+This document provides a high-level overview of how the command line (CLI) interface works for the `farming` module. To set up a local testing environment, it requires 0.24.1 or lower versions of [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
 
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout the document.
 
-## Command Line Interfaces
+# Table of Contents
 
 - [Transaction](#Transaction)
-    * [CreateFixedAmountPlan](#CreateFixedAmountPlan)
-    * [CreateRatioPlan](#CreateRatioPlan)
-    * [Stake](#Stake)
-    * [Unstake](#Unstake)
-    * [Harvest](#Harvest)
-    * [RemovePlan](#RemovePlan)
+  - [CreateFixedAmountPlan](#CreateFixedAmountPlan)
+  - [CreateRatioPlan](#CreateRatioPlan)
+  - [Stake](#Stake)
+  - [Unstake](#Unstake)
+  - [Harvest](#Harvest)
+  - [RemovePlan](#RemovePlan)
 - [Query](#Query)
-    * [Params](#Params)
-    * [Plans](#Plans)
-    * [Plan](#Plan)
-    * [Position](#Position)
-    * [Stakings](#Stakings)
-    * [QueuedStakings](#QueuedStakings)
-    * [TotalStakings](#TotalStakings)
-    * [Rewards](#Rewards)
-    * [UnharvestedRewards](#UnharvestedRewards)
-    * [CurrentEpochDays](#CurrentEpochDays)
-    * [HistoricalRewards](#HistoricalRewards)
+  - [Params](#Params)
+  - [Plans](#Plans)
+  - [Plan](#Plan)
+  - [Position](#Position)
+  - [Stakings](#Stakings)
+  - [QueuedStakings](#QueuedStakings)
+  - [TotalStakings](#TotalStakings)
+  - [Rewards](#Rewards)
+  - [UnharvestedRewards](#UnharvestedRewards)
+  - [CurrentEpochDays](#CurrentEpochDays)
+  - [HistoricalRewards](#HistoricalRewards)
 
 # Transaction
 
 <!-- markdown-link-check-disable -->
+
 ++ https://github.com/crescent-network/crescent/blob/main/proto/crescent/farming/v1beta1/tx.proto
 
 ## CreateFixedAmountPlan
@@ -52,7 +53,7 @@ create-private-fixed-plan [plan-file]
 
 - `name`: the name of the farming plan can be any name to store in a blockchain network, duplicate values are allowed
 - `staking_coin_weights`: the distributing amount for each epoch. An amount must be decimal, not an integer. The sum of total weight must be 1.000000000000000000
-- `start_time`: start time of the farming plan 
+- `start_time`: start time of the farming plan
 - `end_time`: end time of the farming plan
 - `epoch_amount`: the amount to distribute per epoch as an incentive for staking denoms that are defined in the staking coin weights
 
@@ -97,7 +98,7 @@ crescentd tx farming create-private-fixed-plan private-fixed-plan.json \
 
 ## CreateRatioPlan
 
-***This message is disabled by default, you have to build the binary with `make install-testing` to activate this message.***
+**_This message is disabled by default, you have to build the binary with `make install-testing` to activate this message._**
 
 Anyone can create this private plan type message. A ratio plan plans to distribute amount of coins by ratio that is defined in `EpochRatio`. Internally, `PrivatePlanFarmingPoolAddress` is generated and assigned to the plan. The creator must query the plan and send amount of coins to the farming pool address so that the plan distributes as intended. For a ratio plan, whichever coins that the farming pool address has in balances are used every epoch. To prevent spamming attacks, a `PlanCreationFee` fee must be paid on plan creation.
 
@@ -111,9 +112,9 @@ create-private-ratio-plan [plan-file]
 
 - `name`: the name of the farming plan can be any name to store in a blockchain network, duplicate values are allowed
 - `staking_coin_weights`: the distributing amount for each epoch. An amount must be decimal, not an integer. The sum of total weight must be 1.000000000000000000
-- `start_time`: start time of the farming plan 
+- `start_time`: start time of the farming plan
 - `end_time`: end time of the farming plan
-- `epoch_ratio`: a ratio to distribute per epoch as an incentive for staking denoms that are defined in staking coin weights. The ratio refers to all coins that the creator has in their account. Note that the total ratio cannot exceed 1.0 (100%). 
+- `epoch_ratio`: a ratio to distribute per epoch as an incentive for staking denoms that are defined in staking coin weights. The ratio refers to all coins that the creator has in their account. Note that the total ratio cannot exceed 1.0 (100%).
 
 Example JSON
 
@@ -251,13 +252,13 @@ crescentd tx farming remove-plan 1 \
 --output json | jq
 ```
 
-
 # Query
 
 <!-- markdown-link-check-disable -->
+
 ++ https://github.com/crescent-network/crescent/blob/main/proto/crescent/farming/v1beta1/query.proto
 
-## Params 
+## Params
 
 Usage
 
@@ -272,7 +273,7 @@ Example
 crescentd q farming params --output json | jq
 ```
 
-## Plans 
+## Plans
 
 Usage
 
@@ -308,7 +309,7 @@ crescentd q farming plans \
 --output json | jq
 ```
 
-## Plan 
+## Plan
 
 Usage
 
@@ -438,7 +439,7 @@ crescentd q farming unharvested-rewards cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42
 --output json | jq
 ```
 
-## CurrentEpochDays 
+## CurrentEpochDays
 
 Usage
 

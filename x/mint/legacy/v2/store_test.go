@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/crescent-network/crescent/v2/app"
-	"github.com/crescent-network/crescent/v2/x/mint/legacy/v2"
-	"github.com/crescent-network/crescent/v2/x/mint/types"
+	"github.com/crescent-network/crescent/v3/app"
+	v2 "github.com/crescent-network/crescent/v3/x/mint/legacy/v2"
+	"github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 func TestStoreMigration(t *testing.T) {

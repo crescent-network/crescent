@@ -24,4 +24,6 @@ message GenesisState {
   repeated WithdrawRequest withdraw_requests = 7 [(gogoproto.nullable) = false];
 
   repeated Order orders = 8 [(gogoproto.nullable) = false];
+
+  repeated MMOrderIndex market_making_order_indexes = 9 [(gogoproto.nullable) = false];
 }

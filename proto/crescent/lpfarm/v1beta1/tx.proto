@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package crescent.lpfarm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "crescent/lpfarm/v1beta1/lpfarm.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/x/lpfarm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+service Msg {
+  rpc CreatePrivatePlan(MsgCreatePrivatePlan) returns (MsgCreatePrivatePlanResponse);
+  rpc Farm(MsgFarm) returns (MsgFarmResponse);
+  rpc Unfarm(MsgUnfarm) returns (MsgUnfarmResponse);
+  rpc Harvest(MsgHarvest) returns (MsgHarvestResponse);
+}
+
+message MsgCreatePrivatePlan {
+  string                    creator            = 1;
+  string                    description        = 2;
+  repeated RewardAllocation reward_allocations = 3 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp start_time         = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp end_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message MsgCreatePrivatePlanResponse {
+  uint64 plan_id              = 1;
+  string farming_pool_address = 2;
+}
+
+message MsgFarm {
+  string                   farmer = 1;
+  cosmos.base.v1beta1.Coin coin   = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgFarmResponse {
+  repeated cosmos.base.v1beta1.Coin withdrawn_rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message MsgUnfarm {
+  string                   farmer = 1;
+  cosmos.base.v1beta1.Coin coin   = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgUnfarmResponse {
+  repeated cosmos.base.v1beta1.Coin withdrawn_rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message MsgHarvest {
+  string farmer = 1;
+  string denom  = 2;
+}
+
+message MsgHarvestResponse {
+  repeated cosmos.base.v1beta1.Coin withdrawn_rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/mint/types"
+	"github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -16,4 +16,11 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
+}
+
+// LastBlockTime returns last block time.
+func (k Keeper) LastBlockTime(c context.Context, _ *types.QueryLastBlockTimeRequest) (*types.QueryLastBlockTimeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	return &types.QueryLastBlockTimeResponse{LastBlockTime: k.GetLastBlockTime(ctx)}, nil
 }

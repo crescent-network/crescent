@@ -12,7 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/crescent-network/crescent/v2/x/liquidity/types"
+	utils "github.com/crescent-network/crescent/v3/types"
+	"github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 // Simulation parameter constants.
@@ -29,11 +30,11 @@ func GenBatchSize(r *rand.Rand) uint32 {
 }
 
 func GenTickPrecision(r *rand.Rand) uint32 {
-	return uint32(r.Int31n(4))
+	return uint32(2 + r.Int31n(4))
 }
 
 func GenMaxPriceRatio(r *rand.Rand) sdk.Dec {
-	return simtypes.RandomDecAmount(r, sdk.NewDecWithPrec(2, 1))
+	return utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("0.2"))
 }
 
 func GenWithdrawFeeRate(r *rand.Rand) sdk.Dec {

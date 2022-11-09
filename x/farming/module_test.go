@@ -8,9 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	chain "github.com/crescent-network/crescent/v2/app"
-	"github.com/crescent-network/crescent/v2/x/farming/keeper"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	chain "github.com/crescent-network/crescent/v3/app"
+	"github.com/crescent-network/crescent/v3/x/farming/keeper"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 const (
@@ -142,6 +142,6 @@ func (suite *ModuleTestSuite) Rewards(farmerAcc sdk.AccAddress) sdk.Coins {
 	return rewards
 }
 
-func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
-	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
-}
+//func coinsEq(exp, got sdk.Coins) (bool, string, string, string) {
+//	return exp.IsEqual(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+//}

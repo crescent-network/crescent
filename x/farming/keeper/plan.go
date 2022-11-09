@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 // GetPlan returns a plan for a given plan id.
@@ -100,6 +100,11 @@ func (k Keeper) GetGlobalPlanId(ctx sdk.Context) uint64 {
 		id = val.GetValue()
 	}
 	return id
+}
+
+func (k Keeper) DeleteGlobalPlanId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GlobalPlanIdKey)
 }
 
 func (k Keeper) decodePlan(bz []byte) types.PlanI {

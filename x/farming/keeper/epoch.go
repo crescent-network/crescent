@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 // GetLastEpochTime returns the last time the epoch ended.
@@ -39,12 +39,17 @@ func (k Keeper) SetLastEpochTime(ctx sdk.Context, t time.Time) {
 	store.Set(types.LastEpochTimeKey, bz)
 }
 
+func (k Keeper) DeleteLastEpochTime(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastEpochTimeKey)
+}
+
 // AdvanceEpoch allocates rewards and advances epoch by one.
 // AdvanceEpoch also forcefully makes queued stakings to be staked.
 // Use this only for simulation and testing purpose.
 func (k Keeper) AdvanceEpoch(ctx sdk.Context) error {
 	currentEpochDays := k.GetCurrentEpochDays(ctx)
-	k.ProcessQueuedCoins(ctx, ctx.BlockTime().Add(time.Duration(currentEpochDays)*types.Day))
+	k.ProcessQueuedCoins(ctx, ctx.BlockTime()) // Caller must adjust the ctx's BlockTime to simulate the advance.
 	if err := k.TerminateEndedPlans(ctx); err != nil {
 		return err
 	}
@@ -82,4 +87,9 @@ func (k Keeper) SetCurrentEpochDays(ctx sdk.Context, epochDays uint32) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt32Value{Value: epochDays})
 	store.Set(types.CurrentEpochDaysKey, bz)
+}
+
+func (k Keeper) DeleteCurrentEpochDays(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.CurrentEpochDaysKey)
 }

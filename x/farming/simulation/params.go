@@ -9,7 +9,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals

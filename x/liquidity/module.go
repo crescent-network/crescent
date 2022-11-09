@@ -18,10 +18,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/crescent-network/crescent/v2/x/liquidity/client/cli"
-	"github.com/crescent-network/crescent/v2/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/v2/x/liquidity/simulation"
-	"github.com/crescent-network/crescent/v2/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/liquidity/client/cli"
+	"github.com/crescent-network/crescent/v3/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/v3/x/liquidity/simulation"
+	"github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 var (
@@ -144,6 +144,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(err)
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInvariants registers the capability module's invariants.
@@ -166,7 +169,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {

@@ -39,17 +39,17 @@ This is the easiest way to get started. Download a pre-built binary for your ope
 
 **Step 1. Install Golang**
 
-Go version [1.17](https://go.dev/doc/go1.17) or higher is required for Crescent Core.
+Go version [1.18](https://go.dev/doc/go1.18) or higher is required for Crescent Core.
 
 If you haven't already, install Go by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
 **Step 2. Get Crescent Core source code**
 
-Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v2.0.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
+Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v3.0.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
-cd crescent && git checkout release/v2.0.x
+cd crescent && git checkout release/v3.0.x
 make install
 ```
 
@@ -63,12 +63,12 @@ crescentd version --long
 
 ## Dependency
 
-Crescent Core uses a customized Cosmos SDK. Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.45.3...v1.1.0-sdk-0.45.3).
+Crescent Core uses a customized Cosmos SDK. Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.45.9...v1.1.2-sdk-0.45.9).
 
 | Requirement           | Notes             |
 |-----------------------|-------------------|
-| Go version            | Go1.17 or higher  |
-| customized cosmos-sdk | v1.1.0-sdk-0.45.3 |
+| Go version            | Go1.18 or higher  |
+| customized cosmos-sdk | v1.1.2-sdk-0.45.9 |
 
 ## Documentation
 

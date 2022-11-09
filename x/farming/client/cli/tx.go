@@ -19,8 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/crescent-network/crescent/v2/x/farming/keeper"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming/keeper"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 // GetTxCmd returns a root CLI command handler for all x/farming transaction commands.

@@ -6,8 +6,14 @@
   - x/liquidity/**/*
 "x/liquidstaking":
   - x/liquidstaking/**/*
+"x/liquidfarming":
+  - x/liquidfarming/**/*
 "x/mint":
   - x/mint/**/*
+"x/marketmaker":
+  - x/marketmaker/**/*
+"x/lpfarm":
+  - x/lpfarm/**/*
 "documentation":
   - docs/**/*
 "build":

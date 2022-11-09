@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
@@ -38,18 +38,22 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetOrder(ctx, order)
 		k.SetOrderIndex(ctx, order)
 	}
+	for _, index := range genState.MarketMakingOrderIndexes {
+		k.SetMMOrderIndex(ctx, index)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
-		Params:           k.GetParams(ctx),
-		LastPairId:       k.GetLastPairId(ctx),
-		LastPoolId:       k.GetLastPoolId(ctx),
-		Pairs:            k.GetAllPairs(ctx),
-		Pools:            k.GetAllPools(ctx),
-		DepositRequests:  k.GetAllDepositRequests(ctx),
-		WithdrawRequests: k.GetAllWithdrawRequests(ctx),
-		Orders:           k.GetAllOrders(ctx),
+		Params:                   k.GetParams(ctx),
+		LastPairId:               k.GetLastPairId(ctx),
+		LastPoolId:               k.GetLastPoolId(ctx),
+		Pairs:                    k.GetAllPairs(ctx),
+		Pools:                    k.GetAllPools(ctx),
+		DepositRequests:          k.GetAllDepositRequests(ctx),
+		WithdrawRequests:         k.GetAllWithdrawRequests(ctx),
+		Orders:                   k.GetAllOrders(ctx),
+		MarketMakingOrderIndexes: k.GetAllMMOrderIndexes(ctx),
 	}
 }

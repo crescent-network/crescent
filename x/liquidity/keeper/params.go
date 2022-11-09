@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 // GetBatchSize returns the current batch size parameter.
@@ -75,6 +75,13 @@ func (k Keeper) GetMaxPriceLimitRatio(ctx sdk.Context) (ratio sdk.Dec) {
 	return
 }
 
+// GetMaxNumMarketMakingOrderTicks returns the current maximum number of
+// market making order ticks.
+func (k Keeper) GetMaxNumMarketMakingOrderTicks(ctx sdk.Context) (i uint32) {
+	k.paramSpace.Get(ctx, types.KeyMaxNumMarketMakingOrderTicks, &i)
+	return
+}
+
 // GetMaxOrderLifespan returns the current maximum order lifespan
 // parameter.
 func (k Keeper) GetMaxOrderLifespan(ctx sdk.Context) (maxLifespan time.Duration) {
@@ -104,4 +111,9 @@ func (k Keeper) GetWithdrawExtraGas(ctx sdk.Context) (gas sdk.Gas) {
 func (k Keeper) GetOrderExtraGas(ctx sdk.Context) (gas sdk.Gas) {
 	k.paramSpace.Get(ctx, types.KeyOrderExtraGas, &gas)
 	return
+}
+
+// SetMaxNumMarketMakingOrderTicks sets max num market making order ticks
+func (k Keeper) SetMaxNumMarketMakingOrderTicks(ctx sdk.Context, input uint32) {
+	k.paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrderTicks, input)
 }

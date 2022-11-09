@@ -12,11 +12,11 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v2/app"
-	utils "github.com/crescent-network/crescent/v2/types"
-	"github.com/crescent-network/crescent/v2/x/mint"
-	"github.com/crescent-network/crescent/v2/x/mint/keeper"
-	"github.com/crescent-network/crescent/v2/x/mint/types"
+	chain "github.com/crescent-network/crescent/v3/app"
+	utils "github.com/crescent-network/crescent/v3/types"
+	"github.com/crescent-network/crescent/v3/x/mint"
+	"github.com/crescent-network/crescent/v3/x/mint/keeper"
+	"github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 var (

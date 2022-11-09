@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/crescent-network/crescent/v2/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestGetBatchSize() {
@@ -38,6 +38,10 @@ func (s *KeeperTestSuite) TestGetMinInitialDepositAmount() {
 
 func (s *KeeperTestSuite) TestGetMaxPriceLimitRatio() {
 	s.Require().EqualValues(types.DefaultMaxPriceLimitRatio, s.keeper.GetMaxPriceLimitRatio(s.ctx))
+}
+
+func (s *KeeperTestSuite) TestGetMaxNumMarketMakingOrderTicks() {
+	s.Require().EqualValues(types.DefaultMaxNumMarketMakingOrderTicks, s.keeper.GetMaxNumMarketMakingOrderTicks(s.ctx))
 }
 
 func (s *KeeperTestSuite) TestGetMaxOrderLifespan() {

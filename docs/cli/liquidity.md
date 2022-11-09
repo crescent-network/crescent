@@ -7,41 +7,43 @@ Description: A high-level overview of how the command-line interfaces (CLI) work
 
 ## Synopsis
 
-This document provides a high-level overview of how the command line (CLI) interface works for the `liquidity` module. To set up a local testing environment, it requires the latest [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
+This document provides a high-level overview of how the command line (CLI) interface works for the `liquidity` module. To set up a local testing environment, it requires 0.24.1 or lower versions of [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
 
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout the document.
 
 ## Command Line Interfaces
 
 - [Transaction](#Transaction)
-    * [CreatePair](#CreatePair)
-    * [CreatePool](#CreatePool)
-    * [CreateRangedPool](#CreateRangedPool)
-    * [Deposit](#Deposit)
-    * [Withdraw](#Withdraw)
-    * [LimitOrder](#LimitOrder)
-    * [MarketOrder](#MarketOrder)
-    * [CancelOrder](#CancelOrder)
-    * [CancelAllOrders](#CancelAllOrders)
+  - [CreatePair](#CreatePair)
+  - [CreatePool](#CreatePool)
+  - [CreateRangedPool](#CreateRangedPool)
+  - [Deposit](#Deposit)
+  - [Withdraw](#Withdraw)
+  - [LimitOrder](#LimitOrder)
+  - [MarketOrder](#MarketOrder)
+  - [MMOrder](#MMOrder)
+  - [CancelOrder](#CancelOrder)
+  - [CancelAllOrders](#CancelAllOrders)
+  - [CancelMMOrder](#CancelMMOrder)
 - [Query](#Query)
-    * [Params](#Params)
-    * [Pairs](#Pairs)
-    * [Pair](#Pair)
-    * [Pools](#Pools)
-    * [Pool](#Pool)
-    * [DepositRequests](#DepositRequests)
-    * [DepositRequest](#DepositRequest)
-    * [WithdrawRequests](#WithdrawRequests)
-    * [WithdrawRequest](#WithdrawRequest)
-    * [Orders](#Orders)
-    * [Order](#Order)
-    * [OrderBooks](#OrderBooks)
+  - [Params](#Params)
+  - [Pairs](#Pairs)
+  - [Pair](#Pair)
+  - [Pools](#Pools)
+  - [Pool](#Pool)
+  - [DepositRequests](#DepositRequests)
+  - [DepositRequest](#DepositRequest)
+  - [WithdrawRequests](#WithdrawRequests)
+  - [WithdrawRequest](#WithdrawRequest)
+  - [Orders](#Orders)
+  - [Order](#Order)
+  - [OrderBooks](#OrderBooks)
 
 # Transaction
 
 ## CreatePair
 
-Create a pair (market) for trading. 
+Create a pair (market) for trading.
 
 A pair consists of a base coin and a quote coin and you can think of a pair in an order book. An orderer can request a limit or market order once a pair is created. Anyone can create a pair by paying a fee `PairCreationFee` (default is 1000000stake).
 
@@ -51,10 +53,10 @@ Usage
 create-pair [base-coin-denom] [quote-coin-denom]
 ```
 
-| **Argument**      |  **Description**                     |
-| :---------------- | :----------------------------------- |
-| base-coin-denom   | denom of the base coin for the pair  | 
-| quote-coin-deom   | denom of the quote coin for the pair |
+| **Argument**    | **Description**                      |
+| :-------------- | :----------------------------------- |
+| base-coin-denom | denom of the base coin for the pair  |
+| quote-coin-deom | denom of the quote coin for the pair |
 
 Example
 
@@ -77,7 +79,7 @@ crescentd q liquidity pairs -o json | jq
 
 ## CreatePool
 
-Create a liquidity pool in existing pair. 
+Create a liquidity pool in existing pair.
 
 Pool(s) belong to a pair. Therefore, a pair must exist in order to create a pool. Anyone can create a pool by paying a fee PoolCreationFee (default is 1000000stake).
 
@@ -87,9 +89,9 @@ Usage
 create-pool [pair-id] [deposit-coins]
 ```
 
-| **Argument**  |  **Description**                       |
+| **Argument**  | **Description**                        |
 | :------------ | :------------------------------------- |
-| pair-id       | pair id                                | 
+| pair-id       | pair id                                |
 | deposit-coins | deposit amount of base and quote coins |
 
 Example
@@ -124,7 +126,7 @@ create-ranged-pool [pair-id] [deposit-coins] [min-price] [max-price] [initial-pr
 ```
 
 | **Argument**  | **Description**                        |
-|:--------------|:---------------------------------------|
+| :------------ | :------------------------------------- |
 | pair-id       | pair id                                |
 | deposit-coins | deposit amount of base and quote coins |
 | min-price     | minimum price of the pool              |
@@ -153,7 +155,7 @@ crescentd q liquidity pools -o json | jq
 
 ## Deposit
 
-Deposit coins to a liquidity pool.  
+Deposit coins to a liquidity pool.
 
 Deposit uses a batch execution methodology. Deposit requests are accumulated in a batch for a pre-defined period (default is 1 block) and they are executed at the end of the batch. A minimum deposit amount is 1000000 for each denomination.
 
@@ -165,7 +167,7 @@ Usage
 deposit [pool-id] [deposit-coins]
 ```
 
-| **Argument**  |  **Description**                       |
+| **Argument**  | **Description**                        |
 | :------------ | :------------------------------------- |
 | pool-id       | pool id                                |
 | deposit-coins | deposit amount of base and quote coins |
@@ -203,7 +205,7 @@ Usage
 withdraw [pool-id] [pool-coin]
 ```
 
-| **Argument** |  **Description**                |
+| **Argument** | **Description**                 |
 | :----------- | :------------------------------ |
 | pool-id      | pool id                         |
 | pool-coin    | amount of pool coin to withdraw |
@@ -243,18 +245,18 @@ Usage
 limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount]
 ```
 
-| **Argument**        |  **Description**                |
-| :------------------ | :------------------------------ |
-| pair-id             | pair id                         |
-| direction           | swap direction; buy or sell |
-| offer-coin          | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price * amount. For sell direction, base coin amount must be greater than or equal to the amount value.  |
-| demand-coin-denom   | demand coin denom that the orderer is willing to swap for |
-| price               | order price; the exchange ratio is the amount of quote coin over the amount of base coin |
-| amount              | amount of base coin that the orderer is willing to buy or sell |
+| **Argument**      | **Description**                                                                                                                                                                                                                                                                                                  |
+| :---------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pair-id           | pair id                                                                                                                                                                                                                                                                                                          |
+| direction         | swap direction; buy or sell                                                                                                                                                                                                                                                                                      |
+| offer-coin        | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price \* amount. For sell direction, base coin amount must be greater than or equal to the amount value. |
+| demand-coin-denom | demand coin denom that the orderer is willing to swap for                                                                                                                                                                                                                                                        |
+| price             | order price; the exchange ratio is the amount of quote coin over the amount of base coin                                                                                                                                                                                                                         |
+| amount            | amount of base coin that the orderer is willing to buy or sell                                                                                                                                                                                                                                                   |
 
-| **Optional Flag**  |  **Description**                                     |
-| :------------------- | :--------------------------------------------------- |
-| order-lifespan       | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns|us|ms|s|m|h|
+| **Optional Flag** | **Description**                                                                                                                                         |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --- | --- | --- | --- |
+| order-lifespan    | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns | us  | ms  | s   | m   | h   |
 
 Example
 
@@ -291,9 +293,9 @@ crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json 
 
 Make a market order.
 
-Unlike a limit order, there is no need to input order price. 
+Unlike a limit order, there is no need to input order price.
 
-Buy market order uses `MaxPriceLimitRatio` of the last price, which is `LastPrice * (1+MaxPriceLimitRatio)`. 
+Buy market order uses `MaxPriceLimitRatio` of the last price, which is `LastPrice * (1+MaxPriceLimitRatio)`.
 
 Sell market order uses negative MaxPriceLimitRatio of the last price, which is `LastPrice * (1-MaxPriceLimitRatio)`.
 
@@ -305,17 +307,17 @@ Usage
 market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount]
 ```
 
-| **Argument**      |  **Description**                |
-| :---------------- | :------------------------------ |
-| pair-id           | pair id                         |
-| direction         | swap direction; buy or sell |
-| offer-coin        | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price * amount. For sell direction, base coin amount must be greater than or equal to the amount value.  |
-| demand-coin-denom | demand coin denom that the orderer is willing to swap for |
-| amount            | amount of base coin that the orderer is willing to buy or sell |
+| **Argument**      | **Description**                                                                                                                                                                                                                                                                                                  |
+| :---------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pair-id           | pair id                                                                                                                                                                                                                                                                                                          |
+| direction         | swap direction; buy or sell                                                                                                                                                                                                                                                                                      |
+| offer-coin        | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price \* amount. For sell direction, base coin amount must be greater than or equal to the amount value. |
+| demand-coin-denom | demand coin denom that the orderer is willing to swap for                                                                                                                                                                                                                                                        |
+| amount            | amount of base coin that the orderer is willing to buy or sell                                                                                                                                                                                                                                                   |
 
-| **Optional Flag**  |  **Description**                                     |
-| :------------------- | :--------------------------------------------------- |
-| order-lifespan       | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns|us|ms|s|m|h|
+| **Optional Flag** | **Description**                                                                                                                                         |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --- | --- | --- | --- |
+| order-lifespan    | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns | us  | ms  | s   | m   | h   |
 
 Example
 
@@ -348,6 +350,57 @@ crescentd tx liquidity market-order 1 sell 100000000uatom uusd 100000000 \
 crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
+## MMOrder
+
+Make an MM(market making) order.
+An MM order is a group of multiple buy/sell limit orders which are distributed
+evenly based on its parameters.
+
+Usage
+
+```bash
+mm-order [pair-id] [max-sell-price] [min-sell-price] [sell-amount] [max-buy-price] [min-buy-price] [buy-amount]
+```
+
+| **Argument**   | **Description**              |
+| :------------- | :--------------------------- |
+| pair-id        | pair id                      |
+| max-sell-price | maximum price of sell orders |
+| min-sell-price | minimum price of sell orders |
+| sell-amount    | total amount of sell orders  |
+| max-buy-price  | maximum price of buy orders  |
+| min-buy-price  | minimum price of buy orders  |
+| buy-amount     | total amount of buy orders   |
+
+| **Optional Flag** | **Description**                                                                                                                                         |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --- | --- | --- | --- |
+| order-lifespan    | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns | us  | ms  | s   | m   | h   |
+
+Example
+
+```bash
+# Make a market making order in pair 1 with following parameters:
+# Sell: total 1000000 with price range from 102 to 101
+# Buy: total 1000000 with price range from 100 to 99
+crescentd tx liquidity mm-order 1 102 101 1000000 100 99 1000000  \
+--chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Make the same order with order-lifespan flag
+crescentd tx liquidity mm-order 1 102 101 1000000 100 99 1000000  \
+--order-lifespan 30s \
+--chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+```
+
 ## CancelOrder
 
 Cancel an order.
@@ -358,10 +411,10 @@ Usage
 cancel-order [pair-id] [order-id]
 ```
 
-| **Argument** |  **Description** |
-| :----------- | :----------------|
-| pair-id      | pair id          |
-| order-id     | order id         |
+| **Argument** | **Description** |
+| :----------- | :-------------- |
+| pair-id      | pair id         |
+| order-id     | order id        |
 
 Example
 
@@ -387,7 +440,7 @@ Usage
 cancel-all-orders [pair-ids]
 ```
 
-| **Argument** |  **Description**                |
+| **Argument** | **Description**                 |
 | :----------- | :------------------------------ |
 | pool-id      | pool id                         |
 | pool-coin    | amount of pool coin to withdraw |
@@ -396,6 +449,33 @@ Example
 
 ```bash
 crescentd tx liquidity cancel-all-orders 1,2,3 \
+--chain-id localnet \
+--from alice \
+--keyring-backend=test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+```
+
+## CancelMMOrder
+
+Cancel a market making order in a pair.
+This will cancel all limit orders in the pair made by the mm order.
+
+Usage
+
+```bash
+cancel-mm-order [pair-id]
+```
+
+| **Argument** | **Description** |
+| :----------- | :-------------- |
+| pair-id      | pair id         |
+
+Example
+
+```bash
+crescentd tx liquidity cancel-mm-order 1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend=test \
@@ -626,5 +706,3 @@ crescentd order-books 1 --num-ticks=10
 
 crescentd order-books 1,2,3
 ```
-
-

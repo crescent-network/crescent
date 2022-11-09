@@ -21,15 +21,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v2/app"
-	utils "github.com/crescent-network/crescent/v2/types"
-	"github.com/crescent-network/crescent/v2/x/farming"
-	farmingtypes "github.com/crescent-network/crescent/v2/x/farming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v2/x/liquidity/types"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/keeper"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/types"
-	"github.com/crescent-network/crescent/v2/x/mint"
+	chain "github.com/crescent-network/crescent/v3/app"
+	utils "github.com/crescent-network/crescent/v3/types"
+	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v3/x/mint"
 )
 
 var (
@@ -367,42 +366,30 @@ func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depo
 // farming module keeper utils for liquid staking combine test
 
 func (s *KeeperTestSuite) advanceEpochDays() {
-	currentEpochDays := s.app.FarmingKeeper.GetCurrentEpochDays(s.ctx)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(currentEpochDays) * farmingtypes.Day))
-	farming.EndBlocker(s.ctx, s.app.FarmingKeeper)
+	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{})
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(24 * time.Hour))
+	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{})
 }
 
-func (s *KeeperTestSuite) CreateFixedAmountPlan(farmingPoolAcc sdk.AccAddress, stakingCoinWeightsMap map[string]string, epochAmountMap map[string]int64) {
-	stakingCoinWeights := sdk.NewDecCoins()
-	for denom, weight := range stakingCoinWeightsMap {
-		stakingCoinWeights = stakingCoinWeights.Add(sdk.NewDecCoinFromDec(denom, sdk.MustNewDecFromStr(weight)))
-	}
-
-	epochAmount := sdk.NewCoins()
-	for denom, amount := range epochAmountMap {
-		epochAmount = epochAmount.Add(sdk.NewInt64Coin(denom, amount))
-	}
-
-	msg := farmingtypes.NewMsgCreateFixedAmountPlan(
-		fmt.Sprintf("plan%d", s.app.FarmingKeeper.GetGlobalPlanId(s.ctx)+1),
-		farmingPoolAcc,
-		stakingCoinWeights,
-		farmingtypes.ParseTime("0001-01-01T00:00:00Z"),
-		farmingtypes.ParseTime("9999-12-31T00:00:00Z"),
-		epochAmount,
-	)
-	_, err := s.app.FarmingKeeper.CreateFixedAmountPlan(s.ctx, msg, farmingPoolAcc, farmingPoolAcc, farmingtypes.PlanTypePublic)
+func (s *KeeperTestSuite) createPublicPlan(farmingPoolAddr sdk.AccAddress, rewardAllocs []lpfarmtypes.RewardAllocation) {
+	_, err := s.app.LPFarmKeeper.CreatePublicPlan(
+		s.ctx, "", farmingPoolAddr, rewardAllocs,
+		utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"))
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) Stake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
-	err := s.app.FarmingKeeper.Stake(s.ctx, farmerAcc, amt)
+func (s *KeeperTestSuite) farm(farmerAddr sdk.AccAddress, coin sdk.Coin) {
+	_, err := s.app.LPFarmKeeper.Farm(s.ctx, farmerAddr, coin)
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) Unstake(farmerAcc sdk.AccAddress, amt sdk.Coins) {
-	err := s.app.FarmingKeeper.Unstake(s.ctx, farmerAcc, amt)
-	s.Require().NoError(err)
+func (s *KeeperTestSuite) assertTallyResult(yes, no, vito, abstain int64, proposal govtypes.Proposal) {
+	cachedCtx, _ := s.ctx.CacheContext()
+	_, _, result := s.app.GovKeeper.Tally(cachedCtx, proposal)
+	s.Require().Equal(sdk.NewInt(yes), result.Yes)
+	s.Require().Equal(sdk.NewInt(no), result.No)
+	s.Require().Equal(sdk.NewInt(vito), result.NoWithVeto)
+	s.Require().Equal(sdk.NewInt(abstain), result.Abstain)
 }
 
 func (s *KeeperTestSuite) assertVotingPower(addr sdk.AccAddress, stakingVotingPower, liquidStakingVotingPower, validatorVotingPower sdk.Int) {

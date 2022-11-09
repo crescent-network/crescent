@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/keeper"
-	"github.com/crescent-network/crescent/v2/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
 )
 
 // BeginBlocker updates liquid validator set changes for the current block

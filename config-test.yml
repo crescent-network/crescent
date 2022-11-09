@@ -1,23 +1,55 @@
+version: 1
 init:
   home: "$HOME/.crescent"
 build:
-  ldflags: ["-X github.com/crescent-network/crescent/v2/x/farming/keeper.enableAdvanceEpoch=true"]
+  ldflags:
+    - -X github.com/crescent-network/crescent/v3/x/farming/keeper.enableAdvanceEpoch=true
+    - -X github.com/crescent-network/crescent/v3/x/liquidfarming/keeper.enableAdvanceAuction=true
+  proto:
+    path: proto
+    third_party_paths:
+      - third_party/proto
+      - proto_vendor
 accounts:
   - name: alice # cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p
-    mnemonic: "guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
-    coins: ["1500000000000stake", "1000000000000000uatom", "1000000000000000uusd"]
+    coins:
+      - 1500000000000stake
+      - 1000000000000000uatom
+      - 1000000000000000uusd
+    mnemonic:
+      guard cream sadness conduct invite crumble clock pudding hole grit liar
+      hotel maid produce squeeze return argue turtle know drive eight casino maze host
   - name: bob # cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3
-    mnemonic: "friend excite rough reopen cover wheel spoon convince island path clean monkey play snow number walnut pull lock shoot hurry dream divide concert discover"
-    coins: ["1000000000000stake", "1000000000000000uatom", "1000000000000000uusd"]
+    coins:
+      - 1000000000000stake
+      - 1000000000000000uatom
+      - 1000000000000000uusd
+    mnemonic:
+      friend excite rough reopen cover wheel spoon convince island path clean
+      monkey play snow number walnut pull lock shoot hurry dream divide concert discover
   - name: steve # cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
-    mnemonic: "fuel obscure melt april direct second usual hair leave hobby beef bacon solid drum used law mercy worry fat super must ritual bring faculty"
-    coins: ["1000000000000stake", "1000000000000000uatom", "1000000000000000uusd"]
+    coins:
+      - 1000000000000stake
+      - 1000000000000000uatom
+      - 1000000000000000uusd
+    mnemonic:
+      fuel obscure melt april direct second usual hair leave hobby beef bacon
+      solid drum used law mercy worry fat super must ritual bring faculty
   - name: source # cre15rz2rwnlgr7nf6eauz52usezffwrxc0mxajpmw
-    mnemonic: "diary behind allow lawn loop assault armor survey media toe rural mass skull way crater tobacco pair glare window soon lift pistol fitness annual"
-    coins: ["15000000000000airdrop"]
+    coins:
+      - 15000000000000airdrop
+    mnemonic:
+      diary behind allow lawn loop assault armor survey media toe rural mass
+      skull way crater tobacco pair glare window soon lift pistol fitness annual
 validator:
   name: alice
-  staked: "500000000000stake"
+  staked: 100000000stake
+faucet:
+  name: bob
+  coins:
+    - 10000000stake
+    - 10000000uatom
+  host: 0.0.0.0:4500
 genesis:
   chain_id: "localnet"
   app_state:
@@ -35,6 +67,17 @@ genesis:
         min_deposit:
           - amount: "1"
             denom: "stake"
+      voting_params:
+        voting_period: "20s"
+    budget:
+      params:
+        budgets:
+          - name: "incentivize-marketmaker-20201Q-20301Q"
+            rate: "0.300000000000000000"
+            source_address: "cre17xpfvakm2amg962yls6f84z3kell8c5l53s97s" # fee collector account
+            destination_address: "cre1ddn66jv0sjpmck0ptegmhmqtn35qsg2vxyk2hn9sqf4qxtzqz3sq3qhhde"
+            start_time: "2020-03-01T00:00:00Z"
+            end_time: "2030-03-01T00:00:00Z"
     farming:
       params:
         private_plan_creation_fee:
@@ -48,12 +91,35 @@ genesis:
         pool_creation_fee:
           - amount: "100000"
             denom: "stake"
+    marketmaker:
+      params:
+        incentive_pairs:
+          - pair_id: 1
+            update_time: "2022-09-10T00:00:00Z"
+            incentive_weight: "0.000000000000000000"
+            max_spread: "0"
+            min_width: "0"
+            min_depth: "0"
+          - pair_id: 2
+            update_time: "2022-09-10T00:00:00Z"
+            incentive_weight: "0.000000000000000000"
+            max_spread: "0"
+            min_width: "0"
+            min_depth: "0"
     liquidstaking:
       params:
         liquid_bond_denom: "bstake"
         whitelisted_validators:
           - validator_address: "crevaloper1zaavvzxez0elundtn32qnk9lkm8kmcszyvldht"
             target_weight: "100000000"
+    liquidfarming:
+      params:
+        rewards_auction_duration: "120s"
+        liquid_farms:
+          - pool_id: "1"
+            min_farm_amount: "1"
+            min_bid_amount: "1"
+            fee_rate: "0.100000000000000000"
     claim:
       airdrops:
         - id: "1"

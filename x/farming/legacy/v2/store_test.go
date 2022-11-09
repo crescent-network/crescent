@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
-	chain "github.com/crescent-network/crescent/v2/app"
-	utils "github.com/crescent-network/crescent/v2/types"
-	v1farming "github.com/crescent-network/crescent/v2/x/farming/legacy/v1"
-	v2farming "github.com/crescent-network/crescent/v2/x/farming/legacy/v2"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	chain "github.com/crescent-network/crescent/v3/app"
+	utils "github.com/crescent-network/crescent/v3/types"
+	v1farming "github.com/crescent-network/crescent/v3/x/farming/legacy/v1"
+	v2farming "github.com/crescent-network/crescent/v3/x/farming/legacy/v2"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 func TestMigrateQueuedStaking(t *testing.T) {

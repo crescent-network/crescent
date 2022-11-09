@@ -2,7 +2,7 @@
 
 NAME=crescent
 APPNAME=crescentd
-REPO=github.com/crescent-network/crescent/v2
+REPO=github.com/crescent-network/crescent/v3
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
@@ -88,7 +88,8 @@ ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
 testing_ldflags = -X $(REPO)/x/farming/keeper.enableAdvanceEpoch=true \
-                  -X $(REPO)/x/farming/keeper.enableRatioPlan=true
+                  -X $(REPO)/x/farming/keeper.enableRatioPlan=true \
+				  -X $(REPO)/x/liquidfarming/keeper.enableAdvanceAuction=true
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 TESTING_BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags) $(testing_ldflags)'
@@ -236,9 +237,8 @@ localnet:
 ###############################################################################
 
 lint:
-	$(BINDIR)/golangci-lint run
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs gofmt -d -s
-	go mod verify
+	@echo "--> Running linter"
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 
 .PHONY: lint
 

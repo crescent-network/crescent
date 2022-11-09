@@ -32,11 +32,17 @@ service Msg {
   // MarketOrder defines a method for making a market order
   rpc MarketOrder(MsgMarketOrder) returns (MsgMarketOrderResponse);
 
+  // MsgMMOrder defines a method for making a MM(market making) order
+  rpc MMOrder(MsgMMOrder) returns (MsgMMOrderResponse);
+
   // CancelOrder defines a method for cancelling an order
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
 
   // CancelAllOrders defines a method for cancelling all orders
   rpc CancelAllOrders(MsgCancelAllOrders) returns (MsgCancelAllOrdersResponse);
+
+  // CancelMMOrder defines a method for cancelling previously placed market making orders
+  rpc CancelMMOrder(MsgCancelMMOrder) returns (MsgCancelMMOrderResponse);
 }
 
 // MsgCreatePair defines an SDK message for creating a pair.
@@ -182,6 +188,45 @@ message MsgMarketOrder {
 // MsgMarketOrderResponse defines the Msg/MarketOrder response type.
 message MsgMarketOrderResponse {}
 
+// MsgMMOrder defines an SDK message for making a MM(market making) order.
+message MsgMMOrder {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_id specifies the pair id
+  uint64 pair_id = 2;
+
+  // max_sell_price specifies the maximum sell price
+  string max_sell_price = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // min_sell_price specifies the minimum sell price
+  string min_sell_price = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // sell_amount specifies the total amount of base coin of sell orders
+  string sell_amount = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // max_buy_price specifies the maximum buy price
+  string max_buy_price = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // min_buy_price specifies the minimum buy price
+  string min_buy_price = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // buy_amount specifies the total amount of base coin of buy orders
+  string buy_amount = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // order_lifespan specifies the order lifespan
+  google.protobuf.Duration order_lifespan = 9 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+// MsgMMOrderResponse defines the Msg/MMOrder response type.
+message MsgMMOrderResponse {}
+
 // MsgCancelOrder defines an SDK message for cancelling an order
 message MsgCancelOrder {
   // orderer specifies the bech32-encoded address that makes an order
@@ -208,3 +253,15 @@ message MsgCancelAllOrders {
 
 // MsgCancelAllOrdersResponse defines the Msg/CancelAllOrders response type.
 message MsgCancelAllOrdersResponse {}
+
+// MsgCancelMMOrder defines an SDK message for cancelling all market making orders
+message MsgCancelMMOrder {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // pair_id specifies the pair id to cancel orders
+  uint64 pair_id = 2;
+}
+
+// MsgCancelMMOrderResponse defines the Msg/CancelMMOrder response type.
+message MsgCancelMMOrderResponse {}

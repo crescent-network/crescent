@@ -110,6 +110,19 @@ The `liquidity` module emits the following events:
 | message      | action            | market_order      |
 | message      | sender            | {senderAddress}   |
 
+### MsgMMOrder
+
+| Type     | Attribute Key      | Attribute Value |
+|----------|--------------------|-----------------|
+| mm_order | orderer            | {orderer}       |
+| mm_order | pair_id            | {pairId}        |
+| mm_order | batch_id           | {batchId}       |
+| mm_order | order_ids          | {orderIds}      |
+| mm_order | canceled_order_ids | {orderIds}      |
+| message  | module             | liquidity       |
+| message  | action             | mm_order        |
+| message  | sender             | {senderAddress} |
+
 ### MsgCancelOrder
 
 | Type         | Attribute Key | Attribute Value |
@@ -131,6 +144,17 @@ The `liquidity` module emits the following events:
 | message           | module             | liquidity         |
 | message           | action             | cancel_all_orders |
 | message           | sender             | {senderAddress}   |
+
+### MsgCancelMMOrder
+
+| Type            | Attribute Key      | Attribute Value |
+|-----------------|--------------------|-----------------|
+| cancel_mm_order | orderer            | {orderer}       |
+| cancel_mm_order | pair_id            | {pairId}        |
+| cancel_mm_order | canceled_order_ids | {orderIds}      |
+| message         | module             | liquidity       |
+| message         | action             | cancel_mm_order |
+| message         | sender             | {senderAddress} |
 
 ## EndBlocker
 

@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/crescent-network/crescent/v2/x/farming/client/cli"
-	"github.com/crescent-network/crescent/v2/x/farming/keeper"
-	"github.com/crescent-network/crescent/v2/x/farming/simulation"
-	"github.com/crescent-network/crescent/v2/x/farming/types"
+	"github.com/crescent-network/crescent/v3/x/farming/client/cli"
+	"github.com/crescent-network/crescent/v3/x/farming/keeper"
+	"github.com/crescent-network/crescent/v3/x/farming/simulation"
+	"github.com/crescent-network/crescent/v3/x/farming/types"
 )
 
 var (
@@ -184,12 +184,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the farming content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(am.accountKeeper, am.bankKeeper, am.keeper)
+	return nil
 }
 
 // RandomizedParams creates randomized farming param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for farming module's types.
@@ -199,7 +199,5 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
-	)
+	return nil
 }

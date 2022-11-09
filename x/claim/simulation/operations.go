@@ -9,11 +9,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/crescent-network/crescent/v2/app/params"
-	utils "github.com/crescent-network/crescent/v2/types"
-	"github.com/crescent-network/crescent/v2/x/claim/keeper"
-	"github.com/crescent-network/crescent/v2/x/claim/types"
-	minttypes "github.com/crescent-network/crescent/v2/x/mint/types"
+	appparams "github.com/crescent-network/crescent/v3/app/params"
+	utils "github.com/crescent-network/crescent/v3/types"
+	"github.com/crescent-network/crescent/v3/x/claim/keeper"
+	"github.com/crescent-network/crescent/v3/x/claim/types"
+	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
 )
 
 const (

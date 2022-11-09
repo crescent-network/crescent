@@ -21,4 +21,5 @@ var (
 	ErrInvalidEpochAmount              = sdkerrors.Register(ModuleName, 14, "invalid epoch amount")
 	ErrRatioPlanDisabled               = sdkerrors.Register(ModuleName, 15, "creation of ratio plans is disabled")
 	ErrInvalidUnharvestedRewardsAmount = sdkerrors.Register(ModuleName, 16, "invalid unharvested rewards amount")
+	ErrModuleDisabled                  = sdkerrors.Register(ModuleName, 17, "farming module has been disabled")
 )

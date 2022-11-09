@@ -17,7 +17,7 @@ Internal Tendermint users have different permissions, if you're not sure, fork t
 
 To build the project:
 
-- [Golang](https://golang.org/dl/) v1.17 or higher
+- [Golang](https://golang.org/dl/) v1.18 or higher
 - [make](https://www.gnu.org/software/make/) to use `Makefile` targets
 
 ## Development Environment Setup

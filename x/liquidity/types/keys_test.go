@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/crescent-network/crescent/v2/x/liquidity/types"
+	"github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
 type keysTestSuite struct {
@@ -192,4 +192,12 @@ func (s *keysTestSuite) TestOrderIndexKey() {
 	s.Require().Equal(orderer, orderer2)
 	s.Require().Equal(uint64(1), pairId)
 	s.Require().Equal(uint64(1), orderId)
+}
+
+func (s *keysTestSuite) TestMMOrderIndexKey() {
+	orderer := sdk.AccAddress(crypto.AddressHash([]byte("orderer")))
+	key := types.GetMMOrderIndexKey(orderer, 1)
+	s.Require().Equal([]byte{0xb6, 0x14, 0x54, 0x7e, 0xfe, 0x47, 0x8f, 0xc9, 0xf9, 0x52, 0xb2,
+		0x5c, 0xbc, 0x50, 0xf2, 0x85, 0xf7, 0x7d, 0xff, 0x52, 0x9f, 0x25, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x1}, key)
 }
