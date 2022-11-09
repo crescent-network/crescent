@@ -22,6 +22,7 @@ dist
 tools-stamp
 proto-tools-stamp
 buf-stamp
+ts-client
 
 # Data - ideally these don't exist
 app/data/*

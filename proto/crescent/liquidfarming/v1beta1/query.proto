@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 import "crescent/liquidfarming/v1beta1/liquidfarming.proto";
 import "crescent/liquidfarming/v1beta1/params.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/liquidfarming/types";
+option go_package = "github.com/crescent-network/crescent/v3/x/liquidfarming/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -92,7 +92,7 @@ message QueryRewardsAuctionsRequest {
 // QueryRewardsAuctionsResponse is response type for the Query/RewardsAuctions RPC method.
 message QueryRewardsAuctionsResponse {
   repeated RewardsAuction                rewards_auctions = 1 [(gogoproto.nullable) = false];
-  cosmos.base.query.v1beta1.PageResponse pagination      = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination       = 2;
 }
 
 // QueryRewardsAuctionRequest is request type for the Query/RewardsAuction RPC method.
@@ -151,8 +151,11 @@ message LiquidFarmResponse {
 
   string lf_coin_denom = 3 [(gogoproto.customname) = "LFCoinDenom"];
 
-  string lf_coin_supply = 4
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false, (gogoproto.customname) = "LFCoinSupply"];
+  string lf_coin_supply = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "LFCoinSupply"
+  ];
 
   string pool_coin_denom = 5;
 

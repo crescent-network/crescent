@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/marketmaker/types";
+option go_package = "github.com/crescent-network/crescent/v3/x/marketmaker/types";
 
 // Msg defines the marketmaker Msg service.
 service Msg {

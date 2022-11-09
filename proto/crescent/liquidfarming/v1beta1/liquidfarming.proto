@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package                      = "github.com/crescent-network/crescent/x/liquidfarming/types";
+option go_package                      = "github.com/crescent-network/crescent/v3/x/liquidfarming/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // RewardsAuction defines rewards auction that is created by the module
@@ -47,9 +47,10 @@ message RewardsAuction {
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
   repeated cosmos.base.v1beta1.Coin fees = 11
-    [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  string fee_rate = 12 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string fee_rate = 12
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // CompoundingRewards records the amount of pool coin that is used for a bidder to place a bid

@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "crescent/lpfarm/v1beta1/lpfarm.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package                      = "github.com/crescent-network/crescent/x/lpfarm/types";
+option go_package                      = "github.com/crescent-network/crescent/v3/x/lpfarm/types";
 option (gogoproto.goproto_getters_all) = false;
 
 message FarmingPlanProposal {
