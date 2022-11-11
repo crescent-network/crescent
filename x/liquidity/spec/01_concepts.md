@@ -28,7 +28,7 @@ Read more about matching process in the [Liquidity pool white paper](../../../do
 
 We introduce tick system in DEX, alongside with enabling order book feature.
 This is a natural consequence because most exchanges with order book have its own tick system.
-The size of tick is configured by using the `TickPreicision` governance parameter.
+The size of tick is configured by using the `TickPrecision` governance parameter.
 
 ## Liquidity Pool
 
