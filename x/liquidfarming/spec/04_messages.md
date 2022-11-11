@@ -26,7 +26,7 @@ Validity checks are performed for `MsgLiquidFarm` message. The transaction that 
 - The amount of farming coin is not positive
 - The amount of farming coin is less than `MinimumFarmAmount`
 - The farming coin denom is not the same as the pool coin denom of the pool with `PoolId`
-- The farmer has insufficient spendable balances for the farming coin amount
+- The farmer has insufficient spendable balances of the pool coin amount
 
 ## MsgLiquidUnfarm
 
@@ -46,12 +46,12 @@ Validity checks are performed for `MsgLiquidUnfarm` message. The transaction tha
 - The target liquid farm with the pool id does not exist
 - The amount of LF coins is not positive
 - The unfarming coin denom is not the same as the pool coin denom of the pool with `PoolId`
-- The farmer has insufficient spendable balances for the unfarming amount
+- The farmer has insufficient spendable balances for the unfarming LF coin amount
 
 ## MsgLiquidUnfarmAndWithdraw
 
 Unfarm LFCoin to liquid unfarm and withdraw the pool coin from the pool.
-The module burns LFCoin amounts at the current burn rate, withdraw the corresponding amount of pool coins from the pool, and then releases the withdrawn coins to a farmer.
+The module burns LFCoin amounts at the current burn rate, withdraw the corresponding amount of pool coins from the pool, and then the withdrawn coins are sent back to the farmer.
 
 ```go
 type MsgLiquidUnfarmAndWithdraw struct {
@@ -66,7 +66,7 @@ Validity checks are performed for `MsgLiquidUnfarmAndWithdraw` message. The tran
 - The target liquid farm with the pool id does not exist
 - The amount of LF coins is not positive
 - The unfarming coin denom is not the same as the pool coin denom of the pool with `PoolId`
-- The farmer has insufficient spendable balances for the unfarming amount
+- The farmer has insufficient spendable balances for the unfarming LF coin amount
 
 ## MsgPlaceBid
 
@@ -86,6 +86,8 @@ Validity checks are performed for `MsgPlaceBid` message. The transaction that is
 
 - The target liquid farm with the pool id does not exist
 - The target auction status is in invalid status
+- The bidding coin amount is less than that of the current winning bidding coin amount
+-
 
 ## MsgRefundBid
 
@@ -107,7 +109,7 @@ Validity checks are performed for `MsgRefundBid` message. The transaction that i
 
 ## MsgAdvanceAuction
 
-***This message is disabled by default, you have to build the binary with `make install-testing` to activate this message.***
+**_This message is disabled by default, you have to build the binary with `make install-testing` to activate this message._**
 
 For testing purposes only, this custom message is used to advance auction.
 
