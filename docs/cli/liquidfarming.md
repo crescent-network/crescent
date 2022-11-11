@@ -275,6 +275,9 @@ Example
 # By default, the value is set to 12 hours but for local testing purpose it is set to 120 seconds.
 # If you wait 120 seconds (2 minutes) after starting a local network, the module automatically creates new rewards auction.
 crescentd query liquidfarming rewards-auctions 1 -o json | jq
+crescentd query liquidfarming rewards-auctions 1 --status AUCTION_STATUS_STARTED -o json | jq
+crescentd query liquidfarming rewards-auctions 1 --status AUCTION_STATUS_FINISHED -o json | jq
+crescentd query liquidfarming rewards-auctions 1 --status AUCTION_STATUS_SKIPPED -o json | jq
 ```
 
 ## RewardsAuction
