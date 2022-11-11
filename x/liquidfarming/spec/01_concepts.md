@@ -1,15 +1,16 @@
 <!-- order: 1 -->
+
 # Concepts
 
 This is the concept for `Liquidfarming` module in Crescent Network.
 
 ## LiquidFarming Module
 
-The `liquidfarming` module provides a functionality for farmers to have another option to use with their liquidity pool coins in Crescent Network. 
+The `liquidfarming` module provides a functionality for farmers to have another option to use with their liquidity pool coins in Crescent Network.
 
-The module allows farmers to farm their pool coin and mint a synthetic version of the pool coin called LFCoin. 
-Farmers can use the LFCoin to take a full advantage of Crescent functionality, such as Boost. 
-On behalf of farmers, the module stakes their pool coin to the `farming` module and receives farming rewards for every epoch. 
+The module allows farmers to farm their pool coin and mint a synthetic version of the pool coin called LFCoin.
+Farmers can use the LFCoin to take a full advantage of Crescent functionality, such as Boost.
+On behalf of farmers, the module stakes their pool coin to the `farming` module and receives farming rewards for every epoch.
 The module provides auto-compounding of the rewards by going through an auction process, which results in the exchange of the farming rewards coin(s) into the pool coin.
 
 ## Liquid Farm
@@ -26,38 +27,37 @@ In this case, the ongoing rewards auction becomes finished, all bids are refunde
 ## Liquid Farm
 
 Once a user farms their pool coin, the user receives LFCoin instantly minted.
-The following formula is used for an exchange rate of `LFCoinMint` (which is also called `mintedCoin`) when a user farms with `LPCoinFarm` (which is also called `farmingCoin`).
+The following formula is used for an exchange rate of `LFCoinMint` when a user farms with `LPCoinFarm`.
 
-$$LFCoinMint = \frac{LFCoinTotalSupply}{LPCoinTotalStaked+LPCoinTotalQueued} \times LPCoinFarm,$$
+$$LF Coin Mint = \frac{LF Coin Supply}{LP Coin Farming Amount} \times LP Coin Farm,$$
 
-where `LFCoinTotalSupply` is not zero.
-`LPCoinTotalQueued` is the amount of pool coins in `FarmQueued` by the `liquidfarming` module.
-If `LFCoinTotalSupply` is zero, then the following formula is applied:
+where `LFCoinSupply` is not zero.
+If `LF Coin Supply` is zero, then the following formula is applied:
 
-$$LFCoinMint = LPCoinFarm.$$
+$$LF Coin Mint = LP Coin Farm.$$
 
 ## Liquid Unfarm
 
 When a user unfarms their LFCoin, the module burns the LFCoin and releases the corresponding amount of pool coin.
-The following formula is used for an exchange rate of `LFCoinBurn` (which is also called `burningCoin`) to receive `LPCoinUnfarm` (which is also called `unfarmedCoin`):
+The following formula is used for an exchange rate of `LFCoinBurn` to receive `LPCoinUnfarm`:
 
-$$LPCoinUnfarm = \frac{LPCoinTotalStaked+LPCoinTotalQueued-CompoundingRewards}{LFCoinTotalSupply} \times LFCoinBurn,$$
+$$LP Coin Unfarm = \frac{LP Coin Farming Amount - Compounding Rewards}{LF Coin Supply} \times LF Coin Burn,$$
 
-if $$LFCoinBurn < LFCoinTotalSupply$$, where `CompoundingRewards` is the amount of pool coins obtained from the last rewards auction, which is in `FarmQueued`.
-If $$LFCoinBurn = LFCoinTotalSupply$$, the following formula is used:
+if $$LFCoinBurn < LF Coin Supply$$, where `CompoundingRewards` is the amount of pool coins obtained from the last rewards auction.
+If $$LFCoinBurn = LF Coin Supply$$, the following formula is used:
 
-$$LPCoinUnfarm = \frac{LPCoinTotalStaked+LPCoinTotalQueued}{LFCoinTotalSupply} \times LFCoinBurn.$$
+$$LP Coin Unfarm = \frac{LP Coin Farming Amount}{LF Coin Supply} \times LF Coin Burn.$$
 
-If the `liquidfarm` is not registered in the parameter, the following formula is used an exchange rate of `LFCoinBurn`:
+If the `liquidfarm` is not registered in the governance parameter, the `LiquidFarming` module unstakes all LP coin, and the following formula is used an exchange rate of `LFCoinBurn`:
 
-$$LPCoinUnfarm = \frac{LPCoinTotalQueued}{LFCoinTotalSupply} \times LFCoinBurn.$$
+$$LP Coin Unfarm = \frac{LP Coin In Module}{LF Coin Supply} \times LF Coin Burn.$$
 
 ## Farming Rewards and Auction
 
 On behalf of users, the module stakes their pool coins and claims farming rewards.
-In order to exchange the rewards coin(s) into the pool coin to be additionally staked for farming, the module creates an auction to sell the rewards that will be received at the end of the epoch.
+In order to exchange the rewards coin(s) into the pool coin to be additionally staked for farming, the module creates an auction to sell the rewards that will be received at the end of the auction period.
 Note that the exact amount of the rewards being auctioned is not determined when the auction is created, but will be determined when the auction ends.
-The amount of the rewards depends on the total amount of staked pool coins and the `liquidfarming` module’s staked pool coin, which can be varied during the epoch.
+The amount of the rewards depends on the total amount of staked pool coins and the `liquidfarming` module’s staked pool coin, which can be varied during the auction period.
 Therefore, a bidder to place a bid for the auction should be aware of this uncertainty of the rewards amount.
 
 ## Bidding for Auction and Winning Bid
