@@ -272,7 +272,7 @@ Example
 ```bash
 # The "rewards_auction_duration" param is the duration that is used to create new rewards auction in begin blocker.
 # You can adjust the value in config-test.yml file to make it faster or slower.
-# By default, the value is set to 12 hours but for local testing purpose it is set to 120 seconds.
+# By default, the value is set to 8 hours but for local testing purpose it is set to 120 seconds.
 # If you wait 120 seconds (2 minutes) after starting a local network, the module automatically creates new rewards auction.
 crescentd query liquidfarming rewards-auctions 1 -o json | jq
 crescentd query liquidfarming rewards-auctions 1 --status AUCTION_STATUS_STARTED -o json | jq
