@@ -4,10 +4,11 @@ Description: A high-level overview of gRPC-gateway REST routes in farming module
 ---
 
 # Farming Module
-
+ 
 ## Synopsis
 
 This document provides a high-level overview of what gRPC-gateway REST routes are supported in the `farming` module.
+
 
 ## Swagger Documentation
 
@@ -16,33 +17,27 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 ## gRPC-gateway REST Routes
 
 <!-- markdown-link-check-disable -->
+++https://github.com/crescent-network/crescent/blob/main/proto/crescent/farming/v1beta1/query.proto 
 
-++https://github.com/crescent-network/crescent/blob/main/proto/crescent/farming/v1beta1/query.proto
-
-- [Farming Module](#farming-module)
-  - [Synopsis](#synopsis)
-  - [Swagger Documentation](#swagger-documentation)
-  - [gRPC-gateway REST Routes](#grpc-gateway-rest-routes)
-    - [Params](#params)
-    - [Plans](#plans)
-    - [Plan](#plan)
-    - [Position](#position)
-    - [Stakings](#stakings)
-    - [QueuedStakings](#queuedstakings)
-    - [TotalStakings](#totalstakings)
-    - [Rewards](#rewards)
-    - [UnharvestedRewards](#unharvestedrewards)
-    - [CurrentEpochDays](#currentepochdays)
-    - [HistoricalRewards](#historicalrewards)
+- [Params](#Params)
+- [Plans](#Plans)
+- [Plan](#Plan)
+- [Position](#Position)
+- [Stakings](#Stakings)
+- [QueuedStakings](#QueuedStakings)
+- [TotalStakings](#TotalStakings)
+- [Rewards](#Rewards)
+- [UnharvestedRewards](#UnharvestedRewards)
+- [CurrentEpochDays](#CurrentEpochDays)
+- [HistoricalRewards](#HistoricalRewards)
 
 ### Params
 
 Query the values set as farming parameters:
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/params
 ```
@@ -68,10 +63,9 @@ Example Response
 
 Query all the farming plans exist in the network:
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/plans
 ```
@@ -124,10 +118,9 @@ Example Response
 
 Query a particular plan:
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/plans/1
 ```
@@ -174,10 +167,10 @@ Example Response
 
 Query for farming position of a farmer:
 
-Example Request
+
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/position/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
@@ -192,7 +185,8 @@ Example Response
       "amount": "2500000"
     }
   ],
-  "queued_coins": [],
+  "queued_coins": [
+  ],
   "rewards": [
     {
       "denom": "stake",
@@ -204,10 +198,9 @@ Example Response
 
 Query for farming position of a farmer with the given staking coin denom
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/position/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1
 ```
@@ -222,7 +215,8 @@ Example Response
       "amount": "2500000"
     }
   ],
-  "queued_coins": [],
+  "queued_coins": [
+  ],
   "rewards": [
     {
       "denom": "stake",
@@ -239,7 +233,6 @@ Query for all stakings by a farmer:
 Example Request
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
@@ -272,7 +265,6 @@ Query for all stakings by a farmer with the given staking coin denom
 Example Request
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
 ```
@@ -299,10 +291,10 @@ Example Response
 
 Query for all queued stakings by a farmer:
 
+
 Example Request
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/queued_stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
@@ -335,7 +327,6 @@ Query for queued stakings by a farmer with the given staking coin denom
 Example Request
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/queued_stakings/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
 ```
@@ -360,12 +351,11 @@ Example Response
 
 ### TotalStakings
 
-Query for total stakings by a staking coin denom:
+Query for total stakings by a staking coin denom: 
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/total_stakings/pool1
 ```
@@ -382,10 +372,9 @@ Example Response
 
 Query for all rewards by a farmer:
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
@@ -421,12 +410,12 @@ Example Response
 }
 ```
 
+
 Query for all rewards by a farmer with the staking coin denom:
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool1
 ```
@@ -460,7 +449,6 @@ Query for unharvested rewards for a farmer:
 Example Request
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/unharvested_rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf
 ```
@@ -501,7 +489,6 @@ Query for unharvested rewards for a farmer with the given staking coin denom
 Example Request
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/unharvested_rewards/cre185fflsvwrz0cx46w6qada7mdy92m6kx4vg42xf?staking_coin_denom=pool2
 ```
@@ -532,10 +519,9 @@ Example Response
 
 Query for the current epoch days:
 
-Example Request
+Example Request 
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/current_epoch_days
 ```
@@ -555,7 +541,6 @@ Query for historical rewards for a staking coin denom:
 Example Request
 
 <!-- markdown-link-check-disable -->
-
 ```bash
 http://localhost:1317/crescent/farming/v1beta1/historical_rewards
 ```
@@ -567,7 +552,8 @@ Example Response
   "historical_rewards": [
     {
       "epoch": "0",
-      "cumulative_unit_rewards": []
+      "cumulative_unit_rewards": [
+      ]
     },
     {
       "epoch": "1",
@@ -586,7 +572,7 @@ Example Response
           "amount": "200.000000000000000000"
         }
       ]
-    }
+    },
   ],
   "pagination": {
     "next_key": null,
