@@ -87,7 +87,6 @@ Validity checks are performed for `MsgPlaceBid` message. The transaction that is
 - The target liquid farm with the pool id does not exist
 - The target auction status is in invalid status
 - The bidding coin amount is less than that of the current winning bidding coin amount
--
 
 ## MsgRefundBid
 

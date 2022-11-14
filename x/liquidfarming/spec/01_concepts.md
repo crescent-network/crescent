@@ -13,7 +13,7 @@ Farmers can use the LFCoin to take a full advantage of Crescent functionality, s
 On behalf of farmers, the module stakes their pool coin to the `lpfarm` module and receives farming rewards for every block.
 The module provides auto-compounding of the rewards by going through an auction process, which results in the exchange of the farming rewards coin(s) into the pool coin.
 
-## Liquid Farm
+## Registration of Liquidfarm
 
 A `liquidFarm` corresponds to one unique pool id. A `liquidFarm` stakes and unstakes the pool coins as users’ requests. When the rewards are allocated by staking the pool coins, the `liquidFarm` creates and manages an auction in order to exchange the rewards to pool coins to be staked additionally.
 

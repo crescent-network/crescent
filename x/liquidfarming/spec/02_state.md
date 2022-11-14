@@ -14,10 +14,10 @@ type LiquidFarms struct {
 
 // LiquidFarm defines liquid farm.
 type LiquidFarm struct {
-	PoolId				uint64		// the pool id
-	MinFarmAmount		sdk.Int		// the minimum farm amount; it allows zero value
-	MinBidAmount		sdk.Int		// the minimum bid amount; it allows zero value
-	FeeRate				sdk.Dec		// default value is 12 hours
+	PoolId        uint64  // the pool id
+	MinFarmAmount sdk.Int // the minimum farm amount; it allows zero value
+	MinBidAmount  sdk.Int // the minimum bid amount; it allows zero value
+	FeeRate       sdk.Dec // default value is 12 hours
 }
 ```
 
@@ -28,10 +28,10 @@ type LiquidFarm struct {
 type AuctionStatus int32
 
 const (
-	AuctionStatusNil			AuctionStatus = 0
-	AuctionStatusStarted		AuctionStatus = 1
-	AuctionStatusFinished		AuctionStatus = 2
-	AuctionStatusSkipped		AuctionStatus = 3
+	AuctionStatusNil      AuctionStatus = 0
+	AuctionStatusStarted  AuctionStatus = 1
+	AuctionStatusFinished AuctionStatus = 2
+	AuctionStatusSkipped  AuctionStatus = 3
 )
 
 // RewardsAuction defines rewards auction information.
@@ -65,8 +65,8 @@ type CompoundingRewards struct {
 ```go
 // Bid defines a standard bid for an auction.
 type Bid struct {
-	PoolId      uint64
-	Bidder      string
+	PoolId uint64
+	Bidder string
 	Amount sdk.Coin
 }
 ```
