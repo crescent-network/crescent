@@ -227,7 +227,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 		}
 		farm.CurrentRewards = farm.CurrentRewards.Add(rewardsByDenom[denom]...)
 		farm.OutstandingRewards = farm.OutstandingRewards.Add(rewardsByDenom[denom]...)
-		if pi, ok := ra.poolInfosByPoolCoinDenom[denom]; ok {
+		if pi, ok := ra.poolInfoByPoolCoinDenom[denom]; ok {
 			farm.PreviousShare = &pi.rewardsShare
 		} else {
 			farm.PreviousShare = nil

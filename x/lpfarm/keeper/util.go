@@ -65,7 +65,7 @@ type rewardAllocator struct {
 	totalRewardsByFarmingPool map[string]sdk.Coins               // farming pool => total rewards
 	farmingPoolAddrs          []sdk.AccAddress
 	poolInfosByPairId         map[uint64][]*poolInfo
-	poolInfosByPoolCoinDenom  map[string]*poolInfo
+	poolInfoByPoolCoinDenom   map[string]*poolInfo
 }
 
 type poolInfo struct {
@@ -82,7 +82,7 @@ func newRewardAllocator(ctx sdk.Context, k Keeper, ck *cachingKeeper) *rewardAll
 		allocatedRewards:          map[string]map[string]sdk.DecCoins{},
 		totalRewardsByFarmingPool: map[string]sdk.Coins{},
 		poolInfosByPairId:         map[uint64][]*poolInfo{},
-		poolInfosByPoolCoinDenom:  map[string]*poolInfo{},
+		poolInfoByPoolCoinDenom:   map[string]*poolInfo{},
 	}
 }
 
@@ -113,7 +113,7 @@ func (ra *rewardAllocator) allocateRewardsToPair(farmingPoolAddr sdk.AccAddress,
 				rewardWeight:  rewardWeight,
 			}
 			poolInfos = append(poolInfos, pi)
-			ra.poolInfosByPoolCoinDenom[pool.PoolCoinDenom] = pi
+			ra.poolInfoByPoolCoinDenom[pool.PoolCoinDenom] = pi
 			return false, nil
 		})
 		for _, pi := range poolInfos {
