@@ -17,7 +17,7 @@ type LiquidFarm struct {
 	PoolId        uint64  // the pool id
 	MinFarmAmount sdk.Int // the minimum farm amount; it allows zero value
 	MinBidAmount  sdk.Int // the minimum bid amount; it allows zero value
-	FeeRate       sdk.Dec // default value is 12 hours
+	FeeRate       sdk.Dec // the fee rate for the liquidfarm which deducts from auction winner's rewards
 }
 ```
 
