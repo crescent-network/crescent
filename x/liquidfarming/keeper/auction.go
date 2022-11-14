@@ -127,14 +127,20 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, auction types.RewardsAucti
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(auction.PoolId)
 	farmingRewards := k.lpfarmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
 	truncatedRewards, _ := farmingRewards.TruncateDecimal() // TODO: farm module may use sdk.DecCoins for sdk.Coins in the future
+	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(auction.PoolId)
+	withdrawnRewardsReserves := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
+	totalRewards := truncatedRewards.Add(withdrawnRewardsReserves...)
 
 	winningBid, found := k.GetWinningBid(ctx, auction.Id, auction.PoolId)
 	if !found {
-		k.skipRewardsAuction(ctx, truncatedRewards, feeRate, auction)
+		k.skipRewardsAuction(ctx, totalRewards, feeRate, auction)
 	} else {
 		_, found = k.lpfarmKeeper.GetPosition(ctx, liquidFarmReserveAddr, poolCoinDenom)
 		if found {
-			_, fees, err := k.payoutRewards(ctx, auction.PoolId, feeRate, liquidFarmReserveAddr, poolCoinDenom, winningBid)
+			_, fees, err := k.payoutRewards(
+				ctx, auction.PoolId, poolCoinDenom, liquidFarmReserveAddr,
+				withdrawnRewardsReserveAddr, withdrawnRewardsReserves, winningBid, feeRate,
+			)
 			if err != nil {
 				return err
 			}
@@ -153,7 +159,7 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, auction types.RewardsAucti
 
 		auction.SetWinner(winningBid.Bidder)
 		auction.SetWinningAmount(winningBid.Amount)
-		auction.SetRewards(truncatedRewards)
+		auction.SetRewards(totalRewards)
 		auction.SetStatus(types.AuctionStatusFinished)
 		auction.SetFeeRate(feeRate)
 		k.SetRewardsAuction(ctx, auction)
@@ -172,10 +178,11 @@ func (k Keeper) getNextAuctionIdWithUpdate(ctx sdk.Context, poolId uint64) uint6
 	return auctionId
 }
 
+// skipRewardsAuction skips rewards auction since there is no bid.
 func (k Keeper) skipRewardsAuction(ctx sdk.Context, rewards sdk.Coins, feeRate sdk.Dec, auction types.RewardsAuction) {
 	auction.SetRewards(rewards)
-	auction.SetStatus(types.AuctionStatusSkipped)
 	auction.SetFeeRate(feeRate)
+	auction.SetStatus(types.AuctionStatusSkipped)
 	k.SetRewardsAuction(ctx, auction)
 	k.SetCompoundingRewards(ctx, auction.PoolId, types.CompoundingRewards{
 		Amount: sdk.ZeroInt(),
@@ -218,10 +225,12 @@ func (k Keeper) refundAllBids(ctx sdk.Context, auction types.RewardsAuction, inc
 func (k Keeper) payoutRewards(
 	ctx sdk.Context,
 	poolId uint64,
-	feeRate sdk.Dec,
-	liquidFarmReserveAddr sdk.AccAddress,
 	poolCoinDenom string,
+	liquidFarmReserveAddr sdk.AccAddress,
+	withdrawnRewardsReserveAddr sdk.AccAddress,
+	withdrawnRewardsReserves sdk.Coins,
 	winningBid types.Bid,
+	feeRate sdk.Dec,
 ) (deducted sdk.Coins, fees sdk.Coins, err error) {
 	withdrawnRewards, err := k.lpfarmKeeper.Harvest(ctx, liquidFarmReserveAddr, poolCoinDenom)
 	if err != nil {
@@ -233,14 +242,12 @@ func (k Keeper) payoutRewards(
 	// when an account executes Farm/Unfarm if the account already has position.
 	// The module reserves any auto withdrawn rewards in the withdrawn rewards reserve account.
 	// So, farming rewards must add the balance of withdrawn rewards reserve account.
-	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(poolId)
-	spendable := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
-	totalRewards := spendable.Add(withdrawnRewards...)
+	totalRewards := withdrawnRewardsReserves.Add(withdrawnRewards...)
 
 	if !totalRewards.IsZero() {
 		deducted, fees = types.DeductFees(totalRewards, feeRate)
 
-		if err := k.bankKeeper.SendCoins(ctx, withdrawnRewardsReserveAddr, liquidFarmReserveAddr, spendable); err != nil {
+		if err := k.bankKeeper.SendCoins(ctx, withdrawnRewardsReserveAddr, liquidFarmReserveAddr, withdrawnRewardsReserves); err != nil {
 			return sdk.Coins{}, sdk.Coins{}, err
 		}
 
