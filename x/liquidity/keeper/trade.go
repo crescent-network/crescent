@@ -40,7 +40,7 @@ func GetTradeIndexByOrdererKey(ordererAddr sdk.AccAddress, pairId, orderId uint6
 		sdk.Uint64ToBigEndian(uint64(height))...)
 }
 
-func (k Keeper) GetLastTradeId(_ sdk.Context) (lastTradeId uint64, found bool) {
+func (k Keeper) GetLastTradeId() (lastTradeId uint64, found bool) {
 	store := dbadapter.Store{DB: k.offChainDB}
 	bz := store.Get(LastTradeIdKey)
 	if bz == nil {
@@ -49,12 +49,12 @@ func (k Keeper) GetLastTradeId(_ sdk.Context) (lastTradeId uint64, found bool) {
 	return sdk.BigEndianToUint64(bz), true
 }
 
-func (k Keeper) SetLastTradeId(_ sdk.Context, id uint64) {
+func (k Keeper) SetLastTradeId(id uint64) {
 	store := dbadapter.Store{DB: k.offChainDB}
 	store.Set(LastTradeIdKey, sdk.Uint64ToBigEndian(id))
 }
 
-func (k Keeper) SetTrade(_ sdk.Context, trade types.Trade) {
+func (k Keeper) SetTrade(trade types.Trade) {
 	store := dbadapter.Store{DB: k.offChainDB}
 	bz := k.cdc.MustMarshal(&trade)
 	store.Set(GetTradeKey(trade.Id), bz)
@@ -64,7 +64,7 @@ func (k Keeper) SetTrade(_ sdk.Context, trade types.Trade) {
 		sdk.Uint64ToBigEndian(trade.Id))
 }
 
-func (k Keeper) GetTrade(_ sdk.Context, id uint64) (trade types.Trade, found bool) {
+func (k Keeper) GetTrade(id uint64) (trade types.Trade, found bool) {
 	store := dbadapter.Store{DB: k.offChainDB}
 	bz := store.Get(GetTradeKey(id))
 	if bz == nil {
@@ -77,6 +77,10 @@ func (k Keeper) GetTrade(_ sdk.Context, id uint64) (trade types.Trade, found boo
 func (k Querier) Trades(c context.Context, req *types.QueryTradesRequest) (*types.QueryTradesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if k.offChainDB == nil {
+		return nil, status.Error(codes.Unavailable, "trades endpoint is disabled for this node")
 	}
 
 	var (
@@ -105,13 +109,12 @@ func (k Querier) Trades(c context.Context, req *types.QueryTradesRequest) (*type
 		return nil, status.Error(codes.InvalidArgument, "orderer or pair id must be specified")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
 	store := dbadapter.Store{DB: k.offChainDB}
 	tradeStore := prefix.NewStore(store, keyPrefix)
 
 	var trades []types.Trade
 	pageRes, err := query.Paginate(tradeStore, req.Pagination, func(key, value []byte) error {
-		trade, _ := k.GetTrade(ctx, sdk.BigEndianToUint64(value))
+		trade, _ := k.GetTrade(sdk.BigEndianToUint64(value))
 		trades = append(trades, trade)
 		return nil
 	})
@@ -127,9 +130,11 @@ func (k Querier) Trade(c context.Context, req *types.QueryTradeRequest) (*types.
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	if k.offChainDB == nil {
+		return nil, status.Error(codes.Unavailable, "trade endpoint is disabled for this node")
+	}
 
-	trade, found := k.GetTrade(ctx, req.Id)
+	trade, found := k.GetTrade(req.Id)
 	if !found {
 		return nil, status.Error(codes.NotFound, "trade not found")
 	}

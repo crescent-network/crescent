@@ -180,6 +180,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingCo
 
 	a := appCreator{encodingConfig}
 	server.AddCommands(rootCmd, chain.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	// Add custom flag to the start command.
+	for _, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "start" {
+			cmd.Flags().Bool(FlagEnableOffChainAPI, false, "enable off-chain API")
+		}
+	}
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
@@ -279,10 +285,14 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
-	offChainDBDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	offChainDB, err := sdk.NewLevelDB("offchain", offChainDBDir)
-	if err != nil {
-		panic(err)
+	var offChainDB dbm.DB
+	enableOffChainAPI := cast.ToBool(appOpts.Get(FlagEnableOffChainAPI))
+	if enableOffChainAPI {
+		offChainDBDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
+		offChainDB, err = sdk.NewLevelDB("offchain", offChainDBDir)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return chain.NewApp(
