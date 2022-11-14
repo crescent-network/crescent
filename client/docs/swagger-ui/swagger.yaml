@@ -26646,7 +26646,6 @@ paths:
                   properties:
                     id:
                       type: string
-                      format: uint64
                     order:
                       type: object
                       properties:
@@ -26970,7 +26969,6 @@ paths:
                 properties:
                   id:
                     type: string
-                    format: uint64
                   order:
                     type: object
                     properties:
@@ -27184,7 +27182,6 @@ paths:
           in: path
           required: true
           type: string
-          format: uint64
       tags:
         - Query
   /crescent/liquidstaking/v1beta1/params:
@@ -48039,7 +48036,6 @@ definitions:
         properties:
           id:
             type: string
-            format: uint64
           order:
             type: object
             properties:
@@ -48223,7 +48219,6 @@ definitions:
           properties:
             id:
               type: string
-              format: uint64
             order:
               type: object
               properties:
@@ -48631,7 +48626,6 @@ definitions:
     properties:
       id:
         type: string
-        format: uint64
       order:
         type: object
         properties:

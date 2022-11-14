@@ -10,7 +10,7 @@ option go_package                      = "github.com/crescent-network/crescent/x
 option (gogoproto.goproto_getters_all) = false;
 
 message Trade {
-  uint64 id    = 1;
+  string id    = 1;
   Order  order = 2 [(gogoproto.nullable) = false];
   // height specifies the block height where the trade has been made.
   int64  height         = 3;

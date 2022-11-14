@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -15,14 +17,21 @@ import (
 )
 
 var (
-	LastTradeIdKey               = []byte{0xa2}
-	TradeKeyPrefix               = []byte{0xa3}
-	TradeIndexKeyPrefix          = []byte{0xa4}
-	TradeIndexByOrdererKeyPrefix = []byte{0xa8}
+	TradeKeyPrefix               = []byte{0xa2}
+	TradeIndexKeyPrefix          = []byte{0xa3}
+	TradeIndexByOrdererKeyPrefix = []byte{0xa4}
 )
 
-func GetTradeKey(id uint64) []byte {
-	return append(TradeKeyPrefix, sdk.Uint64ToBigEndian(id)...)
+func TradeId(pairId, orderId uint64, height int64) string {
+	h := md5.New()
+	h.Write(sdk.Uint64ToBigEndian(pairId))
+	h.Write(sdk.Uint64ToBigEndian(orderId))
+	h.Write(sdk.Uint64ToBigEndian(uint64(height)))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func GetTradeKey(id string) []byte {
+	return append(TradeKeyPrefix, id...)
 }
 
 func GetTradeIndexKey(pairId, orderId uint64, height int64) []byte {
@@ -40,31 +49,17 @@ func GetTradeIndexByOrdererKey(ordererAddr sdk.AccAddress, pairId, orderId uint6
 		sdk.Uint64ToBigEndian(uint64(height))...)
 }
 
-func (k Keeper) GetLastTradeId() (lastTradeId uint64, found bool) {
-	store := dbadapter.Store{DB: k.offChainDB}
-	bz := store.Get(LastTradeIdKey)
-	if bz == nil {
-		return
-	}
-	return sdk.BigEndianToUint64(bz), true
-}
-
-func (k Keeper) SetLastTradeId(id uint64) {
-	store := dbadapter.Store{DB: k.offChainDB}
-	store.Set(LastTradeIdKey, sdk.Uint64ToBigEndian(id))
-}
-
 func (k Keeper) SetTrade(trade types.Trade) {
 	store := dbadapter.Store{DB: k.offChainDB}
 	bz := k.cdc.MustMarshal(&trade)
 	store.Set(GetTradeKey(trade.Id), bz)
-	store.Set(GetTradeIndexKey(trade.Order.PairId, trade.Order.Id, trade.Height), sdk.Uint64ToBigEndian(trade.Id))
+	idBz := []byte(trade.Id)
+	store.Set(GetTradeIndexKey(trade.Order.PairId, trade.Order.Id, trade.Height), idBz)
 	store.Set(GetTradeIndexByOrdererKey(
-		trade.Order.GetOrderer(), trade.Order.PairId, trade.Order.Id, trade.Height),
-		sdk.Uint64ToBigEndian(trade.Id))
+		trade.Order.GetOrderer(), trade.Order.PairId, trade.Order.Id, trade.Height), idBz)
 }
 
-func (k Keeper) GetTrade(id uint64) (trade types.Trade, found bool) {
+func (k Keeper) GetTrade(id string) (trade types.Trade, found bool) {
 	store := dbadapter.Store{DB: k.offChainDB}
 	bz := store.Get(GetTradeKey(id))
 	if bz == nil {
@@ -74,7 +69,7 @@ func (k Keeper) GetTrade(id uint64) (trade types.Trade, found bool) {
 	return trade, true
 }
 
-func (k Querier) Trades(c context.Context, req *types.QueryTradesRequest) (*types.QueryTradesResponse, error) {
+func (k Querier) Trades(_ context.Context, req *types.QueryTradesRequest) (*types.QueryTradesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -106,7 +101,7 @@ func (k Querier) Trades(c context.Context, req *types.QueryTradesRequest) (*type
 			keyPrefix = append(keyPrefix, sdk.Uint64ToBigEndian(req.OrderId)...)
 		}
 	} else {
-		return nil, status.Error(codes.InvalidArgument, "orderer or pair id must be specified")
+		keyPrefix = TradeIndexKeyPrefix
 	}
 
 	store := dbadapter.Store{DB: k.offChainDB}
@@ -114,7 +109,7 @@ func (k Querier) Trades(c context.Context, req *types.QueryTradesRequest) (*type
 
 	var trades []types.Trade
 	pageRes, err := query.Paginate(tradeStore, req.Pagination, func(key, value []byte) error {
-		trade, _ := k.GetTrade(sdk.BigEndianToUint64(value))
+		trade, _ := k.GetTrade(string(value))
 		trades = append(trades, trade)
 		return nil
 	})
@@ -125,7 +120,7 @@ func (k Querier) Trades(c context.Context, req *types.QueryTradesRequest) (*type
 	return &types.QueryTradesResponse{Trades: trades, Pagination: pageRes}, nil
 }
 
-func (k Querier) Trade(c context.Context, req *types.QueryTradeRequest) (*types.QueryTradeResponse, error) {
+func (k Querier) Trade(_ context.Context, req *types.QueryTradeRequest) (*types.QueryTradeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
