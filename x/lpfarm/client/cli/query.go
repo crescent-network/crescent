@@ -106,6 +106,7 @@ $ %s query %s plans
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "plans")
 	return cmd
 }
 
@@ -202,8 +203,13 @@ $ %s query %s positions cosmos1...
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 			res, err := queryClient.Positions(cmd.Context(), &types.QueryPositionsRequest{
-				Farmer: args[0],
+				Farmer:     args[0],
+				Pagination: pageReq,
 			})
 			if err != nil {
 				return err
@@ -212,6 +218,7 @@ $ %s query %s positions cosmos1...
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "positions")
 	return cmd
 }
 
@@ -286,6 +293,7 @@ $ %s query %s historical-rewards pool1
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "historical-rewards")
 	return cmd
 }
 

@@ -103,7 +103,15 @@ $ %s query %s marketmakers --eligible=true...
 			eligibleStr, _ := cmd.Flags().GetString(FlagEligible)
 
 			queryClient := types.NewQueryClient(clientCtx)
-			req := &types.QueryMarketMakersRequest{}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryMarketMakersRequest{
+				Pagination: pageReq,
+			}
+
 			switch {
 			case pairIdStr != "":
 				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
@@ -131,6 +139,7 @@ $ %s query %s marketmakers --eligible=true...
 
 	cmd.Flags().AddFlagSet(flagSetMarketMakers())
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "marketmakers")
 
 	return cmd
 }
