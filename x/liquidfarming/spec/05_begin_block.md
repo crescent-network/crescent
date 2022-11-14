@@ -4,7 +4,7 @@
 
 At each BeginBlock, the following operations occur in the `liquidfarming` module:
 
-- Synchronizes `LiquidFarms` registered in params with the ones stored in KVStore. When a new `LiquidFarm` is added by governance proposal, the `LiquidFarm` is stored in KVStore. When a new `LiquidFarm` is added by governance proposal, a rewards auction is started at 00:00UTC in the next day.
+- Synchronizes `LiquidFarms` registered in params with the ones stored in KVStore. When a new `LiquidFarm` is added by governance proposal, the `LiquidFarm` is stored in KVStore and a rewards auction will be started at 00:00UTC in the next day.
 
 - When an existing `LiquidFarm` is removed by the governance proposal, it first calls `Unfarm` function in the `lpfarm` module with the reserve module account to unfarm all farming coin to prevent from having farming rewards accumulated and handle the ongoing `RewardsAuction`. It refunds all placed bids and change the auction status to `AuctionStatusFinished`. Lastly, it deletes the `LiquidFarm` in the store.
 

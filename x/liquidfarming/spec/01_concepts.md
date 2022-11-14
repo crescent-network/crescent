@@ -10,7 +10,7 @@ The `liquidfarming` module provides a functionality for farmers to have another 
 
 The module allows farmers to farm their pool coin and mint a synthetic version of the pool coin called LFCoin.
 Farmers can use the LFCoin to take a full advantage of Crescent functionality, such as Boost.
-On behalf of farmers, the module stakes their pool coin to the `lpfarm` module and receives farming rewards for every epoch.
+On behalf of farmers, the module stakes their pool coin to the `lpfarm` module and receives farming rewards for every block.
 The module provides auto-compounding of the rewards by going through an auction process, which results in the exchange of the farming rewards coin(s) into the pool coin.
 
 ## Liquid Farm
