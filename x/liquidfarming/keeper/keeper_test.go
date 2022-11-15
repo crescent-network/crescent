@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) liquidUnfarm(poolId uint64, farmer sdk.AccAddress, lfC
 	if fund {
 		s.fundAddr(farmer, sdk.NewCoins(lfCoin))
 	}
-	_, err := s.keeper.LiquidUnfarm(s.ctx, poolId, farmer, lfCoin)
+	_, _, err := s.keeper.LiquidUnfarm(s.ctx, poolId, farmer, lfCoin)
 	s.Require().NoError(err)
 }
 

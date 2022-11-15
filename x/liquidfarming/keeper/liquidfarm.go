@@ -86,10 +86,10 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 // LiquidUnfarm handles types.MsgLiquidUnfarm to unfarm LFCoin.
 // It doesn't validate if the liquid farm exists because farmers still need to be able to
 // unfarm their LFCoin in case the liquid farm object is removed in params by governance proposal.
-func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress, unfarmingCoin sdk.Coin) (unfarmedCoin sdk.Coin, err error) {
+func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress, unfarmingCoin sdk.Coin) (unfarmedCoin sdk.Coin, withdrawnRewards sdk.Coins, err error) {
 	pool, found := k.liquidityKeeper.GetPool(ctx, poolId)
 	if !found {
-		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", poolId)
+		return sdk.Coin{}, sdk.Coins{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", poolId)
 	}
 
 	reserveAddr := types.LiquidFarmReserveAddress(pool.Id)
@@ -123,12 +123,12 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 	)
 	unfarmedCoin = sdk.NewCoin(poolCoinDenom, unfarmingAmt)
 
-	withdrawnRewards := sdk.Coins{}
+	withdrawnRewards = sdk.Coins{}
 	if found {
 		// Unfarm the farmed coin in the farm module and release it to the farmer
 		withdrawnRewards, err = k.lpfarmKeeper.Unfarm(ctx, reserveAddr, unfarmedCoin)
 		if err != nil {
-			return sdk.Coin{}, err
+			return sdk.Coin{}, sdk.Coins{}, err
 		}
 	}
 
@@ -138,20 +138,20 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 	if !withdrawnRewards.IsZero() {
 		withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(poolId)
 		if err := k.bankKeeper.SendCoins(ctx, reserveAddr, withdrawnRewardsReserveAddr, withdrawnRewards); err != nil {
-			return sdk.Coin{}, err
+			return sdk.Coin{}, sdk.Coins{}, err
 		}
 	}
 
 	if err := k.bankKeeper.SendCoins(ctx, reserveAddr, farmer, sdk.NewCoins(unfarmedCoin)); err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdk.Coins{}, err
 	}
 
 	// Burn the LFCoin amount
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, farmer, types.ModuleName, sdk.NewCoins(unfarmingCoin)); err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdk.Coins{}, err
 	}
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(unfarmingCoin)); err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdk.Coins{}, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -161,15 +161,16 @@ func (k Keeper) LiquidUnfarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddre
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
 			sdk.NewAttribute(types.AttributeKeyUnfarmingCoin, unfarmingCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyUnfarmedCoin, unfarmedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyWithdrawnRewards, withdrawnRewards.String()),
 		),
 	})
 
-	return unfarmedCoin, nil
+	return unfarmedCoin, sdk.Coins{}, nil
 }
 
 // LiquidUnfarmAndWithdraw handles types.MsgUnfarmAndWithdraw to unfarm LFCoin and withdraw pool coin from the pool.
 func (k Keeper) LiquidUnfarmAndWithdraw(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress, unfarmingCoin sdk.Coin) error {
-	unfarmedCoin, err := k.LiquidUnfarm(ctx, poolId, farmer, unfarmingCoin)
+	unfarmedCoin, withdrawnRewards, err := k.LiquidUnfarm(ctx, poolId, farmer, unfarmingCoin)
 	if err != nil {
 		return err
 	}
@@ -190,6 +191,7 @@ func (k Keeper) LiquidUnfarmAndWithdraw(ctx sdk.Context, poolId uint64, farmer s
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
 			sdk.NewAttribute(types.AttributeKeyUnfarmingCoin, unfarmingCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyUnfarmedCoin, unfarmedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyWithdrawnRewards, withdrawnRewards.String()),
 		),
 	})
 
