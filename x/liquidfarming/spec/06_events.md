@@ -47,14 +47,14 @@ The `liquidfarming` module emits the following events:
 
 ### MsgPlaceBid
 
-| Type      | Attribute Key | Attribute Value |
-| --------- | ------------- | --------------- |
-| place_bid | auction_id    | {auctionId}     |
-| place_bid | bidder        | {bidder}        |
-| place_bid | bidding_coin  | {biddingCoin}   |
-| message   | module        | liquidfarming   |
-| message   | action        | deposit         |
-| message   | bidder        | {bidderAddress} |
+| Type      | Attribute Key | Attribute Value   |
+| --------- | ------------- | ----------------- |
+| place_bid | auction_id    | {auctionId}       |
+| place_bid | bidder        | {bidder}          |
+| place_bid | bidding_coin  | {biddingCoin}     |
+| message   | module        | {liquidfarming}   |
+| message   | action        | {deposit}         |
+| message   | bidder        | {bidderAddress}   |
 
 ### MsgRefundBid
 
@@ -63,6 +63,6 @@ The `liquidfarming` module emits the following events:
 | refund_bid | auction_id    | {auctionId}     |
 | refund_bid | bidder        | {bidder}        |
 | refund_bid | refund_coin   | {bidAmount}     |
-| message    | module        | liquidfarming   |
-| message    | action        | deposit         |
+| message    | module        | {liquidfarming} |
+| message    | action        | {deposit}       |
 | message    | bidder        | {bidderAddress} |
