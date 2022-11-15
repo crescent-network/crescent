@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
+	"github.com/crescent-network/crescent/v3/app"
 	chain "github.com/crescent-network/crescent/v3/app"
 	farmingparams "github.com/crescent-network/crescent/v3/app/params"
 )
@@ -172,8 +173,9 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingCo
 		genutilcli.GenTxCmd(chain.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, chain.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(chain.ModuleBasics),
 		AddGenesisAccountCmd(chain.DefaultNodeHome),
+		AddGenesisWasmMsgCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(chain.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		// testnetCmd(chain.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
