@@ -144,7 +144,7 @@ func (s *KeeperTestSuite) TestLiquidFarm_WithFarmPlan() {
 }
 
 func (s *KeeperTestSuite) TestLiquidUnfarm_Validation() {
-	_, _, err := s.keeper.LiquidUnfarm(s.ctx, 1, s.addr(0), utils.ParseCoin("100_000_000pool1"))
+	_, err := s.keeper.LiquidUnfarm(s.ctx, 1, s.addr(0), utils.ParseCoin("100_000_000pool1"))
 	s.Require().EqualError(err, "pool 1 not found: not found")
 
 	pair := s.createPair(helperAddr, "denom1", "denom2")
@@ -185,7 +185,7 @@ func (s *KeeperTestSuite) TestLiquidUnfarm_Validation() {
 		s.Run(tc.name, func() {
 			s.Require().NoError(tc.msg.ValidateBasic())
 			cacheCtx, _ := s.ctx.CacheContext()
-			unfarmInfo, _, err := s.keeper.LiquidUnfarm(cacheCtx, tc.msg.PoolId, tc.msg.GetFarmer(), tc.msg.UnfarmingCoin)
+			unfarmInfo, err := s.keeper.LiquidUnfarm(cacheCtx, tc.msg.PoolId, tc.msg.GetFarmer(), tc.msg.UnfarmingCoin)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 				tc.postRun(cacheCtx, unfarmInfo)

@@ -14,7 +14,6 @@ The `liquidfarming` module emits the following events:
 | liquid_farm | farmer            | {farmer}         |
 | liquid_farm | farming_coin      | {farmingCoin}    |
 | liquid_farm | minted_coin       | {mintingCoin}    |
-| liquid_farm | withdrawn_rewards | {withdrawnCoins} |
 | message     | module            | {liquidfarming}  |
 | message     | action            | {farm}           |
 | message     | farmer            | {farmerAddress}  |
@@ -27,7 +26,6 @@ The `liquidfarming` module emits the following events:
 | liquid_unfarm | farmer            | {farmer}         |
 | liquid_unfarm | unfarming_coin    | {unfarmingCoin}  |
 | liquid_unfarm | unfarmed_coin     | {unfarmedCoin}   |
-| liquid_unfarm | withdrawn_rewards | {withdrawnCoins} |
 | message       | module            | {liquidfarming}  |
 | message       | action            | {unfarm}         |
 | message       | farmer            | {farmerAddress}  |
@@ -40,7 +38,6 @@ The `liquidfarming` module emits the following events:
 | liquid_unfarm_and_withdraw | farmer            | {farmer}          |
 | liquid_unfarm_and_withdraw | unfarming_coin    | {unfarmingCoin}   |
 | liquid_unfarm_and_withdraw | unfarmed_coin     | {unfarmedCoin}    |
-| liquid_unfarm_and_withdraw | withdrawn_rewards | {withdrawnCoins}  |
 | message                    | module            | liquidfarming     |
 | message                    | action            | unfarmandwithdraw |
 | message                    | farmer            | {farmerAddress}   |

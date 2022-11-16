@@ -36,7 +36,7 @@ func (m msgServer) LiquidFarm(goCtx context.Context, msg *types.MsgLiquidFarm) (
 func (m msgServer) LiquidUnfarm(goCtx context.Context, msg *types.MsgLiquidUnfarm) (*types.MsgLiquidUnfarmResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, _, err := m.Keeper.LiquidUnfarm(ctx, msg.PoolId, msg.GetFarmer(), msg.UnfarmingCoin); err != nil {
+	if _, err := m.Keeper.LiquidUnfarm(ctx, msg.PoolId, msg.GetFarmer(), msg.UnfarmingCoin); err != nil {
 		return nil, err
 	}
 
