@@ -24,6 +24,10 @@ func (k Keeper) PlaceBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidde
 		return types.Bid{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "auction by pool %d not found", poolId)
 	}
 
+	if auction.Status != types.AuctionStatusStarted {
+		return types.Bid{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "auction status must be %s", types.AuctionStatusStarted.String())
+	}
+
 	if auction.BiddingCoinDenom != biddingCoin.Denom {
 		return types.Bid{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected denom %s, but got %s", auction.BiddingCoinDenom, biddingCoin.Denom)
 	}
