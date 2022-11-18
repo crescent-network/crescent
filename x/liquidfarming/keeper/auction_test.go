@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	utils "github.com/crescent-network/crescent/v3/types"
 	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
@@ -137,6 +138,35 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 	// Place a bid with less than the winning bid amount
 	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, bidderAddr2, sdk.NewInt64Coin(pool.PoolCoinDenom, 90_000_000))
 	s.Require().EqualError(err, "90000000 is not bigger than 150000000: not bigger than the winning bid amount")
+}
+
+func (s *KeeperTestSuite) TestPlaceBid_AuctionStatus() {
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+
+	lf1 := s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+
+	s.liquidFarm(lf1.PoolId, helperAddr, utils.ParseCoin("10_000_000pool1"), true)
+	s.nextBlock()
+
+	// Create the first auction
+	s.nextAuction()
+
+	s.fundAddr(s.addr(0), utils.ParseCoins("300_000_000pool1"))
+
+	_, err := s.keeper.PlaceBid(s.ctx, 1, pool.Id, s.addr(0), utils.ParseCoin("100_000_000pool1"))
+	s.Require().NoError(err)
+
+	// Finish the first auction and create next one
+	s.nextAuction()
+
+	// Place a bid for the old auction
+	_, err = s.keeper.PlaceBid(s.ctx, 1, pool.Id, s.addr(0), utils.ParseCoin("200_000_000pool1"))
+	s.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
+
+	auctionId := s.keeper.GetLastRewardsAuctionId(s.ctx, lf1.PoolId)
+	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, s.addr(0), utils.ParseCoin("200_000_000pool1"))
+	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) TestRefundBid() {
