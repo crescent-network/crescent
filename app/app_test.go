@@ -46,11 +46,11 @@ import (
 	"github.com/crescent-network/crescent/v3/x/mint"
 )
 
-func TestSimAppExportAndBlockedAddrs(t *testing.T) { // TODO: remove if this test case is no longer needed
+func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
 	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
-	// ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+
 	for acc := range maccPerms {
 		require.True(
 			t,
