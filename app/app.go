@@ -92,9 +92,6 @@ import (
 
 	// IBC modules
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
-	icacontroller "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
@@ -111,7 +108,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
 	// Crescent core modules
-	farmingparams "github.com/crescent-network/crescent/v3/app/params"
+	appparams "github.com/crescent-network/crescent/v3/app/params"
 	v2_0_0 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v2.0.0"
 	v3 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v3"
 	"github.com/crescent-network/crescent/v3/app/upgrades/testnet/rc4"
@@ -151,20 +148,24 @@ import (
 )
 
 var (
-	// If EnabledSpecificProposals is "", and this is "true", then enable all x/wasm proposals.
-	// If EnabledSpecificProposals is "", and this is not "true", then disable all x/wasm proposals.
-	ProposalsEnabled = "false"
-	// If set to non-empty string it must be comma-separated list of values that are all a subset
-	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)
-	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
-	EnableSpecificProposals = "" // TODO: determine which proposal do we need
+	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
+	// and EnableSpecificWasmProposals is empty. Otherwise, all x/wasm proposals
+	// are disabled.
+	WasmProposalsEnabled = "true"
+
+	// EnableSpecificWasmProposals, if set, must be comma-separated list of values
+	// that are all a subset of "EnableAllProposals", which takes precedence over
+	// WasmProposalsEnabled.
+	//
+	// See: https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
+	EnableSpecificProposals = ""
 )
 
-// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
+// GetEnabledProposals parses the WasmProposalsEnabled / EnableSpecificProposals values to
 // produce a list of enabled proposals to pass into wasmd app.
 func GetEnabledProposals() []wasm.ProposalType {
 	if EnableSpecificProposals == "" {
-		if ProposalsEnabled == "true" {
+		if WasmProposalsEnabled == "true" {
 			return wasm.EnableAllProposals
 		}
 		return wasm.DisableAllProposals
@@ -258,6 +259,7 @@ var (
 // capabilities aren't needed for testing.
 type App struct {
 	*baseapp.BaseApp
+
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
@@ -294,17 +296,18 @@ type App struct {
 	MarketMakerKeeper   marketmakerkeeper.Keeper
 	LPFarmKeeper        lpfarmkeeper.Keeper
 	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	WasmKeeper          wasm.Keeper
 
+	// scoped keepers
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
 	ScopedWasmKeeper          capabilitykeeper.ScopedKeeper
 
-	transferModule transfer.AppModule
+	// IBC transfer module
+	TransferModule transfer.AppModule
 
 	// the module manager
 	mm *module.Manager
@@ -334,9 +337,9 @@ func NewApp(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig farmingparams.EncodingConfig,
-	enabledProposals []wasm.ProposalType,
+	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
+	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
@@ -345,8 +348,8 @@ func NewApp(
 
 	bApp := baseapp.NewBaseApp(AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetVersion(version.Version)
+	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey,
@@ -373,7 +376,6 @@ func NewApp(
 		marketmakertypes.StoreKey,
 		lpfarmtypes.StoreKey,
 		icahosttypes.StoreKey,
-		icacontrollertypes.StoreKey,
 		wasm.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -408,7 +410,6 @@ func NewApp(
 	)
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	app.CapabilityKeeper.Seal()
@@ -421,6 +422,7 @@ func NewApp(
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 	)
+
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		keys[banktypes.StoreKey],
@@ -428,16 +430,19 @@ func NewApp(
 		app.GetSubspace(banktypes.ModuleName),
 		app.ModuleAccountAddrs(),
 	)
+
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey],
 		appCodec,
 		app.BaseApp.MsgServiceRouter(),
 	)
+
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
 		appCodec,
 		keys[feegrant.StoreKey],
 		app.AccountKeeper,
 	)
+
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
 		keys[stakingtypes.StoreKey],
@@ -466,18 +471,21 @@ func NewApp(
 		authtypes.FeeCollectorName,
 		app.ModuleAccountAddrs(),
 	)
+
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		keys[slashingtypes.StoreKey],
 		app.StakingKeeper,
 		app.GetSubspace(slashingtypes.ModuleName),
 	)
+
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName),
 		invCheckPeriod,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
 	)
+
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		keys[upgradetypes.StoreKey],
@@ -491,6 +499,7 @@ func NewApp(
 	app.StakingKeeper = app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
+
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		keys[ibchost.StoreKey],
@@ -499,6 +508,7 @@ func NewApp(
 		app.UpgradeKeeper,
 		scopedIBCKeeper,
 	)
+
 	app.BudgetKeeper = budgetkeeper.NewKeeper(
 		appCodec,
 		keys[budgettypes.StoreKey],
@@ -507,6 +517,8 @@ func NewApp(
 		app.BankKeeper,
 		app.ModuleAccountAddrs(),
 	)
+
+	// Farming Keeper will be deprecated once v3 is applied
 	app.FarmingKeeper = farmingkeeper.NewKeeper(
 		appCodec,
 		keys[farmingtypes.StoreKey],
@@ -514,6 +526,7 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
+
 	app.LiquidityKeeper = liquiditykeeper.NewKeeper(
 		appCodec,
 		keys[liquiditytypes.StoreKey],
@@ -521,6 +534,7 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
+
 	app.MarketMakerKeeper = marketmakerkeeper.NewKeeper(
 		appCodec,
 		keys[marketmakertypes.StoreKey],
@@ -528,6 +542,7 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
+
 	app.LPFarmKeeper = lpfarmkeeper.NewKeeper(
 		appCodec,
 		keys[lpfarmtypes.StoreKey],
@@ -544,10 +559,10 @@ func NewApp(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposalHandler(app.FarmingKeeper)).
 		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper)).
-		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper))
+		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
 
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
 		appCodec,
@@ -593,14 +608,18 @@ func NewApp(
 		keys[ibctransfertypes.StoreKey],
 		app.GetSubspace(ibctransfertypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
 		scopedTransferKeeper,
 	)
-	app.transferModule = transfer.NewAppModule(app.TransferKeeper)
+	app.TransferModule = transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
+	fmt.Println("Panics after the line...")
+	fmt.Println("icahosttypes.StoreKey: ", keys[icahosttypes.StoreKey])
+	fmt.Println("icahosttypes.SubModuleName: ", app.GetSubspace(icahosttypes.SubModuleName))
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
 		keys[icahosttypes.StoreKey],
@@ -611,21 +630,9 @@ func NewApp(
 		scopedICAHostKeeper,
 		app.MsgServiceRouter(),
 	)
-	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
-		appCodec,
-		keys[icacontrollertypes.StoreKey],
-		app.GetSubspace(icacontrollertypes.SubModuleName),
-		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
-		app.IBCKeeper.ChannelKeeper,
-		&app.IBCKeeper.PortKeeper,
-		scopedICAControllerKeeper,
-		app.MsgServiceRouter(),
-	)
-	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
+	fmt.Println("...")
+	icaModule := ica.NewAppModule(nil, &app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
-
-	// You will likely want to swap out the second argument with your own reviewed and maintained ica auth module
-	icaControllerIBCModule := icacontroller.NewIBCModule(app.ICAControllerKeeper, interTxIBCModule)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -670,15 +677,14 @@ func NewApp(
 	ibcRouter := porttypes.NewRouter()
 
 	// The gov proposal types can be individually enabled
-	if len(enabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, enabledProposals))
+	if len(wasmEnabledProposals) != 0 {
+		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasmEnabledProposals))
 	}
 	ibcRouter.
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
-		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		app.IBCKeeper.SetRouter(ibcRouter)
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+	app.IBCKeeper.SetRouter(ibcRouter)
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,
@@ -729,7 +735,7 @@ func NewApp(
 		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.GovKeeper, app.LiquidityKeeper, app.LiquidStakingKeeper),
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
-		app.transferModule,
+		app.TransferModule,
 		icaModule,
 	)
 
@@ -874,7 +880,7 @@ func NewApp(
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		app.transferModule,
+		app.TransferModule,
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -893,8 +899,8 @@ func NewApp(
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			IBCChannelkeeper: app.IBCKeeper.ChannelKeeper,
-			WasmConfig:       &wasmConfig,
+			IBCKeeper:  app.IBCKeeper,
+			WasmConfig: &wasmConfig,
 		},
 	)
 	if err != nil {
@@ -913,7 +919,6 @@ func NewApp(
 	app.ScopedTransferKeeper = scopedTransferKeeper
 	app.ScopedWasmKeeper = scopedWasmKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
-	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {

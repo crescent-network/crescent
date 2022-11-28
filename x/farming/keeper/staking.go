@@ -303,9 +303,11 @@ func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmerAcc sdk.AccAddress, s
 		if err := k.bankKeeper.SendCoins(ctx, farmerAcc, reserveAcc, stakingCoins); err != nil {
 			return err
 		}
-		if !k.bankKeeper.BlockedAddr(ctx, reserveAcc) {
-			k.bankKeeper.AddBlockedAddr(ctx, reserveAcc)
-		}
+		// Comment out the following logic to bypass the reverted dynamic BlockAddrs function in Cosmos SDK
+		//
+		// if !k.bankKeeper.BlockedAddr(ctx, reserveAcc) {
+		// 	k.bankKeeper.AddBlockedAddr(ctx, reserveAcc)
+		// }
 	} else {
 		var inputs []banktypes.Input
 		var outputs []banktypes.Output
@@ -313,9 +315,11 @@ func (k Keeper) ReserveStakingCoins(ctx sdk.Context, farmerAcc sdk.AccAddress, s
 			reserveAcc := types.StakingReserveAcc(coin.Denom)
 			inputs = append(inputs, banktypes.NewInput(farmerAcc, sdk.Coins{coin}))
 			outputs = append(outputs, banktypes.NewOutput(reserveAcc, sdk.Coins{coin}))
-			if !k.bankKeeper.BlockedAddr(ctx, reserveAcc) {
-				k.bankKeeper.AddBlockedAddr(ctx, reserveAcc)
-			}
+			// Comment out the following logic to bypass the reverted dynamic BlockAddrs function in Cosmos SDK
+			//
+			// if !k.bankKeeper.BlockedAddr(ctx, reserveAcc) {
+			// 	k.bankKeeper.AddBlockedAddr(ctx, reserveAcc)
+			// }
 		}
 		if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
 			return err

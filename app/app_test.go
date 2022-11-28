@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,15 +46,15 @@ import (
 	"github.com/crescent-network/crescent/v3/x/mint"
 )
 
-func TestSimAppExportAndBlockedAddrs(t *testing.T) {
+func TestSimAppExportAndBlockedAddrs(t *testing.T) { // TODO: remove if this test case is no longer needed
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
-	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
+	// ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	for acc := range maccPerms {
 		require.True(
 			t,
-			app.BankKeeper.BlockedAddr(ctx, app.AccountKeeper.GetModuleAddress(acc)),
+			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
 			"ensure that blocked addresses are properly set in bank keeper",
 		)
 	}
@@ -72,7 +73,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app2 := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
 	res, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 
@@ -84,7 +85,7 @@ func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(AppName, logger, db, encCfg.TxConfig.TxDecoder())
@@ -217,7 +218,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
@@ -270,7 +271,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
-	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
 	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
