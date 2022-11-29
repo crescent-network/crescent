@@ -75,7 +75,6 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
 			sdk.NewAttribute(types.AttributeKeyFarmingCoin, farmingCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyMintedCoin, mintingCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyWithdrawnRewards, withdrawnRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyLiquidFarmReserveAddress, reserveAddr.String()),
 		),
 	})

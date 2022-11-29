@@ -337,3 +337,47 @@ func (s *KeeperTestSuite) TestAllocateRewards_ToPairAndDenom() {
 	// 4476stake(from plan 1, pool 2 has 77.35% shares)
 	s.assertEq(utils.ParseDecCoins("4476.007697921871stake"), s.rewards(farmerAddr, "pool2"))
 }
+
+func (s *KeeperTestSuite) TestPreviousShare() {
+	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+	s.createPairWithLastPrice("denom2", "denom3", sdk.NewDec(1))
+	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+	s.createRangedPool(
+		1, utils.ParseCoins("100_000000denom1,100_000000denom2"),
+		utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"))
+	s.createPool(2, utils.ParseCoins("100_000000denom2,100_000000denom3"))
+
+	s.createPrivatePlan([]types.RewardAllocation{
+		types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+	}, utils.ParseCoins("10000_000000stake"))
+	s.createPrivatePlan([]types.RewardAllocation{
+		types.NewDenomRewardAllocation("pool3", utils.ParseCoins("100_000000stake")),
+	}, utils.ParseCoins("10000_000000stake"))
+
+	farmerAddr := utils.TestAddress(0)
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool1"))
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool2"))
+	s.farm(farmerAddr, utils.ParseCoin("1000000pool3"))
+
+	s.nextBlock()
+
+	farm, _ := s.keeper.GetFarm(s.ctx, "pool1")
+	s.assertEq(utils.ParseDec("0.226540919660986421"), *farm.PreviousShare)
+	farm, _ = s.keeper.GetFarm(s.ctx, "pool2")
+	s.assertEq(utils.ParseDec("0.773459080339013578"), *farm.PreviousShare)
+	farm, _ = s.keeper.GetFarm(s.ctx, "pool3")
+	s.Require().Nil(farm.PreviousShare)
+
+	pair, _ := s.app.LiquidityKeeper.GetPair(s.ctx, 1)
+	pair.LastPrice = utils.ParseDecP("2.5")
+	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
+
+	s.nextBlock()
+
+	farm, _ = s.keeper.GetFarm(s.ctx, "pool1")
+	s.assertEq(sdk.NewDec(1), *farm.PreviousShare)
+	farm, _ = s.keeper.GetFarm(s.ctx, "pool2")
+	s.Require().Nil(farm.PreviousShare)
+	farm, _ = s.keeper.GetFarm(s.ctx, "pool3")
+	s.Require().Nil(farm.PreviousShare)
+}
