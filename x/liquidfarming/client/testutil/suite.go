@@ -9,6 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -30,6 +31,9 @@ import (
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
+// emptyWasmOpts defines a type alias for a list of wasm options.
+var emptyWasmOpts []wasm.Option = nil
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -47,6 +51,8 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
+			wasm.DisableAllProposals,
+			emptyWasmOpts,
 			baseapp.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
