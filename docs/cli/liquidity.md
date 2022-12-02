@@ -294,7 +294,7 @@ An Example of Buying Direction
 # the current last price of the pair.
 # You are placing an order with an intention to wait until your order is matched and executed at 2.9.
 #
-# Make a limit order to buy
+# Place a limit order to buy
 crescentd tx liquidity limit-order 1 buy 50000000uusd uatom 2.9 17241379 \
 --chain-id localnet \
 --from alice \
@@ -303,7 +303,7 @@ crescentd tx liquidity limit-order 1 buy 50000000uusd uatom 2.9 17241379 \
 --yes \
 --output json | jq
 
-# Make a limit order to buy with order-lifespan flag
+# Place a limit order to buy with order-lifespan flag
 crescentd tx liquidity limit-order 1 buy 50000000uusd uatom 2.9 17241379 \
 --chain-id localnet \
 --order-lifespan 30s \
@@ -356,8 +356,19 @@ An Example of Selling Direction
 # You are placing an order with an intention to sell it immediately with any amounts placed in the orderbook pair.
 # OfferCoinAmount is the maximum amount you can sell.
 #
+# Place a limit order to sell
 crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 2.7 50000000 \
 --chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Place a limit order to sell with order-lifespan flag
+crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 2.7 50000000 \
+--chain-id localnet \
+--order-lifespan 30s \
 --from alice \
 --keyring-backend test \
 --broadcast-mode block \
