@@ -286,10 +286,14 @@ An Example of Buying Direction
 # and improve performance issue. 
 #
 # In regards of the `amount` field, it is how many ATOM you want to buy.
-# In this scenario, OfferCoinAmount/OrderPrice is the maximum amount you can buy. 
-# The amount value multiply by order price cannot be more than the offer coin amount.
+# It is important to note that OfferCoinAmount/OrderPrice is the maximum amount you can buy and
+# the amount value multiply by order price cannot be more than the offer coin amount.
+# 
+# To describe the CLI below, 
+# it means you want to buy 17241379 amount of uatom by offering 50000000uusd with an order price of 2.9, which is lower than
+# the current last price of the pair.
+# You are placing an order with an intention to wait until your order is matched and executed at 2.9.
 #
-
 # Make a limit order to buy
 crescentd tx liquidity limit-order 1 buy 50000000uusd uatom 2.9 17241379 \
 --chain-id localnet \
@@ -345,8 +349,12 @@ An Example of Selling Direction
 # Our DEX is designed in this way to minimize computational resources 
 # and improve performance issue. 
 #
-# In regards of the `amount` field, it is how many ATOM you want to sell.
-# In this scenario, OfferCoinAmount is the maximum amount you can sell.
+# In regards of the `amount` field, it is a number of ATOMs you want to sell.
+# 
+# To describe the CLI below, 
+# it means you want to sell 50000000 all amounts by offering 50000000uatom for uusd with an order price of 2.7.
+# You are placing an order with an intention to sell it immediately with any amounts placed in the orderbook pair.
+# OfferCoinAmount is the maximum amount you can sell.
 #
 crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 2.7 50000000 \
 --chain-id localnet \
