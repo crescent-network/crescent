@@ -25,27 +25,29 @@ func (k Keeper) PlaceBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidde
 	}
 
 	if auction.Status != types.AuctionStatusStarted {
-		return types.Bid{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "auction status must be %s", types.AuctionStatusStarted.String())
+		return types.Bid{}, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "auction status must be %s", types.AuctionStatusStarted.String())
 	}
 
 	if auction.BiddingCoinDenom != biddingCoin.Denom {
-		return types.Bid{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected denom %s, but got %s", auction.BiddingCoinDenom, biddingCoin.Denom)
+		return types.Bid{}, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "expected denom %s, but got %s", auction.BiddingCoinDenom, biddingCoin.Denom)
 	}
 
 	if biddingCoin.Amount.LT(liquidFarm.MinBidAmount) {
-		return types.Bid{}, sdkerrors.Wrapf(types.ErrSmallerThanMinimumAmount, "%s is smaller than %s", biddingCoin.Amount, liquidFarm.MinBidAmount)
+		return types.Bid{}, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "must be greater than the minimum bid amount %s", liquidFarm.MinBidAmount)
 	}
 
-	winningBid, found := k.GetWinningBid(ctx, auctionId, poolId)
-	if found {
+	if winningBid, found := k.GetWinningBid(ctx, auctionId, poolId); found {
 		if biddingCoin.Amount.LTE(winningBid.Amount.Amount) {
-			return types.Bid{}, sdkerrors.Wrapf(types.ErrNotBiggerThanWinningBidAmount, "%s is not bigger than %s", biddingCoin.Amount, winningBid.Amount.Amount)
+			return types.Bid{}, sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "must be greater than the winning bid amount %s", winningBid.Amount.Amount)
 		}
 	}
 
 	// Refund the previous bid if exists
-	previousBid, found := k.GetBid(ctx, auctionId, bidder)
-	if found {
+	if previousBid, found := k.GetBid(ctx, auctionId, bidder); found {
 		if err := k.bankKeeper.SendCoins(ctx, auction.GetPayingReserveAddress(), previousBid.GetBidder(), sdk.NewCoins(previousBid.Amount)); err != nil {
 			return types.Bid{}, err
 		}
@@ -56,11 +58,7 @@ func (k Keeper) PlaceBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidde
 		return types.Bid{}, err
 	}
 
-	bid := types.NewBid(
-		poolId,
-		bidder.String(),
-		biddingCoin,
-	)
+	bid := types.NewBid(poolId, bidder.String(), biddingCoin)
 	k.SetBid(ctx, bid)
 	k.SetWinningBid(ctx, auction.Id, bid)
 

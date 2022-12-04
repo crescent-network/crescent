@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestPlaceBid_Validation() {
 				sdk.NewInt64Coin(pool.PoolCoinDenom, 100),
 			),
 			nil,
-			"100 is smaller than 1000000: smaller than the minimum amount",
+			"must be greater than the minimum bid amount 1000000: invalid request",
 		},
 	} {
 		s.Run(tc.name, func() {
@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 
 	// Place a bid with less than the winning bid amount
 	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, bidderAddr2, sdk.NewInt64Coin(pool.PoolCoinDenom, 90_000_000))
-	s.Require().EqualError(err, "90000000 is not bigger than 150000000: not bigger than the winning bid amount")
+	s.Require().EqualError(err, "must be greater than the winning bid amount 150000000: invalid request")
 }
 
 func (s *KeeperTestSuite) TestPlaceBid_AuctionStatus() {
