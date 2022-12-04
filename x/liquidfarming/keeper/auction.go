@@ -47,7 +47,7 @@ func (k Keeper) PlaceBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidde
 	}
 
 	// Refund the previous bid if exists
-	if previousBid, found := k.GetBid(ctx, auctionId, bidder); found {
+	if previousBid, found := k.GetBid(ctx, poolId, bidder); found {
 		if err := k.bankKeeper.SendCoins(ctx, auction.GetPayingReserveAddress(), previousBid.GetBidder(), sdk.NewCoins(previousBid.Amount)); err != nil {
 			return types.Bid{}, err
 		}

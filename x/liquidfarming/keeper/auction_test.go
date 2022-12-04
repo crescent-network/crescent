@@ -169,6 +169,38 @@ func (s *KeeperTestSuite) TestPlaceBid_AuctionStatus() {
 	s.Require().NoError(err)
 }
 
+func (s *KeeperTestSuite) TestPlaceBid_RefundPreviousBid() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000000denom1, 100_000000denom2"))
+	plan := s.createPrivatePlan(s.addr(0), []lpfarmtypes.RewardAllocation{
+		{
+			PairId:        pool.PairId,
+			RewardsPerDay: utils.ParseCoins("100_000000stake"),
+		},
+	})
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("100_000000stake"))
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(0), utils.ParseCoin("10_000000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction() // increase auction id
+	s.nextAuction() // increase auction id
+
+	s.fundAddr(s.addr(5), utils.ParseCoins("500_000000pool1"))
+	s.assertEq(utils.ParseCoins("500_000000pool1"), s.getBalances(s.addr(5)))
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("450_000000pool1"), false)
+	s.nextBlock()
+	s.assertEq(utils.ParseCoins("50_000000pool1"), s.getBalances(s.addr(5)))
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("500_000000pool1"), false)
+	s.nextBlock()
+	s.assertEq(utils.ParseCoins("0pool1"), s.getBalances(s.addr(5)))
+}
+
 func (s *KeeperTestSuite) TestRefundBid() {
 	pair := s.createPair(helperAddr, "denom1", "denom2")
 	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
