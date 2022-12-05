@@ -46,7 +46,7 @@ func (k Keeper) PlaceBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidde
 		}
 	}
 
-	// Refund the previous bid if exists
+	// Refund the previous bid if the bidder has placed bid before
 	if previousBid, found := k.GetBid(ctx, poolId, bidder); found {
 		if err := k.bankKeeper.SendCoins(ctx, auction.GetPayingReserveAddress(), previousBid.GetBidder(), sdk.NewCoins(previousBid.Amount)); err != nil {
 			return types.Bid{}, err
@@ -54,6 +54,7 @@ func (k Keeper) PlaceBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidde
 		k.DeleteBid(ctx, previousBid)
 	}
 
+	// Reserve bidding coin
 	if err := k.bankKeeper.SendCoins(ctx, bidder, auction.GetPayingReserveAddress(), sdk.NewCoins(biddingCoin)); err != nil {
 		return types.Bid{}, err
 	}
@@ -85,12 +86,12 @@ func (k Keeper) RefundBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidd
 
 	winningBid, found := k.GetWinningBid(ctx, auctionId, poolId)
 	if found && winningBid.Bidder == bidder.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "winning bid can't be refunded")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "not allowed to refund the winning bid")
 	}
 
 	bid, found := k.GetBid(ctx, poolId, bidder)
 	if !found {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "bid not found")
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "bid by pool %d not found", poolId)
 	}
 
 	if err := k.bankKeeper.SendCoins(ctx, auction.GetPayingReserveAddress(), bidder, sdk.NewCoins(bid.Amount)); err != nil {
@@ -128,7 +129,7 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, auction types.RewardsAucti
 	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(auction.PoolId)
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(auction.PoolId)
 	farmingRewards := k.lpfarmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
-	truncatedRewards, _ := farmingRewards.TruncateDecimal() // TODO: farm module may use sdk.DecCoins for sdk.Coins in the future
+	truncatedRewards, _ := farmingRewards.TruncateDecimal()
 	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(auction.PoolId)
 	withdrawnRewardsReserves := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
 	totalRewards := truncatedRewards.Add(withdrawnRewardsReserves...)
@@ -137,8 +138,8 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, auction types.RewardsAucti
 	if !found {
 		k.skipRewardsAuction(ctx, totalRewards, feeRate, auction)
 	} else {
-		_, found = k.lpfarmKeeper.GetPosition(ctx, liquidFarmReserveAddr, poolCoinDenom)
-		if found {
+		// Payout farming rewards if there is any accumulated rewards in the lpfarm module
+		if _, found = k.lpfarmKeeper.GetPosition(ctx, liquidFarmReserveAddr, poolCoinDenom); found {
 			_, fees, err := k.payoutRewards(
 				ctx, auction.PoolId, poolCoinDenom, liquidFarmReserveAddr,
 				withdrawnRewardsReserveAddr, withdrawnRewardsReserves, winningBid, feeRate,
@@ -149,9 +150,8 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, auction types.RewardsAucti
 			auction.SetFees(fees)
 		}
 
-		// Compound rewards even if there is no one farmed.
-		auctionPayingReserveAddr := auction.GetPayingReserveAddress()
-		if err := k.compoundRewards(ctx, auctionPayingReserveAddr, liquidFarmReserveAddr, winningBid.Amount); err != nil {
+		// Compound rewards even if there is no one liquid farmed.
+		if err := k.compoundRewards(ctx, auction.GetPayingReserveAddress(), liquidFarmReserveAddr, winningBid.Amount); err != nil {
 			return err
 		}
 

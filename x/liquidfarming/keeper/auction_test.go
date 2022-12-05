@@ -250,7 +250,7 @@ func (s *KeeperTestSuite) TestRefundBid() {
 				s.addr(1).String(),
 			),
 			nil,
-			"winning bid can't be refunded: invalid request",
+			"not allowed to refund the winning bid: invalid request",
 		},
 	} {
 		s.Run(tc.name, func() {
