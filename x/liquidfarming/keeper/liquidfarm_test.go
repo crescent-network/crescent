@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestLiquidFarm_Validation() {
 				sdk.NewInt64Coin(pool.PoolCoinDenom, 100),
 			),
 			nil,
-			"100 is smaller than 100000000: smaller than the minimum amount",
+			"must be greater than the minimum amount 100000000: invalid request",
 		},
 		{
 			"insufficient funds",

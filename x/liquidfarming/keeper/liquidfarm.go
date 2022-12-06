@@ -23,7 +23,7 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 	}
 
 	if farmingCoin.Amount.LT(liquidFarm.MinFarmAmount) {
-		return sdkerrors.Wrapf(types.ErrSmallerThanMinimumAmount, "%s is smaller than %s", farmingCoin.Amount, liquidFarm.MinFarmAmount)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "must be greater than the minimum amount %s", liquidFarm.MinFarmAmount)
 	}
 
 	reserveAddr := types.LiquidFarmReserveAddress(pool.Id)
