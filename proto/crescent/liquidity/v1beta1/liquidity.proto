@@ -52,6 +52,8 @@ message Params {
 
   uint64 order_extra_gas = 16
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
+
+  uint32 max_num_active_pools_per_pair = 17;
 }
 
 // Pair defines a coin pair.

@@ -34,6 +34,7 @@ func UpgradeHandler(
 
 		// Set newly added liquidity param
 		liquidityKeeper.SetMaxNumMarketMakingOrderTicks(ctx, liquiditytypes.DefaultMaxNumMarketMakingOrderTicks)
+		liquidityKeeper.SetMaxNumActivePoolsPerPair(ctx, liquiditytypes.DefaultMaxNumActivePoolsPerPair)
 
 		// Set param for new market maker module
 		marketmakerParams := marketmakertypes.DefaultParams()

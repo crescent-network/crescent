@@ -103,7 +103,7 @@ func (k Keeper) ValidateMsgCreatePool(ctx sdk.Context, msg *types.MsgCreatePool)
 	if duplicate {
 		return types.ErrPoolAlreadyExists
 	}
-	if numActivePools >= types.MaxNumActivePoolsPerPair {
+	if uint32(numActivePools) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 		return types.ErrTooManyPools
 	}
 
@@ -205,7 +205,7 @@ func (k Keeper) ValidateMsgCreateRangedPool(ctx sdk.Context, msg *types.MsgCreat
 		}
 		return false, nil
 	})
-	if numActivePools >= types.MaxNumActivePoolsPerPair {
+	if uint32(numActivePools) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 		return types.ErrTooManyPools
 	}
 

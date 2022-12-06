@@ -209,7 +209,7 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		if len(k.GetAllPools(ctx)) >= types.MaxNumActivePoolsPerPair {
+		if uint32(len(k.GetAllPools(ctx))) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "all pools have been created"), nil, nil
 		}
 
@@ -274,7 +274,7 @@ func SimulateMsgCreateRangedPool(ak types.AccountKeeper, bk types.BankKeeper, k 
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		if len(k.GetAllPools(ctx)) >= types.MaxNumActivePoolsPerPair {
+		if uint32(len(k.GetAllPools(ctx))) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "all pools have been created"), nil, nil
 		}
 
