@@ -3,7 +3,7 @@ module github.com/crescent-network/crescent/v3
 go 1.18
 
 require (
-	github.com/CosmWasm/wasmd v0.29.1
+	github.com/CosmWasm/wasmd v0.29.2
 	github.com/cosmos/cosmos-sdk v0.45.10
 	github.com/cosmos/ibc-go/v3 v3.3.1
 	github.com/gogo/protobuf v1.3.3
