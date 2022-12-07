@@ -129,6 +129,7 @@ func TestRunMigrations(t *testing.T) {
 			"", 1,
 			false, "", true, "no migrations found for module bank: not found", 0,
 		},
+		// TODO: resolve this
 		// {
 		// 	"can register and run migration handler for x/bank",
 		// 	"bank", 1,

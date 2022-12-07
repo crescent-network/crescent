@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -11,7 +11,7 @@ import (
 func ParseFarmingPlanProposal(cdc codec.JSONCodec, proposalFile string) (types.FarmingPlanProposal, error) {
 	proposal := types.FarmingPlanProposal{}
 
-	contents, err := ioutil.ReadFile(proposalFile)
+	contents, err := os.ReadFile(proposalFile)
 	if err != nil {
 		return proposal, err
 	}

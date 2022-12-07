@@ -37,6 +37,7 @@ import (
 	chain "github.com/crescent-network/crescent/v3/app"
 )
 
+// nolint:unused
 var (
 	flagNodeDirPrefix     = "node-dir-prefix"
 	flagNumValidators     = "v"
@@ -46,7 +47,7 @@ var (
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command { // nolint:unused
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a simapp testnet",
