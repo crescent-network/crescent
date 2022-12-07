@@ -598,7 +598,8 @@ func (s *KeeperTestSuite) TestMaxNumActivePoolsPerPair() {
 		pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
 		pool1 := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"), true)
-		for i := 0; i < types.MaxNumActivePoolsPerPair-1; i++ {
+		maxNumActivePools := s.keeper.GetMaxNumActivePoolsPerPair(s.ctx)
+		for i := uint32(0); i < maxNumActivePools-1; i++ {
 			s.createRangedPool(
 				s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
 				utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)
@@ -622,7 +623,8 @@ func (s *KeeperTestSuite) TestMaxNumActivePoolsPerPair() {
 		s.SetupTest()
 		pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
-		for i := 0; i < types.MaxNumActivePoolsPerPair; i++ {
+		maxNumActivePools := s.keeper.GetMaxNumActivePoolsPerPair(s.ctx)
+		for i := uint32(0); i < maxNumActivePools; i++ {
 			s.createRangedPool(
 				s.addr(0), pair.Id, utils.ParseCoins("1000000denom1,1000000denom2"),
 				utils.ParseDec("0.5"), utils.ParseDec("2.0"), utils.ParseDec("1.0"), true)

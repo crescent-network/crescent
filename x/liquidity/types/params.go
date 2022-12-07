@@ -16,6 +16,7 @@ const (
 	DefaultTickPrecision                uint32 = 4
 	DefaultMaxNumMarketMakingOrderTicks        = 10
 	DefaultMaxOrderLifespan                    = 24 * time.Hour
+	DefaultMaxNumActivePoolsPerPair            = 20
 )
 
 // Liquidity params default values
@@ -40,10 +41,6 @@ const (
 	PairEscrowAddressPrefix   = "PairEscrowAddress"
 	ModuleAddressNameSplitter = "|"
 	AddressType               = farmingtypes.AddressType32Bytes
-
-	// MaxNumActivePoolsPerPair is the maximum number of active(not disabled)
-	// pools per pair.
-	MaxNumActivePoolsPerPair = 50
 )
 
 var (
@@ -68,6 +65,7 @@ var (
 	KeyDepositExtraGas              = []byte("DepositExtraGas")
 	KeyWithdrawExtraGas             = []byte("WithdrawExtraGas")
 	KeyOrderExtraGas                = []byte("OrderExtraGas")
+	KeyMaxNumActivePoolsPerPair     = []byte("MaxNumActivePoolsPerPair")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -95,6 +93,7 @@ func DefaultParams() Params {
 		DepositExtraGas:              DefaultDepositExtraGas,
 		WithdrawExtraGas:             DefaultWithdrawExtraGas,
 		OrderExtraGas:                DefaultOrderExtraGas,
+		MaxNumActivePoolsPerPair:     DefaultMaxNumActivePoolsPerPair,
 	}
 }
 
@@ -117,6 +116,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyDepositExtraGas, &params.DepositExtraGas, validateExtraGas),
 		paramstypes.NewParamSetPair(KeyWithdrawExtraGas, &params.WithdrawExtraGas, validateExtraGas),
 		paramstypes.NewParamSetPair(KeyOrderExtraGas, &params.OrderExtraGas, validateExtraGas),
+		paramstypes.NewParamSetPair(KeyMaxNumActivePoolsPerPair, &params.MaxNumActivePoolsPerPair, validateMaxNumActivePoolsPerPair),
 	}
 }
 
@@ -142,6 +142,7 @@ func (params Params) Validate() error {
 		{params.DepositExtraGas, validateExtraGas},
 		{params.WithdrawExtraGas, validateExtraGas},
 		{params.OrderExtraGas, validateExtraGas},
+		{params.MaxNumActivePoolsPerPair, validateMaxNumActivePoolsPerPair},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -325,5 +326,13 @@ func validateExtraGas(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	return nil
+}
+
+func validateMaxNumActivePoolsPerPair(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 	return nil
 }

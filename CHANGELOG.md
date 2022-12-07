@@ -38,11 +38,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v3.0.0
+## [v3.0.0] - 2022-12-07
 
 ### State Machine Breaking
 
 - (ibc) [\#56](https://github.com/crescent-network/crescent/pull/56) fix!: upgrade ibc-go for pool coin blacklisting
+- (liquidity) [\#128](https://github.com/crescent-network/crescent/pull/128) refactor!: move MaxNumActivePoolsPerPair into params
 
 ### Features
 
@@ -59,6 +60,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 - (x/mint) [\#65](https://github.com/crescent-network/crescent/pull/65) feat: add last block time endpoint
+
+
+## [v2.3.0] - 2022-10-19
+
+### Improvements
+
+- (deps) [\#77](https://github.com/crescent-network/crescent/pull/77) feat: bump cosmos-sdk to v0.45.9 and use cosmos-sdk ics23 #377 #378
+- (x/liquidity) [\#77](https://github.com/crescent-network/crescent/pull/77) fix: lower the highest tick boundary for extra safety
+
+## [v2.2.0] - 2022-10-15
+
+### Bug Fixes
+
+- (security) [\#74](https://github.com/crescent-network/crescent/pull/74) fix: apply dragonberry security patch
 
 ## [v2.1.1] - 2022-07-29
 
@@ -160,8 +175,11 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
   - `x/vesting` feat: periodic vesting msg
   - `x/bank` feat: Add dynamic blockedAddrs
 
-[unreleased]: https://github.com/crescent-network/crescent/compare/v2.1.0...HEAD
+[unreleased]: https://github.com/crescent-network/crescent/compare/v3.0.0...HEAD
 [v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
 [v1.1.0]: https://github.com/crescent-network/crescent/releases/tag/v1.1.0
 [v2.1.0]: https://github.com/crescent-network/crescent/releases/tag/v2.1.0
 [v2.1.1]: https://github.com/crescent-network/crescent/releases/tag/v2.1.1
+[v2.2.0]: https://github.com/crescent-network/crescent/releases/tag/v2.2.0
+[v2.3.0]: https://github.com/crescent-network/crescent/releases/tag/v2.3.0
+[v3.0.0]: https://github.com/crescent-network/crescent/releases/tag/v3.0.0

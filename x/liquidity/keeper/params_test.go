@@ -63,3 +63,7 @@ func (s *KeeperTestSuite) TestGetWithdrawExtraGas() {
 func (s *KeeperTestSuite) TestGetOrderExtraGas() {
 	s.Require().EqualValues(types.DefaultOrderExtraGas, s.keeper.GetOrderExtraGas(s.ctx))
 }
+
+func (s *KeeperTestSuite) TestGetMaxNumActivePoolsPerPair() {
+	s.Require().EqualValues(types.DefaultMaxNumActivePoolsPerPair, s.keeper.GetMaxNumActivePoolsPerPair(s.ctx))
+}

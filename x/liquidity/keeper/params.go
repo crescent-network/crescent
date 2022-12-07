@@ -117,3 +117,15 @@ func (k Keeper) GetOrderExtraGas(ctx sdk.Context) (gas sdk.Gas) {
 func (k Keeper) SetMaxNumMarketMakingOrderTicks(ctx sdk.Context, input uint32) {
 	k.paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrderTicks, input)
 }
+
+// GetMaxNumActivePoolsPerPair returns the current maximum number of active
+// pools per pair.
+func (k Keeper) GetMaxNumActivePoolsPerPair(ctx sdk.Context) (i uint32) {
+	k.paramSpace.Get(ctx, types.KeyMaxNumActivePoolsPerPair, &i)
+	return
+}
+
+// SetMaxNumActivePoolsPerPair sets the maximum number of active pools per pair.
+func (k Keeper) SetMaxNumActivePoolsPerPair(ctx sdk.Context, i uint32) {
+	k.paramSpace.Set(ctx, types.KeyMaxNumActivePoolsPerPair, i)
+}

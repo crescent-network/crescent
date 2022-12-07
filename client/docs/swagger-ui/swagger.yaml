@@ -25329,6 +25329,9 @@ paths:
                   order_extra_gas:
                     type: string
                     format: uint64
+                  max_num_active_pools_per_pair:
+                    type: integer
+                    format: int64
                 description: Params defines the parameters for the liquidity module.
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
@@ -46445,6 +46448,9 @@ definitions:
       order_extra_gas:
         type: string
         format: uint64
+      max_num_active_pools_per_pair:
+        type: integer
+        format: int64
     description: Params defines the parameters for the liquidity module.
   crescent.liquidity.v1beta1.PoolBalances:
     type: object
@@ -47279,6 +47285,9 @@ definitions:
           order_extra_gas:
             type: string
             format: uint64
+          max_num_active_pools_per_pair:
+            type: integer
+            format: int64
         description: Params defines the parameters for the liquidity module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   crescent.liquidity.v1beta1.QueryPoolResponse:
