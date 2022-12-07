@@ -451,7 +451,7 @@ func (s *IntegrationTestSuite) TestNewLiquidFarmCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			false, &sdk.TxResponse{}, 2,
+			false, &sdk.TxResponse{}, 18,
 		},
 		{
 			"invalid case: pool id not found",
@@ -601,7 +601,7 @@ func (s *IntegrationTestSuite) TestNewPlaceBidCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			false, &sdk.TxResponse{}, 2,
+			false, &sdk.TxResponse{}, 18,
 		},
 		{
 			"invalid case: invalid bidding coin denom",

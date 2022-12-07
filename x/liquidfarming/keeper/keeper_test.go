@@ -86,6 +86,24 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 	s.Require().NoError(err)
 }
 
+func (s *KeeperTestSuite) assertEq(exp, got interface{}) {
+	s.T().Helper()
+	var equal bool
+	switch exp := exp.(type) {
+	case sdk.Int:
+		equal = exp.Equal(got.(sdk.Int))
+	case sdk.Dec:
+		equal = exp.Equal(got.(sdk.Dec))
+	case sdk.Coin:
+		equal = exp.IsEqual(got.(sdk.Coin))
+	case sdk.Coins:
+		equal = exp.IsEqual(got.(sdk.Coins))
+	case sdk.DecCoins:
+		equal = exp.IsEqual(got.(sdk.DecCoins))
+	}
+	s.Require().True(equal, "expected:\t%v\ngot:\t\t%v", exp, got)
+}
+
 func (s *KeeperTestSuite) createPrivatePlan(creator sdk.AccAddress, rewardAllocs []lpfarmtypes.RewardAllocation) lpfarmtypes.Plan {
 	s.T().Helper()
 	s.fundAddr(creator, s.app.LPFarmKeeper.GetPrivatePlanCreationFee(s.ctx))
