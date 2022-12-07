@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v3.0.0
+## [v3.0.0](https://github.com/crescent-network/crescent/releases/tag/v3.0.0) - 2022-12-07
 
 ### State Machine Breaking
 
