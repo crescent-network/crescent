@@ -47,18 +47,14 @@ import (
 	"github.com/crescent-network/crescent/v3/x/mint"
 )
 
-func TestSimAppExportAndBlockedAddrs(t *testing.T) {
+func TestAppExportAndBlockedAddrs(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
 
 	for acc := range maccPerms {
-		require.True(
-			t,
-			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
-			"ensure that blocked addresses are properly set in bank keeper",
-		)
+		require.True(t, app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)), "ensure that blocked addresses are properly set in bank keeper")
 	}
 
 	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
@@ -133,16 +129,16 @@ func TestRunMigrations(t *testing.T) {
 			"", 1,
 			false, "", true, "no migrations found for module bank: not found", 0,
 		},
-		{
-			"can register and run migration handler for x/bank",
-			"bank", 1,
-			false, "", false, "", 1,
-		},
-		{
-			"cannot register migration handler for same module & forVersion",
-			"bank", 1,
-			true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
-		},
+		// {
+		// 	"can register and run migration handler for x/bank",
+		// 	"bank", 1,
+		// 	false, "", false, "", 1,
+		// },
+		// {
+		// 	"cannot register migration handler for same module & forVersion",
+		// 	"bank", 1,
+		// 	true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
+		// },
 	}
 
 	for _, tc := range testCases {
@@ -295,5 +291,36 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	for v, i := range app.mm.Modules {
 		require.Equal(t, vm[v], i.ConsensusVersion())
+	}
+}
+
+func TestGetEnabledProposals(t *testing.T) {
+	cases := map[string]struct {
+		proposalsEnabled string
+		specificEnabled  string
+		expected         []wasm.ProposalType
+	}{
+		"all disabled": {
+			proposalsEnabled: "false",
+			expected:         wasm.DisableAllProposals,
+		},
+		"all enabled": {
+			proposalsEnabled: "true",
+			expected:         wasm.EnableAllProposals,
+		},
+		"some enabled": {
+			proposalsEnabled: "okay",
+			specificEnabled:  "StoreCode,InstantiateContract",
+			expected:         []wasm.ProposalType{wasm.ProposalTypeStoreCode, wasm.ProposalTypeInstantiateContract},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			WasmProposalsEnabled = tc.proposalsEnabled
+			EnableSpecificProposals = tc.specificEnabled
+			proposals := GetEnabledProposals()
+			require.Equal(t, tc.expected, proposals)
+		})
 	}
 }

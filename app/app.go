@@ -405,11 +405,7 @@ func NewApp(
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
 
 	// add capability keeper and ScopeToModule for ibc module
-	app.CapabilityKeeper = capabilitykeeper.NewKeeper(
-		appCodec,
-		keys[capabilitytypes.StoreKey],
-		memKeys[capabilitytypes.MemStoreKey],
-	)
+	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
@@ -424,7 +420,6 @@ func NewApp(
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 	)
-
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		keys[banktypes.StoreKey],
@@ -432,19 +427,16 @@ func NewApp(
 		app.GetSubspace(banktypes.ModuleName),
 		app.ModuleAccountAddrs(),
 	)
-
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey],
 		appCodec,
 		app.BaseApp.MsgServiceRouter(),
 	)
-
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
 		appCodec,
 		keys[feegrant.StoreKey],
 		app.AccountKeeper,
 	)
-
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
 		keys[stakingtypes.StoreKey],
@@ -462,7 +454,6 @@ func NewApp(
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
 	)
-
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		keys[distrtypes.StoreKey],
@@ -473,21 +464,18 @@ func NewApp(
 		authtypes.FeeCollectorName,
 		app.ModuleAccountAddrs(),
 	)
-
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		keys[slashingtypes.StoreKey],
 		app.StakingKeeper,
 		app.GetSubspace(slashingtypes.ModuleName),
 	)
-
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName),
 		invCheckPeriod,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
 	)
-
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		keys[upgradetypes.StoreKey],
@@ -510,7 +498,6 @@ func NewApp(
 		app.UpgradeKeeper,
 		scopedIBCKeeper,
 	)
-
 	app.BudgetKeeper = budgetkeeper.NewKeeper(
 		appCodec,
 		keys[budgettypes.StoreKey],
@@ -519,16 +506,13 @@ func NewApp(
 		app.BankKeeper,
 		app.ModuleAccountAddrs(),
 	)
-
-	// Farming Keeper will be deprecated once v3 is applied
-	app.FarmingKeeper = farmingkeeper.NewKeeper(
+	app.FarmingKeeper = farmingkeeper.NewKeeper( // Farming Keeper will be deprecated once v3 is applied
 		appCodec,
 		keys[farmingtypes.StoreKey],
 		app.GetSubspace(farmingtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
-
 	app.LiquidityKeeper = liquiditykeeper.NewKeeper(
 		appCodec,
 		keys[liquiditytypes.StoreKey],
@@ -536,7 +520,6 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
-
 	app.MarketMakerKeeper = marketmakerkeeper.NewKeeper(
 		appCodec,
 		keys[marketmakertypes.StoreKey],
@@ -544,7 +527,6 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
-
 	app.LPFarmKeeper = lpfarmkeeper.NewKeeper(
 		appCodec,
 		keys[lpfarmtypes.StoreKey],
@@ -553,7 +535,6 @@ func NewApp(
 		app.BankKeeper,
 		app.LiquidityKeeper,
 	)
-
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
 		appCodec,
 		keys[liquidstakingtypes.StoreKey],
@@ -566,7 +547,6 @@ func NewApp(
 		app.LPFarmKeeper,
 		app.SlashingKeeper,
 	)
-
 	app.LiquidFarmingKeeper = liquidfarmingkeeper.NewKeeper(
 		appCodec,
 		keys[liquidfarmingtypes.StoreKey],
@@ -609,7 +589,6 @@ func NewApp(
 			app.LiquidStakingKeeper.Hooks(),
 		),
 	)
-
 	app.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,
 		keys[claimtypes.StoreKey],
@@ -619,7 +598,6 @@ func NewApp(
 		app.LiquidityKeeper,
 		app.LiquidStakingKeeper,
 	)
-
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
@@ -822,8 +800,10 @@ func NewApp(
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
+		ibchost.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
+		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
 		budgettypes.ModuleName,
@@ -834,13 +814,14 @@ func NewApp(
 		claimtypes.ModuleName,
 		marketmakertypes.ModuleName,
 		lpfarmtypes.ModuleName,
+
+		icatypes.ModuleName,
+		wasm.ModuleName,
+
+		// empty logic modules
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		ibctransfertypes.ModuleName,
-		ibchost.ModuleName,
-		icatypes.ModuleName,
-		wasm.ModuleName,
 
 		// InitGenesis of crisis module called AssertInvariants
 		crisistypes.ModuleName,
