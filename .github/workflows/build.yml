@@ -18,10 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-arch: ["amd64"]
-        # wamsd does not fully support arm64 architecture yet
-        # Reference https://github.com/CosmWasm/wasmd#supported-systems
-        # go-arch: ["amd64", "arm64"]
+        go-arch: ["amd64", "arm64"] # it this related to https://github.com/CosmWasm/wasmd#supported-systems?
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3

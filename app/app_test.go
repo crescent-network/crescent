@@ -129,17 +129,16 @@ func TestRunMigrations(t *testing.T) {
 			"", 1,
 			false, "", true, "no migrations found for module bank: not found", 0,
 		},
-		// TODO: resolve this
-		// {
-		// 	"can register and run migration handler for x/bank",
-		// 	"bank", 1,
-		// 	false, "", false, "", 1,
-		// },
-		// {
-		// 	"cannot register migration handler for same module & forVersion",
-		// 	"bank", 1,
-		// 	true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
-		// },
+		{
+			"can register and run migration handler for x/bank",
+			"bank", 1,
+			false, "", false, "", 1,
+		},
+		{
+			"cannot register migration handler for same module & forVersion",
+			"bank", 1,
+			true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -199,8 +198,8 @@ func TestRunMigrations(t *testing.T) {
 					"marketmaker":   marketmaker.AppModule{}.ConsensusVersion(),
 					"lpfarm":        lpfarm.AppModule{}.ConsensusVersion(),
 					"ibc":           ibc.AppModule{}.ConsensusVersion(),
-					"transfer":      transfer.AppModule{}.ConsensusVersion(),
 					"ica":           ica.AppModule{}.ConsensusVersion(),
+					"transfer":      transfer.AppModule{}.ConsensusVersion(),
 					"wasm":          wasm.AppModule{}.ConsensusVersion(),
 				},
 			)
