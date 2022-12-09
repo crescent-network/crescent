@@ -37,4 +37,4 @@ jobs:
             Makefile
       - name: Build
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false CGO_ENABLED=1 make build
