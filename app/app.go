@@ -111,6 +111,7 @@ import (
 	appparams "github.com/crescent-network/crescent/v3/app/params"
 	v2_0_0 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v2.0.0"
 	v3 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v3"
+	v4 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v4"
 	"github.com/crescent-network/crescent/v3/app/upgrades/testnet/rc4"
 	"github.com/crescent-network/crescent/v3/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/v3/x/claim/keeper"
@@ -1107,6 +1108,7 @@ func (app *App) SetUpgradeStoreLoaders() {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &rc4.StoreUpgrades))
 	}
+
 	// mainnet upgrade state loaders
 	if upgradeInfo.Name == v2_0_0.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
@@ -1116,6 +1118,11 @@ func (app *App) SetUpgradeStoreLoaders() {
 	if upgradeInfo.Name == v3.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v3.StoreUpgrades))
+	}
+
+	if upgradeInfo.Name == v4.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v4.StoreUpgrades))
 	}
 }
 
@@ -1131,4 +1138,8 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v3.UpgradeName, v3.UpgradeHandler(
 			mm, configurator, app.MarketMakerKeeper, app.LiquidityKeeper, app.LPFarmKeeper, app.FarmingKeeper, app.BankKeeper))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v4.UpgradeName, v4.UpgradeHandler(
+			mm, configurator, app.ICAHostKeeper))
 }
