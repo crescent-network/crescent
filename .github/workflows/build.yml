@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-arch: ["amd64", "arm64"] # it this related to https://github.com/CosmWasm/wasmd#supported-systems?
+        go-arch: ["amd64"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -37,4 +37,4 @@ jobs:
             Makefile
       - name: Build
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false CGO_ENABLED=1 make build
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
