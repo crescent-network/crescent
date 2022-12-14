@@ -25,8 +25,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
+	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/budget/x/budget"
@@ -49,11 +50,10 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
 	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	for acc := range maccPerms {
 		require.True(
 			t,
-			app.BankKeeper.BlockedAddr(ctx, app.AccountKeeper.GetModuleAddress(acc)),
+			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
 			"ensure that blocked addresses are properly set in bank keeper",
 		)
 	}
@@ -174,32 +174,33 @@ func TestRunMigrations(t *testing.T) {
 			_, err = app.mm.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), app.configurator,
 				module.VersionMap{
-					"bank":          1,
-					"auth":          auth.AppModule{}.ConsensusVersion(),
-					"authz":         authzmodule.AppModule{}.ConsensusVersion(),
-					"staking":       staking.AppModule{}.ConsensusVersion(),
-					"mint":          mint.AppModule{}.ConsensusVersion(),
-					"distribution":  distribution.AppModule{}.ConsensusVersion(),
-					"slashing":      slashing.AppModule{}.ConsensusVersion(),
-					"gov":           gov.AppModule{}.ConsensusVersion(),
-					"params":        params.AppModule{}.ConsensusVersion(),
-					"upgrade":       upgrade.AppModule{}.ConsensusVersion(),
-					"vesting":       vesting.AppModule{}.ConsensusVersion(),
-					"feegrant":      feegrantmodule.AppModule{}.ConsensusVersion(),
-					"evidence":      evidence.AppModule{}.ConsensusVersion(),
-					"crisis":        crisis.AppModule{}.ConsensusVersion(),
-					"genutil":       genutil.AppModule{}.ConsensusVersion(),
-					"capability":    capability.AppModule{}.ConsensusVersion(),
-					"budget":        budget.AppModule{}.ConsensusVersion(),
-					"farming":       farming.AppModule{}.ConsensusVersion(),
-					"liquidity":     liquidity.AppModule{}.ConsensusVersion(),
-					"liquidstaking": liquidstaking.AppModule{}.ConsensusVersion(),
-					"liquidfarming": liquidfarming.AppModule{}.ConsensusVersion(),
-					"claim":         claim.AppModule{}.ConsensusVersion(),
-					"marketmaker":   marketmaker.AppModule{}.ConsensusVersion(),
-					"lpfarm":        lpfarm.AppModule{}.ConsensusVersion(),
-					"ibc":           ibc.AppModule{}.ConsensusVersion(),
-					"transfer":      transfer.AppModule{}.ConsensusVersion(),
+					"bank":               1,
+					"auth":               auth.AppModule{}.ConsensusVersion(),
+					"authz":              authzmodule.AppModule{}.ConsensusVersion(),
+					"staking":            staking.AppModule{}.ConsensusVersion(),
+					"mint":               mint.AppModule{}.ConsensusVersion(),
+					"distribution":       distribution.AppModule{}.ConsensusVersion(),
+					"slashing":           slashing.AppModule{}.ConsensusVersion(),
+					"gov":                gov.AppModule{}.ConsensusVersion(),
+					"params":             params.AppModule{}.ConsensusVersion(),
+					"upgrade":            upgrade.AppModule{}.ConsensusVersion(),
+					"vesting":            vesting.AppModule{}.ConsensusVersion(),
+					"feegrant":           feegrantmodule.AppModule{}.ConsensusVersion(),
+					"evidence":           evidence.AppModule{}.ConsensusVersion(),
+					"crisis":             crisis.AppModule{}.ConsensusVersion(),
+					"genutil":            genutil.AppModule{}.ConsensusVersion(),
+					"capability":         capability.AppModule{}.ConsensusVersion(),
+					"budget":             budget.AppModule{}.ConsensusVersion(),
+					"farming":            farming.AppModule{}.ConsensusVersion(),
+					"liquidity":          liquidity.AppModule{}.ConsensusVersion(),
+					"liquidstaking":      liquidstaking.AppModule{}.ConsensusVersion(),
+					"liquidfarming":      liquidfarming.AppModule{}.ConsensusVersion(),
+					"claim":              claim.AppModule{}.ConsensusVersion(),
+					"marketmaker":        marketmaker.AppModule{}.ConsensusVersion(),
+					"lpfarm":             lpfarm.AppModule{}.ConsensusVersion(),
+					"ibc":                ibc.AppModule{}.ConsensusVersion(),
+					"transfer":           transfer.AppModule{}.ConsensusVersion(),
+					"interchainaccounts": ica.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
