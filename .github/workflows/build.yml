@@ -1,0 +1,40 @@
+name: Build Crescent Core
+#  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - release/**
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-arch: ["amd64"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "^1.18"
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
+      - name: Build
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
