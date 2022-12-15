@@ -202,6 +202,7 @@ func TestRunMigrations(t *testing.T) {
 					"ibc":                ibc.AppModule{}.ConsensusVersion(),
 					"transfer":           transfer.AppModule{}.ConsensusVersion(),
 					"interchainaccounts": ica.AppModule{}.ConsensusVersion(),
+					"wasm":               wasm.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
