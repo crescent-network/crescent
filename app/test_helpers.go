@@ -38,14 +38,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-
 	simappparams "github.com/crescent-network/crescent/v3/app/params"
 	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
 )
-
-// EmptyWasmOpts defines a type alias for a list of wasm options.
-var EmptyWasmOpts []wasm.Option = nil
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // App testing.
@@ -78,7 +73,7 @@ func MakeTestEncodingConfig() simappparams.EncodingConfig {
 func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts)
+	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
@@ -508,8 +503,6 @@ func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB) network
 			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
-			wasm.EnableAllProposals,
-			EmptyWasmOpts,
 			bam.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			bam.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

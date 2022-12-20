@@ -9,7 +9,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -82,7 +81,7 @@ func TestFullAppSimulation(t *testing.T) {
 	}()
 
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
-		MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
+		MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
@@ -121,7 +120,7 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
-		MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
+		MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
@@ -162,7 +161,7 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	newApp := NewApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
-		MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
+		MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, AppName, app.Name())
 
 	var genesisState GenesisState
@@ -228,7 +227,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
-		MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
+		MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
@@ -274,7 +273,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	newApp := NewApp(logger, newDB, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
-		MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
+		MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, AppName, app.Name())
 
 	newApp.InitChain(abci.RequestInitChain{
@@ -324,7 +323,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			db := dbm.NewMemDB()
 			app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
-				MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
+				MakeEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
