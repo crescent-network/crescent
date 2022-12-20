@@ -108,8 +108,8 @@ include contrib/devtools/Makefile
 ###############################################################################
 
 build: go.sum
-ifeq ($(OS),Windows_NT) # wamsd does not support Windows OS yet
-	exit 1 
+ifeq ($(OS),Windows_NT)
+	go build $(BUILD_FLAGS) -o build/$(APPNAME).exe ./cmd/$(APPNAME)
 else
 	go build $(BUILD_FLAGS) -o build/$(APPNAME) ./cmd/$(APPNAME)
 endif
