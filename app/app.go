@@ -143,6 +143,7 @@ import (
 
 	// wasmd module
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	// unnamed import of statik for swagger UI support
@@ -205,6 +206,7 @@ var (
 			farmingclient.ProposalHandler,
 			marketmakerclient.ProposalHandler,
 			lpfarmclient.ProposalHandler,
+			wasmclient.ProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
