@@ -63,10 +63,10 @@ crescentd version --long
 
 Crescent core uses a fork of [cosmos-sdk](https://github.com/crescent-network/cosmos-sdk) and [ibc-go](https://github.com/crescent-network/ibc-go). If you would like to know which ones customized from the original `cosmos-sdk` and `ibc-go`, please reference the release notes in the respective repository.
 
-| Requirement         | Notes              |
-|---------------------|--------------------|
-| cosmos-sdk (forked) | v1.1.2-sdk-0.45.9  |
-| ibc-go (forked)     | v2.2.0-crescent-v3 |
+| Requirement         | Notes                |
+|---------------------|----------------------|
+| cosmos-sdk (forked) | v1.1.4-sdk-0.45.10   |
+| ibc-go (forked)     | v3.4.0-crescent-v4-2 |
 
 ## Documentation
 

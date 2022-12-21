@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### State Machine Breaking
+
+- (ibc) [\#131](https://github.com/crescent-network/crescent/pull/131) build!: upgrade ibc-go from v2.2.0 to v3.4.0
+
 ## [v3.0.0] - 2022-12-07
 
 ### State Machine Breaking
