@@ -14,6 +14,8 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+
 	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
 )
 
@@ -57,5 +59,6 @@ func UpgradeHandler(mm *module.Manager, configurator module.Configurator, icaMod
 var StoreUpgrades = store.StoreUpgrades{
 	Added: []string{
 		icahosttypes.StoreKey,
+		wasm.StoreKey,
 	},
 }

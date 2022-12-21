@@ -67,6 +67,7 @@ Crescent core uses a fork of [cosmos-sdk](https://github.com/crescent-network/co
 |---------------------|----------------------|
 | cosmos-sdk (forked) | v1.1.4-sdk-0.45.10   |
 | ibc-go (forked)     | v3.4.0-crescent-v4-2 |
+| wasmd               | v0.29.2              |
 
 ## Documentation
 
