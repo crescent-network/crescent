@@ -9,7 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "crescent/marketmaker/v1beta1/marketmaker.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package            = "github.com/crescent-network/crescent/v3/x/marketmaker/types";
+option go_package            = "github.com/crescent-network/crescent/v4/x/marketmaker/types";
 option (gogoproto.equal_all) = true;
 
 // GenesisState defines the marketmaker module's genesis state.

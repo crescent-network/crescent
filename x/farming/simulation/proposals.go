@@ -7,9 +7,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/crescent-network/crescent/v3/app/params"
-	"github.com/crescent-network/crescent/v3/x/farming/keeper"
-	"github.com/crescent-network/crescent/v3/x/farming/types"
+	"github.com/crescent-network/crescent/v4/app/params"
+	"github.com/crescent-network/crescent/v4/x/farming/keeper"
+	"github.com/crescent-network/crescent/v4/x/farming/types"
 )
 
 // Simulation operation weights constants.

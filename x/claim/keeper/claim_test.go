@@ -4,11 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	v1_1_0 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v1.1.0"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/claim"
-	"github.com/crescent-network/crescent/v3/x/claim/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity"
+	v1_1_0 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v1.1.0"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/claim"
+	"github.com/crescent-network/crescent/v4/x/claim/types"
+	"github.com/crescent-network/crescent/v4/x/liquidity"
 
 	_ "github.com/stretchr/testify/suite"
 )

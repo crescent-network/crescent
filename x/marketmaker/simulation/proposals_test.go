@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/crescent-network/crescent/v3/app/params"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/simulation"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v4/app/params"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/simulation"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/types"
 )
 
 func TestProposalContents(t *testing.T) {

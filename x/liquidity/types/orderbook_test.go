@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
 func newOrder(dir amm.OrderDirection, price sdk.Dec, amt sdk.Int) amm.Order {

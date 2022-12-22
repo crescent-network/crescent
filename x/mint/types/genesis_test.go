@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/mint/types"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/mint/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

@@ -9,11 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	chain "github.com/crescent-network/crescent/v3/app"
+	chain "github.com/crescent-network/crescent/v4/app"
 
-	"github.com/crescent-network/crescent/v3/x/marketmaker"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/keeper"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v4/x/marketmaker"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/keeper"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/types"
 )
 
 const (

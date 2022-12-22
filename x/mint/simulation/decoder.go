@@ -8,11 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/crescent-network/crescent/v3/x/mint/types"
+	"github.com/crescent-network/crescent/v4/x/mint/types"
 )
 
-//NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
-//Value to the corresponding mint type.
+// NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
+// Value to the corresponding mint type.
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {

@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/gogo/protobuf/types"
 
-	"github.com/crescent-network/crescent/v3/x/farming/types"
+	"github.com/crescent-network/crescent/v4/x/farming/types"
 )
 
 // GetHistoricalRewards returns historical rewards for a given

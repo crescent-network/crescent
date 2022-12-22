@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v4/x/lpfarm/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
