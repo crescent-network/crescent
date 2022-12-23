@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/types"
 )
 
 // RegisterInvariants registers all marketmaker invariants.

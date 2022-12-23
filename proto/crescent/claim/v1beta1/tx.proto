@@ -4,7 +4,7 @@ package crescent.claim.v1beta1;
 import "gogoproto/gogo.proto";
 import "crescent/claim/v1beta1/claim.proto";
 
-option go_package                      = "github.com/crescent-network/crescent/v3/x/claim/types";
+option go_package                      = "github.com/crescent-network/crescent/v4/x/claim/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the Msg service.

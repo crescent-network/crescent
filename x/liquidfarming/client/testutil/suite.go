@@ -23,13 +23,13 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	"github.com/crescent-network/crescent/v3/app/params"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/client/cli"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	liquiditytestutil "github.com/crescent-network/crescent/v3/x/liquidity/client/testutil"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/v4/app"
+	"github.com/crescent-network/crescent/v4/app/params"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming/client/cli"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
+	liquiditytestutil "github.com/crescent-network/crescent/v4/x/liquidity/client/testutil"
+	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
 // emptyWasmOpts defines a type alias for a list of wasm options.

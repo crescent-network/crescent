@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,16 +37,14 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-
-	"github.com/crescent-network/crescent/v3/x/claim"
-	"github.com/crescent-network/crescent/v3/x/farming"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming"
-	"github.com/crescent-network/crescent/v3/x/liquidity"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking"
-	"github.com/crescent-network/crescent/v3/x/lpfarm"
-	"github.com/crescent-network/crescent/v3/x/marketmaker"
-	"github.com/crescent-network/crescent/v3/x/mint"
+	"github.com/crescent-network/crescent/v4/x/claim"
+	"github.com/crescent-network/crescent/v4/x/farming"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming"
+	"github.com/crescent-network/crescent/v4/x/liquidity"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking"
+	"github.com/crescent-network/crescent/v4/x/lpfarm"
+	"github.com/crescent-network/crescent/v4/x/marketmaker"
+	"github.com/crescent-network/crescent/v4/x/mint"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

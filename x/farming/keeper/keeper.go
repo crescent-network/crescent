@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/crescent-network/crescent/v3/x/farming/types"
+	"github.com/crescent-network/crescent/v4/x/farming/types"
 )
 
 var (

@@ -18,10 +18,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/crescent-network/crescent/v3/x/marketmaker/client/cli"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/keeper"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/simulation"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/client/cli"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/keeper"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/simulation"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/types"
 )
 
 var (

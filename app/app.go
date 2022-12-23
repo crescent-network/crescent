@@ -108,38 +108,38 @@ import (
 	budgettypes "github.com/tendermint/budget/x/budget/types"
 
 	// core modules
-	farmingparams "github.com/crescent-network/crescent/v3/app/params"
-	v2_0_0 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v2.0.0"
-	v3 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v3"
-	v4 "github.com/crescent-network/crescent/v3/app/upgrades/mainnet/v4"
-	"github.com/crescent-network/crescent/v3/app/upgrades/testnet/rc4"
-	"github.com/crescent-network/crescent/v3/x/claim"
-	claimkeeper "github.com/crescent-network/crescent/v3/x/claim/keeper"
-	claimtypes "github.com/crescent-network/crescent/v3/x/claim/types"
-	"github.com/crescent-network/crescent/v3/x/farming"
-	farmingclient "github.com/crescent-network/crescent/v3/x/farming/client"
-	farmingkeeper "github.com/crescent-network/crescent/v3/x/farming/keeper"
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming"
-	liquidfarmingkeeper "github.com/crescent-network/crescent/v3/x/liquidfarming/keeper"
-	liquidfarmingtypes "github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity"
-	liquiditykeeper "github.com/crescent-network/crescent/v3/x/liquidity/keeper"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking"
-	liquidstakingkeeper "github.com/crescent-network/crescent/v3/x/liquidstaking/keeper"
-	liquidstakingtypes "github.com/crescent-network/crescent/v3/x/liquidstaking/types"
-	"github.com/crescent-network/crescent/v3/x/lpfarm"
-	lpfarmclient "github.com/crescent-network/crescent/v3/x/lpfarm/client"
-	lpfarmkeeper "github.com/crescent-network/crescent/v3/x/lpfarm/keeper"
-	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
-	"github.com/crescent-network/crescent/v3/x/marketmaker"
-	marketmakerclient "github.com/crescent-network/crescent/v3/x/marketmaker/client"
-	marketmakerkeeper "github.com/crescent-network/crescent/v3/x/marketmaker/keeper"
-	marketmakertypes "github.com/crescent-network/crescent/v3/x/marketmaker/types"
-	"github.com/crescent-network/crescent/v3/x/mint"
-	mintkeeper "github.com/crescent-network/crescent/v3/x/mint/keeper"
-	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
+	farmingparams "github.com/crescent-network/crescent/v4/app/params"
+	v2_0_0 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v2.0.0"
+	v3 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v3"
+	v4 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v4"
+	"github.com/crescent-network/crescent/v4/app/upgrades/testnet/rc4"
+	"github.com/crescent-network/crescent/v4/x/claim"
+	claimkeeper "github.com/crescent-network/crescent/v4/x/claim/keeper"
+	claimtypes "github.com/crescent-network/crescent/v4/x/claim/types"
+	"github.com/crescent-network/crescent/v4/x/farming"
+	farmingclient "github.com/crescent-network/crescent/v4/x/farming/client"
+	farmingkeeper "github.com/crescent-network/crescent/v4/x/farming/keeper"
+	farmingtypes "github.com/crescent-network/crescent/v4/x/farming/types"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming"
+	liquidfarmingkeeper "github.com/crescent-network/crescent/v4/x/liquidfarming/keeper"
+	liquidfarmingtypes "github.com/crescent-network/crescent/v4/x/liquidfarming/types"
+	"github.com/crescent-network/crescent/v4/x/liquidity"
+	liquiditykeeper "github.com/crescent-network/crescent/v4/x/liquidity/keeper"
+	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking"
+	liquidstakingkeeper "github.com/crescent-network/crescent/v4/x/liquidstaking/keeper"
+	liquidstakingtypes "github.com/crescent-network/crescent/v4/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v4/x/lpfarm"
+	lpfarmclient "github.com/crescent-network/crescent/v4/x/lpfarm/client"
+	lpfarmkeeper "github.com/crescent-network/crescent/v4/x/lpfarm/keeper"
+	lpfarmtypes "github.com/crescent-network/crescent/v4/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v4/x/marketmaker"
+	marketmakerclient "github.com/crescent-network/crescent/v4/x/marketmaker/client"
+	marketmakerkeeper "github.com/crescent-network/crescent/v4/x/marketmaker/keeper"
+	marketmakertypes "github.com/crescent-network/crescent/v4/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v4/x/mint"
+	mintkeeper "github.com/crescent-network/crescent/v4/x/mint/keeper"
+	minttypes "github.com/crescent-network/crescent/v4/x/mint/types"
 
 	// wasmd module
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -147,7 +147,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	// unnamed import of statik for swagger UI support
-	_ "github.com/crescent-network/crescent/v3/client/docs/statik"
+	_ "github.com/crescent-network/crescent/v4/client/docs/statik"
 )
 
 var (
@@ -197,16 +197,18 @@ var (
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			farmingclient.ProposalHandler,
-			marketmakerclient.ProposalHandler,
-			lpfarmclient.ProposalHandler,
-			wasmclient.ProposalHandler,
+			append(
+				wasmclient.ProposalHandlers,
+				paramsclient.ProposalHandler,
+				distrclient.ProposalHandler,
+				upgradeclient.ProposalHandler,
+				upgradeclient.CancelProposalHandler,
+				ibcclientclient.UpdateClientProposalHandler,
+				ibcclientclient.UpgradeProposalHandler,
+				farmingclient.ProposalHandler,
+				marketmakerclient.ProposalHandler,
+				lpfarmclient.ProposalHandler,
+			)...,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},

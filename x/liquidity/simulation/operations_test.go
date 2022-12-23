@@ -11,12 +11,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/v3/x/liquidity/simulation"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/v4/app"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v4/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/v4/x/liquidity/simulation"
+	"github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
 type SimTestSuite struct {

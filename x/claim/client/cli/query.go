@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v3/x/claim/types"
+	"github.com/crescent-network/crescent/v4/x/claim/types"
 )
 
 // GetQueryCmd returns the cli query commands for the module.

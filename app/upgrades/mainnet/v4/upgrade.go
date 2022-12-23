@@ -16,7 +16,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
 const UpgradeName = "v4"

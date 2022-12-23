@@ -5,8 +5,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/crescent-network/crescent/v3/x/marketmaker/keeper"
-	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/keeper"
+	"github.com/crescent-network/crescent/v4/x/marketmaker/types"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {

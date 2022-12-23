@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis state.

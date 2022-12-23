@@ -25,10 +25,10 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	"github.com/crescent-network/crescent/v3/app/params"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking/client/cli"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
+	chain "github.com/crescent-network/crescent/v4/app"
+	"github.com/crescent-network/crescent/v4/app/params"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking/client/cli"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking/types"
 )
 
 // emptyWasmOpts defines a type alias for a list of wasm options.

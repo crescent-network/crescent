@@ -36,8 +36,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	farmingparams "github.com/crescent-network/crescent/v3/app/params"
+	chain "github.com/crescent-network/crescent/v4/app"
+	farmingparams "github.com/crescent-network/crescent/v4/app/params"
 )
 
 var (

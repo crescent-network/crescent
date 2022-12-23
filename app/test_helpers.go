@@ -40,8 +40,8 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	simappparams "github.com/crescent-network/crescent/v3/app/params"
-	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
+	simappparams "github.com/crescent-network/crescent/v4/app/params"
+	minttypes "github.com/crescent-network/crescent/v4/x/mint/types"
 )
 
 // EmptyWasmOpts defines a type alias for a list of wasm options.
