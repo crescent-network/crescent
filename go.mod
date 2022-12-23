@@ -1,4 +1,4 @@
-module github.com/crescent-network/crescent/v3
+module github.com/crescent-network/crescent/v4
 
 go 1.18
 

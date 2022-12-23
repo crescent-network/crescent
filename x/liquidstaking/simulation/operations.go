@@ -10,10 +10,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/crescent-network/crescent/v3/app/params"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking/keeper"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
+	appparams "github.com/crescent-network/crescent/v4/app/params"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking/keeper"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking/types"
 )
 
 // Simulation operation weights constants.

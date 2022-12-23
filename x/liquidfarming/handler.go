@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/keeper"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming/keeper"
+	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
 )
 
 // NewHandler returns a new msg handler.

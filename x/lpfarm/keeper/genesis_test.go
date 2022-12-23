@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/lpfarm/types"
 )
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {

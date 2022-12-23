@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/v4/app"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v4/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
 type KeeperTestSuite struct {
@@ -288,7 +288,7 @@ func (s *KeeperTestSuite) mmOrder(
 	return orders
 }
 
-//nolint
+// nolint
 func (s *KeeperTestSuite) cancelOrder(orderer sdk.AccAddress, pairId, orderId uint64) {
 	s.T().Helper()
 	err := s.keeper.CancelOrder(s.ctx, types.NewMsgCancelOrder(orderer, pairId, orderId))

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking/types"
 )
 
 // RandomValidator returns a random validator given access to the keeper and ctx

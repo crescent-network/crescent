@@ -7,9 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidstaking/types"
-	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
+	utils "github.com/crescent-network/crescent/v4/types"
+	"github.com/crescent-network/crescent/v4/x/liquidstaking/types"
+	minttypes "github.com/crescent-network/crescent/v4/x/mint/types"
 )
 
 // tests LiquidStake, LiquidUnstake

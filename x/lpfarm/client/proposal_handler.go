@@ -3,8 +3,8 @@ package client
 import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 
-	"github.com/crescent-network/crescent/v3/x/lpfarm/client/cli"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/client/rest"
+	"github.com/crescent-network/crescent/v4/x/lpfarm/client/cli"
+	"github.com/crescent-network/crescent/v4/x/lpfarm/client/rest"
 )
 
 // ProposalHandler is the public plan command handler.

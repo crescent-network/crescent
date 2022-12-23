@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v3/x/claim/types"
+	"github.com/crescent-network/crescent/v4/x/claim/types"
 )
 
 // GetTxCmd returns the transaction commands for the module.
