@@ -112,6 +112,7 @@ import (
 	v2_0_0 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v2.0.0"
 	v3 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v3"
 	v4 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v4"
+	v5 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v5"
 	"github.com/crescent-network/crescent/v4/app/upgrades/testnet/rc4"
 	"github.com/crescent-network/crescent/v4/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/v4/x/claim/keeper"
@@ -842,8 +843,7 @@ func NewApp(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		// Temporarily disable x/authz simulation
-		// authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
 		budget.NewAppModule(appCodec, app.BudgetKeeper, app.AccountKeeper, app.BankKeeper),
@@ -1120,6 +1120,10 @@ func (app *App) SetUpgradeStoreLoaders() {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v4.StoreUpgrades))
 	}
+	if upgradeInfo.Name == v5.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v5.StoreUpgrades))
+	}
 }
 
 func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Configurator) {
@@ -1136,6 +1140,8 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 			mm, configurator, app.MarketMakerKeeper, app.LiquidityKeeper, app.LPFarmKeeper, app.FarmingKeeper, app.BankKeeper))
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v4.UpgradeName, v4.UpgradeHandler(
-			mm, configurator, app.icaModule))
+		v4.UpgradeName, v4.UpgradeHandler(mm, configurator, app.icaModule))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5.UpgradeName, v5.UpgradeHandler(mm, configurator, app.WasmKeeper))
 }

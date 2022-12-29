@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -36,6 +37,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	claimtypes "github.com/crescent-network/crescent/v4/x/claim/types"
 	farmingtypes "github.com/crescent-network/crescent/v4/x/farming/types"
@@ -61,13 +63,6 @@ type StoreKeysPrefixes struct {
 // an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 	bapp.SetFauxMerkleMode()
-}
-
-// interBlockCacheOpt returns a BaseApp option function that sets the persistent
-// inter-block write-through cache.
-// nolint:deadcode,unused,varcheck
-func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 func TestFullAppSimulation(t *testing.T) {
@@ -202,8 +197,45 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[lpfarmtypes.StoreKey], newApp.keys[lpfarmtypes.StoreKey], [][]byte{}},
 		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
+		{app.keys[wasm.StoreKey], newApp.keys[wasm.StoreKey], [][]byte{}},
 	}
 
+	// delete persistent tx counter value
+	ctxA.KVStore(app.keys[wasm.StoreKey]).Delete(wasmtypes.TXCounterPrefix)
+
+	// reset contract code index in source DB for comparison with dest DB
+	dropContractHistory := func(s store.KVStore, keys ...[]byte) {
+		for _, key := range keys {
+			prefixStore := prefix.NewStore(s, key)
+			iter := prefixStore.Iterator(nil, nil)
+			for ; iter.Valid(); iter.Next() {
+				prefixStore.Delete(iter.Key())
+			}
+			iter.Close()
+		}
+	}
+	prefixes := [][]byte{wasmtypes.ContractCodeHistoryElementPrefix, wasmtypes.ContractByCodeIDAndCreatedSecondaryIndexPrefix}
+	dropContractHistory(ctxA.KVStore(app.keys[wasm.StoreKey]), prefixes...)
+	dropContractHistory(ctxB.KVStore(newApp.keys[wasm.StoreKey]), prefixes...)
+
+	normalizeContractInfo := func(ctx sdk.Context, app *App) {
+		var index uint64
+		app.WasmKeeper.IterateContractInfo(ctx, func(address sdk.AccAddress, info wasmtypes.ContractInfo) bool {
+			created := &wasmtypes.AbsoluteTxPosition{
+				BlockHeight: uint64(0),
+				TxIndex:     index,
+			}
+			info.Created = created
+			store := ctx.KVStore(app.keys[wasm.StoreKey])
+			store.Set(wasmtypes.GetContractAddressKey(address), app.appCodec.MustMarshal(&info))
+			index++
+			return false
+		})
+	}
+	normalizeContractInfo(ctxA, app)
+	normalizeContractInfo(ctxB, newApp)
+
+	// diff both stores
 	for _, skp := range storeKeysPrefixes {
 		storeA := ctxA.KVStore(skp.A)
 		storeB := ctxB.KVStore(skp.B)
