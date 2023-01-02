@@ -7,12 +7,6 @@
   },
   "apis": [
     {
-      "url": "./client/docs/swagger_legacy.yaml",
-      "dereference": {
-        "circular": "ignore"
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/crescent/farming/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
