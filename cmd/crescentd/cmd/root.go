@@ -294,7 +294,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
 		appOpts,
-		wasm.EnableAllProposals,
+		chain.GetEnabledProposals(),
 		wasmOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
