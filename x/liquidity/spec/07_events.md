@@ -156,6 +156,14 @@ The `liquidity` module emits the following events:
 | message         | action             | cancel_mm_order |
 | message         | sender             | {senderAddress} |
 
+### MsgPostBatchSwap
+
+TBD
+
+### MsgPostBatchOptimalSwap
+
+TBD
+
 ## EndBlocker
 
 ### Batch Result for MsgDeposit

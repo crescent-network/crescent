@@ -22,8 +22,9 @@ const (
 )
 
 var (
-	LastPairIdKey = []byte{0xa0} // key for the latest pair id
-	LastPoolIdKey = []byte{0xa1} // key for the latest pool id
+	LastPairIdKey                = []byte{0xa0} // key for the latest pair id
+	LastPoolIdKey                = []byte{0xa1} // key for the latest pool id
+	LastPostBatchMsgRequestIdKey = []byte{0xa2}
 
 	PairKeyPrefix               = []byte{0xa5}
 	PairIndexKeyPrefix          = []byte{0xa6}
@@ -40,6 +41,7 @@ var (
 	OrderKeyPrefix                = []byte{0xb2}
 	OrderIndexKeyPrefix           = []byte{0xb3}
 	MMOrderIndexKeyPrefix         = []byte{0xb6}
+	PostBatchMsgRequestKeyPrefix  = []byte{0xb7}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
@@ -149,6 +151,12 @@ func GetOrderIndexKeyPrefix(orderer sdk.AccAddress) []byte {
 // orderer and pair id.
 func GetMMOrderIndexKey(orderer sdk.AccAddress, pairId uint64) []byte {
 	return append(append(MMOrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...), sdk.Uint64ToBigEndian(pairId)...)
+}
+
+// GetPostBatchMsgRequestKey returns the store key to retrieve PostBatchMsgRequest
+// object by its id.
+func GetPostBatchMsgRequestKey(id uint64) []byte {
+	return append(PostBatchMsgRequestKeyPrefix, sdk.Uint64ToBigEndian(id)...)
 }
 
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.

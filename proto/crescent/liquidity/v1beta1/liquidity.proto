@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v4/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -194,6 +195,30 @@ message Order {
   OrderStatus status = 15;
 }
 
+message PostBatchMsgRequest {
+  uint64 id = 1;
+
+  google.protobuf.Any msg = 2;
+
+  google.protobuf.Any result = 3;
+
+  int64 msg_height = 4;
+
+  RequestStatus status = 5;
+}
+
+message PostBatchSwapResult {
+  repeated PostBatchOrderTag order_tags = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin coin_out = 2 [(gogoproto.nullable) = false];
+}
+
+message PostBatchOrderTag {
+  uint64 pair_id = 1;
+
+  uint64 order_id = 2;
+}
+
 // MMOrderIndex defines an index type to quickly find market making orders
 // from an orderer.
 message MMOrderIndex {
@@ -233,6 +258,9 @@ enum OrderType {
 
   // ORDER_TYPE_MM specifies MM(market making) order type.
   ORDER_TYPE_MM = 3 [(gogoproto.enumvalue_customname) = "OrderTypeMM"];
+
+  // ORDER_TYPE_POST_BATCH specifies post batch order type.
+  ORDER_TYPE_POST_BATCH = 4 [(gogoproto.enumvalue_customname) = "OrderTypePostBatch"];
 }
 
 // OrderDirection enumerates order directions.

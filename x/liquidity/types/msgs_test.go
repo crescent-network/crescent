@@ -882,3 +882,5 @@ func TestMsgCancelMMOrder(t *testing.T) {
 		})
 	}
 }
+
+// TODO: implement tests for MsgPostBatchSwap, MsgPostBatchOptimalSwap

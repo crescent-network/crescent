@@ -43,6 +43,14 @@ service Msg {
 
   // CancelMMOrder defines a method for cancelling previously placed market making orders
   rpc CancelMMOrder(MsgCancelMMOrder) returns (MsgCancelMMOrderResponse);
+
+  // PostBatchSwap defines a method for swapping one coin to another after the batch
+  // following the specified route
+  rpc PostBatchSwap(MsgPostBatchSwap) returns (MsgPostBatchSwapResponse);
+
+  // PostBatchOptimalSwap defines a method for swapping one coin to another after the batch
+  // following the best route
+  rpc PostBatchOptimalSwap(MsgPostBatchOptimalSwap) returns (MsgPostBatchOptimalSwapResponse);
 }
 
 // MsgCreatePair defines an SDK message for creating a pair.
@@ -265,3 +273,31 @@ message MsgCancelMMOrder {
 
 // MsgCancelMMOrderResponse defines the Msg/CancelMMOrder response type.
 message MsgCancelMMOrderResponse {}
+
+// MsgPostBatchSwap defines an SDK message for swapping one coin to another
+// following the specified route.
+message MsgPostBatchSwap {
+  string orderer = 1;
+
+  cosmos.base.v1beta1.Coin coin_in = 2 [(gogoproto.nullable) = false];
+
+  repeated uint64 path = 3;
+
+  cosmos.base.v1beta1.Coin min_coin_out = 4 [(gogoproto.nullable) = false];
+}
+
+// MsgPostBatchSwapResponse defines the Msg/PostBatchSwap response type.
+message MsgPostBatchSwapResponse {}
+
+// MsgPostBatchOptimalSwap defines an SDK message for swapping one coin to another
+// following the best route.
+message MsgPostBatchOptimalSwap {
+  string orderer = 1;
+
+  cosmos.base.v1beta1.Coin coin_in = 2 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin min_coin_out = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgPostBatchOptimalSwapResponse defines the Msg/PostBatchOptimalSwap response type.
+message MsgPostBatchOptimalSwapResponse {}

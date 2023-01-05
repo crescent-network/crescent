@@ -285,3 +285,11 @@ type MsgCancelMMOrder struct {
 ```
 
 Cancel previously made MM order by specifying the pair id.
+
+## MsgPostBatchSwap
+
+TBD
+
+## MsgPostBatchOptimalSwap
+
+TBD

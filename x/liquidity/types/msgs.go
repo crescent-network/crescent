@@ -21,21 +21,25 @@ var (
 	_ sdk.Msg = (*MsgCancelOrder)(nil)
 	_ sdk.Msg = (*MsgCancelAllOrders)(nil)
 	_ sdk.Msg = (*MsgCancelMMOrder)(nil)
+	_ sdk.Msg = (*MsgPostBatchSwap)(nil)
+	_ sdk.Msg = (*MsgPostBatchOptimalSwap)(nil)
 )
 
 // Message types for the liquidity module
 const (
-	TypeMsgCreatePair       = "create_pair"
-	TypeMsgCreatePool       = "create_pool"
-	TypeMsgCreateRangedPool = "create_ranged_pool"
-	TypeMsgDeposit          = "deposit"
-	TypeMsgWithdraw         = "withdraw"
-	TypeMsgLimitOrder       = "limit_order"
-	TypeMsgMarketOrder      = "market_order"
-	TypeMsgMMOrder          = "mm_order"
-	TypeMsgCancelOrder      = "cancel_order"
-	TypeMsgCancelAllOrders  = "cancel_all_orders"
-	TypeMsgCancelMMOrder    = "cancel_mm_order"
+	TypeMsgCreatePair           = "create_pair"
+	TypeMsgCreatePool           = "create_pool"
+	TypeMsgCreateRangedPool     = "create_ranged_pool"
+	TypeMsgDeposit              = "deposit"
+	TypeMsgWithdraw             = "withdraw"
+	TypeMsgLimitOrder           = "limit_order"
+	TypeMsgMarketOrder          = "market_order"
+	TypeMsgMMOrder              = "mm_order"
+	TypeMsgCancelOrder          = "cancel_order"
+	TypeMsgCancelAllOrders      = "cancel_all_orders"
+	TypeMsgCancelMMOrder        = "cancel_mm_order"
+	TypeMsgPostBatchSwap        = "post_batch_swap"
+	TypeMsgPostBatchOptimalSwap = "post_batch_optimal_swap"
 )
 
 // NewMsgCreatePair returns a new MsgCreatePair.
@@ -726,6 +730,128 @@ func (msg MsgCancelMMOrder) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgCancelMMOrder) GetOrderer() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+// NewMsgPostBatchSwap creates a new MsgPostBatchSwap.
+func NewMsgPostBatchSwap(
+	orderer sdk.AccAddress,
+	coinIn sdk.Coin,
+	path []uint64,
+	minCoinOut sdk.Coin,
+) *MsgPostBatchSwap {
+	return &MsgPostBatchSwap{
+		Orderer:    orderer.String(),
+		CoinIn:     coinIn,
+		Path:       path,
+		MinCoinOut: minCoinOut,
+	}
+}
+
+func (msg MsgPostBatchSwap) Route() string { return RouterKey }
+
+func (msg MsgPostBatchSwap) Type() string { return TypeMsgPostBatchSwap }
+
+func (msg MsgPostBatchSwap) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
+	}
+	if err := msg.CoinIn.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "invalid coin in")
+	}
+	if !msg.CoinIn.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "coin in must be positive")
+	}
+	if len(msg.Path) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty path")
+	}
+	for _, pairId := range msg.Path {
+		if pairId == 0 {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pair id must not be zero")
+		}
+	}
+	if err := msg.MinCoinOut.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "invalid min coin out")
+	}
+	if !msg.MinCoinOut.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min coin out must be positive")
+	}
+	return nil
+}
+
+func (msg MsgPostBatchSwap) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgPostBatchSwap) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgPostBatchSwap) GetOrderer() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+// NewMsgPostBatchOptimalSwap creates a new MsgPostBatchOptimalSwap.
+func NewMsgPostBatchOptimalSwap(
+	orderer sdk.AccAddress,
+	coinIn sdk.Coin,
+	minCoinOut sdk.Coin,
+) *MsgPostBatchOptimalSwap {
+	return &MsgPostBatchOptimalSwap{
+		Orderer:    orderer.String(),
+		CoinIn:     coinIn,
+		MinCoinOut: minCoinOut,
+	}
+}
+
+func (msg MsgPostBatchOptimalSwap) Route() string { return RouterKey }
+
+func (msg MsgPostBatchOptimalSwap) Type() string { return TypeMsgPostBatchOptimalSwap }
+
+func (msg MsgPostBatchOptimalSwap) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
+	}
+	if err := msg.CoinIn.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "invalid coin in")
+	}
+	if !msg.CoinIn.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "coin in must be positive")
+	}
+	if err := msg.MinCoinOut.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "invalid min coin out")
+	}
+	if !msg.MinCoinOut.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min coin out must be positive")
+	}
+	return nil
+}
+
+func (msg MsgPostBatchOptimalSwap) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgPostBatchOptimalSwap) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgPostBatchOptimalSwap) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)

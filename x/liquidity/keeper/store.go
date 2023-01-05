@@ -585,3 +585,47 @@ func (k Keeper) DeleteMMOrderIndex(ctx sdk.Context, index types.MMOrderIndex) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetMMOrderIndexKey(index.GetOrderer(), index.PairId))
 }
+
+// GetLastPostBatchMsgRequestId returns the last PostBatchMsgRequest ID.
+func (k Keeper) GetLastPostBatchMsgRequestId(ctx sdk.Context) (id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.LastPostBatchMsgRequestIdKey)
+	if bz == nil {
+		return 0
+	}
+	return sdk.BigEndianToUint64(bz)
+}
+
+// SetLastPostBatchMsgRequestId sets the last PostBatchMsgRequest ID.
+func (k Keeper) SetLastPostBatchMsgRequestId(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(id)
+	store.Set(types.LastPostBatchMsgRequestIdKey, bz)
+}
+
+// SetPostBatchMsgRequest stores a types.PostBatchMsgRequest object.
+func (k Keeper) SetPostBatchMsgRequest(ctx sdk.Context, req types.PostBatchMsgRequest) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&req)
+	store.Set(types.GetPostBatchMsgRequestKey(req.Id), bz)
+}
+
+// IterateAllPostBatchMsgRequests iterates through PostBatchMsgRequests in the
+// store and call cb on each request.
+func (k Keeper) IterateAllPostBatchMsgRequests(ctx sdk.Context, cb func(req types.PostBatchMsgRequest) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.PostBatchMsgRequestKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var req types.PostBatchMsgRequest
+		k.cdc.MustUnmarshal(iter.Value(), &req)
+		stop, err := cb(req)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}

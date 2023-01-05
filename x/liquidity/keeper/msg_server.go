@@ -139,3 +139,19 @@ func (m msgServer) CancelMMOrder(goCtx context.Context, msg *types.MsgCancelMMOr
 
 	return &types.MsgCancelMMOrderResponse{}, nil
 }
+
+func (m msgServer) PostBatchSwap(goCtx context.Context, msg *types.MsgPostBatchSwap) (*types.MsgPostBatchSwapResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if _, err := m.Keeper.PostBatchSwap(ctx, msg); err != nil {
+		return nil, err
+	}
+	return &types.MsgPostBatchSwapResponse{}, nil
+}
+
+func (m msgServer) PostBatchOptimalSwap(goCtx context.Context, msg *types.MsgPostBatchOptimalSwap) (*types.MsgPostBatchOptimalSwapResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if _, err := m.Keeper.PostBatchOptimalSwap(ctx, msg); err != nil {
+		return nil, err
+	}
+	return &types.MsgPostBatchOptimalSwapResponse{}, nil
+}

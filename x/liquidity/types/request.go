@@ -177,6 +177,38 @@ func NewOrderForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin
 	}
 }
 
+// NewOrderForPostBatchSwap returns a new Order from MsgPostBatchSwap.
+func NewOrderForPostBatchSwap(msg *MsgPostBatchSwap, id uint64, pair Pair, coinIn sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
+	var (
+		dir             OrderDirection
+		demandCoinDenom string
+	)
+	if pair.BaseCoinDenom == coinIn.Denom {
+		dir = OrderDirectionSell
+		demandCoinDenom = pair.QuoteCoinDenom
+	} else {
+		dir = OrderDirectionBuy
+		demandCoinDenom = pair.BaseCoinDenom
+	}
+	return Order{
+		Type:               OrderTypePostBatch,
+		Id:                 id,
+		PairId:             pair.Id,
+		MsgHeight:          msgHeight,
+		Orderer:            msg.Orderer,
+		Direction:          dir,
+		OfferCoin:          coinIn,
+		RemainingOfferCoin: coinIn,
+		ReceivedCoin:       sdk.NewCoin(demandCoinDenom, sdk.ZeroInt()),
+		Price:              price,
+		Amount:             msg.Amount,
+		OpenAmount:         msg.Amount,
+		BatchId:            pair.CurrentBatchId,
+		ExpireAt:           expireAt,
+		Status:             OrderStatusNotExecuted,
+	}
+}
+
 func NewOrder(
 	typ OrderType, id uint64, pair Pair, orderer sdk.AccAddress,
 	offerCoin sdk.Coin, price sdk.Dec, amt sdk.Int, expireAt time.Time, msgHeight int64) Order {

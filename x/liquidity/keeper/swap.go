@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -760,4 +761,122 @@ func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, status types.Ord
 	})
 
 	return nil
+}
+
+func (k Keeper) PostBatchSwap(ctx sdk.Context, msg *types.MsgPostBatchSwap) (req types.PostBatchMsgRequest, err error) {
+	// TODO: validate msg
+	return k.QueuePostBatchMsg(ctx, msg)
+}
+
+func (k Keeper) PostBatchOptimalSwap(ctx sdk.Context, msg *types.MsgPostBatchOptimalSwap) (req types.PostBatchMsgRequest, err error) {
+	// TODO: validate msg
+	return k.QueuePostBatchMsg(ctx, msg)
+}
+
+func (k Keeper) QueuePostBatchMsg(ctx sdk.Context, msg sdk.Msg) (req types.PostBatchMsgRequest, err error) {
+	id := k.GetLastPostBatchMsgRequestId(ctx)
+	id++
+	k.SetLastPostBatchMsgRequestId(ctx, id)
+	msgAny, err := cdctypes.NewAnyWithValue(msg)
+	if err != nil {
+		return req, err
+	}
+	req = types.PostBatchMsgRequest{
+		Id:        id,
+		Msg:       msgAny,
+		MsgHeight: ctx.BlockHeight(),
+		Status:    types.RequestStatusNotExecuted,
+	}
+	k.SetPostBatchMsgRequest(ctx, req)
+	return req, nil
+}
+
+func (k Keeper) ExecutePostBatchMsg(ctx sdk.Context, req types.PostBatchMsgRequest) (res *cdctypes.Any, err error) {
+	var msg sdk.Msg
+	if err := k.cdc.UnpackAny(req.Msg, &msg); err != nil {
+		return nil, err
+	}
+	switch msg := msg.(type) {
+	case *types.MsgPostBatchSwap:
+		swapRes, err := k.ExecutePostBatchSwap(ctx, msg)
+		if err != nil {
+			return nil, err
+		}
+		return cdctypes.NewAnyWithValue(&swapRes)
+	case *types.MsgPostBatchOptimalSwap:
+		swapRes, err := k.ExecutePostBatchOptimalSwap(ctx, msg)
+		if err != nil {
+			return nil, err
+		}
+		return cdctypes.NewAnyWithValue(&swapRes)
+	default:
+		req.Status = types.RequestStatusFailed
+		k.SetPostBatchMsgRequest(ctx, req)
+		return nil, nil
+	}
+}
+
+func (k Keeper) ExecutePostBatchSwap(ctx sdk.Context, msg *types.MsgPostBatchSwap) (res types.PostBatchSwapResult, err error) {
+	coinIn := msg.CoinIn
+	ctx, writeCache := ctx.CacheContext()
+	for _, pairId := range msg.Path {
+		pair, _ := k.GetPair(ctx, pairId) // pair always exists
+		var orderDir types.OrderDirection
+		if pair.BaseCoinDenom == coinIn.Denom {
+			orderDir = types.OrderDirectionSell
+		} else {
+			orderDir = types.OrderDirectionBuy
+		}
+		ob := amm.NewOrderBook()
+		// TODO: refactor code below to reduce code duplication
+		_ = k.IterateOrdersByPair(ctx, pairId, func(order types.Order) (stop bool, err error) {
+			switch order.Status {
+			case types.OrderStatusNotExecuted,
+				types.OrderStatusNotMatched,
+				types.OrderStatusPartiallyMatched:
+				if order.ExpiredAt(ctx.BlockTime()) {
+					return false, nil
+				}
+				if order.Direction != orderDir {
+					ob.AddOrder(types.NewUserOrder(order))
+				}
+				if order.Status == types.OrderStatusNotExecuted {
+					order.SetStatus(types.OrderStatusNotMatched)
+					k.SetOrder(ctx, order)
+				}
+			}
+			return false, nil
+		})
+
+		var pools []*types.PoolOrderer
+		_ = k.IteratePoolsByPair(ctx, pairId, func(pool types.Pool) (stop bool, err error) {
+			if pool.Disabled {
+				return false, nil
+			}
+			rx, ry := k.getPoolBalances(ctx, pool, pair)
+			ps := k.GetPoolCoinSupply(ctx, pool)
+			ammPool := types.NewPoolOrderer(
+				pool.AMMPool(rx.Amount, ry.Amount, ps),
+				pool.Id, pool.GetReserveAddress(), pair.BaseCoinDenom, pair.QuoteCoinDenom)
+			if ammPool.IsDepleted() {
+				k.MarkPoolAsDisabled(ctx, pool)
+				return false, nil
+			}
+			pools = append(pools, ammPool)
+			return false, nil
+		})
+
+		// TODO: add virtual order
+		// TODO: use new custom matching logic
+		if err := k.ApplyMatchResult(ctx, pair, orders, quoteCoinDiff); err != nil {
+			return res, err
+		}
+		pair.LastPrice = &matchPrice
+		k.SetPair(ctx, pair)
+	}
+	// TODO: set res
+	return res, nil
+}
+
+func (k Keeper) ExecutePostBatchOptimalSwap(ctx sdk.Context, msg *types.MsgPostBatchOptimalSwap) (res types.PostBatchSwapResult, err error) {
 }
