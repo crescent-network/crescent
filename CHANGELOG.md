@@ -38,9 +38,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v4.0.0] - 2023-01-05
+
 ### State Machine Breaking
 
 - (ibc) [\#131](https://github.com/crescent-network/crescent/pull/131) build!: upgrade ibc-go from v2.2.0 to v3.4.0
+
+### Bug Fixes
+
+- (api) [\#137](https://github.com/crescent-network/crescent/pull/137) fix: rollback swagger version to 2 and add missing apis
 
 ## [v3.0.0] - 2022-12-07
 
@@ -179,7 +185,7 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
   - `x/vesting` feat: periodic vesting msg
   - `x/bank` feat: Add dynamic blockedAddrs
 
-[unreleased]: https://github.com/crescent-network/crescent/compare/v3.0.0...HEAD
+[unreleased]: https://github.com/crescent-network/crescent/compare/v4.0.0...HEAD
 [v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
 [v1.1.0]: https://github.com/crescent-network/crescent/releases/tag/v1.1.0
 [v2.1.0]: https://github.com/crescent-network/crescent/releases/tag/v2.1.0
@@ -187,3 +193,4 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
 [v2.2.0]: https://github.com/crescent-network/crescent/releases/tag/v2.2.0
 [v2.3.0]: https://github.com/crescent-network/crescent/releases/tag/v2.3.0
 [v3.0.0]: https://github.com/crescent-network/crescent/releases/tag/v3.0.0
+[v4.0.0]: https://github.com/crescent-network/crescent/releases/tag/v4.0.0
