@@ -165,8 +165,8 @@ var (
 	EnableSpecificProposals = ""
 )
 
-// GetEnabledProposals parses the WasmProposalsEnabled / EnableSpecificProposals values to
-// produce a list of enabled proposals to pass into wasmd app.
+// GetEnabledProposals parses the WasmProposalsEnabled and EnableSpecificProposals values
+// to produce a list of enabled proposals to pass into the application.
 func GetEnabledProposals() []wasm.ProposalType {
 	if EnableSpecificProposals == "" {
 		if WasmProposalsEnabled == "true" {
@@ -575,34 +575,6 @@ func NewApp(
 		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper)).
 		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper))
 
-	// The gov proposal types can be individually enabled
-	if len(wasmEnabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasmEnabledProposals))
-	}
-
-	app.GovKeeper = govkeeper.NewKeeper(
-		appCodec,
-		keys[govtypes.StoreKey],
-		app.GetSubspace(govtypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		govRouter,
-	)
-	app.GovKeeper = *app.GovKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-			app.LiquidStakingKeeper.Hooks(),
-		),
-	)
-	app.ClaimKeeper = claimkeeper.NewKeeper(
-		appCodec,
-		keys[claimtypes.StoreKey],
-		app.BankKeeper,
-		app.DistrKeeper,
-		app.GovKeeper,
-		app.LiquidityKeeper,
-		app.LiquidStakingKeeper,
-	)
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
@@ -666,6 +638,36 @@ func NewApp(
 		wasmConfig,
 		availableCapabilities,
 		wasmOpts...,
+	)
+
+	// The gov proposal types can be individually enabled
+	if len(wasmEnabledProposals) != 0 {
+		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasmEnabledProposals))
+	}
+
+	app.GovKeeper = govkeeper.NewKeeper(
+		appCodec,
+		keys[govtypes.StoreKey],
+		app.GetSubspace(govtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		govRouter,
+	)
+	app.GovKeeper = *app.GovKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+			app.LiquidStakingKeeper.Hooks(),
+		),
+	)
+
+	app.ClaimKeeper = claimkeeper.NewKeeper(
+		appCodec,
+		keys[claimtypes.StoreKey],
+		app.BankKeeper,
+		app.DistrKeeper,
+		app.GovKeeper,
+		app.LiquidityKeeper,
+		app.LiquidStakingKeeper,
 	)
 
 	// create static IBC router, add transfer route, then set and seal it
