@@ -114,6 +114,7 @@ import (
 	v4 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v4"
 	v5 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v5"
 	"github.com/crescent-network/crescent/v4/app/upgrades/testnet/rc4"
+	"github.com/crescent-network/crescent/v4/wasmbinding"
 	"github.com/crescent-network/crescent/v4/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/v4/x/claim/keeper"
 	claimtypes "github.com/crescent-network/crescent/v4/x/claim/types"
@@ -620,6 +621,9 @@ func NewApp(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	availableCapabilities := "iterator,staking,stargate,cosmwasm_1_1"
+
+	wasmOpts = append(wasmbinding.RegisterCustomPlugin(&app.LiquidityKeeper), wasmOpts...)
+
 	app.WasmKeeper = wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
