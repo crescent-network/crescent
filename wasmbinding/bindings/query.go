@@ -31,3 +31,11 @@ type PairsResponse struct {
 type PairResponse struct {
 	Pair liquiditytypes.Pair `json:"pair"`
 }
+
+type PoolsResponse struct {
+	Pools []liquiditytypes.Pool `json:"pools"`
+}
+
+type PoolResponse struct {
+	Pool liquiditytypes.Pool `json:"pool"`
+}

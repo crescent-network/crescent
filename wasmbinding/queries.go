@@ -19,7 +19,10 @@ func NewQueryPlugin(lk *liquiditykeeper.Keeper) *QueryPlugin {
 	}
 }
 
-// TODO: the function must return bindings.PairResponse? why not []liquiditytypes.Pair?
+//
+// TODO: test to see if the function must return custom response (bindings.XXXResponse), not []liquiditytypes.Pair.
+//
+
 func (qp QueryPlugin) Pairs(ctx sdk.Context) *bindings.PairsResponse {
 	pairs := qp.liquidityKeeper.GetAllPairs(ctx)
 	return &bindings.PairsResponse{Pairs: pairs}
@@ -33,10 +36,15 @@ func (qp QueryPlugin) Pair(ctx sdk.Context, pairId uint64) (*bindings.PairRespon
 	return &bindings.PairResponse{Pair: pair}, nil
 }
 
-func (qp QueryPlugin) Pools(ctx sdk.Context) {
-	// TODO: not implemented yet
+func (qp QueryPlugin) Pools(ctx sdk.Context) *bindings.PoolsResponse {
+	pools := qp.liquidityKeeper.GetAllPools(ctx)
+	return &bindings.PoolsResponse{Pools: pools}
 }
 
-func (qp QueryPlugin) Pool(ctx sdk.Context) {
-	// TODO: not implemented yet
+func (qp QueryPlugin) Pool(ctx sdk.Context, poolId uint64) (*bindings.PoolResponse, error) {
+	pool, found := qp.liquidityKeeper.GetPool(ctx, poolId)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
+	}
+	return &bindings.PoolResponse{Pool: pool}, nil
 }
