@@ -260,7 +260,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
+	app := NewApp(logger, db, nil, true, map[int64]bool{}, dir, simapp.FlagPeriodValue,
 		MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
 	require.Equal(t, AppName, app.Name())
 
@@ -306,7 +306,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := NewApp(logger, newDB, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
+	newApp := NewApp(logger, newDB, nil, true, map[int64]bool{}, newDir, simapp.FlagPeriodValue,
 		MakeEncodingConfig(), EmptyAppOptions{}, wasm.EnableAllProposals, EmptyWasmOpts, fauxMerkleModeOpt)
 	require.Equal(t, AppName, app.Name())
 

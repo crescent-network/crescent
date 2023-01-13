@@ -19,9 +19,8 @@ func UpgradeHandler(mm *module.Manager, configurator module.Configurator, wasmKe
 			return newVM, err
 		}
 
-		// Set the code upload access permission to nobody
-		// Since gov proposals bypass the existing authorization policy
-		// this updates the wasmd module from permissionless to permissioned
+		// Set the code upload access permission to nobody for permissioned contract platform
+		// Note that governance proposals bypass the existing authorization policy
 		params := wasmKeeper.GetParams(ctx)
 		params.CodeUploadAccess = wasmtypes.AllowNobody
 		wasmKeeper.SetParams(ctx, params)
