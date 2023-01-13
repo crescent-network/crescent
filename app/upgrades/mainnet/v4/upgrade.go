@@ -26,7 +26,7 @@ func UpgradeHandler(mm *module.Manager, configurator module.Configurator, icaMod
 
 		// Create ICS27 Host submodule params
 		icaHostParams := icahosttypes.Params{
-			HostEnabled: true,
+			HostEnabled: false,
 			AllowMessages: []string{
 				// bank module
 				sdk.MsgTypeURL(&banktypes.MsgSend{}),
