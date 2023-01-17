@@ -4,7 +4,7 @@ import (
 	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
-// CrescentQuery contains custom queries for Crescent Network.
+// CrescentQuery contains custom queries that can be called from a contract.
 type CrescentQuery struct {
 	Pairs *Pairs `json:"pairs,omitempty"`
 	Pair  *Pair  `json:"pair,omitempty"`

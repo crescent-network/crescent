@@ -8,7 +8,7 @@ import (
 	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
-// TODO: TBD
+// CrescentMsg contains what messages that can be called from a contract
 type CrescentMsg struct {
 	LimitOrder *LimitOrder `json:"limit_order,omitempty"`
 }
