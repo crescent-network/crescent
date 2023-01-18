@@ -145,6 +145,6 @@ genesis:
       params:
         instantiate_default_permission: "Everybody"
         code_upload_access:
-          permission: "Nobody" # Nobody | OnlyAddress | Everybody | AnyOfAddresses
+          permission: "Everybody" # Nobody | OnlyAddress | Everybody | AnyOfAddresses
           address: ""
           addresses: []

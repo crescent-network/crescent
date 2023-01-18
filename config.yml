@@ -101,3 +101,10 @@ genesis:
             - amount: "3000000000000"
               denom: "airdrop"
           claimed_conditions:
+    wasm:
+      params:
+        instantiate_default_permission: "Everybody"
+        code_upload_access:
+          permission: "Nobody" # Nobody | OnlyAddress | Everybody | AnyOfAddresses
+          address: ""
+          addresses: []
