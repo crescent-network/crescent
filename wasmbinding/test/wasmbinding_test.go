@@ -3,7 +3,6 @@ package wasmbinding_test
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -69,18 +68,6 @@ func (s *WasmBindingTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom,
 	return pair
 }
 
-type ReflectQuery struct {
-	Chain *ChainRequest `json:"chain,omitempty"`
-}
-
-type ChainRequest struct {
-	Request wasmvmtypes.QueryRequest `json:"request"`
-}
-
-type ChainResponse struct {
-	Data []byte `json:"data"`
-}
-
 func (s *WasmBindingTestSuite) storeReflectCode(creator sdk.AccAddress) {
 	s.T().Helper()
 	wasmCode, err := os.ReadFile("../testdata/crescent_reflect.wasm")
@@ -101,6 +88,18 @@ func (s *WasmBindingTestSuite) storeReflectCode(creator sdk.AccAddress) {
 	s.Require().NoError(err)
 }
 
+type ReflectQuery struct {
+	Pairs *PairsRequest `json:"pairs,omitempty"`
+}
+
+type PairsRequest struct {
+	Request wasmvmtypes.QueryRequest `json:"request"`
+}
+
+type ChainResponse struct {
+	Data []byte `json:"data"`
+}
+
 func (s *WasmBindingTestSuite) instantiateReflectContract(creator, admin sdk.AccAddress) sdk.AccAddress {
 	s.T().Helper()
 	codeID := uint64(1)
@@ -113,21 +112,28 @@ func (s *WasmBindingTestSuite) instantiateReflectContract(creator, admin sdk.Acc
 
 func (s *WasmBindingTestSuite) querySmart(contractAddr sdk.AccAddress, request bindings.CrescentQuery, response interface{}) {
 	s.T().Helper()
+
 	msgBz, err := json.Marshal(request)
 	s.Require().NoError(err)
 
-	query := ReflectQuery{
-		Chain: &ChainRequest{
-			Request: wasmvmtypes.QueryRequest{
-				Custom: msgBz,
-			},
+	// query := ReflectQuery{
+	// 	Pairs: &PairsRequest{
+	// 		Request: wasmvmtypes.QueryRequest{
+	// 			Custom: msgBz,
+	// 		},
+	// 	},
+	// }
+
+	query := &PairsRequest{
+		Request: wasmvmtypes.QueryRequest{
+			Custom: msgBz,
 		},
 	}
+
 	queryBz, err := json.Marshal(query)
 	s.Require().NoError(err)
 
 	resBz, err := s.app.WasmKeeper.QuerySmart(s.ctx, contractAddr, queryBz)
-	fmt.Println("err: ", err) // Error parsing into type crescent_examples::msg::QueryMsg: unknown variant `chain`, expected `pairs`
 	s.Require().NoError(err)
 
 	var resp ChainResponse

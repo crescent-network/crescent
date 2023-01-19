@@ -17,9 +17,7 @@ func (s *WasmBindingTestSuite) TestPairs() {
 	query := bindings.CrescentQuery{
 		Pairs: &bindings.Pairs{},
 	}
-
 	resp := bindings.PairsResponse{}
 
 	s.querySmart(reflect, query, resp)
-
 }
