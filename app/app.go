@@ -620,7 +620,7 @@ func NewApp(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	availableCapabilities := "iterator,staking,stargate,cosmwasm_1_1"
+	availableCapabilities := "iterator,staking,stargate,crescent,cosmwasm_1_1"
 
 	wasmOpts = append(wasmbinding.RegisterCustomPlugin(&app.LiquidityKeeper), wasmOpts...)
 
