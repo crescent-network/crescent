@@ -68,9 +68,9 @@ func (s *WasmBindingTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom,
 	return pair
 }
 
-func (s *WasmBindingTestSuite) storeReflectCode(creator sdk.AccAddress) {
+func (s *WasmBindingTestSuite) storeCode(creator sdk.AccAddress, filePath string) {
 	s.T().Helper()
-	wasmCode, err := os.ReadFile("../testdata/crescent_reflect.wasm")
+	wasmCode, err := os.ReadFile(filePath)
 	s.Require().NoError(err)
 
 	content := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
@@ -100,7 +100,7 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func (s *WasmBindingTestSuite) instantiateReflectContract(creator, admin sdk.AccAddress) sdk.AccAddress {
+func (s *WasmBindingTestSuite) instantiateEmptyContract(creator, admin sdk.AccAddress) sdk.AccAddress {
 	s.T().Helper()
 	codeID := uint64(1)
 	initMsgBz := []byte("{}")
@@ -116,18 +116,8 @@ func (s *WasmBindingTestSuite) querySmart(contractAddr sdk.AccAddress, request b
 	msgBz, err := json.Marshal(request)
 	s.Require().NoError(err)
 
-	// query := ReflectQuery{
-	// 	Pairs: &PairsRequest{
-	// 		Request: wasmvmtypes.QueryRequest{
-	// 			Custom: msgBz,
-	// 		},
-	// 	},
-	// }
-
-	query := &PairsRequest{
-		Request: wasmvmtypes.QueryRequest{
-			Custom: msgBz,
-		},
+	query := wasmvmtypes.QueryRequest{
+		Custom: msgBz,
 	}
 
 	queryBz, err := json.Marshal(query)

@@ -9,15 +9,15 @@ func (s *WasmBindingTestSuite) TestPairs() {
 	s.createPair(s.addr(0), "denom3", "denom4", true)
 	s.createPair(s.addr(0), "denom5", "denom6", true)
 
-	s.storeReflectCode(s.addr(0))
+	s.storeCode(s.addr(0), "../testdata/crescent_examples.wasm")
 
-	reflect := s.instantiateReflectContract(s.addr(0), s.addr(0))
-	s.Require().NotEmpty(reflect)
+	contractAddr := s.instantiateEmptyContract(s.addr(0), s.addr(0))
+	s.Require().NotEmpty(contractAddr)
 
 	query := bindings.CrescentQuery{
 		Pairs: &bindings.Pairs{},
 	}
 	resp := bindings.PairsResponse{}
 
-	s.querySmart(reflect, query, resp)
+	s.querySmart(contractAddr, query, resp)
 }

@@ -7,7 +7,7 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
-tag="v0.0.1"
+tag="TBD"
 
 for contract in hackatom reflect; do
   url="https://github.com/CosmWasm/cosmwasm/releases/download/$tag/${contract}.wasm"
@@ -16,7 +16,7 @@ for contract in hackatom reflect; do
 done
 
 tag="$1"
-url="https://github.com/crescent-network/crescent-cosmwasm/releases/download/$tag/crescent_reflect.wasm"
+url="https://github.com/crescent-network/crescent-cosmwasm/releases/download/$tag/crescent_examples.wasm"
 echo "Downloading $url ..."
 wget -O "crescent_reflect.wasm" "$url"
 
