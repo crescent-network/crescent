@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package crescent.bootstrap.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "crescent/bootstrap/v1beta1/bootstrap.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/crescent-network/crescent/v4/x/bootstrap/types";
+
+message BootstrapProposal {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  // title specifies the title of the proposal
+  string title = 1;
+
+  // description specifies the description of the proposal
+  string description = 2;
+
+  string return_address = 3;
+
+  cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
+
+  string quote_coin_denom = 5;
+
+  string min_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string max_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  uint64 pair_id = 8;
+
+  uint64 pool_id = 9;
+
+  repeated InitialOrder initial_orders = 10;
+}
+
+message InitialOrder {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  cosmos.base.v1beta1.Coin offer_coin = 1 [(gogoproto.nullable) = false];
+
+  string price = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

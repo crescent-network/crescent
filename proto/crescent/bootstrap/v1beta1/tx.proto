@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package crescent.bootstrap.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "crescent/bootstrap/v1beta1/bootstrap.proto";
+
+option go_package = "github.com/crescent-network/crescent/v4/x/bootstrap/types";
+
+// Msg defines the bootstrap Msg service.
+service Msg {
+  rpc LimitOrder(MsgLimitOrder) returns (MsgLimitOrderResponse);
+}
+
+// MsgLimitOrder defines an SDK message for making a limit order
+message MsgLimitOrder {
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 1;
+
+  // bootstrap_id specifies the bootstrap id
+  uint64 bootstrap_id = 2;
+
+  // direction specifies the order direction(buy or sell)
+  OrderDirection direction = 3;
+
+  // offer_coin specifies the amount of coin the orderer offers
+  cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
+
+  // price specifies the order price
+  string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+// MsgLimitOrderResponse defines the Msg/LimitOrder response type.
+message MsgLimitOrderResponse {}

@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package crescent.bootstrap.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v4/x/bootstrap/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Params defines the set of params for the bootstrap module.
+message Params {
+
+  string bootstrap_fee_rate = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  uint32 tick_precision = 2;
+
+  string fee_collector_address = 3;
+
+  string dust_collector_address = 4;
+
+  repeated cosmos.base.v1beta1.Coin bootstrap_creation_fee = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+
+  uint64 order_extra_gas = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
+}
+
+// Order defines an order.
+message Order {
+  // id specifies the id of the order
+  uint64 id = 1;
+
+  // bootstrap_id specifies the bootstrap id
+  uint64 bootstrap_id = 2;
+
+  // msg_height specifies the block height when the order is stored for the batch execution
+  int64 msg_height = 3;
+
+  // orderer specifies the bech32-encoded address that makes an order
+  string orderer = 4;
+
+  // direction specifies the order direction; either buy or sell
+  OrderDirection direction = 5;
+
+  cosmos.base.v1beta1.Coin offer_coin = 6 [(gogoproto.nullable) = false];
+
+  // remaining_offer_coin specifies the remaining offer coin
+  cosmos.base.v1beta1.Coin remaining_offer_coin = 7 [(gogoproto.nullable) = false];
+
+  // received_coin specifies the received coin after the swap
+  cosmos.base.v1beta1.Coin received_coin = 8 [(gogoproto.nullable) = false];
+
+  // price specifies the price that an orderer is willing to swap
+  string price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  OrderStatus status = 10;
+}
+
+// Pool defines bootstrap pool object
+message BootstrapPool {
+  uint64 id = 1;
+
+  cosmos.base.v1beta1.Coin bootstrap_coin = 2 [(gogoproto.nullable) = false];
+
+  string quote_coin_denom = 3;
+
+  string min_price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  string max_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+
+  // start_time specifies the start time of the bootstrap pool
+  google.protobuf.Timestamp start_time = 6
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+
+  // end_time specifies the end time of the bootstrap pool
+  google.protobuf.Timestamp end_time = 7
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+
+  string escrow_address = 8;
+}
+
+// OrderDirection enumerates order directions.
+enum OrderDirection {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
+  ORDER_DIRECTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OrderDirectionUnspecified"];
+
+  // ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
+  ORDER_DIRECTION_BUY = 1 [(gogoproto.enumvalue_customname) = "OrderDirectionBuy"];
+
+  // ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
+  ORDER_DIRECTION_SELL = 2 [(gogoproto.enumvalue_customname) = "OrderDirectionSell"];
+}
+
+// OrderStatus enumerates order statuses.
+enum OrderStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // ORDER_STATUS_UNSPECIFIED specifies unknown order status
+  ORDER_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OrderStatusUnspecified"];
+
+  // ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
+  ORDER_STATUS_NOT_EXECUTED = 1 [(gogoproto.enumvalue_customname) = "OrderStatusNotExecuted"];
+
+  // ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
+  ORDER_STATUS_NOT_MATCHED = 2 [(gogoproto.enumvalue_customname) = "OrderStatusNotMatched"];
+
+  // ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
+  ORDER_STATUS_PARTIALLY_MATCHED = 3 [(gogoproto.enumvalue_customname) = "OrderStatusPartiallyMatched"];
+
+  // ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
+  ORDER_STATUS_COMPLETED = 4 [(gogoproto.enumvalue_customname) = "OrderStatusCompleted"];
+
+  // ORDER_STATUS_EXPIRED indicates the order has been expired
+  ORDER_STATUS_EXPIRED = 5 [(gogoproto.enumvalue_customname) = "OrderStatusExpired"];
+
+  // TODO: TBD
+  //// ORDER_STATUS_CANCELED indicates the order has been canceled
+  // ORDER_STATUS_CANCELED = 5 [(gogoproto.enumvalue_customname) = "OrderStatusCanceled"];
+}
+//
+//// Skewness enumerates skewness types.
+// enum Skewness {
+//  option (gogoproto.goproto_enum_prefix) = false;
+//
+//  // SKEWNESS_UNSPECIFIED specifies unknown skewness type.
+//  SKEWNESS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "SkewnessUnspecified"];
+//
+//  // SKEWNESS_BALANCED specifies balanced skewness type.
+//  SKEWNESS_BALANCED = 1 [(gogoproto.enumvalue_customname) = "SkewnessBalanced"];
+//
+//  // SKEWNESS_MILD specifies mild skewness type.
+//  SKEWNESS_MILD = 2 [(gogoproto.enumvalue_customname) = "SkewnessMild"];
+//
+//  // SKEWNESS_SEVERE specifies severe skewness type.
+//  SKEWNESS_SEVERE = 3 [(gogoproto.enumvalue_customname) = "SkewnessSevere"];
+//
+//  // SKEWNESS_EXTREME specifies extreme skewness type.
+//  SKEWNESS_EXTREME = 4 [(gogoproto.enumvalue_customname) = "SkewnessExtreme"];
+//}
