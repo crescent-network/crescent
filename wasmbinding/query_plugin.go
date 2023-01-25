@@ -23,19 +23,21 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 		case contractQuery.Pairs != nil:
 			pairs := qp.Pairs(ctx)
 
-			bz, err := json.Marshal(pairs)
+			bz, err := json.Marshal(&pairs)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal response: %w", err)
 			}
 			return bz, nil
 
 		case contractQuery.Pair != nil:
-			pair, err := qp.Pair(ctx, contractQuery.Pair.PairId)
+			pairId := contractQuery.Pair.PairId
+
+			pair, err := qp.Pair(ctx, pairId)
 			if err != nil {
 				return nil, err
 			}
 
-			bz, err := json.Marshal(pair)
+			bz, err := json.Marshal(&pair)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal response: %w", err)
 			}
@@ -44,7 +46,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 		case contractQuery.Pools != nil:
 			pools := qp.Pools(ctx)
 
-			bz, err := json.Marshal(pools)
+			bz, err := json.Marshal(&pools)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal response: %w", err)
 			}
@@ -56,7 +58,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 				return nil, err
 			}
 
-			bz, err := json.Marshal(pool)
+			bz, err := json.Marshal(&pool)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal response: %w", err)
 			}

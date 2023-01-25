@@ -25,11 +25,14 @@ type Pool struct {
 }
 
 type PairsResponse struct {
-	Pairs []liquiditytypes.Pair `json:"pairs"`
+	Pairs []PairResponse `json:"pairs"`
 }
 
 type PairResponse struct {
-	Pair liquiditytypes.Pair `json:"pair"`
+	Id             uint64 `json:"id"`
+	BaseCoinDenom  string `json:"base_coin_denom"`
+	QuoteCoinDenom string `json:"quote_coin_denom"`
+	EscrowAddress  string `json:"escrow_address"`
 }
 
 type PoolsResponse struct {
