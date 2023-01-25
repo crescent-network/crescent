@@ -5,7 +5,6 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -98,42 +97,42 @@ $ %s query %s bootstrap --eligible=true...
 				return err
 			}
 
-			pairIdStr, _ := cmd.Flags().GetString(FlagPairId)
-			mmAddr, _ := cmd.Flags().GetString(FlagAddress)
-			eligibleStr, _ := cmd.Flags().GetString(FlagEligible)
+			//pairIdStr, _ := cmd.Flags().GetString(FlagPairId)
+			//mmAddr, _ := cmd.Flags().GetString(FlagAddress)
+			//eligibleStr, _ := cmd.Flags().GetString(FlagEligible)
+			//
+			//queryClient := types.NewQueryClient(clientCtx)
+			//pageReq, err := client.ReadPageRequest(cmd.Flags())
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//req := &types.QueryBootstrapsRequest{
+			//	Pagination: pageReq,
+			//}
+			//
+			//switch {
+			//case pairIdStr != "":
+			//	pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
+			//	if err != nil {
+			//		return fmt.Errorf("parse pair id: %w", err)
+			//	}
+			//	req.PairId = pairId
+			//case mmAddr != "":
+			//	req.Address = mmAddr
+			//case eligibleStr != "":
+			//	if _, err := strconv.ParseBool(eligibleStr); err != nil {
+			//		return fmt.Errorf("parse eligible flag: %w", err)
+			//	}
+			//	req.Eligible = eligibleStr
+			//}
+			//
+			//res, err := queryClient.Bootstraps(cmd.Context(), req)
+			//if err != nil {
+			//	return err
+			//}
 
-			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			req := &types.QueryBootstrapsRequest{
-				Pagination: pageReq,
-			}
-
-			switch {
-			case pairIdStr != "":
-				pairId, err := strconv.ParseUint(pairIdStr, 10, 64)
-				if err != nil {
-					return fmt.Errorf("parse pair id: %w", err)
-				}
-				req.PairId = pairId
-			case mmAddr != "":
-				req.Address = mmAddr
-			case eligibleStr != "":
-				if _, err := strconv.ParseBool(eligibleStr); err != nil {
-					return fmt.Errorf("parse eligible flag: %w", err)
-				}
-				req.Eligible = eligibleStr
-			}
-
-			res, err := queryClient.Bootstraps(cmd.Context(), req)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintProto(nil)
 		},
 	}
 
@@ -166,21 +165,21 @@ $ %s query %s incentive %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			//queryClient := types.NewQueryClient(clientCtx)
+			//
+			//mmAddr, err := sdk.AccAddressFromBech32(args[0])
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//resp, err := queryClient.Incentive(cmd.Context(), &types.QueryIncentiveRequest{
+			//	Address: mmAddr.String(),
+			//})
+			//if err != nil {
+			//	return err
+			//}
 
-			mmAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			resp, err := queryClient.Incentive(cmd.Context(), &types.QueryIncentiveRequest{
-				Address: mmAddr.String(),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(resp)
+			return clientCtx.PrintProto(nil)
 		},
 	}
 

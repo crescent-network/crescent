@@ -1,8 +1,6 @@
 package types
 
 import (
-	"bytes"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -23,62 +21,61 @@ const (
 
 // keys for bootstrap store prefixes
 var (
-	BootstrapKeyPrefix              = []byte{0xc0}
-	BootstrapIndexByPairIdKeyPrefix = []byte{0xc1}
-	DepositKeyPrefix                = []byte{0xc2}
+	LastBootstrapPoolIdKey = []byte{0xf1}
 
-	IncentiveKeyPrefix = []byte{0xc5}
+	BootstrapPoolKeyPrefix = []byte{0xf2}
+	OrderKeyPrefix         = []byte{0xf3}
+	OrderIndexKeyPrefix    = []byte{0xf4}
+
+	// TODO:
+	BootstrapPoolByReserveAddressIndexKeyPrefix = []byte{0xf5}
 )
 
-// GetBootstrapKey returns a key for a market maker record.
-func GetBootstrapKey(mmAddr sdk.AccAddress, pairId uint64) []byte {
-	return append(append(BootstrapKeyPrefix, address.MustLengthPrefix(mmAddr)...), sdk.Uint64ToBigEndian(pairId)...)
+// GetBootstrapPoolKey returns a key for a bootstrap pool record.
+func GetBootstrapPoolKey(id uint64) []byte {
+	return append(BootstrapPoolKeyPrefix, sdk.Uint64ToBigEndian(id)...)
 }
 
-// GetBootstrapIndexByPairIdKey returns a key for a market maker record.
-func GetBootstrapIndexByPairIdKey(pairId uint64, mmAddress sdk.AccAddress) []byte {
-	return append(append(BootstrapIndexByPairIdKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), mmAddress...)
+// GetOrderKey returns a key for a bootstrap order record.
+func GetOrderKey(poolId, id uint64) []byte {
+	return append(append(OrderKeyPrefix, sdk.Uint64ToBigEndian(poolId)...), sdk.Uint64ToBigEndian(id)...)
 }
 
-// GetDepositKey returns a key for a market maker record.
-func GetDepositKey(mmAddr sdk.AccAddress, pairId uint64) []byte {
-	return append(append(DepositKeyPrefix, address.MustLengthPrefix(mmAddr)...), sdk.Uint64ToBigEndian(pairId)...)
+// GetOrderIndexKeyByOrdererPrefix returns the index key prefix to iterate orders
+// by an orderer.
+func GetOrderIndexKeyByOrdererPrefix(orderer sdk.AccAddress) []byte {
+	return append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...)
 }
 
-// GetIncentiveKey returns kv indexing key of the incentive
-func GetIncentiveKey(mmAddr sdk.AccAddress) []byte {
-	return append(IncentiveKeyPrefix, mmAddr...)
+// GetOrderIndexKeyByOrdererByPoolIdPrefix returns the index key prefix to iterate orders
+// by an orderer.
+func GetOrderIndexKeyByOrdererByPoolIdPrefix(orderer sdk.AccAddress, poolId uint64) []byte {
+	return append(append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...), sdk.Uint64ToBigEndian(poolId)...)
 }
 
-// GetBootstrapByAddrPrefix returns a key prefix used to iterate
-// market makers by a address.
-func GetBootstrapByAddrPrefix(mmAddr sdk.AccAddress) []byte {
-	return append(BootstrapKeyPrefix, address.MustLengthPrefix(mmAddr)...)
+// GetOrderIndexKey returns the index key to map orders with an orderer.
+func GetOrderIndexKey(orderer sdk.AccAddress, pairId, orderId uint64) []byte {
+	return append(append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...),
+		sdk.Uint64ToBigEndian(pairId)...)
 }
 
-// GetBootstrapByPairIdPrefix returns a key prefix used to iterate
-// market makers by a pair id.
-func GetBootstrapByPairIdPrefix(pairId uint64) []byte {
-	return append(BootstrapIndexByPairIdKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
-}
-
-// ParseBootstrapIndexByPairIdKey parses a market maker index by pair id key.
-func ParseBootstrapIndexByPairIdKey(key []byte) (pairId uint64, mmAddr sdk.AccAddress) {
-	if !bytes.HasPrefix(key, BootstrapIndexByPairIdKeyPrefix) {
-		panic("key does not have proper prefix")
-	}
-	pairId = sdk.BigEndianToUint64(key[1:9])
-	mmAddr = key[9:]
-	return
-}
-
-// ParseDepositKey parses a deposit key.
-func ParseDepositKey(key []byte) (mmAddr sdk.AccAddress, pairId uint64) {
-	if !bytes.HasPrefix(key, DepositKeyPrefix) {
-		panic("key does not have proper prefix")
-	}
-	addrLen := key[1]
-	mmAddr = key[2 : 2+addrLen]
-	pairId = sdk.BigEndianToUint64(key[2+addrLen:])
-	return
-}
+//// ParseBootstrapIndexByPairIdKey parses a market maker index by pair id key.
+//func ParseBootstrapIndexByPairIdKey(key []byte) (pairId uint64, mmAddr sdk.AccAddress) {
+//	if !bytes.HasPrefix(key, BootstrapIndexByPairIdKeyPrefix) {
+//		panic("key does not have proper prefix")
+//	}
+//	pairId = sdk.BigEndianToUint64(key[1:9])
+//	mmAddr = key[9:]
+//	return
+//}
+//
+//// ParseDepositKey parses a deposit key.
+//func ParseDepositKey(key []byte) (mmAddr sdk.AccAddress, pairId uint64) {
+//	if !bytes.HasPrefix(key, DepositKeyPrefix) {
+//		panic("key does not have proper prefix")
+//	}
+//	addrLen := key[1]
+//	mmAddr = key[2 : 2+addrLen]
+//	pairId = sdk.BigEndianToUint64(key[2+addrLen:])
+//	return
+//}

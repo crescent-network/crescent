@@ -12,8 +12,7 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/bootstrap interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgApplyBootstrap{}, "bootstrap/MsgApplyBootstrap", nil)
-	cdc.RegisterConcrete(&MsgClaimIncentives{}, "bootstrap/MsgClaimIncentives", nil)
+	cdc.RegisterConcrete(&MsgLimitOrder{}, "bootstrap/MsgLimitOrder", nil)
 	cdc.RegisterConcrete(&BootstrapProposal{}, "bootstrap/BootstrapProposal", nil)
 }
 
@@ -21,8 +20,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
-		&MsgApplyBootstrap{},
-		&MsgClaimIncentives{},
+		&MsgLimitOrder{},
 	)
 
 	registry.RegisterImplementations(

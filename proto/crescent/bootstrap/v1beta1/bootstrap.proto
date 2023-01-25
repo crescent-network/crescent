@@ -16,16 +16,22 @@ message Params {
   string bootstrap_fee_rate = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  uint32 tick_precision = 2;
+  string initial_stage_required_amount = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
-  string fee_collector_address = 3;
+  string required_amount_reduction_rate = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string dust_collector_address = 4;
+  uint32 tick_precision = 4;
 
-  repeated cosmos.base.v1beta1.Coin bootstrap_creation_fee = 5
+  string fee_collector_address = 5;
+
+  string dust_collector_address = 6;
+
+  repeated cosmos.base.v1beta1.Coin bootstrap_creation_fee = 7
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
-  uint64 order_extra_gas = 6
+  uint64 order_extra_gas = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
 }
 
@@ -34,8 +40,8 @@ message Order {
   // id specifies the id of the order
   uint64 id = 1;
 
-  // bootstrap_id specifies the bootstrap id
-  uint64 bootstrap_id = 2;
+  // bootstrap_pool_id specifies the bootstrap pool id
+  uint64 bootstrap_pool_id = 2;
 
   // msg_height specifies the block height when the order is stored for the batch execution
   int64 msg_height = 3;

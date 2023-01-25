@@ -20,8 +20,8 @@ message MsgLimitOrder {
   // orderer specifies the bech32-encoded address that makes an order
   string orderer = 1;
 
-  // bootstrap_id specifies the bootstrap id
-  uint64 bootstrap_id = 2;
+  // bootstrap_pool_id specifies the bootstrap pool id
+  uint64 bootstrap_pool_id = 2;
 
   // direction specifies the order direction(buy or sell)
   OrderDirection direction = 3;

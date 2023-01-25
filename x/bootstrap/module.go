@@ -20,7 +20,6 @@ import (
 
 	"github.com/crescent-network/crescent/v4/x/bootstrap/client/cli"
 	"github.com/crescent-network/crescent/v4/x/bootstrap/keeper"
-	"github.com/crescent-network/crescent/v4/x/bootstrap/simulation"
 	"github.com/crescent-network/crescent/v4/x/bootstrap/types"
 )
 
@@ -172,28 +171,31 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // GenerateGenesisState creates a randomized GenState of the bootstrap module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	//simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns all the market maker content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(am.bankKeeper, am.keeper)
+	return nil
+	//return simulation.ProposalContents(am.bankKeeper, am.keeper)
 }
 
 // RandomizedParams creates randomized bootstrap param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	return nil
+	//return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for bootstrap module's types.
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	//sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
-	)
+	return nil
+	//return simulation.WeightedOperations(
+	//	simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+	//)
 }

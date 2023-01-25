@@ -11,30 +11,29 @@ var (
 
 // Message types for the bootstrap module
 const (
-	TypeMsgApplyBootstrap  = "apply_market_maker"
-	TypeMsgClaimIncentives = "claim_incentives"
+	TypeMsgLimitOrder = "limit_order"
 )
 
 // NewMsgLimitOrder creates a new limit order.
 func NewMsgLimitOrder(
 	orderer sdk.AccAddress,
-	bootstrapId uint64,
+	bootstrapPoolId uint64,
 	direction OrderDirection,
 	offerCoin sdk.Coin,
 	price sdk.Dec,
 ) *MsgLimitOrder {
 	return &MsgLimitOrder{
-		Orderer:     orderer.String(),
-		BootstrapId: bootstrapId,
-		Direction:   direction,
-		OfferCoin:   offerCoin,
-		Price:       price,
+		Orderer:         orderer.String(),
+		BootstrapPoolId: bootstrapPoolId,
+		Direction:       direction,
+		OfferCoin:       offerCoin,
+		Price:           price,
 	}
 }
 
 func (msg MsgLimitOrder) Route() string { return RouterKey }
 
-func (msg MsgLimitOrder) Type() string { return TypeMsgApplyBootstrap }
+func (msg MsgLimitOrder) Type() string { return TypeMsgLimitOrder }
 
 func (msg MsgLimitOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {

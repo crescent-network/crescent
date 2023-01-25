@@ -3,9 +3,6 @@ package types
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-	"gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -13,30 +10,38 @@ import (
 )
 
 const (
-	AddressType                             = farmingtypes.AddressType32Bytes
-	ClaimableIncentiveReserveAccName string = "ClaimableIncentiveReserveAcc"
+	AddressType = farmingtypes.AddressType32Bytes
+	//ClaimableIncentiveReserveAccName string = "ClaimableIncentiveReserveAcc"
 )
 
 // Parameter store keys
 var (
-	KeyIncentiveBudgetAddress = []byte("IncentiveBudgetAddress")
-	KeyDepositAmount          = []byte("DepositAmount")
-	KeyCommon                 = []byte("Common")
-	KeyIncentivePairs         = []byte("IncentivePairs")
+	KeyBootstrapFeeRate            = []byte("BootstrapFeeRate")
+	KeyInitialStageRequiredAmount  = []byte("InitialStageRequiredAmount")
+	KeyRequiredAmountReductionRate = []byte("RequiredAmountReductionRate")
+	KeyTickPrecision               = []byte("TickPrecision")
+	KeyFeeCollectorAddress         = []byte("FeeCollectorAddress")
+	KeyDustCollectorAddress        = []byte("DustCollectorAddress")
+	KeyBootstrapCreationFee        = []byte("BootstrapCreationFee")
+	KeyOrderExtraGas               = []byte("OrderExtraGas")
 
-	DefaultIncentiveBudgetAddress = farmingtypes.DeriveAddress(AddressType, farmingtypes.ModuleName, "ecosystem_incentive_mm")
-	DefaultDepositAmount          = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000)))
-	DefaultCommon                 = Common{
-		MinOpenRatio:      sdk.MustNewDecFromStr("0.5"),
-		MinOpenDepthRatio: sdk.MustNewDecFromStr("0.1"),
-		MaxDowntime:       uint32(20),
-		MaxTotalDowntime:  uint32(100),
-		MinHours:          uint32(16),
-		MinDays:           uint32(22),
-	}
+	DefaultBootstrapFeeRate            = sdk.MustNewDecFromStr("0.05")
+	DefaultInitialStageRequiredAmount  = sdk.NewInt(10_000_000_000)
+	DefaultRequiredAmountReductionRate = sdk.MustNewDecFromStr("0.5")
+	DefaultTickPrecision               = uint32(3)
 
-	ClaimableIncentiveReserveAcc = farmingtypes.DeriveAddress(AddressType, ModuleName, ClaimableIncentiveReserveAccName)
-	DepositReserveAcc            = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
+	// TODO: TBD
+	DefaultBootstrapCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+
+	DefaultFeeCollectorAddress  = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
+	DefaultDustCollectorAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "DustCollector")
+
+	// TODO: TBD
+	DefaultOrderExtraGas = sdk.Gas(37000)
+
+	//DefaultIncentiveBudgetAddress = farmingtypes.DeriveAddress(AddressType, farmingtypes.ModuleName, "ecosystem_incentive_mm")
+	//ClaimableIncentiveReserveAcc = farmingtypes.DeriveAddress(AddressType, ModuleName, ClaimableIncentiveReserveAccName)
+	//DepositReserveAcc            = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -49,41 +54,49 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default bootstrap module parameters.
 func DefaultParams() Params {
 	return Params{
-		IncentiveBudgetAddress: DefaultIncentiveBudgetAddress.String(),
-		DepositAmount:          DefaultDepositAmount,
-		Common:                 DefaultCommon,
-		IncentivePairs:         []IncentivePair{},
+		BootstrapFeeRate:            DefaultBootstrapFeeRate,
+		InitialStageRequiredAmount:  DefaultInitialStageRequiredAmount,
+		RequiredAmountReductionRate: DefaultRequiredAmountReductionRate,
+		TickPrecision:               DefaultTickPrecision,
+		FeeCollectorAddress:         DefaultFeeCollectorAddress.String(),
+		DustCollectorAddress:        DefaultDustCollectorAddress.String(),
+		BootstrapCreationFee:        DefaultBootstrapCreationFee,
+		OrderExtraGas:               DefaultOrderExtraGas,
 	}
 }
 
 // ParamSetPairs implements paramstypes.ParamSet.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyIncentiveBudgetAddress, &p.IncentiveBudgetAddress, validateIncentiveBudgetAddress),
-		paramstypes.NewParamSetPair(KeyDepositAmount, &p.DepositAmount, validateDepositAmount),
-		paramstypes.NewParamSetPair(KeyCommon, &p.Common, validateCommon),
-		paramstypes.NewParamSetPair(KeyIncentivePairs, &p.IncentivePairs, validateIncentivePairs),
+		paramstypes.NewParamSetPair(KeyBootstrapFeeRate, &p.BootstrapFeeRate, validateBootstrapFeeRate),
+		paramstypes.NewParamSetPair(KeyInitialStageRequiredAmount, &p.InitialStageRequiredAmount, validateInitialStageRequiredAmount),
+		paramstypes.NewParamSetPair(KeyRequiredAmountReductionRate, &p.RequiredAmountReductionRate, validateRequiredAmountReductionRate),
+		paramstypes.NewParamSetPair(KeyTickPrecision, &p.TickPrecision, validateTickPrecision),
+		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &p.FeeCollectorAddress, validateFeeCollectorAddress),
+		paramstypes.NewParamSetPair(KeyDustCollectorAddress, &p.DustCollectorAddress, validateDustCollectorAddress),
+		paramstypes.NewParamSetPair(KeyBootstrapCreationFee, &p.BootstrapCreationFee, validateBootstrapCreationFee),
+		paramstypes.NewParamSetPair(KeyOrderExtraGas, &p.OrderExtraGas, validateExtraGas),
 	}
 }
 
-func (p Params) IncentiveBudgetAcc() sdk.AccAddress {
-	acc, _ := sdk.AccAddressFromBech32(p.IncentiveBudgetAddress)
-	return acc
-}
+//func (p Params) IncentiveBudgetAcc() sdk.AccAddress {
+//	acc, _ := sdk.AccAddressFromBech32(p.IncentiveBudgetAddress)
+//	return acc
+//}
 
-func (p Params) IncentivePairsMap() map[uint64]IncentivePair {
-	iMap := make(map[uint64]IncentivePair)
-	for _, pair := range p.IncentivePairs {
-		iMap[pair.PairId] = pair
-	}
-	return iMap
-}
+//func (p Params) IncentivePairsMap() map[uint64]IncentivePair {
+//	iMap := make(map[uint64]IncentivePair)
+//	for _, pair := range p.IncentivePairs {
+//		iMap[pair.PairId] = pair
+//	}
+//	return iMap
+//}
 
 // String returns a human-readable string representation of the parameters.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
+//func (p Params) String() string {
+//	out, _ := yaml.Marshal(p)
+//	return string(out)
+//}
 
 // Validate validates parameters.
 func (p Params) Validate() error {
@@ -91,9 +104,14 @@ func (p Params) Validate() error {
 		value     interface{}
 		validator func(interface{}) error
 	}{
-		{p.IncentiveBudgetAddress, validateIncentiveBudgetAddress},
-		{p.DepositAmount, validateDepositAmount},
-		{p.IncentivePairs, validateIncentivePairs},
+		{p.BootstrapFeeRate, validateBootstrapFeeRate},
+		{p.InitialStageRequiredAmount, validateInitialStageRequiredAmount},
+		{p.RequiredAmountReductionRate, validateRequiredAmountReductionRate},
+		{p.TickPrecision, validateTickPrecision},
+		{p.FeeCollectorAddress, validateFeeCollectorAddress},
+		{p.DustCollectorAddress, validateDustCollectorAddress},
+		{p.BootstrapCreationFee, validateBootstrapCreationFee},
+		{p.OrderExtraGas, validateExtraGas},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
@@ -102,7 +120,33 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateDepositAmount(i interface{}) error {
+func validateBootstrapFeeRate(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("bootstrap fee rate must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateRequiredAmountReductionRate(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("required amount reduction fee rate must not be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateInitialStageRequiredAmount(i interface{}) error {
 	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -115,14 +159,23 @@ func validateDepositAmount(i interface{}) error {
 	return nil
 }
 
-func validateIncentiveBudgetAddress(i interface{}) error {
+func validateTickPrecision(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateFeeCollectorAddress(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v == "" {
-		return fmt.Errorf("incentive budget address must not be empty")
+		return fmt.Errorf("fee collector address must not be empty")
 	}
 
 	_, err := sdk.AccAddressFromBech32(v)
@@ -133,27 +186,42 @@ func validateIncentiveBudgetAddress(i interface{}) error {
 	return nil
 }
 
-func validateCommon(i interface{}) error {
-	_, ok := i.(Common)
+func validateDustCollectorAddress(i interface{}) error {
+	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
+
+	if v == "" {
+		return fmt.Errorf("dust collector address must not be empty")
+	}
+
+	_, err := sdk.AccAddressFromBech32(v)
+	if err != nil {
+		return fmt.Errorf("invalid account address: %v", v)
+	}
+
 	return nil
 }
 
-func validateIncentivePairs(i interface{}) error {
-	ips, ok := i.([]IncentivePair)
+func validateBootstrapCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	// pair id duplication checking
-	pairMap := map[uint64]struct{}{}
-	for _, ip := range ips {
-		if _, ok := pairMap[ip.PairId]; ok {
-			return fmt.Errorf("incentive pair id cannot be duplicated: %d", ip.PairId)
-		}
-		pairMap[ip.PairId] = struct{}{}
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid bootstrap creation fee: %w", err)
 	}
+
+	return nil
+}
+
+func validateExtraGas(i interface{}) error {
+	_, ok := i.(sdk.Gas)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	return nil
 }

@@ -5,7 +5,6 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -64,21 +63,21 @@ $ %s tx %s apply 1,2 --from mykey
 				return err
 			}
 
-			farmer := clientCtx.GetFromAddress()
-			pairIds := []uint64{}
-			pairIdsStr := strings.Split(args[0], ",")
+			//farmer := clientCtx.GetFromAddress()
+			//pairIds := []uint64{}
+			//pairIdsStr := strings.Split(args[0], ",")
+			//
+			//for _, i := range pairIdsStr {
+			//	pairId, err := strconv.ParseUint(i, 10, 64)
+			//	if err != nil {
+			//		return fmt.Errorf("parse pair id: %w", err)
+			//	}
+			//	pairIds = append(pairIds, pairId)
+			//}
+			//
+			//msg := types.NewMsgApplyBootstrap(farmer, pairIds)
 
-			for _, i := range pairIdsStr {
-				pairId, err := strconv.ParseUint(i, 10, 64)
-				if err != nil {
-					return fmt.Errorf("parse pair id: %w", err)
-				}
-				pairIds = append(pairIds, pairId)
-			}
-
-			msg := types.NewMsgApplyBootstrap(farmer, pairIds)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), nil)
 		},
 	}
 
@@ -106,11 +105,11 @@ $ %s tx %s claim --from mykey`,
 				return err
 			}
 
-			creator := clientCtx.GetFromAddress()
+			//creator := clientCtx.GetFromAddress()
 
-			msg := types.NewMsgClaimIncentives(creator)
+			//msg := types.NewMsgClaimIncentives(creator)
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), nil)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -182,23 +181,23 @@ Where proposal.json contains:
 				return err
 			}
 
-			proposal, err := ParseBootstrapProposal(clientCtx.Codec, args[0])
-			if err != nil {
-				return err
-			}
+			//proposal, err := ParseBootstrapProposal(clientCtx.Codec, args[0])
+			//if err != nil {
+			//	return err
+			//}
 
-			content := types.NewBootstrapProposal(
-				proposal.Title,
-				proposal.Description,
-				proposal.Inclusions,
-				proposal.Exclusions,
-				proposal.Rejections,
-				proposal.Distributions,
-			)
+			//content := types.NewBootstrapProposal(
+			//	proposal.Title,
+			//	proposal.Description,
+			//	proposal.Inclusions,
+			//	proposal.Exclusions,
+			//	proposal.Rejections,
+			//	proposal.Distributions,
+			//)
 
 			from := clientCtx.GetFromAddress()
 
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := gov.NewMsgSubmitProposal(nil, deposit, from)
 			if err != nil {
 				return err
 			}

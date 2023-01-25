@@ -25,24 +25,13 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// ApplyBootstrap defines a method for apply to be market maker.
-func (k msgServer) ApplyBootstrap(goCtx context.Context, msg *types.MsgApplyBootstrap) (*types.MsgApplyBootstrapResponse, error) {
+// LimitOrder defines a method for limit order
+func (k msgServer) LimitOrder(goCtx context.Context, msg *types.MsgLimitOrder) (*types.MsgLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.Keeper.ApplyBootstrap(ctx, msg.GetAddress(), msg.PairIds); err != nil {
+	if err := k.Keeper.LimitOrder(ctx, msg.GetAddress(), msg.BootstrapPoolId, msg.Direction, msg.OfferCoin, msg.Price); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgApplyBootstrapResponse{}, nil
-}
-
-// ClaimIncentives defines a method for claim all claimable incentives of the market maker.
-func (k msgServer) ClaimIncentives(goCtx context.Context, msg *types.MsgClaimIncentives) (*types.MsgClaimIncentivesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if err := k.Keeper.ClaimIncentives(ctx, msg.GetAddress()); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgClaimIncentivesResponse{}, nil
+	return &types.MsgLimitOrderResponse{}, nil
 }
