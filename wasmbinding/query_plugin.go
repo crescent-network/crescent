@@ -30,35 +30,12 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			return bz, nil
 
 		case contractQuery.Pair != nil:
-			pairId := contractQuery.Pair.PairId
-
-			pair, err := qp.Pair(ctx, pairId)
+			pair, err := qp.Pair(ctx, contractQuery.Pair.Id)
 			if err != nil {
 				return nil, err
 			}
 
 			bz, err := json.Marshal(&pair)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal response: %w", err)
-			}
-			return bz, nil
-
-		case contractQuery.Pools != nil:
-			pools := qp.Pools(ctx)
-
-			bz, err := json.Marshal(&pools)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal response: %w", err)
-			}
-			return bz, nil
-
-		case contractQuery.Pool != nil:
-			pool, err := qp.Pool(ctx, contractQuery.Pool.PoolId)
-			if err != nil {
-				return nil, err
-			}
-
-			bz, err := json.Marshal(&pool)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal response: %w", err)
 			}

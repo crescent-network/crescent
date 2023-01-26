@@ -22,7 +22,7 @@ func NewQueryPlugin(lk *liquiditykeeper.Keeper) *QueryPlugin {
 func (qp QueryPlugin) Pairs(ctx sdk.Context) *bindings.PairsResponse {
 	pairs := qp.liquidityKeeper.GetAllPairs(ctx)
 
-	pairsResponse := []bindings.PairResponse{}
+	resp := []bindings.PairResponse{}
 	for _, pair := range pairs {
 		p := &bindings.PairResponse{
 			Id:             pair.Id,
@@ -30,33 +30,21 @@ func (qp QueryPlugin) Pairs(ctx sdk.Context) *bindings.PairsResponse {
 			QuoteCoinDenom: pair.QuoteCoinDenom,
 			EscrowAddress:  pair.EscrowAddress,
 		}
-		pairsResponse = append(pairsResponse, *p)
+		resp = append(resp, *p)
 	}
-	return &bindings.PairsResponse{Pairs: pairsResponse}
+	return &bindings.PairsResponse{Pairs: resp}
 }
 
 func (qp QueryPlugin) Pair(ctx sdk.Context, pairId uint64) (*bindings.PairResponse, error) {
 	pair, found := qp.liquidityKeeper.GetPair(ctx, pairId)
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "pair not found")
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
 	}
+
 	return &bindings.PairResponse{
 		Id:             pair.Id,
 		BaseCoinDenom:  pair.BaseCoinDenom,
 		QuoteCoinDenom: pair.QuoteCoinDenom,
 		EscrowAddress:  pair.EscrowAddress,
 	}, nil
-}
-
-func (qp QueryPlugin) Pools(ctx sdk.Context) *bindings.PoolsResponse {
-	pools := qp.liquidityKeeper.GetAllPools(ctx)
-	return &bindings.PoolsResponse{Pools: pools}
-}
-
-func (qp QueryPlugin) Pool(ctx sdk.Context, poolId uint64) (*bindings.PoolResponse, error) {
-	pool, found := qp.liquidityKeeper.GetPool(ctx, poolId)
-	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
-	}
-	return &bindings.PoolResponse{Pool: pool}, nil
 }

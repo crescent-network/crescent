@@ -2,19 +2,16 @@ package wasmbinding_test
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"os"
 	"testing"
 	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	chain "github.com/crescent-network/crescent/v4/app"
-	"github.com/crescent-network/crescent/v4/wasmbinding/bindings"
 	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
 	minttypes "github.com/crescent-network/crescent/v4/x/mint/types"
 
@@ -88,18 +85,6 @@ func (s *WasmBindingTestSuite) storeCode(creator sdk.AccAddress, filePath string
 	s.Require().NoError(err)
 }
 
-type ReflectQuery struct {
-	Pairs *PairsRequest `json:"pairs,omitempty"`
-}
-
-type PairsRequest struct {
-	Request wasmvmtypes.QueryRequest `json:"request"`
-}
-
-type ChainResponse struct {
-	Data []byte `json:"data"`
-}
-
 func (s *WasmBindingTestSuite) instantiateEmptyContract(creator, admin sdk.AccAddress) sdk.AccAddress {
 	s.T().Helper()
 	codeID := uint64(1)
@@ -108,28 +93,4 @@ func (s *WasmBindingTestSuite) instantiateEmptyContract(creator, admin sdk.AccAd
 	addr, _, err := contractKeeper.Instantiate(s.ctx, codeID, creator, admin, initMsgBz, "demo contract", nil)
 	s.Require().NoError(err)
 	return addr
-}
-
-func (s *WasmBindingTestSuite) querySmart(contractAddr sdk.AccAddress, request bindings.CrescentQuery, response interface{}) {
-	s.T().Helper()
-
-	msgBz, err := json.Marshal(request)
-	s.Require().NoError(err)
-
-	query := wasmvmtypes.QueryRequest{
-		Custom: msgBz,
-	}
-
-	queryBz, err := json.Marshal(query)
-	s.Require().NoError(err)
-
-	resBz, err := s.app.WasmKeeper.QuerySmart(s.ctx, contractAddr, queryBz)
-	s.Require().NoError(err)
-
-	var resp ChainResponse
-	err = json.Unmarshal(resBz, &resp)
-	s.Require().NoError(err)
-
-	err = json.Unmarshal(resp.Data, response)
-	s.Require().NoError(err)
 }

@@ -16,9 +16,9 @@ for contract in hackatom reflect; do
 done
 
 tag="$1"
-url="https://github.com/crescent-network/crescent-cosmwasm/releases/download/$tag/crescent_examples.wasm"
+url="https://github.com/crescent-network/crescent-cosmwasm/releases/download/$tag/liquidity.wasm"
 echo "Downloading $url ..."
-wget -O "crescent_reflect.wasm" "$url"
+wget -O "crescent_liquidity.wasm" "$url"
 
 rm -f version.txt
 echo "$tag" >version.txt
