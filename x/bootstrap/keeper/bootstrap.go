@@ -1,7 +1,12 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/crescent-network/crescent/v4/x/bootstrap/types"
 )
@@ -12,6 +17,22 @@ func (k Keeper) LimitOrder(ctx sdk.Context, orderer sdk.AccAddress, poolId uint6
 	// TODO:
 
 	return nil
+}
+
+func (k Keeper) Vesting(ctx sdk.Context, returnAddr sdk.AccAddress, originalVesting sdk.Coins, startTime int64, periods vestingtypes.Periods) {
+	//var account authtypes.AccountI
+	bacc := k.accountKeeper.GetAccount(ctx, returnAddr)
+	fmt.Println(bacc.GetPubKey(), bacc.GetSequence(), bacc.GetAccountNumber(), bacc.GetAddress())
+
+	// TODO: send
+
+	_, ok := bacc.(exported.VestingAccount)
+	if ok {
+		panic("already vested")
+	}
+
+	acc := vestingtypes.NewPeriodicVestingAccount(bacc.(*authtypes.BaseAccount), originalVesting, startTime, periods)
+	k.accountKeeper.SetAccount(ctx, acc)
 }
 
 //func (k Keeper) ApplyBootstrap(ctx sdk.Context, mmAddr sdk.AccAddress, pairIds []uint64) error {

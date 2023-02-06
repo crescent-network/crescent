@@ -1,103 +1,67 @@
 package keeper_test
 
-//import (
-//	_ "github.com/stretchr/testify/suite"
-//
-//	"github.com/crescent-network/crescent/v4/x/bootstrap/types"
-//)
-//
-//func (suite *KeeperTestSuite) TestApplyBootstrap() {
-//	ctx := suite.ctx
-//	k := suite.keeper
-//	mmAddr := suite.addrs[0]
-//	params := k.GetParams(ctx)
-//
-//	// not exist mm case
-//	_, found := k.GetBootstrap(ctx, mmAddr, 1)
-//	suite.False(found)
-//
-//	// apply market maker for the pair 1
-//	balanceBefore := suite.app.BankKeeper.GetAllBalances(ctx, mmAddr)
-//	balanceBeforeModuleAcc := suite.app.BankKeeper.GetAllBalances(ctx, types.DepositReserveAcc)
-//	err := k.ApplyBootstrap(ctx, mmAddr, []uint64{1})
-//	suite.NoError(err)
-//
-//	// validate deposit amount
-//	balanceAfter := suite.app.BankKeeper.GetAllBalances(ctx, mmAddr)
-//	balanceAfterModuleAcc := suite.app.BankKeeper.GetAllBalances(ctx, types.DepositReserveAcc)
-//	suite.EqualValues(balanceBefore.Sub(params.DepositAmount), balanceAfter)
-//	suite.EqualValues(balanceBeforeModuleAcc.Add(params.DepositAmount...), balanceAfterModuleAcc)
-//
-//	// exist mm case
-//	mm, found := k.GetBootstrap(ctx, mmAddr, 1)
-//	suite.True(found)
-//	suite.False(mm.Eligible)
-//	suite.Equal(uint64(1), mm.PairId)
-//	suite.Equal(mmAddr.String(), mm.Address)
-//
-//	// apply market maker with multiple pairs
-//	balanceBefore = suite.app.BankKeeper.GetAllBalances(ctx, mmAddr)
-//	err = k.ApplyBootstrap(ctx, mmAddr, []uint64{2, 3})
-//	suite.NoError(err)
-//
-//	mm, found = k.GetBootstrap(ctx, mmAddr, 2)
-//	suite.True(found)
-//	suite.False(mm.Eligible)
-//	suite.Equal(uint64(2), mm.PairId)
-//	suite.Equal(mmAddr.String(), mm.Address)
-//
-//	mm, found = k.GetBootstrap(ctx, mmAddr, 3)
-//	suite.True(found)
-//	suite.False(mm.Eligible)
-//	suite.Equal(uint64(3), mm.PairId)
-//	suite.Equal(mmAddr.String(), mm.Address)
-//
-//	// validate deposit amount
-//	balanceAfter = suite.app.BankKeeper.GetAllBalances(ctx, mmAddr)
-//	suite.EqualValues(balanceBefore.Sub(params.DepositAmount).Sub(params.DepositAmount), balanceAfter)
-//
-//	// already exist market maker for the pair 1
-//	err = k.ApplyBootstrap(ctx, mmAddr, []uint64{1})
-//	suite.ErrorIs(err, types.ErrAlreadyExistBootstrap)
-//
-//	// already exist market maker for the pair 1, 2
-//	err = k.ApplyBootstrap(ctx, mmAddr, []uint64{1, 2})
-//	suite.ErrorIs(err, types.ErrAlreadyExistBootstrap)
-//
-//	// If only one of them is duplicated, all of them fail
-//	err = k.ApplyBootstrap(ctx, mmAddr, []uint64{3, 4})
-//	suite.ErrorIs(err, types.ErrAlreadyExistBootstrap)
-//
-//	balanceAfter2 := suite.app.BankKeeper.GetAllBalances(ctx, mmAddr)
-//	suite.EqualValues(balanceAfter, balanceAfter2)
-//
-//}
-//
-//func (suite *KeeperTestSuite) TestApplyBootstrapUnregisteredPair() {
-//	ctx := suite.ctx
-//	k := suite.keeper
-//	mmAddr := suite.addrs[0]
-//
-//	// reset IncentivePairs
-//	suite.ResetIncentivePairs()
-//
-//	// apply market maker for the unregistered pair 1
-//	err := k.ApplyBootstrap(ctx, mmAddr, []uint64{1})
-//	suite.ErrorIs(err, types.ErrUnregisteredPairId)
-//
-//	// add IncentivePairs 1~7
-//	suite.SetIncentivePairs()
-//
-//	// apply market maker for the registered pair 1
-//	err = k.ApplyBootstrap(ctx, mmAddr, []uint64{1})
-//	suite.NoError(err)
-//	mm, found := k.GetBootstrap(ctx, mmAddr, 1)
-//	suite.True(found)
-//	suite.False(mm.Eligible)
-//
-//	// apply market maker for the unregistered pair 8
-//	err = k.ApplyBootstrap(ctx, mmAddr, []uint64{8})
-//	suite.ErrorIs(err, types.ErrUnregisteredPairId)
-//	_, found = k.GetBootstrap(ctx, mmAddr, 8)
-//	suite.False(found)
-//}
+import (
+	"fmt"
+	"time"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	_ "github.com/stretchr/testify/suite"
+
+	chain "github.com/crescent-network/crescent/v4/app"
+)
+
+func (suite *KeeperTestSuite) TestVesting() {
+	app := suite.app
+	ctx := suite.ctx
+	k := suite.keeper
+
+	t, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+	ctx = ctx.WithBlockTime(t)
+
+	_, pub1, addr1 := testdata.KeyTestPubAddr()
+	//_, pub2, addr2 := testdata.KeyTestPubAddr()
+
+	err := chain.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, initialBalances)
+	suite.Require().NoError(err)
+
+	acc := app.AccountKeeper.GetAccount(ctx, addr1)
+	acc.SetPubKey(pub1)
+	acc.SetSequence(10)
+	app.AccountKeeper.SetAccount(ctx, acc)
+
+	fmt.Println(acc)
+	fmt.Println(app.BankKeeper.SpendableCoins(ctx, acc.GetAddress()))
+
+	originalVesting := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(333333)))
+	startTime := ctx.BlockTime().Unix()
+	periods := vestingtypes.Periods{
+		vestingtypes.Period{Length: int64(23 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 111111)}},
+		vestingtypes.Period{Length: int64(23 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 111111)}},
+		vestingtypes.Period{Length: int64(23 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 111111)}},
+	}
+
+	k.Vesting(ctx, acc.GetAddress(), originalVesting, startTime, periods)
+
+	bacc := app.AccountKeeper.GetAccount(ctx, acc.GetAddress())
+	_, ok := bacc.(exported.VestingAccount)
+	suite.Require().True(ok)
+
+	fmt.Println(app.BankKeeper.SpendableCoins(ctx, acc.GetAddress()))
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
+
+	fmt.Println(app.BankKeeper.SpendableCoins(ctx, acc.GetAddress()), startTime, ctx.BlockTime().Unix())
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
+
+	fmt.Println(app.BankKeeper.SpendableCoins(ctx, acc.GetAddress()), startTime, ctx.BlockTime().Unix())
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
+
+	fmt.Println(app.BankKeeper.SpendableCoins(ctx, acc.GetAddress()), startTime, ctx.BlockTime().Unix())
+	//suite.EqualValues(balanceAfter, balanceAfter2)
+
+}

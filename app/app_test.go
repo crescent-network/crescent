@@ -36,6 +36,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/crescent-network/crescent/v4/x/bootstrap"
 	"github.com/crescent-network/crescent/v4/x/claim"
 	"github.com/crescent-network/crescent/v4/x/farming"
 	"github.com/crescent-network/crescent/v4/x/liquidfarming"
@@ -198,6 +199,7 @@ func TestRunMigrations(t *testing.T) {
 					"claim":              claim.AppModule{}.ConsensusVersion(),
 					"marketmaker":        marketmaker.AppModule{}.ConsensusVersion(),
 					"lpfarm":             lpfarm.AppModule{}.ConsensusVersion(),
+					"bootstrap":          bootstrap.AppModule{}.ConsensusVersion(),
 					"ibc":                ibc.AppModule{}.ConsensusVersion(),
 					"transfer":           transfer.AppModule{}.ConsensusVersion(),
 					"interchainaccounts": ica.AppModule{}.ConsensusVersion(),
@@ -261,6 +263,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"claim":         claim.AppModule{}.ConsensusVersion(),
 			"marketmaker":   marketmaker.AppModule{}.ConsensusVersion(),
 			"lpfarm":        lpfarm.AppModule{}.ConsensusVersion(),
+			"bootstrap":     bootstrap.AppModule{}.ConsensusVersion(),
 			"ibc":           ibc.AppModule{}.ConsensusVersion(),
 			"transfer":      transfer.AppModule{}.ConsensusVersion(),
 		},

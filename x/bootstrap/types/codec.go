@@ -22,6 +22,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgLimitOrder{},
 	)
+	// TODO: add msg modify
 
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

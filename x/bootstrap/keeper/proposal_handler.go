@@ -2,13 +2,41 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v4/x/bootstrap/types"
 )
 
 // HandleBootstrapProposal is a handler for executing a market maker proposal.
-func HandleBootstrapProposal(ctx sdk.Context, k Keeper, proposal *types.BootstrapProposal) error {
-	// TODO:
+func HandleBootstrapProposal(ctx sdk.Context, k Keeper, p *types.BootstrapProposal) error {
+	// keeper level validation logic
+	if k.bankKeeper.GetSupply(ctx, p.QuoteCoinDenom).Amount.IsZero() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom %s has no supply", p.QuoteCoinDenom)
+	}
+
+	_, found := k.liquidityKeeper.GetPair(ctx, p.PairId)
+	if !found {
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", p.PairId)
+	}
+
+	_, found = k.liquidityKeeper.GetPool(ctx, p.PoolId)
+	if !found {
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", p.PoolId)
+	}
+
+	// TODO: check return address is not vesting account
+
+	// TODO: send offer coin to reserve
+	//err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, types.ModuleName, mmAddr, p.OfferCoin)
+	//if err != nil {
+	//	return err
+	//}
+
+	//if k.bankKeeper.GetSupply(ctx, p.OfferCoin.).Amount.IsZero() {
+	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom %s has no supply", p.QuoteCoinDenom)
+	//}
+
+	/////////////////////////////////////////////////////
 
 	return nil
 }

@@ -26,9 +26,10 @@ func DefaultGenesisState() *GenesisState {
 
 // ValidateGenesis validates GenesisState.
 func ValidateGenesis(data GenesisState) error {
-	if err := data.Params.Validate(); err != nil {
-		return err
-	}
+	// TODO: TBD
+	//if err := data.Params.Validate(); err != nil {
+	//	return err
+	//}
 
 	//for _, record := range data.Bootstraps {
 	//	if err := record.Validate(); err != nil {

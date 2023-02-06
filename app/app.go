@@ -89,7 +89,7 @@ import (
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
@@ -111,6 +111,9 @@ import (
 	v3 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v3"
 	v4 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v4"
 	"github.com/crescent-network/crescent/v4/app/upgrades/testnet/rc4"
+	"github.com/crescent-network/crescent/v4/x/bootstrap"
+	bootstrapkeeper "github.com/crescent-network/crescent/v4/x/bootstrap/keeper"
+	bootstraptypes "github.com/crescent-network/crescent/v4/x/bootstrap/types"
 	"github.com/crescent-network/crescent/v4/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/v4/x/claim/keeper"
 	claimtypes "github.com/crescent-network/crescent/v4/x/claim/types"
@@ -187,6 +190,7 @@ var (
 		claim.AppModuleBasic{},
 		marketmaker.AppModuleBasic{},
 		lpfarm.AppModuleBasic{},
+		bootstrap.AppModuleBasic{},
 		ica.AppModuleBasic{},
 	)
 
@@ -207,6 +211,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		marketmakertypes.ModuleName:    nil,
 		lpfarmtypes.ModuleName:         nil,
+		bootstraptypes.ModuleName:      nil,
 		icatypes.ModuleName:            nil,
 	}
 )
@@ -259,6 +264,7 @@ type App struct {
 	ClaimKeeper         claimkeeper.Keeper
 	MarketMakerKeeper   marketmakerkeeper.Keeper
 	LPFarmKeeper        lpfarmkeeper.Keeper
+	BootstrapKeeper     bootstrapkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 
 	// scoped keepers
@@ -335,6 +341,7 @@ func NewApp(
 		claimtypes.StoreKey,
 		marketmakertypes.StoreKey,
 		lpfarmtypes.StoreKey,
+		bootstraptypes.StoreKey,
 		icahosttypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -491,6 +498,14 @@ func NewApp(
 		app.BankKeeper,
 		app.LiquidityKeeper,
 	)
+	app.BootstrapKeeper = bootstrapkeeper.NewKeeper(
+		appCodec,
+		keys[bootstraptypes.StoreKey],
+		app.GetSubspace(bootstraptypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.LiquidityKeeper,
+	)
 	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
 		appCodec,
 		keys[liquidstakingtypes.StoreKey],
@@ -523,7 +538,8 @@ func NewApp(
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposalHandler(app.FarmingKeeper)).
 		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper)).
-		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper))
+		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper)).
+		AddRoute(bootstraptypes.RouterKey, bootstrap.NewBootstrapProposalHandler(app.BootstrapKeeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,
@@ -628,6 +644,7 @@ func NewApp(
 		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.GovKeeper, app.LiquidityKeeper, app.LiquidStakingKeeper),
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
+		bootstrap.NewAppModule(appCodec, app.BootstrapKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		app.transferModule,
 		app.icaModule,
 	)
@@ -666,6 +683,8 @@ func NewApp(
 		claimtypes.ModuleName,
 		marketmakertypes.ModuleName,
 		icatypes.ModuleName,
+		// TODO: TBD
+		bootstraptypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		// EndBlocker of crisis module called AssertInvariants
@@ -698,6 +717,8 @@ func NewApp(
 		marketmakertypes.ModuleName,
 		lpfarmtypes.ModuleName,
 		icatypes.ModuleName,
+		// TODO: TBD
+		bootstraptypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -728,6 +749,8 @@ func NewApp(
 		claimtypes.ModuleName,
 		marketmakertypes.ModuleName,
 		lpfarmtypes.ModuleName,
+		// TODO: TBD
+		bootstraptypes.ModuleName,
 
 		// empty logic modules
 		paramstypes.ModuleName,
@@ -771,6 +794,7 @@ func NewApp(
 		liquidfarming.NewAppModule(appCodec, app.LiquidFarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
+		// TODO: add Bootstrap moodule
 		ibc.NewAppModule(app.IBCKeeper),
 		app.transferModule,
 	)
@@ -979,6 +1003,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(liquidfarmingtypes.ModuleName)
 	paramsKeeper.Subspace(marketmakertypes.ModuleName)
 	paramsKeeper.Subspace(lpfarmtypes.ModuleName)
+	paramsKeeper.Subspace(bootstraptypes.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 
 	return paramsKeeper

@@ -18,16 +18,18 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	bankKeeper    types.BankKeeper
-	accountKeeper types.AccountKeeper
+	accountKeeper   types.AccountKeeper
+	bankKeeper      types.BankKeeper
+	liquidityKeeper types.LiquidityKeeper
 }
 
 // NewKeeper returns a bootstrap keeper. It handles:
 // - creating new ModuleAccounts for each pool ReserveAccount
 // - sending to and from ModuleAccounts
 // - minting, burning PoolCoins
+// TODO: app.go
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, liquidityKeeper types.LiquidityKeeper,
 ) Keeper {
 	// ensure bootstrap module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -40,11 +42,12 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 	}
 
 	return Keeper{
-		storeKey:      key,
-		cdc:           cdc,
-		paramSpace:    paramSpace,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
+		storeKey:        key,
+		cdc:             cdc,
+		paramSpace:      paramSpace,
+		accountKeeper:   accountKeeper,
+		bankKeeper:      bankKeeper,
+		liquidityKeeper: liquidityKeeper,
 	}
 }
 

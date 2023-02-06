@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -22,18 +24,26 @@ func init() {
 func NewBootstrapProposal(
 	title string,
 	description string,
-	//inclusions []BootstrapHandle,
-	//exclusions []BootstrapHandle,
-	//rejections []BootstrapHandle,
-	//distributions []IncentiveDistribution,
+	returnAddress string,
+	offerCoin sdk.Coin,
+	quoteCoinDenom string,
+	minPrice sdk.Dec,
+	maxPrice sdk.Dec,
+	pairId uint64,
+	poolId uint64,
+	initialOrders []InitialOrder,
 ) *BootstrapProposal {
 	return &BootstrapProposal{
-		Title:       title,
-		Description: description,
-		//Inclusions:    inclusions,
-		//Exclusions:    exclusions,
-		//Rejections:    rejections,
-		//Distributions: distributions,
+		Title:          title,
+		Description:    description,
+		ReturnAddress:  returnAddress,
+		OfferCoin:      offerCoin,
+		QuoteCoinDenom: quoteCoinDenom,
+		MinPrice:       minPrice,
+		MaxPrice:       maxPrice,
+		PairId:         pairId,
+		PoolId:         poolId,
+		InitialOrders:  initialOrders,
 	}
 }
 
@@ -46,48 +56,47 @@ func (p *BootstrapProposal) ProposalRoute() string { return RouterKey }
 func (p *BootstrapProposal) ProposalType() string { return ProposalTypeBootstrap }
 
 func (p *BootstrapProposal) ValidateBasic() error {
-	//if len(p.Inclusions) == 0 && len(p.Exclusions) == 0 && len(p.Rejections) == 0 && len(p.Distributions) == 0 {
-	//	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal request must not be empty")
-	//}
-	//
-	//// checking duplicated market maker for inclusion, exclusion, rejection
-	//addrMap := make(map[BootstrapHandle]struct{})
-	//
-	//for _, mm := range p.Inclusions {
-	//	if _, ok := addrMap[mm]; ok {
-	//		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market maker can't be duplicated")
-	//	}
-	//	addrMap[mm] = struct{}{}
-	//	if err := mm.Validate(); err != nil {
-	//		return err
-	//	}
-	//}
-	//
-	//for _, mm := range p.Exclusions {
-	//	if _, ok := addrMap[mm]; ok {
-	//		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market maker can't be duplicated")
-	//	}
-	//	addrMap[mm] = struct{}{}
-	//	if err := mm.Validate(); err != nil {
-	//		return err
-	//	}
-	//}
-	//
-	//for _, mm := range p.Rejections {
-	//	if _, ok := addrMap[mm]; ok {
-	//		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market maker can't be duplicated")
-	//	}
-	//	addrMap[mm] = struct{}{}
-	//	if err := mm.Validate(); err != nil {
-	//		return err
-	//	}
-	//}
-	//
-	//for _, dp := range p.Distributions {
-	//	if err := dp.Validate(); err != nil {
-	//		return err
-	//	}
-	//}
+	_, err := sdk.AccAddressFromBech32(p.ReturnAddress)
+	if err != nil {
+		return err
+	}
+
+	if err = p.OfferCoin.Validate(); err != nil {
+		return err
+	}
+
+	if err = sdk.ValidateDenom(p.QuoteCoinDenom); err != nil {
+		return err
+	}
+
+	if !p.MinPrice.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min price should be positive")
+	}
+
+	if !p.MaxPrice.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price should be positive")
+	}
+
+	if p.MaxPrice.LTE(p.MinPrice) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price should be greater than min price")
+	}
+
+	if p.PairId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid pair id")
+	}
+
+	if p.PoolId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid pool id")
+	}
+
+	// validate ascending order
+	lastPrice := sdk.ZeroDec()
+	for _, io := range p.InitialOrders {
+		if lastPrice.GTE(io.Price) {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "initial orders should be sorted ascending order")
+		}
+		lastPrice = io.Price
+	}
 	return gov.ValidateAbstract(p)
 }
 

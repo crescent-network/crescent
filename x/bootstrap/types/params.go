@@ -11,7 +11,7 @@ import (
 
 const (
 	AddressType = farmingtypes.AddressType32Bytes
-	//ClaimableIncentiveReserveAccName string = "ClaimableIncentiveReserveAcc"
+	//SampleReserveAccName string = "SampleReserveAcc"
 )
 
 // Parameter store keys
@@ -39,8 +39,7 @@ var (
 	// TODO: TBD
 	DefaultOrderExtraGas = sdk.Gas(37000)
 
-	//DefaultIncentiveBudgetAddress = farmingtypes.DeriveAddress(AddressType, farmingtypes.ModuleName, "ecosystem_incentive_mm")
-	//ClaimableIncentiveReserveAcc = farmingtypes.DeriveAddress(AddressType, ModuleName, ClaimableIncentiveReserveAccName)
+	//SampleReserveAcc = farmingtypes.DeriveAddress(AddressType, ModuleName, SampleReserveAccName)
 	//DepositReserveAcc            = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
 )
 
@@ -78,25 +77,6 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyOrderExtraGas, &p.OrderExtraGas, validateExtraGas),
 	}
 }
-
-//func (p Params) IncentiveBudgetAcc() sdk.AccAddress {
-//	acc, _ := sdk.AccAddressFromBech32(p.IncentiveBudgetAddress)
-//	return acc
-//}
-
-//func (p Params) IncentivePairsMap() map[uint64]IncentivePair {
-//	iMap := make(map[uint64]IncentivePair)
-//	for _, pair := range p.IncentivePairs {
-//		iMap[pair.PairId] = pair
-//	}
-//	return iMap
-//}
-
-// String returns a human-readable string representation of the parameters.
-//func (p Params) String() string {
-//	out, _ := yaml.Marshal(p)
-//	return string(out)
-//}
 
 // Validate validates parameters.
 func (p Params) Validate() error {
@@ -147,14 +127,15 @@ func validateRequiredAmountReductionRate(i interface{}) error {
 }
 
 func validateInitialStageRequiredAmount(i interface{}) error {
-	v, ok := i.(sdk.Coins)
+	_, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if err := v.Validate(); err != nil {
-		return err
-	}
+	// TODO: sdk.Int or sdk.Coin
+	//if err := v.Validate(); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
