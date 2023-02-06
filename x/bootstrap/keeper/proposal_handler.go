@@ -38,6 +38,7 @@ func HandleBootstrapProposal(ctx sdk.Context, k Keeper, p *types.BootstrapPropos
 
 	/////////////////////////////////////////////////////
 
+	// TODO: set initial orders
 	return nil
 }
 
