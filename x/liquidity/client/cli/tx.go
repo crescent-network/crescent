@@ -38,6 +38,7 @@ func GetTxCmd() *cobra.Command {
 		NewCancelOrderCmd(),
 		NewCancelAllOrdersCmd(),
 		NewCancelMMOrderCmd(),
+		NewBatchTestCmd(),
 	)
 
 	return cmd
@@ -634,6 +635,42 @@ $ %s tx %s cancel-mm-order 1 --from mykey
 			}
 
 			msg := types.NewMsgCancelMMOrder(clientCtx.GetFromAddress(), pairId)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewBatchTestCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "batch-test [amount]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Batch test, input uint64 amount, return sum of amount of the batch",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Batch test, input uint64 amount, return sum of amount of the batch.
+
+Example:
+$ %s tx %s batch-test 1 --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			amount, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse amount: %w", err)
+			}
+
+			msg := types.NewMsgBatchTest(clientCtx.GetFromAddress(), amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

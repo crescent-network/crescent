@@ -467,6 +467,26 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) 
 	return nil
 }
 
+func (k Keeper) BatchTest(ctx sdk.Context, msg *types.MsgBatchTest) error {
+	sumOfAmount := uint64(0)
+	for _, value := range k.GetBatchTests(ctx, ctx.BlockHeight()) {
+		sumOfAmount += value.Amount
+	}
+
+	fmt.Println("on msg level", msg.String(), sumOfAmount)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeBatchTest,
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeBatchTestAmount, strconv.FormatUint(msg.Amount, 10)),
+			sdk.NewAttribute(types.AttributeBatchTestAmountSum, strconv.FormatUint(sumOfAmount, 10)),
+		),
+	})
+
+	return nil
+}
+
 func (k Keeper) cancelMMOrder(ctx sdk.Context, orderer sdk.AccAddress, pair types.Pair, skipIfNotFound bool) (canceledOrderIds []uint64, err error) {
 	index, found := k.GetMMOrderIndex(ctx, orderer, pair.Id)
 	if found {

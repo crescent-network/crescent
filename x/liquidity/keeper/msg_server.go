@@ -139,3 +139,13 @@ func (m msgServer) CancelMMOrder(goCtx context.Context, msg *types.MsgCancelMMOr
 
 	return &types.MsgCancelMMOrderResponse{}, nil
 }
+
+func (m msgServer) BatchTest(goCtx context.Context, msg *types.MsgBatchTest) (*types.MsgBatchTestResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := m.Keeper.BatchTest(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgBatchTestResponse{}, nil
+}

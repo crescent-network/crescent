@@ -43,6 +43,8 @@ service Msg {
 
   // CancelMMOrder defines a method for cancelling previously placed market making orders
   rpc CancelMMOrder(MsgCancelMMOrder) returns (MsgCancelMMOrderResponse);
+
+  rpc BatchTest(MsgBatchTest) returns (MsgBatchTestResponse);
 }
 
 // MsgCreatePair defines an SDK message for creating a pair.
@@ -265,3 +267,10 @@ message MsgCancelMMOrder {
 
 // MsgCancelMMOrderResponse defines the Msg/CancelMMOrder response type.
 message MsgCancelMMOrderResponse {}
+
+message MsgBatchTest {
+  string orderer = 1;
+  uint64 amount  = 2;
+}
+
+message MsgBatchTestResponse {}

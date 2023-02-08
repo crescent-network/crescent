@@ -40,6 +40,9 @@ var (
 	OrderKeyPrefix                = []byte{0xb2}
 	OrderIndexKeyPrefix           = []byte{0xb3}
 	MMOrderIndexKeyPrefix         = []byte{0xb6}
+
+	LastBatchTestIdKey = []byte{0xc0}
+	BatchTestPrefix    = []byte{0xc1}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
@@ -149,6 +152,10 @@ func GetOrderIndexKeyPrefix(orderer sdk.AccAddress) []byte {
 // orderer and pair id.
 func GetMMOrderIndexKey(orderer sdk.AccAddress, pairId uint64) []byte {
 	return append(append(MMOrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...), sdk.Uint64ToBigEndian(pairId)...)
+}
+
+func GetBatchTestIndexKey(height int64, id uint64) []byte {
+	return append(append(BatchTestPrefix, sdk.Uint64ToBigEndian(uint64(height))...), sdk.Uint64ToBigEndian(id)...)
 }
 
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.

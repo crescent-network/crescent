@@ -18,7 +18,10 @@ const (
 	EventTypeOrderResult      = "order_result"
 	EventTypeUserOrderMatched = "user_order_matched"
 	EventTypePoolOrderMatched = "pool_order_matched"
+	EventTypeBatchTest        = "batch_test"
 
+	AttributeBatchTestAmount       = "batch_test_amount"
+	AttributeBatchTestAmountSum    = "batch_test_amount_sum"
 	AttributeKeyCreator            = "creator"
 	AttributeKeyDepositor          = "depositor"
 	AttributeKeyWithdrawer         = "withdrawer"

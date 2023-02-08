@@ -204,6 +204,11 @@ message MMOrderIndex {
   repeated uint64 order_ids = 3;
 }
 
+message BatchTest {
+  string orderer = 1;
+  uint64 amount  = 2;
+}
+
 // PoolType enumerates pool types.
 enum PoolType {
   option (gogoproto.goproto_enum_prefix) = false;

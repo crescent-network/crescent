@@ -89,7 +89,7 @@ import (
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
@@ -801,6 +801,7 @@ func NewApp(
 	app.SetAnteHandler(anteHandler)
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetMidBlocker(app.MidBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
 	app.SetUpgradeStoreLoaders()
@@ -825,6 +826,47 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 // BeginBlocker application updates every begin block.
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
+}
+
+func (app *App) MidBlocker(ctx sdk.Context, req abci.RequestMidBlock) abci.ResponseMidBlock {
+	// iterate txs
+	for _, tx := range req.Txs {
+		// decode
+		tx, err := app.TxDecoder(tx)
+		if err != nil {
+			continue
+		}
+
+		// validation
+		msgs := tx.GetMsgs()
+		for _, msg := range msgs {
+			err := msg.ValidateBasic()
+			if err != nil {
+				break
+			}
+		}
+
+		// TODO: check-tx, anteHandle, app.runMsgs(runMsgCtx, msgs, mode)
+
+		// iterate msgs, add custom mid-block logic
+		for _, msg := range msgs {
+			// filter only target msg
+			switch msg := msg.(type) {
+			case *liquiditytypes.MsgBatchTest:
+				// set ascending id
+				id := app.LiquidityKeeper.GetLastBatchTestId(ctx) + 1
+				app.LiquidityKeeper.SetLastBatchTestId(ctx, id)
+				// store msg with height, id
+				app.LiquidityKeeper.SetBatchTest(ctx, ctx.BlockHeight(), id, liquiditytypes.BatchTest{
+					Orderer: msg.Orderer,
+					Amount:  msg.Amount,
+				})
+			}
+		}
+	}
+
+	// TODO: add result, events
+	return abci.ResponseMidBlock{}
 }
 
 // EndBlocker application updates every end block.

@@ -21,6 +21,7 @@ var (
 	_ sdk.Msg = (*MsgCancelOrder)(nil)
 	_ sdk.Msg = (*MsgCancelAllOrders)(nil)
 	_ sdk.Msg = (*MsgCancelMMOrder)(nil)
+	_ sdk.Msg = (*MsgBatchTest)(nil)
 )
 
 // Message types for the liquidity module
@@ -36,6 +37,7 @@ const (
 	TypeMsgCancelOrder      = "cancel_order"
 	TypeMsgCancelAllOrders  = "cancel_all_orders"
 	TypeMsgCancelMMOrder    = "cancel_mm_order"
+	TypeMsgBatchTest        = "batch_test"
 )
 
 // NewMsgCreatePair returns a new MsgCreatePair.
@@ -726,6 +728,50 @@ func (msg MsgCancelMMOrder) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgCancelMMOrder) GetOrderer() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func NewMsgBatchTest(
+	orderer sdk.AccAddress,
+	amount uint64,
+) *MsgBatchTest {
+	return &MsgBatchTest{
+		Orderer: orderer.String(),
+		Amount:  amount,
+	}
+}
+
+func (msg MsgBatchTest) Route() string { return RouterKey }
+
+func (msg MsgBatchTest) Type() string { return TypeMsgBatchTest }
+
+func (msg MsgBatchTest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Orderer); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid orderer address: %v", err)
+	}
+	if msg.Amount == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount not be 0")
+	}
+	return nil
+}
+
+func (msg MsgBatchTest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgBatchTest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgBatchTest) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Orderer)
 	if err != nil {
 		panic(err)

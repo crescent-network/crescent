@@ -29,6 +29,25 @@ func (k Keeper) SetLastPairId(ctx sdk.Context, id uint64) {
 	store.Set(types.LastPairIdKey, bz)
 }
 
+func (k Keeper) GetLastBatchTestId(ctx sdk.Context) (id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.LastBatchTestIdKey)
+	if bz == nil {
+		id = 0 // initialize
+	} else {
+		var val gogotypes.UInt64Value
+		k.cdc.MustUnmarshal(bz, &val)
+		id = val.GetValue()
+	}
+	return
+}
+
+func (k Keeper) SetLastBatchTestId(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
+	store.Set(types.LastBatchTestIdKey, bz)
+}
+
 // GetPair returns pair object for the given pair id.
 func (k Keeper) GetPair(ctx sdk.Context, id uint64) (pair types.Pair, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -584,4 +603,47 @@ func (k Keeper) GetAllMMOrderIndexes(ctx sdk.Context) (indexes []types.MMOrderIn
 func (k Keeper) DeleteMMOrderIndex(ctx sdk.Context, index types.MMOrderIndex) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetMMOrderIndexKey(index.GetOrderer(), index.PairId))
+}
+
+func (k Keeper) GetBatchTest(ctx sdk.Context, height int64, id uint64) (index types.BatchTest, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetBatchTestIndexKey(height, id))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &index)
+	return index, true
+}
+
+func (k Keeper) SetBatchTest(ctx sdk.Context, height int64, id uint64, index types.BatchTest) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&index)
+	store.Set(types.GetBatchTestIndexKey(height, id), bz)
+}
+
+func (k Keeper) IterateAllBatchTest(ctx sdk.Context, height int64, cb func(index types.BatchTest) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, append(types.BatchTestPrefix, sdk.Uint64ToBigEndian(uint64(height))...))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var index types.BatchTest
+		k.cdc.MustUnmarshal(iter.Value(), &index)
+		stop, err := cb(index)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
+func (k Keeper) GetBatchTests(ctx sdk.Context, height int64) (indexes []types.BatchTest) {
+	indexes = []types.BatchTest{}
+	_ = k.IterateAllBatchTest(ctx, height, func(index types.BatchTest) (stop bool, err error) {
+		indexes = append(indexes, index)
+		return false, nil
+	})
+	return
 }

@@ -22,6 +22,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCancelOrder{}, "liquidity/MsgCancelOrder", nil)
 	cdc.RegisterConcrete(&MsgCancelAllOrders{}, "liquidity/MsgCancelAllOrders", nil)
 	cdc.RegisterConcrete(&MsgCancelMMOrder{}, "liquidity/MsgCancelMMOrder", nil)
+	cdc.RegisterConcrete(&MsgBatchTest{}, "liquidity/MsgBatchTest", nil)
 }
 
 // RegisterInterfaces registers the x/liquidity interfaces types with the
@@ -40,6 +41,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCancelOrder{},
 		&MsgCancelAllOrders{},
 		&MsgCancelMMOrder{},
+		&MsgBatchTest{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
