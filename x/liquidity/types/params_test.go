@@ -78,6 +78,7 @@ func TestParams_Validate(t *testing.T) {
 			"minimum initial deposit amount must not be negative: -1",
 		},
 		{
+
 			"negative MaxPriceLimitRatio",
 			func(params *types.Params) {
 				params.MaxPriceLimitRatio = sdk.NewDec(-1)
@@ -90,6 +91,13 @@ func TestParams_Validate(t *testing.T) {
 				params.MaxNumMarketMakingOrderTicks = 0
 			},
 			"max number of market making order ticks must be positive: 0",
+		},
+		{
+			"zero MaxNumMarketMakingOrdersPerPair",
+			func(params *types.Params) {
+				params.MaxNumMarketMakingOrdersPerPair = 0
+			},
+			"max number of market making orders per pair must be positive: 0",
 		},
 		{
 			"negative MaxOrderLifespan",

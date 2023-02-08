@@ -128,14 +128,3 @@ func (m msgServer) CancelAllOrders(goCtx context.Context, msg *types.MsgCancelAl
 
 	return &types.MsgCancelAllOrdersResponse{}, nil
 }
-
-// CancelMMOrder defines a method to cancel all previous market making orders.
-func (m msgServer) CancelMMOrder(goCtx context.Context, msg *types.MsgCancelMMOrder) (*types.MsgCancelMMOrderResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if _, err := m.Keeper.CancelMMOrder(ctx, msg); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgCancelMMOrderResponse{}, nil
-}

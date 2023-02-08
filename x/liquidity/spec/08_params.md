@@ -4,25 +4,26 @@
 
 The `liquidity` module contains the following parameters:
 
-| Key                          | Type               | Example                                                        |
-|------------------------------|--------------------|----------------------------------------------------------------|
-| BatchSize                    | uint32             | 1                                                              |
-| TickPrecision                | uint32             | 3                                                              |
-| FeeCollectorAddress          | string             | cre1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvq303p8d |
-| DustCollectorAddress         | string             | cre1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0s4xymnj |
-| MinInitialPoolCoinSupply     | string (sdk.Int)   | "1000000000000"                                                |
-| PairCreationFee              | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                         |
-| PoolCreationFee              | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                         |
-| MinInitialDepositAmount      | string (sdk.Int)   | "1000000"                                                      |
-| MaxPriceLimitRatio           | string (sdk.Dec)   | "0.100000000000000000"                                         |
-| MaxNumMarketMakingOrderTicks | uint32             | 10                                                             |
-| MaxOrderLifespan             | time.Duration      | 24hours                                                        |
-| SwapFeeRate                  | string (sdk.Dec)   | "0.000000000000000000"                                         |
-| WithdrawFeeRate              | string (sdk.Dec)   | "0.000000000000000000"                                         |
-| DepositExtraGas              | uint64 (sdk.Gas)   | 60000                                                          |
-| WithdrawExtraGas             | uint64 (sdk.Gas)   | 64000                                                          |
-| OrderExtraGas                | uint64 (sdk.Gas)   | 37000                                                          |
-| MaxNumActivePoolsPerPair     | uint32             | 20                                                             |
+| Key                             | Type               | Example                                                        |
+|---------------------------------|--------------------|----------------------------------------------------------------|
+| BatchSize                       | uint32             | 1                                                              |
+| TickPrecision                   | uint32             | 3                                                              |
+| FeeCollectorAddress             | string             | cre1zdew6yxyw92z373yqp756e0x4rvd2het37j0a2wjp7fj48eevxvq303p8d |
+| DustCollectorAddress            | string             | cre1suads2mkd027cmfphmk9fpuwcct4d8ys02frk8e64hluswfwfj0s4xymnj |
+| MinInitialPoolCoinSupply        | string (sdk.Int)   | "1000000000000"                                                |
+| PairCreationFee                 | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                         |
+| PoolCreationFee                 | string (sdk.Coins) | [{"denom":"stake","amount":"1000000"}]                         |
+| MinInitialDepositAmount         | string (sdk.Int)   | "1000000"                                                      |
+| MaxPriceLimitRatio              | string (sdk.Dec)   | "0.100000000000000000"                                         |
+| MaxNumMarketMakingOrderTicks    | uint32             | 10                                                             |
+| MaxNumMarketMakingOrdersPerPair | uint32             | 15                                                             |
+| MaxOrderLifespan                | time.Duration      | 24hours                                                        |
+| SwapFeeRate                     | string (sdk.Dec)   | "0.000000000000000000"                                         |
+| WithdrawFeeRate                 | string (sdk.Dec)   | "0.000000000000000000"                                         |
+| DepositExtraGas                 | uint64 (sdk.Gas)   | 60000                                                          |
+| WithdrawExtraGas                | uint64 (sdk.Gas)   | 64000                                                          |
+| OrderExtraGas                   | uint64 (sdk.Gas)   | 37000                                                          |
+| MaxNumActivePoolsPerPair        | uint32             | 20                                                             |
 
 ## BatchSize
 
@@ -75,8 +76,14 @@ the module will reject the order.
 
 ## MaxNumMarketMakingOrderTicks
 
+***This parameter has been deprecated.***
+
 The maximum number of limit orders made from the `MsgMMOrder` message on each
 side(buy/sell).
+
+## MaxNumMarketMakingOrdersPerPair
+
+The maximum number of MM orders made from a market maker in each pair.
 
 ## MaxOrderLifespan
 

@@ -38,22 +38,32 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetOrder(ctx, order)
 		k.SetOrderIndex(ctx, order)
 	}
-	for _, index := range genState.MarketMakingOrderIndexes {
-		k.SetMMOrderIndex(ctx, index)
+	for _, record := range genState.NumMarketMakingOrdersRecords {
+		ordererAddr := sdk.MustAccAddressFromBech32(record.Orderer)
+		k.SetNumMMOrders(ctx, ordererAddr, record.PairId, record.NumMarketMakingOrders)
 	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	numMMOrdersRecords := []types.NumMMOrdersRecord{}
+	k.IterateAllNumMMOrders(ctx, func(ordererAddr sdk.AccAddress, pairId uint64, numMMOrders uint32) (stop bool) {
+		numMMOrdersRecords = append(numMMOrdersRecords, types.NumMMOrdersRecord{
+			Orderer:               ordererAddr.String(),
+			PairId:                pairId,
+			NumMarketMakingOrders: numMMOrders,
+		})
+		return false
+	})
 	return &types.GenesisState{
-		Params:                   k.GetParams(ctx),
-		LastPairId:               k.GetLastPairId(ctx),
-		LastPoolId:               k.GetLastPoolId(ctx),
-		Pairs:                    k.GetAllPairs(ctx),
-		Pools:                    k.GetAllPools(ctx),
-		DepositRequests:          k.GetAllDepositRequests(ctx),
-		WithdrawRequests:         k.GetAllWithdrawRequests(ctx),
-		Orders:                   k.GetAllOrders(ctx),
-		MarketMakingOrderIndexes: k.GetAllMMOrderIndexes(ctx),
+		Params:                       k.GetParams(ctx),
+		LastPairId:                   k.GetLastPairId(ctx),
+		LastPoolId:                   k.GetLastPoolId(ctx),
+		Pairs:                        k.GetAllPairs(ctx),
+		Pools:                        k.GetAllPools(ctx),
+		DepositRequests:              k.GetAllDepositRequests(ctx),
+		WithdrawRequests:             k.GetAllWithdrawRequests(ctx),
+		Orders:                       k.GetAllOrders(ctx),
+		NumMarketMakingOrdersRecords: numMMOrdersRecords,
 	}
 }
