@@ -21,23 +21,26 @@ message Params {
   string bootstrap_fee_rate = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
+  string fee_collector_address = 3;
+
+  // TODO: TBD, add other fee params
+
   // reduction rate of the required amount
-  string required_amount_reduction_rate = 3
+  string required_amount_reduction_rate = 4
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
   // required amount for the initial stage
-  // TODO: TBD coins or int
-  string initial_stage_required_amount = 4
+  string initial_stage_required_amount = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // precision of the tick
-  uint32 tick_precision = 5;
+  uint32 tick_precision = 6;
 
-  uint64 order_extra_gas = 6
+  uint64 order_extra_gas = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
 
   // vesting periods of the bootstrap coin
-  repeated int64 vesting_periods = 7;
+  repeated int64 vesting_periods = 8;
 }
 
 // Order defines an order.
@@ -69,6 +72,8 @@ message Order {
   string price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
   OrderStatus status = 10;
+
+  bool is_initial = 11;
 }
 
 // Pool defines bootstrap pool object
@@ -96,12 +101,6 @@ message BootstrapPool {
   string escrow_address = 7;
   // address of the fee collector (incl. dust colletor)
   string fee_collector_address = 8;
-
-  // re-buy is enabled or not
-  bool re_buy_enabled = 9;
-
-  // re-buy price compared to the selling price
-  string re_buy_price_rate = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }
 
 // OrderDirection enumerates order directions.

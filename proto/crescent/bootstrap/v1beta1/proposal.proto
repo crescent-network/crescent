@@ -47,12 +47,6 @@ message BootstrapProposal {
 
   // duration of the stage
   google.protobuf.Duration stage_duration = 13 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
-
-  // re-buy is enabled or not
-  bool re_buy_enabled = 14;
-
-  // re-buy price compared to the selling price
-  string re_buy_price_rate = 15 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }
 
 message InitialOrder {
@@ -62,4 +56,7 @@ message InitialOrder {
   cosmos.base.v1beta1.Coin offer_coin = 1 [(gogoproto.nullable) = false];
 
   string price = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // direction specifies the order direction; either buy or sell
+  OrderDirection direction = 3;
 }

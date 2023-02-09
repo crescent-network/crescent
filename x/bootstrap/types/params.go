@@ -16,25 +16,28 @@ const (
 
 // Parameter store keys
 var (
+	KeyBootstrapCreationFeeRate    = []byte("BootstrapCreationFeeRate")
 	KeyBootstrapFeeRate            = []byte("BootstrapFeeRate")
-	KeyInitialStageRequiredAmount  = []byte("InitialStageRequiredAmount")
 	KeyRequiredAmountReductionRate = []byte("RequiredAmountReductionRate")
-	KeyTickPrecision               = []byte("TickPrecision")
+	KeyInitialStageRequiredAmount  = []byte("InitialStageRequiredAmount")
 	KeyFeeCollectorAddress         = []byte("FeeCollectorAddress")
-	KeyDustCollectorAddress        = []byte("DustCollectorAddress")
-	KeyBootstrapCreationFee        = []byte("BootstrapCreationFee")
+	KeyTickPrecision               = []byte("TickPrecision")
 	KeyOrderExtraGas               = []byte("OrderExtraGas")
+	KeyVestingPeriods              = []byte("VestingPeriods")
 
+	// TODO: need to fix default value
+	DefaultBootstrapCreationFeeRate    = sdk.MustNewDecFromStr("0.05")
 	DefaultBootstrapFeeRate            = sdk.MustNewDecFromStr("0.05")
 	DefaultInitialStageRequiredAmount  = sdk.NewInt(10_000_000_000)
 	DefaultRequiredAmountReductionRate = sdk.MustNewDecFromStr("0.5")
 	DefaultTickPrecision               = uint32(3)
 
 	// TODO: TBD
-	DefaultBootstrapCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	//DefaultBootstrapCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 
-	DefaultFeeCollectorAddress  = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
-	DefaultDustCollectorAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "DustCollector")
+	DefaultFeeCollectorAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
+
+	DefaultVestingPeriods = []int64{2592000, 2592000, 2592000}
 
 	// TODO: TBD
 	DefaultOrderExtraGas = sdk.Gas(37000)
@@ -53,28 +56,28 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default bootstrap module parameters.
 func DefaultParams() Params {
 	return Params{
+		BootstrapCreationFeeRate:    DefaultBootstrapCreationFeeRate,
 		BootstrapFeeRate:            DefaultBootstrapFeeRate,
-		InitialStageRequiredAmount:  DefaultInitialStageRequiredAmount,
 		RequiredAmountReductionRate: DefaultRequiredAmountReductionRate,
-		TickPrecision:               DefaultTickPrecision,
+		InitialStageRequiredAmount:  DefaultInitialStageRequiredAmount,
 		FeeCollectorAddress:         DefaultFeeCollectorAddress.String(),
-		DustCollectorAddress:        DefaultDustCollectorAddress.String(),
-		BootstrapCreationFee:        DefaultBootstrapCreationFee,
+		TickPrecision:               DefaultTickPrecision,
 		OrderExtraGas:               DefaultOrderExtraGas,
+		VestingPeriods:              DefaultVestingPeriods,
 	}
 }
 
 // ParamSetPairs implements paramstypes.ParamSet.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
+		paramstypes.NewParamSetPair(KeyBootstrapCreationFeeRate, &p.BootstrapFeeRate, validateBootstrapFeeRate),
 		paramstypes.NewParamSetPair(KeyBootstrapFeeRate, &p.BootstrapFeeRate, validateBootstrapFeeRate),
-		paramstypes.NewParamSetPair(KeyInitialStageRequiredAmount, &p.InitialStageRequiredAmount, validateInitialStageRequiredAmount),
 		paramstypes.NewParamSetPair(KeyRequiredAmountReductionRate, &p.RequiredAmountReductionRate, validateRequiredAmountReductionRate),
-		paramstypes.NewParamSetPair(KeyTickPrecision, &p.TickPrecision, validateTickPrecision),
+		paramstypes.NewParamSetPair(KeyInitialStageRequiredAmount, &p.InitialStageRequiredAmount, validateInitialStageRequiredAmount),
 		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &p.FeeCollectorAddress, validateFeeCollectorAddress),
-		paramstypes.NewParamSetPair(KeyDustCollectorAddress, &p.DustCollectorAddress, validateDustCollectorAddress),
-		paramstypes.NewParamSetPair(KeyBootstrapCreationFee, &p.BootstrapCreationFee, validateBootstrapCreationFee),
+		paramstypes.NewParamSetPair(KeyTickPrecision, &p.TickPrecision, validateTickPrecision),
 		paramstypes.NewParamSetPair(KeyOrderExtraGas, &p.OrderExtraGas, validateExtraGas),
+		paramstypes.NewParamSetPair(KeyVestingPeriods, &p.VestingPeriods, validateVestingPeriods),
 	}
 }
 
@@ -84,14 +87,14 @@ func (p Params) Validate() error {
 		value     interface{}
 		validator func(interface{}) error
 	}{
+		{p.BootstrapCreationFeeRate, validateBootstrapFeeRate},
 		{p.BootstrapFeeRate, validateBootstrapFeeRate},
-		{p.InitialStageRequiredAmount, validateInitialStageRequiredAmount},
 		{p.RequiredAmountReductionRate, validateRequiredAmountReductionRate},
-		{p.TickPrecision, validateTickPrecision},
+		{p.InitialStageRequiredAmount, validateInitialStageRequiredAmount},
 		{p.FeeCollectorAddress, validateFeeCollectorAddress},
-		{p.DustCollectorAddress, validateDustCollectorAddress},
-		{p.BootstrapCreationFee, validateBootstrapCreationFee},
+		{p.TickPrecision, validateTickPrecision},
 		{p.OrderExtraGas, validateExtraGas},
+		{p.VestingPeriods, validateVestingPeriods},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
@@ -167,37 +170,6 @@ func validateFeeCollectorAddress(i interface{}) error {
 	return nil
 }
 
-func validateDustCollectorAddress(i interface{}) error {
-	v, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v == "" {
-		return fmt.Errorf("dust collector address must not be empty")
-	}
-
-	_, err := sdk.AccAddressFromBech32(v)
-	if err != nil {
-		return fmt.Errorf("invalid account address: %v", v)
-	}
-
-	return nil
-}
-
-func validateBootstrapCreationFee(i interface{}) error {
-	v, ok := i.(sdk.Coins)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if err := v.Validate(); err != nil {
-		return fmt.Errorf("invalid bootstrap creation fee: %w", err)
-	}
-
-	return nil
-}
-
 func validateExtraGas(i interface{}) error {
 	_, ok := i.(sdk.Gas)
 	if !ok {
@@ -206,3 +178,31 @@ func validateExtraGas(i interface{}) error {
 
 	return nil
 }
+
+func validateVestingPeriods(i interface{}) error {
+	v, ok := i.([]int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	for _, p := range v {
+		if 60 > p {
+			return fmt.Errorf("vesting period length should be over 60: %d", p)
+		}
+	}
+
+	return nil
+}
+
+//func validateBootstrapCreationFee(i interface{}) error {
+//	v, ok := i.(sdk.Coins)
+//	if !ok {
+//		return fmt.Errorf("invalid parameter type: %T", i)
+//	}
+//
+//	if err := v.Validate(); err != nil {
+//		return fmt.Errorf("invalid bootstrap creation fee: %w", err)
+//	}
+//
+//	return nil
+//}
