@@ -84,6 +84,10 @@ service Query {
   rpc OrderBooks(QueryOrderBooksRequest) returns (QueryOrderBooksResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/order_books";
   }
+
+  rpc NumMMOrders(QueryNumMMOrdersRequest) returns (QueryNumMMOrdersResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/num_mm_orders/{orderer}/{pair_id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -246,6 +250,15 @@ message QueryOrderBooksRequest {
 // QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.
 message QueryOrderBooksResponse {
   repeated OrderBookPairResponse pairs = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryNumMMOrdersRequest {
+  string orderer = 1;
+  uint64 pair_id = 2;
+}
+
+message QueryNumMMOrdersResponse {
+  uint32 num_market_making_orders = 1;
 }
 
 //

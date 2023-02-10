@@ -395,6 +395,21 @@ func (s *KeeperTestSuite) TestMMOrderNumberLimit() {
 	s.nextBlock()
 
 	// Now it is possible to place one more MM order.
+	order := s.mmOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy,
+		utils.ParseDec("1.1"), sdk.NewInt(1_000000), time.Hour, true)
+
+	s.nextBlock()
+	_, err = s.keeper.MMOrder(
+		s.ctx,
+		types.NewMsgMMOrder(
+			s.addr(1), pair.Id, types.OrderDirectionBuy,
+			utils.ParseCoin("1_100000denom2"), "denom1",
+			utils.ParseDec("1.1"), sdk.NewInt(1_000000), 0))
+	s.Require().ErrorIs(err, types.ErrMaxNumMMOrdersExceeded)
+	// Cancelling a market making order makes it possible to place more
+	// MM orders again.
+	s.cancelOrder(s.addr(1), order.PairId, order.Id)
 	s.mmOrder(
 		s.addr(1), pair.Id, types.OrderDirectionBuy,
 		utils.ParseDec("1.1"), sdk.NewInt(1_000000), time.Hour, true)

@@ -1088,3 +1088,58 @@ func (s *KeeperTestSuite) TestSellOrdersOnlyOrderBook() {
 		}
 	}
 }
+
+func (s *KeeperTestSuite) TestGRPCQueryNumMMOrders() {
+	creator := s.addr(0)
+	pair := s.createPair(creator, "denom1", "denom2", true)
+
+	s.mmOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy,
+		utils.ParseDec("0.9"), sdk.NewInt(1_000000), time.Hour, true)
+	s.mmOrder(
+		s.addr(1), pair.Id, types.OrderDirectionSell,
+		utils.ParseDec("1.1"), sdk.NewInt(1_000000), time.Hour, true)
+
+	liquidity.EndBlocker(s.ctx, s.keeper)
+
+	for _, tc := range []struct {
+		name      string
+		req       *types.QueryNumMMOrdersRequest
+		expectErr bool
+		postRun   func(resp *types.QueryNumMMOrdersResponse)
+	}{
+		{
+			"nil request",
+			nil,
+			true,
+			nil,
+		},
+		{
+			"invalid request",
+			&types.QueryNumMMOrdersRequest{},
+			true,
+			nil,
+		},
+		{
+			"happy case",
+			&types.QueryNumMMOrdersRequest{
+				Orderer: s.addr(1).String(),
+				PairId:  1,
+			},
+			false,
+			func(resp *types.QueryNumMMOrdersResponse) {
+				s.Require().EqualValues(2, resp.NumMarketMakingOrders)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.NumMMOrders(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			}
+		})
+	}
+}

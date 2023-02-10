@@ -3547,6 +3547,52 @@ paths:
       externalDocs:
         description: Find out more about the query and error codes
         url: 'https://github.com/crescent-network/crescent/tree/main/docs'
+  '/crescent/liquidity/v1beta1/num_mm_orders/{orderer}/{pair_id}':
+    get:
+      operationId: NumMMOrders
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              num_market_making_orders:
+                type: integer
+                format: int64
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: orderer
+          in: path
+          required: true
+          type: string
+        - name: pair_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /crescent/liquidity/v1beta1/order_books:
     get:
       operationId: OrderBooks
@@ -11592,6 +11638,12 @@ definitions:
     description: >-
       QueryDepositRequestsResponse is response type for the
       Query/DepositRequests RPC method.
+  crescent.liquidity.v1beta1.QueryNumMMOrdersResponse:
+    type: object
+    properties:
+      num_market_making_orders:
+        type: integer
+        format: int64
   crescent.liquidity.v1beta1.QueryOrderBooksResponse:
     type: object
     properties:
