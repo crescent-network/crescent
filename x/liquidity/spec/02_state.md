@@ -241,4 +241,4 @@ The key to find the store is the first parameter in the list.
 
 ### The key to get the number of MM orders an orderer made in a pair
 
-- NumMMOrdersKey: `[]byte{0xb6} | OrdererAddrLen (1 byte) | OrdererAddress | PairId -> BigEndian(NumMMOrders)`
+- NumMMOrdersKey: `[]byte{0xb7} | OrdererAddrLen (1 byte) | OrdererAddress | PairId -> BigEndian(NumMMOrders)`

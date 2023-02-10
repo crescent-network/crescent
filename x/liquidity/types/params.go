@@ -14,8 +14,8 @@ import (
 const (
 	DefaultBatchSize                       uint32 = 1
 	DefaultTickPrecision                   uint32 = 4
-	DefaultMaxNumMarketMakingOrdersPerPair        = 15
 	DefaultMaxNumMarketMakingOrderTicks           = 10
+	DefaultMaxNumMarketMakingOrdersPerPair        = 15
 	DefaultMaxOrderLifespan                       = 24 * time.Hour
 	DefaultMaxNumActivePoolsPerPair               = 20
 )

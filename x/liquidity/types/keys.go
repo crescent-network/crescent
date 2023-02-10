@@ -39,7 +39,7 @@ var (
 	WithdrawRequestIndexKeyPrefix = []byte{0xb5}
 	OrderKeyPrefix                = []byte{0xb2}
 	OrderIndexKeyPrefix           = []byte{0xb3}
-	NumMMOrdersKeyPrefix          = []byte{0xb6}
+	NumMMOrdersKeyPrefix          = []byte{0xb7}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
