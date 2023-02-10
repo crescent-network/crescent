@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/crescent-network/crescent/v4/x/antehandlers"
 )
 
 const (
@@ -14,6 +16,7 @@ const (
 
 // Implements Proposal Interface
 var _ gov.Content = &BootstrapProposal{}
+var _ antehandlers.ProposalExtended = &BootstrapProposal{}
 
 func init() {
 	gov.RegisterProposalType(ProposalTypeBootstrap)
@@ -24,8 +27,8 @@ func init() {
 func NewBootstrapProposal(
 	title string,
 	description string,
-	returnAddress string,
-	offerCoin sdk.Coin,
+	proposerAddress string,
+	offerCoins sdk.Coins,
 	quoteCoinDenom string,
 	minPrice sdk.Dec,
 	maxPrice sdk.Dec,
@@ -34,16 +37,16 @@ func NewBootstrapProposal(
 	initialOrders []InitialOrder,
 ) *BootstrapProposal {
 	return &BootstrapProposal{
-		Title:          title,
-		Description:    description,
-		ReturnAddress:  returnAddress,
-		OfferCoin:      offerCoin,
-		QuoteCoinDenom: quoteCoinDenom,
-		MinPrice:       minPrice,
-		MaxPrice:       maxPrice,
-		PairId:         pairId,
-		PoolId:         poolId,
-		InitialOrders:  initialOrders,
+		Title:           title,
+		Description:     description,
+		ProposerAddress: proposerAddress,
+		OfferCoins:      offerCoins,
+		QuoteCoinDenom:  quoteCoinDenom,
+		MinPrice:        minPrice,
+		MaxPrice:        maxPrice,
+		PairId:          pairId,
+		PoolId:          poolId,
+		InitialOrders:   initialOrders,
 	}
 }
 
@@ -51,17 +54,19 @@ func (p *BootstrapProposal) GetTitle() string { return p.Title }
 
 func (p *BootstrapProposal) GetDescription() string { return p.Description }
 
+func (p *BootstrapProposal) GetProposerAddress() string { return p.ProposerAddress }
+
 func (p *BootstrapProposal) ProposalRoute() string { return RouterKey }
 
 func (p *BootstrapProposal) ProposalType() string { return ProposalTypeBootstrap }
 
 func (p *BootstrapProposal) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(p.ReturnAddress)
+	_, err := sdk.AccAddressFromBech32(p.ProposerAddress)
 	if err != nil {
 		return err
 	}
 
-	if err = p.OfferCoin.Validate(); err != nil {
+	if err = p.OfferCoins.Validate(); err != nil {
 		return err
 	}
 
@@ -105,14 +110,14 @@ func (p BootstrapProposal) String() string {
 	return fmt.Sprintf(`Bootstrap Proposal:
   Title:         %s
   Description:   %s
-  ReturnAddress: %v
-  OfferCoin:     %v
+  ProposerAddress: %v
+  OfferCoins:     %v
   QuoteCoinDenom:%s
   MinPrice:      %v
   MaxPrice:      %v
   PairId:        %v
   PoolId:        %v
   InitialOrders: %v
-`, p.Title, p.Description, p.ReturnAddress, p.OfferCoin, p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, p.PairId, p.PoolId,
+`, p.Title, p.Description, p.ProposerAddress, p.OfferCoins, p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, p.PairId, p.PoolId,
 		p.InitialOrders)
 }

@@ -21,9 +21,11 @@ message BootstrapProposal {
   // description specifies the description of the proposal
   string description = 2;
 
-  string return_address = 3;
+  // proposer_address specifies the proposer of the proposal
+  string proposer_address = 3;
 
-  cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin offer_coins = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 
   string quote_coin_denom = 5;
 

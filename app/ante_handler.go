@@ -7,6 +7,8 @@ import (
 
 	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+
+	"github.com/crescent-network/crescent/v4/x/antehandlers"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -15,6 +17,7 @@ type HandlerOptions struct {
 	ante.HandlerOptions
 
 	IBCKeeper *ibckeeper.Keeper
+	//BootstrapKeeper *bootstrapkeeper.Keeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -48,6 +51,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		//bootstrapante.NewProposalFeeDecorator(*options.BootstrapKeeper),
+		antehandlers.NewValidateProposerDecorator(),
 		ibcante.NewAnteDecorator(options.IBCKeeper),
 	}
 
