@@ -19,6 +19,6 @@ func DeleteMMOrderIndexes(store sdk.KVStore) {
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, paramSpace paramstypes.Subspace) error {
 	store := ctx.KVStore(storeKey)
 	DeleteMMOrderIndexes(store)
-	paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrdersPerPair, types.DefaultMaxNumMarketMakingOrdersPerPair)
+	paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrdersPerPair, uint32(types.DefaultMaxNumMarketMakingOrdersPerPair))
 	return nil
 }

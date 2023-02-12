@@ -16,11 +16,12 @@ import (
 
 func TestMigrateStore(t *testing.T) {
 	encCfg := chain.MakeTestEncodingConfig()
-	storeKey := sdk.NewKVStoreKey("liquidity")
+	storeKey := sdk.NewKVStoreKey(types.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 	paramSpace := paramtypes.NewSubspace(encCfg.Marshaler, encCfg.Amino, storeKey, tKey, types.ModuleName)
+	paramSpace.WithKeyTable(types.ParamKeyTable())
 
 	ordererAddr := utils.TestAddress(0)
 	// We're setting dummy value cause only the existence of the key is important.
