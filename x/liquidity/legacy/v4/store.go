@@ -1,8 +1,10 @@
 package v4
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/crescent-network/crescent/v4/x/liquidity/types"
 )
 
 func DeleteMMOrderIndexes(store sdk.KVStore) {
@@ -14,8 +16,9 @@ func DeleteMMOrderIndexes(store sdk.KVStore) {
 	}
 }
 
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, paramSpace paramstypes.Subspace) error {
 	store := ctx.KVStore(storeKey)
 	DeleteMMOrderIndexes(store)
+	paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrdersPerPair, types.DefaultMaxNumMarketMakingOrdersPerPair)
 	return nil
 }
