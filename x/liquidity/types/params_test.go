@@ -78,7 +78,6 @@ func TestParams_Validate(t *testing.T) {
 			"minimum initial deposit amount must not be negative: -1",
 		},
 		{
-
 			"negative MaxPriceLimitRatio",
 			func(params *types.Params) {
 				params.MaxPriceLimitRatio = sdk.NewDec(-1)
