@@ -235,57 +235,32 @@ func (s *KeeperTestSuite) sellMarketOrder(
 }
 
 func (s *KeeperTestSuite) mmOrder(
-	orderer sdk.AccAddress, pairId uint64,
-	maxSellPrice, minSellPrice sdk.Dec, sellAmt sdk.Int,
-	maxBuyPrice, minBuyPrice sdk.Dec, buyAmt sdk.Int,
-	orderLifespan time.Duration, fund bool) []types.Order {
+	orderer sdk.AccAddress, pairId uint64, dir types.OrderDirection,
+	price sdk.Dec, amt sdk.Int, orderLifespan time.Duration, fund bool) types.Order {
 	s.T().Helper()
+	pair, found := s.keeper.GetPair(s.ctx, pairId)
+	s.Require().True(found)
+	var ammDir amm.OrderDirection
+	var offerCoinDenom, demandCoinDenom string
+	switch dir {
+	case types.OrderDirectionBuy:
+		ammDir = amm.Buy
+		offerCoinDenom, demandCoinDenom = pair.QuoteCoinDenom, pair.BaseCoinDenom
+	case types.OrderDirectionSell:
+		ammDir = amm.Sell
+		offerCoinDenom, demandCoinDenom = pair.BaseCoinDenom, pair.QuoteCoinDenom
+	}
+	offerCoin := sdk.NewCoin(offerCoinDenom, amm.OfferCoinAmount(ammDir, price, amt))
 	if fund {
-		pair, found := s.keeper.GetPair(s.ctx, pairId)
-		s.Require().True(found)
-
-		maxNumTicks := int(s.keeper.GetMaxNumMarketMakingOrderTicks(s.ctx))
-		tickPrec := int(s.keeper.GetTickPrecision(s.ctx))
-
-		var buyTicks, sellTicks []types.MMOrderTick
-		offerBaseCoin := sdk.NewInt64Coin(pair.BaseCoinDenom, 0)
-		offerQuoteCoin := sdk.NewInt64Coin(pair.QuoteCoinDenom, 0)
-		if buyAmt.IsPositive() {
-			buyTicks = types.MMOrderTicks(
-				types.OrderDirectionBuy, minBuyPrice, maxBuyPrice, buyAmt, maxNumTicks, tickPrec)
-			for _, tick := range buyTicks {
-				offerQuoteCoin = offerQuoteCoin.AddAmount(tick.OfferCoinAmount)
-			}
-		}
-		if sellAmt.IsPositive() {
-			sellTicks = types.MMOrderTicks(
-				types.OrderDirectionSell, minSellPrice, maxSellPrice, sellAmt, maxNumTicks, tickPrec)
-			for _, tick := range sellTicks {
-				offerBaseCoin = offerBaseCoin.AddAmount(tick.OfferCoinAmount)
-			}
-		}
-		s.fundAddr(orderer, sdk.NewCoins(offerBaseCoin, offerQuoteCoin))
+		s.fundAddr(orderer, sdk.NewCoins(offerCoin))
 	}
 	msg := types.NewMsgMMOrder(
-		orderer, pairId,
-		maxSellPrice, minSellPrice, sellAmt,
-		maxBuyPrice, minBuyPrice, buyAmt,
-		orderLifespan)
+		orderer, pairId, dir, offerCoin, demandCoinDenom,
+		price, amt, orderLifespan)
 	s.Require().NoError(msg.ValidateBasic())
-	orders, err := s.keeper.MMOrder(s.ctx, msg)
+	req, err := s.keeper.MMOrder(s.ctx, msg)
 	s.Require().NoError(err)
-
-	index, found := s.keeper.GetMMOrderIndex(s.ctx, orderer, pairId)
-	maxNumTicks := int(s.keeper.GetMaxNumMarketMakingOrderTicks(s.ctx))
-	s.Require().True(found)
-	s.Require().Equal(orderer.String(), index.Orderer)
-	s.Require().Equal(pairId, index.PairId)
-	s.Require().True(len(index.OrderIds) <= maxNumTicks*2)
-	s.Require().True(len(index.OrderIds) == len(orders))
-	for i, order := range orders {
-		s.Require().Equal(order.Id, index.OrderIds[i])
-	}
-	return orders
+	return req
 }
 
 // nolint

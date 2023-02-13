@@ -92,6 +92,13 @@ func TestParams_Validate(t *testing.T) {
 			"max number of market making order ticks must be positive: 0",
 		},
 		{
+			"zero MaxNumMarketMakingOrdersPerPair",
+			func(params *types.Params) {
+				params.MaxNumMarketMakingOrdersPerPair = 0
+			},
+			"max number of market making orders per pair must be positive: 0",
+		},
+		{
 			"negative MaxOrderLifespan",
 			func(params *types.Params) {
 				params.MaxOrderLifespan = -1

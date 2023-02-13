@@ -44,6 +44,10 @@ func (s *KeeperTestSuite) TestGetMaxNumMarketMakingOrderTicks() {
 	s.Require().EqualValues(types.DefaultMaxNumMarketMakingOrderTicks, s.keeper.GetMaxNumMarketMakingOrderTicks(s.ctx))
 }
 
+func (s *KeeperTestSuite) TestGetMaxNumMarketMakingOrdersPerPair() {
+	s.Require().EqualValues(types.DefaultMaxNumMarketMakingOrdersPerPair, s.keeper.GetMaxNumMarketMakingOrdersPerPair(s.ctx))
+}
+
 func (s *KeeperTestSuite) TestGetMaxOrderLifespan() {
 	s.Require().EqualValues(types.DefaultMaxOrderLifespan, s.keeper.GetMaxOrderLifespan(s.ctx))
 }

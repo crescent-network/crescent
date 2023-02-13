@@ -621,91 +621,70 @@ func TestMsgMMOrder(t *testing.T) {
 			"pair id must not be 0: invalid request",
 		},
 		{
-			"non-positive max sell price",
+			"invalid direction",
 			func(msg *types.MsgMMOrder) {
-				msg.MaxSellPrice = sdk.ZeroDec()
+				msg.Direction = 0
 			},
-			"max sell price must be positive: 0.000000000000000000: invalid request",
+			"invalid order direction: ORDER_DIRECTION_UNSPECIFIED: invalid request",
 		},
 		{
-			"non-positive min sell price",
+			"invalid offer coin",
 			func(msg *types.MsgMMOrder) {
-				msg.MinSellPrice = sdk.ZeroDec()
+				msg.OfferCoin = utils.ParseCoin("0denom1")
 			},
-			"min sell price must be positive: 0.000000000000000000: invalid request",
+			"offer coin 0denom1 is smaller than the min amount 100: invalid request",
 		},
 		{
-			"min sell price > max sell price",
+			"small offer coin amount",
 			func(msg *types.MsgMMOrder) {
-				msg.MaxSellPrice = utils.ParseDec("1.1")
-				msg.MinSellPrice = utils.ParseDec("1.2")
+				msg.OfferCoin = utils.ParseCoin("10denom1")
 			},
-			"max sell price must not be lower than min sell price: invalid request",
+			"offer coin 10denom1 is smaller than the min amount 100: invalid request",
 		},
 		{
-			"too small sell amount",
+			"insufficient offer coin amount",
 			func(msg *types.MsgMMOrder) {
-				msg.SellAmount = sdk.NewInt(99)
+				msg.OfferCoin = utils.ParseCoin("1000000denom2")
+				msg.Price = utils.ParseDec("10")
+				msg.Amount = newInt(1000000)
 			},
-			"sell amount 99 is smaller than the min amount 100: invalid request",
+			"1000000denom2 is less than 10000000denom2: insufficient offer coin",
 		},
 		{
-			"non-positive max buy price",
+			"invalid demand coin denom",
 			func(msg *types.MsgMMOrder) {
-				msg.MaxBuyPrice = sdk.ZeroDec()
+				msg.DemandCoinDenom = "invaliddenom!"
 			},
-			"max buy price must be positive: 0.000000000000000000: invalid request",
+			"invalid demand coin denom: invalid denom: invaliddenom!",
 		},
 		{
-			"non-positive min buy price",
+			"same offer coin denom and demand coin denom",
 			func(msg *types.MsgMMOrder) {
-				msg.MinBuyPrice = sdk.ZeroDec()
+				msg.OfferCoin = utils.ParseCoin("1000000denom1")
+				msg.DemandCoinDenom = "denom1"
 			},
-			"min buy price must be positive: 0.000000000000000000: invalid request",
+			"offer coin denom and demand coin denom must not be same: invalid request",
 		},
 		{
-			"min buy price > max buy price",
+			"invalid price",
 			func(msg *types.MsgMMOrder) {
-				msg.MaxBuyPrice = utils.ParseDec("0.8")
-				msg.MinBuyPrice = utils.ParseDec("0.9")
+				msg.Price = utils.ParseDec("0")
 			},
-			"max buy price must not be lower than min buy price: invalid request",
+			"price must be positive: invalid request",
 		},
 		{
-			"too small buy amount",
+			"zero order amount",
 			func(msg *types.MsgMMOrder) {
-				msg.BuyAmount = sdk.NewInt(99)
+				msg.Amount = sdk.ZeroInt()
 			},
-			"buy amount 99 is smaller than the min amount 100: invalid request",
+			"order amount 0 is smaller than the min amount 100: invalid request",
 		},
 		{
-			"zero buy amount",
+			"small order amount",
 			func(msg *types.MsgMMOrder) {
-				msg.BuyAmount = sdk.ZeroInt()
+				msg.Amount = newInt(10)
 			},
-			"",
-		},
-		{
-			"too small sell amount",
-			func(msg *types.MsgMMOrder) {
-				msg.SellAmount = sdk.NewInt(99)
-			},
-			"sell amount 99 is smaller than the min amount 100: invalid request",
-		},
-		{
-			"zero sell amount",
-			func(msg *types.MsgMMOrder) {
-				msg.SellAmount = sdk.ZeroInt()
-			},
-			"",
-		},
-		{
-			"both zero amount",
-			func(msg *types.MsgMMOrder) {
-				msg.SellAmount = sdk.ZeroInt()
-				msg.BuyAmount = sdk.ZeroInt()
-			},
-			"sell amount and buy amount must not be zero at the same time: invalid request",
+			"order amount 10 is smaller than the min amount 100: invalid request",
 		},
 		{
 			"invalid order lifespan",
@@ -717,10 +696,8 @@ func TestMsgMMOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgMMOrder(
-				testAddr, 1,
-				utils.ParseDec("1.5"), utils.ParseDec("1.1"), sdk.NewInt(1000000),
-				utils.ParseDec("0.9"), utils.ParseDec("0.5"), sdk.NewInt(1000000),
-				orderLifespan)
+				testAddr, 1, types.OrderDirectionBuy, utils.ParseCoin("1000000denom2"),
+				"denom1", utils.ParseDec("1.0"), newInt(1000000), orderLifespan)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgMMOrder, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -825,50 +802,6 @@ func TestMsgCancelAllOrders(t *testing.T) {
 			msg := types.NewMsgCancelAllOrders(sdk.AccAddress(crypto.AddressHash([]byte("orderer"))), []uint64{1, 2, 3})
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgCancelAllOrders, msg.Type())
-			require.Equal(t, types.RouterKey, msg.Route())
-			err := msg.ValidateBasic()
-			if tc.expectedErr == "" {
-				require.NoError(t, err)
-				signers := msg.GetSigners()
-				require.Len(t, signers, 1)
-				require.Equal(t, msg.GetOrderer(), signers[0])
-			} else {
-				require.EqualError(t, err, tc.expectedErr)
-			}
-		})
-	}
-}
-
-func TestMsgCancelMMOrder(t *testing.T) {
-	for _, tc := range []struct {
-		name        string
-		malleate    func(msg *types.MsgCancelMMOrder)
-		expectedErr string
-	}{
-		{
-			"happy case",
-			func(msg *types.MsgCancelMMOrder) {},
-			"", // empty means no error expected
-		},
-		{
-			"invalid orderer",
-			func(msg *types.MsgCancelMMOrder) {
-				msg.Orderer = "invalidaddr"
-			},
-			"invalid orderer address: decoding bech32 failed: invalid separator index -1: invalid address",
-		},
-		{
-			"invalid pair id",
-			func(msg *types.MsgCancelMMOrder) {
-				msg.PairId = 0
-			},
-			"pair id must not be 0: invalid request",
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCancelMMOrder(testAddr, 1)
-			tc.malleate(msg)
-			require.Equal(t, types.TypeMsgCancelMMOrder, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {

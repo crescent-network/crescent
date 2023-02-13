@@ -39,7 +39,7 @@ var (
 	WithdrawRequestIndexKeyPrefix = []byte{0xb5}
 	OrderKeyPrefix                = []byte{0xb2}
 	OrderIndexKeyPrefix           = []byte{0xb3}
-	MMOrderIndexKeyPrefix         = []byte{0xb6}
+	NumMMOrdersKeyPrefix          = []byte{0xb7}
 )
 
 // GetPairKey returns the store key to retrieve pair object from the pair id.
@@ -145,10 +145,10 @@ func GetOrderIndexKeyPrefix(orderer sdk.AccAddress) []byte {
 	return append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...)
 }
 
-// GetMMOrderIndexKey returns the store key to retrieve MMOrderIndex object by
-// orderer and pair id.
-func GetMMOrderIndexKey(orderer sdk.AccAddress, pairId uint64) []byte {
-	return append(append(MMOrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...), sdk.Uint64ToBigEndian(pairId)...)
+// GetNumMMOrdersKey returns the store key to retrieve the number of MM orders
+// by orderer and pair id.
+func GetNumMMOrdersKey(orderer sdk.AccAddress, pairId uint64) []byte {
+	return append(append(NumMMOrdersKeyPrefix, address.MustLengthPrefix(orderer)...), sdk.Uint64ToBigEndian(pairId)...)
 }
 
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.
@@ -213,6 +213,18 @@ func ParseOrderIndexKey(key []byte) (orderer sdk.AccAddress, pairId, orderId uin
 	orderer = key[2 : 2+addrLen]
 	pairId = sdk.BigEndianToUint64(key[2+addrLen : 2+addrLen+8])
 	orderId = sdk.BigEndianToUint64(key[2+addrLen+8:])
+	return
+}
+
+// ParseNumMMOrdersKey parses NumMMOrdersKey.
+func ParseNumMMOrdersKey(key []byte) (ordererAddr sdk.AccAddress, pairId uint64) {
+	if !bytes.HasPrefix(key, NumMMOrdersKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+
+	addrLen := key[1]
+	ordererAddr = key[2 : 2+addrLen]
+	pairId = sdk.BigEndianToUint64(key[2+addrLen:])
 	return
 }
 

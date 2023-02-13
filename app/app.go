@@ -89,7 +89,7 @@ import (
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
@@ -110,6 +110,7 @@ import (
 	v2_0_0 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v2.0.0"
 	v3 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v3"
 	v4 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v4"
+	v5 "github.com/crescent-network/crescent/v4/app/upgrades/mainnet/v5"
 	"github.com/crescent-network/crescent/v4/app/upgrades/testnet/rc4"
 	"github.com/crescent-network/crescent/v4/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/v4/x/claim/keeper"
@@ -1010,6 +1011,10 @@ func (app *App) SetUpgradeStoreLoaders() {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v4.StoreUpgrades))
 	}
+	if upgradeInfo.Name == v5.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v5.StoreUpgrades))
+	}
 }
 
 func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Configurator) {
@@ -1028,4 +1033,8 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v4.UpgradeName, v4.UpgradeHandler(
 			mm, configurator, app.icaModule))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5.UpgradeName, v5.UpgradeHandler(
+			mm, configurator))
 }
