@@ -21,13 +21,13 @@ type Keeper struct {
 	accountKeeper   types.AccountKeeper
 	bankKeeper      types.BankKeeper
 	liquidityKeeper types.LiquidityKeeper
+	// TODO: add liquidstaking keeper to get voting power, CalcLiquidStakingVotingPower
 }
 
 // NewKeeper returns a bootstrap keeper. It handles:
 // - creating new ModuleAccounts for each pool ReserveAccount
 // - sending to and from ModuleAccounts
 // - minting, burning PoolCoins
-// TODO: app.go
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, liquidityKeeper types.LiquidityKeeper,
 ) Keeper {

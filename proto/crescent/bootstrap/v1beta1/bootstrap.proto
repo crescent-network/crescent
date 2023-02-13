@@ -84,23 +84,29 @@ message BootstrapPool {
   // amount and denom of the bootstrap coin
   cosmos.base.v1beta1.Coin bootstrap_coin = 2 [(gogoproto.nullable) = false];
 
+  // denom of the bootstrap coin
+  string bootstrap_coin_denom = 3;
+
   // denom of the quote coin
-  string quote_coin_denom = 3;
+  string quote_coin_denom = 4;
 
   // min price of the bootstrap coin
-  string min_price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string min_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
   // max price of the bootstrap coin
-  string max_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string max_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
+  // TODO: need to fix with start, end time
   // stage_schedule specifies the schedule of the bootstrap stages
-  repeated google.protobuf.Timestamp stage_schedule = 6
+  repeated google.protobuf.Timestamp stage_schedule = 7
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"stage_schedule\""];
 
+  // address of the proposer
+  string proposer_address = 8;
   // address of the escrow account
-  string escrow_address = 7;
+  string escrow_address = 9;
   // address of the fee collector (incl. dust colletor)
-  string fee_collector_address = 8;
+  string fee_collector_address = 10;
 }
 
 // OrderDirection enumerates order directions.

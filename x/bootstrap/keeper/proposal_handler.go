@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/crescent-network/crescent/v4/x/bootstrap/types"
 )
@@ -24,21 +25,32 @@ func HandleBootstrapProposal(ctx sdk.Context, k Keeper, p *types.BootstrapPropos
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", p.PoolId)
 	}
 
-	// TODO: check return address is not vesting account
+	proposer := p.GetProposer()
+	// TODO: TBD along vesting method
+	// check proposer address is not vesting account
+	bacc := k.accountKeeper.GetAccount(ctx, proposer)
+	_, ok := bacc.(exported.VestingAccount)
+	if ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "proposer %s must not vesting account", p.ProposerAddress)
+	}
 
-	// TODO: send offer coin to reserve
-	//err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, types.ModuleName, mmAddr, p.OfferCoin)
-	//if err != nil {
-	//	return err
-	//}
+	bp := types.NewBootstrapPool(k.GetLastBootstrapPoolId(ctx)+1, "tmpBaseCoin", p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, proposer)
 
-	//if k.bankKeeper.GetSupply(ctx, p.OfferCoin.).Amount.IsZero() {
-	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom %s has no supply", p.QuoteCoinDenom)
-	//}
+	// TODO: make stage schedules StartTime, NumOfStages, StageDuration
 
-	/////////////////////////////////////////////////////
+	// escrow OfferCoins
+	err := k.bankKeeper.SendCoins(ctx, proposer, bp.GetEscrowAddress(), p.OfferCoins)
+	if err != nil {
+		return err
+	}
 
-	// TODO: set initial orders
+	// TODO: Set BootstrapPool
+
+	// TODO: set initial orders, Set, store
+
+	// TODO: collecting creation fee
+	//creationFees := sdk.NewCoins()
+
 	return nil
 }
 

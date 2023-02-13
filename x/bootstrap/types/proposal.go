@@ -56,6 +56,14 @@ func (p *BootstrapProposal) GetDescription() string { return p.Description }
 
 func (p *BootstrapProposal) GetProposerAddress() string { return p.ProposerAddress }
 
+func (p *BootstrapProposal) GetProposer() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.ProposerAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 func (p *BootstrapProposal) ProposalRoute() string { return RouterKey }
 
 func (p *BootstrapProposal) ProposalType() string { return ProposalTypeBootstrap }
@@ -94,14 +102,29 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid pool id")
 	}
 
-	// validate ascending order
+	// validate initial orders, ascending, price
 	lastPrice := sdk.ZeroDec()
+	sumOfOfferCoin := sdk.NewCoins()
 	for _, io := range p.InitialOrders {
+		if err = io.OfferCoin.Validate(); err != nil {
+			return err
+		}
+		if io.Price.LT(p.MinPrice) || io.Price.GT(p.MaxPrice) {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "initial orders price should be between min price and max price")
+		}
 		if lastPrice.GTE(io.Price) {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "initial orders should be sorted ascending order")
 		}
 		lastPrice = io.Price
+		sumOfOfferCoin = sumOfOfferCoin.Add(io.OfferCoin)
 	}
+
+	// validate sum of order amount must be equal to the offer coin amount
+	if !p.OfferCoins.IsEqual(sumOfOfferCoin) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "sum of order amount must be equal to the offer coin amount")
+	}
+
+	// TODO: StartTime, NumOfStages, StageDuration
 	return gov.ValidateAbstract(p)
 }
 

@@ -1,5 +1,63 @@
 package types
 
+import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+)
+
+func DeriveBootstrapPoolEscrowAddress(id uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("BootstrapPoolEscrowAddress/%d", id)))
+}
+
+func DeriveBootstrapPoolFeeCollectorAddress(id uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("BootstrapPoolFeeCollectorAddress/%s", id)))
+}
+
+func NewBootstrapPool(id uint64, bootstrapCoinDenom, QuoteCoinDenom string, minPrice, maxPrice sdk.Dec, proposer sdk.AccAddress) BootstrapPool {
+	return BootstrapPool{
+		Id: id,
+		//BootstrapCoin:       sdk.Coin{},
+		BootstrapCoinDenom: bootstrapCoinDenom,
+		QuoteCoinDenom:     QuoteCoinDenom,
+		MinPrice:           &minPrice,
+		MaxPrice:           &maxPrice,
+		//StageSchedule:       nil,
+		ProposerAddress:     proposer.String(),
+		EscrowAddress:       DeriveBootstrapPoolEscrowAddress(id).String(),
+		FeeCollectorAddress: DeriveBootstrapPoolFeeCollectorAddress(id).String(),
+	}
+}
+
+func (m BootstrapPool) GetProposer() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(m.ProposerAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func (m BootstrapPool) GetEscrowAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(m.EscrowAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func (m BootstrapPool) GetFeeCollector() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(m.FeeCollectorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+// TODO: GetFeeCollector
+// TODO: GetEscrowAddress
+// TODO: GetProposer
+
 //func GetAccAddress(address string) sdk.AccAddress {
 //	if address == "" {
 //		return nil
