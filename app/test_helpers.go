@@ -38,8 +38,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	simappparams "github.com/crescent-network/crescent/v4/app/params"
-	minttypes "github.com/crescent-network/crescent/v4/x/mint/types"
+	simappparams "github.com/crescent-network/crescent/v5/app/params"
+	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in

@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/crescent-network/crescent/v4/x/marker/types"
+	"github.com/crescent-network/crescent/v5/x/marker/types"
 )
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {

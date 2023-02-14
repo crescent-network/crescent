@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v4/x/marker/types"
+	"github.com/crescent-network/crescent/v5/x/marker/types"
 )
 
 // GetLastBlockTime returns the last block time, if present.

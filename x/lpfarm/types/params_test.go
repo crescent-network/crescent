@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v4/types"
-	"github.com/crescent-network/crescent/v4/x/lpfarm/types"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 func TestParams_Validate(t *testing.T) {

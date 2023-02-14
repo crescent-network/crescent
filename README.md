@@ -47,7 +47,7 @@ Use `git` to retrieve Crescent Core from [the official repository](https://githu
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
-cd crescent && git checkout release/v4.0.x
+cd crescent && git checkout release/v5.0.x
 make install
 ```
 

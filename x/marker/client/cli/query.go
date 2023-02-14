@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v4/x/marker/types"
+	"github.com/crescent-network/crescent/v5/x/marker/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

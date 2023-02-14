@@ -5,8 +5,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/crescent-network/crescent/v4/x/lpfarm/keeper"
-	"github.com/crescent-network/crescent/v4/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // NewHandler returns a new msg handler.

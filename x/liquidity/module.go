@@ -18,10 +18,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/crescent-network/crescent/v4/x/liquidity/client/cli"
-	"github.com/crescent-network/crescent/v4/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/v4/x/liquidity/simulation"
-	"github.com/crescent-network/crescent/v4/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/client/cli"
+	"github.com/crescent-network/crescent/v5/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/v5/x/liquidity/simulation"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 var (

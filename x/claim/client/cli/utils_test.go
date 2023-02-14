@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/crescent-network/crescent/v4/x/claim/client/cli"
-	"github.com/crescent-network/crescent/v4/x/claim/types"
+	"github.com/crescent-network/crescent/v5/x/claim/client/cli"
+	"github.com/crescent-network/crescent/v5/x/claim/types"
 )
 
 func TestNormalizeConditionType(t *testing.T) {

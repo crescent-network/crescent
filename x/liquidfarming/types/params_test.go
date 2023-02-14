@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
 func TestParams_Validate(t *testing.T) {

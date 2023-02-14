@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // LiquidFarm handles types.MsgLiquidFarm to farm.

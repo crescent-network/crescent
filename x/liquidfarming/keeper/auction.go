@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v4/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // PlaceBid handles types.MsgPlaceBid and stores bid object.

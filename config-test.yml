@@ -3,8 +3,8 @@ init:
   home: "$HOME/.crescent"
 build:
   ldflags:
-    - -X github.com/crescent-network/crescent/v4/x/farming/keeper.enableAdvanceEpoch=true
-    - -X github.com/crescent-network/crescent/v4/x/liquidfarming/keeper.enableAdvanceAuction=true
+    - -X github.com/crescent-network/crescent/v5/x/farming/keeper.enableAdvanceEpoch=true
+    - -X github.com/crescent-network/crescent/v5/x/liquidfarming/keeper.enableAdvanceAuction=true
   proto:
     path: proto
     third_party_paths:

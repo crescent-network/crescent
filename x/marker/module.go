@@ -18,9 +18,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/crescent-network/crescent/v4/x/marker/client/cli"
-	"github.com/crescent-network/crescent/v4/x/marker/keeper"
-	"github.com/crescent-network/crescent/v4/x/marker/types"
+	"github.com/crescent-network/crescent/v5/x/marker/client/cli"
+	"github.com/crescent-network/crescent/v5/x/marker/keeper"
+	"github.com/crescent-network/crescent/v5/x/marker/types"
 )
 
 var (

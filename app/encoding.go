@@ -5,7 +5,7 @@ package app
 import (
 	"github.com/cosmos/cosmos-sdk/std"
 
-	"github.com/crescent-network/crescent/v4/app/params"
+	"github.com/crescent-network/crescent/v5/app/params"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing

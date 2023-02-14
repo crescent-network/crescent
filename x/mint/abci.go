@@ -6,10 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v4/types"
+	utils "github.com/crescent-network/crescent/v5/types"
 
-	"github.com/crescent-network/crescent/v4/x/mint/keeper"
-	"github.com/crescent-network/crescent/v4/x/mint/types"
+	"github.com/crescent-network/crescent/v5/x/mint/keeper"
+	"github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 // BeginBlocker mints new tokens for the previous block.

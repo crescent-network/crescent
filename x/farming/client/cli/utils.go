@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v4/x/farming/types"
+	"github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 // PrivateFixedPlanRequest defines CLI request for a private fixed plan.

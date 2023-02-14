@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/crescent-network/crescent/v4/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly,
