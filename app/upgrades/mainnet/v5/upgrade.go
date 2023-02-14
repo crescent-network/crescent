@@ -5,6 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	markertypes "github.com/crescent-network/crescent/v4/x/marker/types"
 )
 
 const UpgradeName = "v5"
@@ -16,4 +18,6 @@ func UpgradeHandler(
 	}
 }
 
-var StoreUpgrades = store.StoreUpgrades{}
+var StoreUpgrades = store.StoreUpgrades{
+	Added: []string{markertypes.StoreKey},
+}

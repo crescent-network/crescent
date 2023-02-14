@@ -4,10 +4,10 @@ import (
 	"time"
 )
 
-func NewGenesisState( params Params, lastBlockTime *time.Time, ) *GenesisState {
+func NewGenesisState(params Params, lastBlockTime *time.Time) *GenesisState {
 	return &GenesisState{
-		Params:            params,
-		LastBlockTime:     lastBlockTime,
+		Params:        params,
+		LastBlockTime: lastBlockTime,
 	}
 }
 

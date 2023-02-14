@@ -108,11 +108,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	}
 }
 
-// Name returns the module's name.
-func (am AppModule) Name() string {
-	return am.AppModuleBasic.Name()
-}
-
 // Route returns the module's message routing key.
 func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
