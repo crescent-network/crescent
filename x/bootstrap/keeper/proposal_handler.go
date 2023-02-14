@@ -34,7 +34,7 @@ func HandleBootstrapProposal(ctx sdk.Context, k Keeper, p *types.BootstrapPropos
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "proposer %s must not vesting account", p.ProposerAddress)
 	}
 
-	bp := types.NewBootstrapPool(k.GetLastBootstrapPoolId(ctx)+1, "tmpBaseCoin", p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, proposer)
+	bp := types.NewBootstrapPool(k.GetLastBootstrapPoolId(ctx)+1, p.BootstrapCoinDenom, p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, proposer)
 
 	// TODO: make stage schedules StartTime, NumOfStages, StageDuration
 

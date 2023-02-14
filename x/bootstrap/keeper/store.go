@@ -57,6 +57,127 @@ func (k Keeper) getNextBootstrapPoolIdWithUpdate(ctx sdk.Context) uint64 {
 	return id
 }
 
+// GetOrder returns the particular order.
+func (k Keeper) GetOrder(ctx sdk.Context, pairId, id uint64) (order types.Order, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetOrderKey(pairId, id))
+	if bz == nil {
+		return
+	}
+	order = types.MustUnmarshalOrder(k.cdc, bz)
+	return order, true
+}
+
+// SetOrder stores an order for the batch execution.
+func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
+	bz := types.MustMarshaOrder(k.cdc, order)
+	store.Set(types.GetOrderKey(order.BootstrapPoolId, order.Id), bz)
+}
+
+func (k Keeper) SetOrderIndex(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetOrderIndexKey(order.GetOrderer(), order.BootstrapPoolId, order.Id), []byte{})
+}
+
+// IterateAllOrders iterates through all orders in the store and all
+// cb for each order.
+func (k Keeper) IterateAllOrders(ctx sdk.Context, cb func(order types.Order) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.OrderKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		order := types.MustUnmarshalOrder(k.cdc, iter.Value())
+		stop, err := cb(order)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateOrdersByPool iterates through all the orders within the pool
+// and call cb for each order.
+func (k Keeper) IterateOrdersByPool(ctx sdk.Context, poolId uint64, cb func(order types.Order) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetOrdersByPoolKeyPrefix(poolId))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		order := types.MustUnmarshalOrder(k.cdc, iter.Value())
+		stop, err := cb(order)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateOrdersByOrderer iterates through orders in the store by an orderer
+// and call cb on each order.
+func (k Keeper) IterateOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress, cb func(order types.Order) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetOrderIndexKeyByOrdererPrefix(orderer))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, poolId, orderId := types.ParseOrderIndexKey(iter.Key())
+		order, _ := k.GetOrder(ctx, poolId, orderId)
+		stop, err := cb(order)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
+// GetAllOrders returns all orders in the store.
+func (k Keeper) GetAllOrders(ctx sdk.Context) (orders []types.Order) {
+	orders = []types.Order{}
+	_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
+		orders = append(orders, order)
+		return false, nil
+	})
+	return
+}
+
+// GetOrdersByPool returns orders within the pool.
+func (k Keeper) GetOrdersByPool(ctx sdk.Context, poolId uint64) (orders []types.Order) {
+	_ = k.IterateOrdersByPool(ctx, poolId, func(order types.Order) (stop bool, err error) {
+		orders = append(orders, order)
+		return false, nil
+	})
+	return
+}
+
+// GetOrdersByOrderer returns orders by the orderer.
+func (k Keeper) GetOrdersByOrderer(ctx sdk.Context, orderer sdk.AccAddress) (orders []types.Order) {
+	_ = k.IterateOrdersByOrderer(ctx, orderer, func(order types.Order) (stop bool, err error) {
+		orders = append(orders, order)
+		return false, nil
+	})
+	return
+}
+
+// DeleteOrder deletes an order.
+func (k Keeper) DeleteOrder(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetOrderKey(order.BootstrapPoolId, order.Id))
+	k.DeleteOrderIndex(ctx, order)
+}
+
+func (k Keeper) DeleteOrderIndex(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetOrderIndexKey(order.GetOrderer(), order.BootstrapPoolId, order.Id))
+}
+
 //// DeleteBootstrap deletes market maker for a given address and pair id.
 //func (k Keeper) DeleteBootstrap(ctx sdk.Context, mmAddr sdk.AccAddress, pairId uint64) {
 //	store := ctx.KVStore(k.storeKey)

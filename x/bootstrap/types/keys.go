@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -41,6 +43,11 @@ func GetOrderKey(poolId, id uint64) []byte {
 	return append(append(OrderKeyPrefix, sdk.Uint64ToBigEndian(poolId)...), sdk.Uint64ToBigEndian(id)...)
 }
 
+// GetOrdersByPoolKeyPrefix returns the store key to iterate orders by pool.
+func GetOrdersByPoolKeyPrefix(poolId uint64) []byte {
+	return append(OrderKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
+}
+
 // GetOrderIndexKeyByOrdererPrefix returns the index key prefix to iterate orders
 // by an orderer.
 func GetOrderIndexKeyByOrdererPrefix(orderer sdk.AccAddress) []byte {
@@ -54,9 +61,22 @@ func GetOrderIndexKeyByOrdererByPoolIdPrefix(orderer sdk.AccAddress, poolId uint
 }
 
 // GetOrderIndexKey returns the index key to map orders with an orderer.
-func GetOrderIndexKey(orderer sdk.AccAddress, pairId, orderId uint64) []byte {
+func GetOrderIndexKey(orderer sdk.AccAddress, poolId, orderId uint64) []byte {
 	return append(append(OrderIndexKeyPrefix, address.MustLengthPrefix(orderer)...),
-		sdk.Uint64ToBigEndian(pairId)...)
+		sdk.Uint64ToBigEndian(poolId)...)
+}
+
+// ParseOrderIndexKey parses an order index key.
+func ParseOrderIndexKey(key []byte) (orderer sdk.AccAddress, pool, orderId uint64) {
+	if !bytes.HasPrefix(key, OrderIndexKeyPrefix) {
+		panic("key does not have proper prefix")
+	}
+
+	addrLen := key[1]
+	orderer = key[2 : 2+addrLen]
+	pool = sdk.BigEndianToUint64(key[2+addrLen : 2+addrLen+8])
+	orderId = sdk.BigEndianToUint64(key[2+addrLen+8:])
+	return
 }
 
 //// ParseBootstrapIndexByPairIdKey parses a market maker index by pair id key.
