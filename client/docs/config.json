@@ -3,7 +3,7 @@
   "info": {
     "title": "Crescent REST and gRPC Gateway docs",
     "description": "A REST interface for state queries, transactions",
-    "version": "3.0.0"
+    "version": "5.0.0"
   },
   "apis": [
     {
@@ -74,6 +74,15 @@
         "rename": {
           "Params": "LiquidFarmingParams",
           "Rewards": "LiquidFarmingRewards"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/marker/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MarkerParams",
+          "LastBlockTime": "MarkerLastBlockTime"
         }
       }
     }
