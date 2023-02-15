@@ -13,6 +13,7 @@ import (
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgLimitOrder{}, "bootstrap/MsgLimitOrder", nil)
+	cdc.RegisterConcrete(&MsgModifyOrder{}, "bootstrap/MsgModifyOrder", nil)
 	cdc.RegisterConcrete(&BootstrapProposal{}, "bootstrap/BootstrapProposal", nil)
 }
 
@@ -21,8 +22,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgLimitOrder{},
+		&MsgModifyOrder{},
 	)
-	// TODO: add msg modify
 
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

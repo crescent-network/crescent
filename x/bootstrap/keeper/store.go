@@ -55,9 +55,9 @@ func (k Keeper) getNextBootstrapPoolIdWithUpdate(ctx sdk.Context) uint64 {
 }
 
 // GetOrder returns the particular order.
-func (k Keeper) GetOrder(ctx sdk.Context, pairId, id uint64) (order types.Order, found bool) {
+func (k Keeper) GetOrder(ctx sdk.Context, poolId, id uint64) (order types.Order, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetOrderKey(pairId, id))
+	bz := store.Get(types.GetOrderKey(poolId, id))
 	if bz == nil {
 		return
 	}

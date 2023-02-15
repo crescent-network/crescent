@@ -31,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryParams(),
 		GetQueryBootstrapsCmd(),
 		GetCmdQueryIncentive(),
+		// TODO: add query functions
 	)
 	return mmQueryCmd
 }

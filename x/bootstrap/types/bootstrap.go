@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,6 +56,19 @@ func (m BootstrapPool) GetFeeCollector() sdk.AccAddress {
 	return addr
 }
 
+func (m BootstrapPool) IsActive() bool {
+	// TODO: checking available stages
+	return false
+}
+
+func (m BootstrapPool) CurrentStage() (id int32, stage Stage) {
+	// TODO: checking available stages
+	return 0, Stage{
+		StartTime: time.Time{},
+		EndTime:   time.Time{},
+	}
+}
+
 func NewOrderForInitialOrder(io InitialOrder, id, poolId uint64, height int64, orderer string) Order {
 	return Order{
 		Id:                 id,
@@ -64,28 +78,32 @@ func NewOrderForInitialOrder(io InitialOrder, id, poolId uint64, height int64, o
 		Direction:          io.Direction,
 		OfferCoin:          io.OfferCoin,
 		RemainingOfferCoin: io.OfferCoin,
-		ReceivedCoin:       sdk.Coin{},
-		Price:              io.Price,
-		Status:             OrderStatusNotExecuted,
-		IsInitial:          true,
+		// TODO:
+		//ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
+		ReceivedCoin: sdk.Coin{},
+		Price:        io.Price,
+		Status:       OrderStatusNotExecuted,
+		IsInitial:    true,
 	}
 }
 
-//func NewOrderForLimitOrder(msg MsgLimitOrder, id, poolId uint64, height int64, orderer string) Order {
-//	return Order{
-//		Id:                 id,
-//		BootstrapPoolId:    poolId,
-//		MsgHeight:          height,
-//		Orderer:            orderer,
-//		Direction:          io.Direction,
-//		OfferCoin:          io.OfferCoin,
-//		RemainingOfferCoin: io.OfferCoin,
-//		ReceivedCoin:       sdk.Coin{},
-//		Price:              io.Price,
-//		Status:             OrderStatusNotExecuted,
-//		IsInitial:          true,
-//	}
-//}
+func NewOrderForLimitOrder(msg *MsgLimitOrder, id, poolId uint64, offerCoin sdk.Coin, price sdk.Dec, height int64) Order {
+	return Order{
+		Id:                 id,
+		BootstrapPoolId:    poolId,
+		MsgHeight:          height,
+		Orderer:            msg.Orderer,
+		Direction:          msg.Direction,
+		OfferCoin:          offerCoin,
+		RemainingOfferCoin: offerCoin,
+		// TODO:
+		//ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
+		ReceivedCoin: sdk.Coin{},
+		Price:        price,
+		Status:       OrderStatusNotExecuted,
+		IsInitial:    false,
+	}
+}
 
 func (m Order) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(m.Orderer)

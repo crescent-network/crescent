@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -22,4 +24,16 @@ func ParseBootstrapProposal(cdc codec.JSONCodec, proposalFile string) (types.Boo
 	}
 
 	return proposal, nil
+}
+
+// parseOrderDirection parses order direction string and returns
+// types.OrderDirection.
+func parseOrderDirection(s string) (types.OrderDirection, error) {
+	switch strings.ToLower(s) {
+	case "buy", "b":
+		return types.OrderDirectionBuy, nil
+	case "sell", "s":
+		return types.OrderDirectionSell, nil
+	}
+	return 0, fmt.Errorf("invalid order direction: %s", s)
 }

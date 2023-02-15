@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -11,12 +13,206 @@ import (
 	"github.com/crescent-network/crescent/v4/x/bootstrap/types"
 )
 
-func (k Keeper) LimitOrder(ctx sdk.Context, orderer sdk.AccAddress, poolId uint64, direction types.OrderDirection,
-	offerCoin sdk.Coin, price sdk.Dec) error {
+func (k Keeper) LimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (types.Order, error) {
+	// TODO: keeper level validate
+	tickAdjustedOfferCoin, price, err := k.ValidateMsgLimitOrder(ctx, msg)
+	if err != nil {
+		return types.Order{}, err
+	}
+
+	refundedCoin := msg.OfferCoin.Sub(tickAdjustedOfferCoin)
+	pool, _ := k.GetBootstrapPool(ctx, msg.BootstrapPoolId)
+	if err := k.bankKeeper.SendCoins(ctx, msg.GetOrderer(), pool.GetEscrowAddress(), sdk.NewCoins(tickAdjustedOfferCoin)); err != nil {
+		return types.Order{}, err
+	}
+
+	orderId := k.getNextOrderIdWithUpdate(ctx, pool.Id)
+	order := types.NewOrderForLimitOrder(msg, orderId, pool.Id, tickAdjustedOfferCoin, price, ctx.BlockHeight())
+	k.SetOrder(ctx, order)
+	k.SetOrderIndex(ctx, order)
+
+	ctx.GasMeter().ConsumeGas(k.GetOrderExtraGas(ctx), "OrderExtraGas")
+
+	// TODO: event emit
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeLimitOrder,
+			sdk.NewAttribute(types.AttributeKeyOrderer, msg.Orderer),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.BootstrapPoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyOrderDirection, msg.Direction.String()),
+			sdk.NewAttribute(types.AttributeKeyOfferCoin, tickAdjustedOfferCoin.String()),
+			//sdk.NewAttribute(types.AttributeKeyDemandCoinDenom, msg.DemandCoinDenom),
+			sdk.NewAttribute(types.AttributeKeyPrice, price.String()),
+			//sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.Id, 10)),
+			//sdk.NewAttribute(types.AttributeKeyStageId, strconv.FormatUint(order.BatchId, 10)),
+			sdk.NewAttribute(types.AttributeKeyRefundedCoins, refundedCoin.String()),
+		),
+	})
+
+	return order, nil
+}
+
+// ValidateMsgLimitOrder validates types.MsgLimitOrder with state and returns
+// calculated offer coin and price that is fit into ticks.
+func (k Keeper) ValidateMsgLimitOrder(ctx sdk.Context, msg *types.MsgLimitOrder) (offerCoin sdk.Coin, price sdk.Dec, err error) {
+	spendable := k.bankKeeper.SpendableCoins(ctx, msg.GetOrderer())
+	if spendableAmt := spendable.AmountOf(msg.OfferCoin.Denom); spendableAmt.LT(msg.OfferCoin.Amount) {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+			sdkerrors.ErrInsufficientFunds, "%s is smaller than %s",
+			sdk.NewCoin(msg.OfferCoin.Denom, spendableAmt), msg.OfferCoin)
+	}
+
+	//tickPrec := k.GetTickPrecision(ctx)
+
+	pool, found := k.GetBootstrapPool(ctx, msg.BootstrapPoolId)
+	if !found {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "bootstrap pool %d not found", msg.BootstrapPoolId)
+	}
+
+	// TODO: checking IsActive
+	if !pool.IsActive() {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInactivePool, "bootstrap pool %d inactive", pool.Id)
+	}
+
+	//switch msg.Direction {
+	//case types.OrderDirectionBuy:
+	//	if msg.OfferCoin.Denom != pool.QuoteCoinDenom || msg.DemandCoinDenom != pool.BaseCoinDenom {
+	//		return sdk.Coin{}, sdk.Dec{},
+	//			sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+	//				msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+	//	}
+	//	price = amm.PriceToDownTick(msg.Price, int(tickPrec))
+	//	offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, price, msg.Amount))
+	//	if msg.OfferCoin.IsLT(offerCoin) {
+	//		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+	//			types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, offerCoin)
+	//	}
+	//case types.OrderDirectionSell:
+	//	if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
+	//		return sdk.Coin{}, sdk.Dec{},
+	//			sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+	//				msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+	//	}
+	//	price = amm.PriceToUpTick(msg.Price, int(tickPrec))
+	//	offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount)
+	//	if msg.OfferCoin.Amount.LT(msg.Amount) {
+	//		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+	//			types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount))
+	//	}
+	//}
+	//if types.IsTooSmallOrderAmount(msg.Amount, price) {
+	//	return sdk.Coin{}, sdk.Dec{}, types.ErrTooSmallOrder
+	//}
+
+	// TODO: fix tick
+	//return offerCoin, price, nil
+	return msg.OfferCoin, msg.Price, nil
+}
+
+func (k Keeper) ModifyOrder(ctx sdk.Context, msg *types.MsgModifyOrder) error {
+	// TODO: keeper level validate
+	//tickAdjustedOfferCoin, price, err := k.ValidateMsgModifyOrder(ctx, msg)
+	//if err != nil {
+	//	return types.Order{}, err
+	//}
 
 	// TODO:
 
 	return nil
+}
+
+// ValidateMsgModifyOrder validates types.MsgModifyOrder with state and returns
+// calculated offer coin and price that is fit into ticks.
+func (k Keeper) ValidateMsgModifyOrder(ctx sdk.Context, msg *types.MsgModifyOrder) (offerCoin sdk.Coin, price sdk.Dec, err error) {
+	//spendable := k.bankKeeper.SpendableCoins(ctx, msg.GetOrderer())
+	//if spendableAmt := spendable.AmountOf(msg.OfferCoin.Denom); spendableAmt.LT(msg.OfferCoin.Amount) {
+	//	return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+	//		sdkerrors.ErrInsufficientFunds, "%s is smaller than %s",
+	//		sdk.NewCoin(msg.OfferCoin.Denom, spendableAmt), msg.OfferCoin)
+	//}
+
+	//tickPrec := k.GetTickPrecision(ctx)
+
+	pool, found := k.GetBootstrapPool(ctx, msg.BootstrapPoolId)
+	if !found {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "bootstrap pool %d not found", msg.BootstrapPoolId)
+	}
+
+	// TODO: checking IsActive
+	if !pool.IsActive() {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(types.ErrInactivePool, "bootstrap pool %d inactive", pool.Id)
+	}
+
+	order, found := k.GetOrder(ctx, pool.Id, msg.OrderId)
+	if !found {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "order %d not found", msg.OrderId)
+	}
+
+	if order.Orderer != msg.Orderer {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "orderer %s not matched", order.Orderer)
+	}
+
+	if msg.BootstrapPoolId != order.BootstrapPoolId {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "bootstrap pool not matched")
+	}
+
+	// The denom of offer coin is not the same as the bootstrap coin denom
+	if offerCoin.Denom != order.OfferCoin.Denom {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offer coin denom not matched")
+	}
+
+	// The price is less than the original amount of price
+	if price.LT(order.Price) {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price should be higher than original order")
+	}
+
+	// The amount of offer coin is less than the original amount of offer coin
+	if offerCoin.Amount.LT(order.OfferCoin.Amount) {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offer coin amount should be more than original order")
+	}
+
+	//- Both offer coin and price are the same as those of the original order
+	if offerCoin.Amount.Equal(order.OfferCoin.Amount) && price.Equal(order.Price) {
+		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offer coin amount and price is same with original order")
+	}
+
+	// TODO: add demand denom, amount
+	//- Direction is not the same as the original one
+
+	//switch msg.Direction {
+	//case types.OrderDirectionBuy:
+	//	if msg.OfferCoin.Denom != pool.QuoteCoinDenom || msg.DemandCoinDenom != pool.BaseCoinDenom {
+	//		return sdk.Coin{}, sdk.Dec{},
+	//			sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+	//				msg.DemandCoinDenom, msg.OfferCoin.Denom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+	//	}
+	//	price = amm.PriceToDownTick(msg.Price, int(tickPrec))
+	//	offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, amm.OfferCoinAmount(amm.Buy, price, msg.Amount))
+	//	if msg.OfferCoin.IsLT(offerCoin) {
+	//		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+	//			types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, offerCoin)
+	//	}
+	//case types.OrderDirectionSell:
+	//	if msg.OfferCoin.Denom != pair.BaseCoinDenom || msg.DemandCoinDenom != pair.QuoteCoinDenom {
+	//		return sdk.Coin{}, sdk.Dec{},
+	//			sdkerrors.Wrapf(types.ErrWrongPair, "denom pair (%s, %s) != (%s, %s)",
+	//				msg.OfferCoin.Denom, msg.DemandCoinDenom, pair.BaseCoinDenom, pair.QuoteCoinDenom)
+	//	}
+	//	price = amm.PriceToUpTick(msg.Price, int(tickPrec))
+	//	offerCoin = sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount)
+	//	if msg.OfferCoin.Amount.LT(msg.Amount) {
+	//		return sdk.Coin{}, sdk.Dec{}, sdkerrors.Wrapf(
+	//			types.ErrInsufficientOfferCoin, "%s is smaller than %s", msg.OfferCoin, sdk.NewCoin(msg.OfferCoin.Denom, msg.Amount))
+	//	}
+	//}
+	//if types.IsTooSmallOrderAmount(msg.Amount, price) {
+	//	return sdk.Coin{}, sdk.Dec{}, types.ErrTooSmallOrder
+	//}
+
+	// TODO: fix tick
+	//return offerCoin, price, nil
+	return msg.OfferCoin, msg.Price, nil
 }
 
 func (k Keeper) Vesting(ctx sdk.Context, returnAddr sdk.AccAddress, originalVesting sdk.Coins, startTime int64, periods vestingtypes.Periods) {

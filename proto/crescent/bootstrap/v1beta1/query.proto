@@ -59,6 +59,7 @@ service Query {
       }
     };
   }
+  // TODO: add endpoints
   //
   //// Incentive returns a specific incentive.
   // rpc Incentive(QueryIncentiveRequest) returns (QueryIncentiveResponse) {

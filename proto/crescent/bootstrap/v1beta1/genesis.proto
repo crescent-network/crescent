@@ -25,4 +25,6 @@ message GenesisState {
   repeated BootstrapPool pools = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"pools\""];
 
   repeated Order order = 4 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"orders\""];
+
+  // TODO: add last order ids, records
 }

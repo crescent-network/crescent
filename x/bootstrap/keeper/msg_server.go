@@ -29,9 +29,20 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) LimitOrder(goCtx context.Context, msg *types.MsgLimitOrder) (*types.MsgLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.Keeper.LimitOrder(ctx, msg.GetAddress(), msg.BootstrapPoolId, msg.Direction, msg.OfferCoin, msg.Price); err != nil {
+	if _, err := k.Keeper.LimitOrder(ctx, msg); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgLimitOrderResponse{}, nil
+}
+
+// ModifyOrder defines a method for modify order
+func (k msgServer) ModifyOrder(goCtx context.Context, msg *types.MsgModifyOrder) (*types.MsgModifyOrderResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.Keeper.ModifyOrder(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgModifyOrderResponse{}, nil
 }
