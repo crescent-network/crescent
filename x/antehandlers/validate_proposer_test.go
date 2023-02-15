@@ -2,6 +2,7 @@ package antehandlers_test
 
 import (
 	"fmt"
+	"time"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -25,13 +26,17 @@ func (suite *AnteTestSuite) TestAnteHandlerValidateProposer() {
 		"test title",
 		"test description",
 		"",
-		sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1))),
+		sdk.NewCoins(sdk.NewCoin("quote", sdk.NewInt(1))),
+		"base",
 		"quote",
 		sdk.MustNewDecFromStr("0.1"),
 		sdk.MustNewDecFromStr("0.1"),
 		uint64(1),
 		uint64(1),
 		[]bootstraptypes.InitialOrder{},
+		time.Now(),
+		time.Duration(10000),
+		10,
 	)
 
 	// Variable data per test case

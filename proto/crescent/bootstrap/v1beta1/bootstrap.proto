@@ -14,33 +14,41 @@ option (gogoproto.goproto_getters_all) = false;
 message Params {
 
   // fee rate of the bootstrap creation
-  string bootstrap_creation_fee_rate = 1
+  string creation_fee_rate = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // fee rate of the bootstrap pool for orders
-  string bootstrap_fee_rate = 2
+  // fee rate of the bootstrap pool for initial orders
+  string proposer_trading_fee_rate = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string fee_collector_address = 3;
+  // fee rate of the bootstrap pool for other orders
+  string non_proposer_trading_fee_rate = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // TODO: TBD, add other fee params
+  // farming rewards rate from the fee of the bootstrap pool
+  string fee_farming_rate = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
   // reduction rate of the required amount
-  string required_amount_reduction_rate = 4
+  string required_amount_reduction_rate = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
   // required amount for the initial stage
-  string initial_stage_required_amount = 5
+  string initial_stage_required_amount = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // precision of the tick
-  uint32 tick_precision = 6;
+  uint32 tick_precision = 7;
 
-  uint64 order_extra_gas = 7
+  uint64 order_extra_gas = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Gas", (gogoproto.nullable) = false];
 
   // vesting periods of the bootstrap coin
-  repeated int64 vesting_periods = 8;
+  repeated int64 vesting_periods = 9;
+
+  repeated string quote_coin_whitelist = 10;
+
+  string fee_collector_address = 11;
 }
 
 // Order defines an order.
@@ -81,32 +89,38 @@ message BootstrapPool {
   // id of the bootstrap pool
   uint64 id = 1;
 
-  // amount and denom of the bootstrap coin
-  cosmos.base.v1beta1.Coin bootstrap_coin = 2 [(gogoproto.nullable) = false];
-
-  // denom of the bootstrap coin
-  string bootstrap_coin_denom = 3;
+  // denom of the base coin
+  string base_coin_denom = 2;
 
   // denom of the quote coin
-  string quote_coin_denom = 4;
+  string quote_coin_denom = 3;
 
   // min price of the bootstrap coin
-  string min_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string min_price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
   // max price of the bootstrap coin
-  string max_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string max_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  // TODO: need to fix with start, end time
-  // stage_schedule specifies the schedule of the bootstrap stages
-  repeated google.protobuf.Timestamp stage_schedule = 7
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"stage_schedule\""];
+  // stages specifies the schedule of the bootstrap stages
+  repeated Stage stages = 6;
 
   // address of the proposer
-  string proposer_address = 8;
+  string proposer_address = 7;
   // address of the escrow account
-  string escrow_address = 9;
+  string escrow_address = 8;
   // address of the fee collector (incl. dust colletor)
-  string fee_collector_address = 10;
+  string fee_collector_address = 9;
+}
+
+message Stage {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  google.protobuf.Timestamp start_time = 1
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+
+  google.protobuf.Timestamp end_time = 2
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
 }
 
 // OrderDirection enumerates order directions.

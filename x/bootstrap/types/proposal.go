@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,24 +30,32 @@ func NewBootstrapProposal(
 	description string,
 	proposerAddress string,
 	offerCoins sdk.Coins,
+	baseCoinDenom string,
 	quoteCoinDenom string,
 	minPrice sdk.Dec,
 	maxPrice sdk.Dec,
 	pairId uint64,
 	poolId uint64,
 	initialOrders []InitialOrder,
+	startTime time.Time,
+	stageDuration time.Duration,
+	numOfStages uint32,
 ) *BootstrapProposal {
 	return &BootstrapProposal{
 		Title:           title,
 		Description:     description,
 		ProposerAddress: proposerAddress,
 		OfferCoins:      offerCoins,
+		BaseCoinDenom:   baseCoinDenom,
 		QuoteCoinDenom:  quoteCoinDenom,
 		MinPrice:        minPrice,
 		MaxPrice:        maxPrice,
 		PairId:          pairId,
 		PoolId:          poolId,
 		InitialOrders:   initialOrders,
+		StartTime:       startTime,
+		StageDuration:   stageDuration,
+		NumOfStages:     numOfStages,
 	}
 }
 

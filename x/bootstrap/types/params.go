@@ -16,31 +16,30 @@ const (
 
 // Parameter store keys
 var (
-	KeyBootstrapCreationFeeRate    = []byte("BootstrapCreationFeeRate")
-	KeyBootstrapFeeRate            = []byte("BootstrapFeeRate")
+	KeyCreationFeeRate             = []byte("CreationFeeRate")
+	KeyProposerTradingFeeRate      = []byte("ProposerTradingFeeRate")
+	KeyNonProposerTradingFeeRate   = []byte("NonProposerTradingFeeRate")
+	KeyFeeFarmingRate              = []byte("FeeFarmingRate")
 	KeyRequiredAmountReductionRate = []byte("RequiredAmountReductionRate")
 	KeyInitialStageRequiredAmount  = []byte("InitialStageRequiredAmount")
-	KeyFeeCollectorAddress         = []byte("FeeCollectorAddress")
 	KeyTickPrecision               = []byte("TickPrecision")
 	KeyOrderExtraGas               = []byte("OrderExtraGas")
 	KeyVestingPeriods              = []byte("VestingPeriods")
+	KeyQuoteCoinWhitelist          = []byte("QuoteCoinWhitelist")
+	KeyFeeCollectorAddress         = []byte("FeeCollectorAddress")
 
 	// TODO: need to fix default value
-	DefaultBootstrapCreationFeeRate    = sdk.MustNewDecFromStr("0.05")
-	DefaultBootstrapFeeRate            = sdk.MustNewDecFromStr("0.05")
+	DefaultCreationFeeRate             = sdk.MustNewDecFromStr("0.05")
+	DefaultProposerTradingFeeRate      = sdk.MustNewDecFromStr("0.05")
+	DefaultNonProposerTradingFeeRate   = sdk.MustNewDecFromStr("0.05")
+	DefaultFeeFarmingRate              = sdk.MustNewDecFromStr("0.05")
 	DefaultInitialStageRequiredAmount  = sdk.NewInt(10_000_000_000)
 	DefaultRequiredAmountReductionRate = sdk.MustNewDecFromStr("0.5")
 	DefaultTickPrecision               = uint32(3)
-
-	// TODO: TBD
-	//DefaultBootstrapCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
-
-	DefaultFeeCollectorAddress = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
-
-	DefaultVestingPeriods = []int64{2592000, 2592000, 2592000}
-
-	// TODO: TBD
-	DefaultOrderExtraGas = sdk.Gas(37000)
+	DefaultFeeCollectorAddress         = farmingtypes.DeriveAddress(AddressType, ModuleName, "FeeCollector")
+	DefaultVestingPeriods              = []int64{2592000, 2592000, 2592000}
+	DefaultQuoteCoinWhitelist          = []string{sdk.DefaultBondDenom}
+	DefaultOrderExtraGas               = sdk.Gas(37000)
 
 	//SampleReserveAcc = farmingtypes.DeriveAddress(AddressType, ModuleName, SampleReserveAccName)
 	//DepositReserveAcc            = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
@@ -56,13 +55,16 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns the default bootstrap module parameters.
 func DefaultParams() Params {
 	return Params{
-		BootstrapCreationFeeRate:    DefaultBootstrapCreationFeeRate,
-		BootstrapFeeRate:            DefaultBootstrapFeeRate,
+		CreationFeeRate:             DefaultCreationFeeRate,
+		ProposerTradingFeeRate:      DefaultProposerTradingFeeRate,
+		NonProposerTradingFeeRate:   DefaultNonProposerTradingFeeRate,
+		FeeFarmingRate:              DefaultFeeFarmingRate,
 		RequiredAmountReductionRate: DefaultRequiredAmountReductionRate,
 		InitialStageRequiredAmount:  DefaultInitialStageRequiredAmount,
 		FeeCollectorAddress:         DefaultFeeCollectorAddress.String(),
 		TickPrecision:               DefaultTickPrecision,
 		OrderExtraGas:               DefaultOrderExtraGas,
+		QuoteCoinWhitelist:          DefaultQuoteCoinWhitelist,
 		VestingPeriods:              DefaultVestingPeriods,
 	}
 }
@@ -70,14 +72,17 @@ func DefaultParams() Params {
 // ParamSetPairs implements paramstypes.ParamSet.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyBootstrapCreationFeeRate, &p.BootstrapFeeRate, validateBootstrapFeeRate),
-		paramstypes.NewParamSetPair(KeyBootstrapFeeRate, &p.BootstrapFeeRate, validateBootstrapFeeRate),
+		paramstypes.NewParamSetPair(KeyCreationFeeRate, &p.CreationFeeRate, validateFeeRate),
+		paramstypes.NewParamSetPair(KeyProposerTradingFeeRate, &p.ProposerTradingFeeRate, validateFeeRate),
+		paramstypes.NewParamSetPair(KeyNonProposerTradingFeeRate, &p.NonProposerTradingFeeRate, validateFeeRate),
+		paramstypes.NewParamSetPair(KeyFeeFarmingRate, &p.FeeFarmingRate, validateFeeRate),
 		paramstypes.NewParamSetPair(KeyRequiredAmountReductionRate, &p.RequiredAmountReductionRate, validateRequiredAmountReductionRate),
 		paramstypes.NewParamSetPair(KeyInitialStageRequiredAmount, &p.InitialStageRequiredAmount, validateInitialStageRequiredAmount),
-		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &p.FeeCollectorAddress, validateFeeCollectorAddress),
 		paramstypes.NewParamSetPair(KeyTickPrecision, &p.TickPrecision, validateTickPrecision),
 		paramstypes.NewParamSetPair(KeyOrderExtraGas, &p.OrderExtraGas, validateExtraGas),
 		paramstypes.NewParamSetPair(KeyVestingPeriods, &p.VestingPeriods, validateVestingPeriods),
+		paramstypes.NewParamSetPair(KeyQuoteCoinWhitelist, &p.QuoteCoinWhitelist, validateQuoteCoinWhitelist),
+		paramstypes.NewParamSetPair(KeyFeeCollectorAddress, &p.FeeCollectorAddress, validateFeeCollectorAddress),
 	}
 }
 
@@ -87,14 +92,17 @@ func (p Params) Validate() error {
 		value     interface{}
 		validator func(interface{}) error
 	}{
-		{p.BootstrapCreationFeeRate, validateBootstrapFeeRate},
-		{p.BootstrapFeeRate, validateBootstrapFeeRate},
+		{p.CreationFeeRate, validateFeeRate},
+		{p.ProposerTradingFeeRate, validateFeeRate},
+		{p.NonProposerTradingFeeRate, validateFeeRate},
+		{p.FeeFarmingRate, validateFeeRate},
 		{p.RequiredAmountReductionRate, validateRequiredAmountReductionRate},
 		{p.InitialStageRequiredAmount, validateInitialStageRequiredAmount},
-		{p.FeeCollectorAddress, validateFeeCollectorAddress},
 		{p.TickPrecision, validateTickPrecision},
 		{p.OrderExtraGas, validateExtraGas},
 		{p.VestingPeriods, validateVestingPeriods},
+		{p.QuoteCoinWhitelist, validateQuoteCoinWhitelist},
+		{p.FeeCollectorAddress, validateFeeCollectorAddress},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
@@ -103,7 +111,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateBootstrapFeeRate(i interface{}) error {
+func validateFeeRate(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -194,15 +202,17 @@ func validateVestingPeriods(i interface{}) error {
 	return nil
 }
 
-//func validateBootstrapCreationFee(i interface{}) error {
-//	v, ok := i.(sdk.Coins)
-//	if !ok {
-//		return fmt.Errorf("invalid parameter type: %T", i)
-//	}
-//
-//	if err := v.Validate(); err != nil {
-//		return fmt.Errorf("invalid bootstrap creation fee: %w", err)
-//	}
-//
-//	return nil
-//}
+func validateQuoteCoinWhitelist(i interface{}) error {
+	v, ok := i.([]string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	for _, s := range v {
+		if err := sdk.ValidateDenom(s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
