@@ -42,7 +42,7 @@ func (k Keeper) Vesting(ctx sdk.Context, returnAddr sdk.AccAddress, originalVest
 //	totalDepositAmt := sdk.Coins{}
 //	for _, pairId := range pairIds {
 //		// Fail if the same market maker already exists
-//		_, found := k.GetBootstrap(ctx, mmAddr, pairId)
+//		_, found := k.GetBootstrapPool(ctx, mmAddr, pairId)
 //		if found {
 //			return types.ErrAlreadyExistBootstrap
 //		}
@@ -63,7 +63,7 @@ func (k Keeper) Vesting(ctx sdk.Context, returnAddr sdk.AccAddress, originalVest
 //	// create market maker, deposit object for each pair
 //	for _, pairId := range pairIds {
 //		k.SetDeposit(ctx, mmAddr, pairId, params.DepositAmount)
-//		k.SetBootstrap(ctx, types.Bootstrap{
+//		k.SetBootstrapPool(ctx, types.Bootstrap{
 //			Address:  mmAddr.String(),
 //			PairId:   pairId,
 //			Eligible: false,

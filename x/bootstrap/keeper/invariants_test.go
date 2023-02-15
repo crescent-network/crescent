@@ -40,12 +40,12 @@ package keeper_test
 //	_, broken = keeper.DepositReservedAmountInvariant(k)(ctx)
 //	suite.Require().False(broken)
 //
-//	mmPair2, found := k.GetBootstrap(ctx, mmAddr, 2)
+//	mmPair2, found := k.GetBootstrapPool(ctx, mmAddr, 2)
 //	suite.True(found)
 //
 //	// manipulate eligible of the market maker to break invariant
 //	mmPair2.Eligible = true
-//	k.SetBootstrap(ctx, mmPair2)
+//	k.SetBootstrapPool(ctx, mmPair2)
 //
 //	// broken deposit reserved count invariant
 //	_, broken = keeper.DepositReservedAmountInvariant(k)(ctx)
@@ -53,7 +53,7 @@ package keeper_test
 //
 //	// recovery
 //	mmPair2.Eligible = false
-//	k.SetBootstrap(ctx, mmPair2)
+//	k.SetBootstrapPool(ctx, mmPair2)
 //
 //	// Send coins from deposit reserve acc to break deposit amount invariant
 //	err = suite.app.BankKeeper.SendCoins(
@@ -196,12 +196,12 @@ package keeper_test
 //	_, found = k.GetDeposit(ctx, mmAddr2, 3)
 //	suite.True(found)
 //
-//	mmPair2, found := k.GetBootstrap(ctx, mmAddr, 2)
+//	mmPair2, found := k.GetBootstrapPool(ctx, mmAddr, 2)
 //	suite.True(found)
 //
 //	// manipulate eligible of the market maker to break invariant
 //	mmPair2.Eligible = true
-//	k.SetBootstrap(ctx, mmPair2)
+//	k.SetBootstrapPool(ctx, mmPair2)
 //
 //	// broken deposit record invariant
 //	_, broken = keeper.DepositRecordsInvariant(k)(ctx)
@@ -209,7 +209,7 @@ package keeper_test
 //
 //	// recovery
 //	mmPair2.Eligible = false
-//	k.SetBootstrap(ctx, mmPair2)
+//	k.SetBootstrapPool(ctx, mmPair2)
 //
 //	_, broken = keeper.DepositRecordsInvariant(k)(ctx)
 //	suite.Require().False(broken)

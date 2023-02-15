@@ -108,7 +108,7 @@ package simulation_test
 //	// begin a new block
 //	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[0].Address.String(),
 //		PairId:   1,
 //		Eligible: true,

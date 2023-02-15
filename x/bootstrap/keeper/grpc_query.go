@@ -53,7 +53,7 @@ func (k Querier) Bootstraps(c context.Context, req *types.QueryBootstrapPoolsReq
 	//
 	//// query specific market maker case
 	//if !mmAddr.Empty() && req.PairId != 0 {
-	//	mm, found := k.GetBootstrap(ctx, mmAddr, req.PairId)
+	//	mm, found := k.GetBootstrapPool(ctx, mmAddr, req.PairId)
 	//	if !found {
 	//		return &types.QueryBootstrapsResponse{}, nil
 	//	}
@@ -83,7 +83,7 @@ func (k Querier) Bootstraps(c context.Context, req *types.QueryBootstrapPoolsReq
 	//	switch {
 	//	case req.PairId != 0:
 	//		pairId, mmAddr := types.ParseBootstrapIndexByPairIdKey(append(keyPrefix, key...))
-	//		mm, _ = k.GetBootstrap(ctx, mmAddr, pairId)
+	//		mm, _ = k.GetBootstrapPool(ctx, mmAddr, pairId)
 	//	default:
 	//		mm, err = types.UnmarshalBootstrap(k.cdc, value)
 	//		if err != nil {

@@ -231,3 +231,5 @@ func TestSafeMath(t *testing.T) {
 		})
 	}
 }
+
+// TODO: CoinMul, CoinsMul, Contains

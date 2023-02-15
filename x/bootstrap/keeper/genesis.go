@@ -34,7 +34,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	//	if err := record.Validate(); err != nil {
 	//		panic(err)
 	//	}
-	//	k.SetBootstrap(ctx, record)
+	//	k.SetBootstrapPool(ctx, record)
 	//}
 	//
 	//for _, record := range genState.Incentives {

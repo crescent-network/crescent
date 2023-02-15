@@ -87,7 +87,7 @@ package simulation
 //		}
 //
 //		for _, pair := range pairs {
-//			_, found := k.GetBootstrap(ctx, account.GetAddress(), pair)
+//			_, found := k.GetBootstrapPool(ctx, account.GetAddress(), pair)
 //			if found {
 //				return simtypes.NoOpMsg(bootstraptypes.ModuleName, bootstraptypes.TypeMsgApplyBootstrap, "already exist market maker"), nil, nil
 //			}

@@ -33,12 +33,10 @@ message BootstrapProposal {
   string quote_coin_denom = 6;
 
   // min price of the bootstrap coin
-  string min_price = 7
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string min_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
   // max price of the bootstrap coin
-  string max_price = 8
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
   uint64 pair_id = 9;
 
@@ -52,9 +50,8 @@ message BootstrapProposal {
   // duration of the stage
   google.protobuf.Duration stage_duration = 13 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 
-// number of stages of the bootstrap pool
-uint32 num_of_stages = 14;
-
+  // number of stages of the bootstrap pool
+  uint32 num_of_stages = 14;
 }
 
 message InitialOrder {

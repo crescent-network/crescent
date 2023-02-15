@@ -16,13 +16,13 @@ func DeriveBootstrapPoolFeeCollectorAddress(id uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("BootstrapPoolFeeCollectorAddress/%s", id)))
 }
 
-func NewBootstrapPool(id uint64, baseCoinDenom, QuoteCoinDenom string, minPrice, maxPrice sdk.Dec, proposer sdk.AccAddress) BootstrapPool {
+func NewBootstrapPool(id uint64, baseCoinDenom, QuoteCoinDenom string, minPrice, maxPrice *sdk.Dec, proposer sdk.AccAddress) BootstrapPool {
 	return BootstrapPool{
 		Id:             id,
 		BaseCoinDenom:  baseCoinDenom,
 		QuoteCoinDenom: QuoteCoinDenom,
-		MinPrice:       &minPrice,
-		MaxPrice:       &maxPrice,
+		MinPrice:       minPrice,
+		MaxPrice:       maxPrice,
 		// TODO: schedule
 		//Stages:       nil,
 		ProposerAddress:     proposer.String(),

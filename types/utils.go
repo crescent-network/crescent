@@ -234,3 +234,26 @@ func LengthPrefixString(s string) []byte {
 	bzLen := len(bz)
 	return append([]byte{byte(bzLen)}, bz...)
 }
+
+// TODO: Truncate or Ceil
+func CoinMul(coin sdk.Coin, rate sdk.Dec) (output sdk.Coin) {
+	return sdk.NewCoin(coin.Denom, coin.Amount.ToDec().Mul(rate).TruncateInt())
+}
+
+func CoinsMul(coins sdk.Coins, rate sdk.Dec) (output sdk.Coins) {
+	output = sdk.Coins{}
+	for _, coin := range coins {
+		output = output.Add(CoinMul(coin, rate))
+	}
+	return
+}
+
+// Contains checks if a string is present in a list
+func Contains(list []string, str string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}

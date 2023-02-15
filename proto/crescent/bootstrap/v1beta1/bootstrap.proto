@@ -96,10 +96,10 @@ message BootstrapPool {
   string quote_coin_denom = 3;
 
   // min price of the bootstrap coin
-  string min_price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string min_price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
   // max price of the bootstrap coin
-  string max_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string max_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
   // stages specifies the schedule of the bootstrap stages
   repeated Stage stages = 6;

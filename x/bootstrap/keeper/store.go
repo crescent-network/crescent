@@ -7,9 +7,8 @@ import (
 	"github.com/crescent-network/crescent/v4/x/bootstrap/types"
 )
 
-// GetBootstrap returns market maker object for a given
-// address and pair id.
-func (k Keeper) GetBootstrap(ctx sdk.Context, id uint64) (mm types.BootstrapPool, found bool) {
+// GetBootstrapPool returns bootstrap pool object for a given id
+func (k Keeper) GetBootstrapPool(ctx sdk.Context, id uint64) (mm types.BootstrapPool, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetBootstrapPoolKey(id))
 	if bz == nil {
@@ -20,13 +19,11 @@ func (k Keeper) GetBootstrap(ctx sdk.Context, id uint64) (mm types.BootstrapPool
 	return
 }
 
-// SetBootstrap sets a market maker.
-func (k Keeper) SetBootstrap(ctx sdk.Context, pool types.BootstrapPool) {
+// SetBootstrapPool sets a bootstrap pool.
+func (k Keeper) SetBootstrapPool(ctx sdk.Context, pool types.BootstrapPool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&pool)
 	store.Set(types.GetBootstrapPoolKey(pool.Id), bz)
-	//store.Set(types.GetBootstrapIndexByPairIdKey(mm.PairId, mmAddr), []byte{})
-	// TODO: index by reserve addr
 }
 
 // GetLastBootstrapPoolId returns the last bootstrap pool id.
@@ -252,7 +249,7 @@ func (k Keeper) DeleteOrderIndex(ctx sdk.Context, order types.Order) {
 //	defer iter.Close()
 //	for ; iter.Valid(); iter.Next() {
 //		pairId, mmAddr := types.ParseBootstrapIndexByPairIdKey(iter.Key())
-//		mm, _ := k.GetBootstrap(ctx, mmAddr, pairId)
+//		mm, _ := k.GetBootstrapPool(ctx, mmAddr, pairId)
 //		if cb(mm) {
 //			break
 //		}

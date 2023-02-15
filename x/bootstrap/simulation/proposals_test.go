@@ -25,49 +25,49 @@ package simulation_test
 //	param.IncentiveBudgetAddress = accounts[1].Address.String()
 //	app.BootstrapKeeper.SetParams(ctx, param)
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[0].Address.String(),
 //		PairId:   1,
 //		Eligible: true,
 //	})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[0].Address.String(),
 //		PairId:   2,
 //		Eligible: true,
 //	})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[3].Address.String(),
 //		PairId:   1,
 //		Eligible: true,
 //	})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[5].Address.String(),
 //		PairId:   1,
 //		Eligible: true,
 //	})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[4].Address.String(),
 //		PairId:   2,
 //		Eligible: true,
 //	})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[4].Address.String(),
 //		PairId:   3,
 //		Eligible: true,
 //	})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[5].Address.String(),
 //		PairId:   3,
 //		Eligible: true,
 //	})
 //
-//	app.BootstrapKeeper.SetBootstrap(ctx, types.Bootstrap{
+//	app.BootstrapKeeper.SetBootstrapPool(ctx, types.Bootstrap{
 //		Address:  accounts[6].Address.String(),
 //		PairId:   3,
 //		Eligible: true,

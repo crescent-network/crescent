@@ -48,8 +48,8 @@ func NewBootstrapProposal(
 		OfferCoins:      offerCoins,
 		BaseCoinDenom:   baseCoinDenom,
 		QuoteCoinDenom:  quoteCoinDenom,
-		MinPrice:        minPrice,
-		MaxPrice:        maxPrice,
+		MinPrice:        &minPrice,
+		MaxPrice:        &maxPrice,
 		PairId:          pairId,
 		PoolId:          poolId,
 		InitialOrders:   initialOrders,
@@ -91,15 +91,15 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		return err
 	}
 
-	if !p.MinPrice.IsPositive() {
+	if p.MinPrice != nil && !p.MinPrice.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min price should be positive")
 	}
 
-	if !p.MaxPrice.IsPositive() {
+	if p.MaxPrice != nil && !p.MaxPrice.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price should be positive")
 	}
 
-	if p.MaxPrice.LTE(p.MinPrice) {
+	if p.MinPrice != nil && p.MaxPrice != nil && p.MaxPrice.LTE(*p.MinPrice) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price should be greater than min price")
 	}
 
@@ -118,10 +118,10 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		if err = io.OfferCoin.Validate(); err != nil {
 			return err
 		}
-		if io.Price.LT(p.MinPrice) || io.Price.GT(p.MaxPrice) {
+		if p.MinPrice != nil && io.Price.LT(*p.MinPrice) || p.MaxPrice != nil && io.Price.GT(*p.MaxPrice) {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "initial orders price should be between min price and max price")
 		}
-		if lastPrice.GTE(io.Price) {
+		if lastPrice.GT(io.Price) {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "initial orders should be sorted ascending order")
 		}
 		lastPrice = io.Price
