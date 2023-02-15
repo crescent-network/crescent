@@ -3,9 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v2 "github.com/crescent-network/crescent/v4/x/liquidity/legacy/v2"
-	v3 "github.com/crescent-network/crescent/v4/x/liquidity/legacy/v3"
-	v4 "github.com/crescent-network/crescent/v4/x/liquidity/legacy/v4"
+	v2 "github.com/crescent-network/crescent/v5/x/liquidity/legacy/v2"
+	v3 "github.com/crescent-network/crescent/v5/x/liquidity/legacy/v3"
+	v4 "github.com/crescent-network/crescent/v5/x/liquidity/legacy/v4"
 )
 
 type Migrator struct {

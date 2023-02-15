@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	utils "github.com/crescent-network/crescent/v4/types"
+	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 const (

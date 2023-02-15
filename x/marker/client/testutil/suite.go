@@ -16,10 +16,10 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
 
-	chain "github.com/crescent-network/crescent/v4/app"
-	"github.com/crescent-network/crescent/v4/app/params"
-	"github.com/crescent-network/crescent/v4/x/marker/client/cli"
-	"github.com/crescent-network/crescent/v4/x/marker/types"
+	chain "github.com/crescent-network/crescent/v5/app"
+	"github.com/crescent-network/crescent/v5/app/params"
+	"github.com/crescent-network/crescent/v5/x/marker/client/cli"
+	"github.com/crescent-network/crescent/v5/x/marker/types"
 )
 
 type IntegrationTestSuite struct {

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	markertypes "github.com/crescent-network/crescent/v4/x/marker/types"
+	markertypes "github.com/crescent-network/crescent/v5/x/marker/types"
 )
 
 const UpgradeName = "v5"

@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v4/x/claim/types"
+	"github.com/crescent-network/crescent/v5/x/claim/types"
 )
 
 // GetAirdrop returns the airdrop object from the airdrop id.

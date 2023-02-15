@@ -8,7 +8,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/crescent-network/crescent/v4/x/marker/types"
+	"github.com/crescent-network/crescent/v5/x/marker/types"
 )
 
 // Keeper of the module's store.

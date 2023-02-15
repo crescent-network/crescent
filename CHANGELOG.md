@@ -38,6 +38,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v5.0.0] - 2023-02-14
+
+### Features
+
+- (x/marker) [\#145](https://github.com/crescent-network/crescent/pull/145) Add marker module
+
+### Client Breaking
+
+- (x/liquidity) [\#144](https://github.com/crescent-network/crescent/pull/144) Change `MsgMMOrder`
+
+### CLI Breaking
+
+- (x/liquidity) [\#144](https://github.com/crescent-network/crescent/pull/144) Change `mm-order` tx cmd
+
 ## [v4.0.0] - 2023-01-05
 
 ### State Machine Breaking
@@ -185,7 +199,7 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
   - `x/vesting` feat: periodic vesting msg
   - `x/bank` feat: Add dynamic blockedAddrs
 
-[unreleased]: https://github.com/crescent-network/crescent/compare/v4.0.0...HEAD
+[unreleased]: https://github.com/crescent-network/crescent/compare/v5.0.0...HEAD
 [v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
 [v1.1.0]: https://github.com/crescent-network/crescent/releases/tag/v1.1.0
 [v2.1.0]: https://github.com/crescent-network/crescent/releases/tag/v2.1.0
@@ -194,3 +208,4 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
 [v2.3.0]: https://github.com/crescent-network/crescent/releases/tag/v2.3.0
 [v3.0.0]: https://github.com/crescent-network/crescent/releases/tag/v3.0.0
 [v4.0.0]: https://github.com/crescent-network/crescent/releases/tag/v4.0.0
+[v5.0.0]: https://github.com/crescent-network/crescent/releases/tag/v5.0.0

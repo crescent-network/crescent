@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/crescent-network/crescent/v4/x/farming/simulation"
-	"github.com/crescent-network/crescent/v4/x/farming/types"
+	"github.com/crescent-network/crescent/v5/x/farming/simulation"
+	"github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 func TestDecodeFarmingStore(t *testing.T) {

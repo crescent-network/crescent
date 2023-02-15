@@ -13,8 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v4/x/liquidfarming/keeper"
-	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
 // GetTxCmd returns the cli transaction commands for the module.

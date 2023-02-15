@@ -3,7 +3,7 @@ package cli
 import (
 	"strings"
 
-	"github.com/crescent-network/crescent/v4/x/claim/types"
+	"github.com/crescent-network/crescent/v5/x/claim/types"
 )
 
 // NormalizeConditionType normalizes specified condition type.

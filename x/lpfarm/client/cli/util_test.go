@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/require"
 
-	"github.com/crescent-network/crescent/v4/app/params"
-	"github.com/crescent-network/crescent/v4/x/lpfarm/client/cli"
+	"github.com/crescent-network/crescent/v5/app/params"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/client/cli"
 )
 
 func TestParseFarmingPlanProposal(t *testing.T) {

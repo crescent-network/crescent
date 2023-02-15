@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 import "crescent/liquidfarming/v1beta1/liquidfarming.proto";
 import "crescent/liquidfarming/v1beta1/params.proto";
 
-option go_package = "github.com/crescent-network/crescent/v4/x/liquidfarming/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/liquidfarming/types";
 
 // Query defines the gRPC querier service.
 service Query {

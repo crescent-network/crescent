@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Crescent REST and gRPC Gateway docs
   description: 'A REST interface for state queries, transactions'
-  version: 3.0.0
+  version: 5.0.0
 paths:
   /crescent/farming/v1beta1/current_epoch_days:
     get:
@@ -9598,6 +9598,77 @@ paths:
                       format: byte
       tags:
         - Query
+  /crescent/marker/v1beta1/last_block_time:
+    get:
+      operationId: MarkerLastBlockTime
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              last_block_time:
+                type: string
+                format: date-time
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /crescent/marker/v1beta1/params:
+    get:
+      operationId: MarkerParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
 definitions:
   cosmos.base.query.v1beta1.PageRequest:
     type: object
@@ -15018,3 +15089,16 @@ definitions:
     description: |-
       RewardsAuction defines rewards auction that is created by the module
       for every rewards_auction_duration in params.
+  crescent.marker.v1beta1.Params:
+    type: object
+  crescent.marker.v1beta1.QueryLastBlockTimeResponse:
+    type: object
+    properties:
+      last_block_time:
+        type: string
+        format: date-time
+  crescent.marker.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object

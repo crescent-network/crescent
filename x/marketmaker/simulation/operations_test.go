@@ -11,11 +11,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v4/app"
-	"github.com/crescent-network/crescent/v4/app/params"
-	"github.com/crescent-network/crescent/v4/x/marketmaker/simulation"
-	"github.com/crescent-network/crescent/v4/x/marketmaker/types"
-	minttypes "github.com/crescent-network/crescent/v4/x/mint/types"
+	chain "github.com/crescent-network/crescent/v5/app"
+	"github.com/crescent-network/crescent/v5/app/params"
+	"github.com/crescent-network/crescent/v5/x/marketmaker/simulation"
+	"github.com/crescent-network/crescent/v5/x/marketmaker/types"
+	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.

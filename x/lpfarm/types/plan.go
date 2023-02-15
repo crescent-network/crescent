@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v4/types"
+	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 const day = 24 * time.Hour

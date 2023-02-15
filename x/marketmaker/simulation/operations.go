@@ -10,10 +10,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/crescent-network/crescent/v4/app/params"
-	utils "github.com/crescent-network/crescent/v4/types"
-	marketmakerkeeper "github.com/crescent-network/crescent/v4/x/marketmaker/keeper"
-	marketmakertypes "github.com/crescent-network/crescent/v4/x/marketmaker/types"
+	appparams "github.com/crescent-network/crescent/v5/app/params"
+	utils "github.com/crescent-network/crescent/v5/types"
+	marketmakerkeeper "github.com/crescent-network/crescent/v5/x/marketmaker/keeper"
+	marketmakertypes "github.com/crescent-network/crescent/v5/x/marketmaker/types"
 )
 
 // Simulation operation weights constants.

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v4/x/mint/types"
+	"github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 var _ types.QueryServer = Keeper{}

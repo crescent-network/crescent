@@ -12,7 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v4/x/liquidfarming/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
 // GetQueryCmd returns the cli query commands for the module

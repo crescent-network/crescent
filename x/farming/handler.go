@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/crescent-network/crescent/v4/x/farming/keeper"
-	"github.com/crescent-network/crescent/v4/x/farming/types"
+	"github.com/crescent-network/crescent/v5/x/farming/keeper"
+	"github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 func NewHandler(_ keeper.Keeper) sdk.Handler {

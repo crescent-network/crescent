@@ -8,10 +8,10 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 
-	chain "github.com/crescent-network/crescent/v4/app"
-	utils "github.com/crescent-network/crescent/v4/types"
-	v4liquidity "github.com/crescent-network/crescent/v4/x/liquidity/legacy/v4"
-	"github.com/crescent-network/crescent/v4/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/v5/app"
+	utils "github.com/crescent-network/crescent/v5/types"
+	v4liquidity "github.com/crescent-network/crescent/v5/x/liquidity/legacy/v4"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 func TestMigrateStore(t *testing.T) {

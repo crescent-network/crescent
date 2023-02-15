@@ -8,9 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v4/app/params"
-	"github.com/crescent-network/crescent/v4/x/farming/simulation"
-	"github.com/crescent-network/crescent/v4/x/farming/types"
+	"github.com/crescent-network/crescent/v5/app/params"
+	"github.com/crescent-network/crescent/v5/x/farming/simulation"
+	"github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 func TestProposalContents(t *testing.T) {
