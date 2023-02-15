@@ -55,6 +55,38 @@ func (m BootstrapPool) GetFeeCollector() sdk.AccAddress {
 	return addr
 }
 
+func NewOrderForInitialOrder(io InitialOrder, id, poolId uint64, height int64, orderer string) Order {
+	return Order{
+		Id:                 id,
+		BootstrapPoolId:    poolId,
+		MsgHeight:          height,
+		Orderer:            orderer,
+		Direction:          io.Direction,
+		OfferCoin:          io.OfferCoin,
+		RemainingOfferCoin: io.OfferCoin,
+		ReceivedCoin:       sdk.Coin{},
+		Price:              io.Price,
+		Status:             OrderStatusNotExecuted,
+		IsInitial:          true,
+	}
+}
+
+//func NewOrderForLimitOrder(msg MsgLimitOrder, id, poolId uint64, height int64, orderer string) Order {
+//	return Order{
+//		Id:                 id,
+//		BootstrapPoolId:    poolId,
+//		MsgHeight:          height,
+//		Orderer:            orderer,
+//		Direction:          io.Direction,
+//		OfferCoin:          io.OfferCoin,
+//		RemainingOfferCoin: io.OfferCoin,
+//		ReceivedCoin:       sdk.Coin{},
+//		Price:              io.Price,
+//		Status:             OrderStatusNotExecuted,
+//		IsInitial:          true,
+//	}
+//}
+
 func (m Order) GetOrderer() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(m.Orderer)
 	if err != nil {
@@ -64,69 +96,71 @@ func (m Order) GetOrderer() sdk.AccAddress {
 }
 
 // Validate validates Order for genesis.
-func (order Order) Validate() error {
-	if order.Id == 0 {
+func (m Order) Validate() error {
+	if m.Id == 0 {
 		return fmt.Errorf("id must not be 0")
 	}
-	if order.BootstrapPoolId == 0 {
+	if m.BootstrapPoolId == 0 {
 		return fmt.Errorf("pool id must not be 0")
 	}
-	if order.MsgHeight == 0 {
+	if m.MsgHeight == 0 {
 		return fmt.Errorf("message height must not be 0")
 	}
-	if _, err := sdk.AccAddressFromBech32(order.Orderer); err != nil {
-		return fmt.Errorf("invalid orderer address %s: %w", order.Orderer, err)
+	if _, err := sdk.AccAddressFromBech32(m.Orderer); err != nil {
+		return fmt.Errorf("invalid orderer address %s: %w", m.Orderer, err)
 	}
-	if order.Direction != OrderDirectionBuy && order.Direction != OrderDirectionSell {
-		return fmt.Errorf("invalid direction: %s", order.Direction)
+	if m.Direction != OrderDirectionBuy && m.Direction != OrderDirectionSell {
+		return fmt.Errorf("invalid direction: %s", m.Direction)
 	}
-	if err := order.OfferCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid offer coin %s: %w", order.OfferCoin, err)
+	if err := m.OfferCoin.Validate(); err != nil {
+		return fmt.Errorf("invalid offer coin %s: %w", m.OfferCoin, err)
 	}
-	if order.OfferCoin.IsZero() {
+	if m.OfferCoin.IsZero() {
 		return fmt.Errorf("offer coin must not be 0")
 	}
-	if err := order.RemainingOfferCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid remaining offer coin %s: %w", order.RemainingOfferCoin, err)
+	if err := m.RemainingOfferCoin.Validate(); err != nil {
+		return fmt.Errorf("invalid remaining offer coin %s: %w", m.RemainingOfferCoin, err)
 	}
-	if order.OfferCoin.Denom != order.RemainingOfferCoin.Denom {
-		return fmt.Errorf("offer coin denom %s != remaining offer coin denom %s", order.OfferCoin.Denom, order.RemainingOfferCoin.Denom)
+	if m.OfferCoin.Denom != m.RemainingOfferCoin.Denom {
+		return fmt.Errorf("offer coin denom %s != remaining offer coin denom %s", m.OfferCoin.Denom, m.RemainingOfferCoin.Denom)
 	}
-	if err := order.ReceivedCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid received coin %s: %w", order.ReceivedCoin, err)
+	if err := m.ReceivedCoin.Validate(); err != nil {
+		return fmt.Errorf("invalid received coin %s: %w", m.ReceivedCoin, err)
 	}
-	if !order.Price.IsPositive() {
-		return fmt.Errorf("price must be positive: %s", order.Price)
+	if !m.Price.IsPositive() {
+		return fmt.Errorf("price must be positive: %s", m.Price)
 	}
-	//if !order.Amount.IsPositive() {
-	//	return fmt.Errorf("amount must be positive: %s", order.Amount)
+
+	// TODO: add other validations
+	//if !m.Amount.IsPositive() {
+	//	return fmt.Errorf("amount must be positive: %s", m.Amount)
 	//}
-	//if order.OpenAmount.IsNegative() {
-	//	return fmt.Errorf("open amount must not be negative: %s", order.OpenAmount)
+	//if m.OpenAmount.IsNegative() {
+	//	return fmt.Errorf("open amount must not be negative: %s", m.OpenAmount)
 	//}
-	//if order.BatchId == 0 {
+	//if m.BatchId == 0 {
 	//	return fmt.Errorf("batch id must not be 0")
 	//}
-	//if order.ExpireAt.IsZero() {
+	//if m.ExpireAt.IsZero() {
 	//	return fmt.Errorf("no expiration info")
 	//}
-	if !order.Status.IsValid() {
-		return fmt.Errorf("invalid status: %s", order.Status)
+	if !m.Status.IsValid() {
+		return fmt.Errorf("invalid status: %s", m.Status)
 	}
 	return nil
 }
 
 // SetStatus sets the order's status.
 // SetStatus is to easily find locations where the status is changed.
-func (order *Order) SetStatus(status OrderStatus) {
-	order.Status = status
+func (m *Order) SetStatus(status OrderStatus) {
+	m.Status = status
 }
 
 // IsValid returns true if the OrderStatus is one of:
 // OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched,
 // OrderStatusCompleted, OrderStatusCanceled, OrderStatusExpired.
-func (status OrderStatus) IsValid() bool {
-	switch status {
+func (x OrderStatus) IsValid() bool {
+	switch x {
 	case OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched,
 		OrderStatusCompleted, OrderStatusExpired:
 		return true
@@ -137,8 +171,8 @@ func (status OrderStatus) IsValid() bool {
 
 // IsMatchable returns true if the OrderStatus is one of:
 // OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched.
-func (status OrderStatus) IsMatchable() bool {
-	switch status {
+func (x OrderStatus) IsMatchable() bool {
+	switch x {
 	case OrderStatusNotExecuted, OrderStatusNotMatched, OrderStatusPartiallyMatched:
 		return true
 	default:
@@ -147,8 +181,8 @@ func (status OrderStatus) IsMatchable() bool {
 }
 
 // CanBeExpired has the same condition as IsMatchable.
-func (status OrderStatus) CanBeExpired() bool {
-	return status.IsMatchable()
+func (x OrderStatus) CanBeExpired() bool {
+	return x.IsMatchable()
 }
 
 //// CanBeCanceled returns true if the OrderStatus is one of:

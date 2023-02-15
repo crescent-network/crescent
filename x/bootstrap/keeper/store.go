@@ -77,6 +77,33 @@ func (k Keeper) SetOrderIndex(ctx sdk.Context, order types.Order) {
 	store.Set(types.GetOrderIndexKey(order.GetOrderer(), order.BootstrapPoolId, order.Id), []byte{})
 }
 
+// GetLastOrderId returns the last order id of the pool.
+func (k Keeper) GetLastOrderId(ctx sdk.Context, poolId uint64) (id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetLastOrderIdIndexKey(poolId))
+	if bz == nil {
+		id = 0 // initialize the order id
+	} else {
+		var val gogotypes.UInt64Value
+		k.cdc.MustUnmarshal(bz, &val)
+		id = val.GetValue()
+	}
+	return
+}
+
+func (k Keeper) SetLastOrderId(ctx sdk.Context, poolId, orderId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: orderId})
+	store.Set(types.GetLastOrderIdIndexKey(poolId), bz)
+}
+
+// getNextOrderIdWithUpdate increments the pool's last order id and returns it.
+func (k Keeper) getNextOrderIdWithUpdate(ctx sdk.Context, poolId uint64) uint64 {
+	id := k.GetLastOrderId(ctx, poolId) + 1
+	k.SetLastOrderId(ctx, poolId, id)
+	return id
+}
+
 // IterateAllOrders iterates through all orders in the store and all
 // cb for each order.
 func (k Keeper) IterateAllOrders(ctx sdk.Context, cb func(order types.Order) (stop bool, err error)) error {

@@ -7,6 +7,7 @@ import (
 
 var (
 	_ sdk.Msg = (*MsgLimitOrder)(nil)
+	// TODO: add modify order
 )
 
 // Message types for the bootstrap module

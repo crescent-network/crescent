@@ -53,6 +53,11 @@ func (s *KeeperTestSuite) TestBootstrapProposal() {
 	fmt.Println(s.app.BankKeeper.GetAllBalances(ctx, bp.GetFeeCollector()))
 	fmt.Println(s.app.BankKeeper.GetAllBalances(ctx, s.addrs[1]))
 
+	fmt.Println(s.keeper.GetAllOrders(ctx))
+
+	// TODO: assert orders
+	// TODO: assert stage
+
 	// TODO: add test cases using malleate
 	//for _, tc := range []struct {
 	//	name        string

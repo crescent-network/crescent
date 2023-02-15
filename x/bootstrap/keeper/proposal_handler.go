@@ -72,9 +72,16 @@ func HandleBootstrapProposal(ctx sdk.Context, k Keeper, p *types.BootstrapPropos
 	// Set bootstrap pool
 	k.SetBootstrapPool(ctx, bp)
 	k.SetLastBootstrapPoolId(ctx, bp.Id)
-	// TODO: set
 
 	// TODO: set initial orders, Set, store
+
+	// TODO: refactor PlaceInitialOrder with cached context
+	for _, io := range p.InitialOrders {
+		orderId := k.getNextOrderIdWithUpdate(ctx, bp.Id)
+		order := types.NewOrderForInitialOrder(io, orderId, bp.Id, ctx.BlockHeight(), bp.ProposerAddress)
+		k.SetOrder(ctx, order)
+		k.SetOrderIndex(ctx, order)
+	}
 
 	// TODO: event emit
 	//		ctx.EventManager().EmitEvents(sdk.Events{
