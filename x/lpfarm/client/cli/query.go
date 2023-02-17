@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -73,6 +74,7 @@ $ %s query %s params
 
 // NewQueryPlansCmd implements the plans query cmd.
 func NewQueryPlansCmd() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 	cmd := &cobra.Command{
 		Use:   "plans",
 		Args:  cobra.NoArgs,
@@ -82,7 +84,15 @@ func NewQueryPlansCmd() *cobra.Command {
 
 Example:
 $ %s query %s plans
+$ %s query %s plans --farming-pool-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query %s plans --termination-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query %s plans --is-private false
+$ %s query %s plans --is-terminated false
 `,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName, bech32PrefixAccAddr,
+				version.AppName, types.ModuleName, bech32PrefixAccAddr,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -91,13 +101,21 @@ $ %s query %s plans
 			if err != nil {
 				return err
 			}
+			farmingPoolAddr, _ := cmd.Flags().GetString(FlagFarmingPoolAddress)
+			terminationAddr, _ := cmd.Flags().GetString(FlagTerminationAddress)
+			isPrivate, _ := cmd.Flags().GetString(FlagIsPrivate)
+			isTerminated, _ := cmd.Flags().GetString(FlagIsTerminated)
 			queryClient := types.NewQueryClient(clientCtx)
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 			res, err := queryClient.Plans(cmd.Context(), &types.QueryPlansRequest{
-				Pagination: pageReq,
+				FarmingPoolAddress: farmingPoolAddr,
+				TerminationAddress: terminationAddr,
+				IsPrivate:          isPrivate,
+				IsTerminated:       isTerminated,
+				Pagination:         pageReq,
 			})
 			if err != nil {
 				return err
@@ -105,6 +123,10 @@ $ %s query %s plans
 			return clientCtx.PrintProto(res)
 		},
 	}
+	cmd.Flags().String(FlagFarmingPoolAddress, "", "bech32 encoded farming pool address")
+	cmd.Flags().String(FlagTerminationAddress, "", "bech32 encoded termination address")
+	cmd.Flags().String(FlagIsPrivate, "", "Whether the plan is private or not (true|false)")
+	cmd.Flags().String(FlagIsTerminated, "", "Whether the plan is terminated or not (true|false)")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "plans")
 	return cmd

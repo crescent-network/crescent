@@ -8204,6 +8204,22 @@ paths:
                       type: string
                       format: byte
       parameters:
+        - name: farming_pool_address
+          in: query
+          required: false
+          type: string
+        - name: termination_address
+          in: query
+          required: false
+          type: string
+        - name: is_private
+          in: query
+          required: false
+          type: string
+        - name: is_terminated
+          in: query
+          required: false
+          type: string
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
