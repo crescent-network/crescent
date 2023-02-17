@@ -143,7 +143,7 @@ func NumMMOrdersInvariant(k Keeper) sdk.Invariant {
 		// orderer address => (pair id => num mm orders)
 		numMMOrdersMap := map[string]map[uint64]uint32{}
 		_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
-			if order.Type == types.OrderTypeMM {
+			if order.Type == types.OrderTypeMM && !order.Status.ShouldBeDeleted() {
 				numMMOrdersByPairId, ok := numMMOrdersMap[order.Orderer]
 				if !ok {
 					numMMOrdersByPairId = map[uint64]uint32{}
@@ -180,7 +180,7 @@ func NumMMOrdersInvariant(k Keeper) sdk.Invariant {
 		broken := count != 0
 		return sdk.FormatInvariant(
 			types.ModuleName, "num-mm-orders",
-			fmt.Sprintf("%d pool(s) with wrong status found\n%s", count, msg),
+			fmt.Sprintf("%d orderer-pair pairs with wrong status\n%s", count, msg),
 		), broken
 	}
 }
