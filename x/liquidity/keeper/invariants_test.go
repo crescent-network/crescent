@@ -89,3 +89,7 @@ func (s *KeeperTestSuite) TestPoolStatusInvariant() {
 	_, broken = keeper.PoolStatusInvariant(s.keeper)(s.ctx)
 	s.Require().True(broken)
 }
+
+func (s *KeeperTestSuite) TestNumMMOrdersInvariant() {
+	// TODO: not implemented
+}
