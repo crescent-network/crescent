@@ -32,26 +32,25 @@ message BootstrapProposal {
   // denom of the quote coin
   string quote_coin_denom = 6;
 
+  // pair id of the liquidity module
+  uint64 pair_id = 7;
+
   // min price of the bootstrap coin
-  string min_price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+  string min_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
   // max price of the bootstrap coin
-  string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+  string max_price = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
-  uint64 pair_id = 9;
+  repeated InitialOrder initial_orders = 10 [(gogoproto.nullable) = false];
 
-  uint64 pool_id = 10;
-
-  repeated InitialOrder initial_orders = 11 [(gogoproto.nullable) = false];
-
-  google.protobuf.Timestamp start_time = 12
+  google.protobuf.Timestamp start_time = 11
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
 
   // duration of the stage
-  google.protobuf.Duration stage_duration = 13 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+  google.protobuf.Duration stage_duration = 12 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 
   // number of stages of the bootstrap pool
-  uint32 num_of_stages = 14;
+  uint32 num_of_stages = 13;
 }
 
 message InitialOrder {
@@ -64,4 +63,6 @@ message InitialOrder {
 
   // direction specifies the order direction; either buy or sell
   OrderDirection direction = 3;
+
+  uint32 associate_stage = 4;
 }

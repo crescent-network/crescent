@@ -17,24 +17,24 @@ message Params {
   string creation_fee_rate = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // fee rate of the bootstrap pool for initial orders
-  string proposer_trading_fee_rate = 2
+  // fee rate of the order to the protocol
+  string protocol_fee_rate = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // fee rate of the bootstrap pool for other orders
-  string non_proposer_trading_fee_rate = 3
+  // trading fee rate of the bootstrap pool for proposer's initial orders
+  string initial_trading_fee_rate = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // farming rewards rate from the fee of the bootstrap pool
-  string fee_farming_rate = 4
+  // trading fee rate of the bootstrap pool for other orders
+  string trading_fee_rate = 4
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // reduction rate of the required amount
-  string required_amount_reduction_rate = 5
+  // reduction rate of the required voting power
+  string required_voting_power_reduction_rate = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  // required amount for the initial stage
-  string initial_stage_required_amount = 6
+  // required voting power for the first stage
+  string required_voting_power = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // precision of the tick
@@ -48,7 +48,7 @@ message Params {
 
   repeated string quote_coin_whitelist = 10;
 
-  string fee_collector_address = 11;
+  string protocol_fee_collector_address = 11;
 }
 
 // Order defines an order.
@@ -81,7 +81,7 @@ message Order {
 
   OrderStatus status = 10;
 
-  bool is_initial = 11;
+  uint32 associate_stage = 11;
 }
 
 // Pool defines bootstrap pool object
@@ -95,21 +95,33 @@ message BootstrapPool {
   // denom of the quote coin
   string quote_coin_denom = 3;
 
+  // pair id of the liquidity module
+  uint64 pair_id = 4;
+
   // min price of the bootstrap coin
-  string min_price = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+  string min_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
   // max price of the bootstrap coin
-  string max_price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+  string max_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 
   // stages specifies the schedule of the bootstrap stages
-  repeated Stage stages = 6;
+  repeated Stage stages = 7;
 
   // address of the proposer
-  string proposer_address = 7;
+  string proposer_address = 8;
   // address of the escrow account
-  string escrow_address = 8;
+  string escrow_address = 9;
   // address of the fee collector (incl. dust colletor)
-  string fee_collector_address = 9;
+  string fee_collector_address = 10;
+
+  string creation_fee_rate = 11
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+  string protocol_fee_rate = 12
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+  string initial_trading_fee_rate = 13
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+  string trading_fee_rate = 14
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
 }
 
 message Stage {

@@ -31,8 +31,17 @@ message MsgLimitOrder {
   // offer_coin specifies the amount of coin the orderer offers
   cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
 
+  // fee specifies the amount of fee
+  cosmos.base.v1beta1.Coin fee = 5 [(gogoproto.nullable) = false];
+
+  // demand_coin_denom specifies the demand coin denom
+  string demand_coin_denom = 6;
+
   // price specifies the order price
-  string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // amount specifies the amount of base coin the orderer wants to buy or sell
+  string amount = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // MsgLimitOrderResponse defines the Msg/LimitOrder response type.
@@ -52,8 +61,18 @@ message MsgModifyOrder {
   // offer_coin specifies the amount of coin the orderer offers
   cosmos.base.v1beta1.Coin offer_coin = 4 [(gogoproto.nullable) = false];
 
+  // fee specifies the amount of fee
+  cosmos.base.v1beta1.Coin fee = 5 [(gogoproto.nullable) = false];
+
+  // TODO: TBD, could be removed
+  // demand_coin_denom specifies the demand coin denom
+  string demand_coin_denom = 6;
+
   // price specifies the order price
-  string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string price = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // amount specifies the amount of base coin the orderer wants to buy or sell
+  string amount = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // MsgModifyOrderResponse defines the Msg/ModifyOrder response type.

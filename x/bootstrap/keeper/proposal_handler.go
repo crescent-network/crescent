@@ -31,11 +31,6 @@ func HandleBootstrapProposal(ctx sdk.Context, k Keeper, p *types.BootstrapPropos
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid pair, offer coin or quote coin miss matched")
 	}
 
-	_, found = k.liquidityKeeper.GetPool(ctx, p.PoolId)
-	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", p.PoolId)
-	}
-
 	params := k.GetParams(ctx)
 	// check is the quote denom in whitelist
 	if !utils.Contains(params.QuoteCoinWhitelist, p.QuoteCoinDenom) {

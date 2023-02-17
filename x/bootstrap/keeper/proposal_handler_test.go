@@ -25,7 +25,6 @@ func (s *KeeperTestSuite) TestBootstrapProposal() {
 		MinPrice:        nil,
 		MaxPrice:        nil,
 		PairId:          s.pairs[0].Id,
-		PoolId:          s.pools[0].Id,
 		InitialOrders: []types.InitialOrder{
 			{
 				OfferCoin: sdk.NewCoin(denom1, sdk.NewInt(50_000_000)),

@@ -35,7 +35,6 @@ func NewBootstrapProposal(
 	minPrice sdk.Dec,
 	maxPrice sdk.Dec,
 	pairId uint64,
-	poolId uint64,
 	initialOrders []InitialOrder,
 	startTime time.Time,
 	stageDuration time.Duration,
@@ -51,7 +50,6 @@ func NewBootstrapProposal(
 		MinPrice:        &minPrice,
 		MaxPrice:        &maxPrice,
 		PairId:          pairId,
-		PoolId:          poolId,
 		InitialOrders:   initialOrders,
 		StartTime:       startTime,
 		StageDuration:   stageDuration,
@@ -107,10 +105,6 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid pair id")
 	}
 
-	if p.PoolId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid pool id")
-	}
-
 	// validate initial orders, ascending, price
 	lastPrice := sdk.ZeroDec()
 	sumOfOfferCoin := sdk.NewCoins()
@@ -148,8 +142,7 @@ func (p BootstrapProposal) String() string {
   MinPrice:      %v
   MaxPrice:      %v
   PairId:        %v
-  PoolId:        %v
   InitialOrders: %v
-`, p.Title, p.Description, p.ProposerAddress, p.OfferCoins, p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, p.PairId, p.PoolId,
+`, p.Title, p.Description, p.ProposerAddress, p.OfferCoins, p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, p.PairId,
 		p.InitialOrders)
 }

@@ -14,7 +14,7 @@ func DeriveBootstrapPoolEscrowAddress(id uint64) sdk.AccAddress {
 }
 
 func DeriveBootstrapPoolFeeCollectorAddress(id uint64) sdk.AccAddress {
-	return address.Module(ModuleName, []byte(fmt.Sprintf("BootstrapPoolFeeCollectorAddress/%s", id)))
+	return address.Module(ModuleName, []byte(fmt.Sprintf("BootstrapPoolFeeCollectorAddress/%d", id)))
 }
 
 func NewBootstrapPool(id uint64, baseCoinDenom, QuoteCoinDenom string, minPrice, maxPrice *sdk.Dec, proposer sdk.AccAddress) BootstrapPool {
@@ -80,10 +80,10 @@ func NewOrderForInitialOrder(io InitialOrder, id, poolId uint64, height int64, o
 		RemainingOfferCoin: io.OfferCoin,
 		// TODO:
 		//ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
-		ReceivedCoin: sdk.Coin{},
-		Price:        io.Price,
-		Status:       OrderStatusNotExecuted,
-		IsInitial:    true,
+		ReceivedCoin:   sdk.Coin{},
+		Price:          io.Price,
+		Status:         OrderStatusNotExecuted,
+		AssociateStage: io.AssociateStage,
 	}
 }
 
@@ -98,10 +98,10 @@ func NewOrderForLimitOrder(msg *MsgLimitOrder, id, poolId uint64, offerCoin sdk.
 		RemainingOfferCoin: offerCoin,
 		// TODO:
 		//ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
-		ReceivedCoin: sdk.Coin{},
-		Price:        price,
-		Status:       OrderStatusNotExecuted,
-		IsInitial:    false,
+		ReceivedCoin:   sdk.Coin{},
+		Price:          price,
+		Status:         OrderStatusNotExecuted,
+		AssociateStage: 0,
 	}
 }
 
@@ -172,6 +172,13 @@ func (m Order) Validate() error {
 // SetStatus is to easily find locations where the status is changed.
 func (m *Order) SetStatus(status OrderStatus) {
 	m.Status = status
+}
+
+func (m *Order) IsInitial() bool {
+	if m.AssociateStage == 0 {
+		return true
+	}
+	return false
 }
 
 // IsValid returns true if the OrderStatus is one of:

@@ -32,7 +32,6 @@ func (suite *AnteTestSuite) TestAnteHandlerValidateProposer() {
 		sdk.MustNewDecFromStr("0.1"),
 		sdk.MustNewDecFromStr("0.1"),
 		uint64(1),
-		uint64(1),
 		[]bootstraptypes.InitialOrder{},
 		time.Now(),
 		time.Duration(10000),
