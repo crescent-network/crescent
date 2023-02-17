@@ -221,8 +221,8 @@ github.com/creachadair/taskgroup v0.3.2 h1:zlfutDS+5XG40AOxcHDSThxKzns8Tnr9jnr6V
 github.com/creachadair/taskgroup v0.3.2/go.mod h1:wieWwecHVzsidg2CsUnFinW1faVN4+kq+TDlRJQ0Wbk=
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/crescent-network/cosmos-sdk v1.1.4-sdk-0.45.10 h1:JBdGVt8oGb15r/hi9xmTGwcUnJdf0mjzvAHTN6ykFRI=
-github.com/crescent-network/cosmos-sdk v1.1.4-sdk-0.45.10/go.mod h1:CbfWNs4PuxxsvRD/snQuSBDwIhtsD7rIDTVQyYMKTa0=
+github.com/crescent-network/cosmos-sdk v1.2.0-sdk-0.45.10 h1:nl/ZwPvXJCxUdYlUEe+PVUNb3ifVvaqJw5XVXnNbwIM=
+github.com/crescent-network/cosmos-sdk v1.2.0-sdk-0.45.10/go.mod h1:CbfWNs4PuxxsvRD/snQuSBDwIhtsD7rIDTVQyYMKTa0=
 github.com/crescent-network/ibc-go/v3 v3.4.0-crescent-v4-2 h1:ibh/OH30EtvlORD8gUoOz30+7Wl4NTbt/kL6IjDPwTU=
 github.com/crescent-network/ibc-go/v3 v3.4.0-crescent-v4-2/go.mod h1:nI//NgRwnCGKFEkMn62rSW8/fQ1KprbUKFfxp5AbSZk=
 github.com/cristalhq/acmd v0.8.1/go.mod h1:LG5oa43pE/BbxtfMoImHCQN++0Su7dzipdgBjMCBVDQ=
