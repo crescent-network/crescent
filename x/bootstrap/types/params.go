@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -44,7 +45,12 @@ var (
 	//SampleReserveAcc = farmingtypes.DeriveAddress(AddressType, ModuleName, SampleReserveAccName)
 	//DepositReserveAcc            = sdk.AccAddress(crypto.AddressHash([]byte(ModuleName)))
 
-	// TODO: MinStageDuration, MaxStageDuration, MaxNumOfStages, MaxInitialOrders
+	// TODO: TBD
+	MinStageDuration = 2 * time.Hour
+	MaxStageDuration = 30 * 24 * time.Hour
+	MinNumOfStages   = uint32(1)
+	MaxNumOfStages   = uint32(20)
+	MaxInitialOrders = 10000
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/stretchr/testify/suite"
@@ -38,8 +39,8 @@ func (s *KeeperTestSuite) TestBootstrapProposal() {
 			},
 		},
 		StartTime:     utils.ParseTime("2023-02-14T00:00:00Z"),
-		NumOfStages:   1,
-		StageDuration: 10000,
+		NumOfStages:   5,
+		StageDuration: 24 * time.Hour,
 	}
 	s.Require().NoError(proposal.ValidateBasic())
 	fmt.Println(s.app.BankKeeper.GetAllBalances(ctx, s.addrs[1]))
@@ -47,6 +48,8 @@ func (s *KeeperTestSuite) TestBootstrapProposal() {
 
 	bp, found := s.keeper.GetBootstrapPool(ctx, 1)
 	s.Require().True(found)
+
+	fmt.Println(bp.Stages)
 
 	fmt.Println(s.app.BankKeeper.GetAllBalances(ctx, bp.GetEscrowAddress()))
 	fmt.Println(s.app.BankKeeper.GetAllBalances(ctx, bp.GetFeeCollector()))

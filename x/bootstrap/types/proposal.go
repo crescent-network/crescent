@@ -76,11 +76,13 @@ func (p *BootstrapProposal) ProposalRoute() string { return RouterKey }
 func (p *BootstrapProposal) ProposalType() string { return ProposalTypeBootstrap }
 
 func (p *BootstrapProposal) ValidateBasic() error {
+	// validate address
 	_, err := sdk.AccAddressFromBech32(p.ProposerAddress)
 	if err != nil {
 		return err
 	}
 
+	// validate offer coins and denom
 	if err = p.OfferCoins.Validate(); err != nil {
 		return err
 	}
@@ -89,6 +91,7 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		return err
 	}
 
+	// validate min/max prices
 	if p.MinPrice != nil && !p.MinPrice.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min price should be positive")
 	}
@@ -101,6 +104,7 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price should be greater than min price")
 	}
 
+	// validate pair id
 	if p.PairId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid pair id")
 	}
@@ -108,6 +112,9 @@ func (p *BootstrapProposal) ValidateBasic() error {
 	// validate initial orders, ascending, price
 	lastPrice := sdk.ZeroDec()
 	sumOfOfferCoin := sdk.NewCoins()
+	if len(p.InitialOrders) > MaxInitialOrders {
+		return fmt.Errorf("num of initial orders %d must be lesser than MaxInitialOrders %d", len(p.InitialOrders), MaxInitialOrders)
+	}
 	for _, io := range p.InitialOrders {
 		if err = io.OfferCoin.Validate(); err != nil {
 			return err
@@ -120,6 +127,10 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		}
 		lastPrice = io.Price
 		sumOfOfferCoin = sumOfOfferCoin.Add(io.OfferCoin)
+
+		if io.AssociateStage > p.NumOfStages {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "initial order's associate stage should be in num of stages")
+		}
 	}
 
 	// validate sum of order amount must be equal to the offer coin amount
@@ -127,7 +138,13 @@ func (p *BootstrapProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "sum of order amount must be equal to the offer coin amount")
 	}
 
-	// TODO: StartTime, NumOfStages, StageDuration
+	if p.StageDuration < MinStageDuration || p.StageDuration > MaxStageDuration {
+		return fmt.Errorf("stage duration %d must be greater than MinStageDuration %s and lesser than MaxStageDuration %s", p.StageDuration, MinStageDuration, MaxStageDuration)
+	}
+	if p.NumOfStages < MinNumOfStages || p.NumOfStages > MaxNumOfStages {
+		return fmt.Errorf("num of stages %d must be greater than MinNumOfStages %s and lesser than MaxNumOfStages %s", p.NumOfStages, MinNumOfStages, MaxNumOfStages)
+	}
+
 	return gov.ValidateAbstract(p)
 }
 
@@ -145,4 +162,21 @@ func (p BootstrapProposal) String() string {
   InitialOrders: %v
 `, p.Title, p.Description, p.ProposerAddress, p.OfferCoins, p.QuoteCoinDenom, p.MinPrice, p.MaxPrice, p.PairId,
 		p.InitialOrders)
+}
+
+func (p BootstrapProposal) GetStages() []Stage {
+	stages := []Stage{
+		{
+			StartTime: p.StartTime,
+			EndTime:   p.StartTime.Add(p.StageDuration),
+		},
+	}
+
+	for i := uint32(1); i < p.NumOfStages; i++ {
+		stages = append(stages, Stage{
+			StartTime: stages[i-1].EndTime,
+			EndTime:   stages[i-1].EndTime.Add(p.StageDuration),
+		})
+	}
+	return stages
 }

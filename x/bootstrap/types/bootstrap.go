@@ -7,6 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	utils "github.com/crescent-network/crescent/v4/types"
 )
 
 func DeriveBootstrapPoolEscrowAddress(id uint64) sdk.AccAddress {
@@ -17,18 +20,22 @@ func DeriveBootstrapPoolFeeCollectorAddress(id uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("BootstrapPoolFeeCollectorAddress/%d", id)))
 }
 
-func NewBootstrapPool(id uint64, baseCoinDenom, QuoteCoinDenom string, minPrice, maxPrice *sdk.Dec, proposer sdk.AccAddress) BootstrapPool {
+func NewBootstrapPool(id uint64, baseCoinDenom, QuoteCoinDenom string, pairId uint64, minPrice, maxPrice *sdk.Dec, stages []Stage, proposer sdk.AccAddress, params Params) BootstrapPool {
 	return BootstrapPool{
-		Id:             id,
-		BaseCoinDenom:  baseCoinDenom,
-		QuoteCoinDenom: QuoteCoinDenom,
-		MinPrice:       minPrice,
-		MaxPrice:       maxPrice,
-		// TODO: schedule
-		//Stages:       nil,
-		ProposerAddress:     proposer.String(),
-		EscrowAddress:       DeriveBootstrapPoolEscrowAddress(id).String(),
-		FeeCollectorAddress: DeriveBootstrapPoolFeeCollectorAddress(id).String(),
+		Id:                    id,
+		BaseCoinDenom:         baseCoinDenom,
+		QuoteCoinDenom:        QuoteCoinDenom,
+		PairId:                pairId,
+		MinPrice:              minPrice,
+		MaxPrice:              maxPrice,
+		Stages:                stages,
+		ProposerAddress:       proposer.String(),
+		EscrowAddress:         DeriveBootstrapPoolEscrowAddress(id).String(),
+		FeeCollectorAddress:   DeriveBootstrapPoolFeeCollectorAddress(id).String(),
+		CreationFeeRate:       params.CreationFeeRate,
+		ProtocolFeeRate:       params.ProtocolFeeRate,
+		InitialTradingFeeRate: params.InitialTradingFeeRate,
+		TradingFeeRate:        params.TradingFeeRate,
 	}
 }
 
@@ -67,6 +74,84 @@ func (m BootstrapPool) CurrentStage() (id int32, stage Stage) {
 		StartTime: time.Time{},
 		EndTime:   time.Time{},
 	}
+}
+
+func (m BootstrapPool) Validate() error {
+	// validate addresses
+	_, err := sdk.AccAddressFromBech32(m.ProposerAddress)
+	if err != nil {
+		return err
+	}
+	_, err = sdk.AccAddressFromBech32(m.EscrowAddress)
+	if err != nil {
+		return err
+	}
+	_, err = sdk.AccAddressFromBech32(m.FeeCollectorAddress)
+	if err != nil {
+		return err
+	}
+
+	// validate denoms
+	if err := sdk.ValidateDenom(m.BaseCoinDenom); err != nil {
+		return err
+	}
+	if err := sdk.ValidateDenom(m.QuoteCoinDenom); err != nil {
+		return err
+	}
+
+	// validate min/max prices
+	if m.MinPrice != nil && !m.MinPrice.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "min price should be positive")
+	}
+
+	if m.MaxPrice != nil && !m.MaxPrice.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price should be positive")
+	}
+
+	if m.MinPrice != nil && m.MaxPrice != nil && m.MaxPrice.LTE(*m.MinPrice) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "max price should be greater than min price")
+	}
+
+	// validate pair id
+	if m.PairId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid pair id")
+	}
+
+	// validate stages
+	numOfStages := uint32(len(m.Stages))
+	if numOfStages < MinNumOfStages || numOfStages > MaxNumOfStages {
+		return fmt.Errorf("num of stages %d must be greater than MinNumOfStages %s and lesser than MaxNumOfStages %s", numOfStages, MinNumOfStages, MaxNumOfStages)
+	}
+	for i, s := range m.Stages {
+		duration := s.EndTime.Sub(s.StartTime)
+		if duration < MinStageDuration || duration > MaxStageDuration {
+			return fmt.Errorf("stage duration %d must be greater than MinStageDuration %s and lesser than MaxStageDuration %s", duration, MinStageDuration, MaxStageDuration)
+		}
+		if !s.EndTime.After(s.StartTime) {
+			return fmt.Errorf("stage end time %s must be greater than start time %s", s.EndTime.Format(time.RFC3339), s.StartTime.Format(time.RFC3339))
+		}
+		for _, so := range m.Stages[i+1:] {
+			if utils.DateRangesOverlap(s.StartTime, s.EndTime, so.StartTime, so.EndTime) {
+				return fmt.Errorf("stage periods cannot be overlapped %s ~ %s with %s ~ %s", s.StartTime.Format(time.RFC3339), s.EndTime.Format(time.RFC3339), so.StartTime.Format(time.RFC3339), so.EndTime.Format(time.RFC3339))
+			}
+		}
+	}
+
+	// validate fee rates
+	if m.CreationFeeRate.IsNegative() {
+		return fmt.Errorf("creation fee rate must not be negative: %s", m.CreationFeeRate)
+	}
+	if m.ProtocolFeeRate.IsNegative() {
+		return fmt.Errorf("protocol fee rate must not be negative: %s", m.ProtocolFeeRate)
+	}
+	if m.InitialTradingFeeRate.IsNegative() {
+		return fmt.Errorf("initial trading fee rate must not be negative: %s", m.InitialTradingFeeRate)
+	}
+	if m.TradingFeeRate.IsNegative() {
+		return fmt.Errorf("trading fee rate must not be negative: %s", m.TradingFeeRate)
+	}
+
+	return nil
 }
 
 func NewOrderForInitialOrder(io InitialOrder, id, poolId uint64, height int64, orderer string) Order {
