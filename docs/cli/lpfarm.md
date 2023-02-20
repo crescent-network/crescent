@@ -220,6 +220,10 @@ Example:
 
 ```bash
 crescentd q lpfarm plans -o json | jq
+crescentd q lpfarm plans --farming-pool-addr cre1gkvhlzmpxarqwk4jh7k7yemf60r50y55n8ax9kxcx8t28hm0e7cqk52jh9 -o json | jq
+crescentd q lpfarm plans --termination-addr cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3 -o json | jq
+crescentd q lpfarm plans --is-private true -o json | jq
+crescentd q lpfarm plans --is-terminated false -o json | jq
 ```
 
 #### Plan

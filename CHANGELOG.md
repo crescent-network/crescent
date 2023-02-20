@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 - (x/marker) [\#145](https://github.com/crescent-network/crescent/pull/145) Add marker module
+- (x/lpfarm) [\#149](https://github.com/crescent-network/crescent/pull/149) Add filter params to `QueryPlans`
 
 ### Client Breaking
 

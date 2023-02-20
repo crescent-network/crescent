@@ -47,7 +47,11 @@ message QueryParamsResponse {
 }
 
 message QueryPlansRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  string                                farming_pool_address = 1;
+  string                                termination_address  = 2;
+  string                                is_private           = 3;
+  string                                is_terminated        = 4;
+  cosmos.base.query.v1beta1.PageRequest pagination           = 5;
 }
 
 message QueryPlansResponse {
