@@ -38,7 +38,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v5.0.0] - 2023-02-14
+## [v5.0.0] - 2023-02
+
+### State Machine Breaking
+
+- (deps) [\#147](https://github.com/crescent-network/crescent/pull/147) feat!: bump cosmos-sdk to `v1.2.0-sdk-0.45.10` to use `MinInitialDepositRatio` as 0.5 for proposal submission
 
 ### Features
 
