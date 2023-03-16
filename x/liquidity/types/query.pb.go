@@ -2224,7 +2224,13 @@ type QueryClient interface {
 	OrdersByOrderer(ctx context.Context, in *QueryOrdersByOrdererRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error)
 	OrderBooks(ctx context.Context, in *QueryOrderBooksRequest, opts ...grpc.CallOption) (*QueryOrderBooksResponse, error)
 	NumMMOrders(ctx context.Context, in *QueryNumMMOrdersRequest, opts ...grpc.CallOption) (*QueryNumMMOrdersResponse, error)
+	// Trades returns trade histories.
+	// This query is only available with nodes that enabled off chain APIs
+	// through command line options.
 	Trades(ctx context.Context, in *QueryTradesRequest, opts ...grpc.CallOption) (*QueryTradesResponse, error)
+	// Trade returns a trade history.
+	// This query is only available with nodes that enabled off chain APIs
+	// through command line options.
 	Trade(ctx context.Context, in *QueryTradeRequest, opts ...grpc.CallOption) (*QueryTradeResponse, error)
 }
 
@@ -2430,7 +2436,13 @@ type QueryServer interface {
 	OrdersByOrderer(context.Context, *QueryOrdersByOrdererRequest) (*QueryOrdersResponse, error)
 	OrderBooks(context.Context, *QueryOrderBooksRequest) (*QueryOrderBooksResponse, error)
 	NumMMOrders(context.Context, *QueryNumMMOrdersRequest) (*QueryNumMMOrdersResponse, error)
+	// Trades returns trade histories.
+	// This query is only available with nodes that enabled off chain APIs
+	// through command line options.
 	Trades(context.Context, *QueryTradesRequest) (*QueryTradesResponse, error)
+	// Trade returns a trade history.
+	// This query is only available with nodes that enabled off chain APIs
+	// through command line options.
 	Trade(context.Context, *QueryTradeRequest) (*QueryTradeResponse, error)
 }
 

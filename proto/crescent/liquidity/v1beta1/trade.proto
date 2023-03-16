@@ -9,6 +9,8 @@ import "crescent/liquidity/v1beta1/liquidity.proto";
 option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
 
+// Trade describes a trade history of an order.
+// Trade is only stored when the node is configured to enable off chain APIs.
 message Trade {
   string id    = 1;
   Order  order = 2 [(gogoproto.nullable) = false];

@@ -6027,6 +6027,10 @@ paths:
         - Query
   /crescent/liquidity/v1beta1/trades:
     get:
+      summary: |-
+        Trades returns trade histories.
+        This query is only available with nodes that enabled off chain APIs
+        through command line options.
       operationId: Trades
       responses:
         '200':
@@ -6227,6 +6231,11 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                  description: >-
+                    Trade describes a trade history of an order.
+
+                    Trade is only stored when the node is configured to enable
+                    off chain APIs.
               pagination:
                 type: object
                 properties:
@@ -6352,6 +6361,10 @@ paths:
         - Query
   '/crescent/liquidity/v1beta1/trades/{id}':
     get:
+      summary: |-
+        Trade returns a trade history.
+        This query is only available with nodes that enabled off chain APIs
+        through command line options.
       operationId: Trade
       responses:
         '200':
@@ -6550,6 +6563,11 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
+                description: >-
+                  Trade describes a trade history of an order.
+
+                  Trade is only stored when the node is configured to enable off
+                  chain APIs.
         default:
           description: An unexpected error response
           schema:
@@ -13164,6 +13182,11 @@ definitions:
               method
 
               signatures required by gogoproto.
+        description: >-
+          Trade describes a trade history of an order.
+
+          Trade is only stored when the node is configured to enable off chain
+          APIs.
   crescent.liquidity.v1beta1.QueryTradesResponse:
     type: object
     properties:
@@ -13347,6 +13370,11 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+          description: >-
+            Trade describes a trade history of an order.
+
+            Trade is only stored when the node is configured to enable off chain
+            APIs.
       pagination:
         type: object
         properties:
@@ -13744,6 +13772,9 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+    description: |-
+      Trade describes a trade history of an order.
+      Trade is only stored when the node is configured to enable off chain APIs.
   crescent.liquidity.v1beta1.WithdrawRequest:
     type: object
     properties:

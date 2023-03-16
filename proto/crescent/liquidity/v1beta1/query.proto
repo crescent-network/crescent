@@ -90,10 +90,16 @@ service Query {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/num_mm_orders/{orderer}/{pair_id}";
   }
 
+  // Trades returns trade histories.
+  // This query is only available with nodes that enabled off chain APIs
+  // through command line options.
   rpc Trades(QueryTradesRequest) returns (QueryTradesResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/trades";
   }
 
+  // Trade returns a trade history.
+  // This query is only available with nodes that enabled off chain APIs
+  // through command line options.
   rpc Trade(QueryTradeRequest) returns (QueryTradeResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/trades/{id}";
   }
