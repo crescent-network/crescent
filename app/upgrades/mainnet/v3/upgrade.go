@@ -9,15 +9,15 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	farmingkeeper "github.com/crescent-network/crescent/v3/x/farming/keeper"
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
-	liquidfarmingtypes "github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	liquiditykeeper "github.com/crescent-network/crescent/v3/x/liquidity/keeper"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
-	lpfarmkeeper "github.com/crescent-network/crescent/v3/x/lpfarm/keeper"
-	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
-	marketmakerkeeper "github.com/crescent-network/crescent/v3/x/marketmaker/keeper"
-	marketmakertypes "github.com/crescent-network/crescent/v3/x/marketmaker/types"
+	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
+	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
+	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	lpfarmkeeper "github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
+	marketmakerkeeper "github.com/crescent-network/crescent/v5/x/marketmaker/keeper"
+	marketmakertypes "github.com/crescent-network/crescent/v5/x/marketmaker/types"
 )
 
 const UpgradeName = "v3"
@@ -34,6 +34,7 @@ func UpgradeHandler(
 
 		// Set newly added liquidity param
 		liquidityKeeper.SetMaxNumMarketMakingOrderTicks(ctx, liquiditytypes.DefaultMaxNumMarketMakingOrderTicks)
+		liquidityKeeper.SetMaxNumActivePoolsPerPair(ctx, liquiditytypes.DefaultMaxNumActivePoolsPerPair)
 
 		// Set param for new market maker module
 		marketmakerParams := marketmakertypes.DefaultParams()

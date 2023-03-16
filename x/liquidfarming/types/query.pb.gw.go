@@ -848,7 +848,7 @@ var (
 
 	pattern_Query_RewardsAuction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "rewards_auctions", "auction_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Bids_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "pools", "pool_id", "bids"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Bids_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "bids"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_Rewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 

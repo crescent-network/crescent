@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity"
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity"
+	"github.com/crescent-network/crescent/v5/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -367,84 +367,52 @@ func (s *KeeperTestSuite) TestMatchWithLowPricePool() {
 	s.Require().Equal(types.OrderStatusNotMatched, order.Status)
 }
 
-func (s *KeeperTestSuite) TestMMOrder() {
+func (s *KeeperTestSuite) TestMMOrderNumberLimit() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pair.LastPrice = utils.ParseDecP("1.0")
 	s.keeper.SetPair(s.ctx, pair)
 
-	orders := s.mmOrder(
-		s.addr(1), pair.Id,
-		utils.ParseDec("1.1"), utils.ParseDec("1.03"), sdk.NewInt(1000_000000),
-		utils.ParseDec("0.97"), utils.ParseDec("0.9"), sdk.NewInt(1000_000000),
-		10*time.Second, true)
-	maxNumTicks := int(s.keeper.GetMaxNumMarketMakingOrderTicks(s.ctx))
-	s.Require().Len(orders, 2*maxNumTicks)
-
-	pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
-	s.Require().EqualValues(2*maxNumTicks, pair.LastOrderId)
-
-	// failed cancel on same batch
-	cancelMsg := types.MsgCancelMMOrder{
-		Orderer: s.addr(1).String(),
-		PairId:  pair.Id,
+	for i := uint32(0); i < s.keeper.GetMaxNumMarketMakingOrdersPerPair(s.ctx); i++ {
+		price := sdk.NewDecWithPrec(int64(1000+i*5), 3)
+		s.mmOrder(
+			s.addr(1), pair.Id, types.OrderDirectionBuy,
+			price, sdk.NewInt(1_000000), time.Hour, true)
 	}
-	_, err := s.keeper.CancelMMOrder(s.ctx, &cancelMsg)
-	s.Require().ErrorIs(err, types.ErrSameBatch)
 
-	// successful cancel on next block
 	s.nextBlock()
-	ids, err := s.keeper.CancelMMOrder(s.ctx, &cancelMsg)
-	s.Require().NoError(err)
-	for i := range ids {
-		s.Require().Equal(ids[i], orders[i].Id)
-	}
-	_, found := s.keeper.GetMMOrderIndex(s.ctx, s.addr(1), pair.Id)
-	s.Require().False(found)
-
-}
-
-func (s *KeeperTestSuite) TestMMOrderCancelPreviousOrders() {
-	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
-	pair.LastPrice = utils.ParseDecP("1.0")
-	s.keeper.SetPair(s.ctx, pair)
-
-	s.mmOrder(
-		s.addr(1), pair.Id,
-		utils.ParseDec("1.1"), utils.ParseDec("1.03"), sdk.NewInt(1000_000000),
-		utils.ParseDec("0.97"), utils.ParseDec("0.9"), sdk.NewInt(1000_000000),
-		10*time.Second, true)
-
-	// Cannot place MM orders again because it's not allowed to cancel previous
-	// orders within same batch.
+	// Cannot place an MM order anymore.
 	s.fundAddr(s.addr(1), utils.ParseCoins("1000000000denom1,1000000000denom2"))
-	_, err := s.keeper.MMOrder(s.ctx, types.NewMsgMMOrder(
-		s.addr(1), pair.Id,
-		utils.ParseDec("1.1"), utils.ParseDec("1.03"), sdk.NewInt(1000_000000),
-		utils.ParseDec("0.97"), utils.ParseDec("0.9"), sdk.NewInt(1000_000000),
-		10*time.Second))
-	s.Require().ErrorIs(err, types.ErrSameBatch)
+	_, err := s.keeper.MMOrder(
+		s.ctx,
+		types.NewMsgMMOrder(
+			s.addr(1), pair.Id, types.OrderDirectionBuy,
+			utils.ParseCoin("1_100000denom2"), "denom1",
+			utils.ParseDec("1.1"), sdk.NewInt(1_000000), 0))
+	s.Require().ErrorIs(err, types.ErrMaxNumMMOrdersExceeded)
 
-	// Now it's OK to cancel previous orders and place new orders.
+	// Complete one MM order.
+	s.sellLimitOrder(s.addr(2), pair.Id, utils.ParseDec("0.9"), sdk.NewInt(1_000000), 0, true)
 	s.nextBlock()
+
+	// Now it is possible to place one more MM order.
+	order := s.mmOrder(
+		s.addr(1), pair.Id, types.OrderDirectionBuy,
+		utils.ParseDec("1.1"), sdk.NewInt(1_000000), time.Hour, true)
+
+	s.nextBlock()
+	_, err = s.keeper.MMOrder(
+		s.ctx,
+		types.NewMsgMMOrder(
+			s.addr(1), pair.Id, types.OrderDirectionBuy,
+			utils.ParseCoin("1_100000denom2"), "denom1",
+			utils.ParseDec("1.1"), sdk.NewInt(1_000000), 0))
+	s.Require().ErrorIs(err, types.ErrMaxNumMMOrdersExceeded)
+	// Cancelling a market making order makes it possible to place more
+	// MM orders again.
+	s.cancelOrder(s.addr(1), order.PairId, order.Id)
 	s.mmOrder(
-		s.addr(1), pair.Id,
-		utils.ParseDec("1.1"), utils.ParseDec("1.03"), sdk.NewInt(1000_000000),
-		utils.ParseDec("0.97"), utils.ParseDec("0.9"), sdk.NewInt(1000_000000),
-		10*time.Second, true)
-
-	orders := s.keeper.GetAllOrders(s.ctx)
-	maxNumTicks := int(s.keeper.GetMaxNumMarketMakingOrderTicks(s.ctx))
-	s.Require().Len(orders, 2*2*maxNumTicks) // canceled previous orders + new orders
-
-	s.nextBlock()
-
-	orders = s.keeper.GetAllOrders(s.ctx)
-	s.Require().Len(orders, 2*maxNumTicks) // new orders
-	// Check order ids.
-	for _, order := range orders {
-		s.Require().EqualValues(2, order.BatchId)
-		s.Require().GreaterOrEqual(order.Id, uint64(2*maxNumTicks+1))
-	}
+		s.addr(1), pair.Id, types.OrderDirectionBuy,
+		utils.ParseDec("1.1"), sdk.NewInt(1_000000), time.Hour, true)
 }
 
 func (s *KeeperTestSuite) TestCancelOrder() {

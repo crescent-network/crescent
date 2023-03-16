@@ -11,8 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper.
@@ -583,4 +583,26 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 	return &types.QueryOrderBooksResponse{
 		Pairs: pairs,
 	}, nil
+}
+
+// NumMMOrders queries the number of market making orders by an orderer in a pair.
+func (k Querier) NumMMOrders(c context.Context, req *types.QueryNumMMOrdersRequest) (*types.QueryNumMMOrdersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ordererAddr, err := sdk.AccAddressFromBech32(req.Orderer)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid orderer")
+	}
+
+	if req.PairId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pair id cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	numMMOrders := k.GetNumMMOrders(ctx, ordererAddr, req.PairId)
+
+	return &types.QueryNumMMOrdersResponse{NumMarketMakingOrders: numMMOrders}, nil
 }

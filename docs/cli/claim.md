@@ -7,7 +7,7 @@ Description: A high-level overview of how the command-line interfaces (CLI) work
 
 ## Synopsis
 
-This document provides a high-level overview of how the command line (CLI) interface works for the `claim` module. To set up a local testing environment, it requires 0.24.1 or lower versions of [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
+This document provides a high-level overview of how the command line (CLI) interface works for the `claim` module. To set up a local testing environment, it requires 0.24.1 or lower versions of [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/welcome/install) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
 
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout the document.
 

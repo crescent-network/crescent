@@ -26,8 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	"github.com/stretchr/testify/require"
 	budgettypes "github.com/tendermint/budget/x/budget/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -35,13 +35,13 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	claimtypes "github.com/crescent-network/crescent/v3/x/claim/types"
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
-	liquidstakingtypes "github.com/crescent-network/crescent/v3/x/liquidstaking/types"
-	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
-	marketmakertypes "github.com/crescent-network/crescent/v3/x/marketmaker/types"
-	minttypes "github.com/crescent-network/crescent/v3/x/mint/types"
+	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
+	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	liquidstakingtypes "github.com/crescent-network/crescent/v5/x/liquidstaking/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
+	marketmakertypes "github.com/crescent-network/crescent/v5/x/marketmaker/types"
+	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 // Get flags every time the simulator is run

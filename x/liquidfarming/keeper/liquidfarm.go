@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // LiquidFarm handles types.MsgLiquidFarm to farm.
@@ -23,7 +23,7 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 	}
 
 	if farmingCoin.Amount.LT(liquidFarm.MinFarmAmount) {
-		return sdkerrors.Wrapf(types.ErrSmallerThanMinimumAmount, "%s is smaller than %s", farmingCoin.Amount, liquidFarm.MinFarmAmount)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "must be greater than the minimum amount %s", liquidFarm.MinFarmAmount)
 	}
 
 	reserveAddr := types.LiquidFarmReserveAddress(pool.Id)
@@ -75,7 +75,6 @@ func (k Keeper) LiquidFarm(ctx sdk.Context, poolId uint64, farmer sdk.AccAddress
 			sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
 			sdk.NewAttribute(types.AttributeKeyFarmingCoin, farmingCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyMintedCoin, mintingCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyWithdrawnRewards, withdrawnRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyLiquidFarmReserveAddress, reserveAddr.String()),
 		),
 	})

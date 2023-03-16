@@ -9,9 +9,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
 // GetQueryCmd returns the cli query commands for the module
@@ -111,6 +112,7 @@ $ %s query %s liquidfarms
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "liquidfarms")
 
 	return cmd
 }
@@ -182,17 +184,32 @@ $ %s query %s rewards-auctions 1
 				return fmt.Errorf("failed to parse pool id: %w", err)
 			}
 
+			status, _ := cmd.Flags().GetString(FlagRewardsAuctionStatus)
+
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.RewardsAuctions(cmd.Context(), &types.QueryRewardsAuctionsRequest{
+			req := &types.QueryRewardsAuctionsRequest{
 				PoolId:     poolId,
 				Pagination: pageReq,
-			})
+			}
+
+			if status != "" {
+				if status == types.AuctionStatusStarted.String() ||
+					status == types.AuctionStatusFinished.String() ||
+					status == types.AuctionStatusSkipped.String() {
+					req.Status = status
+				} else {
+					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
+						"auction status type must be AUCTION_STATUS_STARTED, AUCTION_STATUS_FINISHED, or AUCTION_STATUS_SKIPPED")
+				}
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.RewardsAuctions(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -201,7 +218,9 @@ $ %s query %s rewards-auctions 1
 		},
 	}
 
+	cmd.Flags().AddFlagSet(flagSetRewardsAuctions())
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "auctions")
 
 	return cmd
 }
@@ -300,6 +319,7 @@ $ %s query %s bids 1
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "bids")
 
 	return cmd
 }

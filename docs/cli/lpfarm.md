@@ -10,7 +10,7 @@ Description: A high-level overview of how the command-line interfaces (CLI) work
 This document provides a high-level overview of how the command line (CLI)
 interface works for the `lpfarm` module. To set up a local testing environment, it requires the latest
 [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine,
-see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root
+see [this guide](https://docs.ignite.com/welcome/install) to install it. Run this command under the project root
 directory
 `$ ignite chain serve -v -c config-test.yml`.
 
@@ -220,6 +220,10 @@ Example:
 
 ```bash
 crescentd q lpfarm plans -o json | jq
+crescentd q lpfarm plans --farming-pool-addr cre1gkvhlzmpxarqwk4jh7k7yemf60r50y55n8ax9kxcx8t28hm0e7cqk52jh9 -o json | jq
+crescentd q lpfarm plans --termination-addr cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3 -o json | jq
+crescentd q lpfarm plans --is-private true -o json | jq
+crescentd q lpfarm plans --is-terminated false -o json | jq
 ```
 
 #### Plan

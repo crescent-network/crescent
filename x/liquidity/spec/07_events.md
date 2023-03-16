@@ -112,16 +112,22 @@ The `liquidity` module emits the following events:
 
 ### MsgMMOrder
 
-| Type     | Attribute Key      | Attribute Value |
-|----------|--------------------|-----------------|
-| mm_order | orderer            | {orderer}       |
-| mm_order | pair_id            | {pairId}        |
-| mm_order | batch_id           | {batchId}       |
-| mm_order | order_ids          | {orderIds}      |
-| mm_order | canceled_order_ids | {orderIds}      |
-| message  | module             | liquidity       |
-| message  | action             | mm_order        |
-| message  | sender             | {senderAddress} |
+| Type     | Attribute Key     | Attribute Value   |
+|----------|-------------------|-------------------|
+| mm_order | orderer           | {orderer}         |
+| mm_order | pair_id           | {pairId}          |
+| mm_order | order_direction   | {direction}       |
+| mm_order | offer_coin        | {offerCoin}       |
+| mm_order | demand_coin_denom | {demandCoinDenom} |
+| mm_order | price             | {price}           |
+| mm_order | amount            | {amount}          |
+| mm_order | order_id          | {orderId}         |
+| mm_order | batch_id          | {batchId}         |
+| mm_order | expire_at         | {expireAt}        |
+| mm_order | refunded_coins    | {refundedCoins}   |
+| message  | module            | liquidity         |
+| message  | action            | limit_order       |
+| message  | sender            | {senderAddress}   |
 
 ### MsgCancelOrder
 
@@ -144,17 +150,6 @@ The `liquidity` module emits the following events:
 | message           | module             | liquidity         |
 | message           | action             | cancel_all_orders |
 | message           | sender             | {senderAddress}   |
-
-### MsgCancelMMOrder
-
-| Type            | Attribute Key      | Attribute Value |
-|-----------------|--------------------|-----------------|
-| cancel_mm_order | orderer            | {orderer}       |
-| cancel_mm_order | pair_id            | {pairId}        |
-| cancel_mm_order | canceled_order_ids | {orderIds}      |
-| message         | module             | liquidity       |
-| message         | action             | cancel_mm_order |
-| message         | sender             | {senderAddress} |
 
 ## EndBlocker
 

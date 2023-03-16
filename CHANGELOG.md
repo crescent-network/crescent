@@ -38,11 +38,41 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v3.0.0
+## [v5.0.0] - 2023-02
+
+### State Machine Breaking
+
+- (deps) [\#147](https://github.com/crescent-network/crescent/pull/147) feat!: bump cosmos-sdk to `v1.2.0-sdk-0.45.10` to use `MinInitialDepositRatio` as 0.5 for proposal submission
+
+### Features
+
+- (x/marker) [\#145](https://github.com/crescent-network/crescent/pull/145) Add marker module
+- (x/lpfarm) [\#149](https://github.com/crescent-network/crescent/pull/149) Add filter params to `QueryPlans`
+
+### Client Breaking
+
+- (x/liquidity) [\#144](https://github.com/crescent-network/crescent/pull/144) Change `MsgMMOrder`
+
+### CLI Breaking
+
+- (x/liquidity) [\#144](https://github.com/crescent-network/crescent/pull/144) Change `mm-order` tx cmd
+
+## [v4.0.0] - 2023-01-05
+
+### State Machine Breaking
+
+- (ibc) [\#131](https://github.com/crescent-network/crescent/pull/131) build!: upgrade ibc-go from v2.2.0 to v3.4.0
+
+### Bug Fixes
+
+- (api) [\#137](https://github.com/crescent-network/crescent/pull/137) fix: rollback swagger version to 2 and add missing apis
+
+## [v3.0.0] - 2022-12-07
 
 ### State Machine Breaking
 
 - (ibc) [\#56](https://github.com/crescent-network/crescent/pull/56) fix!: upgrade ibc-go for pool coin blacklisting
+- (liquidity) [\#128](https://github.com/crescent-network/crescent/pull/128) refactor!: move MaxNumActivePoolsPerPair into params
 
 ### Features
 
@@ -59,6 +89,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 - (x/mint) [\#65](https://github.com/crescent-network/crescent/pull/65) feat: add last block time endpoint
+
+
+## [v2.3.0] - 2022-10-19
+
+### Improvements
+
+- (deps) [\#77](https://github.com/crescent-network/crescent/pull/77) feat: bump cosmos-sdk to v0.45.9 and use cosmos-sdk ics23 #377 #378
+- (x/liquidity) [\#77](https://github.com/crescent-network/crescent/pull/77) fix: lower the highest tick boundary for extra safety
+
+## [v2.2.0] - 2022-10-15
+
+### Bug Fixes
+
+- (security) [\#74](https://github.com/crescent-network/crescent/pull/74) fix: apply dragonberry security patch
 
 ## [v2.1.1] - 2022-07-29
 
@@ -160,8 +204,13 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
   - `x/vesting` feat: periodic vesting msg
   - `x/bank` feat: Add dynamic blockedAddrs
 
-[unreleased]: https://github.com/crescent-network/crescent/compare/v2.1.0...HEAD
+[unreleased]: https://github.com/crescent-network/crescent/compare/v5.0.0...HEAD
 [v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
 [v1.1.0]: https://github.com/crescent-network/crescent/releases/tag/v1.1.0
 [v2.1.0]: https://github.com/crescent-network/crescent/releases/tag/v2.1.0
 [v2.1.1]: https://github.com/crescent-network/crescent/releases/tag/v2.1.1
+[v2.2.0]: https://github.com/crescent-network/crescent/releases/tag/v2.2.0
+[v2.3.0]: https://github.com/crescent-network/crescent/releases/tag/v2.3.0
+[v3.0.0]: https://github.com/crescent-network/crescent/releases/tag/v3.0.0
+[v4.0.0]: https://github.com/crescent-network/crescent/releases/tag/v4.0.0
+[v5.0.0]: https://github.com/crescent-network/crescent/releases/tag/v5.0.0

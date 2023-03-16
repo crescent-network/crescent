@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // GetLastPairId returns the last pair id.
@@ -562,56 +562,34 @@ func (k Keeper) DeleteOrderIndex(ctx sdk.Context, order types.Order) {
 	store.Delete(types.GetOrderIndexKey(order.GetOrderer(), order.PairId, order.Id))
 }
 
-// GetMMOrderIndex returns the market making order index.
-func (k Keeper) GetMMOrderIndex(ctx sdk.Context, orderer sdk.AccAddress, pairId uint64) (index types.MMOrderIndex, found bool) {
+func (k Keeper) GetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, pairId uint64) (numMMOrders uint32) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetMMOrderIndexKey(orderer, pairId))
+	bz := store.Get(types.GetNumMMOrdersKey(ordererAddr, pairId))
 	if bz == nil {
-		return
+		return 0
 	}
-	k.cdc.MustUnmarshal(bz, &index)
-	return index, true
+	return uint32(sdk.BigEndianToUint64(bz))
 }
 
-// SetMMOrderIndex stores a market making order index.
-func (k Keeper) SetMMOrderIndex(ctx sdk.Context, index types.MMOrderIndex) {
+func (k Keeper) SetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, pairId uint64, numMMOrders uint32) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&index)
-	store.Set(types.GetMMOrderIndexKey(index.GetOrderer(), index.PairId), bz)
+	store.Set(types.GetNumMMOrdersKey(ordererAddr, pairId), sdk.Uint64ToBigEndian(uint64(numMMOrders)))
 }
 
-// IterateAllMMOrderIndexes iterates through all market making order indexes
-// in the store and call cb for each order.
-func (k Keeper) IterateAllMMOrderIndexes(ctx sdk.Context, cb func(index types.MMOrderIndex) (stop bool, err error)) error {
+func (k Keeper) DeleteNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, pairId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.MMOrderIndexKeyPrefix)
+	store.Delete(types.GetNumMMOrdersKey(ordererAddr, pairId))
+}
+
+func (k Keeper) IterateAllNumMMOrders(ctx sdk.Context, cb func(ordererAddr sdk.AccAddress, pairId uint64, numMMOrders uint32) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.NumMMOrdersKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var index types.MMOrderIndex
-		k.cdc.MustUnmarshal(iter.Value(), &index)
-		stop, err := cb(index)
-		if err != nil {
-			return err
-		}
-		if stop {
+		ordererAddr, pairId := types.ParseNumMMOrdersKey(iter.Key())
+		numMMOrders := uint32(sdk.BigEndianToUint64(iter.Value()))
+		if cb(ordererAddr, pairId, numMMOrders) {
 			break
 		}
 	}
-	return nil
-}
-
-// GetAllMMOrderIndexes returns all market making order indexes in the store.
-func (k Keeper) GetAllMMOrderIndexes(ctx sdk.Context) (indexes []types.MMOrderIndex) {
-	indexes = []types.MMOrderIndex{}
-	_ = k.IterateAllMMOrderIndexes(ctx, func(index types.MMOrderIndex) (stop bool, err error) {
-		indexes = append(indexes, index)
-		return false, nil
-	})
-	return
-}
-
-// DeleteMMOrderIndex deletes a market making order index.
-func (k Keeper) DeleteMMOrderIndex(ctx sdk.Context, index types.MMOrderIndex) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetMMOrderIndexKey(index.GetOrderer(), index.PairId))
 }

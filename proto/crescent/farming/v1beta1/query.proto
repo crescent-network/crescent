@@ -12,7 +12,7 @@ import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/farming/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/farming/types";
 
 // Query defines the gRPC query service for the farming module.
 service Query {

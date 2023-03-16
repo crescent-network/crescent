@@ -34,7 +34,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	chain "github.com/crescent-network/crescent/v3/app"
+	chain "github.com/crescent-network/crescent/v5/app"
 )
 
 var (

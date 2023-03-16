@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // GetTxCmd returns the transaction commands for the module
@@ -37,7 +37,6 @@ func GetTxCmd() *cobra.Command {
 		NewMMOrderCmd(),
 		NewCancelOrderCmd(),
 		NewCancelAllOrdersCmd(),
-		NewCancelMMOrderCmd(),
 	)
 
 	return cmd
@@ -433,27 +432,30 @@ $ %s tx %s market-order 1 s 10000uatom stake 10000 --order-lifespan=10m --from m
 
 func NewMMOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mm-order [pair-id] [max-sell-price] [min-sell-price] [sell-amount] [max-buy-price] [min-buy-price] [buy-amount]",
-		Args:  cobra.ExactArgs(7),
+		Use:   "mm-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amount]",
+		Args:  cobra.ExactArgs(6),
 		Short: "Make a market making order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Make a market making order.
-A market making order is a set of limit orders for each buy/sell side.
-You can leave one side(but not both) empty by passing 0 as its arguments.
+Market making orders are basically limit orders but has a limit to the number
+of orders an orderer can place per pair.
+This type of order is designed for market makers, so normal users should use
+limit/market orders instead.
 
 Example:
-$ %s tx %s mm-order 1 102 101 10000 100 99 10000 --from mykey
-$ %s tx %s mm-order 1 0 0 0 100 99 10000 --from mykey
-$ %s tx %s mm-order 1 102 101 10000 0 0 0 --from mykey
+$ %s tx %s mm-order 1 buy 5000stake uatom 0.5 10000 --from mykey
+$ %s tx %s mm-order 1 b 5000stake uatom 0.5 10000 --from mykey
+$ %s tx %s mm-order 1 sell 10000uatom stake 2.0 10000 --order-lifespan=10m --from mykey
+$ %s tx %s mm-order 1 s 10000uatom stake 2.0 10000 --order-lifespan=10m --from mykey
 
-[pair-id]: pair id to make order
-[max-sell-price]: maximum price of sell orders
-[min-sell-price]]: minimum price of sell orders
-[sell-amount]: total amount of sell orders
-[max-buy-price]: maximum price of buy orders
-[min-buy-price]: minimum price of buy orders
-[buy-amount]: the total amount of buy orders
+[pair-id]: pair id to swap with
+[direction]: order direction (one of: buy,b,sell,s)
+[offer-coin]: the amount of offer coin to swap
+[demand-coin-denom]: the denom to exchange with the offer coin
+[price]: the limit order price for the swap; the exchange ratio is X/Y where X is the amount of quote coin and Y is the amount of base coin
+[amount]: the amount of base coin to buy or sell
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
@@ -470,34 +472,29 @@ $ %s tx %s mm-order 1 102 101 10000 0 0 0 --from mykey
 				return fmt.Errorf("parse pair id: %w", err)
 			}
 
-			maxSellPrice, err := sdk.NewDecFromStr(args[1])
+			dir, err := parseOrderDirection(args[1])
 			if err != nil {
-				return fmt.Errorf("invalid max sell price: %w", err)
+				return fmt.Errorf("parse order direction: %w", err)
 			}
 
-			minSellPrice, err := sdk.NewDecFromStr(args[2])
+			offerCoin, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
-				return fmt.Errorf("invalid min sell price: %w", err)
+				return fmt.Errorf("invalid offer coin: %w", err)
 			}
 
-			sellAmt, ok := sdk.NewIntFromString(args[3])
+			demandCoinDenom := args[3]
+			if err := sdk.ValidateDenom(demandCoinDenom); err != nil {
+				return fmt.Errorf("invalid demand coin denom: %w", err)
+			}
+
+			price, err := sdk.NewDecFromStr(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid price: %w", err)
+			}
+
+			amt, ok := sdk.NewIntFromString(args[5])
 			if !ok {
-				return fmt.Errorf("invalid sell amount: %s", args[3])
-			}
-
-			maxBuyPrice, err := sdk.NewDecFromStr(args[4])
-			if err != nil {
-				return fmt.Errorf("invalid max buy price: %w", err)
-			}
-
-			minBuyPrice, err := sdk.NewDecFromStr(args[5])
-			if err != nil {
-				return fmt.Errorf("invalid min buy price: %w", err)
-			}
-
-			buyAmt, ok := sdk.NewIntFromString(args[6])
-			if !ok {
-				return fmt.Errorf("invalid buy amount: %s", args[3])
+				return fmt.Errorf("invalid amount: %s", args[5])
 			}
 
 			orderLifespan, _ := cmd.Flags().GetDuration(FlagOrderLifespan)
@@ -505,8 +502,11 @@ $ %s tx %s mm-order 1 102 101 10000 0 0 0 --from mykey
 			msg := types.NewMsgMMOrder(
 				clientCtx.GetFromAddress(),
 				pairId,
-				maxSellPrice, minSellPrice, sellAmt,
-				maxBuyPrice, minBuyPrice, buyAmt,
+				dir,
+				offerCoin,
+				demandCoinDenom,
+				price,
+				amt,
 				orderLifespan,
 			)
 
@@ -597,43 +597,6 @@ $ %s tx %s cancel-all-orders 1,3 --from mykey
 			}
 
 			msg := types.NewMsgCancelAllOrders(clientCtx.GetFromAddress(), pairIds)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-func NewCancelMMOrderCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cancel-mm-order [pair-id]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Cancel the mm order in a pair",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Cancel the mm order in a pair.
-This will cancel all limit orders in the pair made by the mm order.
-
-Example:
-$ %s tx %s cancel-mm-order 1 --from mykey
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			pairId, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgCancelMMOrder(clientCtx.GetFromAddress(), pairId)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // RegisterInvariants registers all liquidity module invariants.
@@ -14,6 +14,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "pool-coin-escrow", PoolCoinEscrowInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "remaining-offer-coin-escrow", RemainingOfferCoinEscrowInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "pool-status", PoolStatusInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "num-mm-orders", NumMMOrdersInvariant(k))
 }
 
 // AllInvariants returns a combined invariant of the liquidity module.
@@ -24,6 +25,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 			PoolCoinEscrowInvariant,
 			RemainingOfferCoinEscrowInvariant,
 			PoolStatusInvariant,
+			NumMMOrdersInvariant,
 		} {
 			res, stop := inv(k)(ctx)
 			if stop {
@@ -130,6 +132,55 @@ func PoolStatusInvariant(k Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(
 			types.ModuleName, "pool-status",
 			fmt.Sprintf("%d pool(s) with wrong status found\n%s", count, msg),
+		), broken
+	}
+}
+
+// NumMMOrdersInvariant checks the actual number of mm orders with NumMMOrders
+// records.
+func NumMMOrdersInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		// orderer address => (pair id => num mm orders)
+		numMMOrdersMap := map[string]map[uint64]uint32{}
+		_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
+			if order.Type == types.OrderTypeMM && !order.Status.ShouldBeDeleted() {
+				numMMOrdersByPairId, ok := numMMOrdersMap[order.Orderer]
+				if !ok {
+					numMMOrdersByPairId = map[uint64]uint32{}
+					numMMOrdersMap[order.Orderer] = numMMOrdersByPairId
+				}
+				numMMOrdersByPairId[order.PairId]++
+			}
+			return false, nil
+		})
+		var (
+			count int
+			msg   string
+		)
+		k.IterateAllNumMMOrders(ctx, func(ordererAddr sdk.AccAddress, pairId uint64, numMMOrders uint32) (stop bool) {
+			orderer := ordererAddr.String()
+			numMMOrdersByPairId, ok := numMMOrdersMap[orderer]
+			if !ok {
+				count++
+				msg += fmt.Sprintf("\torderer %s has no mm orders\n", orderer)
+				return false
+			}
+			correctNumMMOrders, ok := numMMOrdersByPairId[pairId]
+			if !ok {
+				count++
+				msg += fmt.Sprintf("\torderer %s has no mm orders in pair %d\n", orderer, pairId)
+				return false
+			}
+			if numMMOrders != correctNumMMOrders {
+				count++
+				msg += fmt.Sprintf("\torderer %s has wrong number of mm orders in pair %d; got %d, expected %d\n", orderer, pairId, numMMOrders, correctNumMMOrders)
+			}
+			return false
+		})
+		broken := count != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "num-mm-orders",
+			fmt.Sprintf("%d orderer-pair pairs with wrong status\n%s", count, msg),
 		), broken
 	}
 }

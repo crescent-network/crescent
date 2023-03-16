@@ -9,9 +9,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/crescent-network/crescent/v3/app/params"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/keeper"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
+	appparams "github.com/crescent-network/crescent/v5/app/params"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
 // Simulation operation weights constants.

@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
-	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // AccountKeeper defines the expected interface needed for the module.

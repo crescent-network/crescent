@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -75,7 +76,7 @@ func (s *KeeperTestSuite) TestPlaceBid_Validation() {
 				sdk.NewInt64Coin(pool.PoolCoinDenom, 100),
 			),
 			nil,
-			"100 is smaller than 1000000: smaller than the minimum amount",
+			"must be greater than the minimum bid amount 1000000: invalid request",
 		},
 	} {
 		s.Run(tc.name, func() {
@@ -136,7 +137,68 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 
 	// Place a bid with less than the winning bid amount
 	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, bidderAddr2, sdk.NewInt64Coin(pool.PoolCoinDenom, 90_000_000))
-	s.Require().EqualError(err, "90000000 is not bigger than 150000000: not bigger than the winning bid amount")
+	s.Require().EqualError(err, "must be greater than the winning bid amount 150000000: invalid request")
+}
+
+func (s *KeeperTestSuite) TestPlaceBid_AuctionStatus() {
+	pair := s.createPair(helperAddr, "denom1", "denom2")
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+
+	lf1 := s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+
+	s.liquidFarm(lf1.PoolId, helperAddr, utils.ParseCoin("10_000_000pool1"), true)
+	s.nextBlock()
+
+	// Create the first auction
+	s.nextAuction()
+
+	s.fundAddr(s.addr(0), utils.ParseCoins("300_000_000pool1"))
+
+	_, err := s.keeper.PlaceBid(s.ctx, 1, pool.Id, s.addr(0), utils.ParseCoin("100_000_000pool1"))
+	s.Require().NoError(err)
+
+	// Finish the first auction and create next one
+	s.nextAuction()
+
+	// Place a bid for the old auction
+	_, err = s.keeper.PlaceBid(s.ctx, 1, pool.Id, s.addr(0), utils.ParseCoin("200_000_000pool1"))
+	s.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
+
+	auctionId := s.keeper.GetLastRewardsAuctionId(s.ctx, lf1.PoolId)
+	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, s.addr(0), utils.ParseCoin("200_000_000pool1"))
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestPlaceBid_RefundPreviousBid() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000000denom1, 100_000000denom2"))
+	plan := s.createPrivatePlan(s.addr(0), []lpfarmtypes.RewardAllocation{
+		{
+			PairId:        pool.PairId,
+			RewardsPerDay: utils.ParseCoins("100_000000stake"),
+		},
+	})
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("100_000000stake"))
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(0), utils.ParseCoin("10_000000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction() // increase auction id
+	s.nextAuction() // increase auction id
+
+	s.fundAddr(s.addr(5), utils.ParseCoins("500_000000pool1"))
+	s.assertEq(utils.ParseCoins("500_000000pool1"), s.getBalances(s.addr(5)))
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("450_000000pool1"), false)
+	s.nextBlock()
+	s.assertEq(utils.ParseCoins("50_000000pool1"), s.getBalances(s.addr(5)))
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("500_000000pool1"), false)
+	s.nextBlock()
+	s.assertEq(utils.ParseCoins("0pool1"), s.getBalances(s.addr(5)))
 }
 
 func (s *KeeperTestSuite) TestRefundBid() {
@@ -188,7 +250,7 @@ func (s *KeeperTestSuite) TestRefundBid() {
 				s.addr(1).String(),
 			),
 			nil,
-			"winning bid can't be refunded: invalid request",
+			"not allowed to refund the winning bid: invalid request",
 		},
 	} {
 		s.Run(tc.name, func() {
@@ -351,4 +413,50 @@ func (s *KeeperTestSuite) TestFinishRewardsAuction_NoOneFarmed() {
 
 	// Ensure that received pool coin amount is greater than the original liquid farm amount
 	s.Require().True(s.getBalance(s.addr(1), pool.PoolCoinDenom).Amount.GT(sdk.NewInt(50_000_000)))
+}
+
+func (s *KeeperTestSuite) TestRewardsAuction_RewardsAndFees() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(s.addr(0), []lpfarmtypes.RewardAllocation{
+		{
+			PairId:        pool.PairId,
+			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
+		},
+	})
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("100_000_000stake"))
+
+	// Fee rate is 10%
+	liquidFarm := s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), utils.ParseDec("0.1"))
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(0), utils.ParseCoin("10_000_000pool1"), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(1), utils.ParseCoin("10_000_000pool1"), true)
+	s.nextBlock()
+
+	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(pool.Id)
+	s.Require().False(s.getBalances(withdrawnRewardsReserveAddr).IsZero())
+
+	s.nextAuction()
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("2_000_000pool1"), true)
+	s.nextBlock()
+
+	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(pool.Id)
+	farmingRewards := s.app.LPFarmKeeper.Rewards(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
+	truncatedRewards, _ := farmingRewards.TruncateDecimal()
+	spendable := s.app.BankKeeper.SpendableCoins(s.ctx, withdrawnRewardsReserveAddr)
+	totalRewards := truncatedRewards.Add(spendable...)
+
+	deducted, fees := types.DeductFees(totalRewards, liquidFarm.FeeRate)
+
+	s.nextAuction()
+
+	auction, found := s.keeper.GetRewardsAuction(s.ctx, 1, pool.Id)
+	s.Require().True(found)
+
+	s.Require().True(auction.Rewards.IsEqual(deducted.Add(fees...)))
+	s.Require().True(auction.Fees.IsEqual(fees))
 }

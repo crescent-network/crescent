@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
+	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 func (pair Pair) GetEscrowAddress() sdk.AccAddress {

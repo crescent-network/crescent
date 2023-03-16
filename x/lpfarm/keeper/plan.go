@@ -1,13 +1,12 @@
 package keeper
 
 import (
-	"sort"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // CreatePrivatePlan creates a new private farming plan.
@@ -198,8 +197,6 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 	})
 
 	rewardsByDenom := map[string]sdk.DecCoins{}
-	// We keep this slice for deterministic iteration over the rewardsByDenom map.
-	var denomsWithRewards []string
 	for _, farmingPoolAddr := range ra.farmingPoolAddrs {
 		farmingPool := farmingPoolAddr.String()
 		totalRewards := ra.totalRewardsByFarmingPool[farmingPool]
@@ -212,23 +209,28 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 			return err
 		}
 		for denom, rewards := range ra.allocatedRewards[farmingPool] {
-			if _, ok := rewardsByDenom[denom]; !ok {
-				denomsWithRewards = append(denomsWithRewards, denom)
-			}
 			rewardsByDenom[denom] = rewardsByDenom[denom].Add(rewards...)
 		}
 	}
 
-	sort.Strings(denomsWithRewards)
-	for _, denom := range denomsWithRewards {
-		farm, found := ck.getFarm(ctx, denom)
-		if !found { // Sanity check
-			panic("farm not found")
+	k.IterateAllFarms(ctx, func(denom string, farm types.Farm) (stop bool) {
+		if _, ok := rewardsByDenom[denom]; ok {
+			farm.CurrentRewards = farm.CurrentRewards.Add(rewardsByDenom[denom]...)
+			farm.OutstandingRewards = farm.OutstandingRewards.Add(rewardsByDenom[denom]...)
+			if pi, ok := ra.poolInfoByPoolCoinDenom[denom]; ok {
+				farm.PreviousShare = &pi.rewardsShare
+			} else {
+				farm.PreviousShare = nil
+			}
+			k.SetFarm(ctx, denom, farm)
+		} else {
+			if farm.PreviousShare != nil {
+				farm.PreviousShare = nil
+				k.SetFarm(ctx, denom, farm)
+			}
 		}
-		farm.CurrentRewards = farm.CurrentRewards.Add(rewardsByDenom[denom]...)
-		farm.OutstandingRewards = farm.OutstandingRewards.Add(rewardsByDenom[denom]...)
-		k.SetFarm(ctx, denom, farm)
-	}
+		return false
+	})
 
 	return nil
 }

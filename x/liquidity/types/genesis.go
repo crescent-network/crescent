@@ -7,15 +7,15 @@ import (
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params:                   DefaultParams(),
-		LastPairId:               0,
-		LastPoolId:               0,
-		Pairs:                    []Pair{},
-		Pools:                    []Pool{},
-		DepositRequests:          []DepositRequest{},
-		WithdrawRequests:         []WithdrawRequest{},
-		Orders:                   []Order{},
-		MarketMakingOrderIndexes: []MMOrderIndex{},
+		Params:                       DefaultParams(),
+		LastPairId:                   0,
+		LastPoolId:                   0,
+		Pairs:                        []Pair{},
+		Pools:                        []Pool{},
+		DepositRequests:              []DepositRequest{},
+		WithdrawRequests:             []WithdrawRequest{},
+		Orders:                       []Order{},
+		NumMarketMakingOrdersRecords: []NumMMOrdersRecord{},
 	}
 }
 
@@ -134,6 +134,11 @@ func (genState GenesisState) Validate() error {
 			orderSet[order.PairId] = map[uint64]struct{}{}
 		}
 		orderSet[order.PairId][order.Id] = struct{}{}
+	}
+	for _, record := range genState.NumMarketMakingOrdersRecords {
+		if record.NumMarketMakingOrders == 0 {
+			return fmt.Errorf("number of MM order must be positive")
+		}
 	}
 	return nil
 }

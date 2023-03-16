@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/claim/v1beta1/claim.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/claim/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/claim/types";
 
 // Query defines the gRPC querier service.
 service Query {

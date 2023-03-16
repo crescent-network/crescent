@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 import "crescent/liquidfarming/v1beta1/liquidfarming.proto";
 import "crescent/liquidfarming/v1beta1/params.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/liquidfarming/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/liquidfarming/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -40,7 +40,7 @@ service Query {
 
   // Bids returns all bids for the liquid farm
   rpc Bids(QueryBidsRequest) returns (QueryBidsResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/pools/{pool_id}/bids";
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/bids";
   }
 
   // Rewards returns all accumulated farming rewards for the liquid farm

@@ -1,17 +1,11 @@
 {
-  "swagger": "3.0",
+  "swagger": "2.0",
   "info": {
     "title": "Crescent REST and gRPC Gateway docs",
     "description": "A REST interface for state queries, transactions",
-    "version": "3.0.0"
+    "version": "5.0.0"
   },
   "apis": [
-    {
-      "url": "./client/docs/swagger_legacy.yaml",
-      "dereference": {
-        "circular": "ignore"
-      }
-    },
     {
       "url": "./tmp-swagger-gen/crescent/farming/v1beta1/query.swagger.json",
       "operationIds": {
@@ -58,6 +52,37 @@
       "operationIds": {
         "rename": {
           "Params": "MarketMakerParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/lpfarm/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "LPFarmParams",
+          "HistoricalRewards": "LPFarmHistoricalRewards",
+          "Plans": "LPFarmPlans",
+          "Plan": "LPFarmPlan",
+          "Position": "LPFarmPosition",
+          "Rewards": "LPFarmRewards"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/liquidfarming/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "LiquidFarmingParams",
+          "Rewards": "LiquidFarmingRewards"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/marker/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MarkerParams",
+          "LastBlockTime": "MarkerLastBlockTime"
         }
       }
     }

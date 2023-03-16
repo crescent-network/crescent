@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -126,6 +126,7 @@ $ %s query %s pairs --denoms=uatom,stake
 
 	cmd.Flags().AddFlagSet(flagSetPairs())
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "pairs")
 
 	return cmd
 }
@@ -237,6 +238,7 @@ $ %s query %s pools --disabled=true
 
 	cmd.Flags().AddFlagSet(flagSetPools())
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "pools")
 
 	return cmd
 }
@@ -363,6 +365,7 @@ $ %s query %s deposit-requests 1
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "deposit-requests")
 
 	return cmd
 }
@@ -467,6 +470,7 @@ $ %s query %s withdraw-requests 1
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "withdraw-requests")
 
 	return cmd
 }
@@ -597,6 +601,7 @@ $ %s query %s orders --pair-id=1
 
 	cmd.Flags().AddFlagSet(flagSetOrders())
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	return cmd
 }

@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v1liquidity "github.com/crescent-network/crescent/v3/x/liquidity/legacy/v1"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	v1liquidity "github.com/crescent-network/crescent/v5/x/liquidity/legacy/v1"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 func MigratePool(store sdk.KVStore, cdc codec.BinaryCodec) error {

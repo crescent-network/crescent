@@ -12,11 +12,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	appparams "github.com/crescent-network/crescent/v3/app/params"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/keeper"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	appparams "github.com/crescent-network/crescent/v5/app/params"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v5/x/liquidity/keeper"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // Simulation operation weights constants.
@@ -31,7 +31,6 @@ const (
 	OpWeightMsgMMOrder          = "op_weight_msg_mm_order"
 	OpWeightMsgCancelOrder      = "op_weight_msg_cancel_order"
 	OpWeightMsgCancelAllOrders  = "op_weight_msg_cancel_all_orders"
-	OpWeightMsgCancelMMOrder    = "op_weight_msg_cancel_mm_order"
 )
 
 var (
@@ -99,11 +98,6 @@ func WeightedOperations(
 		weightMsgCancelAllOrders = appparams.DefaultWeightMsgCancelAllOrders
 	})
 
-	var weightMsgCancelMMOrder int
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelMMOrder, &weightMsgCancelMMOrder, nil, func(_ *rand.Rand) {
-		weightMsgCancelMMOrder = appparams.DefaultWeightMsgCancelMMOrder
-	})
-
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreatePair,
@@ -144,10 +138,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgCancelAllOrders,
 			SimulateMsgCancelAllOrders(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgCancelMMOrder,
-			SimulateMsgCancelMMOrder(ak, bk, k),
 		),
 	}
 }
@@ -209,7 +199,7 @@ func SimulateMsgCreatePool(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		if len(k.GetAllPools(ctx)) >= types.MaxNumActivePoolsPerPair {
+		if uint32(len(k.GetAllPools(ctx))) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "all pools have been created"), nil, nil
 		}
 
@@ -274,7 +264,7 @@ func SimulateMsgCreateRangedPool(ak types.AccountKeeper, bk types.BankKeeper, k 
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
-		if len(k.GetAllPools(ctx)) >= types.MaxNumActivePoolsPerPair {
+		if uint32(len(k.GetAllPools(ctx))) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreatePool, "all pools have been created"), nil, nil
 		}
 
@@ -644,89 +634,71 @@ func SimulateMsgMMOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		fundAccountsOnce(r, ctx, bk, accs)
 
+		params := k.GetParams(ctx)
+
 		accs = utils.ShuffleSimAccounts(r, accs)
 
-		var (
-			simAccount      simtypes.Account
-			spendable       sdk.Coins
-			pair            types.Pair
-			canSell, canBuy bool
-		)
+		var simAccount simtypes.Account
+		var spendable sdk.Coins
+		var pair types.Pair
+		var pool types.Pool
+		var dir types.OrderDirection
 		skip := true
 		for _, simAccount = range accs {
 			spendable = bk.SpendableCoins(ctx, simAccount.Address)
 
 			var found bool
-			pair, canSell, canBuy, found = findPairToMakeMMOrders(r, k, ctx, simAccount.Address, spendable)
+			pair, pool, dir, found = findPairToMakeMMOrder(r, k, ctx, simAccount.Address, spendable)
 			if found {
 				skip = false
 				break
 			}
 		}
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMMOrder, "no account to make market making orders"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMMOrder, "no account to make a market making order"), nil, nil
 		}
 
 		var minPrice, maxPrice sdk.Dec
-		tickPrec := int(k.GetTickPrecision(ctx))
-		if pair.LastPrice == nil {
-			minPrice = utils.ParseDec("0.5")
-			maxPrice = utils.ParseDec("5.0")
+		if pair.LastPrice != nil {
+			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
 		} else {
-			minPrice, maxPrice = types.PriceLimits(*pair.LastPrice, k.GetMaxPriceLimitRatio(ctx), tickPrec)
+			if pool != (types.Pool{}) {
+				rx, ry := k.GetPoolBalances(ctx, pool)
+				ammPool := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{})
+				minPrice, maxPrice = minMaxPrice(k, ctx, ammPool.Price())
+			} else {
+				minPrice, maxPrice = utils.ParseDec("0.5"), utils.ParseDec("5.0")
+			}
 		}
-		midPrice := minPrice.Add(maxPrice).QuoInt64(2)
+		price := amm.PriceToDownTick(utils.RandomDec(r, minPrice, maxPrice), int(params.TickPrecision))
 
-		maxNumTicks := k.GetMaxNumMarketMakingOrderTicks(ctx)
-		ammTickPrec := amm.TickPrecision(tickPrec)
-		var (
-			maxSellPrice, minSellPrice sdk.Dec
-			sellAmt                    = sdk.ZeroInt()
-			maxBuyPrice, minBuyPrice   sdk.Dec
-			buyAmt                     = sdk.ZeroInt()
+		minAmt := sdk.MaxInt(
+			amm.MinCoinAmount,
+			amm.MinCoinAmount.ToDec().QuoRoundUp(price).Ceil().TruncateInt(),
 		)
-		if canSell {
-			minSellPrice = ammTickPrec.PriceToDownTick(
-				utils.RandomDec(r, midPrice.Mul(utils.ParseDec("0.98")), midPrice.Mul(utils.ParseDec("1.02"))))
-			maxSellPrice = ammTickPrec.PriceToDownTick(
-				utils.RandomDec(r, minSellPrice, maxPrice))
-			sellAmt = utils.RandomInt(r, amm.MinCoinAmount, sdk.NewInt(10_000000))
-		}
-		if canBuy {
-			maxBuyPrice = ammTickPrec.PriceToUpTick(
-				utils.RandomDec(r, midPrice.Mul(utils.ParseDec("0.98")), midPrice.Mul(utils.ParseDec("1.02"))))
-			minBuyPrice = ammTickPrec.PriceToUpTick(
-				utils.RandomDec(r, minPrice, maxBuyPrice))
-			buyAmt = utils.RandomInt(r, amm.MinCoinAmount, sdk.NewInt(10_000000))
-		}
+		amt := utils.RandomInt(r, minAmt, minAmt.MulRaw(100))
 
-		offerBaseCoin := sdk.NewInt64Coin(pair.BaseCoinDenom, 0)
-		offerQuoteCoin := sdk.NewInt64Coin(pair.QuoteCoinDenom, 0)
-		if buyAmt.IsPositive() {
-			buyTicks := types.MMOrderTicks(
-				types.OrderDirectionBuy, minBuyPrice, maxBuyPrice, buyAmt, int(maxNumTicks), tickPrec)
-			for _, tick := range buyTicks {
-				offerQuoteCoin = offerQuoteCoin.AddAmount(tick.OfferCoinAmount)
-			}
+		var offerCoin sdk.Coin
+		var demandCoinDenom string
+		switch dir {
+		case types.OrderDirectionBuy:
+			offerCoin = sdk.NewCoin(pair.QuoteCoinDenom, price.MulInt(amt).Ceil().TruncateInt())
+			demandCoinDenom = pair.BaseCoinDenom
+		case types.OrderDirectionSell:
+			offerCoin = sdk.NewCoin(pair.BaseCoinDenom, amt)
+			demandCoinDenom = pair.QuoteCoinDenom
 		}
-		if sellAmt.IsPositive() {
-			sellTicks := types.MMOrderTicks(
-				types.OrderDirectionSell, minSellPrice, maxSellPrice, sellAmt, int(maxNumTicks), tickPrec)
-			for _, tick := range sellTicks {
-				offerBaseCoin = offerBaseCoin.AddAmount(tick.OfferCoinAmount)
-			}
+		if offerCoin.Amount.LT(amm.MinCoinAmount) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMMOrder, "too small offer coin amount"), nil, nil
 		}
-		if !sdk.NewCoins(offerBaseCoin, offerQuoteCoin).IsAllLTE(spendable) {
+		if !sdk.NewCoins(offerCoin).IsAllLTE(spendable) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMMOrder, "insufficient funds"), nil, nil
 		}
 
-		lifespan := time.Duration(r.Int63n(int64(k.GetMaxOrderLifespan(ctx))))
+		lifespan := time.Duration(r.Int63n(int64(params.MaxOrderLifespan)))
 
 		msg := types.NewMsgMMOrder(
-			simAccount.Address, pair.Id,
-			maxSellPrice, minSellPrice, sellAmt,
-			maxBuyPrice, minBuyPrice, buyAmt,
-			lifespan)
+			simAccount.Address, pair.Id, dir, offerCoin, demandCoinDenom, price, amt, lifespan)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -847,53 +819,6 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k k
 		selectedPairIds = selectedPairIds[:r.Intn(len(selectedPairIds))]
 
 		msg := types.NewMsgCancelAllOrders(simAccount.Address, selectedPairIds)
-
-		txCtx := simulation.OperationInput{
-			R:               r,
-			App:             app,
-			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
-			Msg:             msg,
-			MsgType:         msg.Type(),
-			Context:         ctx,
-			SimAccount:      simAccount,
-			AccountKeeper:   ak,
-			Bankkeeper:      bk,
-			ModuleName:      types.ModuleName,
-			CoinsSpentInMsg: spendable,
-		}
-
-		return utils.GenAndDeliverTxWithFees(txCtx, Gas, Fees)
-	}
-}
-
-func SimulateMsgCancelMMOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		fundAccountsOnce(r, ctx, bk, accs)
-
-		accs = utils.ShuffleSimAccounts(r, accs)
-
-		var simAccount simtypes.Account
-		var spendable sdk.Coins
-		var pair types.Pair
-		skip := true
-		for _, simAccount = range accs {
-			spendable = bk.SpendableCoins(ctx, simAccount.Address)
-
-			var found bool
-			pair, found = findPairToCancelMMOrders(r, k, ctx, simAccount.Address)
-			if found {
-				skip = false
-				break
-			}
-		}
-		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelMMOrder, "no account to cancel market making orders"), nil, nil
-		}
-
-		msg := types.NewMsgCancelMMOrder(simAccount.Address, pair.Id)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -1102,70 +1027,52 @@ func findPairToMakeMarketOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, s
 	return types.Pair{}, 0, false
 }
 
-func findPairToMakeMMOrders(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, orderer sdk.AccAddress, spendable sdk.Coins) (pair types.Pair, canSell, canBuy, found bool) {
-	pairs := k.GetAllPairs(ctx)
+func findPairToMakeMMOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, ordererAddr sdk.AccAddress, spendable sdk.Coins) (types.Pair, types.Pool, types.OrderDirection, bool) {
+	var pairs []types.Pair
+	_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
+		pairs = append(pairs, pair)
+		return false, nil
+	})
 	r.Shuffle(len(pairs), func(i, j int) {
 		pairs[i], pairs[j] = pairs[j], pairs[i]
 	})
 
-loop:
-	for _, pair = range pairs {
-		// Skip pairs that already have market making orders from this orderer.
-		index, f := k.GetMMOrderIndex(ctx, orderer, pair.Id)
-		if f {
-			for _, orderId := range index.OrderIds {
-				order, f := k.GetOrder(ctx, pair.Id, orderId)
-				if f && (order.BatchId == pair.CurrentBatchId) {
-					continue loop
-				}
-			}
-		}
-
-		baseCoinAmt := spendable.AmountOf(pair.BaseCoinDenom)
-		quoteCoinAmt := spendable.AmountOf(pair.QuoteCoinDenom)
-		if baseCoinAmt.GTE(sdk.NewInt(100_000000)) {
-			canSell = true
-		} else {
-			canSell = false
-		}
-		if quoteCoinAmt.GTE(sdk.NewInt(100_000000)) {
-			canBuy = true
-		} else {
-			canBuy = false
-		}
-		if canBuy || canSell {
-			found = true
-			return
-		}
-	}
-
-	return
-}
-
-func findPairToCancelMMOrders(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, orderer sdk.AccAddress) (pair types.Pair, found bool) {
-	pairs := k.GetAllPairs(ctx)
-	r.Shuffle(len(pairs), func(i, j int) {
-		pairs[i], pairs[j] = pairs[j], pairs[i]
-	})
-
-loop:
-	for _, pair = range pairs {
-		index, f := k.GetMMOrderIndex(ctx, orderer, pair.Id)
-		if !f {
+	maxNumMMOrders := k.GetMaxNumMarketMakingOrdersPerPair(ctx)
+	for _, pair := range pairs {
+		if k.GetNumMMOrders(ctx, ordererAddr, pair.Id) >= maxNumMMOrders {
 			continue
 		}
 
-		for _, orderId := range index.OrderIds {
-			order, f := k.GetOrder(ctx, pair.Id, orderId)
-			if f && (order.BatchId == pair.CurrentBatchId) {
-				continue loop
+		var resPool types.Pool
+		_ = k.IteratePoolsByPair(ctx, pair.Id, func(pool types.Pool) (stop bool, err error) {
+			if !pool.Disabled {
+				resPool = pool
+				return true, nil
+			}
+			return false, nil
+		})
+
+		dirs := []types.OrderDirection{types.OrderDirectionBuy, types.OrderDirectionSell}
+		r.Shuffle(len(dirs), func(i, j int) {
+			dirs[i], dirs[j] = dirs[j], dirs[i]
+		})
+
+		for _, dir := range dirs {
+			var minOfferCoinAmt sdk.Coin
+			switch dir {
+			case types.OrderDirectionBuy:
+				minOfferCoinAmt = sdk.NewCoin(pair.QuoteCoinDenom, amm.MinCoinAmount)
+			case types.OrderDirectionSell:
+				minOfferCoinAmt = sdk.NewCoin(pair.BaseCoinDenom, amm.MinCoinAmount)
+			}
+
+			if sdk.NewCoins(minOfferCoinAmt).IsAllLTE(spendable) {
+				return pair, resPool, dir, true
 			}
 		}
-
-		found = true
-		return
 	}
-	return
+
+	return types.Pair{}, types.Pool{}, 0, false
 }
 
 func minMaxPrice(k keeper.Keeper, ctx sdk.Context, lastPrice sdk.Dec) (sdk.Dec, sdk.Dec) {

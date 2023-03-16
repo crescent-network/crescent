@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/crescent-network/crescent/v3/x/farming/types"
+	"github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 func TestMsgCreateFixedAmountPlan(t *testing.T) {

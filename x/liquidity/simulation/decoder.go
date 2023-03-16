@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
@@ -42,12 +42,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvA.Value, &reqA)
 			cdc.MustUnmarshal(kvB.Value, &reqB)
 			return fmt.Sprintf("%v\n%v", reqA, reqB)
-
-		case bytes.Equal(kvA.Key[:1], types.MMOrderIndexKeyPrefix):
-			var indexA, indexB types.MMOrderIndex
-			cdc.MustUnmarshal(kvA.Value, &indexA)
-			cdc.MustUnmarshal(kvB.Value, &indexB)
-			return fmt.Sprintf("%v\n%v", indexA, indexB)
 
 		default:
 			panic(fmt.Sprintf("invalid liquidity key prefix %X", kvA.Key[:1]))

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -10,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly,
@@ -33,17 +34,58 @@ func (k Querier) Plans(c context.Context, req *types.QueryPlansRequest) (*types.
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	if req.FarmingPoolAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(req.FarmingPoolAddress); err != nil {
+			return nil, err
+		}
+	}
+	if req.TerminationAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(req.TerminationAddress); err != nil {
+			return nil, err
+		}
+	}
+	var isPrivate bool
+	if req.IsPrivate != "" {
+		var err error
+		isPrivate, err = strconv.ParseBool(req.IsPrivate)
+		if err != nil {
+			return nil, err
+		}
+	}
+	var isTerminated bool
+	if req.IsTerminated != "" {
+		var err error
+		isTerminated, err = strconv.ParseBool(req.IsTerminated)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
 	planStore := prefix.NewStore(store, types.PlanKeyPrefix)
 	var plans []types.Plan
-	pageRes, err := query.Paginate(planStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.FilteredPaginate(planStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		var plan types.Plan
 		if err := k.cdc.Unmarshal(value, &plan); err != nil {
-			return err
+			return false, err
 		}
-		plans = append(plans, plan)
-		return nil
+		if req.FarmingPoolAddress != "" && plan.FarmingPoolAddress != req.FarmingPoolAddress {
+			return false, nil
+		}
+		if req.TerminationAddress != "" && plan.TerminationAddress != req.TerminationAddress {
+			return false, nil
+		}
+		if req.IsPrivate != "" && plan.IsPrivate != isPrivate {
+			return false, nil
+		}
+		if req.IsTerminated != "" && plan.IsTerminated != isTerminated {
+			return false, nil
+		}
+		if accumulate {
+			plans = append(plans, plan)
+		}
+		return true, nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

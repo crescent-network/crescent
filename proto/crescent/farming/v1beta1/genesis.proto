@@ -9,7 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "crescent/farming/v1beta1/farming.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package            = "github.com/crescent-network/crescent/x/farming/types";
+option go_package            = "github.com/crescent-network/crescent/v5/x/farming/types";
 option (gogoproto.equal_all) = true;
 
 // GenesisState defines the farming module's genesis state.

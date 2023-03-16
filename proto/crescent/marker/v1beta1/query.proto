@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package crescent.marker.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "crescent/marker/v1beta1/marker.proto";
+
+option go_package = "github.com/crescent-network/crescent/v5/x/marker/types";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/marker/v1beta1/params";
+  }
+  rpc LastBlockTime(QueryLastBlockTimeRequest) returns (QueryLastBlockTimeResponse) {
+    option (google.api.http).get = "/crescent/marker/v1beta1/last_block_time";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryLastBlockTimeRequest {}
+
+message QueryLastBlockTimeResponse {
+  google.protobuf.Timestamp last_block_time = 1 [(gogoproto.stdtime) = true];
+}

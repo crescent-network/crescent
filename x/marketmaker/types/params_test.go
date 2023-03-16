@@ -11,7 +11,7 @@ import (
 
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/crescent-network/crescent/v3/x/marketmaker/types"
+	"github.com/crescent-network/crescent/v5/x/marketmaker/types"
 )
 
 func TestParams(t *testing.T) {

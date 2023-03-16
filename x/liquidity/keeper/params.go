@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // GetBatchSize returns the current batch size parameter.
@@ -82,6 +82,13 @@ func (k Keeper) GetMaxNumMarketMakingOrderTicks(ctx sdk.Context) (i uint32) {
 	return
 }
 
+// GetMaxNumMarketMakingOrdersPerPair returns the current maximum number of
+// market making orders per pair.
+func (k Keeper) GetMaxNumMarketMakingOrdersPerPair(ctx sdk.Context) (i uint32) {
+	k.paramSpace.Get(ctx, types.KeyMaxNumMarketMakingOrdersPerPair, &i)
+	return
+}
+
 // GetMaxOrderLifespan returns the current maximum order lifespan
 // parameter.
 func (k Keeper) GetMaxOrderLifespan(ctx sdk.Context) (maxLifespan time.Duration) {
@@ -116,4 +123,21 @@ func (k Keeper) GetOrderExtraGas(ctx sdk.Context) (gas sdk.Gas) {
 // SetMaxNumMarketMakingOrderTicks sets max num market making order ticks
 func (k Keeper) SetMaxNumMarketMakingOrderTicks(ctx sdk.Context, input uint32) {
 	k.paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrderTicks, input)
+}
+
+// SetMaxNumMarketMakingOrdersPerPair sets max num market making orders per pair
+func (k Keeper) SetMaxNumMarketMakingOrdersPerPair(ctx sdk.Context, input uint32) {
+	k.paramSpace.Set(ctx, types.KeyMaxNumMarketMakingOrdersPerPair, input)
+}
+
+// GetMaxNumActivePoolsPerPair returns the current maximum number of active
+// pools per pair.
+func (k Keeper) GetMaxNumActivePoolsPerPair(ctx sdk.Context) (i uint32) {
+	k.paramSpace.Get(ctx, types.KeyMaxNumActivePoolsPerPair, &i)
+	return
+}
+
+// SetMaxNumActivePoolsPerPair sets the maximum number of active pools per pair.
+func (k Keeper) SetMaxNumActivePoolsPerPair(ctx sdk.Context, i uint32) {
+	k.paramSpace.Set(ctx, types.KeyMaxNumActivePoolsPerPair, i)
 }

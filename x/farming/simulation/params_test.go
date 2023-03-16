@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/crescent-network/crescent/v3/x/farming/simulation"
+	"github.com/crescent-network/crescent/v5/x/farming/simulation"
 )
 
 func TestParamChanges(t *testing.T) {

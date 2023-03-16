@@ -204,29 +204,23 @@ The transaction that is triggered with the `MsgMarketOrder` message fails if:
 
 ## MsgMMOrder
 
-Make an MM(market making) order, which places multiple limit orders at once based
-on the parameters.
+Make an MM(market making) order, which basically is a limit order with order
+type of `OrderTypeMM`.
 
 ```go
 type MsgMMOrder struct {
-    Orderer       string
-    PairId        uint64
-    MaxSellPrice  sdk.Dec
-    MinSellPrice  sdk.Dec
-    SellAmount    sdk.Int
-    MaxBuyPrice   sdk.Dec
-    MinBuyPrice   sdk.Dec
-    BuyAmount     sdk.Int
-    OrderLifespan time.Duration
+    Orderer         string        // the bech32-encoded address that makes an order
+    PairId          uint64        // the pair id
+    Direction       SwapDirection // the swap direction; buy or sell
+    OfferCoin       sdk.Coin      // the amount of coin that the orderer offers
+    DemandCoinDenom string        // the demand coin denom that the orderer wants to swap for
+    Price           sdk.Dec       // the order price; the exchange ratio is the amount of quote coin over the amount of base coin
+    Amount          sdk.Int       // the amount of base coin that the orderer wants to buy or sell
+    OrderLifespan   time.Duration // the order lifespan
 }
 ```
 
-Limit orders are created at even intervals, for each buy/sell side.
-If the amount is zero, then no orders are made for that order direction.
-The maximum number of orders for each side is limited by the `MaxNumMarketMakingOrderTicks`
-parameter.
-At any point, there can be only one MM order from an orderer.
-If the orderer makes another MM order, then the previous order will be canceled.
+There is a limit on the number of limit orders made from this message.
 
 ## MsgCancelOrder
 
@@ -272,16 +266,3 @@ Validity checks are performed for `MsgCancelAllOrders` messages.
 The transaction that is triggered with the `MsgCancelAllOrders` message fails if:
 - `Orderer` address is invalid
 - Pair with `PairId` in `PairIds` does not exist
-
-## MsgCancelMMOrder
-
-Cancel an MM(market making) order.
-
-```go
-type MsgCancelMMOrder struct {
-    Orderer string
-    PairId  uint64
-}
-```
-
-Cancel previously made MM order by specifying the pair id.

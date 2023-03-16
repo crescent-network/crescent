@@ -8,7 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/liquidity/v1beta1/liquidity.proto";
 import "crescent/liquidity/v1beta1/trade.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/liquidity/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/liquidity/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -84,6 +84,10 @@ service Query {
 
   rpc OrderBooks(QueryOrderBooksRequest) returns (QueryOrderBooksResponse) {
     option (google.api.http).get = "/crescent/liquidity/v1beta1/order_books";
+  }
+
+  rpc NumMMOrders(QueryNumMMOrdersRequest) returns (QueryNumMMOrdersResponse) {
+    option (google.api.http).get = "/crescent/liquidity/v1beta1/num_mm_orders/{orderer}/{pair_id}";
   }
 
   rpc Trades(QueryTradesRequest) returns (QueryTradesResponse) {
@@ -255,6 +259,15 @@ message QueryOrderBooksRequest {
 // QueryOrderBooksResponse is response type for Query/OrderBooks RPC method.
 message QueryOrderBooksResponse {
   repeated OrderBookPairResponse pairs = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryNumMMOrdersRequest {
+  string orderer = 1;
+  uint64 pair_id = 2;
+}
+
+message QueryNumMMOrdersResponse {
+  uint32 num_market_making_orders = 1;
 }
 
 message QueryTradesRequest {

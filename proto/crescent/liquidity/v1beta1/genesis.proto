@@ -4,7 +4,7 @@ package crescent.liquidity.v1beta1;
 import "gogoproto/gogo.proto";
 import "crescent/liquidity/v1beta1/liquidity.proto";
 
-option go_package                      = "github.com/crescent-network/crescent/x/liquidity/types";
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidity/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // GenesisState defines the liquidity module's genesis state.
@@ -25,5 +25,13 @@ message GenesisState {
 
   repeated Order orders = 8 [(gogoproto.nullable) = false];
 
-  repeated MMOrderIndex market_making_order_indexes = 9 [(gogoproto.nullable) = false];
+  repeated NumMMOrdersRecord num_market_making_orders_records = 9 [(gogoproto.nullable) = false];
+}
+
+// NumMMOrdersRecord holds information about how many MM orders an orderer
+// ordered per pair.
+message NumMMOrdersRecord {
+  string orderer                  = 1;
+  uint64 pair_id                  = 2;
+  uint32 num_market_making_orders = 3;
 }

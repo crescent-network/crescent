@@ -21,13 +21,13 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	"github.com/crescent-network/crescent/v3/app/params"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/client/cli"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	liquiditytestutil "github.com/crescent-network/crescent/v3/x/liquidity/client/testutil"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
+	chain "github.com/crescent-network/crescent/v5/app"
+	"github.com/crescent-network/crescent/v5/app/params"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/client/cli"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytestutil "github.com/crescent-network/crescent/v5/x/liquidity/client/testutil"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 type IntegrationTestSuite struct {
@@ -445,7 +445,7 @@ func (s *IntegrationTestSuite) TestNewLiquidFarmCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			false, &sdk.TxResponse{}, 2,
+			false, &sdk.TxResponse{}, 18,
 		},
 		{
 			"invalid case: pool id not found",
@@ -595,7 +595,7 @@ func (s *IntegrationTestSuite) TestNewPlaceBidCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			false, &sdk.TxResponse{}, 2,
+			false, &sdk.TxResponse{}, 18,
 		},
 		{
 			"invalid case: invalid bidding coin denom",

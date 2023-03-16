@@ -13,9 +13,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banksimulation "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/claim/simulation"
-	"github.com/crescent-network/crescent/v3/x/claim/types"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/claim/simulation"
+	"github.com/crescent-network/crescent/v5/x/claim/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

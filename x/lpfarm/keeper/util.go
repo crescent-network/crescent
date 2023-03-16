@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // cachingKeeper acts like a proxy to keeper methods,
@@ -65,6 +65,7 @@ type rewardAllocator struct {
 	totalRewardsByFarmingPool map[string]sdk.Coins               // farming pool => total rewards
 	farmingPoolAddrs          []sdk.AccAddress
 	poolInfosByPairId         map[uint64][]*poolInfo
+	poolInfoByPoolCoinDenom   map[string]*poolInfo
 }
 
 type poolInfo struct {
@@ -81,6 +82,7 @@ func newRewardAllocator(ctx sdk.Context, k Keeper, ck *cachingKeeper) *rewardAll
 		allocatedRewards:          map[string]map[string]sdk.DecCoins{},
 		totalRewardsByFarmingPool: map[string]sdk.Coins{},
 		poolInfosByPairId:         map[uint64][]*poolInfo{},
+		poolInfoByPoolCoinDenom:   map[string]*poolInfo{},
 	}
 }
 
@@ -106,10 +108,12 @@ func (ra *rewardAllocator) allocateRewardsToPair(farmingPoolAddr sdk.AccAddress,
 			}
 			rewardWeight := ra.k.PoolRewardWeight(ra.ctx, pool, pair)
 			totalRewardWeight = totalRewardWeight.Add(rewardWeight)
-			poolInfos = append(poolInfos, &poolInfo{
+			pi := &poolInfo{
 				poolCoinDenom: pool.PoolCoinDenom,
 				rewardWeight:  rewardWeight,
-			})
+			}
+			poolInfos = append(poolInfos, pi)
+			ra.poolInfoByPoolCoinDenom[pool.PoolCoinDenom] = pi
 			return false, nil
 		})
 		for _, pi := range poolInfos {

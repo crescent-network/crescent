@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package                      = "github.com/crescent-network/crescent/x/liquidfarming/types";
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidfarming/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // RewardsAuction defines rewards auction that is created by the module

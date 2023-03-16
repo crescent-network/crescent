@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 
 	_ "github.com/stretchr/testify/suite"
 )
@@ -38,6 +38,63 @@ func (s *KeeperTestSuite) TestGRPCPairs() {
 				s.Require().Len(resp.Plans, 2)
 				s.Require().Equal(privPlan, resp.Plans[0])
 				s.Require().Equal(pubPlan, resp.Plans[1])
+			},
+		},
+		{
+			"query plans with farming pool address",
+			&types.QueryPlansRequest{
+				// We've created the public farming plan with this farming pool address
+				FarmingPoolAddress: utils.TestAddress(100).String(),
+			},
+			"",
+			func(resp *types.QueryPlansResponse) {
+				s.Require().Len(resp.Plans, 1)
+				s.Require().Equal(utils.TestAddress(100).String(), resp.Plans[0].FarmingPoolAddress)
+			},
+		},
+		{
+			"query plans with termination pool address",
+			&types.QueryPlansRequest{
+				// We've created the private farming plan from this account
+				TerminationAddress: helperAddr.String(),
+			},
+			"",
+			func(resp *types.QueryPlansResponse) {
+				s.Require().Len(resp.Plans, 1)
+				s.Require().Equal(helperAddr.String(), resp.Plans[0].TerminationAddress)
+			},
+		},
+		{
+			"query private plans",
+			&types.QueryPlansRequest{
+				IsPrivate: "true",
+			},
+			"",
+			func(resp *types.QueryPlansResponse) {
+				s.Require().Len(resp.Plans, 1)
+				s.Require().True(resp.Plans[0].IsPrivate)
+			},
+		},
+		{
+			"query non-terminated plans",
+			&types.QueryPlansRequest{
+				IsTerminated: "false",
+			},
+			"",
+			func(resp *types.QueryPlansResponse) {
+				// All plans are non-terminated.
+				s.Require().Len(resp.Plans, 2)
+			},
+		},
+		{
+			"query terminated plans",
+			&types.QueryPlansRequest{
+				IsTerminated: "true",
+			},
+			"",
+			func(resp *types.QueryPlansResponse) {
+				// No plans are terminated.
+				s.Require().Len(resp.Plans, 0)
 			},
 		},
 	} {

@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // getNextPoolIdWithUpdate increments pool id by one and set it.
@@ -103,7 +103,7 @@ func (k Keeper) ValidateMsgCreatePool(ctx sdk.Context, msg *types.MsgCreatePool)
 	if duplicate {
 		return types.ErrPoolAlreadyExists
 	}
-	if numActivePools >= types.MaxNumActivePoolsPerPair {
+	if uint32(numActivePools) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 		return types.ErrTooManyPools
 	}
 
@@ -205,7 +205,7 @@ func (k Keeper) ValidateMsgCreateRangedPool(ctx sdk.Context, msg *types.MsgCreat
 		}
 		return false, nil
 	})
-	if numActivePools >= types.MaxNumActivePoolsPerPair {
+	if uint32(numActivePools) >= k.GetMaxNumActivePoolsPerPair(ctx) {
 		return types.ErrTooManyPools
 	}
 

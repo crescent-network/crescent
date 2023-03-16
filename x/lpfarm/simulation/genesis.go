@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // Simulation parameter constants

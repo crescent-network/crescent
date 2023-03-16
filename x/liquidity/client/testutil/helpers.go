@@ -11,8 +11,8 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/client/cli"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/client/cli"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 var commonArgs = []string{
@@ -41,7 +41,7 @@ func MsgCreatePool(clientCtx client.Context, from string, pairId uint64, deposit
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewCreatePoolCmd(), args)
 }
 
-//nolint
+// nolint
 func MsgDeposit(clientCtx client.Context, from string, poolId uint64, depositCoins sdk.Coins, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append(append([]string{
 		strconv.FormatUint(poolId, 10),
@@ -52,7 +52,7 @@ func MsgDeposit(clientCtx client.Context, from string, poolId uint64, depositCoi
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewDepositCmd(), args)
 }
 
-//nolint
+// nolint
 func MsgWithdraw(clientCtx client.Context, from string, poolId uint64, poolCoin sdk.Coin, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append(append([]string{
 		strconv.FormatUint(poolId, 10),

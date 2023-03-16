@@ -1,12 +1,12 @@
 <p>&nbsp;</p>
 <p align="center">
 
-<img src="crescent_core_image.png" width=700 height=280>
+<img src="assets/banner.png" width=700 height=280>
 
 </p>
 
 <p align="center">
-Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<br/><br/>
+Expanding DeFi capabilities through InterBlockchain Technology<br/><br/>
 
 <a href="https://pkg.go.dev/github.com/crescent-network/crescent">
     <img src="https://pkg.go.dev/badge/github.com/crescent-network/crescent">
@@ -18,44 +18,42 @@ Crescent Core - Expanding DeFi capabilities through InterBlockchain Technology<b
 </p>
 
 
-## What is Crescent?
+## What is Crescent Network?
 
-Crescent is a DeFi Hub that provides innovative and powerful tools that empower users’ digital assets for maximizing their financial returns while managing associated risks in the most efficient way. In the base layer, Crescent core has a DEX functionality equipped with several unique characteristics.
+Crescent Network is a DeFi Hub in Cosmos ecosystem with a goal of empowering users’ digital assets for maximizing their financial returns while managing associated risks in the most efficient way by providing innovative and sophisticated DeFi products. In the base layer, Crescent core has the following unique characteristics.
 
-- A Hybrid DEX : a hybrid system of orderbook and AMM
-- Tick System : standardization of order price
-- Batch Execution : all orders included in same block are fairly executed
-- Ranged Pools : liquidity pools providing liquidity within predefined price range
-- Optimized Liquidity Incentives Strategy
-- Synergy with Crescent Boost
+- Hybrid DEX: a combination of Automated Market Maker (AMM) and Order Book models.
+- Ranged Pool: next generation Automated Market Maker that increases capital efficiency. Liquidity is allocated within a predefined price range.
+- Batch Execution : all deposits, withdrawals, and orders are accumulated in a batch and they are fairly executed at the same time.
+- Novel DeFi products are on the way!
 
 ## Installation
 
 ### Use binaries
 
-This is the easiest way to get started. Download a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/crescent-network/crescent/releases) page.
+Download a pre-built binary for your operating system. You can find the latest binaries in this [releases](https://github.com/crescent-network/crescent/releases) page.
 
 ### Build from source
 
 **Step 1. Install Golang**
 
-Go version [1.18](https://go.dev/doc/go1.18) or higher is required for Crescent Core.
+Go version [1.18](https://go.dev/doc/go1.18) or higher is required.
 
-If you haven't already, install Go by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
+If you haven't already, install Go by following the installation guide in [the official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
-**Step 2. Get Crescent Core source code**
+**Step 2. Get source code**
 
-Use `git` to retrieve Crescent Core from the [official repo](https://github.com/crescent-network/crescent/) and checkout the `release/v3.0.x` branch. This branch contains the latest release, which will install the `crescentd` binary.
+Use `git` to retrieve Crescent Core from [the official repository](https://github.com/crescent-network/crescent) and checkout latest release, which will install the `crescentd` binary.
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
-cd crescent && git checkout release/v3.0.x
+cd crescent && git checkout release/v5.0.x
 make install
 ```
 
 **Step 3. Verify your installation**
 
-Verify that you have installed `crescentd` successfully by running the following command:
+Verify the commit hash to see if you have installed `crescentd` correctly.
 
 ```bash
 crescentd version --long
@@ -63,19 +61,19 @@ crescentd version --long
 
 ## Dependency
 
-Crescent Core uses a customized Cosmos SDK. Please check the differences on [here](https://github.com/crescent-network/cosmos-sdk/compare/v0.45.9...v1.1.2-sdk-0.45.9).
+Crescent core uses a fork of [cosmos-sdk](https://github.com/crescent-network/cosmos-sdk) and [ibc-go](https://github.com/crescent-network/ibc-go). If you would like to know which ones customized from the original `cosmos-sdk` and `ibc-go`, please reference the release notes in the respective repository.
 
-| Requirement           | Notes             |
-|-----------------------|-------------------|
-| Go version            | Go1.18 or higher  |
-| customized cosmos-sdk | v1.1.2-sdk-0.45.9 |
+| Requirement         | Notes                |
+|---------------------|----------------------|
+| cosmos-sdk (forked) | v1.2.0-sdk-0.45.10   |
+| ibc-go (forked)     | v3.4.0-crescent-v4-2 |
 
 ## Documentation
 
-The documentation is available in [docs](docs) directory. If you are a developer interested in technical specification, see inside each `x/{module}`'s `spec` directory.
+The documentation is available in [docs](docs) directory. If you are a developer interested in technical specification, go to each `x/{module}`'s `spec` directory.
 
 * [Crescent Official Docs](https://docs.crescent.network/)
-* [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent/2.0.0)
+* [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent)
 
 ## Community
 

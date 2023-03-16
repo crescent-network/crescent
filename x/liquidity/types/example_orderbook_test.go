@@ -3,9 +3,9 @@ package types_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 func ExampleMakeOrderBookPairResponse() {

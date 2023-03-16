@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
+	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 const (

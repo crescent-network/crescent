@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/crescent-network/crescent/v3/x/mint/types"
+	"github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 // RandomizedGenState generates a random GenesisState for mint

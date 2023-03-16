@@ -11,13 +11,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/keeper"
-	"github.com/crescent-network/crescent/v3/x/liquidfarming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
-	lpfarmtypes "github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	chain "github.com/crescent-network/crescent/v5/app"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 var (
@@ -84,6 +84,24 @@ func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
 	s.Require().NoError(err)
 	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.ModuleName, addr, amt)
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) assertEq(exp, got interface{}) {
+	s.T().Helper()
+	var equal bool
+	switch exp := exp.(type) {
+	case sdk.Int:
+		equal = exp.Equal(got.(sdk.Int))
+	case sdk.Dec:
+		equal = exp.Equal(got.(sdk.Dec))
+	case sdk.Coin:
+		equal = exp.IsEqual(got.(sdk.Coin))
+	case sdk.Coins:
+		equal = exp.IsEqual(got.(sdk.Coins))
+	case sdk.DecCoins:
+		equal = exp.IsEqual(got.(sdk.DecCoins))
+	}
+	s.Require().True(equal, "expected:\t%v\ngot:\t\t%v", exp, got)
 }
 
 func (s *KeeperTestSuite) createPrivatePlan(creator sdk.AccAddress, rewardAllocs []lpfarmtypes.RewardAllocation) lpfarmtypes.Plan {

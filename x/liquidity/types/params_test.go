@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 func TestParams_Validate(t *testing.T) {
@@ -90,6 +90,13 @@ func TestParams_Validate(t *testing.T) {
 				params.MaxNumMarketMakingOrderTicks = 0
 			},
 			"max number of market making order ticks must be positive: 0",
+		},
+		{
+			"zero MaxNumMarketMakingOrdersPerPair",
+			func(params *types.Params) {
+				params.MaxNumMarketMakingOrdersPerPair = 0
+			},
+			"max number of market making orders per pair must be positive: 0",
 		},
 		{
 			"negative MaxOrderLifespan",

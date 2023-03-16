@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package crescent.marker.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "crescent/marker/v1beta1/marker.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/marker/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message GenesisState {
+  Params                    params          = 1 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp last_block_time = 2 [(gogoproto.stdtime) = true];
+}

@@ -7,15 +7,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	farmingtypes "github.com/crescent-network/crescent/v3/x/farming/types"
+	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 // Liquidity params default values
 const (
-	DefaultBatchSize                    uint32 = 1
-	DefaultTickPrecision                uint32 = 4
-	DefaultMaxNumMarketMakingOrderTicks        = 10
-	DefaultMaxOrderLifespan                    = 24 * time.Hour
+	DefaultBatchSize                       uint32 = 1
+	DefaultTickPrecision                   uint32 = 4
+	DefaultMaxNumMarketMakingOrderTicks           = 10
+	DefaultMaxNumMarketMakingOrdersPerPair        = 15
+	DefaultMaxOrderLifespan                       = 24 * time.Hour
+	DefaultMaxNumActivePoolsPerPair               = 20
 )
 
 // Liquidity params default values
@@ -40,10 +42,6 @@ const (
 	PairEscrowAddressPrefix   = "PairEscrowAddress"
 	ModuleAddressNameSplitter = "|"
 	AddressType               = farmingtypes.AddressType32Bytes
-
-	// MaxNumActivePoolsPerPair is the maximum number of active(not disabled)
-	// pools per pair.
-	MaxNumActivePoolsPerPair = 50
 )
 
 var (
@@ -52,22 +50,24 @@ var (
 )
 
 var (
-	KeyBatchSize                    = []byte("BatchSize")
-	KeyTickPrecision                = []byte("TickPrecision")
-	KeyFeeCollectorAddress          = []byte("FeeCollectorAddress")
-	KeyDustCollectorAddress         = []byte("DustCollectorAddress")
-	KeyMinInitialPoolCoinSupply     = []byte("MinInitialPoolCoinSupply")
-	KeyPairCreationFee              = []byte("PairCreationFee")
-	KeyPoolCreationFee              = []byte("PoolCreationFee")
-	KeyMinInitialDepositAmount      = []byte("MinInitialDepositAmount")
-	KeyMaxPriceLimitRatio           = []byte("MaxPriceLimitRatio")
-	KeyMaxNumMarketMakingOrderTicks = []byte("MaxNumMarketMakingOrderTicks")
-	KeyMaxOrderLifespan             = []byte("MaxOrderLifespan")
-	KeySwapFeeRate                  = []byte("SwapFeeRate")
-	KeyWithdrawFeeRate              = []byte("WithdrawFeeRate")
-	KeyDepositExtraGas              = []byte("DepositExtraGas")
-	KeyWithdrawExtraGas             = []byte("WithdrawExtraGas")
-	KeyOrderExtraGas                = []byte("OrderExtraGas")
+	KeyBatchSize                       = []byte("BatchSize")
+	KeyTickPrecision                   = []byte("TickPrecision")
+	KeyFeeCollectorAddress             = []byte("FeeCollectorAddress")
+	KeyDustCollectorAddress            = []byte("DustCollectorAddress")
+	KeyMinInitialPoolCoinSupply        = []byte("MinInitialPoolCoinSupply")
+	KeyPairCreationFee                 = []byte("PairCreationFee")
+	KeyPoolCreationFee                 = []byte("PoolCreationFee")
+	KeyMinInitialDepositAmount         = []byte("MinInitialDepositAmount")
+	KeyMaxPriceLimitRatio              = []byte("MaxPriceLimitRatio")
+	KeyMaxNumMarketMakingOrderTicks    = []byte("MaxNumMarketMakingOrderTicks")
+	KeyMaxNumMarketMakingOrdersPerPair = []byte("MaxNumMarketMakingOrdersPerPair")
+	KeyMaxOrderLifespan                = []byte("MaxOrderLifespan")
+	KeySwapFeeRate                     = []byte("SwapFeeRate")
+	KeyWithdrawFeeRate                 = []byte("WithdrawFeeRate")
+	KeyDepositExtraGas                 = []byte("DepositExtraGas")
+	KeyWithdrawExtraGas                = []byte("WithdrawExtraGas")
+	KeyOrderExtraGas                   = []byte("OrderExtraGas")
+	KeyMaxNumActivePoolsPerPair        = []byte("MaxNumActivePoolsPerPair")
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -79,22 +79,24 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns a default params for the liquidity module.
 func DefaultParams() Params {
 	return Params{
-		BatchSize:                    DefaultBatchSize,
-		TickPrecision:                DefaultTickPrecision,
-		FeeCollectorAddress:          DefaultFeeCollectorAddress.String(),
-		DustCollectorAddress:         DefaultDustCollectorAddress.String(),
-		MinInitialPoolCoinSupply:     DefaultMinInitialPoolCoinSupply,
-		PairCreationFee:              DefaultPairCreationFee,
-		PoolCreationFee:              DefaultPoolCreationFee,
-		MinInitialDepositAmount:      DefaultMinInitialDepositAmount,
-		MaxPriceLimitRatio:           DefaultMaxPriceLimitRatio,
-		MaxNumMarketMakingOrderTicks: DefaultMaxNumMarketMakingOrderTicks,
-		MaxOrderLifespan:             DefaultMaxOrderLifespan,
-		SwapFeeRate:                  DefaultSwapFeeRate,
-		WithdrawFeeRate:              DefaultWithdrawFeeRate,
-		DepositExtraGas:              DefaultDepositExtraGas,
-		WithdrawExtraGas:             DefaultWithdrawExtraGas,
-		OrderExtraGas:                DefaultOrderExtraGas,
+		BatchSize:                       DefaultBatchSize,
+		TickPrecision:                   DefaultTickPrecision,
+		FeeCollectorAddress:             DefaultFeeCollectorAddress.String(),
+		DustCollectorAddress:            DefaultDustCollectorAddress.String(),
+		MinInitialPoolCoinSupply:        DefaultMinInitialPoolCoinSupply,
+		PairCreationFee:                 DefaultPairCreationFee,
+		PoolCreationFee:                 DefaultPoolCreationFee,
+		MinInitialDepositAmount:         DefaultMinInitialDepositAmount,
+		MaxPriceLimitRatio:              DefaultMaxPriceLimitRatio,
+		MaxNumMarketMakingOrderTicks:    DefaultMaxNumMarketMakingOrderTicks,
+		MaxNumMarketMakingOrdersPerPair: DefaultMaxNumMarketMakingOrdersPerPair,
+		MaxOrderLifespan:                DefaultMaxOrderLifespan,
+		SwapFeeRate:                     DefaultSwapFeeRate,
+		WithdrawFeeRate:                 DefaultWithdrawFeeRate,
+		DepositExtraGas:                 DefaultDepositExtraGas,
+		WithdrawExtraGas:                DefaultWithdrawExtraGas,
+		OrderExtraGas:                   DefaultOrderExtraGas,
+		MaxNumActivePoolsPerPair:        DefaultMaxNumActivePoolsPerPair,
 	}
 }
 
@@ -111,12 +113,14 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyMinInitialDepositAmount, &params.MinInitialDepositAmount, validateMinInitialDepositAmount),
 		paramstypes.NewParamSetPair(KeyMaxPriceLimitRatio, &params.MaxPriceLimitRatio, validateMaxPriceLimitRatio),
 		paramstypes.NewParamSetPair(KeyMaxNumMarketMakingOrderTicks, &params.MaxNumMarketMakingOrderTicks, validateMaxNumMarketMakingOrderTicks),
+		paramstypes.NewParamSetPair(KeyMaxNumMarketMakingOrdersPerPair, &params.MaxNumMarketMakingOrdersPerPair, validateMaxNumMarketMakingOrdersPerPair),
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 		paramstypes.NewParamSetPair(KeySwapFeeRate, &params.SwapFeeRate, validateSwapFeeRate),
 		paramstypes.NewParamSetPair(KeyWithdrawFeeRate, &params.WithdrawFeeRate, validateWithdrawFeeRate),
 		paramstypes.NewParamSetPair(KeyDepositExtraGas, &params.DepositExtraGas, validateExtraGas),
 		paramstypes.NewParamSetPair(KeyWithdrawExtraGas, &params.WithdrawExtraGas, validateExtraGas),
 		paramstypes.NewParamSetPair(KeyOrderExtraGas, &params.OrderExtraGas, validateExtraGas),
+		paramstypes.NewParamSetPair(KeyMaxNumActivePoolsPerPair, &params.MaxNumActivePoolsPerPair, validateMaxNumActivePoolsPerPair),
 	}
 }
 
@@ -136,12 +140,14 @@ func (params Params) Validate() error {
 		{params.MinInitialDepositAmount, validateMinInitialDepositAmount},
 		{params.MaxPriceLimitRatio, validateMaxPriceLimitRatio},
 		{params.MaxNumMarketMakingOrderTicks, validateMaxNumMarketMakingOrderTicks},
+		{params.MaxNumMarketMakingOrdersPerPair, validateMaxNumMarketMakingOrdersPerPair},
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 		{params.SwapFeeRate, validateSwapFeeRate},
 		{params.WithdrawFeeRate, validateWithdrawFeeRate},
 		{params.DepositExtraGas, validateExtraGas},
 		{params.WithdrawExtraGas, validateExtraGas},
 		{params.OrderExtraGas, validateExtraGas},
+		{params.MaxNumActivePoolsPerPair, validateMaxNumActivePoolsPerPair},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -280,6 +286,19 @@ func validateMaxNumMarketMakingOrderTicks(i interface{}) error {
 	return nil
 }
 
+func validateMaxNumMarketMakingOrdersPerPair(i interface{}) error {
+	v, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max number of market making orders per pair must be positive: %d", v)
+	}
+
+	return nil
+}
+
 func validateMaxOrderLifespan(i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
@@ -325,5 +344,13 @@ func validateExtraGas(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	return nil
+}
+
+func validateMaxNumActivePoolsPerPair(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 	return nil
 }

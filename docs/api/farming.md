@@ -572,7 +572,7 @@ Example Response
           "amount": "200.000000000000000000"
         }
       ]
-    },
+    }
   ],
   "pagination": {
     "next_key": null,

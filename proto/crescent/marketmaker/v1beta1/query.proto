@@ -12,7 +12,7 @@ import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/marketmaker/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/marketmaker/types";
 
 // Query defines the gRPC query service for the marketmaker module.
 service Query {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 
-	"github.com/crescent-network/crescent/v3/app/params"
-	"github.com/crescent-network/crescent/v3/x/farming/client/cli"
+	"github.com/crescent-network/crescent/v5/app/params"
+	"github.com/crescent-network/crescent/v5/x/farming/client/cli"
 )
 
 func TestParsePrivateFixedPlan(t *testing.T) {

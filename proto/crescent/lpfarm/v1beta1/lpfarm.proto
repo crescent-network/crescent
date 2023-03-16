@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package                      = "github.com/crescent-network/crescent/x/lpfarm/types";
+option go_package                      = "github.com/crescent-network/crescent/v5/x/lpfarm/types";
 option (gogoproto.goproto_getters_all) = false;
 
 message Params {
@@ -44,7 +44,8 @@ message Farm {
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
   repeated cosmos.base.v1beta1.DecCoin outstanding_rewards = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
-  uint64 period = 4;
+  uint64 period         = 4;
+  string previous_share = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }
 
 message Position {

@@ -18,10 +18,10 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/crescent-network/crescent/v3/x/lpfarm/client/cli"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/keeper"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/simulation"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/client/cli"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/simulation"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 var (

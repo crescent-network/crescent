@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/crescent-network/crescent/v3/x/liquidity/amm"
+	"github.com/crescent-network/crescent/v5/x/liquidity/amm"
 )
 
 type sendCoinsTxKey struct {
@@ -101,85 +101,6 @@ func IsTooSmallOrderAmount(amt sdk.Int, price sdk.Dec) bool {
 func PriceLimits(lastPrice, priceLimitRatio sdk.Dec, tickPrec int) (lowestPrice, highestPrice sdk.Dec) {
 	lowestPrice = amm.PriceToUpTick(lastPrice.Mul(sdk.OneDec().Sub(priceLimitRatio)), tickPrec)
 	highestPrice = amm.PriceToDownTick(lastPrice.Mul(sdk.OneDec().Add(priceLimitRatio)), tickPrec)
-	return
-}
-
-func NewMMOrderIndex(orderer sdk.AccAddress, pairId uint64, orderIds []uint64) MMOrderIndex {
-	return MMOrderIndex{
-		Orderer:  orderer.String(),
-		PairId:   pairId,
-		OrderIds: orderIds,
-	}
-}
-
-func (index MMOrderIndex) GetOrderer() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(index.Orderer)
-	if err != nil {
-		panic(err)
-	}
-	return addr
-}
-
-// MMOrderTick holds information about each tick's price and amount of an MMOrder.
-type MMOrderTick struct {
-	OfferCoinAmount sdk.Int
-	Price           sdk.Dec
-	Amount          sdk.Int
-}
-
-// MMOrderTicks returns fairly distributed tick information with given parameters.
-func MMOrderTicks(dir OrderDirection, minPrice, maxPrice sdk.Dec, amt sdk.Int, maxNumTicks, tickPrec int) (ticks []MMOrderTick) {
-	ammDir := amm.OrderDirection(dir)
-	if minPrice.Equal(maxPrice) {
-		return []MMOrderTick{{OfferCoinAmount: amm.OfferCoinAmount(ammDir, minPrice, amt), Price: minPrice, Amount: amt}}
-	}
-	gap := maxPrice.Sub(minPrice).QuoInt64(int64(maxNumTicks - 1))
-	switch dir {
-	case OrderDirectionBuy:
-		var prevP sdk.Dec
-		for i := 0; i < maxNumTicks-1; i++ {
-			p := amm.PriceToDownTick(minPrice.Add(gap.MulInt64(int64(i))), tickPrec)
-			if prevP.IsNil() || !p.Equal(prevP) {
-				ticks = append(ticks, MMOrderTick{
-					Price: p,
-				})
-				prevP = p
-			}
-		}
-		tickAmt := amt.QuoRaw(int64(len(ticks) + 1))
-		for i := range ticks {
-			ticks[i].Amount = tickAmt
-			ticks[i].OfferCoinAmount = amm.OfferCoinAmount(ammDir, ticks[i].Price, ticks[i].Amount)
-			amt = amt.Sub(tickAmt)
-		}
-		ticks = append(ticks, MMOrderTick{
-			OfferCoinAmount: amm.OfferCoinAmount(ammDir, maxPrice, amt),
-			Price:           maxPrice,
-			Amount:          amt,
-		})
-	case OrderDirectionSell:
-		var prevP sdk.Dec
-		for i := 0; i < maxNumTicks-1; i++ {
-			p := amm.PriceToUpTick(maxPrice.Sub(gap.MulInt64(int64(i))), tickPrec)
-			if prevP.IsNil() || !p.Equal(prevP) {
-				ticks = append(ticks, MMOrderTick{
-					Price: p,
-				})
-				prevP = p
-			}
-		}
-		tickAmt := amt.QuoRaw(int64(len(ticks) + 1))
-		for i := range ticks {
-			ticks[i].Amount = tickAmt
-			ticks[i].OfferCoinAmount = amm.OfferCoinAmount(ammDir, ticks[i].Price, ticks[i].Amount)
-			amt = amt.Sub(tickAmt)
-		}
-		ticks = append(ticks, MMOrderTick{
-			OfferCoinAmount: amm.OfferCoinAmount(ammDir, minPrice, amt),
-			Price:           minPrice,
-			Amount:          amt,
-		})
-	}
 	return
 }
 

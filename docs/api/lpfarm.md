@@ -59,8 +59,12 @@ Example Request:
 
 <!-- markdown-link-check-disable -->
 
-```bash
+```
 http://localhost:1317/crescent/lpfarm/v1beta1/plans
+http://localhost:1317/crescent/lpfarm/v1beta1/plans?farming_pool_address=cre1gkvhlzmpxarqwk4jh7k7yemf60r50y55n8ax9kxcx8t28hm0e7cqk52jh9
+http://localhost:1317/crescent/lpfarm/v1beta1/plans?termination_address=cre1mzgucqnfr2l8cj5apvdpllhzt4zeuh2c5l33n3
+http://localhost:1317/crescent/lpfarm/v1beta1/plans?is_private=true
+http://localhost:1317/crescent/lpfarm/v1beta1/plans?is_terminated=false
 ```
 
 Example Response

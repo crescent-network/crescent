@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v3/x/lpfarm/keeper"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {

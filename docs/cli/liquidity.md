@@ -7,7 +7,7 @@ Description: A high-level overview of how the command-line interfaces (CLI) work
 
 ## Synopsis
 
-This document provides a high-level overview of how the command line (CLI) interface works for the `liquidity` module. To set up a local testing environment, it requires 0.24.1 or lower versions of [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
+This document provides a high-level overview of how the command line (CLI) interface works for the `liquidity` module. To set up a local testing environment, it requires 0.24.1 or lower versions of [Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine, see [this guide](https://docs.ignite.com/welcome/install) to install it. Run this command under the project root directory `$ ignite chain serve -c config-test.yml`.
 
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout the document.
 
@@ -53,10 +53,10 @@ Usage
 create-pair [base-coin-denom] [quote-coin-denom]
 ```
 
-| **Argument**    | **Description**                      |
-| :-------------- | :----------------------------------- |
-| base-coin-denom | denom of the base coin for the pair  |
-| quote-coin-deom | denom of the quote coin for the pair |
+| **Argument**     | **Description**                      |
+| :--------------- | :----------------------------------- |
+| base-coin-denom  | denom of the base coin for the pair  |
+| quote-coin-denom | denom of the quote coin for the pair |
 
 Example
 
@@ -246,23 +246,56 @@ limit-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [price] [amou
 ```
 
 | **Argument**      | **Description**                                                                                                                                                                                                                                                                                                  |
-| :---------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|:------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | pair-id           | pair id                                                                                                                                                                                                                                                                                                          |
 | direction         | swap direction; buy or sell                                                                                                                                                                                                                                                                                      |
-| offer-coin        | amount of coin that the orderer offers to swap with; buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price \* amount. For sell direction, base coin amount must be greater than or equal to the amount value. |
+| offer-coin        | amount of coin that the orderer offers to swap for the demand coin denom; it varies depending on swap direction (buy or sell). Buy direction requires quote coin whereas sell direction requires base coin. For buy direction, quote coin amount must be greater than or equal to price \* amount. For sell direction, base coin amount must be greater than or equal to the amount value. |
 | demand-coin-denom | demand coin denom that the orderer is willing to swap for                                                                                                                                                                                                                                                        |
-| price             | order price; the exchange ratio is the amount of quote coin over the amount of base coin                                                                                                                                                                                                                         |
+| price             | order price; the exchange ratio is the amount of quote coin over the amount of base coin. It must be between 90% and 110% of the last price. This means the price change can only be between -10% and +10%.                                                                                                                                                                                                                         |
 | amount            | amount of base coin that the orderer is willing to buy or sell                                                                                                                                                                                                                                                   |
 
-| **Optional Flag** | **Description**                                                                                                                                         |
-| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --- | --- | --- | --- |
-| order-lifespan    | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns | us  | ms  | s   | m   | h   |
+| **Optional Flag**      | **Description**                                                                                                                                                                              |
+|:-----------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| order-lifespan         | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns&#124;us&#124;ms&#124;s&#124;m&#124;h |
 
-Example
+An Example of Buying Direction
 
 ```bash
-# Make a limit order to swap
-crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
+#
+# Pair: ATOM / USDT where ATOM is `BaseCoinDenom` and USDT is `QuoteCoinDenom`
+#
+# Let’s say you want to buy ATOM with 50 USDT (50*10^6uusd)
+#
+# You first have to query the last price of the pair
+# 
+# Assuming the last price is 3.0, it is up to your discretion
+# what order price you want to place an order with.
+#
+# [Case 1]
+# If you want your order to be executed to buy ATOM right away,
+# you must place an order with an order price above the last price.
+# e.g) 3.1, 3.2, 3.3 (max limit)
+#
+# [Case 2]
+# If you are willing to wait until your order is executed at certain price,
+# then place an order with an order price that is less than or equal to the last price.
+#
+# It is important to note that the order price must be between 90% and 110% of the last price 
+# for the price change to be between -10% and +10%. 
+# Our DEX is designed in this way to minimize computational resources 
+# and improve performance issue. 
+#
+# In regards of the `amount` field, it is how many ATOM you want to buy.
+# It is important to note that OfferCoinAmount/OrderPrice is the maximum amount you can buy and
+# the amount value multiply by order price cannot be more than the offer coin amount.
+# 
+# To describe the CLI below, 
+# it means you want to buy 17241379 amount of uatom by offering 50000000uusd with an order price of 2.9, which is lower than
+# the current last price of the pair.
+# You are placing an order with an intention to wait until your order is matched and executed at 2.9.
+#
+# Place a limit order to buy
+crescentd tx liquidity limit-order 1 buy 50000000uusd uatom 2.9 17241379 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -270,8 +303,70 @@ crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
 --yes \
 --output json | jq
 
-# Make a limit order to swap with order-lifespan flag
-crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 3.3 50000000 \
+# Place a limit order to buy with order-lifespan flag
+crescentd tx liquidity limit-order 1 buy 50000000uusd uatom 2.9 17241379 \
+--chain-id localnet \
+--order-lifespan 30s \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+#
+# Tips
+#
+# You can query order requests by using the following command
+# You must query this right away to get the result
+# Otherwise, it is removed as it is executed.
+crescentd q liquidity orders cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
+```
+
+An Example of Selling Direction
+
+```bash
+#
+# Pair: ATOM / USDT where ATOM is `BaseCoinDenom` and USDT is `QuoteCoinDenom`
+#
+# Let’s say you want to sell 50 ATOM (50*10^6uatom) for USDT
+#
+# You first have to query the last price of the pair
+# 
+# Assuming the last price is 3.0, it is up to your discretion
+# what order price you want to place an order with.
+#
+# [Case 1]
+# If you want your order to be executed to sell ATOM right away,
+# you must place an order with an order price below the last price.
+# e.g) 2.9, 2.8, 2.7 (max limit)
+# 
+# [Case 2]
+# If you are willing to wait until your order is executed at certain price,
+# then place an order with an order price that is more than or equal to the last price.
+#
+# It is important to note that the order price must be between 90% and 110% of the last price 
+# for the price change to be between -10% and +10%. 
+# Our DEX is designed in this way to minimize computational resources 
+# and improve performance issue. 
+#
+# In regards of the `amount` field, it is a number of ATOMs you want to sell.
+# 
+# To describe the CLI below, 
+# it means you want to sell 50000000 all amounts by offering 50000000uatom for uusd with an order price of 2.7.
+# You are placing an order with an intention to sell it immediately with any amounts placed in the orderbook pair.
+# OfferCoinAmount is the maximum amount you can sell.
+#
+# Place a limit order to sell
+crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 2.7 50000000 \
+--chain-id localnet \
+--from alice \
+--keyring-backend test \
+--broadcast-mode block \
+--yes \
+--output json | jq
+
+# Place a limit order to sell with order-lifespan flag
+crescentd tx liquidity limit-order 1 sell 50000000uatom uusd 2.7 50000000 \
 --chain-id localnet \
 --order-lifespan 30s \
 --from alice \
@@ -315,9 +410,9 @@ market-order [pair-id] [direction] [offer-coin] [demand-coin-denom] [amount]
 | demand-coin-denom | demand coin denom that the orderer is willing to swap for                                                                                                                                                                                                                                                        |
 | amount            | amount of base coin that the orderer is willing to buy or sell                                                                                                                                                                                                                                                   |
 
-| **Optional Flag** | **Description**                                                                                                                                         |
-| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --- | --- | --- | --- |
-| order-lifespan    | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns | us  | ms  | s   | m   | h   |
+| **Optional Flag**      | **Description**                                                                                                                                                                              |
+|:-----------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| order-lifespan         | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns&#124;us&#124;ms&#124;s&#124;m&#124;h |
 
 Example
 
@@ -372,9 +467,9 @@ mm-order [pair-id] [max-sell-price] [min-sell-price] [sell-amount] [max-buy-pric
 | min-buy-price  | minimum price of buy orders  |
 | buy-amount     | total amount of buy orders   |
 
-| **Optional Flag** | **Description**                                                                                                                                         |
-| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --- | --- | --- | --- |
-| order-lifespan    | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns | us  | ms  | s   | m   | h   |
+| **Optional Flag**      | **Description**                                                                                                                                                                              |
+|:-----------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| order-lifespan         | duration that the order lives until it is expired; an order will be executed for at least one batch, even if the lifespan is 0; valid time units are ns&#124;us&#124;ms&#124;s&#124;m&#124;h |
 
 Example
 

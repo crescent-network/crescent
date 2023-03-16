@@ -11,12 +11,12 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	utils "github.com/crescent-network/crescent/v3/types"
-	liquiditytypes "github.com/crescent-network/crescent/v3/x/liquidity/types"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/keeper"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/simulation"
-	"github.com/crescent-network/crescent/v3/x/lpfarm/types"
+	chain "github.com/crescent-network/crescent/v5/app"
+	utils "github.com/crescent-network/crescent/v5/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/simulation"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 func TestSimTestSuite(t *testing.T) {

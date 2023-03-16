@@ -8,10 +8,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	chain "github.com/crescent-network/crescent/v3/app"
-	utils "github.com/crescent-network/crescent/v3/types"
-	"github.com/crescent-network/crescent/v3/x/claim/simulation"
-	"github.com/crescent-network/crescent/v3/x/claim/types"
+	chain "github.com/crescent-network/crescent/v5/app"
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/claim/simulation"
+	"github.com/crescent-network/crescent/v5/x/claim/types"
 )
 
 func TestDecodeClaimStore(t *testing.T) {

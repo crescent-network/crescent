@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/lpfarm/v1beta1/lpfarm.proto";
 
-option go_package = "github.com/crescent-network/crescent/x/lpfarm/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/lpfarm/types";
 
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
@@ -47,7 +47,11 @@ message QueryParamsResponse {
 }
 
 message QueryPlansRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  string                                farming_pool_address = 1;
+  string                                termination_address  = 2;
+  string                                is_private           = 3;
+  string                                is_terminated        = 4;
+  cosmos.base.query.v1beta1.PageRequest pagination           = 5;
 }
 
 message QueryPlansResponse {
