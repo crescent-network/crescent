@@ -69,6 +69,9 @@ func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
 		}
 		return false, nil
 	})
+}
+
+func (k Keeper) DeleteOutdatedOrders(ctx sdk.Context) {
 	_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
 		if order.Status.ShouldBeDeleted() {
 			k.DeleteOrder(ctx, order)

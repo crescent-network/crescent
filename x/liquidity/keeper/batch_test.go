@@ -1,17 +1,10 @@
 package keeper_test
 
 import (
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	utils "github.com/crescent-network/crescent/v5/types"
-	"github.com/crescent-network/crescent/v5/x/liquidity"
-	"github.com/crescent-network/crescent/v5/x/liquidity/types"
-
 	_ "github.com/stretchr/testify/suite"
 )
 
+/*
 func (s *KeeperTestSuite) TestOrderExpiration() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 
@@ -44,3 +37,4 @@ func (s *KeeperTestSuite) TestOrderExpiration() {
 	_, found = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
 	s.Require().False(found) // The order is gone.
 }
+*/

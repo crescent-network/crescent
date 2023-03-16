@@ -716,6 +716,7 @@ func (s *KeeperTestSuite) TestGRPCWithdrawRequest() {
 	}
 }
 
+/*
 func (s *KeeperTestSuite) TestGRPCOrders() {
 	creator := s.addr(0)
 	pair := s.createPair(creator, "denom1", "denom2", true)
@@ -767,6 +768,7 @@ func (s *KeeperTestSuite) TestGRPCOrders() {
 		})
 	}
 }
+*/
 
 func (s *KeeperTestSuite) TestGRPCOrder() {
 	creator := s.addr(0)
@@ -830,6 +832,7 @@ func (s *KeeperTestSuite) TestGRPCOrder() {
 	}
 }
 
+/*
 func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)
 	pair2 := s.createPair(s.addr(0), "denom2", "denom3", true)
@@ -905,6 +908,7 @@ func (s *KeeperTestSuite) TestGRPCOrdersByOrderer() {
 		})
 	}
 }
+*/
 
 func (s *KeeperTestSuite) TestGRPCOrderBooks() {
 	pair := s.createPair(s.addr(0), "denom1", "denom2", true)

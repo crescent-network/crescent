@@ -427,6 +427,9 @@ func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshaOrder(k.cdc, order)
 	store.Set(types.GetOrderKey(order.PairId, order.Id), bz)
+	if k.offChainDB != nil {
+		k.SetOffloadedOrder(ctx, order)
+	}
 }
 
 func (k Keeper) SetOrderIndex(ctx sdk.Context, order types.Order) {

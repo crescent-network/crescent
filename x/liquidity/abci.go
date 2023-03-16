@@ -22,5 +22,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
 	if ctx.BlockHeight()%int64(params.BatchSize) == 0 {
 		k.ExecuteRequests(ctx)
+		k.DeleteOutdatedOrders(ctx)
 	}
 }
