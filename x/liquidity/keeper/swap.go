@@ -327,7 +327,7 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 				return false, nil
 			}
 			// TODO: add orders only when price is in the range?
-			ob.AddOrder(types.NewUserOrder(order, orderState))
+			ob.AddOrder(types.NewUserOrder(pair, order, orderState))
 			if orderState.Status == types.OrderStatusNotExecuted {
 				orderState.SetStatus(types.OrderStatusNotMatched)
 				k.SetOrderState(ctx, order.PairId, order.Id, orderState)
@@ -456,8 +456,8 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 				panic("order state not found")
 			}
 			os.OpenAmount = os.OpenAmount.Sub(matchedAmt)
-			os.RemainingOfferCoin = os.RemainingOfferCoin.Sub(paidCoin)
-			os.ReceivedCoin = os.ReceivedCoin.Add(receivedCoin)
+			os.RemainingOfferCoinAmount = os.RemainingOfferCoinAmount.Sub(order.PaidOfferCoinAmount)
+			os.ReceivedCoinAmount = os.ReceivedCoinAmount.Add(order.ReceivedDemandCoinAmount)
 
 			if os.OpenAmount.IsZero() {
 				if err := k.FinishOrder(ctx, o, os, types.OrderStatusCompleted); err != nil {
@@ -535,9 +535,17 @@ func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, orderState types
 		return nil
 	}
 
-	if orderState.RemainingOfferCoin.IsPositive() {
+	if orderState.RemainingOfferCoinAmount.IsPositive() {
 		pair, _ := k.GetPair(ctx, order.PairId)
-		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), order.GetOrderer(), sdk.NewCoins(orderState.RemainingOfferCoin)); err != nil {
+		var offerCoinDenom string
+		switch order.Direction {
+		case types.OrderDirectionBuy:
+			offerCoinDenom = pair.QuoteCoinDenom
+		case types.OrderDirectionSell:
+			offerCoinDenom = pair.BaseCoinDenom
+		}
+		coins := sdk.NewCoins(sdk.NewCoin(offerCoinDenom, orderState.RemainingOfferCoinAmount))
+		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), order.GetOrderer(), coins); err != nil {
 			return err
 		}
 	}
@@ -563,9 +571,9 @@ func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, orderState types
 			sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyAmount, order.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyOpenAmount, orderState.OpenAmount.String()),
-			sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, orderState.RemainingOfferCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyReceivedCoin, orderState.ReceivedCoin.String()),
+			//sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
+			//sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, orderState.RemainingOfferCoin.String()),
+			//sdk.NewAttribute(types.AttributeKeyReceivedCoin, orderState.ReceivedCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyStatus, orderState.Status.String()),
 		),
 	})

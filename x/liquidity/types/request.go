@@ -138,35 +138,30 @@ func (req *WithdrawRequest) SetStatus(status RequestStatus) {
 func NewOrder(
 	typ OrderType, id uint64, pair Pair, pairState PairState, orderer sdk.AccAddress,
 	offerCoin sdk.Coin, price sdk.Dec, amt sdk.Int, expireAt time.Time, msgHeight int64) (Order, OrderState) {
-	var (
-		dir             OrderDirection
-		demandCoinDenom string
-	)
+	var dir OrderDirection
 	if offerCoin.Denom == pair.BaseCoinDenom {
 		dir = OrderDirectionSell
-		demandCoinDenom = pair.QuoteCoinDenom
 	} else {
 		dir = OrderDirectionBuy
-		demandCoinDenom = pair.BaseCoinDenom
 	}
 	order := Order{
-		Type:      typ,
-		Id:        id,
-		PairId:    pair.Id,
-		MsgHeight: msgHeight,
-		Orderer:   orderer.String(),
-		Direction: dir,
-		OfferCoin: offerCoin,
-		Price:     price,
-		Amount:    amt,
-		BatchId:   pairState.CurrentBatchId,
-		ExpireAt:  expireAt,
+		Type:            typ,
+		Id:              id,
+		PairId:          pair.Id,
+		MsgHeight:       msgHeight,
+		Orderer:         orderer.String(),
+		Direction:       dir,
+		OfferCoinAmount: offerCoin.Amount,
+		Price:           price,
+		Amount:          amt,
+		BatchId:         pairState.CurrentBatchId,
+		ExpireAt:        expireAt,
 	}
 	orderState := OrderState{
-		RemainingOfferCoin: offerCoin,
-		ReceivedCoin:       sdk.NewCoin(demandCoinDenom, sdk.ZeroInt()),
-		OpenAmount:         amt,
-		Status:             OrderStatusNotExecuted,
+		RemainingOfferCoinAmount: offerCoin.Amount,
+		ReceivedCoinAmount:       sdk.ZeroInt(),
+		OpenAmount:               amt,
+		Status:                   OrderStatusNotExecuted,
 	}
 	return order, orderState
 }
@@ -196,10 +191,7 @@ func (order Order) Validate() error {
 	if order.Direction != OrderDirectionBuy && order.Direction != OrderDirectionSell {
 		return fmt.Errorf("invalid direction: %s", order.Direction)
 	}
-	if err := order.OfferCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid offer coin %s: %w", order.OfferCoin, err)
-	}
-	if order.OfferCoin.IsZero() {
+	if order.OfferCoinAmount.IsZero() {
 		return fmt.Errorf("offer coin must not be 0")
 	}
 	//if err := order.RemainingOfferCoin.Validate(); err != nil {

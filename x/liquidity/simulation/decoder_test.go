@@ -20,7 +20,7 @@ func TestDecodeLiquidityStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	pair, _ := types.NewPair(1, "denom1", "denom2")
-	pool,_ := types.NewBasicPool(1, 1, utils.TestAddress(0))
+	pool, _ := types.NewBasicPool(1, 1, utils.TestAddress(0))
 	depositReq := types.DepositRequest{
 		Id:             1,
 		PoolId:         1,
@@ -38,16 +38,16 @@ func TestDecodeLiquidityStore(t *testing.T) {
 		Status:     types.RequestStatusNotExecuted,
 	}
 	order := types.Order{
-		Id:                 1,
-		PairId:             1,
-		MsgHeight:          1,
-		Orderer:            sdk.AccAddress(crypto.AddressHash([]byte("orderer"))).String(),
-		Direction:          types.OrderDirectionSell,
-		OfferCoin:          sdk.NewInt64Coin("denom1", 1000000),
-		Price:              utils.ParseDec("1.0"),
-		Amount:             sdk.NewInt(1000000),
-		BatchId:            1,
-		ExpireAt:           utils.ParseTime("2022-02-01T00:00:00Z"),
+		Id:              1,
+		PairId:          1,
+		MsgHeight:       1,
+		Orderer:         sdk.AccAddress(crypto.AddressHash([]byte("orderer"))).String(),
+		Direction:       types.OrderDirectionSell,
+		OfferCoinAmount: sdk.NewInt(1000000),
+		Price:           utils.ParseDec("1.0"),
+		Amount:          sdk.NewInt(1000000),
+		BatchId:         1,
+		ExpireAt:        utils.ParseTime("2022-02-01T00:00:00Z"),
 	}
 
 	kvPairs := kv.Pairs{

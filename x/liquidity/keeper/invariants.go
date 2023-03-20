@@ -92,7 +92,14 @@ func RemainingOfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
 			_ = k.IterateOrdersByPair(ctx, pair.Id, func(order types.Order) (stop bool, err error) {
 				orderState, _ := k.GetOrderState(ctx, order.PairId, order.Id)
 				if !orderState.Status.ShouldBeDeleted() {
-					remainingOfferCoins = remainingOfferCoins.Add(orderState.RemainingOfferCoin)
+					var offerCoinDenom string
+					switch order.Direction {
+					case types.OrderDirectionBuy:
+						offerCoinDenom = pair.QuoteCoinDenom
+					case types.OrderDirectionSell:
+						offerCoinDenom = pair.BaseCoinDenom
+					}
+					remainingOfferCoins = remainingOfferCoins.Add(sdk.NewCoin(offerCoinDenom, orderState.RemainingOfferCoinAmount))
 				}
 				return false, nil
 			})

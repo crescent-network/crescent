@@ -555,7 +555,7 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 			case types.OrderStatusNotExecuted,
 				types.OrderStatusNotMatched,
 				types.OrderStatusPartiallyMatched:
-				ob.AddOrder(types.NewUserOrder(order, orderState))
+				ob.AddOrder(types.NewUserOrder(pair, order, orderState))
 			}
 			return false, nil
 		})

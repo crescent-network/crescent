@@ -3756,21 +3756,8 @@ paths:
                          - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
                          - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
                          - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-                    offer_coin:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
+                    offer_coin_amount:
+                      type: string
                     price:
                       type: string
                       title: >-
@@ -4173,21 +4160,8 @@ paths:
                          - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
                          - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
                          - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-                    offer_coin:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
+                    offer_coin_amount:
+                      type: string
                     price:
                       type: string
                       title: >-
@@ -4386,21 +4360,8 @@ paths:
                        - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
                        - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
                        - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-                  offer_coin:
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
+                  offer_coin_amount:
+                    type: string
                   price:
                     type: string
                     title: >-
@@ -10919,18 +10880,8 @@ definitions:
            - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
            - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
            - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-      offer_coin:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
+      offer_coin_amount:
+        type: string
       price:
         type: string
         title: price specifies the price that an orderer is willing to swap
@@ -11568,21 +11519,8 @@ definitions:
                - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
                - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
                - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-          offer_coin:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
+          offer_coin_amount:
+            type: string
           price:
             type: string
             title: price specifies the price that an orderer is willing to swap
@@ -11652,21 +11590,8 @@ definitions:
                  - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
                  - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
                  - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-            offer_coin:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
+            offer_coin_amount:
+              type: string
             price:
               type: string
               title: price specifies the price that an orderer is willing to swap

@@ -345,8 +345,8 @@ func (s *KeeperTestSuite) TestPartialMatch() {
 	orderState, found := s.keeper.GetOrderState(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
 	s.Require().Equal(types.OrderStatusPartiallyMatched, orderState.Status)
-	s.Require().True(coinEq(utils.ParseCoin("5000denom2"), orderState.RemainingOfferCoin))
-	s.Require().True(coinEq(utils.ParseCoin("5000denom1"), orderState.ReceivedCoin))
+	s.Require().True(intEq(sdk.NewInt(5000), orderState.RemainingOfferCoinAmount))
+	s.Require().True(intEq(sdk.NewInt(5000), orderState.ReceivedCoinAmount))
 	s.Require().True(intEq(sdk.NewInt(5000), orderState.OpenAmount))
 
 	s.sellMarketOrder(s.addr(3), pair.Id, sdk.NewInt(5000), 0, true)
@@ -770,8 +770,8 @@ func (s *KeeperTestSuite) TestRangedLiquidity() {
 	order := s.buyLimitOrder(s.addr(2), pair.Id, orderPrice, orderAmt, 0, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	orderState, _ := s.keeper.GetOrderState(s.ctx, order.PairId, order.Id)
-	paid := order.OfferCoin.Sub(orderState.RemainingOfferCoin).Amount
-	received := orderState.ReceivedCoin.Amount
+	paid := order.OfferCoinAmount.Sub(orderState.RemainingOfferCoinAmount)
+	received := orderState.ReceivedCoinAmount
 	s.Require().True(received.LT(orderAmt))
 	s.Require().True(paid.ToDec().QuoInt(received).LTE(orderPrice))
 	liquidity.BeginBlocker(s.ctx, s.keeper)
@@ -787,8 +787,8 @@ func (s *KeeperTestSuite) TestRangedLiquidity() {
 	order = s.buyLimitOrder(s.addr(2), pair.Id, orderPrice, orderAmt, 0, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	orderState, _ = s.keeper.GetOrderState(s.ctx, order.PairId, order.Id)
-	paid = order.OfferCoin.Sub(orderState.RemainingOfferCoin).Amount
-	received = orderState.ReceivedCoin.Amount
+	paid = order.OfferCoinAmount.Sub(orderState.RemainingOfferCoinAmount)
+	received = orderState.ReceivedCoinAmount
 	s.Require().True(intEq(orderAmt, received))
 	s.Require().True(paid.ToDec().QuoInt(received).LTE(orderPrice))
 }
@@ -813,8 +813,8 @@ func (s *KeeperTestSuite) TestOneSidedRangedPool() {
 	order := s.buyLimitOrder(s.addr(2), pair.Id, utils.ParseDec("1.1"), sdk.NewInt(100000), 0, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
 	orderState, _ := s.keeper.GetOrderState(s.ctx, order.PairId, order.Id)
-	paid := order.OfferCoin.Sub(orderState.RemainingOfferCoin).Amount
-	received := orderState.ReceivedCoin.Amount
+	paid := order.OfferCoinAmount.Sub(orderState.RemainingOfferCoinAmount)
+	received := orderState.ReceivedCoinAmount
 	s.Require().True(intEq(orderAmt, received))
 	s.Require().True(paid.ToDec().QuoInt(received).LTE(orderPrice))
 

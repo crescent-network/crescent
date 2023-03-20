@@ -31,31 +31,36 @@ type UserOrder struct {
 }
 
 // NewUserOrder returns a new user order.
-func NewUserOrder(order Order, orderState OrderState) *UserOrder {
-	var dir amm.OrderDirection
-	var amt sdk.Int
+func NewUserOrder(pair Pair, order Order, orderState OrderState) *UserOrder {
+	var (
+		dir                             amm.OrderDirection
+		amt                             sdk.Int
+		offerCoinDenom, demandCoinDenom string
+	)
 	switch order.Direction {
 	case OrderDirectionBuy:
 		dir = amm.Buy
 		utils.SafeMath(func() {
 			amt = sdk.MinInt(
 				orderState.OpenAmount,
-				orderState.RemainingOfferCoin.Amount.ToDec().QuoTruncate(order.Price).TruncateInt(),
+				orderState.RemainingOfferCoinAmount.ToDec().QuoTruncate(order.Price).TruncateInt(),
 			)
 		}, func() {
 			amt = orderState.OpenAmount
 		})
+		offerCoinDenom, demandCoinDenom = pair.QuoteCoinDenom, pair.BaseCoinDenom
 	case OrderDirectionSell:
 		dir = amm.Sell
 		amt = orderState.OpenAmount
+		offerCoinDenom, demandCoinDenom = pair.BaseCoinDenom, pair.QuoteCoinDenom
 	}
 	return &UserOrder{
-		BaseOrder:       amm.NewBaseOrder(dir, order.Price, amt, orderState.RemainingOfferCoin.Amount),
+		BaseOrder:       amm.NewBaseOrder(dir, order.Price, amt, orderState.RemainingOfferCoinAmount),
 		Orderer:         order.GetOrderer(),
 		OrderId:         order.Id,
 		BatchId:         order.BatchId,
-		OfferCoinDenom:  order.OfferCoin.Denom,
-		DemandCoinDenom: orderState.ReceivedCoin.Denom,
+		OfferCoinDenom:  offerCoinDenom,
+		DemandCoinDenom: demandCoinDenom,
 	}
 }
 

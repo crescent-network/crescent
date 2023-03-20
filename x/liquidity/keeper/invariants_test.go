@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) TestRemainingOfferCoinEscrowInvariant() {
 
 	orderState, _ := s.keeper.GetOrderState(s.ctx, order.PairId, order.Id)
 	oldOrderState := orderState
-	orderState.RemainingOfferCoin = utils.ParseCoin("2000000denom1")
+	orderState.RemainingOfferCoinAmount = sdk.NewInt(2000000)
 	s.keeper.SetOrderState(s.ctx, order.PairId, order.Id, orderState)
 	_, broken = keeper.RemainingOfferCoinEscrowInvariant(s.keeper)(s.ctx)
 	s.Require().True(broken)

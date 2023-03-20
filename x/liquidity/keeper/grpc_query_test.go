@@ -806,7 +806,7 @@ func (s *KeeperTestSuite) TestGRPCOrder() {
 				s.Require().Equal(order.MsgHeight, resp.Order.MsgHeight)
 				s.Require().Equal(order.Orderer, resp.Order.Orderer)
 				s.Require().Equal(order.Direction, resp.Order.Direction)
-				s.Require().Equal(order.OfferCoin, resp.Order.OfferCoin)
+				s.Require().Equal(order.OfferCoinAmount, resp.Order.OfferCoinAmount)
 				//s.Require().Equal(order.RemainingOfferCoin, resp.Order.RemainingOfferCoin)
 				//s.Require().Equal(order.ReceivedCoin, resp.Order.ReceivedCoin)
 				s.Require().Equal(order.Price, resp.Order.Price)

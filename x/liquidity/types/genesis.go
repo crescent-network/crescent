@@ -113,19 +113,6 @@ func (genState GenesisState) Validate() error {
 		if record.Order.BatchId > pairRecord.State.CurrentBatchId {
 			return fmt.Errorf("order at index %d has a batch id greater than its pair's current batch id: %d", i, record.Order.BatchId)
 		}
-		var offerCoinDenom, demandCoinDenom string
-		switch record.Order.Direction {
-		case OrderDirectionBuy:
-			offerCoinDenom, demandCoinDenom = pairRecord.Pair.QuoteCoinDenom, pairRecord.Pair.BaseCoinDenom
-		case OrderDirectionSell:
-			offerCoinDenom, demandCoinDenom = pairRecord.Pair.BaseCoinDenom, pairRecord.Pair.QuoteCoinDenom
-		}
-		if record.Order.OfferCoin.Denom != offerCoinDenom {
-			return fmt.Errorf("order at index %d has wrong offer coin denom: %s != %s", i, record.Order.OfferCoin.Denom, offerCoinDenom)
-		}
-		if record.State.ReceivedCoin.Denom != demandCoinDenom {
-			return fmt.Errorf("order at index %d has wrong demand coin denom: %s != %s", i, record.Order.OfferCoin.Denom, demandCoinDenom)
-		}
 		if set, ok := orderSet[record.Order.PairId]; ok {
 			if _, ok := set[record.Order.Id]; ok {
 				return fmt.Errorf("order at index %d has a duplicate id: %d", i, record.Order.Id)
