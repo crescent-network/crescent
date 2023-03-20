@@ -489,9 +489,10 @@ func SimulateMsgLimitOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLimitOrder, "no account to make a limit order"), nil, nil
 		}
 
+		pairState, _ := k.GetPairState(ctx, pair.Id)
 		var minPrice, maxPrice sdk.Dec
-		if pair.LastPrice != nil {
-			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
+		if pairState.LastPrice != nil {
+			minPrice, maxPrice = minMaxPrice(k, ctx, *pairState.LastPrice)
 		} else {
 			if pool != (types.Pool{}) {
 				rx, ry := k.GetPoolBalances(ctx, pool)
@@ -579,7 +580,8 @@ func SimulateMsgMarketOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMarketOrder, "no account to make a market order"), nil, nil
 		}
 
-		minPrice, maxPrice := types.PriceLimits(*pair.LastPrice, k.GetMaxPriceLimitRatio(ctx), int(k.GetTickPrecision(ctx)))
+		pairState, _ := k.GetPairState(ctx, pair.Id)
+		minPrice, maxPrice := types.PriceLimits(*pairState.LastPrice, k.GetMaxPriceLimitRatio(ctx), int(k.GetTickPrecision(ctx)))
 
 		minAmt := sdk.MaxInt(
 			amm.MinCoinAmount,
@@ -658,9 +660,10 @@ func SimulateMsgMMOrder(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMMOrder, "no account to make a market making order"), nil, nil
 		}
 
+		pairState, _ := k.GetPairState(ctx, pair.Id)
 		var minPrice, maxPrice sdk.Dec
-		if pair.LastPrice != nil {
-			minPrice, maxPrice = minMaxPrice(k, ctx, *pair.LastPrice)
+		if pairState.LastPrice != nil {
+			minPrice, maxPrice = minMaxPrice(k, ctx, *pairState.LastPrice)
 		} else {
 			if pool != (types.Pool{}) {
 				rx, ry := k.GetPoolBalances(ctx, pool)
@@ -734,8 +737,9 @@ func SimulateMsgCancelOrder(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 
 			found := false
 			_ = k.IterateOrdersByOrderer(ctx, simAccount.Address, func(order types.Order) (stop bool, err error) {
-				pair, _ := k.GetPair(ctx, order.PairId)
-				if order.Status.CanBeCanceled() && order.BatchId < pair.CurrentBatchId {
+				pairState, _ := k.GetPairState(ctx, order.PairId)
+				orderState, _ := k.GetOrderState(ctx, order.PairId, order.Id)
+				if orderState.Status.CanBeCanceled() && order.BatchId < pairState.CurrentBatchId {
 					orders = append(orders, order)
 					found = true
 					return true, nil
@@ -789,8 +793,9 @@ func SimulateMsgCancelAllOrders(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 			found := false
 			_ = k.IterateOrdersByOrderer(ctx, simAccount.Address, func(order types.Order) (stop bool, err error) {
-				pair, _ := k.GetPair(ctx, order.PairId)
-				if order.Status.CanBeCanceled() && order.BatchId < pair.CurrentBatchId {
+				orderState, _ := k.GetOrderState(ctx, order.PairId, order.Id)
+				pairState, _ := k.GetPairState(ctx, order.PairId)
+				if orderState.Status.CanBeCanceled() && order.BatchId < pairState.CurrentBatchId {
 					pairIds[order.PairId] = struct{}{}
 					found = true
 				}
@@ -1000,7 +1005,8 @@ func findPairToMakeMarketOrder(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, s
 	})
 
 	for _, pair := range pairs {
-		if pair.LastPrice == nil {
+		pairState, _ := k.GetPairState(ctx, pair.Id)
+		if pairState.LastPrice == nil {
 			continue
 		}
 

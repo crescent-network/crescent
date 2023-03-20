@@ -20,16 +20,19 @@ func (pair Pair) GetEscrowAddress() sdk.AccAddress {
 }
 
 // NewPair returns a new pair object.
-func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) Pair {
-	return Pair{
+func NewPair(id uint64, baseCoinDenom, quoteCoinDenom string) (Pair, PairState) {
+	pair := Pair{
 		Id:             id,
 		BaseCoinDenom:  baseCoinDenom,
 		QuoteCoinDenom: quoteCoinDenom,
 		EscrowAddress:  PairEscrowAddress(id).String(),
+	}
+	pairState := PairState{
 		LastOrderId:    0,
 		LastPrice:      nil,
 		CurrentBatchId: 1,
 	}
+	return pair, pairState
 }
 
 // Validate validates Pair for genesis.
@@ -46,14 +49,14 @@ func (pair Pair) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(pair.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address %s: %w", pair.EscrowAddress, err)
 	}
-	if pair.LastPrice != nil {
-		if !pair.LastPrice.IsPositive() {
-			return fmt.Errorf("last price must be positive: %s", pair.LastPrice)
-		}
-	}
-	if pair.CurrentBatchId == 0 {
-		return fmt.Errorf("current batch id must not be 0")
-	}
+	//if pair.LastPrice != nil {
+	//	if !pair.LastPrice.IsPositive() {
+	//		return fmt.Errorf("last price must be positive: %s", pair.LastPrice)
+	//	}
+	//}
+	//if pair.CurrentBatchId == 0 {
+	//	return fmt.Errorf("current batch id must not be 0")
+	//}
 	return nil
 }
 

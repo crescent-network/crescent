@@ -3,7 +3,6 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/crescent-network/crescent/v5/x/liquidity/types"
@@ -48,24 +47,24 @@ func TestPair_Validate(t *testing.T) {
 			},
 			"invalid escrow address invalidaddr: decoding bech32 failed: invalid separator index -1",
 		},
-		{
-			"",
-			func(pair *types.Pair) {
-				p := sdk.NewDec(-1)
-				pair.LastPrice = &p
-			},
-			"last price must be positive: -1.000000000000000000",
-		},
-		{
-			"",
-			func(pair *types.Pair) {
-				pair.CurrentBatchId = 0
-			},
-			"current batch id must not be 0",
-		},
+		//{
+		//	"",
+		//	func(pair *types.Pair) {
+		//		p := sdk.NewDec(-1)
+		//		pair.LastPrice = &p
+		//	},
+		//	"last price must be positive: -1.000000000000000000",
+		//},
+		//{
+		//	"",
+		//	func(pair *types.Pair) {
+		//		pair.CurrentBatchId = 0
+		//	},
+		//	"current batch id must not be 0",
+		//},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pair := types.NewPair(1, "denom1", "denom2")
+			pair, _ := types.NewPair(1, "denom1", "denom2")
 			tc.malleate(&pair)
 			err := pair.Validate()
 			if tc.expectedErr == "" {

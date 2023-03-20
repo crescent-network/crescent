@@ -135,51 +135,9 @@ func (req *WithdrawRequest) SetStatus(status RequestStatus) {
 	req.Status = status
 }
 
-// NewOrderForLimitOrder returns a new Order from MsgLimitOrder.
-func NewOrderForLimitOrder(msg *MsgLimitOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
-	return Order{
-		Type:               OrderTypeLimit,
-		Id:                 id,
-		PairId:             pair.Id,
-		MsgHeight:          msgHeight,
-		Orderer:            msg.Orderer,
-		Direction:          msg.Direction,
-		OfferCoin:          offerCoin,
-		RemainingOfferCoin: offerCoin,
-		ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
-		Price:              price,
-		Amount:             msg.Amount,
-		OpenAmount:         msg.Amount,
-		BatchId:            pair.CurrentBatchId,
-		ExpireAt:           expireAt,
-		Status:             OrderStatusNotExecuted,
-	}
-}
-
-// NewOrderForMarketOrder returns a new Order from MsgMarketOrder.
-func NewOrderForMarketOrder(msg *MsgMarketOrder, id uint64, pair Pair, offerCoin sdk.Coin, price sdk.Dec, expireAt time.Time, msgHeight int64) Order {
-	return Order{
-		Type:               OrderTypeMarket,
-		Id:                 id,
-		PairId:             pair.Id,
-		MsgHeight:          msgHeight,
-		Orderer:            msg.Orderer,
-		Direction:          msg.Direction,
-		OfferCoin:          offerCoin,
-		RemainingOfferCoin: offerCoin,
-		ReceivedCoin:       sdk.NewCoin(msg.DemandCoinDenom, sdk.ZeroInt()),
-		Price:              price,
-		Amount:             msg.Amount,
-		OpenAmount:         msg.Amount,
-		BatchId:            pair.CurrentBatchId,
-		ExpireAt:           expireAt,
-		Status:             OrderStatusNotExecuted,
-	}
-}
-
 func NewOrder(
-	typ OrderType, id uint64, pair Pair, orderer sdk.AccAddress,
-	offerCoin sdk.Coin, price sdk.Dec, amt sdk.Int, expireAt time.Time, msgHeight int64) Order {
+	typ OrderType, id uint64, pair Pair, pairState PairState, orderer sdk.AccAddress,
+	offerCoin sdk.Coin, price sdk.Dec, amt sdk.Int, expireAt time.Time, msgHeight int64) (Order, OrderState) {
 	var (
 		dir             OrderDirection
 		demandCoinDenom string
@@ -191,23 +149,26 @@ func NewOrder(
 		dir = OrderDirectionBuy
 		demandCoinDenom = pair.BaseCoinDenom
 	}
-	return Order{
-		Type:               typ,
-		Id:                 id,
-		PairId:             pair.Id,
-		MsgHeight:          msgHeight,
-		Orderer:            orderer.String(),
-		Direction:          dir,
-		OfferCoin:          offerCoin,
+	order := Order{
+		Type:      typ,
+		Id:        id,
+		PairId:    pair.Id,
+		MsgHeight: msgHeight,
+		Orderer:   orderer.String(),
+		Direction: dir,
+		OfferCoin: offerCoin,
+		Price:     price,
+		Amount:    amt,
+		BatchId:   pairState.CurrentBatchId,
+		ExpireAt:  expireAt,
+	}
+	orderState := OrderState{
 		RemainingOfferCoin: offerCoin,
 		ReceivedCoin:       sdk.NewCoin(demandCoinDenom, sdk.ZeroInt()),
-		Price:              price,
-		Amount:             amt,
 		OpenAmount:         amt,
-		BatchId:            pair.CurrentBatchId,
-		ExpireAt:           expireAt,
 		Status:             OrderStatusNotExecuted,
 	}
+	return order, orderState
 }
 
 func (order Order) GetOrderer() sdk.AccAddress {
@@ -241,33 +202,33 @@ func (order Order) Validate() error {
 	if order.OfferCoin.IsZero() {
 		return fmt.Errorf("offer coin must not be 0")
 	}
-	if err := order.RemainingOfferCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid remaining offer coin %s: %w", order.RemainingOfferCoin, err)
-	}
-	if order.OfferCoin.Denom != order.RemainingOfferCoin.Denom {
-		return fmt.Errorf("offer coin denom %s != remaining offer coin denom %s", order.OfferCoin.Denom, order.RemainingOfferCoin.Denom)
-	}
-	if err := order.ReceivedCoin.Validate(); err != nil {
-		return fmt.Errorf("invalid received coin %s: %w", order.ReceivedCoin, err)
-	}
+	//if err := order.RemainingOfferCoin.Validate(); err != nil {
+	//	return fmt.Errorf("invalid remaining offer coin %s: %w", order.RemainingOfferCoin, err)
+	//}
+	//if order.OfferCoin.Denom != order.RemainingOfferCoin.Denom {
+	//	return fmt.Errorf("offer coin denom %s != remaining offer coin denom %s", order.OfferCoin.Denom, order.RemainingOfferCoin.Denom)
+	//}
+	//if err := order.ReceivedCoin.Validate(); err != nil {
+	//	return fmt.Errorf("invalid received coin %s: %w", order.ReceivedCoin, err)
+	//}
 	if !order.Price.IsPositive() {
 		return fmt.Errorf("price must be positive: %s", order.Price)
 	}
 	if !order.Amount.IsPositive() {
 		return fmt.Errorf("amount must be positive: %s", order.Amount)
 	}
-	if order.OpenAmount.IsNegative() {
-		return fmt.Errorf("open amount must not be negative: %s", order.OpenAmount)
-	}
+	//if order.OpenAmount.IsNegative() {
+	//	return fmt.Errorf("open amount must not be negative: %s", order.OpenAmount)
+	//}
 	if order.BatchId == 0 {
 		return fmt.Errorf("batch id must not be 0")
 	}
 	if order.ExpireAt.IsZero() {
 		return fmt.Errorf("no expiration info")
 	}
-	if !order.Status.IsValid() {
-		return fmt.Errorf("invalid status: %s", order.Status)
-	}
+	//if !order.Status.IsValid() {
+	//	return fmt.Errorf("invalid status: %s", order.Status)
+	//}
 	return nil
 }
 
@@ -278,8 +239,8 @@ func (order Order) ExpiredAt(t time.Time) bool {
 
 // SetStatus sets the order's status.
 // SetStatus is to easily find locations where the status is changed.
-func (order *Order) SetStatus(status OrderStatus) {
-	order.Status = status
+func (orderState *OrderState) SetStatus(status OrderStatus) {
+	orderState.Status = status
 }
 
 // IsValid returns true if the RequestStatus is one of:

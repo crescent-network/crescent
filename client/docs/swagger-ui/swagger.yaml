@@ -3771,46 +3771,12 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                    remaining_offer_coin:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                      title: remaining_offer_coin specifies the remaining offer coin
-                    received_coin:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                      title: received_coin specifies the received coin after the swap
                     price:
                       type: string
                       title: >-
                         price specifies the price that an orderer is willing to
                         swap
                     amount:
-                      type: string
-                    open_amount:
                       type: string
                     batch_id:
                       type: string
@@ -3821,27 +3787,6 @@ paths:
                     expire_at:
                       type: string
                       format: date-time
-                    status:
-                      type: string
-                      enum:
-                        - ORDER_STATUS_UNSPECIFIED
-                        - ORDER_STATUS_NOT_EXECUTED
-                        - ORDER_STATUS_NOT_MATCHED
-                        - ORDER_STATUS_PARTIALLY_MATCHED
-                        - ORDER_STATUS_COMPLETED
-                        - ORDER_STATUS_CANCELED
-                        - ORDER_STATUS_EXPIRED
-                      default: ORDER_STATUS_UNSPECIFIED
-                      description: |-
-                        OrderStatus enumerates order statuses.
-
-                         - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
-                         - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
-                         - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
-                         - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
-                         - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
-                         - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
-                         - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
                   description: Order defines an order.
               pagination:
                 type: object
@@ -3988,14 +3933,6 @@ paths:
                       type: string
                     escrow_address:
                       type: string
-                    last_order_id:
-                      type: string
-                      format: uint64
-                    last_price:
-                      type: string
-                    current_batch_id:
-                      type: string
-                      format: uint64
                   description: Pair defines a coin pair.
               pagination:
                 type: object
@@ -4138,14 +4075,6 @@ paths:
                     type: string
                   escrow_address:
                     type: string
-                  last_order_id:
-                    type: string
-                    format: uint64
-                  last_price:
-                    type: string
-                  current_batch_id:
-                    type: string
-                    format: uint64
                 description: Pair defines a coin pair.
             description: QueryPairResponse is response type for the Query/Pair RPC method.
         default:
@@ -4259,46 +4188,12 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                    remaining_offer_coin:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                      title: remaining_offer_coin specifies the remaining offer coin
-                    received_coin:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                      title: received_coin specifies the received coin after the swap
                     price:
                       type: string
                       title: >-
                         price specifies the price that an orderer is willing to
                         swap
                     amount:
-                      type: string
-                    open_amount:
                       type: string
                     batch_id:
                       type: string
@@ -4309,27 +4204,6 @@ paths:
                     expire_at:
                       type: string
                       format: date-time
-                    status:
-                      type: string
-                      enum:
-                        - ORDER_STATUS_UNSPECIFIED
-                        - ORDER_STATUS_NOT_EXECUTED
-                        - ORDER_STATUS_NOT_MATCHED
-                        - ORDER_STATUS_PARTIALLY_MATCHED
-                        - ORDER_STATUS_COMPLETED
-                        - ORDER_STATUS_CANCELED
-                        - ORDER_STATUS_EXPIRED
-                      default: ORDER_STATUS_UNSPECIFIED
-                      description: |-
-                        OrderStatus enumerates order statuses.
-
-                         - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
-                         - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
-                         - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
-                         - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
-                         - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
-                         - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
-                         - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
                   description: Order defines an order.
               pagination:
                 type: object
@@ -4527,46 +4401,12 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
-                  remaining_offer_coin:
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
-                    title: remaining_offer_coin specifies the remaining offer coin
-                  received_coin:
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
-                    title: received_coin specifies the received coin after the swap
                   price:
                     type: string
                     title: >-
                       price specifies the price that an orderer is willing to
                       swap
                   amount:
-                    type: string
-                  open_amount:
                     type: string
                   batch_id:
                     type: string
@@ -4577,27 +4417,6 @@ paths:
                   expire_at:
                     type: string
                     format: date-time
-                  status:
-                    type: string
-                    enum:
-                      - ORDER_STATUS_UNSPECIFIED
-                      - ORDER_STATUS_NOT_EXECUTED
-                      - ORDER_STATUS_NOT_MATCHED
-                      - ORDER_STATUS_PARTIALLY_MATCHED
-                      - ORDER_STATUS_COMPLETED
-                      - ORDER_STATUS_CANCELED
-                      - ORDER_STATUS_EXPIRED
-                    default: ORDER_STATUS_UNSPECIFIED
-                    description: |-
-                      OrderStatus enumerates order statuses.
-
-                       - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
-                       - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
-                       - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
-                       - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
-                       - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
-                       - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
-                       - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
                 description: Order defines an order.
             description: >-
               QueryOrderResponse is response type for the Query/Order RPC
@@ -11112,38 +10931,10 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      remaining_offer_coin:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-        title: remaining_offer_coin specifies the remaining offer coin
-      received_coin:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-        title: received_coin specifies the received coin after the swap
       price:
         type: string
         title: price specifies the price that an orderer is willing to swap
       amount:
-        type: string
-      open_amount:
         type: string
       batch_id:
         type: string
@@ -11152,27 +10943,6 @@ definitions:
       expire_at:
         type: string
         format: date-time
-      status:
-        type: string
-        enum:
-          - ORDER_STATUS_UNSPECIFIED
-          - ORDER_STATUS_NOT_EXECUTED
-          - ORDER_STATUS_NOT_MATCHED
-          - ORDER_STATUS_PARTIALLY_MATCHED
-          - ORDER_STATUS_COMPLETED
-          - ORDER_STATUS_CANCELED
-          - ORDER_STATUS_EXPIRED
-        default: ORDER_STATUS_UNSPECIFIED
-        description: |-
-          OrderStatus enumerates order statuses.
-
-           - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
-           - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
-           - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
-           - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
-           - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
-           - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
-           - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
     description: Order defines an order.
   crescent.liquidity.v1beta1.OrderBookPairResponse:
     type: object
@@ -11260,27 +11030,6 @@ definitions:
        - ORDER_DIRECTION_UNSPECIFIED: ORDER_DIRECTION_UNSPECIFIED specifies unknown order direction
        - ORDER_DIRECTION_BUY: ORDER_DIRECTION_BUY specifies buy(swap quote coin to base coin) order direction
        - ORDER_DIRECTION_SELL: ORDER_DIRECTION_SELL specifies sell(swap base coin to quote coin) order direction
-  crescent.liquidity.v1beta1.OrderStatus:
-    type: string
-    enum:
-      - ORDER_STATUS_UNSPECIFIED
-      - ORDER_STATUS_NOT_EXECUTED
-      - ORDER_STATUS_NOT_MATCHED
-      - ORDER_STATUS_PARTIALLY_MATCHED
-      - ORDER_STATUS_COMPLETED
-      - ORDER_STATUS_CANCELED
-      - ORDER_STATUS_EXPIRED
-    default: ORDER_STATUS_UNSPECIFIED
-    description: |-
-      OrderStatus enumerates order statuses.
-
-       - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
-       - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
-       - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
-       - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
-       - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
-       - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
-       - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
   crescent.liquidity.v1beta1.OrderType:
     type: string
     enum:
@@ -11308,14 +11057,6 @@ definitions:
         type: string
       escrow_address:
         type: string
-      last_order_id:
-        type: string
-        format: uint64
-      last_price:
-        type: string
-      current_batch_id:
-        type: string
-        format: uint64
     description: Pair defines a coin pair.
   crescent.liquidity.v1beta1.Params:
     type: object
@@ -11842,44 +11583,10 @@ definitions:
               method
 
               signatures required by gogoproto.
-          remaining_offer_coin:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-            title: remaining_offer_coin specifies the remaining offer coin
-          received_coin:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-            title: received_coin specifies the received coin after the swap
           price:
             type: string
             title: price specifies the price that an orderer is willing to swap
           amount:
-            type: string
-          open_amount:
             type: string
           batch_id:
             type: string
@@ -11888,27 +11595,6 @@ definitions:
           expire_at:
             type: string
             format: date-time
-          status:
-            type: string
-            enum:
-              - ORDER_STATUS_UNSPECIFIED
-              - ORDER_STATUS_NOT_EXECUTED
-              - ORDER_STATUS_NOT_MATCHED
-              - ORDER_STATUS_PARTIALLY_MATCHED
-              - ORDER_STATUS_COMPLETED
-              - ORDER_STATUS_CANCELED
-              - ORDER_STATUS_EXPIRED
-            default: ORDER_STATUS_UNSPECIFIED
-            description: |-
-              OrderStatus enumerates order statuses.
-
-               - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
-               - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
-               - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
-               - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
-               - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
-               - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
-               - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
         description: Order defines an order.
     description: QueryOrderResponse is response type for the Query/Order RPC method.
   crescent.liquidity.v1beta1.QueryOrdersResponse:
@@ -11981,44 +11667,10 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-            remaining_offer_coin:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-              title: remaining_offer_coin specifies the remaining offer coin
-            received_coin:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-              title: received_coin specifies the received coin after the swap
             price:
               type: string
               title: price specifies the price that an orderer is willing to swap
             amount:
-              type: string
-            open_amount:
               type: string
             batch_id:
               type: string
@@ -12029,27 +11681,6 @@ definitions:
             expire_at:
               type: string
               format: date-time
-            status:
-              type: string
-              enum:
-                - ORDER_STATUS_UNSPECIFIED
-                - ORDER_STATUS_NOT_EXECUTED
-                - ORDER_STATUS_NOT_MATCHED
-                - ORDER_STATUS_PARTIALLY_MATCHED
-                - ORDER_STATUS_COMPLETED
-                - ORDER_STATUS_CANCELED
-                - ORDER_STATUS_EXPIRED
-              default: ORDER_STATUS_UNSPECIFIED
-              description: |-
-                OrderStatus enumerates order statuses.
-
-                 - ORDER_STATUS_UNSPECIFIED: ORDER_STATUS_UNSPECIFIED specifies unknown order status
-                 - ORDER_STATUS_NOT_EXECUTED: ORDER_STATUS_NOT_EXECUTED indicates the order has not been executed yet
-                 - ORDER_STATUS_NOT_MATCHED: ORDER_STATUS_NOT_MATCHED indicates the order has been executed but has no match
-                 - ORDER_STATUS_PARTIALLY_MATCHED: ORDER_STATUS_PARTIALLY_MATCHED indicates the order has been partially matched
-                 - ORDER_STATUS_COMPLETED: ORDER_STATUS_COMPLETED indicates the order has been fully matched and completed
-                 - ORDER_STATUS_CANCELED: ORDER_STATUS_CANCELED indicates the order has been canceled
-                 - ORDER_STATUS_EXPIRED: ORDER_STATUS_EXPIRED indicates the order has been expired
           description: Order defines an order.
       pagination:
         type: object
@@ -12092,14 +11723,6 @@ definitions:
             type: string
           escrow_address:
             type: string
-          last_order_id:
-            type: string
-            format: uint64
-          last_price:
-            type: string
-          current_batch_id:
-            type: string
-            format: uint64
         description: Pair defines a coin pair.
     description: QueryPairResponse is response type for the Query/Pair RPC method.
   crescent.liquidity.v1beta1.QueryPairsResponse:
@@ -12119,14 +11742,6 @@ definitions:
               type: string
             escrow_address:
               type: string
-            last_order_id:
-              type: string
-              format: uint64
-            last_price:
-              type: string
-            current_batch_id:
-              type: string
-              format: uint64
           description: Pair defines a coin pair.
       pagination:
         type: object

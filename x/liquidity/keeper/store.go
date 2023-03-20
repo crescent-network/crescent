@@ -525,6 +525,7 @@ func (k Keeper) DeleteOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetOrderKey(order.PairId, order.Id))
 	k.DeleteOrderIndex(ctx, order)
+	k.DeleteOrderState(ctx, order.PairId, order.Id)
 }
 
 func (k Keeper) DeleteOrderIndex(ctx sdk.Context, order types.Order) {
@@ -562,4 +563,57 @@ func (k Keeper) IterateAllNumMMOrders(ctx sdk.Context, cb func(ordererAddr sdk.A
 			break
 		}
 	}
+}
+
+func (k Keeper) GetPairState(ctx sdk.Context, pairId uint64) (pairState types.PairState, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetPairStateKey(pairId))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &pairState)
+	return pairState, true
+}
+
+func (k Keeper) SetPairState(ctx sdk.Context, pairId uint64, pairState types.PairState) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&pairState)
+	store.Set(types.GetPairStateKey(pairId), bz)
+}
+
+func (k Keeper) GetPoolState(ctx sdk.Context, poolId uint64) (poolState types.PoolState, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetPoolStateKey(poolId))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &poolState)
+	return poolState, true
+}
+
+func (k Keeper) SetPoolState(ctx sdk.Context, poolId uint64, poolState types.PoolState) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&poolState)
+	store.Set(types.GetPoolStateKey(poolId), bz)
+}
+
+func (k Keeper) GetOrderState(ctx sdk.Context, pairId, orderId uint64) (orderState types.OrderState, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetOrderStateKey(pairId, orderId))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &orderState)
+	return orderState, true
+}
+
+func (k Keeper) SetOrderState(ctx sdk.Context, pairId, orderId uint64, orderState types.OrderState) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&orderState)
+	store.Set(types.GetOrderStateKey(pairId, orderId), bz)
+}
+
+func (k Keeper) DeleteOrderState(ctx sdk.Context, pairId, orderId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetOrderStateKey(pairId, orderId))
 }

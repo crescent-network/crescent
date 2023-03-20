@@ -368,9 +368,9 @@ func (s *KeeperTestSuite) TestPreviousShare() {
 	farm, _ = s.keeper.GetFarm(s.ctx, "pool3")
 	s.Require().Nil(farm.PreviousShare)
 
-	pair, _ := s.app.LiquidityKeeper.GetPair(s.ctx, 1)
-	pair.LastPrice = utils.ParseDecP("2.5")
-	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
+	pairState, _ := s.app.LiquidityKeeper.GetPairState(s.ctx, 1)
+	pairState.LastPrice = utils.ParseDecP("2.5")
+	s.app.LiquidityKeeper.SetPairState(s.ctx, 1, pairState)
 
 	s.nextBlock()
 

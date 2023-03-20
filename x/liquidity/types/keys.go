@@ -26,10 +26,12 @@ var (
 	LastPoolIdKey = []byte{0xa1} // key for the latest pool id
 
 	PairKeyPrefix               = []byte{0xa5}
+	PairStateKeyPrefix          = []byte{0x01}
 	PairIndexKeyPrefix          = []byte{0xa6}
 	PairsByDenomsIndexKeyPrefix = []byte{0xa7}
 
 	PoolKeyPrefix                      = []byte{0xab}
+	PoolStateKeyPrefix                 = []byte{0x02}
 	PoolByReserveAddressIndexKeyPrefix = []byte{0xac}
 	PoolsByPairIndexKeyPrefix          = []byte{0xad}
 
@@ -39,6 +41,7 @@ var (
 	WithdrawRequestIndexKeyPrefix = []byte{0xb5}
 	OrderKeyPrefix                = []byte{0xb2}
 	OrderIndexKeyPrefix           = []byte{0xb3}
+	OrderStateKeyPrefix           = []byte{0x03}
 	NumMMOrdersKeyPrefix          = []byte{0xb7}
 )
 
@@ -149,6 +152,18 @@ func GetOrderIndexKeyPrefix(orderer sdk.AccAddress) []byte {
 // by orderer and pair id.
 func GetNumMMOrdersKey(orderer sdk.AccAddress, pairId uint64) []byte {
 	return append(append(NumMMOrdersKeyPrefix, address.MustLengthPrefix(orderer)...), sdk.Uint64ToBigEndian(pairId)...)
+}
+
+func GetPairStateKey(pairId uint64) []byte {
+	return append(PairStateKeyPrefix, sdk.Uint64ToBigEndian(pairId)...)
+}
+
+func GetPoolStateKey(poolId uint64) []byte {
+	return append(PoolStateKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
+}
+
+func GetOrderStateKey(pairId, orderId uint64) []byte {
+	return append(append(OrderStateKeyPrefix, sdk.Uint64ToBigEndian(pairId)...), sdk.Uint64ToBigEndian(orderId)...)
 }
 
 // ParsePairsByDenomsIndexKey parses a pair by denom index key.

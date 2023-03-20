@@ -63,7 +63,7 @@ func (op *BulkSendCoinsOperation) Run(ctx sdk.Context, bankKeeper BankKeeper) er
 }
 
 // NewPoolResponse returns a new PoolResponse from given information.
-func NewPoolResponse(pool Pool, rx, ry sdk.Coin, poolCoinSupply sdk.Int) PoolResponse {
+func NewPoolResponse(pool Pool, poolState PoolState, rx, ry sdk.Coin, poolCoinSupply sdk.Int) PoolResponse {
 	var price *sdk.Dec
 	if !pool.Disabled {
 		p := pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{}).Price()
@@ -84,8 +84,8 @@ func NewPoolResponse(pool Pool, rx, ry sdk.Coin, poolCoinSupply sdk.Int) PoolRes
 			BaseCoin:  ry,
 			QuoteCoin: rx,
 		},
-		LastDepositRequestId:  pool.LastDepositRequestId,
-		LastWithdrawRequestId: pool.LastWithdrawRequestId,
+		LastDepositRequestId:  poolState.LastDepositRequestId,
+		LastWithdrawRequestId: poolState.LastWithdrawRequestId,
 		Disabled:              pool.Disabled,
 	}
 }

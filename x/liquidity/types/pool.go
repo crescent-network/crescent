@@ -47,35 +47,41 @@ func ParsePoolCoinDenom(denom string) (poolId uint64, err error) {
 }
 
 // NewBasicPool returns a new basic pool object.
-func NewBasicPool(id, pairId uint64, creator sdk.AccAddress) Pool {
-	return Pool{
-		Type:                  PoolTypeBasic,
-		Id:                    id,
-		PairId:                pairId,
-		Creator:               creator.String(),
-		ReserveAddress:        PoolReserveAddress(id).String(),
-		PoolCoinDenom:         PoolCoinDenom(id),
+func NewBasicPool(id, pairId uint64, creator sdk.AccAddress) (Pool, PoolState) {
+	pool := Pool{
+		Type:           PoolTypeBasic,
+		Id:             id,
+		PairId:         pairId,
+		Creator:        creator.String(),
+		ReserveAddress: PoolReserveAddress(id).String(),
+		PoolCoinDenom:  PoolCoinDenom(id),
+		Disabled:       false,
+	}
+	poolState := PoolState{
 		LastDepositRequestId:  0,
 		LastWithdrawRequestId: 0,
-		Disabled:              false,
 	}
+	return pool, poolState
 }
 
 // NewRangedPool returns a new ranged pool object.
-func NewRangedPool(id, pairId uint64, creator sdk.AccAddress, minPrice, maxPrice sdk.Dec) Pool {
-	return Pool{
-		Type:                  PoolTypeRanged,
-		Id:                    id,
-		PairId:                pairId,
-		Creator:               creator.String(),
-		ReserveAddress:        PoolReserveAddress(id).String(),
-		PoolCoinDenom:         PoolCoinDenom(id),
-		MinPrice:              &minPrice,
-		MaxPrice:              &maxPrice,
+func NewRangedPool(id, pairId uint64, creator sdk.AccAddress, minPrice, maxPrice sdk.Dec) (Pool, PoolState) {
+	pool := Pool{
+		Type:           PoolTypeRanged,
+		Id:             id,
+		PairId:         pairId,
+		Creator:        creator.String(),
+		ReserveAddress: PoolReserveAddress(id).String(),
+		PoolCoinDenom:  PoolCoinDenom(id),
+		MinPrice:       &minPrice,
+		MaxPrice:       &maxPrice,
+		Disabled:       false,
+	}
+	poolState := PoolState{
 		LastDepositRequestId:  0,
 		LastWithdrawRequestId: 0,
-		Disabled:              false,
 	}
+	return pool, poolState
 }
 
 func (pool Pool) GetCreator() sdk.AccAddress {

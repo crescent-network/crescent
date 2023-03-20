@@ -18,13 +18,14 @@ func (k Keeper) ExecuteRequests(ctx sdk.Context) {
 		panic(err)
 	}
 	if err := k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
-		if order.Status.CanBeExpired() && order.ExpiredAt(ctx.BlockTime()) {
-			if err := k.FinishOrder(ctx, order, types.OrderStatusExpired); err != nil {
+		orderState, _ := k.GetOrderState(ctx, order.PairId, order.Id)
+		if orderState.Status.CanBeExpired() && order.ExpiredAt(ctx.BlockTime()) {
+			if err := k.FinishOrder(ctx, order, orderState, types.OrderStatusExpired); err != nil {
 				return false, err
 			}
-		} else if types.IsTooSmallOrderAmount(order.OpenAmount, order.Price) {
+		} else if types.IsTooSmallOrderAmount(orderState.OpenAmount, order.Price) {
 			// TODO: should we introduce new order status for this type of expiration?
-			if err := k.FinishOrder(ctx, order, types.OrderStatusExpired); err != nil {
+			if err := k.FinishOrder(ctx, order, orderState, types.OrderStatusExpired); err != nil {
 				return false, err
 			}
 		}
@@ -70,7 +71,8 @@ func (k Keeper) DeleteOutdatedRequests(ctx sdk.Context) {
 		return false, nil
 	})
 	_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
-		if order.Status.ShouldBeDeleted() {
+		orderState, _ := k.GetOrderState(ctx, order.PairId, order.Id)
+		if orderState.Status.ShouldBeDeleted() {
 			k.DeleteOrder(ctx, order)
 		}
 		return false, nil

@@ -61,7 +61,8 @@ func (s *SimTestSuite) TestSimulateMsgCreatePrivatePlan() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 1)
 
-	s.app.LiquidityKeeper.SetPair(s.ctx, liquiditytypes.NewPair(1, "denom1", "denom2"))
+	pair, _ := liquiditytypes.NewPair(1, "denom1", "denom2")
+	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
 
 	op := simulation.SimulateMsgCreatePrivatePlan(
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.LiquidityKeeper, s.app.LPFarmKeeper)

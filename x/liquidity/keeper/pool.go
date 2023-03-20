@@ -21,18 +21,20 @@ func (k Keeper) getNextPoolIdWithUpdate(ctx sdk.Context) uint64 {
 // getNextDepositRequestIdWithUpdate increments the pool's last deposit request
 // id and returns it.
 func (k Keeper) getNextDepositRequestIdWithUpdate(ctx sdk.Context, pool types.Pool) uint64 {
-	id := pool.LastDepositRequestId + 1
-	pool.LastDepositRequestId = id
-	k.SetPool(ctx, pool)
+	poolState, _ := k.GetPoolState(ctx, pool.Id)
+	id := poolState.LastDepositRequestId + 1
+	poolState.LastDepositRequestId = id
+	k.SetPoolState(ctx, pool.Id, poolState)
 	return id
 }
 
 // getNextWithdrawRequestIdWithUpdate increments the pool's last withdraw
 // request id and returns it.
 func (k Keeper) getNextWithdrawRequestIdWithUpdate(ctx sdk.Context, pool types.Pool) uint64 {
-	id := pool.LastWithdrawRequestId + 1
-	pool.LastWithdrawRequestId = id
-	k.SetPool(ctx, pool)
+	poolState, _ := k.GetPoolState(ctx, pool.Id)
+	id := poolState.LastWithdrawRequestId + 1
+	poolState.LastWithdrawRequestId = id
+	k.SetPoolState(ctx, pool.Id, poolState)
 	return id
 }
 
@@ -126,10 +128,11 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg *types.MsgCreatePool) (types.Poo
 
 	// Create and save the new pool object.
 	poolId := k.getNextPoolIdWithUpdate(ctx)
-	pool := types.NewBasicPool(poolId, pair.Id, msg.GetCreator())
+	pool, poolState := types.NewBasicPool(poolId, pair.Id, msg.GetCreator())
 	k.SetPool(ctx, pool)
 	k.SetPoolByReserveIndex(ctx, pool)
 	k.SetPoolsByPairIndex(ctx, pool)
+	k.SetPoolState(ctx, pool.Id, poolState)
 
 	// Send deposit coins to the pool's reserve account.
 	creator := msg.GetCreator()
@@ -234,10 +237,11 @@ func (k Keeper) CreateRangedPool(ctx sdk.Context, msg *types.MsgCreateRangedPool
 
 	// Create and save the new pool object.
 	poolId := k.getNextPoolIdWithUpdate(ctx)
-	pool := types.NewRangedPool(poolId, pair.Id, msg.GetCreator(), msg.MinPrice, msg.MaxPrice)
+	pool, poolState := types.NewRangedPool(poolId, pair.Id, msg.GetCreator(), msg.MinPrice, msg.MaxPrice)
 	k.SetPool(ctx, pool)
 	k.SetPoolByReserveIndex(ctx, pool)
 	k.SetPoolsByPairIndex(ctx, pool)
+	k.SetPoolState(ctx, pool.Id, poolState)
 
 	// Send deposit coins to the pool's reserve account.
 	creator := msg.GetCreator()

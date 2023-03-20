@@ -86,7 +86,7 @@ func newRewardAllocator(ctx sdk.Context, k Keeper, ck *cachingKeeper) *rewardAll
 	}
 }
 
-func (ra *rewardAllocator) allocateRewardsToPair(farmingPoolAddr sdk.AccAddress, pair liquiditytypes.Pair, rewards sdk.Coins) {
+func (ra *rewardAllocator) allocateRewardsToPair(farmingPoolAddr sdk.AccAddress, pair liquiditytypes.Pair, pairState liquiditytypes.PairState, rewards sdk.Coins) {
 	poolInfos, ok := ra.poolInfosByPairId[pair.Id]
 	if !ok {
 		totalRewardWeight := sdk.ZeroDec()
@@ -99,14 +99,14 @@ func (ra *rewardAllocator) allocateRewardsToPair(farmingPoolAddr sdk.AccAddress,
 			// This is because the amplification factor would be zero
 			// so its reward weight would eventually be zero, too.
 			if pool.Type == liquiditytypes.PoolTypeRanged &&
-				(pair.LastPrice.LT(*pool.MinPrice) || pair.LastPrice.GT(*pool.MaxPrice)) {
+				(pairState.LastPrice.LT(*pool.MinPrice) || pairState.LastPrice.GT(*pool.MaxPrice)) {
 				return false, nil
 			}
 			farm, found := ra.ck.getFarm(ra.ctx, pool.PoolCoinDenom)
 			if !found || !farm.TotalFarmingAmount.IsPositive() {
 				return false, nil
 			}
-			rewardWeight := ra.k.PoolRewardWeight(ra.ctx, pool, pair)
+			rewardWeight := ra.k.PoolRewardWeight(ra.ctx, pool, pair, pairState)
 			totalRewardWeight = totalRewardWeight.Add(rewardWeight)
 			pi := &poolInfo{
 				poolCoinDenom: pool.PoolCoinDenom,
@@ -157,9 +157,9 @@ func (ra *rewardAllocator) allocateRewardsToDenom(farmingPoolAddr sdk.AccAddress
 }
 
 // PoolRewardWeight returns the pool's reward weight.
-func (k Keeper) PoolRewardWeight(ctx sdk.Context, pool liquiditytypes.Pool, pair liquiditytypes.Pair) sdk.Dec {
+func (k Keeper) PoolRewardWeight(ctx sdk.Context, pool liquiditytypes.Pool, pair liquiditytypes.Pair, pairState liquiditytypes.PairState) sdk.Dec {
 	if pool.Type == liquiditytypes.PoolTypeRanged &&
-		(pair.LastPrice.LT(*pool.MinPrice) || pair.LastPrice.GT(*pool.MaxPrice)) {
+		(pairState.LastPrice.LT(*pool.MinPrice) || pairState.LastPrice.GT(*pool.MaxPrice)) {
 		return sdk.ZeroDec()
 	}
 	// TODO: further optimize gas usage by using BankKeeper.SpendableCoin()

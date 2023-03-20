@@ -28,8 +28,9 @@ func BenchmarkMatching(b *testing.B) {
 
 	pair, err := keeper.CreatePair(ctx, types.NewMsgCreatePair(utils.TestAddress(0), "denom1", "denom2"))
 	require.NoError(b, err)
-	pair.LastPrice = utils.ParseDecP("0.99999")
-	keeper.SetPair(ctx, pair)
+	pairState, _ := keeper.GetPairState(ctx, pair.Id)
+	pairState.LastPrice = utils.ParseDecP("0.99999")
+	keeper.SetPairState(ctx, pair.Id, pairState)
 
 	_, err = keeper.CreatePool(ctx, types.NewMsgCreatePool(
 		utils.TestAddress(0), pair.Id, utils.ParseCoins("1000_000000denom1,1000_00000denom2")))

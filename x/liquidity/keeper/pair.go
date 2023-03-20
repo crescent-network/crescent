@@ -18,9 +18,10 @@ func (k Keeper) getNextPairIdWithUpdate(ctx sdk.Context) uint64 {
 
 // getNextOrderIdWithUpdate increments the pair's last order id and returns it.
 func (k Keeper) getNextOrderIdWithUpdate(ctx sdk.Context, pair types.Pair) uint64 {
-	id := pair.LastOrderId + 1
-	pair.LastOrderId = id
-	k.SetPair(ctx, pair)
+	pairState, _ := k.GetPairState(ctx, pair.Id)
+	id := pairState.LastOrderId + 1
+	pairState.LastOrderId = id
+	k.SetPairState(ctx, pair.Id, pairState)
 	return id
 }
 
@@ -47,11 +48,12 @@ func (k Keeper) CreatePair(ctx sdk.Context, msg *types.MsgCreatePair) (types.Pai
 	}
 
 	id := k.getNextPairIdWithUpdate(ctx)
-	pair := types.NewPair(id, msg.BaseCoinDenom, msg.QuoteCoinDenom)
+	pair, pairState := types.NewPair(id, msg.BaseCoinDenom, msg.QuoteCoinDenom)
 	k.SetPair(ctx, pair)
 	k.SetPairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
 	k.SetPairLookupIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id)
 	k.SetPairLookupIndex(ctx, pair.QuoteCoinDenom, pair.BaseCoinDenom, pair.Id)
+	k.SetPairState(ctx, pair.Id, pairState)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

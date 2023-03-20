@@ -193,8 +193,9 @@ func (s *KeeperTestSuite) marketOrder(
 	s.T().Helper()
 	pair, found := s.keeper.GetPair(s.ctx, pairId)
 	s.Require().True(found)
-	s.Require().NotNil(pair.LastPrice)
-	lastPrice := *pair.LastPrice
+	pairState, _ := s.keeper.GetPairState(s.ctx, pairId)
+	s.Require().NotNil(pairState.LastPrice)
+	lastPrice := *pairState.LastPrice
 	var offerCoin sdk.Coin
 	var demandCoinDenom string
 	switch dir {

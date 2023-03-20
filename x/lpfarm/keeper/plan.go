@@ -186,10 +186,11 @@ func (k Keeper) AllocateRewards(ctx sdk.Context) error {
 					if !found { // It should never happen
 						panic("pair not found")
 					}
-					if pair.LastPrice == nil { // If the pair doesn't have the last price, skip.
+					pairState, _ := k.liquidityKeeper.GetPairState(ctx, pair.Id)
+					if pairState.LastPrice == nil { // If the pair doesn't have the last price, skip.
 						continue
 					}
-					ra.allocateRewardsToPair(plan.GetFarmingPoolAddress(), pair, truncatedRewards)
+					ra.allocateRewardsToPair(plan.GetFarmingPoolAddress(), pair, pairState, truncatedRewards)
 				}
 			}
 		}

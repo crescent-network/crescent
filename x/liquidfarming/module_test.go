@@ -2,7 +2,6 @@ package liquidfarming_test
 
 import (
 	"encoding/binary"
-
 	"testing"
 	"time"
 
@@ -67,8 +66,9 @@ func (s *ModuleTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quot
 func (s *ModuleTestSuite) createPairWithLastPrice(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, lastPrice sdk.Dec) liquiditytypes.Pair {
 	s.T().Helper()
 	pair := s.createPair(creator, baseCoinDenom, quoteCoinDenom)
-	pair.LastPrice = &lastPrice
-	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
+	pairState, _ := s.app.LiquidityKeeper.GetPairState(s.ctx, pair.Id)
+	pairState.LastPrice = &lastPrice
+	s.app.LiquidityKeeper.SetPairState(s.ctx, pair.Id, pairState)
 	return pair
 }
 

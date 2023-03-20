@@ -89,9 +89,10 @@ func RemainingOfferCoinEscrowInvariant(k Keeper) sdk.Invariant {
 		)
 		_ = k.IterateAllPairs(ctx, func(pair types.Pair) (stop bool, err error) {
 			remainingOfferCoins := sdk.Coins{}
-			_ = k.IterateOrdersByPair(ctx, pair.Id, func(req types.Order) (stop bool, err error) {
-				if !req.Status.ShouldBeDeleted() {
-					remainingOfferCoins = remainingOfferCoins.Add(req.RemainingOfferCoin)
+			_ = k.IterateOrdersByPair(ctx, pair.Id, func(order types.Order) (stop bool, err error) {
+				orderState, _ := k.GetOrderState(ctx, order.PairId, order.Id)
+				if !orderState.Status.ShouldBeDeleted() {
+					remainingOfferCoins = remainingOfferCoins.Add(orderState.RemainingOfferCoin)
 				}
 				return false, nil
 			})
@@ -143,7 +144,8 @@ func NumMMOrdersInvariant(k Keeper) sdk.Invariant {
 		// orderer address => (pair id => num mm orders)
 		numMMOrdersMap := map[string]map[uint64]uint32{}
 		_ = k.IterateAllOrders(ctx, func(order types.Order) (stop bool, err error) {
-			if order.Type == types.OrderTypeMM && !order.Status.ShouldBeDeleted() {
+			orderState, _ := k.GetOrderState(ctx, order.PairId, order.Id)
+			if order.Type == types.OrderTypeMM && !orderState.Status.ShouldBeDeleted() {
 				numMMOrdersByPairId, ok := numMMOrdersMap[order.Orderer]
 				if !ok {
 					numMMOrdersByPairId = map[uint64]uint32{}

@@ -39,13 +39,17 @@ func (k Keeper) placeOrder(
 	if !found {
 		return types.Order{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
 	}
+	pairState, found := k.GetPairState(ctx, pair.Id)
+	if !found {
+		panic("pair state not found")
+	}
 
 	tickPrec := k.GetTickPrecision(ctx)
 	switch typ {
 	case types.OrderTypeLimit, types.OrderTypeMM:
 		var upperPriceLimit, lowerPriceLimit sdk.Dec
-		if pair.LastPrice != nil {
-			lowerPriceLimit, upperPriceLimit = k.PriceLimits(ctx, *pair.LastPrice)
+		if pairState.LastPrice != nil {
+			lowerPriceLimit, upperPriceLimit = k.PriceLimits(ctx, *pairState.LastPrice)
 		} else {
 			upperPriceLimit = amm.HighestTick(int(tickPrec))
 			lowerPriceLimit = amm.LowestTick(int(tickPrec))
@@ -57,7 +61,7 @@ func (k Keeper) placeOrder(
 			return types.Order{}, sdkerrors.Wrapf(types.ErrPriceOutOfRange, "%s is lower than %s", *price, lowerPriceLimit)
 		}
 	case types.OrderTypeMarket:
-		if pair.LastPrice == nil {
+		if pairState.LastPrice == nil {
 			return types.Order{}, types.ErrNoLastPrice
 		}
 	default:
@@ -78,7 +82,7 @@ func (k Keeper) placeOrder(
 		switch typ {
 		case types.OrderTypeMarket:
 			resultPrice = amm.PriceToDownTick(
-				pair.LastPrice.Mul(
+				pairState.LastPrice.Mul(
 					sdk.OneDec().Add(k.GetMaxPriceLimitRatio(ctx))),
 				int(tickPrec))
 		default:
@@ -98,7 +102,7 @@ func (k Keeper) placeOrder(
 		switch typ {
 		case types.OrderTypeMarket:
 			resultPrice = amm.PriceToUpTick(
-				pair.LastPrice.Mul(
+				pairState.LastPrice.Mul(
 					sdk.OneDec().Sub(k.GetMaxPriceLimitRatio(ctx))),
 				int(tickPrec))
 		default:
@@ -122,10 +126,12 @@ func (k Keeper) placeOrder(
 
 	orderId := k.getNextOrderIdWithUpdate(ctx, pair)
 	expireAt := ctx.BlockTime().Add(orderLifespan)
-	order = types.NewOrder(
-		typ, orderId, pair, ordererAddr, resultOfferCoin, resultPrice, amount, expireAt, ctx.BlockHeight())
+	var orderState types.OrderState
+	order, orderState = types.NewOrder(
+		typ, orderId, pair, pairState, ordererAddr, resultOfferCoin, resultPrice, amount, expireAt, ctx.BlockHeight())
 	k.SetOrder(ctx, order)
 	k.SetOrderIndex(ctx, order)
+	k.SetOrderState(ctx, order.PairId, order.Id, orderState)
 
 	ctx.GasMeter().ConsumeGas(k.GetOrderExtraGas(ctx), "OrderExtraGas")
 
@@ -199,14 +205,21 @@ func (k Keeper) ValidateMsgCancelOrder(ctx sdk.Context, msg *types.MsgCancelOrde
 		return types.Order{},
 			sdkerrors.Wrapf(sdkerrors.ErrNotFound, "order %d not found in pair %d", msg.OrderId, msg.PairId)
 	}
+	orderState, found := k.GetOrderState(ctx, order.PairId, order.Id)
+	if !found {
+		panic("order state not found")
+	}
 	if msg.Orderer != order.Orderer {
 		return types.Order{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "mismatching orderer")
 	}
-	if order.Status == types.OrderStatusCanceled {
+	if orderState.Status == types.OrderStatusCanceled {
 		return types.Order{}, types.ErrAlreadyCanceled
 	}
-	pair, _ := k.GetPair(ctx, msg.PairId)
-	if order.BatchId == pair.CurrentBatchId {
+	pairState, found := k.GetPairState(ctx, msg.PairId)
+	if !found {
+		panic("pair state not found")
+	}
+	if order.BatchId == pairState.CurrentBatchId {
 		return types.Order{}, types.ErrSameBatch
 	}
 	return order, nil
@@ -219,7 +232,11 @@ func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 		return err
 	}
 
-	if err := k.FinishOrder(ctx, order, types.OrderStatusCanceled); err != nil {
+	orderState, found := k.GetOrderState(ctx, order.PairId, order.Id)
+	if !found {
+		panic("order state not found")
+	}
+	if err := k.FinishOrder(ctx, order, orderState, types.OrderStatusCanceled); err != nil {
 		return err
 	}
 
@@ -237,30 +254,38 @@ func (k Keeper) CancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 
 // CancelAllOrders handles types.MsgCancelAllOrders and cancels all orders.
 func (k Keeper) CancelAllOrders(ctx sdk.Context, msg *types.MsgCancelAllOrders) error {
-	orderPairCache := map[uint64]types.Pair{} // maps order's pair id to pair, to cache the result
-	pairIdSet := map[uint64]struct{}{}        // set of pairs where to cancel orders
-	var pairIds []string                      // needed to emit an event
+	orderPairStateCache := map[uint64]types.PairState{} // maps order's pair id to pair, to cache the result
+	pairIdSet := map[uint64]struct{}{}                  // set of pairs where to cancel orders
+	var pairIds []string                                // needed to emit an event
 	for _, pairId := range msg.PairIds {
-		pair, found := k.GetPair(ctx, pairId)
+		pairState, found := k.GetPairState(ctx, pairId)
 		if !found { // check if the pair exists
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pair %d not found", pairId)
 		}
 		pairIdSet[pairId] = struct{}{} // add pair id to the set
 		pairIds = append(pairIds, strconv.FormatUint(pairId, 10))
-		orderPairCache[pairId] = pair // also cache the pair to use at below
+		orderPairStateCache[pairId] = pairState // also cache the pair to use at below
 	}
 
 	var canceledOrderIds []string
 	if err := k.IterateOrdersByOrderer(ctx, msg.GetOrderer(), func(order types.Order) (stop bool, err error) {
 		_, ok := pairIdSet[order.PairId] // is the pair included in the pair set?
 		if len(pairIdSet) == 0 || ok {   // pair ids not specified(cancel all), or the pair is in the set
-			pair, ok := orderPairCache[order.PairId]
+			pairState, ok := orderPairStateCache[order.PairId]
 			if !ok {
-				pair, _ = k.GetPair(ctx, order.PairId)
-				orderPairCache[order.PairId] = pair
+				var found bool
+				pairState, found = k.GetPairState(ctx, order.PairId)
+				if !found {
+					panic("pair state not found")
+				}
+				orderPairStateCache[order.PairId] = pairState
 			}
-			if order.Status != types.OrderStatusCanceled && order.BatchId < pair.CurrentBatchId {
-				if err := k.FinishOrder(ctx, order, types.OrderStatusCanceled); err != nil {
+			orderState, found := k.GetOrderState(ctx, order.PairId, order.Id)
+			if !found {
+				panic("order state not found")
+			}
+			if orderState.Status != types.OrderStatusCanceled && order.BatchId < pairState.CurrentBatchId {
+				if err := k.FinishOrder(ctx, order, orderState, types.OrderStatusCanceled); err != nil {
 					return false, err
 				}
 				canceledOrderIds = append(canceledOrderIds, strconv.FormatUint(order.Id, 10))
@@ -287,25 +312,29 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 	ob := amm.NewOrderBook()
 
 	if err := k.IterateOrdersByPair(ctx, pair.Id, func(order types.Order) (stop bool, err error) {
-		switch order.Status {
+		orderState, found := k.GetOrderState(ctx, order.PairId, order.Id)
+		if !found {
+			panic("order state not found")
+		}
+		switch orderState.Status {
 		case types.OrderStatusNotExecuted,
 			types.OrderStatusNotMatched,
 			types.OrderStatusPartiallyMatched:
-			if order.Status != types.OrderStatusNotExecuted && order.ExpiredAt(ctx.BlockTime()) {
-				if err := k.FinishOrder(ctx, order, types.OrderStatusExpired); err != nil {
+			if orderState.Status != types.OrderStatusNotExecuted && order.ExpiredAt(ctx.BlockTime()) {
+				if err := k.FinishOrder(ctx, order, orderState, types.OrderStatusExpired); err != nil {
 					return false, err
 				}
 				return false, nil
 			}
 			// TODO: add orders only when price is in the range?
-			ob.AddOrder(types.NewUserOrder(order))
-			if order.Status == types.OrderStatusNotExecuted {
-				order.SetStatus(types.OrderStatusNotMatched)
-				k.SetOrder(ctx, order)
+			ob.AddOrder(types.NewUserOrder(order, orderState))
+			if orderState.Status == types.OrderStatusNotExecuted {
+				orderState.SetStatus(types.OrderStatusNotMatched)
+				k.SetOrderState(ctx, order.PairId, order.Id, orderState)
 			}
 		case types.OrderStatusCanceled:
 		default:
-			return false, fmt.Errorf("invalid order status: %s", order.Status)
+			return false, fmt.Errorf("invalid order status: %s", orderState.Status)
 		}
 		return false, nil
 	}); err != nil {
@@ -330,17 +359,21 @@ func (k Keeper) ExecuteMatching(ctx sdk.Context, pair types.Pair) error {
 		return false, nil
 	})
 
-	matchPrice, quoteCoinDiff, matched := k.Match(ctx, ob, pools, pair.LastPrice)
+	pairState, found := k.GetPairState(ctx, pair.Id)
+	if !found {
+		panic("pair state not found")
+	}
+	matchPrice, quoteCoinDiff, matched := k.Match(ctx, ob, pools, pairState.LastPrice)
 	if matched {
 		orders := ob.Orders()
 		if err := k.ApplyMatchResult(ctx, pair, orders, quoteCoinDiff); err != nil {
 			return err
 		}
-		pair.LastPrice = &matchPrice
+		pairState.LastPrice = &matchPrice
 	}
 
-	pair.CurrentBatchId++
-	k.SetPair(ctx, pair)
+	pairState.CurrentBatchId++
+	k.SetPairState(ctx, pair.Id, pairState)
 
 	return nil
 }
@@ -418,17 +451,21 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 			receivedCoin := sdk.NewCoin(order.DemandCoinDenom, order.ReceivedDemandCoinAmount)
 
 			o, _ := k.GetOrder(ctx, pair.Id, order.OrderId)
-			o.OpenAmount = o.OpenAmount.Sub(matchedAmt)
-			o.RemainingOfferCoin = o.RemainingOfferCoin.Sub(paidCoin)
-			o.ReceivedCoin = o.ReceivedCoin.Add(receivedCoin)
+			os, found := k.GetOrderState(ctx, pair.Id, order.OrderId)
+			if !found {
+				panic("order state not found")
+			}
+			os.OpenAmount = os.OpenAmount.Sub(matchedAmt)
+			os.RemainingOfferCoin = os.RemainingOfferCoin.Sub(paidCoin)
+			os.ReceivedCoin = os.ReceivedCoin.Add(receivedCoin)
 
-			if o.OpenAmount.IsZero() {
-				if err := k.FinishOrder(ctx, o, types.OrderStatusCompleted); err != nil {
+			if os.OpenAmount.IsZero() {
+				if err := k.FinishOrder(ctx, o, os, types.OrderStatusCompleted); err != nil {
 					return err
 				}
 			} else {
-				o.SetStatus(types.OrderStatusPartiallyMatched)
-				k.SetOrder(ctx, o)
+				os.SetStatus(types.OrderStatusPartiallyMatched)
+				k.SetOrderState(ctx, pair.Id, order.OrderId, os)
 			}
 			bulkOp.QueueSendCoins(pair.GetEscrowAddress(), order.Orderer, sdk.NewCoins(receivedCoin))
 
@@ -493,20 +530,20 @@ func (k Keeper) ApplyMatchResult(ctx sdk.Context, pair types.Pair, orders []amm.
 	return nil
 }
 
-func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, status types.OrderStatus) error {
-	if order.Status == types.OrderStatusCompleted || order.Status.IsCanceledOrExpired() { // sanity check
+func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, orderState types.OrderState, status types.OrderStatus) error {
+	if orderState.Status == types.OrderStatusCompleted || orderState.Status.IsCanceledOrExpired() { // sanity check
 		return nil
 	}
 
-	if order.RemainingOfferCoin.IsPositive() {
+	if orderState.RemainingOfferCoin.IsPositive() {
 		pair, _ := k.GetPair(ctx, order.PairId)
-		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), order.GetOrderer(), sdk.NewCoins(order.RemainingOfferCoin)); err != nil {
+		if err := k.bankKeeper.SendCoins(ctx, pair.GetEscrowAddress(), order.GetOrderer(), sdk.NewCoins(orderState.RemainingOfferCoin)); err != nil {
 			return err
 		}
 	}
 
-	order.SetStatus(status)
-	k.SetOrder(ctx, order)
+	orderState.SetStatus(status)
+	k.SetOrderState(ctx, order.PairId, order.Id, orderState)
 	if order.Type == types.OrderTypeMM {
 		ordererAddr := order.GetOrderer()
 		numMMOrders := k.GetNumMMOrders(ctx, ordererAddr, order.PairId)
@@ -525,11 +562,11 @@ func (k Keeper) FinishOrder(ctx sdk.Context, order types.Order, status types.Ord
 			sdk.NewAttribute(types.AttributeKeyPairId, strconv.FormatUint(order.PairId, 10)),
 			sdk.NewAttribute(types.AttributeKeyOrderId, strconv.FormatUint(order.Id, 10)),
 			sdk.NewAttribute(types.AttributeKeyAmount, order.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyOpenAmount, order.OpenAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyOpenAmount, orderState.OpenAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyOfferCoin, order.OfferCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, order.RemainingOfferCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyReceivedCoin, order.ReceivedCoin.String()),
-			sdk.NewAttribute(types.AttributeKeyStatus, order.Status.String()),
+			sdk.NewAttribute(types.AttributeKeyRemainingOfferCoin, orderState.RemainingOfferCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyReceivedCoin, orderState.ReceivedCoin.String()),
+			sdk.NewAttribute(types.AttributeKeyStatus, orderState.Status.String()),
 		),
 	})
 

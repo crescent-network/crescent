@@ -223,9 +223,9 @@ func (s *SimTestSuite) TestSimulateMsgMarketOrder() {
 	accs := s.getTestingAccounts(r, 1)
 
 	pair := s.createPair(accs[0].Address, "denom1", "stake")
-	p := utils.ParseDec("1.0")
-	pair.LastPrice = &p
-	s.keeper.SetPair(s.ctx, pair)
+	pairState, _ := s.keeper.GetPairState(s.ctx, pair.Id)
+	pairState.LastPrice = utils.ParseDecP("1.0")
+	s.keeper.SetPairState(s.ctx, pair.Id, pairState)
 
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
@@ -256,8 +256,9 @@ func (s *SimTestSuite) TestSimulateMsgCancelOrder() {
 	pair := s.createPair(accs[0].Address, "denom1", "stake")
 	order := s.limitOrder(accs[0].Address, pair.Id, types.OrderDirectionBuy, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
 	// Increment the pair's current batch id to simulate next block.
-	pair.CurrentBatchId++
-	s.keeper.SetPair(s.ctx, pair)
+	pairState, _ := s.keeper.GetPairState(s.ctx, pair.Id)
+	pairState.CurrentBatchId++
+	s.keeper.SetPairState(s.ctx, pair.Id, pairState)
 
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
@@ -287,12 +288,15 @@ func (s *SimTestSuite) TestSimulateMsgCancelAllOrders() {
 	s.limitOrder(accs[0].Address, pair1.Id, types.OrderDirectionBuy, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
 	s.limitOrder(accs[0].Address, pair2.Id, types.OrderDirectionSell, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
 	s.limitOrder(accs[0].Address, pair3.Id, types.OrderDirectionSell, utils.ParseDec("1.0"), sdk.NewInt(1000000), time.Hour)
-	pair1.CurrentBatchId++
-	s.keeper.SetPair(s.ctx, pair1)
-	pair2.CurrentBatchId++
-	s.keeper.SetPair(s.ctx, pair2)
-	pair3.CurrentBatchId++
-	s.keeper.SetPair(s.ctx, pair3)
+	pairState1, _ := s.keeper.GetPairState(s.ctx, pair1.Id)
+	pairState1.CurrentBatchId++
+	s.keeper.SetPairState(s.ctx, pair1.Id, pairState1)
+	pairState2, _ := s.keeper.GetPairState(s.ctx, pair2.Id)
+	pairState2.CurrentBatchId++
+	s.keeper.SetPairState(s.ctx, pair2.Id, pairState2)
+	pairState3, _ := s.keeper.GetPairState(s.ctx, pair3.Id)
+	pairState3.CurrentBatchId++
+	s.keeper.SetPairState(s.ctx, pair3.Id, pairState3)
 
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 

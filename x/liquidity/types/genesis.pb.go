@@ -28,11 +28,11 @@ type GenesisState struct {
 	Params                       Params              `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	LastPairId                   uint64              `protobuf:"varint,2,opt,name=last_pair_id,json=lastPairId,proto3" json:"last_pair_id,omitempty"`
 	LastPoolId                   uint64              `protobuf:"varint,3,opt,name=last_pool_id,json=lastPoolId,proto3" json:"last_pool_id,omitempty"`
-	Pairs                        []Pair              `protobuf:"bytes,4,rep,name=pairs,proto3" json:"pairs"`
-	Pools                        []Pool              `protobuf:"bytes,5,rep,name=pools,proto3" json:"pools"`
+	Pairs                        []PairRecord        `protobuf:"bytes,4,rep,name=pairs,proto3" json:"pairs"`
+	Pools                        []PoolRecord        `protobuf:"bytes,5,rep,name=pools,proto3" json:"pools"`
 	DepositRequests              []DepositRequest    `protobuf:"bytes,6,rep,name=deposit_requests,json=depositRequests,proto3" json:"deposit_requests"`
 	WithdrawRequests             []WithdrawRequest   `protobuf:"bytes,7,rep,name=withdraw_requests,json=withdrawRequests,proto3" json:"withdraw_requests"`
-	Orders                       []Order             `protobuf:"bytes,8,rep,name=orders,proto3" json:"orders"`
+	Orders                       []OrderRecord       `protobuf:"bytes,8,rep,name=orders,proto3" json:"orders"`
 	NumMarketMakingOrdersRecords []NumMMOrdersRecord `protobuf:"bytes,9,rep,name=num_market_making_orders_records,json=numMarketMakingOrdersRecords,proto3" json:"num_market_making_orders_records"`
 }
 
@@ -69,6 +69,120 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
+type PairRecord struct {
+	Pair  Pair      `protobuf:"bytes,1,opt,name=pair,proto3" json:"pair"`
+	State PairState `protobuf:"bytes,2,opt,name=state,proto3" json:"state"`
+}
+
+func (m *PairRecord) Reset()         { *m = PairRecord{} }
+func (m *PairRecord) String() string { return proto.CompactTextString(m) }
+func (*PairRecord) ProtoMessage()    {}
+func (*PairRecord) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6a6239844d27c73b, []int{1}
+}
+func (m *PairRecord) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PairRecord) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PairRecord.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PairRecord) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PairRecord.Merge(m, src)
+}
+func (m *PairRecord) XXX_Size() int {
+	return m.Size()
+}
+func (m *PairRecord) XXX_DiscardUnknown() {
+	xxx_messageInfo_PairRecord.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PairRecord proto.InternalMessageInfo
+
+type PoolRecord struct {
+	Pool  Pool      `protobuf:"bytes,1,opt,name=pool,proto3" json:"pool"`
+	State PoolState `protobuf:"bytes,2,opt,name=state,proto3" json:"state"`
+}
+
+func (m *PoolRecord) Reset()         { *m = PoolRecord{} }
+func (m *PoolRecord) String() string { return proto.CompactTextString(m) }
+func (*PoolRecord) ProtoMessage()    {}
+func (*PoolRecord) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6a6239844d27c73b, []int{2}
+}
+func (m *PoolRecord) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolRecord) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolRecord.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolRecord) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolRecord.Merge(m, src)
+}
+func (m *PoolRecord) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolRecord) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolRecord.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolRecord proto.InternalMessageInfo
+
+type OrderRecord struct {
+	Order Order      `protobuf:"bytes,1,opt,name=order,proto3" json:"order"`
+	State OrderState `protobuf:"bytes,2,opt,name=state,proto3" json:"state"`
+}
+
+func (m *OrderRecord) Reset()         { *m = OrderRecord{} }
+func (m *OrderRecord) String() string { return proto.CompactTextString(m) }
+func (*OrderRecord) ProtoMessage()    {}
+func (*OrderRecord) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6a6239844d27c73b, []int{3}
+}
+func (m *OrderRecord) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OrderRecord) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OrderRecord.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OrderRecord) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OrderRecord.Merge(m, src)
+}
+func (m *OrderRecord) XXX_Size() int {
+	return m.Size()
+}
+func (m *OrderRecord) XXX_DiscardUnknown() {
+	xxx_messageInfo_OrderRecord.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OrderRecord proto.InternalMessageInfo
+
 // NumMMOrdersRecord holds information about how many MM orders an orderer
 // ordered per pair.
 type NumMMOrdersRecord struct {
@@ -81,7 +195,7 @@ func (m *NumMMOrdersRecord) Reset()         { *m = NumMMOrdersRecord{} }
 func (m *NumMMOrdersRecord) String() string { return proto.CompactTextString(m) }
 func (*NumMMOrdersRecord) ProtoMessage()    {}
 func (*NumMMOrdersRecord) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6a6239844d27c73b, []int{1}
+	return fileDescriptor_6a6239844d27c73b, []int{4}
 }
 func (m *NumMMOrdersRecord) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -112,6 +226,9 @@ var xxx_messageInfo_NumMMOrdersRecord proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "crescent.liquidity.v1beta1.GenesisState")
+	proto.RegisterType((*PairRecord)(nil), "crescent.liquidity.v1beta1.PairRecord")
+	proto.RegisterType((*PoolRecord)(nil), "crescent.liquidity.v1beta1.PoolRecord")
+	proto.RegisterType((*OrderRecord)(nil), "crescent.liquidity.v1beta1.OrderRecord")
 	proto.RegisterType((*NumMMOrdersRecord)(nil), "crescent.liquidity.v1beta1.NumMMOrdersRecord")
 }
 
@@ -120,38 +237,44 @@ func init() {
 }
 
 var fileDescriptor_6a6239844d27c73b = []byte{
-	// 490 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xcf, 0x6b, 0xd4, 0x40,
-	0x14, 0xc7, 0x37, 0x76, 0x37, 0x6b, 0xa7, 0x15, 0xdb, 0x41, 0x71, 0x58, 0x24, 0xc6, 0x3d, 0x2d,
-	0x95, 0x26, 0xb4, 0x22, 0x22, 0x08, 0x4a, 0x11, 0xa4, 0x87, 0xd5, 0x12, 0x0f, 0x05, 0x05, 0xc3,
-	0xec, 0xce, 0x90, 0x0e, 0x9b, 0x64, 0xd2, 0x79, 0x93, 0xae, 0xc5, 0x83, 0x7f, 0x80, 0x17, 0xff,
-	0xac, 0x3d, 0xf6, 0xe8, 0x49, 0x74, 0xf7, 0x1f, 0x91, 0x4c, 0xb2, 0xbf, 0xd0, 0x86, 0xde, 0x92,
-	0x97, 0xef, 0xe7, 0xf3, 0xde, 0x90, 0x37, 0xa8, 0x37, 0x54, 0x1c, 0x86, 0x3c, 0xd5, 0x7e, 0x2c,
-	0xce, 0x73, 0xc1, 0x84, 0xbe, 0xf4, 0x2f, 0x0e, 0x06, 0x5c, 0xd3, 0x03, 0x3f, 0xe2, 0x29, 0x07,
-	0x01, 0x5e, 0xa6, 0xa4, 0x96, 0xb8, 0x33, 0x4f, 0x7a, 0x8b, 0xa4, 0x57, 0x25, 0x3b, 0xf7, 0x22,
-	0x19, 0x49, 0x13, 0xf3, 0x8b, 0xa7, 0x92, 0xe8, 0xec, 0xd5, 0xb8, 0x97, 0x0e, 0x93, 0xed, 0x7e,
-	0x6f, 0xa1, 0xed, 0xb7, 0x65, 0xbf, 0x0f, 0x9a, 0x6a, 0x8e, 0x5f, 0x23, 0x3b, 0xa3, 0x8a, 0x26,
-	0x40, 0x2c, 0xd7, 0xea, 0x6d, 0x1d, 0x76, 0xbd, 0xeb, 0xfb, 0x7b, 0x27, 0x26, 0x79, 0xd4, 0x9c,
-	0xfc, 0x7a, 0xd4, 0x08, 0x2a, 0x0e, 0xbb, 0x68, 0x3b, 0xa6, 0xa0, 0xc3, 0x8c, 0x0a, 0x15, 0x0a,
-	0x46, 0x6e, 0xb9, 0x56, 0xaf, 0x19, 0xa0, 0xa2, 0x76, 0x42, 0x85, 0x3a, 0x66, 0xcb, 0x84, 0x94,
-	0x71, 0x91, 0xd8, 0x58, 0x49, 0x48, 0x19, 0x1f, 0x33, 0xfc, 0x12, 0xb5, 0x0a, 0x1c, 0x48, 0xd3,
-	0xdd, 0xe8, 0x6d, 0x1d, 0xba, 0xf5, 0x43, 0x08, 0x55, 0x8d, 0x50, 0x42, 0x86, 0x96, 0x32, 0x06,
-	0xd2, 0xba, 0x01, 0x2d, 0x65, 0xbc, 0xa0, 0x0b, 0x08, 0x7f, 0x42, 0x3b, 0x8c, 0x67, 0x12, 0x84,
-	0x0e, 0x15, 0x3f, 0xcf, 0x39, 0x68, 0x20, 0xb6, 0x11, 0xed, 0xd5, 0x89, 0xde, 0x94, 0x4c, 0x50,
-	0x22, 0x95, 0xf2, 0x2e, 0x5b, 0xab, 0x02, 0xfe, 0x8c, 0x76, 0xc7, 0x42, 0x9f, 0x31, 0x45, 0xc7,
-	0x4b, 0x7b, 0xdb, 0xd8, 0x9f, 0xd4, 0xd9, 0x4f, 0x2b, 0x68, 0x5d, 0xbf, 0x33, 0x5e, 0x2f, 0x03,
-	0x7e, 0x85, 0x6c, 0xa9, 0x18, 0x57, 0x40, 0x6e, 0x1b, 0xe9, 0xe3, 0x3a, 0xe9, 0xfb, 0x22, 0x39,
-	0xff, 0x7b, 0x25, 0x86, 0xbf, 0x22, 0x37, 0xcd, 0x93, 0x30, 0xa1, 0x6a, 0xc4, 0x75, 0x98, 0xd0,
-	0x91, 0x48, 0xa3, 0xb0, 0xfc, 0x16, 0x2a, 0x3e, 0x94, 0x8a, 0x01, 0xd9, 0x34, 0xea, 0xfd, 0x3a,
-	0xf5, 0xbb, 0x3c, 0xe9, 0xf7, 0x8d, 0x1f, 0x02, 0x43, 0x55, 0x6d, 0x1e, 0xa6, 0x79, 0xd2, 0x37,
-	0xee, 0xbe, 0x51, 0xaf, 0x46, 0xa0, 0xfb, 0x0d, 0xed, 0xfe, 0x03, 0x62, 0x82, 0xda, 0xa6, 0x3f,
-	0x57, 0x66, 0x25, 0x37, 0x83, 0xf9, 0x2b, 0x7e, 0x80, 0xda, 0xeb, 0x4b, 0x66, 0x67, 0xe5, 0x82,
-	0x3d, 0x47, 0xe4, 0xba, 0x43, 0x98, 0x65, 0xbb, 0x13, 0xdc, 0xff, 0xef, 0x1c, 0x47, 0xa7, 0x93,
-	0x3f, 0x4e, 0x63, 0x32, 0x75, 0xac, 0xab, 0xa9, 0x63, 0xfd, 0x9e, 0x3a, 0xd6, 0x8f, 0x99, 0xd3,
-	0xb8, 0x9a, 0x39, 0x8d, 0x9f, 0x33, 0xa7, 0xf1, 0xf1, 0x45, 0x24, 0xf4, 0x59, 0x3e, 0xf0, 0x86,
-	0x32, 0xf1, 0xe7, 0x67, 0xdf, 0x4f, 0xb9, 0x1e, 0x4b, 0x35, 0x5a, 0x14, 0xfc, 0x8b, 0x67, 0xfe,
-	0x97, 0x95, 0x9b, 0xa7, 0x2f, 0x33, 0x0e, 0x03, 0xdb, 0x5c, 0xb7, 0xa7, 0x7f, 0x03, 0x00, 0x00,
-	0xff, 0xff, 0x1f, 0x94, 0x92, 0x74, 0xf8, 0x03, 0x00, 0x00,
+	// 591 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x5f, 0x6b, 0xd3, 0x50,
+	0x18, 0xc6, 0x1b, 0xd7, 0x3f, 0xee, 0x74, 0xe2, 0x76, 0x50, 0x0c, 0x45, 0x62, 0x2c, 0x38, 0xcb,
+	0x64, 0x09, 0xab, 0x88, 0x28, 0x08, 0x5a, 0x14, 0xd9, 0x45, 0x75, 0xc4, 0x8b, 0x81, 0x82, 0x21,
+	0x6d, 0x0e, 0xdd, 0xa1, 0x49, 0xde, 0xec, 0x9c, 0x93, 0xd5, 0xe1, 0x85, 0x1f, 0xc0, 0x9b, 0x7d,
+	0x01, 0xbf, 0x4f, 0x2f, 0x77, 0xe9, 0x95, 0x68, 0xfb, 0x45, 0x24, 0x27, 0x69, 0x9b, 0x68, 0x97,
+	0x6e, 0x77, 0xed, 0xdb, 0xe7, 0xf9, 0xbd, 0x4f, 0xf3, 0xbe, 0x79, 0x51, 0xab, 0xcf, 0x08, 0xef,
+	0x93, 0x40, 0x98, 0x1e, 0x3d, 0x8e, 0xa8, 0x4b, 0xc5, 0xa9, 0x79, 0xb2, 0xd7, 0x23, 0xc2, 0xd9,
+	0x33, 0x07, 0x24, 0x20, 0x9c, 0x72, 0x23, 0x64, 0x20, 0x00, 0x37, 0x66, 0x4a, 0x63, 0xae, 0x34,
+	0x52, 0x65, 0xe3, 0xd6, 0x00, 0x06, 0x20, 0x65, 0x66, 0xfc, 0x29, 0x71, 0x34, 0x76, 0x0a, 0xd8,
+	0x0b, 0x86, 0xd4, 0x36, 0x7f, 0x54, 0xd0, 0xc6, 0xdb, 0xa4, 0xdf, 0x07, 0xe1, 0x08, 0x82, 0x5f,
+	0xa2, 0x6a, 0xe8, 0x30, 0xc7, 0xe7, 0xaa, 0xa2, 0x2b, 0xad, 0x7a, 0xbb, 0x69, 0x5c, 0xdc, 0xdf,
+	0x38, 0x90, 0xca, 0x4e, 0x79, 0xfc, 0xeb, 0x5e, 0xc9, 0x4a, 0x7d, 0x58, 0x47, 0x1b, 0x9e, 0xc3,
+	0x85, 0x1d, 0x3a, 0x94, 0xd9, 0xd4, 0x55, 0xaf, 0xe9, 0x4a, 0xab, 0x6c, 0xa1, 0xb8, 0x76, 0xe0,
+	0x50, 0xb6, 0xef, 0x2e, 0x14, 0x00, 0x5e, 0xac, 0x58, 0xcb, 0x28, 0x00, 0xbc, 0x7d, 0x17, 0x77,
+	0x50, 0x25, 0xb6, 0x73, 0xb5, 0xac, 0xaf, 0xb5, 0xea, 0xed, 0xed, 0xe2, 0x10, 0x94, 0x59, 0xa4,
+	0x0f, 0xcc, 0x4d, 0x83, 0x24, 0x56, 0xc9, 0x00, 0xf0, 0xb8, 0x5a, 0xb9, 0x04, 0x03, 0xc0, 0xfb,
+	0x87, 0x11, 0x5b, 0xf1, 0x27, 0xb4, 0xe9, 0x92, 0x10, 0x38, 0x15, 0x36, 0x23, 0xc7, 0x11, 0xe1,
+	0x82, 0xab, 0x55, 0x89, 0xdb, 0x29, 0xc2, 0xbd, 0x4e, 0x3c, 0x56, 0x62, 0x49, 0x91, 0x37, 0xdd,
+	0x5c, 0x95, 0xe3, 0xcf, 0x68, 0x6b, 0x44, 0xc5, 0x91, 0xcb, 0x9c, 0xd1, 0x82, 0x5e, 0x93, 0xf4,
+	0x47, 0x45, 0xf4, 0xc3, 0xd4, 0x94, 0xc7, 0x6f, 0x8e, 0xf2, 0x65, 0x8e, 0xdf, 0xa0, 0x2a, 0x30,
+	0x97, 0x30, 0xae, 0x5e, 0x97, 0xd0, 0x87, 0x45, 0xd0, 0xf7, 0xb1, 0x32, 0xf7, 0x08, 0x52, 0x33,
+	0xfe, 0x8a, 0xf4, 0x20, 0xf2, 0x6d, 0xdf, 0x61, 0x43, 0x22, 0x6c, 0xdf, 0x19, 0xd2, 0x60, 0x60,
+	0x27, 0xbf, 0xd9, 0x4c, 0x1a, 0xb8, 0xba, 0x2e, 0x1b, 0xec, 0x16, 0x35, 0x78, 0x17, 0xf9, 0xdd,
+	0xae, 0xec, 0xc2, 0x73, 0x6d, 0xee, 0x06, 0x91, 0xdf, 0x95, 0xec, 0xae, 0x44, 0x67, 0x25, 0xbc,
+	0xf9, 0x5d, 0x41, 0x68, 0x31, 0x60, 0xfc, 0x1c, 0x95, 0xe3, 0xe1, 0xa6, 0xbb, 0xa9, 0xaf, 0x5a,
+	0x8b, 0xb4, 0x85, 0xf4, 0xe0, 0x57, 0xa8, 0xc2, 0xe3, 0x15, 0x97, 0x0b, 0x59, 0x6f, 0x3f, 0x58,
+	0x65, 0x96, 0xef, 0xc3, 0x6c, 0x1d, 0xa4, 0x33, 0x49, 0x33, 0x5f, 0x15, 0x99, 0x06, 0xc0, 0xbb,
+	0x54, 0x1a, 0x00, 0x6f, 0x9e, 0x06, 0xc0, 0xbb, 0x5a, 0x1a, 0x00, 0x6f, 0x49, 0x9a, 0x33, 0x05,
+	0xd5, 0x33, 0x63, 0xc3, 0x2f, 0x50, 0x45, 0x8e, 0x25, 0xcd, 0x73, 0x7f, 0xe5, 0xb8, 0x67, 0x38,
+	0xe9, 0x8a, 0xdf, 0x97, 0x6c, 0xa2, 0xed, 0x95, 0xf6, 0x25, 0x91, 0xbe, 0xa1, 0xad, 0xff, 0xe6,
+	0x8c, 0x55, 0x54, 0x93, 0x1d, 0xd2, 0x64, 0xeb, 0xd6, 0xec, 0x2b, 0xbe, 0x83, 0x6a, 0xf9, 0x2b,
+	0x51, 0x0d, 0x93, 0x0b, 0xf1, 0x14, 0xa9, 0x17, 0xed, 0x9c, 0xbc, 0x16, 0x37, 0xac, 0xdb, 0x4b,
+	0xd7, 0xa6, 0x73, 0x38, 0xfe, 0xa3, 0x95, 0xc6, 0x13, 0x4d, 0x39, 0x9f, 0x68, 0xca, 0xef, 0x89,
+	0xa6, 0x9c, 0x4d, 0xb5, 0xd2, 0xf9, 0x54, 0x2b, 0xfd, 0x9c, 0x6a, 0xa5, 0x8f, 0xcf, 0x06, 0x54,
+	0x1c, 0x45, 0x3d, 0xa3, 0x0f, 0xbe, 0x39, 0xfb, 0x77, 0xbb, 0x01, 0x11, 0x23, 0x60, 0xc3, 0x79,
+	0xc1, 0x3c, 0x79, 0x62, 0x7e, 0xc9, 0x9c, 0x4e, 0x71, 0x1a, 0x12, 0xde, 0xab, 0xca, 0x7b, 0xf9,
+	0xf8, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x99, 0x6e, 0xb5, 0x18, 0xb9, 0x05, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -281,6 +404,135 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *PairRecord) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PairRecord) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PairRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.State.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.Pair.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *PoolRecord) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolRecord) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.State.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.Pool.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *OrderRecord) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OrderRecord) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OrderRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.State.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.Order.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func (m *NumMMOrdersRecord) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -382,6 +634,45 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *PairRecord) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Pair.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	l = m.State.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	return n
+}
+
+func (m *PoolRecord) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Pool.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	l = m.State.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	return n
+}
+
+func (m *OrderRecord) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Order.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	l = m.State.Size()
+	n += 1 + l + sovGenesis(uint64(l))
 	return n
 }
 
@@ -539,7 +830,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Pairs = append(m.Pairs, Pair{})
+			m.Pairs = append(m.Pairs, PairRecord{})
 			if err := m.Pairs[len(m.Pairs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -573,7 +864,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Pools = append(m.Pools, Pool{})
+			m.Pools = append(m.Pools, PoolRecord{})
 			if err := m.Pools[len(m.Pools)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -675,7 +966,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Orders = append(m.Orders, Order{})
+			m.Orders = append(m.Orders, OrderRecord{})
 			if err := m.Orders[len(m.Orders)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -711,6 +1002,354 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			m.NumMarketMakingOrdersRecords = append(m.NumMarketMakingOrdersRecords, NumMMOrdersRecord{})
 			if err := m.NumMarketMakingOrdersRecords[len(m.NumMarketMakingOrdersRecords)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PairRecord) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PairRecord: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PairRecord: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pair", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Pair.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.State.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolRecord) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolRecord: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolRecord: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pool", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Pool.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.State.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OrderRecord) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OrderRecord: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OrderRecord: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Order", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Order.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.State.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

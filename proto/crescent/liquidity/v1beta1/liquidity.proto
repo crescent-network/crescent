@@ -67,12 +67,14 @@ message Pair {
   string quote_coin_denom = 3;
 
   string escrow_address = 4;
+}
 
-  uint64 last_order_id = 5;
+message PairState {
+  uint64 last_order_id = 1;
 
-  string last_price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string last_price = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  uint64 current_batch_id = 7;
+  uint64 current_batch_id = 3;
 }
 
 // Pool defines generic liquidity pool object which can be either a basic pool or a
@@ -94,11 +96,13 @@ message Pool {
 
   string max_price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 
-  uint64 last_deposit_request_id = 9;
+  bool disabled = 9;
+}
 
-  uint64 last_withdraw_request_id = 10;
+message PoolState {
+  uint64 last_deposit_request_id = 1;
 
-  bool disabled = 11;
+  uint64 last_withdraw_request_id = 2;
 }
 
 // DepositRequest defines a deposit request.
@@ -174,26 +178,28 @@ message Order {
 
   cosmos.base.v1beta1.Coin offer_coin = 7 [(gogoproto.nullable) = false];
 
-  // remaining_offer_coin specifies the remaining offer coin
-  cosmos.base.v1beta1.Coin remaining_offer_coin = 8 [(gogoproto.nullable) = false];
-
-  // received_coin specifies the received coin after the swap
-  cosmos.base.v1beta1.Coin received_coin = 9 [(gogoproto.nullable) = false];
-
   // price specifies the price that an orderer is willing to swap
-  string price = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string price = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 
-  string amount = 11 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-
-  string open_amount = 12
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string amount = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 
   // batch_id specifies the pair's batch id when the request is stored
-  uint64 batch_id = 13;
+  uint64 batch_id = 10;
 
-  google.protobuf.Timestamp expire_at = 14 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp expire_at = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
 
-  OrderStatus status = 15;
+message OrderState {
+  // remaining_offer_coin specifies the remaining offer coin
+  cosmos.base.v1beta1.Coin remaining_offer_coin = 1 [(gogoproto.nullable) = false];
+
+  // received_coin specifies the received coin after the swap
+  cosmos.base.v1beta1.Coin received_coin = 2 [(gogoproto.nullable) = false];
+
+  string open_amount = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  OrderStatus status = 4;
 }
 
 // PoolType enumerates pool types.

@@ -10,11 +10,11 @@ func DefaultGenesis() *GenesisState {
 		Params:                       DefaultParams(),
 		LastPairId:                   0,
 		LastPoolId:                   0,
-		Pairs:                        []Pair{},
-		Pools:                        []Pool{},
+		Pairs:                        []PairRecord{},
+		Pools:                        []PoolRecord{},
 		DepositRequests:              []DepositRequest{},
 		WithdrawRequests:             []WithdrawRequest{},
-		Orders:                       []Order{},
+		Orders:                       []OrderRecord{},
 		NumMarketMakingOrdersRecords: []NumMMOrdersRecord{},
 	}
 }
@@ -25,50 +25,50 @@ func (genState GenesisState) Validate() error {
 	if err := genState.Params.Validate(); err != nil {
 		return fmt.Errorf("invalid params: %w", err)
 	}
-	pairMap := map[uint64]Pair{}
-	for i, pair := range genState.Pairs {
-		if err := pair.Validate(); err != nil {
+	pairRecordMap := map[uint64]PairRecord{}
+	for i, record := range genState.Pairs {
+		if err := record.Pair.Validate(); err != nil {
 			return fmt.Errorf("invalid pair at index %d: %w", i, err)
 		}
-		if pair.Id > genState.LastPairId {
-			return fmt.Errorf("pair at index %d has an id greater than last pair id: %d", i, pair.Id)
+		if record.Pair.Id > genState.LastPairId {
+			return fmt.Errorf("pair at index %d has an id greater than last pair id: %d", i, record.Pair.Id)
 		}
-		if _, ok := pairMap[pair.Id]; ok {
-			return fmt.Errorf("pair at index %d has a duplicate id: %d", i, pair.Id)
+		if _, ok := pairRecordMap[record.Pair.Id]; ok {
+			return fmt.Errorf("pair at index %d has a duplicate id: %d", i, record.Pair.Id)
 		}
-		pairMap[pair.Id] = pair
+		pairRecordMap[record.Pair.Id] = record
 	}
-	poolMap := map[uint64]Pool{}
-	for i, pool := range genState.Pools {
-		if err := pool.Validate(); err != nil {
+	poolRecordMap := map[uint64]PoolRecord{}
+	for i, record := range genState.Pools {
+		if err := record.Pool.Validate(); err != nil {
 			return fmt.Errorf("invalid pool at index %d: %w", i, err)
 		}
-		if pool.Id > genState.LastPoolId {
-			return fmt.Errorf("pool at index %d has an id greater than last pool id: %d", i, pool.Id)
+		if record.Pool.Id > genState.LastPoolId {
+			return fmt.Errorf("pool at index %d has an id greater than last pool id: %d", i, record.Pool.Id)
 		}
-		if _, ok := pairMap[pool.PairId]; !ok {
-			return fmt.Errorf("pool at index %d has unknown pair id: %d", i, pool.PairId)
+		if _, ok := pairRecordMap[record.Pool.PairId]; !ok {
+			return fmt.Errorf("pool at index %d has unknown pair id: %d", i, record.Pool.PairId)
 		}
-		if _, ok := poolMap[pool.Id]; ok {
-			return fmt.Errorf("pool at index %d has a duplicate pool id: %d", i, pool.Id)
+		if _, ok := poolRecordMap[record.Pool.Id]; ok {
+			return fmt.Errorf("pool at index %d has a duplicate pool id: %d", i, record.Pool.Id)
 		}
-		poolMap[pool.Id] = pool
+		poolRecordMap[record.Pool.Id] = record
 	}
 	depositReqSet := map[uint64]map[uint64]struct{}{}
 	for i, req := range genState.DepositRequests {
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("invalid deposit request at index %d: %w", i, err)
 		}
-		pool, ok := poolMap[req.PoolId]
+		poolRecord, ok := poolRecordMap[req.PoolId]
 		if !ok {
 			return fmt.Errorf("deposit request at index %d has unknown pool id: %d", i, req.PoolId)
 		}
-		if req.MintedPoolCoin.Denom != pool.PoolCoinDenom {
+		if req.MintedPoolCoin.Denom != poolRecord.Pool.PoolCoinDenom {
 			return fmt.Errorf("deposit request at index %d has wrong minted pool coin: %s", i, req.MintedPoolCoin)
 		}
-		pair := pairMap[pool.PairId]
-		if req.DepositCoins.AmountOf(pair.BaseCoinDenom).IsZero() ||
-			req.DepositCoins.AmountOf(pair.QuoteCoinDenom).IsZero() {
+		pairRecord := pairRecordMap[poolRecord.Pool.PairId]
+		if req.DepositCoins.AmountOf(pairRecord.Pair.BaseCoinDenom).IsZero() ||
+			req.DepositCoins.AmountOf(pairRecord.Pair.QuoteCoinDenom).IsZero() {
 			return fmt.Errorf("deposit request at index %d has wrong deposit coins: %s", i, req.DepositCoins)
 		}
 		if set, ok := depositReqSet[req.PoolId]; ok {
@@ -85,11 +85,11 @@ func (genState GenesisState) Validate() error {
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("invalid withdraw request at index %d: %w", i, err)
 		}
-		pool, ok := poolMap[req.PoolId]
+		poolRecord, ok := poolRecordMap[req.PoolId]
 		if !ok {
 			return fmt.Errorf("withdraw request at index %d has unknown pool id: %d", i, req.PoolId)
 		}
-		if req.PoolCoin.Denom != pool.PoolCoinDenom {
+		if req.PoolCoin.Denom != poolRecord.Pool.PoolCoinDenom {
 			return fmt.Errorf("withdraw request at index %d has wrong pool coin: %s", i, req.PoolCoin)
 		}
 		if set, ok := withdrawReqSet[req.PoolId]; ok {
@@ -102,38 +102,38 @@ func (genState GenesisState) Validate() error {
 		withdrawReqSet[req.PoolId][req.Id] = struct{}{}
 	}
 	orderSet := map[uint64]map[uint64]struct{}{}
-	for i, order := range genState.Orders {
-		if err := order.Validate(); err != nil {
+	for i, record := range genState.Orders {
+		if err := record.Order.Validate(); err != nil {
 			return fmt.Errorf("invalid order at index %d: %w", i, err)
 		}
-		pair, ok := pairMap[order.PairId]
+		pairRecord, ok := pairRecordMap[record.Order.PairId]
 		if !ok {
-			return fmt.Errorf("order at index %d has unknown pair id: %d", i, order.PairId)
+			return fmt.Errorf("order at index %d has unknown pair id: %d", i, record.Order.PairId)
 		}
-		if order.BatchId > pair.CurrentBatchId {
-			return fmt.Errorf("order at index %d has a batch id greater than its pair's current batch id: %d", i, order.BatchId)
+		if record.Order.BatchId > pairRecord.State.CurrentBatchId {
+			return fmt.Errorf("order at index %d has a batch id greater than its pair's current batch id: %d", i, record.Order.BatchId)
 		}
 		var offerCoinDenom, demandCoinDenom string
-		switch order.Direction {
+		switch record.Order.Direction {
 		case OrderDirectionBuy:
-			offerCoinDenom, demandCoinDenom = pair.QuoteCoinDenom, pair.BaseCoinDenom
+			offerCoinDenom, demandCoinDenom = pairRecord.Pair.QuoteCoinDenom, pairRecord.Pair.BaseCoinDenom
 		case OrderDirectionSell:
-			offerCoinDenom, demandCoinDenom = pair.BaseCoinDenom, pair.QuoteCoinDenom
+			offerCoinDenom, demandCoinDenom = pairRecord.Pair.BaseCoinDenom, pairRecord.Pair.QuoteCoinDenom
 		}
-		if order.OfferCoin.Denom != offerCoinDenom {
-			return fmt.Errorf("order at index %d has wrong offer coin denom: %s != %s", i, order.OfferCoin.Denom, offerCoinDenom)
+		if record.Order.OfferCoin.Denom != offerCoinDenom {
+			return fmt.Errorf("order at index %d has wrong offer coin denom: %s != %s", i, record.Order.OfferCoin.Denom, offerCoinDenom)
 		}
-		if order.ReceivedCoin.Denom != demandCoinDenom {
-			return fmt.Errorf("order at index %d has wrong demand coin denom: %s != %s", i, order.OfferCoin.Denom, demandCoinDenom)
+		if record.State.ReceivedCoin.Denom != demandCoinDenom {
+			return fmt.Errorf("order at index %d has wrong demand coin denom: %s != %s", i, record.Order.OfferCoin.Denom, demandCoinDenom)
 		}
-		if set, ok := orderSet[order.PairId]; ok {
-			if _, ok := set[order.Id]; ok {
-				return fmt.Errorf("order at index %d has a duplicate id: %d", i, order.Id)
+		if set, ok := orderSet[record.Order.PairId]; ok {
+			if _, ok := set[record.Order.Id]; ok {
+				return fmt.Errorf("order at index %d has a duplicate id: %d", i, record.Order.Id)
 			}
 		} else {
-			orderSet[order.PairId] = map[uint64]struct{}{}
+			orderSet[record.Order.PairId] = map[uint64]struct{}{}
 		}
-		orderSet[order.PairId][order.Id] = struct{}{}
+		orderSet[record.Order.PairId][record.Order.Id] = struct{}{}
 	}
 	for _, record := range genState.NumMarketMakingOrdersRecords {
 		if record.NumMarketMakingOrders == 0 {

@@ -15,17 +15,35 @@ message GenesisState {
 
   uint64 last_pool_id = 3;
 
-  repeated Pair pairs = 4 [(gogoproto.nullable) = false];
+  repeated PairRecord pairs = 4 [(gogoproto.nullable) = false];
 
-  repeated Pool pools = 5 [(gogoproto.nullable) = false];
+  repeated PoolRecord pools = 5 [(gogoproto.nullable) = false];
 
   repeated DepositRequest deposit_requests = 6 [(gogoproto.nullable) = false];
 
   repeated WithdrawRequest withdraw_requests = 7 [(gogoproto.nullable) = false];
 
-  repeated Order orders = 8 [(gogoproto.nullable) = false];
+  repeated OrderRecord orders = 8 [(gogoproto.nullable) = false];
 
   repeated NumMMOrdersRecord num_market_making_orders_records = 9 [(gogoproto.nullable) = false];
+}
+
+message PairRecord {
+  Pair pair = 1 [(gogoproto.nullable) = false];
+
+  PairState state = 2 [(gogoproto.nullable) = false];
+}
+
+message PoolRecord {
+  Pool pool = 1 [(gogoproto.nullable) = false];
+
+  PoolState state = 2 [(gogoproto.nullable) = false];
+}
+
+message OrderRecord {
+  Order order = 1 [(gogoproto.nullable) = false];
+
+  OrderState state = 2 [(gogoproto.nullable) = false];
 }
 
 // NumMMOrdersRecord holds information about how many MM orders an orderer

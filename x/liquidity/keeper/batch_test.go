@@ -29,16 +29,16 @@ func (s *KeeperTestSuite) TestOrderExpiration() {
 
 	s.ctx = s.ctx.WithBlockTime(utils.ParseTime("2022-03-01T12:00:12Z"))
 	liquidity.BeginBlocker(s.ctx, s.keeper)
-	order, found = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
+	orderState, found := s.keeper.GetOrderState(s.ctx, order.PairId, order.Id)
 	s.Require().True(found)
-	s.Require().Equal(types.OrderStatusPartiallyMatched, order.Status)
+	s.Require().Equal(types.OrderStatusPartiallyMatched, orderState.Status)
 	// Another buy order comes in, but this time the first order has been expired,
 	// so there is no match.
 	s.limitOrder(s.addr(3), pair.Id, types.OrderDirectionBuy, utils.ParseDec("1.0"), sdk.NewInt(5000), 0, true)
 	liquidity.EndBlocker(s.ctx, s.keeper)
-	order, _ = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)
-	s.Require().Equal(types.OrderStatusExpired, order.Status)
-	s.Require().True(intEq(sdk.NewInt(5000), order.OpenAmount))
+	orderState, _ = s.keeper.GetOrderState(s.ctx, order.PairId, order.Id)
+	s.Require().Equal(types.OrderStatusExpired, orderState.Status)
+	s.Require().True(intEq(sdk.NewInt(5000), orderState.OpenAmount))
 
 	liquidity.BeginBlocker(s.ctx, s.keeper)
 	_, found = s.keeper.GetOrder(s.ctx, order.PairId, order.Id)

@@ -121,8 +121,9 @@ func (s *KeeperTestSuite) createPair(baseCoinDenom, quoteCoinDenom string) liqui
 func (s *KeeperTestSuite) createPairWithLastPrice(baseCoinDenom, quoteCoinDenom string, lastPrice sdk.Dec) liquiditytypes.Pair {
 	s.T().Helper()
 	pair := s.createPair(baseCoinDenom, quoteCoinDenom)
-	pair.LastPrice = &lastPrice
-	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
+	pairState, _ := s.app.LiquidityKeeper.GetPairState(s.ctx, pair.Id)
+	pairState.LastPrice = &lastPrice
+	s.app.LiquidityKeeper.SetPairState(s.ctx, pair.Id, pairState)
 	return pair
 }
 

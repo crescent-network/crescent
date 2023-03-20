@@ -26,6 +26,7 @@ func (s *KeeperTestSuite) TestSimulation1() {
 	fuzz := func() {
 		for i := 0; i < numBlocks; i++ {
 			pair, _ = s.keeper.GetPair(s.ctx, pair.Id)
+			pairState, _ := s.keeper.GetPairState(s.ctx, pair.Id)
 			pools := s.keeper.GetAllPools(s.ctx)
 
 			totalBalancesBefore := sdk.Coins{}
@@ -42,13 +43,13 @@ func (s *KeeperTestSuite) TestSimulation1() {
 			for j := 0; j < numOrders; j++ {
 				orderer := s.addr(r.Intn(numUsers))
 				var price sdk.Dec
-				if pair.LastPrice == nil {
+				if pairState.LastPrice == nil {
 					price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10.0"))
 				} else {
 					price = utils.RandomDec(
 						r,
-						pair.LastPrice.Mul(utils.ParseDec("0.901")),
-						pair.LastPrice.Mul(utils.ParseDec("1.099")))
+						pairState.LastPrice.Mul(utils.ParseDec("0.901")),
+						pairState.LastPrice.Mul(utils.ParseDec("1.099")))
 				}
 				if r.Intn(2) == 0 { // 50% chance
 					// Buy

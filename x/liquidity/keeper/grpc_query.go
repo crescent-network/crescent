@@ -176,7 +176,8 @@ func (k Querier) Pools(c context.Context, req *types.QueryPoolsRequest) (*types.
 			pair := pairGetter(pool.PairId)
 			rx, ry := k.getPoolBalances(ctx, pool, pair)
 			ps := k.GetPoolCoinSupply(ctx, pool)
-			poolsRes = append(poolsRes, types.NewPoolResponse(pool, rx, ry, ps))
+			poolState, _ := k.GetPoolState(ctx, pool.Id)
+			poolsRes = append(poolsRes, types.NewPoolResponse(pool, poolState, rx, ry, ps))
 		}
 
 		return true, nil
@@ -210,7 +211,8 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 
 	rx, ry := k.getPoolBalances(ctx, pool, pair)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, rx, ry, ps)}, nil
+	poolState, _ := k.GetPoolState(ctx, pool.Id)
+	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, poolState, rx, ry, ps)}, nil
 }
 
 // PoolByReserveAddress queries the specific pool by the reserve account address.
@@ -237,7 +239,8 @@ func (k Querier) PoolByReserveAddress(c context.Context, req *types.QueryPoolByR
 
 	rx, ry := k.GetPoolBalances(ctx, pool)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, rx, ry, ps)}, nil
+	poolState, _ := k.GetPoolState(ctx, pool.Id)
+	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, poolState,rx, ry, ps)}, nil
 }
 
 // PoolByPoolCoinDenom queries the specific pool by the pool coin denomination.
@@ -263,7 +266,8 @@ func (k Querier) PoolByPoolCoinDenom(c context.Context, req *types.QueryPoolByPo
 
 	rx, ry := k.GetPoolBalances(ctx, pool)
 	ps := k.GetPoolCoinSupply(ctx, pool)
-	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, rx, ry, ps)}, nil
+	poolState, _ := k.GetPoolState(ctx, pool.Id)
+	return &types.QueryPoolResponse{Pool: types.NewPoolResponse(pool, poolState, rx, ry, ps)}, nil
 }
 
 // DepositRequests queries all deposit requests.
@@ -538,22 +542,25 @@ func (k Querier) OrderBooks(c context.Context, req *types.QueryOrderBooksRequest
 			return nil, status.Errorf(codes.NotFound, "pair %d doesn't exist", pairId)
 		}
 
-		if pair.LastPrice == nil {
+		pairState, _ := k.GetPairState(ctx, pairId)
+
+		if pairState.LastPrice == nil {
 			return nil, status.Errorf(codes.Unavailable, "pair %d does not have last price", pairId)
 		}
 
 		ob := amm.NewOrderBook()
 		_ = k.IterateOrdersByPair(ctx, pairId, func(order types.Order) (stop bool, err error) {
-			switch order.Status {
+			orderState, _ := k.GetOrderState(ctx, pairId, order.Id)
+			switch orderState.Status {
 			case types.OrderStatusNotExecuted,
 				types.OrderStatusNotMatched,
 				types.OrderStatusPartiallyMatched:
-				ob.AddOrder(types.NewUserOrder(order))
+				ob.AddOrder(types.NewUserOrder(order, orderState))
 			}
 			return false, nil
 		})
 
-		lowestPrice, highestPrice := k.PriceLimits(ctx, *pair.LastPrice)
+		lowestPrice, highestPrice := k.PriceLimits(ctx, *pairState.LastPrice)
 		_ = k.IteratePoolsByPair(ctx, pairId, func(pool types.Pool) (stop bool, err error) {
 			if pool.Disabled {
 				return false, nil
