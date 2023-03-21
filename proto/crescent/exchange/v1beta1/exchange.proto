@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message Params {}
+
+message SpotMarket {
+  string id          = 1;
+  string base_denom  = 2;
+  string quote_denom = 3;
+}
+
+message SpotOrder {
+  string id        = 1;
+  string orderer   = 2;
+  string market_id = 3;
+  bool   is_buy    = 4;
+  string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string open_quantity = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}

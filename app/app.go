@@ -115,6 +115,9 @@ import (
 	"github.com/crescent-network/crescent/v5/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/v5/x/claim/keeper"
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
+	"github.com/crescent-network/crescent/v5/x/exchange"
+	exchangekeeper "github.com/crescent-network/crescent/v5/x/exchange/keeper"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	"github.com/crescent-network/crescent/v5/x/farming"
 	farmingclient "github.com/crescent-network/crescent/v5/x/farming/client"
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
@@ -193,6 +196,7 @@ var (
 		lpfarm.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		marker.AppModuleBasic{},
+		exchange.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -266,6 +270,7 @@ type App struct {
 	LPFarmKeeper        lpfarmkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	MarkerKeeper        markerkeeper.Keeper
+	ExchangeKeeper      exchangekeeper.Keeper
 
 	// scoped keepers
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -343,6 +348,7 @@ func NewApp(
 		lpfarmtypes.StoreKey,
 		icahosttypes.StoreKey,
 		markertypes.StoreKey,
+		exchangetypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -596,6 +602,13 @@ func NewApp(
 		keys[markertypes.StoreKey],
 		app.GetSubspace(markertypes.ModuleName),
 	)
+	app.ExchangeKeeper = exchangekeeper.NewKeeper(
+		appCodec,
+		keys[exchangetypes.StoreKey],
+		app.GetSubspace(exchangetypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+	)
 
 	// create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -642,6 +655,7 @@ func NewApp(
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper),
+		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.AccountKeeper, app.BankKeeper),
 		app.transferModule,
 		app.icaModule,
 	)
@@ -681,6 +695,7 @@ func NewApp(
 		marketmakertypes.ModuleName,
 		icatypes.ModuleName,
 		markertypes.ModuleName,
+		exchangetypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		// EndBlocker of crisis module called AssertInvariants
@@ -713,6 +728,7 @@ func NewApp(
 		marketmakertypes.ModuleName,
 		lpfarmtypes.ModuleName,
 		icatypes.ModuleName,
+		exchangetypes.ModuleName,
 
 		markertypes.ModuleName,
 	)
@@ -746,6 +762,7 @@ func NewApp(
 		marketmakertypes.ModuleName,
 		lpfarmtypes.ModuleName,
 		markertypes.ModuleName,
+		exchangetypes.ModuleName,
 
 		// empty logic modules
 		paramstypes.ModuleName,
@@ -790,6 +807,7 @@ func NewApp(
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper),
+		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		app.transferModule,
 	)
@@ -999,6 +1017,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(marketmakertypes.ModuleName)
 	paramsKeeper.Subspace(lpfarmtypes.ModuleName)
 	paramsKeeper.Subspace(markertypes.ModuleName)
+	paramsKeeper.Subspace(exchangetypes.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 
 	return paramsKeeper

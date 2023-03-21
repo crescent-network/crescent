@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "crescent/exchange/v1beta1/exchange.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+service Msg {
+  rpc CreateSpotMarket(MsgCreateSpotMarket) returns (MsgCreateSpotMarketResponse);
+  rpc PlaceSpotLimitOrder(MsgPlaceSpotLimitOrder) returns (MsgPlaceSpotLimitOrderResponse);
+  rpc PlaceSpotMarketOrder(MsgPlaceSpotMarketOrder) returns (MsgPlaceSpotMarketOrderResponse);
+}
+
+message MsgCreateSpotMarket {
+  string sender      = 1;
+  string base_denom  = 2;
+  string quote_denom = 3;
+}
+
+message MsgCreateSpotMarketResponse {}
+
+message MsgPlaceSpotLimitOrder {
+  string sender    = 1;
+  string market_id = 2;
+  bool   is_buy    = 3;
+  string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgPlaceSpotLimitOrderResponse {}
+
+message MsgPlaceSpotMarketOrder {
+  string sender    = 1;
+  string market_id = 2;
+  bool   is_buy    = 3;
+  string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgPlaceSpotMarketOrderResponse {}

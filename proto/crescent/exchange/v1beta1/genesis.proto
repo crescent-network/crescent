@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/exchange/v1beta1/exchange.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

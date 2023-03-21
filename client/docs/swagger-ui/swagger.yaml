@@ -9685,6 +9685,41 @@ paths:
                       format: byte
       tags:
         - Query
+  /crescent/exchange/v1beta1/params:
+    get:
+      operationId: ExchangeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
 definitions:
   cosmos.base.query.v1beta1.PageRequest:
     type: object
@@ -15114,6 +15149,13 @@ definitions:
         type: string
         format: date-time
   crescent.marker.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+  crescent.exchange.v1beta1.Params:
+    type: object
+  crescent.exchange.v1beta1.QueryParamsResponse:
     type: object
     properties:
       params:
