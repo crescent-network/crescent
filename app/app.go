@@ -216,6 +216,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		marketmakertypes.ModuleName:    nil,
 		lpfarmtypes.ModuleName:         nil,
+		exchangetypes.ModuleName:       nil,
 		icatypes.ModuleName:            nil,
 	}
 )

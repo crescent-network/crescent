@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -19,15 +21,27 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (k msgServer) CreateSpotMarket(goCtx context.Context, msg *types.MsgCreateSpotMarket) (*types.MsgCreateSpotMarketResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	return &types.MsgCreateSpotMarketResponse{}, nil
+	market, err := k.Keeper.CreateSpotMarket(ctx, msg.BaseDenom, msg.QuoteDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreateSpotMarketResponse{MarketId: market.Id}, nil
 }
 
 func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlaceSpotLimitOrder) (*types.MsgPlaceSpotLimitOrderResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	return &types.MsgPlaceSpotLimitOrderResponse{}, nil
+	order, _, err := k.Keeper.PlaceSpotLimitOrder(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
+		msg.IsBuy, msg.Price, msg.Quantity)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgPlaceSpotLimitOrderResponse{OrderId: order.Id}, nil
 }
 
 func (k msgServer) PlaceSpotMarketOrder(goCtx context.Context, msg *types.MsgPlaceSpotMarketOrder) (*types.MsgPlaceSpotMarketOrderResponse, error) {

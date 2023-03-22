@@ -18,7 +18,7 @@ message SpotMarket {
   string quote_denom = 3;
 }
 
-message SpotOrder {
+message SpotLimitOrder {
   string id        = 1;
   string orderer   = 2;
   string market_id = 3;
@@ -27,4 +27,5 @@ message SpotOrder {
   string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string open_quantity = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  uint64 sequence = 8;
 }

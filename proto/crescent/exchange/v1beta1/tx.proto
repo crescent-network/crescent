@@ -22,7 +22,9 @@ message MsgCreateSpotMarket {
   string quote_denom = 3;
 }
 
-message MsgCreateSpotMarketResponse {}
+message MsgCreateSpotMarketResponse {
+  string market_id = 1;
+}
 
 message MsgPlaceSpotLimitOrder {
   string sender    = 1;
@@ -32,7 +34,9 @@ message MsgPlaceSpotLimitOrder {
   string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgPlaceSpotLimitOrderResponse {}
+message MsgPlaceSpotLimitOrderResponse {
+  string order_id = 1;
+}
 
 message MsgPlaceSpotMarketOrder {
   string sender    = 1;
@@ -41,4 +45,6 @@ message MsgPlaceSpotMarketOrder {
   string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgPlaceSpotMarketOrderResponse {}
+message MsgPlaceSpotMarketOrderResponse {
+  string order_id = 1;
+}
