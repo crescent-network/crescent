@@ -10,32 +10,32 @@ Spread(or Bid-ask spread) measures the distance of 2-sided liquidity. It represe
 
 ## Width
 
-Width(ask or bid) indicates the difference between each side of the order’s maximum and minimum price. The market price does not stand still, so the proper width of maker orders helps stay stable.
+Width(ask or bid) indicates the difference between each side of the order’s maximum and minimum price. 
 
 ## Depth
 
-Depth(ask or bid) is the total order amount on each side. If market depth is insufficient enough to handle large trade amounts, market liquidity is low despite its narrow spread. 
+Depth(ask or bid) is the total order amount on each side. Market depth refers to how large an order can be accommodated without significantly affecting the market price.
 
 ## Uptime
 
-Uptime measures the availability of liquidity. High uptime ensures that users can trade at any time they want. Uptime is calculated as a percentage of time a market maker provides orders. 
+Uptime measures the availability of liquidity. High uptime ensures that users can trade at any time they want. Uptime is calculated as a percentage of time a market maker provides liquidity. 
 
 ## Market Maker Order Type
 
-Market makers are provided a particular order type to place and cancel multiple market-making orders by a single transaction. This specific order type allows market makers atomic placement of a group of limit orders, minimizing broadcasting failures and burdens.
+Market makers are provided with dedicated MarketMaker order type. This particular order type is identical to regular limit order, but the total number of possible orders is limited. Market makers have to use market maker order type in order for their activity to be recognized by scoring module.
 
 # Scoring
 
 ## Methodology
 
 - The evaluation objective is to reward market makers who consistently provide tight and deep liquidity for users.
-- Market makers earn points according to liquidity contribution, which means there is a score cap per block.
+- Market makers are rewarded based on liquidity contribution each block. It discourages market makers from taking advantage of off-peak trading hours to collect incentives.  
 - The calculation is done off-chain based on on-chain blockchain data. The codebase is publicly available for any third-party verification.
 
 ## Market Maker Eligibility
 
-- Market maker eligibility is decided by governance every month.
-- Only registered market makers can earn incentives based on their scores. Market makers who fail to meet the uptime requirements are also given their month incentives.
+- Market maker eligibility is decided by governance on a monthly basis by looking at uptime conditions.
+- Only registered market makers can earn incentives and will receive rewards until they are disqualified.
 - New applicants are requested to submit ApplyMarketMaker transaction to be included in the uptime evaluation. Those who meet the uptime requirement will be included in eligible market makers through governance.
 - The governance can exclude existing market makers who fail to meet the requirements for 2 consecutive months or 3 months within the last 5 months.
 
@@ -43,7 +43,8 @@ Market makers are provided a particular order type to place and cancel multiple 
 
 - Orders satisfying following conditions can be recognized and evaluated:
     - Use MMOrder from eligible MMAddress 
-    - `Spread`equal or smaller than `MaxSpread`
+    - Both bid and ask orders must be open
+    - `Spread` larger than 0, equal or smaller than `MaxSpread`
     - Min(`AskWidth`,`BidWidth`) equal or larger than `MinWidth`
     - Min(`AskDepth`,`BidDepth`) equal or larger than `MinDepth`
 - Parameters (bottom of the document) are assigned differently for each pair depending on the market characteristics, and can be adjusted by governance
@@ -55,6 +56,7 @@ Market makers are provided a particular order type to place and cancel multiple 
         - No valid orders longer than `MaxDowntime` in a row
         - No valid orders longer than `MaxTotalDowntime` total in an hour
     - `LiveDay` is added as `LiveHour` is equal or larger than `MinHours` in a day
+    - The date is calculated in UTC and `LiveHour` is reset every 00:00 UTC.
 - Those who earn`LiveDay` equal or larger than `MinDays` satisfy the uptime requirement.
 - Parameters (bottom of the document) are decided and adjusted by governance.
 
