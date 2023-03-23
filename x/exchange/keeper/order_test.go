@@ -20,26 +20,26 @@ func (s *KeeperTestSuite) TestFoo() {
 	s.Require().NoError(s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, utils.ParseCoins("1000000ucre,1000000uusd")))
 	s.Require().NoError(s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, bobAddr, utils.ParseCoins("1000000ucre,1000000uusd")))
 
-	_, _, err = s.k.PlaceSpotLimitOrder(
-		s.ctx, aliceAddr, market.Id, true, utils.ParseDec("100"), sdk.NewInt(1000))
+	_, _, err = s.k.PlaceSpotOrder(
+		s.ctx, aliceAddr, market.Id, true, utils.ParseDecP("100"), sdk.NewInt(1000))
 	s.Require().NoError(err)
-	_, _, err = s.k.PlaceSpotLimitOrder(
-		s.ctx, aliceAddr, market.Id, true, utils.ParseDec("99"), sdk.NewInt(1000))
+	_, _, err = s.k.PlaceSpotOrder(
+		s.ctx, aliceAddr, market.Id, true, utils.ParseDecP("99"), sdk.NewInt(1000))
 	s.Require().NoError(err)
-	_, _, err = s.k.PlaceSpotLimitOrder(
-		s.ctx, aliceAddr, market.Id, true, utils.ParseDec("97"), sdk.NewInt(1000))
+	_, _, err = s.k.PlaceSpotOrder(
+		s.ctx, aliceAddr, market.Id, true, utils.ParseDecP("97"), sdk.NewInt(1000))
 	s.Require().NoError(err)
 
-	_, _, err = s.k.PlaceSpotLimitOrder(
-		s.ctx, bobAddr, market.Id, false, utils.ParseDec("98"), sdk.NewInt(1500))
+	_, _, err = s.k.PlaceSpotOrder(
+		s.ctx, bobAddr, market.Id, false, utils.ParseDecP("98"), sdk.NewInt(1500))
 	s.Require().NoError(err)
 
 	s.Require().Equal("1001500ucre,704000uusd", s.app.BankKeeper.GetAllBalances(s.ctx, aliceAddr).String())
 	s.Require().Equal("998500ucre,1149500uusd", s.app.BankKeeper.GetAllBalances(s.ctx, bobAddr).String())
 	s.Require().Equal("146500uusd", s.app.BankKeeper.GetAllBalances(s.ctx, s.app.AccountKeeper.GetModuleAddress(types.ModuleName)).String())
 
-	_, _, err = s.k.PlaceSpotLimitOrder(
-		s.ctx, bobAddr, market.Id, false, utils.ParseDec("96"), sdk.NewInt(1500))
+	_, _, err = s.k.PlaceSpotOrder(
+		s.ctx, bobAddr, market.Id, false, utils.ParseDecP("96"), sdk.NewInt(1500))
 	s.Require().NoError(err)
 
 	s.Require().Equal("1003000ucre,704000uusd", s.app.BankKeeper.GetAllBalances(s.ctx, aliceAddr).String())

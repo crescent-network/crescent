@@ -45,6 +45,4 @@ message MsgPlaceSpotMarketOrder {
   string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgPlaceSpotMarketOrderResponse {
-  string order_id = 1;
-}
+message MsgPlaceSpotMarketOrderResponse {}

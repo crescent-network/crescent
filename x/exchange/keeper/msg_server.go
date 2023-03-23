@@ -34,9 +34,9 @@ func (k msgServer) CreateSpotMarket(goCtx context.Context, msg *types.MsgCreateS
 func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlaceSpotLimitOrder) (*types.MsgPlaceSpotLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	order, _, err := k.Keeper.PlaceSpotLimitOrder(
+	order, _, err := k.Keeper.PlaceSpotOrder(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
-		msg.IsBuy, msg.Price, msg.Quantity)
+		msg.IsBuy, &msg.Price, msg.Quantity)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,14 @@ func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlac
 }
 
 func (k msgServer) PlaceSpotMarketOrder(goCtx context.Context, msg *types.MsgPlaceSpotMarketOrder) (*types.MsgPlaceSpotMarketOrderResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, _, err := k.Keeper.PlaceSpotOrder(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
+		msg.IsBuy, nil, msg.Quantity)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgPlaceSpotMarketOrderResponse{}, nil
 }

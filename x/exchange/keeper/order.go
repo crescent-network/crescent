@@ -10,15 +10,15 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) PlaceSpotLimitOrder(
+func (k Keeper) PlaceSpotOrder(
 	ctx sdk.Context, senderAddr sdk.AccAddress, marketId string,
-	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder, rested bool, err error) {
+	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder, rested bool, err error) {
 	market, found := k.GetSpotMarket(ctx, marketId)
 	if !found {
 		return types.SpotLimitOrder{}, false, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 	}
 
-	executedQty, executedQuoteAmt, outputs := k.executeSpotOrder(ctx, market, senderAddr, isBuy, price, qty)
+	executedQty, executedQuoteAmt, outputs := k.executeSpotOrder(ctx, market, senderAddr, isBuy, priceLimit, qty)
 	fmt.Printf("Order result - executedQty=%v executedQuoteAmt=%v\n", executedQty, executedQuoteAmt)
 
 	if executedQty.IsPositive() {
@@ -40,25 +40,25 @@ func (k Keeper) PlaceSpotLimitOrder(
 		}
 	}
 
-	remainingQty := qty.Sub(executedQty)
-	if remainingQty.IsPositive() {
-		order = k.restSpotLimitOrder(ctx, senderAddr, marketId, isBuy, price, remainingQty)
-		offerCoin := sdk.Coins{market.OfferCoin(isBuy, price, remainingQty)}
-		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, offerCoin); err != nil {
-			return types.SpotLimitOrder{}, false, err
+	if priceLimit != nil { // limit order
+		if remainingQty := qty.Sub(executedQty); remainingQty.IsPositive() {
+			order = k.restSpotLimitOrder(ctx, senderAddr, marketId, isBuy, *priceLimit, remainingQty)
+			offerCoin := sdk.Coins{market.OfferCoin(isBuy, *priceLimit, remainingQty)}
+			if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, offerCoin); err != nil {
+				return types.SpotLimitOrder{}, false, err
+			}
+			rested = true
 		}
-		rested = true
 	}
-
 	return
 }
 
 func (k Keeper) executeSpotOrder(
 	ctx sdk.Context, market types.SpotMarket, senderAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int) (executedQty, executedQuoteAmt sdk.Int, outputs []banktypes.Output) {
+	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (executedQty, executedQuoteAmt sdk.Int, outputs []banktypes.Output) {
 	remainingQty := qty
 	executedQuoteAmt = types.ZeroInt
-	k.IterateSpotOrderBook(ctx, market.Id, !isBuy, price, func(order types.SpotLimitOrder) (stop bool) {
+	k.IterateSpotOrderBook(ctx, market.Id, !isBuy, priceLimit, func(order types.SpotLimitOrder) (stop bool) {
 		executableQty := types.MinInt(order.OpenQuantity, remainingQty)
 		quoteAmt := types.QuoteAmount(isBuy, order.Price, executableQty)
 		executedQuoteAmt = executedQuoteAmt.Add(quoteAmt)

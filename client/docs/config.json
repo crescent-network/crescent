@@ -90,7 +90,7 @@
       "url": "./tmp-swagger-gen/crescent/exchange/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "ExchangeParams",
+          "Params": "ExchangeParams"
         }
       }
     }

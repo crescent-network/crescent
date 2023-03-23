@@ -75,17 +75,29 @@ func (k Keeper) SetSpotOrderBookOrder(ctx sdk.Context, order types.SpotLimitOrde
 	store.Set(types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, seq), []byte(order.Id))
 }
 
-func (k Keeper) IterateSpotOrderBook(ctx sdk.Context, marketId string, isBuy bool, endPrice sdk.Dec, cb func(order types.SpotLimitOrder) (stop bool)) {
+func (k Keeper) IterateSpotOrderBook(ctx sdk.Context, marketId string, isBuy bool, priceLimit *sdk.Dec, cb func(order types.SpotLimitOrder) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
 	if isBuy {
+		var start []byte
+		if priceLimit == nil {
+			start = types.GetSpotOrderBookIteratorPrefix(marketId, true)
+		} else {
+			start = types.GetSpotOrderBookIteratorEndBytes(marketId, true, *priceLimit)
+		}
 		iter = store.ReverseIterator(
-			types.GetSpotOrderBookIteratorEndBytes(marketId, true, endPrice),
+			start,
 			sdk.PrefixEndBytes(types.GetSpotOrderBookIteratorPrefix(marketId, true)))
 	} else {
+		var end []byte
+		if priceLimit == nil {
+			end = sdk.PrefixEndBytes(types.GetSpotOrderBookIteratorPrefix(marketId, false))
+		} else {
+			end = types.GetSpotOrderBookIteratorEndBytes(marketId, false, *priceLimit)
+		}
 		iter = store.Iterator(
 			types.GetSpotOrderBookIteratorPrefix(marketId, false),
-			types.GetSpotOrderBookIteratorEndBytes(marketId, false, endPrice))
+			end)
 	}
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
