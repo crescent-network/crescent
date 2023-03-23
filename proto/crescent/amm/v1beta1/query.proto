@@ -1,16 +1,16 @@
 syntax = "proto3";
 
-package crescent.exchange.v1beta1;
+package crescent.amm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "crescent/exchange/v1beta1/exchange.proto";
+import "crescent/amm/v1beta1/amm.proto";
 
-option go_package = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option go_package = "github.com/crescent-network/crescent/v5/x/amm/types";
 
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/crescent/exchange/v1beta1/params";
+    option (google.api.http).get = "/crescent/amm/v1beta1/params";
   }
 }
 

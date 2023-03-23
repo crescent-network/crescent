@@ -22,7 +22,7 @@ type Querier struct {
 
 var _ types.QueryServer = Querier{}
 
-// Params queries the parameters of the lending module.
+// Params queries the parameters of the module.
 func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/crescent-network/crescent/v5/x/exchange/types"
+	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly,

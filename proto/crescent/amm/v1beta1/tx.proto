@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+service Msg {
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+  rpc AddLiquidity(MsgAddLiquidity) returns (MsgAddLiquidityResponse);
+  rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
+}
+
+message MsgCreatePool {
+  string sender = 1;
+}
+
+message MsgCreatePoolResponse {}
+
+message MsgAddLiquidity {
+  string sender = 1;
+}
+
+message MsgAddLiquidityResponse {}
+
+message MsgRemoveLiquidity {
+  string sender = 1;
+}
+
+message MsgRemoveLiquidityResponse {}
