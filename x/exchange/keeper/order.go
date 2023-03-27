@@ -80,10 +80,10 @@ func (k Keeper) executeSpotOrder(
 			k.DeleteSpotOrderBookOrder(ctx, order)
 			k.DeleteSpotLimitOrder(ctx, order)
 			// TODO: emit event
-			fmt.Println("Deleting order -", order.Price, order.Sequence)
+			fmt.Println("Deleting order -", order.Price, order.Id)
 		} else {
 			k.SetSpotLimitOrder(ctx, order)
-			fmt.Println("Updating order -", order.Price, order.Sequence, "->", order.OpenQuantity)
+			fmt.Println("Updating order -", order.Price, order.Id, "->", order.OpenQuantity)
 		}
 
 		remainingQty = remainingQty.Sub(executableQty)
@@ -96,8 +96,8 @@ func (k Keeper) executeSpotOrder(
 func (k Keeper) restSpotLimitOrder(
 	ctx sdk.Context, senderAddr sdk.AccAddress, marketId string,
 	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder) {
-	seq := k.GetNextOrderSequence(ctx)
-	order = types.NewSpotLimitOrder(senderAddr, marketId, isBuy, price, qty, seq)
+	orderId := k.GetNextOrderIdWithUpdate(ctx)
+	order = types.NewSpotLimitOrder(orderId, senderAddr, marketId, isBuy, price, qty)
 	k.SetSpotLimitOrder(ctx, order)
 	k.SetSpotOrderBookOrder(ctx, order)
 	return

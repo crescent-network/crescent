@@ -19,7 +19,7 @@ message SpotMarket {
 }
 
 message SpotLimitOrder {
-  string id        = 1;
+  uint64 id        = 1;
   string orderer   = 2;
   string market_id = 3;
   bool   is_buy    = 4;
@@ -27,5 +27,4 @@ message SpotLimitOrder {
   string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string open_quantity = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  uint64 sequence = 8;
 }

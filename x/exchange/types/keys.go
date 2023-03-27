@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	OrderSequenceKey            = []byte{0x01}
+	LastOrderIdKey              = []byte{0x01}
 	SpotMarketKeyPrefix         = []byte{0x02}
 	SpotLimitOrderKeyPrefix     = []byte{0x03}
 	SpotOrderBookOrderKeyPrefix = []byte{0x04}
@@ -29,20 +29,28 @@ func GetSpotMarketKey(marketId string) []byte {
 	return append(SpotMarketKeyPrefix, marketId...)
 }
 
-func GetSpotLimitOrderKey(marketId, orderId string) []byte {
-	return append(append(SpotLimitOrderKeyPrefix, marketId...), orderId...)
-}
-
-func GetSpotOrderBookOrderKey(marketId string, isBuy bool, price sdk.Dec, seq uint64) (key []byte) {
-	key = append(SpotOrderBookOrderKeyPrefix, marketId...)
-	key = append(key, boolToByte(isBuy))
-	key = append(key, sdk.SortableDecBytes(price)...)
-	key = append(key, sdk.Uint64ToBigEndian(seq)...)
+func GetSpotLimitOrderKey(marketId string, orderId uint64) (key []byte) {
+	key = append(SpotLimitOrderKeyPrefix, marketId...)
+	key = append(key, sdk.Uint64ToBigEndian(orderId)...)
 	return
 }
 
-func GetSpotOrderBookIteratorPrefix(marketId string, isBuy bool) []byte {
-	return append(append(SpotOrderBookOrderKeyPrefix, marketId...), boolToByte(isBuy))
+func GetSpotOrderBookOrderKey(marketId string, isBuy bool, price sdk.Dec, orderId uint64) (key []byte) {
+	key = append(SpotOrderBookOrderKeyPrefix, marketId...)
+	key = append(key, boolToByte(isBuy))
+	key = append(key, sdk.SortableDecBytes(price)...)
+	if isBuy {
+		key = append(key, sdk.Uint64ToBigEndian(-orderId)...)
+	} else {
+		key = append(key, sdk.Uint64ToBigEndian(orderId)...)
+	}
+	return
+}
+
+func GetSpotOrderBookIteratorPrefix(marketId string, isBuy bool) (key []byte) {
+	key = append(SpotOrderBookOrderKeyPrefix, marketId...)
+	key = append(key, boolToByte(isBuy))
+	return
 }
 
 func GetSpotOrderBookIteratorEndBytes(marketId string, isBuy bool, price sdk.Dec) []byte {
