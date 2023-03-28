@@ -14,19 +14,51 @@ service Msg {
 }
 
 message MsgCreatePool {
-  string sender = 1;
+  string sender       = 1;
+  string denom0       = 2;
+  string denom1       = 3;
+  uint32 tick_spacing = 4;
 }
 
-message MsgCreatePoolResponse {}
+message MsgCreatePoolResponse {
+  uint64 pool_id = 1;
+}
 
 message MsgAddLiquidity {
-  string sender = 1;
+  string sender          = 1;
+  uint64 pool_id         = 2;
+  int32  lower_tick      = 3;
+  int32  upper_tick      = 4;
+  string desired_amount0 = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string desired_amount1 = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string min_amount0 = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string min_amount1 = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgAddLiquidityResponse {}
+message MsgAddLiquidityResponse {
+  uint64 position_id = 1;
+  string liquidity   = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string amount0 = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string amount1 = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
 
 message MsgRemoveLiquidity {
-  string sender = 1;
+  string sender      = 1;
+  uint64 position_id = 2;
+  string liquidity   = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string min_amount0 = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string min_amount1 = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgRemoveLiquidityResponse {}
+message MsgRemoveLiquidityResponse {
+  string amount0 = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string amount1 = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}

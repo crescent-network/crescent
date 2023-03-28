@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -19,19 +21,45 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	return &types.MsgCreatePoolResponse{}, nil
+	pool, err := k.Keeper.CreatePool(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Denom0, msg.Denom1, msg.TickSpacing)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreatePoolResponse{PoolId: pool.Id}, nil
 }
 
 func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidity) (*types.MsgAddLiquidityResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	return &types.MsgAddLiquidityResponse{}, nil
+	_, liquidity, amt0, amt1, err := k.Keeper.AddLiquidity(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PoolId, msg.LowerTick, msg.UpperTick,
+		msg.DesiredAmount0, msg.DesiredAmount1, msg.MinAmount0, msg.MinAmount1)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgAddLiquidityResponse{
+		Liquidity: liquidity,
+		Amount0:   amt0,
+		Amount1:   amt1,
+	}, nil
 }
 
 func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLiquidity) (*types.MsgRemoveLiquidityResponse, error) {
-	//ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	return &types.MsgRemoveLiquidityResponse{}, nil
+	_, amt0, amt1, err := k.Keeper.RemoveLiquidity(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId,
+		msg.Liquidity, msg.MinAmount0, msg.MinAmount1)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRemoveLiquidityResponse{
+		Amount0: amt0,
+		Amount1: amt1,
+	}, nil
 }
