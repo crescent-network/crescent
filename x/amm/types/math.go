@@ -32,3 +32,33 @@ func LiquidityForAmounts(currentSqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amt0,
 	}
 	return LiquidityForAmount1(sqrtPriceA, sqrtPriceB, amt1)
 }
+
+func amount0Delta(sqrtPriceA, sqrtPriceB sdk.Dec, liquidity sdk.Int, roundUp bool) sdk.Int {
+	intermediate := sqrtPriceB.Sub(sqrtPriceA).MulInt(liquidity)
+	if roundUp {
+		return intermediate.QuoRoundUp(sqrtPriceB).QuoRoundUp(sqrtPriceA).Ceil().TruncateInt()
+	}
+	return intermediate.QuoTruncate(sqrtPriceB).QuoTruncate(sqrtPriceA).TruncateInt()
+}
+
+func amount1Delta(sqrtPriceA, sqrtPriceB sdk.Dec, liquidity sdk.Int, roundUp bool) sdk.Int {
+	intermediate := sqrtPriceB.Sub(sqrtPriceA).MulInt(liquidity)
+	if roundUp {
+		return intermediate.Ceil().TruncateInt()
+	}
+	return intermediate.TruncateInt()
+}
+
+func Amount0Delta(sqrtPriceA, sqrtPriceB sdk.Dec, liquidity sdk.Int) sdk.Int {
+	if liquidity.IsNegative() {
+		return amount0Delta(sqrtPriceA, sqrtPriceB, liquidity.Neg(), false).Neg()
+	}
+	return amount0Delta(sqrtPriceA, sqrtPriceB, liquidity, true)
+}
+
+func Amount1Delta(sqrtPriceA, sqrtPriceB sdk.Dec, liquidity sdk.Int) sdk.Int {
+	if liquidity.IsNegative() {
+		return amount1Delta(sqrtPriceA, sqrtPriceB, liquidity.Neg(), false).Neg()
+	}
+	return amount1Delta(sqrtPriceA, sqrtPriceB, liquidity, true)
+}

@@ -6,7 +6,7 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func SqrtPriceFromTick(tick int32, prec int) (sdk.Dec, error) {
+func SqrtPriceAtTick(tick int32, prec int) (sdk.Dec, error) {
 	price := exchangetypes.PriceAtTick(tick, prec)
 	return price.ApproxSqrt()
 }

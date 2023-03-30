@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (k Keeper) AddLiquidity(
@@ -18,20 +19,44 @@ func (k Keeper) AddLiquidity(
 		return
 	}
 
-	// TODO: if this is the first liquidity, initialize pool price
+	if pool.CurrentSqrtPrice.IsZero() {
+		if desiredAmt0.IsZero() || desiredAmt1.IsZero() {
+			err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must specify both coins for initial liquidity")
+			return
+		}
 
-	sqrtPriceA, err := types.SqrtPriceFromTick(lowerTick, 4) // TODO: use tick prec param
+		currentPrice := desiredAmt1.ToDec().Quo(desiredAmt0.ToDec())
+		var currentSqrtPrice sdk.Dec
+		currentSqrtPrice, err = currentPrice.ApproxSqrt()
+		if err != nil {
+			return
+		}
+
+		pool.CurrentSqrtPrice = currentSqrtPrice
+		pool.CurrentTick = exchangetypes.TickAtPrice(currentSqrtPrice, 4) // TODO: use tick prec param
+		k.SetPool(ctx, pool)
+	}
+
+	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, 4) // TODO: use tick prec param
 	if err != nil {
 		return
 	}
-	sqrtPriceB, err := types.SqrtPriceFromTick(upperTick, 4) // TODO: use tick prec param
+	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, 4) // TODO: use tick prec param
 	if err != nil {
 		return
 	}
-	liquidity = types.LiquidityForAmounts(pool.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
+	liquidity = types.LiquidityForAmounts(
+		pool.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 	fmt.Printf("DEBUG: liquidity=%s\n", liquidity)
 
-	position, amt0, amt1 = k.modifyPosition(ctx, pool, senderAddr, lowerTick, upperTick, liquidity)
+	position, amt0, amt1 = k.modifyPosition(
+		ctx, pool, senderAddr, lowerTick, upperTick, sqrtPriceA, sqrtPriceB, liquidity)
+
+	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
+		// TODO: use more verbose error message
+		err = types.ErrConditionsNotMet
+		return
+	}
 
 	return
 }
@@ -43,7 +68,7 @@ func (k Keeper) RemoveLiquidity(
 
 func (k Keeper) modifyPosition(
 	ctx sdk.Context, pool types.Pool, ownerAddr sdk.AccAddress,
-	lowerTick, upperTick int32, liquidityDelta sdk.Int) (position types.Position, amt0, amt1 sdk.Int) {
+	lowerTick, upperTick int32, sqrtPriceA, sqrtPriceB sdk.Dec, liquidityDelta sdk.Int) (position types.Position, amt0, amt1 sdk.Int) {
 	// TODO: validate ticks
 	var found bool
 	position, found = k.GetPositionByParams(ctx, pool.Id, ownerAddr, lowerTick, upperTick)
@@ -61,6 +86,15 @@ func (k Keeper) modifyPosition(
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
 	k.SetPosition(ctx, position)
 
-	// calculate amt0, amt1
+	if pool.CurrentTick < lowerTick {
+		amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
+		amt1 = sdk.ZeroInt()
+	} else if pool.CurrentTick < upperTick {
+		amt0 = types.Amount0Delta(pool.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
+		amt1 = types.Amount1Delta(sqrtPriceA, pool.CurrentSqrtPrice, liquidityDelta)
+	} else {
+		amt0 = sdk.ZeroInt()
+		amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
+	}
 	return
 }
