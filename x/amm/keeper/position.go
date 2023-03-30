@@ -49,8 +49,7 @@ func (k Keeper) AddLiquidity(
 		pool.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 	fmt.Printf("DEBUG: liquidity=%s\n", liquidity)
 
-	position, amt0, amt1 = k.modifyPosition(
-		ctx, pool, senderAddr, lowerTick, upperTick, sqrtPriceA, sqrtPriceB, liquidity)
+	position, amt0, amt1 = k.modifyPosition(ctx, pool, senderAddr, lowerTick, upperTick, liquidity)
 
 	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
 		// TODO: use more verbose error message
@@ -63,12 +62,42 @@ func (k Keeper) AddLiquidity(
 
 func (k Keeper) RemoveLiquidity(
 	ctx sdk.Context, senderAddr sdk.AccAddress, positionId uint64, liquidity, minAmt0, minAmt1 sdk.Int) (position types.Position, amt0, amt1 sdk.Int, err error) {
+	var found bool
+	position, found = k.GetPosition(ctx, positionId)
+	if !found {
+		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
+		return
+	}
+
+	if senderAddr.String() != position.Owner {
+		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the sender")
+		return
+	}
+
+	if position.Liquidity.LT(liquidity) {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position liquidity is smaller than the liquidity specified")
+		return
+	}
+
+	pool, found := k.GetPool(ctx, position.PoolId)
+	if !found { // sanity check
+		panic("pool not found")
+	}
+
+	position, amt0, amt1 = k.modifyPosition(ctx, pool, senderAddr, position.LowerTick, position.UpperTick, liquidity)
+
+	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
+		// TODO: use more verbose error message
+		err = types.ErrConditionsNotMet
+		return
+	}
+
 	return
 }
 
 func (k Keeper) modifyPosition(
 	ctx sdk.Context, pool types.Pool, ownerAddr sdk.AccAddress,
-	lowerTick, upperTick int32, sqrtPriceA, sqrtPriceB sdk.Dec, liquidityDelta sdk.Int) (position types.Position, amt0, amt1 sdk.Int) {
+	lowerTick, upperTick int32, liquidityDelta sdk.Int) (position types.Position, amt0, amt1 sdk.Int) {
 	// TODO: validate ticks
 	var found bool
 	position, found = k.GetPositionByParams(ctx, pool.Id, ownerAddr, lowerTick, upperTick)
@@ -86,6 +115,15 @@ func (k Keeper) modifyPosition(
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
 	k.SetPosition(ctx, position)
 
+	// TODO: handle prec param and error correctly
+	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, 4)
+	if err != nil {
+		panic(err)
+	}
+	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, 4)
+	if err != nil {
+		panic(err)
+	}
 	if pool.CurrentTick < lowerTick {
 		amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		amt1 = sdk.ZeroInt()

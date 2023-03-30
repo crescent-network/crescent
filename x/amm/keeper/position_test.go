@@ -18,4 +18,9 @@ func (s *KeeperTestSuite) TestAddLiquidity() {
 		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.NewInt(10000), sdk.NewInt(10000))
 	s.Require().NoError(err)
 	fmt.Println(position, liquidity, amt0, amt1)
+
+	_, amt0, amt1, err = s.k.RemoveLiquidity(
+		s.ctx, senderAddr, 1, sdk.NewInt(9472135), sdk.ZeroInt(), sdk.ZeroInt())
+	s.Require().NoError(err)
+	fmt.Println(amt0, amt1)
 }
