@@ -623,6 +623,7 @@ func NewApp(
 		app.GetSubspace(ammtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.ExchangeKeeper,
 	)
 
 	// create static IBC router, add transfer route, then set and seal it

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -11,7 +9,7 @@ import (
 )
 
 func (k Keeper) AddLiquidity(
-	ctx sdk.Context, senderAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32,
+	ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32,
 	desiredAmt0, desiredAmt1, minAmt0, minAmt1 sdk.Int) (position types.Position, liquidity, amt0, amt1 sdk.Int, err error) {
 	pool, found := k.GetPool(ctx, poolId)
 	if !found {
@@ -47,9 +45,8 @@ func (k Keeper) AddLiquidity(
 	}
 	liquidity = types.LiquidityForAmounts(
 		pool.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
-	fmt.Printf("DEBUG: liquidity=%s\n", liquidity)
 
-	position, amt0, amt1 = k.modifyPosition(ctx, pool, senderAddr, lowerTick, upperTick, liquidity)
+	position, amt0, amt1 = k.modifyPosition(ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
 
 	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
 		// TODO: use more verbose error message
@@ -57,11 +54,16 @@ func (k Keeper) AddLiquidity(
 		return
 	}
 
+	depositCoins := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
+	if err = k.bankKeeper.SendCoins(ctx, ownerAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), depositCoins); err != nil {
+		return
+	}
+
 	return
 }
 
 func (k Keeper) RemoveLiquidity(
-	ctx sdk.Context, senderAddr sdk.AccAddress, positionId uint64, liquidity, minAmt0, minAmt1 sdk.Int) (position types.Position, amt0, amt1 sdk.Int, err error) {
+	ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64, liquidity, minAmt0, minAmt1 sdk.Int) (position types.Position, amt0, amt1 sdk.Int, err error) {
 	var found bool
 	position, found = k.GetPosition(ctx, positionId)
 	if !found {
@@ -69,8 +71,8 @@ func (k Keeper) RemoveLiquidity(
 		return
 	}
 
-	if senderAddr.String() != position.Owner {
-		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the sender")
+	if ownerAddr.String() != position.Owner {
+		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
 		return
 	}
 
@@ -84,7 +86,8 @@ func (k Keeper) RemoveLiquidity(
 		panic("pool not found")
 	}
 
-	position, amt0, amt1 = k.modifyPosition(ctx, pool, senderAddr, position.LowerTick, position.UpperTick, liquidity)
+	position, amt0, amt1 = k.modifyPosition(ctx, pool, ownerAddr, position.LowerTick, position.UpperTick, liquidity.Neg())
+	amt0, amt1 = amt0.Neg(), amt1.Neg()
 
 	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
 		// TODO: use more verbose error message
@@ -106,14 +109,23 @@ func (k Keeper) modifyPosition(
 		position = types.NewPosition(positionId, pool.Id, ownerAddr, lowerTick, upperTick)
 	}
 
-	k.updateTick(ctx, pool.Id, lowerTick, pool.CurrentTick, liquidityDelta, false)
-	k.updateTick(ctx, pool.Id, upperTick, pool.CurrentTick, liquidityDelta, true)
+	flippedLower := k.updateTick(ctx, pool.Id, lowerTick, pool.CurrentTick, liquidityDelta, false)
+	flippedUpper := k.updateTick(ctx, pool.Id, upperTick, pool.CurrentTick, liquidityDelta, true)
 
 	// TODO: get fee growth inside
 
 	// TODO: set position with new fee growth inside
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
 	k.SetPosition(ctx, position)
+
+	if liquidityDelta.IsNegative() {
+		if flippedLower {
+			k.DeleteTickInfo(ctx, pool.Id, lowerTick)
+		}
+		if flippedUpper {
+			k.DeleteTickInfo(ctx, pool.Id, upperTick)
+		}
+	}
 
 	// TODO: handle prec param and error correctly
 	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, 4)
@@ -130,6 +142,8 @@ func (k Keeper) modifyPosition(
 	} else if pool.CurrentTick < upperTick {
 		amt0 = types.Amount0Delta(pool.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
 		amt1 = types.Amount1Delta(sqrtPriceA, pool.CurrentSqrtPrice, liquidityDelta)
+		pool.CurrentLiquidity = pool.CurrentLiquidity.Add(liquidityDelta)
+		k.SetPool(ctx, pool)
 	} else {
 		amt0 = sdk.ZeroInt()
 		amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
