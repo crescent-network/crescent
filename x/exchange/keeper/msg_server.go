@@ -23,7 +23,8 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k msgServer) CreateSpotMarket(goCtx context.Context, msg *types.MsgCreateSpotMarket) (*types.MsgCreateSpotMarketResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	market, err := k.Keeper.CreateSpotMarket(ctx, msg.BaseDenom, msg.QuoteDenom)
+	market, err := k.Keeper.CreateSpotMarket(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.BaseDenom, msg.QuoteDenom)
 	if err != nil {
 		return nil, err
 	}

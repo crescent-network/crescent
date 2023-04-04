@@ -12,7 +12,7 @@ func (s *KeeperTestSuite) TestFoo() {
 	aliceAddr := utils.TestAddress(1)
 	bobAddr := utils.TestAddress(2)
 
-	market, err := s.k.CreateSpotMarket(s.ctx, "ucre", "uusd")
+	market, err := s.k.CreateSpotMarket(s.ctx, utils.TestAddress(3), "ucre", "uusd")
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, utils.ParseCoins("1000000ucre,1000000uusd")))

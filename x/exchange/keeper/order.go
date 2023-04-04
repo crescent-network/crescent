@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -11,15 +9,19 @@ import (
 )
 
 func (k Keeper) PlaceSpotOrder(
-	ctx sdk.Context, senderAddr sdk.AccAddress, marketId string,
+	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder, rested bool, err error) {
 	market, found := k.GetSpotMarket(ctx, marketId)
 	if !found {
 		return types.SpotLimitOrder{}, false, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 	}
 
-	executedQty, executedQuoteAmt, outputs := k.executeSpotOrder(ctx, market, senderAddr, isBuy, priceLimit, qty)
-	fmt.Printf("Order result - executedQty=%v executedQuoteAmt=%v\n", executedQty, executedQuoteAmt)
+	lastPrice, executedQty, executedQuoteAmt, outputs := k.executeSpotOrder(ctx, market, ordererAddr, isBuy, priceLimit, qty)
+
+	if !lastPrice.IsNil() {
+		market.LastPrice = &lastPrice
+		k.SetSpotMarket(ctx, market)
+	}
 
 	if executedQty.IsPositive() {
 		executedQuoteCoin := sdk.Coins{sdk.NewCoin(market.QuoteDenom, executedQuoteAmt)}
@@ -27,11 +29,11 @@ func (k Keeper) PlaceSpotOrder(
 		var inputs []banktypes.Input
 		if isBuy {
 			inputs = append(inputs,
-				banktypes.NewInput(senderAddr, executedQuoteCoin),
+				banktypes.NewInput(ordererAddr, executedQuoteCoin),
 				banktypes.NewInput(k.accountKeeper.GetModuleAddress(types.ModuleName), executedBaseCoin))
 		} else {
 			inputs = append(inputs,
-				banktypes.NewInput(senderAddr, executedBaseCoin),
+				banktypes.NewInput(ordererAddr, executedBaseCoin),
 				banktypes.NewInput(k.accountKeeper.GetModuleAddress(types.ModuleName), executedQuoteCoin))
 		}
 
@@ -42,9 +44,9 @@ func (k Keeper) PlaceSpotOrder(
 
 	if priceLimit != nil { // limit order
 		if remainingQty := qty.Sub(executedQty); remainingQty.IsPositive() {
-			order = k.restSpotLimitOrder(ctx, senderAddr, marketId, isBuy, *priceLimit, remainingQty)
+			order = k.restSpotLimitOrder(ctx, ordererAddr, marketId, isBuy, *priceLimit, remainingQty)
 			offerCoin := sdk.Coins{market.OfferCoin(isBuy, *priceLimit, remainingQty)}
-			if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, offerCoin); err != nil {
+			if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, ordererAddr, types.ModuleName, offerCoin); err != nil {
 				return types.SpotLimitOrder{}, false, err
 			}
 			rested = true
@@ -54,8 +56,8 @@ func (k Keeper) PlaceSpotOrder(
 }
 
 func (k Keeper) executeSpotOrder(
-	ctx sdk.Context, market types.SpotMarket, senderAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (executedQty, executedQuoteAmt sdk.Int, outputs []banktypes.Output) {
+	ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress,
+	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (lastPrice sdk.Dec, executedQty, executedQuoteAmt sdk.Int, outputs []banktypes.Output) {
 	remainingQty := qty
 	executedQuoteAmt = types.ZeroInt
 	k.IterateSpotOrderBook(ctx, market.Id, !isBuy, priceLimit, func(order types.SpotLimitOrder) (stop bool) {
@@ -74,16 +76,15 @@ func (k Keeper) executeSpotOrder(
 		}
 		outputs = append(outputs,
 			banktypes.Output{Address: order.Orderer, Coins: paidCoin},
-			banktypes.NewOutput(senderAddr, receivedCoin))
+			banktypes.NewOutput(ordererAddr, receivedCoin))
 
+		lastPrice = order.Price
 		if order.OpenQuantity.IsZero() {
 			k.DeleteSpotOrderBookOrder(ctx, order)
 			k.DeleteSpotLimitOrder(ctx, order)
 			// TODO: emit event
-			fmt.Println("Deleting order -", order.Price, order.Id)
 		} else {
 			k.SetSpotLimitOrder(ctx, order)
-			fmt.Println("Updating order -", order.Price, order.Id, "->", order.OpenQuantity)
 		}
 
 		remainingQty = remainingQty.Sub(executableQty)
@@ -94,10 +95,10 @@ func (k Keeper) executeSpotOrder(
 }
 
 func (k Keeper) restSpotLimitOrder(
-	ctx sdk.Context, senderAddr sdk.AccAddress, marketId string,
+	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder) {
 	orderId := k.GetNextOrderIdWithUpdate(ctx)
-	order = types.NewSpotLimitOrder(orderId, senderAddr, marketId, isBuy, price, qty)
+	order = types.NewSpotLimitOrder(orderId, ordererAddr, marketId, isBuy, price, qty)
 	k.SetSpotLimitOrder(ctx, order)
 	k.SetSpotOrderBookOrder(ctx, order)
 	return

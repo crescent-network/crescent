@@ -7,7 +7,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) CreateSpotMarket(ctx sdk.Context, baseDenom, quoteDenom string) (market types.SpotMarket, err error) {
+func (k Keeper) CreateSpotMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, baseDenom, quoteDenom string) (market types.SpotMarket, err error) {
 	marketId := types.DeriveMarketId(baseDenom, quoteDenom)
 	if _, found := k.GetSpotMarket(ctx, marketId); found {
 		return market, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "spot market already exists")

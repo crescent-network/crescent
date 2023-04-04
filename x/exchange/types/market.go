@@ -20,6 +20,7 @@ func NewSpotMarket(baseDenom, quoteDenom string) SpotMarket {
 		Id:         marketId,
 		BaseDenom:  baseDenom,
 		QuoteDenom: quoteDenom,
+		LastPrice:  nil,
 	}
 }
 
