@@ -17,7 +17,7 @@ func (k Keeper) AddLiquidity(
 		return
 	}
 
-	if pool.CurrentSqrtPrice.IsZero() {
+	if !pool.Initialized {
 		if desiredAmt0.IsZero() || desiredAmt1.IsZero() {
 			err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must specify both coins for initial liquidity")
 			return
@@ -32,6 +32,7 @@ func (k Keeper) AddLiquidity(
 
 		pool.CurrentSqrtPrice = currentSqrtPrice
 		pool.CurrentTick = exchangetypes.TickAtPrice(currentSqrtPrice, 4) // TODO: use tick prec param
+		pool.Initialized = true
 		k.SetPool(ctx, pool)
 	}
 
