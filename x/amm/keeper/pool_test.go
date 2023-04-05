@@ -12,7 +12,7 @@ import (
 
 func (s *KeeperTestSuite) TestPoolOrders() {
 	creatorAddr := utils.TestAddress(1)
-	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, creatorAddr, utils.ParseCoins("10000000ucre,10000000uusd"))
+	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, creatorAddr, utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
 
 	market, err := s.app.ExchangeKeeper.CreateSpotMarket(s.ctx, creatorAddr, "ucre", "uusd")
 	s.Require().NoError(err)
@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 
 	_, _, _, _, err = s.k.AddLiquidity(
 		s.ctx, creatorAddr, pool.Id, -20000, 2500,
-		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.NewInt(1000000))
+		sdk.NewInt(100_000000), sdk.NewInt(100_000000), sdk.NewInt(100_000000), sdk.NewInt(100_000000))
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.k.UpdateOrders(s.ctx, market.Id, -20000, 2500))
@@ -31,4 +31,10 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 		fmt.Println(order.IsBuy, order.Price, order.OpenQuantity)
 		return false
 	})
+
+	ordererAddr := utils.TestAddress(2)
+	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, ordererAddr, utils.ParseCoins("1000_000000uusd"))
+	s.Require().NoError(
+		s.app.ExchangeKeeper.PlaceSpotMarketOrder(
+			s.ctx, ordererAddr, market.Id, true, sdk.NewInt(15_000000)))
 }

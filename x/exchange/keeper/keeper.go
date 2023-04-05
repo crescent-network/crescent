@@ -19,6 +19,7 @@ type Keeper struct {
 
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+	hooks         types.ExchangeHooks
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -45,4 +46,12 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k *Keeper) SetHooks(hooks types.ExchangeHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set hooks twice")
+	}
+	k.hooks = hooks
+	return k
 }

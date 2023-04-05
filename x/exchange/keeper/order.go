@@ -8,6 +8,19 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+func (k Keeper) PlaceSpotLimitOrder(
+	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
+	isBuy bool, priceLimit sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder, rested bool, err error) {
+	return k.PlaceSpotOrder(ctx, ordererAddr, marketId, isBuy, &priceLimit, qty)
+}
+
+func (k Keeper) PlaceSpotMarketOrder(
+	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
+	isBuy bool, qty sdk.Int) error {
+	_, _, err := k.PlaceSpotOrder(ctx, ordererAddr, marketId, isBuy, nil, qty)
+	return err
+}
+
 func (k Keeper) PlaceSpotOrder(
 	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder, rested bool, err error) {
@@ -86,6 +99,7 @@ func (k Keeper) executeSpotOrder(
 		} else {
 			k.SetSpotLimitOrder(ctx, order)
 		}
+		k.AfterSpotOrderExecuted(ctx, order, executableQty)
 
 		remainingQty = remainingQty.Sub(executableQty)
 		return remainingQty.IsZero()
