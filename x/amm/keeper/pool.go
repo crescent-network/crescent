@@ -14,7 +14,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, 
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
 	pool := types.NewPool(poolId, denom0, denom1, tickSpacing, reserveAddr)
 	k.SetPool(ctx, pool)
-	k.SetPoolIndex(ctx, pool)
+	k.SetPoolsByMarketIndex(ctx, pool)
+	k.SetPoolByReserveAddressIndex(ctx, pool)
 
 	return pool, nil
 }
@@ -25,7 +26,7 @@ func (k Keeper) UpdateOrders(ctx sdk.Context, marketId string, lowerTick, upperT
 		panic("market not found")
 	}
 
-	k.IteratePoolsByMarketId(ctx, market.Id, func(pool types.Pool) (stop bool) {
+	k.IteratePoolsByMarket(ctx, market.Id, func(pool types.Pool) (stop bool) {
 		k.updateOrders(ctx, market, pool, lowerTick, upperTick)
 		return false
 	})

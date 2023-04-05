@@ -65,17 +65,24 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store.Set(types.GetPoolKey(pool.Id), bz)
 }
 
-func (k Keeper) SetPoolIndex(ctx sdk.Context, pool types.Pool) {
+func (k Keeper) SetPoolsByMarketIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPoolIndexKey(exchangetypes.DeriveMarketId(pool.Denom0, pool.Denom1), pool.Id), []byte{})
+	store.Set(types.GetPoolsByMarketIndexKey(exchangetypes.DeriveMarketId(pool.Denom0, pool.Denom1), pool.Id), []byte{})
 }
 
-func (k Keeper) IteratePoolsByMarketId(ctx sdk.Context, marketId string, cb func(pool types.Pool) (stop bool)) {
+func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByMarketIdKeyPrefix(marketId))
+	store.Set(
+		types.GetPoolByReserveAddressIndexKey(sdk.MustAccAddressFromBech32(pool.ReserveAddress)),
+		sdk.Uint64ToBigEndian(pool.Id))
+}
+
+func (k Keeper) IteratePoolsByMarket(ctx sdk.Context, marketId string, cb func(pool types.Pool) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByMarketIndexKeyPrefix(marketId))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		_, poolId := types.ParsePoolIndexKey(iter.Key())
+		_, poolId := types.ParsePoolsByMarketIndexKey(iter.Key())
 		pool, found := k.GetPool(ctx, poolId)
 		if !found { // sanity check
 			panic("pool not found")
@@ -84,6 +91,15 @@ func (k Keeper) IteratePoolsByMarketId(ctx sdk.Context, marketId string, cb func
 			break
 		}
 	}
+}
+
+func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddress) (pool types.Pool, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetPoolByReserveAddressIndexKey(reserveAddr))
+	if bz == nil {
+		return
+	}
+	return k.GetPool(ctx, sdk.BigEndianToUint64(bz))
 }
 
 func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (position types.Position, found bool) {
@@ -170,4 +186,27 @@ func (k Keeper) IterateTickInfosAbove(ctx sdk.Context, poolId uint64, currentTic
 func (k Keeper) DeleteTickInfo(ctx sdk.Context, poolId uint64, tick int32) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetTickInfoKey(poolId, tick))
+}
+
+func (k Keeper) GetExecutedQuantity(ctx sdk.Context, poolId uint64) (qty sdk.Int) {
+	store := ctx.TransientStore(k.tsKey)
+	bz := store.Get(types.GetExecutedQuantityKey(poolId))
+	if bz == nil {
+		return sdk.ZeroInt()
+	}
+	var eq types.ExecutedQuantity
+	k.cdc.MustUnmarshal(bz, &eq)
+	return eq.Quantity
+}
+
+func (k Keeper) SetExecutedQuantity(ctx sdk.Context, poolId uint64, qty sdk.Int) {
+	store := ctx.TransientStore(k.tsKey)
+	bz := k.cdc.MustMarshal(&types.ExecutedQuantity{Quantity: qty})
+	store.Set(types.GetExecutedQuantityKey(poolId), bz)
+}
+
+func (k Keeper) IncrementExecutedQuantity(ctx sdk.Context, poolId uint64, qty sdk.Int) {
+	executedQty := k.GetExecutedQuantity(ctx, poolId)
+	executedQty = executedQty.Add(qty)
+	k.SetExecutedQuantity(ctx, poolId, executedQty)
 }

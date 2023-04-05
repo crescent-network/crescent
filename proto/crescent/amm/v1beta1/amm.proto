@@ -39,3 +39,7 @@ message TickInfo {
   string net_liquidity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
+
+message ExecutedQuantity {
+  string quantity = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}

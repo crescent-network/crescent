@@ -16,6 +16,8 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
+	TStoreKey = "transient_amm"
+
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
@@ -24,27 +26,33 @@ const (
 )
 
 var (
-	LastPoolIdKey          = []byte{0x40}
-	LastPositionIdKey      = []byte{0x41}
-	PoolKeyPrefix          = []byte{0x42} // poolId => Pool
-	PoolIndexKeyPrefix     = []byte{0x43} // marketId + poolId => nil
-	PositionKeyPrefix      = []byte{0x44} // positionId => Position
-	PositionIndexKeyPrefix = []byte{0x45} // poolId + owner + lowerTick + upperTick => positionId
-	TickInfoKeyPrefix      = []byte{0x46} // poolId + tick => TickInfo
+	LastPoolIdKey                      = []byte{0x40}
+	LastPositionIdKey                  = []byte{0x41}
+	PoolKeyPrefix                      = []byte{0x42} // poolId => Pool
+	PoolByReserveAddressIndexKeyPrefix = []byte{0x43} // reserveAddress => poolId
+	PoolsByMarketIndexKeyPrefix        = []byte{0x44} // marketId + poolId => nil
+	PositionKeyPrefix                  = []byte{0x45} // positionId => Position
+	PositionIndexKeyPrefix             = []byte{0x46} // poolId + owner + lowerTick + upperTick => positionId
+	TickInfoKeyPrefix                  = []byte{0x47} // poolId + tick => TickInfo
+	ExecutedQuantityKeyPrefix          = []byte{0x48} // poolId => executedQuantity
 )
 
 func GetPoolKey(poolId uint64) []byte {
 	return append(PoolKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
 }
 
-func GetPoolIndexKey(marketId string, poolId uint64) []byte {
-	key := append(PoolIndexKeyPrefix, utils.LengthPrefixString(marketId)...)
+func GetPoolByReserveAddressIndexKey(reserveAddr sdk.AccAddress) []byte {
+	return append(PoolByReserveAddressIndexKeyPrefix, reserveAddr...)
+}
+
+func GetPoolsByMarketIndexKey(marketId string, poolId uint64) []byte {
+	key := append(PoolsByMarketIndexKeyPrefix, utils.LengthPrefixString(marketId)...)
 	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
 	return key
 }
 
-func GetPoolsByMarketIdKeyPrefix(marketId string) []byte {
-	return append(PoolIndexKeyPrefix, utils.LengthPrefixString(marketId)...)
+func GetPoolsByMarketIndexKeyPrefix(marketId string) []byte {
+	return append(PoolsByMarketIndexKeyPrefix, utils.LengthPrefixString(marketId)...)
 }
 
 func GetPositionKey(positionId uint64) []byte {
@@ -67,7 +75,11 @@ func GetTickInfoKeyPrefix(poolId uint64) []byte {
 	return append(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
 }
 
-func ParsePoolIndexKey(key []byte) (marketId string, poolId uint64) {
+func GetExecutedQuantityKey(poolId uint64) []byte {
+	return append(ExecutedQuantityKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
+}
+
+func ParsePoolsByMarketIndexKey(key []byte) (marketId string, poolId uint64) {
 	marketIdLen := key[1]
 	marketId = string(key[2 : 2+marketIdLen])
 	poolId = sdk.BigEndianToUint64(key[2+marketIdLen:])

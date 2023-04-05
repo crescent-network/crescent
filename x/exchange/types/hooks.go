@@ -5,7 +5,8 @@ import (
 )
 
 type ExchangeHooks interface {
-	AfterSpotOrderExecuted(ctx sdk.Context, order SpotLimitOrder, qty sdk.Int)
+	AfterRestingSpotOrderExecuted(ctx sdk.Context, order SpotLimitOrder, qty sdk.Int)
+	AfterSpotOrderExecuted(ctx sdk.Context, market SpotMarket, ordererAddr sdk.AccAddress, isBuy bool, lastPrice sdk.Dec, qty, quoteAmt sdk.Int)
 }
 
 type MultiExchangeHooks []ExchangeHooks
@@ -14,8 +15,14 @@ func NewMultiExchangeHooks(hooks ...ExchangeHooks) MultiExchangeHooks {
 	return hooks
 }
 
-func (hs MultiExchangeHooks) AfterSpotOrderExecuted(ctx sdk.Context, order SpotLimitOrder, qty sdk.Int) {
+func (hs MultiExchangeHooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order SpotLimitOrder, qty sdk.Int) {
 	for _, h := range hs {
-		h.AfterSpotOrderExecuted(ctx, order, qty)
+		h.AfterRestingSpotOrderExecuted(ctx, order, qty)
+	}
+}
+
+func (hs MultiExchangeHooks) AfterSpotOrderExecuted(ctx sdk.Context, market SpotMarket, ordererAddr sdk.AccAddress, isBuy bool, lastPrice sdk.Dec, qty, quoteAmt sdk.Int) {
+	for _, h := range hs {
+		h.AfterSpotOrderExecuted(ctx, market, ordererAddr, isBuy, lastPrice, qty, quoteAmt)
 	}
 }

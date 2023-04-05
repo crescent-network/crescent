@@ -99,12 +99,13 @@ func (k Keeper) executeSpotOrder(
 		} else {
 			k.SetSpotLimitOrder(ctx, order)
 		}
-		k.AfterSpotOrderExecuted(ctx, order, executableQty)
+		k.AfterRestingSpotOrderExecuted(ctx, order, executableQty)
 
 		remainingQty = remainingQty.Sub(executableQty)
 		return remainingQty.IsZero()
 	})
 	executedQty = qty.Sub(remainingQty)
+	k.AfterSpotOrderExecuted(ctx, market, ordererAddr, isBuy, lastPrice, executedQty, executedQuoteAmt)
 	return
 }
 
