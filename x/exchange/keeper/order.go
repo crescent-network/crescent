@@ -60,7 +60,7 @@ func (k Keeper) executeSpotOrder(
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (lastPrice sdk.Dec, executedQty, executedQuoteAmt sdk.Int, outputs []banktypes.Output) {
 	remainingQty := qty
 	executedQuoteAmt = types.ZeroInt
-	k.IterateSpotOrderBook(ctx, market.Id, !isBuy, priceLimit, func(order types.SpotLimitOrder) (stop bool) {
+	k.IterateSpotOrderBookOrders(ctx, market.Id, !isBuy, priceLimit, func(order types.SpotLimitOrder) (stop bool) {
 		executableQty := types.MinInt(order.OpenQuantity, remainingQty)
 		quoteAmt := types.QuoteAmount(isBuy, order.Price, executableQty)
 		executedQuoteAmt = executedQuoteAmt.Add(quoteAmt)

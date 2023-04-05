@@ -36,8 +36,32 @@ func (k Keeper) UpdateOrders(ctx sdk.Context, marketId string, lowerTick, upperT
 func (k Keeper) updateOrders(
 	ctx sdk.Context, market exchangetypes.SpotMarket,
 	pool types.Pool, lowerTick, upperTick int32) {
-	// TODO: place buy orders
-	k.IterateTicksAbovePoolPriceWithLiquidity(ctx, pool.Id, upperTick, func(tick int32, liquidity sdk.Int) {
+	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+	initialReserves := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
+	reserve0, reserve1 := initialReserves.AmountOf(pool.Denom0), initialReserves.AmountOf(pool.Denom1)
+	k.IterateTicksBelowPoolPriceWithLiquidity(ctx, pool, lowerTick, func(tick int32, liquidity sdk.Int) {
+		price := exchangetypes.PriceAtTick(tick, 4) // TODO: use tick prec param
+		sqrtPrice, err := price.ApproxSqrt()
+		if err != nil { // TODO: return error
+			panic(err)
+		}
+		sqrtPriceAbove, err := types.SqrtPriceAtTick(tick+int32(pool.TickSpacing), 4)
+		if err != nil {
+			panic(err)
+		}
+		sqrtPriceAbove = sdk.MinDec(pool.CurrentSqrtPrice, sqrtPriceAbove)
+		qty := sdk.MinInt(
+			reserve1.ToDec().QuoTruncate(price).TruncateInt(),
+			sqrtPriceAbove.Sub(sqrtPrice).MulInt(liquidity).QuoTruncate(price).TruncateInt())
+		reserve1 = reserve1.Sub(market.OfferCoin(true, price, qty).Amount)
+		_, _, err = k.exchangeKeeper.PlaceSpotOrder(
+			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), market.Id,
+			true, &price, qty)
+		if err != nil {
+			panic(err)
+		}
+	})
+	k.IterateTicksAbovePoolPriceWithLiquidity(ctx, pool, upperTick, func(tick int32, liquidity sdk.Int) {
 		price := exchangetypes.PriceAtTick(tick, 4) // TODO: use tick prec param
 		sqrtPrice, err := price.ApproxSqrt()
 		if err != nil { // TODO: return error
@@ -48,7 +72,10 @@ func (k Keeper) updateOrders(
 			panic(err)
 		}
 		sqrtPriceBelow = sdk.MaxDec(pool.CurrentSqrtPrice, sqrtPriceBelow)
-		qty := sdk.OneDec().Quo(sqrtPriceBelow).Sub(sdk.OneDec().Quo(sqrtPrice)).MulInt(liquidity).TruncateInt()
+		qty := sdk.MinInt(
+			reserve0,
+			sdk.OneDec().QuoTruncate(sqrtPriceBelow).Sub(sdk.OneDec().QuoTruncate(sqrtPrice)).MulInt(liquidity).TruncateInt())
+		reserve0 = reserve0.Sub(qty)
 		_, _, err = k.exchangeKeeper.PlaceSpotOrder(
 			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), market.Id,
 			false, &price, qty)
@@ -58,11 +85,24 @@ func (k Keeper) updateOrders(
 	})
 }
 
-func (k Keeper) IterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, poolId uint64, highestTick int32, cb func(tick int32, liquidity sdk.Int)) {
-	pool, found := k.GetPool(ctx, poolId)
-	if !found { // sanity check
-		panic("pool not found")
-	}
+func (k Keeper) IterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, lowestTick int32, cb func(tick int32, liquidity sdk.Int)) {
+	currentTick := pool.CurrentTick
+	liquidity := pool.CurrentLiquidity
+	k.IterateTickInfosBelow(ctx, pool.Id, pool.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+		if liquidity.IsPositive() {
+			for ; currentTick >= tick && currentTick >= lowestTick; currentTick -= int32(pool.TickSpacing) {
+				cb(currentTick, liquidity)
+			}
+		}
+		if tick <= lowestTick {
+			return true
+		}
+		liquidity = liquidity.Add(tickInfo.NetLiquidity)
+		return false
+	})
+}
+
+func (k Keeper) IterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, highestTick int32, cb func(tick int32, liquidity sdk.Int)) {
 	currentTick := pool.CurrentTick
 	liquidity := pool.CurrentLiquidity
 	// TODO: What if there's no tick infos above the current pool's tick but

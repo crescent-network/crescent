@@ -71,7 +71,7 @@ func (k Keeper) SetSpotOrderBookOrder(ctx sdk.Context, order types.SpotLimitOrde
 		sdk.Uint64ToBigEndian(order.Id))
 }
 
-func (k Keeper) IterateSpotOrderBook(ctx sdk.Context, marketId string, isBuy bool, priceLimit *sdk.Dec, cb func(order types.SpotLimitOrder) (stop bool)) {
+func (k Keeper) IterateSpotOrderBookOrders(ctx sdk.Context, marketId string, isBuy bool, priceLimit *sdk.Dec, cb func(order types.SpotLimitOrder) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
 	if isBuy {
@@ -112,4 +112,26 @@ func (k Keeper) DeleteSpotOrderBookOrder(ctx sdk.Context, order types.SpotLimitO
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(
 		types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id))
+}
+
+func (k Keeper) IterateSpotOrderBook(ctx sdk.Context, marketId string, cb func(order types.SpotLimitOrder) (stop bool)) {
+	iterate := func(iter sdk.Iterator) {
+		for ; iter.Valid(); iter.Next() {
+			orderId := sdk.BigEndianToUint64(iter.Value())
+			order, found := k.GetSpotLimitOrder(ctx, marketId, orderId)
+			if !found { // sanity check
+				panic("order not found")
+			}
+			if cb(order) {
+				break
+			}
+		}
+	}
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStoreReversePrefixIterator(store, types.GetSpotOrderBookIteratorPrefix(marketId, false))
+	iterate(iter)
+	_ = iter.Close()
+	iter = sdk.KVStoreReversePrefixIterator(store, types.GetSpotOrderBookIteratorPrefix(marketId, true))
+	defer iter.Close()
+	iterate(iter)
 }

@@ -24,11 +24,11 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	app := chain.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	suite.app = app
-	suite.ctx = ctx
-	suite.k = suite.app.AMMKeeper
+	s.app = app
+	s.ctx = ctx
+	s.k = s.app.AMMKeeper
 }
