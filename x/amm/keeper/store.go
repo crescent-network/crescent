@@ -188,25 +188,18 @@ func (k Keeper) DeleteTickInfo(ctx sdk.Context, poolId uint64, tick int32) {
 	store.Delete(types.GetTickInfoKey(poolId, tick))
 }
 
-func (k Keeper) GetExecutedQuantity(ctx sdk.Context, poolId uint64) (qty sdk.Int) {
+func (k Keeper) GetLastOrderResult(ctx sdk.Context, ownerAddr sdk.AccAddress) (res types.LastOrderResult, found bool) {
 	store := ctx.TransientStore(k.tsKey)
-	bz := store.Get(types.GetExecutedQuantityKey(poolId))
+	bz := store.Get(types.GetLastOrderResultKey(ownerAddr))
 	if bz == nil {
-		return sdk.ZeroInt()
+		return
 	}
-	var eq types.ExecutedQuantity
-	k.cdc.MustUnmarshal(bz, &eq)
-	return eq.Quantity
+	k.cdc.MustUnmarshal(bz, &res)
+	return res, true
 }
 
-func (k Keeper) SetExecutedQuantity(ctx sdk.Context, poolId uint64, qty sdk.Int) {
+func (k Keeper) SetLastOrderResult(ctx sdk.Context, ownerAddr sdk.AccAddress, res types.LastOrderResult) {
 	store := ctx.TransientStore(k.tsKey)
-	bz := k.cdc.MustMarshal(&types.ExecutedQuantity{Quantity: qty})
-	store.Set(types.GetExecutedQuantityKey(poolId), bz)
-}
-
-func (k Keeper) IncrementExecutedQuantity(ctx sdk.Context, poolId uint64, qty sdk.Int) {
-	executedQty := k.GetExecutedQuantity(ctx, poolId)
-	executedQty = executedQty.Add(qty)
-	k.SetExecutedQuantity(ctx, poolId, executedQty)
+	bz := k.cdc.MustMarshal(&res)
+	store.Set(types.GetLastOrderResultKey(ownerAddr), bz)
 }

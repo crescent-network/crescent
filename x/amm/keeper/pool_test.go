@@ -25,8 +25,6 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 		sdk.NewInt(100_000000), sdk.NewInt(100_000000), sdk.NewInt(100_000000), sdk.NewInt(100_000000))
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.k.UpdateOrders(s.ctx, market.Id, -20000, 2500))
-
 	s.app.ExchangeKeeper.IterateSpotOrderBook(s.ctx, market.Id, func(order types.SpotLimitOrder) (stop bool) {
 		fmt.Println(order.IsBuy, order.Price, order.OpenQuantity)
 		return false

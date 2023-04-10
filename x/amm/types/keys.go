@@ -34,49 +34,59 @@ var (
 	PositionKeyPrefix                  = []byte{0x45} // positionId => Position
 	PositionIndexKeyPrefix             = []byte{0x46} // poolId + owner + lowerTick + upperTick => positionId
 	TickInfoKeyPrefix                  = []byte{0x47} // poolId + tick => TickInfo
-	ExecutedQuantityKeyPrefix          = []byte{0x48} // poolId => executedQuantity
+	LastOrderResultKeyPrefix           = []byte{0x48} // poolId => LastPoolOrderResult
+	PoolOrderIdRangeKeyPrefix          = []byte{0x49} // startOrderId + endOrderId => poolId
 )
 
 func GetPoolKey(poolId uint64) []byte {
-	return append(PoolKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
+	return utils.Key(PoolKeyPrefix, sdk.Uint64ToBigEndian(poolId))
 }
 
 func GetPoolByReserveAddressIndexKey(reserveAddr sdk.AccAddress) []byte {
-	return append(PoolByReserveAddressIndexKeyPrefix, reserveAddr...)
+	return utils.Key(PoolByReserveAddressIndexKeyPrefix, reserveAddr)
 }
 
 func GetPoolsByMarketIndexKey(marketId string, poolId uint64) []byte {
-	key := append(PoolsByMarketIndexKeyPrefix, utils.LengthPrefixString(marketId)...)
-	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
-	return key
+	return utils.Key(
+		PoolsByMarketIndexKeyPrefix,
+		utils.LengthPrefixString(marketId),
+		sdk.Uint64ToBigEndian(poolId))
 }
 
 func GetPoolsByMarketIndexKeyPrefix(marketId string) []byte {
-	return append(PoolsByMarketIndexKeyPrefix, utils.LengthPrefixString(marketId)...)
+	return utils.Key(PoolsByMarketIndexKeyPrefix, utils.LengthPrefixString(marketId))
 }
 
 func GetPositionKey(positionId uint64) []byte {
-	return append(PositionKeyPrefix, sdk.Uint64ToBigEndian(positionId)...)
+	return utils.Key(PositionKeyPrefix, sdk.Uint64ToBigEndian(positionId))
 }
 
 func GetPositionIndexKey(poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upperTick int32) []byte {
-	key := append(PositionIndexKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
-	key = append(key, address.MustLengthPrefix(ownerAddr)...)
-	key = append(key, tickToBytes(lowerTick)...)
-	key = append(key, tickToBytes(upperTick)...)
-	return key
+	return utils.Key(
+		PositionIndexKeyPrefix,
+		sdk.Uint64ToBigEndian(poolId),
+		address.MustLengthPrefix(ownerAddr),
+		tickToBytes(lowerTick),
+		tickToBytes(upperTick))
 }
 
 func GetTickInfoKey(poolId uint64, tick int32) []byte {
-	return append(append(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId)...), tickToBytes(tick)...)
+	return utils.Key(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId), tickToBytes(tick))
 }
 
 func GetTickInfoKeyPrefix(poolId uint64) []byte {
-	return append(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
+	return utils.Key(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId))
 }
 
-func GetExecutedQuantityKey(poolId uint64) []byte {
-	return append(ExecutedQuantityKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
+func GetLastOrderResultKey(ordererAddr sdk.AccAddress) []byte {
+	return utils.Key(LastOrderResultKeyPrefix, ordererAddr)
+}
+
+func GetPoolOrderIdRangeKey(startOrderId, endOrderId uint64) []byte {
+	return utils.Key(
+		PoolOrderIdRangeKeyPrefix,
+		sdk.Uint64ToBigEndian(startOrderId),
+		sdk.Uint64ToBigEndian(endOrderId))
 }
 
 func ParsePoolsByMarketIndexKey(key []byte) (marketId string, poolId uint64) {

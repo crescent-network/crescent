@@ -31,23 +31,24 @@ func (k Keeper) AddLiquidity(
 		}
 
 		pool.CurrentSqrtPrice = currentSqrtPrice
-		pool.CurrentTick = exchangetypes.TickAtPrice(currentSqrtPrice, 4) // TODO: use tick prec param
+		pool.CurrentTick = exchangetypes.TickAtPrice(currentSqrtPrice, TickPrecision) // TODO: use tick prec param
 		pool.Initialized = true
 		k.SetPool(ctx, pool)
 	}
 
-	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, 4) // TODO: use tick prec param
+	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
 	if err != nil {
 		return
 	}
-	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, 4) // TODO: use tick prec param
+	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, TickPrecision) // TODO: use tick prec param
 	if err != nil {
 		return
 	}
 	liquidity = types.LiquidityForAmounts(
 		pool.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 
-	position, amt0, amt1 = k.modifyPosition(ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
+	position, amt0, amt1 = k.modifyPosition(
+		ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
 
 	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
 		// TODO: use more verbose error message
@@ -56,9 +57,12 @@ func (k Keeper) AddLiquidity(
 	}
 
 	depositCoins := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
-	if err = k.bankKeeper.SendCoins(ctx, ownerAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), depositCoins); err != nil {
+	if err = k.bankKeeper.SendCoins(
+		ctx, ownerAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), depositCoins); err != nil {
 		return
 	}
+
+	k.UpdatePoolOrders(ctx, pool, lowerTick, upperTick)
 
 	return
 }
@@ -87,7 +91,8 @@ func (k Keeper) RemoveLiquidity(
 		panic("pool not found")
 	}
 
-	position, amt0, amt1 = k.modifyPosition(ctx, pool, ownerAddr, position.LowerTick, position.UpperTick, liquidity.Neg())
+	position, amt0, amt1 = k.modifyPosition(
+		ctx, pool, ownerAddr, position.LowerTick, position.UpperTick, liquidity.Neg())
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
 
 	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
@@ -95,6 +100,14 @@ func (k Keeper) RemoveLiquidity(
 		err = types.ErrConditionsNotMet
 		return
 	}
+
+	withdrawCoins := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
+	if err = k.bankKeeper.SendCoins(
+		ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), ownerAddr, withdrawCoins); err != nil {
+		return
+	}
+
+	k.UpdatePoolOrders(ctx, pool, position.LowerTick, position.UpperTick)
 
 	return
 }
@@ -129,11 +142,11 @@ func (k Keeper) modifyPosition(
 	}
 
 	// TODO: handle prec param and error correctly
-	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, 4)
+	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, TickPrecision)
 	if err != nil {
 		panic(err)
 	}
-	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, 4)
+	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, TickPrecision)
 	if err != nil {
 		panic(err)
 	}

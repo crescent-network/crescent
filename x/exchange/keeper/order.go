@@ -24,9 +24,12 @@ func (k Keeper) PlaceSpotMarketOrder(
 func (k Keeper) PlaceSpotOrder(
 	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder, rested bool, err error) {
+	if !qty.IsPositive() {
+		return order, false, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "quantity must be positive")
+	}
 	market, found := k.GetSpotMarket(ctx, marketId)
 	if !found {
-		return types.SpotLimitOrder{}, false, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+		return order, false, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 	}
 
 	lastPrice, executedQty, executedQuoteAmt, outputs := k.executeSpotOrder(ctx, market, ordererAddr, isBuy, priceLimit, qty)
@@ -51,7 +54,7 @@ func (k Keeper) PlaceSpotOrder(
 		}
 
 		if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
-			return types.SpotLimitOrder{}, false, err
+			return order, false, err
 		}
 	}
 
@@ -60,7 +63,7 @@ func (k Keeper) PlaceSpotOrder(
 			order = k.restSpotLimitOrder(ctx, ordererAddr, marketId, isBuy, *priceLimit, remainingQty)
 			offerCoin := sdk.Coins{market.OfferCoin(isBuy, *priceLimit, remainingQty)}
 			if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, ordererAddr, types.ModuleName, offerCoin); err != nil {
-				return types.SpotLimitOrder{}, false, err
+				return order, false, err
 			}
 			rested = true
 		}
@@ -78,6 +81,7 @@ func (k Keeper) executeSpotOrder(
 		quoteAmt := types.QuoteAmount(isBuy, order.Price, executableQty)
 		executedQuoteAmt = executedQuoteAmt.Add(quoteAmt)
 
+		k.AfterRestingSpotOrderExecuted(ctx, order, executableQty) // TODO: rename the hook?
 		order.OpenQuantity = order.OpenQuantity.Sub(executableQty)
 		var paidCoin, receivedCoin sdk.Coins
 		if isBuy {
@@ -99,7 +103,6 @@ func (k Keeper) executeSpotOrder(
 		} else {
 			k.SetSpotLimitOrder(ctx, order)
 		}
-		k.AfterRestingSpotOrderExecuted(ctx, order, executableQty)
 
 		remainingQty = remainingQty.Sub(executableQty)
 		return remainingQty.IsZero()

@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 const (
@@ -26,46 +28,55 @@ var (
 )
 
 func GetSpotMarketKey(marketId string) []byte {
-	return append(SpotMarketKeyPrefix, marketId...)
+	return utils.Key(SpotMarketKeyPrefix, []byte(marketId))
 }
 
 func GetSpotLimitOrderKey(marketId string, orderId uint64) (key []byte) {
-	key = append(SpotLimitOrderKeyPrefix, marketId...)
-	key = append(key, sdk.Uint64ToBigEndian(orderId)...)
-	return
+	return utils.Key(SpotLimitOrderKeyPrefix, utils.LengthPrefixString(marketId), sdk.Uint64ToBigEndian(orderId))
 }
 
 func GetSpotOrderBookOrderKey(marketId string, isBuy bool, price sdk.Dec, orderId uint64) (key []byte) {
-	key = append(SpotOrderBookOrderKeyPrefix, marketId...)
-	key = append(key, boolToByte(isBuy))
-	key = append(key, sdk.SortableDecBytes(price)...)
+	var orderIdBytes []byte
 	if isBuy {
-		key = append(key, sdk.Uint64ToBigEndian(-orderId)...)
+		orderIdBytes = sdk.Uint64ToBigEndian(-orderId)
 	} else {
-		key = append(key, sdk.Uint64ToBigEndian(orderId)...)
+		orderIdBytes = sdk.Uint64ToBigEndian(orderId)
 	}
-	return
+	return utils.Key(
+		SpotOrderBookOrderKeyPrefix,
+		utils.LengthPrefixString(marketId),
+		isBuyToBytes(isBuy),
+		sdk.SortableDecBytes(price),
+		orderIdBytes)
 }
 
 func GetSpotOrderBookIteratorPrefix(marketId string, isBuy bool) (key []byte) {
-	key = append(SpotOrderBookOrderKeyPrefix, marketId...)
-	key = append(key, boolToByte(isBuy))
-	return
+	return utils.Key(
+		SpotOrderBookOrderKeyPrefix,
+		utils.LengthPrefixString(marketId),
+		isBuyToBytes(isBuy))
 }
 
 func GetSpotOrderBookIteratorEndBytes(marketId string, isBuy bool, price sdk.Dec) []byte {
-	prefix := append(SpotOrderBookOrderKeyPrefix, marketId...)
-	prefix = append(prefix, boolToByte(isBuy))
-	prefix = append(prefix, sdk.SortableDecBytes(price)...)
+	prefix := utils.Key(
+		SpotOrderBookOrderKeyPrefix,
+		utils.LengthPrefixString(marketId),
+		isBuyToBytes(isBuy),
+		sdk.SortableDecBytes(price))
 	if isBuy {
 		return prefix
 	}
 	return sdk.PrefixEndBytes(prefix)
 }
 
-func boolToByte(b bool) byte {
-	if b {
-		return 1
+var (
+	buyBytes  = []byte{1}
+	sellBytes = []byte{0}
+)
+
+func isBuyToBytes(isBuy bool) []byte {
+	if isBuy {
+		return buyBytes
 	}
-	return 0
+	return sellBytes
 }
