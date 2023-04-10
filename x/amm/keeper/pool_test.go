@@ -17,7 +17,7 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	market, err := s.app.ExchangeKeeper.CreateSpotMarket(s.ctx, creatorAddr, "ucre", "uusd")
 	s.Require().NoError(err)
 
-	pool, err := s.k.CreatePool(s.ctx, creatorAddr, "ucre", "uusd", 100)
+	pool, err := s.k.CreatePool(s.ctx, creatorAddr, "ucre", "uusd", 100, sdk.NewDec(1))
 	s.Require().NoError(err)
 
 	_, _, _, _, err = s.k.AddLiquidity(

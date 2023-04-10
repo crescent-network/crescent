@@ -18,6 +18,7 @@ message MsgCreatePool {
   string denom0       = 2;
   string denom1       = 3;
   uint32 tick_spacing = 4;
+  string price = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 message MsgCreatePoolResponse {

@@ -12,7 +12,7 @@ import (
 func (s *KeeperTestSuite) TestAddLiquidity() {
 	senderAddr := utils.TestAddress(1)
 	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, senderAddr, utils.ParseCoins("10000000ucre,10000000uusd"))
-	pool, err := s.k.CreatePool(s.ctx, senderAddr, "ucre", "uusd", 10)
+	pool, err := s.k.CreatePool(s.ctx, senderAddr, "ucre", "uusd", 10, sdk.NewDec(1))
 	s.Require().NoError(err)
 	fmt.Println(pool)
 	position, liquidity, amt0, amt1, err := s.k.AddLiquidity(

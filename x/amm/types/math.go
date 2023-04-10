@@ -62,3 +62,14 @@ func Amount1Delta(sqrtPriceA, sqrtPriceB sdk.Dec, liquidity sdk.Int) sdk.Int {
 	}
 	return amount1Delta(sqrtPriceA, sqrtPriceB, liquidity, true)
 }
+
+func NextSqrtPriceFromAmount0RoundingUp(sqrtPrice sdk.Dec, liquidity sdk.Int, amt sdk.Int) sdk.Dec {
+	// amt == 0?
+	numerator := liquidity.ToDec()
+	product := sqrtPrice.MulInt(amt)
+	denominator := product.Add(numerator)
+	if denominator.GTE(numerator) {
+		return numerator.Mul(sqrtPrice).Quo(denominator)
+	}
+	return numerator.Quo(numerator.Quo(sqrtPrice).Add(amt.ToDec()))
+}

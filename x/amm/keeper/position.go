@@ -5,7 +5,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v5/x/amm/types"
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (k Keeper) AddLiquidity(
@@ -15,25 +14,6 @@ func (k Keeper) AddLiquidity(
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
 		return
-	}
-
-	if !pool.Initialized {
-		if desiredAmt0.IsZero() || desiredAmt1.IsZero() {
-			err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must specify both coins for initial liquidity")
-			return
-		}
-
-		currentPrice := desiredAmt1.ToDec().Quo(desiredAmt0.ToDec())
-		var currentSqrtPrice sdk.Dec
-		currentSqrtPrice, err = currentPrice.ApproxSqrt()
-		if err != nil {
-			return
-		}
-
-		pool.CurrentSqrtPrice = currentSqrtPrice
-		pool.CurrentTick = exchangetypes.TickAtPrice(currentSqrtPrice, TickPrecision) // TODO: use tick prec param
-		pool.Initialized = true
-		k.SetPool(ctx, pool)
 	}
 
 	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param

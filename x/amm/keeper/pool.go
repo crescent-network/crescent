@@ -7,12 +7,14 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32) (types.Pool, error) {
+func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) (types.Pool, error) {
 	// TODO: charge pool creation fee from senderAddr
 	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
 
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
-	pool := types.NewPool(poolId, denom0, denom1, tickSpacing, reserveAddr)
+	pool := types.NewPool(
+		poolId, denom0, denom1, tickSpacing, reserveAddr,
+		exchangetypes.TickAtPrice(price, TickPrecision), price)
 	k.SetPool(ctx, pool)
 	k.SetPoolsByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
@@ -41,16 +43,17 @@ func (k Keeper) updateSpotMarketOrders(
 	initialReserves := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
 	reserve0, reserve1 := initialReserves.AmountOf(pool.Denom0), initialReserves.AmountOf(pool.Denom1)
 	k.IterateTicksBelowPoolPriceWithLiquidity(ctx, pool, lowerTick, func(tick int32, liquidity sdk.Int) {
-		price := exchangetypes.PriceAtTick(tick, TickPrecision) // TODO: use tick prec param
-		sqrtPrice, err := price.ApproxSqrt()
-		if err != nil { // TODO: return error
-			panic(err)
-		}
+		// TODO: check out of tick range
 		sqrtPriceAbove, err := types.SqrtPriceAtTick(tick+int32(pool.TickSpacing), TickPrecision)
 		if err != nil {
 			panic(err)
 		}
 		sqrtPriceAbove = sdk.MinDec(pool.CurrentSqrtPrice, sqrtPriceAbove)
+		price := exchangetypes.PriceAtTick(tick, TickPrecision)
+		sqrtPrice, err := price.ApproxSqrt()
+		if err != nil {
+			panic(err)
+		}
 		qty := sdk.MinInt(
 			reserve1.ToDec().QuoTruncate(price).TruncateInt(),
 			sqrtPriceAbove.Sub(sqrtPrice).MulInt(liquidity).QuoTruncate(price).TruncateInt())
@@ -63,16 +66,16 @@ func (k Keeper) updateSpotMarketOrders(
 		}
 	})
 	k.IterateTicksAbovePoolPriceWithLiquidity(ctx, pool, upperTick, func(tick int32, liquidity sdk.Int) {
-		price := exchangetypes.PriceAtTick(tick, TickPrecision) // TODO: use tick prec param
-		sqrtPrice, err := price.ApproxSqrt()
-		if err != nil { // TODO: return error
-			panic(err)
-		}
 		sqrtPriceBelow, err := types.SqrtPriceAtTick(tick-int32(pool.TickSpacing), TickPrecision)
 		if err != nil {
 			panic(err)
 		}
 		sqrtPriceBelow = sdk.MaxDec(pool.CurrentSqrtPrice, sqrtPriceBelow)
+		price := exchangetypes.PriceAtTick(tick, TickPrecision) // TODO: use tick prec param
+		sqrtPrice, err := price.ApproxSqrt()
+		if err != nil {
+			panic(err)
+		}
 		qty := sdk.MinInt(
 			reserve0,
 			sdk.OneDec().QuoTruncate(sqrtPriceBelow).Sub(sdk.OneDec().QuoTruncate(sqrtPrice)).MulInt(liquidity).TruncateInt())
