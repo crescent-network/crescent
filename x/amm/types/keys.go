@@ -1,12 +1,11 @@
 package types
 
 import (
-	"encoding/binary"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 const (
@@ -34,8 +33,7 @@ var (
 	PositionKeyPrefix                  = []byte{0x45} // positionId => Position
 	PositionIndexKeyPrefix             = []byte{0x46} // poolId + owner + lowerTick + upperTick => positionId
 	TickInfoKeyPrefix                  = []byte{0x47} // poolId + tick => TickInfo
-	LastOrderResultKeyPrefix           = []byte{0x48} // poolId => LastPoolOrderResult
-	PoolOrderIdRangeKeyPrefix          = []byte{0x49} // startOrderId + endOrderId => poolId
+	PoolOrderKeyPrefix                 = []byte{0x48} // poolId + marketId + tick => orderId
 )
 
 func GetPoolKey(poolId uint64) []byte {
@@ -66,27 +64,34 @@ func GetPositionIndexKey(poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upp
 		PositionIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(poolId),
 		address.MustLengthPrefix(ownerAddr),
-		tickToBytes(lowerTick),
-		tickToBytes(upperTick))
+		exchangetypes.TickToBytes(lowerTick),
+		exchangetypes.TickToBytes(upperTick))
 }
 
 func GetTickInfoKey(poolId uint64, tick int32) []byte {
-	return utils.Key(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId), tickToBytes(tick))
+	return utils.Key(
+		TickInfoKeyPrefix,
+		sdk.Uint64ToBigEndian(poolId),
+		exchangetypes.TickToBytes(tick))
 }
 
 func GetTickInfoKeyPrefix(poolId uint64) []byte {
 	return utils.Key(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId))
 }
 
-func GetLastOrderResultKey(ordererAddr sdk.AccAddress) []byte {
-	return utils.Key(LastOrderResultKeyPrefix, ordererAddr)
+func GetPoolOrderKey(poolId uint64, marketId string, tick int32) []byte {
+	return utils.Key(
+		PoolOrderKeyPrefix,
+		sdk.Uint64ToBigEndian(poolId),
+		utils.LengthPrefixString(marketId),
+		exchangetypes.TickToBytes(tick))
 }
 
-func GetPoolOrderIdRangeKey(startOrderId, endOrderId uint64) []byte {
+func GetPoolOrderKeyPrefix(poolId uint64, marketId string) []byte {
 	return utils.Key(
-		PoolOrderIdRangeKeyPrefix,
-		sdk.Uint64ToBigEndian(startOrderId),
-		sdk.Uint64ToBigEndian(endOrderId))
+		PoolOrderKeyPrefix,
+		sdk.Uint64ToBigEndian(poolId),
+		utils.LengthPrefixString(marketId))
 }
 
 func ParsePoolsByMarketIndexKey(key []byte) (marketId string, poolId uint64) {
@@ -98,19 +103,14 @@ func ParsePoolsByMarketIndexKey(key []byte) (marketId string, poolId uint64) {
 
 func ParseTickInfoKey(key []byte) (poolId uint64, tick int32) {
 	poolId = sdk.BigEndianToUint64(key[1:9])
-	tick = bytesToTick(key[9:])
+	tick = exchangetypes.BytesToTick(key[9:])
 	return
 }
 
-func tickToBytes(tick int32) []byte {
-	bz := make([]byte, 5)
-	if tick >= 0 {
-		bz[0] = 1
-	}
-	binary.BigEndian.PutUint32(bz[1:], uint32(tick))
-	return bz
-}
-
-func bytesToTick(bz []byte) int32 {
-	return int32(binary.BigEndian.Uint32(bz[1:]))
+func ParsePoolOrderKey(key []byte) (poolId uint64, marketId string, tick int32) {
+	poolId = sdk.BigEndianToUint64(key[1:9])
+	marketIdLen := key[9]
+	marketId = string(key[10 : 10+marketIdLen])
+	tick = exchangetypes.BytesToTick(key[10+marketIdLen:])
+	return
 }

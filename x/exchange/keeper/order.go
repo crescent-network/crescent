@@ -32,8 +32,9 @@ func (k Keeper) PlaceSpotOrder(
 		return order, false, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 	}
 
-	lastPrice, executedQty, executedQuoteAmt, outputs := k.executeSpotOrder(ctx, market, ordererAddr, isBuy, priceLimit, qty)
+	firstPrice, lastPrice, executedQty, executedQuoteAmt, outputs := k.executeSpotOrder(ctx, market, ordererAddr, isBuy, priceLimit, qty)
 
+	// TODO: merge if-statement conditions - seems like duplicated
 	if !lastPrice.IsNil() {
 		market.LastPrice = &lastPrice
 		k.SetSpotMarket(ctx, market)
@@ -58,11 +59,15 @@ func (k Keeper) PlaceSpotOrder(
 		}
 	}
 
+	if !firstPrice.IsNil() {
+		k.AfterSpotOrderExecuted(ctx, market, ordererAddr, isBuy, firstPrice, lastPrice, executedQty, executedQuoteAmt)
+	}
+
 	if priceLimit != nil { // limit order
 		if remainingQty := qty.Sub(executedQty); remainingQty.IsPositive() {
 			order = k.restSpotLimitOrder(ctx, ordererAddr, marketId, isBuy, *priceLimit, remainingQty)
-			offerCoin := sdk.Coins{market.OfferCoin(isBuy, *priceLimit, remainingQty)}
-			if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, ordererAddr, types.ModuleName, offerCoin); err != nil {
+			depositCoins := sdk.Coins{market.DepositCoin(isBuy, types.DepositAmount(isBuy, *priceLimit, remainingQty))}
+			if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, ordererAddr, types.ModuleName, depositCoins); err != nil {
 				return order, false, err
 			}
 			rested = true
@@ -73,11 +78,17 @@ func (k Keeper) PlaceSpotOrder(
 
 func (k Keeper) executeSpotOrder(
 	ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (lastPrice sdk.Dec, executedQty, executedQuoteAmt sdk.Int, outputs []banktypes.Output) {
+	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (firstPrice, lastPrice sdk.Dec, executedQty, executedQuoteAmt sdk.Int, outputs []banktypes.Output) {
 	remainingQty := qty
 	executedQuoteAmt = types.ZeroInt
 	k.IterateSpotOrderBookOrders(ctx, market.Id, !isBuy, priceLimit, func(order types.SpotLimitOrder) (stop bool) {
-		executableQty := types.MinInt(order.OpenQuantity, remainingQty)
+		if firstPrice.IsNil() {
+			firstPrice = order.Price
+		}
+
+		executableQty := types.MinInt(
+			order.ExecutableQuantity(),
+			remainingQty)
 		quoteAmt := types.QuoteAmount(isBuy, order.Price, executableQty)
 		executedQuoteAmt = executedQuoteAmt.Add(quoteAmt)
 
@@ -87,9 +98,11 @@ func (k Keeper) executeSpotOrder(
 		if isBuy {
 			paidCoin = sdk.Coins{sdk.NewCoin(market.QuoteDenom, quoteAmt)}
 			receivedCoin = sdk.Coins{sdk.NewCoin(market.BaseDenom, executableQty)}
+			order.DepositAmount = order.DepositAmount.Sub(executableQty)
 		} else {
 			paidCoin = sdk.Coins{sdk.NewCoin(market.BaseDenom, executableQty)}
 			receivedCoin = sdk.Coins{sdk.NewCoin(market.QuoteDenom, quoteAmt)}
+			order.DepositAmount = order.DepositAmount.Sub(quoteAmt)
 		}
 		outputs = append(outputs,
 			banktypes.Output{Address: order.Orderer, Coins: paidCoin},
@@ -108,7 +121,6 @@ func (k Keeper) executeSpotOrder(
 		return remainingQty.IsZero()
 	})
 	executedQty = qty.Sub(remainingQty)
-	k.AfterSpotOrderExecuted(ctx, market, ordererAddr, isBuy, lastPrice, executedQty, executedQuoteAmt)
 	return
 }
 
@@ -116,8 +128,30 @@ func (k Keeper) restSpotLimitOrder(
 	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.SpotLimitOrder) {
 	orderId := k.GetNextOrderIdWithUpdate(ctx)
-	order = types.NewSpotLimitOrder(orderId, ordererAddr, marketId, isBuy, price, qty)
+	depositAmt := types.DepositAmount(isBuy, price, qty)
+	order = types.NewSpotLimitOrder(orderId, ordererAddr, marketId, isBuy, price, qty, depositAmt)
 	k.SetSpotLimitOrder(ctx, order)
 	k.SetSpotOrderBookOrder(ctx, order)
 	return
+}
+
+func (k Keeper) CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, marketId string, orderId uint64) (order types.SpotLimitOrder, err error) {
+	market, found := k.GetSpotMarket(ctx, marketId)
+	if !found {
+		return order, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+	}
+	order, found = k.GetSpotLimitOrder(ctx, market.Id, orderId)
+	if !found {
+		return order, sdkerrors.Wrap(sdkerrors.ErrNotFound, "order not found")
+	}
+	if senderAddr.String() != order.Orderer {
+		return order, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "order is not created by the sender")
+	}
+	refundedCoins := sdk.NewCoins(market.DepositCoin(order.IsBuy, order.DepositAmount))
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, senderAddr, refundedCoins); err != nil {
+		return order, err
+	}
+	k.DeleteSpotLimitOrder(ctx, order)
+	k.DeleteSpotOrderBookOrder(ctx, order)
+	return order, nil
 }

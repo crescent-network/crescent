@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v5/x/amm/types"
@@ -24,16 +22,26 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 	// TODO: optimize
 	pool, found := h.k.GetPoolByReserveAddress(ctx, ordererAddr)
 	if found {
-		fmt.Println("found pool", pool.Id)
-		var tick int32
 		if qty.Equal(order.Quantity) {
 			sqrtPrice, err := order.Price.ApproxSqrt()
 			if err != nil {
 				panic(err)
 			}
+			if order.IsBuy {
+				expectedAmt0 := types.Amount0Delta(sqrtPrice, pool.CurrentSqrtPrice, pool.CurrentLiquidity)
+				amt0 := qty
+				diff := amt0.Sub(expectedAmt0)
+				if diff.IsPositive() {
+				}
+			} else {
+				expectedAmt1 := types.Amount1Delta(pool.CurrentSqrtPrice, sqrtPrice, pool.CurrentLiquidity)
+				amt1 := order.Price.MulInt(qty).TruncateInt()
+				diff := amt1.Sub(expectedAmt1)
+				if diff.IsPositive() {
+				}
+			}
 			pool.CurrentSqrtPrice = sqrtPrice
-			tick = exchangetypes.TickAtPrice(order.Price, TickPrecision)
-			fmt.Println(" fully matched", sqrtPrice, tick)
+			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, exchangetypes.TickAtPrice(order.Price, TickPrecision))
 		} else {
 			var sqrtPrice sdk.Dec
 			if order.IsBuy {
@@ -42,12 +50,11 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 				sqrtPrice = types.NextSqrtPriceFromAmount0OutRoundingUp(pool.CurrentSqrtPrice, pool.CurrentLiquidity, qty)
 			}
 			pool.CurrentSqrtPrice = sqrtPrice
-			tick = types.TickAtSqrtPrice(pool.CurrentSqrtPrice, TickPrecision)
-			fmt.Println(" partially matched", sqrtPrice, tick)
 		}
-		tickInfo, found := h.k.GetTickInfo(ctx, pool.Id, tick)
+		nextTick := types.TickAtSqrtPrice(pool.CurrentSqrtPrice, TickPrecision)
+		pool.CurrentTick = nextTick
+		tickInfo, found := h.k.GetTickInfo(ctx, pool.Id, nextTick)
 		if found {
-			pool.CurrentTick = tick
 			var netLiquidity sdk.Int
 			if order.IsBuy {
 				netLiquidity = tickInfo.NetLiquidity
@@ -55,12 +62,16 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 				netLiquidity = tickInfo.NetLiquidity.Neg()
 			}
 			pool.CurrentLiquidity = pool.CurrentLiquidity.Add(netLiquidity)
-			fmt.Println("  pool current tick ->", tick, "current L ->", pool.CurrentLiquidity)
 		}
 		h.k.SetPool(ctx, pool)
 	}
 }
 
-func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, market exchangetypes.SpotMarket, ordererAddr sdk.AccAddress, isBuy bool, lastPrice sdk.Dec, qty, quoteAmt sdk.Int) {
-	// Update pool orders from the market's last price to the new last price
+func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, market exchangetypes.SpotMarket, ordererAddr sdk.AccAddress, isBuy bool, firstPrice, lastPrice sdk.Dec, qty, quoteAmt sdk.Int) {
+	tickA := exchangetypes.TickAtPrice(firstPrice, TickPrecision)
+	tickB := exchangetypes.TickAtPrice(lastPrice, TickPrecision)
+	if tickA > tickB {
+		tickA, tickB = tickB, tickA
+	}
+	h.k.UpdateSpotMarketOrders(ctx, market.Id, tickA, tickB)
 }

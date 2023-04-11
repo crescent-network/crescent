@@ -15,7 +15,7 @@ func MinInt(a, b sdk.Int) sdk.Int {
 	return b
 }
 
-func OfferAmount(isBuy bool, price sdk.Dec, qty sdk.Int) sdk.Int {
+func DepositAmount(isBuy bool, price sdk.Dec, qty sdk.Int) sdk.Int {
 	if isBuy {
 		return price.MulInt(qty).Ceil().TruncateInt()
 	}

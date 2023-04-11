@@ -1,8 +1,11 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -42,7 +45,22 @@ func (k Keeper) updateSpotMarketOrders(
 	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 	initialReserves := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
 	reserve0, reserve1 := initialReserves.AmountOf(pool.Denom0), initialReserves.AmountOf(pool.Denom1)
+	// TODO: cancel previous orders
+	fmt.Println("pool", pool.CurrentTick, pool.CurrentSqrtPrice)
 	k.IterateTicksBelowPoolPriceWithLiquidity(ctx, pool, lowerTick, func(tick int32, liquidity sdk.Int) {
+		prevOrderId, found := k.GetPoolOrder(ctx, pool.Id, marketId, tick)
+		if found {
+			prevOrder, err := k.exchangeKeeper.CancelSpotOrder(ctx, reserveAddr, marketId, prevOrderId)
+			if err != nil {
+				panic(err)
+			}
+			k.DeletePoolOrder(ctx, pool.Id, marketId, tick) // TODO: use cancel hook to delete pool order
+			if prevOrder.IsBuy {
+				reserve1 = reserve1.Add(prevOrder.DepositAmount)
+			} else {
+				reserve0 = reserve0.Add(prevOrder.DepositAmount)
+			}
+		}
 		// TODO: check out of tick range
 		sqrtPriceAbove, err := types.SqrtPriceAtTick(tick+int32(pool.TickSpacing), TickPrecision)
 		if err != nil {
@@ -57,15 +75,34 @@ func (k Keeper) updateSpotMarketOrders(
 		qty := sdk.MinInt(
 			reserve1.ToDec().QuoTruncate(price).TruncateInt(),
 			sqrtPriceAbove.Sub(sqrtPrice).MulInt(liquidity).QuoTruncate(price).TruncateInt())
-		reserve1 = reserve1.Sub(exchangetypes.OfferAmount(true, price, qty))
-		_, _, err = k.exchangeKeeper.PlaceSpotLimitOrder(
-			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), marketId,
-			true, price, qty)
-		if err != nil {
-			panic(err)
+		if qty.IsPositive() {
+			order, rested, err := k.exchangeKeeper.PlaceSpotLimitOrder(
+				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), marketId,
+				true, price, qty)
+			if err != nil {
+				panic(err)
+			}
+			if !rested { // sanity check
+				panic("order not rested")
+			}
+			k.SetPoolOrder(ctx, pool.Id, marketId, tick, order.Id)
+			reserve1 = reserve1.Sub(exchangetypes.DepositAmount(true, price, qty))
 		}
 	})
 	k.IterateTicksAbovePoolPriceWithLiquidity(ctx, pool, upperTick, func(tick int32, liquidity sdk.Int) {
+		prevOrderId, found := k.GetPoolOrder(ctx, pool.Id, marketId, tick)
+		if found {
+			prevOrder, err := k.exchangeKeeper.CancelSpotOrder(ctx, reserveAddr, marketId, prevOrderId)
+			if err != nil {
+				panic(err)
+			}
+			k.DeletePoolOrder(ctx, pool.Id, marketId, tick)
+			if prevOrder.IsBuy {
+				reserve1 = reserve1.Add(prevOrder.DepositAmount)
+			} else {
+				reserve0 = reserve0.Add(prevOrder.DepositAmount)
+			}
+		}
 		sqrtPriceBelow, err := types.SqrtPriceAtTick(tick-int32(pool.TickSpacing), TickPrecision)
 		if err != nil {
 			panic(err)
@@ -78,19 +115,26 @@ func (k Keeper) updateSpotMarketOrders(
 		}
 		qty := sdk.MinInt(
 			reserve0,
-			sdk.OneDec().QuoTruncate(sqrtPriceBelow).Sub(sdk.OneDec().QuoTruncate(sqrtPrice)).MulInt(liquidity).TruncateInt())
-		reserve0 = reserve0.Sub(qty)
-		_, _, err = k.exchangeKeeper.PlaceSpotLimitOrder(
-			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), marketId,
-			false, price, qty)
-		if err != nil {
-			panic(err)
+			sdk.OneDec().QuoTruncate(sqrtPriceBelow).Sub(sdk.OneDec().QuoRoundUp(sqrtPrice)).MulInt(liquidity).TruncateInt())
+		if qty.IsPositive() {
+			order, rested, err := k.exchangeKeeper.PlaceSpotLimitOrder(
+				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), marketId,
+				false, price, qty)
+			if err != nil {
+				panic(err)
+			}
+			if !rested { // sanity check
+				panic("order not rested")
+			}
+			k.SetPoolOrder(ctx, pool.Id, marketId, tick, order.Id)
+			reserve0 = reserve0.Sub(qty)
 		}
 	})
 }
 
 func (k Keeper) IterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, lowestTick int32, cb func(tick int32, liquidity sdk.Int)) {
-	currentTick := pool.CurrentTick - int32(pool.TickSpacing)
+	q, _ := utils.DivMod(pool.CurrentTick, int32(pool.TickSpacing))
+	currentTick := q * int32(pool.TickSpacing)
 	liquidity := pool.CurrentLiquidity
 	k.IterateTickInfosBelow(ctx, pool.Id, pool.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 		if liquidity.IsPositive() {
@@ -107,7 +151,7 @@ func (k Keeper) IterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool ty
 }
 
 func (k Keeper) IterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, highestTick int32, cb func(tick int32, liquidity sdk.Int)) {
-	currentTick := pool.CurrentTick + int32(pool.TickSpacing)
+	currentTick := pool.CurrentTick / int32(pool.TickSpacing) * int32(pool.TickSpacing) // TODO: check division
 	liquidity := pool.CurrentLiquidity
 	// TODO: What if there's no tick infos above the current pool's tick but
 	//       still there's liquidity below highestTick? Is this even possible?

@@ -188,18 +188,34 @@ func (k Keeper) DeleteTickInfo(ctx sdk.Context, poolId uint64, tick int32) {
 	store.Delete(types.GetTickInfoKey(poolId, tick))
 }
 
-func (k Keeper) GetLastOrderResult(ctx sdk.Context, ownerAddr sdk.AccAddress) (res types.LastOrderResult, found bool) {
-	store := ctx.TransientStore(k.tsKey)
-	bz := store.Get(types.GetLastOrderResultKey(ownerAddr))
+func (k Keeper) SetPoolOrder(ctx sdk.Context, poolId uint64, marketId string, tick int32, orderId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetPoolOrderKey(poolId, marketId, tick), sdk.Uint64ToBigEndian(orderId))
+}
+
+func (k Keeper) GetPoolOrder(ctx sdk.Context, poolId uint64, marketId string, tick int32) (orderId uint64, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetPoolOrderKey(poolId, marketId, tick))
 	if bz == nil {
 		return
 	}
-	k.cdc.MustUnmarshal(bz, &res)
-	return res, true
+	orderId = sdk.BigEndianToUint64(bz)
+	return orderId, true
 }
 
-func (k Keeper) SetLastOrderResult(ctx sdk.Context, ownerAddr sdk.AccAddress, res types.LastOrderResult) {
-	store := ctx.TransientStore(k.tsKey)
-	bz := k.cdc.MustMarshal(&res)
-	store.Set(types.GetLastOrderResultKey(ownerAddr), bz)
+//func (k Keeper) IteratePoolOrders(ctx sdk.Context, poolId uint64, marketId string, cb func(tick int32, orderId uint64) (stop bool)) {
+//	store := ctx.KVStore(k.storeKey)
+//	iter := sdk.KVStorePrefixIterator(store, types.GetPoolOrderKeyPrefix(poolId, marketId))
+//	defer iter.Close()
+//	for ; iter.Valid(); iter.Next() {
+//		_, _, tick := types.ParsePoolOrderKey(iter.Key())
+//		if cb(tick, sdk.BigEndianToUint64(iter.Value())) {
+//			break
+//		}
+//	}
+//}
+
+func (k Keeper) DeletePoolOrder(ctx sdk.Context, poolId uint64, marketId string, tick int32) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPoolOrderKey(poolId, marketId, tick))
 }

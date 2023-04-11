@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"golang.org/x/exp/constraints"
 )
 
 // GetShareValue multiplies with truncation by receiving int amount and decimal ratio and returns int result.
@@ -233,4 +234,10 @@ func LengthPrefixString(s string) []byte {
 	bz := []byte(s)
 	bzLen := len(bz)
 	return append([]byte{byte(bzLen)}, bz...)
+}
+
+func DivMod[T constraints.Integer](x, y T) (q, r T) {
+	r = (x%y + y) % y
+	q = (x - r) / y
+	return
 }

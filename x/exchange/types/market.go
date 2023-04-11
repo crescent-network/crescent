@@ -24,10 +24,9 @@ func NewSpotMarket(baseDenom, quoteDenom string) SpotMarket {
 	}
 }
 
-func (market SpotMarket) OfferCoin(isBuy bool, price sdk.Dec, qty sdk.Int) sdk.Coin {
-	offerAmt := OfferAmount(isBuy, price, qty)
+func (market SpotMarket) DepositCoin(isBuy bool, amt sdk.Int) sdk.Coin {
 	if isBuy {
-		return sdk.NewCoin(market.QuoteDenom, offerAmt)
+		return sdk.NewCoin(market.QuoteDenom, amt)
 	}
-	return sdk.NewCoin(market.BaseDenom, offerAmt)
+	return sdk.NewCoin(market.BaseDenom, amt)
 }

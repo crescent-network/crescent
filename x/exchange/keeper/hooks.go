@@ -14,8 +14,8 @@ func (k Keeper) AfterRestingSpotOrderExecuted(ctx sdk.Context, order types.SpotL
 	}
 }
 
-func (k Keeper) AfterSpotOrderExecuted(ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress, isBuy bool, lastPrice sdk.Dec, qty, quoteAmt sdk.Int) {
+func (k Keeper) AfterSpotOrderExecuted(ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress, isBuy bool, firstPrice, lastPrice sdk.Dec, qty, quoteAmt sdk.Int) {
 	if k.hooks != nil {
-		k.hooks.AfterSpotOrderExecuted(ctx, market, ordererAddr, isBuy, lastPrice, qty, quoteAmt)
+		k.hooks.AfterSpotOrderExecuted(ctx, market, ordererAddr, isBuy, firstPrice, lastPrice, qty, quoteAmt)
 	}
 }

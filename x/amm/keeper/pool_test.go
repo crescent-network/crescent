@@ -25,14 +25,30 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 		sdk.NewInt(100_000000), sdk.NewInt(100_000000), sdk.NewInt(100_000000), sdk.NewInt(100_000000))
 	s.Require().NoError(err)
 
-	s.app.ExchangeKeeper.IterateSpotOrderBook(s.ctx, market.Id, func(order types.SpotLimitOrder) (stop bool) {
-		fmt.Println(order.IsBuy, order.Price, order.OpenQuantity)
-		return false
-	})
+	printOrderBook := func() {
+		s.app.ExchangeKeeper.IterateSpotOrderBook(s.ctx, market.Id, func(order types.SpotLimitOrder) (stop bool) {
+			if order.Price.GTE(utils.ParseDec("0.98")) && order.Price.LTE(utils.ParseDec("1.03")) {
+				fmt.Println(order.IsBuy, order.Price, order.OpenQuantity)
+			}
+			return false
+		})
+	}
+	fmt.Println("Initial:")
+	printOrderBook()
 
 	ordererAddr := utils.TestAddress(2)
-	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, ordererAddr, utils.ParseCoins("1000_000000uusd"))
+	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, ordererAddr, utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
+	s.Require().NoError(
+		s.app.ExchangeKeeper.PlaceSpotMarketOrder(
+			s.ctx, ordererAddr, market.Id, false, sdk.NewInt(15_000000)))
+
+	fmt.Println("After sell:")
+	printOrderBook()
+
 	s.Require().NoError(
 		s.app.ExchangeKeeper.PlaceSpotMarketOrder(
 			s.ctx, ordererAddr, market.Id, true, sdk.NewInt(15_000000)))
+
+	fmt.Println("After buy:")
+	printOrderBook()
 }
