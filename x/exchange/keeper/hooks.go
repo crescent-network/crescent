@@ -8,7 +8,7 @@ import (
 
 var _ types.ExchangeHooks = Keeper{}
 
-func (k Keeper) AfterRestingSpotOrderExecuted(ctx sdk.Context, order types.SpotLimitOrder, qty sdk.Int) {
+func (k Keeper) AfterRestingSpotOrderExecuted(ctx sdk.Context, order types.SpotOrder, qty sdk.Int) {
 	if k.hooks != nil {
 		k.hooks.AfterRestingSpotOrderExecuted(ctx, order, qty)
 	}

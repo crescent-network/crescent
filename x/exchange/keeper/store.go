@@ -22,6 +22,22 @@ func (k Keeper) SetSpotMarket(ctx sdk.Context, market types.SpotMarket) {
 	store.Set(types.GetSpotMarketKey(market.Id), bz)
 }
 
+func (k Keeper) GetSpotMarketState(ctx sdk.Context, marketId string) (state types.SpotMarketState, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetSpotMarketStateKey(marketId))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &state)
+	return state, true
+}
+
+func (k Keeper) SetSpotMarketState(ctx sdk.Context, marketId string, state types.SpotMarketState) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&state)
+	store.Set(types.GetSpotMarketStateKey(marketId), bz)
+}
+
 func (k Keeper) GetLastOrderId(ctx sdk.Context) (orderId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastOrderIdKey)
@@ -43,15 +59,15 @@ func (k Keeper) GetNextOrderIdWithUpdate(ctx sdk.Context) (orderId uint64) {
 	return
 }
 
-func (k Keeper) SetSpotLimitOrder(ctx sdk.Context, order types.SpotLimitOrder) {
+func (k Keeper) SetSpotOrder(ctx sdk.Context, order types.SpotOrder) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&order)
-	store.Set(types.GetSpotLimitOrderKey(order.MarketId, order.Id), bz)
+	store.Set(types.GetSpotOrderKey(order.MarketId, order.Id), bz)
 }
 
-func (k Keeper) GetSpotLimitOrder(ctx sdk.Context, marketId string, orderId uint64) (order types.SpotLimitOrder, found bool) {
+func (k Keeper) GetSpotOrder(ctx sdk.Context, marketId string, orderId uint64) (order types.SpotOrder, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetSpotLimitOrderKey(marketId, orderId))
+	bz := store.Get(types.GetSpotOrderKey(marketId, orderId))
 	if bz == nil {
 		return
 	}
@@ -59,19 +75,19 @@ func (k Keeper) GetSpotLimitOrder(ctx sdk.Context, marketId string, orderId uint
 	return order, true
 }
 
-func (k Keeper) DeleteSpotLimitOrder(ctx sdk.Context, order types.SpotLimitOrder) {
+func (k Keeper) DeleteSpotOrder(ctx sdk.Context, order types.SpotOrder) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetSpotLimitOrderKey(order.MarketId, order.Id))
+	store.Delete(types.GetSpotOrderKey(order.MarketId, order.Id))
 }
 
-func (k Keeper) SetSpotOrderBookOrder(ctx sdk.Context, order types.SpotLimitOrder) {
+func (k Keeper) SetSpotOrderBookOrder(ctx sdk.Context, order types.SpotOrder) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(
-		types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id),
+		types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, *order.Price, order.Id),
 		sdk.Uint64ToBigEndian(order.Id))
 }
 
-func (k Keeper) IterateSpotOrderBookOrders(ctx sdk.Context, marketId string, isBuy bool, priceLimit *sdk.Dec, cb func(order types.SpotLimitOrder) (stop bool)) {
+func (k Keeper) IterateSpotOrderBookOrders(ctx sdk.Context, marketId string, isBuy bool, priceLimit *sdk.Dec, cb func(order types.SpotOrder) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
 	if isBuy {
@@ -98,7 +114,7 @@ func (k Keeper) IterateSpotOrderBookOrders(ctx sdk.Context, marketId string, isB
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		orderId := sdk.BigEndianToUint64(iter.Value())
-		order, found := k.GetSpotLimitOrder(ctx, marketId, orderId)
+		order, found := k.GetSpotOrder(ctx, marketId, orderId)
 		if !found {
 			panic("order not found")
 		}
@@ -108,17 +124,17 @@ func (k Keeper) IterateSpotOrderBookOrders(ctx sdk.Context, marketId string, isB
 	}
 }
 
-func (k Keeper) DeleteSpotOrderBookOrder(ctx sdk.Context, order types.SpotLimitOrder) {
+func (k Keeper) DeleteSpotOrderBookOrder(ctx sdk.Context, order types.SpotOrder) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(
-		types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id))
+		types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, *order.Price, order.Id))
 }
 
-func (k Keeper) IterateSpotOrderBook(ctx sdk.Context, marketId string, cb func(order types.SpotLimitOrder) (stop bool)) {
+func (k Keeper) IterateSpotOrderBook(ctx sdk.Context, marketId string, cb func(order types.SpotOrder) (stop bool)) {
 	iterate := func(iter sdk.Iterator) {
 		for ; iter.Valid(); iter.Next() {
 			orderId := sdk.BigEndianToUint64(iter.Value())
-			order, found := k.GetSpotLimitOrder(ctx, marketId, orderId)
+			order, found := k.GetSpotOrder(ctx, marketId, orderId)
 			if !found { // sanity check
 				panic("order not found")
 			}

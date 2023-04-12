@@ -35,7 +35,7 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	_, liquidity, amt0, amt1, err := k.Keeper.AddLiquidity(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PoolId, msg.LowerTick, msg.UpperTick,
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PoolId, msg.LowerPrice, msg.UpperPrice,
 		msg.DesiredAmount0, msg.DesiredAmount1, msg.MinAmount0, msg.MinAmount1)
 	if err != nil {
 		return nil, err

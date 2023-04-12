@@ -3,6 +3,7 @@ syntax = "proto3";
 package crescent.exchange.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "crescent/exchange/v1beta1/exchange.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -11,6 +12,7 @@ service Msg {
   rpc CreateSpotMarket(MsgCreateSpotMarket) returns (MsgCreateSpotMarketResponse);
   rpc PlaceSpotLimitOrder(MsgPlaceSpotLimitOrder) returns (MsgPlaceSpotLimitOrderResponse);
   rpc PlaceSpotMarketOrder(MsgPlaceSpotMarketOrder) returns (MsgPlaceSpotMarketOrderResponse);
+  rpc CancelSpotOrder(MsgCancelSpotOrder) returns (MsgCancelSpotOrderResponse);
 }
 
 message MsgCreateSpotMarket {
@@ -32,7 +34,8 @@ message MsgPlaceSpotLimitOrder {
 }
 
 message MsgPlaceSpotLimitOrderResponse {
-  uint64 order_id = 1;
+  SpotOrder order = 1 [(gogoproto.nullable) = false];
+  string    quote = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 message MsgPlaceSpotMarketOrder {
@@ -42,4 +45,15 @@ message MsgPlaceSpotMarketOrder {
   string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgPlaceSpotMarketOrderResponse {}
+message MsgPlaceSpotMarketOrderResponse {
+  SpotOrder order = 1 [(gogoproto.nullable) = false];
+  string    quote = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgCancelSpotOrder {
+  string sender    = 1;
+  string market_id = 2;
+  uint64 order_id  = 3;
+}
+
+message MsgCancelSpotOrderResponse {}

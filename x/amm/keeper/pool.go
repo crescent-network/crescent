@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -10,14 +8,19 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) (types.Pool, error) {
+func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) (pool types.Pool, err error) {
 	// TODO: charge pool creation fee from senderAddr
 	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
 
+	var sqrtPrice sdk.Dec
+	sqrtPrice, err = price.ApproxSqrt()
+	if err != nil {
+		return
+	}
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
-	pool := types.NewPool(
+	pool = types.NewPool(
 		poolId, denom0, denom1, tickSpacing, reserveAddr,
-		exchangetypes.TickAtPrice(price, TickPrecision), price)
+		exchangetypes.TickAtPrice(sqrtPrice, TickPrecision), sqrtPrice)
 	k.SetPool(ctx, pool)
 	k.SetPoolsByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
@@ -42,11 +45,14 @@ func (k Keeper) UpdateSpotMarketOrders(ctx sdk.Context, marketId string, lowerTi
 func (k Keeper) updateSpotMarketOrders(
 	ctx sdk.Context, marketId string,
 	pool types.Pool, lowerTick, upperTick int32) {
+	market, found := k.exchangeKeeper.GetSpotMarket(ctx, marketId)
+	if !found {
+		panic("market not found")
+	}
 	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 	initialReserves := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
 	reserve0, reserve1 := initialReserves.AmountOf(pool.Denom0), initialReserves.AmountOf(pool.Denom1)
 	// TODO: cancel previous orders
-	fmt.Println("pool", pool.CurrentTick, pool.CurrentSqrtPrice)
 	k.IterateTicksBelowPoolPriceWithLiquidity(ctx, pool, lowerTick, func(tick int32, liquidity sdk.Int) {
 		prevOrderId, found := k.GetPoolOrder(ctx, pool.Id, marketId, tick)
 		if found {
@@ -56,9 +62,9 @@ func (k Keeper) updateSpotMarketOrders(
 			}
 			k.DeletePoolOrder(ctx, pool.Id, marketId, tick) // TODO: use cancel hook to delete pool order
 			if prevOrder.IsBuy {
-				reserve1 = reserve1.Add(prevOrder.DepositAmount)
+				reserve1 = reserve1.Add(prevOrder.RemainingDeposit)
 			} else {
-				reserve0 = reserve0.Add(prevOrder.DepositAmount)
+				reserve0 = reserve0.Add(prevOrder.RemainingDeposit)
 			}
 		}
 		// TODO: check out of tick range
@@ -76,14 +82,14 @@ func (k Keeper) updateSpotMarketOrders(
 			reserve1.ToDec().QuoTruncate(price).TruncateInt(),
 			sqrtPriceAbove.Sub(sqrtPrice).MulInt(liquidity).QuoTruncate(price).TruncateInt())
 		if qty.IsPositive() {
-			order, rested, err := k.exchangeKeeper.PlaceSpotLimitOrder(
-				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), marketId,
+			order, execQuote, err := k.exchangeKeeper.PlaceSpotLimitOrder(
+				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), market,
 				true, price, qty)
 			if err != nil {
 				panic(err)
 			}
-			if !rested { // sanity check
-				panic("order not rested")
+			if !execQuote.IsZero() { // sanity check
+				panic("pool order matched with another order")
 			}
 			k.SetPoolOrder(ctx, pool.Id, marketId, tick, order.Id)
 			reserve1 = reserve1.Sub(exchangetypes.DepositAmount(true, price, qty))
@@ -98,9 +104,9 @@ func (k Keeper) updateSpotMarketOrders(
 			}
 			k.DeletePoolOrder(ctx, pool.Id, marketId, tick)
 			if prevOrder.IsBuy {
-				reserve1 = reserve1.Add(prevOrder.DepositAmount)
+				reserve1 = reserve1.Add(prevOrder.RemainingDeposit)
 			} else {
-				reserve0 = reserve0.Add(prevOrder.DepositAmount)
+				reserve0 = reserve0.Add(prevOrder.RemainingDeposit)
 			}
 		}
 		sqrtPriceBelow, err := types.SqrtPriceAtTick(tick-int32(pool.TickSpacing), TickPrecision)
@@ -115,16 +121,16 @@ func (k Keeper) updateSpotMarketOrders(
 		}
 		qty := sdk.MinInt(
 			reserve0,
-			sdk.OneDec().QuoTruncate(sqrtPriceBelow).Sub(sdk.OneDec().QuoRoundUp(sqrtPrice)).MulInt(liquidity).TruncateInt())
+			utils.OneDec.QuoTruncate(sqrtPriceBelow).Sub(utils.OneDec.QuoRoundUp(sqrtPrice)).MulInt(liquidity).TruncateInt())
 		if qty.IsPositive() {
-			order, rested, err := k.exchangeKeeper.PlaceSpotLimitOrder(
-				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), marketId,
+			order, execQuote, err := k.exchangeKeeper.PlaceSpotLimitOrder(
+				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), market,
 				false, price, qty)
 			if err != nil {
 				panic(err)
 			}
-			if !rested { // sanity check
-				panic("order not rested")
+			if !execQuote.IsZero() { // sanity check
+				panic("pool order matched with another order")
 			}
 			k.SetPoolOrder(ctx, pool.Id, marketId, tick, order.Id)
 			reserve0 = reserve0.Sub(qty)

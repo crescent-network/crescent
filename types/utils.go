@@ -241,3 +241,11 @@ func DivMod[T constraints.Integer](x, y T) (q, r T) {
 	q = (x - r) / y
 	return
 }
+
+// MinInt works like sdk.MinInt, but without allocations.
+func MinInt(a, b sdk.Int) sdk.Int {
+	if a.LT(b) {
+		return a
+	}
+	return b
+}

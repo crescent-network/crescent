@@ -17,7 +17,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotLimitOrder, qty sdk.Int) {
+func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotOrder, qty sdk.Int) {
 	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
 	// TODO: optimize
 	pool, found := h.k.GetPoolByReserveAddress(ctx, ordererAddr)
@@ -32,22 +32,52 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 				amt0 := qty
 				diff := amt0.Sub(expectedAmt0)
 				if diff.IsPositive() {
+					reserveAddr:= sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+					if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
+						ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.Denom0, diff))); err != nil {
+						panic(err)
+					}
 				}
 			} else {
 				expectedAmt1 := types.Amount1Delta(pool.CurrentSqrtPrice, sqrtPrice, pool.CurrentLiquidity)
 				amt1 := order.Price.MulInt(qty).TruncateInt()
 				diff := amt1.Sub(expectedAmt1)
 				if diff.IsPositive() {
+					reserveAddr:= sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+					if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
+						ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.Denom1, diff))); err != nil {
+						panic(err)
+					}
 				}
 			}
 			pool.CurrentSqrtPrice = sqrtPrice
-			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, exchangetypes.TickAtPrice(order.Price, TickPrecision))
+			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, exchangetypes.TickAtPrice(*order.Price, TickPrecision))
 		} else {
 			var sqrtPrice sdk.Dec
 			if order.IsBuy {
 				sqrtPrice = types.NextSqrtPriceFromAmount1OutRoundingDown(pool.CurrentSqrtPrice, pool.CurrentLiquidity, qty)
+				expectedAmt0 := types.Amount0Delta(sqrtPrice, pool.CurrentSqrtPrice, pool.CurrentLiquidity)
+				amt0 := qty
+				diff := amt0.Sub(expectedAmt0)
+				if diff.IsPositive() {
+					reserveAddr:= sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+					if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
+						ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.Denom0, diff))); err != nil {
+						panic(err)
+					}
+				}
 			} else {
 				sqrtPrice = types.NextSqrtPriceFromAmount0OutRoundingUp(pool.CurrentSqrtPrice, pool.CurrentLiquidity, qty)
+				expectedAmt1 := types.Amount1Delta(pool.CurrentSqrtPrice, sqrtPrice, pool.CurrentLiquidity)
+				amt1 := order.Price.MulInt(qty).TruncateInt()
+				diff := amt1.Sub(expectedAmt1)
+				if diff.IsPositive() {
+					reserveAddr:= sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+					if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
+						ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.Denom1, diff))); err != nil {
+						panic(err)
+					}
+				}
 			}
 			pool.CurrentSqrtPrice = sqrtPrice
 		}

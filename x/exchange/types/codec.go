@@ -14,6 +14,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateSpotMarket{}, "exchange/MsgCreateSpotMarket", nil)
 	cdc.RegisterConcrete(&MsgPlaceSpotLimitOrder{}, "exchange/MsgPlaceSpotLimitOrder", nil)
 	cdc.RegisterConcrete(&MsgPlaceSpotMarketOrder{}, "exchange/MsgPlaceSpotMarketOrder", nil)
+	cdc.RegisterConcrete(&MsgCancelSpotOrder{}, "exchange/MsgCancelSpotOrder", nil)
 }
 
 // RegisterInterfaces registers the x/exchange interfaces types with the
@@ -24,6 +25,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreateSpotMarket{},
 		&MsgPlaceSpotLimitOrder{},
 		&MsgPlaceSpotMarketOrder{},
+		&MsgCancelSpotOrder{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

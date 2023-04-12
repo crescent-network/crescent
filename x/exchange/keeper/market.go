@@ -17,6 +17,17 @@ func (k Keeper) CreateSpotMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, ba
 
 	market = types.NewSpotMarket(baseDenom, quoteDenom)
 	k.SetSpotMarket(ctx, market)
+	k.SetSpotMarketState(ctx, market.Id, types.NewSpotMarketState(nil))
 
 	return market, nil
+}
+
+func (k Keeper) EscrowCoin(ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress, amt sdk.Coin) error {
+	escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
+	return k.bankKeeper.SendCoins(ctx, ordererAddr, escrowAddr, sdk.NewCoins(amt))
+}
+
+func (k Keeper) ReleaseCoin(ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress, amt sdk.Coin) error {
+	escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
+	return k.bankKeeper.SendCoins(ctx, escrowAddr, ordererAddr, sdk.NewCoins(amt))
 }

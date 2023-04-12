@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -35,24 +36,53 @@ func (k msgServer) CreateSpotMarket(goCtx context.Context, msg *types.MsgCreateS
 func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlaceSpotLimitOrder) (*types.MsgPlaceSpotLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	order, _, err := k.Keeper.PlaceSpotLimitOrder(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
+	market, found := k.Keeper.GetSpotMarket(ctx, msg.MarketId)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+	}
+
+	order, execQuote, err := k.Keeper.PlaceSpotLimitOrder(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), market,
 		msg.IsBuy, msg.Price, msg.Quantity)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgPlaceSpotLimitOrderResponse{OrderId: order.Id}, nil
+	return &types.MsgPlaceSpotLimitOrderResponse{
+		Order: order,
+		Quote: execQuote,
+	}, nil
 }
 
 func (k msgServer) PlaceSpotMarketOrder(goCtx context.Context, msg *types.MsgPlaceSpotMarketOrder) (*types.MsgPlaceSpotMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.Keeper.PlaceSpotMarketOrder(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
-		msg.IsBuy, msg.Quantity); err != nil {
+	market, found := k.Keeper.GetSpotMarket(ctx, msg.MarketId)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+	}
+
+	order, execQuote, err := k.Keeper.PlaceSpotMarketOrder(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), market,
+		msg.IsBuy, msg.Quantity)
+	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgPlaceSpotMarketOrderResponse{}, nil
+	return &types.MsgPlaceSpotMarketOrderResponse{
+		Order: order,
+		Quote: execQuote,
+	}, nil
+}
+
+func (k msgServer) CancelSpotOrder(goCtx context.Context, msg *types.MsgCancelSpotOrder) (*types.MsgCancelSpotOrderResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, err := k.Keeper.CancelSpotOrder(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId, msg.OrderId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelSpotOrderResponse{}, nil
 }

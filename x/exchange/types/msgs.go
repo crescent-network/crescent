@@ -9,6 +9,7 @@ var (
 	_ sdk.Msg = (*MsgCreateSpotMarket)(nil)
 	_ sdk.Msg = (*MsgPlaceSpotLimitOrder)(nil)
 	_ sdk.Msg = (*MsgPlaceSpotMarketOrder)(nil)
+	_ sdk.Msg = (*MsgCancelSpotOrder)(nil)
 )
 
 // Message types for the module
@@ -16,6 +17,7 @@ const (
 	TypeMsgCreateSpotMarket     = "create_spot_market"
 	TypeMsgPlaceSpotLimitOrder  = "place_spot_limit_order"
 	TypeMsgPlaceSpotMarketOrder = "place_spot_market_order"
+	TypeMsgCancelSpotOrder      = "cancel_spot_order"
 )
 
 func NewMsgCreateSpotMarket(
@@ -110,6 +112,36 @@ func (msg MsgPlaceSpotMarketOrder) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgPlaceSpotMarketOrder) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	return nil
+}
+
+func NewCancelSpotOrder(senderAddr sdk.AccAddress, marketId string, orderId uint64) *MsgCancelSpotOrder {
+	return &MsgCancelSpotOrder{
+		Sender:   senderAddr.String(),
+		MarketId: marketId,
+		OrderId:  orderId,
+	}
+}
+
+func (msg MsgCancelSpotOrder) Route() string { return RouterKey }
+func (msg MsgCancelSpotOrder) Type() string  { return TypeMsgCancelSpotOrder }
+
+func (msg MsgCancelSpotOrder) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCancelSpotOrder) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCancelSpotOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}

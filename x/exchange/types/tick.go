@@ -10,6 +10,20 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
+func ValidateTickPrice(price sdk.Dec, prec int) (tick int32, valid bool) {
+	b := price.BigInt()
+	c := int32(len(b.Text(10)) - 1) // characteristic of b
+	ten := big.NewInt(10)
+	q, r := b.QuoRem(b, ten.Exp(ten, big.NewInt(int64(c-int32(prec))), nil), new(big.Int))
+	i := int32(q.Int64())
+	pow10 := int32(math.Pow10(prec))
+	tick = (i - pow10) + 9*pow10*(c-sdk.Precision)
+	if r.Sign() == 0 {
+		valid = true
+	}
+	return
+}
+
 func PriceAtTick(tick int32, prec int) sdk.Dec {
 	pow10 := int(math.Pow10(prec))
 	q, r := utils.DivMod(int(tick), 9*pow10)
@@ -21,12 +35,8 @@ func PriceAtTick(tick int32, prec int) sdk.Dec {
 }
 
 func TickAtPrice(price sdk.Dec, prec int) int32 {
-	b := price.BigInt()
-	c := int32(len(b.Text(10)) - 1) // characteristic of b
-	ten := big.NewInt(10)
-	i := int32(b.Quo(b, ten.Exp(ten, big.NewInt(int64(c-int32(prec))), nil)).Int64())
-	pow10 := int32(math.Pow10(prec))
-	return (i - pow10) + 9*pow10*(c-sdk.Precision)
+	tick, _ := ValidateTickPrice(price, prec)
+	return tick
 }
 
 func TickToBytes(tick int32) []byte {

@@ -20,19 +20,25 @@ const (
 	QuerierRoute = ModuleName
 )
 
+// TODO: reallocate key prefix bytes
 var (
 	LastOrderIdKey              = []byte{0x01}
 	SpotMarketKeyPrefix         = []byte{0x02}
-	SpotLimitOrderKeyPrefix     = []byte{0x03}
-	SpotOrderBookOrderKeyPrefix = []byte{0x04}
+	SpotMarketStateKeyPrefix    = []byte{0x03}
+	SpotOrderKeyPrefix          = []byte{0x04}
+	SpotOrderBookOrderKeyPrefix = []byte{0x05}
 )
 
 func GetSpotMarketKey(marketId string) []byte {
-	return utils.Key(SpotMarketKeyPrefix, []byte(marketId))
+	return utils.Key(SpotMarketKeyPrefix, utils.LengthPrefixString(marketId))
 }
 
-func GetSpotLimitOrderKey(marketId string, orderId uint64) (key []byte) {
-	return utils.Key(SpotLimitOrderKeyPrefix, utils.LengthPrefixString(marketId), sdk.Uint64ToBigEndian(orderId))
+func GetSpotMarketStateKey(marketId string) []byte {
+	return utils.Key(SpotMarketStateKeyPrefix, utils.LengthPrefixString(marketId))
+}
+
+func GetSpotOrderKey(marketId string, orderId uint64) (key []byte) {
+	return utils.Key(SpotOrderKeyPrefix, utils.LengthPrefixString(marketId), sdk.Uint64ToBigEndian(orderId))
 }
 
 func GetSpotOrderBookOrderKey(marketId string, isBuy bool, price sdk.Dec, orderId uint64) (key []byte) {

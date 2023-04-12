@@ -30,6 +30,6 @@ type BankKeeper interface {
 
 type ExchangeKeeper interface {
 	GetSpotMarket(ctx sdk.Context, marketId string) (market exchangetypes.SpotMarket, found bool)
-	PlaceSpotLimitOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string, isBuy bool, priceLimit sdk.Dec, qty sdk.Int) (order exchangetypes.SpotLimitOrder, rested bool, err error)
-	CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, marketId string, orderId uint64) (order exchangetypes.SpotLimitOrder, err error)
+	PlaceSpotLimitOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, market exchangetypes.SpotMarket, isBuy bool, priceLimit sdk.Dec, qty sdk.Int) (order exchangetypes.SpotOrder, execQuote sdk.Int, err error)
+	CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, marketId string, orderId uint64) (order exchangetypes.SpotOrder, err error)
 }

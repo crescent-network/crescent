@@ -4,23 +4,37 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (k Keeper) AddLiquidity(
-	ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32,
+	ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerPrice, upperPrice sdk.Dec,
 	desiredAmt0, desiredAmt1, minAmt0, minAmt1 sdk.Int) (position types.Position, liquidity, amt0, amt1 sdk.Int, err error) {
+	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice, TickPrecision)
+	if !valid {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid lower tick")
+		return
+	}
+	upperTick, valid := exchangetypes.ValidateTickPrice(upperPrice, TickPrecision)
+	if !valid {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid upper tick")
+		return
+	}
+
 	pool, found := k.GetPool(ctx, poolId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
 		return
 	}
 
-	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
+	var sqrtPriceA, sqrtPriceB sdk.Dec
+	sqrtPriceA, err = types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
 	if err != nil {
 		return
 	}
-	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, TickPrecision) // TODO: use tick prec param
+	sqrtPriceB, err = types.SqrtPriceAtTick(upperTick, TickPrecision) // TODO: use tick prec param
 	if err != nil {
 		return
 	}
@@ -43,7 +57,6 @@ func (k Keeper) AddLiquidity(
 	}
 
 	k.UpdatePoolOrders(ctx, pool, lowerTick, upperTick)
-
 	return
 }
 
@@ -88,7 +101,6 @@ func (k Keeper) RemoveLiquidity(
 	}
 
 	k.UpdatePoolOrders(ctx, pool, position.LowerTick, position.UpperTick)
-
 	return
 }
 
@@ -132,14 +144,14 @@ func (k Keeper) modifyPosition(
 	}
 	if pool.CurrentTick < lowerTick {
 		amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
-		amt1 = sdk.ZeroInt()
+		amt1 = utils.ZeroInt
 	} else if pool.CurrentTick < upperTick {
 		amt0 = types.Amount0Delta(pool.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
 		amt1 = types.Amount1Delta(sqrtPriceA, pool.CurrentSqrtPrice, liquidityDelta)
 		pool.CurrentLiquidity = pool.CurrentLiquidity.Add(liquidityDelta)
 		k.SetPool(ctx, pool)
 	} else {
-		amt0 = sdk.ZeroInt()
+		amt0 = utils.ZeroInt
 		amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 	}
 	return
