@@ -44,7 +44,6 @@ func (k Keeper) PlaceSpotOrder(
 		k.AfterSpotOrderExecuted(ctx, market, ordererAddr, isBuy, firstPrice, lastPrice, execQty, execQuote)
 	}
 
-	// create new order
 	openQty := qty.Sub(execQty)
 	var deposit sdk.Int
 	if priceLimit != nil {
@@ -103,7 +102,7 @@ func (k Keeper) executeSpotOrder(
 			panic(err)
 		}
 		order.OpenQuantity = order.OpenQuantity.Sub(execQty)
-		order.RemainingDeposit = order.RemainingDeposit.Sub(paid)
+		order.RemainingDeposit = order.RemainingDeposit.Sub(receivedCoin.Amount)
 		k.AfterRestingSpotOrderExecuted(ctx, order, execQty) // TODO: rename the hook?
 
 		lastPrice = *order.Price

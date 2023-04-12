@@ -46,7 +46,8 @@ func (k Keeper) AddLiquidity(
 
 	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
 		// TODO: use more verbose error message
-		err = types.ErrConditionsNotMet
+		err = sdkerrors.Wrapf(
+			types.ErrConditionsNotMet, "(%s, %s) < (%s, %s)", amt0, amt1, minAmt0, minAmt1)
 		return
 	}
 
@@ -90,7 +91,8 @@ func (k Keeper) RemoveLiquidity(
 
 	if amt0.LT(minAmt0) || amt1.LT(minAmt1) {
 		// TODO: use more verbose error message
-		err = types.ErrConditionsNotMet
+		err = sdkerrors.Wrapf(
+			types.ErrConditionsNotMet, "(%s, %s) < (%s, %s)", amt0, amt1, minAmt0, minAmt1)
 		return
 	}
 

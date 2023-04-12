@@ -20,7 +20,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, 
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
 	pool = types.NewPool(
 		poolId, denom0, denom1, tickSpacing, reserveAddr,
-		exchangetypes.TickAtPrice(sqrtPrice, TickPrecision), sqrtPrice)
+		exchangetypes.TickAtPrice(price, TickPrecision), sqrtPrice)
 	k.SetPool(ctx, pool)
 	k.SetPoolsByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
@@ -78,9 +78,9 @@ func (k Keeper) updateSpotMarketOrders(
 		if err != nil {
 			panic(err)
 		}
-		qty := sdk.MinInt(
+		qty := utils.MinInt(
 			reserve1.ToDec().QuoTruncate(price).TruncateInt(),
-			sqrtPriceAbove.Sub(sqrtPrice).MulInt(liquidity).QuoTruncate(price).TruncateInt())
+			types.Amount1DeltaRounding(sqrtPrice, sqrtPriceAbove, liquidity, false).ToDec().QuoTruncate(price).TruncateInt())
 		if qty.IsPositive() {
 			order, execQuote, err := k.exchangeKeeper.PlaceSpotLimitOrder(
 				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), market,
@@ -119,9 +119,9 @@ func (k Keeper) updateSpotMarketOrders(
 		if err != nil {
 			panic(err)
 		}
-		qty := sdk.MinInt(
+		qty := utils.MinInt(
 			reserve0,
-			utils.OneDec.QuoTruncate(sqrtPriceBelow).Sub(utils.OneDec.QuoRoundUp(sqrtPrice)).MulInt(liquidity).TruncateInt())
+			types.Amount0DeltaRounding(sqrtPriceBelow, sqrtPrice, liquidity, false))
 		if qty.IsPositive() {
 			order, execQuote, err := k.exchangeKeeper.PlaceSpotLimitOrder(
 				ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), market,
@@ -157,7 +157,7 @@ func (k Keeper) IterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool ty
 }
 
 func (k Keeper) IterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, highestTick int32, cb func(tick int32, liquidity sdk.Int)) {
-	currentTick := pool.CurrentTick / int32(pool.TickSpacing) * int32(pool.TickSpacing) // TODO: check division
+	currentTick := (pool.CurrentTick + int32(pool.TickSpacing)) / int32(pool.TickSpacing) * int32(pool.TickSpacing)
 	liquidity := pool.CurrentLiquidity
 	// TODO: What if there's no tick infos above the current pool's tick but
 	//       still there's liquidity below highestTick? Is this even possible?
