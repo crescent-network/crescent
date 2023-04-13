@@ -102,6 +102,22 @@ func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddr
 	return k.GetPool(ctx, sdk.BigEndianToUint64(bz))
 }
 
+func (k Keeper) GetPoolState(ctx sdk.Context, poolId uint64) (state types.PoolState, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetPoolStateKey(poolId))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &state)
+	return state, true
+}
+
+func (k Keeper) SetPoolState(ctx sdk.Context, poolId uint64, state types.PoolState) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&state)
+	store.Set(types.GetPoolStateKey(poolId), bz)
+}
+
 func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (position types.Position, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPositionKey(positionId))

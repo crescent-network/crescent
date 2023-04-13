@@ -12,9 +12,9 @@ import (
 
 func PlaceSpotMarketOrder(
 	t *testing.T, ctx sdk.Context, k keeper.Keeper,
-	ordererAddr sdk.AccAddress, market types.SpotMarket, isBuy bool, qty sdk.Int) (order types.SpotOrder, execQuote sdk.Int) {
+	ordererAddr sdk.AccAddress, marketId string, isBuy bool, qty sdk.Int) (order types.SpotOrder, execQuote sdk.Int) {
 	var err error
-	order, execQuote, err = k.PlaceSpotMarketOrder(ctx, ordererAddr, market, isBuy, qty)
+	order, execQuote, err = k.PlaceSpotMarketOrder(ctx, ordererAddr, marketId, isBuy, qty)
 	require.NoError(t, err)
 	return
 }

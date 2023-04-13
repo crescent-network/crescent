@@ -10,15 +10,18 @@ option (gogoproto.goproto_getters_all) = false;
 message Params {}
 
 message Pool {
-  uint64 id                 = 1;
-  string denom0             = 2;
-  string denom1             = 3;
-  uint32 tick_spacing       = 4;
-  string reserve_address    = 5;
-  int32  current_tick       = 6;
-  string current_sqrt_price = 7
+  uint64 id              = 1;
+  string denom0          = 2;
+  string denom1          = 3;
+  uint32 tick_spacing    = 4;
+  string reserve_address = 5;
+}
+
+message PoolState {
+  int32  current_tick       = 1;
+  string current_sqrt_price = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string current_liquidity = 8
+  string current_liquidity = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 

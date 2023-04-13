@@ -7,13 +7,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-func NewPool(id uint64, denom0, denom1 string, tickSpacing uint32, reserveAddr sdk.AccAddress, tick int32, sqrtPrice sdk.Dec) Pool {
+func NewPool(id uint64, denom0, denom1 string, tickSpacing uint32, reserveAddr sdk.AccAddress) Pool {
 	return Pool{
-		Id:               id,
-		Denom0:           denom0,
-		Denom1:           denom1,
-		TickSpacing:      tickSpacing,
-		ReserveAddress:   reserveAddr.String(),
+		Id:             id,
+		Denom0:         denom0,
+		Denom1:         denom1,
+		TickSpacing:    tickSpacing,
+		ReserveAddress: reserveAddr.String(),
+	}
+}
+func NewPoolState(tick int32, sqrtPrice sdk.Dec) PoolState {
+	return PoolState{
 		CurrentTick:      tick,
 		CurrentSqrtPrice: sqrtPrice,
 		CurrentLiquidity: sdk.ZeroInt(),

@@ -20,6 +20,7 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	HasSupply(ctx sdk.Context, denom string) bool
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
 
@@ -30,6 +31,6 @@ type BankKeeper interface {
 
 type ExchangeKeeper interface {
 	GetSpotMarket(ctx sdk.Context, marketId string) (market exchangetypes.SpotMarket, found bool)
-	PlaceSpotLimitOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, market exchangetypes.SpotMarket, isBuy bool, priceLimit sdk.Dec, qty sdk.Int) (order exchangetypes.SpotOrder, execQuote sdk.Int, err error)
+	PlaceSpotLimitOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string, isBuy bool, priceLimit sdk.Dec, qty sdk.Int) (order exchangetypes.SpotOrder, execQuote sdk.Int, err error)
 	CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, marketId string, orderId uint64) (order exchangetypes.SpotOrder, err error)
 }

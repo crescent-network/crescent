@@ -28,16 +28,21 @@ var (
 	LastPoolIdKey                      = []byte{0x40}
 	LastPositionIdKey                  = []byte{0x41}
 	PoolKeyPrefix                      = []byte{0x42} // poolId => Pool
-	PoolByReserveAddressIndexKeyPrefix = []byte{0x43} // reserveAddress => poolId
-	PoolsByMarketIndexKeyPrefix        = []byte{0x44} // marketId + poolId => nil
-	PositionKeyPrefix                  = []byte{0x45} // positionId => Position
-	PositionIndexKeyPrefix             = []byte{0x46} // poolId + owner + lowerTick + upperTick => positionId
-	TickInfoKeyPrefix                  = []byte{0x47} // poolId + tick => TickInfo
-	PoolOrderKeyPrefix                 = []byte{0x48} // poolId + marketId + tick => orderId
+	PoolStateKeyPrefix                 = []byte{0x43} // poolId => PoolState
+	PoolByReserveAddressIndexKeyPrefix = []byte{0x44} // reserveAddress => poolId
+	PoolsByMarketIndexKeyPrefix        = []byte{0x45} // marketId + poolId => nil
+	PositionKeyPrefix                  = []byte{0x46} // positionId => Position
+	PositionIndexKeyPrefix             = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
+	TickInfoKeyPrefix                  = []byte{0x48} // poolId + tick => TickInfo
+	PoolOrderKeyPrefix                 = []byte{0x49} // poolId + marketId + tick => orderId
 )
 
 func GetPoolKey(poolId uint64) []byte {
 	return utils.Key(PoolKeyPrefix, sdk.Uint64ToBigEndian(poolId))
+}
+
+func GetPoolStateKey(poolId uint64) []byte {
+	return utils.Key(PoolStateKeyPrefix, sdk.Uint64ToBigEndian(poolId))
 }
 
 func GetPoolByReserveAddressIndexKey(reserveAddr sdk.AccAddress) []byte {

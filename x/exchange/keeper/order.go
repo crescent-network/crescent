@@ -9,20 +9,25 @@ import (
 )
 
 func (k Keeper) PlaceSpotLimitOrder(
-	ctx sdk.Context, ordererAddr sdk.AccAddress, market types.SpotMarket,
+	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, priceLimit sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQuote sdk.Int, err error) {
-	return k.PlaceSpotOrder(ctx, ordererAddr, market, isBuy, &priceLimit, qty)
+	return k.PlaceSpotOrder(ctx, ordererAddr, marketId, isBuy, &priceLimit, qty)
 }
 
 func (k Keeper) PlaceSpotMarketOrder(
-	ctx sdk.Context, ordererAddr sdk.AccAddress, market types.SpotMarket,
+	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, qty sdk.Int) (order types.SpotOrder, execQuote sdk.Int, err error) {
-	return k.PlaceSpotOrder(ctx, ordererAddr, market, isBuy, nil, qty)
+	return k.PlaceSpotOrder(ctx, ordererAddr, marketId, isBuy, nil, qty)
 }
 
 func (k Keeper) PlaceSpotOrder(
-	ctx sdk.Context, ordererAddr sdk.AccAddress, market types.SpotMarket,
+	ctx sdk.Context, ordererAddr sdk.AccAddress, marketId string,
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQuote sdk.Int, err error) {
+	market, found := k.GetSpotMarket(ctx, marketId)
+	if !found {
+		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+		return
+	}
 	if !qty.IsPositive() {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "quantity must be positive")
 		return
@@ -72,6 +77,11 @@ func (k Keeper) executeSpotOrder(
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (firstPrice, lastPrice sdk.Dec, totalExecQty, totalExecQuote sdk.Int) {
 	totalExecQuote = utils.ZeroInt
 	remainingQty := qty
+	type Trade struct {
+		order   types.SpotOrder
+		execQty sdk.Int
+	}
+	var trades []Trade
 	k.IterateSpotOrderBookOrders(ctx, market.Id, !isBuy, priceLimit, func(order types.SpotOrder) (stop bool) {
 		if firstPrice.IsNil() {
 			firstPrice = *order.Price
@@ -103,7 +113,10 @@ func (k Keeper) executeSpotOrder(
 		}
 		order.OpenQuantity = order.OpenQuantity.Sub(execQty)
 		order.RemainingDeposit = order.RemainingDeposit.Sub(receivedCoin.Amount)
-		k.AfterRestingSpotOrderExecuted(ctx, order, execQty) // TODO: rename the hook?
+		trades = append(trades, Trade{
+			order:   order,
+			execQty: execQty,
+		})
 
 		lastPrice = *order.Price
 		if order.OpenQuantity.IsZero() {
@@ -117,6 +130,9 @@ func (k Keeper) executeSpotOrder(
 		remainingQty = remainingQty.Sub(execQty)
 		return remainingQty.IsZero()
 	})
+	for _, trade := range trades {
+		k.AfterRestingSpotOrderExecuted(ctx, trade.order, trade.execQty) // TODO: rename the hook?
+	}
 	totalExecQty = qty.Sub(remainingQty)
 	return
 }

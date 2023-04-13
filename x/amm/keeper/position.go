@@ -28,6 +28,10 @@ func (k Keeper) AddLiquidity(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
 		return
 	}
+	poolState, found := k.GetPoolState(ctx, poolId)
+	if !found { // sanity check
+		panic("pool state not found")
+	}
 
 	var sqrtPriceA, sqrtPriceB sdk.Dec
 	sqrtPriceA, err = types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
@@ -39,7 +43,7 @@ func (k Keeper) AddLiquidity(
 		return
 	}
 	liquidity = types.LiquidityForAmounts(
-		pool.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
+		poolState.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 
 	position, amt0, amt1 = k.modifyPosition(
 		ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
@@ -117,8 +121,12 @@ func (k Keeper) modifyPosition(
 		position = types.NewPosition(positionId, pool.Id, ownerAddr, lowerTick, upperTick)
 	}
 
-	flippedLower := k.updateTick(ctx, pool.Id, lowerTick, pool.CurrentTick, liquidityDelta, false)
-	flippedUpper := k.updateTick(ctx, pool.Id, upperTick, pool.CurrentTick, liquidityDelta, true)
+	poolState, found := k.GetPoolState(ctx, pool.Id)
+	if !found {
+		panic("pool state not found")
+	}
+	flippedLower := k.updateTick(ctx, pool.Id, lowerTick, poolState.CurrentTick, liquidityDelta, false)
+	flippedUpper := k.updateTick(ctx, pool.Id, upperTick, poolState.CurrentTick, liquidityDelta, true)
 
 	// TODO: get fee growth inside
 
@@ -144,14 +152,14 @@ func (k Keeper) modifyPosition(
 	if err != nil {
 		panic(err)
 	}
-	if pool.CurrentTick < lowerTick {
+	if poolState.CurrentTick < lowerTick {
 		amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		amt1 = utils.ZeroInt
-	} else if pool.CurrentTick < upperTick {
-		amt0 = types.Amount0Delta(pool.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
-		amt1 = types.Amount1Delta(sqrtPriceA, pool.CurrentSqrtPrice, liquidityDelta)
-		pool.CurrentLiquidity = pool.CurrentLiquidity.Add(liquidityDelta)
-		k.SetPool(ctx, pool)
+	} else if poolState.CurrentTick < upperTick {
+		amt0 = types.Amount0Delta(poolState.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
+		amt1 = types.Amount1Delta(sqrtPriceA, poolState.CurrentSqrtPrice, liquidityDelta)
+		poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(liquidityDelta)
+		k.SetPoolState(ctx, pool.Id, poolState)
 	} else {
 		amt0 = utils.ZeroInt
 		amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)

@@ -120,13 +120,12 @@ func DecApproxEqual(a, b sdk.Dec) bool {
 }
 
 // DecApproxSqrt returns an approximate estimation of x's square root.
-func DecApproxSqrt(x sdk.Dec) (r sdk.Dec) {
-	var err error
-	r, err = x.ApproxSqrt()
+func DecApproxSqrt(x sdk.Dec) sdk.Dec {
+	r, err := x.ApproxSqrt()
 	if err != nil {
 		panic(err)
 	}
-	return
+	return r
 }
 
 // RandomInt returns a random integer in the half-open interval [min, max).

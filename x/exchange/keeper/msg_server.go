@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -36,13 +35,8 @@ func (k msgServer) CreateSpotMarket(goCtx context.Context, msg *types.MsgCreateS
 func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlaceSpotLimitOrder) (*types.MsgPlaceSpotLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	market, found := k.Keeper.GetSpotMarket(ctx, msg.MarketId)
-	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
-	}
-
 	order, execQuote, err := k.Keeper.PlaceSpotLimitOrder(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), market,
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
 		msg.IsBuy, msg.Price, msg.Quantity)
 	if err != nil {
 		return nil, err
@@ -57,13 +51,8 @@ func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlac
 func (k msgServer) PlaceSpotMarketOrder(goCtx context.Context, msg *types.MsgPlaceSpotMarketOrder) (*types.MsgPlaceSpotMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	market, found := k.Keeper.GetSpotMarket(ctx, msg.MarketId)
-	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
-	}
-
 	order, execQuote, err := k.Keeper.PlaceSpotMarketOrder(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), market,
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
 		msg.IsBuy, msg.Quantity)
 	if err != nil {
 		return nil, err
