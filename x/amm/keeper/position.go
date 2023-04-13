@@ -28,20 +28,11 @@ func (k Keeper) AddLiquidity(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
 		return
 	}
-	poolState, found := k.GetPoolState(ctx, poolId)
-	if !found { // sanity check
-		panic("pool state not found")
-	}
+	poolState := k.MustGetPoolState(ctx, poolId)
 
-	var sqrtPriceA, sqrtPriceB sdk.Dec
-	sqrtPriceA, err = types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
-	if err != nil {
-		return
-	}
-	sqrtPriceB, err = types.SqrtPriceAtTick(upperTick, TickPrecision) // TODO: use tick prec param
-	if err != nil {
-		return
-	}
+	sqrtPriceA := types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
+	sqrtPriceB := types.SqrtPriceAtTick(upperTick, TickPrecision) // TODO: use tick prec param
+
 	liquidity = types.LiquidityForAmounts(
 		poolState.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 
@@ -121,10 +112,7 @@ func (k Keeper) modifyPosition(
 		position = types.NewPosition(positionId, pool.Id, ownerAddr, lowerTick, upperTick)
 	}
 
-	poolState, found := k.GetPoolState(ctx, pool.Id)
-	if !found {
-		panic("pool state not found")
-	}
+	poolState := k.MustGetPoolState(ctx, pool.Id)
 	flippedLower := k.updateTick(ctx, pool.Id, lowerTick, poolState.CurrentTick, liquidityDelta, false)
 	flippedUpper := k.updateTick(ctx, pool.Id, upperTick, poolState.CurrentTick, liquidityDelta, true)
 
@@ -144,14 +132,8 @@ func (k Keeper) modifyPosition(
 	}
 
 	// TODO: handle prec param and error correctly
-	sqrtPriceA, err := types.SqrtPriceAtTick(lowerTick, TickPrecision)
-	if err != nil {
-		panic(err)
-	}
-	sqrtPriceB, err := types.SqrtPriceAtTick(upperTick, TickPrecision)
-	if err != nil {
-		panic(err)
-	}
+	sqrtPriceA := types.SqrtPriceAtTick(lowerTick, TickPrecision)
+	sqrtPriceB := types.SqrtPriceAtTick(upperTick, TickPrecision)
 	if poolState.CurrentTick < lowerTick {
 		amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		amt1 = utils.ZeroInt

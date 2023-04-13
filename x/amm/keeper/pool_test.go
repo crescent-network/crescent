@@ -13,17 +13,17 @@ import (
 
 func (s *KeeperTestSuite) TestPoolOrders() {
 	creatorAddr := utils.TestAddress(1)
-	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, creatorAddr, utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
+	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uusd"))
 
 	market, err := s.app.ExchangeKeeper.CreateSpotMarket(s.ctx, creatorAddr, "ucre", "uusd")
 	s.Require().NoError(err)
 
-	pool, err := s.k.CreatePool(s.ctx, creatorAddr, "ucre", "uusd", 100, sdk.NewDec(10))
+	pool, err := s.k.CreatePool(s.ctx, creatorAddr, "ucre", "uusd", 50, sdk.NewDec(10))
 	s.Require().NoError(err)
 
 	_, _, amt0, amt1, err := s.k.AddLiquidity(
 		s.ctx, creatorAddr, pool.Id, utils.ParseDec("8"), utils.ParseDec("12.5"),
-		sdk.NewInt(100_000000), sdk.NewInt(1000_000000), sdk.NewInt(99_000000), sdk.NewInt(999_000000))
+		sdk.NewInt(1000_000000), sdk.NewInt(10000_000000), sdk.NewInt(999_000000), sdk.NewInt(9999_000000))
 	s.Require().NoError(err)
 	fmt.Println("input", amt0, amt1)
 	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
@@ -37,37 +37,20 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			return false
 		})
 	}
-	fmt.Println("Initial:")
+
+	fmt.Println("Initial")
 	printOrderBook()
 
 	ordererAddr := utils.TestAddress(2)
 	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, ordererAddr, utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
 
 	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-		ordererAddr, market.Id, false, sdk.NewInt(3_000000))
-
-	fmt.Println("After sell:")
+		ordererAddr, market.Id, false, sdk.NewInt(100_000000))
+	fmt.Println("After sell")
 	printOrderBook()
 
-	fmt.Println("=============== buy 1")
 	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-		ordererAddr, market.Id, true, sdk.NewInt(1_000000))
-
-	fmt.Println("=============== buy 2")
-	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-		ordererAddr, market.Id, true, sdk.NewInt(2_000000))
-	
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!1")
-	printOrderBook()
-	fmt.Println("=============== sell 10")
-	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-		ordererAddr, market.Id, false, sdk.NewInt(10_000000))
-	fmt.Println("=============== buy 1 * 10")
-	for i := 0; i < 10; i++ {
-		testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-			ordererAddr, market.Id, true, sdk.NewInt(1_000000))
-	}
-
-	fmt.Println("After buy:")
+		ordererAddr, market.Id, true, sdk.NewInt(100_000000))
+	fmt.Println("After buy")
 	printOrderBook()
 }

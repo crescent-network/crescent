@@ -24,21 +24,19 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 	pool, found := h.k.GetPoolByReserveAddress(ctx, ordererAddr)
 	if found {
 		reserveAddr := ordererAddr
-
-		poolState, found := h.k.GetPoolState(ctx, pool.Id)
-		if !found { // sanity check
-			panic("pool state not found")
-		}
+		poolState := h.k.MustGetPoolState(ctx, pool.Id)
 
 		var nextSqrtPrice sdk.Dec
-		if order.OpenQuantity.IsZero() {
+		if order.OpenQuantity.IsZero() { // Fully executed
 			nextSqrtPrice = utils.DecApproxSqrt(*order.Price)
 			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, exchangetypes.TickAtPrice(*order.Price, TickPrecision))
-		} else {
+		} else { // Partially executed
 			if order.IsBuy {
-				nextSqrtPrice = types.NextSqrtPriceFromInput(poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, execQty, true)
+				nextSqrtPrice = types.NextSqrtPriceFromInput(
+					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, execQty, true)
 			} else {
-				nextSqrtPrice = types.NextSqrtPriceFromOutput(poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, execQty, false)
+				nextSqrtPrice = types.NextSqrtPriceFromOutput(
+					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, execQty, false)
 			}
 		}
 
@@ -70,12 +68,18 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 
 		// Place a new order
 		tick := exchangetypes.TickAtPrice(*order.Price, TickPrecision)
-		var prevTick int32
+		var (
+			prevTick      int32
+			prevSqrtPrice sdk.Dec
+		)
 		if order.IsBuy {
 			prevTick = tick + int32(pool.TickSpacing)
+			prevSqrtPrice = types.SqrtPriceAtTick(prevTick, TickPrecision)
 		} else {
 			prevTick = tick - int32(pool.TickSpacing)
+			prevSqrtPrice = types.SqrtPriceAtTick(prevTick, TickPrecision)
 		}
+		prevPrice := exchangetypes.PriceAtTick(prevTick, TickPrecision)
 
 		// Cancel order at previous tick
 		prevOrderId, found := h.k.GetPoolOrder(ctx, pool.Id, order.MarketId, prevTick)
@@ -83,27 +87,18 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 			if _, err := h.k.exchangeKeeper.CancelSpotOrder(ctx, reserveAddr, order.MarketId, prevOrderId); err != nil {
 				panic(err)
 			}
-			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, tick) // TODO: use cancel hook to delete pool order
+			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, prevTick) // TODO: use cancel hook to delete pool order
 		}
 
-		available := h.k.bankKeeper.GetBalance(ctx, reserveAddr, amtInDenom).Amount
-		var prevSqrtPrice sdk.Dec
-		if order.IsBuy {
-			prevSqrtPrice = utils.DecApproxSqrt(exchangetypes.PriceAtTick(prevTick, TickPrecision))
-		} else {
-			prevSqrtPrice = utils.DecApproxSqrt(exchangetypes.PriceAtTick(prevTick, TickPrecision))
-		}
-
-		prevPrice := exchangetypes.PriceAtTick(prevTick, TickPrecision)
 		var qty sdk.Int
 		if order.IsBuy { // New order is a sell order
 			// TODO: use previous liquidity?
 			qty = utils.MinInt(
-				available,
+				h.k.bankKeeper.GetBalance(ctx, reserveAddr, pool.Denom0).Amount,
 				types.Amount0DeltaRounding(prevSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false))
 		} else { // New order is a buy order
 			quote := utils.MinInt(
-				available,
+				h.k.bankKeeper.GetBalance(ctx, reserveAddr, pool.Denom1).Amount,
 				types.Amount1DeltaRounding(prevSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false))
 			qty = quote.ToDec().QuoTruncate(prevPrice).TruncateInt()
 		}

@@ -112,6 +112,14 @@ func (k Keeper) GetPoolState(ctx sdk.Context, poolId uint64) (state types.PoolSt
 	return state, true
 }
 
+func (k Keeper) MustGetPoolState(ctx sdk.Context, poolId uint64) types.PoolState {
+	state, found := k.GetPoolState(ctx, poolId)
+	if !found {
+		panic("pool state not found")
+	}
+	return state
+}
+
 func (k Keeper) SetPoolState(ctx sdk.Context, poolId uint64, state types.PoolState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&state)

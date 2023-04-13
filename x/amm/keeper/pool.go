@@ -12,11 +12,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, 
 	// TODO: charge pool creation fee from senderAddr
 	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
 
-	var sqrtPrice sdk.Dec
-	sqrtPrice, err = price.ApproxSqrt()
-	if err != nil {
-		return
-	}
+	sqrtPrice := utils.DecApproxSqrt(price)
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
 	pool = types.NewPool(poolId, denom0, denom1, tickSpacing, reserveAddr)
 	state := types.NewPoolState(exchangetypes.TickAtPrice(price, TickPrecision), sqrtPrice)
@@ -46,10 +42,7 @@ func (k Keeper) UpdateSpotMarketOrders(ctx sdk.Context, market exchangetypes.Spo
 func (k Keeper) updateSpotMarketOrders(
 	ctx sdk.Context, market exchangetypes.SpotMarket,
 	pool types.Pool, lowerTick, upperTick int32) {
-	poolState, found := k.GetPoolState(ctx, pool.Id)
-	if !found { // sanity check
-		panic("pool state not found")
-	}
+	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 	initialReserves := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
 	reserve0, reserve1 := initialReserves.AmountOf(pool.Denom0), initialReserves.AmountOf(pool.Denom1)
@@ -69,16 +62,10 @@ func (k Keeper) updateSpotMarketOrders(
 			}
 		}
 		// TODO: check out of tick range
-		sqrtPriceAbove, err := types.SqrtPriceAtTick(tick+int32(pool.TickSpacing), TickPrecision)
-		if err != nil {
-			panic(err)
-		}
+		sqrtPriceAbove := types.SqrtPriceAtTick(tick+int32(pool.TickSpacing), TickPrecision)
 		sqrtPriceAbove = sdk.MinDec(poolState.CurrentSqrtPrice, sqrtPriceAbove)
 		price := exchangetypes.PriceAtTick(tick, TickPrecision)
-		sqrtPrice, err := price.ApproxSqrt()
-		if err != nil {
-			panic(err)
-		}
+		sqrtPrice := utils.DecApproxSqrt(price)
 		qty := utils.MinInt(
 			reserve1.ToDec().QuoTruncate(price).TruncateInt(),
 			types.Amount1DeltaRounding(sqrtPrice, sqrtPriceAbove, liquidity, false).ToDec().QuoTruncate(price).TruncateInt())
@@ -110,16 +97,10 @@ func (k Keeper) updateSpotMarketOrders(
 				reserve0 = reserve0.Add(prevOrder.RemainingDeposit)
 			}
 		}
-		sqrtPriceBelow, err := types.SqrtPriceAtTick(tick-int32(pool.TickSpacing), TickPrecision)
-		if err != nil {
-			panic(err)
-		}
+		sqrtPriceBelow := types.SqrtPriceAtTick(tick-int32(pool.TickSpacing), TickPrecision)
 		sqrtPriceBelow = sdk.MaxDec(poolState.CurrentSqrtPrice, sqrtPriceBelow)
 		price := exchangetypes.PriceAtTick(tick, TickPrecision) // TODO: use tick prec param
-		sqrtPrice, err := price.ApproxSqrt()
-		if err != nil {
-			panic(err)
-		}
+		sqrtPrice := utils.DecApproxSqrt(price)
 		qty := utils.MinInt(
 			reserve0,
 			types.Amount0DeltaRounding(sqrtPriceBelow, sqrtPrice, liquidity, false))
