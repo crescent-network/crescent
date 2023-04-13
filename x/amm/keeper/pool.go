@@ -9,16 +9,23 @@ import (
 )
 
 func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) (pool types.Pool, err error) {
-	// TODO: charge pool creation fee from senderAddr
-	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
+	// Charge pool creation fee to the module account
+	creationFee := k.GetPoolCreationFee(ctx)
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, creationFee); err != nil {
+		return pool, err
+	}
 
-	sqrtPrice := utils.DecApproxSqrt(price)
+	// Create a new pool
+	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
 	pool = types.NewPool(poolId, denom0, denom1, tickSpacing, reserveAddr)
-	state := types.NewPoolState(exchangetypes.TickAtPrice(price, TickPrecision), sqrtPrice)
 	k.SetPool(ctx, pool)
 	k.SetPoolsByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
+
+	// Set initial pool state
+	state := types.NewPoolState(
+		exchangetypes.TickAtPrice(price, TickPrecision), utils.DecApproxSqrt(price))
 	k.SetPoolState(ctx, pool.Id, state)
 
 	return pool, nil

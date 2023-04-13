@@ -3,11 +3,15 @@ syntax = "proto3";
 package crescent.exchange.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
 option (gogoproto.goproto_getters_all) = false;
 
-message Params {}
+message Params {
+  repeated cosmos.base.v1beta1.Coin spot_market_creation_fee = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
 
 message SpotMarket {
   string id             = 1;

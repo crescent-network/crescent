@@ -10,6 +10,11 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
+func MinMaxTick(prec int) (min, max int32) {
+	p := int32(math.Pow10(prec))
+	return -126 * p, 360 * p
+}
+
 func ValidateTickPrice(price sdk.Dec, prec int) (tick int32, valid bool) {
 	b := price.BigInt()
 	c := int32(len(b.Text(10)) - 1) // characteristic of b

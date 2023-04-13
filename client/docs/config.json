@@ -93,6 +93,14 @@
           "Params": "ExchangeParams"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/amm/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AMMParams"
+        }
+      }
     }
   ]
 }

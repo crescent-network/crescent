@@ -3,6 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 var (
@@ -18,9 +20,14 @@ const (
 	TypeMsgRemoveLiquidity = "remove_liquidity"
 )
 
-func NewMsgCreatePool(senderAddr sdk.AccAddress) *MsgCreatePool {
+func NewMsgCreatePool(
+	senderAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) *MsgCreatePool {
 	return &MsgCreatePool{
-		Sender: senderAddr.String(),
+		Sender:      senderAddr.String(),
+		Denom0:      denom0,
+		Denom1:      denom1,
+		TickSpacing: tickSpacing,
+		Price:       price,
 	}
 }
 
@@ -42,6 +49,24 @@ func (msg MsgCreatePool) GetSigners() []sdk.AccAddress {
 func (msg MsgCreatePool) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if err := sdk.ValidateDenom(msg.Denom0); err != nil {
+		return sdkerrors.Wrap(err, "invalid denom0")
+	}
+	if err := sdk.ValidateDenom(msg.Denom1); err != nil {
+		return sdkerrors.Wrap(err, "invalid denom1")
+	}
+	if msg.TickSpacing == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tick spacing must be positive")
+	}
+	if !msg.Price.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "price must be positive")
+	}
+	if msg.Price.LT(exchangetypes.MinPrice) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price %s", exchangetypes.MinPrice)
+	}
+	if msg.Price.LT(exchangetypes.MaxPrice) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price %s", exchangetypes.MaxPrice)
 	}
 	return nil
 }

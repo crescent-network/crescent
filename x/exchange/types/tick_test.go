@@ -11,6 +11,23 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+func TestMinMaxTick(t *testing.T) {
+	for i, tc := range []struct {
+		prec     int
+		min, max int32
+	}{
+		{0, -126, 360},
+		{1, -1260, 3600},
+		{2, -12600, 36000},
+	} {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			min, max := types.MinMaxTick(tc.prec)
+			require.Equal(t, tc.min, min)
+			require.Equal(t, tc.max, max)
+		})
+	}
+}
+
 func TestValidateTickPrice(t *testing.T) {
 	for i, tc := range []struct {
 		price sdk.Dec
@@ -34,10 +51,10 @@ func TestValidateTickPrice(t *testing.T) {
 }
 
 func TestPriceAtTick(t *testing.T) {
-	for i, tc := range []struct{
-		tick int32
+	for i, tc := range []struct {
+		tick  int32
 		price sdk.Dec
-	} {
+	}{
 		{0, sdk.NewDec(1)},
 		{2345, utils.ParseDec("1.2345")},
 		{-230000, utils.ParseDec("0.005")},
