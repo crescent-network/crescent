@@ -6,6 +6,7 @@ import (
 
 var (
 	ZeroInt = sdk.ZeroInt()
+	ZeroDec = sdk.ZeroDec()
 	OneInt  = sdk.OneInt()
 	OneDec  = sdk.OneDec()
 )

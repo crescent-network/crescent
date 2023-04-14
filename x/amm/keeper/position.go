@@ -11,7 +11,7 @@ import (
 
 func (k Keeper) AddLiquidity(
 	ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerPrice, upperPrice sdk.Dec,
-	desiredAmt0, desiredAmt1, minAmt0, minAmt1 sdk.Int) (position types.Position, liquidity, amt0, amt1 sdk.Int, err error) {
+	desiredAmt0, desiredAmt1, minAmt0, minAmt1 sdk.Int) (position types.Position, liquidity sdk.Dec, amt0, amt1 sdk.Int, err error) {
 	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice, TickPrecision)
 	if !valid {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid lower tick")
@@ -57,7 +57,7 @@ func (k Keeper) AddLiquidity(
 }
 
 func (k Keeper) RemoveLiquidity(
-	ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64, liquidity, minAmt0, minAmt1 sdk.Int) (position types.Position, amt0, amt1 sdk.Int, err error) {
+	ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64, liquidity sdk.Dec, minAmt0, minAmt1 sdk.Int) (position types.Position, amt0, amt1 sdk.Int, err error) {
 	var found bool
 	position, found = k.GetPosition(ctx, positionId)
 	if !found {
@@ -103,7 +103,7 @@ func (k Keeper) RemoveLiquidity(
 
 func (k Keeper) modifyPosition(
 	ctx sdk.Context, pool types.Pool, ownerAddr sdk.AccAddress,
-	lowerTick, upperTick int32, liquidityDelta sdk.Int) (position types.Position, amt0, amt1 sdk.Int) {
+	lowerTick, upperTick int32, liquidityDelta sdk.Dec) (position types.Position, amt0, amt1 sdk.Int) {
 	// TODO: validate ticks
 	var found bool
 	position, found = k.GetPositionByParams(ctx, pool.Id, ownerAddr, lowerTick, upperTick)

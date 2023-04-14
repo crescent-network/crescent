@@ -54,7 +54,7 @@ func (k Keeper) updateSpotMarketOrders(
 	initialReserves := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
 	reserve0, reserve1 := initialReserves.AmountOf(pool.Denom0), initialReserves.AmountOf(pool.Denom1)
 	// TODO: cancel previous orders
-	k.iterateTicksBelowPoolPriceWithLiquidity(ctx, pool, poolState, lowerTick, func(tick int32, liquidity sdk.Int) {
+	k.iterateTicksBelowPoolPriceWithLiquidity(ctx, pool, poolState, lowerTick, func(tick int32, liquidity sdk.Dec) {
 		prevOrderId, found := k.GetPoolOrder(ctx, pool.Id, market.Id, tick)
 		if found {
 			prevOrder, err := k.exchangeKeeper.CancelSpotOrder(ctx, reserveAddr, market.Id, prevOrderId)
@@ -90,7 +90,7 @@ func (k Keeper) updateSpotMarketOrders(
 			reserve1 = reserve1.Sub(exchangetypes.DepositAmount(true, price, qty))
 		}
 	})
-	k.iterateTicksAbovePoolPriceWithLiquidity(ctx, pool, poolState, upperTick, func(tick int32, liquidity sdk.Int) {
+	k.iterateTicksAbovePoolPriceWithLiquidity(ctx, pool, poolState, upperTick, func(tick int32, liquidity sdk.Dec) {
 		prevOrderId, found := k.GetPoolOrder(ctx, pool.Id, market.Id, tick)
 		if found {
 			prevOrder, err := k.exchangeKeeper.CancelSpotOrder(ctx, reserveAddr, market.Id, prevOrderId)
@@ -127,7 +127,7 @@ func (k Keeper) updateSpotMarketOrders(
 	})
 }
 
-func (k Keeper) iterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, poolState types.PoolState, lowestTick int32, cb func(tick int32, liquidity sdk.Int)) {
+func (k Keeper) iterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, poolState types.PoolState, lowestTick int32, cb func(tick int32, liquidity sdk.Dec)) {
 	q, _ := utils.DivMod(poolState.CurrentTick, int32(pool.TickSpacing))
 	currentTick := q * int32(pool.TickSpacing)
 	liquidity := poolState.CurrentLiquidity
@@ -145,7 +145,7 @@ func (k Keeper) iterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool ty
 	})
 }
 
-func (k Keeper) iterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, poolState types.PoolState, highestTick int32, cb func(tick int32, liquidity sdk.Int)) {
+func (k Keeper) iterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, poolState types.PoolState, highestTick int32, cb func(tick int32, liquidity sdk.Dec)) {
 	currentTick := (poolState.CurrentTick + int32(pool.TickSpacing)) / int32(pool.TickSpacing) * int32(pool.TickSpacing)
 	liquidity := poolState.CurrentLiquidity
 	// TODO: What if there's no tick infos above the current pool's tick but
@@ -162,4 +162,46 @@ func (k Keeper) iterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, pool ty
 		liquidity = liquidity.Add(tickInfo.NetLiquidity)
 		return false
 	})
+}
+
+func (k Keeper) PlacePoolOrder(
+	ctx sdk.Context, pool types.Pool, poolState types.PoolState, marketId string,
+	isBuy bool, tick int32) error {
+	price := exchangetypes.PriceAtTick(tick, TickPrecision)
+	sqrtPrice := utils.DecApproxSqrt(price)
+	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+
+	// Cancel previous order
+	prevOrderId, found := k.GetPoolOrder(ctx, pool.Id, marketId, tick)
+	if found {
+		if _, err := k.exchangeKeeper.CancelSpotOrder(ctx, reserveAddr, marketId, prevOrderId); err != nil {
+			return err
+		}
+		k.DeletePoolOrder(ctx, pool.Id, marketId, tick) // TODO: use cancel hook to delete pool order
+	}
+
+	// TODO: is it ok to use pool's current liquidity?
+	var qty sdk.Int
+	if isBuy {
+		quote := utils.MinInt(
+			k.bankKeeper.GetBalance(ctx, reserveAddr, pool.Denom1).Amount,
+			types.Amount1DeltaRounding(sqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, false))
+		qty = quote.ToDec().QuoTruncate(price).TruncateInt()
+	} else {
+		qty = utils.MinInt(
+			k.bankKeeper.GetBalance(ctx, reserveAddr, pool.Denom0).Amount,
+			types.Amount0DeltaRounding(sqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, false))
+	}
+	if qty.IsPositive() {
+		order, execQuote, err := k.exchangeKeeper.PlaceSpotLimitOrder(
+			ctx, reserveAddr, marketId, isBuy, price, qty)
+		if err != nil {
+			return err
+		}
+		if !execQuote.IsZero() { // sanity check
+			panic("pool order matched with another order")
+		}
+		k.SetPoolOrder(ctx, pool.Id, order.MarketId, tick, order.Id)
+	}
+	return nil
 }

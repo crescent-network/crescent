@@ -6,7 +6,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
-func (k Keeper) updateTick(ctx sdk.Context, poolId uint64, tick, currentTick int32, liquidityDelta sdk.Int, upper bool) (flipped bool) {
+func (k Keeper) updateTick(ctx sdk.Context, poolId uint64, tick, currentTick int32, liquidityDelta sdk.Dec, upper bool) (flipped bool) {
 	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
 	if !found {
 		tickInfo = types.NewTickInfo()

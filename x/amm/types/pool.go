@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+
+	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 func NewPool(id uint64, denom0, denom1 string, tickSpacing uint32, reserveAddr sdk.AccAddress) Pool {
@@ -20,7 +22,7 @@ func NewPoolState(tick int32, sqrtPrice sdk.Dec) PoolState {
 	return PoolState{
 		CurrentTick:      tick,
 		CurrentSqrtPrice: sqrtPrice,
-		CurrentLiquidity: sdk.ZeroInt(),
+		CurrentLiquidity: utils.ZeroDec,
 	}
 }
 
