@@ -8,25 +8,39 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) RequestTransientSpotOrders(ctx sdk.Context, market exchangetypes.SpotMarket, isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) {
+var _ exchangetypes.SpotOrderSource = Keeper{}
+
+func (k Keeper) RequestTransientSpotOrders(
+	ctx sdk.Context, market exchangetypes.SpotMarket, isBuy bool,
+	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) {
+	var tickLimit int32
+	if priceLimit == nil {
+		minTick, maxTick := exchangetypes.MinMaxTick(TickPrecision)
+		if isBuy {
+			tickLimit = minTick
+		} else {
+			tickLimit = maxTick
+		}
+	} else {
+		tickLimit = exchangetypes.TickAtPrice(*priceLimit, TickPrecision)
+	}
 	k.IteratePoolsByMarket(ctx, market.Id, func(pool types.Pool) (stop bool) {
-		remainingQty := qty
+		accQty := utils.ZeroInt
+		accQuote := utils.ZeroInt
 		poolState := k.MustGetPoolState(ctx, pool.Id)
 		reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 		reserve := k.bankKeeper.SpendableCoins(ctx, reserveAddr).AmountOf(pool.DenomOut(isBuy))
-		var tickLimit int32
-		if priceLimit == nil {
-			minTick, maxTick := exchangetypes.MinMaxTick(TickPrecision)
-			if isBuy {
-				tickLimit = minTick
-			} else {
-				tickLimit = maxTick
-			}
-		} else {
-			tickLimit = exchangetypes.TickAtPrice(*priceLimit, TickPrecision)
-		}
 		var tickDelta int32
 		cb := func(tick int32, liquidity sdk.Dec) (stop bool) {
+			if qtyLimit != nil && !qtyLimit.Sub(accQty).IsPositive() {
+				return true
+			}
+			if quoteLimit != nil && !quoteLimit.Sub(accQuote).IsPositive() {
+				return true
+			}
+			if !reserve.IsPositive() {
+				return true
+			}
 			// TODO: check out of tick range
 			price := exchangetypes.PriceAtTick(tick, TickPrecision)
 			sqrtPrice := utils.DecApproxSqrt(price)
@@ -49,9 +63,10 @@ func (k Keeper) RequestTransientSpotOrders(ctx sdk.Context, market exchangetypes
 					panic(err)
 				}
 				reserve = reserve.Sub(exchangetypes.DepositAmount(isBuy, price, qty))
-				remainingQty = remainingQty.Sub(qty)
+				accQty = accQty.Add(qty)
+				accQuote = accQuote.Add(exchangetypes.QuoteAmount(!isBuy, price, qty))
 			}
-			return !(remainingQty.IsPositive() && reserve.IsPositive())
+			return false
 		}
 		if isBuy {
 			tickDelta = int32(pool.TickSpacing)

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -29,8 +30,8 @@ func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId string, minPrice, m
 		return
 	}
 	// TODO: do not use hardcoded quantity
-	k.constructTransientSpotOrderBook(ctx, market, false, &maxPrice, sdk.NewIntWithDecimal(1, 40))
-	k.constructTransientSpotOrderBook(ctx, market, true, &minPrice, sdk.NewIntWithDecimal(1, 40))
+	k.constructTransientSpotOrderBook(ctx, market, false, &maxPrice, nil, nil)
+	k.constructTransientSpotOrderBook(ctx, market, true, &minPrice, nil, nil)
 	makeCb := func(levels *[]types.OrderBookPriceLevel) func(order types.TransientSpotOrder) (stop bool) {
 		return func(order types.TransientSpotOrder) (stop bool) {
 			if len(*levels) > 0 {
@@ -53,21 +54,30 @@ func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId string, minPrice, m
 	return ob, nil
 }
 
-func (k Keeper) constructTransientSpotOrderBook(ctx sdk.Context, market types.SpotMarket, isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) {
-	remainingQty := qty
+func (k Keeper) constructTransientSpotOrderBook(
+	ctx sdk.Context, market types.SpotMarket, isBuy bool,
+	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) {
+	accQty := utils.ZeroInt
+	accQuote := utils.ZeroInt
 	k.IterateSpotOrderBookSide(ctx, market.Id, isBuy, func(order types.SpotOrder) (stop bool) {
-		// If the order's price exceeds the price limit, break
 		if priceLimit != nil &&
 			((isBuy && order.Price.LT(*priceLimit)) ||
 				(!isBuy && order.Price.GT(*priceLimit))) {
 			return true
 		}
+		if qtyLimit != nil && !qtyLimit.Sub(accQty).IsPositive() {
+			return true
+		}
+		if quoteLimit != nil && !quoteLimit.Sub(accQuote).IsPositive() {
+			return true
+		}
 		k.SetTransientSpotOrderBookOrder(ctx, types.NewTransientSpotOrderFromSpotOrder(order))
-		remainingQty = remainingQty.Sub(order.OpenQuantity)
-		return !remainingQty.IsPositive()
+		accQty = accQty.Add(order.OpenQuantity)
+		accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
+		return false
 	})
 	for _, source := range k.spotOrderSources {
-		source.RequestTransientSpotOrders(ctx, market, isBuy, priceLimit, qty)
+		source.RequestTransientSpotOrders(ctx, market, isBuy, priceLimit, qtyLimit, quoteLimit)
 	}
 }
 

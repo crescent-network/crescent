@@ -5,24 +5,23 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	chain "github.com/crescent-network/crescent/v5/app"
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 func (s *KeeperTestSuite) TestAddLiquidity() {
 	senderAddr := utils.TestAddress(1)
-	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, senderAddr, utils.ParseCoins("10000000ucre,10000000uusd"))
-	pool, err := s.k.CreatePool(s.ctx, senderAddr, "ucre", "uusd", 10, sdk.NewDec(1))
-	s.Require().NoError(err)
+
+	s.FundAccount(senderAddr, utils.ParseCoins("10000000ucre,10000000uusd"))
+
+	pool := s.CreatePool(senderAddr, "ucre", "uusd", 10, sdk.NewDec(1), true)
 	fmt.Println(pool)
-	position, liquidity, amt0, amt1, err := s.k.AddLiquidity(
-		s.ctx, senderAddr, 1, utils.ParseDec("0.8"), utils.ParseDec("1.25"),
+
+	position, liquidity, amt0, amt1 := s.AddLiquidity(
+		senderAddr, 1, utils.ParseDec("0.8"), utils.ParseDec("1.25"),
 		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.NewInt(10000), sdk.NewInt(10000))
-	s.Require().NoError(err)
 	fmt.Println(position, liquidity, amt0, amt1)
 
-	_, amt0, amt1, err = s.k.RemoveLiquidity(
-		s.ctx, senderAddr, 1, sdk.NewDec(9472135), sdk.ZeroInt(), sdk.ZeroInt())
-	s.Require().NoError(err)
+	_, amt0, amt1 = s.RemoveLiquidity(
+		senderAddr, 1, sdk.NewDec(9472135), sdk.ZeroInt(), sdk.ZeroInt())
 	fmt.Println(amt0, amt1)
 }

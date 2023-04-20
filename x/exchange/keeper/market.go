@@ -8,12 +8,23 @@ import (
 )
 
 func (k Keeper) CreateSpotMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, baseDenom, quoteDenom string) (market types.SpotMarket, err error) {
+	if !k.bankKeeper.HasSupply(ctx, baseDenom) {
+		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "base denom %s has no supply", baseDenom)
+		return
+	}
+	if !k.bankKeeper.HasSupply(ctx, quoteDenom) {
+		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quote denom %s has no supply", quoteDenom)
+		return
+	}
+
 	marketId := types.DeriveMarketId(baseDenom, quoteDenom)
 	if _, found := k.GetSpotMarket(ctx, marketId); found {
 		return market, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "spot market already exists")
 	}
 
-	// TODO: charge creation fees
+	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, k.GetSpotMarketCreationFee(ctx)); err != nil {
+		return
+	}
 
 	market = types.NewSpotMarket(baseDenom, quoteDenom)
 	k.SetSpotMarket(ctx, market)

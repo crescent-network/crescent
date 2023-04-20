@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
@@ -9,10 +10,18 @@ import (
 )
 
 func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) (pool types.Pool, err error) {
-	// Charge pool creation fee to the module account
+	if !k.bankKeeper.HasSupply(ctx, denom0) {
+		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom0 %s has no supply", denom0)
+		return
+	}
+	if !k.bankKeeper.HasSupply(ctx, denom1) {
+		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom1 %s has no supply", denom1)
+		return
+	}
+
 	creationFee := k.GetPoolCreationFee(ctx)
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, creationFee); err != nil {
-		return pool, err
+	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, creationFee); err != nil {
+		return
 	}
 
 	// Create a new pool

@@ -5,30 +5,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	chain "github.com/crescent-network/crescent/v5/app"
-	"github.com/crescent-network/crescent/v5/x/amm/keeper"
+	"github.com/crescent-network/crescent/v5/app/testutil"
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
-
-	app *chain.App
-	ctx sdk.Context
-	k   keeper.Keeper
+	testutil.TestSuite
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-func (s *KeeperTestSuite) SetupTest() {
-	app := chain.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	s.app = app
-	s.ctx = ctx
-	s.k = s.app.AMMKeeper
 }

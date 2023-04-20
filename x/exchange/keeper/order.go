@@ -11,17 +11,17 @@ import (
 func (k Keeper) PlaceSpotLimitOrder(
 	ctx sdk.Context, marketId string, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQty, execQuote sdk.Int, err error) {
-	return k.ExecuteSpotOrder(ctx, marketId, ordererAddr, isBuy, &price, qty)
+	return k.PlaceSpotOrder(ctx, marketId, ordererAddr, isBuy, &price, qty)
 }
 
 func (k Keeper) PlaceSpotMarketOrder(
 	ctx sdk.Context, marketId string, ordererAddr sdk.AccAddress,
 	isBuy bool, qty sdk.Int) (execQty, execQuote sdk.Int, err error) {
-	_, execQty, execQuote, err = k.ExecuteSpotOrder(ctx, marketId, ordererAddr, isBuy, nil, qty)
+	_, execQty, execQuote, err = k.PlaceSpotOrder(ctx, marketId, ordererAddr, isBuy, nil, qty)
 	return
 }
 
-func (k Keeper) ExecuteSpotOrder(
+func (k Keeper) PlaceSpotOrder(
 	ctx sdk.Context, marketId string, ordererAddr sdk.AccAddress,
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQty, execQuote sdk.Int, err error) {
 	if !qty.IsPositive() {
@@ -35,14 +35,8 @@ func (k Keeper) ExecuteSpotOrder(
 		return
 	}
 
-	var lastPrice sdk.Dec
-	lastPrice, execQty, execQuote = k.executeSpotOrder(ctx, market, ordererAddr, isBuy, priceLimit, qty)
-
-	if !lastPrice.IsNil() {
-		state := k.MustGetSpotMarketState(ctx, market.Id)
-		state.LastPrice = &lastPrice
-		k.SetSpotMarketState(ctx, market.Id, state)
-	}
+	execQty, execQuote = k.executeSpotOrder(
+		ctx, market, ordererAddr, isBuy, priceLimit, &qty, nil)
 
 	openQty := qty.Sub(execQty)
 	if priceLimit != nil {
@@ -63,20 +57,37 @@ func (k Keeper) ExecuteSpotOrder(
 
 func (k Keeper) executeSpotOrder(
 	ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (lastPrice sdk.Dec, totalExecQty, totalExecQuote sdk.Int) {
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) (totalExecQty, totalExecQuote sdk.Int) {
+	if qtyLimit == nil && quoteLimit == nil { // sanity check
+		panic("quantity limit and quote limit cannot be set to nil at the same time")
+	}
+	var lastPrice sdk.Dec
+	totalExecQty = utils.ZeroInt
 	totalExecQuote = utils.ZeroInt
-	k.constructTransientSpotOrderBook(ctx, market, !isBuy, priceLimit, qty)
-	remainingQty := qty
+	k.constructTransientSpotOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
 	k.IterateTransientSpotOrderBookSide(ctx, market.Id, !isBuy, func(order types.TransientSpotOrder) (stop bool) {
-		// If the order's price exceeds the price limit, break
 		if priceLimit != nil &&
 			((isBuy && order.Order.Price.GT(*priceLimit)) ||
 				(!isBuy && order.Order.Price.LT(*priceLimit))) {
 			return true
 		}
+		if qtyLimit != nil && !qtyLimit.Sub(totalExecQty).IsPositive() {
+			return true
+		}
+		if quoteLimit != nil && !quoteLimit.Sub(totalExecQuote).IsPositive() {
+			return true
+		}
 
-		execQty := utils.MinInt(order.ExecutableQuantity(), remainingQty)
+		var execQty sdk.Int
+		if qtyLimit != nil {
+			execQty = utils.MinInt(order.ExecutableQuantity(), qtyLimit.Sub(totalExecQty))
+		} else { // quoteLimit != nil
+			execQty = utils.MinInt(
+				order.ExecutableQuantity(),
+				quoteLimit.Sub(totalExecQuote).ToDec().QuoTruncate(order.Order.Price).TruncateInt())
+		}
 		execQuote := types.QuoteAmount(isBuy, order.Order.Price, execQty)
+		totalExecQty = totalExecQty.Add(execQty)
 		totalExecQuote = totalExecQuote.Add(execQuote)
 
 		var (
@@ -106,16 +117,18 @@ func (k Keeper) executeSpotOrder(
 
 		k.SetTransientSpotOrderBookOrder(ctx, order)
 		k.AfterSpotOrderExecuted(ctx, order.Order, execQty)
-
-		remainingQty = remainingQty.Sub(execQty)
-		return remainingQty.IsZero()
+		return false
 	})
-	totalExecQty = qty.Sub(remainingQty)
 	k.settleTransientSpotOrderBook(ctx, market)
+	if !lastPrice.IsNil() {
+		state := k.MustGetSpotMarketState(ctx, market.Id)
+		state.LastPrice = &lastPrice
+		k.SetSpotMarketState(ctx, market.Id, state)
+	}
 	return
 }
 
-func (k Keeper) CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, marketId string, orderId uint64) (order types.SpotOrder, err error) {
+func (k Keeper) CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, orderId uint64) (order types.SpotOrder, err error) {
 	order, found := k.GetSpotOrder(ctx, orderId)
 	if !found {
 		return order, sdkerrors.Wrap(sdkerrors.ErrNotFound, "order not found")

@@ -14,7 +14,7 @@ message Params {
 }
 
 message SpotMarket {
-  string id             = 1;
+  string id             = 1; // TODO: use uint64 id?
   string base_denom     = 2;
   string quote_denom    = 3;
   string escrow_address = 4;
@@ -25,7 +25,7 @@ message SpotMarketState {
 }
 
 message SpotOrder {
-  uint64 id        = 1;
+  uint64 id        = 1; // TODO: use string id?
   string orderer   = 2;
   string market_id = 3;
   bool   is_buy    = 4;

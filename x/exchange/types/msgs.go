@@ -10,6 +10,7 @@ var (
 	_ sdk.Msg = (*MsgPlaceSpotLimitOrder)(nil)
 	_ sdk.Msg = (*MsgPlaceSpotMarketOrder)(nil)
 	_ sdk.Msg = (*MsgCancelSpotOrder)(nil)
+	_ sdk.Msg = (*MsgSwapExactIn)(nil)
 )
 
 // Message types for the module
@@ -18,6 +19,7 @@ const (
 	TypeMsgPlaceSpotLimitOrder  = "place_spot_limit_order"
 	TypeMsgPlaceSpotMarketOrder = "place_spot_market_order"
 	TypeMsgCancelSpotOrder      = "cancel_spot_order"
+	TypeMsgSwapExactIn          = "swap_exact_in"
 )
 
 func NewMsgCreateSpotMarket(
@@ -118,11 +120,10 @@ func (msg MsgPlaceSpotMarketOrder) ValidateBasic() error {
 	return nil
 }
 
-func NewCancelSpotOrder(senderAddr sdk.AccAddress, marketId string, orderId uint64) *MsgCancelSpotOrder {
+func NewMsgCancelSpotOrder(senderAddr sdk.AccAddress, orderId uint64) *MsgCancelSpotOrder {
 	return &MsgCancelSpotOrder{
-		Sender:   senderAddr.String(),
-		MarketId: marketId,
-		OrderId:  orderId,
+		Sender:  senderAddr.String(),
+		OrderId: orderId,
 	}
 }
 
@@ -142,6 +143,37 @@ func (msg MsgCancelSpotOrder) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgCancelSpotOrder) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	return nil
+}
+
+func NewMsgSwapExactIn(senderAddr sdk.AccAddress, routes []string, input, minOutput sdk.Coin) *MsgSwapExactIn {
+	return &MsgSwapExactIn{
+		Sender:    senderAddr.String(),
+		Routes:    routes,
+		Input:     input,
+		MinOutput: minOutput,
+	}
+}
+
+func (msg MsgSwapExactIn) Route() string { return RouterKey }
+func (msg MsgSwapExactIn) Type() string  { return TypeMsgSwapExactIn }
+
+func (msg MsgSwapExactIn) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgSwapExactIn) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgSwapExactIn) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}

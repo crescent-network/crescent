@@ -70,10 +70,24 @@ func (k msgServer) CancelSpotOrder(goCtx context.Context, msg *types.MsgCancelSp
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	_, err := k.Keeper.CancelSpotOrder(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId, msg.OrderId)
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.OrderId)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgCancelSpotOrderResponse{}, nil
+}
+
+func (k msgServer) SwapExactIn(goCtx context.Context, msg *types.MsgSwapExactIn) (*types.MsgSwapExactInResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	output, err := k.Keeper.SwapExactIn(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Routes, msg.Input, msg.MinOutput)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSwapExactInResponse{
+		Output: output,
+	}, nil
 }
