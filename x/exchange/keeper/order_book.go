@@ -21,15 +21,16 @@ func (k Keeper) CreateTransientSpotOrder(
 	return nil
 }
 
-func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId string) (ob types.OrderBook, err error) {
+func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId string, minPrice, maxPrice sdk.Dec) (ob types.OrderBook, err error) {
+	ctx, _ = ctx.CacheContext()
 	market, found := k.GetSpotMarket(ctx, marketId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
 	// TODO: do not use hardcoded quantity
-	k.constructTransientSpotOrderBook(ctx, market, false, nil, sdk.NewIntWithDecimal(1, 40))
-	k.constructTransientSpotOrderBook(ctx, market, true, nil, sdk.NewIntWithDecimal(1, 40))
+	k.constructTransientSpotOrderBook(ctx, market, false, &maxPrice, sdk.NewIntWithDecimal(1, 40))
+	k.constructTransientSpotOrderBook(ctx, market, true, &minPrice, sdk.NewIntWithDecimal(1, 40))
 	makeCb := func(levels *[]types.OrderBookPriceLevel) func(order types.TransientSpotOrder) (stop bool) {
 		return func(order types.TransientSpotOrder) (stop bool) {
 			if len(*levels) > 0 {

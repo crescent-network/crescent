@@ -46,7 +46,7 @@ func (k Keeper) iterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool ty
 		if tick <= lowestTick {
 			return true
 		}
-		liquidity = liquidity.Add(tickInfo.NetLiquidity)
+		liquidity = liquidity.Sub(tickInfo.NetLiquidity)
 		return false
 	})
 }

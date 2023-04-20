@@ -27,8 +27,6 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	ordererAddr := utils.TestAddress(2)
 	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, ordererAddr, utils.ParseCoins("1000000_000000ucre,1000000_000000uusd"))
 
-	fmt.Println(s.app.ExchangeKeeper.TransientOrderBook(s.ctx, market.Id))
-
 	balancesBefore := s.app.BankKeeper.SpendableCoins(s.ctx, ordererAddr)
 	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
 		market.Id, ordererAddr, true, sdk.NewInt(110_000000))

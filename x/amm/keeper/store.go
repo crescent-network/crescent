@@ -179,7 +179,7 @@ func (k Keeper) IterateTickInfosBelow(ctx sdk.Context, poolId uint64, currentTic
 	store := ctx.KVStore(k.storeKey)
 	iter := store.ReverseIterator(
 		types.GetTickInfoKeyPrefix(poolId),
-		types.GetTickInfoKey(poolId, currentTick))
+		types.GetTickInfoKey(poolId, currentTick+1))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		_, tick := types.ParseTickInfoKey(iter.Key())
