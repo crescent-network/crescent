@@ -52,7 +52,6 @@ func (k Keeper) AddLiquidity(
 		return
 	}
 
-	k.UpdatePoolOrders(ctx, pool, lowerTick, upperTick)
 	return
 }
 
@@ -97,7 +96,6 @@ func (k Keeper) RemoveLiquidity(
 		return
 	}
 
-	k.UpdatePoolOrders(ctx, pool, position.LowerTick, position.UpperTick)
 	return
 }
 

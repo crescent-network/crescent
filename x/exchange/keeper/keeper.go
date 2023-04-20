@@ -15,17 +15,20 @@ import (
 type Keeper struct {
 	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
+	tsKey      sdk.StoreKey
 	paramSpace paramstypes.Subspace
 
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	hooks         types.ExchangeHooks
+	accountKeeper    types.AccountKeeper
+	bankKeeper       types.BankKeeper
+	hooks            types.ExchangeHooks
+	spotOrderSources []types.SpotOrderSource
 }
 
 // NewKeeper creates a new Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
+	tsKey sdk.StoreKey,
 	paramSpace paramstypes.Subspace,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
@@ -37,6 +40,7 @@ func NewKeeper(
 	return Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
+		tsKey:         tsKey,
 		paramSpace:    paramSpace,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
@@ -53,5 +57,13 @@ func (k *Keeper) SetHooks(hooks types.ExchangeHooks) *Keeper {
 		panic("cannot set hooks twice")
 	}
 	k.hooks = hooks
+	return k
+}
+
+func (k *Keeper) SetSpotOrderSources(sources ...types.SpotOrderSource) *Keeper {
+	if k.spotOrderSources != nil {
+		panic("cannot set spot order sources twice")
+	}
+	k.spotOrderSources = sources
 	return k
 }

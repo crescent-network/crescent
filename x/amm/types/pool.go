@@ -18,6 +18,21 @@ func NewPool(id uint64, denom0, denom1 string, tickSpacing uint32, reserveAddr s
 		ReserveAddress: reserveAddr.String(),
 	}
 }
+
+func (pool Pool) DenomIn(isBuy bool) string {
+	if isBuy {
+		return pool.Denom0
+	}
+	return pool.Denom1
+}
+
+func (pool Pool) DenomOut(isBuy bool) string {
+	if isBuy {
+		return pool.Denom1
+	}
+	return pool.Denom0
+}
+
 func NewPoolState(tick int32, sqrtPrice sdk.Dec) PoolState {
 	return PoolState{
 		CurrentTick:      tick,

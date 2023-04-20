@@ -29,10 +29,16 @@ message SpotOrder {
   string orderer   = 2;
   string market_id = 3;
   bool   is_buy    = 4;
-  string price     = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string open_quantity = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string remaining_deposit = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message TransientSpotOrder {
+  SpotOrder order        = 1 [(gogoproto.nullable) = false];
+  bool      updated      = 2;
+  bool      is_temporary = 3;
 }

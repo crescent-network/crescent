@@ -18,7 +18,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotOrder, execQty sdk.Int) {
+func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotOrder, execQty sdk.Int) {
 	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
 	// TODO: optimize
 	pool, found := h.k.GetPoolByReserveAddress(ctx, ordererAddr)
@@ -27,12 +27,12 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 
 		var nextSqrtPrice sdk.Dec
 		if order.OpenQuantity.IsZero() { // Fully executed
-			nextSqrtPrice = utils.DecApproxSqrt(*order.Price)
-			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, exchangetypes.TickAtPrice(*order.Price, TickPrecision))
+			nextSqrtPrice = utils.DecApproxSqrt(order.Price)
+			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, exchangetypes.TickAtPrice(order.Price, TickPrecision))
 		} else { // Partially executed
 			// TODO: fix nextSqrtPrice?
 			if order.IsBuy {
-				quote := exchangetypes.QuoteAmount(true, *order.Price, execQty)
+				quote := exchangetypes.QuoteAmount(true, order.Price, execQty)
 				nextSqrtPrice = types.NextSqrtPriceFromOutput(
 					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, quote, true)
 			} else {
@@ -41,53 +41,31 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 			}
 		}
 
+		var expectedAmtIn, amtIn, amtInDiff sdk.Int
 		if order.IsBuy {
-			expectedAmtIn := types.Amount0DeltaRounding(
+			expectedAmtIn = types.Amount0DeltaRounding(
 				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
-			amtIn := execQty
-			amtInDiff := amtIn.Sub(expectedAmtIn)
-			if amtInDiff.IsPositive() {
-				reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
-				if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
-					ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.Denom0, amtInDiff))); err != nil {
-					panic(err)
-				}
-			} else if amtInDiff.IsNegative() { // sanity check
-				//panic(amtInDiff)
-			}
+			amtIn = execQty
+			amtInDiff = amtIn.Sub(expectedAmtIn)
 		} else {
-			expectedAmtIn := types.Amount1DeltaRounding(
+			expectedAmtIn = types.Amount1DeltaRounding(
 				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
-			amtIn := exchangetypes.QuoteAmount(false, *order.Price, execQty)
-			amtInDiff := amtIn.Sub(expectedAmtIn)
-			if amtInDiff.IsPositive() {
-				reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
-				if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
-					ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.Denom1, amtInDiff))); err != nil {
-					panic(err)
-				}
-			} else if amtInDiff.IsNegative() { // sanity check
-				//panic(amtInDiff)
-			}
+			amtIn = exchangetypes.QuoteAmount(false, order.Price, execQty)
+			amtInDiff = amtIn.Sub(expectedAmtIn)
 		}
-
-		tick := exchangetypes.TickAtPrice(*order.Price, TickPrecision)
-		var prevTick int32
-		if order.IsBuy {
-			prevTick = tick + int32(pool.TickSpacing)
-		} else {
-			prevTick = tick - int32(pool.TickSpacing)
+		if amtInDiff.IsPositive() {
+			reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+			if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
+				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.DenomIn(order.IsBuy), amtInDiff))); err != nil {
+				panic(err)
+			}
+		} else if amtInDiff.IsNegative() { // sanity check
+			//panic(amtInDiff)
 		}
 
 		poolState.CurrentSqrtPrice = nextSqrtPrice
 		nextTick := types.TickAtSqrtPrice(nextSqrtPrice, TickPrecision)
 		poolState.CurrentTick = nextTick
-
-		// TODO: use previous liquidity?
-		if err := h.k.PlacePoolOrder(
-			ctx, pool, poolState, order.MarketId, !order.IsBuy, prevTick); err != nil {
-			panic(err)
-		}
 
 		if order.OpenQuantity.IsZero() {
 			// TODO: handle liquidity = 0 case
@@ -106,7 +84,4 @@ func (h Hooks) AfterRestingSpotOrderExecuted(ctx sdk.Context, order exchangetype
 		}
 		h.k.SetPoolState(ctx, pool.Id, poolState)
 	}
-}
-
-func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, market exchangetypes.SpotMarket, ordererAddr sdk.AccAddress, isBuy bool, firstPrice, lastPrice sdk.Dec, qty, quoteAmt sdk.Int) {
 }

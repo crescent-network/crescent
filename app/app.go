@@ -358,7 +358,11 @@ func NewApp(
 		exchangetypes.StoreKey,
 		ammtypes.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, ammtypes.TStoreKey)
+	tkeys := sdk.NewTransientStoreKeys(
+		paramstypes.TStoreKey,
+		ammtypes.TStoreKey,
+		exchangetypes.TStoreKey,
+	)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &App{
@@ -613,6 +617,7 @@ func NewApp(
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec,
 		keys[exchangetypes.StoreKey],
+		tkeys[exchangetypes.TStoreKey],
 		app.GetSubspace(exchangetypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -629,6 +634,7 @@ func NewApp(
 	app.ExchangeKeeper.SetHooks(
 		exchangetypes.NewMultiExchangeHooks(app.AMMKeeper.Hooks()),
 	)
+	app.ExchangeKeeper.SetSpotOrderSources(app.AMMKeeper)
 
 	// create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()

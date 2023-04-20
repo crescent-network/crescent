@@ -8,7 +8,7 @@ import (
 
 func NewSpotOrder(
 	orderId uint64, ordererAddr sdk.AccAddress, marketId string,
-	isBuy bool, price *sdk.Dec, qty, openQty, remainingDeposit sdk.Int) SpotOrder {
+	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int) SpotOrder {
 	return SpotOrder{
 		Id:               orderId,
 		Orderer:          ordererAddr.String(),
@@ -21,16 +21,38 @@ func NewSpotOrder(
 	}
 }
 
-func (order SpotOrder) ExecutableQuantity() sdk.Int {
-	if order.Price == nil {
-		// Orders without price are market orders, thus executable quantity
-		// cannot be determined. Simply return zero for market orders.
-		return utils.ZeroInt
+func NewTransientSpotOrder(
+	orderId uint64, ordererAddr sdk.AccAddress, marketId string,
+	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, isTemporary bool) TransientSpotOrder {
+	return TransientSpotOrder{
+		Order: SpotOrder{
+			Id:               orderId,
+			Orderer:          ordererAddr.String(),
+			MarketId:         marketId,
+			IsBuy:            isBuy,
+			Price:            price,
+			Quantity:         qty,
+			OpenQuantity:     openQty,
+			RemainingDeposit: remainingDeposit,
+		},
+		Updated:     false,
+		IsTemporary: isTemporary,
 	}
-	if order.IsBuy {
+}
+
+func NewTransientSpotOrderFromSpotOrder(order SpotOrder) TransientSpotOrder {
+	return TransientSpotOrder{
+		Order:       order,
+		Updated:     false,
+		IsTemporary: false,
+	}
+}
+
+func (order TransientSpotOrder) ExecutableQuantity() sdk.Int {
+	if order.Order.IsBuy {
 		return utils.MinInt(
-			order.OpenQuantity,
-			order.RemainingDeposit.ToDec().QuoTruncate(*order.Price).TruncateInt())
+			order.Order.OpenQuantity,
+			order.Order.RemainingDeposit.ToDec().QuoTruncate(order.Order.Price).TruncateInt())
 	}
-	return order.RemainingDeposit
+	return order.Order.RemainingDeposit
 }

@@ -35,32 +35,34 @@ func (k msgServer) CreateSpotMarket(goCtx context.Context, msg *types.MsgCreateS
 func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlaceSpotLimitOrder) (*types.MsgPlaceSpotLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	order, execQuote, err := k.Keeper.PlaceSpotLimitOrder(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
+	order, execQty, execQuote, err := k.Keeper.PlaceSpotLimitOrder(
+		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Price, msg.Quantity)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgPlaceSpotLimitOrderResponse{
-		Order: order,
-		Quote: execQuote,
+		Rested:           order.Id > 0,
+		OrderId:          order.Id,
+		ExecutedQuantity: execQty,
+		ExecutedQuote:    execQuote,
 	}, nil
 }
 
 func (k msgServer) PlaceSpotMarketOrder(goCtx context.Context, msg *types.MsgPlaceSpotMarketOrder) (*types.MsgPlaceSpotMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	order, execQuote, err := k.Keeper.PlaceSpotMarketOrder(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId,
+	execQty, execQuote, err := k.Keeper.PlaceSpotMarketOrder(
+		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Quantity)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgPlaceSpotMarketOrderResponse{
-		Order: order,
-		Quote: execQuote,
+		ExecutedQuantity: execQty,
+		ExecutedQuote:    execQuote,
 	}, nil
 }
 

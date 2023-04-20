@@ -13,6 +13,8 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
+	TStoreKey = "transient_exchange"
+
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
@@ -37,11 +39,11 @@ func GetSpotMarketStateKey(marketId string) []byte {
 	return utils.Key(SpotMarketStateKeyPrefix, utils.LengthPrefixString(marketId))
 }
 
-func GetSpotOrderKey(marketId string, orderId uint64) (key []byte) {
-	return utils.Key(SpotOrderKeyPrefix, utils.LengthPrefixString(marketId), sdk.Uint64ToBigEndian(orderId))
+func GetSpotOrderKey(orderId uint64) []byte {
+	return utils.Key(SpotOrderKeyPrefix, sdk.Uint64ToBigEndian(orderId))
 }
 
-func GetSpotOrderBookOrderKey(marketId string, isBuy bool, price sdk.Dec, orderId uint64) (key []byte) {
+func GetSpotOrderBookOrderKey(marketId string, isBuy bool, price sdk.Dec, orderId uint64) []byte {
 	var orderIdBytes []byte
 	if isBuy {
 		orderIdBytes = sdk.Uint64ToBigEndian(-orderId)
@@ -56,7 +58,7 @@ func GetSpotOrderBookOrderKey(marketId string, isBuy bool, price sdk.Dec, orderI
 		orderIdBytes)
 }
 
-func GetSpotOrderBookIteratorPrefix(marketId string, isBuy bool) (key []byte) {
+func GetSpotOrderBookIteratorPrefix(marketId string, isBuy bool) []byte {
 	return utils.Key(
 		SpotOrderBookOrderKeyPrefix,
 		utils.LengthPrefixString(marketId),
@@ -76,8 +78,8 @@ func GetSpotOrderBookIteratorEndBytes(marketId string, isBuy bool, price sdk.Dec
 }
 
 var (
-	buyBytes  = []byte{1}
-	sellBytes = []byte{0}
+	buyBytes  = []byte{0}
+	sellBytes = []byte{1}
 )
 
 func isBuyToBytes(isBuy bool) []byte {

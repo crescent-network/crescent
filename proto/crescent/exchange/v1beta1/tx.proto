@@ -34,8 +34,12 @@ message MsgPlaceSpotLimitOrder {
 }
 
 message MsgPlaceSpotLimitOrderResponse {
-  SpotOrder order = 1 [(gogoproto.nullable) = false];
-  string    quote = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  bool   rested            = 1;
+  uint64 order_id          = 2;
+  string executed_quantity = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string executed_quote = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 message MsgPlaceSpotMarketOrder {
@@ -46,8 +50,10 @@ message MsgPlaceSpotMarketOrder {
 }
 
 message MsgPlaceSpotMarketOrderResponse {
-  SpotOrder order = 1 [(gogoproto.nullable) = false];
-  string    quote = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string executed_quantity = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string executed_quote = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 message MsgCancelSpotOrder {

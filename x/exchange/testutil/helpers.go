@@ -7,14 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
-	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func PlaceSpotMarketOrder(
 	t *testing.T, ctx sdk.Context, k keeper.Keeper,
-	ordererAddr sdk.AccAddress, marketId string, isBuy bool, qty sdk.Int) (order types.SpotOrder, execQuote sdk.Int) {
+	marketId string, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (execQty, execQuote sdk.Int) {
 	var err error
-	order, execQuote, err = k.PlaceSpotMarketOrder(ctx, ordererAddr, marketId, isBuy, qty)
+	execQty, execQuote, err = k.PlaceSpotMarketOrder(ctx, marketId, ordererAddr, isBuy, qty)
 	require.NoError(t, err)
 	return
 }

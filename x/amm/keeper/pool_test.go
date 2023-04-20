@@ -8,7 +8,6 @@ import (
 	chain "github.com/crescent-network/crescent/v5/app"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/testutil"
-	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (s *KeeperTestSuite) TestPoolOrders() {
@@ -28,21 +27,20 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	ordererAddr := utils.TestAddress(2)
 	_ = chain.FundAccount(s.app.BankKeeper, s.ctx, ordererAddr, utils.ParseCoins("1000000_000000ucre,1000000_000000uusd"))
 
-	printOrderBook := func() {
-		s.app.ExchangeKeeper.IterateSpotOrderBook(s.ctx, market.Id, func(order types.SpotOrder) (stop bool) {
-			if order.Price.GTE(utils.ParseDec("4.5")) && order.Price.LTE(utils.ParseDec("5.5")) {
-				fmt.Println(order.IsBuy, order.Price, order.OpenQuantity)
-			}
-			return false
-		})
-	}
+	fmt.Println(s.app.ExchangeKeeper.TransientOrderBook(s.ctx, market.Id))
 
+	balancesBefore := s.app.BankKeeper.SpendableCoins(s.ctx, ordererAddr)
 	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-		ordererAddr, market.Id, true, sdk.NewInt(1100_000000))
+		market.Id, ordererAddr, true, sdk.NewInt(110_000000))
+	fmt.Println(s.app.BankKeeper.SpendableCoins(s.ctx, ordererAddr).SafeSub(balancesBefore))
 
+	balancesBefore = s.app.BankKeeper.SpendableCoins(s.ctx, ordererAddr)
 	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-		ordererAddr, market.Id, false, sdk.NewInt(80_000000))
-	printOrderBook()
+		market.Id, ordererAddr, false, sdk.NewInt(80_000000))
+	fmt.Println(s.app.BankKeeper.SpendableCoins(s.ctx, ordererAddr).SafeSub(balancesBefore))
+
+	balancesBefore = s.app.BankKeeper.SpendableCoins(s.ctx, ordererAddr)
 	testutil.PlaceSpotMarketOrder(s.T(), s.ctx, s.app.ExchangeKeeper,
-		ordererAddr, market.Id, false, sdk.NewInt(10_000000))
+		market.Id, ordererAddr, false, sdk.NewInt(10_000000))
+	fmt.Println(s.app.BankKeeper.SpendableCoins(s.ctx, ordererAddr).SafeSub(balancesBefore))
 }
