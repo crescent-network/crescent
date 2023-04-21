@@ -28,7 +28,6 @@ func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotO
 		var nextSqrtPrice sdk.Dec
 		if order.OpenQuantity.IsZero() { // Fully executed
 			nextSqrtPrice = utils.DecApproxSqrt(order.Price)
-			h.k.DeletePoolOrder(ctx, pool.Id, order.MarketId, exchangetypes.TickAtPrice(order.Price, TickPrecision))
 		} else { // Partially executed
 			// TODO: fix nextSqrtPrice?
 			if order.IsBuy {

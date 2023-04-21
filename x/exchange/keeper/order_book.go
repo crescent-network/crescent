@@ -59,6 +59,7 @@ func (k Keeper) constructTransientSpotOrderBook(
 	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) {
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
+	// TODO: adjust price limit
 	k.IterateSpotOrderBookSide(ctx, market.Id, isBuy, func(order types.SpotOrder) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Price.LT(*priceLimit)) ||
