@@ -10,11 +10,13 @@ import (
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 var (
-	KeyPoolCreationFee = []byte("SpotMarketCreationFee")
+	KeyPoolCreationFee    = []byte("SpotMarketCreationFee")
+	KeyDefaultTickSpacing = []byte("DefaultTickSpacing")
 )
 
 var (
-	DefaultPoolCreationFee = sdk.NewCoins()
+	DefaultPoolCreationFee    = sdk.NewCoins()
+	DefaultDefaultTickSpacing = uint32(50)
 )
 
 func ParamKeyTable() paramstypes.KeyTable {
@@ -24,7 +26,8 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns a default params for the module.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: DefaultPoolCreationFee,
+		PoolCreationFee:    DefaultPoolCreationFee,
+		DefaultTickSpacing: DefaultDefaultTickSpacing,
 	}
 }
 
@@ -32,6 +35,7 @@ func DefaultParams() Params {
 func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyPoolCreationFee, &params.PoolCreationFee, validatePoolCreationFee),
+		paramstypes.NewParamSetPair(KeyDefaultTickSpacing, &params.DefaultTickSpacing, validateDefaultTickSpacing),
 	}
 }
 
@@ -42,6 +46,7 @@ func (params Params) Validate() error {
 		validateFunc func(i interface{}) error
 	}{
 		{params.PoolCreationFee, validatePoolCreationFee},
+		{params.DefaultTickSpacing, validateDefaultTickSpacing},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -57,6 +62,17 @@ func validatePoolCreationFee(i interface{}) error {
 	}
 	if err := v.Validate(); err != nil {
 		return fmt.Errorf("invalid pool creation fee: %w", err)
+	}
+	return nil
+}
+
+func validateDefaultTickSpacing(i interface{}) error {
+	v, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v == 0 {
+		return fmt.Errorf("tick spacing must be positive")
 	}
 	return nil
 }

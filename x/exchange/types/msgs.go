@@ -54,7 +54,7 @@ func (msg MsgCreateSpotMarket) ValidateBasic() error {
 }
 
 func NewMsgPlaceSpotLimitOrder(
-	senderAddr sdk.AccAddress, marketId string,
+	senderAddr sdk.AccAddress, marketId uint64,
 	isBuy bool, price sdk.Dec, quantity sdk.Int) *MsgPlaceSpotLimitOrder {
 	return &MsgPlaceSpotLimitOrder{
 		Sender:   senderAddr.String(),
@@ -88,7 +88,7 @@ func (msg MsgPlaceSpotLimitOrder) ValidateBasic() error {
 }
 
 func NewMsgPlaceSpotMarketOrder(
-	senderAddr sdk.AccAddress, marketId string,
+	senderAddr sdk.AccAddress, marketId uint64,
 	isBuy bool, quantity sdk.Int) *MsgPlaceSpotMarketOrder {
 	return &MsgPlaceSpotMarketOrder{
 		Sender:   senderAddr.String(),
@@ -149,7 +149,7 @@ func (msg MsgCancelSpotOrder) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgSwapExactIn(senderAddr sdk.AccAddress, routes []string, input, minOutput sdk.Coin) *MsgSwapExactIn {
+func NewMsgSwapExactIn(senderAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin) *MsgSwapExactIn {
 	return &MsgSwapExactIn{
 		Sender:    senderAddr.String(),
 		Routes:    routes,

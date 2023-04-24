@@ -22,7 +22,7 @@ func (k Keeper) CreateTransientSpotOrder(
 	return nil
 }
 
-func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId string, minPrice, maxPrice sdk.Dec) (ob types.OrderBook, err error) {
+func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId uint64, minPrice, maxPrice sdk.Dec) (ob types.OrderBook, err error) {
 	ctx, _ = ctx.CacheContext()
 	market, found := k.GetSpotMarket(ctx, marketId)
 	if !found {

@@ -9,20 +9,20 @@ import (
 )
 
 func (k Keeper) PlaceSpotLimitOrder(
-	ctx sdk.Context, marketId string, ordererAddr sdk.AccAddress,
+	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQty, execQuote sdk.Int, err error) {
 	return k.PlaceSpotOrder(ctx, marketId, ordererAddr, isBuy, &price, qty)
 }
 
 func (k Keeper) PlaceSpotMarketOrder(
-	ctx sdk.Context, marketId string, ordererAddr sdk.AccAddress,
+	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, qty sdk.Int) (execQty, execQuote sdk.Int, err error) {
 	_, execQty, execQuote, err = k.PlaceSpotOrder(ctx, marketId, ordererAddr, isBuy, nil, qty)
 	return
 }
 
 func (k Keeper) PlaceSpotOrder(
-	ctx sdk.Context, marketId string, ordererAddr sdk.AccAddress,
+	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQty, execQuote sdk.Int, err error) {
 	if !qty.IsPositive() {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "quantity must be positive")

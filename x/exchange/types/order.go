@@ -7,7 +7,7 @@ import (
 )
 
 func NewSpotOrder(
-	orderId uint64, ordererAddr sdk.AccAddress, marketId string,
+	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
 	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int) SpotOrder {
 	return SpotOrder{
 		Id:               orderId,
@@ -22,7 +22,7 @@ func NewSpotOrder(
 }
 
 func NewTransientSpotOrder(
-	orderId uint64, ordererAddr sdk.AccAddress, marketId string,
+	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
 	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, isTemporary bool) TransientSpotOrder {
 	return TransientSpotOrder{
 		Order: SpotOrder{

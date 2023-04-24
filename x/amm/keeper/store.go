@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v5/x/amm/types"
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (k Keeper) GetLastPoolId(ctx sdk.Context) (poolId uint64) {
@@ -65,9 +64,9 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store.Set(types.GetPoolKey(pool.Id), bz)
 }
 
-func (k Keeper) SetPoolsByMarketIndex(ctx sdk.Context, pool types.Pool) {
+func (k Keeper) SetPoolsByMarketIndex(ctx sdk.Context, marketId uint64, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPoolsByMarketIndexKey(exchangetypes.DeriveMarketId(pool.Denom0, pool.Denom1), pool.Id), []byte{})
+	store.Set(types.GetPoolsByMarketIndexKey(marketId, pool.Id), []byte{})
 }
 
 func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
@@ -77,7 +76,7 @@ func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
 		sdk.Uint64ToBigEndian(pool.Id))
 }
 
-func (k Keeper) IteratePoolsByMarket(ctx sdk.Context, marketId string, cb func(pool types.Pool) (stop bool)) {
+func (k Keeper) IteratePoolsByMarket(ctx sdk.Context, marketId uint64, cb func(pool types.Pool) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByMarketIndexKeyPrefix(marketId))
 	defer iter.Close()

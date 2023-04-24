@@ -7,7 +7,7 @@ import (
 
 func (k Keeper) SwapExactIn(
 	ctx sdk.Context, ordererAddr sdk.AccAddress,
-	routes []string, input, minOutput sdk.Coin) (output sdk.Coin, err error) {
+	routes []uint64, input, minOutput sdk.Coin) (output sdk.Coin, err error) {
 	currentIn := input
 	for _, marketId := range routes {
 		if !currentIn.Amount.IsPositive() {
@@ -15,7 +15,7 @@ func (k Keeper) SwapExactIn(
 		}
 		market, found := k.GetSpotMarket(ctx, marketId)
 		if !found {
-			err = sdkerrors.Wrapf(sdkerrors.ErrNotFound, "market %s not found", marketId)
+			err = sdkerrors.Wrapf(sdkerrors.ErrNotFound, "market %d not found", marketId)
 			return
 		}
 		var (

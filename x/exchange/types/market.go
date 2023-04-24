@@ -1,26 +1,17 @@
 package types
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-func DeriveMarketId(baseDenom, quoteDenom string) string {
-	s := fmt.Sprintf("spot/market/%s/%s", baseDenom, quoteDenom)
-	sum := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(sum[:])
+func DeriveEscrowAddress(marketId uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("SpotMarketEscrowAddress/%d", marketId)))
 }
 
-func DeriveEscrowAddress(marketId string) sdk.AccAddress {
-	return address.Module(ModuleName, []byte(fmt.Sprintf("SpotMarketEscrowAddress/%s", marketId)))
-}
-
-func NewSpotMarket(baseDenom, quoteDenom string) SpotMarket {
-	marketId := DeriveMarketId(baseDenom, quoteDenom)
+func NewSpotMarket(marketId uint64, baseDenom, quoteDenom string) SpotMarket {
 	return SpotMarket{
 		Id:            marketId,
 		BaseDenom:     baseDenom,

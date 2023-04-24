@@ -24,12 +24,12 @@ message MsgCreateSpotMarket {
 }
 
 message MsgCreateSpotMarketResponse {
-  string market_id = 1;
+  uint64 market_id = 1;
 }
 
 message MsgPlaceSpotLimitOrder {
   string sender    = 1;
-  string market_id = 2;
+  uint64 market_id = 2;
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
@@ -46,7 +46,7 @@ message MsgPlaceSpotLimitOrderResponse {
 
 message MsgPlaceSpotMarketOrder {
   string sender    = 1;
-  string market_id = 2;
+  uint64 market_id = 2;
   bool   is_buy    = 3;
   string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
@@ -67,7 +67,7 @@ message MsgCancelSpotOrderResponse {}
 
 message MsgSwapExactIn {
   string                   sender     = 1;
-  repeated string          routes     = 2;
+  repeated uint64          routes     = 2;
   cosmos.base.v1beta1.Coin input      = 3 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin min_output = 4 [(gogoproto.nullable) = false];
 }

@@ -11,14 +11,16 @@ option (gogoproto.goproto_getters_all) = false;
 message Params {
   repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  uint32 default_tick_spacing = 2;
 }
 
 message Pool {
   uint64 id              = 1;
-  string denom0          = 2;
-  string denom1          = 3;
-  uint32 tick_spacing    = 4;
-  string reserve_address = 5;
+  uint64 market_id       = 2;
+  string denom0          = 3;
+  string denom1          = 4;
+  uint32 tick_spacing    = 5;
+  string reserve_address = 6;
 }
 
 message PoolState {

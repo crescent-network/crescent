@@ -21,11 +21,10 @@ const (
 )
 
 func NewMsgCreatePool(
-	senderAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) *MsgCreatePool {
+	senderAddr sdk.AccAddress, marketId uint64, tickSpacing uint32, price sdk.Dec) *MsgCreatePool {
 	return &MsgCreatePool{
 		Sender:      senderAddr.String(),
-		Denom0:      denom0,
-		Denom1:      denom1,
+		MarketId:    marketId,
 		TickSpacing: tickSpacing,
 		Price:       price,
 	}
@@ -50,11 +49,8 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
-	if err := sdk.ValidateDenom(msg.Denom0); err != nil {
-		return sdkerrors.Wrap(err, "invalid denom0")
-	}
-	if err := sdk.ValidateDenom(msg.Denom1); err != nil {
-		return sdkerrors.Wrap(err, "invalid denom1")
+	if msg.MarketId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
 	if msg.TickSpacing == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tick spacing must be positive")
@@ -71,9 +67,18 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgAddLiquidity(senderAddr sdk.AccAddress) *MsgAddLiquidity {
+func NewMsgAddLiquidity(
+	senderAddr sdk.AccAddress, poolId uint64, lowerPrice, upperPrice sdk.Dec,
+	desiredAmt0, desiredAmt1, minAmt0, minAmt1 sdk.Int) *MsgAddLiquidity {
 	return &MsgAddLiquidity{
-		Sender: senderAddr.String(),
+		Sender:         senderAddr.String(),
+		PoolId:         poolId,
+		LowerPrice:     lowerPrice,
+		UpperPrice:     upperPrice,
+		DesiredAmount0: desiredAmt0,
+		DesiredAmount1: desiredAmt1,
+		MinAmount0:     minAmt0,
+		MinAmount1:     minAmt1,
 	}
 }
 
@@ -99,9 +104,15 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgRemoveLiquidity(senderAddr sdk.AccAddress) *MsgRemoveLiquidity {
+func NewMsgRemoveLiquidity(
+	senderAddr sdk.AccAddress, positionId uint64, liquidity sdk.Dec,
+	minAmt0, minAmt1 sdk.Int) *MsgRemoveLiquidity {
 	return &MsgRemoveLiquidity{
-		Sender: senderAddr.String(),
+		Sender:     senderAddr.String(),
+		PositionId: positionId,
+		Liquidity:  liquidity,
+		MinAmount0: minAmt0,
+		MinAmount1: minAmt1,
 	}
 }
 

@@ -17,7 +17,7 @@ func (s *TestSuite) CreateSpotMarket(creatorAddr sdk.AccAddress, baseDenom, quot
 }
 
 func (s *TestSuite) PlaceSpotLimitOrder(
-	marketId string, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int) (order exchangetypes.SpotOrder, execQty, execQuote sdk.Int) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int) (order exchangetypes.SpotOrder, execQty, execQuote sdk.Int) {
 	s.T().Helper()
 	var err error
 	order, execQty, execQuote, err = s.App.ExchangeKeeper.PlaceSpotLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty)
@@ -26,7 +26,7 @@ func (s *TestSuite) PlaceSpotLimitOrder(
 }
 
 func (s *TestSuite) PlaceSpotMarketOrder(
-	marketId string, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (execQty, execQuote sdk.Int) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (execQty, execQuote sdk.Int) {
 	s.T().Helper()
 	var err error
 	execQty, execQuote, err = s.App.ExchangeKeeper.PlaceSpotMarketOrder(s.Ctx, marketId, ordererAddr, isBuy, qty)
@@ -35,7 +35,7 @@ func (s *TestSuite) PlaceSpotMarketOrder(
 }
 
 func (s *TestSuite) SwapExactIn(
-	ordererAddr sdk.AccAddress, routes []string, input, minOutput sdk.Coin) (output sdk.Coin) {
+	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin) (output sdk.Coin) {
 	s.T().Helper()
 	var err error
 	output, err = s.App.ExchangeKeeper.SwapExactIn(s.Ctx, ordererAddr, routes, input, minOutput)

@@ -13,7 +13,7 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	s.FundAccount(creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uusd"))
 
 	market := s.CreateSpotMarket(creatorAddr, "ucre", "uusd", true)
-	pool := s.CreatePool(creatorAddr, "ucre", "uusd", 500, sdk.NewDec(5), true)
+	pool := s.CreatePool(creatorAddr, market.Id, 500, sdk.NewDec(5), true)
 
 	s.AddLiquidity(
 		creatorAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),

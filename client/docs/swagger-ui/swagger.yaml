@@ -9767,6 +9767,9 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                  default_tick_spacing:
+                    type: integer
+                    format: int64
         default:
           description: An unexpected error response
           schema:
@@ -15281,6 +15284,9 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+      default_tick_spacing:
+        type: integer
+        format: int64
   crescent.amm.v1beta1.QueryParamsResponse:
     type: object
     properties:
@@ -15304,3 +15310,6 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+          default_tick_spacing:
+            type: integer
+            format: int64

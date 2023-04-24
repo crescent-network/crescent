@@ -9,9 +9,10 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-func NewPool(id uint64, denom0, denom1 string, tickSpacing uint32, reserveAddr sdk.AccAddress) Pool {
+func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32, reserveAddr sdk.AccAddress) Pool {
 	return Pool{
 		Id:             id,
+		MarketId:       marketId,
 		Denom0:         denom0,
 		Denom1:         denom1,
 		TickSpacing:    tickSpacing,

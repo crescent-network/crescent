@@ -16,9 +16,7 @@ func (k Keeper) CreateSpotMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, ba
 		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quote denom %s has no supply", quoteDenom)
 		return
 	}
-
-	marketId := types.DeriveMarketId(baseDenom, quoteDenom)
-	if _, found := k.GetSpotMarket(ctx, marketId); found {
+	if _, found := k.GetSpotMarketByDenoms(ctx, baseDenom, quoteDenom); found {
 		return market, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "spot market already exists")
 	}
 
@@ -26,9 +24,11 @@ func (k Keeper) CreateSpotMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, ba
 		return
 	}
 
-	market = types.NewSpotMarket(baseDenom, quoteDenom)
+	marketId := k.GetNextMarketIdWithUpdate(ctx)
+	market = types.NewSpotMarket(marketId, baseDenom, quoteDenom)
 	k.SetSpotMarket(ctx, market)
 	k.SetSpotMarketState(ctx, market.Id, types.NewSpotMarketState(nil))
+	k.SetSpotMarketByDenomsIndex(ctx, market)
 
 	return market, nil
 }

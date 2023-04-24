@@ -6,12 +6,12 @@ import (
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
-func (s *TestSuite) CreatePool(creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec, fundFee bool) ammtypes.Pool {
+func (s *TestSuite) CreatePool(creatorAddr sdk.AccAddress, marketId uint64, tickSpacing uint32, price sdk.Dec, fundFee bool) ammtypes.Pool {
 	s.T().Helper()
 	if fundFee {
 		s.FundAccount(creatorAddr, s.App.AMMKeeper.GetPoolCreationFee(s.Ctx))
 	}
-	pool, err := s.App.AMMKeeper.CreatePool(s.Ctx, creatorAddr, denom0, denom1, tickSpacing, price)
+	pool, err := s.App.AMMKeeper.CreatePool(s.Ctx, creatorAddr, marketId, tickSpacing, price)
 	s.Require().NoError(err)
 	return pool
 }

@@ -9,13 +9,10 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, denom1 string, tickSpacing uint32, price sdk.Dec) (pool types.Pool, err error) {
-	if !k.bankKeeper.HasSupply(ctx, denom0) {
-		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom0 %s has no supply", denom0)
-		return
-	}
-	if !k.bankKeeper.HasSupply(ctx, denom1) {
-		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom1 %s has no supply", denom1)
+func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId uint64, tickSpacing uint32, price sdk.Dec) (pool types.Pool, err error) {
+	market, found := k.exchangeKeeper.GetSpotMarket(ctx, marketId)
+	if !found {
+		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
 
@@ -27,9 +24,9 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, denom0, 
 	// Create a new pool
 	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
-	pool = types.NewPool(poolId, denom0, denom1, tickSpacing, reserveAddr)
+	pool = types.NewPool(poolId, marketId, market.BaseDenom, market.QuoteDenom, tickSpacing, reserveAddr)
 	k.SetPool(ctx, pool)
-	k.SetPoolsByMarketIndex(ctx, pool)
+	k.SetPoolsByMarketIndex(ctx, marketId, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
 
 	// Set initial pool state

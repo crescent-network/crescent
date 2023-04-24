@@ -23,7 +23,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (*types.MsgCreatePoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	pool, err := k.Keeper.CreatePool(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Denom0, msg.Denom1, msg.TickSpacing, msg.Price)
+	pool, err := k.Keeper.CreatePool(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId, msg.TickSpacing, msg.Price)
 	if err != nil {
 		return nil, err
 	}

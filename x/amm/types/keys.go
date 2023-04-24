@@ -34,7 +34,6 @@ var (
 	PositionKeyPrefix                  = []byte{0x46} // positionId => Position
 	PositionIndexKeyPrefix             = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
 	TickInfoKeyPrefix                  = []byte{0x48} // poolId + tick => TickInfo
-	PoolOrderKeyPrefix                 = []byte{0x49} // poolId + marketId + tick => orderId
 )
 
 func GetPoolKey(poolId uint64) []byte {
@@ -49,15 +48,15 @@ func GetPoolByReserveAddressIndexKey(reserveAddr sdk.AccAddress) []byte {
 	return utils.Key(PoolByReserveAddressIndexKeyPrefix, reserveAddr)
 }
 
-func GetPoolsByMarketIndexKey(marketId string, poolId uint64) []byte {
+func GetPoolsByMarketIndexKey(marketId uint64, poolId uint64) []byte {
 	return utils.Key(
 		PoolsByMarketIndexKeyPrefix,
-		utils.LengthPrefixString(marketId),
+		sdk.Uint64ToBigEndian(marketId),
 		sdk.Uint64ToBigEndian(poolId))
 }
 
-func GetPoolsByMarketIndexKeyPrefix(marketId string) []byte {
-	return utils.Key(PoolsByMarketIndexKeyPrefix, utils.LengthPrefixString(marketId))
+func GetPoolsByMarketIndexKeyPrefix(marketId uint64) []byte {
+	return utils.Key(PoolsByMarketIndexKeyPrefix, sdk.Uint64ToBigEndian(marketId))
 }
 
 func GetPositionKey(positionId uint64) []byte {
@@ -84,38 +83,14 @@ func GetTickInfoKeyPrefix(poolId uint64) []byte {
 	return utils.Key(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId))
 }
 
-func GetPoolOrderKey(poolId uint64, marketId string, tick int32) []byte {
-	return utils.Key(
-		PoolOrderKeyPrefix,
-		sdk.Uint64ToBigEndian(poolId),
-		utils.LengthPrefixString(marketId),
-		exchangetypes.TickToBytes(tick))
-}
-
-func GetPoolOrderKeyPrefix(poolId uint64, marketId string) []byte {
-	return utils.Key(
-		PoolOrderKeyPrefix,
-		sdk.Uint64ToBigEndian(poolId),
-		utils.LengthPrefixString(marketId))
-}
-
-func ParsePoolsByMarketIndexKey(key []byte) (marketId string, poolId uint64) {
-	marketIdLen := key[1]
-	marketId = string(key[2 : 2+marketIdLen])
-	poolId = sdk.BigEndianToUint64(key[2+marketIdLen:])
+func ParsePoolsByMarketIndexKey(key []byte) (marketId, poolId uint64) {
+	marketId = sdk.BigEndianToUint64(key[1:9])
+	poolId = sdk.BigEndianToUint64(key[9:17])
 	return
 }
 
 func ParseTickInfoKey(key []byte) (poolId uint64, tick int32) {
 	poolId = sdk.BigEndianToUint64(key[1:9])
 	tick = exchangetypes.BytesToTick(key[9:])
-	return
-}
-
-func ParsePoolOrderKey(key []byte) (poolId uint64, marketId string, tick int32) {
-	poolId = sdk.BigEndianToUint64(key[1:9])
-	marketIdLen := key[9]
-	marketId = string(key[10 : 10+marketIdLen])
-	tick = exchangetypes.BytesToTick(key[10+marketIdLen:])
 	return
 }
