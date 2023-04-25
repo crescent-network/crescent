@@ -41,7 +41,7 @@ func (k Keeper) PlaceSpotOrder(
 	openQty := qty.Sub(execQty)
 	if priceLimit != nil {
 		if openQty.IsPositive() {
-			orderId := k.GetNextOrderIdWithUpdate(ctx)
+			orderId := k.GetNextSpotOrderIdWithUpdate(ctx)
 			deposit := types.DepositAmount(isBuy, *priceLimit, openQty)
 			order = types.NewSpotOrder(
 				orderId, ordererAddr, market.Id, isBuy, *priceLimit, qty, openQty, deposit)

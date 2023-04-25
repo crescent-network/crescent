@@ -15,7 +15,7 @@ func (k Keeper) CreateTransientSpotOrder(
 	if err := k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit)); err != nil {
 		return err
 	}
-	orderId := k.GetNextOrderIdWithUpdate(ctx)
+	orderId := k.GetNextSpotOrderIdWithUpdate(ctx)
 	order := types.NewTransientSpotOrder(
 		orderId, ordererAddr, market.Id, isBuy, price, qty, qty, deposit, isTemporary)
 	k.SetTransientSpotOrderBookOrder(ctx, order)
@@ -93,7 +93,7 @@ func (k Keeper) settleTransientSpotOrderBook(ctx sdk.Context, market types.SpotM
 			}
 		}
 		if !order.IsTemporary && order.Updated {
-			if order.Order.OpenQuantity.IsZero() {
+			if order.ExecutableQuantity().IsZero() {
 				k.DeleteSpotOrder(ctx, order.Order)
 				k.DeleteSpotOrderBookOrder(ctx, order.Order)
 			} else {

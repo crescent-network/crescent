@@ -9,5 +9,14 @@ option go_package                      = "github.com/crescent-network/crescent/v
 option (gogoproto.goproto_getters_all) = false;
 
 message GenesisState {
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params                    params              = 1 [(gogoproto.nullable) = false];
+  uint64                    last_spot_market_id = 2;
+  uint64                    last_spot_order_id  = 3;
+  repeated SpotMarketRecord spot_market_records = 4 [(gogoproto.nullable) = false];
+  repeated SpotOrder        spot_orders         = 5 [(gogoproto.nullable) = false];
+}
+
+message SpotMarketRecord {
+  SpotMarket      market = 1 [(gogoproto.nullable) = false];
+  SpotMarketState state  = 2 [(gogoproto.nullable) = false];
 }

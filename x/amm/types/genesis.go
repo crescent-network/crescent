@@ -1,5 +1,9 @@
 package types
 
+import (
+	"fmt"
+)
+
 func NewGenesisState(
 	params Params, lastPoolId, lastPositionId uint64,
 	poolRecords []PoolRecord, positions []Position, tickInfoRecords []TickInfoRecord) *GenesisState {
@@ -24,17 +28,17 @@ func (genState GenesisState) Validate() error {
 	}
 	for _, poolRecord := range genState.PoolRecords {
 		if err := poolRecord.Validate(); err != nil {
-			return err
+			return fmt.Errorf("invalid pool record: %w", err)
 		}
 	}
 	for _, position := range genState.Positions {
 		if err := position.Validate(); err != nil {
-			return err
+			return fmt.Errorf("invalid position: %w", err)
 		}
 	}
 	for _, tickInfoRecord := range genState.TickInfoRecords {
 		if err := tickInfoRecord.Validate(); err != nil {
-			return err
+			return fmt.Errorf("invalid tick info record: %w", err)
 		}
 	}
 	return nil
@@ -42,17 +46,20 @@ func (genState GenesisState) Validate() error {
 
 func (record PoolRecord) Validate() error {
 	if err := record.Pool.Validate(); err != nil {
-		return err
+		return fmt.Errorf("invalid pool: %w", err)
 	}
 	if err := record.State.Validate(); err != nil {
-		return err
+		return fmt.Errorf("invalid pool state: %w", err)
 	}
 	return nil
 }
 
 func (record TickInfoRecord) Validate() error {
+	if record.PoolId == 0 {
+		return fmt.Errorf("pool id must not be 0")
+	}
 	if err := record.TickInfo.Validate(); err != nil {
-		return err
+		return fmt.Errorf("invalid tick info: %w", err)
 	}
 	return nil
 }

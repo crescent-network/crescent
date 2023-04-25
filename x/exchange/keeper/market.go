@@ -24,11 +24,11 @@ func (k Keeper) CreateSpotMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, ba
 		return
 	}
 
-	marketId := k.GetNextMarketIdWithUpdate(ctx)
+	marketId := k.GetNextSpotMarketIdWithUpdate(ctx)
 	market = types.NewSpotMarket(marketId, baseDenom, quoteDenom)
 	k.SetSpotMarket(ctx, market)
-	k.SetSpotMarketState(ctx, market.Id, types.NewSpotMarketState(nil))
 	k.SetSpotMarketByDenomsIndex(ctx, market)
+	k.SetSpotMarketState(ctx, market.Id, types.NewSpotMarketState(nil))
 
 	return market, nil
 }

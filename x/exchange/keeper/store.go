@@ -6,24 +6,24 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) GetLastMarketId(ctx sdk.Context) (marketId uint64) {
+func (k Keeper) GetLastSpotMarketId(ctx sdk.Context) (marketId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.LastMarketIdKey)
+	bz := store.Get(types.LastSpotMarketIdKey)
 	if bz == nil {
 		return 0
 	}
 	return sdk.BigEndianToUint64(bz)
 }
 
-func (k Keeper) SetLastMarketId(ctx sdk.Context, marketId uint64) {
+func (k Keeper) SetLastSpotMarketId(ctx sdk.Context, marketId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastMarketIdKey, sdk.Uint64ToBigEndian(marketId))
+	store.Set(types.LastSpotMarketIdKey, sdk.Uint64ToBigEndian(marketId))
 }
 
-func (k Keeper) GetNextMarketIdWithUpdate(ctx sdk.Context) (marketId uint64) {
-	marketId = k.GetLastMarketId(ctx)
+func (k Keeper) GetNextSpotMarketIdWithUpdate(ctx sdk.Context) (marketId uint64) {
+	marketId = k.GetLastSpotMarketId(ctx)
 	marketId++
-	k.SetLastMarketId(ctx, marketId)
+	k.SetLastSpotMarketId(ctx, marketId)
 	return
 }
 
@@ -41,6 +41,19 @@ func (k Keeper) SetSpotMarket(ctx sdk.Context, market types.SpotMarket) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&market)
 	store.Set(types.GetSpotMarketKey(market.Id), bz)
+}
+
+func (k Keeper) IterateAllSpotMarkets(ctx sdk.Context, cb func(market types.SpotMarket) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.SpotMarketKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var market types.SpotMarket
+		k.cdc.MustUnmarshal(iter.Value(), &market)
+		if cb(market) {
+			break
+		}
+	}
 }
 
 func (k Keeper) GetSpotMarketState(ctx sdk.Context, marketId uint64) (state types.SpotMarketState, found bool) {
@@ -82,24 +95,24 @@ func (k Keeper) SetSpotMarketByDenomsIndex(ctx sdk.Context, market types.SpotMar
 		types.GetSpotMarketByDenomsIndexKey(market.BaseDenom, market.QuoteDenom), sdk.Uint64ToBigEndian(market.Id))
 }
 
-func (k Keeper) GetLastOrderId(ctx sdk.Context) (orderId uint64) {
+func (k Keeper) GetLastSpotOrderId(ctx sdk.Context) (orderId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.LastOrderIdKey)
+	bz := store.Get(types.LastSpotOrderIdKey)
 	if bz == nil {
 		return 0
 	}
 	return sdk.BigEndianToUint64(bz)
 }
 
-func (k Keeper) SetLastOrderId(ctx sdk.Context, orderId uint64) {
+func (k Keeper) SetLastSpotOrderId(ctx sdk.Context, orderId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastOrderIdKey, sdk.Uint64ToBigEndian(orderId))
+	store.Set(types.LastSpotOrderIdKey, sdk.Uint64ToBigEndian(orderId))
 }
 
-func (k Keeper) GetNextOrderIdWithUpdate(ctx sdk.Context) (orderId uint64) {
-	orderId = k.GetLastOrderId(ctx)
+func (k Keeper) GetNextSpotOrderIdWithUpdate(ctx sdk.Context) (orderId uint64) {
+	orderId = k.GetLastSpotOrderId(ctx)
 	orderId++
-	k.SetLastOrderId(ctx, orderId)
+	k.SetLastSpotOrderId(ctx, orderId)
 	return
 }
 
@@ -117,6 +130,19 @@ func (k Keeper) GetSpotOrder(ctx sdk.Context, orderId uint64) (order types.SpotO
 	}
 	k.cdc.MustUnmarshal(bz, &order)
 	return order, true
+}
+
+func (k Keeper) IterateAllSpotOrders(ctx sdk.Context, cb func(order types.SpotOrder) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.SpotOrderKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var order types.SpotOrder
+		k.cdc.MustUnmarshal(iter.Value(), &order)
+		if cb(order) {
+			break
+		}
+	}
 }
 
 func (k Keeper) DeleteSpotOrder(ctx sdk.Context, order types.SpotOrder) {

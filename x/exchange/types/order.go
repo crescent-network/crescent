@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -19,6 +21,34 @@ func NewSpotOrder(
 		OpenQuantity:     openQty,
 		RemainingDeposit: remainingDeposit,
 	}
+}
+
+func (order SpotOrder) Validate() error {
+	if order.Id == 0 {
+		return fmt.Errorf("id must not be 0")
+	}
+	if _, err := sdk.AccAddressFromBech32(order.Orderer); err != nil {
+		return fmt.Errorf("invalid orderer address: %w", err)
+	}
+	if order.MarketId == 0 {
+		return fmt.Errorf("market id must not be 0")
+	}
+	if !order.Price.IsPositive() {
+		return fmt.Errorf("price must be positive: %s", order.Price)
+	}
+	if !order.Quantity.IsPositive() {
+		return fmt.Errorf("quantity must be positive: %s", order.Quantity)
+	}
+	if order.OpenQuantity.IsNegative() {
+		return fmt.Errorf("open quantity must not be negative: %s", order.OpenQuantity)
+	}
+	if order.OpenQuantity.GT(order.Quantity) {
+		return fmt.Errorf("open quantity must be smaller than quantity: %s > %s", order.OpenQuantity, order.Quantity)
+	}
+	if !order.RemainingDeposit.IsPositive() {
+		return fmt.Errorf("remaining deposit must be positive: %s", order.RemainingDeposit)
+	}
+	return nil
 }
 
 func NewTransientSpotOrder(
@@ -54,5 +84,5 @@ func (order TransientSpotOrder) ExecutableQuantity() sdk.Int {
 			order.Order.OpenQuantity,
 			order.Order.RemainingDeposit.ToDec().QuoTruncate(order.Order.Price).TruncateInt())
 	}
-	return order.Order.RemainingDeposit
+	return utils.MinInt(order.Order.OpenQuantity, order.Order.RemainingDeposit)
 }

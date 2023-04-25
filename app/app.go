@@ -360,7 +360,6 @@ func NewApp(
 	)
 	tkeys := sdk.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
-		ammtypes.TStoreKey,
 		exchangetypes.TStoreKey,
 	)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -625,7 +624,6 @@ func NewApp(
 	app.AMMKeeper = ammkeeper.NewKeeper(
 		appCodec,
 		keys[ammtypes.StoreKey],
-		tkeys[ammtypes.TStoreKey],
 		app.GetSubspace(ammtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,

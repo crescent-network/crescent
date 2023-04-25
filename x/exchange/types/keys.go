@@ -24,8 +24,8 @@ const (
 
 // TODO: reallocate key prefix bytes
 var (
-	LastMarketIdKey                  = []byte{0x01}
-	LastOrderIdKey                   = []byte{0x02}
+	LastSpotMarketIdKey              = []byte{0x01}
+	LastSpotOrderIdKey               = []byte{0x02}
 	SpotMarketKeyPrefix              = []byte{0x03}
 	SpotMarketStateKeyPrefix         = []byte{0x04}
 	SpotMarketByDenomsIndexKeyPrefix = []byte{0x05}
