@@ -9685,6 +9685,76 @@ paths:
                       format: byte
       tags:
         - Query
+  /crescent/exchange/v1beta1/best_swap_exact_in_routes:
+    get:
+      operationId: BestSwapExactInRoutes
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              routes:
+                type: array
+                items:
+                  type: string
+                  format: uint64
+              output:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: input.denom
+          in: query
+          required: false
+          type: string
+        - name: input.amount
+          in: query
+          required: false
+          type: string
+        - name: min_output.denom
+          in: query
+          required: false
+          type: string
+        - name: min_output.amount
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /crescent/exchange/v1beta1/params:
     get:
       operationId: ExchangeParams
@@ -15244,6 +15314,26 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+  crescent.exchange.v1beta1.QueryBestSwapExactInRoutesResponse:
+    type: object
+    properties:
+      routes:
+        type: array
+        items:
+          type: string
+          format: uint64
+      output:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
   crescent.exchange.v1beta1.QueryParamsResponse:
     type: object
     properties:

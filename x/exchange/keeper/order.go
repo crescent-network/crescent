@@ -36,7 +36,7 @@ func (k Keeper) PlaceSpotOrder(
 	}
 
 	execQty, execQuote = k.executeSpotOrder(
-		ctx, market, ordererAddr, isBuy, priceLimit, &qty, nil)
+		ctx, market, ordererAddr, isBuy, priceLimit, &qty, nil, false)
 
 	openQty := qty.Sub(execQty)
 	if priceLimit != nil {
@@ -57,9 +57,12 @@ func (k Keeper) PlaceSpotOrder(
 
 func (k Keeper) executeSpotOrder(
 	ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) (totalExecQty, totalExecQuote sdk.Int) {
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, simulate bool) (totalExecQty, totalExecQuote sdk.Int) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
+	}
+	if simulate {
+		ctx, _ = ctx.CacheContext()
 	}
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
@@ -90,40 +93,44 @@ func (k Keeper) executeSpotOrder(
 		totalExecQty = totalExecQty.Add(execQty)
 		totalExecQuote = totalExecQuote.Add(execQuote)
 
-		var (
-			paid                   sdk.Int
-			paidCoin, receivedCoin sdk.Coin
-		)
-		if isBuy {
-			paid = execQuote
-			paidCoin = sdk.NewCoin(market.QuoteDenom, paid)
-			receivedCoin = sdk.NewCoin(market.BaseDenom, execQty)
-		} else {
-			paid = execQty
-			paidCoin = sdk.NewCoin(market.BaseDenom, paid)
-			receivedCoin = sdk.NewCoin(market.QuoteDenom, execQuote)
-		}
-		if err := k.bankKeeper.SendCoins(
-			ctx, ordererAddr, sdk.MustAccAddressFromBech32(order.Order.Orderer), sdk.NewCoins(paidCoin)); err != nil {
-			panic(err)
-		}
-		if err := k.ReleaseCoin(ctx, market, ordererAddr, receivedCoin); err != nil {
-			panic(err)
-		}
-		order.Order.OpenQuantity = order.Order.OpenQuantity.Sub(execQty)
-		order.Order.RemainingDeposit = order.Order.RemainingDeposit.Sub(receivedCoin.Amount)
-		order.Updated = true
 		lastPrice = order.Order.Price
 
-		k.SetTransientSpotOrderBookOrder(ctx, order)
-		k.AfterSpotOrderExecuted(ctx, order.Order, execQty)
+		if !simulate {
+			var (
+				paid                   sdk.Int
+				paidCoin, receivedCoin sdk.Coin
+			)
+			if isBuy {
+				paid = execQuote
+				paidCoin = sdk.NewCoin(market.QuoteDenom, paid)
+				receivedCoin = sdk.NewCoin(market.BaseDenom, execQty)
+			} else {
+				paid = execQty
+				paidCoin = sdk.NewCoin(market.BaseDenom, paid)
+				receivedCoin = sdk.NewCoin(market.QuoteDenom, execQuote)
+			}
+			if err := k.bankKeeper.SendCoins(
+				ctx, ordererAddr, sdk.MustAccAddressFromBech32(order.Order.Orderer), sdk.NewCoins(paidCoin)); err != nil {
+				panic(err)
+			}
+			if err := k.ReleaseCoin(ctx, market, ordererAddr, receivedCoin); err != nil {
+				panic(err)
+			}
+			order.Order.OpenQuantity = order.Order.OpenQuantity.Sub(execQty)
+			order.Order.RemainingDeposit = order.Order.RemainingDeposit.Sub(receivedCoin.Amount)
+			order.Updated = true
+			k.SetTransientSpotOrderBookOrder(ctx, order)
+			k.AfterSpotOrderExecuted(ctx, order.Order, execQty)
+		}
 		return false
 	})
-	k.settleTransientSpotOrderBook(ctx, market)
-	if !lastPrice.IsNil() {
-		state := k.MustGetSpotMarketState(ctx, market.Id)
-		state.LastPrice = &lastPrice
-		k.SetSpotMarketState(ctx, market.Id, state)
+	if !simulate {
+		k.settleTransientSpotOrderBook(ctx, market)
+		if !lastPrice.IsNil() {
+			state := k.MustGetSpotMarketState(ctx, market.Id)
+			state.LastPrice = &lastPrice
+			k.SetSpotMarketState(ctx, market.Id, state)
+		}
 	}
 	return
 }

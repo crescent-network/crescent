@@ -74,6 +74,13 @@ func GetSpotOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
 		isBuyToBytes(isBuy))
 }
 
+func ParseSpotMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
+	baseDenomLen := key[1]
+	baseDenom = string(key[2 : 2+baseDenomLen])
+	quoteDenom = string(key[2+baseDenomLen:])
+	return
+}
+
 var (
 	buyBytes  = []byte{0}
 	sellBytes = []byte{1}

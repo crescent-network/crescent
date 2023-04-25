@@ -3,15 +3,18 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (k Keeper) SwapExactIn(
 	ctx sdk.Context, ordererAddr sdk.AccAddress,
-	routes []uint64, input, minOutput sdk.Coin) (output sdk.Coin, err error) {
+	routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, err error) {
 	currentIn := input
 	for _, marketId := range routes {
 		if !currentIn.Amount.IsPositive() {
-			break
+			err = types.ErrInsufficientOutput // TODO: use different error
+			return
 		}
 		market, found := k.GetSpotMarket(ctx, marketId)
 		if !found {
@@ -31,7 +34,8 @@ func (k Keeper) SwapExactIn(
 			quoteLimit = &currentIn.Amount
 			output.Denom = market.BaseDenom
 		}
-		totalExecQty, totalExecQuote := k.executeSpotOrder(ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit)
+		totalExecQty, totalExecQuote := k.executeSpotOrder(
+			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, simulate)
 		if isBuy {
 			output.Amount = totalExecQty
 		} else {
@@ -44,5 +48,30 @@ func (k Keeper) SwapExactIn(
 			sdkerrors.ErrInvalidRequest, "output denom %s != wanted %s", output.Denom, minOutput.Denom)
 		return
 	}
+	if output.Amount.LT(minOutput.Amount) {
+		err = sdkerrors.Wrapf(
+			types.ErrInsufficientOutput, "output %s < wanted %s", output, minOutput)
+		return
+	}
 	return
+}
+
+func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string) (allRoutes [][]uint64) {
+	denomMap := map[string]map[string]uint64{}
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.SpotMarketByDenomsIndexKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		baseDenom, quoteDenom := types.ParseSpotMarketByDenomsIndexKey(iter.Key())
+		marketId := sdk.BigEndianToUint64(iter.Value())
+		if _, ok := denomMap[baseDenom]; !ok {
+			denomMap[baseDenom] = map[string]uint64{}
+		}
+		if _, ok := denomMap[quoteDenom]; !ok {
+			denomMap[quoteDenom] = map[string]uint64{}
+		}
+		denomMap[baseDenom][quoteDenom] = marketId
+		denomMap[quoteDenom][baseDenom] = marketId
+	}
+	return types.FindAllRoutes(denomMap, fromDenom, toDenom)
 }

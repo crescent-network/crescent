@@ -31,3 +31,11 @@ func (s *TestSuite) RemoveLiquidity(ownerAddr sdk.AccAddress, positionId uint64,
 	s.Require().NoError(err)
 	return
 }
+
+func (s *TestSuite) Collect(ownerAddr sdk.AccAddress, positionId uint64, maxAmt0, maxAmt1 sdk.Int) (amt0, amt1 sdk.Int) {
+	s.T().Helper()
+	var err error
+	amt0, amt1, err = s.App.AMMKeeper.Collect(s.Ctx, ownerAddr, positionId, maxAmt0, maxAmt1)
+	s.Require().NoError(err)
+	return
+}

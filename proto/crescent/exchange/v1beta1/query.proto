@@ -4,6 +4,7 @@ package crescent.exchange.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "crescent/exchange/v1beta1/exchange.proto";
 
 option go_package = "github.com/crescent-network/crescent/v5/x/exchange/types";
@@ -12,10 +13,23 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/params";
   }
+  rpc BestSwapExactInRoutes(QueryBestSwapExactInRoutesRequest) returns (QueryBestSwapExactInRoutesResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/best_swap_exact_in_routes";
+  }
 }
 
 message QueryParamsRequest {}
 
 message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryBestSwapExactInRoutesRequest {
+  cosmos.base.v1beta1.Coin input      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin min_output = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryBestSwapExactInRoutesResponse {
+  repeated uint64          routes = 1;
+  cosmos.base.v1beta1.Coin output = 2 [(gogoproto.nullable) = false];
 }

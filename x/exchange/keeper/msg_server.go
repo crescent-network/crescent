@@ -82,7 +82,7 @@ func (k msgServer) SwapExactIn(goCtx context.Context, msg *types.MsgSwapExactIn)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	output, err := k.Keeper.SwapExactIn(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Routes, msg.Input, msg.MinOutput)
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Routes, msg.Input, msg.MinOutput, false)
 	if err != nil {
 		return nil, err
 	}

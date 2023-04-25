@@ -35,10 +35,10 @@ func (s *TestSuite) PlaceSpotMarketOrder(
 }
 
 func (s *TestSuite) SwapExactIn(
-	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin) (output sdk.Coin) {
+	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin) {
 	s.T().Helper()
 	var err error
-	output, err = s.App.ExchangeKeeper.SwapExactIn(s.Ctx, ordererAddr, routes, input, minOutput)
+	output, err = s.App.ExchangeKeeper.SwapExactIn(s.Ctx, ordererAddr, routes, input, minOutput, simulate)
 	s.Require().NoError(err)
 	return output
 }
