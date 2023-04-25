@@ -5,6 +5,7 @@ package crescent.exchange.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/exchange/v1beta1/exchange.proto";
 
 option go_package = "github.com/crescent-network/crescent/v5/x/exchange/types";
@@ -12,6 +13,15 @@ option go_package = "github.com/crescent-network/crescent/v5/x/exchange/types";
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/params";
+  }
+  rpc AllSpotMarkets(QueryAllSpotMarketsRequest) returns (QueryAllSpotMarketsResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/spot/markets";
+  }
+  rpc SpotMarket(QuerySpotMarketRequest) returns (QuerySpotMarketResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/spot/markets/{market_id}";
+  }
+  rpc SpotOrder(QuerySpotOrderRequest) returns (QuerySpotOrderResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/spot/orders/{order_id}";
   }
   rpc BestSwapExactInRoutes(QueryBestSwapExactInRoutesRequest) returns (QueryBestSwapExactInRoutesResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/best_swap_exact_in_routes";
@@ -24,6 +34,31 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
+message QueryAllSpotMarketsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllSpotMarketsResponse {
+  repeated SpotMarketResponse            markets    = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QuerySpotMarketRequest {
+  uint64 market_id = 1;
+}
+
+message QuerySpotMarketResponse {
+  SpotMarketResponse market = 1 [(gogoproto.nullable) = false];
+}
+
+message QuerySpotOrderRequest {
+  uint64 order_id = 1;
+}
+
+message QuerySpotOrderResponse {
+  SpotOrder order = 1 [(gogoproto.nullable) = false];
+}
+
 message QueryBestSwapExactInRoutesRequest {
   cosmos.base.v1beta1.Coin input      = 1 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin min_output = 2 [(gogoproto.nullable) = false];
@@ -32,4 +67,12 @@ message QueryBestSwapExactInRoutesRequest {
 message QueryBestSwapExactInRoutesResponse {
   repeated uint64          routes = 1;
   cosmos.base.v1beta1.Coin output = 2 [(gogoproto.nullable) = false];
+}
+
+message SpotMarketResponse {
+  uint64 id             = 1;
+  string base_denom     = 2;
+  string quote_denom    = 3;
+  string escrow_address = 4;
+  string last_price     = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }
