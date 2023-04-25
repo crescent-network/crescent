@@ -159,11 +159,11 @@ func (k Keeper) modifyPosition(
 	lowerTick, upperTick int32, liquidityDelta sdk.Dec) (position types.Position, amt0, amt1 sdk.Int) {
 	// TODO: validate ticks
 	var found bool
-	position, found = k.GetPositionByParams(ctx, pool.Id, ownerAddr, lowerTick, upperTick)
+	position, found = k.GetPositionByParams(ctx, ownerAddr, pool.Id, lowerTick, upperTick)
 	if !found {
 		positionId := k.GetNextPositionIdWithUpdate(ctx)
 		position = types.NewPosition(positionId, pool.Id, ownerAddr, lowerTick, upperTick)
-		k.SetPositionIndex(ctx, position)
+		k.SetPositionByParamsIndex(ctx, position)
 	}
 
 	if liquidityDelta.IsZero() && !position.Liquidity.IsPositive() { // sanity check

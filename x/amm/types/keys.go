@@ -32,7 +32,7 @@ var (
 	PoolByReserveAddressIndexKeyPrefix = []byte{0x44} // reserveAddress => poolId
 	PoolsByMarketIndexKeyPrefix        = []byte{0x45} // marketId + poolId => nil
 	PositionKeyPrefix                  = []byte{0x46} // positionId => Position
-	PositionIndexKeyPrefix             = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
+	PositionByParamsIndexKeyPrefix     = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
 	TickInfoKeyPrefix                  = []byte{0x48} // poolId + tick => TickInfo
 )
 
@@ -55,7 +55,7 @@ func GetPoolsByMarketIndexKey(marketId uint64, poolId uint64) []byte {
 		sdk.Uint64ToBigEndian(poolId))
 }
 
-func GetPoolsByMarketIndexKeyPrefix(marketId uint64) []byte {
+func GetPoolsByMarketIteratorPrefix(marketId uint64) []byte {
 	return utils.Key(PoolsByMarketIndexKeyPrefix, sdk.Uint64ToBigEndian(marketId))
 }
 
@@ -63,13 +63,19 @@ func GetPositionKey(positionId uint64) []byte {
 	return utils.Key(PositionKeyPrefix, sdk.Uint64ToBigEndian(positionId))
 }
 
-func GetPositionIndexKey(poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upperTick int32) []byte {
+func GetPositionByParamsIndexKey(ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32) []byte {
 	return utils.Key(
-		PositionIndexKeyPrefix,
-		sdk.Uint64ToBigEndian(poolId),
+		PositionByParamsIndexKeyPrefix,
 		address.MustLengthPrefix(ownerAddr),
+		sdk.Uint64ToBigEndian(poolId),
 		exchangetypes.TickToBytes(lowerTick),
 		exchangetypes.TickToBytes(upperTick))
+}
+
+func GetPositionsByOwnerIteratorPrefix(ownerAddr sdk.AccAddress) []byte {
+	return utils.Key(
+		PositionByParamsIndexKeyPrefix,
+		address.MustLengthPrefix(ownerAddr))
 }
 
 func GetTickInfoKey(poolId uint64, tick int32) []byte {

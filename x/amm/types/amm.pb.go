@@ -106,7 +106,8 @@ func (m *Pool) XXX_DiscardUnknown() {
 var xxx_messageInfo_Pool proto.InternalMessageInfo
 
 type PoolState struct {
-	CurrentTick      int32                                  `protobuf:"varint,1,opt,name=current_tick,json=currentTick,proto3" json:"current_tick,omitempty"`
+	CurrentTick int32 `protobuf:"varint,1,opt,name=current_tick,json=currentTick,proto3" json:"current_tick,omitempty"`
+	// TODO: use current price without sqrt?
 	CurrentSqrtPrice github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=current_sqrt_price,json=currentSqrtPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"current_sqrt_price"`
 	CurrentLiquidity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=current_liquidity,json=currentLiquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"current_liquidity"`
 	FeeGrowthGlobal0 github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=fee_growth_global0,json=feeGrowthGlobal0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fee_growth_global0"`

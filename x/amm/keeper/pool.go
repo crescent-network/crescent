@@ -15,6 +15,15 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
+	poolExists := false
+	k.IteratePoolsByMarket(ctx, marketId, func(pool types.Pool) (stop bool) {
+		poolExists = true
+		return true
+	})
+	if poolExists {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot create more than one pool per spot market")
+		return
+	}
 
 	creationFee := k.GetPoolCreationFee(ctx)
 	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, creationFee); err != nil {
@@ -26,7 +35,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	reserveAddr := types.DerivePoolReserveAddress(poolId)
 	pool = types.NewPool(poolId, marketId, market.BaseDenom, market.QuoteDenom, tickSpacing, reserveAddr)
 	k.SetPool(ctx, pool)
-	k.SetPoolsByMarketIndex(ctx, marketId, pool)
+	k.SetPoolsByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
 
 	// Set initial pool state

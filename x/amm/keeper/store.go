@@ -64,9 +64,9 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store.Set(types.GetPoolKey(pool.Id), bz)
 }
 
-func (k Keeper) SetPoolsByMarketIndex(ctx sdk.Context, marketId uint64, pool types.Pool) {
+func (k Keeper) SetPoolsByMarketIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPoolsByMarketIndexKey(marketId, pool.Id), []byte{})
+	store.Set(types.GetPoolsByMarketIndexKey(pool.MarketId, pool.Id), []byte{})
 }
 
 func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
@@ -76,9 +76,22 @@ func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
 		sdk.Uint64ToBigEndian(pool.Id))
 }
 
+func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.PoolKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var pool types.Pool
+		k.cdc.MustUnmarshal(iter.Value(), &pool)
+		if cb(pool) {
+			break
+		}
+	}
+}
+
 func (k Keeper) IteratePoolsByMarket(ctx sdk.Context, marketId uint64, cb func(pool types.Pool) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByMarketIndexKeyPrefix(marketId))
+	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByMarketIteratorPrefix(marketId))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		_, poolId := types.ParsePoolsByMarketIndexKey(iter.Key())
@@ -135,9 +148,9 @@ func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (position types.
 	return position, true
 }
 
-func (k Keeper) GetPositionByParams(ctx sdk.Context, poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upperTick int32) (position types.Position, found bool) {
+func (k Keeper) GetPositionByParams(ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32) (position types.Position, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetPositionIndexKey(poolId, ownerAddr, lowerTick, upperTick))
+	bz := store.Get(types.GetPositionByParamsIndexKey(ownerAddr, poolId, lowerTick, upperTick))
 	if bz == nil {
 		return
 	}
@@ -150,12 +163,25 @@ func (k Keeper) SetPosition(ctx sdk.Context, position types.Position) {
 	store.Set(types.GetPositionKey(position.Id), bz)
 }
 
-func (k Keeper) SetPositionIndex(ctx sdk.Context, position types.Position) {
+func (k Keeper) SetPositionByParamsIndex(ctx sdk.Context, position types.Position) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPositionIndexKey(
-		position.PoolId, sdk.MustAccAddressFromBech32(position.Owner),
+	store.Set(types.GetPositionByParamsIndexKey(
+		sdk.MustAccAddressFromBech32(position.Owner), position.PoolId,
 		position.LowerTick, position.UpperTick),
 		sdk.Uint64ToBigEndian(position.Id))
+}
+
+func (k Keeper) IterateAllPositions(ctx sdk.Context, cb func(position types.Position) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.PositionKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var pool types.Position
+		k.cdc.MustUnmarshal(iter.Value(), &pool)
+		if cb(pool) {
+			break
+		}
+	}
 }
 
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tick int32) (tickInfo types.TickInfo, found bool) {
@@ -172,6 +198,20 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tick int32, tickInfo
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&tickInfo)
 	store.Set(types.GetTickInfoKey(poolId, tick), bz)
+}
+
+func (k Keeper) IterateAllTickInfos(ctx sdk.Context, cb func(poolId uint64, tick int32, tickInfo types.TickInfo) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.TickInfoKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		poolId, tick := types.ParseTickInfoKey(iter.Key())
+		var tickInfo types.TickInfo
+		k.cdc.MustUnmarshal(iter.Value(), &tickInfo)
+		if cb(poolId, tick, tickInfo) {
+			break
+		}
+	}
 }
 
 func (k Keeper) IterateTickInfosBelow(ctx sdk.Context, poolId uint64, currentTick int32, cb func(tick int32, tickInfo types.TickInfo) (stop bool)) {

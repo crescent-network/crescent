@@ -5,6 +5,8 @@ package crescent.amm.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "crescent/amm/v1beta1/amm.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/crescent-network/crescent/v5/x/amm/types";
 
@@ -12,10 +14,90 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/params";
   }
+  rpc AllPools(QueryAllPoolsRequest) returns (QueryAllPoolsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/pools";
+  }
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/pools/{pool_id}";
+  }
+  rpc AllPositions(QueryAllPositionsRequest) returns (QueryAllPositionsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/positions";
+  }
+  rpc Positions(QueryPositionsRequest) returns (QueryPositionsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/positions/{owner}";
+  }
 }
 
 message QueryParamsRequest {}
 
 message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllPoolsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllPoolsResponse {
+  repeated PoolResponse                  pools      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPoolRequest {
+  uint64 pool_id = 1;
+}
+
+message QueryPoolResponse {
+  PoolResponse pool = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllPositionsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllPositionsResponse {
+  repeated PositionResponse              positions  = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPositionsRequest {
+  string                                owner      = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryPositionsResponse {
+  repeated PositionResponse              positions  = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message PoolResponse {
+  uint64                   id                 = 1;
+  uint64                   market_id          = 2;
+  cosmos.base.v1beta1.Coin balance0           = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin balance1           = 4 [(gogoproto.nullable) = false];
+  uint32                   tick_spacing       = 5;
+  string                   reserve_address    = 6;
+  int32                    current_tick       = 7;
+  string                   current_sqrt_price = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string current_liquidity = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 10
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+message PositionResponse {
+  uint64 id          = 1;
+  uint64 pool_id     = 2;
+  string owner       = 3;
+  string lower_price = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string upper_price = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string liquidity = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin last_fee_growth_inside = 7
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin owed_tokens = 8
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }

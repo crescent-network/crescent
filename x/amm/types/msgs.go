@@ -58,7 +58,7 @@ func (msg MsgCreatePool) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tick spacing must be positive")
 	}
 	if !msg.Price.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "price must be positive")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price must be positive: %s", msg.Price)
 	}
 	if msg.Price.LT(exchangetypes.MinPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price %s", exchangetypes.MinPrice)
@@ -103,6 +103,27 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
+	if msg.PoolId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool is must not be 0")
+	}
+	if !msg.LowerPrice.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lower price must be positive: %s", msg.LowerPrice)
+	}
+	if !msg.UpperPrice.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", msg.UpperPrice)
+	}
+	if !msg.DesiredAmount0.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "desired amount 0 must be positive: %s", msg.DesiredAmount0)
+	}
+	if !msg.DesiredAmount1.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "desired amount 1 must be positive: %s", msg.DesiredAmount1)
+	}
+	if msg.MinAmount0.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 0 must not be negative: %s", msg.MinAmount0)
+	}
+	if msg.MinAmount1.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 1 must not be negative: %s", msg.MinAmount1)
+	}
 	return nil
 }
 
@@ -137,6 +158,18 @@ func (msg MsgRemoveLiquidity) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
+	if msg.PositionId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position is must not be 0")
+	}
+	if msg.Liquidity.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity must not be negative: %s", msg.Liquidity)
+	}
+	if msg.MinAmount0.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 0 must not be negative: %s", msg.MinAmount0)
+	}
+	if msg.MinAmount1.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 1 must not be negative: %s", msg.MinAmount1)
+	}
 	return nil
 }
 
@@ -167,6 +200,15 @@ func (msg MsgCollect) GetSigners() []sdk.AccAddress {
 func (msg MsgCollect) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if msg.PositionId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position is must not be 0")
+	}
+	if msg.MaxAmount0.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "max amount 0 must not be negative: %s", msg.MaxAmount0)
+	}
+	if msg.MaxAmount1.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "max amount 1 must not be negative: %s", msg.MaxAmount1)
 	}
 	return nil
 }
