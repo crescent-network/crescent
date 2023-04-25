@@ -8,11 +8,15 @@ import (
 
 func NewPosition(id, poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upperTick int32) Position {
 	return Position{
-		Id:        id,
-		PoolId:    poolId,
-		Owner:     ownerAddr.String(),
-		LowerTick: lowerTick,
-		UpperTick: upperTick,
-		Liquidity: utils.ZeroDec,
+		Id:                   id,
+		PoolId:               poolId,
+		Owner:                ownerAddr.String(),
+		LowerTick:            lowerTick,
+		UpperTick:            upperTick,
+		Liquidity:            utils.ZeroDec,
+		LastFeeGrowthInside0: utils.ZeroDec,
+		LastFeeGrowthInside1: utils.ZeroDec,
+		OwedToken0:           utils.ZeroInt,
+		OwedToken1:           utils.ZeroInt,
 	}
 }

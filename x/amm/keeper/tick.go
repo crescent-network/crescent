@@ -6,7 +6,8 @@ import (
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
-func (k Keeper) updateTick(ctx sdk.Context, poolId uint64, tick, currentTick int32, liquidityDelta sdk.Dec, upper bool) (flipped bool) {
+func (k Keeper) updateTick(
+	ctx sdk.Context, poolId uint64, tick, currentTick int32, liquidityDelta, feeGrowthGlobal0, feeGrowthGlobal1 sdk.Dec, upper bool) (flipped bool) {
 	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
 	if !found {
 		tickInfo = types.NewTickInfo()
@@ -18,7 +19,8 @@ func (k Keeper) updateTick(ctx sdk.Context, poolId uint64, tick, currentTick int
 
 	if grossLiquidityBefore.IsZero() {
 		if tick <= currentTick {
-			// TODO: set fee growth outside
+			tickInfo.FeeGrowthOutside0 = feeGrowthGlobal0
+			tickInfo.FeeGrowthOutside1 = feeGrowthGlobal1
 		}
 	}
 
@@ -30,5 +32,39 @@ func (k Keeper) updateTick(ctx sdk.Context, poolId uint64, tick, currentTick int
 	}
 
 	k.SetTickInfo(ctx, poolId, tick, tickInfo)
+	return
+}
+
+func (k Keeper) feeGrowthInside(
+	ctx sdk.Context, poolId uint64, lowerTick, upperTick, currentTick int32,
+	feeGrowthGlobal0, feeGrowthGlobal1 sdk.Dec) (feeGrowthInside0, feeGrowthInside1 sdk.Dec) {
+	lower, found := k.GetTickInfo(ctx, poolId, lowerTick)
+	if !found { // sanity check
+		panic("lower tick info not found")
+	}
+	upper, found := k.GetTickInfo(ctx, poolId, upperTick)
+	if !found { // sanity check
+		panic("upper tick info not found")
+	}
+
+	var feeGrowthBelow0, feeGrowthBelow1 sdk.Dec
+	if currentTick >= lowerTick {
+		feeGrowthBelow0 = lower.FeeGrowthOutside0
+		feeGrowthBelow1 = lower.FeeGrowthOutside1
+	} else {
+		feeGrowthBelow0 = feeGrowthGlobal0.Sub(lower.FeeGrowthOutside0)
+		feeGrowthBelow1 = feeGrowthGlobal1.Sub(lower.FeeGrowthOutside1)
+	}
+	var feeGrowthAbove0, feeGrowthAbove1 sdk.Dec
+	if currentTick < upperTick {
+		feeGrowthAbove0 = upper.FeeGrowthOutside0
+		feeGrowthAbove1 = upper.FeeGrowthOutside1
+	} else {
+		feeGrowthAbove0 = feeGrowthGlobal0.Sub(upper.FeeGrowthOutside0)
+		feeGrowthAbove1 = feeGrowthGlobal1.Sub(upper.FeeGrowthOutside1)
+	}
+
+	feeGrowthInside0 = feeGrowthGlobal0.Sub(feeGrowthBelow0).Sub(feeGrowthAbove0)
+	feeGrowthInside1 = feeGrowthGlobal1.Sub(feeGrowthBelow1).Sub(feeGrowthAbove1)
 	return
 }

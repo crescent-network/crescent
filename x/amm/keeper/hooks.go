@@ -53,10 +53,16 @@ func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotO
 			amtInDiff = amtIn.Sub(expectedAmtIn)
 		}
 		if amtInDiff.IsPositive() {
+			coinDiff := sdk.NewCoin(pool.DenomIn(order.IsBuy), amtInDiff)
 			reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 			if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
-				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(pool.DenomIn(order.IsBuy), amtInDiff))); err != nil {
+				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(coinDiff)); err != nil {
 				panic(err)
+			}
+			if order.IsBuy {
+				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity))
+			} else {
+				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity))
 			}
 		} else if amtInDiff.IsNegative() { // sanity check
 			//panic(amtInDiff)
@@ -70,13 +76,15 @@ func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotO
 			// TODO: handle liquidity = 0 case
 			tickInfo, found := h.k.GetTickInfo(ctx, pool.Id, poolState.CurrentTick)
 			if found { // TODO: handle tick crossing properly!
+				tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
+				tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
+				h.k.SetTickInfo(ctx, pool.Id, poolState.CurrentTick, tickInfo)
 				var netLiquidity sdk.Dec
 				if order.IsBuy {
 					netLiquidity = tickInfo.NetLiquidity.Neg()
 				} else {
 					netLiquidity = tickInfo.NetLiquidity
 				}
-				_ = netLiquidity
 				// TODO: fix liquidity calculation
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 			}

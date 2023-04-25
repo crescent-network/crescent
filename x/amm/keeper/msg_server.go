@@ -63,3 +63,17 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 		Amount1: amt1,
 	}, nil
 }
+
+func (k msgServer) Collect(goCtx context.Context, msg *types.MsgCollect) (*types.MsgCollectResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	amt0, amt1, err := k.Keeper.Collect(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.MaxAmount0, msg.MaxAmount1)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCollectResponse{
+		Amount0: amt0,
+		Amount1: amt1,
+	}, nil
+}

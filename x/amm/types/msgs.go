@@ -11,6 +11,7 @@ var (
 	_ sdk.Msg = (*MsgCreatePool)(nil)
 	_ sdk.Msg = (*MsgAddLiquidity)(nil)
 	_ sdk.Msg = (*MsgRemoveLiquidity)(nil)
+	_ sdk.Msg = (*MsgCollect)(nil)
 )
 
 // Message types for the module
@@ -18,6 +19,7 @@ const (
 	TypeMsgCreatePool      = "create_pool"
 	TypeMsgAddLiquidity    = "add_liquidity"
 	TypeMsgRemoveLiquidity = "remove_liquidity"
+	TypeMsgCollect         = "collect"
 )
 
 func NewMsgCreatePool(
@@ -132,6 +134,37 @@ func (msg MsgRemoveLiquidity) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgRemoveLiquidity) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	return nil
+}
+
+func NewMsgCollect(senderAddr sdk.AccAddress, positionId uint64, maxAmt0, maxAmt1 sdk.Int) *MsgCollect {
+	return &MsgCollect{
+		Sender:     senderAddr.String(),
+		PositionId: positionId,
+		MaxAmount0: maxAmt0,
+		MaxAmount1: maxAmt1,
+	}
+}
+
+func (msg MsgCollect) Route() string { return RouterKey }
+func (msg MsgCollect) Type() string  { return TypeMsgCollect }
+
+func (msg MsgCollect) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCollect) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCollect) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}

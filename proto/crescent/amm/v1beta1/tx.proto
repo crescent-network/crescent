@@ -11,6 +11,7 @@ service Msg {
   rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
   rpc AddLiquidity(MsgAddLiquidity) returns (MsgAddLiquidityResponse);
   rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
+  rpc Collect(MsgCollect) returns (MsgCollectResponse);
 }
 
 message MsgCreatePool {
@@ -61,6 +62,20 @@ message MsgRemoveLiquidity {
 }
 
 message MsgRemoveLiquidityResponse {
+  string amount0 = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string amount1 = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgCollect {
+  string sender      = 1;
+  uint64 position_id = 2;
+  string max_amount0 = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string max_amount1 = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgCollectResponse {
   string amount0 = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string amount1 = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }

@@ -39,6 +39,8 @@ func NewPoolState(tick int32, sqrtPrice sdk.Dec) PoolState {
 		CurrentTick:      tick,
 		CurrentSqrtPrice: sqrtPrice,
 		CurrentLiquidity: utils.ZeroDec,
+		FeeGrowthGlobal0: utils.ZeroDec,
+		FeeGrowthGlobal1: utils.ZeroDec,
 	}
 }
 
