@@ -25,7 +25,10 @@ func (k Keeper) CreateMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, baseDe
 	}
 
 	marketId := k.GetNextMarketIdWithUpdate(ctx)
-	market = types.NewMarket(marketId, baseDenom, quoteDenom)
+	defaultMakerFeeRate := k.GetDefaultMakerFeeRate(ctx)
+	defaultTakerFeeRate := k.GetDefaultTakerFeeRate(ctx)
+	market = types.NewMarket(
+		marketId, baseDenom, quoteDenom, defaultMakerFeeRate, defaultTakerFeeRate)
 	k.SetMarket(ctx, market)
 	k.SetMarketByDenomsIndex(ctx, market)
 	k.SetMarketState(ctx, market.Id, types.NewMarketState(nil))

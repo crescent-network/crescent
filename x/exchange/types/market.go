@@ -11,12 +11,15 @@ func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("MarketEscrowAddress/%d", marketId)))
 }
 
-func NewMarket(marketId uint64, baseDenom, quoteDenom string) Market {
+func NewMarket(
+	marketId uint64, baseDenom, quoteDenom string, makerFeeRate, takerFeeRate sdk.Dec) Market {
 	return Market{
 		Id:            marketId,
 		BaseDenom:     baseDenom,
 		QuoteDenom:    quoteDenom,
 		EscrowAddress: DeriveMarketEscrowAddress(marketId).String(),
+		MakerFeeRate:  makerFeeRate,
+		TakerFeeRate:  takerFeeRate,
 	}
 }
 

@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
-	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -17,13 +16,13 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactInRoutes() {
 	market2 := s.CreateMarket(utils.TestAddress(0), "uatom", "ucre", true)
 	market3 := s.CreateMarket(utils.TestAddress(0), "uatom", "uusd", true)
 
-	pool1 := s.CreatePool(creatorAddr, market1.Id, ammtypes.DefaultDefaultTickSpacing, utils.ParseDec("9.7"), true)
+	pool1 := s.CreatePool(creatorAddr, market1.Id, utils.ParseDec("9.7"), true)
 	s.AddLiquidity(creatorAddr, pool1.Id, utils.ParseDec("9.5"), utils.ParseDec("10"),
 		sdk.NewInt(10000_000000), sdk.NewInt(10000_000000), sdk.OneInt(), sdk.OneInt())
-	pool2 := s.CreatePool(creatorAddr, market2.Id, ammtypes.DefaultDefaultTickSpacing, utils.ParseDec("1.04"), true)
+	pool2 := s.CreatePool(creatorAddr, market2.Id, utils.ParseDec("1.04"), true)
 	s.AddLiquidity(creatorAddr, pool2.Id, utils.ParseDec("1"), utils.ParseDec("1.2"),
 		sdk.NewInt(10000_000000), sdk.NewInt(10000_000000), sdk.OneInt(), sdk.OneInt())
-	pool3 := s.CreatePool(creatorAddr, market3.Id, ammtypes.DefaultDefaultTickSpacing, utils.ParseDec("10.3"), true)
+	pool3 := s.CreatePool(creatorAddr, market3.Id, utils.ParseDec("10.3"), true)
 	s.AddLiquidity(creatorAddr, pool3.Id, utils.ParseDec("9.7"), utils.ParseDec("11"),
 		sdk.NewInt(10000_000000), sdk.NewInt(10000_000000), sdk.OneInt(), sdk.OneInt())
 

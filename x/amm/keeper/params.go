@@ -25,3 +25,12 @@ func (k Keeper) GetPoolCreationFee(ctx sdk.Context) (fee sdk.Coins) {
 func (k Keeper) SetPoolCreationFee(ctx sdk.Context, fee sdk.Coins) {
 	k.paramSpace.Set(ctx, types.KeyPoolCreationFee, fee)
 }
+
+func (k Keeper) GetDefaultTickSpacing(ctx sdk.Context) (tickSpacing uint32) {
+	k.paramSpace.Get(ctx, types.KeyDefaultTickSpacing, &tickSpacing)
+	return
+}
+
+func (k Keeper) SetDefaultTickSpacing(ctx sdk.Context, tickSpacing uint32) {
+	k.paramSpace.Set(ctx, types.KeyDefaultTickSpacing, tickSpacing)
+}

@@ -9,7 +9,7 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId uint64, tickSpacing uint32, price sdk.Dec) (pool types.Pool, err error) {
+func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId uint64, price sdk.Dec) (pool types.Pool, err error) {
 	market, found := k.exchangeKeeper.GetMarket(ctx, marketId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
@@ -32,8 +32,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 
 	// Create a new pool
 	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
-	reserveAddr := types.DerivePoolReserveAddress(poolId)
-	pool = types.NewPool(poolId, marketId, market.BaseDenom, market.QuoteDenom, tickSpacing, reserveAddr)
+	defaultTickSpacing := k.GetDefaultTickSpacing(ctx)
+	pool = types.NewPool(poolId, marketId, market.BaseDenom, market.QuoteDenom, defaultTickSpacing)
 	k.SetPool(ctx, pool)
 	k.SetPoolsByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)

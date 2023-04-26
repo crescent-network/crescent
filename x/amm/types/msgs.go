@@ -23,12 +23,11 @@ const (
 )
 
 func NewMsgCreatePool(
-	senderAddr sdk.AccAddress, marketId uint64, tickSpacing uint32, price sdk.Dec) *MsgCreatePool {
+	senderAddr sdk.AccAddress, marketId uint64, price sdk.Dec) *MsgCreatePool {
 	return &MsgCreatePool{
-		Sender:      senderAddr.String(),
-		MarketId:    marketId,
-		TickSpacing: tickSpacing,
-		Price:       price,
+		Sender:   senderAddr.String(),
+		MarketId: marketId,
+		Price:    price,
 	}
 }
 
@@ -53,9 +52,6 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	}
 	if msg.MarketId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
-	}
-	if msg.TickSpacing == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tick spacing must be positive")
 	}
 	if !msg.Price.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price must be positive: %s", msg.Price)
