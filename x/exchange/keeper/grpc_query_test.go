@@ -12,11 +12,11 @@ import (
 func (s *KeeperTestSuite) TestQueryBestSwapExactInRoutes() {
 	creatorAddr := utils.TestAddress(1)
 	s.FundAccount(creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uatom,100000_000000uusd"))
-	
+
 	market1 := s.CreateSpotMarket(utils.TestAddress(0), "ucre", "uusd", true)
 	market2 := s.CreateSpotMarket(utils.TestAddress(0), "uatom", "ucre", true)
 	market3 := s.CreateSpotMarket(utils.TestAddress(0), "uatom", "uusd", true)
-	
+
 	pool1 := s.CreatePool(creatorAddr, market1.Id, ammtypes.DefaultDefaultTickSpacing, utils.ParseDec("9.7"), true)
 	s.AddLiquidity(creatorAddr, pool1.Id, utils.ParseDec("9.5"), utils.ParseDec("10"),
 		sdk.NewInt(10000_000000), sdk.NewInt(10000_000000), sdk.OneInt(), sdk.OneInt())
@@ -29,10 +29,10 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactInRoutes() {
 
 	querier := keeper.Querier{Keeper: s.App.ExchangeKeeper}
 	resp, err := querier.BestSwapExactInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactInRoutesRequest{
-		Input:     utils.ParseCoin("100_000000ucre"),
-		MinOutput: utils.ParseCoin("950_000000uusd"),
+		Input:       utils.ParseCoin("100_000000ucre"),
+		OutputDenom: "uusd",
 	})
 	s.Require().NoError(err)
-	
+
 	s.Require().EqualValues([]uint64{2, 3}, resp.Routes)
 }

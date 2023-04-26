@@ -56,7 +56,7 @@ func (k Keeper) SwapExactIn(
 	return
 }
 
-func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string) (allRoutes [][]uint64) {
+func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {
 	denomMap := map[string]map[string]uint64{}
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.SpotMarketByDenomsIndexKeyPrefix)
@@ -73,5 +73,5 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string) (allRo
 		denomMap[baseDenom][quoteDenom] = marketId
 		denomMap[quoteDenom][baseDenom] = marketId
 	}
-	return types.FindAllRoutes(denomMap, fromDenom, toDenom)
+	return types.FindAllRoutes(denomMap, fromDenom, toDenom, maxRoutesLen)
 }

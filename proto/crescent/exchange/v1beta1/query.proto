@@ -60,8 +60,8 @@ message QuerySpotOrderResponse {
 }
 
 message QueryBestSwapExactInRoutesRequest {
-  cosmos.base.v1beta1.Coin input      = 1 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin min_output = 2 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin input        = 1 [(gogoproto.nullable) = false];
+  string                   output_denom = 2;
 }
 
 message QueryBestSwapExactInRoutesResponse {

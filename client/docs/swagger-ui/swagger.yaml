@@ -9745,11 +9745,7 @@ paths:
           in: query
           required: false
           type: string
-        - name: min_output.denom
-          in: query
-          required: false
-          type: string
-        - name: min_output.amount
+        - name: output_denom
           in: query
           required: false
           type: string

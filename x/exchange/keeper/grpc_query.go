@@ -84,7 +84,7 @@ func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSw
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	allRoutes := k.FindAllRoutes(ctx, req.Input.Denom, req.MinOutput.Denom)
+	allRoutes := k.FindAllRoutes(ctx, req.Input.Denom, req.OutputDenom, 3) // TODO: remove hard-coded limit
 	if len(allRoutes) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "no possible routes")
 	}
@@ -93,7 +93,8 @@ func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSw
 		bestRoutes []uint64
 	)
 	for _, routes := range allRoutes {
-		output, err := k.SwapExactIn(ctx, sdk.AccAddress{}, routes, req.Input, req.MinOutput, true)
+		output, err := k.SwapExactIn(
+			ctx, sdk.AccAddress{}, routes, req.Input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
 		if err != nil && !errors.Is(err, types.ErrInsufficientOutput) { // sanity check
 			panic(err)
 		}
@@ -104,12 +105,9 @@ func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSw
 			}
 		}
 	}
-	if bestOutput.LT(req.MinOutput.Amount) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "no possible routes") // TODO: use different error
-	}
 	return &types.QueryBestSwapExactInRoutesResponse{
 		Routes: bestRoutes,
-		Output: sdk.NewCoin(req.MinOutput.Denom, bestOutput),
+		Output: sdk.NewCoin(req.OutputDenom, bestOutput),
 	}, nil
 }
 

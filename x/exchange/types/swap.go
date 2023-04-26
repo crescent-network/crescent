@@ -1,6 +1,6 @@
 package types
 
-func FindAllRoutes(denomMap map[string]map[string]uint64, fromDenom, toDenom string) (allRoutes [][]uint64) {
+func FindAllRoutes(denomMap map[string]map[string]uint64, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {
 	var currentRoutes []uint64
 	visited := map[uint64]struct{}{}
 	var backtrack func(currentDenom string)
@@ -16,7 +16,9 @@ func FindAllRoutes(denomMap map[string]map[string]uint64, fromDenom, toDenom str
 				} else {
 					visited[marketId] = struct{}{}
 					currentRoutes = append(currentRoutes, marketId)
-					backtrack(denom)
+					if len(currentRoutes) < maxRoutesLen {
+						backtrack(denom)
+					}
 					currentRoutes = currentRoutes[:len(currentRoutes)-1]
 					delete(visited, marketId)
 				}
