@@ -97,27 +97,55 @@ func (k Keeper) executeOrder(
 
 		if !simulate {
 			var (
-				paid                   sdk.Int
-				paidCoin, receivedCoin sdk.Coin
+				paidCoin           sdk.Coin
+				receivedCoin       sdk.Coin
+				makerPaid          sdk.Int
+				makerReceivedCoins sdk.Coins
 			)
 			if isBuy {
-				paid = execQuote
-				paidCoin = sdk.NewCoin(market.QuoteDenom, paid)
-				receivedCoin = sdk.NewCoin(market.BaseDenom, execQty)
+				paidCoin = sdk.NewCoin(market.QuoteDenom, execQuote)
+				receivedCoin = sdk.NewCoin(
+					market.BaseDenom,
+					utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQty).TruncateInt())
+				makerPaid = execQty
+				if market.MakerFeeRate.IsPositive() {
+					makerReceivedCoins = sdk.NewCoins(
+						sdk.NewCoin(
+							market.QuoteDenom,
+							utils.OneDec.Sub(market.MakerFeeRate).MulInt(execQuote).TruncateInt()))
+				} else {
+					makerReceivedCoins = sdk.NewCoins(
+						sdk.NewCoin(market.QuoteDenom, execQuote),
+						sdk.NewCoin(market.BaseDenom, market.MakerFeeRate.Neg().MulInt(execQty).TruncateInt()))
+				}
 			} else {
-				paid = execQty
-				paidCoin = sdk.NewCoin(market.BaseDenom, paid)
-				receivedCoin = sdk.NewCoin(market.QuoteDenom, execQuote)
+				paidCoin = sdk.NewCoin(market.BaseDenom, execQty)
+				receivedCoin = sdk.NewCoin(
+					market.QuoteDenom,
+					utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQuote).TruncateInt())
+				makerPaid = execQuote
+				if market.MakerFeeRate.IsPositive() {
+					makerReceivedCoins = sdk.NewCoins(
+						sdk.NewCoin(
+							market.BaseDenom,
+							utils.OneDec.Sub(market.MakerFeeRate).MulInt(execQty).TruncateInt()))
+				} else {
+					makerReceivedCoins = sdk.NewCoins(
+						sdk.NewCoin(market.BaseDenom, execQty),
+						sdk.NewCoin(market.QuoteDenom, market.MakerFeeRate.Neg().MulInt(execQuote).TruncateInt()))
+				}
 			}
-			if err := k.bankKeeper.SendCoins(
-				ctx, ordererAddr, sdk.MustAccAddressFromBech32(order.Order.Orderer), sdk.NewCoins(paidCoin)); err != nil {
+			if err := k.EscrowCoin(ctx, market, ordererAddr, paidCoin); err != nil {
+				panic(err)
+			}
+			if err := k.ReleaseCoins(ctx, market, sdk.MustAccAddressFromBech32(order.Order.Orderer), makerReceivedCoins); err != nil {
 				panic(err)
 			}
 			if err := k.ReleaseCoin(ctx, market, ordererAddr, receivedCoin); err != nil {
 				panic(err)
 			}
 			order.Order.OpenQuantity = order.Order.OpenQuantity.Sub(execQty)
-			order.Order.RemainingDeposit = order.Order.RemainingDeposit.Sub(receivedCoin.Amount)
+			order.Order.RemainingDeposit = order.Order.RemainingDeposit.Sub(makerPaid)
 			order.Updated = true
 			k.SetTransientOrderBookOrder(ctx, order)
 			k.AfterOrderExecuted(ctx, order.Order, execQty)

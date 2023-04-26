@@ -10,14 +10,14 @@ import (
 
 func (s *KeeperTestSuite) TestPoolOrders() {
 	creatorAddr := utils.TestAddress(1)
-	s.FundAccount(creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uusd"))
+	s.FundAccount(creatorAddr, utils.ParseCoins("10000000_000000ucre,10000000_000000uusd"))
 
 	market := s.CreateMarket(creatorAddr, "ucre", "uusd", true)
 	pool := s.CreatePool(creatorAddr, market.Id, sdk.NewDec(5), true)
 
 	s.AddLiquidity(
 		creatorAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(1000_000000), sdk.NewInt(5000_000000), sdk.NewInt(100_000000), sdk.NewInt(500_000000))
+		sdk.NewInt(100000_000000), sdk.NewInt(500000_000000), sdk.NewInt(100_000000), sdk.NewInt(500_000000))
 
 	ordererAddr := utils.TestAddress(2)
 	s.FundAccount(ordererAddr, utils.ParseCoins("1000000_000000ucre,1000000_000000uusd"))

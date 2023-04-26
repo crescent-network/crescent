@@ -36,12 +36,26 @@ func (k Keeper) CreateMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, baseDe
 	return market, nil
 }
 
-func (k Keeper) EscrowCoin(ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress, amt sdk.Coin) error {
-	escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
-	return k.bankKeeper.SendCoins(ctx, ordererAddr, escrowAddr, sdk.NewCoins(amt))
+func (k Keeper) EscrowCoin(ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin) error {
+	return k.EscrowCoins(ctx, market, addr, sdk.NewCoins(amt))
 }
 
-func (k Keeper) ReleaseCoin(ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress, amt sdk.Coin) error {
-	escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
-	return k.bankKeeper.SendCoins(ctx, escrowAddr, ordererAddr, sdk.NewCoins(amt))
+func (k Keeper) EscrowCoins(ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins) error {
+	if amt.IsAllPositive() {
+		escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
+		return k.bankKeeper.SendCoins(ctx, addr, escrowAddr, amt)
+	}
+	return nil
+}
+
+func (k Keeper) ReleaseCoin(ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin) error {
+	return k.ReleaseCoins(ctx, market, addr, sdk.NewCoins(amt))
+}
+
+func (k Keeper) ReleaseCoins(ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins) error {
+	if amt.IsAllPositive() {
+		escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
+		return k.bankKeeper.SendCoins(ctx, escrowAddr, addr, amt)
+	}
+	return nil
 }
