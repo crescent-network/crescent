@@ -281,7 +281,7 @@ func (k Keeper) CheckDelegationStates(ctx sdk.Context, proxyAcc sdk.AccAddress) 
 				totalDelShares = totalDelShares.Add(delShares)
 				liquidTokens := val.TokensFromSharesTruncated(delShares).TruncateInt()
 				totalLiquidTokens = totalLiquidTokens.Add(liquidTokens)
-				totalRewards = totalRewards.Add(delReward.AmountOf(bondDenom))
+				totalRewards = totalRewards.Add(delReward.AmountOf(bondDenom).TruncateDec())
 			}
 			return false
 		},
