@@ -6,30 +6,30 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) GetLastSpotMarketId(ctx sdk.Context) (marketId uint64) {
+func (k Keeper) GetLastMarketId(ctx sdk.Context) (marketId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.LastSpotMarketIdKey)
+	bz := store.Get(types.LastMarketIdKey)
 	if bz == nil {
 		return 0
 	}
 	return sdk.BigEndianToUint64(bz)
 }
 
-func (k Keeper) SetLastSpotMarketId(ctx sdk.Context, marketId uint64) {
+func (k Keeper) SetLastMarketId(ctx sdk.Context, marketId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastSpotMarketIdKey, sdk.Uint64ToBigEndian(marketId))
+	store.Set(types.LastMarketIdKey, sdk.Uint64ToBigEndian(marketId))
 }
 
-func (k Keeper) GetNextSpotMarketIdWithUpdate(ctx sdk.Context) (marketId uint64) {
-	marketId = k.GetLastSpotMarketId(ctx)
+func (k Keeper) GetNextMarketIdWithUpdate(ctx sdk.Context) (marketId uint64) {
+	marketId = k.GetLastMarketId(ctx)
 	marketId++
-	k.SetLastSpotMarketId(ctx, marketId)
+	k.SetLastMarketId(ctx, marketId)
 	return
 }
 
-func (k Keeper) GetSpotMarket(ctx sdk.Context, marketId uint64) (market types.SpotMarket, found bool) {
+func (k Keeper) GetMarket(ctx sdk.Context, marketId uint64) (market types.Market, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetSpotMarketKey(marketId))
+	bz := store.Get(types.GetMarketKey(marketId))
 	if bz == nil {
 		return
 	}
@@ -37,18 +37,18 @@ func (k Keeper) GetSpotMarket(ctx sdk.Context, marketId uint64) (market types.Sp
 	return market, true
 }
 
-func (k Keeper) SetSpotMarket(ctx sdk.Context, market types.SpotMarket) {
+func (k Keeper) SetMarket(ctx sdk.Context, market types.Market) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&market)
-	store.Set(types.GetSpotMarketKey(market.Id), bz)
+	store.Set(types.GetMarketKey(market.Id), bz)
 }
 
-func (k Keeper) IterateAllSpotMarkets(ctx sdk.Context, cb func(market types.SpotMarket) (stop bool)) {
+func (k Keeper) IterateAllMarkets(ctx sdk.Context, cb func(market types.Market) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.SpotMarketKeyPrefix)
+	iter := sdk.KVStorePrefixIterator(store, types.MarketKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var market types.SpotMarket
+		var market types.Market
 		k.cdc.MustUnmarshal(iter.Value(), &market)
 		if cb(market) {
 			break
@@ -56,9 +56,9 @@ func (k Keeper) IterateAllSpotMarkets(ctx sdk.Context, cb func(market types.Spot
 	}
 }
 
-func (k Keeper) GetSpotMarketState(ctx sdk.Context, marketId uint64) (state types.SpotMarketState, found bool) {
+func (k Keeper) GetMarketState(ctx sdk.Context, marketId uint64) (state types.MarketState, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetSpotMarketStateKey(marketId))
+	bz := store.Get(types.GetMarketStateKey(marketId))
 	if bz == nil {
 		return
 	}
@@ -66,65 +66,65 @@ func (k Keeper) GetSpotMarketState(ctx sdk.Context, marketId uint64) (state type
 	return state, true
 }
 
-func (k Keeper) MustGetSpotMarketState(ctx sdk.Context, marketId uint64) types.SpotMarketState {
-	state, found := k.GetSpotMarketState(ctx, marketId)
+func (k Keeper) MustGetMarketState(ctx sdk.Context, marketId uint64) types.MarketState {
+	state, found := k.GetMarketState(ctx, marketId)
 	if !found {
-		panic("spot market state not found")
+		panic(" market state not found")
 	}
 	return state
 }
 
-func (k Keeper) SetSpotMarketState(ctx sdk.Context, marketId uint64, state types.SpotMarketState) {
+func (k Keeper) SetMarketState(ctx sdk.Context, marketId uint64, state types.MarketState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&state)
-	store.Set(types.GetSpotMarketStateKey(marketId), bz)
+	store.Set(types.GetMarketStateKey(marketId), bz)
 }
 
-func (k Keeper) GetSpotMarketByDenoms(ctx sdk.Context, baseDenom, quoteDenom string) (market types.SpotMarket, found bool) {
+func (k Keeper) GetMarketByDenoms(ctx sdk.Context, baseDenom, quoteDenom string) (market types.Market, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetSpotMarketByDenomsIndexKey(baseDenom, quoteDenom))
+	bz := store.Get(types.GetMarketByDenomsIndexKey(baseDenom, quoteDenom))
 	if bz == nil {
 		return
 	}
-	return k.GetSpotMarket(ctx, sdk.BigEndianToUint64(bz))
+	return k.GetMarket(ctx, sdk.BigEndianToUint64(bz))
 }
 
-func (k Keeper) SetSpotMarketByDenomsIndex(ctx sdk.Context, market types.SpotMarket) {
+func (k Keeper) SetMarketByDenomsIndex(ctx sdk.Context, market types.Market) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(
-		types.GetSpotMarketByDenomsIndexKey(market.BaseDenom, market.QuoteDenom), sdk.Uint64ToBigEndian(market.Id))
+		types.GetMarketByDenomsIndexKey(market.BaseDenom, market.QuoteDenom), sdk.Uint64ToBigEndian(market.Id))
 }
 
-func (k Keeper) GetLastSpotOrderId(ctx sdk.Context) (orderId uint64) {
+func (k Keeper) GetLastOrderId(ctx sdk.Context) (orderId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.LastSpotOrderIdKey)
+	bz := store.Get(types.LastOrderIdKey)
 	if bz == nil {
 		return 0
 	}
 	return sdk.BigEndianToUint64(bz)
 }
 
-func (k Keeper) SetLastSpotOrderId(ctx sdk.Context, orderId uint64) {
+func (k Keeper) SetLastOrderId(ctx sdk.Context, orderId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastSpotOrderIdKey, sdk.Uint64ToBigEndian(orderId))
+	store.Set(types.LastOrderIdKey, sdk.Uint64ToBigEndian(orderId))
 }
 
-func (k Keeper) GetNextSpotOrderIdWithUpdate(ctx sdk.Context) (orderId uint64) {
-	orderId = k.GetLastSpotOrderId(ctx)
+func (k Keeper) GetNextOrderIdWithUpdate(ctx sdk.Context) (orderId uint64) {
+	orderId = k.GetLastOrderId(ctx)
 	orderId++
-	k.SetLastSpotOrderId(ctx, orderId)
+	k.SetLastOrderId(ctx, orderId)
 	return
 }
 
-func (k Keeper) SetSpotOrder(ctx sdk.Context, order types.SpotOrder) {
+func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&order)
-	store.Set(types.GetSpotOrderKey(order.Id), bz)
+	store.Set(types.GetOrderKey(order.Id), bz)
 }
 
-func (k Keeper) GetSpotOrder(ctx sdk.Context, orderId uint64) (order types.SpotOrder, found bool) {
+func (k Keeper) GetOrder(ctx sdk.Context, orderId uint64) (order types.Order, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetSpotOrderKey(orderId))
+	bz := store.Get(types.GetOrderKey(orderId))
 	if bz == nil {
 		return
 	}
@@ -132,12 +132,12 @@ func (k Keeper) GetSpotOrder(ctx sdk.Context, orderId uint64) (order types.SpotO
 	return order, true
 }
 
-func (k Keeper) IterateAllSpotOrders(ctx sdk.Context, cb func(order types.SpotOrder) (stop bool)) {
+func (k Keeper) IterateAllOrders(ctx sdk.Context, cb func(order types.Order) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.SpotOrderKeyPrefix)
+	iter := sdk.KVStorePrefixIterator(store, types.OrderKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var order types.SpotOrder
+		var order types.Order
 		k.cdc.MustUnmarshal(iter.Value(), &order)
 		if cb(order) {
 			break
@@ -145,35 +145,35 @@ func (k Keeper) IterateAllSpotOrders(ctx sdk.Context, cb func(order types.SpotOr
 	}
 }
 
-func (k Keeper) DeleteSpotOrder(ctx sdk.Context, order types.SpotOrder) {
+func (k Keeper) DeleteOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetSpotOrderKey(order.Id))
+	store.Delete(types.GetOrderKey(order.Id))
 }
 
-func (k Keeper) SetSpotOrderBookOrder(ctx sdk.Context, order types.SpotOrder) {
+func (k Keeper) SetOrderBookOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(
-		types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id),
+		types.GetOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id),
 		sdk.Uint64ToBigEndian(order.Id))
 }
 
-func (k Keeper) IterateSpotOrderBook(ctx sdk.Context, marketId uint64, cb func(order types.SpotOrder) (stop bool)) {
-	k.IterateSpotOrderBookSide(ctx, marketId, false, cb)
-	k.IterateSpotOrderBookSide(ctx, marketId, true, cb)
+func (k Keeper) IterateOrderBook(ctx sdk.Context, marketId uint64, cb func(order types.Order) (stop bool)) {
+	k.IterateOrderBookSide(ctx, marketId, false, cb)
+	k.IterateOrderBookSide(ctx, marketId, true, cb)
 }
 
-func (k Keeper) IterateSpotOrderBookSide(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.SpotOrder) (stop bool)) {
+func (k Keeper) IterateOrderBookSide(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.Order) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
 	if isBuy {
-		iter = sdk.KVStoreReversePrefixIterator(store, types.GetSpotOrderBookIteratorPrefix(marketId, true))
+		iter = sdk.KVStoreReversePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, true))
 	} else {
-		iter = sdk.KVStorePrefixIterator(store, types.GetSpotOrderBookIteratorPrefix(marketId, false))
+		iter = sdk.KVStorePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, false))
 	}
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		orderId := sdk.BigEndianToUint64(iter.Value())
-		order, found := k.GetSpotOrder(ctx, orderId)
+		order, found := k.GetOrder(ctx, orderId)
 		if !found { // sanity check
 			panic("order not found")
 		}
@@ -183,29 +183,29 @@ func (k Keeper) IterateSpotOrderBookSide(ctx sdk.Context, marketId uint64, isBuy
 	}
 }
 
-func (k Keeper) DeleteSpotOrderBookOrder(ctx sdk.Context, order types.SpotOrder) {
+func (k Keeper) DeleteOrderBookOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(
-		types.GetSpotOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id))
+		types.GetOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id))
 }
 
-func (k Keeper) SetTransientSpotOrderBookOrder(ctx sdk.Context, order types.TransientSpotOrder) {
+func (k Keeper) SetTransientOrderBookOrder(ctx sdk.Context, order types.TransientOrder) {
 	store := ctx.TransientStore(k.tsKey)
 	bz := k.cdc.MustMarshal(&order)
-	store.Set(types.GetSpotOrderBookOrderKey(order.Order.MarketId, order.Order.IsBuy, order.Order.Price, order.Order.Id), bz)
+	store.Set(types.GetOrderBookOrderKey(order.Order.MarketId, order.Order.IsBuy, order.Order.Price, order.Order.Id), bz)
 }
 
-func (k Keeper) IterateTransientSpotOrderBookSide(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.TransientSpotOrder) (stop bool)) {
+func (k Keeper) IterateTransientOrderBookSide(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.TransientOrder) (stop bool)) {
 	store := ctx.TransientStore(k.tsKey)
 	var iter sdk.Iterator
 	if isBuy {
-		iter = sdk.KVStoreReversePrefixIterator(store, types.GetSpotOrderBookIteratorPrefix(marketId, true))
+		iter = sdk.KVStoreReversePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, true))
 	} else {
-		iter = sdk.KVStorePrefixIterator(store, types.GetSpotOrderBookIteratorPrefix(marketId, false))
+		iter = sdk.KVStorePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, false))
 	}
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var order types.TransientSpotOrder
+		var order types.TransientOrder
 		k.cdc.MustUnmarshal(iter.Value(), &order)
 		if cb(order) {
 			break
@@ -213,12 +213,12 @@ func (k Keeper) IterateTransientSpotOrderBookSide(ctx sdk.Context, marketId uint
 	}
 }
 
-func (k Keeper) IterateTransientSpotOrderBook(ctx sdk.Context, marketId uint64, cb func(order types.TransientSpotOrder) (stop bool)) {
-	k.IterateTransientSpotOrderBookSide(ctx, marketId, false, cb)
-	k.IterateTransientSpotOrderBookSide(ctx, marketId, true, cb)
+func (k Keeper) IterateTransientOrderBook(ctx sdk.Context, marketId uint64, cb func(order types.TransientOrder) (stop bool)) {
+	k.IterateTransientOrderBookSide(ctx, marketId, false, cb)
+	k.IterateTransientOrderBookSide(ctx, marketId, true, cb)
 }
 
-func (k Keeper) DeleteTransientSpotOrderBookOrder(ctx sdk.Context, order types.TransientSpotOrder) {
+func (k Keeper) DeleteTransientOrderBookOrder(ctx sdk.Context, order types.TransientOrder) {
 	store := ctx.TransientStore(k.tsKey)
-	store.Delete(types.GetSpotOrderBookOrderKey(order.Order.MarketId, order.Order.IsBuy, order.Order.Price, order.Order.Id))
+	store.Delete(types.GetOrderBookOrderKey(order.Order.MarketId, order.Order.IsBuy, order.Order.Price, order.Order.Id))
 }

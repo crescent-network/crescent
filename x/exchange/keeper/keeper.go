@@ -18,10 +18,10 @@ type Keeper struct {
 	tsKey      sdk.StoreKey
 	paramSpace paramstypes.Subspace
 
-	accountKeeper    types.AccountKeeper
-	bankKeeper       types.BankKeeper
-	hooks            types.ExchangeHooks
-	spotOrderSources []types.SpotOrderSource
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	hooks         types.ExchangeHooks
+	orderSources  []types.OrderSource
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -60,10 +60,10 @@ func (k *Keeper) SetHooks(hooks types.ExchangeHooks) *Keeper {
 	return k
 }
 
-func (k *Keeper) SetSpotOrderSources(sources ...types.SpotOrderSource) *Keeper {
-	if k.spotOrderSources != nil {
-		panic("cannot set spot order sources twice")
+func (k *Keeper) SetOrderSources(sources ...types.OrderSource) *Keeper {
+	if k.orderSources != nil {
+		panic("cannot set order sources twice")
 	}
-	k.spotOrderSources = sources
+	k.orderSources = sources
 	return k
 }

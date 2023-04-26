@@ -4,6 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type SpotOrderSource interface {
-	RequestTransientSpotOrders(ctx sdk.Context, market SpotMarket, isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int)
+type OrderSource interface {
+	RequestTransientOrders(ctx sdk.Context, market Market, isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int)
 }

@@ -8,10 +8,10 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var _ exchangetypes.SpotOrderSource = Keeper{}
+var _ exchangetypes.OrderSource = Keeper{}
 
-func (k Keeper) RequestTransientSpotOrders(
-	ctx sdk.Context, market exchangetypes.SpotMarket, isBuy bool,
+func (k Keeper) RequestTransientOrders(
+	ctx sdk.Context, market exchangetypes.Market, isBuy bool,
 	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) {
 	var tickLimit int32
 	if priceLimit == nil {
@@ -58,7 +58,7 @@ func (k Keeper) RequestTransientSpotOrders(
 					types.Amount0DeltaRounding(sqrtPriceBefore, sqrtPrice, liquidity, false))
 			}
 			if qty.IsPositive() {
-				if err := k.exchangeKeeper.CreateTransientSpotOrder(
+				if err := k.exchangeKeeper.CreateTransientOrder(
 					ctx, market, reserveAddr, isBuy, price, qty, true); err != nil {
 					panic(err)
 				}

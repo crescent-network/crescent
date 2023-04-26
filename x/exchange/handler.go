@@ -16,17 +16,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case *types.MsgCreateSpotMarket:
-			res, err := msgServer.CreateSpotMarket(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgCreateMarket:
+			res, err := msgServer.CreateMarket(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgPlaceSpotLimitOrder:
-			res, err := msgServer.PlaceSpotLimitOrder(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgPlaceLimitOrder:
+			res, err := msgServer.PlaceLimitOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgPlaceSpotMarketOrder:
-			res, err := msgServer.PlaceSpotMarketOrder(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgPlaceMarketOrder:
+			res, err := msgServer.PlaceMarketOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgCancelSpotOrder:
-			res, err := msgServer.CancelSpotOrder(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgCancelOrder:
+			res, err := msgServer.CancelOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgSwapExactIn:
 			res, err := msgServer.SwapExactIn(sdk.WrapSDKContext(ctx), msg)

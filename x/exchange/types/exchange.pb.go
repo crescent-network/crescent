@@ -26,7 +26,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Params struct {
-	SpotMarketCreationFee github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=spot_market_creation_fee,json=spotMarketCreationFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"spot_market_creation_fee"`
+	MarketCreationFee   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=market_creation_fee,json=marketCreationFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"market_creation_fee"`
+	DefaultMakerFeeRate github_com_cosmos_cosmos_sdk_types.Dec   `protobuf:"bytes,2,opt,name=default_maker_fee_rate,json=defaultMakerFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"default_maker_fee_rate"`
+	DefaultTakerFeeRate github_com_cosmos_cosmos_sdk_types.Dec   `protobuf:"bytes,3,opt,name=default_taker_fee_rate,json=defaultTakerFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"default_taker_fee_rate"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -62,25 +64,27 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
-type SpotMarket struct {
-	Id            uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	BaseDenom     string `protobuf:"bytes,2,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty"`
-	QuoteDenom    string `protobuf:"bytes,3,opt,name=quote_denom,json=quoteDenom,proto3" json:"quote_denom,omitempty"`
-	EscrowAddress string `protobuf:"bytes,4,opt,name=escrow_address,json=escrowAddress,proto3" json:"escrow_address,omitempty"`
+type Market struct {
+	Id            uint64                                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	BaseDenom     string                                 `protobuf:"bytes,2,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty"`
+	QuoteDenom    string                                 `protobuf:"bytes,3,opt,name=quote_denom,json=quoteDenom,proto3" json:"quote_denom,omitempty"`
+	EscrowAddress string                                 `protobuf:"bytes,4,opt,name=escrow_address,json=escrowAddress,proto3" json:"escrow_address,omitempty"`
+	MakerFeeRate  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=maker_fee_rate,json=makerFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"maker_fee_rate"`
+	TakerFeeRate  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=taker_fee_rate,json=takerFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"taker_fee_rate"`
 }
 
-func (m *SpotMarket) Reset()         { *m = SpotMarket{} }
-func (m *SpotMarket) String() string { return proto.CompactTextString(m) }
-func (*SpotMarket) ProtoMessage()    {}
-func (*SpotMarket) Descriptor() ([]byte, []int) {
+func (m *Market) Reset()         { *m = Market{} }
+func (m *Market) String() string { return proto.CompactTextString(m) }
+func (*Market) ProtoMessage()    {}
+func (*Market) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bb2114aee993f375, []int{1}
 }
-func (m *SpotMarket) XXX_Unmarshal(b []byte) error {
+func (m *Market) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SpotMarket) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Market) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SpotMarket.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Market.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -90,34 +94,34 @@ func (m *SpotMarket) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *SpotMarket) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SpotMarket.Merge(m, src)
+func (m *Market) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Market.Merge(m, src)
 }
-func (m *SpotMarket) XXX_Size() int {
+func (m *Market) XXX_Size() int {
 	return m.Size()
 }
-func (m *SpotMarket) XXX_DiscardUnknown() {
-	xxx_messageInfo_SpotMarket.DiscardUnknown(m)
+func (m *Market) XXX_DiscardUnknown() {
+	xxx_messageInfo_Market.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SpotMarket proto.InternalMessageInfo
+var xxx_messageInfo_Market proto.InternalMessageInfo
 
-type SpotMarketState struct {
+type MarketState struct {
 	LastPrice *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=last_price,json=lastPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"last_price,omitempty"`
 }
 
-func (m *SpotMarketState) Reset()         { *m = SpotMarketState{} }
-func (m *SpotMarketState) String() string { return proto.CompactTextString(m) }
-func (*SpotMarketState) ProtoMessage()    {}
-func (*SpotMarketState) Descriptor() ([]byte, []int) {
+func (m *MarketState) Reset()         { *m = MarketState{} }
+func (m *MarketState) String() string { return proto.CompactTextString(m) }
+func (*MarketState) ProtoMessage()    {}
+func (*MarketState) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bb2114aee993f375, []int{2}
 }
-func (m *SpotMarketState) XXX_Unmarshal(b []byte) error {
+func (m *MarketState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SpotMarketState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MarketState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SpotMarketState.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MarketState.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -127,19 +131,19 @@ func (m *SpotMarketState) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *SpotMarketState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SpotMarketState.Merge(m, src)
+func (m *MarketState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketState.Merge(m, src)
 }
-func (m *SpotMarketState) XXX_Size() int {
+func (m *MarketState) XXX_Size() int {
 	return m.Size()
 }
-func (m *SpotMarketState) XXX_DiscardUnknown() {
-	xxx_messageInfo_SpotMarketState.DiscardUnknown(m)
+func (m *MarketState) XXX_DiscardUnknown() {
+	xxx_messageInfo_MarketState.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SpotMarketState proto.InternalMessageInfo
+var xxx_messageInfo_MarketState proto.InternalMessageInfo
 
-type SpotOrder struct {
+type Order struct {
 	Id               uint64                                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Orderer          string                                 `protobuf:"bytes,2,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	MarketId         uint64                                 `protobuf:"varint,3,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -150,18 +154,18 @@ type SpotOrder struct {
 	RemainingDeposit github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,8,opt,name=remaining_deposit,json=remainingDeposit,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"remaining_deposit"`
 }
 
-func (m *SpotOrder) Reset()         { *m = SpotOrder{} }
-func (m *SpotOrder) String() string { return proto.CompactTextString(m) }
-func (*SpotOrder) ProtoMessage()    {}
-func (*SpotOrder) Descriptor() ([]byte, []int) {
+func (m *Order) Reset()         { *m = Order{} }
+func (m *Order) String() string { return proto.CompactTextString(m) }
+func (*Order) ProtoMessage()    {}
+func (*Order) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bb2114aee993f375, []int{3}
 }
-func (m *SpotOrder) XXX_Unmarshal(b []byte) error {
+func (m *Order) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SpotOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Order) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SpotOrder.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Order.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -171,36 +175,36 @@ func (m *SpotOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *SpotOrder) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SpotOrder.Merge(m, src)
+func (m *Order) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Order.Merge(m, src)
 }
-func (m *SpotOrder) XXX_Size() int {
+func (m *Order) XXX_Size() int {
 	return m.Size()
 }
-func (m *SpotOrder) XXX_DiscardUnknown() {
-	xxx_messageInfo_SpotOrder.DiscardUnknown(m)
+func (m *Order) XXX_DiscardUnknown() {
+	xxx_messageInfo_Order.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SpotOrder proto.InternalMessageInfo
+var xxx_messageInfo_Order proto.InternalMessageInfo
 
-type TransientSpotOrder struct {
-	Order       SpotOrder `protobuf:"bytes,1,opt,name=order,proto3" json:"order"`
-	Updated     bool      `protobuf:"varint,2,opt,name=updated,proto3" json:"updated,omitempty"`
-	IsTemporary bool      `protobuf:"varint,3,opt,name=is_temporary,json=isTemporary,proto3" json:"is_temporary,omitempty"`
+type TransientOrder struct {
+	Order       Order `protobuf:"bytes,1,opt,name=order,proto3" json:"order"`
+	Updated     bool  `protobuf:"varint,2,opt,name=updated,proto3" json:"updated,omitempty"`
+	IsTemporary bool  `protobuf:"varint,3,opt,name=is_temporary,json=isTemporary,proto3" json:"is_temporary,omitempty"`
 }
 
-func (m *TransientSpotOrder) Reset()         { *m = TransientSpotOrder{} }
-func (m *TransientSpotOrder) String() string { return proto.CompactTextString(m) }
-func (*TransientSpotOrder) ProtoMessage()    {}
-func (*TransientSpotOrder) Descriptor() ([]byte, []int) {
+func (m *TransientOrder) Reset()         { *m = TransientOrder{} }
+func (m *TransientOrder) String() string { return proto.CompactTextString(m) }
+func (*TransientOrder) ProtoMessage()    {}
+func (*TransientOrder) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bb2114aee993f375, []int{4}
 }
-func (m *TransientSpotOrder) XXX_Unmarshal(b []byte) error {
+func (m *TransientOrder) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *TransientSpotOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *TransientOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_TransientSpotOrder.Marshal(b, m, deterministic)
+		return xxx_messageInfo_TransientOrder.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -210,24 +214,24 @@ func (m *TransientSpotOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *TransientSpotOrder) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TransientSpotOrder.Merge(m, src)
+func (m *TransientOrder) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TransientOrder.Merge(m, src)
 }
-func (m *TransientSpotOrder) XXX_Size() int {
+func (m *TransientOrder) XXX_Size() int {
 	return m.Size()
 }
-func (m *TransientSpotOrder) XXX_DiscardUnknown() {
-	xxx_messageInfo_TransientSpotOrder.DiscardUnknown(m)
+func (m *TransientOrder) XXX_DiscardUnknown() {
+	xxx_messageInfo_TransientOrder.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_TransientSpotOrder proto.InternalMessageInfo
+var xxx_messageInfo_TransientOrder proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*Params)(nil), "crescent.exchange.v1beta1.Params")
-	proto.RegisterType((*SpotMarket)(nil), "crescent.exchange.v1beta1.SpotMarket")
-	proto.RegisterType((*SpotMarketState)(nil), "crescent.exchange.v1beta1.SpotMarketState")
-	proto.RegisterType((*SpotOrder)(nil), "crescent.exchange.v1beta1.SpotOrder")
-	proto.RegisterType((*TransientSpotOrder)(nil), "crescent.exchange.v1beta1.TransientSpotOrder")
+	proto.RegisterType((*Market)(nil), "crescent.exchange.v1beta1.Market")
+	proto.RegisterType((*MarketState)(nil), "crescent.exchange.v1beta1.MarketState")
+	proto.RegisterType((*Order)(nil), "crescent.exchange.v1beta1.Order")
+	proto.RegisterType((*TransientOrder)(nil), "crescent.exchange.v1beta1.TransientOrder")
 }
 
 func init() {
@@ -235,46 +239,49 @@ func init() {
 }
 
 var fileDescriptor_bb2114aee993f375 = []byte{
-	// 610 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x51, 0x6b, 0x13, 0x4b,
-	0x14, 0xce, 0xb6, 0x49, 0x9a, 0x9c, 0xb4, 0xbd, 0xf7, 0x0e, 0xb7, 0xb0, 0xed, 0xe5, 0x6e, 0x6a,
-	0x50, 0x09, 0x42, 0x77, 0x6d, 0x45, 0xf0, 0x51, 0xd3, 0x20, 0x54, 0x10, 0xeb, 0xb6, 0xf8, 0xa0,
-	0xc2, 0x32, 0xd9, 0x3d, 0xa6, 0x43, 0xdd, 0x99, 0xed, 0xcc, 0xa4, 0x6d, 0x9e, 0xf5, 0x5d, 0xc1,
-	0x7f, 0x21, 0xf8, 0x3f, 0xfa, 0xd8, 0x47, 0xf1, 0xa1, 0x6a, 0xfb, 0x47, 0x64, 0x66, 0xb3, 0x1b,
-	0x41, 0x04, 0xdb, 0xa7, 0xdd, 0xf9, 0xce, 0xf9, 0xbe, 0xf3, 0x9d, 0xfd, 0xd8, 0x81, 0x6e, 0x2c,
-	0x51, 0xc5, 0xc8, 0x75, 0x80, 0xc7, 0xf1, 0x1e, 0xe5, 0x43, 0x0c, 0x0e, 0xd7, 0x07, 0xa8, 0xe9,
-	0x7a, 0x09, 0xf8, 0x99, 0x14, 0x5a, 0x90, 0xe5, 0xa2, 0xd3, 0x2f, 0x0b, 0x93, 0xce, 0x95, 0x7f,
-	0x87, 0x62, 0x28, 0x6c, 0x57, 0x60, 0xde, 0x72, 0xc2, 0x8a, 0x17, 0x0b, 0x95, 0x0a, 0x15, 0x0c,
-	0xa8, 0x9a, 0x8a, 0xc6, 0x82, 0xf1, 0xbc, 0xde, 0x79, 0xe7, 0x40, 0x7d, 0x9b, 0x4a, 0x9a, 0x2a,
-	0xf2, 0xd6, 0x01, 0x57, 0x65, 0x42, 0x47, 0x29, 0x95, 0xfb, 0xa8, 0xa3, 0x58, 0x22, 0xd5, 0x4c,
-	0xf0, 0xe8, 0x15, 0xa2, 0xeb, 0xac, 0xce, 0x76, 0x5b, 0x1b, 0xcb, 0x7e, 0x2e, 0xe7, 0x1b, 0xb9,
-	0x62, 0xb2, 0xbf, 0x29, 0x18, 0xef, 0xdd, 0x3e, 0x39, 0x6b, 0x57, 0x3e, 0x7e, 0x6d, 0x77, 0x87,
-	0x4c, 0xef, 0x8d, 0x06, 0x7e, 0x2c, 0xd2, 0x60, 0x32, 0x3b, 0x7f, 0xac, 0xa9, 0x64, 0x3f, 0xd0,
-	0xe3, 0x0c, 0x95, 0x25, 0xa8, 0x70, 0xc9, 0x0c, 0x7b, 0x6c, 0x67, 0x6d, 0x4e, 0x46, 0x3d, 0x44,
-	0xec, 0xbc, 0x71, 0x00, 0x76, 0xca, 0x0a, 0x59, 0x84, 0x19, 0x96, 0xb8, 0xce, 0xaa, 0xd3, 0xad,
-	0x86, 0x33, 0x2c, 0x21, 0xff, 0x03, 0x98, 0xe1, 0x51, 0x82, 0x5c, 0xa4, 0xee, 0xcc, 0xaa, 0xd3,
-	0x6d, 0x86, 0x4d, 0x83, 0xf4, 0x0d, 0x40, 0xda, 0xd0, 0x3a, 0x18, 0x09, 0x5d, 0xd4, 0x67, 0x6d,
-	0x1d, 0x2c, 0x94, 0x37, 0xdc, 0x80, 0x45, 0x54, 0xb1, 0x14, 0x47, 0x11, 0x4d, 0x12, 0x89, 0x4a,
-	0xb9, 0x55, 0xdb, 0xb3, 0x90, 0xa3, 0x0f, 0x72, 0xb0, 0xf3, 0x12, 0xfe, 0x9a, 0x9a, 0xd8, 0xd1,
-	0x54, 0x23, 0xd9, 0x02, 0x78, 0x4d, 0x95, 0x8e, 0x32, 0xc9, 0x62, 0xb4, 0x8e, 0x9a, 0xbd, 0x5b,
-	0x5f, 0xce, 0xda, 0x37, 0xff, 0x60, 0xe3, 0x3e, 0xc6, 0x61, 0xd3, 0xb0, 0xb7, 0x0d, 0xb9, 0xf3,
-	0x69, 0x16, 0x9a, 0x46, 0xfe, 0x89, 0x4c, 0x50, 0xfe, 0xb2, 0xa2, 0x0b, 0x73, 0xc2, 0x14, 0x50,
-	0x4e, 0xf6, 0x2b, 0x8e, 0xe4, 0x3f, 0x68, 0x4e, 0xc2, 0x61, 0x89, 0xdd, 0xad, 0x1a, 0x36, 0x72,
-	0x60, 0x2b, 0x21, 0x4b, 0x50, 0x67, 0x2a, 0x1a, 0x8c, 0xc6, 0x76, 0xa3, 0x46, 0x58, 0x63, 0xaa,
-	0x37, 0x1a, 0x93, 0x3e, 0xd4, 0x72, 0xc7, 0x35, 0xeb, 0xd8, 0x37, 0x39, 0x5d, 0xc2, 0x75, 0x4e,
-	0x26, 0x8f, 0xa0, 0x71, 0x30, 0xa2, 0x5c, 0x33, 0x3d, 0x76, 0xeb, 0x97, 0x16, 0xda, 0xe2, 0x3a,
-	0x2c, 0xf9, 0x64, 0x07, 0x16, 0x44, 0x86, 0x3c, 0x2a, 0x05, 0xe7, 0xae, 0x24, 0x38, 0x6f, 0x44,
-	0x9e, 0x16, 0xa2, 0x2f, 0xe0, 0x1f, 0x89, 0x29, 0x65, 0x9c, 0xf1, 0x61, 0x94, 0x60, 0x26, 0x14,
-	0xd3, 0x6e, 0xe3, 0x4a, 0xc2, 0x7f, 0x97, 0x42, 0xfd, 0x5c, 0xa7, 0xf3, 0xc1, 0x01, 0xb2, 0x2b,
-	0x29, 0x57, 0x0c, 0xb9, 0x9e, 0x06, 0x77, 0x1f, 0x6a, 0x36, 0x19, 0x9b, 0x5d, 0x6b, 0xe3, 0xba,
-	0xff, 0xdb, 0xbf, 0xd3, 0x2f, 0x49, 0xbd, 0xaa, 0x71, 0x13, 0xe6, 0x44, 0x13, 0xf5, 0x28, 0x4b,
-	0xa8, 0xc6, 0xc4, 0x46, 0xdd, 0x08, 0x8b, 0x23, 0xb9, 0x06, 0xf3, 0x4c, 0x45, 0x1a, 0xd3, 0x4c,
-	0x48, 0x2a, 0xc7, 0x36, 0xed, 0x46, 0xd8, 0x62, 0x6a, 0xb7, 0x80, 0x7a, 0xcf, 0x4e, 0xbe, 0x7b,
-	0x95, 0x93, 0x73, 0xcf, 0x39, 0x3d, 0xf7, 0x9c, 0x6f, 0xe7, 0x9e, 0xf3, 0xfe, 0xc2, 0xab, 0x9c,
-	0x5e, 0x78, 0x95, 0xcf, 0x17, 0x5e, 0xe5, 0xf9, 0xbd, 0x9f, 0xb7, 0x9d, 0xf8, 0x5a, 0xe3, 0xa8,
-	0x8f, 0x84, 0xdc, 0x2f, 0x81, 0xe0, 0xf0, 0x6e, 0x70, 0x3c, 0xbd, 0x75, 0xec, 0x37, 0x18, 0xd4,
-	0xed, 0xd5, 0x70, 0xe7, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0x45, 0xd9, 0x02, 0x49, 0x97, 0x04,
-	0x00, 0x00,
+	// 665 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x51, 0x4f, 0x13, 0x4d,
+	0x14, 0xed, 0x96, 0xb6, 0xb4, 0x53, 0x68, 0x3e, 0x96, 0x4f, 0x53, 0x30, 0x6e, 0x6b, 0x13, 0x4d,
+	0x63, 0xc2, 0xae, 0x60, 0x4c, 0x7c, 0xf0, 0xc5, 0xd2, 0x90, 0x60, 0x42, 0xc4, 0xa5, 0x31, 0x46,
+	0x1f, 0x36, 0xd3, 0xdd, 0x4b, 0x99, 0x94, 0x9d, 0x29, 0x33, 0x53, 0xa0, 0xf1, 0x27, 0xf8, 0xe2,
+	0xdf, 0x50, 0xff, 0x08, 0x6f, 0xf2, 0x68, 0x7c, 0x40, 0x85, 0x3f, 0x62, 0x66, 0x66, 0xb7, 0x14,
+	0x8c, 0x89, 0xd6, 0xa7, 0x76, 0xce, 0xdc, 0x7b, 0xce, 0xbd, 0xe7, 0x64, 0x07, 0x35, 0x43, 0x0e,
+	0x22, 0x04, 0x2a, 0x3d, 0x38, 0x0e, 0xf7, 0x30, 0xed, 0x81, 0x77, 0xb8, 0xda, 0x05, 0x89, 0x57,
+	0xc7, 0x80, 0x3b, 0xe0, 0x4c, 0x32, 0x7b, 0x29, 0xad, 0x74, 0xc7, 0x17, 0x49, 0xe5, 0xf2, 0xff,
+	0x3d, 0xd6, 0x63, 0xba, 0xca, 0x53, 0xff, 0x4c, 0xc3, 0xb2, 0x13, 0x32, 0x11, 0x33, 0xe1, 0x75,
+	0xb1, 0xb8, 0x24, 0x0d, 0x19, 0xa1, 0xe6, 0xbe, 0xf1, 0x39, 0x8b, 0x0a, 0xdb, 0x98, 0xe3, 0x58,
+	0xd8, 0x6f, 0xd1, 0x62, 0x8c, 0x79, 0x1f, 0x64, 0x10, 0x72, 0xc0, 0x92, 0x30, 0x1a, 0xec, 0x02,
+	0x54, 0xad, 0xfa, 0x4c, 0xb3, 0xbc, 0xb6, 0xe4, 0x1a, 0x22, 0x57, 0x11, 0xa5, 0x9a, 0xee, 0x3a,
+	0x23, 0xb4, 0xf5, 0xe0, 0xe4, 0xac, 0x96, 0xf9, 0xf8, 0xad, 0xd6, 0xec, 0x11, 0xb9, 0x37, 0xec,
+	0xba, 0x21, 0x8b, 0xbd, 0x44, 0xd5, 0xfc, 0xac, 0x88, 0xa8, 0xef, 0xc9, 0xd1, 0x00, 0x84, 0x6e,
+	0x10, 0xfe, 0x82, 0xd1, 0x59, 0x4f, 0x64, 0x36, 0x00, 0xec, 0x10, 0xdd, 0x8c, 0x60, 0x17, 0x0f,
+	0xf7, 0x65, 0x10, 0xe3, 0x3e, 0x70, 0x25, 0x1d, 0x70, 0x2c, 0xa1, 0x9a, 0xad, 0x5b, 0xcd, 0x52,
+	0xcb, 0x55, 0x22, 0x5f, 0xcf, 0x6a, 0xf7, 0xfe, 0x40, 0xa4, 0x0d, 0xa1, 0xbf, 0x98, 0xb0, 0x6d,
+	0x29, 0xb2, 0x0d, 0x00, 0x1f, 0xcb, 0x2b, 0x22, 0xf2, 0xaa, 0xc8, 0xcc, 0x3f, 0x89, 0x74, 0x26,
+	0x44, 0x1a, 0x9f, 0xb2, 0xa8, 0xb0, 0xa5, 0xf7, 0xb3, 0x2b, 0x28, 0x4b, 0xa2, 0xaa, 0x55, 0xb7,
+	0x9a, 0x39, 0x3f, 0x4b, 0x22, 0xfb, 0x36, 0x42, 0xca, 0xbe, 0x20, 0x02, 0xca, 0x62, 0xb3, 0x98,
+	0x5f, 0x52, 0x48, 0x5b, 0x01, 0x76, 0x0d, 0x95, 0x0f, 0x86, 0x4c, 0xa6, 0xf7, 0x7a, 0x26, 0x1f,
+	0x69, 0xc8, 0x14, 0xdc, 0x45, 0x15, 0x10, 0x21, 0x67, 0x47, 0x01, 0x8e, 0x22, 0x0e, 0x42, 0x54,
+	0x73, 0xba, 0x66, 0xde, 0xa0, 0x4f, 0x0d, 0x68, 0x77, 0x50, 0xe5, 0x9a, 0x87, 0xf9, 0xa9, 0xd6,
+	0x9b, 0x8b, 0x27, 0xcd, 0xeb, 0xa0, 0xca, 0x35, 0xd3, 0x0a, 0xd3, 0xb1, 0xca, 0x49, 0xb7, 0x5e,
+	0xa1, 0xb2, 0x31, 0x6b, 0x47, 0x2a, 0x91, 0x4d, 0x84, 0xf6, 0xb1, 0x90, 0xc1, 0x80, 0x93, 0x10,
+	0xb4, 0x73, 0xa5, 0xd6, 0xfd, 0xbf, 0x20, 0x2f, 0xa9, 0xee, 0x6d, 0xd5, 0xdc, 0xf8, 0x30, 0x83,
+	0xf2, 0xcf, 0x79, 0x04, 0xfc, 0x97, 0x18, 0xaa, 0x68, 0x96, 0xa9, 0x0b, 0xe0, 0x49, 0x06, 0xe9,
+	0xd1, 0xbe, 0x85, 0x4a, 0xc9, 0x27, 0x40, 0x22, 0xed, 0x7f, 0xce, 0x2f, 0x1a, 0x60, 0x33, 0xb2,
+	0x6f, 0xa0, 0x02, 0x11, 0x41, 0x77, 0x38, 0xd2, 0xae, 0x17, 0xfd, 0x3c, 0x11, 0xad, 0xe1, 0xc8,
+	0x6e, 0xa3, 0xbc, 0x99, 0x76, 0x3a, 0x93, 0x4d, 0xb3, 0xfd, 0x0c, 0x15, 0x0f, 0x86, 0x98, 0x4a,
+	0x22, 0x47, 0x53, 0xf8, 0xba, 0x49, 0xa5, 0x3f, 0xee, 0xb7, 0x77, 0xd0, 0x3c, 0x1b, 0x00, 0x0d,
+	0xc6, 0x84, 0xb3, 0x53, 0x11, 0xce, 0x29, 0x92, 0x17, 0x29, 0xe9, 0x1b, 0xb4, 0xc0, 0x21, 0xc6,
+	0x84, 0x12, 0xda, 0x0b, 0x22, 0x18, 0x30, 0x41, 0x64, 0xb5, 0x38, 0x15, 0xf1, 0x7f, 0x63, 0xa2,
+	0xb6, 0xe1, 0x69, 0xbc, 0xb3, 0x50, 0xa5, 0xc3, 0x31, 0x15, 0x04, 0xa8, 0x34, 0xa1, 0x3d, 0x41,
+	0x79, 0x9d, 0x8a, 0xce, 0xad, 0xbc, 0x56, 0x77, 0x7f, 0xfb, 0xf2, 0xb9, 0xba, 0xa1, 0x95, 0x53,
+	0x53, 0xf8, 0xa6, 0x49, 0x45, 0x3c, 0x1c, 0x44, 0x58, 0x42, 0xa4, 0x23, 0x2e, 0xfa, 0xe9, 0xd1,
+	0xbe, 0x83, 0xe6, 0x88, 0x08, 0x24, 0xc4, 0x03, 0xc6, 0x31, 0x1f, 0xe9, 0x94, 0x8b, 0x7e, 0x99,
+	0x88, 0x4e, 0x0a, 0xb5, 0x5e, 0x9e, 0xfc, 0x70, 0x32, 0x27, 0xe7, 0x8e, 0x75, 0x7a, 0xee, 0x58,
+	0xdf, 0xcf, 0x1d, 0xeb, 0xfd, 0x85, 0x93, 0x39, 0xbd, 0x70, 0x32, 0x5f, 0x2e, 0x9c, 0xcc, 0xeb,
+	0xc7, 0x93, 0x5b, 0x26, 0x33, 0xad, 0x50, 0x90, 0x47, 0x8c, 0xf7, 0xc7, 0x80, 0x77, 0xf8, 0xc8,
+	0x3b, 0xbe, 0x7c, 0xcd, 0xf5, 0xee, 0xdd, 0x82, 0x7e, 0x72, 0x1f, 0xfe, 0x0c, 0x00, 0x00, 0xff,
+	0xff, 0xb4, 0xe6, 0xe8, 0x33, 0xef, 0x05, 0x00, 0x00,
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {
@@ -297,10 +304,30 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.SpotMarketCreationFee) > 0 {
-		for iNdEx := len(m.SpotMarketCreationFee) - 1; iNdEx >= 0; iNdEx-- {
+	{
+		size := m.DefaultTakerFeeRate.Size()
+		i -= size
+		if _, err := m.DefaultTakerFeeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintExchange(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.DefaultMakerFeeRate.Size()
+		i -= size
+		if _, err := m.DefaultMakerFeeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintExchange(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.MarketCreationFee) > 0 {
+		for iNdEx := len(m.MarketCreationFee) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.SpotMarketCreationFee[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.MarketCreationFee[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -314,7 +341,7 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SpotMarket) Marshal() (dAtA []byte, err error) {
+func (m *Market) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -324,16 +351,36 @@ func (m *SpotMarket) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SpotMarket) MarshalTo(dAtA []byte) (int, error) {
+func (m *Market) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SpotMarket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Market) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.TakerFeeRate.Size()
+		i -= size
+		if _, err := m.TakerFeeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintExchange(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	{
+		size := m.MakerFeeRate.Size()
+		i -= size
+		if _, err := m.MakerFeeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintExchange(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
 	if len(m.EscrowAddress) > 0 {
 		i -= len(m.EscrowAddress)
 		copy(dAtA[i:], m.EscrowAddress)
@@ -363,7 +410,7 @@ func (m *SpotMarket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SpotMarketState) Marshal() (dAtA []byte, err error) {
+func (m *MarketState) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -373,12 +420,12 @@ func (m *SpotMarketState) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SpotMarketState) MarshalTo(dAtA []byte) (int, error) {
+func (m *MarketState) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SpotMarketState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MarketState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -398,7 +445,7 @@ func (m *SpotMarketState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SpotOrder) Marshal() (dAtA []byte, err error) {
+func (m *Order) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -408,12 +455,12 @@ func (m *SpotOrder) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SpotOrder) MarshalTo(dAtA []byte) (int, error) {
+func (m *Order) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SpotOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Order) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -488,7 +535,7 @@ func (m *SpotOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TransientSpotOrder) Marshal() (dAtA []byte, err error) {
+func (m *TransientOrder) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -498,12 +545,12 @@ func (m *TransientSpotOrder) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TransientSpotOrder) MarshalTo(dAtA []byte) (int, error) {
+func (m *TransientOrder) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TransientSpotOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *TransientOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -558,16 +605,20 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.SpotMarketCreationFee) > 0 {
-		for _, e := range m.SpotMarketCreationFee {
+	if len(m.MarketCreationFee) > 0 {
+		for _, e := range m.MarketCreationFee {
 			l = e.Size()
 			n += 1 + l + sovExchange(uint64(l))
 		}
 	}
+	l = m.DefaultMakerFeeRate.Size()
+	n += 1 + l + sovExchange(uint64(l))
+	l = m.DefaultTakerFeeRate.Size()
+	n += 1 + l + sovExchange(uint64(l))
 	return n
 }
 
-func (m *SpotMarket) Size() (n int) {
+func (m *Market) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -588,10 +639,14 @@ func (m *SpotMarket) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovExchange(uint64(l))
 	}
+	l = m.MakerFeeRate.Size()
+	n += 1 + l + sovExchange(uint64(l))
+	l = m.TakerFeeRate.Size()
+	n += 1 + l + sovExchange(uint64(l))
 	return n
 }
 
-func (m *SpotMarketState) Size() (n int) {
+func (m *MarketState) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -604,7 +659,7 @@ func (m *SpotMarketState) Size() (n int) {
 	return n
 }
 
-func (m *SpotOrder) Size() (n int) {
+func (m *Order) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -634,7 +689,7 @@ func (m *SpotOrder) Size() (n int) {
 	return n
 }
 
-func (m *TransientSpotOrder) Size() (n int) {
+func (m *TransientOrder) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -688,7 +743,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SpotMarketCreationFee", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketCreationFee", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -715,8 +770,76 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SpotMarketCreationFee = append(m.SpotMarketCreationFee, types.Coin{})
-			if err := m.SpotMarketCreationFee[len(m.SpotMarketCreationFee)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.MarketCreationFee = append(m.MarketCreationFee, types.Coin{})
+			if err := m.MarketCreationFee[len(m.MarketCreationFee)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultMakerFeeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExchange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExchange
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExchange
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DefaultMakerFeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultTakerFeeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExchange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExchange
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExchange
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DefaultTakerFeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -741,7 +864,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SpotMarket) Unmarshal(dAtA []byte) error {
+func (m *Market) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -764,10 +887,10 @@ func (m *SpotMarket) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SpotMarket: wiretype end group for non-group")
+			return fmt.Errorf("proto: Market: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SpotMarket: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Market: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -885,6 +1008,74 @@ func (m *SpotMarket) Unmarshal(dAtA []byte) error {
 			}
 			m.EscrowAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MakerFeeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExchange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExchange
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExchange
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MakerFeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExchange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExchange
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExchange
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TakerFeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipExchange(dAtA[iNdEx:])
@@ -906,7 +1097,7 @@ func (m *SpotMarket) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SpotMarketState) Unmarshal(dAtA []byte) error {
+func (m *MarketState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -929,10 +1120,10 @@ func (m *SpotMarketState) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SpotMarketState: wiretype end group for non-group")
+			return fmt.Errorf("proto: MarketState: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SpotMarketState: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MarketState: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -992,7 +1183,7 @@ func (m *SpotMarketState) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SpotOrder) Unmarshal(dAtA []byte) error {
+func (m *Order) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1015,10 +1206,10 @@ func (m *SpotOrder) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SpotOrder: wiretype end group for non-group")
+			return fmt.Errorf("proto: Order: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SpotOrder: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Order: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1268,7 +1459,7 @@ func (m *SpotOrder) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TransientSpotOrder) Unmarshal(dAtA []byte) error {
+func (m *TransientOrder) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1291,10 +1482,10 @@ func (m *TransientSpotOrder) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: TransientSpotOrder: wiretype end group for non-group")
+			return fmt.Errorf("proto: TransientOrder: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TransientSpotOrder: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: TransientOrder: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

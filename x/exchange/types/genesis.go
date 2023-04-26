@@ -5,14 +5,14 @@ import (
 )
 
 func NewGenesisState(
-	params Params, lastSpotMarketId, lastSpotOrderId uint64,
-	marketRecords []SpotMarketRecord, orders []SpotOrder) *GenesisState {
+	params Params, lastMarketId, lastOrderId uint64,
+	marketRecords []MarketRecord, orders []Order) *GenesisState {
 	return &GenesisState{
-		Params:            params,
-		LastSpotMarketId:  lastSpotMarketId,
-		LastSpotOrderId:   lastSpotOrderId,
-		SpotMarketRecords: marketRecords,
-		SpotOrders:        orders,
+		Params:        params,
+		LastMarketId:  lastMarketId,
+		LastOrderId:   lastOrderId,
+		MarketRecords: marketRecords,
+		Orders:        orders,
 	}
 }
 
@@ -25,20 +25,20 @@ func (genState GenesisState) Validate() error {
 	if err := genState.Params.Validate(); err != nil {
 		return err
 	}
-	for _, marketRecord := range genState.SpotMarketRecords {
+	for _, marketRecord := range genState.MarketRecords {
 		if err := marketRecord.Validate(); err != nil {
-			return fmt.Errorf("invalid spot market record: %w", err)
+			return fmt.Errorf("invalid market record: %w", err)
 		}
 	}
-	for _, order := range genState.SpotOrders {
+	for _, order := range genState.Orders {
 		if err := order.Validate(); err != nil {
-			return fmt.Errorf("invalid spot order: %w", err)
+			return fmt.Errorf("invalid order: %w", err)
 		}
 	}
 	return nil
 }
 
-func (record SpotMarketRecord) Validate() error {
+func (record MarketRecord) Validate() error {
 	if err := record.Market.Validate(); err != nil {
 		return fmt.Errorf("invalid market: %w", err)
 	}

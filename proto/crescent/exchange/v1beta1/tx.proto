@@ -10,24 +10,24 @@ option go_package                      = "github.com/crescent-network/crescent/v
 option (gogoproto.goproto_getters_all) = false;
 
 service Msg {
-  rpc CreateSpotMarket(MsgCreateSpotMarket) returns (MsgCreateSpotMarketResponse);
-  rpc PlaceSpotLimitOrder(MsgPlaceSpotLimitOrder) returns (MsgPlaceSpotLimitOrderResponse);
-  rpc PlaceSpotMarketOrder(MsgPlaceSpotMarketOrder) returns (MsgPlaceSpotMarketOrderResponse);
-  rpc CancelSpotOrder(MsgCancelSpotOrder) returns (MsgCancelSpotOrderResponse);
+  rpc CreateMarket(MsgCreateMarket) returns (MsgCreateMarketResponse);
+  rpc PlaceLimitOrder(MsgPlaceLimitOrder) returns (MsgPlaceLimitOrderResponse);
+  rpc PlaceMarketOrder(MsgPlaceMarketOrder) returns (MsgPlaceMarketOrderResponse);
+  rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
   rpc SwapExactIn(MsgSwapExactIn) returns (MsgSwapExactInResponse);
 }
 
-message MsgCreateSpotMarket {
+message MsgCreateMarket {
   string sender      = 1;
   string base_denom  = 2;
   string quote_denom = 3;
 }
 
-message MsgCreateSpotMarketResponse {
+message MsgCreateMarketResponse {
   uint64 market_id = 1;
 }
 
-message MsgPlaceSpotLimitOrder {
+message MsgPlaceLimitOrder {
   string sender    = 1;
   uint64 market_id = 2;
   bool   is_buy    = 3;
@@ -35,7 +35,7 @@ message MsgPlaceSpotLimitOrder {
   string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgPlaceSpotLimitOrderResponse {
+message MsgPlaceLimitOrderResponse {
   bool   rested            = 1;
   uint64 order_id          = 2;
   string executed_quantity = 3
@@ -44,26 +44,26 @@ message MsgPlaceSpotLimitOrderResponse {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgPlaceSpotMarketOrder {
+message MsgPlaceMarketOrder {
   string sender    = 1;
   uint64 market_id = 2;
   bool   is_buy    = 3;
   string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgPlaceSpotMarketOrderResponse {
+message MsgPlaceMarketOrderResponse {
   string executed_quantity = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string executed_quote = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message MsgCancelSpotOrder {
+message MsgCancelOrder {
   string sender   = 1;
   uint64 order_id = 2;
 }
 
-message MsgCancelSpotOrderResponse {}
+message MsgCancelOrderResponse {}
 
 message MsgSwapExactIn {
   string                   sender     = 1;

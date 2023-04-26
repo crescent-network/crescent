@@ -24,35 +24,35 @@ const (
 
 // TODO: reallocate key prefix bytes
 var (
-	LastSpotMarketIdKey              = []byte{0x01}
-	LastSpotOrderIdKey               = []byte{0x02}
-	SpotMarketKeyPrefix              = []byte{0x03}
-	SpotMarketStateKeyPrefix         = []byte{0x04}
-	SpotMarketByDenomsIndexKeyPrefix = []byte{0x05}
-	SpotOrderKeyPrefix               = []byte{0x06}
-	SpotOrderBookOrderKeyPrefix      = []byte{0x07}
+	LastMarketIdKey              = []byte{0x01}
+	LastOrderIdKey               = []byte{0x02}
+	MarketKeyPrefix              = []byte{0x03}
+	MarketStateKeyPrefix         = []byte{0x04}
+	MarketByDenomsIndexKeyPrefix = []byte{0x05}
+	OrderKeyPrefix               = []byte{0x06}
+	OrderBookOrderKeyPrefix      = []byte{0x07}
 )
 
-func GetSpotMarketKey(marketId uint64) []byte {
-	return utils.Key(SpotMarketKeyPrefix, sdk.Uint64ToBigEndian(marketId))
+func GetMarketKey(marketId uint64) []byte {
+	return utils.Key(MarketKeyPrefix, sdk.Uint64ToBigEndian(marketId))
 }
 
-func GetSpotMarketStateKey(marketId uint64) []byte {
-	return utils.Key(SpotMarketStateKeyPrefix, sdk.Uint64ToBigEndian(marketId))
+func GetMarketStateKey(marketId uint64) []byte {
+	return utils.Key(MarketStateKeyPrefix, sdk.Uint64ToBigEndian(marketId))
 }
 
-func GetSpotMarketByDenomsIndexKey(baseDenom, quoteDenom string) []byte {
+func GetMarketByDenomsIndexKey(baseDenom, quoteDenom string) []byte {
 	return utils.Key(
-		SpotMarketByDenomsIndexKeyPrefix,
+		MarketByDenomsIndexKeyPrefix,
 		utils.LengthPrefixString(baseDenom),
 		[]byte(quoteDenom))
 }
 
-func GetSpotOrderKey(orderId uint64) []byte {
-	return utils.Key(SpotOrderKeyPrefix, sdk.Uint64ToBigEndian(orderId))
+func GetOrderKey(orderId uint64) []byte {
+	return utils.Key(OrderKeyPrefix, sdk.Uint64ToBigEndian(orderId))
 }
 
-func GetSpotOrderBookOrderKey(marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) []byte {
+func GetOrderBookOrderKey(marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) []byte {
 	var orderIdBytes []byte
 	if isBuy {
 		orderIdBytes = sdk.Uint64ToBigEndian(-orderId)
@@ -60,21 +60,21 @@ func GetSpotOrderBookOrderKey(marketId uint64, isBuy bool, price sdk.Dec, orderI
 		orderIdBytes = sdk.Uint64ToBigEndian(orderId)
 	}
 	return utils.Key(
-		SpotOrderBookOrderKeyPrefix,
+		OrderBookOrderKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
 		isBuyToBytes(isBuy),
 		sdk.SortableDecBytes(price),
 		orderIdBytes)
 }
 
-func GetSpotOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
+func GetOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
 	return utils.Key(
-		SpotOrderBookOrderKeyPrefix,
+		OrderBookOrderKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
 		isBuyToBytes(isBuy))
 }
 
-func ParseSpotMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
+func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 	baseDenomLen := key[1]
 	baseDenom = string(key[2 : 2+baseDenomLen])
 	quoteDenom = string(key[2+baseDenomLen:])

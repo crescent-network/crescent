@@ -8,10 +8,10 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-func NewSpotOrder(
+func NewOrder(
 	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int) SpotOrder {
-	return SpotOrder{
+	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int) Order {
+	return Order{
 		Id:               orderId,
 		Orderer:          ordererAddr.String(),
 		MarketId:         marketId,
@@ -23,7 +23,7 @@ func NewSpotOrder(
 	}
 }
 
-func (order SpotOrder) Validate() error {
+func (order Order) Validate() error {
 	if order.Id == 0 {
 		return fmt.Errorf("id must not be 0")
 	}
@@ -51,11 +51,11 @@ func (order SpotOrder) Validate() error {
 	return nil
 }
 
-func NewTransientSpotOrder(
+func NewTransientOrder(
 	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, isTemporary bool) TransientSpotOrder {
-	return TransientSpotOrder{
-		Order: SpotOrder{
+	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, isTemporary bool) TransientOrder {
+	return TransientOrder{
+		Order: Order{
 			Id:               orderId,
 			Orderer:          ordererAddr.String(),
 			MarketId:         marketId,
@@ -70,15 +70,15 @@ func NewTransientSpotOrder(
 	}
 }
 
-func NewTransientSpotOrderFromSpotOrder(order SpotOrder) TransientSpotOrder {
-	return TransientSpotOrder{
+func NewTransientOrderFromOrder(order Order) TransientOrder {
+	return TransientOrder{
 		Order:       order,
 		Updated:     false,
 		IsTemporary: false,
 	}
 }
 
-func (order TransientSpotOrder) ExecutableQuantity() sdk.Int {
+func (order TransientOrder) ExecutableQuantity() sdk.Int {
 	if order.Order.IsBuy {
 		return utils.MinInt(
 			order.Order.OpenQuantity,

@@ -9,22 +9,30 @@ option go_package                      = "github.com/crescent-network/crescent/v
 option (gogoproto.goproto_getters_all) = false;
 
 message Params {
-  repeated cosmos.base.v1beta1.Coin spot_market_creation_fee = 1
+  repeated cosmos.base.v1beta1.Coin market_creation_fee = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  string default_maker_fee_rate = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string default_taker_fee_rate = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
-message SpotMarket {
+message Market {
   uint64 id             = 1;
   string base_denom     = 2;
   string quote_denom    = 3;
   string escrow_address = 4;
+  string maker_fee_rate = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string taker_fee_rate = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
-message SpotMarketState {
+message MarketState {
   string last_price = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }
 
-message SpotOrder {
+message Order {
   uint64 id        = 1;
   string orderer   = 2;
   uint64 market_id = 3;
@@ -37,8 +45,8 @@ message SpotOrder {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-message TransientSpotOrder {
-  SpotOrder order        = 1 [(gogoproto.nullable) = false];
-  bool      updated      = 2;
-  bool      is_temporary = 3;
+message TransientOrder {
+  Order order        = 1 [(gogoproto.nullable) = false];
+  bool  updated      = 2;
+  bool  is_temporary = 3;
 }

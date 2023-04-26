@@ -18,7 +18,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-func (h Hooks) AfterSpotOrderExecuted(ctx sdk.Context, order exchangetypes.SpotOrder, execQty sdk.Int) {
+func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, execQty sdk.Int) {
 	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
 	// TODO: optimize
 	pool, found := h.k.GetPoolByReserveAddress(ctx, ordererAddr)

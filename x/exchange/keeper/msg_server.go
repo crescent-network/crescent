@@ -20,29 +20,29 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (k msgServer) CreateSpotMarket(goCtx context.Context, msg *types.MsgCreateSpotMarket) (*types.MsgCreateSpotMarketResponse, error) {
+func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarket) (*types.MsgCreateMarketResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	market, err := k.Keeper.CreateSpotMarket(
+	market, err := k.Keeper.CreateMarket(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.BaseDenom, msg.QuoteDenom)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgCreateSpotMarketResponse{MarketId: market.Id}, nil
+	return &types.MsgCreateMarketResponse{MarketId: market.Id}, nil
 }
 
-func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlaceSpotLimitOrder) (*types.MsgPlaceSpotLimitOrderResponse, error) {
+func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLimitOrder) (*types.MsgPlaceLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	order, execQty, execQuote, err := k.Keeper.PlaceSpotLimitOrder(
+	order, execQty, execQuote, err := k.Keeper.PlaceLimitOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Price, msg.Quantity)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgPlaceSpotLimitOrderResponse{
+	return &types.MsgPlaceLimitOrderResponse{
 		Rested:           order.Id > 0,
 		OrderId:          order.Id,
 		ExecutedQuantity: execQty,
@@ -50,32 +50,32 @@ func (k msgServer) PlaceSpotLimitOrder(goCtx context.Context, msg *types.MsgPlac
 	}, nil
 }
 
-func (k msgServer) PlaceSpotMarketOrder(goCtx context.Context, msg *types.MsgPlaceSpotMarketOrder) (*types.MsgPlaceSpotMarketOrderResponse, error) {
+func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMarketOrder) (*types.MsgPlaceMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	execQty, execQuote, err := k.Keeper.PlaceSpotMarketOrder(
+	execQty, execQuote, err := k.Keeper.PlaceMarketOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Quantity)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgPlaceSpotMarketOrderResponse{
+	return &types.MsgPlaceMarketOrderResponse{
 		ExecutedQuantity: execQty,
 		ExecutedQuote:    execQuote,
 	}, nil
 }
 
-func (k msgServer) CancelSpotOrder(goCtx context.Context, msg *types.MsgCancelSpotOrder) (*types.MsgCancelSpotOrderResponse, error) {
+func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := k.Keeper.CancelSpotOrder(
+	_, err := k.Keeper.CancelOrder(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.OrderId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgCancelSpotOrderResponse{}, nil
+	return &types.MsgCancelOrderResponse{}, nil
 }
 
 func (k msgServer) SwapExactIn(goCtx context.Context, msg *types.MsgSwapExactIn) (*types.MsgSwapExactInResponse, error) {

@@ -10,7 +10,7 @@ import (
 )
 
 func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId uint64, tickSpacing uint32, price sdk.Dec) (pool types.Pool, err error) {
-	market, found := k.exchangeKeeper.GetSpotMarket(ctx, marketId)
+	market, found := k.exchangeKeeper.GetMarket(ctx, marketId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
@@ -21,7 +21,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 		return true
 	})
 	if poolExists {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot create more than one pool per spot market")
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot create more than one pool per  market")
 		return
 	}
 

@@ -10,7 +10,7 @@ import (
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 var (
-	KeyPoolCreationFee    = []byte("SpotMarketCreationFee")
+	KeyPoolCreationFee    = []byte("PoolCreationFee")
 	KeyDefaultTickSpacing = []byte("DefaultTickSpacing")
 )
 

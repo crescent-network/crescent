@@ -14,14 +14,14 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/params";
   }
-  rpc AllSpotMarkets(QueryAllSpotMarketsRequest) returns (QueryAllSpotMarketsResponse) {
-    option (google.api.http).get = "/crescent/exchange/v1beta1/spot/markets";
+  rpc AllMarkets(QueryAllMarketsRequest) returns (QueryAllMarketsResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/markets";
   }
-  rpc SpotMarket(QuerySpotMarketRequest) returns (QuerySpotMarketResponse) {
-    option (google.api.http).get = "/crescent/exchange/v1beta1/spot/markets/{market_id}";
+  rpc Market(QueryMarketRequest) returns (QueryMarketResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/markets/{market_id}";
   }
-  rpc SpotOrder(QuerySpotOrderRequest) returns (QuerySpotOrderResponse) {
-    option (google.api.http).get = "/crescent/exchange/v1beta1/spot/orders/{order_id}";
+  rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/orders/{order_id}";
   }
   rpc BestSwapExactInRoutes(QueryBestSwapExactInRoutesRequest) returns (QueryBestSwapExactInRoutesResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/best_swap_exact_in_routes";
@@ -34,29 +34,29 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryAllSpotMarketsRequest {
+message QueryAllMarketsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-message QueryAllSpotMarketsResponse {
-  repeated SpotMarketResponse            markets    = 1 [(gogoproto.nullable) = false];
+message QueryAllMarketsResponse {
+  repeated MarketResponse                markets    = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QuerySpotMarketRequest {
+message QueryMarketRequest {
   uint64 market_id = 1;
 }
 
-message QuerySpotMarketResponse {
-  SpotMarketResponse market = 1 [(gogoproto.nullable) = false];
+message QueryMarketResponse {
+  MarketResponse market = 1 [(gogoproto.nullable) = false];
 }
 
-message QuerySpotOrderRequest {
+message QueryOrderRequest {
   uint64 order_id = 1;
 }
 
-message QuerySpotOrderResponse {
-  SpotOrder order = 1 [(gogoproto.nullable) = false];
+message QueryOrderResponse {
+  Order order = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryBestSwapExactInRoutesRequest {
@@ -69,7 +69,7 @@ message QueryBestSwapExactInRoutesResponse {
   cosmos.base.v1beta1.Coin output = 2 [(gogoproto.nullable) = false];
 }
 
-message SpotMarketResponse {
+message MarketResponse {
   uint64 id             = 1;
   string base_denom     = 2;
   string quote_denom    = 3;

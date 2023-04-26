@@ -10,8 +10,8 @@ func (s *KeeperTestSuite) TestSwapExactIn() {
 	creatorAddr := utils.TestAddress(0)
 	s.FundAccount(creatorAddr, utils.ParseCoins("10000_000000ucre,10000_000000uatom,10000_000000uusd"))
 
-	market1 := s.CreateSpotMarket(creatorAddr, "ucre", "uusd", true)
-	market2 := s.CreateSpotMarket(creatorAddr, "uatom", "ucre", true)
+	market1 := s.CreateMarket(creatorAddr, "ucre", "uusd", true)
+	market2 := s.CreateMarket(creatorAddr, "uatom", "ucre", true)
 
 	pool1 := s.CreatePool(creatorAddr, market1.Id, 100, utils.ParseDec("5"), true)
 	s.AddLiquidity(

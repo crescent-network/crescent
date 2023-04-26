@@ -12,7 +12,7 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	creatorAddr := utils.TestAddress(1)
 	s.FundAccount(creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uusd"))
 
-	market := s.CreateSpotMarket(creatorAddr, "ucre", "uusd", true)
+	market := s.CreateMarket(creatorAddr, "ucre", "uusd", true)
 	pool := s.CreatePool(creatorAddr, market.Id, 500, sdk.NewDec(5), true)
 
 	s.AddLiquidity(
@@ -23,15 +23,15 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	s.FundAccount(ordererAddr, utils.ParseCoins("1000000_000000ucre,1000000_000000uusd"))
 
 	balancesBefore := s.App.BankKeeper.SpendableCoins(s.Ctx, ordererAddr)
-	s.PlaceSpotMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(110_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(110_000000))
 	fmt.Println(s.App.BankKeeper.SpendableCoins(s.Ctx, ordererAddr).SafeSub(balancesBefore))
 
 	balancesBefore = s.App.BankKeeper.SpendableCoins(s.Ctx, ordererAddr)
-	s.PlaceSpotMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(80_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(80_000000))
 	fmt.Println(s.App.BankKeeper.SpendableCoins(s.Ctx, ordererAddr).SafeSub(balancesBefore))
 
 	balancesBefore = s.App.BankKeeper.SpendableCoins(s.Ctx, ordererAddr)
-	s.PlaceSpotMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(10_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(10_000000))
 	fmt.Println(s.App.BankKeeper.SpendableCoins(s.Ctx, ordererAddr).SafeSub(balancesBefore))
 }
 
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestPoolBenefits() {
 	s.FundAccount(bobAddr, initialBalances)
 	s.FundAccount(ordererAddr, initialBalances)
 
-	market := s.CreateSpotMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
 	pool := s.CreatePool(utils.TestAddress(0), market.Id, 50, utils.ParseDec("5"), true)
 
 	alicePosition, aliceLiquidity, _, _ := s.AddLiquidity(
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestPoolBenefits() {
 	fmt.Println("Alice provides", aliceLiquidity)
 	fmt.Println("Bob provides", bobLiquidity)
 
-	s.PlaceSpotMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(1000_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(1000_000000))
 	fmt.Println(s.Collect(aliceAddr, alicePosition.Id, sdk.NewInt(100_000000), sdk.NewInt(100_000000)))
 	fmt.Println(s.Collect(bobAddr, bobPosition.Id, sdk.NewInt(100_000000), sdk.NewInt(100_000000)))
 }

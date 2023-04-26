@@ -9,42 +9,42 @@ import (
 // InitGenesis initializes the module's state from a provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
-	if genState.LastSpotMarketId > 0 {
-		k.SetLastSpotMarketId(ctx, genState.LastSpotMarketId)
+	if genState.LastMarketId > 0 {
+		k.SetLastMarketId(ctx, genState.LastMarketId)
 	}
-	if genState.LastSpotOrderId > 0 {
-		k.SetLastSpotOrderId(ctx, genState.LastSpotOrderId)
+	if genState.LastOrderId > 0 {
+		k.SetLastOrderId(ctx, genState.LastOrderId)
 	}
-	for _, marketRecord := range genState.SpotMarketRecords {
-		k.SetSpotMarket(ctx, marketRecord.Market)
-		k.SetSpotMarketByDenomsIndex(ctx, marketRecord.Market)
-		k.SetSpotMarketState(ctx, marketRecord.Market.Id, marketRecord.State)
+	for _, marketRecord := range genState.MarketRecords {
+		k.SetMarket(ctx, marketRecord.Market)
+		k.SetMarketByDenomsIndex(ctx, marketRecord.Market)
+		k.SetMarketState(ctx, marketRecord.Market.Id, marketRecord.State)
 	}
-	for _, order := range genState.SpotOrders {
-		k.SetSpotOrder(ctx, order)
-		k.SetSpotOrderBookOrder(ctx, order)
+	for _, order := range genState.Orders {
+		k.SetOrder(ctx, order)
+		k.SetOrderBookOrder(ctx, order)
 	}
 }
 
 // ExportGenesis returns the module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	marketRecords := []types.SpotMarketRecord{}
-	k.IterateAllSpotMarkets(ctx, func(market types.SpotMarket) (stop bool) {
-		marketRecords = append(marketRecords, types.SpotMarketRecord{
+	marketRecords := []types.MarketRecord{}
+	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
+		marketRecords = append(marketRecords, types.MarketRecord{
 			Market: market,
-			State:  k.MustGetSpotMarketState(ctx, market.Id),
+			State:  k.MustGetMarketState(ctx, market.Id),
 		})
 		return false
 	})
-	orders := []types.SpotOrder{}
-	k.IterateAllSpotOrders(ctx, func(order types.SpotOrder) (stop bool) {
+	orders := []types.Order{}
+	k.IterateAllOrders(ctx, func(order types.Order) (stop bool) {
 		orders = append(orders, order)
 		return false
 	})
 	return types.NewGenesisState(
 		k.GetParams(ctx),
-		k.GetLastSpotMarketId(ctx),
-		k.GetLastSpotOrderId(ctx),
+		k.GetLastMarketId(ctx),
+		k.GetLastOrderId(ctx),
 		marketRecords,
 		orders)
 }

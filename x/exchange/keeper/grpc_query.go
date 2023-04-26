@@ -32,51 +32,51 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func (k Querier) AllSpotMarkets(c context.Context, req *types.QueryAllSpotMarketsRequest) (*types.QueryAllSpotMarketsResponse, error) {
+func (k Querier) AllMarkets(c context.Context, req *types.QueryAllMarketsRequest) (*types.QueryAllMarketsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	marketStore := prefix.NewStore(store, types.SpotMarketKeyPrefix)
-	var marketResps []types.SpotMarketResponse
+	marketStore := prefix.NewStore(store, types.MarketKeyPrefix)
+	var marketResps []types.MarketResponse
 	pageRes, err := query.Paginate(marketStore, req.Pagination, func(key, value []byte) error {
-		var market types.SpotMarket
+		var market types.Market
 		k.cdc.MustUnmarshal(value, &market)
-		marketResps = append(marketResps, k.MakeSpotMarketResponse(ctx, market))
+		marketResps = append(marketResps, k.MakeMarketResponse(ctx, market))
 		return nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryAllSpotMarketsResponse{
+	return &types.QueryAllMarketsResponse{
 		Markets:    marketResps,
 		Pagination: pageRes,
 	}, nil
 }
 
-func (k Querier) SpotMarket(c context.Context, req *types.QuerySpotMarketRequest) (*types.QuerySpotMarketResponse, error) {
+func (k Querier) Market(c context.Context, req *types.QueryMarketRequest) (*types.QueryMarketResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	market, found := k.GetSpotMarket(ctx, req.MarketId)
+	market, found := k.GetMarket(ctx, req.MarketId)
 	if !found {
 		return nil, status.Error(codes.NotFound, "market not found")
 	}
-	return &types.QuerySpotMarketResponse{Market: k.MakeSpotMarketResponse(ctx, market)}, nil
+	return &types.QueryMarketResponse{Market: k.MakeMarketResponse(ctx, market)}, nil
 }
 
-func (k Querier) SpotOrder(c context.Context, req *types.QuerySpotOrderRequest) (*types.QuerySpotOrderResponse, error) {
+func (k Querier) Order(c context.Context, req *types.QueryOrderRequest) (*types.QueryOrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	order, found := k.GetSpotOrder(ctx, req.OrderId)
+	order, found := k.GetOrder(ctx, req.OrderId)
 	if !found {
 		return nil, status.Error(codes.NotFound, "order not found")
 	}
-	return &types.QuerySpotOrderResponse{Order: order}, nil
+	return &types.QueryOrderResponse{Order: order}, nil
 }
 
 func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSwapExactInRoutesRequest) (*types.QueryBestSwapExactInRoutesResponse, error) {
@@ -111,7 +111,7 @@ func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSw
 	}, nil
 }
 
-func (k Querier) MakeSpotMarketResponse(ctx sdk.Context, market types.SpotMarket) types.SpotMarketResponse {
-	marketState := k.MustGetSpotMarketState(ctx, market.Id)
-	return types.NewSpotMarketResponse(market, marketState)
+func (k Querier) MakeMarketResponse(ctx sdk.Context, market types.Market) types.MarketResponse {
+	marketState := k.MustGetMarketState(ctx, market.Id)
+	return types.NewMarketResponse(market, marketState)
 }

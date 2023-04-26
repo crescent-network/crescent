@@ -11,10 +11,10 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/exchange interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgCreateSpotMarket{}, "exchange/MsgCreateSpotMarket", nil)
-	cdc.RegisterConcrete(&MsgPlaceSpotLimitOrder{}, "exchange/MsgPlaceSpotLimitOrder", nil)
-	cdc.RegisterConcrete(&MsgPlaceSpotMarketOrder{}, "exchange/MsgPlaceSpotMarketOrder", nil)
-	cdc.RegisterConcrete(&MsgCancelSpotOrder{}, "exchange/MsgCancelSpotOrder", nil)
+	cdc.RegisterConcrete(&MsgCreateMarket{}, "exchange/MsgCreateMarket", nil)
+	cdc.RegisterConcrete(&MsgPlaceLimitOrder{}, "exchange/MsgPlaceLimitOrder", nil)
+	cdc.RegisterConcrete(&MsgPlaceMarketOrder{}, "exchange/MsgPlaceMarketOrder", nil)
+	cdc.RegisterConcrete(&MsgCancelOrder{}, "exchange/MsgCancelOrder", nil)
 }
 
 // RegisterInterfaces registers the x/exchange interfaces types with the
@@ -22,10 +22,10 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
-		&MsgCreateSpotMarket{},
-		&MsgPlaceSpotLimitOrder{},
-		&MsgPlaceSpotMarketOrder{},
-		&MsgCancelSpotOrder{},
+		&MsgCreateMarket{},
+		&MsgPlaceLimitOrder{},
+		&MsgPlaceMarketOrder{},
+		&MsgCancelOrder{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

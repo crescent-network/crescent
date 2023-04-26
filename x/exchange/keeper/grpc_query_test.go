@@ -13,9 +13,9 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactInRoutes() {
 	creatorAddr := utils.TestAddress(1)
 	s.FundAccount(creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uatom,100000_000000uusd"))
 
-	market1 := s.CreateSpotMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	market2 := s.CreateSpotMarket(utils.TestAddress(0), "uatom", "ucre", true)
-	market3 := s.CreateSpotMarket(utils.TestAddress(0), "uatom", "uusd", true)
+	market1 := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	market2 := s.CreateMarket(utils.TestAddress(0), "uatom", "ucre", true)
+	market3 := s.CreateMarket(utils.TestAddress(0), "uatom", "uusd", true)
 
 	pool1 := s.CreatePool(creatorAddr, market1.Id, ammtypes.DefaultDefaultTickSpacing, utils.ParseDec("9.7"), true)
 	s.AddLiquidity(creatorAddr, pool1.Id, utils.ParseDec("9.5"), utils.ParseDec("10"),

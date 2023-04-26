@@ -16,7 +16,7 @@ func (k Keeper) SwapExactIn(
 			err = types.ErrInsufficientOutput // TODO: use different error
 			return
 		}
-		market, found := k.GetSpotMarket(ctx, marketId)
+		market, found := k.GetMarket(ctx, marketId)
 		if !found {
 			err = sdkerrors.Wrapf(sdkerrors.ErrNotFound, "market %d not found", marketId)
 			return
@@ -34,7 +34,7 @@ func (k Keeper) SwapExactIn(
 			quoteLimit = &currentIn.Amount
 			output.Denom = market.BaseDenom
 		}
-		totalExecQty, totalExecQuote := k.executeSpotOrder(
+		totalExecQty, totalExecQuote := k.executeOrder(
 			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, simulate)
 		if isBuy {
 			output.Amount = totalExecQty
@@ -59,10 +59,10 @@ func (k Keeper) SwapExactIn(
 func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {
 	denomMap := map[string]map[string]uint64{}
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.SpotMarketByDenomsIndexKeyPrefix)
+	iter := sdk.KVStorePrefixIterator(store, types.MarketByDenomsIndexKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		baseDenom, quoteDenom := types.ParseSpotMarketByDenomsIndexKey(iter.Key())
+		baseDenom, quoteDenom := types.ParseMarketByDenomsIndexKey(iter.Key())
 		marketId := sdk.BigEndianToUint64(iter.Value())
 		if _, ok := denomMap[baseDenom]; !ok {
 			denomMap[baseDenom] = map[string]uint64{}

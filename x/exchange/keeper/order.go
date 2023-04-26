@@ -8,55 +8,55 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) PlaceSpotLimitOrder(
+func (k Keeper) PlaceLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQty, execQuote sdk.Int, err error) {
-	return k.PlaceSpotOrder(ctx, marketId, ordererAddr, isBuy, &price, qty)
+	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.Order, execQty, execQuote sdk.Int, err error) {
+	return k.PlaceOrder(ctx, marketId, ordererAddr, isBuy, &price, qty)
 }
 
-func (k Keeper) PlaceSpotMarketOrder(
+func (k Keeper) PlaceMarketOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, qty sdk.Int) (execQty, execQuote sdk.Int, err error) {
-	_, execQty, execQuote, err = k.PlaceSpotOrder(ctx, marketId, ordererAddr, isBuy, nil, qty)
+	_, execQty, execQuote, err = k.PlaceOrder(ctx, marketId, ordererAddr, isBuy, nil, qty)
 	return
 }
 
-func (k Keeper) PlaceSpotOrder(
+func (k Keeper) PlaceOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.SpotOrder, execQty, execQuote sdk.Int, err error) {
+	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (order types.Order, execQty, execQuote sdk.Int, err error) {
 	if !qty.IsPositive() {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "quantity must be positive")
 		return
 	}
 
-	market, found := k.GetSpotMarket(ctx, marketId)
+	market, found := k.GetMarket(ctx, marketId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
 
-	execQty, execQuote = k.executeSpotOrder(
+	execQty, execQuote = k.executeOrder(
 		ctx, market, ordererAddr, isBuy, priceLimit, &qty, nil, false)
 
 	openQty := qty.Sub(execQty)
 	if priceLimit != nil {
 		if openQty.IsPositive() {
-			orderId := k.GetNextSpotOrderIdWithUpdate(ctx)
+			orderId := k.GetNextOrderIdWithUpdate(ctx)
 			deposit := types.DepositAmount(isBuy, *priceLimit, openQty)
-			order = types.NewSpotOrder(
+			order = types.NewOrder(
 				orderId, ordererAddr, market.Id, isBuy, *priceLimit, qty, openQty, deposit)
 			if err = k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit)); err != nil {
 				return
 			}
-			k.SetSpotOrder(ctx, order)
-			k.SetSpotOrderBookOrder(ctx, order)
+			k.SetOrder(ctx, order)
+			k.SetOrderBookOrder(ctx, order)
 		}
 	}
 	return
 }
 
-func (k Keeper) executeSpotOrder(
-	ctx sdk.Context, market types.SpotMarket, ordererAddr sdk.AccAddress,
+func (k Keeper) executeOrder(
+	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
 	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, simulate bool) (totalExecQty, totalExecQuote sdk.Int) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
@@ -67,8 +67,8 @@ func (k Keeper) executeSpotOrder(
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
 	totalExecQuote = utils.ZeroInt
-	k.constructTransientSpotOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
-	k.IterateTransientSpotOrderBookSide(ctx, market.Id, !isBuy, func(order types.TransientSpotOrder) (stop bool) {
+	k.constructTransientOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
+	k.IterateTransientOrderBookSide(ctx, market.Id, !isBuy, func(order types.TransientOrder) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Order.Price.GT(*priceLimit)) ||
 				(!isBuy && order.Order.Price.LT(*priceLimit))) {
@@ -119,28 +119,28 @@ func (k Keeper) executeSpotOrder(
 			order.Order.OpenQuantity = order.Order.OpenQuantity.Sub(execQty)
 			order.Order.RemainingDeposit = order.Order.RemainingDeposit.Sub(receivedCoin.Amount)
 			order.Updated = true
-			k.SetTransientSpotOrderBookOrder(ctx, order)
-			k.AfterSpotOrderExecuted(ctx, order.Order, execQty)
+			k.SetTransientOrderBookOrder(ctx, order)
+			k.AfterOrderExecuted(ctx, order.Order, execQty)
 		}
 		return false
 	})
 	if !simulate {
-		k.settleTransientSpotOrderBook(ctx, market)
+		k.settleTransientOrderBook(ctx, market)
 		if !lastPrice.IsNil() {
-			state := k.MustGetSpotMarketState(ctx, market.Id)
+			state := k.MustGetMarketState(ctx, market.Id)
 			state.LastPrice = &lastPrice
-			k.SetSpotMarketState(ctx, market.Id, state)
+			k.SetMarketState(ctx, market.Id, state)
 		}
 	}
 	return
 }
 
-func (k Keeper) CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, orderId uint64) (order types.SpotOrder, err error) {
-	order, found := k.GetSpotOrder(ctx, orderId)
+func (k Keeper) CancelOrder(ctx sdk.Context, senderAddr sdk.AccAddress, orderId uint64) (order types.Order, err error) {
+	order, found := k.GetOrder(ctx, orderId)
 	if !found {
 		return order, sdkerrors.Wrap(sdkerrors.ErrNotFound, "order not found")
 	}
-	market, found := k.GetSpotMarket(ctx, order.MarketId)
+	market, found := k.GetMarket(ctx, order.MarketId)
 	if !found { // sanity check
 		panic("market not found")
 	}
@@ -151,7 +151,7 @@ func (k Keeper) CancelSpotOrder(ctx sdk.Context, senderAddr sdk.AccAddress, orde
 	if err := k.ReleaseCoin(ctx, market, senderAddr, refundedCoin); err != nil {
 		return order, err
 	}
-	k.DeleteSpotOrder(ctx, order)
-	k.DeleteSpotOrderBookOrder(ctx, order)
+	k.DeleteOrder(ctx, order)
+	k.DeleteOrderBookOrder(ctx, order)
 	return order, nil
 }

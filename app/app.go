@@ -632,7 +632,7 @@ func NewApp(
 	app.ExchangeKeeper.SetHooks(
 		exchangetypes.NewMultiExchangeHooks(app.AMMKeeper.Hooks()),
 	)
-	app.ExchangeKeeper.SetSpotOrderSources(app.AMMKeeper)
+	app.ExchangeKeeper.SetOrderSources(app.AMMKeeper)
 
 	// create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
