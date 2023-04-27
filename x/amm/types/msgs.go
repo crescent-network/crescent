@@ -59,7 +59,7 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	if msg.Price.LT(exchangetypes.MinPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price %s", exchangetypes.MinPrice)
 	}
-	if msg.Price.LT(exchangetypes.MaxPrice) {
+	if msg.Price.GT(exchangetypes.MaxPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price %s", exchangetypes.MaxPrice)
 	}
 	return nil

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -25,6 +26,10 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		NewQueryParamsCmd(),
+		NewQueryAllPoolsCmd(),
+		NewQueryPoolCmd(),
+		NewQueryAllPositionsCmd(),
+		NewQueryPositionsCmd(),
 	)
 
 	return cmd
@@ -59,5 +64,158 @@ $ %s query %s params
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewQueryAllPoolsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pools",
+		Args:  cobra.NoArgs,
+		Short: "Query all pools",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all pools.
+
+Example:
+$ %s query %s pools
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			res, err := queryClient.AllPools(cmd.Context(), &types.QueryAllPoolsRequest{
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "pools")
+	return cmd
+}
+
+func NewQueryPoolCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pool [pool-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query a specific pool",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query a specific pool by its ID.
+
+Example:
+$ %s query %s pool 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid pool id: %w", err)
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{
+				PoolId: poolId,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewQueryAllPositionsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "positions",
+		Args:  cobra.NoArgs,
+		Short: "Query all positions",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all positions.
+
+Example:
+$ %s query %s positions
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AllPositions(cmd.Context(), &types.QueryAllPositionsRequest{
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "positions")
+	return cmd
+}
+
+func NewQueryPositionsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "positions [owner]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query positions by owner",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query positions by owner.
+
+Example:
+$ %s query %s positions cre1...
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			owner := args[0]
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Positions(cmd.Context(), &types.QueryPositionsRequest{
+				Owner:      owner,
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "positions")
 	return cmd
 }

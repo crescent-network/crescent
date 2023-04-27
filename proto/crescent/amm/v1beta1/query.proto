@@ -23,6 +23,7 @@ service Query {
   rpc AllPositions(QueryAllPositionsRequest) returns (QueryAllPositionsResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/positions";
   }
+  // TODO: add PoolPositions
   rpc Positions(QueryPositionsRequest) returns (QueryPositionsResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/positions/{owner}";
   }
