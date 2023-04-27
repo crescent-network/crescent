@@ -27,6 +27,19 @@ func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, ex
 		poolState := h.k.MustGetPoolState(ctx, pool.Id)
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 
+		if order.IsBuy {
+			if _, valid := exchangetypes.ValidateTickPrice(poolState.CurrentPrice, TickPrecision); valid {
+				tickInfo, found := h.k.GetTickInfo(ctx, pool.Id, poolState.CurrentTick)
+				if found {
+					// Cross the tick
+					poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(tickInfo.NetLiquidity)
+					tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
+					tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
+					h.k.SetTickInfo(ctx, pool.Id, poolState.CurrentTick, tickInfo)
+				}
+			}
+		}
+
 		var nextSqrtPrice, nextPrice sdk.Dec
 		if order.OpenQuantity.IsZero() { // Fully executed
 			nextSqrtPrice = utils.DecApproxSqrt(order.Price)
@@ -38,26 +51,13 @@ func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, ex
 			nextPrice = nextSqrtPrice.Power(2)
 		}
 
-		if fee.IsNegative() {
-			if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
-				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(fee.Denom, fee.Amount.Neg()))); err != nil {
-				panic(err)
-			}
-			feeGrowth := fee.Amount.Neg().ToDec().QuoTruncate(poolState.CurrentLiquidity)
-			if fee.Denom == pool.Denom0 {
-				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
-			} else {
-				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(feeGrowth)
-			}
-		}
-
 		var expectedAmtIn sdk.Int
 		if order.IsBuy {
 			expectedAmtIn = types.Amount0DeltaRounding(
-				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
 		} else {
 			expectedAmtIn = types.Amount1DeltaRounding(
-				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
 		}
 		amtInDiff := received.Amount.Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
@@ -75,27 +75,34 @@ func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, ex
 			//panic(amtInDiff)
 		}
 
-		nextTick := exchangetypes.TickAtPrice(nextPrice, TickPrecision)
-		poolState.CurrentPrice = nextPrice
-		poolState.CurrentTick = nextTick
-
-		if order.OpenQuantity.IsZero() {
-			// TODO: handle liquidity = 0 case
-			tickInfo, found := h.k.GetTickInfo(ctx, pool.Id, poolState.CurrentTick)
-			if found { // TODO: handle tick crossing properly!
-				tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
-				tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
-				h.k.SetTickInfo(ctx, pool.Id, poolState.CurrentTick, tickInfo)
-				var netLiquidity sdk.Dec
-				if order.IsBuy {
-					netLiquidity = tickInfo.NetLiquidity.Neg()
-				} else {
-					netLiquidity = tickInfo.NetLiquidity
-				}
-				// TODO: fix liquidity calculation
-				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
+		if fee.IsNegative() {
+			if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
+				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(fee.Denom, fee.Amount.Neg()))); err != nil {
+				panic(err)
+			}
+			feeGrowth := fee.Amount.Neg().ToDec().QuoTruncate(poolState.CurrentLiquidity)
+			if fee.Denom == pool.Denom0 {
+				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
+			} else {
+				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(feeGrowth)
 			}
 		}
+
+		nextTick := exchangetypes.TickAtPrice(nextPrice, TickPrecision)
+		if nextTick != poolState.CurrentTick {
+			poolState.CurrentTick = nextTick
+			if !order.IsBuy {
+				tickInfo, found := h.k.GetTickInfo(ctx, pool.Id, poolState.CurrentTick)
+				if found {
+					// Cross
+					poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(tickInfo.NetLiquidity)
+					tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
+					tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
+					h.k.SetTickInfo(ctx, pool.Id, poolState.CurrentTick, tickInfo)
+				}
+			}
+		}
+		poolState.CurrentPrice = nextPrice
 		h.k.SetPoolState(ctx, pool.Id, poolState)
 	}
 }
