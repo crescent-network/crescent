@@ -18,11 +18,12 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, execQty sdk.Int) {
+func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, execQty sdk.Int, paid, received, fee sdk.Coin) {
 	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
 	// TODO: optimize
 	pool, found := h.k.GetPoolByReserveAddress(ctx, ordererAddr)
 	if found {
+		reserveAddr := ordererAddr
 		poolState := h.k.MustGetPoolState(ctx, pool.Id)
 
 		var nextSqrtPrice sdk.Dec
@@ -31,38 +32,46 @@ func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, ex
 		} else { // Partially executed
 			// TODO: fix nextSqrtPrice?
 			if order.IsBuy {
-				quote := exchangetypes.QuoteAmount(true, order.Price, execQty)
 				nextSqrtPrice = types.NextSqrtPriceFromOutput(
-					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, quote, true)
+					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, received.Amount, true)
 			} else {
 				nextSqrtPrice = types.NextSqrtPriceFromOutput(
-					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, execQty, false)
+					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, paid.Amount, false)
 			}
 		}
 
-		var expectedAmtIn, amtIn, amtInDiff sdk.Int
+		if fee.IsNegative() {
+			if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
+				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(fee.Denom, fee.Amount.Neg()))); err != nil {
+				panic(err)
+			}
+			feeGrowth := fee.Amount.Neg().ToDec().QuoTruncate(poolState.CurrentLiquidity)
+			if fee.Denom == pool.Denom0 {
+				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
+			} else {
+				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(feeGrowth)
+			}
+		}
+
+		var expectedAmtIn sdk.Int
 		if order.IsBuy {
 			expectedAmtIn = types.Amount0DeltaRounding(
 				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
-			amtIn = execQty
-			amtInDiff = amtIn.Sub(expectedAmtIn)
 		} else {
 			expectedAmtIn = types.Amount1DeltaRounding(
 				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
-			amtIn = exchangetypes.QuoteAmount(false, order.Price, execQty)
-			amtInDiff = amtIn.Sub(expectedAmtIn)
 		}
+		amtInDiff := received.Amount.Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
-			coinDiff := sdk.NewCoin(pool.DenomIn(order.IsBuy), amtInDiff)
-			reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 			if err := h.k.bankKeeper.SendCoinsFromAccountToModule(
-				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(coinDiff)); err != nil {
+				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(received.Denom, amtInDiff))); err != nil {
 				panic(err)
 			}
+			feeGrowth := amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity)
 			if order.IsBuy {
-				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity))
+				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
 			} else {
-				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity))
+				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(feeGrowth)
 			}
 		} else if amtInDiff.IsNegative() { // sanity check
 			//panic(amtInDiff)
