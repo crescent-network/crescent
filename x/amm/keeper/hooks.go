@@ -25,19 +25,17 @@ func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, ex
 	if found {
 		reserveAddr := ordererAddr
 		poolState := h.k.MustGetPoolState(ctx, pool.Id)
+		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 
-		var nextSqrtPrice sdk.Dec
+		var nextSqrtPrice, nextPrice sdk.Dec
 		if order.OpenQuantity.IsZero() { // Fully executed
 			nextSqrtPrice = utils.DecApproxSqrt(order.Price)
+			nextPrice = order.Price
 		} else { // Partially executed
 			// TODO: fix nextSqrtPrice?
-			if order.IsBuy {
-				nextSqrtPrice = types.NextSqrtPriceFromOutput(
-					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, received.Amount, true)
-			} else {
-				nextSqrtPrice = types.NextSqrtPriceFromOutput(
-					poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, paid.Amount, false)
-			}
+			nextSqrtPrice = types.NextSqrtPriceFromOutput(
+				currentSqrtPrice, poolState.CurrentLiquidity, paid.Amount, order.IsBuy)
+			nextPrice = nextSqrtPrice.Power(2)
 		}
 
 		if fee.IsNegative() {
@@ -56,10 +54,10 @@ func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, ex
 		var expectedAmtIn sdk.Int
 		if order.IsBuy {
 			expectedAmtIn = types.Amount0DeltaRounding(
-				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
 		} else {
 			expectedAmtIn = types.Amount1DeltaRounding(
-				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
 		}
 		amtInDiff := received.Amount.Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
@@ -77,8 +75,8 @@ func (h Hooks) AfterOrderExecuted(ctx sdk.Context, order exchangetypes.Order, ex
 			//panic(amtInDiff)
 		}
 
-		poolState.CurrentSqrtPrice = nextSqrtPrice
-		nextTick := types.TickAtSqrtPrice(nextSqrtPrice, TickPrecision)
+		nextTick := exchangetypes.TickAtPrice(nextPrice, TickPrecision)
+		poolState.CurrentPrice = nextPrice
 		poolState.CurrentTick = nextTick
 
 		if order.OpenQuantity.IsZero() {

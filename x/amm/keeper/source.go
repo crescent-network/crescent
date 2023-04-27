@@ -47,12 +47,12 @@ func (k Keeper) RequestTransientOrders(
 			sqrtPriceBefore := types.SqrtPriceAtTick(tick+tickDelta, TickPrecision)
 			var qty sdk.Int
 			if isBuy {
-				sqrtPriceBefore = sdk.MinDec(poolState.CurrentSqrtPrice, sqrtPriceBefore)
+				sqrtPriceBefore = sdk.MinDec(utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceBefore)
 				qty = utils.MinInt(
 					reserve.ToDec().QuoTruncate(price).TruncateInt(),
 					types.Amount1DeltaRounding(sqrtPriceBefore, sqrtPrice, liquidity, false).ToDec().QuoTruncate(price).TruncateInt())
 			} else {
-				sqrtPriceBefore = sdk.MaxDec(poolState.CurrentSqrtPrice, sqrtPriceBefore)
+				sqrtPriceBefore = sdk.MaxDec(utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceBefore)
 				qty = utils.MinInt(
 					reserve,
 					types.Amount0DeltaRounding(sqrtPriceBefore, sqrtPrice, liquidity, false))

@@ -39,8 +39,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	k.SetPoolByReserveAddressIndex(ctx, pool)
 
 	// Set initial pool state
-	state := types.NewPoolState(
-		exchangetypes.TickAtPrice(price, TickPrecision), utils.DecApproxSqrt(price))
+	state := types.NewPoolState(exchangetypes.TickAtPrice(price, TickPrecision), price)
 	k.SetPoolState(ctx, pool.Id, state)
 
 	return pool, nil

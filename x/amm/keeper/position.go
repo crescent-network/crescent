@@ -34,7 +34,7 @@ func (k Keeper) AddLiquidity(
 	sqrtPriceB := types.SqrtPriceAtTick(upperTick, TickPrecision) // TODO: use tick prec param
 
 	liquidity = types.LiquidityForAmounts(
-		poolState.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
+		utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 
 	position, amt0, amt1 = k.modifyPosition(
 		ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
@@ -215,8 +215,9 @@ func (k Keeper) modifyPosition(
 		if poolState.CurrentTick < lowerTick {
 			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		} else if poolState.CurrentTick < upperTick {
-			amt0 = types.Amount0Delta(poolState.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
-			amt1 = types.Amount1Delta(sqrtPriceA, poolState.CurrentSqrtPrice, liquidityDelta)
+			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
+			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, liquidityDelta)
+			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, liquidityDelta)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(liquidityDelta)
 			k.SetPoolState(ctx, pool.Id, poolState)
 		} else {

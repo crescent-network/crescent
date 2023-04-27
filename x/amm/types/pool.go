@@ -56,10 +56,10 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
-func NewPoolState(tick int32, sqrtPrice sdk.Dec) PoolState {
+func NewPoolState(tick int32, price sdk.Dec) PoolState {
 	return PoolState{
 		CurrentTick:      tick,
-		CurrentSqrtPrice: sqrtPrice,
+		CurrentPrice:     price,
 		CurrentLiquidity: utils.ZeroDec,
 		FeeGrowthGlobal0: utils.ZeroDec,
 		FeeGrowthGlobal1: utils.ZeroDec,
@@ -67,8 +67,8 @@ func NewPoolState(tick int32, sqrtPrice sdk.Dec) PoolState {
 }
 
 func (poolState PoolState) Validate() error {
-	if !poolState.CurrentSqrtPrice.IsPositive() {
-		return fmt.Errorf("current sqrt price must be positive: %s", poolState.CurrentSqrtPrice)
+	if !poolState.CurrentPrice.IsPositive() {
+		return fmt.Errorf("current price must be positive: %s", poolState.CurrentPrice)
 	}
 	if poolState.CurrentLiquidity.IsNegative() {
 		return fmt.Errorf("current liquidity must not be negative: %s", poolState.CurrentLiquidity)

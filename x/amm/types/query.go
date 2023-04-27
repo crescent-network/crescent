@@ -15,7 +15,7 @@ func NewPoolResponse(pool Pool, poolState PoolState, balances sdk.Coins) PoolRes
 		TickSpacing:      pool.TickSpacing,
 		ReserveAddress:   pool.ReserveAddress,
 		CurrentTick:      poolState.CurrentTick,
-		CurrentSqrtPrice: poolState.CurrentSqrtPrice,
+		CurrentPrice:     poolState.CurrentPrice,
 		CurrentLiquidity: poolState.CurrentLiquidity,
 		FeeGrowthGlobal: sdk.NewDecCoins(
 			sdk.NewDecCoinFromDec(pool.Denom0, poolState.FeeGrowthGlobal0),
