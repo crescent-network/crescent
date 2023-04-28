@@ -28,6 +28,16 @@ func (k Keeper) AddLiquidity(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
 		return
 	}
+
+	if lowerTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "lower tick must be multiple of tick spacing")
+		return
+	}
+	if upperTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upper tick must be multiple of tick spacing")
+		return
+	}
+
 	poolState := k.MustGetPoolState(ctx, poolId)
 
 	sqrtPriceA := types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
