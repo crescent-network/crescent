@@ -25,7 +25,7 @@ func LiquidityForAmounts(currentSqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amt0,
 	//}
 	if currentSqrtPrice.LTE(sqrtPriceA) {
 		return LiquidityForAmount0(sqrtPriceA, sqrtPriceB, amt0)
-	} else if sqrtPriceA.LT(sqrtPriceB) {
+	} else if currentSqrtPrice.LT(sqrtPriceB) {
 		liquidity0 := LiquidityForAmount0(currentSqrtPrice, sqrtPriceB, amt0)
 		liquidity1 := LiquidityForAmount1(sqrtPriceA, currentSqrtPrice, amt1)
 		return sdk.MinDec(liquidity0, liquidity1)
