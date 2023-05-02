@@ -45,43 +45,74 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	return pool, nil
 }
 
-func (k Keeper) iterateTicksBelowPoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, poolState types.PoolState, lowestTick int32, cb func(tick int32, liquidity sdk.Dec) (stop bool)) {
-	q, _ := utils.DivMod(poolState.CurrentTick, int32(pool.TickSpacing))
-	currentTick := q * int32(pool.TickSpacing)
-	liquidity := poolState.CurrentLiquidity
-	k.IterateTickInfosBelow(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
-		if liquidity.IsPositive() {
-			for ; currentTick >= tick && currentTick >= lowestTick; currentTick -= int32(pool.TickSpacing) {
-				if cb(currentTick, liquidity) {
-					return true
-				}
-			}
-		}
-		if tick <= lowestTick {
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
+	ts := int32(pool.TickSpacing)
+	poolState := k.MustGetPoolState(ctx, pool.Id)
+	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy))
+	k.IteratePoolOrderTicks(ctx, pool, poolState, isBuy, func(tick int32, liquidity sdk.Dec) (stop bool) {
+		if !reserveBalance.IsPositive() {
 			return true
 		}
-		liquidity = liquidity.Sub(tickInfo.NetLiquidity)
+		// TODO: check out of tick range
+		price := exchangetypes.PriceAtTick(tick, TickPrecision)
+		sqrtPrice := utils.DecApproxSqrt(price)
+		var qty sdk.Int
+		if isBuy {
+			prevSqrtPrice := sdk.MinDec(
+				types.SqrtPriceAtTick(tick+ts, TickPrecision),
+				utils.DecApproxSqrt(poolState.CurrentPrice))
+			qty = utils.MinInt(
+				reserveBalance.ToDec().QuoTruncate(price).TruncateInt(),
+				types.Amount1DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false).ToDec().QuoTruncate(price).TruncateInt())
+		} else {
+			prevSqrtPrice := sdk.MaxDec(
+				types.SqrtPriceAtTick(tick-ts, TickPrecision),
+				utils.DecApproxSqrt(poolState.CurrentPrice))
+			qty = utils.MinInt(
+				reserveBalance,
+				types.Amount0DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false))
+		}
+		if qty.IsPositive() {
+			if cb(price, qty) {
+				return true
+			}
+			reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, price, qty))
+		}
 		return false
 	})
 }
 
-func (k Keeper) iterateTicksAbovePoolPriceWithLiquidity(ctx sdk.Context, pool types.Pool, poolState types.PoolState, highestTick int32, cb func(tick int32, liquidity sdk.Dec) (stop bool)) {
-	currentTick := (poolState.CurrentTick + int32(pool.TickSpacing)) / int32(pool.TickSpacing) * int32(pool.TickSpacing)
-	liquidity := poolState.CurrentLiquidity
-	// TODO: What if there's no tick infos above the current pool's tick but
-	//       still there's liquidity below highestTick? Is this even possible?
-	k.IterateTickInfosAbove(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
-		if liquidity.IsPositive() {
-			for ; currentTick <= tick && currentTick <= highestTick; currentTick += int32(pool.TickSpacing) {
-				if cb(currentTick, liquidity) {
+func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolState types.PoolState, isBuy bool, cb func(tick int32, liquidity sdk.Dec) (stop bool)) {
+	ts := int32(pool.TickSpacing)
+	currentTick := poolState.CurrentTick / ts * ts
+	currentLiquidity := poolState.CurrentLiquidity
+	iterCb := func(tick int32, tickInfo types.TickInfo) bool {
+		if currentLiquidity.IsPositive() {
+			for currentTick != tick {
+				var nextTick int32
+				if isBuy {
+					nextTick = currentTick - ts
+				} else {
+					nextTick = currentTick + ts
+				}
+				if cb(nextTick, currentLiquidity) {
 					return true
 				}
+				currentTick = nextTick
 			}
+		} else {
+			currentTick = tick
 		}
-		if tick >= highestTick {
-			return true
+		if isBuy {
+			currentLiquidity = currentLiquidity.Sub(tickInfo.NetLiquidity)
+		} else {
+			currentLiquidity = currentLiquidity.Add(tickInfo.NetLiquidity)
 		}
-		liquidity = liquidity.Add(tickInfo.NetLiquidity)
 		return false
-	})
+	}
+	if isBuy {
+		k.IterateTickInfosBelow(ctx, pool.Id, currentTick, iterCb)
+	} else {
+		k.IterateTickInfosAbove(ctx, pool.Id, currentTick, iterCb)
+	}
 }

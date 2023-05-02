@@ -20,6 +20,10 @@ func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint
 	}
 }
 
+func (pool Pool) MustGetReserveAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+}
+
 func (pool Pool) DenomIn(isBuy bool) string {
 	if isBuy {
 		return pool.Denom0

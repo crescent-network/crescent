@@ -61,3 +61,28 @@ func (s *KeeperTestSuite) TestPoolBenefits() {
 	fmt.Println(s.Collect(aliceAddr, alicePosition.Id, sdk.NewInt(100_000000), sdk.NewInt(100_000000)))
 	fmt.Println(s.Collect(bobAddr, bobPosition.Id, sdk.NewInt(100_000000), sdk.NewInt(100_000000)))
 }
+
+func (s *KeeperTestSuite) TestIteratePoolOrders() {
+	creatorAddr := utils.TestAddress(0)
+	ordererAddr := utils.TestAddress(1)
+	initialBalances := utils.ParseCoins("10000_000000ucre,10000_000000uusd")
+	s.FundAccount(creatorAddr, initialBalances)
+	s.FundAccount(ordererAddr, initialBalances)
+
+	market := s.CreateMarket(creatorAddr, "ucre", "uusd", true)
+	pool := s.CreatePool(creatorAddr, market.Id, utils.ParseDec("5"), true)
+	s.AddLiquidity(
+		creatorAddr, pool.Id, utils.ParseDec("4.99"), utils.ParseDec("5.01"),
+		sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.ZeroInt(), sdk.ZeroInt())
+	s.AddLiquidity(
+		creatorAddr, pool.Id, utils.ParseDec("5.03"), utils.ParseDec("5.05"),
+		sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.ZeroInt(), sdk.ZeroInt())
+	//s.AddLiquidity(
+	//	creatorAddr, pool.Id, utils.ParseDec("4.95"), utils.ParseDec("4.97"),
+	//	sdk.NewInt(1000_000000), sdk.NewInt(1000_000000), sdk.ZeroInt(), sdk.ZeroInt())
+
+	s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, false, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+		fmt.Println(price, qty)
+		return false
+	})
+}
