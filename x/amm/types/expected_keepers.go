@@ -31,5 +31,4 @@ type BankKeeper interface {
 
 type ExchangeKeeper interface {
 	GetMarket(ctx sdk.Context, marketId uint64) (market exchangetypes.Market, found bool)
-	CreateTransientOrder(ctx sdk.Context, market exchangetypes.Market, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, isTemporary bool) error
 }

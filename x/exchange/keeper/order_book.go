@@ -10,16 +10,16 @@ import (
 
 func (k Keeper) CreateTransientOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, isTemporary bool) error {
+	isBuy bool, price sdk.Dec, qty sdk.Int, isTemporary bool) (order types.TransientOrder, err error) {
 	deposit := types.DepositAmount(isBuy, price, qty)
-	if err := k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit)); err != nil {
-		return err
+	if err = k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit)); err != nil {
+		return
 	}
 	orderId := k.GetNextOrderIdWithUpdate(ctx)
-	order := types.NewTransientOrder(
+	order = types.NewTransientOrder(
 		orderId, ordererAddr, market.Id, isBuy, price, qty, qty, deposit, isTemporary)
 	k.SetTransientOrderBookOrder(ctx, order)
-	return nil
+	return
 }
 
 func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId uint64, minPrice, maxPrice sdk.Dec) (ob types.OrderBook, err error) {
@@ -54,9 +54,14 @@ func (k Keeper) TransientOrderBook(ctx sdk.Context, marketId uint64, minPrice, m
 	return ob, nil
 }
 
+type TemporaryOrderSourceKey struct {
+	ModuleName string
+	Orderer    string
+}
+
 func (k Keeper) constructTransientOrderBook(
 	ctx sdk.Context, market types.Market, isBuy bool,
-	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) {
+	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) map[uint64]TemporaryOrderSourceKey {
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
 	// TODO: adjust price limit
@@ -77,9 +82,28 @@ func (k Keeper) constructTransientOrderBook(
 		accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
 		return false
 	})
-	for _, source := range k.orderSources {
-		source.RequestTransientOrders(ctx, market, isBuy, priceLimit, qtyLimit, quoteLimit)
+	m := map[uint64]TemporaryOrderSourceKey{}
+	for _, moduleName := range k.sourceModuleNames {
+		source := k.sources[moduleName]
+		source.GenerateOrders(ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error {
+			order, err := k.CreateTransientOrder(ctx, market, ordererAddr, isBuy, price, qty, true)
+			if err != nil {
+				return err
+			}
+			// TODO: construct this map only if a flag is enabled
+			m[order.Order.Id] = TemporaryOrderSourceKey{
+				ModuleName: moduleName,
+				Orderer:    ordererAddr.String(),
+			}
+			return nil
+		}, types.TemporaryOrderOptions{
+			IsBuy:         isBuy,
+			PriceLimit:    priceLimit,
+			QuantityLimit: qtyLimit,
+			QuoteLimit:    quoteLimit,
+		})
 	}
+	return m
 }
 
 func (k Keeper) settleTransientOrderBook(ctx sdk.Context, market types.Market) {

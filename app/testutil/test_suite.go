@@ -6,6 +6,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	chain "github.com/crescent-network/crescent/v5/app"
+	utils "github.com/crescent-network/crescent/v5/types"
 	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
@@ -26,4 +27,11 @@ func (s *TestSuite) FundAccount(
 	s.T().Helper()
 	s.Require().NoError(s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, amt))
 	s.Require().NoError(s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, addr, amt))
+}
+
+func (s *TestSuite) FundedAccount(addrNum int, amt sdk.Coins) sdk.AccAddress {
+	s.T().Helper()
+	addr := utils.TestAddress(addrNum)
+	s.FundAccount(addr, amt)
+	return addr
 }

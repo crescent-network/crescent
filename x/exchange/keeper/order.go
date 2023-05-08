@@ -67,7 +67,9 @@ func (k Keeper) executeOrder(
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
 	totalExecQuote = utils.ZeroInt
-	k.constructTransientOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
+	keyByOrderId := k.constructTransientOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
+	var keys []TemporaryOrderSourceKey
+	resultsByKey := map[TemporaryOrderSourceKey][]types.TemporaryOrderResult{}
 	k.IterateTransientOrderBookSide(ctx, market.Id, !isBuy, func(order types.TransientOrder) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Order.Price.GT(*priceLimit)) ||
@@ -113,12 +115,30 @@ func (k Keeper) executeOrder(
 			order.Order.RemainingDeposit = order.Order.RemainingDeposit.Sub(makerPays.Amount)
 			order.Updated = true
 			k.SetTransientOrderBookOrder(ctx, order)
-			k.AfterOrderExecuted(ctx, order.Order, execQty, makerPays, makerReceives, makerFee)
+
+			if key, ok := keyByOrderId[order.Order.Id]; ok {
+				results, ok := resultsByKey[key]
+				if !ok {
+					keys = append(keys, key)
+				}
+				resultsByKey[key] = append(results, types.TemporaryOrderResult{
+					Order:            &order.Order,
+					ExecutedQuantity: execQty,
+					Paid:             makerPays,
+					Received:         makerReceives,
+					Fee:              makerFee,
+				})
+			}
 		}
 		return false
 	})
 	if !simulate {
 		k.settleTransientOrderBook(ctx, market)
+		for _, key := range keys {
+			results := resultsByKey[key]
+			source := k.sources[key.ModuleName]
+			source.AfterOrdersExecuted(ctx, market, sdk.MustAccAddressFromBech32(key.Orderer), results)
+		}
 		if !lastPrice.IsNil() {
 			state := k.MustGetMarketState(ctx, market.Id)
 			state.LastPrice = &lastPrice

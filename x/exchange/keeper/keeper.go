@@ -18,10 +18,10 @@ type Keeper struct {
 	tsKey      sdk.StoreKey
 	paramSpace paramstypes.Subspace
 
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	hooks         types.ExchangeHooks
-	orderSources  []types.OrderSource
+	accountKeeper     types.AccountKeeper
+	bankKeeper        types.BankKeeper
+	sources           map[string]types.TemporaryOrderSource
+	sourceModuleNames []string
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -52,18 +52,18 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k *Keeper) SetHooks(hooks types.ExchangeHooks) *Keeper {
-	if k.hooks != nil {
-		panic("cannot set hooks twice")
+func (k *Keeper) SetTemporaryOrderSources(sources ...types.TemporaryOrderSource) *Keeper {
+	if k.sources != nil {
+		panic("cannot set temporary order sources twice")
 	}
-	k.hooks = hooks
-	return k
-}
-
-func (k *Keeper) SetOrderSources(sources ...types.OrderSource) *Keeper {
-	if k.orderSources != nil {
-		panic("cannot set order sources twice")
+	k.sources = map[string]types.TemporaryOrderSource{}
+	for _, source := range sources {
+		moduleName := source.ModuleName()
+		if _, ok := k.sources[moduleName]; ok {
+			panic(fmt.Sprintf("duplicate order source: %s", moduleName))
+		}
+		k.sources[moduleName] = source
+		k.sourceModuleNames = append(k.sourceModuleNames, moduleName)
 	}
-	k.orderSources = sources
 	return k
 }

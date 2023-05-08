@@ -45,7 +45,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	return pool, nil
 }
 
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int, liquidity sdk.Dec) (stop bool)) {
 	ts := int32(pool.TickSpacing)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy))
@@ -73,7 +73,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				types.Amount0DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false))
 		}
 		if qty.IsPositive() {
-			if cb(price, qty) {
+			if cb(price, qty, liquidity) {
 				return true
 			}
 			reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, price, qty))
@@ -84,18 +84,18 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 
 func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolState types.PoolState, isBuy bool, cb func(tick int32, liquidity sdk.Dec) (stop bool)) {
 	ts := int32(pool.TickSpacing)
-	currentTick := poolState.CurrentTick / ts * ts
-	currentLiquidity := poolState.CurrentLiquidity
+	currentTick := poolState.CurrentTick
+	orderLiquidity := poolState.CurrentLiquidity
 	iterCb := func(tick int32, tickInfo types.TickInfo) bool {
-		if currentLiquidity.IsPositive() {
+		if orderLiquidity.IsPositive() {
 			for currentTick != tick {
 				var nextTick int32
 				if isBuy {
-					nextTick = currentTick - ts
+					nextTick = (currentTick+ts-1)/ts*ts - ts
 				} else {
-					nextTick = currentTick + ts
+					nextTick = currentTick/ts*ts + ts
 				}
-				if cb(nextTick, currentLiquidity) {
+				if cb(nextTick, orderLiquidity) {
 					return true
 				}
 				currentTick = nextTick
@@ -104,14 +104,14 @@ func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolStat
 			currentTick = tick
 		}
 		if isBuy {
-			currentLiquidity = currentLiquidity.Sub(tickInfo.NetLiquidity)
+			orderLiquidity = orderLiquidity.Sub(tickInfo.NetLiquidity)
 		} else {
-			currentLiquidity = currentLiquidity.Add(tickInfo.NetLiquidity)
+			orderLiquidity = orderLiquidity.Add(tickInfo.NetLiquidity)
 		}
 		return false
 	}
 	if isBuy {
-		k.IterateTickInfosBelow(ctx, pool.Id, currentTick, iterCb)
+		k.IterateTickInfosBelowInclusive(ctx, pool.Id, currentTick, iterCb)
 	} else {
 		k.IterateTickInfosAbove(ctx, pool.Id, currentTick, iterCb)
 	}
