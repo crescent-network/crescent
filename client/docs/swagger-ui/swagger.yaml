@@ -10584,6 +10584,7 @@ paths:
         - Query
   '/crescent/amm/v1beta1/positions/{owner}':
     get:
+      summary: 'TODO: add PoolPositions'
       operationId: AMMPositions
       responses:
         '200':

@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -221,4 +222,45 @@ func (k Keeper) IterateTransientOrderBook(ctx sdk.Context, marketId uint64, cb f
 func (k Keeper) DeleteTransientOrderBookOrder(ctx sdk.Context, order types.TransientOrder) {
 	store := ctx.TransientStore(k.tsKey)
 	store.Delete(types.GetOrderBookOrderKey(order.Order.MarketId, order.Order.IsBuy, order.Order.Price, order.Order.Id))
+}
+
+func (k Keeper) GetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	store := ctx.TransientStore(k.tsKey)
+	bz := store.Get(types.GetTransientBalanceKey(addr, denom))
+	if bz == nil {
+		return sdk.NewCoin(denom, utils.ZeroInt)
+	}
+	var balance types.TransientBalance
+	k.cdc.MustUnmarshal(bz, &balance)
+	return sdk.Coin{Denom: denom, Amount: balance.Amount}
+}
+
+func (k Keeper) SetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, coin sdk.Coin) error {
+	store := ctx.TransientStore(k.tsKey)
+	if coin.IsZero() {
+		k.DeleteTransientBalance(ctx, addr, coin.Denom)
+	} else {
+		bz := k.cdc.MustMarshal(&types.TransientBalance{Amount: coin.Amount})
+		store.Set(types.GetTransientBalanceKey(addr, coin.Denom), bz)
+	}
+	return nil
+}
+
+func (k Keeper) IterateAllTransientBalances(ctx sdk.Context, cb func(addr sdk.AccAddress, coin sdk.Coin) (stop bool)) {
+	store := ctx.TransientStore(k.tsKey)
+	iter := sdk.KVStorePrefixIterator(store, types.TransientBalanceKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		addr, denom := types.ParseTransientBalanceKey(iter.Key())
+		var balance types.TransientBalance
+		k.cdc.MustUnmarshal(iter.Value(), &balance)
+		if cb(addr, sdk.Coin{Denom: denom, Amount: balance.Amount}) {
+			break
+		}
+	}
+}
+
+func (k Keeper) DeleteTransientBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) {
+	store := ctx.TransientStore(k.tsKey)
+	store.Delete(types.GetTransientBalanceKey(addr, denom))
 }

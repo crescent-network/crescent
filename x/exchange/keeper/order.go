@@ -45,7 +45,7 @@ func (k Keeper) PlaceOrder(
 			deposit := types.DepositAmount(isBuy, *priceLimit, openQty)
 			order = types.NewOrder(
 				orderId, ordererAddr, market.Id, isBuy, *priceLimit, qty, openQty, deposit)
-			if err = k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit)); err != nil {
+			if err = k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit), false); err != nil {
 				return
 			}
 			k.SetOrder(ctx, order)
@@ -67,9 +67,9 @@ func (k Keeper) executeOrder(
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
 	totalExecQuote = utils.ZeroInt
-	keyByOrderId := k.constructTransientOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
-	var keys []TemporaryOrderSourceKey
-	resultsByKey := map[TemporaryOrderSourceKey][]types.TemporaryOrderResult{}
+	sourceNameByOrderId := k.constructTransientOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
+	var sourceNames []string
+	resultsBySourceName := map[string][]types.TemporaryOrderResult{}
 	k.IterateTransientOrderBookSide(ctx, market.Id, !isBuy, func(order types.TransientOrder) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Order.Price.GT(*priceLimit)) ||
@@ -100,15 +100,15 @@ func (k Keeper) executeOrder(
 		if !simulate {
 			makerPays, makerReceives, makerFee, takerPays, takerReceives := types.CalculateAmountsAndFee(
 				market, isBuy, execQty, execQuote, order.IsTemporary)
-			if err := k.EscrowCoin(ctx, market, ordererAddr, takerPays); err != nil {
+			if err := k.EscrowCoin(ctx, market, ordererAddr, takerPays, true); err != nil {
 				panic(err)
 			}
-			if err := k.ReleaseCoin(ctx, market, ordererAddr, takerReceives); err != nil {
+			if err := k.ReleaseCoin(ctx, market, ordererAddr, takerReceives, true); err != nil {
 				panic(err)
 			}
 			if err := k.ReleaseCoins(
 				ctx, market, sdk.MustAccAddressFromBech32(order.Order.Orderer),
-				sdk.NewCoins(makerReceives).Sub(sdk.Coins{makerFee})); err != nil {
+				sdk.NewCoins(makerReceives).Sub(sdk.Coins{makerFee}), true); err != nil {
 				panic(err)
 			}
 			order.Order.OpenQuantity = order.Order.OpenQuantity.Sub(execQty)
@@ -116,12 +116,12 @@ func (k Keeper) executeOrder(
 			order.Updated = true
 			k.SetTransientOrderBookOrder(ctx, order)
 
-			if key, ok := keyByOrderId[order.Order.Id]; ok {
-				results, ok := resultsByKey[key]
+			if name, ok := sourceNameByOrderId[order.Order.Id]; ok {
+				results, ok := resultsBySourceName[name]
 				if !ok {
-					keys = append(keys, key)
+					sourceNames = append(sourceNames, name)
 				}
-				resultsByKey[key] = append(results, types.TemporaryOrderResult{
+				resultsBySourceName[name] = append(results, types.TemporaryOrderResult{
 					Order:            &order.Order,
 					ExecutedQuantity: execQty,
 					Paid:             makerPays,
@@ -134,10 +134,13 @@ func (k Keeper) executeOrder(
 	})
 	if !simulate {
 		k.settleTransientOrderBook(ctx, market)
-		for _, key := range keys {
-			results := resultsByKey[key]
-			source := k.sources[key.ModuleName]
-			source.AfterOrdersExecuted(ctx, market, sdk.MustAccAddressFromBech32(key.Orderer), results)
+		if err := k.ExecuteSendCoins(ctx); err != nil {
+			panic(err) // TODO: return error
+		}
+		for _, name := range sourceNames {
+			results := resultsBySourceName[name]
+			source := k.sources[name]
+			source.AfterOrdersExecuted(ctx, market, results)
 		}
 		if !lastPrice.IsNil() {
 			state := k.MustGetMarketState(ctx, market.Id)
@@ -161,7 +164,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, senderAddr sdk.AccAddress, orderId 
 		return order, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "order is not created by the sender")
 	}
 	refundedCoin := market.DepositCoin(order.IsBuy, order.RemainingDeposit)
-	if err := k.ReleaseCoin(ctx, market, senderAddr, refundedCoin); err != nil {
+	if err := k.ReleaseCoin(ctx, market, senderAddr, refundedCoin, false); err != nil {
 		return order, err
 	}
 	k.DeleteOrder(ctx, order)

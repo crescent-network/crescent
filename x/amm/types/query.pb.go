@@ -779,6 +779,7 @@ type QueryClient interface {
 	AllPools(ctx context.Context, in *QueryAllPoolsRequest, opts ...grpc.CallOption) (*QueryAllPoolsResponse, error)
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
 	AllPositions(ctx context.Context, in *QueryAllPositionsRequest, opts ...grpc.CallOption) (*QueryAllPositionsResponse, error)
+	// TODO: add PoolPositions
 	Positions(ctx context.Context, in *QueryPositionsRequest, opts ...grpc.CallOption) (*QueryPositionsResponse, error)
 }
 
@@ -841,6 +842,7 @@ type QueryServer interface {
 	AllPools(context.Context, *QueryAllPoolsRequest) (*QueryAllPoolsResponse, error)
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
 	AllPositions(context.Context, *QueryAllPositionsRequest) (*QueryAllPositionsResponse, error)
+	// TODO: add PoolPositions
 	Positions(context.Context, *QueryPositionsRequest) (*QueryPositionsResponse, error)
 }
 

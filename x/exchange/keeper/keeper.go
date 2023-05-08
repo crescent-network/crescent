@@ -18,10 +18,10 @@ type Keeper struct {
 	tsKey      sdk.StoreKey
 	paramSpace paramstypes.Subspace
 
-	accountKeeper     types.AccountKeeper
-	bankKeeper        types.BankKeeper
-	sources           map[string]types.TemporaryOrderSource
-	sourceModuleNames []string
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	sources       map[string]types.TemporaryOrderSource
+	sourceNames   []string
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -58,12 +58,12 @@ func (k *Keeper) SetTemporaryOrderSources(sources ...types.TemporaryOrderSource)
 	}
 	k.sources = map[string]types.TemporaryOrderSource{}
 	for _, source := range sources {
-		moduleName := source.ModuleName()
+		moduleName := source.Name()
 		if _, ok := k.sources[moduleName]; ok {
 			panic(fmt.Sprintf("duplicate order source: %s", moduleName))
 		}
 		k.sources[moduleName] = source
-		k.sourceModuleNames = append(k.sourceModuleNames, moduleName)
+		k.sourceNames = append(k.sourceNames, moduleName)
 	}
 	return k
 }

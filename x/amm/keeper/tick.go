@@ -68,3 +68,14 @@ func (k Keeper) feeGrowthInside(
 	feeGrowthInside1 = feeGrowthGlobal1.Sub(feeGrowthBelow1).Sub(feeGrowthAbove1)
 	return
 }
+
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, feeGrowthGlobal0, feeGrowthGlobal1 sdk.Dec) (netLiquidity sdk.Dec) {
+	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
+	if !found { // sanity check
+		panic("tick info not found")
+	}
+	tickInfo.FeeGrowthOutside0 = feeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
+	tickInfo.FeeGrowthOutside1 = feeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
+	k.SetTickInfo(ctx, poolId, tick, tickInfo)
+	return tickInfo.NetLiquidity
+}

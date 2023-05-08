@@ -106,10 +106,11 @@ func (m *MsgCreatePoolResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgCreatePoolResponse proto.InternalMessageInfo
 
 type MsgAddLiquidity struct {
-	Sender         string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	PoolId         uint64                                 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
-	LowerPrice     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=lower_price,json=lowerPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"lower_price"`
-	UpperPrice     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=upper_price,json=upperPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"upper_price"`
+	Sender     string                                 `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	PoolId     uint64                                 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	LowerPrice github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=lower_price,json=lowerPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"lower_price"`
+	UpperPrice github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=upper_price,json=upperPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"upper_price"`
+	// TODO: simplify arguments
 	DesiredAmount0 github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=desired_amount0,json=desiredAmount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"desired_amount0"`
 	DesiredAmount1 github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=desired_amount1,json=desiredAmount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"desired_amount1"`
 	MinAmount0     github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=min_amount0,json=minAmount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_amount0"`

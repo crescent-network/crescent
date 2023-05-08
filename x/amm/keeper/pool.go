@@ -86,6 +86,11 @@ func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolStat
 	ts := int32(pool.TickSpacing)
 	currentTick := poolState.CurrentTick
 	orderLiquidity := poolState.CurrentLiquidity
+	if isBuy && currentTick%ts == 0 {
+		if cb(currentTick, orderLiquidity) {
+			return
+		}
+	}
 	iterCb := func(tick int32, tickInfo types.TickInfo) bool {
 		if orderLiquidity.IsPositive() {
 			for currentTick != tick {

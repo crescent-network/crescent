@@ -12,7 +12,7 @@ func (k Keeper) CreateTransientOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int, isTemporary bool) (order types.TransientOrder, err error) {
 	deposit := types.DepositAmount(isBuy, price, qty)
-	if err = k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit)); err != nil {
+	if err = k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit), true); err != nil {
 		return
 	}
 	orderId := k.GetNextOrderIdWithUpdate(ctx)
@@ -61,7 +61,7 @@ type TemporaryOrderSourceKey struct {
 
 func (k Keeper) constructTransientOrderBook(
 	ctx sdk.Context, market types.Market, isBuy bool,
-	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) map[uint64]TemporaryOrderSourceKey {
+	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) map[uint64]string {
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
 	// TODO: adjust price limit
@@ -82,19 +82,16 @@ func (k Keeper) constructTransientOrderBook(
 		accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
 		return false
 	})
-	m := map[uint64]TemporaryOrderSourceKey{}
-	for _, moduleName := range k.sourceModuleNames {
-		source := k.sources[moduleName]
+	m := map[uint64]string{}
+	for _, name := range k.sourceNames {
+		source := k.sources[name]
 		source.GenerateOrders(ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error {
 			order, err := k.CreateTransientOrder(ctx, market, ordererAddr, isBuy, price, qty, true)
 			if err != nil {
 				return err
 			}
 			// TODO: construct this map only if a flag is enabled
-			m[order.Order.Id] = TemporaryOrderSourceKey{
-				ModuleName: moduleName,
-				Orderer:    ordererAddr.String(),
-			}
+			m[order.Order.Id] = name
 			return nil
 		}, types.TemporaryOrderOptions{
 			IsBuy:         isBuy,
@@ -112,7 +109,7 @@ func (k Keeper) settleTransientOrderBook(ctx sdk.Context, market types.Market) {
 		if order.IsTemporary || (order.Updated && order.Order.OpenQuantity.IsZero()) {
 			if err := k.ReleaseCoin(
 				ctx, market, sdk.MustAccAddressFromBech32(order.Order.Orderer),
-				market.DepositCoin(order.Order.IsBuy, order.Order.RemainingDeposit)); err != nil {
+				market.DepositCoin(order.Order.IsBuy, order.Order.RemainingDeposit), true); err != nil {
 				panic(err)
 			}
 		}

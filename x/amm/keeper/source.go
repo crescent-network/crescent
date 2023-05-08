@@ -10,7 +10,7 @@ import (
 
 var _ exchangetypes.TemporaryOrderSource = Keeper{}
 
-func (k Keeper) ModuleName() string {
+func (k Keeper) Name() string {
 	return types.ModuleName
 }
 
@@ -25,6 +25,9 @@ func (k Keeper) GenerateOrders(
 		pool = p
 		return true
 	})
+	if pool == (types.Pool{}) { //  TODO: use flag
+		return // no pool found
+	}
 
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroInt
@@ -50,16 +53,26 @@ func (k Keeper) GenerateOrders(
 	})
 }
 
-func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, market exchangetypes.Market, ordererAddr sdk.AccAddress, results []exchangetypes.TemporaryOrderResult) {
+func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.TemporaryOrderResult) {
+	// TODO: group results by orderer
+	orderers, m := exchangetypes.GroupTemporaryOrderResultsByOrderer(results)
+	for _, orderer := range orderers {
+		ordererAddr := sdk.MustAccAddressFromBech32(orderer)
+		pool, found := k.GetPoolByReserveAddress(ctx, ordererAddr)
+		if !found {
+			panic("pool not found")
+		}
+		k.AfterPoolOrdersExecuted(ctx, pool, m[orderer])
+	}
+}
+
+func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []exchangetypes.TemporaryOrderResult) {
 	// TODO: check if results are sorted?
 	isBuy := results[0].Order.IsBuy
 
-	pool, found := k.GetPoolByReserveAddress(ctx, ordererAddr)
-	if !found {
-		panic("pool not found")
-	}
-	reserveAddr := ordererAddr
+	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
+	accruedRewards := sdk.NewCoins()
 
 	for _, result := range results {
 		orderTick := exchangetypes.TickAtPrice(result.Order.Price, TickPrecision)
@@ -68,13 +81,10 @@ func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, market exchangetypes.Market
 				if tick <= orderTick {
 					return true
 				}
-				// Cross
+				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 				poolState.CurrentTick = tick
 				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick, TickPrecision)
-				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(tickInfo.NetLiquidity)
-				tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
-				tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
-				k.SetTickInfo(ctx, pool.Id, tick, tickInfo)
 				return false
 			})
 		} else {
@@ -82,13 +92,10 @@ func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, market exchangetypes.Market
 				if tick >= orderTick {
 					return true
 				}
-				// Cross
+				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 				poolState.CurrentTick = tick
 				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick, TickPrecision)
-				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(tickInfo.NetLiquidity)
-				tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
-				tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
-				k.SetTickInfo(ctx, pool.Id, tick, tickInfo)
 				return false
 			})
 		}
@@ -131,10 +138,7 @@ func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, market exchangetypes.Market
 		}
 		amtInDiff := result.Received.Amount.Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
-			if err := k.bankKeeper.SendCoinsFromAccountToModule(
-				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(result.Received.Denom, amtInDiff))); err != nil {
-				panic(err)
-			}
+			accruedRewards = accruedRewards.Add(sdk.NewCoin(result.Received.Denom, amtInDiff))
 			feeGrowth := amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity)
 			if result.Order.IsBuy {
 				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
@@ -146,10 +150,7 @@ func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, market exchangetypes.Market
 		}
 
 		if result.Fee.IsNegative() {
-			if err := k.bankKeeper.SendCoinsFromAccountToModule(
-				ctx, reserveAddr, types.ModuleName, sdk.NewCoins(sdk.NewCoin(result.Fee.Denom, result.Fee.Amount.Neg()))); err != nil {
-				panic(err)
-			}
+			accruedRewards = accruedRewards.Add(sdk.NewCoin(result.Fee.Denom, result.Fee.Amount.Neg()))
 			feeGrowth := result.Fee.Amount.Neg().ToDec().QuoTruncate(poolState.CurrentLiquidity)
 			if result.Fee.Denom == pool.Denom0 {
 				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
@@ -158,21 +159,17 @@ func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, market exchangetypes.Market
 			}
 		}
 
-		if max && nextPrice.Equal(targetPrice) {
-			if !isBuy {
-				// Cross
-				tickInfo, found := k.GetTickInfo(ctx, pool.Id, targetTick)
-				if !found {
-					panic("tick info not found")
-				}
-				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(tickInfo.NetLiquidity)
-				tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
-				tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
-				k.SetTickInfo(ctx, pool.Id, targetTick, tickInfo)
-			}
+		if !isBuy && max && nextPrice.Equal(targetPrice) {
+			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 		}
 		poolState.CurrentPrice = nextPrice
 		poolState.CurrentTick = exchangetypes.TickAtPrice(nextPrice, TickPrecision)
 	}
 	k.SetPoolState(ctx, pool.Id, poolState)
+
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(
+		ctx, reserveAddr, types.ModuleName, accruedRewards); err != nil {
+		panic(err)
+	}
 }

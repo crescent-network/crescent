@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 )
@@ -31,6 +32,7 @@ var (
 	MarketByDenomsIndexKeyPrefix = []byte{0x05}
 	OrderKeyPrefix               = []byte{0x06}
 	OrderBookOrderKeyPrefix      = []byte{0x07}
+	TransientBalanceKeyPrefix    = []byte{0x08}
 )
 
 func GetMarketKey(marketId uint64) []byte {
@@ -74,10 +76,24 @@ func GetOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
 		isBuyToBytes(isBuy))
 }
 
+func GetTransientBalanceKey(addr sdk.AccAddress, denom string) []byte {
+	return utils.Key(
+		TransientBalanceKeyPrefix,
+		address.MustLengthPrefix(addr),
+		[]byte(denom))
+}
+
 func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 	baseDenomLen := key[1]
 	baseDenom = string(key[2 : 2+baseDenomLen])
 	quoteDenom = string(key[2+baseDenomLen:])
+	return
+}
+
+func ParseTransientBalanceKey(key []byte) (addr sdk.AccAddress, denom string) {
+	addrLen := key[1]
+	addr = key[2 : 2+addrLen]
+	denom = string(key[2+addrLen:])
 	return
 }
 
