@@ -8,13 +8,21 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var _ exchangetypes.TemporaryOrderSource = Keeper{}
+var _ exchangetypes.TemporaryOrderSource = TemporaryOrderSource{}
 
-func (k Keeper) Name() string {
+type TemporaryOrderSource struct {
+	Keeper
+}
+
+func NewTemporaryOrderSource(k Keeper) TemporaryOrderSource {
+	return TemporaryOrderSource{k}
+}
+
+func (k TemporaryOrderSource) Name() string {
 	return types.ModuleName
 }
 
-func (k Keeper) GenerateOrders(
+func (k TemporaryOrderSource) GenerateOrders(
 	ctx sdk.Context, market exchangetypes.Market,
 	cb exchangetypes.TemporaryOrderCallback,
 	opts exchangetypes.TemporaryOrderOptions) {
@@ -53,7 +61,7 @@ func (k Keeper) GenerateOrders(
 	})
 }
 
-func (k Keeper) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.TemporaryOrderResult) {
+func (k TemporaryOrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.TemporaryOrderResult) {
 	// TODO: group results by orderer
 	orderers, m := exchangetypes.GroupTemporaryOrderResultsByOrderer(results)
 	for _, orderer := range orderers {

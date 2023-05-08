@@ -629,7 +629,9 @@ func NewApp(
 		app.BankKeeper,
 		app.ExchangeKeeper,
 	)
-	app.ExchangeKeeper.SetTemporaryOrderSources(app.AMMKeeper)
+	app.ExchangeKeeper.SetTemporaryOrderSources(
+		ammkeeper.NewTemporaryOrderSource(app.AMMKeeper),
+	)
 
 	// create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
