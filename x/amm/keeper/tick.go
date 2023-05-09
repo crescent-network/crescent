@@ -69,13 +69,41 @@ func (k Keeper) feeGrowthInside(
 	return
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, feeGrowthGlobal0, feeGrowthGlobal1 sdk.Dec) (netLiquidity sdk.Dec) {
+func (k Keeper) farmingRewardsGrowthInside(
+	ctx sdk.Context, poolId uint64, lowerTick, upperTick, currentTick int32,
+	farmingRewardsGrowthGlobal sdk.DecCoins) sdk.DecCoins {
+	lower, found := k.GetTickInfo(ctx, poolId, lowerTick)
+	if !found { // sanity check
+		panic("lower tick info not found")
+	}
+	upper, found := k.GetTickInfo(ctx, poolId, upperTick)
+	if !found { // sanity check
+		panic("upper tick info not found")
+	}
+
+	var rewardsGrowthBelow sdk.DecCoins
+	if currentTick >= lowerTick {
+		rewardsGrowthBelow = lower.FarmingRewardsGrowthOutside
+	} else {
+		rewardsGrowthBelow = farmingRewardsGrowthGlobal.Sub(lower.FarmingRewardsGrowthOutside)
+	}
+	var rewardsGrowthAbove sdk.DecCoins
+	if currentTick < upperTick {
+		rewardsGrowthAbove = upper.FarmingRewardsGrowthOutside
+	} else {
+		rewardsGrowthAbove = farmingRewardsGrowthGlobal.Sub(upper.FarmingRewardsGrowthOutside)
+	}
+	return farmingRewardsGrowthGlobal.Sub(rewardsGrowthBelow).Sub(rewardsGrowthAbove)
+}
+
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, poolState types.PoolState) (netLiquidity sdk.Dec) {
 	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
 	if !found { // sanity check
 		panic("tick info not found")
 	}
-	tickInfo.FeeGrowthOutside0 = feeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
-	tickInfo.FeeGrowthOutside1 = feeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
+	tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
+	tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
+	tickInfo.FarmingRewardsGrowthOutside, _ = poolState.FarmingRewardsGrowthGlobal.SafeSub(tickInfo.FarmingRewardsGrowthOutside)
 	k.SetTickInfo(ctx, poolId, tick, tickInfo)
 	return tickInfo.NetLiquidity
 }

@@ -15,10 +15,11 @@ func SqrtPriceAtTick(tick int32, prec int) sdk.Dec {
 
 func NewTickInfo() TickInfo {
 	return TickInfo{
-		GrossLiquidity:    utils.ZeroDec,
-		NetLiquidity:      utils.ZeroDec,
-		FeeGrowthOutside0: utils.ZeroDec,
-		FeeGrowthOutside1: utils.ZeroDec,
+		GrossLiquidity:              utils.ZeroDec,
+		NetLiquidity:                utils.ZeroDec,
+		FeeGrowthOutside0:           utils.ZeroDec,
+		FeeGrowthOutside1:           utils.ZeroDec,
+		FarmingRewardsGrowthOutside: sdk.DecCoins{},
 	}
 }
 
@@ -34,6 +35,9 @@ func (tickInfo TickInfo) Validate() error {
 	}
 	if tickInfo.FeeGrowthOutside1.IsNegative() {
 		return fmt.Errorf("fee growth outside 1 must not be negative: %s", tickInfo.FeeGrowthOutside1)
+	}
+	if err := tickInfo.FarmingRewardsGrowthOutside.Validate(); err != nil {
+		return fmt.Errorf("invalid farming rewards growth outside: %w", err)
 	}
 	return nil
 }

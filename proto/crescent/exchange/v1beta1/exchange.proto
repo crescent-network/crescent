@@ -50,7 +50,3 @@ message TransientOrder {
   bool  updated      = 2;
   bool  is_temporary = 3;
 }
-
-message TransientBalance {
-  string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-}

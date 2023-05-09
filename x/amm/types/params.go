@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -10,13 +11,19 @@ import (
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 var (
-	KeyPoolCreationFee    = []byte("PoolCreationFee")
-	KeyDefaultTickSpacing = []byte("DefaultTickSpacing")
+	KeyPoolCreationFee               = []byte("PoolCreationFee")
+	KeyDefaultTickSpacing            = []byte("DefaultTickSpacing")
+	KeyPrivateFarmingPlanCreationFee = []byte("PrivateFarmingPlanCreationFee")
+	KeyMaxNumPrivateFarmingPlans     = []byte("MaxNumPrivateFarmingPlans")
+	KeyMaxRewardsBlockTime           = []byte("MaxRewardsBlockTime")
 )
 
 var (
-	DefaultPoolCreationFee    = sdk.NewCoins()
-	DefaultDefaultTickSpacing = uint32(50)
+	DefaultPoolCreationFee               = sdk.NewCoins()
+	DefaultDefaultTickSpacing            = uint32(50)
+	DefaultPrivateFarmingPlanCreationFee = sdk.NewCoins()
+	DefaultMaxNumPrivateFarmingPlans     = uint32(50)
+	DefaultMaxRewardsBlockTime           = 10 * time.Second
 )
 
 func ParamKeyTable() paramstypes.KeyTable {
@@ -26,8 +33,11 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns a default params for the module.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee:    DefaultPoolCreationFee,
-		DefaultTickSpacing: DefaultDefaultTickSpacing,
+		PoolCreationFee:               DefaultPoolCreationFee,
+		DefaultTickSpacing:            DefaultDefaultTickSpacing,
+		PrivateFarmingPlanCreationFee: DefaultPrivateFarmingPlanCreationFee,
+		MaxNumPrivateFarmingPlans:     DefaultMaxNumPrivateFarmingPlans,
+		MaxRewardsBlockTime:           DefaultMaxRewardsBlockTime,
 	}
 }
 
@@ -36,6 +46,9 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyPoolCreationFee, &params.PoolCreationFee, validatePoolCreationFee),
 		paramstypes.NewParamSetPair(KeyDefaultTickSpacing, &params.DefaultTickSpacing, validateDefaultTickSpacing),
+		paramstypes.NewParamSetPair(KeyPrivateFarmingPlanCreationFee, &params.PrivateFarmingPlanCreationFee, validatePrivateFarmingPlanCreationFee),
+		paramstypes.NewParamSetPair(KeyMaxNumPrivateFarmingPlans, &params.MaxNumPrivateFarmingPlans, validateMaxNumPrivateFarmingPlans),
+		paramstypes.NewParamSetPair(KeyMaxRewardsBlockTime, &params.MaxRewardsBlockTime, validateMaxRewardsBlockTime),
 	}
 }
 
@@ -47,6 +60,9 @@ func (params Params) Validate() error {
 	}{
 		{params.PoolCreationFee, validatePoolCreationFee},
 		{params.DefaultTickSpacing, validateDefaultTickSpacing},
+		{params.PrivateFarmingPlanCreationFee, validatePrivateFarmingPlanCreationFee},
+		{params.MaxNumPrivateFarmingPlans, validateMaxNumPrivateFarmingPlans},
+		{params.MaxRewardsBlockTime, validateMaxRewardsBlockTime},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -73,6 +89,36 @@ func validateDefaultTickSpacing(i interface{}) error {
 	}
 	if v == 0 {
 		return fmt.Errorf("tick spacing must be positive")
+	}
+	return nil
+}
+
+func validatePrivateFarmingPlanCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid private farming plan creation fee: %w", err)
+	}
+	return nil
+}
+
+func validateMaxNumPrivateFarmingPlans(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func validateMaxRewardsBlockTime(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v <= 0 {
+		return fmt.Errorf("max rewards block time must be positive")
 	}
 	return nil
 }

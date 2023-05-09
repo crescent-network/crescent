@@ -50,6 +50,12 @@ func (msg MsgCreateMarket) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
+	if err := sdk.ValidateDenom(msg.BaseDenom); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid base denom: %v", err)
+	}
+	if err := sdk.ValidateDenom(msg.QuoteDenom); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid quote denom: %v", err)
+	}
 	return nil
 }
 
@@ -84,6 +90,18 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
+	if msg.MarketId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market is must not be 0")
+	}
+	if msg.Price.LT(MinPrice) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
+	}
+	if msg.Price.GT(MaxPrice) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
+	}
+	if !msg.Quantity.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
+	}
 	return nil
 }
 
@@ -117,6 +135,12 @@ func (msg MsgPlaceMarketOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
+	if msg.MarketId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market is must not be 0")
+	}
+	if !msg.Quantity.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
+	}
 	return nil
 }
 
@@ -145,6 +169,9 @@ func (msg MsgCancelOrder) GetSigners() []sdk.AccAddress {
 func (msg MsgCancelOrder) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if msg.OrderId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "order id must not be 0")
 	}
 	return nil
 }
@@ -176,6 +203,23 @@ func (msg MsgSwapExactIn) GetSigners() []sdk.AccAddress {
 func (msg MsgSwapExactIn) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if len(msg.Routes) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "routes must not be empty")
+	}
+	for _, marketId := range msg.Routes {
+		if marketId == 0 {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
+		}
+	}
+	if err := msg.Input.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid input: %v", err)
+	}
+	if !msg.Input.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "input must be positive: %s", msg.Input)
+	}
+	if err := msg.MinOutput.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid min output: %v", err)
 	}
 	return nil
 }

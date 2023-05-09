@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -12,14 +14,18 @@ var (
 	_ sdk.Msg = (*MsgAddLiquidity)(nil)
 	_ sdk.Msg = (*MsgRemoveLiquidity)(nil)
 	_ sdk.Msg = (*MsgCollect)(nil)
+	_ sdk.Msg = (*MsgCreatePrivateFarmingPlan)(nil)
+	_ sdk.Msg = (*MsgHarvest)(nil)
 )
 
 // Message types for the module
 const (
-	TypeMsgCreatePool      = "create_pool"
-	TypeMsgAddLiquidity    = "add_liquidity"
-	TypeMsgRemoveLiquidity = "remove_liquidity"
-	TypeMsgCollect         = "collect"
+	TypeMsgCreatePool               = "create_pool"
+	TypeMsgAddLiquidity             = "add_liquidity"
+	TypeMsgRemoveLiquidity          = "remove_liquidity"
+	TypeMsgCollect                  = "collect"
+	TypeMsgCreatePrivateFarmingPlan = "create_private_farming_plan"
+	TypeMsgHarvest                  = "harvest"
 )
 
 func NewMsgCreatePool(
@@ -205,6 +211,82 @@ func (msg MsgCollect) ValidateBasic() error {
 	}
 	if msg.MaxAmount1.IsNegative() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "max amount 1 must not be negative: %s", msg.MaxAmount1)
+	}
+	return nil
+}
+
+func NewMsgCreatePrivateFarmingPlan(
+	senderAddr sdk.AccAddress, description string, rewardAllocations []RewardAllocation,
+	startTime, endTime time.Time) *MsgCreatePrivateFarmingPlan {
+	return &MsgCreatePrivateFarmingPlan{
+		Sender:            senderAddr.String(),
+		Description:       description,
+		RewardAllocations: rewardAllocations,
+		StartTime:         startTime,
+		EndTime:           endTime,
+	}
+}
+
+func (msg MsgCreatePrivateFarmingPlan) Route() string { return RouterKey }
+func (msg MsgCreatePrivateFarmingPlan) Type() string  { return TypeMsgCreatePrivateFarmingPlan }
+
+func (msg MsgCreatePrivateFarmingPlan) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreatePrivateFarmingPlan) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCreatePrivateFarmingPlan) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	// Create a dummy plan with valid fields and utilize Validate() method
+	// for user-provided data.
+	validAddr := RewardsPoolAddress // Chose random valid address
+	dummyPlan := NewFarmingPlan(
+		1, msg.Description, validAddr, validAddr,
+		msg.RewardAllocations, msg.StartTime, msg.EndTime, true)
+	if err := dummyPlan.Validate(); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	return nil
+}
+
+func NewMsgHarvest(
+	senderAddr sdk.AccAddress, positionId uint64) *MsgHarvest {
+	return &MsgHarvest{
+		Sender:     senderAddr.String(),
+		PositionId: positionId,
+	}
+}
+
+func (msg MsgHarvest) Route() string { return RouterKey }
+func (msg MsgHarvest) Type() string  { return TypeMsgHarvest }
+
+func (msg MsgHarvest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgHarvest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if msg.PositionId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position id must not be 0")
 	}
 	return nil
 }

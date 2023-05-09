@@ -124,15 +124,9 @@ func (k Keeper) Collect(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 		return
 	}
-
 	if ownerAddr.String() != position.Owner {
 		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
 		return
-	}
-
-	pool, found := k.GetPool(ctx, position.PoolId)
-	if !found { // sanity check
-		panic("pool not found")
 	}
 
 	position, _, _, err = k.RemoveLiquidity(
@@ -153,7 +147,12 @@ func (k Keeper) Collect(
 	}
 	position.OwedToken0 = position.OwedToken0.Sub(amt0)
 	position.OwedToken1 = position.OwedToken1.Sub(amt1)
+	k.SetPosition(ctx, position)
 
+	pool, found := k.GetPool(ctx, position.PoolId)
+	if !found { // sanity check
+		panic("pool not found")
+	}
 	collectCoins := sdk.NewCoins(
 		sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	if collectCoins.IsAllPositive() {
@@ -192,18 +191,26 @@ func (k Keeper) modifyPosition(
 			poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1, true)
 	}
 
+	// TODO: optimize GetTickInfo
 	feeGrowthInside0, feeGrowthInside1 := k.feeGrowthInside(
 		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
 		poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+	farmingRewardsGrowthInside := k.farmingRewardsGrowthInside(
+		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
+		poolState.FarmingRewardsGrowthGlobal)
 
 	owedTokens0 := feeGrowthInside0.Sub(position.LastFeeGrowthInside0).MulTruncate(position.Liquidity).TruncateInt()
 	owedTokens1 := feeGrowthInside1.Sub(position.LastFeeGrowthInside1).MulTruncate(position.Liquidity).TruncateInt()
+	owedFarmingRewards, _ := farmingRewardsGrowthInside.Sub(position.LastFarmingRewardsGrowthInside).
+		MulDecTruncate(position.Liquidity).TruncateDecimal()
 
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
 	position.LastFeeGrowthInside0 = feeGrowthInside0
 	position.LastFeeGrowthInside1 = feeGrowthInside1
 	position.OwedToken0 = position.OwedToken0.Add(owedTokens0)
 	position.OwedToken1 = position.OwedToken1.Add(owedTokens1)
+	position.LastFarmingRewardsGrowthInside = farmingRewardsGrowthInside
+	position.OwedFarmingRewards = position.OwedFarmingRewards.Add(owedFarmingRewards...)
 	k.SetPosition(ctx, position)
 
 	if liquidityDelta.IsNegative() {

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -31,4 +33,8 @@ type BankKeeper interface {
 
 type ExchangeKeeper interface {
 	GetMarket(ctx sdk.Context, marketId uint64) (market exchangetypes.Market, found bool)
+}
+
+type MarkerKeeper interface {
+	GetLastBlockTime(ctx sdk.Context) (t time.Time, found bool)
 }

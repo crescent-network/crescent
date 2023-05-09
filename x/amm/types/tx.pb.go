@@ -7,21 +7,26 @@ import (
 	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -347,6 +352,160 @@ func (m *MsgCollectResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCollectResponse proto.InternalMessageInfo
 
+type MsgCreatePrivateFarmingPlan struct {
+	Sender            string             `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	Description       string             `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	RewardAllocations []RewardAllocation `protobuf:"bytes,3,rep,name=reward_allocations,json=rewardAllocations,proto3" json:"reward_allocations"`
+	StartTime         time.Time          `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	EndTime           time.Time          `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
+}
+
+func (m *MsgCreatePrivateFarmingPlan) Reset()         { *m = MsgCreatePrivateFarmingPlan{} }
+func (m *MsgCreatePrivateFarmingPlan) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePrivateFarmingPlan) ProtoMessage()    {}
+func (*MsgCreatePrivateFarmingPlan) Descriptor() ([]byte, []int) {
+	return fileDescriptor_520126f80a2f40b0, []int{8}
+}
+func (m *MsgCreatePrivateFarmingPlan) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePrivateFarmingPlan) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePrivateFarmingPlan.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePrivateFarmingPlan) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePrivateFarmingPlan.Merge(m, src)
+}
+func (m *MsgCreatePrivateFarmingPlan) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePrivateFarmingPlan) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePrivateFarmingPlan.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePrivateFarmingPlan proto.InternalMessageInfo
+
+type MsgCreatePrivateFarmingPlanResponse struct {
+	FarmingPlanId      uint64 `protobuf:"varint,1,opt,name=farming_plan_id,json=farmingPlanId,proto3" json:"farming_plan_id,omitempty"`
+	FarmingPoolAddress string `protobuf:"bytes,2,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty"`
+}
+
+func (m *MsgCreatePrivateFarmingPlanResponse) Reset()         { *m = MsgCreatePrivateFarmingPlanResponse{} }
+func (m *MsgCreatePrivateFarmingPlanResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePrivateFarmingPlanResponse) ProtoMessage()    {}
+func (*MsgCreatePrivateFarmingPlanResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_520126f80a2f40b0, []int{9}
+}
+func (m *MsgCreatePrivateFarmingPlanResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePrivateFarmingPlanResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePrivateFarmingPlanResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePrivateFarmingPlanResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePrivateFarmingPlanResponse.Merge(m, src)
+}
+func (m *MsgCreatePrivateFarmingPlanResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePrivateFarmingPlanResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePrivateFarmingPlanResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePrivateFarmingPlanResponse proto.InternalMessageInfo
+
+type MsgHarvest struct {
+	Sender     string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	PositionId uint64 `protobuf:"varint,2,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty"`
+}
+
+func (m *MsgHarvest) Reset()         { *m = MsgHarvest{} }
+func (m *MsgHarvest) String() string { return proto.CompactTextString(m) }
+func (*MsgHarvest) ProtoMessage()    {}
+func (*MsgHarvest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_520126f80a2f40b0, []int{10}
+}
+func (m *MsgHarvest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgHarvest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgHarvest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgHarvest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgHarvest.Merge(m, src)
+}
+func (m *MsgHarvest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgHarvest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgHarvest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgHarvest proto.InternalMessageInfo
+
+type MsgHarvestResponse struct {
+	HarvestedRewards github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=harvested_rewards,json=harvestedRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"harvested_rewards"`
+}
+
+func (m *MsgHarvestResponse) Reset()         { *m = MsgHarvestResponse{} }
+func (m *MsgHarvestResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgHarvestResponse) ProtoMessage()    {}
+func (*MsgHarvestResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_520126f80a2f40b0, []int{11}
+}
+func (m *MsgHarvestResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgHarvestResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgHarvestResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgHarvestResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgHarvestResponse.Merge(m, src)
+}
+func (m *MsgHarvestResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgHarvestResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgHarvestResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgHarvestResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCreatePool)(nil), "crescent.amm.v1beta1.MsgCreatePool")
 	proto.RegisterType((*MsgCreatePoolResponse)(nil), "crescent.amm.v1beta1.MsgCreatePoolResponse")
@@ -356,53 +515,77 @@ func init() {
 	proto.RegisterType((*MsgRemoveLiquidityResponse)(nil), "crescent.amm.v1beta1.MsgRemoveLiquidityResponse")
 	proto.RegisterType((*MsgCollect)(nil), "crescent.amm.v1beta1.MsgCollect")
 	proto.RegisterType((*MsgCollectResponse)(nil), "crescent.amm.v1beta1.MsgCollectResponse")
+	proto.RegisterType((*MsgCreatePrivateFarmingPlan)(nil), "crescent.amm.v1beta1.MsgCreatePrivateFarmingPlan")
+	proto.RegisterType((*MsgCreatePrivateFarmingPlanResponse)(nil), "crescent.amm.v1beta1.MsgCreatePrivateFarmingPlanResponse")
+	proto.RegisterType((*MsgHarvest)(nil), "crescent.amm.v1beta1.MsgHarvest")
+	proto.RegisterType((*MsgHarvestResponse)(nil), "crescent.amm.v1beta1.MsgHarvestResponse")
 }
 
 func init() { proto.RegisterFile("crescent/amm/v1beta1/tx.proto", fileDescriptor_520126f80a2f40b0) }
 
 var fileDescriptor_520126f80a2f40b0 = []byte{
-	// 652 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0x3f, 0x6f, 0xd3, 0x40,
-	0x18, 0xc6, 0x73, 0x49, 0x9a, 0xb4, 0x6f, 0x81, 0x4a, 0x56, 0xa1, 0x51, 0x10, 0x6e, 0x65, 0x04,
-	0x8a, 0x84, 0x6a, 0xd7, 0x54, 0x7c, 0x80, 0x96, 0x0e, 0x44, 0x6a, 0x44, 0xb1, 0x84, 0x90, 0x18,
-	0x88, 0x5c, 0xdf, 0xc9, 0x58, 0xf5, 0xf9, 0x8c, 0xef, 0xd2, 0xa6, 0x5f, 0x81, 0x09, 0x76, 0x3e,
-	0x00, 0x23, 0x23, 0x0b, 0x7b, 0xc7, 0x8e, 0x88, 0xa1, 0x82, 0x76, 0xe0, 0x6b, 0x20, 0xff, 0xad,
-	0x93, 0x12, 0xda, 0xda, 0x19, 0x98, 0x12, 0x9f, 0x9f, 0xfb, 0xdd, 0xbd, 0xef, 0xf3, 0xd8, 0x67,
-	0xb8, 0x67, 0x05, 0x84, 0x5b, 0xc4, 0x13, 0x9a, 0x49, 0xa9, 0xb6, 0xaf, 0xef, 0x12, 0x61, 0xea,
-	0x9a, 0x18, 0xaa, 0x7e, 0xc0, 0x04, 0x93, 0x16, 0xd3, 0xdb, 0xaa, 0x49, 0xa9, 0x9a, 0xdc, 0x6e,
-	0x2f, 0xda, 0xcc, 0x66, 0x91, 0x40, 0x0b, 0xff, 0xc5, 0x5a, 0xe5, 0x3d, 0x82, 0x9b, 0x3d, 0x6e,
-	0x3f, 0x0d, 0x88, 0x29, 0xc8, 0x0e, 0x63, 0xae, 0x74, 0x07, 0x1a, 0x9c, 0x78, 0x98, 0x04, 0x2d,
-	0xb4, 0x82, 0x3a, 0x73, 0x46, 0x72, 0x25, 0xdd, 0x85, 0x39, 0x6a, 0x06, 0x7b, 0x44, 0xf4, 0x1d,
-	0xdc, 0xaa, 0xae, 0xa0, 0x4e, 0xdd, 0x98, 0x8d, 0x07, 0xba, 0x58, 0xda, 0x82, 0x19, 0x3f, 0x70,
-	0x2c, 0xd2, 0xaa, 0x85, 0x73, 0x36, 0xd5, 0xa3, 0x93, 0xe5, 0xca, 0x8f, 0x93, 0xe5, 0x87, 0xb6,
-	0x23, 0xde, 0x0e, 0x76, 0x55, 0x8b, 0x51, 0xcd, 0x62, 0x9c, 0x32, 0x9e, 0xfc, 0xac, 0x72, 0xbc,
-	0xa7, 0x89, 0x43, 0x9f, 0x70, 0x75, 0x8b, 0x58, 0x46, 0x3c, 0x59, 0x59, 0x83, 0xdb, 0x23, 0x7b,
-	0x31, 0x08, 0xf7, 0x99, 0xc7, 0x89, 0xb4, 0x04, 0x4d, 0x9f, 0x31, 0x37, 0x5c, 0x19, 0x45, 0x2b,
-	0x37, 0xc2, 0xcb, 0x2e, 0x56, 0xbe, 0xd6, 0x61, 0xa1, 0xc7, 0xed, 0x0d, 0x8c, 0xb7, 0x9d, 0x77,
-	0x03, 0x07, 0x3b, 0xe2, 0x70, 0x62, 0x01, 0x39, 0x48, 0x35, 0x0f, 0x91, 0x9e, 0xc3, 0xbc, 0xcb,
-	0x0e, 0x48, 0xd0, 0x2f, 0x53, 0x02, 0x44, 0x88, 0x9d, 0x90, 0x10, 0x02, 0x07, 0xbe, 0x9f, 0x01,
-	0xeb, 0xc5, 0x80, 0x11, 0x22, 0x06, 0xbe, 0x82, 0x05, 0x4c, 0xb8, 0x13, 0x10, 0xdc, 0x37, 0x29,
-	0x1b, 0x78, 0x62, 0xad, 0x35, 0x73, 0x6d, 0x68, 0xd7, 0x13, 0xc6, 0xad, 0x04, 0xb3, 0x11, 0x53,
-	0x2e, 0x82, 0xf5, 0x56, 0x63, 0x0a, 0x60, 0x3d, 0x6c, 0x01, 0x75, 0xbc, 0x6c, 0xb7, 0xcd, 0x42,
-	0x50, 0xa0, 0x8e, 0x97, 0xee, 0x74, 0x04, 0xa8, 0xb7, 0x66, 0x4b, 0x02, 0x75, 0xe5, 0x53, 0x15,
-	0x96, 0xc6, 0xa2, 0x93, 0xe5, 0x6d, 0x19, 0xe6, 0x7d, 0xc6, 0x1d, 0xe1, 0x30, 0xef, 0x3c, 0x73,
-	0x90, 0x0e, 0x75, 0xb1, 0xb4, 0x0d, 0x73, 0x6e, 0x3a, 0x2b, 0x4a, 0xd3, 0xf5, 0xfd, 0x3d, 0x07,
-	0x48, 0xcf, 0xa0, 0x99, 0x36, 0xaa, 0x56, 0xa8, 0xae, 0x74, 0xfa, 0x39, 0x49, 0x2f, 0x90, 0xba,
-	0x1c, 0x49, 0x57, 0xbe, 0x55, 0x41, 0xea, 0x71, 0xdb, 0x20, 0x94, 0xed, 0x93, 0xcb, 0x1f, 0xae,
-	0xb1, 0x8e, 0x55, 0xff, 0xdd, 0xb1, 0x5a, 0xd9, 0x8e, 0x8d, 0xc5, 0xab, 0x3e, 0xed, 0x78, 0xcd,
-	0x94, 0x8e, 0xd7, 0x17, 0x04, 0xed, 0x8b, 0xfd, 0xcb, 0x12, 0x96, 0xb3, 0x1c, 0x4d, 0xcd, 0xf2,
-	0x6a, 0x39, 0xcb, 0x7f, 0x23, 0x80, 0xf0, 0xfd, 0xcb, 0x5c, 0x97, 0x58, 0xa2, 0xb8, 0xd5, 0x61,
-	0x2f, 0xcd, 0x61, 0xbf, 0x5c, 0xa4, 0x81, 0x9a, 0xc3, 0xbc, 0x39, 0x19, 0x50, 0x2f, 0xec, 0x76,
-	0x0a, 0xd4, 0x95, 0xcf, 0x28, 0x0a, 0x77, 0x52, 0xe9, 0xff, 0x6c, 0xca, 0xe3, 0x8f, 0x35, 0xa8,
-	0xf5, 0xb8, 0x2d, 0xbd, 0x01, 0xc8, 0x1d, 0xd2, 0xf7, 0xd5, 0xbf, 0x9d, 0xf1, 0xea, 0xc8, 0xe9,
-	0xd9, 0x7e, 0x74, 0x05, 0x51, 0x56, 0x3b, 0x86, 0x1b, 0x23, 0xa7, 0xe8, 0x83, 0x89, 0x93, 0xf3,
-	0xb2, 0xf6, 0xea, 0x95, 0x64, 0xd9, 0x2a, 0x14, 0x16, 0xc6, 0xdf, 0x28, 0x9d, 0x89, 0x84, 0x31,
-	0x65, 0x7b, 0xed, 0xaa, 0xca, 0x6c, 0xb9, 0x97, 0xd0, 0x4c, 0xd3, 0xbc, 0x32, 0xb9, 0x19, 0xb1,
-	0xa2, 0xdd, 0xb9, 0x4c, 0x91, 0x62, 0x37, 0x5f, 0x1c, 0xfd, 0x92, 0x2b, 0x47, 0xa7, 0x32, 0x3a,
-	0x3e, 0x95, 0xd1, 0xcf, 0x53, 0x19, 0x7d, 0x38, 0x93, 0x2b, 0xc7, 0x67, 0x72, 0xe5, 0xfb, 0x99,
-	0x5c, 0x79, 0xbd, 0x9e, 0xb7, 0x38, 0x21, 0xae, 0x7a, 0x44, 0x1c, 0xb0, 0x60, 0x2f, 0x1b, 0xd0,
-	0xf6, 0x9f, 0x68, 0xc3, 0xe8, 0xf3, 0x2d, 0xf2, 0x7c, 0xb7, 0x11, 0x7d, 0x8e, 0xad, 0xff, 0x09,
-	0x00, 0x00, 0xff, 0xff, 0x20, 0x21, 0x61, 0x01, 0xdb, 0x09, 0x00, 0x00,
+	// 975 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0x4f, 0x6f, 0xe3, 0x44,
+	0x14, 0xaf, 0x93, 0xb4, 0x69, 0x5f, 0x58, 0xca, 0x5a, 0x85, 0x0d, 0x59, 0x91, 0x44, 0x59, 0x51,
+	0x45, 0x42, 0xb5, 0xe3, 0xae, 0x38, 0x70, 0x42, 0x4d, 0x17, 0xb4, 0x91, 0xb6, 0xa2, 0x58, 0x20,
+	0x24, 0x90, 0x88, 0x26, 0x9e, 0xa9, 0xd7, 0xaa, 0xed, 0x31, 0x33, 0x93, 0x34, 0x7b, 0xe2, 0x8a,
+	0x38, 0xa0, 0xfd, 0x00, 0x7c, 0x00, 0xc4, 0x89, 0x23, 0x42, 0xe2, 0xde, 0xe3, 0x1e, 0x11, 0x87,
+	0x5d, 0x68, 0x0f, 0x7c, 0x00, 0xbe, 0x00, 0x1a, 0x8f, 0xed, 0xb8, 0x69, 0xd3, 0x3f, 0x49, 0x0f,
+	0x9c, 0x5a, 0xbf, 0xf9, 0xbd, 0xdf, 0xcc, 0x7b, 0xbf, 0x9f, 0xc7, 0x2f, 0xf0, 0x8e, 0xc3, 0x08,
+	0x77, 0x48, 0x28, 0x4c, 0x14, 0x04, 0xe6, 0xc8, 0x1a, 0x10, 0x81, 0x2c, 0x53, 0x8c, 0x8d, 0x88,
+	0x51, 0x41, 0xf5, 0x8d, 0x74, 0xd9, 0x40, 0x41, 0x60, 0x24, 0xcb, 0xb5, 0x0d, 0x97, 0xba, 0x34,
+	0x06, 0x98, 0xf2, 0x3f, 0x85, 0xad, 0xd5, 0x2f, 0xa4, 0x92, 0x79, 0xe9, 0x3a, 0xe5, 0x01, 0xe5,
+	0xe6, 0x00, 0x71, 0x92, 0x2d, 0x3b, 0xd4, 0x0b, 0x93, 0xf5, 0x86, 0x4b, 0xa9, 0xeb, 0x13, 0x33,
+	0x7e, 0x1a, 0x0c, 0x0f, 0x4c, 0xe1, 0x05, 0x84, 0x0b, 0x14, 0x44, 0x0a, 0xd0, 0xfa, 0x5e, 0x83,
+	0x3b, 0x7b, 0xdc, 0xdd, 0x65, 0x04, 0x09, 0xb2, 0x4f, 0xa9, 0xaf, 0xbf, 0x05, 0x2b, 0x9c, 0x84,
+	0x98, 0xb0, 0xaa, 0xd6, 0xd4, 0xda, 0x6b, 0x76, 0xf2, 0xa4, 0xdf, 0x87, 0xb5, 0x00, 0xb1, 0x43,
+	0x22, 0xfa, 0x1e, 0xae, 0x16, 0x9a, 0x5a, 0xbb, 0x64, 0xaf, 0xaa, 0x40, 0x0f, 0xeb, 0x8f, 0x60,
+	0x39, 0x62, 0x9e, 0x43, 0xaa, 0x45, 0x99, 0xd3, 0x35, 0x8e, 0x5f, 0x36, 0x96, 0xfe, 0x7c, 0xd9,
+	0xd8, 0x74, 0x3d, 0xf1, 0x74, 0x38, 0x30, 0x1c, 0x1a, 0x98, 0xc9, 0x49, 0xd5, 0x9f, 0x2d, 0x8e,
+	0x0f, 0x4d, 0xf1, 0x2c, 0x22, 0xdc, 0x78, 0x44, 0x1c, 0x5b, 0x25, 0xb7, 0x3a, 0xf0, 0xe6, 0x99,
+	0xb3, 0xd8, 0x84, 0x47, 0x34, 0xe4, 0x44, 0xbf, 0x07, 0xe5, 0x88, 0x52, 0x5f, 0xee, 0xac, 0xc5,
+	0x3b, 0xaf, 0xc8, 0xc7, 0x1e, 0x6e, 0xfd, 0x5a, 0x82, 0xf5, 0x3d, 0xee, 0xee, 0x60, 0xfc, 0xc4,
+	0xfb, 0x66, 0xe8, 0x61, 0x4f, 0x3c, 0x9b, 0x59, 0x40, 0x8e, 0xa4, 0x90, 0x27, 0xd1, 0x3f, 0x81,
+	0x8a, 0x4f, 0x8f, 0x08, 0xeb, 0x2f, 0x52, 0x02, 0xc4, 0x14, 0xfb, 0x92, 0x41, 0x12, 0x0e, 0xa3,
+	0x28, 0x23, 0x2c, 0xcd, 0x47, 0x18, 0x53, 0x28, 0xc2, 0x2f, 0x60, 0x1d, 0x13, 0xee, 0x31, 0x82,
+	0xfb, 0x28, 0xa0, 0xc3, 0x50, 0x74, 0xaa, 0xcb, 0x37, 0x26, 0xed, 0x85, 0xc2, 0x7e, 0x3d, 0xa1,
+	0xd9, 0x51, 0x2c, 0xe7, 0x89, 0xad, 0xea, 0xca, 0x2d, 0x10, 0x5b, 0xb2, 0x05, 0x81, 0x17, 0x66,
+	0xa7, 0x2d, 0xcf, 0x45, 0x0a, 0x81, 0x17, 0xa6, 0x27, 0x3d, 0x43, 0x68, 0x55, 0x57, 0x17, 0x24,
+	0xb4, 0x5a, 0x3f, 0x16, 0xe0, 0xde, 0x94, 0x75, 0x32, 0xbf, 0x35, 0xa0, 0x12, 0x51, 0xee, 0x09,
+	0x8f, 0x86, 0x13, 0xcf, 0x41, 0x1a, 0xea, 0x61, 0xfd, 0x09, 0xac, 0xf9, 0x69, 0x56, 0xec, 0xa6,
+	0x9b, 0xeb, 0x3b, 0x21, 0xd0, 0x1f, 0x43, 0x39, 0x6d, 0x54, 0x71, 0xae, 0xba, 0xd2, 0xf4, 0x09,
+	0x93, 0x35, 0x87, 0xeb, 0x72, 0x4c, 0x56, 0xeb, 0xf7, 0x02, 0xe8, 0x7b, 0xdc, 0xb5, 0x49, 0x40,
+	0x47, 0xe4, 0xea, 0x97, 0x6b, 0xaa, 0x63, 0x85, 0xcb, 0x3b, 0x56, 0x5c, 0xb4, 0x63, 0x53, 0xf6,
+	0x2a, 0xdd, 0xb6, 0xbd, 0x96, 0x17, 0xb6, 0xd7, 0x2f, 0x1a, 0xd4, 0xce, 0xf7, 0x2f, 0x73, 0x58,
+	0x4e, 0x72, 0xed, 0xd6, 0x24, 0x2f, 0x2c, 0x26, 0xf9, 0x3f, 0x1a, 0x80, 0xbc, 0x7f, 0xa9, 0xef,
+	0x13, 0x47, 0xcc, 0x2f, 0xb5, 0xec, 0x25, 0x1a, 0xf7, 0x17, 0xb3, 0x34, 0x04, 0x68, 0x9c, 0x17,
+	0x27, 0x23, 0xb4, 0xe6, 0x56, 0x3b, 0x25, 0xb4, 0x5a, 0x3f, 0x69, 0xb1, 0xb9, 0x93, 0x4a, 0xff,
+	0xd7, 0xa2, 0xfc, 0x56, 0x80, 0xfb, 0x93, 0x8f, 0x22, 0xf3, 0x46, 0x48, 0x90, 0x8f, 0x11, 0x0b,
+	0xbc, 0xd0, 0xdd, 0xf7, 0x51, 0x38, 0x53, 0xa5, 0x26, 0x54, 0x30, 0xe1, 0x0e, 0xf3, 0x22, 0xa9,
+	0x8a, 0x3a, 0x85, 0x9d, 0x0f, 0xe9, 0x5f, 0x81, 0xce, 0xc8, 0x11, 0x62, 0xb8, 0x8f, 0x7c, 0x9f,
+	0x3a, 0x48, 0x06, 0x79, 0xb5, 0xd8, 0x2c, 0xb6, 0x2b, 0xdb, 0x9b, 0xc6, 0x45, 0x43, 0x8a, 0x61,
+	0xc7, 0xf8, 0x9d, 0x0c, 0xde, 0x2d, 0xc9, 0xb2, 0xec, 0xbb, 0x6c, 0x2a, 0xce, 0xf5, 0x5d, 0x00,
+	0x2e, 0x10, 0x13, 0x7d, 0x39, 0x70, 0xc4, 0x8a, 0x55, 0xb6, 0x6b, 0x86, 0x9a, 0x46, 0x8c, 0x74,
+	0x1a, 0x31, 0x3e, 0x4b, 0xa7, 0x91, 0xee, 0xaa, 0x24, 0x7a, 0xfe, 0xaa, 0xa1, 0xd9, 0x6b, 0x71,
+	0x9e, 0x5c, 0xd1, 0x3f, 0x84, 0x55, 0x12, 0x62, 0x45, 0xb1, 0x7c, 0x03, 0x8a, 0x32, 0x09, 0xb1,
+	0x8c, 0xb7, 0xbe, 0x85, 0x07, 0x97, 0xf4, 0x2e, 0xd3, 0x7d, 0x13, 0xd6, 0x0f, 0x54, 0xb8, 0x1f,
+	0xf9, 0x28, 0x77, 0xe5, 0xdf, 0x39, 0x98, 0xa0, 0x7b, 0x58, 0xef, 0xc0, 0x46, 0x86, 0x93, 0x93,
+	0x04, 0xc2, 0x98, 0x11, 0xce, 0x93, 0xe6, 0xea, 0x29, 0x98, 0x52, 0x7f, 0x47, 0xad, 0xb4, 0x3e,
+	0x8a, 0xdf, 0xa8, 0xc7, 0x88, 0x8d, 0x08, 0x9f, 0xff, 0x8d, 0x6a, 0xfd, 0xa0, 0xfc, 0x9a, 0xf0,
+	0x64, 0xe7, 0x1e, 0xc3, 0xdd, 0xa7, 0x2a, 0x44, 0x70, 0x5f, 0x69, 0xc0, 0xab, 0x5a, 0x2c, 0xe0,
+	0xdb, 0x86, 0xb2, 0x95, 0x21, 0x27, 0xc3, 0x4c, 0xbf, 0x5d, 0xea, 0x85, 0xdd, 0x8e, 0xec, 0xd3,
+	0xcf, 0xaf, 0x1a, 0xed, 0x6b, 0x58, 0x51, 0x26, 0x70, 0xfb, 0x8d, 0x6c, 0x17, 0x65, 0x00, 0xbe,
+	0xfd, 0x6f, 0x09, 0x8a, 0x7b, 0xdc, 0xd5, 0xbf, 0x06, 0xc8, 0x8d, 0x8e, 0x0f, 0x2e, 0x76, 0xcd,
+	0x99, 0x99, 0xae, 0xf6, 0xde, 0x35, 0x40, 0x59, 0x85, 0x18, 0x5e, 0x3b, 0x33, 0xdb, 0xbd, 0x3b,
+	0x33, 0x39, 0x0f, 0xab, 0x6d, 0x5d, 0x0b, 0x96, 0xed, 0x12, 0xc0, 0xfa, 0xf4, 0x77, 0xae, 0x3d,
+	0x93, 0x61, 0x0a, 0x59, 0xeb, 0x5c, 0x17, 0x99, 0x6d, 0xf7, 0x39, 0x94, 0xd3, 0x3b, 0xb6, 0x39,
+	0xbb, 0x19, 0x0a, 0x51, 0x6b, 0x5f, 0x85, 0xc8, 0x68, 0xbf, 0xd3, 0xa0, 0x3a, 0xf3, 0x9a, 0xb0,
+	0xae, 0xea, 0xfa, 0xb9, 0x94, 0xda, 0x07, 0x37, 0x4e, 0xc9, 0x57, 0x98, 0x7a, 0x7e, 0x76, 0x85,
+	0x09, 0xe2, 0x92, 0x0a, 0xa7, 0xfc, 0xde, 0xfd, 0xf4, 0xf8, 0xef, 0xfa, 0xd2, 0xf1, 0x49, 0x5d,
+	0x7b, 0x71, 0x52, 0xd7, 0xfe, 0x3a, 0xa9, 0x6b, 0xcf, 0x4f, 0xeb, 0x4b, 0x2f, 0x4e, 0xeb, 0x4b,
+	0x7f, 0x9c, 0xd6, 0x97, 0xbe, 0x7c, 0x98, 0xf7, 0x73, 0xc2, 0xb8, 0x15, 0x12, 0x71, 0x44, 0xd9,
+	0x61, 0x16, 0x30, 0x47, 0xef, 0x9b, 0xe3, 0xf8, 0xc7, 0x54, 0x6c, 0xf0, 0xc1, 0x4a, 0x7c, 0x91,
+	0x3c, 0xfc, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x7e, 0xc3, 0x94, 0x5a, 0xb4, 0x0d, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -421,6 +604,8 @@ type MsgClient interface {
 	AddLiquidity(ctx context.Context, in *MsgAddLiquidity, opts ...grpc.CallOption) (*MsgAddLiquidityResponse, error)
 	RemoveLiquidity(ctx context.Context, in *MsgRemoveLiquidity, opts ...grpc.CallOption) (*MsgRemoveLiquidityResponse, error)
 	Collect(ctx context.Context, in *MsgCollect, opts ...grpc.CallOption) (*MsgCollectResponse, error)
+	CreatePrivateFarmingPlan(ctx context.Context, in *MsgCreatePrivateFarmingPlan, opts ...grpc.CallOption) (*MsgCreatePrivateFarmingPlanResponse, error)
+	Harvest(ctx context.Context, in *MsgHarvest, opts ...grpc.CallOption) (*MsgHarvestResponse, error)
 }
 
 type msgClient struct {
@@ -467,12 +652,32 @@ func (c *msgClient) Collect(ctx context.Context, in *MsgCollect, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *msgClient) CreatePrivateFarmingPlan(ctx context.Context, in *MsgCreatePrivateFarmingPlan, opts ...grpc.CallOption) (*MsgCreatePrivateFarmingPlanResponse, error) {
+	out := new(MsgCreatePrivateFarmingPlanResponse)
+	err := c.cc.Invoke(ctx, "/crescent.amm.v1beta1.Msg/CreatePrivateFarmingPlan", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) Harvest(ctx context.Context, in *MsgHarvest, opts ...grpc.CallOption) (*MsgHarvestResponse, error) {
+	out := new(MsgHarvestResponse)
+	err := c.cc.Invoke(ctx, "/crescent.amm.v1beta1.Msg/Harvest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	CreatePool(context.Context, *MsgCreatePool) (*MsgCreatePoolResponse, error)
 	AddLiquidity(context.Context, *MsgAddLiquidity) (*MsgAddLiquidityResponse, error)
 	RemoveLiquidity(context.Context, *MsgRemoveLiquidity) (*MsgRemoveLiquidityResponse, error)
 	Collect(context.Context, *MsgCollect) (*MsgCollectResponse, error)
+	CreatePrivateFarmingPlan(context.Context, *MsgCreatePrivateFarmingPlan) (*MsgCreatePrivateFarmingPlanResponse, error)
+	Harvest(context.Context, *MsgHarvest) (*MsgHarvestResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -490,6 +695,12 @@ func (*UnimplementedMsgServer) RemoveLiquidity(ctx context.Context, req *MsgRemo
 }
 func (*UnimplementedMsgServer) Collect(ctx context.Context, req *MsgCollect) (*MsgCollectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Collect not implemented")
+}
+func (*UnimplementedMsgServer) CreatePrivateFarmingPlan(ctx context.Context, req *MsgCreatePrivateFarmingPlan) (*MsgCreatePrivateFarmingPlanResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePrivateFarmingPlan not implemented")
+}
+func (*UnimplementedMsgServer) Harvest(ctx context.Context, req *MsgHarvest) (*MsgHarvestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Harvest not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -568,6 +779,42 @@ func _Msg_Collect_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreatePrivateFarmingPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePrivateFarmingPlan)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePrivateFarmingPlan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crescent.amm.v1beta1.Msg/CreatePrivateFarmingPlan",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePrivateFarmingPlan(ctx, req.(*MsgCreatePrivateFarmingPlan))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_Harvest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgHarvest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Harvest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/crescent.amm.v1beta1.Msg/Harvest",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Harvest(ctx, req.(*MsgHarvest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "crescent.amm.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -587,6 +834,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Collect",
 			Handler:    _Msg_Collect_Handler,
+		},
+		{
+			MethodName: "CreatePrivateFarmingPlan",
+			Handler:    _Msg_CreatePrivateFarmingPlan_Handler,
+		},
+		{
+			MethodName: "Harvest",
+			Handler:    _Msg_Harvest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1025,6 +1280,180 @@ func (m *MsgCollectResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgCreatePrivateFarmingPlan) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePrivateFarmingPlan) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePrivateFarmingPlan) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
+	if err1 != nil {
+		return 0, err1
+	}
+	i -= n1
+	i = encodeVarintTx(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x2a
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintTx(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x22
+	if len(m.RewardAllocations) > 0 {
+		for iNdEx := len(m.RewardAllocations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RewardAllocations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePrivateFarmingPlanResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePrivateFarmingPlanResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePrivateFarmingPlanResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FarmingPoolAddress) > 0 {
+		i -= len(m.FarmingPoolAddress)
+		copy(dAtA[i:], m.FarmingPoolAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.FarmingPoolAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.FarmingPlanId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.FarmingPlanId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgHarvest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgHarvest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgHarvest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PositionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgHarvestResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgHarvestResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgHarvestResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.HarvestedRewards) > 0 {
+		for iNdEx := len(m.HarvestedRewards) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.HarvestedRewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1177,6 +1606,80 @@ func (m *MsgCollectResponse) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = m.Amount1.Size()
 	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreatePrivateFarmingPlan) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.RewardAllocations) > 0 {
+		for _, e := range m.RewardAllocations {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovTx(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreatePrivateFarmingPlanResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.FarmingPlanId != 0 {
+		n += 1 + sovTx(uint64(m.FarmingPlanId))
+	}
+	l = len(m.FarmingPoolAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgHarvest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.PositionId != 0 {
+		n += 1 + sovTx(uint64(m.PositionId))
+	}
+	return n
+}
+
+func (m *MsgHarvestResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.HarvestedRewards) > 0 {
+		for _, e := range m.HarvestedRewards {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -2450,6 +2953,506 @@ func (m *MsgCollectResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Amount1.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreatePrivateFarmingPlan) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePrivateFarmingPlan: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePrivateFarmingPlan: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardAllocations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardAllocations = append(m.RewardAllocations, RewardAllocation{})
+			if err := m.RewardAllocations[len(m.RewardAllocations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreatePrivateFarmingPlanResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePrivateFarmingPlanResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePrivateFarmingPlanResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPlanId", wireType)
+			}
+			m.FarmingPlanId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FarmingPlanId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPoolAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FarmingPoolAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgHarvest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgHarvest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgHarvest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
+			}
+			m.PositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgHarvestResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgHarvestResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgHarvestResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HarvestedRewards", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HarvestedRewards = append(m.HarvestedRewards, types.Coin{})
+			if err := m.HarvestedRewards[len(m.HarvestedRewards)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

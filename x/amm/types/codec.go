@@ -14,6 +14,9 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreatePool{}, "amm/MsgCreatePool", nil)
 	cdc.RegisterConcrete(&MsgAddLiquidity{}, "amm/MsgAddLiquidity", nil)
 	cdc.RegisterConcrete(&MsgRemoveLiquidity{}, "amm/MsgRemoveLiquidity", nil)
+	cdc.RegisterConcrete(&MsgCollect{}, "amm/MsgCollect", nil)
+	cdc.RegisterConcrete(&MsgCreatePrivateFarmingPlan{}, "amm/MsgCreatePrivateFarmingPlan", nil)
+	cdc.RegisterConcrete(&MsgHarvest{}, "amm/MsgHarvest", nil)
 }
 
 // RegisterInterfaces registers the x/amm interfaces types with the
@@ -24,6 +27,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreatePool{},
 		&MsgAddLiquidity{},
 		&MsgRemoveLiquidity{},
+		&MsgCollect{},
+		&MsgCreatePrivateFarmingPlan{},
+		&MsgHarvest{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

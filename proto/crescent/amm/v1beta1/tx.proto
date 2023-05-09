@@ -3,6 +3,9 @@ syntax = "proto3";
 package crescent.amm.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "crescent/amm/v1beta1/amm.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -12,6 +15,8 @@ service Msg {
   rpc AddLiquidity(MsgAddLiquidity) returns (MsgAddLiquidityResponse);
   rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
   rpc Collect(MsgCollect) returns (MsgCollectResponse);
+  rpc CreatePrivateFarmingPlan(MsgCreatePrivateFarmingPlan) returns (MsgCreatePrivateFarmingPlanResponse);
+  rpc Harvest(MsgHarvest) returns (MsgHarvestResponse); // TODO: merge with collect?
 }
 
 message MsgCreatePool {
@@ -78,4 +83,27 @@ message MsgCollect {
 message MsgCollectResponse {
   string amount0 = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string amount1 = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message MsgCreatePrivateFarmingPlan {
+  string                    sender             = 1;
+  string                    description        = 2;
+  repeated RewardAllocation reward_allocations = 3 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp start_time         = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp end_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message MsgCreatePrivateFarmingPlanResponse {
+  uint64 farming_plan_id      = 1;
+  string farming_pool_address = 2;
+}
+
+message MsgHarvest {
+  string sender      = 1;
+  uint64 position_id = 2;
+}
+
+message MsgHarvestResponse {
+  repeated cosmos.base.v1beta1.Coin harvested_rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }

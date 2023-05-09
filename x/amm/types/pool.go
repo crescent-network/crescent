@@ -9,6 +9,10 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
+func DerivePoolReserveAddress(poolId uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("PoolReserveAddress/%d", poolId)))
+}
+
 func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32) Pool {
 	return Pool{
 		Id:             id,
@@ -62,11 +66,12 @@ func (pool Pool) Validate() error {
 
 func NewPoolState(tick int32, price sdk.Dec) PoolState {
 	return PoolState{
-		CurrentTick:      tick,
-		CurrentPrice:     price,
-		CurrentLiquidity: utils.ZeroDec,
-		FeeGrowthGlobal0: utils.ZeroDec,
-		FeeGrowthGlobal1: utils.ZeroDec,
+		CurrentTick:                tick,
+		CurrentPrice:               price,
+		CurrentLiquidity:           utils.ZeroDec,
+		FeeGrowthGlobal0:           utils.ZeroDec,
+		FeeGrowthGlobal1:           utils.ZeroDec,
+		FarmingRewardsGrowthGlobal: sdk.DecCoins{},
 	}
 }
 
@@ -83,9 +88,8 @@ func (poolState PoolState) Validate() error {
 	if poolState.FeeGrowthGlobal1.IsNegative() {
 		return fmt.Errorf("fee growth global 1 must not be negative: %s", poolState.FeeGrowthGlobal1)
 	}
+	if err := poolState.FarmingRewardsGrowthGlobal.Validate(); err != nil {
+		return fmt.Errorf("invalid farming rewards growth global: %w", err)
+	}
 	return nil
-}
-
-func DerivePoolReserveAddress(poolId uint64) sdk.AccAddress {
-	return address.Module(ModuleName, []byte(fmt.Sprintf("PoolReserveAddress/%d", poolId)))
 }

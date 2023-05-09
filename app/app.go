@@ -628,6 +628,7 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ExchangeKeeper,
+		app.MarkerKeeper,
 	)
 	app.ExchangeKeeper.SetTemporaryOrderSources(
 		ammkeeper.NewTemporaryOrderSource(app.AMMKeeper),
@@ -701,6 +702,7 @@ func NewApp(
 		liquiditytypes.ModuleName,
 		liquidfarmingtypes.ModuleName,
 		ibchost.ModuleName,
+		ammtypes.ModuleName,
 		lpfarmtypes.ModuleName,
 
 		// empty logic modules
@@ -720,7 +722,6 @@ func NewApp(
 		icatypes.ModuleName,
 		markertypes.ModuleName,
 		exchangetypes.ModuleName,
-		ammtypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		// EndBlocker of crisis module called AssertInvariants

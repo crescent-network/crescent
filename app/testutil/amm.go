@@ -1,6 +1,8 @@
 package testutil
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
@@ -38,4 +40,17 @@ func (s *TestSuite) Collect(ownerAddr sdk.AccAddress, positionId uint64, maxAmt0
 	amt0, amt1, err = s.App.AMMKeeper.Collect(s.Ctx, ownerAddr, positionId, maxAmt0, maxAmt1)
 	s.Require().NoError(err)
 	return
+}
+
+func (s *TestSuite) CreatePrivateFarmingPlan(creatorAddr sdk.AccAddress, rewardAllocs []ammtypes.RewardAllocation, startTime, endTime time.Time, initialFunds sdk.Coins, fundFee bool) (plan ammtypes.FarmingPlan) {
+	s.T().Helper()
+	if fundFee {
+		s.FundAccount(creatorAddr, s.App.AMMKeeper.GetPrivateFarmingPlanCreationFee(s.Ctx))
+	}
+	var err error
+	plan, err = s.App.AMMKeeper.CreatePrivateFarmingPlan(
+		s.Ctx, creatorAddr, "", rewardAllocs, startTime, endTime)
+	s.Require().NoError(err)
+	s.FundAccount(sdk.MustAccAddressFromBech32(plan.FarmingPoolAddress), initialFunds)
+	return plan
 }

@@ -89,7 +89,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				if tick <= orderTick {
 					return true
 				}
-				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 				poolState.CurrentTick = tick
 				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick, TickPrecision)
@@ -100,7 +100,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				if tick >= orderTick {
 					return true
 				}
-				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 				poolState.CurrentTick = tick
 				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick, TickPrecision)
@@ -168,7 +168,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		}
 
 		if !isBuy && max && nextPrice.Equal(targetPrice) {
-			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 		}
 		poolState.CurrentPrice = nextPrice

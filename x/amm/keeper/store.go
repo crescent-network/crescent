@@ -20,8 +20,8 @@ func (k Keeper) SetLastPoolId(ctx sdk.Context, poolId uint64) {
 	store.Set(types.LastPoolIdKey, sdk.Uint64ToBigEndian(poolId))
 }
 
-func (k Keeper) GetNextPoolIdWithUpdate(ctx sdk.Context) uint64 {
-	poolId := k.GetLastPoolId(ctx)
+func (k Keeper) GetNextPoolIdWithUpdate(ctx sdk.Context) (poolId uint64) {
+	poolId = k.GetLastPoolId(ctx)
 	poolId++
 	k.SetLastPoolId(ctx, poolId)
 	return poolId
@@ -41,8 +41,8 @@ func (k Keeper) SetLastPositionId(ctx sdk.Context, positionId uint64) {
 	store.Set(types.LastPositionIdKey, sdk.Uint64ToBigEndian(positionId))
 }
 
-func (k Keeper) GetNextPositionIdWithUpdate(ctx sdk.Context) uint64 {
-	positionId := k.GetLastPositionId(ctx)
+func (k Keeper) GetNextPositionIdWithUpdate(ctx sdk.Context) (positionId uint64) {
+	positionId = k.GetLastPositionId(ctx)
 	positionId++
 	k.SetLastPositionId(ctx, positionId)
 	return positionId
@@ -265,4 +265,67 @@ func (k Keeper) IterateTickInfosAbove(ctx sdk.Context, poolId uint64, currentTic
 func (k Keeper) DeleteTickInfo(ctx sdk.Context, poolId uint64, tick int32) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetTickInfoKey(poolId, tick))
+}
+
+func (k Keeper) GetLastFarmingPlanId(ctx sdk.Context) (planId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.LastFarmingPlanIdKey)
+	if bz == nil {
+		return 0
+	}
+	return sdk.BigEndianToUint64(bz)
+}
+
+func (k Keeper) SetLastFarmingPlanId(ctx sdk.Context, planId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.LastFarmingPlanIdKey, sdk.Uint64ToBigEndian(planId))
+}
+
+func (k Keeper) GetNextFarmingPlanIdWithUpdate(ctx sdk.Context) (planId uint64) {
+	planId = k.GetLastFarmingPlanId(ctx)
+	planId++
+	k.SetLastFarmingPlanId(ctx, planId)
+	return planId
+}
+
+func (k Keeper) GetFarmingPlan(ctx sdk.Context, planId uint64) (plan types.FarmingPlan, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetFarmingPlanKey(planId))
+	if bz == nil {
+		return
+	}
+	k.cdc.MustUnmarshal(bz, &plan)
+	return plan, true
+}
+
+func (k Keeper) SetFarmingPlan(ctx sdk.Context, plan types.FarmingPlan) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetFarmingPlanKey(plan.Id), k.cdc.MustMarshal(&plan))
+}
+
+func (k Keeper) IterateAllFarmingPlans(ctx sdk.Context, cb func(plan types.FarmingPlan) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.FarmingPlanKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var plan types.FarmingPlan
+		k.cdc.MustUnmarshal(iter.Value(), &plan)
+		if cb(plan) {
+			break
+		}
+	}
+}
+
+func (k Keeper) GetNumPrivateFarmingPlans(ctx sdk.Context) (num uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.NumPrivateFarmingPlansKey)
+	if bz == nil {
+		return 0
+	}
+	return sdk.BigEndianToUint64(bz)
+}
+
+func (k Keeper) SetNumPrivateFarmingPlans(ctx sdk.Context, num uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.NumPrivateFarmingPlansKey, sdk.Uint64ToBigEndian(num))
 }
