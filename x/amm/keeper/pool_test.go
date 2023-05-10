@@ -91,10 +91,12 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 				{utils.ParseDec("4.9700"), sdk.NewInt(16788313)},
 			},
 			[]order{
-				{utils.ParseDec("5.0250"), sdk.NewInt(25055960)},
-				{utils.ParseDec("5.0300"), sdk.NewInt(25018591)},
-				{utils.ParseDec("5.0350"), sdk.NewInt(24981315)},
-				{utils.ParseDec("5.0400"), sdk.NewInt(24944131)},
+				{utils.ParseDec("5.0050"), sdk.NewInt(16629158)},
+				{utils.ParseDec("5.0100"), sdk.NewInt(16604258)},
+				{utils.ParseDec("5.0150"), sdk.NewInt(66616807)},
+				{utils.ParseDec("5.0200"), sdk.NewInt(66517255)},
+				{utils.ParseDec("5.0250"), sdk.NewInt(16529929)},
+				{utils.ParseDec("5.0300"), sdk.NewInt(16505276)},
 			},
 		},
 	} {
