@@ -13,12 +13,12 @@ func (s *KeeperTestSuite) TestFarming() {
 	pool := s.CreateSamplePool()
 	lpAddr1 := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	lpAddr2 := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
-	position1, liquidity1, _, _ := s.AddLiquidity(
+	position1, liquidity1, _ := s.AddLiquidity(
 		lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
-		sdk.NewInt(100_000000), sdk.NewInt(500_000000), sdk.ZeroInt(), sdk.ZeroInt())
-	position2, liquidity2, _, _ := s.AddLiquidity(
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+	position2, liquidity2, _ := s.AddLiquidity(
 		lpAddr2, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
-		sdk.NewInt(100_000000), sdk.NewInt(500_000000), sdk.ZeroInt(), sdk.ZeroInt())
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 	fmt.Println(liquidity1)
 	fmt.Println(liquidity2)
 
@@ -31,8 +31,8 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.NextBlock()
 
-	fmt.Println(s.App.AMMKeeper.Harvest(s.Ctx, lpAddr1, position1.Id))
-	fmt.Println(s.App.AMMKeeper.Harvest(s.Ctx, lpAddr2, position2.Id))
+	s.Collect(lpAddr1, position1.Id, utils.ParseCoins("9uatom"))
+	s.Collect(lpAddr2, position2.Id, utils.ParseCoins("47uatom"))
 
 	ordererAddr := s.FundedAccount(3, utils.ParseCoins("10000_000000uusd"))
 	s.PlaceMarketOrder(pool.MarketId, ordererAddr, true, sdk.NewInt(120_000000))
@@ -42,6 +42,6 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.NextBlock()
 
-	fmt.Println(s.App.AMMKeeper.Harvest(s.Ctx, lpAddr1, position1.Id))
-	fmt.Println(s.App.AMMKeeper.Harvest(s.Ctx, lpAddr2, position2.Id))
+	s.Collect(lpAddr1, position1.Id, utils.ParseCoins("56uatom"))
+	s.Collect(lpAddr2, position2.Id, utils.ParseCoins(""))
 }

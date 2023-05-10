@@ -17,12 +17,12 @@ func (s *KeeperTestSuite) TestAddLiquidity() {
 	pool := s.CreatePool(senderAddr, market.Id, sdk.NewDec(1), true)
 	fmt.Println(pool)
 
-	position, liquidity, amt0, amt1 := s.AddLiquidity(
+	position, liquidity, amt := s.AddLiquidity(
 		senderAddr, pool.Id, utils.ParseDec("0.8"), utils.ParseDec("1.25"),
-		sdk.NewInt(1000000), sdk.NewInt(1000000), sdk.NewInt(10000), sdk.NewInt(10000))
-	fmt.Println(position, liquidity, amt0, amt1)
+		utils.ParseCoins("1000000ucre,1000000uusd"))
+	fmt.Println(position, liquidity, amt)
 
-	_, amt0, amt1 = s.RemoveLiquidity(
-		senderAddr, position.Id, sdk.NewDec(9472135), sdk.ZeroInt(), sdk.ZeroInt())
-	fmt.Println(amt0, amt1)
+	_, amt = s.RemoveLiquidity(
+		senderAddr, position.Id, sdk.NewDec(9472135))
+	fmt.Println(amt)
 }

@@ -16,7 +16,6 @@ service Msg {
   rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
   rpc Collect(MsgCollect) returns (MsgCollectResponse);
   rpc CreatePrivateFarmingPlan(MsgCreatePrivateFarmingPlan) returns (MsgCreatePrivateFarmingPlanResponse);
-  rpc Harvest(MsgHarvest) returns (MsgHarvestResponse); // TODO: merge with collect?
 }
 
 message MsgCreatePool {
@@ -36,23 +35,16 @@ message MsgAddLiquidity {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string upper_price = 4
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  // TODO: simplify arguments
-  string desired_amount0 = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string desired_amount1 = 6
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string min_amount0 = 7
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string min_amount1 = 8
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin desired_amount = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 message MsgAddLiquidityResponse {
   uint64 position_id = 1;
   string liquidity   = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string amount0 = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string amount1 = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 message MsgRemoveLiquidity {
@@ -60,30 +52,22 @@ message MsgRemoveLiquidity {
   uint64 position_id = 2;
   string liquidity   = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string min_amount0 = 4
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string min_amount1 = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 message MsgRemoveLiquidityResponse {
-  string amount0 = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string amount1 = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
 message MsgCollect {
-  string sender      = 1;
-  uint64 position_id = 2;
-  string max_amount0 = 3
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string max_amount1 = 4
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string   sender                          = 1;
+  uint64   position_id                     = 2;
+  // TODO: if amount is nil, collect all?
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-message MsgCollectResponse {
-  string amount0 = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string amount1 = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-}
+message MsgCollectResponse {}
 
 message MsgCreatePrivateFarmingPlan {
   string                    sender             = 1;
@@ -96,14 +80,4 @@ message MsgCreatePrivateFarmingPlan {
 message MsgCreatePrivateFarmingPlanResponse {
   uint64 farming_plan_id      = 1;
   string farming_pool_address = 2;
-}
-
-message MsgHarvest {
-  string sender      = 1;
-  uint64 position_id = 2;
-}
-
-message MsgHarvestResponse {
-  repeated cosmos.base.v1beta1.Coin harvested_rewards = 1
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }

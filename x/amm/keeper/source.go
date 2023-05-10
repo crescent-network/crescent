@@ -176,6 +176,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	}
 	k.SetPoolState(ctx, pool.Id, poolState)
 
+	// TODO: use separate addresses for different pools
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(
 		ctx, reserveAddr, types.ModuleName, accruedRewards); err != nil {
 		panic(err)

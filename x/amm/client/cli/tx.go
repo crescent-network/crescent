@@ -33,7 +33,6 @@ func GetTxCmd() *cobra.Command {
 		NewRemoveLiquidityCmd(),
 		NewCollectCmd(),
 		NewCreatePrivateFarmingPlanCmd(),
-		NewHarvestCmd(),
 	)
 
 	return cmd
@@ -76,14 +75,14 @@ $ %s tx %s create-pool 1 10 --from mykey
 
 func NewAddLiquidityCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-liquidity [pool-id] [lower-price] [upper-price] [desired-amount0] [desired-amount1] [min-amt0] [min-amt1]",
-		Args:  cobra.ExactArgs(7),
+		Use:   "add-liquidity [pool-id] [lower-price] [upper-price] [desired-amount]",
+		Args:  cobra.ExactArgs(4),
 		Short: "Add liquidity to a pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Add liquidity to a pool.
 
 Example:
-$ %s tx %s add-liquidity 1 9.5 10.5 1000000 10000000 900000 9000000 --from mykey
+$ %s tx %s add-liquidity 1 9.5 10.5 1000000ucre,10000000uusd --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -105,25 +104,12 @@ $ %s tx %s add-liquidity 1 9.5 10.5 1000000 10000000 900000 9000000 --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid upper price: %w", err)
 			}
-			desiredAmt0, ok := sdk.NewIntFromString(args[3])
-			if !ok {
-				return fmt.Errorf("invalid desired amount0: %s", args[3])
-			}
-			desiredAmt1, ok := sdk.NewIntFromString(args[4])
-			if !ok {
-				return fmt.Errorf("invalid desired amount1: %s", args[4])
-			}
-			minAmt0, ok := sdk.NewIntFromString(args[5])
-			if !ok {
-				return fmt.Errorf("invalid minimum amount0: %s", args[5])
-			}
-			minAmt1, ok := sdk.NewIntFromString(args[6])
-			if !ok {
-				return fmt.Errorf("invalid minimum amount1: %s", args[6])
+			desiredAmt, err := sdk.ParseCoinsNormalized(args[3])
+			if err != nil {
+				return fmt.Errorf("invalid desired amount: %w", err)
 			}
 			msg := types.NewMsgAddLiquidity(
-				clientCtx.GetFromAddress(), poolId, lowerPrice, upperPrice,
-				desiredAmt0, desiredAmt1, minAmt0, minAmt1)
+				clientCtx.GetFromAddress(), poolId, lowerPrice, upperPrice, desiredAmt)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -133,14 +119,14 @@ $ %s tx %s add-liquidity 1 9.5 10.5 1000000 10000000 900000 9000000 --from mykey
 
 func NewRemoveLiquidityCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-liquidity [position-id] [liquidity] [min-amt0] [min-amt1]",
-		Args:  cobra.ExactArgs(4),
+		Use:   "remove-liquidity [position-id] [liquidity]",
+		Args:  cobra.ExactArgs(2),
 		Short: "Remove liquidity from a pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Remove liquidity from a pool.
 
 Example:
-$ %s tx %s remove-liquidity 1 10000000000000 500000 5000000 --from mykey
+$ %s tx %s remove-liquidity 1 10000000000000 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -158,16 +144,8 @@ $ %s tx %s remove-liquidity 1 10000000000000 500000 5000000 --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid liquidity: %w", err)
 			}
-			minAmt0, ok := sdk.NewIntFromString(args[2])
-			if !ok {
-				return fmt.Errorf("invalid minimum amount0: %s", args[2])
-			}
-			minAmt1, ok := sdk.NewIntFromString(args[3])
-			if !ok {
-				return fmt.Errorf("invalid minimum amount1: %s", args[3])
-			}
 			msg := types.NewMsgRemoveLiquidity(
-				clientCtx.GetFromAddress(), positionId, liquidity, minAmt0, minAmt1)
+				clientCtx.GetFromAddress(), positionId, liquidity)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -177,14 +155,14 @@ $ %s tx %s remove-liquidity 1 10000000000000 500000 5000000 --from mykey
 
 func NewCollectCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "collect [position-id] [min-amt0] [min-amt1]",
-		Args:  cobra.ExactArgs(3),
-		Short: "Collect fees accrued in the position",
+		Use:   "collect [position-id] [amount]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Collect fees and farming rewards accrued in the position",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Collect fees accrued in the position.
+			fmt.Sprintf(`Collect fees and farming rewards accrued in the position.
 
 Example:
-$ %s tx %s collect 1 100000 1000000 --from mykey
+$ %s tx %s collect 1 100000ucre,1000000uusd --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -198,16 +176,12 @@ $ %s tx %s collect 1 100000 1000000 --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid position id: %w", err)
 			}
-			minAmt0, ok := sdk.NewIntFromString(args[1])
-			if !ok {
-				return fmt.Errorf("invalid minimum amount0: %s", args[1])
-			}
-			minAmt1, ok := sdk.NewIntFromString(args[2])
-			if !ok {
-				return fmt.Errorf("invalid minimum amount1: %s", args[2])
+			amt, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid amount: %w", err)
 			}
 			msg := types.NewMsgCollect(
-				clientCtx.GetFromAddress(), positionId, minAmt0, minAmt1)
+				clientCtx.GetFromAddress(), positionId, amt)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -273,38 +247,6 @@ $ %s tx %s create-private-farming-plan "New Farming Plan" 2023-01-01T00:00:00Z 2
 			}
 			msg := types.NewMsgCreatePrivateFarmingPlan(
 				clientCtx.GetFromAddress(), description, rewardAllocs, startTime, endTime)
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-func NewHarvestCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "harvest [position-id]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Harvest farming rewards accrued in the position",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Harvest farming rewards accrued in the position.
-
-Example:
-$ %s tx %s harvest 1 --from mykey
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			positionId, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid position id: %w", err)
-			}
-			msg := types.NewMsgHarvest(
-				clientCtx.GetFromAddress(), positionId)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

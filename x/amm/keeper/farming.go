@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -71,31 +70,6 @@ func (k Keeper) createFarmingPlan(
 	k.SetFarmingPlan(ctx, plan)
 	// TODO: emit event
 	return plan, nil
-}
-
-func (k Keeper) Harvest(ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64) (harvestedRewards sdk.Coins, err error) {
-	position, found := k.GetPosition(ctx, positionId)
-	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
-	}
-	if ownerAddr.String() != position.Owner {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
-	}
-	position, _, _, err = k.RemoveLiquidity(
-		ctx, ownerAddr, positionId, utils.ZeroDec, utils.ZeroInt, utils.ZeroInt)
-	if err != nil {
-		return
-	}
-	harvestedRewards = position.OwedFarmingRewards
-	position.OwedFarmingRewards = sdk.Coins{}
-	k.SetPosition(ctx, position)
-	if harvestedRewards.IsAllPositive() {
-		// TODO: emit event
-		if err = k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, ownerAddr, harvestedRewards); err != nil {
-			return nil, err
-		}
-	}
-	return
 }
 
 func (k Keeper) TerminateEndedFarmingPlans(ctx sdk.Context) (err error) {

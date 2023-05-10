@@ -31,43 +31,36 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 
 func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidity) (*types.MsgAddLiquidityResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, liquidity, amt0, amt1, err := k.Keeper.AddLiquidity(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PoolId, msg.LowerPrice, msg.UpperPrice,
-		msg.DesiredAmount0, msg.DesiredAmount1, msg.MinAmount0, msg.MinAmount1)
+	_, liquidity, amt, err := k.Keeper.AddLiquidity(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PoolId,
+		msg.LowerPrice, msg.UpperPrice, msg.DesiredAmount)
 	if err != nil {
 		return nil, err
 	}
 	return &types.MsgAddLiquidityResponse{
 		Liquidity: liquidity,
-		Amount0:   amt0,
-		Amount1:   amt1,
+		Amount:    amt,
 	}, nil
 }
 
 func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLiquidity) (*types.MsgRemoveLiquidityResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, amt0, amt1, err := k.Keeper.RemoveLiquidity(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId,
-		msg.Liquidity, msg.MinAmount0, msg.MinAmount1)
+	_, amt, err := k.Keeper.RemoveLiquidity(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.Liquidity)
 	if err != nil {
 		return nil, err
 	}
 	return &types.MsgRemoveLiquidityResponse{
-		Amount0: amt0,
-		Amount1: amt1,
+		Amount: amt,
 	}, nil
 }
 
 func (k msgServer) Collect(goCtx context.Context, msg *types.MsgCollect) (*types.MsgCollectResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	amt0, amt1, err := k.Keeper.Collect(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.MaxAmount0, msg.MaxAmount1)
-	if err != nil {
+	if err := k.Keeper.Collect(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.Amount); err != nil {
 		return nil, err
 	}
-	return &types.MsgCollectResponse{
-		Amount0: amt0,
-		Amount1: amt1,
-	}, nil
+	return &types.MsgCollectResponse{}, nil
 }
 
 func (k msgServer) CreatePrivateFarmingPlan(goCtx context.Context, msg *types.MsgCreatePrivateFarmingPlan) (*types.MsgCreatePrivateFarmingPlanResponse, error) {
@@ -81,16 +74,5 @@ func (k msgServer) CreatePrivateFarmingPlan(goCtx context.Context, msg *types.Ms
 	return &types.MsgCreatePrivateFarmingPlanResponse{
 		FarmingPlanId:      plan.Id,
 		FarmingPoolAddress: plan.FarmingPoolAddress,
-	}, nil
-}
-
-func (k msgServer) Harvest(goCtx context.Context, msg *types.MsgHarvest) (*types.MsgHarvestResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	harvestedRewards, err := k.Keeper.Harvest(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId)
-	if err != nil {
-		return nil, err
-	}
-	return &types.MsgHarvestResponse{
-		HarvestedRewards: harvestedRewards,
 	}, nil
 }

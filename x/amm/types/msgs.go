@@ -15,7 +15,6 @@ var (
 	_ sdk.Msg = (*MsgRemoveLiquidity)(nil)
 	_ sdk.Msg = (*MsgCollect)(nil)
 	_ sdk.Msg = (*MsgCreatePrivateFarmingPlan)(nil)
-	_ sdk.Msg = (*MsgHarvest)(nil)
 )
 
 // Message types for the module
@@ -25,7 +24,6 @@ const (
 	TypeMsgRemoveLiquidity          = "remove_liquidity"
 	TypeMsgCollect                  = "collect"
 	TypeMsgCreatePrivateFarmingPlan = "create_private_farming_plan"
-	TypeMsgHarvest                  = "harvest"
 )
 
 func NewMsgCreatePool(
@@ -73,16 +71,13 @@ func (msg MsgCreatePool) ValidateBasic() error {
 
 func NewMsgAddLiquidity(
 	senderAddr sdk.AccAddress, poolId uint64, lowerPrice, upperPrice sdk.Dec,
-	desiredAmt0, desiredAmt1, minAmt0, minAmt1 sdk.Int) *MsgAddLiquidity {
+	desiredAmt sdk.Coins) *MsgAddLiquidity {
 	return &MsgAddLiquidity{
-		Sender:         senderAddr.String(),
-		PoolId:         poolId,
-		LowerPrice:     lowerPrice,
-		UpperPrice:     upperPrice,
-		DesiredAmount0: desiredAmt0,
-		DesiredAmount1: desiredAmt1,
-		MinAmount0:     minAmt0,
-		MinAmount1:     minAmt1,
+		Sender:        senderAddr.String(),
+		PoolId:        poolId,
+		LowerPrice:    lowerPrice,
+		UpperPrice:    upperPrice,
+		DesiredAmount: desiredAmt,
 	}
 }
 
@@ -114,30 +109,18 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 	if !msg.UpperPrice.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", msg.UpperPrice)
 	}
-	if !msg.DesiredAmount0.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "desired amount 0 must be positive: %s", msg.DesiredAmount0)
-	}
-	if !msg.DesiredAmount1.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "desired amount 1 must be positive: %s", msg.DesiredAmount1)
-	}
-	if msg.MinAmount0.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 0 must not be negative: %s", msg.MinAmount0)
-	}
-	if msg.MinAmount1.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 1 must not be negative: %s", msg.MinAmount1)
+	if err := msg.DesiredAmount.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid desired amount: %v", err)
 	}
 	return nil
 }
 
 func NewMsgRemoveLiquidity(
-	senderAddr sdk.AccAddress, positionId uint64, liquidity sdk.Dec,
-	minAmt0, minAmt1 sdk.Int) *MsgRemoveLiquidity {
+	senderAddr sdk.AccAddress, positionId uint64, liquidity sdk.Dec) *MsgRemoveLiquidity {
 	return &MsgRemoveLiquidity{
 		Sender:     senderAddr.String(),
 		PositionId: positionId,
 		Liquidity:  liquidity,
-		MinAmount0: minAmt0,
-		MinAmount1: minAmt1,
 	}
 }
 
@@ -166,21 +149,14 @@ func (msg MsgRemoveLiquidity) ValidateBasic() error {
 	if msg.Liquidity.IsNegative() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity must not be negative: %s", msg.Liquidity)
 	}
-	if msg.MinAmount0.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 0 must not be negative: %s", msg.MinAmount0)
-	}
-	if msg.MinAmount1.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "min amount 1 must not be negative: %s", msg.MinAmount1)
-	}
 	return nil
 }
 
-func NewMsgCollect(senderAddr sdk.AccAddress, positionId uint64, maxAmt0, maxAmt1 sdk.Int) *MsgCollect {
+func NewMsgCollect(senderAddr sdk.AccAddress, positionId uint64, amt sdk.Coins) *MsgCollect {
 	return &MsgCollect{
 		Sender:     senderAddr.String(),
 		PositionId: positionId,
-		MaxAmount0: maxAmt0,
-		MaxAmount1: maxAmt1,
+		Amount:     amt,
 	}
 }
 
@@ -206,11 +182,8 @@ func (msg MsgCollect) ValidateBasic() error {
 	if msg.PositionId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position is must not be 0")
 	}
-	if msg.MaxAmount0.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "max amount 0 must not be negative: %s", msg.MaxAmount0)
-	}
-	if msg.MaxAmount1.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "max amount 1 must not be negative: %s", msg.MaxAmount1)
+	if err := msg.Amount.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid amount: %v", err)
 	}
 	return nil
 }
@@ -254,39 +227,6 @@ func (msg MsgCreatePrivateFarmingPlan) ValidateBasic() error {
 		msg.RewardAllocations, msg.StartTime, msg.EndTime, true)
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-	return nil
-}
-
-func NewMsgHarvest(
-	senderAddr sdk.AccAddress, positionId uint64) *MsgHarvest {
-	return &MsgHarvest{
-		Sender:     senderAddr.String(),
-		PositionId: positionId,
-	}
-}
-
-func (msg MsgHarvest) Route() string { return RouterKey }
-func (msg MsgHarvest) Type() string  { return TypeMsgHarvest }
-
-func (msg MsgHarvest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgHarvest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
-func (msg MsgHarvest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
-	}
-	if msg.PositionId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position id must not be 0")
 	}
 	return nil
 }

@@ -65,6 +65,7 @@ func (k Keeper) constructTransientOrderBook(
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
 	// TODO: adjust price limit
+	// TODO: optimize gas for transient store
 	k.IterateOrderBookSide(ctx, market.Id, isBuy, func(order types.Order) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Price.LT(*priceLimit)) ||

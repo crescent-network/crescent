@@ -17,7 +17,7 @@ func (k Keeper) CreateMarket(ctx sdk.Context, creatorAddr sdk.AccAddress, baseDe
 		return
 	}
 	if _, found := k.GetMarketByDenoms(ctx, baseDenom, quoteDenom); found {
-		return market, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, " market already exists")
+		return market, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market already exists")
 	}
 
 	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, k.GetMarketCreationFee(ctx)); err != nil {
