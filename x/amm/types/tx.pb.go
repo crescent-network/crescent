@@ -267,9 +267,10 @@ func (m *MsgRemoveLiquidityResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgRemoveLiquidityResponse proto.InternalMessageInfo
 
 type MsgCollect struct {
-	Sender     string                                   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	PositionId uint64                                   `protobuf:"varint,2,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Sender     string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	PositionId uint64 `protobuf:"varint,2,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty"`
+	// TODO: if amount is nil, collect all?
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *MsgCollect) Reset()         { *m = MsgCollect{} }

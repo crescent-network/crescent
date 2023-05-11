@@ -33,6 +33,7 @@ message MsgPlaceLimitOrder {
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  bool   is_batch = 6;
 }
 
 message MsgPlaceLimitOrderResponse {

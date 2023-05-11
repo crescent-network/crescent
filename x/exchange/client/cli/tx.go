@@ -101,7 +101,8 @@ $ %s tx %s place-limit-order 1 true 15 100000 --from mykey
 			if !ok {
 				return fmt.Errorf("invalid quantity: %s", args[3])
 			}
-			msg := types.NewMsgPlaceLimitOrder(clientCtx.GetFromAddress(), marketId, isBuy, price, qty)
+			isBatch := false // TODO: parse arg properly
+			msg := types.NewMsgPlaceLimitOrder(clientCtx.GetFromAddress(), marketId, isBuy, price, qty, isBatch)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

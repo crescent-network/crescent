@@ -61,13 +61,14 @@ func (msg MsgCreateMarket) ValidateBasic() error {
 
 func NewMsgPlaceLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, quantity sdk.Int) *MsgPlaceLimitOrder {
+	isBuy bool, price sdk.Dec, quantity sdk.Int, isBatch bool) *MsgPlaceLimitOrder {
 	return &MsgPlaceLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
 		IsBuy:    isBuy,
 		Price:    price,
 		Quantity: quantity,
+		IsBatch:  isBatch,
 	}
 }
 

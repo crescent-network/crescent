@@ -60,8 +60,8 @@ message MsgRemoveLiquidityResponse {
 }
 
 message MsgCollect {
-  string   sender                          = 1;
-  uint64   position_id                     = 2;
+  string sender      = 1;
+  uint64 position_id = 2;
   // TODO: if amount is nil, collect all?
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
