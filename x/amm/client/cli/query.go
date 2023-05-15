@@ -28,7 +28,6 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryParamsCmd(),
 		NewQueryAllPoolsCmd(),
 		NewQueryPoolCmd(),
-		NewQueryAllPositionsCmd(),
 		NewQueryPositionsCmd(),
 	)
 
@@ -142,55 +141,20 @@ $ %s query %s pool 1
 	return cmd
 }
 
-func NewQueryAllPositionsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "positions",
-		Args:  cobra.NoArgs,
-		Short: "Query all positions",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all positions.
-
-Example:
-$ %s query %s positions
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.AllPositions(cmd.Context(), &types.QueryAllPositionsRequest{
-				Pagination: pageReq,
-			})
-			if err != nil {
-				return err
-			}
-			return clientCtx.PrintProto(res)
-		},
-	}
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "positions")
-	return cmd
-}
-
 func NewQueryPositionsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "positions [owner]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query positions by owner",
+		Short: "Query positions",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query positions by owner.
+			fmt.Sprintf(`Query all positions or query positions by the owner.
+The owner argument is optional and if omitted, all positions will be returned.
 
 Example:
+$ %s query %s positions
 $ %s query %s positions cre1...
 `,
+				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -199,20 +163,29 @@ $ %s query %s positions cre1...
 			if err != nil {
 				return err
 			}
-			owner := args[0]
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Positions(cmd.Context(), &types.QueryPositionsRequest{
-				Owner:      owner,
-				Pagination: pageReq,
-			})
-			if err != nil {
-				return err
+			if len(args) == 0 {
+				res, err := queryClient.AllPositions(cmd.Context(), &types.QueryAllPositionsRequest{
+					Pagination: pageReq,
+				})
+				if err != nil {
+					return err
+				}
+				return clientCtx.PrintProto(res)
+			} else {
+				res, err := queryClient.Positions(cmd.Context(), &types.QueryPositionsRequest{
+					Owner:      args[0],
+					Pagination: pageReq,
+				})
+				if err != nil {
+					return err
+				}
+				return clientCtx.PrintProto(res)
 			}
-			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
