@@ -20,7 +20,7 @@ type Keeper struct {
 
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	sources       map[string]types.TemporaryOrderSource
+	sources       map[string]types.OrderSource
 	sourceNames   []string
 }
 
@@ -52,18 +52,18 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k *Keeper) SetTemporaryOrderSources(sources ...types.TemporaryOrderSource) *Keeper {
+func (k *Keeper) SetOrderSources(sources ...types.OrderSource) *Keeper {
 	if k.sources != nil {
-		panic("cannot set temporary order sources twice")
+		panic("cannot set order sources twice")
 	}
-	k.sources = map[string]types.TemporaryOrderSource{}
+	k.sources = map[string]types.OrderSource{}
 	for _, source := range sources {
-		moduleName := source.Name()
-		if _, ok := k.sources[moduleName]; ok {
-			panic(fmt.Sprintf("duplicate order source: %s", moduleName))
+		sourceName := source.Name()
+		if _, ok := k.sources[sourceName]; ok {
+			panic(fmt.Sprintf("duplicate order source name: %s", sourceName))
 		}
-		k.sources[moduleName] = source
-		k.sourceNames = append(k.sourceNames, moduleName)
+		k.sources[sourceName] = source
+		k.sourceNames = append(k.sourceNames, sourceName)
 	}
 	return k
 }

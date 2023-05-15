@@ -9965,6 +9965,9 @@ paths:
                     type: string
                   quantity:
                     type: string
+                  msg_height:
+                    type: string
+                    format: int64
                   open_quantity:
                     type: string
                   remaining_deposit:
@@ -16247,6 +16250,9 @@ definitions:
         type: string
       quantity:
         type: string
+      msg_height:
+        type: string
+        format: int64
       open_quantity:
         type: string
       remaining_deposit:
@@ -16374,6 +16380,9 @@ definitions:
             type: string
           quantity:
             type: string
+          msg_height:
+            type: string
+            format: int64
           open_quantity:
             type: string
           remaining_deposit:

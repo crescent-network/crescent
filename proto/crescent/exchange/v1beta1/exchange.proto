@@ -39,14 +39,9 @@ message Order {
   bool   is_buy    = 4;
   string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string open_quantity = 7
+  int64  msg_height    = 7;
+  string open_quantity = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string remaining_deposit = 8
+  string remaining_deposit = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-}
-
-message TransientOrder {
-  Order order        = 1 [(gogoproto.nullable) = false];
-  bool  updated      = 2;
-  bool  is_temporary = 3;
 }

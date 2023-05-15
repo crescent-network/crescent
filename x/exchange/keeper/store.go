@@ -190,40 +190,6 @@ func (k Keeper) DeleteOrderBookOrder(ctx sdk.Context, order types.Order) {
 		types.GetOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id))
 }
 
-func (k Keeper) SetTransientOrderBookOrder(ctx sdk.Context, order types.TransientOrder) {
-	store := ctx.TransientStore(k.tsKey)
-	bz := k.cdc.MustMarshal(&order)
-	store.Set(types.GetOrderBookOrderKey(order.Order.MarketId, order.Order.IsBuy, order.Order.Price, order.Order.Id), bz)
-}
-
-func (k Keeper) IterateTransientOrderBookSide(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.TransientOrder) (stop bool)) {
-	store := ctx.TransientStore(k.tsKey)
-	var iter sdk.Iterator
-	if isBuy {
-		iter = sdk.KVStoreReversePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, true))
-	} else {
-		iter = sdk.KVStorePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, false))
-	}
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var order types.TransientOrder
-		k.cdc.MustUnmarshal(iter.Value(), &order)
-		if cb(order) {
-			break
-		}
-	}
-}
-
-func (k Keeper) IterateTransientOrderBook(ctx sdk.Context, marketId uint64, cb func(order types.TransientOrder) (stop bool)) {
-	k.IterateTransientOrderBookSide(ctx, marketId, false, cb)
-	k.IterateTransientOrderBookSide(ctx, marketId, true, cb)
-}
-
-func (k Keeper) DeleteTransientOrderBookOrder(ctx sdk.Context, order types.TransientOrder) {
-	store := ctx.TransientStore(k.tsKey)
-	store.Delete(types.GetOrderBookOrderKey(order.Order.MarketId, order.Order.IsBuy, order.Order.Price, order.Order.Id))
-}
-
 func (k Keeper) GetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	store := ctx.TransientStore(k.tsKey)
 	bz := store.Get(types.GetTransientBalanceKey(addr, denom))

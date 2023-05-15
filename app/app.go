@@ -630,8 +630,8 @@ func NewApp(
 		app.ExchangeKeeper,
 		app.MarkerKeeper,
 	)
-	app.ExchangeKeeper.SetTemporaryOrderSources(
-		ammkeeper.NewTemporaryOrderSource(app.AMMKeeper),
+	app.ExchangeKeeper.SetOrderSources(
+		ammkeeper.NewOrderSource(app.AMMKeeper),
 	)
 
 	// create static IBC router, add transfer route, then set and seal it

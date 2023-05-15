@@ -10,7 +10,7 @@ import (
 
 func NewOrder(
 	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int) Order {
+	isBuy bool, price sdk.Dec, qty sdk.Int, msgHeight int64, openQty, remainingDeposit sdk.Int) Order {
 	return Order{
 		Id:               orderId,
 		Orderer:          ordererAddr.String(),
@@ -18,6 +18,7 @@ func NewOrder(
 		IsBuy:            isBuy,
 		Price:            price,
 		Quantity:         qty,
+		MsgHeight:        msgHeight,
 		OpenQuantity:     openQty,
 		RemainingDeposit: remainingDeposit,
 	}
@@ -51,38 +52,11 @@ func (order Order) Validate() error {
 	return nil
 }
 
-func NewTransientOrder(
-	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, isTemporary bool) TransientOrder {
-	return TransientOrder{
-		Order: Order{
-			Id:               orderId,
-			Orderer:          ordererAddr.String(),
-			MarketId:         marketId,
-			IsBuy:            isBuy,
-			Price:            price,
-			Quantity:         qty,
-			OpenQuantity:     openQty,
-			RemainingDeposit: remainingDeposit,
-		},
-		Updated:     false,
-		IsTemporary: isTemporary,
-	}
-}
-
-func NewTransientOrderFromOrder(order Order) TransientOrder {
-	return TransientOrder{
-		Order:       order,
-		Updated:     false,
-		IsTemporary: false,
-	}
-}
-
-func (order TransientOrder) ExecutableQuantity() sdk.Int {
-	if order.Order.IsBuy {
+func (order Order) ExecutableQuantity(price sdk.Dec) sdk.Int {
+	if order.IsBuy {
 		return utils.MinInt(
-			order.Order.OpenQuantity,
-			order.Order.RemainingDeposit.ToDec().QuoTruncate(order.Order.Price).TruncateInt())
+			order.OpenQuantity,
+			order.RemainingDeposit.ToDec().QuoTruncate(price).TruncateInt())
 	}
-	return utils.MinInt(order.Order.OpenQuantity, order.Order.RemainingDeposit)
+	return utils.MinInt(order.OpenQuantity, order.RemainingDeposit)
 }

@@ -4,36 +4,28 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type TemporaryOrderSource interface {
+type OrderSource interface {
 	Name() string
-	GenerateOrders(ctx sdk.Context, market Market, cb TemporaryOrderCallback, opts TemporaryOrderOptions)
-	AfterOrdersExecuted(ctx sdk.Context, market Market, results []TemporaryOrderResult)
+	GenerateOrders(ctx sdk.Context, market Market, createOrder CreateOrderFunc, opts GenerateOrdersOptions)
+	AfterOrdersExecuted(ctx sdk.Context, market Market, results []TempOrder)
 }
 
-type TemporaryOrderCallback func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error
+type CreateOrderFunc func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error
 
-type TemporaryOrderOptions struct {
+type GenerateOrdersOptions struct {
 	IsBuy         bool
 	PriceLimit    *sdk.Dec
 	QuantityLimit *sdk.Int
 	QuoteLimit    *sdk.Int
 }
 
-type TemporaryOrderResult struct {
-	Order            *Order
-	ExecutedQuantity sdk.Int
-	Paid             sdk.Coin
-	Received         sdk.Coin
-	Fee              sdk.Coin
-}
-
-func GroupTemporaryOrderResultsByOrderer(results []TemporaryOrderResult) (orderers []string, m map[string][]TemporaryOrderResult) {
-	m = map[string][]TemporaryOrderResult{}
+func GroupTempOrderResultsByOrderer(results []TempOrder) (orderers []string, m map[string][]TempOrder) {
+	m = map[string][]TempOrder{}
 	for _, result := range results {
-		if _, ok := m[result.Order.Orderer]; !ok {
-			orderers = append(orderers, result.Order.Orderer)
+		if _, ok := m[result.Orderer]; !ok {
+			orderers = append(orderers, result.Orderer)
 		}
-		m[result.Order.Orderer] = append(m[result.Order.Orderer], result)
+		m[result.Orderer] = append(m[result.Orderer], result)
 	}
 	return
 }

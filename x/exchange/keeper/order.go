@@ -41,18 +41,34 @@ func (k Keeper) PlaceOrder(
 	openQty := qty.Sub(execQty)
 	if priceLimit != nil {
 		if openQty.IsPositive() {
-			orderId := k.GetNextOrderIdWithUpdate(ctx)
-			deposit := types.DepositAmount(isBuy, *priceLimit, openQty)
-			order = types.NewOrder(
-				orderId, ordererAddr, market.Id, isBuy, *priceLimit, qty, openQty, deposit)
-			if err = k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit), false); err != nil {
+			order, err = k.CreateOrder(ctx, market, ordererAddr, isBuy, *priceLimit, qty, openQty, false)
+			if err != nil {
 				return
 			}
-			k.SetOrder(ctx, order)
-			k.SetOrderBookOrder(ctx, order)
 		}
 	}
 	return
+}
+
+func (k Keeper) CreateOrder(
+	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
+	isBuy bool, price sdk.Dec, qty, openQty sdk.Int, isTemp bool) (types.Order, error) {
+	orderId := k.GetNextOrderIdWithUpdate(ctx)
+	deposit := types.DepositAmount(isBuy, price, openQty)
+	msgHeight := int64(0)
+	if !isTemp {
+		msgHeight = ctx.BlockHeight()
+	}
+	order := types.NewOrder(
+		orderId, ordererAddr, market.Id, isBuy, price, qty, msgHeight, openQty, deposit)
+	if err := k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit), false); err != nil {
+		return order, err
+	}
+	if !isTemp {
+		k.SetOrder(ctx, order)
+		k.SetOrderBookOrder(ctx, order)
+	}
+	return order, nil
 }
 
 func (k Keeper) executeOrder(
@@ -67,80 +83,83 @@ func (k Keeper) executeOrder(
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
 	totalExecQuote = utils.ZeroInt
-	sourceNameByOrderId := k.constructTransientOrderBook(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
+	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
 	var sourceNames []string
-	resultsBySourceName := map[string][]types.TemporaryOrderResult{}
-	k.IterateTransientOrderBookSide(ctx, market.Id, !isBuy, func(order types.TransientOrder) (stop bool) {
+	resultsBySourceName := map[string][]types.TempOrder{}
+	for _, level := range obs.Levels {
 		if priceLimit != nil &&
-			((isBuy && order.Order.Price.GT(*priceLimit)) ||
-				(!isBuy && order.Order.Price.LT(*priceLimit))) {
-			return true
+			((isBuy && level.Price.GT(*priceLimit)) ||
+				(!isBuy && level.Price.LT(*priceLimit))) {
+			break
 		}
 		if qtyLimit != nil && !qtyLimit.Sub(totalExecQty).IsPositive() {
-			return true
+			break
 		}
 		if quoteLimit != nil && !quoteLimit.Sub(totalExecQuote).IsPositive() {
-			return true
+			break
 		}
 
-		var execQty sdk.Int
+		executableQty := types.TotalExecutableQuantity(level.Orders, level.Price)
+		execQty := executableQty
 		if qtyLimit != nil {
-			execQty = utils.MinInt(order.ExecutableQuantity(), qtyLimit.Sub(totalExecQty))
-		} else { // quoteLimit != nil
-			execQty = utils.MinInt(
-				order.ExecutableQuantity(),
-				quoteLimit.Sub(totalExecQuote).ToDec().QuoTruncate(order.Order.Price).TruncateInt())
+			execQty = utils.MinInt(execQty, qtyLimit.Sub(totalExecQty))
 		}
-		execQuote := types.QuoteAmount(isBuy, order.Order.Price, execQty)
+		if quoteLimit != nil {
+			execQty = utils.MinInt(
+				execQty,
+				quoteLimit.Sub(totalExecQuote).ToDec().QuoTruncate(level.Price).TruncateInt())
+		}
+
+		market.FillTempOrderBookLevel(level, execQty, level.Price, true)
+		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
+		// TODO: refactor code
+		if isBuy {
+			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, execQuote), true); err != nil {
+				panic(err)
+			}
+			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQty).TruncateInt()
+			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, receive), true); err != nil {
+				panic(err)
+			}
+		} else {
+			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, execQty), true); err != nil {
+				panic(err)
+			}
+			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQuote).TruncateInt()
+			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, receive), true); err != nil {
+				panic(err)
+			}
+		}
 		totalExecQty = totalExecQty.Add(execQty)
 		totalExecQuote = totalExecQuote.Add(execQuote)
 
-		lastPrice = order.Order.Price
-
 		if !simulate {
-			makerPays, makerReceives, makerFee, takerPays, takerReceives := types.CalculateAmountsAndFee(
-				market, isBuy, execQty, execQuote, order.IsTemporary)
-			if err := k.EscrowCoin(ctx, market, ordererAddr, takerPays, true); err != nil {
-				panic(err)
-			}
-			if err := k.ReleaseCoin(ctx, market, ordererAddr, takerReceives, true); err != nil {
-				panic(err)
-			}
-			if err := k.ReleaseCoins(
-				ctx, market, sdk.MustAccAddressFromBech32(order.Order.Orderer),
-				sdk.NewCoins(makerReceives).Sub(sdk.Coins{makerFee}), true); err != nil {
-				panic(err)
-			}
-			order.Order.OpenQuantity = order.Order.OpenQuantity.Sub(execQty)
-			order.Order.RemainingDeposit = order.Order.RemainingDeposit.Sub(makerPays.Amount)
-			order.Updated = true
-			k.SetTransientOrderBookOrder(ctx, order)
-
-			if name, ok := sourceNameByOrderId[order.Order.Id]; ok {
-				results, ok := resultsBySourceName[name]
-				if !ok {
-					sourceNames = append(sourceNames, name)
+			for _, order := range level.Orders {
+				if order.IsUpdated && order.Source != nil {
+					sourceName := order.Source.Name()
+					results, ok := resultsBySourceName[sourceName]
+					if !ok {
+						sourceNames = append(sourceNames, sourceName)
+					}
+					resultsBySourceName[sourceName] = append(results, *order)
 				}
-				resultsBySourceName[name] = append(results, types.TemporaryOrderResult{
-					Order:            &order.Order,
-					ExecutedQuantity: execQty,
-					Paid:             makerPays,
-					Received:         makerReceives,
-					Fee:              makerFee,
-				})
 			}
+			lastPrice = level.Price
 		}
-		return false
-	})
+	}
 	if !simulate {
-		k.settleTransientOrderBook(ctx, market)
+		if err := k.ApplyTempOrderBookSideChanges(ctx, market, obs); err != nil {
+			panic(err)
+		}
 		if err := k.ExecuteSendCoins(ctx); err != nil {
 			panic(err) // TODO: return error
 		}
-		for _, name := range sourceNames {
-			results := resultsBySourceName[name]
-			source := k.sources[name]
-			source.AfterOrdersExecuted(ctx, market, results)
+		for _, sourceName := range sourceNames {
+			results := resultsBySourceName[sourceName]
+			if len(results) > 0 {
+				source := k.sources[sourceName]
+				source.AfterOrdersExecuted(ctx, market, results)
+			}
 		}
 		if !lastPrice.IsNil() {
 			state := k.MustGetMarketState(ctx, market.Id)

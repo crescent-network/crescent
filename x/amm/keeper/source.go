@@ -8,24 +8,24 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var _ exchangetypes.TemporaryOrderSource = TemporaryOrderSource{}
+var _ exchangetypes.OrderSource = OrderSource{}
 
-type TemporaryOrderSource struct {
+type OrderSource struct {
 	Keeper
 }
 
-func NewTemporaryOrderSource(k Keeper) TemporaryOrderSource {
-	return TemporaryOrderSource{k}
+func NewOrderSource(k Keeper) OrderSource {
+	return OrderSource{k}
 }
 
-func (k TemporaryOrderSource) Name() string {
+func (k OrderSource) Name() string {
 	return types.ModuleName
 }
 
-func (k TemporaryOrderSource) GenerateOrders(
+func (k OrderSource) GenerateOrders(
 	ctx sdk.Context, market exchangetypes.Market,
-	cb exchangetypes.TemporaryOrderCallback,
-	opts exchangetypes.TemporaryOrderOptions) {
+	createOrder exchangetypes.CreateOrderFunc,
+	opts exchangetypes.GenerateOrdersOptions) {
 	// Select the first pool since there will be only one pool per market
 	// TODO: use GetPoolByMarket instead of IteratePoolsByMarket
 	var pool types.Pool
@@ -52,7 +52,7 @@ func (k TemporaryOrderSource) GenerateOrders(
 		if opts.QuoteLimit != nil && !opts.QuoteLimit.Sub(accQuote).IsPositive() {
 			return true
 		}
-		if err := cb(reserveAddr, price, qty); err != nil {
+		if err := createOrder(reserveAddr, price, qty); err != nil {
 			panic(err)
 		}
 		accQty = accQty.Add(qty)
@@ -61,9 +61,9 @@ func (k TemporaryOrderSource) GenerateOrders(
 	})
 }
 
-func (k TemporaryOrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.TemporaryOrderResult) {
+func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.TempOrder) {
 	// TODO: group results by orderer
-	orderers, m := exchangetypes.GroupTemporaryOrderResultsByOrderer(results)
+	orderers, m := exchangetypes.GroupTempOrderResultsByOrderer(results)
 	for _, orderer := range orderers {
 		ordererAddr := sdk.MustAccAddressFromBech32(orderer)
 		pool, found := k.GetPoolByReserveAddress(ctx, ordererAddr)
@@ -74,7 +74,7 @@ func (k TemporaryOrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetyp
 	}
 }
 
-func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []exchangetypes.TemporaryOrderResult) {
+func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []exchangetypes.TempOrder) {
 	// TODO: check if results are sorted?
 	isBuy := results[0].Order.IsBuy
 
@@ -144,9 +144,10 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			expectedAmtIn = types.Amount1DeltaRounding(
 				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
 		}
-		amtInDiff := result.Received.Amount.Sub(expectedAmtIn)
+		denomIn := pool.DenomIn(isBuy)
+		amtInDiff := result.Received.AmountOf(denomIn).Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
-			accruedRewards = accruedRewards.Add(sdk.NewCoin(result.Received.Denom, amtInDiff))
+			accruedRewards = accruedRewards.Add(sdk.NewCoin(denomIn, amtInDiff))
 			feeGrowth := amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity)
 			if result.Order.IsBuy {
 				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
@@ -157,10 +158,12 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			//panic(amtInDiff)
 		}
 
-		if result.Fee.IsNegative() {
-			accruedRewards = accruedRewards.Add(sdk.NewCoin(result.Fee.Denom, result.Fee.Amount.Neg()))
-			feeGrowth := result.Fee.Amount.Neg().ToDec().QuoTruncate(poolState.CurrentLiquidity)
-			if result.Fee.Denom == pool.Denom0 {
+		if len(result.Received) > 1 { // extra fees
+			denomOut := pool.DenomOut(isBuy)
+			fee := result.Received.AmountOf(denomOut)
+			accruedRewards = accruedRewards.Add(sdk.NewCoin(denomOut, fee))
+			feeGrowth := fee.ToDec().QuoTruncate(poolState.CurrentLiquidity)
+			if denomOut == pool.Denom0 {
 				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
 			} else {
 				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(feeGrowth)
