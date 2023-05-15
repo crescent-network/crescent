@@ -79,7 +79,7 @@ The documentation is available in [docs](docs) directory. If you are a developer
 
 * [Official Website](https://crescent.network/)
 * [Medium Blog](https://crescentnetwork.medium.com/)
-* [Discord](https://discord.com/invite/vmjfqHy4UA)
+* [Discord](https://discord.com/invite/ZUfrDnSX8G)
 * [Telegram](https://t.me/+5lJ33oeqV2QwYzQ1)
 * [Twitter](https://twitter.com/CrescentHub)
 
