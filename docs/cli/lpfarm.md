@@ -8,11 +8,7 @@ Description: A high-level overview of how the command-line interfaces (CLI) work
 ## Synopsis
 
 This document provides a high-level overview of how the command line (CLI)
-interface works for the `lpfarm` module. To set up a local testing environment, it requires the latest
-[Ignite CLI](https://docs.ignite.com/). If you don't have Ignite CLI set up in your local machine,
-see [this guide](https://docs.ignite.com/guide/install.html) to install it. Run this command under the project root
-directory
-`$ ignite chain serve -v -c config-test.yml`.
+interface works for the `lpfarm` module. 
 
 Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as it is used to process JSON throughout
 the document.
