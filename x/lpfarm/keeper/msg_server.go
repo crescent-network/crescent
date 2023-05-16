@@ -46,30 +46,24 @@ func (k msgServer) CreatePrivatePlan(goCtx context.Context, msg *types.MsgCreate
 func (k msgServer) TerminatePrivatePlan(goCtx context.Context, msg *types.MsgTerminatePrivatePlan) (*types.MsgTerminatePrivatePlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return nil, err
-	}
-
 	plan, found := k.GetPlan(ctx, msg.PlanId)
 	if !found {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "plan not found: %d", msg.PlanId)
+	}
+	if !plan.IsPrivate {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot terminate public plan")
+	}
+	if plan.TerminationAddress != msg.Creator {
 		return nil, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"invalid farming plan id: %d", msg.PlanId)
+			sdkerrors.ErrUnauthorized,
+			"plan's termination address must be same with the sender's address")
 	}
 
-	if plan.TerminationAddress != creatorAddr.String() {
-		return nil, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"invalid farming creator(termination address)")
-	}
-
-	err = k.Keeper.TerminatePlan(ctx, plan)
-	if err != nil {
+	if err := k.Keeper.TerminatePlan(ctx, plan); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgTerminatePrivatePlanResponse{PlanId: plan.Id}, nil
+	return &types.MsgTerminatePrivatePlanResponse{}, nil
 }
 
 // Farm defines a method for farming coins.

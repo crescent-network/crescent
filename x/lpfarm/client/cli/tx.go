@@ -121,11 +121,11 @@ $ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-0
 func NewTerminatePrivatePlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "terminate-private-plan [plan-id]",
-		Args:  cobra.MinimumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Short: "Terminate a private farming plan",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Terminate a private farming plan
-The plan's termination address must be the msg sender (creator).
+			fmt.Sprintf(`Terminate a private farming plan.
+The plan's termination address must be same with the message sender(original plan creator).
 
 Example:
 $ %s tx %s terminate-private-plan 1 --from mykey
@@ -141,12 +141,10 @@ $ %s tx %s terminate-private-plan 1 --from mykey
 
 			planId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("parse plan id: %w", err)
+				return fmt.Errorf("invalid plan id: %w", err)
 			}
 
-			msg := types.NewMsgTerminatePrivatePlan(
-				clientCtx.GetFromAddress(), planId)
-
+			msg := types.NewMsgTerminatePrivatePlan(clientCtx.GetFromAddress(), planId)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

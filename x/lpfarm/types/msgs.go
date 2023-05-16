@@ -76,7 +76,7 @@ func (msg MsgCreatePrivatePlan) GetCreatorAddress() sdk.AccAddress {
 	return addr
 }
 
-// NewMsgTerminatePrivatePlan terminates a PrivatePlan.
+// NewMsgTerminatePrivatePlan creates a new MsgTerminatePrivatePlan.
 func NewMsgTerminatePrivatePlan(
 	creatorAddr sdk.AccAddress, planId uint64) *MsgTerminatePrivatePlan {
 	return &MsgTerminatePrivatePlan{
@@ -103,6 +103,9 @@ func (msg MsgTerminatePrivatePlan) GetSigners() []sdk.AccAddress {
 func (msg MsgTerminatePrivatePlan) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address: %v", err)
+	}
+	if msg.PlanId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan id must not be 0")
 	}
 	return nil
 }

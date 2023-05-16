@@ -36,9 +36,7 @@ message MsgTerminatePrivatePlan {
   uint64 plan_id = 2;
 }
 
-message MsgTerminatePrivatePlanResponse {
-  uint64 plan_id = 1;
-}
+message MsgTerminatePrivatePlanResponse {}
 
 message MsgFarm {
   string                   farmer = 1;
