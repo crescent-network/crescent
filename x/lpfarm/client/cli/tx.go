@@ -31,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		NewCreatePrivatePlanCmd(),
+		NewTerminatePrivatePlanCmd(),
 		NewFarmCmd(),
 		NewUnfarmCmd(),
 		NewHarvestCmd(),
@@ -107,6 +108,44 @@ $ %s tx %s create-private-plan "New Farming Plan" 2022-01-01T00:00:00Z 2023-01-0
 
 			msg := types.NewMsgCreatePrivatePlan(
 				clientCtx.GetFromAddress(), description, rewardAllocs, startTime, endTime)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewTerminatePrivatePlanCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "terminate-private-plan [plan-id]",
+		Args:  cobra.MinimumNArgs(1),
+		Short: "Terminate a private farming plan",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Terminate a private farming plan
+The plan's termination address must be the msg sender (creator).
+
+Example:
+$ %s tx %s terminate-private-plan 1 --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			planId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("parse plan id: %w", err)
+			}
+
+			msg := types.NewMsgTerminatePrivatePlan(
+				clientCtx.GetFromAddress(), planId)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

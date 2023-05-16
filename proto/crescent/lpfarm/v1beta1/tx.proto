@@ -12,6 +12,7 @@ option (gogoproto.goproto_getters_all) = false;
 
 service Msg {
   rpc CreatePrivatePlan(MsgCreatePrivatePlan) returns (MsgCreatePrivatePlanResponse);
+  rpc TerminatePrivatePlan(MsgTerminatePrivatePlan) returns (MsgTerminatePrivatePlanResponse);
   rpc Farm(MsgFarm) returns (MsgFarmResponse);
   rpc Unfarm(MsgUnfarm) returns (MsgUnfarmResponse);
   rpc Harvest(MsgHarvest) returns (MsgHarvestResponse);
@@ -28,6 +29,15 @@ message MsgCreatePrivatePlan {
 message MsgCreatePrivatePlanResponse {
   uint64 plan_id              = 1;
   string farming_pool_address = 2;
+}
+
+message MsgTerminatePrivatePlan {
+  string creator = 1;
+  uint64 plan_id = 2;
+}
+
+message MsgTerminatePrivatePlanResponse {
+  uint64 plan_id = 1;
 }
 
 message MsgFarm {

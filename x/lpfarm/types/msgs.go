@@ -9,6 +9,7 @@ import (
 
 var (
 	_ sdk.Msg = (*MsgCreatePrivatePlan)(nil)
+	_ sdk.Msg = (*MsgTerminatePrivatePlan)(nil)
 	_ sdk.Msg = (*MsgFarm)(nil)
 	_ sdk.Msg = (*MsgUnfarm)(nil)
 	_ sdk.Msg = (*MsgHarvest)(nil)
@@ -16,10 +17,11 @@ var (
 
 // Message types for the module
 const (
-	TypeMsgCreatePrivatePlan = "create_private_plan"
-	TypeMsgFarm              = "farm"
-	TypeMsgUnfarm            = "unfarm"
-	TypeMsgHarvest           = "harvest"
+	TypeMsgCreatePrivatePlan    = "create_private_plan"
+	TypeMsgTerminatePrivatePlan = "terminate_private_plan"
+	TypeMsgFarm                 = "farm"
+	TypeMsgUnfarm               = "unfarm"
+	TypeMsgHarvest              = "harvest"
 )
 
 // NewMsgCreatePrivatePlan creates a new MsgCreatePrivatePlan.
@@ -67,6 +69,45 @@ func (msg MsgCreatePrivatePlan) ValidateBasic() error {
 }
 
 func (msg MsgCreatePrivatePlan) GetCreatorAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+// NewMsgTerminatePrivatePlan terminates a PrivatePlan.
+func NewMsgTerminatePrivatePlan(
+	creatorAddr sdk.AccAddress, planId uint64) *MsgTerminatePrivatePlan {
+	return &MsgTerminatePrivatePlan{
+		Creator: creatorAddr.String(),
+		PlanId:  planId,
+	}
+}
+
+func (msg MsgTerminatePrivatePlan) Route() string { return RouterKey }
+func (msg MsgTerminatePrivatePlan) Type() string  { return TypeMsgTerminatePrivatePlan }
+
+func (msg MsgTerminatePrivatePlan) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgTerminatePrivatePlan) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgTerminatePrivatePlan) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address: %v", err)
+	}
+	return nil
+}
+
+func (msg MsgTerminatePrivatePlan) GetCreatorAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
