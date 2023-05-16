@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v4/x/lpfarm/types"
 )
@@ -39,6 +40,30 @@ func (k msgServer) CreatePrivatePlan(goCtx context.Context, msg *types.MsgCreate
 		PlanId:             plan.Id,
 		FarmingPoolAddress: plan.FarmingPoolAddress,
 	}, nil
+}
+
+// TerminatePrivatePlan defines a method to terminate a private plan.
+func (k msgServer) TerminatePrivatePlan(goCtx context.Context, msg *types.MsgTerminatePrivatePlan) (*types.MsgTerminatePrivatePlanResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	plan, found := k.GetPlan(ctx, msg.PlanId)
+	if !found {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "plan not found: %d", msg.PlanId)
+	}
+	if !plan.IsPrivate {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot terminate public plan")
+	}
+	if plan.TerminationAddress != msg.Creator {
+		return nil, sdkerrors.Wrapf(
+			sdkerrors.ErrUnauthorized,
+			"plan's termination address must be same with the sender's address")
+	}
+
+	if err := k.Keeper.TerminatePlan(ctx, plan); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgTerminatePrivatePlanResponse{}, nil
 }
 
 // Farm defines a method for farming coins.

@@ -75,6 +75,8 @@ The documentation is available in [docs](docs) directory. If you are a developer
 * [Crescent Official Docs](https://docs.crescent.network/)
 * [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent/2.0.0)
 
+<!-- markdown-link-check-disable -->
+
 ## Community
 
 * [Official Website](https://crescent.network/)

@@ -84,6 +84,30 @@ func (s *SimTestSuite) TestSimulateMsgCreatePrivatePlan() {
 	s.Require().Equal(utils.ParseTime("2022-01-06T00:00:00Z"), msg.EndTime)
 }
 
+func (s *SimTestSuite) TestSimulateMsgTerminatePrivatePlan() {
+	r := rand.New(rand.NewSource(0))
+	accs := s.getTestingAccounts(r, 1)
+
+	_, err := s.app.LPFarmKeeper.CreatePrivatePlan(s.ctx, accs[0].Address, "", []types.RewardAllocation{
+		types.NewDenomRewardAllocation("stake", utils.ParseCoins("100_000000stake")),
+	}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"))
+	s.Require().NoError(err)
+
+	op := simulation.SimulateMsgTerminatePrivatePlan(s.app.AccountKeeper, s.app.BankKeeper, s.keeper)
+	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	s.Require().NoError(err)
+	s.Require().True(opMsg.OK)
+	s.Require().Len(futureOps, 0)
+
+	var msg types.MsgTerminatePrivatePlan
+	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
+
+	s.Require().Equal(types.TypeMsgTerminatePrivatePlan, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Creator)
+	s.Require().Equal(uint64(1), msg.PlanId)
+}
+
 func (s *SimTestSuite) TestSimulateMsgFarm() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 1)

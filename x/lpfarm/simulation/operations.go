@@ -21,15 +21,17 @@ import (
 
 // Simulation operation weights constants.
 const (
-	OpWeightMsgCreatePrivatePlan = "op_weight_msg_create_private_plan"
-	OpWeightMsgFarm              = "op_weight_msg_farm"
-	OpWeightMsgUnfarm            = "op_weight_msg_unfarm"
-	OpWeightMsgHarvest           = "op_weight_msg_harvest"
+	OpWeightMsgCreatePrivatePlan    = "op_weight_msg_create_private_plan"
+	OpWeightMsgTerminatePrivatePlan = "op_weight_msg_terminate_private_plan"
+	OpWeightMsgFarm                 = "op_weight_msg_farm"
+	OpWeightMsgUnfarm               = "op_weight_msg_unfarm"
+	OpWeightMsgHarvest              = "op_weight_msg_harvest"
 
-	DefaultWeightCreatePrivatePlan = 10
-	DefaultWeightFarm              = 40
-	DefaultWeightUnfarm            = 50
-	DefaultWeightHarvest           = 20
+	DefaultWeightCreatePrivatePlan    = 10
+	DefaultWeightTerminatePrivatePlan = 5
+	DefaultWeightFarm                 = 40
+	DefaultWeightUnfarm               = 50
+	DefaultWeightHarvest              = 20
 )
 
 var (
@@ -43,13 +45,17 @@ func WeightedOperations(
 	ak types.AccountKeeper, bk types.BankKeeper, lk types.LiquidityKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgCreatePrivatePlan int
-		weightMsgFarm              int
-		weightMsgUnfarm            int
-		weightMsgHarvest           int
+		weightMsgCreatePrivatePlan    int
+		weightMsgTerminatePrivatePlan int
+		weightMsgFarm                 int
+		weightMsgUnfarm               int
+		weightMsgHarvest              int
 	)
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePrivatePlan, &weightMsgCreatePrivatePlan, nil, func(_ *rand.Rand) {
 		weightMsgCreatePrivatePlan = DefaultWeightCreatePrivatePlan
+	})
+	appParams.GetOrGenerate(cdc, OpWeightMsgTerminatePrivatePlan, &weightMsgTerminatePrivatePlan, nil, func(_ *rand.Rand) {
+		weightMsgTerminatePrivatePlan = DefaultWeightTerminatePrivatePlan
 	})
 	appParams.GetOrGenerate(cdc, OpWeightMsgFarm, &weightMsgFarm, nil, func(_ *rand.Rand) {
 		weightMsgFarm = DefaultWeightFarm
@@ -65,6 +71,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgCreatePrivatePlan,
 			SimulateMsgCreatePrivatePlan(ak, bk, lk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgTerminatePrivatePlan,
+			SimulateMsgTerminatePrivatePlan(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgFarm,
@@ -134,6 +144,55 @@ func SimulateMsgCreatePrivatePlan(
 		fundAddr(ctx, bk, plan.GetFarmingPoolAddress(), utils.ParseCoins("1000000_000000stake"))
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+	}
+}
+
+func SimulateMsgTerminatePrivatePlan(
+	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		accs = utils.ShuffleSimAccounts(r, accs)
+		var simAccount simtypes.Account
+		var planId uint64
+		skip := true
+		for _, simAccount = range accs {
+			k.IterateAllPlans(ctx, func(plan types.Plan) (stop bool) {
+				if !plan.IsTerminated && plan.GetTerminationAddress().Equals(simAccount.Address) {
+					planId = plan.Id
+					return true
+				}
+				return false
+			})
+			if planId > 0 {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgFarm, "no account to farm"), nil, nil
+		}
+
+		msg := types.NewMsgTerminatePrivatePlan(simAccount.Address, planId)
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: bk.SpendableCoins(ctx, simAccount.Address),
+		}
+
+		return utils.GenAndDeliverTxWithFees(txCtx, gas, fees)
 	}
 }
 
