@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
 	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
@@ -59,6 +61,55 @@ func (s *KeeperTestSuite) TestCreatePrivatePlan_PairNotFound() {
 		utils.ParseTime("2023-01-01T00:00:00Z"))
 	s.Require().EqualError(
 		err, "pair 2 not found: not found")
+}
+
+func (s *KeeperTestSuite) TestTerminatePrivatePlan() {
+	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+	s.createPool(1, utils.ParseCoins("100_000000denom1,100_000000denom2"))
+
+	creatorAddr := utils.TestAddress(1)
+	s.fundAddr(creatorAddr, s.keeper.GetPrivatePlanCreationFee(s.ctx))
+	plan, err := s.keeper.CreatePrivatePlan(
+		s.ctx, creatorAddr, "", []types.RewardAllocation{
+			types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+		}, sampleStartTime, sampleEndTime)
+	s.Require().NoError(err)
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("10000_000000stake"))
+
+	s.farm(utils.TestAddress(2), utils.ParseCoin("1000000pool1"))
+
+	s.nextBlock()
+	s.nextBlock()
+	s.nextBlock()
+
+	balancesBefore := s.getBalances(creatorAddr)
+	remainingFarmingRewards := s.getBalances(plan.GetFarmingPoolAddress())
+
+	msgServer := keeper.NewMsgServerImpl(s.keeper)
+	msg := types.NewMsgTerminatePrivatePlan(creatorAddr, 1)
+	_, err = msgServer.TerminatePrivatePlan(sdk.WrapSDKContext(s.ctx), msg)
+	s.Require().NoError(err)
+
+	s.assertEq(sdk.Coins{}, s.getBalances(plan.GetFarmingPoolAddress()))
+	s.assertEq(balancesBefore.Add(remainingFarmingRewards...), s.getBalances(creatorAddr))
+}
+
+func (s *KeeperTestSuite) TestTerminatePrivatePlan_Unauthorized() {
+	s.createPairWithLastPrice("denom1", "denom2", sdk.NewDec(1))
+
+	creatorAddr := utils.TestAddress(1)
+	s.fundAddr(creatorAddr, s.keeper.GetPrivatePlanCreationFee(s.ctx))
+	plan, err := s.keeper.CreatePrivatePlan(
+		s.ctx, creatorAddr, "", []types.RewardAllocation{
+			types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+		}, sampleStartTime, sampleEndTime)
+	s.Require().NoError(err)
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("10000_000000stake"))
+
+	msgServer := keeper.NewMsgServerImpl(s.keeper)
+	msg := types.NewMsgTerminatePrivatePlan(utils.TestAddress(2), 1)
+	_, err = msgServer.TerminatePrivatePlan(sdk.WrapSDKContext(s.ctx), msg)
+	s.Require().ErrorIs(err, sdkerrors.ErrUnauthorized)
 }
 
 func (s *KeeperTestSuite) TestAllocateRewards_NoFarmer() {
