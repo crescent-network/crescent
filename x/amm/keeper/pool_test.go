@@ -7,12 +7,14 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (s *KeeperTestSuite) CreateSamplePool() (pool types.Pool) {
+func (s *KeeperTestSuite) CreateSampleMarketAndPool() (market exchangetypes.Market, pool types.Pool) {
 	creatorAddr := s.FundedAccount(0, utils.ParseCoins("1000000ucre,1000000uusd"))
-	market := s.CreateMarket(creatorAddr, "ucre", "uusd", true)
-	return s.CreatePool(creatorAddr, market.Id, sdk.NewDec(5), true)
+	market = s.CreateMarket(creatorAddr, "ucre", "uusd", true)
+	pool = s.CreatePool(creatorAddr, market.Id, sdk.NewDec(5), true)
+	return market, pool
 }
 
 func (s *KeeperTestSuite) TestPoolOrders() {
@@ -102,7 +104,7 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	} {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			pool := s.CreateSamplePool()
+			_, pool := s.CreateSampleMarketAndPool()
 			lpAddr := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 			tc.addLiquidity(pool, lpAddr)
 			var buyOrders, sellOrders []order

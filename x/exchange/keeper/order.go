@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -45,6 +44,8 @@ func (k Keeper) PlaceOrder(
 			if err != nil {
 				return
 			}
+			k.SetOrder(ctx, order)
+			k.SetOrderBookOrder(ctx, order)
 		}
 	}
 	return
@@ -64,110 +65,7 @@ func (k Keeper) CreateOrder(
 	if err := k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit), false); err != nil {
 		return order, err
 	}
-	if !isTemp {
-		k.SetOrder(ctx, order)
-		k.SetOrderBookOrder(ctx, order)
-	}
 	return order, nil
-}
-
-func (k Keeper) executeOrder(
-	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, simulate bool) (totalExecQty, totalExecQuote sdk.Int) {
-	if qtyLimit == nil && quoteLimit == nil { // sanity check
-		panic("quantity limit and quote limit cannot be set to nil at the same time")
-	}
-	if simulate {
-		ctx, _ = ctx.CacheContext()
-	}
-	var lastPrice sdk.Dec
-	totalExecQty = utils.ZeroInt
-	totalExecQuote = utils.ZeroInt
-	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
-	var sourceNames []string
-	resultsBySourceName := map[string][]types.TempOrder{}
-	for _, level := range obs.Levels {
-		if priceLimit != nil &&
-			((isBuy && level.Price.GT(*priceLimit)) ||
-				(!isBuy && level.Price.LT(*priceLimit))) {
-			break
-		}
-		if qtyLimit != nil && !qtyLimit.Sub(totalExecQty).IsPositive() {
-			break
-		}
-		if quoteLimit != nil && !quoteLimit.Sub(totalExecQuote).IsPositive() {
-			break
-		}
-
-		executableQty := types.TotalExecutableQuantity(level.Orders, level.Price)
-		execQty := executableQty
-		if qtyLimit != nil {
-			execQty = utils.MinInt(execQty, qtyLimit.Sub(totalExecQty))
-		}
-		if quoteLimit != nil {
-			execQty = utils.MinInt(
-				execQty,
-				quoteLimit.Sub(totalExecQuote).ToDec().QuoTruncate(level.Price).TruncateInt())
-		}
-
-		market.FillTempOrderBookLevel(level, execQty, level.Price, true)
-		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
-		// TODO: refactor code
-		if isBuy {
-			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, execQuote), true); err != nil {
-				panic(err)
-			}
-			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQty).TruncateInt()
-			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, receive), true); err != nil {
-				panic(err)
-			}
-		} else {
-			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, execQty), true); err != nil {
-				panic(err)
-			}
-			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQuote).TruncateInt()
-			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, receive), true); err != nil {
-				panic(err)
-			}
-		}
-		totalExecQty = totalExecQty.Add(execQty)
-		totalExecQuote = totalExecQuote.Add(execQuote)
-
-		if !simulate {
-			for _, order := range level.Orders {
-				if order.IsUpdated && order.Source != nil {
-					sourceName := order.Source.Name()
-					results, ok := resultsBySourceName[sourceName]
-					if !ok {
-						sourceNames = append(sourceNames, sourceName)
-					}
-					resultsBySourceName[sourceName] = append(results, *order)
-				}
-			}
-			lastPrice = level.Price
-		}
-	}
-	if !simulate {
-		if err := k.ApplyTempOrderBookSideChanges(ctx, market, obs); err != nil {
-			panic(err)
-		}
-		if err := k.ExecuteSendCoins(ctx); err != nil {
-			panic(err) // TODO: return error
-		}
-		for _, sourceName := range sourceNames {
-			results := resultsBySourceName[sourceName]
-			if len(results) > 0 {
-				source := k.sources[sourceName]
-				source.AfterOrdersExecuted(ctx, market, results)
-			}
-		}
-		if !lastPrice.IsNil() {
-			state := k.MustGetMarketState(ctx, market.Id)
-			state.LastPrice = &lastPrice
-			k.SetMarketState(ctx, market.Id, state)
-		}
-	}
-	return
 }
 
 func (k Keeper) CancelOrder(ctx sdk.Context, senderAddr sdk.AccAddress, orderId uint64) (order types.Order, err error) {

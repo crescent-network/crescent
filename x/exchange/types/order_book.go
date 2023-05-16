@@ -21,12 +21,15 @@ import (
 //}
 
 func (market Market) MatchOrderBookLevels(
-	levelA *TempOrderBookLevel, isMakerA bool, levelB *TempOrderBookLevel, isMakerB bool, price sdk.Dec) {
+	levelA *TempOrderBookLevel, isMakerA bool, levelB *TempOrderBookLevel, isMakerB bool, price sdk.Dec) (execQty sdk.Int, fullA, fullB bool) {
 	executableQtyA := TotalExecutableQuantity(levelA.Orders, price)
 	executableQtyB := TotalExecutableQuantity(levelB.Orders, price)
-	execQty := utils.MinInt(executableQtyA, executableQtyB)
+	execQty = utils.MinInt(executableQtyA, executableQtyB)
+	fullA = execQty.Equal(executableQtyA)
+	fullB = execQty.Equal(executableQtyB)
 	market.FillTempOrderBookLevel(levelA, execQty, price, isMakerA)
 	market.FillTempOrderBookLevel(levelB, execQty, price, isMakerB)
+	return
 }
 
 func (market Market) FillTempOrderBookLevel(level *TempOrderBookLevel, qty sdk.Int, price sdk.Dec, isMaker bool) {
@@ -102,7 +105,6 @@ func (market Market) FillTempOrder(order *TempOrder, qty sdk.Int, price sdk.Dec,
 		panic("open quantity is less than quantity")
 	}
 	negativeMakerFeeRate := market.MakerFeeRate.IsNegative()
-	// TODO: consider fees!
 	order.ExecutedQuantity = order.ExecutedQuantity.Add(qty)
 	order.OpenQuantity = order.OpenQuantity.Sub(qty)
 	if order.IsBuy {
@@ -209,7 +211,7 @@ type TempOrder struct {
 	Received         sdk.Coins
 }
 
-func (market Market) NewTempOrder(order Order, source OrderSource) *TempOrder {
+func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
 	var payDenom string
 	if order.IsBuy {
 		payDenom = market.QuoteDenom

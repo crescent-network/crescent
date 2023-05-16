@@ -38,6 +38,138 @@ import (
 //	return ob, nil
 //}
 
+func (k Keeper) executeOrder(
+	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, simulate bool) (totalExecQty, totalExecQuote sdk.Int) {
+	if qtyLimit == nil && quoteLimit == nil { // sanity check
+		panic("quantity limit and quote limit cannot be set to nil at the same time")
+	}
+	if simulate {
+		ctx, _ = ctx.CacheContext()
+	}
+	var lastPrice sdk.Dec
+	totalExecQty = utils.ZeroInt
+	totalExecQuote = utils.ZeroInt
+	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
+	for _, level := range obs.Levels {
+		if priceLimit != nil &&
+			((isBuy && level.Price.GT(*priceLimit)) ||
+				(!isBuy && level.Price.LT(*priceLimit))) {
+			break
+		}
+		if qtyLimit != nil && !qtyLimit.Sub(totalExecQty).IsPositive() {
+			break
+		}
+		if quoteLimit != nil && !quoteLimit.Sub(totalExecQuote).IsPositive() {
+			break
+		}
+
+		executableQty := types.TotalExecutableQuantity(level.Orders, level.Price)
+		execQty := executableQty
+		if qtyLimit != nil {
+			execQty = utils.MinInt(execQty, qtyLimit.Sub(totalExecQty))
+		}
+		if quoteLimit != nil {
+			execQty = utils.MinInt(
+				execQty,
+				quoteLimit.Sub(totalExecQuote).ToDec().QuoTruncate(level.Price).TruncateInt())
+		}
+
+		market.FillTempOrderBookLevel(level, execQty, level.Price, true)
+		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
+		// TODO: refactor code
+		if isBuy {
+			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, execQuote), true); err != nil {
+				panic(err)
+			}
+			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQty).TruncateInt()
+			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, receive), true); err != nil {
+				panic(err)
+			}
+		} else {
+			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, execQty), true); err != nil {
+				panic(err)
+			}
+			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQuote).TruncateInt()
+			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, receive), true); err != nil {
+				panic(err)
+			}
+		}
+		totalExecQty = totalExecQty.Add(execQty)
+		totalExecQuote = totalExecQuote.Add(execQuote)
+		lastPrice = level.Price
+	}
+	if !simulate {
+		var tempOrders []*types.TempOrder
+		for _, level := range obs.Levels {
+			for _, order := range level.Orders {
+				tempOrders = append(tempOrders, order)
+			}
+		}
+		if err := k.FinalizeMatching(ctx, market, tempOrders); err != nil {
+			panic(err)
+		}
+		if !lastPrice.IsNil() {
+			state := k.MustGetMarketState(ctx, market.Id)
+			state.LastPrice = &lastPrice
+			k.SetMarketState(ctx, market.Id, state)
+		}
+	}
+	return
+}
+
+func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []*types.TempOrder) error {
+	var sourceNames []string
+	resultsBySourceName := map[string][]types.TempOrder{}
+	for _, order := range orders {
+		if order.IsUpdated && order.Source != nil {
+			sourceName := order.Source.Name()
+			results, ok := resultsBySourceName[sourceName]
+			if !ok {
+				sourceNames = append(sourceNames, sourceName)
+			}
+			resultsBySourceName[sourceName] = append(results, *order)
+		}
+
+		ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
+		if order.IsUpdated {
+			if err := k.ReleaseCoins(ctx, market, ordererAddr, order.Received, true); err != nil {
+				return err
+			}
+			if order.Source == nil {
+				// Update user orders
+				if order.ExecutableQuantity(order.Price).IsZero() {
+					k.DeleteOrder(ctx, order.Order)
+					k.DeleteOrderBookOrder(ctx, order.Order)
+				} else {
+					k.SetOrder(ctx, order.Order)
+				}
+			}
+		}
+		// Should refund deposit
+		if order.Source != nil || (order.IsUpdated && order.ExecutableQuantity(order.Price).IsZero()) {
+			if order.RemainingDeposit.IsPositive() {
+				if err := k.ReleaseCoin(
+					ctx, market, ordererAddr,
+					market.DepositCoin(order.IsBuy, order.RemainingDeposit), true); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if err := k.ExecuteSendCoins(ctx); err != nil {
+		return err
+	}
+	for _, sourceName := range sourceNames {
+		results := resultsBySourceName[sourceName]
+		if len(results) > 0 {
+			source := k.sources[sourceName]
+			source.AfterOrdersExecuted(ctx, market, results)
+		}
+	}
+	return nil
+}
+
 func (k Keeper) ConstructTempOrderBookSide(
 	ctx sdk.Context, market types.Market, isBuy bool,
 	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) *types.TempOrderBookSide {
@@ -58,7 +190,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 		if quoteLimit != nil && !quoteLimit.Sub(accQuote).IsPositive() {
 			return true
 		}
-		obs.AddOrder(market.NewTempOrder(order, nil))
+		obs.AddOrder(types.NewTempOrder(order, market, nil))
 		accQty = accQty.Add(order.OpenQuantity)
 		accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
 		return false
@@ -70,7 +202,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 			if err != nil {
 				return err
 			}
-			obs.AddOrder(market.NewTempOrder(order, source))
+			obs.AddOrder(types.NewTempOrder(order, market, source))
 			return nil
 		}, types.GenerateOrdersOptions{
 			IsBuy:         isBuy,
@@ -82,32 +214,30 @@ func (k Keeper) ConstructTempOrderBookSide(
 	return obs
 }
 
-func (k Keeper) ApplyTempOrderBookSideChanges(ctx sdk.Context, market types.Market, obs *types.TempOrderBookSide) error {
-	for _, level := range obs.Levels {
-		for _, order := range level.Orders {
-			ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
-			if order.IsUpdated {
-				if err := k.ReleaseCoins(ctx, market, ordererAddr, order.Received, true); err != nil {
-					return err
-				}
-				if order.Source == nil {
-					// Update user orders
-					if order.ExecutableQuantity(order.Price).IsZero() {
-						k.DeleteOrder(ctx, order.Order)
-						k.DeleteOrderBookOrder(ctx, order.Order)
-					} else {
-						k.SetOrder(ctx, order.Order)
-					}
+func (k Keeper) ApplyTempOrderChanges(ctx sdk.Context, market types.Market, orders []*types.TempOrder) error {
+	for _, order := range orders {
+		ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
+		if order.IsUpdated {
+			if err := k.ReleaseCoins(ctx, market, ordererAddr, order.Received, true); err != nil {
+				return err
+			}
+			if order.Source == nil {
+				// Update user orders
+				if order.ExecutableQuantity(order.Price).IsZero() {
+					k.DeleteOrder(ctx, order.Order)
+					k.DeleteOrderBookOrder(ctx, order.Order)
+				} else {
+					k.SetOrder(ctx, order.Order)
 				}
 			}
-			// Should refund deposit
-			if order.Source != nil || (order.IsUpdated && order.ExecutableQuantity(order.Price).IsZero()) {
-				if order.RemainingDeposit.IsPositive() {
-					if err := k.ReleaseCoin(
-						ctx, market, ordererAddr,
-						market.DepositCoin(order.IsBuy, order.RemainingDeposit), true); err != nil {
-						return err
-					}
+		}
+		// Should refund deposit
+		if order.Source != nil || (order.IsUpdated && order.ExecutableQuantity(order.Price).IsZero()) {
+			if order.RemainingDeposit.IsPositive() {
+				if err := k.ReleaseCoin(
+					ctx, market, ordererAddr,
+					market.DepositCoin(order.IsBuy, order.RemainingDeposit), true); err != nil {
+					return err
 				}
 			}
 		}

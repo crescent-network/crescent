@@ -3,8 +3,9 @@ package testutil
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -48,6 +49,11 @@ func (s *TestSuite) NextBlock() {
 	s.T().Helper()
 	s.EndBlock()
 	s.BeginBlock()
+}
+
+func (s *TestSuite) GetAllBalances(addr sdk.AccAddress) sdk.Coins {
+	s.T().Helper()
+	return s.App.BankKeeper.GetAllBalances(s.Ctx, addr)
 }
 
 func (s *TestSuite) FundAccount(

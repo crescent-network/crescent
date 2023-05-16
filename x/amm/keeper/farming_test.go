@@ -10,7 +10,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestFarming() {
-	pool := s.CreateSamplePool()
+	_, pool := s.CreateSampleMarketAndPool()
 	lpAddr1 := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	lpAddr2 := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	position1, liquidity1, _ := s.AddLiquidity(
