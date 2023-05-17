@@ -15,6 +15,9 @@ var (
 	_ sdk.Msg = (*MsgRemoveLiquidity)(nil)
 	_ sdk.Msg = (*MsgCollect)(nil)
 	_ sdk.Msg = (*MsgCreatePrivateFarmingPlan)(nil)
+	_ sdk.Msg = (*MsgCreateSharedPosition)(nil)
+	_ sdk.Msg = (*MsgMintPositionShare)(nil)
+	_ sdk.Msg = (*MsgBurnPositionShare)(nil)
 )
 
 // Message types for the module
@@ -24,6 +27,9 @@ const (
 	TypeMsgRemoveLiquidity          = "remove_liquidity"
 	TypeMsgCollect                  = "collect"
 	TypeMsgCreatePrivateFarmingPlan = "create_private_farming_plan"
+	TypeMsgCreateSharedPosition     = "create_shared_position"
+	TypeMsgMintPositionShare        = "mint_position_share"
+	TypeMsgBurnPositionShare        = "burn_position_share"
 )
 
 func NewMsgCreatePool(
@@ -228,5 +234,104 @@ func (msg MsgCreatePrivateFarmingPlan) ValidateBasic() error {
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+	return nil
+}
+
+func NewMsgCreateSharedPosition(
+	senderAddr sdk.AccAddress, poolId uint64,
+	lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) *MsgCreateSharedPosition {
+	return &MsgCreateSharedPosition{
+		Sender:        senderAddr.String(),
+		PoolId:        poolId,
+		LowerPrice:    lowerPrice,
+		UpperPrice:    upperPrice,
+		DesiredAmount: desiredAmt,
+	}
+}
+
+func (msg MsgCreateSharedPosition) Route() string { return RouterKey }
+func (msg MsgCreateSharedPosition) Type() string  { return TypeMsgCreateSharedPosition }
+
+func (msg MsgCreateSharedPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreateSharedPosition) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCreateSharedPosition) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	// TODO: implement
+	return nil
+}
+
+func NewMsgMintPositionShare(
+	senderAddr sdk.AccAddress, positionId uint64, desiredAmt sdk.Coins) *MsgMintPositionShare {
+	return &MsgMintPositionShare{
+		Sender:        senderAddr.String(),
+		PositionId:    positionId,
+		DesiredAmount: desiredAmt,
+	}
+}
+
+func (msg MsgMintPositionShare) Route() string { return RouterKey }
+func (msg MsgMintPositionShare) Type() string  { return TypeMsgMintPositionShare }
+
+func (msg MsgMintPositionShare) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgMintPositionShare) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgMintPositionShare) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	// TODO: implement
+	return nil
+}
+
+func NewMsgBurnPositionShare(
+	senderAddr sdk.AccAddress, positionId uint64, share sdk.Coin) *MsgBurnPositionShare {
+	return &MsgBurnPositionShare{
+		Sender:     senderAddr.String(),
+		PositionId: positionId,
+		Share:      share,
+	}
+}
+
+func (msg MsgBurnPositionShare) Route() string { return RouterKey }
+func (msg MsgBurnPositionShare) Type() string  { return TypeMsgBurnPositionShare }
+
+func (msg MsgBurnPositionShare) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgBurnPositionShare) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgBurnPositionShare) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	// TODO: implement
 	return nil
 }

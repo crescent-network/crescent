@@ -16,6 +16,9 @@ service Msg {
   rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
   rpc Collect(MsgCollect) returns (MsgCollectResponse);
   rpc CreatePrivateFarmingPlan(MsgCreatePrivateFarmingPlan) returns (MsgCreatePrivateFarmingPlanResponse);
+  rpc CreateSharedPosition(MsgCreateSharedPosition) returns (MsgCreateSharedPositionResponse);
+  rpc MintPositionShare(MsgMintPositionShare) returns (MsgMintPositionShareResponse);
+  rpc BurnPositionShare(MsgBurnPositionShare) returns (MsgBurnPositionShareResponse);
 }
 
 message MsgCreatePool {
@@ -80,4 +83,52 @@ message MsgCreatePrivateFarmingPlan {
 message MsgCreatePrivateFarmingPlanResponse {
   uint64 farming_plan_id      = 1;
   string farming_pool_address = 2;
+}
+
+message MsgCreateSharedPosition {
+  string sender      = 1;
+  uint64 pool_id     = 2;
+  string lower_price = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string upper_price = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin desired_amount = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message MsgCreateSharedPositionResponse {
+  uint64 position_id = 1;
+  string liquidity   = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin minted_share = 4 [(gogoproto.nullable) = false];
+}
+
+message MsgMintPositionShare {
+  string   sender                                  = 1;
+  uint64   position_id                             = 2;
+  repeated cosmos.base.v1beta1.Coin desired_amount = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message MsgMintPositionShareResponse {
+  string liquidity = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin minted_share = 3 [(gogoproto.nullable) = false];
+}
+
+message MsgBurnPositionShare {
+  string                   sender      = 1;
+  uint64                   position_id = 2;
+  cosmos.base.v1beta1.Coin share       = 3 [(gogoproto.nullable) = false];
+}
+
+message MsgBurnPositionShareResponse {
+  string liquidity = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }

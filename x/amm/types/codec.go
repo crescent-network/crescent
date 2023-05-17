@@ -16,6 +16,9 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgRemoveLiquidity{}, "amm/MsgRemoveLiquidity", nil)
 	cdc.RegisterConcrete(&MsgCollect{}, "amm/MsgCollect", nil)
 	cdc.RegisterConcrete(&MsgCreatePrivateFarmingPlan{}, "amm/MsgCreatePrivateFarmingPlan", nil)
+	cdc.RegisterConcrete(&MsgCreateSharedPosition{}, "amm/MsgCreateSharedPosition", nil)
+	cdc.RegisterConcrete(&MsgMintPositionShare{}, "amm/MsgMintPositionShare", nil)
+	cdc.RegisterConcrete(&MsgBurnPositionShare{}, "amm/MsgBurnPositionShare", nil)
 }
 
 // RegisterInterfaces registers the x/amm interfaces types with the
@@ -28,6 +31,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgRemoveLiquidity{},
 		&MsgCollect{},
 		&MsgCreatePrivateFarmingPlan{},
+		&MsgCreateSharedPosition{},
+		&MsgMintPositionShare{},
+		&MsgBurnPositionShare{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

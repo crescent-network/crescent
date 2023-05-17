@@ -102,9 +102,7 @@ func (k Keeper) executeOrder(
 	if !simulate {
 		var tempOrders []*types.TempOrder
 		for _, level := range obs.Levels {
-			for _, order := range level.Orders {
-				tempOrders = append(tempOrders, order)
-			}
+			tempOrders = append(tempOrders, level.Orders...)
 		}
 		if err := k.FinalizeMatching(ctx, market, tempOrders); err != nil {
 			panic(err)
