@@ -28,6 +28,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	for _, tickInfoRecord := range genState.TickInfoRecords {
 		k.SetTickInfo(ctx, tickInfoRecord.PoolId, tickInfoRecord.Tick, tickInfoRecord.TickInfo)
 	}
+	if genState.LastFarmingPlanId > 0 {
+		k.SetLastFarmingPlanId(ctx, genState.LastFarmingPlanId)
+	}
+	if genState.NumPrivateFarmingPlans > 0 {
+		k.SetNumPrivateFarmingPlans(ctx, genState.NumPrivateFarmingPlans)
+	}
+	for _, plan := range genState.FarmingPlans {
+		k.SetFarmingPlan(ctx, plan)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -54,11 +63,20 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		})
 		return false
 	})
+	farmingPlans := []types.FarmingPlan{}
+	k.IterateAllFarmingPlans(ctx, func(plan types.FarmingPlan) (stop bool) {
+		farmingPlans = append(farmingPlans, plan)
+		return false
+	})
+	// TODO: set farming plans
 	return types.NewGenesisState(
 		k.GetParams(ctx),
 		k.GetLastPoolId(ctx),
 		k.GetLastPositionId(ctx),
 		poolRecords,
 		positions,
-		tickInfoRecords)
+		tickInfoRecords,
+		k.GetLastFarmingPlanId(ctx),
+		k.GetNumPrivateFarmingPlans(ctx),
+		farmingPlans)
 }

@@ -6,20 +6,24 @@ import (
 
 func NewGenesisState(
 	params Params, lastPoolId, lastPositionId uint64,
-	poolRecords []PoolRecord, positions []Position, tickInfoRecords []TickInfoRecord) *GenesisState {
+	poolRecords []PoolRecord, positions []Position, tickInfoRecords []TickInfoRecord,
+	lastFarmingPlanId uint64, numPrivateFarmingPlans uint32, farmingPlans []FarmingPlan) *GenesisState {
 	return &GenesisState{
-		Params:          params,
-		LastPoolId:      lastPoolId,
-		LastPositionId:  lastPositionId,
-		PoolRecords:     poolRecords,
-		Positions:       positions,
-		TickInfoRecords: tickInfoRecords,
+		Params:                 params,
+		LastPoolId:             lastPoolId,
+		LastPositionId:         lastPositionId,
+		PoolRecords:            poolRecords,
+		Positions:              positions,
+		TickInfoRecords:        tickInfoRecords,
+		LastFarmingPlanId:      lastFarmingPlanId,
+		NumPrivateFarmingPlans: numPrivateFarmingPlans,
+		FarmingPlans:           farmingPlans,
 	}
 }
 
 // DefaultGenesis returns the default genesis state for the module.
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(DefaultParams(), 0, 0, nil, nil, nil)
+	return NewGenesisState(DefaultParams(), 0, 0, nil, nil, nil, 0, 0, nil)
 }
 
 func (genState GenesisState) Validate() error {
@@ -39,6 +43,11 @@ func (genState GenesisState) Validate() error {
 	for _, tickInfoRecord := range genState.TickInfoRecords {
 		if err := tickInfoRecord.Validate(); err != nil {
 			return fmt.Errorf("invalid tick info record: %w", err)
+		}
+	}
+	for _, plan := range genState.FarmingPlans {
+		if err := plan.Validate(); err != nil {
+			return fmt.Errorf("invalid farming plan: %w", err)
 		}
 	}
 	return nil

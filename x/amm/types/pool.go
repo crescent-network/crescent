@@ -68,7 +68,7 @@ func NewPoolState(tick int32, price sdk.Dec) PoolState {
 	return PoolState{
 		CurrentTick:                tick,
 		CurrentPrice:               price,
-		CurrentLiquidity:           utils.ZeroDec,
+		CurrentLiquidity:           utils.ZeroInt,
 		FeeGrowthGlobal0:           utils.ZeroDec,
 		FeeGrowthGlobal1:           utils.ZeroDec,
 		FarmingRewardsGrowthGlobal: sdk.DecCoins{},

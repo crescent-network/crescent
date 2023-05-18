@@ -15,7 +15,7 @@ func NewPosition(id, poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upperTi
 		Owner:                          ownerAddr.String(),
 		LowerTick:                      lowerTick,
 		UpperTick:                      upperTick,
-		Liquidity:                      utils.ZeroDec,
+		Liquidity:                      utils.ZeroInt,
 		LastFeeGrowthInside0:           utils.ZeroDec,
 		LastFeeGrowthInside1:           utils.ZeroDec,
 		OwedToken0:                     utils.ZeroInt,

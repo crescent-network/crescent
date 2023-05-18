@@ -45,11 +45,12 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	return pool, nil
 }
 
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int, liquidity sdk.Dec) (stop bool)) {
+// TODO: no need for liquidity
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int, liquidity sdk.Int) (stop bool)) {
 	ts := int32(pool.TickSpacing)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy))
-	k.IteratePoolOrderTicks(ctx, pool, poolState, isBuy, func(tick int32, liquidity sdk.Dec) (stop bool) {
+	k.IteratePoolOrderTicks(ctx, pool, poolState, isBuy, func(tick int32, liquidity sdk.Int) (stop bool) {
 		if !reserveBalance.IsPositive() {
 			return true
 		}
@@ -82,7 +83,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 	})
 }
 
-func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolState types.PoolState, isBuy bool, cb func(tick int32, liquidity sdk.Dec) (stop bool)) {
+func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolState types.PoolState, isBuy bool, cb func(tick int32, liquidity sdk.Int) (stop bool)) {
 	ts := int32(pool.TickSpacing)
 	currentTick := poolState.CurrentTick
 	orderLiquidity := poolState.CurrentLiquidity

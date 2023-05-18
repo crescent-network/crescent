@@ -4,6 +4,7 @@ package crescent.amm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "crescent/amm/v1beta1/amm.proto";
+import "crescent/amm/v1beta1/farming.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -45,7 +46,7 @@ message MsgAddLiquidity {
 message MsgAddLiquidityResponse {
   uint64 position_id = 1;
   string liquidity   = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
@@ -54,7 +55,7 @@ message MsgRemoveLiquidity {
   string sender      = 1;
   uint64 position_id = 2;
   string liquidity   = 3
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 message MsgRemoveLiquidityResponse {
@@ -98,11 +99,11 @@ message MsgCreateSharedPosition {
 
 message MsgCreateSharedPositionResponse {
   uint64 position_id = 1;
-  string liquidity   = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin amount = 3
+  string share_denom = 2;
+  string liquidity   = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 4
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin minted_share = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgMintPositionShare {
@@ -114,21 +115,19 @@ message MsgMintPositionShare {
 
 message MsgMintPositionShareResponse {
   string liquidity = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   repeated cosmos.base.v1beta1.Coin amount = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin minted_share = 3 [(gogoproto.nullable) = false];
 }
 
 message MsgBurnPositionShare {
-  string                   sender      = 1;
-  uint64                   position_id = 2;
-  cosmos.base.v1beta1.Coin share       = 3 [(gogoproto.nullable) = false];
+  string sender      = 1;
+  uint64 position_id = 2;
+  string liquidity   = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 message MsgBurnPositionShareResponse {
-  string liquidity = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin amount = 2
+  repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }

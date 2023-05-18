@@ -122,7 +122,7 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 }
 
 func NewMsgRemoveLiquidity(
-	senderAddr sdk.AccAddress, positionId uint64, liquidity sdk.Dec) *MsgRemoveLiquidity {
+	senderAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) *MsgRemoveLiquidity {
 	return &MsgRemoveLiquidity{
 		Sender:     senderAddr.String(),
 		PositionId: positionId,
@@ -305,11 +305,11 @@ func (msg MsgMintPositionShare) ValidateBasic() error {
 }
 
 func NewMsgBurnPositionShare(
-	senderAddr sdk.AccAddress, positionId uint64, share sdk.Coin) *MsgBurnPositionShare {
+	senderAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) *MsgBurnPositionShare {
 	return &MsgBurnPositionShare{
 		Sender:     senderAddr.String(),
 		PositionId: positionId,
-		Share:      share,
+		Liquidity:  liquidity,
 	}
 }
 

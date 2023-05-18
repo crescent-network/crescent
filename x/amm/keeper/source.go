@@ -40,7 +40,7 @@ func (k OrderSource) GenerateOrders(
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int, liquidity sdk.Dec) (stop bool) {
+	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int, liquidity sdk.Int) (stop bool) {
 		if opts.PriceLimit != nil &&
 			((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
 				(!opts.IsBuy && price.GT(*opts.PriceLimit))) {
@@ -148,7 +148,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		amtInDiff := result.Received.AmountOf(denomIn).Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
 			accruedRewards = accruedRewards.Add(sdk.NewCoin(denomIn, amtInDiff))
-			feeGrowth := amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity)
+			feeGrowth := amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec())
 			if result.Order.IsBuy {
 				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
 			} else {
@@ -158,11 +158,12 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			//panic(amtInDiff)
 		}
 
+		// TODO: simplify code
 		if len(result.Received) > 1 { // extra fees
 			denomOut := pool.DenomOut(isBuy)
 			fee := result.Received.AmountOf(denomOut)
 			accruedRewards = accruedRewards.Add(sdk.NewCoin(denomOut, fee))
-			feeGrowth := fee.ToDec().QuoTruncate(poolState.CurrentLiquidity)
+			feeGrowth := fee.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec())
 			if denomOut == pool.Denom0 {
 				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
 			} else {

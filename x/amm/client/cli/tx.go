@@ -140,9 +140,9 @@ $ %s tx %s remove-liquidity 1 10000000000000 --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid position id: %w", err)
 			}
-			liquidity, err := sdk.NewDecFromStr(args[1])
-			if err != nil {
-				return fmt.Errorf("invalid liquidity: %w", err)
+			liquidity, ok := sdk.NewIntFromString(args[1])
+			if !ok {
+				return fmt.Errorf("invalid liquidity: %s", args[1])
 			}
 			msg := types.NewMsgRemoveLiquidity(
 				clientCtx.GetFromAddress(), positionId, liquidity)

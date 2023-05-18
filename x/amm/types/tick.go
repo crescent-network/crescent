@@ -15,8 +15,8 @@ func SqrtPriceAtTick(tick int32, prec int) sdk.Dec {
 
 func NewTickInfo() TickInfo {
 	return TickInfo{
-		GrossLiquidity:              utils.ZeroDec,
-		NetLiquidity:                utils.ZeroDec,
+		GrossLiquidity:              utils.ZeroInt,
+		NetLiquidity:                utils.ZeroInt,
 		FeeGrowthOutside0:           utils.ZeroDec,
 		FeeGrowthOutside1:           utils.ZeroDec,
 		FarmingRewardsGrowthOutside: sdk.DecCoins{},

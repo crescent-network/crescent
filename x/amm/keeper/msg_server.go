@@ -79,43 +79,41 @@ func (k msgServer) CreatePrivateFarmingPlan(goCtx context.Context, msg *types.Ms
 
 func (k msgServer) CreateSharedPosition(goCtx context.Context, msg *types.MsgCreateSharedPosition) (*types.MsgCreateSharedPositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	position, liquidity, amt, mintedShare, err := k.Keeper.CreateSharedPosition(
+	sharedPosition, liquidity, amt, err := k.Keeper.CreateSharedPosition(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PoolId,
 		msg.LowerPrice, msg.UpperPrice, msg.DesiredAmount)
 	if err != nil {
 		return nil, err
 	}
 	return &types.MsgCreateSharedPositionResponse{
-		PositionId:  position.Id,
-		Liquidity:   liquidity,
-		Amount:      amt,
-		MintedShare: mintedShare,
+		ShareDenom: sharedPosition.ShareDenom,
+		PositionId: sharedPosition.PositionId,
+		Liquidity:  liquidity,
+		Amount:     amt,
 	}, nil
 }
 
 func (k msgServer) MintPositionShare(goCtx context.Context, msg *types.MsgMintPositionShare) (*types.MsgMintPositionShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	liquidity, amt, mintedShare, err := k.Keeper.MintPositionShare(
+	liquidity, amt, err := k.Keeper.MintPositionShare(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.DesiredAmount)
 	if err != nil {
 		return nil, err
 	}
 	return &types.MsgMintPositionShareResponse{
-		Liquidity:   liquidity,
-		Amount:      amt,
-		MintedShare: mintedShare,
+		Liquidity: liquidity,
+		Amount:    amt,
 	}, nil
 }
 
 func (k msgServer) BurnPositionShare(goCtx context.Context, msg *types.MsgBurnPositionShare) (*types.MsgBurnPositionShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	liquidity, amt, err := k.Keeper.BurnPositionShare(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.Share)
+	amt, err := k.Keeper.BurnPositionShare(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.Liquidity)
 	if err != nil {
 		return nil, err
 	}
 	return &types.MsgBurnPositionShareResponse{
-		Liquidity: liquidity,
-		Amount:    amt,
+		Amount: amt,
 	}, nil
 }

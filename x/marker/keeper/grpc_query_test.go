@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestGRPCLastBlockTime() {
 	resp, err := s.querier.LastBlockTime(sdk.WrapSDKContext(s.ctx), &types.QueryLastBlockTimeRequest{})
 	s.Require().NoError(err)
 	s.Require().Nil(resp.LastBlockTime)
-	
+
 	s.nextBlock()
 
 	resp, err = s.querier.LastBlockTime(sdk.WrapSDKContext(s.ctx), &types.QueryLastBlockTimeRequest{})

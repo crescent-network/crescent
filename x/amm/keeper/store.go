@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -316,16 +317,16 @@ func (k Keeper) IterateAllFarmingPlans(ctx sdk.Context, cb func(plan types.Farmi
 	}
 }
 
-func (k Keeper) GetNumPrivateFarmingPlans(ctx sdk.Context) (num uint64) {
+func (k Keeper) GetNumPrivateFarmingPlans(ctx sdk.Context) (num uint32) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.NumPrivateFarmingPlansKey)
 	if bz == nil {
 		return 0
 	}
-	return sdk.BigEndianToUint64(bz)
+	return utils.BigEndianToUint32(bz)
 }
 
-func (k Keeper) SetNumPrivateFarmingPlans(ctx sdk.Context, num uint64) {
+func (k Keeper) SetNumPrivateFarmingPlans(ctx sdk.Context, num uint32) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.NumPrivateFarmingPlansKey, sdk.Uint64ToBigEndian(num))
+	store.Set(types.NumPrivateFarmingPlansKey, utils.Uint32ToBigEndian(num))
 }

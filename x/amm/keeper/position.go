@@ -11,7 +11,7 @@ import (
 
 func (k Keeper) AddLiquidity(
 	ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64,
-	lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) (position types.Position, liquidity sdk.Dec, amt sdk.Coins, err error) {
+	lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) (position types.Position, liquidity sdk.Int, amt sdk.Coins, err error) {
 	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice, TickPrecision)
 	if !valid {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid lower tick")
@@ -58,7 +58,7 @@ func (k Keeper) AddLiquidity(
 }
 
 func (k Keeper) RemoveLiquidity(
-	ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64, liquidity sdk.Dec) (position types.Position, amt sdk.Coins, err error) {
+	ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position types.Position, amt sdk.Coins, err error) {
 	var found bool
 	position, found = k.GetPosition(ctx, positionId)
 	if !found {
@@ -109,7 +109,7 @@ func (k Keeper) Collect(
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
 	}
 
-	position, _, err := k.RemoveLiquidity(ctx, ownerAddr, positionId, utils.ZeroDec)
+	position, _, err := k.RemoveLiquidity(ctx, ownerAddr, positionId, utils.ZeroInt)
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func (k Keeper) Collect(
 
 func (k Keeper) modifyPosition(
 	ctx sdk.Context, pool types.Pool, ownerAddr sdk.AccAddress,
-	lowerTick, upperTick int32, liquidityDelta sdk.Dec) (position types.Position, amt0, amt1 sdk.Int) {
+	lowerTick, upperTick int32, liquidityDelta sdk.Int) (position types.Position, amt0, amt1 sdk.Int) {
 	// TODO: validate ticks
 	var found bool
 	position, found = k.GetPositionByParams(ctx, ownerAddr, pool.Id, lowerTick, upperTick)
@@ -165,11 +165,9 @@ func (k Keeper) modifyPosition(
 	var flippedLower, flippedUpper bool
 	if !liquidityDelta.IsZero() {
 		flippedLower = k.updateTick(
-			ctx, pool.Id, lowerTick, poolState.CurrentTick, liquidityDelta,
-			poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1, false)
+			ctx, pool.Id, lowerTick, poolState.CurrentTick, liquidityDelta, poolState, false)
 		flippedUpper = k.updateTick(
-			ctx, pool.Id, upperTick, poolState.CurrentTick, liquidityDelta,
-			poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1, true)
+			ctx, pool.Id, upperTick, poolState.CurrentTick, liquidityDelta, poolState, true)
 	}
 
 	// TODO: optimize GetTickInfo
@@ -180,10 +178,10 @@ func (k Keeper) modifyPosition(
 		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
 		poolState.FarmingRewardsGrowthGlobal)
 
-	owedTokens0 := feeGrowthInside0.Sub(position.LastFeeGrowthInside0).MulTruncate(position.Liquidity).TruncateInt()
-	owedTokens1 := feeGrowthInside1.Sub(position.LastFeeGrowthInside1).MulTruncate(position.Liquidity).TruncateInt()
+	owedTokens0 := feeGrowthInside0.Sub(position.LastFeeGrowthInside0).MulInt(position.Liquidity).TruncateInt()
+	owedTokens1 := feeGrowthInside1.Sub(position.LastFeeGrowthInside1).MulInt(position.Liquidity).TruncateInt()
 	owedFarmingRewards, _ := farmingRewardsGrowthInside.Sub(position.LastFarmingRewardsGrowthInside).
-		MulDecTruncate(position.Liquidity).TruncateDecimal()
+		MulDecTruncate(position.Liquidity.ToDec()).TruncateDecimal()
 
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
 	position.LastFeeGrowthInside0 = feeGrowthInside0

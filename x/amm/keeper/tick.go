@@ -7,7 +7,8 @@ import (
 )
 
 func (k Keeper) updateTick(
-	ctx sdk.Context, poolId uint64, tick, currentTick int32, liquidityDelta, feeGrowthGlobal0, feeGrowthGlobal1 sdk.Dec, upper bool) (flipped bool) {
+	ctx sdk.Context, poolId uint64, tick, currentTick int32, liquidityDelta sdk.Int,
+	poolState types.PoolState, upper bool) (flipped bool) {
 	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
 	if !found {
 		tickInfo = types.NewTickInfo()
@@ -19,8 +20,9 @@ func (k Keeper) updateTick(
 
 	if grossLiquidityBefore.IsZero() {
 		if tick <= currentTick {
-			tickInfo.FeeGrowthOutside0 = feeGrowthGlobal0
-			tickInfo.FeeGrowthOutside1 = feeGrowthGlobal1
+			tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0
+			tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1
+			tickInfo.FarmingRewardsGrowthOutside = sdk.NewDecCoins()
 		}
 	}
 
@@ -96,7 +98,7 @@ func (k Keeper) farmingRewardsGrowthInside(
 	return farmingRewardsGrowthGlobal.Sub(rewardsGrowthBelow).Sub(rewardsGrowthAbove)
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, poolState types.PoolState) (netLiquidity sdk.Dec) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, poolState types.PoolState) (netLiquidity sdk.Int) {
 	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
 	if !found { // sanity check
 		panic("tick info not found")

@@ -10,7 +10,7 @@ import (
 )
 
 func (k Keeper) CanCreatePrivateFarmingPlan(ctx sdk.Context) bool {
-	return k.GetNumPrivateFarmingPlans(ctx) < uint64(k.GetMaxNumPrivateFarmingPlans(ctx))
+	return k.GetNumPrivateFarmingPlans(ctx) < k.GetMaxNumPrivateFarmingPlans(ctx)
 }
 
 func (k Keeper) CreatePrivateFarmingPlan(
@@ -179,7 +179,7 @@ func (k Keeper) AllocateFarmingRewards(ctx sdk.Context) error {
 	}
 	for _, poolId := range rewardedPools {
 		poolState := k.MustGetPoolState(ctx, poolId)
-		rewardsGrowth := sdk.NewDecCoinsFromCoins(totalRewardsByPool[poolId]...).QuoDecTruncate(poolState.CurrentLiquidity)
+		rewardsGrowth := sdk.NewDecCoinsFromCoins(totalRewardsByPool[poolId]...).QuoDecTruncate(poolState.CurrentLiquidity.ToDec())
 		poolState.FarmingRewardsGrowthGlobal = poolState.FarmingRewardsGrowthGlobal.Add(rewardsGrowth...)
 		k.SetPoolState(ctx, poolId, poolState)
 	}

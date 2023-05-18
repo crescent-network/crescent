@@ -20,6 +20,7 @@ func NewPoolResponse(pool Pool, poolState PoolState, balances sdk.Coins) PoolRes
 		FeeGrowthGlobal: sdk.NewDecCoins(
 			sdk.NewDecCoinFromDec(pool.Denom0, poolState.FeeGrowthGlobal0),
 			sdk.NewDecCoinFromDec(pool.Denom1, poolState.FeeGrowthGlobal1)),
+		FarmingRewardsGrowthGlobal: poolState.FarmingRewardsGrowthGlobal,
 	}
 }
 
@@ -37,5 +38,7 @@ func NewPositionResponse(position Position, pool Pool, prec int) PositionRespons
 		OwedTokens: sdk.NewCoins(
 			sdk.NewCoin(pool.Denom0, position.OwedToken0),
 			sdk.NewCoin(pool.Denom1, position.OwedToken1)),
+		LastFarmingRewardsGrowthInside: position.LastFarmingRewardsGrowthInside,
+		OwedFarmingRewards:             position.OwedFarmingRewards,
 	}
 }
