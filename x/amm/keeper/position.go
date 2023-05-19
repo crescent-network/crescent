@@ -48,9 +48,9 @@ func (k Keeper) AddLiquidity(
 	position, amt0, amt1 = k.modifyPosition(
 		ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
 
-	depositCoins := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
+	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	if err = k.bankKeeper.SendCoins(
-		ctx, ownerAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), depositCoins); err != nil {
+		ctx, ownerAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), amt); err != nil {
 		return
 	}
 	// TODO: emit event
@@ -89,10 +89,10 @@ func (k Keeper) RemoveLiquidity(
 		k.SetPosition(ctx, position)
 	}
 
-	withdrawCoins := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
-	if withdrawCoins.IsAllPositive() {
+	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
+	if amt.IsAllPositive() {
 		if err = k.bankKeeper.SendCoins(
-			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), ownerAddr, withdrawCoins); err != nil {
+			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), ownerAddr, amt); err != nil {
 			return
 		}
 	}
