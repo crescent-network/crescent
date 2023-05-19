@@ -83,7 +83,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	accruedRewards := sdk.NewCoins()
 
 	for _, result := range results {
-		orderTick := exchangetypes.TickAtPrice(result.Order.Price, TickPrecision)
+		orderTick := exchangetypes.TickAtPrice(result.Order.Price)
 		if isBuy {
 			k.IterateTickInfosBelowInclusive(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if tick <= orderTick {
@@ -92,7 +92,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 				poolState.CurrentTick = tick
-				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick, TickPrecision)
+				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
 				return false
 			})
 		} else {
@@ -103,7 +103,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 				poolState.CurrentTick = tick
-				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick, TickPrecision)
+				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
 				return false
 			})
 		}
@@ -120,7 +120,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				return true
 			})
 		}
-		targetPrice := exchangetypes.PriceAtTick(targetTick, TickPrecision)
+		targetPrice := exchangetypes.PriceAtTick(targetTick)
 
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
@@ -176,7 +176,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 		}
 		poolState.CurrentPrice = nextPrice
-		poolState.CurrentTick = exchangetypes.TickAtPrice(nextPrice, TickPrecision)
+		poolState.CurrentTick = exchangetypes.TickAtPrice(nextPrice)
 	}
 	k.SetPoolState(ctx, pool.Id, poolState)
 

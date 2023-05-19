@@ -39,7 +39,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	k.SetPoolByReserveAddressIndex(ctx, pool)
 
 	// Set initial pool state
-	state := types.NewPoolState(exchangetypes.TickAtPrice(price, TickPrecision), price)
+	state := types.NewPoolState(exchangetypes.TickAtPrice(price), price)
 	k.SetPoolState(ctx, pool.Id, state)
 
 	return pool, nil
@@ -55,19 +55,19 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 			return true
 		}
 		// TODO: check out of tick range
-		price := exchangetypes.PriceAtTick(tick, TickPrecision)
+		price := exchangetypes.PriceAtTick(tick)
 		sqrtPrice := utils.DecApproxSqrt(price)
 		var qty sdk.Int
 		if isBuy {
 			prevSqrtPrice := sdk.MinDec(
-				types.SqrtPriceAtTick(tick+ts, TickPrecision),
+				types.SqrtPriceAtTick(tick+ts),
 				utils.DecApproxSqrt(poolState.CurrentPrice))
 			qty = utils.MinInt(
 				reserveBalance.ToDec().QuoTruncate(price).TruncateInt(),
 				types.Amount1DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false).ToDec().QuoTruncate(price).TruncateInt())
 		} else {
 			prevSqrtPrice := sdk.MaxDec(
-				types.SqrtPriceAtTick(tick-ts, TickPrecision),
+				types.SqrtPriceAtTick(tick-ts),
 				utils.DecApproxSqrt(poolState.CurrentPrice))
 			qty = utils.MinInt(
 				reserveBalance,

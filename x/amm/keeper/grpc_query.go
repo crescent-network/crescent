@@ -126,5 +126,5 @@ func (k Querier) MakePositionResponse(ctx sdk.Context, position types.Position) 
 	if !found { // sanity check
 		panic("pool not found")
 	}
-	return types.NewPositionResponse(position, pool, TickPrecision)
+	return types.NewPositionResponse(position, pool)
 }

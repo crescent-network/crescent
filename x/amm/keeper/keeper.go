@@ -11,8 +11,6 @@ import (
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
-const TickPrecision = 4
-
 // Keeper of the module's store.
 type Keeper struct {
 	cdc        codec.BinaryCodec

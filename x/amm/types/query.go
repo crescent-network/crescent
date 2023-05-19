@@ -24,13 +24,13 @@ func NewPoolResponse(pool Pool, poolState PoolState, balances sdk.Coins) PoolRes
 	}
 }
 
-func NewPositionResponse(position Position, pool Pool, prec int) PositionResponse {
+func NewPositionResponse(position Position, pool Pool) PositionResponse {
 	return PositionResponse{
 		Id:         position.Id,
 		PoolId:     position.PoolId,
 		Owner:      position.Owner,
-		LowerPrice: exchangetypes.PriceAtTick(position.LowerTick, prec),
-		UpperPrice: exchangetypes.PriceAtTick(position.UpperTick, prec),
+		LowerPrice: exchangetypes.PriceAtTick(position.LowerTick),
+		UpperPrice: exchangetypes.PriceAtTick(position.UpperTick),
 		Liquidity:  position.Liquidity,
 		LastFeeGrowthInside: sdk.NewDecCoins(
 			sdk.NewDecCoinFromDec(pool.Denom0, position.LastFeeGrowthInside0),

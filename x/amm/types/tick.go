@@ -9,8 +9,8 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func SqrtPriceAtTick(tick int32, prec int) sdk.Dec {
-	return utils.DecApproxSqrt(exchangetypes.PriceAtTick(tick, prec))
+func SqrtPriceAtTick(tick int32) sdk.Dec {
+	return utils.DecApproxSqrt(exchangetypes.PriceAtTick(tick))
 }
 
 func NewTickInfo() TickInfo {

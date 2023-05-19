@@ -12,12 +12,12 @@ import (
 func (k Keeper) AddLiquidity(
 	ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64,
 	lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) (position types.Position, liquidity sdk.Int, amt sdk.Coins, err error) {
-	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice, TickPrecision)
+	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice)
 	if !valid {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid lower tick")
 		return
 	}
-	upperTick, valid := exchangetypes.ValidateTickPrice(upperPrice, TickPrecision)
+	upperTick, valid := exchangetypes.ValidateTickPrice(upperPrice)
 	if !valid {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid upper tick")
 		return
@@ -39,8 +39,8 @@ func (k Keeper) AddLiquidity(
 	}
 	poolState := k.MustGetPoolState(ctx, poolId)
 
-	sqrtPriceA := types.SqrtPriceAtTick(lowerTick, TickPrecision) // TODO: use tick prec param
-	sqrtPriceB := types.SqrtPriceAtTick(upperTick, TickPrecision) // TODO: use tick prec param
+	sqrtPriceA := types.SqrtPriceAtTick(lowerTick) // TODO: use tick prec param
+	sqrtPriceB := types.SqrtPriceAtTick(upperTick) // TODO: use tick prec param
 	liquidity = types.LiquidityForAmounts(
 		utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 
@@ -206,8 +206,8 @@ func (k Keeper) modifyPosition(
 	amt0 = utils.ZeroInt
 	amt1 = utils.ZeroInt
 	if !liquidityDelta.IsZero() {
-		sqrtPriceA := types.SqrtPriceAtTick(lowerTick, TickPrecision)
-		sqrtPriceB := types.SqrtPriceAtTick(upperTick, TickPrecision)
+		sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
+		sqrtPriceB := types.SqrtPriceAtTick(upperTick)
 		if poolState.CurrentTick < lowerTick {
 			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		} else if poolState.CurrentTick < upperTick {
