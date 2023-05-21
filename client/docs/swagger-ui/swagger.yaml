@@ -10533,7 +10533,7 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
-                    owed_tokens:
+                    owed_fee:
                       type: array
                       items:
                         type: object
@@ -10743,7 +10743,7 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
-                    owed_tokens:
+                    owed_fee:
                       type: array
                       items:
                         type: object
@@ -16696,7 +16696,7 @@ definitions:
 
             NOTE: The amount field is an Dec which implements the custom method
             signatures required by gogoproto.
-      owed_tokens:
+      owed_fee:
         type: array
         items:
           type: object
@@ -16895,7 +16895,7 @@ definitions:
                   method
 
                   signatures required by gogoproto.
-            owed_tokens:
+            owed_fee:
               type: array
               items:
                 type: object
@@ -17167,7 +17167,7 @@ definitions:
                   method
 
                   signatures required by gogoproto.
-            owed_tokens:
+            owed_fee:
               type: array
               items:
                 type: object

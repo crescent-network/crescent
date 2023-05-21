@@ -69,8 +69,7 @@ func NewPoolState(tick int32, price sdk.Dec) PoolState {
 		CurrentTick:                tick,
 		CurrentPrice:               price,
 		CurrentLiquidity:           utils.ZeroInt,
-		FeeGrowthGlobal0:           utils.ZeroDec,
-		FeeGrowthGlobal1:           utils.ZeroDec,
+		FeeGrowthGlobal:            sdk.DecCoins{},
 		FarmingRewardsGrowthGlobal: sdk.DecCoins{},
 	}
 }
@@ -82,11 +81,8 @@ func (poolState PoolState) Validate() error {
 	if poolState.CurrentLiquidity.IsNegative() {
 		return fmt.Errorf("current liquidity must not be negative: %s", poolState.CurrentLiquidity)
 	}
-	if poolState.FeeGrowthGlobal0.IsNegative() {
-		return fmt.Errorf("fee growth global 0 must not be negative: %s", poolState.FeeGrowthGlobal0)
-	}
-	if poolState.FeeGrowthGlobal1.IsNegative() {
-		return fmt.Errorf("fee growth global 1 must not be negative: %s", poolState.FeeGrowthGlobal1)
+	if err := poolState.FeeGrowthGlobal.Validate(); err != nil {
+		return fmt.Errorf("invalid fee growth global: %w", err)
 	}
 	if err := poolState.FarmingRewardsGrowthGlobal.Validate(); err != nil {
 		return fmt.Errorf("invalid farming rewards growth global: %w", err)

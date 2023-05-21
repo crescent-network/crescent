@@ -16,10 +16,8 @@ func NewPosition(id, poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upperTi
 		LowerTick:                      lowerTick,
 		UpperTick:                      upperTick,
 		Liquidity:                      utils.ZeroInt,
-		LastFeeGrowthInside0:           utils.ZeroDec,
-		LastFeeGrowthInside1:           utils.ZeroDec,
-		OwedToken0:                     utils.ZeroInt,
-		OwedToken1:                     utils.ZeroInt,
+		LastFeeGrowthInside:            sdk.DecCoins{},
+		OwedFee:                        sdk.Coins{},
 		LastFarmingRewardsGrowthInside: sdk.DecCoins{},
 		OwedFarmingRewards:             sdk.Coins{},
 	}
@@ -38,17 +36,11 @@ func (position Position) Validate() error {
 	if position.Liquidity.IsNegative() {
 		return fmt.Errorf("liquidity must not be negative: %s", position.Liquidity)
 	}
-	if position.LastFeeGrowthInside0.IsNegative() {
-		return fmt.Errorf("last fee growth inside 0 must not be negative: %s", position.LastFeeGrowthInside0)
+	if err := position.LastFeeGrowthInside.Validate(); err != nil {
+		return fmt.Errorf("invalid last fee growth inside: %w", err)
 	}
-	if position.LastFeeGrowthInside1.IsNegative() {
-		return fmt.Errorf("last fee growth inside 1 must not be negative: %s", position.LastFeeGrowthInside1)
-	}
-	if position.OwedToken0.IsNegative() {
-		return fmt.Errorf("owed token 0 must not be negative: %s", position.OwedToken0)
-	}
-	if position.OwedToken1.IsNegative() {
-		return fmt.Errorf("owed token 1 must not be negative: %s", position.OwedToken1)
+	if err := position.OwedFee.Validate(); err != nil {
+		return fmt.Errorf("invalid owed fee: %w", err)
 	}
 	if err := position.LastFarmingRewardsGrowthInside.Validate(); err != nil {
 		return fmt.Errorf("invalid last farming rewards growth inside: %w", err)

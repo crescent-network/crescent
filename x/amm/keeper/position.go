@@ -111,28 +111,18 @@ func (k Keeper) Collect(
 	if err != nil {
 		return err
 	}
-	pool, found := k.GetPool(ctx, position.PoolId)
-	if !found { // sanity check
-		panic("pool not found")
-	}
-	collectible := sdk.NewCoins(
-		sdk.NewCoin(pool.Denom0, position.OwedToken0),
-		sdk.NewCoin(pool.Denom1, position.OwedToken1)).
-		Add(position.OwedFarmingRewards...)
+	collectible := position.OwedFee.Add(position.OwedFarmingRewards...)
 	if !collectible.IsAllGTE(amt) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInsufficientFunds, "collectible %s is smaller than %s", collectible, amt)
 	}
-	amt0 := utils.MinInt(position.OwedToken0, amt.AmountOf(pool.Denom0))
-	amt1 := utils.MinInt(position.OwedToken1, amt.AmountOf(pool.Denom1))
-	position.OwedToken0 = position.OwedToken0.Sub(amt0)
-	position.OwedToken1 = position.OwedToken1.Sub(amt1)
-	fees := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
+	fee := amt.Min(position.OwedFee)
+	position.OwedFee = position.OwedFee.Sub(fee)
 	// TODO: use lp fee address
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, ownerAddr, fees); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, ownerAddr, fee); err != nil {
 		return err
 	}
-	amt = amt.Sub(fees)
+	amt = amt.Sub(fee)
 	position.OwedFarmingRewards = position.OwedFarmingRewards.Sub(amt)
 	if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, ownerAddr, amt); err != nil {
 		return err
@@ -169,23 +159,21 @@ func (k Keeper) modifyPosition(
 	}
 
 	// TODO: optimize GetTickInfo
-	feeGrowthInside0, feeGrowthInside1 := k.feeGrowthInside(
+	feeGrowthInside := k.feeGrowthInside(
 		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
-		poolState.FeeGrowthGlobal0, poolState.FeeGrowthGlobal1)
+		poolState.FeeGrowthGlobal)
 	farmingRewardsGrowthInside := k.farmingRewardsGrowthInside(
 		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
 		poolState.FarmingRewardsGrowthGlobal)
 
-	owedTokens0 := feeGrowthInside0.Sub(position.LastFeeGrowthInside0).MulInt(position.Liquidity).TruncateInt()
-	owedTokens1 := feeGrowthInside1.Sub(position.LastFeeGrowthInside1).MulInt(position.Liquidity).TruncateInt()
+	owedFee, _ := feeGrowthInside.Sub(position.LastFeeGrowthInside).
+		MulDecTruncate(position.Liquidity.ToDec()).TruncateDecimal()
 	owedFarmingRewards, _ := farmingRewardsGrowthInside.Sub(position.LastFarmingRewardsGrowthInside).
 		MulDecTruncate(position.Liquidity.ToDec()).TruncateDecimal()
 
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
-	position.LastFeeGrowthInside0 = feeGrowthInside0
-	position.LastFeeGrowthInside1 = feeGrowthInside1
-	position.OwedToken0 = position.OwedToken0.Add(owedTokens0)
-	position.OwedToken1 = position.OwedToken1.Add(owedTokens1)
+	position.LastFeeGrowthInside = feeGrowthInside
+	position.OwedFee = position.OwedFee.Add(owedFee...)
 	position.LastFarmingRewardsGrowthInside = farmingRewardsGrowthInside
 	position.OwedFarmingRewards = position.OwedFarmingRewards.Add(owedFarmingRewards...)
 	k.SetPosition(ctx, position)

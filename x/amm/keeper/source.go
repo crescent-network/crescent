@@ -33,7 +33,7 @@ func (k OrderSource) GenerateOrders(
 		pool = p
 		return true
 	})
-	if pool == (types.Pool{}) { //  TODO: use flag
+	if pool == (types.Pool{}) { // TODO: use flag
 		return // no pool found
 	}
 
@@ -147,13 +147,10 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		denomIn := pool.DenomIn(isBuy)
 		amtInDiff := result.Received.AmountOf(denomIn).Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
-			accruedRewards = accruedRewards.Add(sdk.NewCoin(denomIn, amtInDiff))
-			feeGrowth := amtInDiff.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec())
-			if result.Order.IsBuy {
-				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
-			} else {
-				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(feeGrowth)
-			}
+			fee := sdk.NewCoin(denomIn, amtInDiff)
+			accruedRewards = accruedRewards.Add(fee)
+			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		} else if amtInDiff.IsNegative() { // sanity check
 			//panic(amtInDiff)
 		}
@@ -161,14 +158,10 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		// TODO: simplify code
 		if len(result.Received) > 1 { // extra fees
 			denomOut := pool.DenomOut(isBuy)
-			fee := result.Received.AmountOf(denomOut)
-			accruedRewards = accruedRewards.Add(sdk.NewCoin(denomOut, fee))
-			feeGrowth := fee.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec())
-			if denomOut == pool.Denom0 {
-				poolState.FeeGrowthGlobal0 = poolState.FeeGrowthGlobal0.Add(feeGrowth)
-			} else {
-				poolState.FeeGrowthGlobal1 = poolState.FeeGrowthGlobal1.Add(feeGrowth)
-			}
+			fee := sdk.NewCoin(denomOut, result.Received.AmountOf(denomOut))
+			accruedRewards = accruedRewards.Add(fee)
+			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		}
 
 		if !isBuy && max && nextPrice.Equal(targetPrice) {

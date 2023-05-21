@@ -20,8 +20,7 @@ func (k Keeper) updateTick(
 
 	if grossLiquidityBefore.IsZero() {
 		if tick <= currentTick {
-			tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0
-			tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1
+			tickInfo.FeeGrowthOutside = poolState.FeeGrowthGlobal
 			tickInfo.FarmingRewardsGrowthOutside = poolState.FarmingRewardsGrowthGlobal
 		}
 	}
@@ -39,7 +38,7 @@ func (k Keeper) updateTick(
 
 func (k Keeper) feeGrowthInside(
 	ctx sdk.Context, poolId uint64, lowerTick, upperTick, currentTick int32,
-	feeGrowthGlobal0, feeGrowthGlobal1 sdk.Dec) (feeGrowthInside0, feeGrowthInside1 sdk.Dec) {
+	feeGrowthGlobal sdk.DecCoins) (feeGrowthInside sdk.DecCoins) {
 	lower, found := k.GetTickInfo(ctx, poolId, lowerTick)
 	if !found { // sanity check
 		panic("lower tick info not found")
@@ -49,25 +48,20 @@ func (k Keeper) feeGrowthInside(
 		panic("upper tick info not found")
 	}
 
-	var feeGrowthBelow0, feeGrowthBelow1 sdk.Dec
+	var feeGrowthBelow sdk.DecCoins
 	if currentTick >= lowerTick {
-		feeGrowthBelow0 = lower.FeeGrowthOutside0
-		feeGrowthBelow1 = lower.FeeGrowthOutside1
+		feeGrowthBelow = lower.FeeGrowthOutside
 	} else {
-		feeGrowthBelow0 = feeGrowthGlobal0.Sub(lower.FeeGrowthOutside0)
-		feeGrowthBelow1 = feeGrowthGlobal1.Sub(lower.FeeGrowthOutside1)
+		feeGrowthBelow = feeGrowthGlobal.Sub(lower.FeeGrowthOutside)
 	}
-	var feeGrowthAbove0, feeGrowthAbove1 sdk.Dec
+	var feeGrowthAbove sdk.DecCoins
 	if currentTick < upperTick {
-		feeGrowthAbove0 = upper.FeeGrowthOutside0
-		feeGrowthAbove1 = upper.FeeGrowthOutside1
+		feeGrowthAbove = upper.FeeGrowthOutside
 	} else {
-		feeGrowthAbove0 = feeGrowthGlobal0.Sub(upper.FeeGrowthOutside0)
-		feeGrowthAbove1 = feeGrowthGlobal1.Sub(upper.FeeGrowthOutside1)
+		feeGrowthAbove = feeGrowthGlobal.Sub(upper.FeeGrowthOutside)
 	}
 
-	feeGrowthInside0 = feeGrowthGlobal0.Sub(feeGrowthBelow0).Sub(feeGrowthAbove0)
-	feeGrowthInside1 = feeGrowthGlobal1.Sub(feeGrowthBelow1).Sub(feeGrowthAbove1)
+	feeGrowthInside = feeGrowthGlobal.Sub(feeGrowthBelow).Sub(feeGrowthAbove)
 	return
 }
 
@@ -103,8 +97,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, poolState 
 	if !found { // sanity check
 		panic("tick info not found")
 	}
-	tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0.Sub(tickInfo.FeeGrowthOutside0)
-	tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1.Sub(tickInfo.FeeGrowthOutside1)
+	tickInfo.FeeGrowthOutside, _ = poolState.FeeGrowthGlobal.SafeSub(tickInfo.FeeGrowthOutside)
 	tickInfo.FarmingRewardsGrowthOutside, _ = poolState.FarmingRewardsGrowthGlobal.SafeSub(tickInfo.FarmingRewardsGrowthOutside)
 	k.SetTickInfo(ctx, poolId, tick, tickInfo)
 	return tickInfo.NetLiquidity

@@ -11,23 +11,6 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func TestMinMaxTick(t *testing.T) {
-	for i, tc := range []struct {
-		prec     int
-		min, max int32
-	}{
-		{0, -126, 360},
-		{1, -1260, 3600},
-		{2, -12600, 36000},
-	} {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			min, max := types.MinMaxTick(tc.prec)
-			require.Equal(t, tc.min, min)
-			require.Equal(t, tc.max, max)
-		})
-	}
-}
-
 func TestValidateTickPrice(t *testing.T) {
 	for i, tc := range []struct {
 		price sdk.Dec
@@ -43,7 +26,7 @@ func TestValidateTickPrice(t *testing.T) {
 		{utils.ParseDec("0.00500001"), -230000, false},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			tick, valid := types.ValidateTickPrice(tc.price, 4)
+			tick, valid := types.ValidateTickPrice(tc.price)
 			require.Equal(t, tc.valid, valid)
 			require.Equal(t, tc.tick, tick)
 		})
@@ -62,7 +45,7 @@ func TestPriceAtTick(t *testing.T) {
 		{1000000, utils.ParseDec("200000000000")},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			price := types.PriceAtTick(tc.tick, 4)
+			price := types.PriceAtTick(tc.tick)
 			require.Equal(t, tc.price.String(), price.String())
 		})
 	}
