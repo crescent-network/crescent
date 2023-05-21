@@ -22,7 +22,7 @@ func (k Keeper) updateTick(
 		if tick <= currentTick {
 			tickInfo.FeeGrowthOutside0 = poolState.FeeGrowthGlobal0
 			tickInfo.FeeGrowthOutside1 = poolState.FeeGrowthGlobal1
-			tickInfo.FarmingRewardsGrowthOutside = sdk.NewDecCoins()
+			tickInfo.FarmingRewardsGrowthOutside = poolState.FarmingRewardsGrowthGlobal
 		}
 	}
 
