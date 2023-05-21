@@ -84,8 +84,6 @@ func (k Keeper) RemoveLiquidity(
 		ctx, pool, ownerAddr, position.LowerTick, position.UpperTick, liquidity.Neg())
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
 	if amt0.IsPositive() || amt1.IsPositive() {
-		position.OwedToken0 = position.OwedToken0.Add(amt0)
-		position.OwedToken1 = position.OwedToken1.Add(amt1)
 		k.SetPosition(ctx, position)
 	}
 
