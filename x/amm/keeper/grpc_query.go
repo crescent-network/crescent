@@ -76,7 +76,7 @@ func (k Querier) AllPositions(c context.Context, req *types.QueryAllPositionsReq
 	pageRes, err := query.Paginate(positionStore, req.Pagination, func(_, value []byte) error {
 		var position types.Position
 		k.cdc.MustUnmarshal(value, &position)
-		positionResps = append(positionResps, k.MakePositionResponse(ctx, position))
+		positionResps = append(positionResps, types.NewPositionResponse(position))
 		return nil
 	})
 	if err != nil {
@@ -103,7 +103,7 @@ func (k Querier) Positions(c context.Context, req *types.QueryPositionsRequest) 
 	pageRes, err := query.Paginate(positionStore, req.Pagination, func(_, value []byte) error {
 		var position types.Position
 		k.cdc.MustUnmarshal(value, &position)
-		positionResps = append(positionResps, k.MakePositionResponse(ctx, position))
+		positionResps = append(positionResps, types.NewPositionResponse(position))
 		return nil
 	})
 	if err != nil {
@@ -119,12 +119,4 @@ func (k Querier) MakePoolResponse(ctx sdk.Context, pool types.Pool) types.PoolRe
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	balances := k.bankKeeper.SpendableCoins(ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress))
 	return types.NewPoolResponse(pool, poolState, balances)
-}
-
-func (k Querier) MakePositionResponse(ctx sdk.Context, position types.Position) types.PositionResponse {
-	pool, found := k.GetPool(ctx, position.PoolId)
-	if !found { // sanity check
-		panic("pool not found")
-	}
-	return types.NewPositionResponse(position, pool)
 }

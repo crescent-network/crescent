@@ -15,8 +15,6 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
-	TStoreKey = "transient_amm"
-
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
@@ -35,7 +33,7 @@ var (
 	PositionByParamsIndexKeyPrefix     = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
 	TickInfoKeyPrefix                  = []byte{0x48} // poolId + tick => TickInfo
 	LastFarmingPlanIdKey               = []byte{0x49}
-	FarmingPlanKeyPrefix               = []byte{0x50}
+	FarmingPlanKeyPrefix               = []byte{0x50} // planId => FarmingPlan
 	NumPrivateFarmingPlansKey          = []byte{0x51}
 )
 

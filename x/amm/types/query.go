@@ -22,7 +22,7 @@ func NewPoolResponse(pool Pool, poolState PoolState, balances sdk.Coins) PoolRes
 	}
 }
 
-func NewPositionResponse(position Position, pool Pool) PositionResponse {
+func NewPositionResponse(position Position) PositionResponse {
 	return PositionResponse{
 		Id:                             position.Id,
 		PoolId:                         position.PoolId,
