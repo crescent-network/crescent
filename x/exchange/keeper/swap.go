@@ -11,6 +11,7 @@ func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context, ordererAddr sdk.AccAddress,
 	routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, err error) {
 	currentIn := input
+	// TODO: limit the length of routes
 	for _, marketId := range routes {
 		if !currentIn.Amount.IsPositive() {
 			err = types.ErrInsufficientOutput // TODO: use different error
@@ -51,6 +52,14 @@ func (k Keeper) SwapExactAmountIn(
 	if output.Amount.LT(minOutput.Amount) {
 		err = sdkerrors.Wrapf(
 			types.ErrInsufficientOutput, "output %s < wanted %s", output, minOutput)
+		return
+	}
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventSwapExactAmountIn{
+		Orderer: ordererAddr.String(),
+		Routes:  routes,
+		Input:   input,
+		Output:  output,
+	}); err != nil {
 		return
 	}
 	return

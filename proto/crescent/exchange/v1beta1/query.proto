@@ -8,7 +8,8 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/exchange/v1beta1/exchange.proto";
 
-option go_package = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
 
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {

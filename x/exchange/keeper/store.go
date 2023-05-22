@@ -81,13 +81,13 @@ func (k Keeper) SetMarketState(ctx sdk.Context, marketId uint64, state types.Mar
 	store.Set(types.GetMarketStateKey(marketId), bz)
 }
 
-func (k Keeper) GetMarketByDenoms(ctx sdk.Context, baseDenom, quoteDenom string) (market types.Market, found bool) {
+func (k Keeper) GetMarketIdByDenoms(ctx sdk.Context, baseDenom, quoteDenom string) (marketId uint64, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetMarketByDenomsIndexKey(baseDenom, quoteDenom))
 	if bz == nil {
 		return
 	}
-	return k.GetMarket(ctx, sdk.BigEndianToUint64(bz))
+	return sdk.BigEndianToUint64(bz), true
 }
 
 func (k Keeper) SetMarketByDenomsIndex(ctx sdk.Context, market types.Market) {

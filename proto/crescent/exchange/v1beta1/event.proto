@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message EventCreateMarket {
+  string creator   = 1;
+  uint64 market_id = 2;
+}
+
+message EventPlaceLimitOrder {
+  string orderer   = 1;
+  uint64 market_id = 2;
+  bool   is_buy    = 3;
+  string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  uint64 order_id = 6;
+  string executed_quantity = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string executed_quote = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message EventPlaceMarketOrder {
+  string orderer   = 1;
+  uint64 market_id = 2;
+  bool   is_buy    = 3;
+  string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  uint64 order_id = 5;
+  string executed_quantity = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string executed_quote = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+}
+
+message EventCancelOrder {
+  string                   orderer          = 1;
+  uint64                   order_id         = 2;
+  cosmos.base.v1beta1.Coin refunded_deposit = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+}
+
+message EventSwapExactAmountIn {
+  string                   orderer = 1;
+  repeated uint64          routes  = 2;
+  cosmos.base.v1beta1.Coin input   = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin output  = 4 [(gogoproto.nullable) = false];
+}

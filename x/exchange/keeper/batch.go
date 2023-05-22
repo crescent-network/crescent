@@ -13,7 +13,8 @@ func (k Keeper) PlaceBatchLimitOrder(
 	if !found { // sanity check
 		panic("market not found")
 	}
-	return k.CreateOrder(ctx, market, ordererAddr, isBuy, price, qty, qty, false)
+	orderId := k.GetNextOrderIdWithUpdate(ctx)
+	return k.newOrder(ctx, orderId, market, ordererAddr, isBuy, price, qty, qty, false)
 }
 
 func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Order) {

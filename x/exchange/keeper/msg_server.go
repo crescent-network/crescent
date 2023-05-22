@@ -43,7 +43,6 @@ func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLim
 	}
 
 	return &types.MsgPlaceLimitOrderResponse{
-		Rested:           order.Id > 0,
 		OrderId:          order.Id,
 		ExecutedQuantity: execQty,
 		ExecutedQuote:    execQuote,
@@ -53,7 +52,7 @@ func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLim
 func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMarketOrder) (*types.MsgPlaceMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	execQty, execQuote, err := k.Keeper.PlaceMarketOrder(
+	orderId, execQty, execQuote, err := k.Keeper.PlaceMarketOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Quantity)
 	if err != nil {
@@ -61,6 +60,7 @@ func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMa
 	}
 
 	return &types.MsgPlaceMarketOrderResponse{
+		OrderId:          orderId,
 		ExecutedQuantity: execQty,
 		ExecutedQuote:    execQuote,
 	}, nil
@@ -69,13 +69,15 @@ func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMa
 func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := k.Keeper.CancelOrder(
+	_, refundedDeposit, err := k.Keeper.CancelOrder(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.OrderId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgCancelOrderResponse{}, nil
+	return &types.MsgCancelOrderResponse{
+		RefundedDeposit: refundedDeposit,
+	}, nil
 }
 
 func (k msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {

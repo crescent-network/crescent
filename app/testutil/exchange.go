@@ -26,18 +26,18 @@ func (s *TestSuite) PlaceLimitOrder(
 }
 
 func (s *TestSuite) PlaceMarketOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (execQty, execQuote sdk.Int) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (orderId uint64, execQty, execQuote sdk.Int) {
 	s.T().Helper()
 	var err error
-	execQty, execQuote, err = s.App.ExchangeKeeper.PlaceMarketOrder(s.Ctx, marketId, ordererAddr, isBuy, qty)
+	orderId, execQty, execQuote, err = s.App.ExchangeKeeper.PlaceMarketOrder(s.Ctx, marketId, ordererAddr, isBuy, qty)
 	s.Require().NoError(err)
 	return
 }
 
-func (s *TestSuite) CancelOrder(ordererAddr sdk.AccAddress, orderId uint64) (order exchangetypes.Order) {
+func (s *TestSuite) CancelOrder(ordererAddr sdk.AccAddress, orderId uint64) (order exchangetypes.Order, refundedDeposit sdk.Coin) {
 	s.T().Helper()
 	var err error
-	order, err = s.App.ExchangeKeeper.CancelOrder(s.Ctx, ordererAddr, orderId)
+	order, refundedDeposit, err = s.App.ExchangeKeeper.CancelOrder(s.Ctx, ordererAddr, orderId)
 	s.Require().NoError(err)
 	return
 }

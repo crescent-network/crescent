@@ -37,11 +37,10 @@ message MsgPlaceLimitOrder {
 }
 
 message MsgPlaceLimitOrderResponse {
-  bool   rested            = 1;
-  uint64 order_id          = 2;
-  string executed_quantity = 3
+  uint64 order_id          = 1;
+  string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string executed_quote = 4
+  string executed_quote = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
@@ -53,9 +52,10 @@ message MsgPlaceMarketOrder {
 }
 
 message MsgPlaceMarketOrderResponse {
-  string executed_quantity = 1
+  uint64 order_id          = 1;
+  string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string executed_quote = 2
+  string executed_quote = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
@@ -64,7 +64,10 @@ message MsgCancelOrder {
   uint64 order_id = 2;
 }
 
-message MsgCancelOrderResponse {}
+message MsgCancelOrderResponse {
+  cosmos.base.v1beta1.Coin refunded_deposit = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+}
 
 message MsgSwapExactAmountIn {
   string                   sender     = 1;

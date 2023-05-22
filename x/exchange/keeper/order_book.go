@@ -196,7 +196,8 @@ func (k Keeper) ConstructTempOrderBookSide(
 	for _, name := range k.sourceNames {
 		source := k.sources[name]
 		source.GenerateOrders(ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error {
-			order, err := k.CreateOrder(ctx, market, ordererAddr, isBuy, price, qty, qty, true)
+			orderId := k.GetNextOrderIdWithUpdate(ctx)
+			order, err := k.newOrder(ctx, orderId, market, ordererAddr, isBuy, price, qty, qty, true)
 			if err != nil {
 				return err
 			}
