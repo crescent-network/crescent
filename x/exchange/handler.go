@@ -28,8 +28,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgCancelOrder:
 			res, err := msgServer.CancelOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgSwapExactIn:
-			res, err := msgServer.SwapExactIn(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgSwapExactAmountIn:
+			res, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)

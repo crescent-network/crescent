@@ -78,16 +78,16 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 	return &types.MsgCancelOrderResponse{}, nil
 }
 
-func (k msgServer) SwapExactIn(goCtx context.Context, msg *types.MsgSwapExactIn) (*types.MsgSwapExactInResponse, error) {
+func (k msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	output, err := k.Keeper.SwapExactIn(
+	output, err := k.Keeper.SwapExactAmountIn(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Routes, msg.Input, msg.MinOutput, false)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSwapExactInResponse{
+	return &types.MsgSwapExactAmountInResponse{
 		Output: output,
 	}, nil
 }

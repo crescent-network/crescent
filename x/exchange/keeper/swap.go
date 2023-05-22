@@ -7,7 +7,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) SwapExactIn(
+func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context, ordererAddr sdk.AccAddress,
 	routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, err error) {
 	currentIn := input

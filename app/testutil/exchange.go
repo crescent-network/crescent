@@ -34,11 +34,19 @@ func (s *TestSuite) PlaceMarketOrder(
 	return
 }
 
-func (s *TestSuite) SwapExactIn(
+func (s *TestSuite) CancelOrder(ordererAddr sdk.AccAddress, orderId uint64) (order exchangetypes.Order) {
+	s.T().Helper()
+	var err error
+	order, err = s.App.ExchangeKeeper.CancelOrder(s.Ctx, ordererAddr, orderId)
+	s.Require().NoError(err)
+	return
+}
+
+func (s *TestSuite) SwapExactAmountIn(
 	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin) {
 	s.T().Helper()
 	var err error
-	output, err = s.App.ExchangeKeeper.SwapExactIn(s.Ctx, ordererAddr, routes, input, minOutput, simulate)
+	output, err = s.App.ExchangeKeeper.SwapExactAmountIn(s.Ctx, ordererAddr, routes, input, minOutput, simulate)
 	s.Require().NoError(err)
 	return output
 }

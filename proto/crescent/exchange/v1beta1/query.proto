@@ -23,8 +23,9 @@ service Query {
   rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/orders/{order_id}";
   }
-  rpc BestSwapExactInRoutes(QueryBestSwapExactInRoutesRequest) returns (QueryBestSwapExactInRoutesResponse) {
-    option (google.api.http).get = "/crescent/exchange/v1beta1/best_swap_exact_in_routes";
+  rpc BestSwapExactAmountInRoutes(QueryBestSwapExactAmountInRoutesRequest)
+      returns (QueryBestSwapExactAmountInRoutesResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/best_swap_exact_amount_in_routes";
   }
 }
 
@@ -59,12 +60,12 @@ message QueryOrderResponse {
   Order order = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryBestSwapExactInRoutesRequest {
+message QueryBestSwapExactAmountInRoutesRequest {
   cosmos.base.v1beta1.Coin input        = 1 [(gogoproto.nullable) = false];
   string                   output_denom = 2;
 }
 
-message QueryBestSwapExactInRoutesResponse {
+message QueryBestSwapExactAmountInRoutesResponse {
   repeated uint64          routes = 1;
   cosmos.base.v1beta1.Coin output = 2 [(gogoproto.nullable) = false];
 }

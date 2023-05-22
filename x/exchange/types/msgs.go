@@ -10,16 +10,16 @@ var (
 	_ sdk.Msg = (*MsgPlaceLimitOrder)(nil)
 	_ sdk.Msg = (*MsgPlaceMarketOrder)(nil)
 	_ sdk.Msg = (*MsgCancelOrder)(nil)
-	_ sdk.Msg = (*MsgSwapExactIn)(nil)
+	_ sdk.Msg = (*MsgSwapExactAmountIn)(nil)
 )
 
 // Message types for the module
 const (
-	TypeMsgCreateMarket     = "create_market"
-	TypeMsgPlaceLimitOrder  = "place_limit_order"
-	TypeMsgPlaceMarketOrder = "place_market_order"
-	TypeMsgCancelOrder      = "cancel_order"
-	TypeMsgSwapExactIn      = "swap_exact_in"
+	TypeMsgCreateMarket      = "create_market"
+	TypeMsgPlaceLimitOrder   = "place_limit_order"
+	TypeMsgPlaceMarketOrder  = "place_market_order"
+	TypeMsgCancelOrder       = "cancel_order"
+	TypeMsgSwapExactAmountIn = "swap_exact_amount_in"
 )
 
 func NewMsgCreateMarket(
@@ -177,8 +177,8 @@ func (msg MsgCancelOrder) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgSwapExactIn(senderAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin) *MsgSwapExactIn {
-	return &MsgSwapExactIn{
+func NewMsgSwapExactAmountIn(senderAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin) *MsgSwapExactAmountIn {
+	return &MsgSwapExactAmountIn{
 		Sender:    senderAddr.String(),
 		Routes:    routes,
 		Input:     input,
@@ -186,14 +186,14 @@ func NewMsgSwapExactIn(senderAddr sdk.AccAddress, routes []uint64, input, minOut
 	}
 }
 
-func (msg MsgSwapExactIn) Route() string { return RouterKey }
-func (msg MsgSwapExactIn) Type() string  { return TypeMsgSwapExactIn }
+func (msg MsgSwapExactAmountIn) Route() string { return RouterKey }
+func (msg MsgSwapExactAmountIn) Type() string  { return TypeMsgSwapExactAmountIn }
 
-func (msg MsgSwapExactIn) GetSignBytes() []byte {
+func (msg MsgSwapExactAmountIn) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgSwapExactIn) GetSigners() []sdk.AccAddress {
+func (msg MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
@@ -201,7 +201,7 @@ func (msg MsgSwapExactIn) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgSwapExactIn) ValidateBasic() error {
+func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}

@@ -6,7 +6,7 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-func (s *KeeperTestSuite) TestSwapExactIn() {
+func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	creatorAddr := utils.TestAddress(0)
 	s.FundAccount(creatorAddr, utils.ParseCoins("10000_000000ucre,10000_000000uatom,10000_000000uusd"))
 
@@ -28,6 +28,6 @@ func (s *KeeperTestSuite) TestSwapExactIn() {
 	routes := []uint64{market1.Id, market2.Id}
 	input := sdk.NewInt64Coin("uusd", 100_000000)
 	minOutput := sdk.NewInt64Coin("uatom", 9_000000)
-	output := s.SwapExactIn(ordererAddr, routes, input, minOutput, false)
+	output := s.SwapExactAmountIn(ordererAddr, routes, input, minOutput, false)
 	s.Require().Equal("9904520uatom", output.String())
 }

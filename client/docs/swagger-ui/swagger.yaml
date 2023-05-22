@@ -9685,9 +9685,9 @@ paths:
                       format: byte
       tags:
         - Query
-  /crescent/exchange/v1beta1/best_swap_exact_in_routes:
+  /crescent/exchange/v1beta1/best_swap_exact_amount_in_routes:
     get:
-      operationId: BestSwapExactInRoutes
+      operationId: BestSwapExactAmountInRoutes
       responses:
         '200':
           description: A successful response.
@@ -16447,7 +16447,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  crescent.exchange.v1beta1.QueryBestSwapExactInRoutesResponse:
+  crescent.exchange.v1beta1.QueryBestSwapExactAmountInRoutesResponse:
     type: object
     properties:
       routes:

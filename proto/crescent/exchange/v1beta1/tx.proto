@@ -14,7 +14,7 @@ service Msg {
   rpc PlaceLimitOrder(MsgPlaceLimitOrder) returns (MsgPlaceLimitOrderResponse);
   rpc PlaceMarketOrder(MsgPlaceMarketOrder) returns (MsgPlaceMarketOrderResponse);
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
-  rpc SwapExactIn(MsgSwapExactIn) returns (MsgSwapExactInResponse);
+  rpc SwapExactAmountIn(MsgSwapExactAmountIn) returns (MsgSwapExactAmountInResponse);
 }
 
 message MsgCreateMarket {
@@ -66,13 +66,13 @@ message MsgCancelOrder {
 
 message MsgCancelOrderResponse {}
 
-message MsgSwapExactIn {
+message MsgSwapExactAmountIn {
   string                   sender     = 1;
   repeated uint64          routes     = 2;
   cosmos.base.v1beta1.Coin input      = 3 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin min_output = 4 [(gogoproto.nullable) = false];
 }
 
-message MsgSwapExactInResponse {
+message MsgSwapExactAmountInResponse {
   cosmos.base.v1beta1.Coin output = 1 [(gogoproto.nullable) = false];
 }

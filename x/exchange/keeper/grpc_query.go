@@ -79,7 +79,7 @@ func (k Querier) Order(c context.Context, req *types.QueryOrderRequest) (*types.
 	return &types.QueryOrderResponse{Order: order}, nil
 }
 
-func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSwapExactInRoutesRequest) (*types.QueryBestSwapExactInRoutesResponse, error) {
+func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.QueryBestSwapExactAmountInRoutesRequest) (*types.QueryBestSwapExactAmountInRoutesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -93,7 +93,7 @@ func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSw
 		bestRoutes []uint64
 	)
 	for _, routes := range allRoutes {
-		output, err := k.SwapExactIn(
+		output, err := k.SwapExactAmountIn(
 			ctx, sdk.AccAddress{}, routes, req.Input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
 		if err != nil && !errors.Is(err, types.ErrInsufficientOutput) { // sanity check
 			panic(err)
@@ -105,7 +105,7 @@ func (k Querier) BestSwapExactInRoutes(c context.Context, req *types.QueryBestSw
 			}
 		}
 	}
-	return &types.QueryBestSwapExactInRoutesResponse{
+	return &types.QueryBestSwapExactAmountInRoutesResponse{
 		Routes: bestRoutes,
 		Output: sdk.NewCoin(req.OutputDenom, bestOutput),
 	}, nil

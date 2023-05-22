@@ -30,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryAllMarketsCmd(),
 		NewQueryMarketCmd(),
 		NewQueryOrderCmd(),
-		NewQueryBestSwapExactInRoutesCmd(),
+		NewQueryBestSwapExactAmountInRoutesCmd(),
 	)
 
 	return cmd
@@ -180,16 +180,16 @@ $ %s query %s order 1
 	return cmd
 }
 
-func NewQueryBestSwapExactInRoutesCmd() *cobra.Command {
+func NewQueryBestSwapExactAmountInRoutesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "best-swap-exact-in-routes [input] [output-denom]",
+		Use:   "best-swap-exact-amount-in-routes [input] [output-denom]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query the best routes for a swap with exact amount in",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the best routes for a swap with exact amount in.
 
 Example:
-$ %s query %s best-swap-exact-in-routes 1000000stake uatom
+$ %s query %s best-swap-exact-amount-in-routes 1000000stake uatom
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -205,7 +205,7 @@ $ %s query %s best-swap-exact-in-routes 1000000stake uatom
 			}
 			outputDenom := args[1]
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.BestSwapExactInRoutes(cmd.Context(), &types.QueryBestSwapExactInRoutesRequest{
+			res, err := queryClient.BestSwapExactAmountInRoutes(cmd.Context(), &types.QueryBestSwapExactAmountInRoutesRequest{
 				Input:       input,
 				OutputDenom: outputDenom,
 			})

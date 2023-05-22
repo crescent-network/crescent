@@ -31,7 +31,7 @@ func GetTxCmd() *cobra.Command {
 		NewPlaceLimitOrderCmd(),
 		NewPlaceMarketOrderCmd(),
 		NewCancelOrderCmd(),
-		NewSwapExactInCmd(),
+		NewSwapExactAmountInCmd(),
 	)
 
 	return cmd
@@ -180,16 +180,16 @@ $ %s tx %s cancel-order 1000 --from mykey
 	return cmd
 }
 
-func NewSwapExactInCmd() *cobra.Command {
+func NewSwapExactAmountInCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap-exact-in [routes] [input] [min-output]",
+		Use:   "swap-exact-amount-in [routes] [input] [min-output]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Swap with exact amount in",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Swap with exact amount in.
 
 Example:
-$ %s tx %s swap-exact-in 1,2,3 1000000stake 98000uatom --from mykey
+$ %s tx %s swap-exact-amount-in 1,2,3 1000000stake 98000uatom --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -215,7 +215,7 @@ $ %s tx %s swap-exact-in 1,2,3 1000000stake 98000uatom --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid minimum output: %w", err)
 			}
-			msg := types.NewMsgSwapExactIn(clientCtx.GetFromAddress(), routes, input, minOutput)
+			msg := types.NewMsgSwapExactAmountIn(clientCtx.GetFromAddress(), routes, input, minOutput)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

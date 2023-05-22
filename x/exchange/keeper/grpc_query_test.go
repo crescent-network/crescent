@@ -8,7 +8,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (s *KeeperTestSuite) TestQueryBestSwapExactInRoutes() {
+func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
 	creatorAddr := utils.TestAddress(1)
 	s.FundAccount(creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uatom,100000_000000uusd"))
 
@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactInRoutes() {
 		utils.ParseCoins("1000_000000uatom,10000_000000uusd"))
 
 	querier := keeper.Querier{Keeper: s.App.ExchangeKeeper}
-	resp, err := querier.BestSwapExactInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactInRoutesRequest{
+	resp, err := querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactAmountInRoutesRequest{
 		Input:       utils.ParseCoin("100_000000ucre"),
 		OutputDenom: "uusd",
 	})
