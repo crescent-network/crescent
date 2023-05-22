@@ -57,6 +57,12 @@ func (k Keeper) createFarmingPlan(
 			return plan, sdkerrors.Wrapf(
 				sdkerrors.ErrNotFound, "pool %d not found", rewardAlloc.PoolId)
 		}
+		for _, coin := range rewardAlloc.RewardsPerDay {
+			if !k.bankKeeper.HasSupply(ctx, coin.Denom) {
+				return plan, sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidRequest, "denom %s has no supply", coin.Denom)
+			}
+		}
 	}
 	// Generate the next plan id and update the last plan id.
 	id := k.GetNextFarmingPlanIdWithUpdate(ctx)
