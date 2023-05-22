@@ -83,9 +83,6 @@ func (k Keeper) RemoveLiquidity(
 	position, amt0, amt1 = k.modifyPosition(
 		ctx, pool, ownerAddr, position.LowerTick, position.UpperTick, liquidity.Neg())
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
-	if amt0.IsPositive() || amt1.IsPositive() {
-		k.SetPosition(ctx, position)
-	}
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	if amt.IsAllPositive() {
