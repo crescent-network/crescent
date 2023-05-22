@@ -100,6 +100,9 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 	if msg.Price.GT(MaxPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
 	}
+	if _, valid := ValidateTickPrice(msg.Price); !valid {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid tick price: %s", msg.Price)
+	}
 	if !msg.Quantity.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
 	}
