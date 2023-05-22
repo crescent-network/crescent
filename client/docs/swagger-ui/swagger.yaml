@@ -10088,23 +10088,6 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                  shared_position_creation_fee:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                   default_tick_spacing:
                     type: integer
                     format: int64
@@ -10128,7 +10111,7 @@ paths:
                   max_num_private_farming_plans:
                     type: integer
                     format: int64
-                  max_rewards_block_time:
+                  max_farming_block_time:
                     type: string
         default:
           description: An unexpected error response
@@ -16556,20 +16539,6 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-      shared_position_creation_fee:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
       default_tick_spacing:
         type: integer
         format: int64
@@ -16590,7 +16559,7 @@ definitions:
       max_num_private_farming_plans:
         type: integer
         format: int64
-      max_rewards_block_time:
+      max_farming_block_time:
         type: string
   crescent.amm.v1beta1.PoolResponse:
     type: object
@@ -16995,23 +16964,6 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-          shared_position_creation_fee:
-            type: array
-            items:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
           default_tick_spacing:
             type: integer
             format: int64
@@ -17035,7 +16987,7 @@ definitions:
           max_num_private_farming_plans:
             type: integer
             format: int64
-          max_rewards_block_time:
+          max_farming_block_time:
             type: string
   crescent.amm.v1beta1.QueryPoolResponse:
     type: object

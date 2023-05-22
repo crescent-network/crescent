@@ -22,6 +22,7 @@ func (s *KeeperTestSuite) TestFarming() {
 	fmt.Println(liquidity1)
 	fmt.Println(liquidity2)
 
+	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1uatom")) // make initial supply
 	s.CreatePrivateFarmingPlan(
 		utils.TestAddress(0), []types.RewardAllocation{
 			types.NewRewardAllocation(pool.Id, utils.ParseCoins("1000000uatom")),

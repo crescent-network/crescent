@@ -125,7 +125,7 @@ func (k Keeper) AllocateFarmingRewards(ctx sdk.Context) error {
 	}
 	elapsed := ctx.BlockTime().Sub(lastBlockTime)
 	// Constrain the elapsed block time to the max rewards block time parameter.
-	if maxBlockTime := k.GetMaxRewardsBlockTime(ctx); elapsed > maxBlockTime {
+	if maxBlockTime := k.GetMaxFarmingBlockTime(ctx); elapsed > maxBlockTime {
 		elapsed = maxBlockTime
 	}
 	// If the elapsed block time is 0, skip this block for rewards allocation.

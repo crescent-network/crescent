@@ -15,7 +15,7 @@ var (
 	KeyDefaultTickSpacing            = []byte("DefaultTickSpacing")
 	KeyPrivateFarmingPlanCreationFee = []byte("PrivateFarmingPlanCreationFee")
 	KeyMaxNumPrivateFarmingPlans     = []byte("MaxNumPrivateFarmingPlans")
-	KeyMaxRewardsBlockTime           = []byte("MaxRewardsBlockTime")
+	KeyMaxFarmingBlockTime           = []byte("MaxFarmingBlockTime")
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 	DefaultDefaultTickSpacing            = uint32(50)
 	DefaultPrivateFarmingPlanCreationFee = sdk.NewCoins()
 	DefaultMaxNumPrivateFarmingPlans     = uint32(50)
-	DefaultMaxRewardsBlockTime           = 10 * time.Second
+	DefaultMaxFarmingBlockTime           = 10 * time.Second
 )
 
 func ParamKeyTable() paramstypes.KeyTable {
@@ -37,7 +37,7 @@ func DefaultParams() Params {
 		DefaultTickSpacing:            DefaultDefaultTickSpacing,
 		PrivateFarmingPlanCreationFee: DefaultPrivateFarmingPlanCreationFee,
 		MaxNumPrivateFarmingPlans:     DefaultMaxNumPrivateFarmingPlans,
-		MaxRewardsBlockTime:           DefaultMaxRewardsBlockTime,
+		MaxFarmingBlockTime:           DefaultMaxFarmingBlockTime,
 	}
 }
 
@@ -48,7 +48,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyDefaultTickSpacing, &params.DefaultTickSpacing, validateDefaultTickSpacing),
 		paramstypes.NewParamSetPair(KeyPrivateFarmingPlanCreationFee, &params.PrivateFarmingPlanCreationFee, validatePrivateFarmingPlanCreationFee),
 		paramstypes.NewParamSetPair(KeyMaxNumPrivateFarmingPlans, &params.MaxNumPrivateFarmingPlans, validateMaxNumPrivateFarmingPlans),
-		paramstypes.NewParamSetPair(KeyMaxRewardsBlockTime, &params.MaxRewardsBlockTime, validateMaxRewardsBlockTime),
+		paramstypes.NewParamSetPair(KeyMaxFarmingBlockTime, &params.MaxFarmingBlockTime, validateMaxFarmingBlockTime),
 	}
 }
 
@@ -62,7 +62,7 @@ func (params Params) Validate() error {
 		{params.DefaultTickSpacing, validateDefaultTickSpacing},
 		{params.PrivateFarmingPlanCreationFee, validatePrivateFarmingPlanCreationFee},
 		{params.MaxNumPrivateFarmingPlans, validateMaxNumPrivateFarmingPlans},
-		{params.MaxRewardsBlockTime, validateMaxRewardsBlockTime},
+		{params.MaxFarmingBlockTime, validateMaxFarmingBlockTime},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -112,13 +112,13 @@ func validateMaxNumPrivateFarmingPlans(i interface{}) error {
 	return nil
 }
 
-func validateMaxRewardsBlockTime(i interface{}) error {
+func validateMaxFarmingBlockTime(i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v <= 0 {
-		return fmt.Errorf("max rewards block time must be positive")
+		return fmt.Errorf("max farming block time must be positive")
 	}
 	return nil
 }
