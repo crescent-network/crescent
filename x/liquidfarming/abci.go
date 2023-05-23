@@ -17,44 +17,12 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	liquidFarmsInStore := k.GetLiquidFarmsInStore(ctx)
-	liquidFarmsInParams := k.GetLiquidFarmsInParams(ctx)
-
-	liquidFarmByPoolId := map[uint64]types.LiquidFarm{} // PoolId => LiquidFarm
-	for _, liquidFarm := range liquidFarmsInStore {
-		liquidFarmByPoolId[liquidFarm.PoolId] = liquidFarm
-	}
-
-	// Iterate through all liquid farms in params.
-	// Store new one or delete the existing one from liquidFarmByPoolId
-	// when it is added or removed in params by governance proposal.
-	for _, liquidFarm := range liquidFarmsInParams {
-		if _, found := liquidFarmByPoolId[liquidFarm.PoolId]; !found {
-			k.SetLiquidFarm(ctx, liquidFarm)
-		} else {
-			delete(liquidFarmByPoolId, liquidFarm.PoolId)
-		}
-	}
-
-	// Sort map keys for deterministic execution
-	var poolIds []uint64
-	for poolId := range liquidFarmByPoolId {
-		poolIds = append(poolIds, poolId)
-	}
-	sort.Slice(poolIds, func(i, j int) bool {
-		return poolIds[i] < poolIds[j]
-	})
-
-	for _, poolId := range poolIds {
-		k.HandleRemovedLiquidFarm(ctx, liquidFarmByPoolId[poolId])
-	}
-
 	y, m, d := ctx.BlockTime().Date()
 
-	endTime, found := k.GetLastRewardsAuctionEndTime(ctx)
+	endTime, found := k.GetNextRewardsAuctionEndTime(ctx)
 	if !found {
 		initialEndTime := time.Date(y, m, d+1, 0, 0, 0, 0, time.UTC) // the next day 00:00 UTC
-		k.SetLastRewardsAuctionEndTime(ctx, initialEndTime)
+		k.SetNextRewardsAuctionEndTime(ctx, initialEndTime)
 	} else {
 		currentTime := ctx.BlockTime()
 		if !currentTime.Before(endTime) {
@@ -66,7 +34,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 				nextEndTime = time.Date(y, m, d+1, 0, 0, 0, 0, time.UTC) // the next day 00:00 UTC
 			}
 
-			for _, l := range liquidFarmsInStore {
+			k.IterateAllLiquidFarms(ctx, func(liquidFarm types.LiquidFarm) (stop bool) {
 				auction, found := k.GetLastRewardsAuction(ctx, l.PoolId)
 				if found {
 					if err := k.FinishRewardsAuction(ctx, auction, l.FeeRate); err != nil {
@@ -74,8 +42,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 					}
 				}
 				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
-			}
-			k.SetLastRewardsAuctionEndTime(ctx, nextEndTime)
+			})
+			k.SetNextRewardsAuctionEndTime(ctx, nextEndTime)
 		}
 	}
 }

@@ -31,8 +31,9 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePool) (
 
 func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidity) (*types.MsgAddLiquidityResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	senderAddr := sdk.MustAccAddressFromBech32(msg.Sender)
 	_, liquidity, amt, err := k.Keeper.AddLiquidity(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PoolId,
+		ctx, senderAddr, senderAddr, msg.PoolId,
 		msg.LowerPrice, msg.UpperPrice, msg.DesiredAmount)
 	if err != nil {
 		return nil, err
@@ -45,7 +46,8 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 
 func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLiquidity) (*types.MsgRemoveLiquidityResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, amt, err := k.Keeper.RemoveLiquidity(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.Liquidity)
+	senderAddr := sdk.MustAccAddressFromBech32(msg.Sender)
+	_, amt, err := k.Keeper.RemoveLiquidity(ctx, senderAddr, senderAddr, msg.PositionId, msg.Liquidity)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +58,9 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 
 func (k msgServer) Collect(goCtx context.Context, msg *types.MsgCollect) (*types.MsgCollectResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	senderAddr := sdk.MustAccAddressFromBech32(msg.Sender)
 	if err := k.Keeper.Collect(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.PositionId, msg.Amount); err != nil {
+		ctx, senderAddr, senderAddr, msg.PositionId, msg.Amount); err != nil {
 		return nil, err
 	}
 	return &types.MsgCollectResponse{}, nil

@@ -109,8 +109,20 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 	if !msg.UpperPrice.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", msg.UpperPrice)
 	}
+	if msg.LowerPrice.GTE(msg.UpperPrice) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "lower price must be lower than upper price")
+	}
+	if _, valid := exchangetypes.ValidateTickPrice(msg.LowerPrice); !valid {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid lower tick")
+	}
+	if _, valid := exchangetypes.ValidateTickPrice(msg.UpperPrice); !valid {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid upper tick")
+	}
 	if err := msg.DesiredAmount.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid desired amount: %v", err)
+	}
+	if len(msg.DesiredAmount) == 0 || len(msg.DesiredAmount) > 2 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid desired amount length: %s", msg.DesiredAmount)
 	}
 	return nil
 }
@@ -146,8 +158,8 @@ func (msg MsgRemoveLiquidity) ValidateBasic() error {
 	if msg.PositionId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position is must not be 0")
 	}
-	if msg.Liquidity.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity must not be negative: %s", msg.Liquidity)
+	if !msg.Liquidity.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity must be positive: %s", msg.Liquidity)
 	}
 	return nil
 }

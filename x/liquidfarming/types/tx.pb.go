@@ -6,8 +6,8 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -30,25 +30,25 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgLiquidFarm defines a SDK message for farming pool coin for a liquid farm.
-type MsgLiquidFarm struct {
-	PoolId      uint64     `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
-	Farmer      string     `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
-	FarmingCoin types.Coin `protobuf:"bytes,3,opt,name=farming_coin,json=farmingCoin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"farming_coin"`
+// MsgMintShare defines a SDK message for minting share of LiquidFarm.
+type MsgMintShare struct {
+	Sender        string                                   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	LiquidFarmId  uint64                                   `protobuf:"varint,2,opt,name=liquid_farm_id,json=liquidFarmId,proto3" json:"liquid_farm_id,omitempty"`
+	DesiredAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=desired_amount,json=desiredAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"desired_amount"`
 }
 
-func (m *MsgLiquidFarm) Reset()         { *m = MsgLiquidFarm{} }
-func (m *MsgLiquidFarm) String() string { return proto.CompactTextString(m) }
-func (*MsgLiquidFarm) ProtoMessage()    {}
-func (*MsgLiquidFarm) Descriptor() ([]byte, []int) {
+func (m *MsgMintShare) Reset()         { *m = MsgMintShare{} }
+func (m *MsgMintShare) String() string { return proto.CompactTextString(m) }
+func (*MsgMintShare) ProtoMessage()    {}
+func (*MsgMintShare) Descriptor() ([]byte, []int) {
 	return fileDescriptor_9f87d9a2dc69f382, []int{0}
 }
-func (m *MsgLiquidFarm) XXX_Unmarshal(b []byte) error {
+func (m *MsgMintShare) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgLiquidFarm) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgMintShare) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgLiquidFarm.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgMintShare.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -58,34 +58,36 @@ func (m *MsgLiquidFarm) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
-func (m *MsgLiquidFarm) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgLiquidFarm.Merge(m, src)
+func (m *MsgMintShare) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgMintShare.Merge(m, src)
 }
-func (m *MsgLiquidFarm) XXX_Size() int {
+func (m *MsgMintShare) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgLiquidFarm) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgLiquidFarm.DiscardUnknown(m)
+func (m *MsgMintShare) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgMintShare.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgLiquidFarm proto.InternalMessageInfo
+var xxx_messageInfo_MsgMintShare proto.InternalMessageInfo
 
-// MsgLiquidFarmResponse defines the MsgLiquidFarmResponse response type.
-type MsgLiquidFarmResponse struct {
+type MsgMintShareResponse struct {
+	PositionId uint64                                   `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty"`
+	Liquidity  github_com_cosmos_cosmos_sdk_types.Int   `protobuf:"bytes,2,opt,name=liquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"liquidity"`
+	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
-func (m *MsgLiquidFarmResponse) Reset()         { *m = MsgLiquidFarmResponse{} }
-func (m *MsgLiquidFarmResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgLiquidFarmResponse) ProtoMessage()    {}
-func (*MsgLiquidFarmResponse) Descriptor() ([]byte, []int) {
+func (m *MsgMintShareResponse) Reset()         { *m = MsgMintShareResponse{} }
+func (m *MsgMintShareResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgMintShareResponse) ProtoMessage()    {}
+func (*MsgMintShareResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_9f87d9a2dc69f382, []int{1}
 }
-func (m *MsgLiquidFarmResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgMintShareResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgLiquidFarmResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgMintShareResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgLiquidFarmResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgMintShareResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -95,37 +97,37 @@ func (m *MsgLiquidFarmResponse) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *MsgLiquidFarmResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgLiquidFarmResponse.Merge(m, src)
+func (m *MsgMintShareResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgMintShareResponse.Merge(m, src)
 }
-func (m *MsgLiquidFarmResponse) XXX_Size() int {
+func (m *MsgMintShareResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgLiquidFarmResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgLiquidFarmResponse.DiscardUnknown(m)
+func (m *MsgMintShareResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgMintShareResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgLiquidFarmResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgMintShareResponse proto.InternalMessageInfo
 
-// MsgLiquidUnfarm defines a SDK message for unfarming LFCoin.
-type MsgLiquidUnfarm struct {
-	PoolId        uint64     `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
-	Farmer        string     `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
-	UnfarmingCoin types.Coin `protobuf:"bytes,3,opt,name=unfarming_coin,json=unfarmingCoin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"unfarming_coin"`
+// MsgBurnShare defines a SDK message for burning share of LiquidFarm.
+type MsgBurnShare struct {
+	Sender       string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	LiquidFarmId uint64     `protobuf:"varint,2,opt,name=liquid_farm_id,json=liquidFarmId,proto3" json:"liquid_farm_id,omitempty"`
+	Share        types.Coin `protobuf:"bytes,3,opt,name=share,proto3" json:"share"`
 }
 
-func (m *MsgLiquidUnfarm) Reset()         { *m = MsgLiquidUnfarm{} }
-func (m *MsgLiquidUnfarm) String() string { return proto.CompactTextString(m) }
-func (*MsgLiquidUnfarm) ProtoMessage()    {}
-func (*MsgLiquidUnfarm) Descriptor() ([]byte, []int) {
+func (m *MsgBurnShare) Reset()         { *m = MsgBurnShare{} }
+func (m *MsgBurnShare) String() string { return proto.CompactTextString(m) }
+func (*MsgBurnShare) ProtoMessage()    {}
+func (*MsgBurnShare) Descriptor() ([]byte, []int) {
 	return fileDescriptor_9f87d9a2dc69f382, []int{2}
 }
-func (m *MsgLiquidUnfarm) XXX_Unmarshal(b []byte) error {
+func (m *MsgBurnShare) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgLiquidUnfarm) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgBurnShare) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgLiquidUnfarm.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgBurnShare.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -135,34 +137,34 @@ func (m *MsgLiquidUnfarm) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *MsgLiquidUnfarm) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgLiquidUnfarm.Merge(m, src)
+func (m *MsgBurnShare) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBurnShare.Merge(m, src)
 }
-func (m *MsgLiquidUnfarm) XXX_Size() int {
+func (m *MsgBurnShare) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgLiquidUnfarm) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgLiquidUnfarm.DiscardUnknown(m)
+func (m *MsgBurnShare) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBurnShare.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgLiquidUnfarm proto.InternalMessageInfo
+var xxx_messageInfo_MsgBurnShare proto.InternalMessageInfo
 
-// MsgLiquidUnfarmResponse defines the MsgLiquidUnfarmResponse response type.
-type MsgLiquidUnfarmResponse struct {
+type MsgBurnShareResponse struct {
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
-func (m *MsgLiquidUnfarmResponse) Reset()         { *m = MsgLiquidUnfarmResponse{} }
-func (m *MsgLiquidUnfarmResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgLiquidUnfarmResponse) ProtoMessage()    {}
-func (*MsgLiquidUnfarmResponse) Descriptor() ([]byte, []int) {
+func (m *MsgBurnShareResponse) Reset()         { *m = MsgBurnShareResponse{} }
+func (m *MsgBurnShareResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBurnShareResponse) ProtoMessage()    {}
+func (*MsgBurnShareResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_9f87d9a2dc69f382, []int{3}
 }
-func (m *MsgLiquidUnfarmResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgBurnShareResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgLiquidUnfarmResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgBurnShareResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgLiquidUnfarmResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgBurnShareResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -172,108 +174,31 @@ func (m *MsgLiquidUnfarmResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *MsgLiquidUnfarmResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgLiquidUnfarmResponse.Merge(m, src)
+func (m *MsgBurnShareResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBurnShareResponse.Merge(m, src)
 }
-func (m *MsgLiquidUnfarmResponse) XXX_Size() int {
+func (m *MsgBurnShareResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgLiquidUnfarmResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgLiquidUnfarmResponse.DiscardUnknown(m)
+func (m *MsgBurnShareResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBurnShareResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgLiquidUnfarmResponse proto.InternalMessageInfo
-
-// MsgLiquidUnfarmAndWithdraw defines a SDK message for unfarming LFCoin.
-type MsgLiquidUnfarmAndWithdraw struct {
-	PoolId        uint64     `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
-	Farmer        string     `protobuf:"bytes,2,opt,name=farmer,proto3" json:"farmer,omitempty"`
-	UnfarmingCoin types.Coin `protobuf:"bytes,3,opt,name=unfarming_coin,json=unfarmingCoin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"unfarming_coin"`
-}
-
-func (m *MsgLiquidUnfarmAndWithdraw) Reset()         { *m = MsgLiquidUnfarmAndWithdraw{} }
-func (m *MsgLiquidUnfarmAndWithdraw) String() string { return proto.CompactTextString(m) }
-func (*MsgLiquidUnfarmAndWithdraw) ProtoMessage()    {}
-func (*MsgLiquidUnfarmAndWithdraw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{4}
-}
-func (m *MsgLiquidUnfarmAndWithdraw) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgLiquidUnfarmAndWithdraw) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgLiquidUnfarmAndWithdraw.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgLiquidUnfarmAndWithdraw) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgLiquidUnfarmAndWithdraw.Merge(m, src)
-}
-func (m *MsgLiquidUnfarmAndWithdraw) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgLiquidUnfarmAndWithdraw) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgLiquidUnfarmAndWithdraw.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgLiquidUnfarmAndWithdraw proto.InternalMessageInfo
-
-// MsgLiquidUnfarmAndWithdrawResponse defines the MsgLiquidUnfarmAndWithdrawResponse response type.
-type MsgLiquidUnfarmAndWithdrawResponse struct {
-}
-
-func (m *MsgLiquidUnfarmAndWithdrawResponse) Reset()         { *m = MsgLiquidUnfarmAndWithdrawResponse{} }
-func (m *MsgLiquidUnfarmAndWithdrawResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgLiquidUnfarmAndWithdrawResponse) ProtoMessage()    {}
-func (*MsgLiquidUnfarmAndWithdrawResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{5}
-}
-func (m *MsgLiquidUnfarmAndWithdrawResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgLiquidUnfarmAndWithdrawResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgLiquidUnfarmAndWithdrawResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgLiquidUnfarmAndWithdrawResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgLiquidUnfarmAndWithdrawResponse.Merge(m, src)
-}
-func (m *MsgLiquidUnfarmAndWithdrawResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgLiquidUnfarmAndWithdrawResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgLiquidUnfarmAndWithdrawResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgLiquidUnfarmAndWithdrawResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgBurnShareResponse proto.InternalMessageInfo
 
 // MsgPlaceBid defines a SDK message for placing a bid for a rewards auction.
 type MsgPlaceBid struct {
-	AuctionId   uint64     `protobuf:"varint,1,opt,name=auction_id,json=auctionId,proto3" json:"auction_id,omitempty"`
-	PoolId      uint64     `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
-	Bidder      string     `protobuf:"bytes,3,opt,name=bidder,proto3" json:"bidder,omitempty"`
-	BiddingCoin types.Coin `protobuf:"bytes,4,opt,name=bidding_coin,json=biddingCoin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"bidding_coin"`
+	Sender           string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	LiquidFarmId     uint64     `protobuf:"varint,2,opt,name=liquid_farm_id,json=liquidFarmId,proto3" json:"liquid_farm_id,omitempty"`
+	RewardsAuctionId uint64     `protobuf:"varint,3,opt,name=rewards_auction_id,json=rewardsAuctionId,proto3" json:"rewards_auction_id,omitempty"`
+	Share            types.Coin `protobuf:"bytes,4,opt,name=share,proto3" json:"share"`
 }
 
 func (m *MsgPlaceBid) Reset()         { *m = MsgPlaceBid{} }
 func (m *MsgPlaceBid) String() string { return proto.CompactTextString(m) }
 func (*MsgPlaceBid) ProtoMessage()    {}
 func (*MsgPlaceBid) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{6}
+	return fileDescriptor_9f87d9a2dc69f382, []int{4}
 }
 func (m *MsgPlaceBid) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -302,7 +227,6 @@ func (m *MsgPlaceBid) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgPlaceBid proto.InternalMessageInfo
 
-// MsgPlaceBidResponse defines the MsgPlaceBidResponse response type.
 type MsgPlaceBidResponse struct {
 }
 
@@ -310,7 +234,7 @@ func (m *MsgPlaceBidResponse) Reset()         { *m = MsgPlaceBidResponse{} }
 func (m *MsgPlaceBidResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgPlaceBidResponse) ProtoMessage()    {}
 func (*MsgPlaceBidResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{7}
+	return fileDescriptor_9f87d9a2dc69f382, []int{5}
 }
 func (m *MsgPlaceBidResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -341,16 +265,16 @@ var xxx_messageInfo_MsgPlaceBidResponse proto.InternalMessageInfo
 
 // MsgRefundBid defines a SDK message for refunding the bid that is not winning for the auction.
 type MsgRefundBid struct {
-	AuctionId uint64 `protobuf:"varint,1,opt,name=auction_id,json=auctionId,proto3" json:"auction_id,omitempty"`
-	PoolId    uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
-	Bidder    string `protobuf:"bytes,3,opt,name=bidder,proto3" json:"bidder,omitempty"`
+	Sender           string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	LiquidFarmId     uint64 `protobuf:"varint,2,opt,name=liquid_farm_id,json=liquidFarmId,proto3" json:"liquid_farm_id,omitempty"`
+	RewardsAuctionId uint64 `protobuf:"varint,3,opt,name=rewards_auction_id,json=rewardsAuctionId,proto3" json:"rewards_auction_id,omitempty"`
 }
 
 func (m *MsgRefundBid) Reset()         { *m = MsgRefundBid{} }
 func (m *MsgRefundBid) String() string { return proto.CompactTextString(m) }
 func (*MsgRefundBid) ProtoMessage()    {}
 func (*MsgRefundBid) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{8}
+	return fileDescriptor_9f87d9a2dc69f382, []int{6}
 }
 func (m *MsgRefundBid) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -379,7 +303,6 @@ func (m *MsgRefundBid) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRefundBid proto.InternalMessageInfo
 
-// MsgRefundBidResponse defines the MsgRefundBidResponse response type.
 type MsgRefundBidResponse struct {
 }
 
@@ -387,7 +310,7 @@ func (m *MsgRefundBidResponse) Reset()         { *m = MsgRefundBidResponse{} }
 func (m *MsgRefundBidResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgRefundBidResponse) ProtoMessage()    {}
 func (*MsgRefundBidResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{9}
+	return fileDescriptor_9f87d9a2dc69f382, []int{7}
 }
 func (m *MsgRefundBidResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -416,24 +339,23 @@ func (m *MsgRefundBidResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRefundBidResponse proto.InternalMessageInfo
 
-// MsgAdvanceAuction defines a message to advance rewards auction by one.
-type MsgAdvanceAuction struct {
-	// requester defines the bech32-encoded address of the requester
-	Requester string `protobuf:"bytes,1,opt,name=requester,proto3" json:"requester,omitempty"`
+// MsgFinishRewardsAuctions defines a message for finishing all rewards auctions.
+type MsgFinishRewardsAuctions struct {
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 }
 
-func (m *MsgAdvanceAuction) Reset()         { *m = MsgAdvanceAuction{} }
-func (m *MsgAdvanceAuction) String() string { return proto.CompactTextString(m) }
-func (*MsgAdvanceAuction) ProtoMessage()    {}
-func (*MsgAdvanceAuction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{10}
+func (m *MsgFinishRewardsAuctions) Reset()         { *m = MsgFinishRewardsAuctions{} }
+func (m *MsgFinishRewardsAuctions) String() string { return proto.CompactTextString(m) }
+func (*MsgFinishRewardsAuctions) ProtoMessage()    {}
+func (*MsgFinishRewardsAuctions) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9f87d9a2dc69f382, []int{8}
 }
-func (m *MsgAdvanceAuction) XXX_Unmarshal(b []byte) error {
+func (m *MsgFinishRewardsAuctions) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAdvanceAuction) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgFinishRewardsAuctions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAdvanceAuction.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgFinishRewardsAuctions.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -443,34 +365,33 @@ func (m *MsgAdvanceAuction) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *MsgAdvanceAuction) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAdvanceAuction.Merge(m, src)
+func (m *MsgFinishRewardsAuctions) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgFinishRewardsAuctions.Merge(m, src)
 }
-func (m *MsgAdvanceAuction) XXX_Size() int {
+func (m *MsgFinishRewardsAuctions) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAdvanceAuction) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAdvanceAuction.DiscardUnknown(m)
+func (m *MsgFinishRewardsAuctions) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgFinishRewardsAuctions.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAdvanceAuction proto.InternalMessageInfo
+var xxx_messageInfo_MsgFinishRewardsAuctions proto.InternalMessageInfo
 
-// MsgAdvanceAuctionResponse defines the Msg/AdvanceAuction response type.
-type MsgAdvanceAuctionResponse struct {
+type MsgFinishRewardsAuctionsResponse struct {
 }
 
-func (m *MsgAdvanceAuctionResponse) Reset()         { *m = MsgAdvanceAuctionResponse{} }
-func (m *MsgAdvanceAuctionResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAdvanceAuctionResponse) ProtoMessage()    {}
-func (*MsgAdvanceAuctionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9f87d9a2dc69f382, []int{11}
+func (m *MsgFinishRewardsAuctionsResponse) Reset()         { *m = MsgFinishRewardsAuctionsResponse{} }
+func (m *MsgFinishRewardsAuctionsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgFinishRewardsAuctionsResponse) ProtoMessage()    {}
+func (*MsgFinishRewardsAuctionsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9f87d9a2dc69f382, []int{9}
 }
-func (m *MsgAdvanceAuctionResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgFinishRewardsAuctionsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAdvanceAuctionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgFinishRewardsAuctionsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAdvanceAuctionResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgFinishRewardsAuctionsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -480,31 +401,29 @@ func (m *MsgAdvanceAuctionResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgAdvanceAuctionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAdvanceAuctionResponse.Merge(m, src)
+func (m *MsgFinishRewardsAuctionsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgFinishRewardsAuctionsResponse.Merge(m, src)
 }
-func (m *MsgAdvanceAuctionResponse) XXX_Size() int {
+func (m *MsgFinishRewardsAuctionsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAdvanceAuctionResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAdvanceAuctionResponse.DiscardUnknown(m)
+func (m *MsgFinishRewardsAuctionsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgFinishRewardsAuctionsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAdvanceAuctionResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgFinishRewardsAuctionsResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgLiquidFarm)(nil), "crescent.liquidfarming.v1beta1.MsgLiquidFarm")
-	proto.RegisterType((*MsgLiquidFarmResponse)(nil), "crescent.liquidfarming.v1beta1.MsgLiquidFarmResponse")
-	proto.RegisterType((*MsgLiquidUnfarm)(nil), "crescent.liquidfarming.v1beta1.MsgLiquidUnfarm")
-	proto.RegisterType((*MsgLiquidUnfarmResponse)(nil), "crescent.liquidfarming.v1beta1.MsgLiquidUnfarmResponse")
-	proto.RegisterType((*MsgLiquidUnfarmAndWithdraw)(nil), "crescent.liquidfarming.v1beta1.MsgLiquidUnfarmAndWithdraw")
-	proto.RegisterType((*MsgLiquidUnfarmAndWithdrawResponse)(nil), "crescent.liquidfarming.v1beta1.MsgLiquidUnfarmAndWithdrawResponse")
+	proto.RegisterType((*MsgMintShare)(nil), "crescent.liquidfarming.v1beta1.MsgMintShare")
+	proto.RegisterType((*MsgMintShareResponse)(nil), "crescent.liquidfarming.v1beta1.MsgMintShareResponse")
+	proto.RegisterType((*MsgBurnShare)(nil), "crescent.liquidfarming.v1beta1.MsgBurnShare")
+	proto.RegisterType((*MsgBurnShareResponse)(nil), "crescent.liquidfarming.v1beta1.MsgBurnShareResponse")
 	proto.RegisterType((*MsgPlaceBid)(nil), "crescent.liquidfarming.v1beta1.MsgPlaceBid")
 	proto.RegisterType((*MsgPlaceBidResponse)(nil), "crescent.liquidfarming.v1beta1.MsgPlaceBidResponse")
 	proto.RegisterType((*MsgRefundBid)(nil), "crescent.liquidfarming.v1beta1.MsgRefundBid")
 	proto.RegisterType((*MsgRefundBidResponse)(nil), "crescent.liquidfarming.v1beta1.MsgRefundBidResponse")
-	proto.RegisterType((*MsgAdvanceAuction)(nil), "crescent.liquidfarming.v1beta1.MsgAdvanceAuction")
-	proto.RegisterType((*MsgAdvanceAuctionResponse)(nil), "crescent.liquidfarming.v1beta1.MsgAdvanceAuctionResponse")
+	proto.RegisterType((*MsgFinishRewardsAuctions)(nil), "crescent.liquidfarming.v1beta1.MsgFinishRewardsAuctions")
+	proto.RegisterType((*MsgFinishRewardsAuctionsResponse)(nil), "crescent.liquidfarming.v1beta1.MsgFinishRewardsAuctionsResponse")
 }
 
 func init() {
@@ -512,47 +431,46 @@ func init() {
 }
 
 var fileDescriptor_9f87d9a2dc69f382 = []byte{
-	// 637 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xcb, 0x4f, 0xd4, 0x40,
-	0x18, 0xdf, 0x01, 0x44, 0xfb, 0xf1, 0x30, 0x56, 0x60, 0xa1, 0x6a, 0x21, 0x1b, 0x13, 0x88, 0x4a,
-	0x1b, 0x40, 0x42, 0x24, 0xf1, 0xc0, 0x9a, 0x98, 0x90, 0xb8, 0x89, 0x69, 0x62, 0x48, 0xbc, 0x90,
-	0x6e, 0x67, 0x28, 0x13, 0x76, 0x67, 0x76, 0x67, 0x5a, 0x1e, 0x17, 0xcf, 0x1e, 0xbd, 0x7a, 0xf3,
-	0xec, 0xdd, 0x93, 0x77, 0xc3, 0x91, 0x78, 0xf2, 0xa4, 0x06, 0xee, 0xfe, 0x0d, 0xa6, 0xdd, 0xe9,
-	0xd0, 0x5d, 0x83, 0xd9, 0x12, 0x39, 0x78, 0xa2, 0x33, 0xf3, 0x7b, 0x26, 0xdf, 0x0c, 0x0b, 0xf3,
-	0x81, 0x20, 0x32, 0x20, 0x2c, 0x72, 0x1b, 0xb4, 0x1d, 0x53, 0xbc, 0xe3, 0x8b, 0x26, 0x65, 0xa1,
-	0xbb, 0xbf, 0x54, 0x27, 0x91, 0xbf, 0xe4, 0x46, 0x87, 0x4e, 0x4b, 0xf0, 0x88, 0x9b, 0x76, 0x06,
-	0x74, 0xba, 0x80, 0x8e, 0x02, 0x5a, 0x13, 0x21, 0x0f, 0x79, 0x0a, 0x75, 0x93, 0xaf, 0x0e, 0xcb,
-	0xb2, 0x03, 0x2e, 0x9b, 0x5c, 0xba, 0x75, 0x5f, 0x12, 0xad, 0x19, 0x70, 0xca, 0xd4, 0xf9, 0x83,
-	0xfc, 0x79, 0x3b, 0x26, 0xe2, 0x48, 0xa3, 0x5a, 0x7e, 0x48, 0x99, 0x1f, 0x51, 0xae, 0xb0, 0x95,
-	0x4f, 0x08, 0xc6, 0x6a, 0x32, 0x7c, 0x91, 0xda, 0x3f, 0xf7, 0x45, 0xd3, 0x2c, 0xc3, 0xf5, 0x16,
-	0xe7, 0x8d, 0x6d, 0x8a, 0xa7, 0xd1, 0x1c, 0x5a, 0x18, 0xf2, 0x86, 0x93, 0xe5, 0x26, 0x36, 0xa7,
-	0x60, 0x38, 0xc9, 0x47, 0xc4, 0xf4, 0xc0, 0x1c, 0x5a, 0x30, 0x3c, 0xb5, 0x32, 0x9b, 0x30, 0xaa,
-	0x72, 0x6f, 0x27, 0x21, 0xa6, 0x07, 0xe7, 0xd0, 0xc2, 0xc8, 0xf2, 0x8c, 0xd3, 0x49, 0xe1, 0x24,
-	0x29, 0xb2, 0x42, 0xce, 0x33, 0x4e, 0x59, 0xd5, 0x3d, 0xfe, 0x3e, 0x5b, 0xfa, 0xf8, 0x63, 0x76,
-	0x3e, 0xa4, 0xd1, 0x6e, 0x5c, 0x77, 0x02, 0xde, 0x74, 0x55, 0xe4, 0xce, 0x9f, 0x45, 0x89, 0xf7,
-	0xdc, 0xe8, 0xa8, 0x45, 0x64, 0x4a, 0xf0, 0x46, 0x94, 0x7e, 0xb2, 0x58, 0x1f, 0x7a, 0xfb, 0x61,
-	0xb6, 0x54, 0x29, 0xc3, 0x64, 0x57, 0x6c, 0x8f, 0xc8, 0x16, 0x67, 0x92, 0x54, 0x3e, 0x23, 0xb8,
-	0xa9, 0x4f, 0x5e, 0xb1, 0x9d, 0x4b, 0x55, 0x6a, 0xc3, 0x78, 0xcc, 0xae, 0xb8, 0xd4, 0x98, 0x76,
-	0xc8, 0xd5, 0x9a, 0x81, 0x72, 0x4f, 0x78, 0x5d, 0xec, 0x0b, 0x02, 0xab, 0xe7, 0x6c, 0x83, 0xe1,
-	0x2d, 0x1a, 0xed, 0x62, 0xe1, 0x1f, 0xfc, 0x47, 0x1d, 0xef, 0x43, 0xe5, 0xe2, 0x1e, 0xba, 0xee,
-	0x57, 0x04, 0x23, 0x35, 0x19, 0xbe, 0x6c, 0xf8, 0x01, 0xa9, 0x52, 0x6c, 0xde, 0x03, 0xf0, 0xe3,
-	0x20, 0x99, 0xdc, 0xf3, 0x8a, 0x86, 0xda, 0xd9, 0xc4, 0xf9, 0xfa, 0x03, 0xbd, 0xf5, 0xeb, 0x14,
-	0x63, 0x22, 0xd2, 0x7a, 0x86, 0xa7, 0x56, 0xc9, 0xd4, 0x26, 0x5f, 0xba, 0xfc, 0xd0, 0xbf, 0x9f,
-	0x5a, 0xa5, 0x9f, 0xab, 0x3e, 0x09, 0xb7, 0x73, 0x9d, 0x74, 0x57, 0x0c, 0xa3, 0x35, 0x19, 0x7a,
-	0x64, 0x27, 0x66, 0xf8, 0x0a, 0xba, 0x2a, 0xf3, 0x29, 0x98, 0xc8, 0xbb, 0x68, 0xf7, 0x35, 0xb8,
-	0x55, 0x93, 0xe1, 0x06, 0xde, 0xf7, 0x59, 0x40, 0x36, 0x3a, 0x2e, 0xe6, 0x5d, 0x30, 0x04, 0x69,
-	0xc7, 0x44, 0x46, 0x44, 0xa4, 0x09, 0x0c, 0xef, 0x7c, 0x43, 0x09, 0xde, 0x81, 0x99, 0x3f, 0x88,
-	0x99, 0xea, 0xf2, 0xaf, 0x6b, 0x30, 0x58, 0x93, 0xa1, 0x29, 0x00, 0x72, 0x8f, 0xcb, 0xa2, 0xf3,
-	0xf7, 0x17, 0xcf, 0xe9, 0xba, 0xd4, 0xd6, 0x6a, 0x21, 0x78, 0xe6, 0x6d, 0x1e, 0xc2, 0x68, 0xd7,
-	0xfd, 0x77, 0xfb, 0x96, 0xe9, 0x10, 0xac, 0xb5, 0x82, 0x04, 0xed, 0xfc, 0x1e, 0x41, 0xf9, 0xa2,
-	0x1b, 0xba, 0x5e, 0x50, 0x34, 0xc7, 0xb5, 0xaa, 0x97, 0xe7, 0xea, 0x6c, 0x0d, 0xb8, 0xa1, 0x6f,
-	0xd3, 0xc3, 0x3e, 0xf4, 0x32, 0xb0, 0xb5, 0x52, 0x00, 0xac, 0xdd, 0x38, 0x18, 0xe7, 0x03, 0xfd,
-	0xa8, 0x0f, 0x05, 0x8d, 0xb6, 0x1e, 0x17, 0x41, 0x6b, 0xc3, 0x37, 0x30, 0xde, 0x33, 0xc3, 0x4b,
-	0x7d, 0xe8, 0x74, 0x53, 0xac, 0x27, 0x85, 0x29, 0x99, 0x7f, 0x75, 0xeb, 0xf8, 0xd4, 0x46, 0x27,
-	0xa7, 0x36, 0xfa, 0x79, 0x6a, 0xa3, 0x77, 0x67, 0x76, 0xe9, 0xe4, 0xcc, 0x2e, 0x7d, 0x3b, 0xb3,
-	0x4b, 0xaf, 0x9f, 0xe6, 0x5f, 0x0c, 0x25, 0xbf, 0xc8, 0x48, 0x74, 0xc0, 0xc5, 0x9e, 0xde, 0x70,
-	0xf7, 0x57, 0xdd, 0xc3, 0x9e, 0xdf, 0x0b, 0xe9, 0x63, 0x52, 0x1f, 0x4e, 0xff, 0x53, 0xaf, 0xfc,
-	0x0e, 0x00, 0x00, 0xff, 0xff, 0x2c, 0xe4, 0x34, 0x3e, 0x56, 0x08, 0x00, 0x00,
+	// 624 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x95, 0xcd, 0x6e, 0x13, 0x31,
+	0x10, 0xc7, 0x63, 0x12, 0x22, 0xe2, 0x94, 0x0a, 0x2d, 0x6d, 0x15, 0x72, 0xd8, 0x44, 0x2b, 0x04,
+	0x91, 0x68, 0x77, 0x69, 0x4a, 0x25, 0x2e, 0x48, 0x34, 0x48, 0x95, 0x22, 0x11, 0x09, 0x2d, 0x37,
+	0x38, 0x44, 0x9b, 0xb5, 0xbb, 0xb1, 0x9a, 0xd8, 0xc1, 0xf6, 0xf6, 0x03, 0x8e, 0xbc, 0x00, 0x12,
+	0x6f, 0xc1, 0x89, 0x47, 0xe0, 0x98, 0x63, 0x8f, 0x08, 0xa1, 0x02, 0xc9, 0x8d, 0xa7, 0x40, 0xeb,
+	0xfd, 0xc8, 0x96, 0x7e, 0x68, 0x03, 0x94, 0x53, 0xb2, 0xf6, 0x7f, 0x66, 0x7e, 0x33, 0x1e, 0x8f,
+	0xe1, 0x5d, 0x97, 0x63, 0xe1, 0x62, 0x2a, 0xad, 0x01, 0x79, 0xe5, 0x13, 0xb4, 0xe3, 0xf0, 0x21,
+	0xa1, 0x9e, 0xb5, 0xb7, 0xde, 0xc3, 0xd2, 0x59, 0xb7, 0xe4, 0x81, 0x39, 0xe2, 0x4c, 0x32, 0x4d,
+	0x8f, 0x85, 0xe6, 0x09, 0xa1, 0x19, 0x09, 0xab, 0x4b, 0x1e, 0xf3, 0x98, 0x92, 0x5a, 0xc1, 0xbf,
+	0xd0, 0xaa, 0xaa, 0xbb, 0x4c, 0x0c, 0x99, 0xb0, 0x7a, 0x8e, 0xc0, 0x89, 0x4f, 0x97, 0x11, 0x1a,
+	0xee, 0x1b, 0x9f, 0x00, 0x5c, 0xe8, 0x08, 0xaf, 0x43, 0xa8, 0x7c, 0xde, 0x77, 0x38, 0xd6, 0x56,
+	0x60, 0x51, 0x60, 0x8a, 0x30, 0xaf, 0x80, 0x3a, 0x68, 0x94, 0xec, 0xe8, 0x4b, 0xbb, 0x0d, 0x17,
+	0xc3, 0xb8, 0xdd, 0x20, 0x70, 0x97, 0xa0, 0xca, 0x95, 0x3a, 0x68, 0x14, 0xec, 0x85, 0x70, 0x75,
+	0xdb, 0xe1, 0xc3, 0x36, 0xd2, 0x38, 0x5c, 0x44, 0x58, 0x10, 0x8e, 0x51, 0xd7, 0x19, 0x32, 0x9f,
+	0xca, 0x4a, 0xbe, 0x9e, 0x6f, 0x94, 0x9b, 0xb7, 0xcc, 0x90, 0xc3, 0x0c, 0x38, 0x62, 0x64, 0xf3,
+	0x09, 0x23, 0xb4, 0x75, 0x7f, 0x7c, 0x5c, 0xcb, 0x7d, 0xf8, 0x56, 0x6b, 0x78, 0x44, 0xf6, 0xfd,
+	0x9e, 0xe9, 0xb2, 0xa1, 0x15, 0x41, 0x87, 0x3f, 0x6b, 0x02, 0xed, 0x5a, 0xf2, 0x70, 0x84, 0x85,
+	0x32, 0x10, 0xf6, 0xf5, 0x28, 0xc4, 0x96, 0x8a, 0x60, 0xfc, 0x04, 0x70, 0x29, 0x9d, 0x82, 0x8d,
+	0xc5, 0x88, 0x51, 0x81, 0xb5, 0x1a, 0x2c, 0x8f, 0x98, 0x20, 0x92, 0x30, 0x1a, 0xf0, 0x02, 0xc5,
+	0x0b, 0xe3, 0xa5, 0x36, 0xd2, 0x9e, 0xc2, 0x52, 0x48, 0x4f, 0xe4, 0xa1, 0x4a, 0xa7, 0xd4, 0x32,
+	0x03, 0x9a, 0x2f, 0xc7, 0xb5, 0x3b, 0x19, 0x68, 0xda, 0x54, 0xda, 0x33, 0x07, 0x9a, 0x0b, 0x8b,
+	0x97, 0x97, 0x73, 0xe4, 0xda, 0x78, 0x1b, 0x9e, 0x57, 0xcb, 0xe7, 0xf4, 0x5f, 0x9c, 0xd7, 0x26,
+	0xbc, 0x2a, 0x02, 0x37, 0x95, 0x7c, 0x1d, 0x5c, 0x8c, 0x5c, 0x08, 0x90, 0xed, 0x50, 0x6d, 0xbc,
+	0x51, 0x15, 0x4f, 0x20, 0x92, 0x8a, 0xcf, 0x4a, 0x00, 0x2e, 0xaf, 0x04, 0x1f, 0x01, 0x2c, 0x77,
+	0x84, 0xf7, 0x6c, 0xe0, 0xb8, 0xb8, 0x45, 0xd0, 0x5f, 0x56, 0x60, 0x15, 0x6a, 0x1c, 0xef, 0x3b,
+	0x1c, 0x89, 0xae, 0xe3, 0xbb, 0x71, 0xaf, 0xe4, 0x95, 0xf2, 0x46, 0xb4, 0xb3, 0x15, 0x6e, 0xa4,
+	0xeb, 0x55, 0x98, 0xab, 0x5e, 0xcb, 0xf0, 0x66, 0x8a, 0x38, 0x2e, 0x97, 0xf1, 0x5a, 0x9d, 0xa5,
+	0x8d, 0x77, 0x7c, 0x8a, 0xfe, 0x73, 0x26, 0xc6, 0x8a, 0x3a, 0xc2, 0x24, 0x76, 0xc2, 0xd4, 0x84,
+	0x95, 0x8e, 0xf0, 0xb6, 0x09, 0x25, 0xa2, 0x6f, 0x9f, 0x30, 0x12, 0xe7, 0xf1, 0x19, 0x06, 0xac,
+	0x9f, 0x67, 0x13, 0xfb, 0x6d, 0x7e, 0x2d, 0xc0, 0x7c, 0x47, 0x78, 0x1a, 0x83, 0xa5, 0xd9, 0xb0,
+	0x59, 0x35, 0x2f, 0x1e, 0x6a, 0x66, 0xfa, 0x5e, 0x57, 0x1f, 0xcc, 0xa3, 0x4e, 0x7a, 0x92, 0xc1,
+	0xd2, 0xec, 0xb6, 0x64, 0x09, 0x98, 0xa8, 0x33, 0x05, 0x3c, 0x7d, 0x09, 0x06, 0xf0, 0x5a, 0xd2,
+	0x9b, 0xf7, 0x32, 0x78, 0x88, 0xc5, 0xd5, 0x8d, 0x39, 0xc4, 0xe9, 0xf4, 0x66, 0x0d, 0x94, 0x25,
+	0xbd, 0x44, 0x9d, 0x29, 0xbd, 0x53, 0x0d, 0xa2, 0xbd, 0x07, 0x70, 0xf9, 0xec, 0xf6, 0x78, 0x98,
+	0xc1, 0xdf, 0x99, 0x96, 0xd5, 0xc7, 0x7f, 0x6a, 0x19, 0x53, 0xb5, 0x5e, 0x8e, 0x7f, 0xe8, 0xb9,
+	0xf1, 0x44, 0x07, 0x47, 0x13, 0x1d, 0x7c, 0x9f, 0xe8, 0xe0, 0xdd, 0x54, 0xcf, 0x1d, 0x4d, 0xf5,
+	0xdc, 0xe7, 0xa9, 0x9e, 0x7b, 0xf1, 0x28, 0x3d, 0x64, 0xa2, 0x48, 0x6b, 0x14, 0xcb, 0x7d, 0xc6,
+	0x77, 0x93, 0x05, 0x6b, 0x6f, 0xd3, 0x3a, 0xf8, 0xed, 0x15, 0x56, 0xf3, 0xa7, 0x57, 0x54, 0x6f,
+	0xe5, 0xc6, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3e, 0x30, 0xe5, 0xe0, 0xac, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -567,19 +485,17 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// LiquidFarm defines a method for farming pool coin for a liquid farm
-	LiquidFarm(ctx context.Context, in *MsgLiquidFarm, opts ...grpc.CallOption) (*MsgLiquidFarmResponse, error)
-	// LiquidUnfarm defines a method for unfarming amount of LFCoin
-	LiquidUnfarm(ctx context.Context, in *MsgLiquidUnfarm, opts ...grpc.CallOption) (*MsgLiquidUnfarmResponse, error)
-	// LiquidUnfarmAndWithdraw defines a method for unfarming amount of LFCoin and withdraw pool coin from the pool
-	LiquidUnfarmAndWithdraw(ctx context.Context, in *MsgLiquidUnfarmAndWithdraw, opts ...grpc.CallOption) (*MsgLiquidUnfarmAndWithdrawResponse, error)
+	// MintShare defines a method for minting share of LiquidFarm
+	MintShare(ctx context.Context, in *MsgMintShare, opts ...grpc.CallOption) (*MsgMintShareResponse, error)
+	// BurnShare defines a method for burning share of LiquidFarm
+	BurnShare(ctx context.Context, in *MsgBurnShare, opts ...grpc.CallOption) (*MsgBurnShareResponse, error)
 	// PlaceBid defines a method for placing a bid for a rewards auction
 	PlaceBid(ctx context.Context, in *MsgPlaceBid, opts ...grpc.CallOption) (*MsgPlaceBidResponse, error)
 	// RefundBid defines a method for refunding the bid that is not winning for the auction
 	RefundBid(ctx context.Context, in *MsgRefundBid, opts ...grpc.CallOption) (*MsgRefundBidResponse, error)
-	// AdvanceAuction defines a method for advancing rewards auction by one.
-	// This Msg is defined just for testing purpose and it shouldn't be used in production.
-	AdvanceAuction(ctx context.Context, in *MsgAdvanceAuction, opts ...grpc.CallOption) (*MsgAdvanceAuctionResponse, error)
+	// FinishRewardsAuctions defines a method for finishing all rewards auctions.
+	// This message is just for testing purpose and it shouldn't be enabled in production.
+	FinishRewardsAuctions(ctx context.Context, in *MsgFinishRewardsAuctions, opts ...grpc.CallOption) (*MsgFinishRewardsAuctionsResponse, error)
 }
 
 type msgClient struct {
@@ -590,27 +506,18 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) LiquidFarm(ctx context.Context, in *MsgLiquidFarm, opts ...grpc.CallOption) (*MsgLiquidFarmResponse, error) {
-	out := new(MsgLiquidFarmResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidfarming.v1beta1.Msg/LiquidFarm", in, out, opts...)
+func (c *msgClient) MintShare(ctx context.Context, in *MsgMintShare, opts ...grpc.CallOption) (*MsgMintShareResponse, error) {
+	out := new(MsgMintShareResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidfarming.v1beta1.Msg/MintShare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) LiquidUnfarm(ctx context.Context, in *MsgLiquidUnfarm, opts ...grpc.CallOption) (*MsgLiquidUnfarmResponse, error) {
-	out := new(MsgLiquidUnfarmResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidfarming.v1beta1.Msg/LiquidUnfarm", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) LiquidUnfarmAndWithdraw(ctx context.Context, in *MsgLiquidUnfarmAndWithdraw, opts ...grpc.CallOption) (*MsgLiquidUnfarmAndWithdrawResponse, error) {
-	out := new(MsgLiquidUnfarmAndWithdrawResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidfarming.v1beta1.Msg/LiquidUnfarmAndWithdraw", in, out, opts...)
+func (c *msgClient) BurnShare(ctx context.Context, in *MsgBurnShare, opts ...grpc.CallOption) (*MsgBurnShareResponse, error) {
+	out := new(MsgBurnShareResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidfarming.v1beta1.Msg/BurnShare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -635,9 +542,9 @@ func (c *msgClient) RefundBid(ctx context.Context, in *MsgRefundBid, opts ...grp
 	return out, nil
 }
 
-func (c *msgClient) AdvanceAuction(ctx context.Context, in *MsgAdvanceAuction, opts ...grpc.CallOption) (*MsgAdvanceAuctionResponse, error) {
-	out := new(MsgAdvanceAuctionResponse)
-	err := c.cc.Invoke(ctx, "/crescent.liquidfarming.v1beta1.Msg/AdvanceAuction", in, out, opts...)
+func (c *msgClient) FinishRewardsAuctions(ctx context.Context, in *MsgFinishRewardsAuctions, opts ...grpc.CallOption) (*MsgFinishRewardsAuctionsResponse, error) {
+	out := new(MsgFinishRewardsAuctionsResponse)
+	err := c.cc.Invoke(ctx, "/crescent.liquidfarming.v1beta1.Msg/FinishRewardsAuctions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -646,33 +553,28 @@ func (c *msgClient) AdvanceAuction(ctx context.Context, in *MsgAdvanceAuction, o
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// LiquidFarm defines a method for farming pool coin for a liquid farm
-	LiquidFarm(context.Context, *MsgLiquidFarm) (*MsgLiquidFarmResponse, error)
-	// LiquidUnfarm defines a method for unfarming amount of LFCoin
-	LiquidUnfarm(context.Context, *MsgLiquidUnfarm) (*MsgLiquidUnfarmResponse, error)
-	// LiquidUnfarmAndWithdraw defines a method for unfarming amount of LFCoin and withdraw pool coin from the pool
-	LiquidUnfarmAndWithdraw(context.Context, *MsgLiquidUnfarmAndWithdraw) (*MsgLiquidUnfarmAndWithdrawResponse, error)
+	// MintShare defines a method for minting share of LiquidFarm
+	MintShare(context.Context, *MsgMintShare) (*MsgMintShareResponse, error)
+	// BurnShare defines a method for burning share of LiquidFarm
+	BurnShare(context.Context, *MsgBurnShare) (*MsgBurnShareResponse, error)
 	// PlaceBid defines a method for placing a bid for a rewards auction
 	PlaceBid(context.Context, *MsgPlaceBid) (*MsgPlaceBidResponse, error)
 	// RefundBid defines a method for refunding the bid that is not winning for the auction
 	RefundBid(context.Context, *MsgRefundBid) (*MsgRefundBidResponse, error)
-	// AdvanceAuction defines a method for advancing rewards auction by one.
-	// This Msg is defined just for testing purpose and it shouldn't be used in production.
-	AdvanceAuction(context.Context, *MsgAdvanceAuction) (*MsgAdvanceAuctionResponse, error)
+	// FinishRewardsAuctions defines a method for finishing all rewards auctions.
+	// This message is just for testing purpose and it shouldn't be enabled in production.
+	FinishRewardsAuctions(context.Context, *MsgFinishRewardsAuctions) (*MsgFinishRewardsAuctionsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) LiquidFarm(ctx context.Context, req *MsgLiquidFarm) (*MsgLiquidFarmResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LiquidFarm not implemented")
+func (*UnimplementedMsgServer) MintShare(ctx context.Context, req *MsgMintShare) (*MsgMintShareResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MintShare not implemented")
 }
-func (*UnimplementedMsgServer) LiquidUnfarm(ctx context.Context, req *MsgLiquidUnfarm) (*MsgLiquidUnfarmResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LiquidUnfarm not implemented")
-}
-func (*UnimplementedMsgServer) LiquidUnfarmAndWithdraw(ctx context.Context, req *MsgLiquidUnfarmAndWithdraw) (*MsgLiquidUnfarmAndWithdrawResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LiquidUnfarmAndWithdraw not implemented")
+func (*UnimplementedMsgServer) BurnShare(ctx context.Context, req *MsgBurnShare) (*MsgBurnShareResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BurnShare not implemented")
 }
 func (*UnimplementedMsgServer) PlaceBid(ctx context.Context, req *MsgPlaceBid) (*MsgPlaceBidResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PlaceBid not implemented")
@@ -680,64 +582,46 @@ func (*UnimplementedMsgServer) PlaceBid(ctx context.Context, req *MsgPlaceBid) (
 func (*UnimplementedMsgServer) RefundBid(ctx context.Context, req *MsgRefundBid) (*MsgRefundBidResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefundBid not implemented")
 }
-func (*UnimplementedMsgServer) AdvanceAuction(ctx context.Context, req *MsgAdvanceAuction) (*MsgAdvanceAuctionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AdvanceAuction not implemented")
+func (*UnimplementedMsgServer) FinishRewardsAuctions(ctx context.Context, req *MsgFinishRewardsAuctions) (*MsgFinishRewardsAuctionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FinishRewardsAuctions not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_LiquidFarm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgLiquidFarm)
+func _Msg_MintShare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgMintShare)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).LiquidFarm(ctx, in)
+		return srv.(MsgServer).MintShare(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidfarming.v1beta1.Msg/LiquidFarm",
+		FullMethod: "/crescent.liquidfarming.v1beta1.Msg/MintShare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).LiquidFarm(ctx, req.(*MsgLiquidFarm))
+		return srv.(MsgServer).MintShare(ctx, req.(*MsgMintShare))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_LiquidUnfarm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgLiquidUnfarm)
+func _Msg_BurnShare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBurnShare)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).LiquidUnfarm(ctx, in)
+		return srv.(MsgServer).BurnShare(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidfarming.v1beta1.Msg/LiquidUnfarm",
+		FullMethod: "/crescent.liquidfarming.v1beta1.Msg/BurnShare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).LiquidUnfarm(ctx, req.(*MsgLiquidUnfarm))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_LiquidUnfarmAndWithdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgLiquidUnfarmAndWithdraw)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).LiquidUnfarmAndWithdraw(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/crescent.liquidfarming.v1beta1.Msg/LiquidUnfarmAndWithdraw",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).LiquidUnfarmAndWithdraw(ctx, req.(*MsgLiquidUnfarmAndWithdraw))
+		return srv.(MsgServer).BurnShare(ctx, req.(*MsgBurnShare))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -778,20 +662,20 @@ func _Msg_RefundBid_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AdvanceAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAdvanceAuction)
+func _Msg_FinishRewardsAuctions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgFinishRewardsAuctions)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AdvanceAuction(ctx, in)
+		return srv.(MsgServer).FinishRewardsAuctions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/crescent.liquidfarming.v1beta1.Msg/AdvanceAuction",
+		FullMethod: "/crescent.liquidfarming.v1beta1.Msg/FinishRewardsAuctions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AdvanceAuction(ctx, req.(*MsgAdvanceAuction))
+		return srv.(MsgServer).FinishRewardsAuctions(ctx, req.(*MsgFinishRewardsAuctions))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -801,16 +685,12 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "LiquidFarm",
-			Handler:    _Msg_LiquidFarm_Handler,
+			MethodName: "MintShare",
+			Handler:    _Msg_MintShare_Handler,
 		},
 		{
-			MethodName: "LiquidUnfarm",
-			Handler:    _Msg_LiquidUnfarm_Handler,
-		},
-		{
-			MethodName: "LiquidUnfarmAndWithdraw",
-			Handler:    _Msg_LiquidUnfarmAndWithdraw_Handler,
+			MethodName: "BurnShare",
+			Handler:    _Msg_BurnShare_Handler,
 		},
 		{
 			MethodName: "PlaceBid",
@@ -821,15 +701,15 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_RefundBid_Handler,
 		},
 		{
-			MethodName: "AdvanceAuction",
-			Handler:    _Msg_AdvanceAuction_Handler,
+			MethodName: "FinishRewardsAuctions",
+			Handler:    _Msg_FinishRewardsAuctions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "crescent/liquidfarming/v1beta1/tx.proto",
 }
 
-func (m *MsgLiquidFarm) Marshal() (dAtA []byte, err error) {
+func (m *MsgMintShare) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -839,18 +719,119 @@ func (m *MsgLiquidFarm) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgLiquidFarm) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgMintShare) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgLiquidFarm) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgMintShare) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DesiredAmount) > 0 {
+		for iNdEx := len(m.DesiredAmount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.DesiredAmount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.LiquidFarmId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LiquidFarmId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgMintShareResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgMintShareResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgMintShareResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	{
+		size := m.Liquidity.Size()
+		i -= size
+		if _, err := m.Liquidity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if m.PositionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBurnShare) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBurnShare) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBurnShare) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.FarmingCoin.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Share.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -859,22 +840,22 @@ func (m *MsgLiquidFarm) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if len(m.Farmer) > 0 {
-		i -= len(m.Farmer)
-		copy(dAtA[i:], m.Farmer)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Farmer)))
+	if m.LiquidFarmId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LiquidFarmId))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x10
 	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgLiquidFarmResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgBurnShareResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -884,152 +865,30 @@ func (m *MsgLiquidFarmResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgLiquidFarmResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgBurnShareResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgLiquidFarmResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgBurnShareResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgLiquidUnfarm) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgLiquidUnfarm) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgLiquidUnfarm) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.UnfarmingCoin.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
 		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.Farmer) > 0 {
-		i -= len(m.Farmer)
-		copy(dAtA[i:], m.Farmer)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Farmer)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgLiquidUnfarmResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgLiquidUnfarmResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgLiquidUnfarmResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgLiquidUnfarmAndWithdraw) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgLiquidUnfarmAndWithdraw) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgLiquidUnfarmAndWithdraw) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.UnfarmingCoin.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.Farmer) > 0 {
-		i -= len(m.Farmer)
-		copy(dAtA[i:], m.Farmer)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Farmer)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgLiquidUnfarmAndWithdrawResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgLiquidUnfarmAndWithdrawResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgLiquidUnfarmAndWithdrawResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -1054,7 +913,7 @@ func (m *MsgPlaceBid) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size, err := m.BiddingCoin.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Share.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1063,22 +922,22 @@ func (m *MsgPlaceBid) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x22
-	if len(m.Bidder) > 0 {
-		i -= len(m.Bidder)
-		copy(dAtA[i:], m.Bidder)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Bidder)))
+	if m.RewardsAuctionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.RewardsAuctionId))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x18
 	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+	if m.LiquidFarmId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LiquidFarmId))
 		i--
 		dAtA[i] = 0x10
 	}
-	if m.AuctionId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.AuctionId))
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1126,22 +985,22 @@ func (m *MsgRefundBid) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Bidder) > 0 {
-		i -= len(m.Bidder)
-		copy(dAtA[i:], m.Bidder)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Bidder)))
+	if m.RewardsAuctionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.RewardsAuctionId))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x18
 	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+	if m.LiquidFarmId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LiquidFarmId))
 		i--
 		dAtA[i] = 0x10
 	}
-	if m.AuctionId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.AuctionId))
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1169,7 +1028,7 @@ func (m *MsgRefundBidResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAdvanceAuction) Marshal() (dAtA []byte, err error) {
+func (m *MsgFinishRewardsAuctions) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1179,27 +1038,27 @@ func (m *MsgAdvanceAuction) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAdvanceAuction) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgFinishRewardsAuctions) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAdvanceAuction) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgFinishRewardsAuctions) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Requester) > 0 {
-		i -= len(m.Requester)
-		copy(dAtA[i:], m.Requester)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Requester)))
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAdvanceAuctionResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgFinishRewardsAuctionsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1209,12 +1068,12 @@ func (m *MsgAdvanceAuctionResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAdvanceAuctionResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgFinishRewardsAuctionsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAdvanceAuctionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgFinishRewardsAuctionsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1233,84 +1092,78 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgLiquidFarm) Size() (n int) {
+func (m *MsgMintShare) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
-	}
-	l = len(m.Farmer)
+	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.FarmingCoin.Size()
+	if m.LiquidFarmId != 0 {
+		n += 1 + sovTx(uint64(m.LiquidFarmId))
+	}
+	if len(m.DesiredAmount) > 0 {
+		for _, e := range m.DesiredAmount {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgMintShareResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PositionId != 0 {
+		n += 1 + sovTx(uint64(m.PositionId))
+	}
+	l = m.Liquidity.Size()
+	n += 1 + l + sovTx(uint64(l))
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgBurnShare) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.LiquidFarmId != 0 {
+		n += 1 + sovTx(uint64(m.LiquidFarmId))
+	}
+	l = m.Share.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
-func (m *MsgLiquidFarmResponse) Size() (n int) {
+func (m *MsgBurnShareResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	return n
-}
-
-func (m *MsgLiquidUnfarm) Size() (n int) {
-	if m == nil {
-		return 0
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
-	var l int
-	_ = l
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
-	}
-	l = len(m.Farmer)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.UnfarmingCoin.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgLiquidUnfarmResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgLiquidUnfarmAndWithdraw) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
-	}
-	l = len(m.Farmer)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.UnfarmingCoin.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgLiquidUnfarmAndWithdrawResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
 	return n
 }
 
@@ -1320,17 +1173,17 @@ func (m *MsgPlaceBid) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.AuctionId != 0 {
-		n += 1 + sovTx(uint64(m.AuctionId))
-	}
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
-	}
-	l = len(m.Bidder)
+	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.BiddingCoin.Size()
+	if m.LiquidFarmId != 0 {
+		n += 1 + sovTx(uint64(m.LiquidFarmId))
+	}
+	if m.RewardsAuctionId != 0 {
+		n += 1 + sovTx(uint64(m.RewardsAuctionId))
+	}
+	l = m.Share.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -1350,15 +1203,15 @@ func (m *MsgRefundBid) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.AuctionId != 0 {
-		n += 1 + sovTx(uint64(m.AuctionId))
-	}
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
-	}
-	l = len(m.Bidder)
+	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.LiquidFarmId != 0 {
+		n += 1 + sovTx(uint64(m.LiquidFarmId))
+	}
+	if m.RewardsAuctionId != 0 {
+		n += 1 + sovTx(uint64(m.RewardsAuctionId))
 	}
 	return n
 }
@@ -1372,20 +1225,20 @@ func (m *MsgRefundBidResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgAdvanceAuction) Size() (n int) {
+func (m *MsgFinishRewardsAuctions) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Requester)
+	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
 }
 
-func (m *MsgAdvanceAuctionResponse) Size() (n int) {
+func (m *MsgFinishRewardsAuctionsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1400,7 +1253,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgLiquidFarm) Unmarshal(dAtA []byte) error {
+func (m *MsgMintShare) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1423,34 +1276,15 @@ func (m *MsgLiquidFarm) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgLiquidFarm: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgMintShare: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgLiquidFarm: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgMintShare: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1478,11 +1312,30 @@ func (m *MsgLiquidFarm) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Farmer = string(dAtA[iNdEx:postIndex])
+			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidFarmId", wireType)
+			}
+			m.LiquidFarmId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LiquidFarmId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FarmingCoin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DesiredAmount", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1509,7 +1362,8 @@ func (m *MsgLiquidFarm) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.FarmingCoin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.DesiredAmount = append(m.DesiredAmount, types.Coin{})
+			if err := m.DesiredAmount[len(m.DesiredAmount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1534,7 +1388,7 @@ func (m *MsgLiquidFarm) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgLiquidFarmResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgMintShareResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1557,67 +1411,17 @@ func (m *MsgLiquidFarmResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgLiquidFarmResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgMintShareResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgLiquidFarmResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgLiquidUnfarm) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgLiquidUnfarm: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgLiquidUnfarm: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgMintShareResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
 			}
-			m.PoolId = 0
+			m.PositionId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1627,14 +1431,14 @@ func (m *MsgLiquidUnfarm) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
+				m.PositionId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Liquidity", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1662,11 +1466,13 @@ func (m *MsgLiquidUnfarm) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Farmer = string(dAtA[iNdEx:postIndex])
+			if err := m.Liquidity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UnfarmingCoin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1693,7 +1499,8 @@ func (m *MsgLiquidUnfarm) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.UnfarmingCoin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Amount = append(m.Amount, types.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1718,7 +1525,7 @@ func (m *MsgLiquidUnfarm) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgLiquidUnfarmResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgBurnShare) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1741,84 +1548,15 @@ func (m *MsgLiquidUnfarmResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgLiquidUnfarmResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgBurnShare: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgLiquidUnfarmResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgLiquidUnfarmAndWithdraw) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgLiquidUnfarmAndWithdraw: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgLiquidUnfarmAndWithdraw: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgBurnShare: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Farmer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1846,11 +1584,30 @@ func (m *MsgLiquidUnfarmAndWithdraw) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Farmer = string(dAtA[iNdEx:postIndex])
+			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidFarmId", wireType)
+			}
+			m.LiquidFarmId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LiquidFarmId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UnfarmingCoin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Share", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1877,7 +1634,7 @@ func (m *MsgLiquidUnfarmAndWithdraw) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.UnfarmingCoin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Share.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1902,7 +1659,7 @@ func (m *MsgLiquidUnfarmAndWithdraw) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgLiquidUnfarmAndWithdrawResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgBurnShareResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1925,12 +1682,46 @@ func (m *MsgLiquidUnfarmAndWithdrawResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgLiquidUnfarmAndWithdrawResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgBurnShareResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgLiquidUnfarmAndWithdrawResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgBurnShareResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1982,46 +1773,8 @@ func (m *MsgPlaceBid) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AuctionId", wireType)
-			}
-			m.AuctionId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AuctionId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bidder", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2049,11 +1802,49 @@ func (m *MsgPlaceBid) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Bidder = string(dAtA[iNdEx:postIndex])
+			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidFarmId", wireType)
+			}
+			m.LiquidFarmId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LiquidFarmId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardsAuctionId", wireType)
+			}
+			m.RewardsAuctionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RewardsAuctionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BiddingCoin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Share", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2080,7 +1871,7 @@ func (m *MsgPlaceBid) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.BiddingCoin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Share.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2185,46 +1976,8 @@ func (m *MsgRefundBid) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AuctionId", wireType)
-			}
-			m.AuctionId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AuctionId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bidder", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2252,8 +2005,46 @@ func (m *MsgRefundBid) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Bidder = string(dAtA[iNdEx:postIndex])
+			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidFarmId", wireType)
+			}
+			m.LiquidFarmId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LiquidFarmId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardsAuctionId", wireType)
+			}
+			m.RewardsAuctionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RewardsAuctionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -2325,7 +2116,7 @@ func (m *MsgRefundBidResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAdvanceAuction) Unmarshal(dAtA []byte) error {
+func (m *MsgFinishRewardsAuctions) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2348,15 +2139,15 @@ func (m *MsgAdvanceAuction) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAdvanceAuction: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgFinishRewardsAuctions: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAdvanceAuction: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgFinishRewardsAuctions: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Requester", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2384,7 +2175,7 @@ func (m *MsgAdvanceAuction) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Requester = string(dAtA[iNdEx:postIndex])
+			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2407,7 +2198,7 @@ func (m *MsgAdvanceAuction) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAdvanceAuctionResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgFinishRewardsAuctionsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2430,10 +2221,10 @@ func (m *MsgAdvanceAuctionResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAdvanceAuctionResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgFinishRewardsAuctionsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAdvanceAuctionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgFinishRewardsAuctionsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

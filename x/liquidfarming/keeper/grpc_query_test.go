@@ -56,8 +56,8 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarms() {
 						s.Require().Equal(minFarmAmt2, liquidFarm.MinFarmAmount)
 						s.Require().Equal(minBidAmt2, liquidFarm.MinBidAmount)
 					}
-					reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
-					lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
+					reserveAddr := types.DeriveLiquidFarmReserveAddress(liquidFarm.PoolId)
+					lfCoinDenom := types.ShareDenom(liquidFarm.PoolId)
 					lfCoinSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
 					poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
 					position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
@@ -109,15 +109,15 @@ func (s *KeeperTestSuite) TestGRPCLiquidFarm() {
 			},
 			false,
 			func(resp *types.QueryLiquidFarmResponse) {
-				reserveAddr := types.LiquidFarmReserveAddress(resp.LiquidFarm.PoolId)
-				lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
+				reserveAddr := types.DeriveLiquidFarmReserveAddress(resp.LiquidFarm.PoolId)
+				lfCoinDenom := types.ShareDenom(pool.Id)
 				lfCoinSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
 				poolCoinDenom := liquiditytypes.PoolCoinDenom(resp.LiquidFarm.PoolId)
 				position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
 				if !found {
 					position.FarmingAmount = sdk.ZeroInt()
 				}
-				s.Require().Equal(types.LiquidFarmReserveAddress(pool.Id).String(), resp.LiquidFarm.LiquidFarmReserveAddress)
+				s.Require().Equal(types.DeriveLiquidFarmReserveAddress(pool.Id).String(), resp.LiquidFarm.LiquidFarmReserveAddress)
 				s.Require().Equal(lfCoinDenom, resp.LiquidFarm.LFCoinDenom)
 				s.Require().Equal(lfCoinSupplyAmt, resp.LiquidFarm.LFCoinSupply)
 				s.Require().Equal(poolCoinDenom, resp.LiquidFarm.PoolCoinDenom)
@@ -320,7 +320,7 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuction() {
 			false,
 			func(resp *types.QueryRewardsAuctionResponse) {
 				s.Require().Equal(pool.PoolCoinDenom, resp.RewardsAuction.BiddingCoinDenom)
-				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
+				s.Require().Equal(types.DeriveBidReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
 				s.Require().Equal(types.AuctionStatusFinished, resp.RewardsAuction.Status)
 			},
 		},
@@ -333,7 +333,7 @@ func (s *KeeperTestSuite) TestGRPCRewardsAuction() {
 			false,
 			func(resp *types.QueryRewardsAuctionResponse) {
 				s.Require().Equal(pool.PoolCoinDenom, resp.RewardsAuction.BiddingCoinDenom)
-				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
+				s.Require().Equal(types.DeriveBidReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
 				s.Require().Equal(types.AuctionStatusStarted, resp.RewardsAuction.Status)
 			},
 		},

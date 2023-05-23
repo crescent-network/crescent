@@ -21,7 +21,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &lB)
 			return fmt.Sprintf("%v\n%v", lA, lB)
 
-		case bytes.Equal(kvA.Key[:1], types.CompoundingRewardsKeyPrefix):
+		case bytes.Equal(kvA.Key[:1], types.PreviousWinningBidKeyPrefix):
 			var cA, cB types.CompoundingRewards
 			cdc.MustUnmarshal(kvA.Value, &cA)
 			cdc.MustUnmarshal(kvB.Value, &cB)

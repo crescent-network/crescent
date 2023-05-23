@@ -42,12 +42,12 @@ func TestLiquidFarmCoinDenom(t *testing.T) {
 		{"denom1", true},
 	} {
 		t.Run("", func(t *testing.T) {
-			poolId, err := types.ParseLiquidFarmCoinDenom(tc.denom)
+			poolId, err := types.ParseShareDenom(tc.denom)
 			if tc.expectsErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.denom, types.LiquidFarmCoinDenom(poolId))
+				require.Equal(t, tc.denom, types.ShareDenom(poolId))
 			}
 		})
 	}
@@ -65,7 +65,7 @@ func TestLiquidFarmReserveAddress(t *testing.T) {
 		{2, addrPrefix + "1d2csu4ynxpuxll8wk72n9z98ytm649u78paj9efskjwrlc2wyhpq8h886j"},
 	} {
 		t.Run("", func(t *testing.T) {
-			require.Equal(t, tc.expected, types.LiquidFarmReserveAddress(tc.poolId).String())
+			require.Equal(t, tc.expected, types.DeriveLiquidFarmReserveAddress(tc.poolId).String())
 		})
 	}
 }
@@ -101,7 +101,7 @@ func TestCalculateLiquidFarmAmount(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			mintingAmt := types.CalculateLiquidFarmAmount(
+			mintingAmt := types.CalculateMintedShareAmount(
 				tc.lfTotalSupplyAmt,
 				tc.lpTotalFarmingAmt,
 				tc.newFarmingAmt,
@@ -162,7 +162,7 @@ func TestCalculateLiquidUnfarmAmount(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			unfarmingAmt := types.CalculateLiquidUnfarmAmount(
+			unfarmingAmt := types.CalculateRemovedLiquidity(
 				tc.lfTotalSupplyAmt,
 				tc.lpTotalFarmingAmt,
 				tc.unfarmingAmt,

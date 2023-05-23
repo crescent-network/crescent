@@ -15,12 +15,12 @@ func TestPayingReserveAddress(t *testing.T) {
 	config := sdk.GetConfig()
 	addrPrefix := config.GetBech32AccountAddrPrefix()
 
-	testAcc1 := types.PayingReserveAddress(1)
-	require.Equal(t, testAcc1, sdk.AccAddress(address.Module(types.ModuleName, []byte("PayingReserveAddress|1"))))
+	testAcc1 := types.DeriveBidReserveAddress(1)
+	require.Equal(t, testAcc1, sdk.AccAddress(address.Module(types.ModuleName, []byte("DeriveBidReserveAddress|1"))))
 	require.Equal(t, addrPrefix+"1h72q3pkvsz537kj08hyv20tun3apampxhpgad97t3ls47nukgtxqeq6eu2", testAcc1.String())
 
-	testAcc2 := types.PayingReserveAddress(22)
-	require.Equal(t, testAcc2, sdk.AccAddress(address.Module(types.ModuleName, []byte("PayingReserveAddress|22"))))
+	testAcc2 := types.DeriveBidReserveAddress(22)
+	require.Equal(t, testAcc2, sdk.AccAddress(address.Module(types.ModuleName, []byte("DeriveBidReserveAddress|22"))))
 	require.Equal(t, addrPrefix+"1tepnmaep852l483ldnfxttgsua9j9ynpmelqmn3ywvwynr7s5acqr6sz4k", testAcc2.String())
 }
 

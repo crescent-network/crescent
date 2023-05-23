@@ -84,7 +84,7 @@ func TestRewardsAuctionValidate(t *testing.T) {
 				utils.ParseTime("9999-12-31T00:00:00Z"),
 			)
 			auction.SetStatus(types.AuctionStatusStarted)
-			auction.SetWinner("")
+			auction.SetWinningBid("")
 			auction.SetWinningAmount(utils.ParseCoin("100000pool1"))
 			auction.SetRewards(utils.ParseCoins("100000denom1"))
 			auction.SetFees(utils.ParseCoins("10denom1"))

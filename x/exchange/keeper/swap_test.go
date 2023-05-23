@@ -15,11 +15,11 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 	pool1 := s.CreatePool(creatorAddr, market1.Id, utils.ParseDec("5"), true)
 	s.AddLiquidity(
-		creatorAddr, pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		creatorAddr, creatorAddr, pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
 	pool2 := s.CreatePool(creatorAddr, market2.Id, utils.ParseDec("2"), true)
 	s.AddLiquidity(
-		creatorAddr, pool2.Id, utils.ParseDec("1.5"), utils.ParseDec("3"),
+		creatorAddr, creatorAddr, pool2.Id, utils.ParseDec("1.5"), utils.ParseDec("3"),
 		utils.ParseCoins("1000_000000uatom,1000_000000ucre"))
 
 	ordererAddr := utils.TestAddress(1)

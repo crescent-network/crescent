@@ -1,22 +1,20 @@
 syntax = "proto3";
+
 package crescent.liquidfarming.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 
-option go_package = "github.com/crescent-network/crescent/v5/x/liquidfarming/types";
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidfarming/types";
+option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the Msg service.
 service Msg {
-  // LiquidFarm defines a method for farming pool coin for a liquid farm
-  rpc LiquidFarm(MsgLiquidFarm) returns (MsgLiquidFarmResponse);
+  // MintShare defines a method for minting share of LiquidFarm
+  rpc MintShare(MsgMintShare) returns (MsgMintShareResponse);
 
-  // LiquidUnfarm defines a method for unfarming amount of LFCoin
-  rpc LiquidUnfarm(MsgLiquidUnfarm) returns (MsgLiquidUnfarmResponse);
-
-  // LiquidUnfarmAndWithdraw defines a method for unfarming amount of LFCoin and withdraw pool coin from the pool
-  rpc LiquidUnfarmAndWithdraw(MsgLiquidUnfarmAndWithdraw) returns (MsgLiquidUnfarmAndWithdrawResponse);
+  // BurnShare defines a method for burning share of LiquidFarm
+  rpc BurnShare(MsgBurnShare) returns (MsgBurnShareResponse);
 
   // PlaceBid defines a method for placing a bid for a rewards auction
   rpc PlaceBid(MsgPlaceBid) returns (MsgPlaceBidResponse);
@@ -24,94 +22,61 @@ service Msg {
   // RefundBid defines a method for refunding the bid that is not winning for the auction
   rpc RefundBid(MsgRefundBid) returns (MsgRefundBidResponse);
 
-  // AdvanceAuction defines a method for advancing rewards auction by one.
-  // This Msg is defined just for testing purpose and it shouldn't be used in production.
-  rpc AdvanceAuction(MsgAdvanceAuction) returns (MsgAdvanceAuctionResponse);
+  // FinishRewardsAuctions defines a method for finishing all rewards auctions.
+  // This message is just for testing purpose and it shouldn't be enabled in production.
+  rpc FinishRewardsAuctions(MsgFinishRewardsAuctions) returns (MsgFinishRewardsAuctionsResponse);
 }
 
-// MsgLiquidFarm defines a SDK message for farming pool coin for a liquid farm.
-message MsgLiquidFarm {
-  option (gogoproto.goproto_getters) = false;
-
-  uint64 pool_id = 1;
-
-  string farmer = 2;
-
-  cosmos.base.v1beta1.Coin farming_coin = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+// MsgMintShare defines a SDK message for minting share of LiquidFarm.
+message MsgMintShare {
+  string   sender                                  = 1;
+  uint64   liquid_farm_id                          = 2;
+  repeated cosmos.base.v1beta1.Coin desired_amount = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-// MsgLiquidFarmResponse defines the MsgLiquidFarmResponse response type.
-message MsgLiquidFarmResponse {}
-
-// MsgLiquidUnfarm defines a SDK message for unfarming LFCoin.
-message MsgLiquidUnfarm {
-  option (gogoproto.goproto_getters) = false;
-
-  uint64 pool_id = 1;
-
-  string farmer = 2;
-
-  cosmos.base.v1beta1.Coin unfarming_coin = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+message MsgMintShareResponse {
+  uint64 position_id = 1;
+  string liquidity   = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-// MsgLiquidUnfarmResponse defines the MsgLiquidUnfarmResponse response type.
-message MsgLiquidUnfarmResponse {}
-
-// MsgLiquidUnfarmAndWithdraw defines a SDK message for unfarming LFCoin.
-message MsgLiquidUnfarmAndWithdraw {
-  option (gogoproto.goproto_getters) = false;
-
-  uint64 pool_id = 1;
-
-  string farmer = 2;
-
-  cosmos.base.v1beta1.Coin unfarming_coin = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+// MsgBurnShare defines a SDK message for burning share of LiquidFarm.
+message MsgBurnShare {
+  string                   sender         = 1;
+  uint64                   liquid_farm_id = 2;
+  cosmos.base.v1beta1.Coin share          = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgLiquidUnfarmAndWithdrawResponse defines the MsgLiquidUnfarmAndWithdrawResponse response type.
-message MsgLiquidUnfarmAndWithdrawResponse {}
+message MsgBurnShareResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
 
 // MsgPlaceBid defines a SDK message for placing a bid for a rewards auction.
 message MsgPlaceBid {
-  option (gogoproto.goproto_getters) = false;
-
-  uint64 auction_id = 1;
-
-  uint64 pool_id = 2;
-
-  string bidder = 3;
-
-  cosmos.base.v1beta1.Coin bidding_coin = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  string                   sender             = 1;
+  uint64                   liquid_farm_id     = 2;
+  uint64                   rewards_auction_id = 3;
+  cosmos.base.v1beta1.Coin share              = 4 [(gogoproto.nullable) = false];
 }
 
-// MsgPlaceBidResponse defines the MsgPlaceBidResponse response type.
 message MsgPlaceBidResponse {}
 
 // MsgRefundBid defines a SDK message for refunding the bid that is not winning for the auction.
 message MsgRefundBid {
-  option (gogoproto.goproto_getters) = false;
-
-  uint64 auction_id = 1;
-
-  uint64 pool_id = 2;
-
-  string bidder = 3;
+  string sender             = 1;
+  uint64 liquid_farm_id     = 2;
+  uint64 rewards_auction_id = 3;
 }
 
-// MsgRefundBidResponse defines the MsgRefundBidResponse response type.
 message MsgRefundBidResponse {}
 
-// MsgAdvanceAuction defines a message to advance rewards auction by one.
-message MsgAdvanceAuction {
-  option (gogoproto.goproto_getters) = false;
-
-  // requester defines the bech32-encoded address of the requester
-  string requester = 1;
+// MsgFinishRewardsAuctions defines a message for finishing all rewards auctions.
+message MsgFinishRewardsAuctions {
+  string sender = 1;
 }
 
-// MsgAdvanceAuctionResponse defines the Msg/AdvanceAuction response type.
-message MsgAdvanceAuctionResponse {}
+message MsgFinishRewardsAuctionsResponse {}

@@ -25,7 +25,7 @@ func TestDecodeFarmingStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.LiquidFarmKeyPrefix, Value: cdc.MustMarshal(&liquidFarm)},
-			{Key: types.CompoundingRewardsKeyPrefix, Value: cdc.MustMarshal(&compoundingRewards)},
+			{Key: types.PreviousWinningBidKeyPrefix, Value: cdc.MustMarshal(&compoundingRewards)},
 			{Key: types.RewardsAuctionKeyPrefix, Value: cdc.MustMarshal(&rewardsAuction)},
 			{Key: types.BidKeyPrefix, Value: cdc.MustMarshal(&bid)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},

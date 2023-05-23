@@ -310,7 +310,7 @@ func (s *KeeperTestSuite) TestAfterAllocateRewards() {
 	s.Require().True(s.getBalance(s.addr(3), "stake").Amount.GT(sdk.NewInt(1)))
 
 	// Ensure newly staked amount by the liquid farm reserve account
-	reserveAddr := types.LiquidFarmReserveAddress(pool.Id)
+	reserveAddr := types.DeriveLiquidFarmReserveAddress(pool.Id)
 	position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, pool.PoolCoinDenom)
 	s.Require().True(found)
 	s.Require().Equal(sdk.NewInt(80_000_000), position.FarmingAmount)
@@ -379,7 +379,7 @@ func (s *KeeperTestSuite) TestFinishRewardsAuction_NoOneFarmed() {
 	s.nextBlock()
 
 	// Ensure that there is no farming rewards accumulated
-	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(pool.Id)
+	liquidFarmReserveAddr := types.DeriveLiquidFarmReserveAddress(pool.Id)
 	farmingRewards := s.app.LPFarmKeeper.Rewards(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
 	s.Require().True(farmingRewards.IsZero())
 
@@ -406,9 +406,9 @@ func (s *KeeperTestSuite) TestFinishRewardsAuction_NoOneFarmed() {
 	s.nextBlock()
 
 	// Ensure that minting amount is still 1:1
-	s.Require().True(s.getBalance(s.addr(1), types.LiquidFarmCoinDenom(pool.Id)).Amount.Equal(sdk.NewInt(50_000_000)))
+	s.Require().True(s.getBalance(s.addr(1), types.ShareDenom(pool.Id)).Amount.Equal(sdk.NewInt(50_000_000)))
 
-	s.liquidUnfarm(pool.Id, s.addr(1), sdk.NewCoin(types.LiquidFarmCoinDenom(pool.Id), sdk.NewInt(50_000_000)), false)
+	s.liquidUnfarm(pool.Id, s.addr(1), sdk.NewCoin(types.ShareDenom(pool.Id), sdk.NewInt(50_000_000)), false)
 	s.nextBlock()
 
 	// Ensure that received pool coin amount is greater than the original liquid farm amount
@@ -444,7 +444,7 @@ func (s *KeeperTestSuite) TestRewardsAuction_RewardsAndFees() {
 	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("2_000_000pool1"), true)
 	s.nextBlock()
 
-	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(pool.Id)
+	liquidFarmReserveAddr := types.DeriveLiquidFarmReserveAddress(pool.Id)
 	farmingRewards := s.app.LPFarmKeeper.Rewards(s.ctx, liquidFarmReserveAddr, pool.PoolCoinDenom)
 	truncatedRewards, _ := farmingRewards.TruncateDecimal()
 	spendable := s.app.BankKeeper.SpendableCoins(s.ctx, withdrawnRewardsReserveAddr)

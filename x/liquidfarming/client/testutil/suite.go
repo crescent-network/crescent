@@ -95,7 +95,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 			Id:                   1,
 			PoolId:               1,
 			BiddingCoinDenom:     liquiditytypes.PoolCoinDenom(1),
-			PayingReserveAddress: types.PayingReserveAddress(1).String(),
+			PayingReserveAddress: types.DeriveBidReserveAddress(1).String(),
 			StartTime:            utils.ParseTime("0001-01-01T00:00:00Z"),
 			EndTime:              utils.ParseTime("9999-12-31T23:59:59Z"),
 			Status:               types.AuctionStatusStarted,
@@ -207,7 +207,7 @@ func (s *IntegrationTestSuite) TestNewQueryLiquidFarmsCmd() {
 			func(resp *types.QueryLiquidFarmsResponse) {
 				s.Require().Len(resp.LiquidFarms, 1)
 				s.Require().Equal(uint64(1), resp.LiquidFarms[0].PoolId)
-				s.Require().Equal(types.LiquidFarmCoinDenom(1), resp.LiquidFarms[0].LFCoinDenom)
+				s.Require().Equal(types.ShareDenom(1), resp.LiquidFarms[0].LFCoinDenom)
 				s.Require().Equal(sdk.NewInt(100_000), resp.LiquidFarms[0].MinFarmAmount)
 				s.Require().Equal(sdk.NewInt(100_000), resp.LiquidFarms[0].MinBidAmount)
 			},
@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestNewQueryLiquidFarmsCmd() {
 			func(resp *types.QueryLiquidFarmsResponse) {
 				s.Require().Len(resp.LiquidFarms, 1)
 				s.Require().Equal(uint64(1), resp.LiquidFarms[0].PoolId)
-				s.Require().Equal(types.LiquidFarmCoinDenom(1), resp.LiquidFarms[0].LFCoinDenom)
+				s.Require().Equal(types.ShareDenom(1), resp.LiquidFarms[0].LFCoinDenom)
 				s.Require().Equal(sdk.NewInt(100_000), resp.LiquidFarms[0].MinFarmAmount)
 				s.Require().Equal(sdk.NewInt(100_000), resp.LiquidFarms[0].MinBidAmount)
 			},
@@ -505,7 +505,7 @@ func (s *IntegrationTestSuite) TestNewUnfarmCmd() {
 			"happy case",
 			[]string{
 				strconv.Itoa(1),
-				sdk.NewInt64Coin(types.LiquidFarmCoinDenom(1), 1_000_000).String(),
+				sdk.NewInt64Coin(types.ShareDenom(1), 1_000_000).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -529,7 +529,7 @@ func (s *IntegrationTestSuite) TestNewUnfarmCmd() {
 			"invalid case: pool id not found",
 			[]string{
 				strconv.Itoa(10),
-				sdk.NewInt64Coin(types.LiquidFarmCoinDenom(10), 1_000_000).String(),
+				sdk.NewInt64Coin(types.ShareDenom(10), 1_000_000).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

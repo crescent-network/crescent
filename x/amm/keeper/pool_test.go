@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			"simple liquidity",
 			func(pool types.Pool, lpAddr sdk.AccAddress) {
 				s.AddLiquidity(
-					lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("5.02"),
+					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("5.02"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
@@ -52,10 +52,10 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			"valley",
 			func(pool types.Pool, lpAddr sdk.AccAddress) {
 				s.AddLiquidity(
-					lpAddr, pool.Id, utils.ParseDec("4.96"), utils.ParseDec("4.98"),
+					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.96"), utils.ParseDec("4.98"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 				s.AddLiquidity(
-					lpAddr, pool.Id, utils.ParseDec("5.02"), utils.ParseDec("5.04"),
+					lpAddr, lpAddr, pool.Id, utils.ParseDec("5.02"), utils.ParseDec("5.04"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
@@ -75,13 +75,13 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			"high valley",
 			func(pool types.Pool, lpAddr sdk.AccAddress) {
 				s.AddLiquidity(
-					lpAddr, pool.Id, utils.ParseDec("4.97"), utils.ParseDec("5.03"),
+					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.97"), utils.ParseDec("5.03"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 				s.AddLiquidity(
-					lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("4.99"),
+					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("4.99"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 				s.AddLiquidity(
-					lpAddr, pool.Id, utils.ParseDec("5.01"), utils.ParseDec("5.02"),
+					lpAddr, lpAddr, pool.Id, utils.ParseDec("5.01"), utils.ParseDec("5.02"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{

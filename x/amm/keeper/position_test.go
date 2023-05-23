@@ -18,11 +18,11 @@ func (s *KeeperTestSuite) TestAddLiquidity() {
 	fmt.Println(pool)
 
 	position, liquidity, amt := s.AddLiquidity(
-		senderAddr, pool.Id, utils.ParseDec("0.8"), utils.ParseDec("1.25"),
+		senderAddr, senderAddr, pool.Id, utils.ParseDec("0.8"), utils.ParseDec("1.25"),
 		utils.ParseCoins("1000000ucre,1000000uusd"))
 	fmt.Println(position, liquidity, amt)
 
 	_, amt = s.RemoveLiquidity(
-		senderAddr, position.Id, sdk.NewInt(9472135))
+		senderAddr, senderAddr, position.Id, sdk.NewInt(9472135))
 	fmt.Println(amt)
 }

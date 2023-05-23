@@ -39,13 +39,37 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	res := []types.LiquidFarmResponse{}
-	for _, liquidFarm := range k.GetLiquidFarmsInStore(ctx) {
-		reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
-		lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
+	store := ctx.KVStore(k.storeKey)
+	liquidFarmStore := prefix.NewStore(store, types.LiquidFarmKeyPrefix)
+	var liquidFarms []types.LiquidFarmResponse
+	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	pageRes, err := query.Paginate(liquidFarmStore, req.Pagination, func(_, value []byte) error {
+		var liquidFarm types.LiquidFarm
+		k.cdc.MustUnmarshal(value, &liquidFarm)
+		position, found := k.ammKeeper.GetPositionByParams(
+			ctx, moduleAccAddr, liquidFarm.PoolId, liquidFarm.LowerTick, liquidFarm.UpperTick)
+		if !found {
+			panic("position not found")
+		}
+		shareDenom := types.ShareDenom(liquidFarm.Id)
+		liquidFarms = append(liquidFarms, types.LiquidFarmResponse{
+			Id:                   liquidFarm.Id,
+			PoolId:               liquidFarm.PoolId,
+			LowerTick:            liquidFarm.LowerTick,
+			UpperTick:            liquidFarm.UpperTick,
+			BidReserveAddress:    liquidFarm.BidReserveAddress,
+			MinBidAmount:         liquidFarm.MinBidAmount,
+			FeeRate:              liquidFarm.FeeRate,
+			LastRewardsAuctionId: liquidFarm.LastRewardsAuctionId,
+			Liquidity:            sdk.Int{},
+			TotalShare:           k.bankKeeper.GetSupply(ctx, shareDenom),
+		})
+
+		reserveAddr := types.DeriveLiquidFarmReserveAddress(liquidFarm.PoolId)
+		lfCoinDenom := types.ShareDenom(liquidFarm.PoolId)
 		lfCoinSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
 		poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
-		position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
+		position, found := k.ammKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 		if !found {
 			position.FarmingAmount = sdk.ZeroInt()
 		}
@@ -60,9 +84,15 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 			MinFarmAmount:            liquidFarm.MinFarmAmount,
 			MinBidAmount:             liquidFarm.MinBidAmount,
 		})
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
-
-	return &types.QueryLiquidFarmsResponse{LiquidFarms: res}, nil
+	return &types.QueryLiquidFarmsResponse{
+		LiquidFarms: liquidFarms,
+		Pagination:  pageRes,
+	}, nil
 }
 
 // LiquidFarm queries the particular LiquidFarm object.
@@ -82,11 +112,11 @@ func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest
 		return nil, status.Errorf(codes.NotFound, "liquid farm by pool id %d not found", req.PoolId)
 	}
 
-	reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
-	lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
+	reserveAddr := types.DeriveLiquidFarmReserveAddress(liquidFarm.PoolId)
+	lfCoinDenom := types.ShareDenom(liquidFarm.PoolId)
 	lfCoinSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
-	position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
+	position, found := k.ammKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 	if !found {
 		position.FarmingAmount = sdk.ZeroInt()
 	}
@@ -241,9 +271,9 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Currently accumulated rewards from the farm module + all withdrawn rewards in the WithdrawnRewardsReserve account
-	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(req.PoolId)
+	liquidFarmReserveAddr := types.DeriveLiquidFarmReserveAddress(req.PoolId)
 	poolCoinDenom := liquiditytypes.PoolCoinDenom(req.PoolId)
-	withdrawnRewards := k.lpfarmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
+	withdrawnRewards := k.ammKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
 	truncatedRewards, _ := withdrawnRewards.TruncateDecimal()
 	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(req.PoolId)
 	spendableCoins := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
@@ -267,17 +297,17 @@ func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateReq
 		MintRate: sdk.ZeroDec(),
 		BurnRate: sdk.ZeroDec(),
 	}
-	lfCoinSupplyAmt := k.bankKeeper.GetSupply(ctx, types.LiquidFarmCoinDenom(req.PoolId)).Amount
+	lfCoinSupplyAmt := k.bankKeeper.GetSupply(ctx, types.ShareDenom(req.PoolId)).Amount
 
 	if !lfCoinSupplyAmt.IsZero() {
-		reserveAddr := types.LiquidFarmReserveAddress(req.PoolId)
+		reserveAddr := types.DeriveLiquidFarmReserveAddress(req.PoolId)
 		poolCoinDenom := liquiditytypes.PoolCoinDenom(req.PoolId)
-		position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
+		position, found := k.ammKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
 		if !found {
 			position.FarmingAmount = sdk.ZeroInt()
 		}
 
-		compoundingRewards, found := k.GetCompoundingRewards(ctx, req.PoolId)
+		compoundingRewards, found := k.GetPreviousWinningBid(ctx, req.PoolId)
 		if !found {
 			compoundingRewards.Amount = sdk.ZeroInt()
 		}

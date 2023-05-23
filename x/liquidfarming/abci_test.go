@@ -23,7 +23,7 @@ func (s *ModuleTestSuite) TestRewardsAuctionEndTimeTest() {
 	}
 	s.keeper.SetParams(s.ctx, params)
 
-	_, found := s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	_, found := s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().False(found)
 
 	// Set chain launch time
@@ -32,7 +32,7 @@ func (s *ModuleTestSuite) TestRewardsAuctionEndTimeTest() {
 	liquidfarming.BeginBlocker(s.ctx, s.keeper)
 
 	// Ensure that the end time is initialized
-	endTime, found := s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found := s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-02T00:00:00Z"), endTime)
 
@@ -46,7 +46,7 @@ func (s *ModuleTestSuite) TestRewardsAuctionEndTimeTest() {
 	s.Require().Len(s.keeper.GetAllRewardsAuctions(s.ctx), 1)
 
 	// Ensure that the end time
-	endTime, found = s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found = s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-02T08:00:00Z"), endTime)
 
@@ -60,7 +60,7 @@ func (s *ModuleTestSuite) TestRewardsAuctionEndTimeTest() {
 	s.Require().Len(s.keeper.GetAllRewardsAuctions(s.ctx), 2)
 
 	// Ensure that the end time
-	endTime, found = s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found = s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-02T16:00:00Z"), endTime)
 }
@@ -82,7 +82,7 @@ func (s *ModuleTestSuite) TestChainHaltedForShortTime() {
 	s.ctx = s.ctx.WithBlockTime(currTime)
 	liquidfarming.BeginBlocker(s.ctx, s.keeper)
 
-	endTime, found := s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found := s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-02T00:00:00Z"), endTime)
 
@@ -92,7 +92,7 @@ func (s *ModuleTestSuite) TestChainHaltedForShortTime() {
 
 	s.Require().Len(s.keeper.GetAllRewardsAuctions(s.ctx), 1)
 
-	endTime, found = s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found = s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-02T08:00:00Z"), endTime)
 
@@ -100,7 +100,7 @@ func (s *ModuleTestSuite) TestChainHaltedForShortTime() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(9 * time.Hour))
 	liquidfarming.BeginBlocker(s.ctx, s.keeper)
 
-	endTime, found = s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found = s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-02T16:00:00Z"), endTime)
 }
@@ -116,7 +116,7 @@ func (s *ModuleTestSuite) TestChainHaltedForLongTime() {
 	s.ctx = s.ctx.WithBlockTime(currTime)
 	liquidfarming.BeginBlocker(s.ctx, s.keeper)
 
-	endTime, found := s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found := s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-02T00:00:00Z"), endTime)
 
@@ -125,7 +125,7 @@ func (s *ModuleTestSuite) TestChainHaltedForLongTime() {
 	liquidfarming.BeginBlocker(s.ctx, s.keeper)
 
 	// Ensure that new end time is set to 00:00UTC next day
-	endTime, found = s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	endTime, found = s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 	s.Require().True(found)
 	s.Require().Equal(utils.ParseTime("2022-10-04T00:00:00Z"), endTime)
 }
@@ -142,7 +142,7 @@ func (s *ModuleTestSuite) TestChangingRewardsAuctionDurationTest() {
 		s.ctx = s.ctx.WithBlockTime(currTime)
 		liquidfarming.BeginBlocker(s.ctx, s.keeper)
 
-		endTime, found := s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+		endTime, found := s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 		s.Require().True(found)
 		s.Require().Equal(utils.ParseTime("2022-10-02T00:00:00Z"), endTime)
 
@@ -157,7 +157,7 @@ func (s *ModuleTestSuite) TestChangingRewardsAuctionDurationTest() {
 		params.RewardsAuctionDuration = after
 		s.keeper.SetParams(s.ctx, params)
 
-		endTime, found = s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+		endTime, found = s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 		s.Require().True(found)
 
 		s.ctx = s.ctx.WithBlockTime(endTime)
@@ -165,7 +165,7 @@ func (s *ModuleTestSuite) TestChangingRewardsAuctionDurationTest() {
 
 		expEndTime := endTime.Add(after)
 
-		endTime, found = s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+		endTime, found = s.keeper.GetNextRewardsAuctionEndTime(s.ctx)
 		s.Require().True(found)
 		s.Require().Equal(expEndTime, endTime)
 	}

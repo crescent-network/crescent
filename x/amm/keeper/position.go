@@ -10,7 +10,7 @@ import (
 )
 
 func (k Keeper) AddLiquidity(
-	ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64,
+	ctx sdk.Context, ownerAddr, fromAddr sdk.AccAddress, poolId uint64,
 	lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) (position types.Position, liquidity sdk.Int, amt sdk.Coins, err error) {
 	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice)
 	if !valid {
@@ -28,6 +28,12 @@ func (k Keeper) AddLiquidity(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
 		return
 	}
+	for _, coin := range desiredAmt {
+		if coin.Denom != pool.Denom0 && coin.Denom != pool.Denom1 {
+			err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "pool has no %s in its reserve", coin.Denom)
+			return
+		}
+	}
 	desiredAmt0, desiredAmt1 := desiredAmt.AmountOf(pool.Denom0), desiredAmt.AmountOf(pool.Denom1)
 	if lowerTick%int32(pool.TickSpacing) != 0 {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "lower tick must be multiple of tick spacing")
@@ -43,6 +49,10 @@ func (k Keeper) AddLiquidity(
 	sqrtPriceB := types.SqrtPriceAtTick(upperTick) // TODO: use tick prec param
 	liquidity = types.LiquidityForAmounts(
 		utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
+	if liquidity.IsZero() {
+		err = sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "minted liquidity is zero") // TODO: use different error
+		return
+	}
 
 	var amt0, amt1 sdk.Int
 	position, amt0, amt1 = k.modifyPosition(
@@ -50,7 +60,7 @@ func (k Keeper) AddLiquidity(
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	if err = k.bankKeeper.SendCoins(
-		ctx, ownerAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), amt); err != nil {
+		ctx, fromAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), amt); err != nil {
 		return
 	}
 	// TODO: emit event
@@ -58,7 +68,7 @@ func (k Keeper) AddLiquidity(
 }
 
 func (k Keeper) RemoveLiquidity(
-	ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position types.Position, amt sdk.Coins, err error) {
+	ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position types.Position, amt sdk.Coins, err error) {
 	var found bool
 	position, found = k.GetPosition(ctx, positionId)
 	if !found {
@@ -87,7 +97,7 @@ func (k Keeper) RemoveLiquidity(
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	if amt.IsAllPositive() {
 		if err = k.bankKeeper.SendCoins(
-			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), ownerAddr, amt); err != nil {
+			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), toAddr, amt); err != nil {
 			return
 		}
 	}
@@ -95,7 +105,7 @@ func (k Keeper) RemoveLiquidity(
 }
 
 func (k Keeper) Collect(
-	ctx sdk.Context, ownerAddr sdk.AccAddress, positionId uint64, amt sdk.Coins) error {
+	ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress, positionId uint64, amt sdk.Coins) error {
 	position, found := k.GetPosition(ctx, positionId)
 	if !found {
 		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
@@ -104,7 +114,7 @@ func (k Keeper) Collect(
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
 	}
 
-	position, _, err := k.RemoveLiquidity(ctx, ownerAddr, positionId, utils.ZeroInt)
+	position, _, err := k.RemoveLiquidity(ctx, ownerAddr, toAddr, positionId, utils.ZeroInt)
 	if err != nil {
 		return err
 	}
@@ -116,17 +126,31 @@ func (k Keeper) Collect(
 	fee := amt.Min(position.OwedFee)
 	position.OwedFee = position.OwedFee.Sub(fee)
 	// TODO: use lp fee address
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, ownerAddr, fee); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, toAddr, fee); err != nil {
 		return err
 	}
 	amt = amt.Sub(fee)
 	position.OwedFarmingRewards = position.OwedFarmingRewards.Sub(amt)
-	if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, ownerAddr, amt); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, toAddr, amt); err != nil {
 		return err
 	}
 	k.SetPosition(ctx, position)
 
 	return nil
+}
+
+func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+	position, found := k.GetPosition(ctx, positionId)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
+	}
+	ctx, _ = ctx.CacheContext()
+	ownerAddr := sdk.MustAccAddressFromBech32(position.Owner)
+	position, _, err := k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt)
+	if err != nil {
+		return nil, err
+	}
+	return position.OwedFee.Add(position.OwedFarmingRewards...), nil
 }
 
 func (k Keeper) modifyPosition(
