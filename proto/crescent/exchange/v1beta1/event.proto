@@ -14,28 +14,28 @@ message EventCreateMarket {
 }
 
 message EventPlaceLimitOrder {
-  string orderer   = 1;
-  uint64 market_id = 2;
-  bool   is_buy    = 3;
-  string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  uint64 order_id = 6;
+  uint64 market_id = 1;
+  uint64 order_id  = 2;
+  string orderer   = 3;
+  bool   is_buy    = 4;
+  string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string executed_quantity = 7
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string executed_quote = 8
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 8 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 9 [(gogoproto.nullable) = false];
 }
 
 message EventPlaceMarketOrder {
-  string orderer   = 1;
-  uint64 market_id = 2;
-  bool   is_buy    = 3;
-  string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  uint64 order_id = 5;
+  uint64 market_id = 1;
+  uint64 order_id  = 2;
+  string orderer   = 3;
+  bool   is_buy    = 4;
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string executed_quantity = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string executed_quote = 7
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 7 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 8 [(gogoproto.nullable) = false];
 }
 
 message EventCancelOrder {
@@ -50,4 +50,19 @@ message EventSwapExactAmountIn {
   repeated uint64          routes  = 2;
   cosmos.base.v1beta1.Coin input   = 3 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin output  = 4 [(gogoproto.nullable) = false];
+}
+
+message EventOrderFilled {
+  uint64 market_id = 1;
+  uint64 order_id  = 2;
+  string orderer   = 3;
+  bool   is_buy    = 4;
+  string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string open_quantity = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string executed_quantity = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 9 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 10 [(gogoproto.nullable) = false];
 }

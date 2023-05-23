@@ -29,5 +29,5 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	input := sdk.NewInt64Coin("uusd", 100_000000)
 	minOutput := sdk.NewInt64Coin("uatom", 9_000000)
 	output := s.SwapExactAmountIn(ordererAddr, routes, input, minOutput, false)
-	s.Require().Equal("9904520uatom", output.String())
+	s.Require().Equal("9845282uatom", output.String())
 }

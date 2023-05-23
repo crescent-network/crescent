@@ -40,7 +40,7 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, simulate bool) (totalExecQty, totalExecQuote sdk.Int) {
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived sdk.Coin) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
@@ -49,7 +49,7 @@ func (k Keeper) executeOrder(
 	}
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
-	totalExecQuote = utils.ZeroInt
+	totalExecQuote := utils.ZeroInt
 	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
 	for _, level := range obs.Levels {
 		if priceLimit != nil &&
@@ -77,26 +77,29 @@ func (k Keeper) executeOrder(
 
 		market.FillTempOrderBookLevel(level, execQty, level.Price, true)
 		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
-		// TODO: refactor code
+		var paid, received sdk.Coin
 		if isBuy {
-			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, execQuote), true); err != nil {
-				panic(err)
-			}
-			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQty).TruncateInt()
-			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, receive), true); err != nil {
-				panic(err)
-			}
+			paid = sdk.NewCoin(market.QuoteDenom, execQuote)
+			received = sdk.NewCoin(market.BaseDenom, market.DeductTakerFee(execQty))
 		} else {
-			if err := k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.BaseDenom, execQty), true); err != nil {
-				panic(err)
-			}
-			receive := utils.OneDec.Sub(market.TakerFeeRate).MulInt(execQuote).TruncateInt()
-			if err := k.ReleaseCoin(ctx, market, ordererAddr, sdk.NewCoin(market.QuoteDenom, receive), true); err != nil {
-				panic(err)
-			}
+			paid = sdk.NewCoin(market.BaseDenom, execQty)
+			received = sdk.NewCoin(market.QuoteDenom, market.DeductTakerFee(execQuote))
+		}
+		if err := k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
+			panic(err)
+		}
+		if err := k.ReleaseCoin(ctx, market, ordererAddr, received, true); err != nil {
+			panic(err)
 		}
 		totalExecQty = totalExecQty.Add(execQty)
 		totalExecQuote = totalExecQuote.Add(execQuote)
+		if totalPaid.IsNil() && totalReceived.IsNil() {
+			totalPaid = paid
+			totalReceived = received
+		} else {
+			totalPaid = totalPaid.Add(paid)
+			totalReceived = totalReceived.Add(received)
+		}
 		lastPrice = level.Price
 	}
 	if !simulate {
@@ -135,6 +138,23 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 				return err
 			}
 			if order.Source == nil {
+				payDenom, receiveDenom := market.PayDenom(order.IsBuy), market.ReceiveDenom(order.IsBuy)
+				paid := order.Paid.SubAmount(order.Received.AmountOf(payDenom))
+				received := sdk.NewCoin(receiveDenom, order.Received.AmountOf(receiveDenom))
+				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
+					MarketId:         market.Id,
+					OrderId:          order.Id,
+					Orderer:          order.Orderer,
+					IsBuy:            order.IsBuy,
+					Price:            order.Price,
+					Quantity:         order.Quantity,
+					OpenQuantity:     order.OpenQuantity,
+					ExecutedQuantity: order.ExecutedQuantity,
+					Paid:             paid,
+					Received:         received,
+				}); err != nil {
+					return err
+				}
 				// Update user orders
 				if order.ExecutableQuantity(order.Price).IsZero() {
 					k.DeleteOrder(ctx, order.Order)

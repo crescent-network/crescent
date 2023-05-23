@@ -35,13 +35,8 @@ func (k Keeper) SwapExactAmountIn(
 			quoteLimit = &currentIn.Amount
 			output.Denom = market.BaseDenom
 		}
-		totalExecQty, totalExecQuote := k.executeOrder(
+		_, _, output = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, simulate)
-		if isBuy {
-			output.Amount = totalExecQty
-		} else {
-			output.Amount = totalExecQuote
-		}
 		currentIn = output
 	}
 	if output.Denom != minOutput.Denom {

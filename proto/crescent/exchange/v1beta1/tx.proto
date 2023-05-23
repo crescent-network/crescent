@@ -40,8 +40,8 @@ message MsgPlaceLimitOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string executed_quote = 3
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgPlaceMarketOrder {
@@ -55,8 +55,8 @@ message MsgPlaceMarketOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string executed_quote = 3
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgCancelOrder {

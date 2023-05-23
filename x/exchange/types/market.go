@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+
+	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
@@ -43,7 +45,46 @@ func (market Market) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(market.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address: %w", err)
 	}
+	if market.TakerFeeRate.IsNegative() {
+		return fmt.Errorf("taker fee rate must not be negative: %s", market.TakerFeeRate)
+	}
+	if market.TakerFeeRate.GT(utils.OneDec) {
+		return fmt.Errorf("taker fee rate must not exceed 1.0: %s", market.TakerFeeRate)
+	}
+	if market.MakerFeeRate.IsNegative() {
+		negMakerFeeRate := market.MakerFeeRate.Neg()
+		if negMakerFeeRate.GT(utils.OneDec) {
+			return fmt.Errorf("minus maker fee rate must not exceed 1.0: %s", market.MakerFeeRate)
+		}
+		if market.TakerFeeRate.LT(negMakerFeeRate) {
+			return fmt.Errorf("minus maker fee rate must not exceed %s", market.TakerFeeRate)
+		}
+	} else if market.MakerFeeRate.GT(utils.OneDec) {
+		return fmt.Errorf("maker fee rate must not exceed 1.0:% s", market.MakerFeeRate)
+	}
 	return nil
+}
+
+func (market Market) DeductMakerFee(amt sdk.Int) sdk.Int {
+	return utils.OneDec.Sub(market.TakerFeeRate).MulInt(amt).TruncateInt()
+}
+
+func (market Market) DeductTakerFee(amt sdk.Int) sdk.Int {
+	return utils.OneDec.Sub(market.TakerFeeRate).MulInt(amt).TruncateInt()
+}
+
+func (market Market) PayDenom(isBuy bool) string {
+	if isBuy {
+		return market.QuoteDenom
+	}
+	return market.BaseDenom
+}
+
+func (market Market) ReceiveDenom(isBuy bool) string {
+	if isBuy {
+		return market.BaseDenom
+	}
+	return market.QuoteDenom
 }
 
 func NewMarketState(lastPrice *sdk.Dec) MarketState {

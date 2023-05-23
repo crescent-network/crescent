@@ -9,20 +9,21 @@ import (
 
 func (k Keeper) PlaceLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.Order, execQty, execQuote sdk.Int, err error) {
-	_, order, execQty, execQuote, err = k.PlaceOrder(ctx, marketId, ordererAddr, isBuy, &price, qty)
+	isBuy bool, price sdk.Dec, qty sdk.Int) (order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
+	_, order, execQty, paid, received, err = k.PlaceOrder(ctx, marketId, ordererAddr, isBuy, &price, qty)
 	if err != nil {
 		return
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceLimitOrder{
-		Orderer:          ordererAddr.String(),
 		MarketId:         marketId,
+		OrderId:          order.Id,
+		Orderer:          ordererAddr.String(),
 		IsBuy:            isBuy,
 		Price:            price,
 		Quantity:         qty,
-		OrderId:          order.Id,
 		ExecutedQuantity: execQty,
-		ExecutedQuote:    execQuote,
+		Paid:             paid,
+		Received:         received,
 	}); err != nil {
 		return
 	}
@@ -31,19 +32,20 @@ func (k Keeper) PlaceLimitOrder(
 
 func (k Keeper) PlaceMarketOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, qty sdk.Int) (orderId uint64, execQty, execQuote sdk.Int, err error) {
-	orderId, _, execQty, execQuote, err = k.PlaceOrder(ctx, marketId, ordererAddr, isBuy, nil, qty)
+	isBuy bool, qty sdk.Int) (orderId uint64, execQty sdk.Int, paid, received sdk.Coin, err error) {
+	orderId, _, execQty, paid, received, err = k.PlaceOrder(ctx, marketId, ordererAddr, isBuy, nil, qty)
 	if err != nil {
 		return
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceMarketOrder{
-		Orderer:          ordererAddr.String(),
 		MarketId:         marketId,
+		OrderId:          orderId,
+		Orderer:          ordererAddr.String(),
 		IsBuy:            isBuy,
 		Quantity:         qty,
-		OrderId:          orderId,
 		ExecutedQuantity: execQty,
-		ExecutedQuote:    execQuote,
+		Paid:             paid,
+		Received:         received,
 	}); err != nil {
 		return
 	}
@@ -52,7 +54,7 @@ func (k Keeper) PlaceMarketOrder(
 
 func (k Keeper) PlaceOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (orderId uint64, order types.Order, execQty, execQuote sdk.Int, err error) {
+	isBuy bool, priceLimit *sdk.Dec, qty sdk.Int) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
 	if !qty.IsPositive() {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "quantity must be positive")
 		return
@@ -65,7 +67,7 @@ func (k Keeper) PlaceOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	execQty, execQuote = k.executeOrder(
+	execQty, paid, received = k.executeOrder(
 		ctx, market, ordererAddr, isBuy, priceLimit, &qty, nil, false)
 
 	openQty := qty.Sub(execQty)
