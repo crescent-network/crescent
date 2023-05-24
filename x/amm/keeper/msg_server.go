@@ -67,7 +67,7 @@ func (k msgServer) CreatePrivateFarmingPlan(goCtx context.Context, msg *types.Ms
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	plan, err := k.Keeper.CreatePrivateFarmingPlan(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Description,
-		msg.RewardAllocations, msg.StartTime, msg.EndTime)
+		sdk.MustAccAddressFromBech32(msg.TerminationAddress), msg.RewardAllocations, msg.StartTime, msg.EndTime)
 	if err != nil {
 		return nil, err
 	}

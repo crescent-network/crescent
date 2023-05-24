@@ -39,14 +39,14 @@ func (s *TestSuite) Collect(ownerAddr sdk.AccAddress, positionId uint64, amt sdk
 	s.Require().NoError(s.App.AMMKeeper.Collect(s.Ctx, ownerAddr, positionId, amt))
 }
 
-func (s *TestSuite) CreatePrivateFarmingPlan(creatorAddr sdk.AccAddress, rewardAllocs []ammtypes.RewardAllocation, startTime, endTime time.Time, initialFunds sdk.Coins, fundFee bool) (plan ammtypes.FarmingPlan) {
+func (s *TestSuite) CreatePrivateFarmingPlan(creatorAddr sdk.AccAddress, description string, termAddr sdk.AccAddress, rewardAllocs []ammtypes.FarmingRewardAllocation, startTime, endTime time.Time, initialFunds sdk.Coins, fundFee bool) (plan ammtypes.FarmingPlan) {
 	s.T().Helper()
 	if fundFee {
 		s.FundAccount(creatorAddr, s.App.AMMKeeper.GetPrivateFarmingPlanCreationFee(s.Ctx))
 	}
 	var err error
 	plan, err = s.App.AMMKeeper.CreatePrivateFarmingPlan(
-		s.Ctx, creatorAddr, "", rewardAllocs, startTime, endTime)
+		s.Ctx, creatorAddr, description, termAddr, rewardAllocs, startTime, endTime)
 	s.Require().NoError(err)
 	s.FundAccount(sdk.MustAccAddressFromBech32(plan.FarmingPoolAddress), initialFunds)
 	return plan
