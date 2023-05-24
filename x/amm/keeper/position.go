@@ -126,7 +126,7 @@ func (k Keeper) Collect(
 	fee := amt.Min(position.OwedFee)
 	position.OwedFee = position.OwedFee.Sub(fee)
 	// TODO: use lp fee address
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, toAddr, fee); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), toAddr, fee); err != nil {
 		return err
 	}
 	amt = amt.Sub(fee)
