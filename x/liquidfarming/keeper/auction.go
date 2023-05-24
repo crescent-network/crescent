@@ -122,11 +122,48 @@ func (k Keeper) refundBid(ctx sdk.Context, liquidFarm types.LiquidFarm, bid type
 	return nil
 }
 
-func (k Keeper) GetPreviousRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm) (auction types.RewardsAuction, found bool) {
+func (k Keeper) GetLastRewardsAuction(ctx sdk.Context, liquidFarmId uint64) (auction types.RewardsAuction, found bool) {
+	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
+	if !found {
+		return auction, false
+	}
 	if liquidFarm.LastRewardsAuctionId == 0 {
+		return auction, false
+	}
+	return k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId)
+}
+
+func (k Keeper) GetPreviousRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm) (auction types.RewardsAuction, found bool) {
+	if liquidFarm.LastRewardsAuctionId <= 1 {
 		return
 	}
 	return k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId-1)
+}
+
+// AdvanceRewardsAuctions advances all rewards auctions' epoch by one and
+// sets the next auction end time.
+func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (err error) {
+	k.IterateAllLiquidFarms(ctx, func(liquidFarm types.LiquidFarm) (stop bool) {
+		if liquidFarm.LastRewardsAuctionId != 0 {
+			auction, found := k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId)
+			if !found { // sanity check
+				panic("rewards auction not found")
+			}
+			if auction.WinningBid == nil {
+				if err = k.SkipRewardsAuction(ctx, liquidFarm, auction); err != nil {
+					return true
+				}
+			} else {
+				if err = k.FinishRewardsAuction(ctx, liquidFarm, auction); err != nil {
+					return true
+				}
+			}
+		}
+		k.StartNewRewardsAuction(ctx, liquidFarm, nextEndTime)
+		return false
+	})
+	k.SetNextRewardsAuctionEndTime(ctx, nextEndTime)
+	return
 }
 
 // StartNewRewardsAuction creates a new rewards auction and increment
@@ -148,6 +185,7 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFar
 	if auction.WinningBid == nil { // sanity check
 		panic("auction has no winning bid")
 	}
+	winningBid := *auction.WinningBid
 
 	position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
 	rewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
@@ -165,12 +203,22 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFar
 		deductedRewards, fees = types.DeductFees(rewards, liquidFarm.FeeRate)
 		if deductedRewards.IsAllPositive() {
 			// Then send deducted rewards to the winning bidder.
-			winningBidderAddr := sdk.MustAccAddressFromBech32(auction.WinningBid.Bidder)
+			winningBidderAddr := sdk.MustAccAddressFromBech32(winningBid.Bidder)
 			if err := k.bankKeeper.SendCoins(ctx, moduleAccAddr, winningBidderAddr, deductedRewards); err != nil {
 				return err
 			}
 		}
 		// Fees have been accrued in the module account.
+		// Now burn the winning bid's share.
+		if err := k.bankKeeper.SendCoinsFromAccountToModule(
+			ctx, sdk.MustAccAddressFromBech32(liquidFarm.BidReserveAddress),
+			types.ModuleName, sdk.NewCoins(winningBid.Share)); err != nil {
+			return err
+		}
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(winningBid.Share)); err != nil {
+			return err
+		}
+		k.DeleteBid(ctx, winningBid)
 	}
 
 	k.IterateBidsByRewardsAuction(ctx, liquidFarm.Id, auction.Id, func(bid types.Bid) (stop bool) {
