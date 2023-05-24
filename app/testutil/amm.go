@@ -48,6 +48,8 @@ func (s *TestSuite) CreatePrivateFarmingPlan(creatorAddr sdk.AccAddress, descrip
 	plan, err = s.App.AMMKeeper.CreatePrivateFarmingPlan(
 		s.Ctx, creatorAddr, description, termAddr, rewardAllocs, startTime, endTime)
 	s.Require().NoError(err)
-	s.FundAccount(sdk.MustAccAddressFromBech32(plan.FarmingPoolAddress), initialFunds)
+	if initialFunds.IsAllPositive() {
+		s.FundAccount(sdk.MustAccAddressFromBech32(plan.FarmingPoolAddress), initialFunds)
+	}
 	return plan
 }

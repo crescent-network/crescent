@@ -1,6 +1,11 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+
 	_ "github.com/stretchr/testify/suite"
 )
 
@@ -88,51 +93,55 @@ import (
 //		})
 //	}
 //}
-//
-//func (s *KeeperTestSuite) TestPlaceBid() {
-//	pair := s.createPair(helperAddr, "denom1", "denom2")
-//	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
-//
-//	_, err := s.keeper.PlaceBid(s.ctx, 1, pool.Id, s.addr(0), sdk.NewInt64Coin(pool.PoolCoinDenom, 100_000_000))
-//	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
-//
-//	s.createLiquidFarm(pool.Id, sdk.NewInt(10_000_000), sdk.NewInt(10_000_000), sdk.ZeroDec())
-//
-//	s.liquidFarm(pool.Id, s.addr(0), utils.ParseCoin("10_000_000pool1"), true)
-//	s.nextBlock()
-//
-//	_, err = s.keeper.PlaceBid(s.ctx, 1, pool.Id, s.addr(0), sdk.NewInt64Coin(pool.PoolCoinDenom, 100_000_000))
-//	s.Require().EqualError(err, "auction by pool 1 not found: not found")
-//
-//	// Create the first auction
-//	s.nextAuction()
-//
-//	var (
-//		bidderAddr1 = s.addr(1)
-//		bidderAddr2 = s.addr(2)
-//	)
-//
-//	s.fundAddr(bidderAddr1, utils.ParseCoins("250_000_000pool1"))
-//	s.fundAddr(bidderAddr2, utils.ParseCoins("100_000_000pool1"))
-//
-//	auctionId := s.keeper.GetLastRewardsAuctionId(s.ctx, pool.Id)
-//
-//	// Place a bid successfully
-//	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, bidderAddr1, sdk.NewInt64Coin(pool.PoolCoinDenom, 100_000_000))
-//	s.Require().NoError(err)
-//
-//	// Place with higher bidding amount
-//	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, bidderAddr1, sdk.NewInt64Coin(pool.PoolCoinDenom, 150_000_000))
-//	s.Require().NoError(err)
-//
-//	// Ensure the refunded amount
-//	s.Require().Equal(sdk.NewInt(100_000_000), s.getBalance(bidderAddr1, pool.PoolCoinDenom).Amount)
-//
-//	// Place a bid with less than the winning bid amount
-//	_, err = s.keeper.PlaceBid(s.ctx, auctionId, pool.Id, bidderAddr2, sdk.NewInt64Coin(pool.PoolCoinDenom, 90_000_000))
-//	s.Require().EqualError(err, "must be greater than the winning bid amount 150000000: invalid request")
-//}
-//
+
+func (s *KeeperTestSuite) TestPlaceBid() {
+	liquidFarm := s.CreateSampleLiquidFarm()
+
+	minterAddr := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
+	s.MintShare(minterAddr, liquidFarm.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"))
+	s.NextBlock()
+
+	// Start the first rewards auction.
+	s.AdvanceRewardsAuctions()
+
+	position := s.App.LiquidFarmingKeeper.MustGetLiquidFarmPosition(s.Ctx, liquidFarm)
+	rewards, err := s.App.AMMKeeper.CollectibleCoins(s.Ctx, position.Id)
+	s.Require().NoError(err)
+	s.Require().Equal("5786uatom", rewards.String())
+
+	bidderAddr1 := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
+	bidderShare1, _, _, _ := s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_00000ucre,50_000000uusd"))
+	bidderAddr2 := s.FundedAccount(3, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
+	bidderShare2, _, _, _ := s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("20_00000ucre,100_000000uusd"))
+
+	auction, found := s.App.LiquidFarmingKeeper.GetLastRewardsAuction(s.Ctx, liquidFarm.Id)
+	s.Require().True(found)
+	s.Require().Nil(auction.WinningBid)
+	s.Require().Equal(types.AuctionStatusStarted, auction.Status)
+
+	s.PlaceBid(bidderAddr1, liquidFarm.Id, auction.Id, bidderShare1.SubAmount(sdk.NewInt(1000)))
+	auction, _ = s.App.LiquidFarmingKeeper.GetRewardsAuction(s.Ctx, liquidFarm.Id, auction.Id)
+	s.Require().Equal(bidderAddr1.String(), auction.WinningBid.Bidder)
+
+	s.PlaceBid(bidderAddr1, liquidFarm.Id, auction.Id, bidderShare1) // Update the bid with the higher amount
+	auction, _ = s.App.LiquidFarmingKeeper.GetRewardsAuction(s.Ctx, liquidFarm.Id, auction.Id)
+	s.Require().Equal(bidderShare1, auction.WinningBid.Share)
+
+	s.PlaceBid(bidderAddr2, liquidFarm.Id, auction.Id, bidderShare2)
+	auction, _ = s.App.LiquidFarmingKeeper.GetRewardsAuction(s.Ctx, liquidFarm.Id, auction.Id)
+	s.Require().Equal(bidderAddr2.String(), auction.WinningBid.Bidder)
+	s.Require().Equal(bidderShare2, auction.WinningBid.Share)
+
+	// Finish the current rewards auction.
+	s.AdvanceRewardsAuctions()
+	s.Require().Equal(sdk.NewInt(5768), s.GetAllBalances(bidderAddr2).AmountOf("uatom"))
+
+	auction, _ = s.App.LiquidFarmingKeeper.GetRewardsAuction(s.Ctx, liquidFarm.Id, auction.Id)
+	s.Require().Equal(types.AuctionStatusFinished, auction.Status)
+	s.Require().Equal("5786uatom", auction.Rewards.String()) // Rewards before deducting fees
+	s.Require().Equal("18uatom", auction.Fees.String())
+}
+
 //func (s *KeeperTestSuite) TestPlaceBid_AuctionStatus() {
 //	pair := s.createPair(helperAddr, "denom1", "denom2")
 //	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))

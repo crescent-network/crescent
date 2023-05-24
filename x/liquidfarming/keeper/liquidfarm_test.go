@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/stretchr/testify/suite"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
 //	func (s *KeeperTestSuite) TestLiquidFarm_Validation() {
