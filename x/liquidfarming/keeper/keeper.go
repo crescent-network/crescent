@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,23 +10,6 @@ import (
 
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
-
-var (
-	// Set this "true" using build flags to enable FinishAuctions msg handling.
-	enableAdvanceAuction = "false"
-
-	// EnableAdvanceAuction indicates whether msgServer accepts MsgAdvanceAuction or not.
-	// Setting this true in production mode will expose unexpected vulnerability.
-	EnableAdvanceAuction = false
-)
-
-func init() {
-	var err error
-	EnableAdvanceAuction, err = strconv.ParseBool(enableAdvanceAuction)
-	if err != nil {
-		panic(err)
-	}
-}
 
 type Keeper struct {
 	cdc           codec.BinaryCodec

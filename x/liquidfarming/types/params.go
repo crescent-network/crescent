@@ -14,7 +14,7 @@ var (
 
 // Default parameters
 var (
-	DefaultRewardsAuctionDuration = 8 * time.Hour
+	DefaultRewardsAuctionDuration = time.Hour
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)

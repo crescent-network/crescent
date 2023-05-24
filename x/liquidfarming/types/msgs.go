@@ -9,17 +9,15 @@ var (
 	_ sdk.Msg = (*MsgMintShare)(nil)
 	_ sdk.Msg = (*MsgBurnShare)(nil)
 	_ sdk.Msg = (*MsgPlaceBid)(nil)
-	_ sdk.Msg = (*MsgRefundBid)(nil)
-	_ sdk.Msg = (*MsgFinishAuctions)(nil)
+	_ sdk.Msg = (*MsgCancelBid)(nil)
 )
 
 // Message types for the module
 const (
-	TypeMsgMintShare      = "mint_share"
-	TypeMsgBurnShare      = "burn_share"
-	TypeMsgPlaceBid       = "place_bid"
-	TypeMsgRefundBid      = "refund_bid"
-	TypeMsgFinishAuctions = "finish_auctions"
+	TypeMsgMintShare = "mint_share"
+	TypeMsgBurnShare = "burn_share"
+	TypeMsgPlaceBid  = "place_bid"
+	TypeMsgCancelBid = "cancel_bid"
 )
 
 // NewMsgMintShare creates a new MsgMintShare
@@ -143,23 +141,23 @@ func (msg MsgPlaceBid) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgRefundBid creates a new MsgRefundBid
-func NewMsgRefundBid(senderAddr sdk.AccAddress, liquidFarmId, rewardsAuctionId uint64) *MsgRefundBid {
-	return &MsgRefundBid{
+// NewMsgCancelBid creates a new MsgCancelBid
+func NewMsgCancelBid(senderAddr sdk.AccAddress, liquidFarmId, rewardsAuctionId uint64) *MsgCancelBid {
+	return &MsgCancelBid{
 		Sender:           senderAddr.String(),
 		LiquidFarmId:     liquidFarmId,
 		RewardsAuctionId: rewardsAuctionId,
 	}
 }
 
-func (msg MsgRefundBid) Route() string { return RouterKey }
-func (msg MsgRefundBid) Type() string  { return TypeMsgRefundBid }
+func (msg MsgCancelBid) Route() string { return RouterKey }
+func (msg MsgCancelBid) Type() string  { return TypeMsgCancelBid }
 
-func (msg MsgRefundBid) GetSignBytes() []byte {
+func (msg MsgCancelBid) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgRefundBid) GetSigners() []sdk.AccAddress {
+func (msg MsgCancelBid) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
@@ -167,7 +165,7 @@ func (msg MsgRefundBid) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgRefundBid) ValidateBasic() error {
+func (msg MsgCancelBid) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
@@ -176,35 +174,6 @@ func (msg MsgRefundBid) ValidateBasic() error {
 	}
 	if msg.RewardsAuctionId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "rewards auction id must not be 0")
-	}
-	return nil
-}
-
-// NewMsgFinishAuctions creates a new MsgFinishAuctions.
-func NewMsgFinishAuctions(senderAddr sdk.AccAddress) *MsgFinishAuctions {
-	return &MsgFinishAuctions{
-		Sender: senderAddr.String(),
-	}
-}
-
-func (msg MsgFinishAuctions) Route() string { return RouterKey }
-func (msg MsgFinishAuctions) Type() string  { return TypeMsgFinishAuctions }
-
-func (msg MsgFinishAuctions) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgFinishAuctions) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
-func (msg MsgFinishAuctions) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 	return nil
 }

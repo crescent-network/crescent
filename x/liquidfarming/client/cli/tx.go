@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
@@ -28,34 +27,25 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewLiquidFarmCmd(),
-		NewLiquidUnfarmCmd(),
-		NewLiquidUnfarmAndWithdrawCmd(),
+		NewMintShareCmd(),
+		NewBurnShareCmd(),
 		NewPlaceBidCmd(),
-		NewRefundBidCmd(),
+		NewCancelBidCmd(),
 	)
-
-	if keeper.EnableAdvanceAuction {
-		cmd.AddCommand(NewAdvanceAuctionCmd())
-	}
-
 	return cmd
-
 }
 
-// NewLiquidFarmCmd implements the liquid farm command handler.
-func NewLiquidFarmCmd() *cobra.Command {
+// NewMintShareCmd implements the mint share command handler.
+func NewMintShareCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "liquid-farm [pool-id] [amount]",
+		Use:   "mint-share [liquid-farm-id] [desired-amount]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Liquid farm pool coin for auto compounding rewards and receive LFCoin by mint rate",
+		Short: "Mint liquid farm share for auto compounding rewards",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Liquid farm pool coin for auto compounding and receive LFCoin by mint rate. 
-The module farms your pool coin to the farm module for you and auto compounds rewards for every auction period.
-LFCoin opens up other opportunities to make profits like providing liquidity for lending protocol.
+			fmt.Sprintf(`Mint liquid farm share for auto compounding rewards. 
 			
 Example:
-$ %s tx %s liquid-farm 1 100000000pool1 --from mykey
+$ %s tx %s mint-share 1 100000000ucre,500000000uusd --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -65,23 +55,15 @@ $ %s tx %s liquid-farm 1 100000000pool1 --from mykey
 			if err != nil {
 				return err
 			}
-
-			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to parse pool id: %w", err)
+				return fmt.Errorf("invalid liquid farm id: %w", err)
 			}
-
-			farmingCoin, err := sdk.ParseCoinNormalized(args[1])
+			desiredAmt, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("invalid coin: %w", err)
+				return fmt.Errorf("invalid desired amount: %w", err)
 			}
-
-			msg := types.NewMsgLiquidFarm(
-				poolId,
-				clientCtx.GetFromAddress().String(),
-				farmingCoin,
-			)
-
+			msg := types.NewMsgMintShare(clientCtx.GetFromAddress(), liquidFarmId, desiredAmt)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -91,17 +73,17 @@ $ %s tx %s liquid-farm 1 100000000pool1 --from mykey
 	return cmd
 }
 
-// NewLiquidUnfarmCmd implements the liquid unfarm command handler.
-func NewLiquidUnfarmCmd() *cobra.Command {
+// NewBurnShareCmd implements the burn share command handler.
+func NewBurnShareCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "liquid-unfarm [pool-id] [amount]",
+		Use:   "burn-share [liquid-farm-id] [share]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Liquid unfarm liquid farming coin (LFCoin) ",
+		Short: "Burn liquid farm share",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Liquid unfarm liquid farming coin (LFCoin) to receive corresponding pool coin by burn rate.
+			fmt.Sprintf(`Burn liquid farm share.
 			
 Example:
-$ %s tx %s liquid-unfarm 1 100000lf1 --from mykey
+$ %s tx %s burn-share 1 10000000000lfshare1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -111,69 +93,15 @@ $ %s tx %s liquid-unfarm 1 100000lf1 --from mykey
 			if err != nil {
 				return err
 			}
-
-			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to parse pool id: %w", err)
+				return fmt.Errorf("invalid liquid farm id: %w", err)
 			}
-
-			unfarmingCoin, err := sdk.ParseCoinNormalized(args[1])
+			share, err := sdk.ParseCoinNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("invalid coin: %w", err)
+				return fmt.Errorf("invalid share: %w", err)
 			}
-
-			msg := types.NewMsgLiquidUnfarm(
-				poolId,
-				clientCtx.GetFromAddress().String(),
-				unfarmingCoin,
-			)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewLiquidUnfarmAndWithdrawCmd implements the liquid unfarm and withdraw command handler.
-func NewLiquidUnfarmAndWithdrawCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "liquid-unfarm-and-withdraw [pool-id] [amount]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Liquid unfarm liquid farming coin (LFCoin) and withdraw from the liquidity module",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Liquid unfarm liquid farming coin (LFCoin) to receive corresponding pool coin by burn rate and withdraw from the liquidity module.
-			
-Example:
-$ %s tx %s liquid-unfarm-and-withdraw 1 100000lf1 --from mykey
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			poolId, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to parse pool id: %w", err)
-			}
-
-			unfarmingCoin, err := sdk.ParseCoinNormalized(args[1])
-			if err != nil {
-				return fmt.Errorf("invalid coin: %w", err)
-			}
-
-			msg := types.NewMsgLiquidUnfarmAndWithdraw(
-				poolId,
-				clientCtx.GetFromAddress().String(),
-				unfarmingCoin,
-			)
-
+			msg := types.NewMsgBurnShare(clientCtx.GetFromAddress(), liquidFarmId, share)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -186,14 +114,14 @@ $ %s tx %s liquid-unfarm-and-withdraw 1 100000lf1 --from mykey
 // NewPlaceBidCmd implements the place bid command handler.
 func NewPlaceBidCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "place-bid [auction-id] [pool-id] [amount]",
+		Use:   "place-bid [liquid-farm-id] [auction-id] [share]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Place a bid for a rewards auction",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Place a bid for a rewards auction.
 			
 Example:
-$ %s tx %s place-bid 1 1 10000000pool1 --from mykey
+$ %s tx %s place-bid 1 1 10000000lfshare1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -203,29 +131,20 @@ $ %s tx %s place-bid 1 1 10000000pool1 --from mykey
 			if err != nil {
 				return err
 			}
-
-			auctionId, err := strconv.ParseUint(args[0], 10, 64)
+			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to parse auctionId id: %w", err)
+				return fmt.Errorf("invalid liquid farm id: %w", err)
 			}
-
-			poolId, err := strconv.ParseUint(args[1], 10, 64)
+			auctionId, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to parse pool id: %w", err)
+				return fmt.Errorf("invalid auction id: %w", err)
 			}
-
-			amount, err := sdk.ParseCoinNormalized(args[2])
+			share, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
-				return fmt.Errorf("invalid bidding amount: %w", err)
+				return fmt.Errorf("invalid share: %w", err)
 			}
-
 			msg := types.NewMsgPlaceBid(
-				auctionId,
-				poolId,
-				clientCtx.GetFromAddress().String(),
-				amount,
-			)
-
+				clientCtx.GetFromAddress(), liquidFarmId, auctionId, share)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -235,10 +154,10 @@ $ %s tx %s place-bid 1 1 10000000pool1 --from mykey
 	return cmd
 }
 
-// NewRefundBidCmd implements the refund bid command handler.
-func NewRefundBidCmd() *cobra.Command {
+// NewCancelBidCmd implements the refund bid command handler.
+func NewCancelBidCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "refund-bid [auction-id] [pool-id]",
+		Use:   "refund-bid [liquid-farm-id] [auction-id]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Refund a bid",
 		Long: strings.TrimSpace(
@@ -255,58 +174,15 @@ $ %s tx %s refund-bid 1 1 --from mykey
 			if err != nil {
 				return err
 			}
-
-			auctionId, err := strconv.ParseUint(args[0], 10, 64)
+			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to parse auctionId id: %w", err)
+				return fmt.Errorf("invalid liquid farm id: %w", err)
 			}
-
-			poolId, err := strconv.ParseUint(args[1], 10, 64)
+			auctionId, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to parse pool id: %w", err)
+				return fmt.Errorf("invalid auction id: %w", err)
 			}
-
-			msg := types.NewMsgRefundBid(
-				auctionId,
-				poolId,
-				clientCtx.GetFromAddress().String(),
-			)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewAdvanceAuctionCmd implements the advance auction by 1 command handler.
-func NewAdvanceAuctionCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "advance-auction",
-		Args:  cobra.NoArgs,
-		Short: "Advance auction by 1 to simulate rewards auction",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Advance auction by 1 to simulate rewards auction.
-This message is available for testing purpose and it can only be enabled when you build the binary with "make install-testing" command. 
-
-Example:
-$ %s tx %s advance-auction --from mykey
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			requesterAcc := clientCtx.GetFromAddress()
-
-			msg := types.NewMsgAdvanceAuction(requesterAcc)
-
+			msg := types.NewMsgCancelBid(clientCtx.GetFromAddress(), liquidFarmId, auctionId)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

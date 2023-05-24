@@ -45,6 +45,10 @@ func GetRewardsAuctionKey(liquidFarmId, auctionId uint64) []byte {
 		sdk.Uint64ToBigEndian(auctionId))
 }
 
+func GetRewardsAuctionsByLiquidFarmIteratorPrefix(liquidFarmId uint64) []byte {
+	return utils.Key(RewardsAuctionKeyPrefix, sdk.Uint64ToBigEndian(liquidFarmId))
+}
+
 // GetBidKey returns the store key to retrieve the bid object
 // by the given liquid farm id, rewards auction id and bidder address.
 func GetBidKey(liquidFarmId, auctionId uint64, bidderAddr sdk.AccAddress) []byte {

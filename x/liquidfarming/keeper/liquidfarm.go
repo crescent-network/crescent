@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
@@ -29,7 +30,7 @@ func (k Keeper) CreateLiquidFarm(
 
 func (k Keeper) MintShare(
 	ctx sdk.Context, senderAddr sdk.AccAddress, liquidFarmId uint64,
-	desiredAmt sdk.Coins) (position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins, err error) {
+	desiredAmt sdk.Coins) (mintedShare sdk.Coin, position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins, err error) {
 	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
@@ -49,7 +50,7 @@ func (k Keeper) MintShare(
 	shareSupply := k.bankKeeper.GetSupply(ctx, shareDenom).Amount
 	mintedShareAmt := types.CalculateMintedShareAmount(
 		liquidity, position.Liquidity.Sub(liquidity), shareSupply)
-	mintedShare := sdk.NewCoin(shareDenom, mintedShareAmt)
+	mintedShare = sdk.NewCoin(shareDenom, mintedShareAmt)
 	if err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintedShare)); err != nil {
 		return
 	}
@@ -69,39 +70,49 @@ func (k Keeper) MintShare(
 	//	),
 	//})
 
-	return position, liquidity, amt, nil
+	return mintedShare, position, liquidity, amt, nil
 }
 
 // BurnShare handles types.MsgBurnShare to burn liquid farm share.
-func (k Keeper) BurnShare(ctx sdk.Context, senderAddr sdk.AccAddress, liquidFarmId uint64, share sdk.Coin) (amt sdk.Coins, err error) {
+func (k Keeper) BurnShare(
+	ctx sdk.Context, senderAddr sdk.AccAddress, liquidFarmId uint64,
+	share sdk.Coin) (removedLiquidity sdk.Int, amt sdk.Coins, err error) {
 	if shareDenom := types.ShareDenom(liquidFarmId); share.Denom != shareDenom {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom != %s", shareDenom)
+		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom != %s", shareDenom)
+		return
 	}
 
 	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
+		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
+		return
 	}
 
 	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
 
 	shareSupply := k.bankKeeper.GetSupply(ctx, share.Denom).Amount
-	prevWinningBidLiquidity := sdk.ZeroInt() // TODO: work
-	liquidity := types.CalculateRemovedLiquidity(
-		share.Amount, shareSupply, position.Liquidity, prevWinningBidLiquidity)
+	var prevWinningBidShareAmt sdk.Int
+	auction, found := k.GetPreviousRewardsAuction(ctx, liquidFarm)
+	if found && auction.WinningBid != nil {
+		prevWinningBidShareAmt = auction.WinningBid.Share.Amount
+	} else {
+		prevWinningBidShareAmt = utils.ZeroInt
+	}
+	removedLiquidity = types.CalculateRemovedLiquidity(
+		share.Amount, shareSupply, position.Liquidity, prevWinningBidShareAmt)
 
 	_, amt, err = k.ammKeeper.RemoveLiquidity(
-		ctx, moduleAccAddr, senderAddr, position.Id, liquidity)
+		ctx, moduleAccAddr, senderAddr, position.Id, removedLiquidity)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, sdk.NewCoins(share)); err != nil {
-		return nil, err
+	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, sdk.NewCoins(share)); err != nil {
+		return
 	}
-	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
-		return nil, err
+	if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
+		return
 	}
 
 	// TODO: emit typed event
@@ -115,7 +126,7 @@ func (k Keeper) BurnShare(ctx sdk.Context, senderAddr sdk.AccAddress, liquidFarm
 	//	),
 	//})
 
-	return amt, nil
+	return removedLiquidity, amt, nil
 }
 
 func (k Keeper) MustGetLiquidFarmPosition(ctx sdk.Context, liquidFarm types.LiquidFarm) ammtypes.Position {

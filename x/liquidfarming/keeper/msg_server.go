@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -21,33 +20,37 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// MintShare defines a method for farming pool coin and mint LFCoin for the farmer.
+// MintShare defines a method for adding liquidity to the public position and
+// minting liquid farm share.
 func (m msgServer) MintShare(goCtx context.Context, msg *types.MsgMintShare) (*types.MsgMintShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	position, liquidity, amt, err := m.Keeper.MintShare(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.DesiredAmount)
+	mintedShare, position, liquidity, amt, err := m.Keeper.MintShare(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.DesiredAmount)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgMintShareResponse{
+		MintedShare:      mintedShare,
 		PositionId: position.Id,
 		Liquidity:  liquidity,
 		Amount:     amt,
 	}, nil
 }
 
-// BurnShare defines a method for unfarming LFCoin to return the corresponding amount of pool coin.
+// BurnShare defines a method for burning liquid farm share to withdraw underlying pool assets.
 func (m msgServer) BurnShare(goCtx context.Context, msg *types.MsgBurnShare) (*types.MsgBurnShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	amt, err := m.Keeper.BurnShare(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.Share)
+	removedLiquidity, amt, err := m.Keeper.BurnShare(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.Share)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgBurnShareResponse{
-		Amount: amt,
+		RemovedLiquidity: removedLiquidity,
+		Amount:    amt,
 	}, nil
 }
 
@@ -63,45 +66,14 @@ func (m msgServer) PlaceBid(goCtx context.Context, msg *types.MsgPlaceBid) (*typ
 	return &types.MsgPlaceBidResponse{}, nil
 }
 
-// RefundBid defines a method for refunding the bid for the auction.
-func (m msgServer) RefundBid(goCtx context.Context, msg *types.MsgRefundBid) (*types.MsgRefundBidResponse, error) {
+// CancelBid defines a method for refunding the bid for the auction.
+func (m msgServer) CancelBid(goCtx context.Context, msg *types.MsgCancelBid) (*types.MsgCancelBidResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.RefundBid(
+	if _, err := m.Keeper.CancelBid(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.RewardsAuctionId); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgRefundBidResponse{}, nil
-}
-
-// FinishRewardsAuctions defines a method for finishing all rewards auctions.
-// This message is just for testing purpose and it shouldn't be used in production.
-func (k msgServer) FinishRewardsAuctions(goCtx context.Context, msg *types.MsgFinishRewardsAuctions) (*types.MsgFinishRewardsAuctionsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if EnableAdvanceAuction {
-		endTime, _ := k.GetNextRewardsAuctionEndTime(ctx)
-		ctx = ctx.WithBlockTime(endTime)
-
-		duration := k.GetRewardsAuctionDuration(ctx)
-		nextEndTime := endTime.Add(duration)
-
-		for _, l := range k.GetAllLiquidFarms(ctx) {
-			auction, found := k.GetLastRewardsAuction(ctx, l.PoolId)
-			if !found {
-				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
-			} else {
-				if err := k.FinishRewardsAuction(ctx, auction, l.FeeRate); err != nil {
-					panic(err)
-				}
-				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
-			}
-		}
-		k.SetNextRewardsAuctionEndTime(ctx, nextEndTime)
-	} else {
-		return nil, fmt.Errorf("FinishAuctions is disabled")
-	}
-
-	return &types.MsgFinishRewardsAuctionsResponse{}, nil
+	return &types.MsgCancelBidResponse{}, nil
 }

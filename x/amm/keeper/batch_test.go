@@ -17,7 +17,7 @@ func (s *KeeperTestSuite) TestBatch() {
 
 	creatorAddr := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	s.AddLiquidity(
-		creatorAddr, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
+		creatorAddr, creatorAddr, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
 		utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))

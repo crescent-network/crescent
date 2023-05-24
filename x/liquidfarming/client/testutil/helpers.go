@@ -25,7 +25,7 @@ func MsgLiquidFarmExec(clientCtx client.Context, from, poolId string, amount sdk
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...), extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewLiquidFarmCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMintShareCmd(), args)
 }
 
 func MsgPlaceBidExec(clientCtx client.Context, from, auctionId, poolId string, amount sdk.Coin, extraArgs ...string) (testutil.BufferWriter, error) {

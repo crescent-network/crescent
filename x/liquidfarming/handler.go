@@ -27,11 +27,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgPlaceBid:
 			res, err := msgServer.PlaceBid(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgRefundBid:
-			res, err := msgServer.RefundBid(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgFinishAuctions:
-			res, err := msgServer.FinishAuctions(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgCancelBid:
+			res, err := msgServer.CancelBid(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))

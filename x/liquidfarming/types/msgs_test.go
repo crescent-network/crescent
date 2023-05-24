@@ -201,43 +201,43 @@ func TestMsgPlaceBid(t *testing.T) {
 	}
 }
 
-func TestMsgRefundBid(t *testing.T) {
+func TestMsgCancelBid(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		malleate    func(msg *types.MsgRefundBid)
+		malleate    func(msg *types.MsgCancelBid)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(msg *types.MsgRefundBid) {},
+			func(msg *types.MsgCancelBid) {},
 			"",
 		},
 		{
 			"invalid auction id",
-			func(msg *types.MsgRefundBid) {
+			func(msg *types.MsgCancelBid) {
 				msg.AuctionId = 0
 			},
 			"invalid auction id: invalid request",
 		},
 		{
 			"invalid pool id",
-			func(msg *types.MsgRefundBid) {
+			func(msg *types.MsgCancelBid) {
 				msg.PoolId = 0
 			},
 			"invalid pool id: invalid request",
 		},
 		{
 			"invalid bidder",
-			func(msg *types.MsgRefundBid) {
+			func(msg *types.MsgCancelBid) {
 				msg.Bidder = "invalidaddr"
 			},
 			"invalid bidder address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgRefundBid(1, 1, testAddr.String())
+			msg := types.NewMsgCancelBid(1, 1, testAddr.String())
 			tc.malleate(msg)
-			require.Equal(t, types.TypeMsgRefundBid, msg.Type())
+			require.Equal(t, types.TypeMsgCancelBid, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
 			require.Equal(t, sdk.MustSortJSON(types.ModuleCdc.MustMarshalJSON(msg)), msg.GetSignBytes())
 			err := msg.ValidateBasic()

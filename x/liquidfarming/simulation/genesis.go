@@ -35,14 +35,14 @@ func GenRewardsAuctionDuration(r *rand.Rand) time.Duration {
 
 // GenLiquidFarms returns randomized liquid farm list.
 func GenLiquidFarms(r *rand.Rand) []types.LiquidFarm {
+	panic("not implemented")
 	numLiquidFarms := r.Intn(5)
 	liquidFarms := []types.LiquidFarm{}
 	for i := 0; i < numLiquidFarms; i++ {
 		liquidFarm := types.LiquidFarm{
-			PoolId:        uint64(i + 1),
-			MinFarmAmount: utils.RandomInt(r, sdk.ZeroInt(), sdk.NewInt(1_000_000)),
-			MinBidAmount:  utils.RandomInt(r, sdk.ZeroInt(), sdk.NewInt(1_000_000)),
-			FeeRate:       simulation.RandomDecAmount(r, sdk.NewDecWithPrec(1, 2)),
+			PoolId:       uint64(i + 1),
+			MinBidAmount: utils.RandomInt(r, sdk.ZeroInt(), sdk.NewInt(1_000_000)),
+			FeeRate:      simulation.RandomDecAmount(r, sdk.NewDecWithPrec(1, 2)),
 		}
 		liquidFarms = append(liquidFarms, liquidFarm)
 	}
@@ -51,21 +51,12 @@ func GenLiquidFarms(r *rand.Rand) []types.LiquidFarm {
 
 // RandomizedGenState generates a random GenesisState.
 func RandomizedGenState(simState *module.SimulationState) {
+	panic("not implemented")
 	genesis := types.DefaultGenesis()
-
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, FeeCollector, &genesis.Params.FeeCollector, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.FeeCollector = GenFeeCollector(r) },
-	)
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, RewardsAuctionDuration, &genesis.Params.RewardsAuctionDuration, simState.Rand,
 		func(r *rand.Rand) { genesis.Params.RewardsAuctionDuration = GenRewardsAuctionDuration(r) },
-	)
-
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, LiquidFarms, &genesis.Params.LiquidFarms, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.LiquidFarms = GenLiquidFarms(r) },
 	)
 
 	bz, _ := json.MarshalIndent(genesis, "", " ")

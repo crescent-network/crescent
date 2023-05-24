@@ -1,7 +1,6 @@
 package liquidfarming
 
 import (
-	"sort"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -35,13 +34,23 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			}
 
 			k.IterateAllLiquidFarms(ctx, func(liquidFarm types.LiquidFarm) (stop bool) {
-				auction, found := k.GetLastRewardsAuction(ctx, l.PoolId)
-				if found {
-					if err := k.FinishRewardsAuction(ctx, auction, l.FeeRate); err != nil {
-						panic(err)
+				if liquidFarm.LastRewardsAuctionId != 0 {
+					auction, found := k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId)
+					if !found { // sanity check
+						panic("rewards auction not found")
+					}
+					if auction.WinningBid == nil {
+						if err := k.SkipRewardsAuction(ctx, liquidFarm, auction); err != nil {
+							panic(err)
+						}
+					} else {
+						if err := k.FinishRewardsAuction(ctx, liquidFarm, auction); err != nil {
+							panic(err)
+						}
 					}
 				}
-				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
+				k.StartNewRewardsAuction(ctx, liquidFarm, nextEndTime)
+				return false
 			})
 			k.SetNextRewardsAuctionEndTime(ctx, nextEndTime)
 		}

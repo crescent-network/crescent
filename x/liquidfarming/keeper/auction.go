@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -72,9 +74,9 @@ func (k Keeper) PlaceBid(
 	return bid, nil
 }
 
-// RefundBid handles types.MsgRefundBid and refunds bid amount to the bidder and
+// CancelBid handles types.MsgCancelBid and refunds bid amount to the bidder and
 // delete the bid object.
-func (k Keeper) RefundBid(ctx sdk.Context, bidderAddr sdk.AccAddress, liquidFarmId, auctionId uint64) (bid types.Bid, err error) {
+func (k Keeper) CancelBid(ctx sdk.Context, bidderAddr sdk.AccAddress, liquidFarmId, auctionId uint64) (bid types.Bid, err error) {
 	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
 	if !found {
 		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
@@ -120,6 +122,25 @@ func (k Keeper) refundBid(ctx sdk.Context, liquidFarm types.LiquidFarm, bid type
 	return nil
 }
 
+func (k Keeper) GetPreviousRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm) (auction types.RewardsAuction, found bool) {
+	if liquidFarm.LastRewardsAuctionId == 0 {
+		return
+	}
+	return k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId-1)
+}
+
+// StartNewRewardsAuction creates a new rewards auction and increment
+// the liquid farm's last rewards auction id.
+func (k Keeper) StartNewRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm, endTime time.Time) {
+	liquidFarm.LastRewardsAuctionId++
+	auctionId := liquidFarm.LastRewardsAuctionId
+	k.SetLiquidFarm(ctx, liquidFarm)
+	startTime := ctx.BlockTime()
+	auction := types.NewRewardsAuction(
+		liquidFarm.Id, auctionId, startTime, endTime, types.AuctionStatusStarted)
+	k.SetRewardsAuction(ctx, auction)
+}
+
 // FinishRewardsAuction finishes ongoing rewards auction by looking up the existence of winning bid.
 // Compound accumulated farming rewards for farmers and refund all bids that are placed for the auction if winning bid exists.
 // If not, set the compounding rewards to zero and update the auction status AuctionStatusSkipped.
@@ -150,6 +171,16 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFar
 			}
 		}
 		// Fees have been accrued in the module account.
+	}
+
+	k.IterateBidsByRewardsAuction(ctx, liquidFarm.Id, auction.Id, func(bid types.Bid) (stop bool) {
+		if err = k.refundBid(ctx, liquidFarm, bid); err != nil {
+			return true
+		}
+		return false
+	})
+	if err != nil {
+		return err
 	}
 
 	auction.SetRewards(rewards)

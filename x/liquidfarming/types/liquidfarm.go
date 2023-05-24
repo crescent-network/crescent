@@ -81,13 +81,13 @@ func CalculateMintedShareAmount(
 
 // CalculateRemovedLiquidity calculates liquidity amount to be removed when
 // burning liquid farm share.
-// removedLiquidity = (totalLiquidity - prevWinningBidLiquidity) * (burnedShareAmt / shareSupply)
+// removedLiquidity = totalLiquidity * (burnedShareAmt / (shareSupply + prevWinningBidShareAmt))
 func CalculateRemovedLiquidity(
-	burnedShareAmt, shareSupply, totalLiquidity, prevWinningBidLiquidity sdk.Int) sdk.Int {
+	burnedShareAmt, shareSupply, totalLiquidity, prevWinningBidShareAmt sdk.Int) sdk.Int {
 	if burnedShareAmt.Equal(shareSupply) { // last one to unfarm
 		return totalLiquidity
 	}
-	return totalLiquidity.Sub(prevWinningBidLiquidity).Mul(burnedShareAmt).Quo(shareSupply)
+	return totalLiquidity.Sub(prevWinningBidShareAmt).Mul(burnedShareAmt).Quo(shareSupply)
 }
 
 // DeductFees deducts fees from rewards by the fee rate.

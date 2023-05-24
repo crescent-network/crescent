@@ -19,12 +19,8 @@ service Msg {
   // PlaceBid defines a method for placing a bid for a rewards auction
   rpc PlaceBid(MsgPlaceBid) returns (MsgPlaceBidResponse);
 
-  // RefundBid defines a method for refunding the bid that is not winning for the auction
-  rpc RefundBid(MsgRefundBid) returns (MsgRefundBidResponse);
-
-  // FinishRewardsAuctions defines a method for finishing all rewards auctions.
-  // This message is just for testing purpose and it shouldn't be enabled in production.
-  rpc FinishRewardsAuctions(MsgFinishRewardsAuctions) returns (MsgFinishRewardsAuctionsResponse);
+  // CancelBid defines a method for cancelling the bid that is not winning for the auction
+  rpc CancelBid(MsgCancelBid) returns (MsgCancelBidResponse);
 }
 
 // MsgMintShare defines a SDK message for minting share of LiquidFarm.
@@ -36,10 +32,11 @@ message MsgMintShare {
 }
 
 message MsgMintShareResponse {
-  uint64 position_id = 1;
-  string liquidity   = 2
+  cosmos.base.v1beta1.Coin minted_share = 1 [(gogoproto.nullable) = false];
+  uint64                   position_id  = 2;
+  string                   liquidity    = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin amount = 3
+  repeated cosmos.base.v1beta1.Coin amount = 4
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
@@ -51,7 +48,9 @@ message MsgBurnShare {
 }
 
 message MsgBurnShareResponse {
-  repeated cosmos.base.v1beta1.Coin amount = 1
+  string removed_liquidity = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
@@ -65,18 +64,11 @@ message MsgPlaceBid {
 
 message MsgPlaceBidResponse {}
 
-// MsgRefundBid defines a SDK message for refunding the bid that is not winning for the auction.
-message MsgRefundBid {
+// MsgCancelBid defines a SDK message for cancelling the bid that is not winning for the auction.
+message MsgCancelBid {
   string sender             = 1;
   uint64 liquid_farm_id     = 2;
   uint64 rewards_auction_id = 3;
 }
 
-message MsgRefundBidResponse {}
-
-// MsgFinishRewardsAuctions defines a message for finishing all rewards auctions.
-message MsgFinishRewardsAuctions {
-  string sender = 1;
-}
-
-message MsgFinishRewardsAuctionsResponse {}
+message MsgCancelBidResponse {}

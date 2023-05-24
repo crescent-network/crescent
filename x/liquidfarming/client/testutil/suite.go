@@ -465,7 +465,7 @@ func (s *IntegrationTestSuite) TestNewLiquidFarmCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewLiquidFarmCmd()
+			cmd := cli.NewMintShareCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -543,7 +543,7 @@ func (s *IntegrationTestSuite) TestNewUnfarmCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewLiquidUnfarmCmd()
+			cmd := cli.NewBurnShareCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -671,7 +671,7 @@ func (s *IntegrationTestSuite) TestNewRefundBidCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewRefundBidCmd()
+			cmd := cli.NewCancelBidCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := utilcli.ExecTestCLICmd(clientCtx, cmd, tc.args)
