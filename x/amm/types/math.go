@@ -10,7 +10,6 @@ func LiquidityForAmount0(sqrtPriceA, sqrtPriceB sdk.Dec, amt0 sdk.Int) sdk.Int {
 	//if sqrtPriceA.GT(sqrtPriceB) {
 	//	sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	//}
-	// TODO: possible precision loss?
 	return sqrtPriceA.MulTruncate(sqrtPriceB).MulInt(amt0).QuoTruncate(sqrtPriceB.Sub(sqrtPriceA)).TruncateInt()
 }
 

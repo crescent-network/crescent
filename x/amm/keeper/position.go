@@ -39,8 +39,8 @@ func (k Keeper) AddLiquidity(
 	}
 	poolState := k.MustGetPoolState(ctx, poolId)
 
-	sqrtPriceA := types.SqrtPriceAtTick(lowerTick) // TODO: use tick prec param
-	sqrtPriceB := types.SqrtPriceAtTick(upperTick) // TODO: use tick prec param
+	sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
+	sqrtPriceB := types.SqrtPriceAtTick(upperTick)
 	liquidity = types.LiquidityForAmounts(
 		utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 
@@ -185,7 +185,6 @@ func (k Keeper) modifyPosition(
 	}
 	// end _updatePosition()
 
-	// TODO: handle prec param and error correctly
 	amt0 = utils.ZeroInt
 	amt1 = utils.ZeroInt
 	if !liquidityDelta.IsZero() {
