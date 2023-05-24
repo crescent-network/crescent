@@ -11,15 +11,15 @@ import (
 
 func (k Keeper) PlaceLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
-	_, order, execQty, paid, received, err = k.PlaceOrder(
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
+	orderId, order, execQty, paid, received, err = k.PlaceOrder(
 		ctx, marketId, ordererAddr, isBuy, &price, qty, lifespan)
 	if err != nil {
 		return
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceLimitOrder{
 		MarketId:         marketId,
-		OrderId:          order.Id,
+		OrderId:          orderId,
 		Orderer:          ordererAddr.String(),
 		IsBuy:            isBuy,
 		Price:            price,

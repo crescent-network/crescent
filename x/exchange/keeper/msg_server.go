@@ -35,7 +35,7 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLimitOrder) (*types.MsgPlaceLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	order, execQty, paid, received, err := k.Keeper.PlaceLimitOrder(
+	orderId, _, execQty, paid, received, err := k.Keeper.PlaceLimitOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 	if err != nil {
@@ -43,7 +43,7 @@ func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLim
 	}
 
 	return &types.MsgPlaceLimitOrderResponse{
-		OrderId:          order.Id,
+		OrderId:          orderId,
 		ExecutedQuantity: execQty,
 		Paid:             paid,
 		Received:         received,
