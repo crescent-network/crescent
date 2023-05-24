@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -10,7 +11,8 @@ import (
 
 func NewOrder(
 	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, qty sdk.Int, msgHeight int64, openQty, remainingDeposit sdk.Int) Order {
+	isBuy bool, price sdk.Dec, qty sdk.Int, msgHeight int64,
+	openQty, remainingDeposit sdk.Int, deadline time.Time) Order {
 	return Order{
 		Id:               orderId,
 		Orderer:          ordererAddr.String(),
@@ -21,6 +23,7 @@ func NewOrder(
 		MsgHeight:        msgHeight,
 		OpenQuantity:     openQty,
 		RemainingDeposit: remainingDeposit,
+		Deadline:         deadline,
 	}
 }
 

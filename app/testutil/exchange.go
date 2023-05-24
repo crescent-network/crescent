@@ -1,6 +1,8 @@
 package testutil
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -17,10 +19,10 @@ func (s *TestSuite) CreateMarket(creatorAddr sdk.AccAddress, baseDenom, quoteDen
 }
 
 func (s *TestSuite) PlaceLimitOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int) (order exchangetypes.Order, execQty sdk.Int, paid, received sdk.Coin) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order exchangetypes.Order, execQty sdk.Int, paid, received sdk.Coin) {
 	s.T().Helper()
 	var err error
-	order, execQty, paid, received, err = s.App.ExchangeKeeper.PlaceLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty)
+	order, execQty, paid, received, err = s.App.ExchangeKeeper.PlaceLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
 	s.Require().NoError(err)
 	return
 }

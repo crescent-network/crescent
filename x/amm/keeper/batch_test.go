@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -21,7 +22,7 @@ func (s *KeeperTestSuite) TestBatch() {
 		utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
-	order, err := s.App.ExchangeKeeper.PlaceBatchLimitOrder(s.Ctx, 1, ordererAddr, true, utils.ParseDec("5.05"), sdk.NewInt(10_000000))
+	order, err := s.App.ExchangeKeeper.PlaceBatchLimitOrder(s.Ctx, 1, ordererAddr, true, utils.ParseDec("5.05"), sdk.NewInt(10_000000), time.Hour)
 	s.Require().NoError(err)
 
 	fmt.Println(s.GetAllBalances(ordererAddr))

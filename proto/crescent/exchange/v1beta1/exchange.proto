@@ -3,6 +3,8 @@ syntax = "proto3";
 package crescent.exchange.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
@@ -15,6 +17,7 @@ message Params {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string default_taker_fee_rate = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  google.protobuf.Duration max_order_lifespan = 4 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 message Market {
@@ -44,4 +47,5 @@ message Order {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string remaining_deposit = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  google.protobuf.Timestamp deadline = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }

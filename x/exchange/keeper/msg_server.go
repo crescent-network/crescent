@@ -37,7 +37,7 @@ func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLim
 
 	order, execQty, paid, received, err := k.Keeper.PlaceLimitOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
-		msg.IsBuy, msg.Price, msg.Quantity)
+		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 	if err != nil {
 		return nil, err
 	}

@@ -69,6 +69,10 @@ func GetOrderBookOrderKey(marketId uint64, isBuy bool, price sdk.Dec, orderId ui
 		orderIdBytes)
 }
 
+func GetOrderIdsByMarketKey(marketId uint64) []byte {
+	return utils.Key(OrderBookOrderKeyPrefix, sdk.Uint64ToBigEndian(marketId))
+}
+
 func GetOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
 	return utils.Key(
 		OrderBookOrderKeyPrefix,

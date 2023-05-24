@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -15,12 +16,14 @@ var (
 	KeyMarketCreationFee   = []byte("MarketCreationFee")
 	KeyDefaultMakerFeeRate = []byte("DefaultMakerFeeRate")
 	KeyDefaultTakerFeeRate = []byte("DefaultTakerFeeRate")
+	KeyMaxOrderLifespan    = []byte("MaxOrderLifespan")
 )
 
 var (
 	DefaultMarketCreationFee   = sdk.NewCoins()
 	DefaultDefaultMakerFeeRate = sdk.NewDecWithPrec(-15, 4) // -0.15%
 	DefaultDefaultTakerFeeRate = sdk.NewDecWithPrec(3, 3)   // 0.3%
+	DefaultMaxOrderLifespan    = 24 * time.Hour
 
 	MinPrice = sdk.NewDecWithPrec(1, 14)
 	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 40))
@@ -36,6 +39,7 @@ func DefaultParams() Params {
 		MarketCreationFee:   DefaultMarketCreationFee,
 		DefaultMakerFeeRate: DefaultDefaultMakerFeeRate,
 		DefaultTakerFeeRate: DefaultDefaultTakerFeeRate,
+		MaxOrderLifespan:    DefaultMaxOrderLifespan,
 	}
 }
 
@@ -45,6 +49,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyMarketCreationFee, &params.MarketCreationFee, validateMarketCreationFee),
 		paramstypes.NewParamSetPair(KeyDefaultMakerFeeRate, &params.DefaultMakerFeeRate, validateDefaultMakerFeeRate),
 		paramstypes.NewParamSetPair(KeyDefaultTakerFeeRate, &params.DefaultTakerFeeRate, validateDefaultTakerFeeRate),
+		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 	}
 }
 
@@ -57,6 +62,7 @@ func (params Params) Validate() error {
 		{params.MarketCreationFee, validateMarketCreationFee},
 		{params.DefaultMakerFeeRate, validateDefaultMakerFeeRate},
 		{params.DefaultTakerFeeRate, validateDefaultTakerFeeRate},
+		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -103,6 +109,17 @@ func validateDefaultTakerFeeRate(i interface{}) error {
 	}
 	if v.IsNegative() {
 		return fmt.Errorf("default taker fee rate must not be negative: %s", v)
+	}
+	return nil
+}
+
+func validateMaxOrderLifespan(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v < 0 {
+		return fmt.Errorf("max order lifespan must not be negative: %v", v)
 	}
 	return nil
 }
