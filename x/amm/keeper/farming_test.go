@@ -24,8 +24,8 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1uatom")) // make initial supply
 	s.CreatePrivateFarmingPlan(
-		utils.TestAddress(0), []types.RewardAllocation{
-			types.NewRewardAllocation(pool.Id, utils.ParseCoins("1000000uatom")),
+		utils.TestAddress(0), "", utils.TestAddress(0), []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("1000000uatom")),
 		},
 		utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T23:59:59Z"),
 		utils.ParseCoins("10000_000000uatom"), true)

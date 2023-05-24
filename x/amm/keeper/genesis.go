@@ -68,7 +68,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		farmingPlans = append(farmingPlans, plan)
 		return false
 	})
-	// TODO: set farming plans
 	return types.NewGenesisState(
 		k.GetParams(ctx),
 		k.GetLastPoolId(ctx),

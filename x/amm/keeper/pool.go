@@ -31,7 +31,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	}
 
 	// Create a new pool
-	poolId := k.GetNextPoolIdWithUpdate(ctx) // TODO: reject creating new pool with same parameters
+	poolId := k.GetNextPoolIdWithUpdate(ctx)
 	defaultTickSpacing := k.GetDefaultTickSpacing(ctx)
 	pool = types.NewPool(poolId, marketId, market.BaseDenom, market.QuoteDenom, defaultTickSpacing)
 	k.SetPool(ctx, pool)
@@ -45,8 +45,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	return pool, nil
 }
 
-// TODO: no need for liquidity
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int, liquidity sdk.Int) (stop bool)) {
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
 	ts := int32(pool.TickSpacing)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy))
@@ -74,7 +73,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				types.Amount0DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false))
 		}
 		if qty.IsPositive() {
-			if cb(price, qty, liquidity) {
+			if cb(price, qty) {
 				return true
 			}
 			reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, price, qty))

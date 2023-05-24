@@ -5,6 +5,7 @@ package crescent.exchange.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "crescent/exchange/v1beta1/exchange.proto";
+import "google/protobuf/duration.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -34,6 +35,7 @@ message MsgPlaceLimitOrder {
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   bool   is_batch = 6;
+  google.protobuf.Duration lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 message MsgPlaceLimitOrderResponse {

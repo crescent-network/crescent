@@ -15,7 +15,7 @@ func (k Keeper) CanCreatePrivateFarmingPlan(ctx sdk.Context) bool {
 
 func (k Keeper) CreatePrivateFarmingPlan(
 	ctx sdk.Context, creatorAddr sdk.AccAddress, description string,
-	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
+	termAddr sdk.AccAddress, rewardAllocs []types.FarmingRewardAllocation, startTime, endTime time.Time,
 ) (plan types.FarmingPlan, err error) {
 	if !k.CanCreatePrivateFarmingPlan(ctx) {
 		return plan, sdkerrors.Wrapf(
@@ -26,7 +26,7 @@ func (k Keeper) CreatePrivateFarmingPlan(
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, fee); err != nil {
 		return plan, err
 	}
-	plan, err = k.createFarmingPlan(ctx, description, nil, creatorAddr, rewardAllocs, startTime, endTime, true)
+	plan, err = k.createFarmingPlan(ctx, description, nil, termAddr, rewardAllocs, startTime, endTime, true)
 	if err != nil {
 		return plan, err
 	}
@@ -36,7 +36,7 @@ func (k Keeper) CreatePrivateFarmingPlan(
 func (k Keeper) CreatePublicFarmingPlan(
 	ctx sdk.Context, description string,
 	farmingPoolAddr sdk.AccAddress,
-	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time,
+	rewardAllocs []types.FarmingRewardAllocation, startTime, endTime time.Time,
 ) (types.FarmingPlan, error) {
 	return k.createFarmingPlan(
 		ctx, description, farmingPoolAddr, farmingPoolAddr,
@@ -45,7 +45,7 @@ func (k Keeper) CreatePublicFarmingPlan(
 
 func (k Keeper) createFarmingPlan(
 	ctx sdk.Context, description string, farmingPoolAddr, termAddr sdk.AccAddress,
-	rewardAllocs []types.RewardAllocation, startTime, endTime time.Time, isPrivate bool,
+	rewardAllocs []types.FarmingRewardAllocation, startTime, endTime time.Time, isPrivate bool,
 ) (plan types.FarmingPlan, err error) {
 	// Check if end time > block time
 	if !endTime.After(ctx.BlockTime()) {

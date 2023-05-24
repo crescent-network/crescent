@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -68,14 +69,14 @@ $ %s tx %s create-market uatom stake --from mykey
 
 func NewPlaceLimitOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "place-limit-order [market-id] [is-buy] [price] [quantity]",
-		Args:  cobra.ExactArgs(4),
+		Use:   "place-limit-order [market-id] [is-buy] [price] [quantity] [lifespan]",
+		Args:  cobra.ExactArgs(5),
 		Short: "Place a limit order",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Place a limit order.
 
 Example:
-$ %s tx %s place-limit-order 1 true 15 100000 --from mykey
+$ %s tx %s place-limit-order 1 true 15 100000 1h --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -101,8 +102,13 @@ $ %s tx %s place-limit-order 1 true 15 100000 --from mykey
 			if !ok {
 				return fmt.Errorf("invalid quantity: %s", args[3])
 			}
+			lifespan, err := time.ParseDuration(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid lifespan: %w", err)
+			}
 			isBatch := false // TODO: parse arg properly
-			msg := types.NewMsgPlaceLimitOrder(clientCtx.GetFromAddress(), marketId, isBuy, price, qty, isBatch)
+			msg := types.NewMsgPlaceLimitOrder(
+				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, isBatch, lifespan)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

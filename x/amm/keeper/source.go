@@ -40,7 +40,7 @@ func (k OrderSource) GenerateOrders(
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int, liquidity sdk.Int) (stop bool) {
+	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
 		if opts.PriceLimit != nil &&
 			((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
 				(!opts.IsBuy && price.GT(*opts.PriceLimit))) {
@@ -62,7 +62,6 @@ func (k OrderSource) GenerateOrders(
 }
 
 func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.TempOrder) {
-	// TODO: group results by orderer
 	orderers, m := exchangetypes.GroupTempOrderResultsByOrderer(results)
 	for _, orderer := range orderers {
 		ordererAddr := sdk.MustAccAddressFromBech32(orderer)

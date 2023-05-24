@@ -24,7 +24,7 @@ func DeriveFarmingPoolAddress(planId uint64) sdk.AccAddress {
 
 func NewFarmingPlan(
 	id uint64, description string, farmingPoolAddr, termAddr sdk.AccAddress,
-	rewardAllocs []RewardAllocation, startTime, endTime time.Time,
+	rewardAllocs []FarmingRewardAllocation, startTime, endTime time.Time,
 	isPrivate bool) FarmingPlan {
 	return FarmingPlan{
 		Id:                 id,
@@ -63,7 +63,7 @@ func (plan FarmingPlan) Validate() error {
 				plan.FarmingPoolAddress, plan.TerminationAddress)
 		}
 	}
-	if err := ValidateRewardAllocations(plan.RewardAllocations); err != nil {
+	if err := ValidateFarmingRewardAllocations(plan.RewardAllocations); err != nil {
 		return fmt.Errorf("invalid reward allocations: %w", err)
 	}
 	if !plan.StartTime.Before(plan.EndTime) {
@@ -72,14 +72,14 @@ func (plan FarmingPlan) Validate() error {
 	return nil
 }
 
-func NewRewardAllocation(poolId uint64, rewardsPerDay sdk.Coins) RewardAllocation {
-	return RewardAllocation{
+func NewFarmingRewardAllocation(poolId uint64, rewardsPerDay sdk.Coins) FarmingRewardAllocation {
+	return FarmingRewardAllocation{
 		PoolId:        poolId,
 		RewardsPerDay: rewardsPerDay,
 	}
 }
 
-func ValidateRewardAllocations(rewardAllocs []RewardAllocation) error {
+func ValidateFarmingRewardAllocations(rewardAllocs []FarmingRewardAllocation) error {
 	if len(rewardAllocs) == 0 {
 		return fmt.Errorf("empty reward allocations")
 	}

@@ -201,14 +201,15 @@ func (msg MsgCollect) ValidateBasic() error {
 }
 
 func NewMsgCreatePrivateFarmingPlan(
-	senderAddr sdk.AccAddress, description string, rewardAllocations []RewardAllocation,
+	senderAddr sdk.AccAddress, description string, termAddr sdk.AccAddress, rewardAllocs []FarmingRewardAllocation,
 	startTime, endTime time.Time) *MsgCreatePrivateFarmingPlan {
 	return &MsgCreatePrivateFarmingPlan{
-		Sender:            senderAddr.String(),
-		Description:       description,
-		RewardAllocations: rewardAllocations,
-		StartTime:         startTime,
-		EndTime:           endTime,
+		Sender:             senderAddr.String(),
+		Description:        description,
+		TerminationAddress: termAddr.String(),
+		RewardAllocations:  rewardAllocs,
+		StartTime:          startTime,
+		EndTime:            endTime,
 	}
 }
 
@@ -233,9 +234,9 @@ func (msg MsgCreatePrivateFarmingPlan) ValidateBasic() error {
 	}
 	// Create a dummy plan with valid fields and utilize Validate() method
 	// for user-provided data.
-	validAddr := RewardsPoolAddress // Chose random valid address
+	farmingPoolAddr := RewardsPoolAddress // Chose random valid address
 	dummyPlan := NewFarmingPlan(
-		1, msg.Description, validAddr, validAddr,
+		1, msg.Description, farmingPoolAddr, sdk.MustAccAddressFromBech32(msg.TerminationAddress),
 		msg.RewardAllocations, msg.StartTime, msg.EndTime, true)
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())

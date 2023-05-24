@@ -10034,6 +10034,9 @@ paths:
                     type: string
                   remaining_deposit:
                     type: string
+                  deadline:
+                    type: string
+                    format: date-time
         default:
           description: An unexpected error response
           schema:
@@ -10096,6 +10099,8 @@ paths:
                   default_maker_fee_rate:
                     type: string
                   default_taker_fee_rate:
+                    type: string
+                  max_order_lifespan:
                     type: string
         default:
           description: An unexpected error response
@@ -16468,6 +16473,9 @@ definitions:
         type: string
       remaining_deposit:
         type: string
+      deadline:
+        type: string
+        format: date-time
   crescent.exchange.v1beta1.Params:
     type: object
     properties:
@@ -16488,6 +16496,8 @@ definitions:
       default_maker_fee_rate:
         type: string
       default_taker_fee_rate:
+        type: string
+      max_order_lifespan:
         type: string
   crescent.exchange.v1beta1.QueryAllMarketsResponse:
     type: object
@@ -16598,6 +16608,9 @@ definitions:
             type: string
           remaining_deposit:
             type: string
+          deadline:
+            type: string
+            format: date-time
   crescent.exchange.v1beta1.QueryParamsResponse:
     type: object
     properties:
@@ -16624,6 +16637,8 @@ definitions:
           default_maker_fee_rate:
             type: string
           default_taker_fee_rate:
+            type: string
+          max_order_lifespan:
             type: string
   crescent.amm.v1beta1.Params:
     type: object

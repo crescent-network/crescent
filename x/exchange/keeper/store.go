@@ -146,6 +146,22 @@ func (k Keeper) IterateAllOrders(ctx sdk.Context, cb func(order types.Order) (st
 	}
 }
 
+func (k Keeper) IterateOrdersByMarket(ctx sdk.Context, marketId uint64, cb func(order types.Order) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetOrderIdsByMarketKey(marketId))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		orderId := sdk.BigEndianToUint64(iter.Value())
+		order, found := k.GetOrder(ctx, orderId)
+		if !found { // sanity check
+			panic("order not found")
+		}
+		if cb(order) {
+			break
+		}
+	}
+}
+
 func (k Keeper) DeleteOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetOrderKey(order.Id))

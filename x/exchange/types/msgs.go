@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -60,8 +62,8 @@ func (msg MsgCreateMarket) ValidateBasic() error {
 }
 
 func NewMsgPlaceLimitOrder(
-	senderAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, quantity sdk.Int, isBatch bool) *MsgPlaceLimitOrder {
+	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
+	price sdk.Dec, quantity sdk.Int, isBatch bool, lifespan time.Duration) *MsgPlaceLimitOrder {
 	return &MsgPlaceLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
@@ -69,6 +71,7 @@ func NewMsgPlaceLimitOrder(
 		Price:    price,
 		Quantity: quantity,
 		IsBatch:  isBatch,
+		Lifespan: lifespan,
 	}
 }
 
@@ -105,6 +108,9 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 	}
 	if !msg.Quantity.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
+	}
+	if msg.Lifespan < 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lifespan must not be negative: %v", msg.Lifespan)
 	}
 	return nil
 }

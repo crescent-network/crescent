@@ -8,18 +8,6 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-//// TODO: rename
-//type OrderBook struct {
-//	Sells []OrderBookPriceLevel
-//	Buys  []OrderBookPriceLevel
-//}
-//
-//// TODO: rename
-//type OrderBookPriceLevel struct {
-//	Price    sdk.Dec
-//	Quantity sdk.Int
-//}
-
 func (market Market) MatchOrderBookLevels(
 	levelA *TempOrderBookLevel, isMakerA bool, levelB *TempOrderBookLevel, isMakerB bool, price sdk.Dec) (execQty sdk.Int, fullA, fullB bool) {
 	executableQtyA := TotalExecutableQuantity(levelA.Orders, price)
