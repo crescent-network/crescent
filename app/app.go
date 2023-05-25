@@ -113,12 +113,14 @@ import (
 	v5 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v5"
 	"github.com/crescent-network/crescent/v5/app/upgrades/testnet/rc4"
 	"github.com/crescent-network/crescent/v5/x/amm"
+	ammclient "github.com/crescent-network/crescent/v5/x/amm/client"
 	ammkeeper "github.com/crescent-network/crescent/v5/x/amm/keeper"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 	"github.com/crescent-network/crescent/v5/x/claim"
 	claimkeeper "github.com/crescent-network/crescent/v5/x/claim/keeper"
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
 	"github.com/crescent-network/crescent/v5/x/exchange"
+	exchangeclient "github.com/crescent-network/crescent/v5/x/exchange/client"
 	exchangekeeper "github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	"github.com/crescent-network/crescent/v5/x/farming"
@@ -178,6 +180,9 @@ var (
 			farmingclient.ProposalHandler,
 			marketmakerclient.ProposalHandler,
 			lpfarmclient.ProposalHandler,
+			exchangeclient.MarketParameterChangeProposalHandler,
+			ammclient.PoolParameterChangeProposalHandler,
+			ammclient.PublicFarmingPlanProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -547,7 +552,9 @@ func NewApp(
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposalHandler(app.FarmingKeeper)).
 		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper)).
-		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper))
+		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper)).
+		AddRoute(exchangetypes.RouterKey, exchange.NewMarketParameterChangeProposalHandler(app.ExchangeKeeper)).
+		AddRoute(ammtypes.RouterKey, amm.NewPoolParameterChangeProposalHandler(app.AMMKeeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,

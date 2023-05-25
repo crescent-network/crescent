@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -226,5 +229,68 @@ $ %s tx %s swap-exact-amount-in 1,2,3 1000000stake 98000uatom --from mykey
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewCmdSubmitMarketParameterChangeProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "market-parameter-change [proposal-file]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a market parameter change proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a market parameter change proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file.
+
+Example:
+$ %s tx gov submit-proposal market-parameter-change <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
+
+Where proposal.json contains:
+
+{
+  "title": "Market parameter change",
+  "description": "Change fee rates",
+  "changes": [
+    {
+      "market_id": "1",
+      "maker_fee_rate"": "0.0005",
+      "taker_fee_rate": "0.001"
+    },
+    {
+      "market_id": "2",
+      "maker_fee_rate"": "-0.001",
+      "taker_fee_rate": "0.002"
+    }
+  ]
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			depositStr, _ := cmd.Flags().GetString(cli.FlagDeposit)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return fmt.Errorf("invalid deposit: %w", err)
+			}
+			var proposal types.MarketParameterChangeProposal
+			bz, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("read proposal: %w", err)
+			}
+			if err = clientCtx.Codec.UnmarshalJSON(bz, &proposal); err != nil {
+				return fmt.Errorf("unmarshal proposal: %w", err)
+			}
+			msg, err := gov.NewMsgSubmitProposal(&proposal, deposit, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	return cmd
 }

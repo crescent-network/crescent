@@ -84,7 +84,8 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	allRoutes := k.FindAllRoutes(ctx, req.Input.Denom, req.OutputDenom, 3) // TODO: remove hard-coded limit
+	maxRoutesLen := int(k.GetMaxSwapRoutesLen(ctx))
+	allRoutes := k.FindAllRoutes(ctx, req.Input.Denom, req.OutputDenom, maxRoutesLen)
 	if len(allRoutes) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "no possible routes")
 	}

@@ -24,6 +24,8 @@ var (
 	DefaultPrivateFarmingPlanCreationFee = sdk.NewCoins()
 	DefaultMaxNumPrivateFarmingPlans     = uint32(50)
 	DefaultMaxFarmingBlockTime           = 10 * time.Second
+
+	AllowedTickSpacings = []uint32{1, 5, 10, 50}
 )
 
 func ParamKeyTable() paramstypes.KeyTable {

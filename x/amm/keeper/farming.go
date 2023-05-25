@@ -35,11 +35,11 @@ func (k Keeper) CreatePrivateFarmingPlan(
 
 func (k Keeper) CreatePublicFarmingPlan(
 	ctx sdk.Context, description string,
-	farmingPoolAddr sdk.AccAddress,
+	farmingPoolAddr, termAddr sdk.AccAddress,
 	rewardAllocs []types.FarmingRewardAllocation, startTime, endTime time.Time,
 ) (types.FarmingPlan, error) {
 	return k.createFarmingPlan(
-		ctx, description, farmingPoolAddr, farmingPoolAddr,
+		ctx, description, farmingPoolAddr, termAddr,
 		rewardAllocs, startTime, endTime, false)
 }
 

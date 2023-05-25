@@ -10040,6 +10040,14 @@ paths:
                     type: string
                   max_order_lifespan:
                     type: string
+                  max_order_price_ratio:
+                    type: string
+                    title: >-
+                      max_order_price_ratio defines the ratio of the maximum
+                      possible order price compared to the market's last price
+                  max_swap_routes_len:
+                    type: integer
+                    format: int64
         default:
           description: An unexpected error response
           schema:
@@ -16396,6 +16404,14 @@ definitions:
         type: string
       max_order_lifespan:
         type: string
+      max_order_price_ratio:
+        type: string
+        title: >-
+          max_order_price_ratio defines the ratio of the maximum possible order
+          price compared to the market's last price
+      max_swap_routes_len:
+        type: integer
+        format: int64
   crescent.exchange.v1beta1.QueryAllMarketsResponse:
     type: object
     properties:
@@ -16537,6 +16553,14 @@ definitions:
             type: string
           max_order_lifespan:
             type: string
+          max_order_price_ratio:
+            type: string
+            title: >-
+              max_order_price_ratio defines the ratio of the maximum possible
+              order price compared to the market's last price
+          max_swap_routes_len:
+            type: integer
+            format: int64
   crescent.amm.v1beta1.Params:
     type: object
     properties:

@@ -17,6 +17,8 @@ var (
 	KeyDefaultMakerFeeRate = []byte("DefaultMakerFeeRate")
 	KeyDefaultTakerFeeRate = []byte("DefaultTakerFeeRate")
 	KeyMaxOrderLifespan    = []byte("MaxOrderLifespan")
+	KeyMaxOrderPriceRatio  = []byte("MaxOrderPriceRatio")
+	KeyMaxSwapRoutesLen    = []byte("MaxSwapRoutesLen")
 )
 
 var (
@@ -24,6 +26,8 @@ var (
 	DefaultDefaultMakerFeeRate = sdk.NewDecWithPrec(-15, 4) // -0.15%
 	DefaultDefaultTakerFeeRate = sdk.NewDecWithPrec(3, 3)   // 0.3%
 	DefaultMaxOrderLifespan    = 24 * time.Hour
+	DefaultMaxOrderPriceRatio  = sdk.NewDecWithPrec(1, 1) // 10%
+	DefaultMaxSwapRoutesLen    = uint32(3)
 
 	MinPrice = sdk.NewDecWithPrec(1, 14)
 	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 40))
@@ -40,6 +44,8 @@ func DefaultParams() Params {
 		DefaultMakerFeeRate: DefaultDefaultMakerFeeRate,
 		DefaultTakerFeeRate: DefaultDefaultTakerFeeRate,
 		MaxOrderLifespan:    DefaultMaxOrderLifespan,
+		MaxOrderPriceRatio:  DefaultMaxOrderPriceRatio,
+		MaxSwapRoutesLen:    DefaultMaxSwapRoutesLen,
 	}
 }
 
@@ -50,6 +56,8 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyDefaultMakerFeeRate, &params.DefaultMakerFeeRate, validateDefaultMakerFeeRate),
 		paramstypes.NewParamSetPair(KeyDefaultTakerFeeRate, &params.DefaultTakerFeeRate, validateDefaultTakerFeeRate),
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
+		paramstypes.NewParamSetPair(KeyMaxOrderPriceRatio, &params.MaxOrderPriceRatio, validateMaxOrderPriceRatio),
+		paramstypes.NewParamSetPair(KeyMaxSwapRoutesLen, &params.MaxSwapRoutesLen, validateMaxSwapRoutesLen),
 	}
 }
 
@@ -63,13 +71,15 @@ func (params Params) Validate() error {
 		{params.DefaultMakerFeeRate, validateDefaultMakerFeeRate},
 		{params.DefaultTakerFeeRate, validateDefaultTakerFeeRate},
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
+		{params.MaxOrderPriceRatio, validateMaxOrderPriceRatio},
+		{params.MaxSwapRoutesLen, validateMaxSwapRoutesLen},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
 		}
 	}
 	if params.DefaultMakerFeeRate.IsNegative() && params.DefaultMakerFeeRate.Neg().GT(params.DefaultTakerFeeRate) {
-		return fmt.Errorf("negative default maker fee rate must not be greater than default taker fee rate")
+		return fmt.Errorf("minus default maker fee rate must not be greater than default taker fee rate")
 	}
 	return nil
 }
@@ -120,6 +130,28 @@ func validateMaxOrderLifespan(i interface{}) error {
 	}
 	if v < 0 {
 		return fmt.Errorf("max order lifespan must not be negative: %v", v)
+	}
+	return nil
+}
+
+func validateMaxOrderPriceRatio(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if !(v.IsPositive() && v.LT(utils.OneDec)) {
+		return fmt.Errorf("max order price ratio must be in range (0.0, 1.0): %s", v)
+	}
+	return nil
+}
+
+func validateMaxSwapRoutesLen(i interface{}) error {
+	v, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v == 0 {
+		return fmt.Errorf("max swap routes len must not be 0")
 	}
 	return nil
 }

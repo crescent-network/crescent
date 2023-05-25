@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -70,6 +71,21 @@ func (k Keeper) PlaceOrder(
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
+	}
+	if priceLimit != nil {
+		marketState := k.MustGetMarketState(ctx, market.Id)
+		if marketState.LastPrice != nil {
+			maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
+			minPrice := marketState.LastPrice.Mul(utils.OneDec.Sub(maxPriceRatio))
+			maxPrice := marketState.LastPrice.Mul(utils.OneDec.Add(maxPriceRatio))
+			if isBuy && priceLimit.GT(maxPrice) {
+				err = sdkerrors.Wrapf(types.ErrOrderPriceOutOfRange, "price is higher than the limit %s", maxPrice)
+				return
+			} else if !isBuy && priceLimit.LT(minPrice) {
+				err = sdkerrors.Wrapf(types.ErrOrderPriceOutOfRange, "price is lower than the limit %s", minPrice)
+				return
+			}
+		}
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)

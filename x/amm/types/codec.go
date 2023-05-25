@@ -6,6 +6,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/amm interfaces and concrete types
@@ -16,6 +17,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgRemoveLiquidity{}, "amm/MsgRemoveLiquidity", nil)
 	cdc.RegisterConcrete(&MsgCollect{}, "amm/MsgCollect", nil)
 	cdc.RegisterConcrete(&MsgCreatePrivateFarmingPlan{}, "amm/MsgCreatePrivateFarmingPlan", nil)
+	cdc.RegisterConcrete(&PoolParameterChangeProposal{}, "amm/PoolParameterChangeProposal", nil)
+	cdc.RegisterConcrete(&PublicFarmingPlanProposal{}, "amm/PublicFarmingPlanProposal", nil)
 }
 
 // RegisterInterfaces registers the x/amm interfaces types with the
@@ -28,6 +31,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgRemoveLiquidity{},
 		&MsgCollect{},
 		&MsgCreatePrivateFarmingPlan{},
+	)
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&PoolParameterChangeProposal{},
+		&PublicFarmingPlanProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

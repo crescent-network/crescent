@@ -10,17 +10,17 @@ import (
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context, ordererAddr sdk.AccAddress,
 	routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, err error) {
+	if maxRoutesLen := int(k.GetMaxSwapRoutesLen(ctx)); len(routes) > maxRoutesLen {
+		return output, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "routes len exceeded the limit %d", maxRoutesLen)
+	}
 	currentIn := input
-	// TODO: limit the length of routes
 	for _, marketId := range routes {
 		if !currentIn.Amount.IsPositive() {
-			err = types.ErrInsufficientOutput // TODO: use different error
-			return
+			return output, types.ErrInsufficientOutput // TODO: use different error
 		}
 		market, found := k.GetMarket(ctx, marketId)
 		if !found {
-			err = sdkerrors.Wrapf(sdkerrors.ErrNotFound, "market %d not found", marketId)
-			return
+			return output, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "market %d not found", marketId)
 		}
 		var (
 			isBuy                bool
@@ -40,14 +40,12 @@ func (k Keeper) SwapExactAmountIn(
 		currentIn = output
 	}
 	if output.Denom != minOutput.Denom {
-		err = sdkerrors.Wrapf(
+		return output, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "output denom %s != wanted %s", output.Denom, minOutput.Denom)
-		return
 	}
 	if output.Amount.LT(minOutput.Amount) {
-		err = sdkerrors.Wrapf(
+		return output, sdkerrors.Wrapf(
 			types.ErrInsufficientOutput, "output %s < wanted %s", output, minOutput)
-		return
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventSwapExactAmountIn{
 		Orderer: ordererAddr.String(),
@@ -55,9 +53,9 @@ func (k Keeper) SwapExactAmountIn(
 		Input:   input,
 		Output:  output,
 	}); err != nil {
-		return
+		return output, err
 	}
-	return
+	return output, nil
 }
 
 func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {

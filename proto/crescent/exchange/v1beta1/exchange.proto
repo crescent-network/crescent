@@ -18,6 +18,10 @@ message Params {
   string default_taker_fee_rate = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   google.protobuf.Duration max_order_lifespan = 4 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  // max_order_price_ratio defines the ratio of the maximum possible order price compared to the market's last price
+  string max_order_price_ratio = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint32 max_swap_routes_len = 6;
 }
 
 message Market {

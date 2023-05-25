@@ -5,5 +5,6 @@ import (
 )
 
 var (
-	ErrInsufficientOutput = sdkerrors.Register(ModuleName, 2, "insufficient output amount")
+	ErrInsufficientOutput   = sdkerrors.Register(ModuleName, 2, "insufficient output amount")
+	ErrOrderPriceOutOfRange = sdkerrors.Register(ModuleName, 3, "order price out of range")
 )
