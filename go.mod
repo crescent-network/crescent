@@ -233,7 +233,7 @@ require (
 	github.com/uudashr/gocognit v1.0.6 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.2.0 // indirect
-	github.com/zondax/hid v0.9.1 // indirect
+	github.com/zondax/hid v0.9.0 // indirect
 	gitlab.com/bosi/decorder v0.2.3 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
@@ -262,7 +262,7 @@ require (
 replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0 // dragonberry security patch
 	github.com/cosmos/cosmos-sdk => github.com/crescent-network/cosmos-sdk v1.2.0-sdk-0.45.10
-	github.com/cosmos/ibc-go/v3 => github.com/crescent-network/ibc-go/v3 v3.4.0-crescent-v4-2
+	github.com/cosmos/ibc-go/v3 => github.com/crescent-network/ibc-go/v3 v3.4.0-crescent-v4-3 // huckleberry security patch
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
