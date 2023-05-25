@@ -5,8 +5,6 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
-
-	_ "github.com/stretchr/testify/suite"
 )
 
 //func (s *KeeperTestSuite) TestPlaceBid_Validation() {

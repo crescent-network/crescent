@@ -23,3 +23,7 @@ func (k Keeper) GetRewardsAuctionDuration(ctx sdk.Context) (duration time.Durati
 	k.paramSpace.Get(ctx, types.KeyRewardsAuctionDuration, &duration)
 	return
 }
+
+func (k Keeper) SetRewardsAuctionDuration(ctx sdk.Context, duration time.Duration) {
+	k.paramSpace.Set(ctx, types.KeyRewardsAuctionDuration, duration)
+}

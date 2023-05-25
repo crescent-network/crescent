@@ -166,8 +166,8 @@ func (k Querier) RewardsAuction(c context.Context, req *types.QueryRewardsAuctio
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	if found := k.LookupRewardsAuction(ctx, req.LiquidFarmId, req.AuctionId); !found {
-		return nil, status.Error(codes.NotFound, "auction not found")
+	if found := k.LookupLiquidFarm(ctx, req.LiquidFarmId); !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
 	}
 	auction, found := k.GetRewardsAuction(ctx, req.LiquidFarmId, req.AuctionId)
 	if !found {
@@ -189,6 +189,9 @@ func (k Querier) Bids(c context.Context, req *types.QueryBidsRequest) (*types.Qu
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	if found := k.LookupLiquidFarm(ctx, req.LiquidFarmId); !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
+	}
 	if found := k.LookupRewardsAuction(ctx, req.LiquidFarmId, req.AuctionId); !found {
 		return nil, status.Error(codes.NotFound, "auction not found")
 	}

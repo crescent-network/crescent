@@ -1,11 +1,7 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	utils "github.com/crescent-network/crescent/v5/types"
-
-	_ "github.com/stretchr/testify/suite"
 )
 
 //	func (s *KeeperTestSuite) TestLiquidFarm_Validation() {
@@ -71,27 +67,19 @@ import (
 //			})
 //		}
 //	}
-func (s *KeeperTestSuite) TestLiquidFarm() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
 
-	liquidFarm, err := s.App.LiquidFarmingKeeper.CreateLiquidFarm(
-		s.Ctx, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(100000000), utils.ParseDec("0.003"))
-	s.Require().NoError(err)
+func (s *KeeperTestSuite) TestLiquidFarmShare() {
+	liquidFarm := s.CreateSampleLiquidFarm()
 
 	senderAddr := s.FundedAccount(1, utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
-	mintedShare, _, liquidity, _, err := s.App.LiquidFarmingKeeper.MintShare(
-		s.Ctx, senderAddr, liquidFarm.Id, utils.ParseCoins("10_000000ucre,50_000000uusd"))
-	s.Require().NoError(err)
+	mintedShare, _, liquidity, origAmt := s.MintShare(senderAddr, liquidFarm.Id, utils.ParseCoins("10_0000000ucre,50_000000uusd"))
+	s.Require().Equal("9068668ucre,50000000uusd", origAmt.String())
 
 	s.Require().Equal(mintedShare.Amount, liquidity)
 
-	//// Check if the reserve account farmed the coin in the farm module
-	//reserveAddr := types.DeriveLiquidFarmReserveAddress(pool.Id)
-	//position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, pool.PoolCoinDenom)
-	//s.Require().True(found)
-	//s.Require().Equal(amount1.Add(amount2).Add(amount3), position.FarmingAmount)
+	burnedLiquidity, amt := s.BurnShare(senderAddr, liquidFarm.Id, mintedShare)
+	s.Require().Equal("9068667ucre,49999999uusd", amt.String()) // Decimal loss
+	s.Require().Equal(liquidity, burnedLiquidity)
 }
 
 //
@@ -401,41 +389,6 @@ func (s *KeeperTestSuite) TestLiquidFarm() {
 //
 //	// Ensure the total supply
 //	s.Require().Equal(sdk.ZeroInt(), s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount)
-//}
-//
-//func (s *KeeperTestSuite) TestLiquidUnfarmAndWithdraw() {
-//	depositCoins := utils.ParseCoins("100_000_000denom1, 100_000_000denom2")
-//	pair := s.createPair(s.addr(0), "denom1", "denom2")
-//	pool := s.createPool(s.addr(0), pair.Id, depositCoins)
-//
-//	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
-//	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
-//
-//	poolAmt := sdk.NewInt(1_000_000_000_000)
-//	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, poolAmt), false)
-//	s.nextBlock()
-//
-//	s.nextAuction()
-//
-//	// Ensure that reserve account farms the coin and its amount
-//	farm, found := s.app.LPFarmKeeper.GetFarm(s.ctx, pool.PoolCoinDenom)
-//	s.Require().True(found)
-//	s.Require().Equal(poolAmt, farm.TotalFarmingAmount)
-//
-//	// Ensure the minted LFCoin
-//	lfCoinDenom := types.ShareDenom(pool.Id)
-//	lfCoinBalance := s.getBalance(s.addr(0), lfCoinDenom)
-//	s.Require().Equal(poolAmt, lfCoinBalance.Amount)
-//
-//	err := s.keeper.LiquidUnfarmAndWithdraw(s.ctx, pool.Id, s.addr(0), lfCoinBalance)
-//	s.Require().NoError(err)
-//
-//	// Call nextBlock as Withdraw is executed in batch
-//	s.nextBlock()
-//
-//	// Ensure that depositCoins are returned to the farmer's balance
-//	s.Require().EqualValues(depositCoins, s.getBalances(s.addr(0)))
-//
 //}
 //
 //func (s *KeeperTestSuite) TestDeleteLiquidFarmInStore() {
