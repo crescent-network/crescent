@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/binary"
 	"math"
 	"math/big"
 
@@ -12,8 +11,8 @@ import (
 
 const (
 	TickPrecision = 4
-	MinTick = -1260000
-	MaxTick = 3600000
+	MinTick       = -1260000
+	MaxTick       = 3600000
 )
 
 func ValidateTickPrice(price sdk.Dec) (tick int32, valid bool) {
@@ -43,17 +42,4 @@ func PriceAtTick(tick int32) sdk.Dec {
 func TickAtPrice(price sdk.Dec) int32 {
 	tick, _ := ValidateTickPrice(price)
 	return tick
-}
-
-func TickToBytes(tick int32) []byte {
-	bz := make([]byte, 5)
-	if tick >= 0 {
-		bz[0] = 1
-	}
-	binary.BigEndian.PutUint32(bz[1:], uint32(tick))
-	return bz
-}
-
-func BytesToTick(bz []byte) int32 {
-	return int32(binary.BigEndian.Uint32(bz[1:]))
 }

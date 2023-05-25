@@ -1,11 +1,12 @@
 package types
 
 import (
+	"encoding/binary"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
 	utils "github.com/crescent-network/crescent/v5/types"
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 const (
@@ -31,7 +32,7 @@ var (
 	PoolsByMarketIndexKeyPrefix        = []byte{0x45} // marketId + poolId => nil
 	PositionKeyPrefix                  = []byte{0x46} // positionId => Position
 	PositionByParamsIndexKeyPrefix     = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
-	PositionsByPoolIndexKeyPrefix      = []byte{0x48} // poolId + owner + lowerTick + upperTick => positionId
+	PositionsByPoolIndexKeyPrefix      = []byte{0x48} // poolId + positionId => nil
 	TickInfoKeyPrefix                  = []byte{0x49} // poolId + tick => TickInfo
 	LastFarmingPlanIdKey               = []byte{0x50}
 	FarmingPlanKeyPrefix               = []byte{0x51} // planId => FarmingPlan
@@ -70,8 +71,8 @@ func GetPositionByParamsIndexKey(ownerAddr sdk.AccAddress, poolId uint64, lowerT
 		PositionByParamsIndexKeyPrefix,
 		address.MustLengthPrefix(ownerAddr),
 		sdk.Uint64ToBigEndian(poolId),
-		exchangetypes.TickToBytes(lowerTick),
-		exchangetypes.TickToBytes(upperTick))
+		TickToBytes(lowerTick),
+		TickToBytes(upperTick))
 }
 
 func GetPositionsByOwnerIteratorPrefix(ownerAddr sdk.AccAddress) []byte {
@@ -95,7 +96,7 @@ func GetTickInfoKey(poolId uint64, tick int32) []byte {
 	return utils.Key(
 		TickInfoKeyPrefix,
 		sdk.Uint64ToBigEndian(poolId),
-		exchangetypes.TickToBytes(tick))
+		TickToBytes(tick))
 }
 
 func GetTickInfoKeyPrefix(poolId uint64) []byte {
@@ -120,6 +121,19 @@ func ParsePositionsByPoolIndexKey(key []byte) (poolId, positionId uint64) {
 
 func ParseTickInfoKey(key []byte) (poolId uint64, tick int32) {
 	poolId = sdk.BigEndianToUint64(key[1:9])
-	tick = exchangetypes.BytesToTick(key[9:])
+	tick = BytesToTick(key[9:])
 	return
+}
+
+func TickToBytes(tick int32) []byte {
+	bz := make([]byte, 5)
+	if tick >= 0 {
+		bz[0] = 1
+	}
+	binary.BigEndian.PutUint32(bz[1:], uint32(tick))
+	return bz
+}
+
+func BytesToTick(bz []byte) int32 {
+	return int32(binary.BigEndian.Uint32(bz[1:]))
 }

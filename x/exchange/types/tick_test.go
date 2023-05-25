@@ -50,11 +50,3 @@ func TestPriceAtTick(t *testing.T) {
 		})
 	}
 }
-
-func TestTickBytes(t *testing.T) {
-	for tick := int32(-100); tick <= 100; tick++ {
-		bz := types.TickToBytes(tick)
-		tick2 := types.BytesToTick(bz)
-		require.Equal(t, tick, tick2)
-	}
-}
