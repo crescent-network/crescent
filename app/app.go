@@ -124,7 +124,6 @@ import (
 	exchangekeeper "github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	"github.com/crescent-network/crescent/v5/x/farming"
-	farmingclient "github.com/crescent-network/crescent/v5/x/farming/client"
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming"
@@ -177,7 +176,6 @@ var (
 			upgradeclient.CancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
-			farmingclient.ProposalHandler,
 			marketmakerclient.ProposalHandler,
 			lpfarmclient.ProposalHandler,
 			exchangeclient.MarketParameterChangeProposalHandler,
