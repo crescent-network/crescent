@@ -26,14 +26,18 @@ func (k Keeper) SwapExactAmountIn(
 			isBuy                bool
 			qtyLimit, quoteLimit *sdk.Int
 		)
-		if market.BaseDenom == currentIn.Denom {
+		switch currentIn.Denom {
+		case market.BaseDenom:
 			isBuy = false
 			qtyLimit = &currentIn.Amount
 			output.Denom = market.QuoteDenom
-		} else {
+		case market.QuoteDenom:
 			isBuy = true
 			quoteLimit = &currentIn.Amount
 			output.Denom = market.BaseDenom
+		default:
+			return output, sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
 		_, _, output = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, simulate)

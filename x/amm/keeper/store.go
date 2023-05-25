@@ -59,6 +59,11 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (pool types.Pool, found 
 	return pool, true
 }
 
+func (k Keeper) LookupPool(ctx sdk.Context, poolId uint64) (found bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.GetPoolKey(poolId))
+}
+
 func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&pool)
@@ -170,6 +175,11 @@ func (k Keeper) SetPositionByParamsIndex(ctx sdk.Context, position types.Positio
 		sdk.MustAccAddressFromBech32(position.Owner), position.PoolId,
 		position.LowerTick, position.UpperTick),
 		sdk.Uint64ToBigEndian(position.Id))
+}
+
+func (k Keeper) SetPositionsByPoolIndex(ctx sdk.Context, position types.Position) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetPositionsByPoolIndexKey(position.PoolId, position.Id), []byte{})
 }
 
 func (k Keeper) IterateAllPositions(ctx sdk.Context, cb func(position types.Position) (stop bool)) {

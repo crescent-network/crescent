@@ -53,7 +53,7 @@ func (k Keeper) createFarmingPlan(
 			sdkerrors.ErrInvalidRequest, "end time is past")
 	}
 	for _, rewardAlloc := range rewardAllocs {
-		if _, found := k.GetPool(ctx, rewardAlloc.PoolId); !found {
+		if found := k.LookupPool(ctx, rewardAlloc.PoolId); !found {
 			return plan, sdkerrors.Wrapf(
 				sdkerrors.ErrNotFound, "pool %d not found", rewardAlloc.PoolId)
 		}

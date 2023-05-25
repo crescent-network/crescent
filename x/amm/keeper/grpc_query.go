@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,6 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -112,6 +114,85 @@ func (k Querier) Positions(c context.Context, req *types.QueryPositionsRequest) 
 	return &types.QueryPositionsResponse{
 		Positions:  positionResps,
 		Pagination: pageRes,
+	}, nil
+}
+
+func (k Querier) PoolPositions(c context.Context, req *types.QueryPoolPositionsRequest) (*types.QueryPoolPositionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "pool id must not be 0")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	if found := k.LookupPool(ctx, req.PoolId); !found {
+		return nil, status.Error(codes.NotFound, "pool not found")
+	}
+	store := ctx.KVStore(k.storeKey)
+	keyPrefix := types.GetPositionsByPoolIteratorPrefix(req.PoolId)
+	positionStore := prefix.NewStore(store, keyPrefix)
+	var positionResps []types.PositionResponse
+	pageRes, err := query.Paginate(positionStore, req.Pagination, func(key, _ []byte) error {
+		_, positionId := types.ParsePositionsByPoolIndexKey(utils.Key(keyPrefix, key))
+		position, found := k.GetPosition(ctx, positionId)
+		if !found { // sanity check
+			panic("position not found")
+		}
+		positionResps = append(positionResps, types.NewPositionResponse(position))
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryPoolPositionsResponse{
+		Positions:  positionResps,
+		Pagination: pageRes,
+	}, nil
+}
+
+func (k Querier) AllFarmingPlans(c context.Context, req *types.QueryAllFarmingPlansRequest) (*types.QueryAllFarmingPlansResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	var isPrivate, isTerminated bool
+	if req.IsPrivate != "" {
+		var err error
+		isPrivate, err = strconv.ParseBool(req.IsPrivate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid is_private: %v", err)
+		}
+	}
+	if req.IsTerminated != "" {
+		var err error
+		isTerminated, err = strconv.ParseBool(req.IsTerminated)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid is_terminated: %v", err)
+		}
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	planStore := prefix.NewStore(store, types.FarmingPlanKeyPrefix)
+	var plans []types.FarmingPlan
+	pageRes, err := query.FilteredPaginate(planStore, req.Pagination, func(_, value []byte, accumulate bool) (hit bool, err error) {
+		var plan types.FarmingPlan
+		k.cdc.MustUnmarshal(value, &plan)
+		if req.IsPrivate != "" && plan.IsPrivate != isPrivate {
+			return false, nil
+		}
+		if req.IsTerminated != "" && plan.IsTerminated != isTerminated {
+			return false, nil
+		}
+		if accumulate {
+			plans = append(plans, plan)
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryAllFarmingPlansResponse{
+		FarmingPlans: plans,
+		Pagination:   pageRes,
 	}, nil
 }
 

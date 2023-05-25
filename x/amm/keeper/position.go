@@ -139,6 +139,7 @@ func (k Keeper) modifyPosition(
 		positionId := k.GetNextPositionIdWithUpdate(ctx)
 		position = types.NewPosition(positionId, pool.Id, ownerAddr, lowerTick, upperTick)
 		k.SetPositionByParamsIndex(ctx, position)
+		k.SetPositionsByPoolIndex(ctx, position)
 	}
 
 	if liquidityDelta.IsZero() && !position.Liquidity.IsPositive() { // sanity check

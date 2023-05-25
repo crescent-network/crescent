@@ -5,6 +5,7 @@ package crescent.amm.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "crescent/amm/v1beta1/amm.proto";
+import "crescent/amm/v1beta1/farming.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
@@ -24,11 +25,15 @@ service Query {
   rpc AllPositions(QueryAllPositionsRequest) returns (QueryAllPositionsResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/positions";
   }
-  // TODO: add PoolPositions
   rpc Positions(QueryPositionsRequest) returns (QueryPositionsResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/positions/{owner}";
   }
-  // TODO: add farming queries
+  rpc PoolPositions(QueryPoolPositionsRequest) returns (QueryPoolPositionsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/pools/{pool_id}/positions";
+  }
+  rpc AllFarmingPlans(QueryAllFarmingPlansRequest) returns (QueryAllFarmingPlansResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/farming_plans";
+  }
 }
 
 message QueryParamsRequest {}
@@ -71,6 +76,27 @@ message QueryPositionsRequest {
 message QueryPositionsResponse {
   repeated PositionResponse              positions  = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPoolPositionsRequest {
+  uint64                                pool_id    = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryPoolPositionsResponse {
+  repeated PositionResponse              positions  = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllFarmingPlansRequest {
+  string                                is_private    = 1;
+  string                                is_terminated = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination    = 3;
+}
+
+message QueryAllFarmingPlansResponse {
+  repeated FarmingPlan                   farming_plans = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination    = 2;
 }
 
 message PoolResponse {

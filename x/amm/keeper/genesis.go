@@ -24,6 +24,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	for _, position := range genState.Positions {
 		k.SetPosition(ctx, position)
 		k.SetPositionByParamsIndex(ctx, position)
+		k.SetPositionsByPoolIndex(ctx, position)
 	}
 	for _, tickInfoRecord := range genState.TickInfoRecords {
 		k.SetTickInfo(ctx, tickInfoRecord.PoolId, tickInfoRecord.Tick, tickInfoRecord.TickInfo)
