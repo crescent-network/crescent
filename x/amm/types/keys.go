@@ -29,7 +29,7 @@ var (
 	PoolKeyPrefix                      = []byte{0x42} // poolId => Pool
 	PoolStateKeyPrefix                 = []byte{0x43} // poolId => PoolState
 	PoolByReserveAddressIndexKeyPrefix = []byte{0x44} // reserveAddress => poolId
-	PoolsByMarketIndexKeyPrefix        = []byte{0x45} // marketId + poolId => nil
+	PoolByMarketIndexKeyPrefix         = []byte{0x45} // marketId => poolId
 	PositionKeyPrefix                  = []byte{0x46} // positionId => Position
 	PositionByParamsIndexKeyPrefix     = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
 	PositionsByPoolIndexKeyPrefix      = []byte{0x48} // poolId + positionId => nil
@@ -51,15 +51,8 @@ func GetPoolByReserveAddressIndexKey(reserveAddr sdk.AccAddress) []byte {
 	return utils.Key(PoolByReserveAddressIndexKeyPrefix, reserveAddr)
 }
 
-func GetPoolsByMarketIndexKey(marketId uint64, poolId uint64) []byte {
-	return utils.Key(
-		PoolsByMarketIndexKeyPrefix,
-		sdk.Uint64ToBigEndian(marketId),
-		sdk.Uint64ToBigEndian(poolId))
-}
-
-func GetPoolsByMarketIteratorPrefix(marketId uint64) []byte {
-	return utils.Key(PoolsByMarketIndexKeyPrefix, sdk.Uint64ToBigEndian(marketId))
+func GetPoolByMarketIndexKey(marketId uint64) []byte {
+	return utils.Key(PoolByMarketIndexKeyPrefix, sdk.Uint64ToBigEndian(marketId))
 }
 
 func GetPositionKey(positionId uint64) []byte {

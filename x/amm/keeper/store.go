@@ -70,9 +70,32 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store.Set(types.GetPoolKey(pool.Id), bz)
 }
 
-func (k Keeper) SetPoolsByMarketIndex(ctx sdk.Context, pool types.Pool) {
+func (k Keeper) GetPoolByMarket(ctx sdk.Context, marketId uint64) (pool types.Pool, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetPoolsByMarketIndexKey(pool.MarketId, pool.Id), []byte{})
+	bz := store.Get(types.GetPoolByMarketIndexKey(marketId))
+	if bz == nil {
+		return
+	}
+	return k.GetPool(ctx, sdk.BigEndianToUint64(bz))
+}
+
+func (k Keeper) LookupPoolByMarket(ctx sdk.Context, marketId uint64) (found bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.GetPoolByMarketIndexKey(marketId))
+}
+
+func (k Keeper) SetPoolByMarketIndex(ctx sdk.Context, pool types.Pool) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetPoolByMarketIndexKey(pool.MarketId), sdk.Uint64ToBigEndian(pool.Id))
+}
+
+func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddress) (pool types.Pool, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetPoolByReserveAddressIndexKey(reserveAddr))
+	if bz == nil {
+		return
+	}
+	return k.GetPool(ctx, sdk.BigEndianToUint64(bz))
 }
 
 func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
@@ -93,31 +116,6 @@ func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop 
 			break
 		}
 	}
-}
-
-func (k Keeper) IteratePoolsByMarket(ctx sdk.Context, marketId uint64, cb func(pool types.Pool) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetPoolsByMarketIteratorPrefix(marketId))
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		_, poolId := types.ParsePoolsByMarketIndexKey(iter.Key())
-		pool, found := k.GetPool(ctx, poolId)
-		if !found { // sanity check
-			panic("pool not found")
-		}
-		if cb(pool) {
-			break
-		}
-	}
-}
-
-func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddress) (pool types.Pool, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetPoolByReserveAddressIndexKey(reserveAddr))
-	if bz == nil {
-		return
-	}
-	return k.GetPool(ctx, sdk.BigEndianToUint64(bz))
 }
 
 func (k Keeper) GetPoolState(ctx sdk.Context, poolId uint64) (state types.PoolState, found bool) {

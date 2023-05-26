@@ -18,7 +18,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	for _, poolRecord := range genState.PoolRecords {
 		k.SetPool(ctx, poolRecord.Pool)
 		k.SetPoolByReserveAddressIndex(ctx, poolRecord.Pool)
-		k.SetPoolsByMarketIndex(ctx, poolRecord.Pool)
+		k.SetPoolByMarketIndex(ctx, poolRecord.Pool)
 		k.SetPoolState(ctx, poolRecord.Pool.Id, poolRecord.State)
 	}
 	for _, position := range genState.Positions {

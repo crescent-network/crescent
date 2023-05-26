@@ -15,12 +15,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	poolExists := false
-	k.IteratePoolsByMarket(ctx, marketId, func(pool types.Pool) (stop bool) {
-		poolExists = true
-		return true
-	})
-	if poolExists {
+	if found := k.LookupPoolByMarket(ctx, market.Id); found {
 		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot create more than one pool per  market")
 		return
 	}
@@ -35,7 +30,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	defaultTickSpacing := k.GetDefaultTickSpacing(ctx)
 	pool = types.NewPool(poolId, marketId, market.BaseDenom, market.QuoteDenom, defaultTickSpacing)
 	k.SetPool(ctx, pool)
-	k.SetPoolsByMarketIndex(ctx, pool)
+	k.SetPoolByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
 
 	// Set initial pool state

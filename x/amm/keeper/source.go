@@ -26,14 +26,8 @@ func (k OrderSource) GenerateOrders(
 	ctx sdk.Context, market exchangetypes.Market,
 	createOrder exchangetypes.CreateOrderFunc,
 	opts exchangetypes.GenerateOrdersOptions) {
-	// Select the first pool since there will be only one pool per market
-	// TODO: use GetPoolByMarket instead of IteratePoolsByMarket
-	var pool types.Pool
-	k.IteratePoolsByMarket(ctx, market.Id, func(p types.Pool) (stop bool) {
-		pool = p
-		return true
-	})
-	if pool == (types.Pool{}) { // TODO: use flag
+	pool, found := k.GetPoolByMarket(ctx, market.Id)
+	if !found {
 		return // no pool found
 	}
 
@@ -66,7 +60,7 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 	for _, orderer := range orderers {
 		ordererAddr := sdk.MustAccAddressFromBech32(orderer)
 		pool, found := k.GetPoolByReserveAddress(ctx, ordererAddr)
-		if !found {
+		if !found { // sanity check
 			panic("pool not found")
 		}
 		k.AfterPoolOrdersExecuted(ctx, pool, m[orderer])
