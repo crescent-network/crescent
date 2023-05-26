@@ -14,6 +14,7 @@ service Msg {
   rpc CreateMarket(MsgCreateMarket) returns (MsgCreateMarketResponse);
   rpc PlaceLimitOrder(MsgPlaceLimitOrder) returns (MsgPlaceLimitOrderResponse);
   rpc PlaceMarketOrder(MsgPlaceMarketOrder) returns (MsgPlaceMarketOrderResponse);
+  rpc PlaceMMLimitOrder(MsgPlaceMMLimitOrder) returns (MsgPlaceMMLimitOrderResponse);
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn) returns (MsgSwapExactAmountInResponse);
 }
@@ -39,6 +40,24 @@ message MsgPlaceLimitOrder {
 }
 
 message MsgPlaceLimitOrderResponse {
+  uint64 order_id          = 1;
+  string executed_quantity = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+}
+
+message MsgPlaceMMLimitOrder {
+  string sender    = 1;
+  uint64 market_id = 2;
+  bool   is_buy    = 3;
+  string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  bool   is_batch = 6;
+  google.protobuf.Duration lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+message MsgPlaceMMLimitOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];

@@ -10,11 +10,12 @@ import (
 )
 
 func NewOrder(
-	orderId uint64, ordererAddr sdk.AccAddress, marketId uint64,
+	orderId uint64, typ OrderType, ordererAddr sdk.AccAddress, marketId uint64,
 	isBuy bool, price sdk.Dec, qty sdk.Int, msgHeight int64,
 	openQty, remainingDeposit sdk.Int, deadline time.Time) Order {
 	return Order{
 		Id:               orderId,
+		Type:             typ,
 		Orderer:          ordererAddr.String(),
 		MarketId:         marketId,
 		IsBuy:            isBuy,
@@ -30,6 +31,9 @@ func NewOrder(
 func (order Order) Validate() error {
 	if order.Id == 0 {
 		return fmt.Errorf("id must not be 0")
+	}
+	if order.Type != OrderTypeLimit && order.Type != OrderTypeMM {
+		return fmt.Errorf("invalid order type: %v", order.Type)
 	}
 	if _, err := sdk.AccAddressFromBech32(order.Orderer); err != nil {
 		return fmt.Errorf("invalid orderer address: %w", err)

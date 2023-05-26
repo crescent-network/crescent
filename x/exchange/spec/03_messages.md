@@ -37,6 +37,20 @@ type MsgPlaceMarketOrder struct {
 }
 ```
 
+## MsgPlaceMMLimitOrder
+
+```go
+type MsgPlaceMMLimitOrder struct {
+    Sender   string
+    MarketId uint64
+    IsBuy    bool
+    Price    sdk.Dec
+    Quantity sdk.Int
+    IsBatch  bool
+    Lifespan time.Duration
+}
+```
+
 ## MsgCancelOrder
 
 ```go

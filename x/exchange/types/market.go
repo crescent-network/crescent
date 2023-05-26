@@ -65,12 +65,12 @@ func (market Market) Validate() error {
 	return nil
 }
 
-func (market Market) DeductMakerFee(amt sdk.Int) sdk.Int {
-	return utils.OneDec.Sub(market.TakerFeeRate).MulInt(amt).TruncateInt()
-}
-
-func (market Market) DeductTakerFee(amt sdk.Int) sdk.Int {
-	return utils.OneDec.Sub(market.TakerFeeRate).MulInt(amt).TruncateInt()
+func (market Market) DeductTakerFee(amt sdk.Int, halveFee bool) sdk.Int {
+	takerFeeRate := market.TakerFeeRate
+	if halveFee {
+		takerFeeRate = takerFeeRate.QuoInt64(2)
+	}
+	return utils.OneDec.Sub(takerFeeRate).MulInt(amt).TruncateInt()
 }
 
 func (market Market) PayDenom(isBuy bool) string {

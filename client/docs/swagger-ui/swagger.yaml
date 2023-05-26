@@ -9953,6 +9953,13 @@ paths:
                   id:
                     type: string
                     format: uint64
+                  type:
+                    type: string
+                    enum:
+                      - ORDER_TYPE_UNSPECIFIED
+                      - ORDER_TYPE_LIMIT
+                      - ORDER_TYPE_MM
+                    default: ORDER_TYPE_UNSPECIFIED
                   orderer:
                     type: string
                   market_id:
@@ -10046,6 +10053,9 @@ paths:
                       max_order_price_ratio defines the ratio of the maximum
                       possible order price compared to the market's last price
                   max_swap_routes_len:
+                    type: integer
+                    format: int64
+                  max_num_mm_orders:
                     type: integer
                     format: int64
         default:
@@ -16750,6 +16760,13 @@ definitions:
       id:
         type: string
         format: uint64
+      type:
+        type: string
+        enum:
+          - ORDER_TYPE_UNSPECIFIED
+          - ORDER_TYPE_LIMIT
+          - ORDER_TYPE_MM
+        default: ORDER_TYPE_UNSPECIFIED
       orderer:
         type: string
       market_id:
@@ -16772,6 +16789,13 @@ definitions:
       deadline:
         type: string
         format: date-time
+  crescent.exchange.v1beta1.OrderType:
+    type: string
+    enum:
+      - ORDER_TYPE_UNSPECIFIED
+      - ORDER_TYPE_LIMIT
+      - ORDER_TYPE_MM
+    default: ORDER_TYPE_UNSPECIFIED
   crescent.exchange.v1beta1.Params:
     type: object
     properties:
@@ -16801,6 +16825,9 @@ definitions:
           max_order_price_ratio defines the ratio of the maximum possible order
           price compared to the market's last price
       max_swap_routes_len:
+        type: integer
+        format: int64
+      max_num_mm_orders:
         type: integer
         format: int64
   crescent.exchange.v1beta1.QueryAllMarketsResponse:
@@ -16893,6 +16920,13 @@ definitions:
           id:
             type: string
             format: uint64
+          type:
+            type: string
+            enum:
+              - ORDER_TYPE_UNSPECIFIED
+              - ORDER_TYPE_LIMIT
+              - ORDER_TYPE_MM
+            default: ORDER_TYPE_UNSPECIFIED
           orderer:
             type: string
           market_id:
@@ -16950,6 +16984,9 @@ definitions:
               max_order_price_ratio defines the ratio of the maximum possible
               order price compared to the market's last price
           max_swap_routes_len:
+            type: integer
+            format: int64
+          max_num_mm_orders:
             type: integer
             format: int64
   crescent.amm.v1beta1.FarmingPlan:

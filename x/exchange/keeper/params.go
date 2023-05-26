@@ -72,3 +72,12 @@ func (k Keeper) GetMaxSwapRoutesLen(ctx sdk.Context) (maxLen uint32) {
 func (k Keeper) SetMaxSwapRouteLen(ctx sdk.Context, maxLen uint32) {
 	k.paramSpace.Set(ctx, types.KeyMaxSwapRoutesLen, maxLen)
 }
+
+func (k Keeper) GetMaxNumMMOrders(ctx sdk.Context) (maxNum uint32) {
+	k.paramSpace.Get(ctx, types.KeyMaxNumMMOrders, &maxNum)
+	return
+}
+
+func (k Keeper) SetMaxNumMMOrders(ctx sdk.Context, maxNum uint32) {
+	k.paramSpace.Set(ctx, types.KeyMaxNumMMOrders, maxNum)
+}

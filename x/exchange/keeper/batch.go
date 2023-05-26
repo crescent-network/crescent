@@ -17,10 +17,13 @@ func (k Keeper) PlaceBatchLimitOrder(
 	}
 	orderId := k.GetNextOrderIdWithUpdate(ctx)
 	deadline := ctx.BlockTime().Add(lifespan)
-	return k.newOrder(ctx, orderId, market, ordererAddr, isBuy, price, qty, qty, deadline, false)
+	return k.newOrder(
+		ctx, orderId, types.OrderTypeLimit, market, ordererAddr, isBuy, price, qty, qty, deadline, false)
 }
 
 func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Order) {
+	// Find the best buy(bid) and sell(ask) prices to limit the price to load
+	// on the other side.
 	var bestBuyPrice, bestSellPrice sdk.Dec
 	for _, order := range orders {
 		if order.IsBuy {
@@ -34,6 +37,7 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 		}
 	}
 
+	// Construct TempOrderBookSides with the price limits we obtained previously.
 	var buyObs, sellObs *types.TempOrderBookSide
 	if !bestSellPrice.IsNil() {
 		buyObs = k.ConstructTempOrderBookSide(ctx, market, true, &bestSellPrice, nil, nil)
@@ -56,11 +60,13 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	if marketState.LastPrice == nil {
-		panic("not implemented")
+		panic("not implemented") // TODO: implement
 	}
 	lastPrice := *marketState.LastPrice
 
-	// Phase 1
+	// Phase 1: Match orders with price below(or equal to) the last price and
+	// price above(or equal to) the last price.
+	// The execution price is the last price.
 	buyLevelIdx, sellLevelIdx := 0, 0
 	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
 		buyLevel := buyObs.Levels[buyLevelIdx]
@@ -68,7 +74,7 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 		if buyLevel.Price.LT(lastPrice) || sellLevel.Price.GT(lastPrice) {
 			break
 		}
-		// Both sides are maker
+		// Both sides are taker
 		_, sellFull, buyFull := market.MatchOrderBookLevels(sellLevel, false, buyLevel, false, lastPrice)
 		if buyFull {
 			buyLevelIdx++
@@ -77,11 +83,16 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 			sellLevelIdx++
 		}
 	}
+	// If there's no level to match, return earlier.
 	if buyLevelIdx >= len(buyObs.Levels) || sellLevelIdx >= len(sellObs.Levels) {
 		return
 	}
 
-	// Phase2
+	// Phase 2: Match orders in traditional exchange's manner.
+	// The matching price is determined by the direction of price.
+
+	// No sell orders with price below(or equal to) the last price,
+	// thus the price will increase.
 	isPriceIncreasing := sellObs.Levels[sellLevelIdx].Price.GT(lastPrice)
 	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
 		buyLevel := buyObs.Levels[buyLevelIdx]
@@ -105,6 +116,7 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 		}
 	}
 
+	// Apply the match results.
 	var tempOrders []*types.TempOrder
 	for _, level := range buyObs.Levels {
 		tempOrders = append(tempOrders, level.Orders...)

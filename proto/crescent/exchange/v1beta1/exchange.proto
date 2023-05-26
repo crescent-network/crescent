@@ -22,6 +22,7 @@ message Params {
   string max_order_price_ratio = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   uint32 max_swap_routes_len = 6;
+  uint32 max_num_mm_orders   = 7 [(gogoproto.customname) = "MaxNumMMOrders"];
 }
 
 message Market {
@@ -40,16 +41,24 @@ message MarketState {
 }
 
 message Order {
-  uint64 id        = 1;
-  string orderer   = 2;
-  uint64 market_id = 3;
-  bool   is_buy    = 4;
-  string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  int64  msg_height    = 7;
-  string open_quantity = 8
+  uint64    id        = 1;
+  OrderType type      = 2;
+  string    orderer   = 3;
+  uint64    market_id = 4;
+  bool      is_buy    = 5;
+  string    price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  int64  msg_height    = 8;
+  string open_quantity = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string remaining_deposit = 9
+  string remaining_deposit = 10
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  google.protobuf.Timestamp deadline = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp deadline = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+enum OrderType {
+  option (gogoproto.goproto_enum_prefix) = false;
+  ORDER_TYPE_UNSPECIFIED                 = 0 [(gogoproto.enumvalue_customname) = "OrderTypeUnspecified"];
+  ORDER_TYPE_LIMIT                       = 1 [(gogoproto.enumvalue_customname) = "OrderTypeLimit"];
+  ORDER_TYPE_MM                          = 2 [(gogoproto.enumvalue_customname) = "OrderTypeMM"];
 }

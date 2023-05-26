@@ -21,6 +21,11 @@
 | Type | Attribute Key | Attribute Value |
 |------|---------------|-----------------|
 
+### MsgPlaceMMLimitOrder
+
+| Type | Attribute Key | Attribute Value |
+|------|---------------|-----------------|
+
 ### MsgCancelOrder
 
 | Type | Attribute Key | Attribute Value |

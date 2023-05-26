@@ -32,7 +32,8 @@ var (
 	MarketByDenomsIndexKeyPrefix = []byte{0x05}
 	OrderKeyPrefix               = []byte{0x06}
 	OrderBookOrderKeyPrefix      = []byte{0x07}
-	TransientBalanceKeyPrefix    = []byte{0x08}
+	NumMMOrdersKeyPrefix         = []byte{0x08}
+	TransientBalanceKeyPrefix    = []byte{0x09}
 )
 
 func GetMarketKey(marketId uint64) []byte {
@@ -78,6 +79,13 @@ func GetOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
 		OrderBookOrderKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
 		isBuyToBytes(isBuy))
+}
+
+func GetNumMMOrdersKey(ordererAddr sdk.AccAddress, marketId uint64) []byte {
+	return utils.Key(
+		NumMMOrdersKeyPrefix,
+		address.MustLengthPrefix(ordererAddr),
+		sdk.Uint64ToBigEndian(marketId))
 }
 
 func GetTransientBalanceKey(addr sdk.AccAddress, denom string) []byte {

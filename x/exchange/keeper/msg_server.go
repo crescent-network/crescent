@@ -68,6 +68,24 @@ func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMa
 	}, nil
 }
 
+func (k msgServer) PlaceMMLimitOrder(goCtx context.Context, msg *types.MsgPlaceMMLimitOrder) (*types.MsgPlaceMMLimitOrderResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	orderId, _, execQty, paid, received, err := k.Keeper.PlaceMMLimitOrder(
+		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
+		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgPlaceMMLimitOrderResponse{
+		OrderId:          orderId,
+		ExecutedQuantity: execQty,
+		Paid:             paid,
+		Received:         received,
+	}, nil
+}
+
 func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -33,6 +33,7 @@ type MarketState struct {
 ```go
 type Order struct {
     Id               uint64
+    Type             OrderType
     Orderer          string
     MarketId         uint64
     IsBuy            bool
@@ -43,6 +44,14 @@ type Order struct {
     RemainingDeposit sdk.Int
     Deadline         time.Time
 }
+
+type OrderType int32
+
+const (
+    OrderTypeUnspecified OrderType = 0
+    OrderTypeLimit       OrderType = 1
+    OrderTypeMM          OrderType = 2
+)
 ```
 
 ## Transient Balance Difference

@@ -12,3 +12,4 @@ The amm module contains the following parameters:
 | MaxOrderLifespan    | int64 (time.Duration) | 168h                                   |
 | MaxOrderPriceRatio  | sdk.Dec               | "0.100000000000000000"                 |
 | MaxSwapRoutesLen    | uint32                | 3                                      |
+| MaxNumMMOrders      | uint32                | 15                                     |

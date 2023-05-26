@@ -206,6 +206,25 @@ func (k Keeper) DeleteOrderBookOrder(ctx sdk.Context, order types.Order) {
 		types.GetOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id))
 }
 
+func (k Keeper) GetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64) (num uint32, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetNumMMOrdersKey(ordererAddr, marketId))
+	if bz == nil {
+		return
+	}
+	return utils.BigEndianToUint32(bz), true
+}
+
+func (k Keeper) SetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64, num uint32) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetNumMMOrdersKey(ordererAddr, marketId), utils.Uint32ToBigEndian(num))
+}
+
+func (k Keeper) DeleteNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetNumMMOrdersKey(ordererAddr, marketId))
+}
+
 func (k Keeper) GetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	store := ctx.TransientStore(k.tsKey)
 	bz := store.Get(types.GetTransientBalanceKey(addr, denom))

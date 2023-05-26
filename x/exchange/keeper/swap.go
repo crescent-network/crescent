@@ -13,6 +13,7 @@ func (k Keeper) SwapExactAmountIn(
 	if maxRoutesLen := int(k.GetMaxSwapRoutesLen(ctx)); len(routes) > maxRoutesLen {
 		return output, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "routes len exceeded the limit %d", maxRoutesLen)
 	}
+	halveFees := len(routes) > 1
 	currentIn := input
 	for _, marketId := range routes {
 		if !currentIn.Amount.IsPositive() {
@@ -40,7 +41,7 @@ func (k Keeper) SwapExactAmountIn(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
 		_, _, output = k.executeOrder(
-			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, simulate)
+			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
 		currentIn = output
 	}
 	if output.Denom != minOutput.Denom {

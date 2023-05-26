@@ -11,6 +11,7 @@ var (
 	_ sdk.Msg = (*MsgCreateMarket)(nil)
 	_ sdk.Msg = (*MsgPlaceLimitOrder)(nil)
 	_ sdk.Msg = (*MsgPlaceMarketOrder)(nil)
+	_ sdk.Msg = (*MsgPlaceMMLimitOrder)(nil)
 	_ sdk.Msg = (*MsgCancelOrder)(nil)
 	_ sdk.Msg = (*MsgSwapExactAmountIn)(nil)
 )
@@ -20,6 +21,7 @@ const (
 	TypeMsgCreateMarket      = "create_market"
 	TypeMsgPlaceLimitOrder   = "place_limit_order"
 	TypeMsgPlaceMarketOrder  = "place_market_order"
+	TypeMsgPlaceMMLimitOrder = "place_mm_limit_order"
 	TypeMsgCancelOrder       = "cancel_order"
 	TypeMsgSwapExactAmountIn = "swap_exact_amount_in"
 )
@@ -150,6 +152,60 @@ func (msg MsgPlaceMarketOrder) ValidateBasic() error {
 	}
 	if !msg.Quantity.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
+	}
+	return nil
+}
+
+func NewMsgPlaceMMLimitOrder(
+	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
+	price sdk.Dec, quantity sdk.Int, isBatch bool, lifespan time.Duration) *MsgPlaceMMLimitOrder {
+	return &MsgPlaceMMLimitOrder{
+		Sender:   senderAddr.String(),
+		MarketId: marketId,
+		IsBuy:    isBuy,
+		Price:    price,
+		Quantity: quantity,
+		IsBatch:  isBatch,
+		Lifespan: lifespan,
+	}
+}
+
+func (msg MsgPlaceMMLimitOrder) Route() string { return RouterKey }
+func (msg MsgPlaceMMLimitOrder) Type() string  { return TypeMsgPlaceMMLimitOrder }
+
+func (msg MsgPlaceMMLimitOrder) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgPlaceMMLimitOrder) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgPlaceMMLimitOrder) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if msg.MarketId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market is must not be 0")
+	}
+	if msg.Price.LT(MinPrice) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
+	}
+	if msg.Price.GT(MaxPrice) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
+	}
+	if _, valid := ValidateTickPrice(msg.Price); !valid {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid tick price: %s", msg.Price)
+	}
+	if !msg.Quantity.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
+	}
+	if msg.Lifespan < 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lifespan must not be negative: %v", msg.Lifespan)
 	}
 	return nil
 }

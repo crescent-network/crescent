@@ -9,7 +9,7 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived sdk.Coin) {
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived sdk.Coin) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
@@ -44,15 +44,15 @@ func (k Keeper) executeOrder(
 				quoteLimit.Sub(totalExecQuote).ToDec().QuoTruncate(level.Price).TruncateInt())
 		}
 
-		market.FillTempOrderBookLevel(level, execQty, level.Price, true)
+		market.FillTempOrderBookLevel(level, execQty, level.Price, true, halveFees)
 		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
 		var paid, received sdk.Coin
 		if isBuy {
 			paid = sdk.NewCoin(market.QuoteDenom, execQuote)
-			received = sdk.NewCoin(market.BaseDenom, market.DeductTakerFee(execQty))
+			received = sdk.NewCoin(market.BaseDenom, market.DeductTakerFee(execQty, halveFees))
 		} else {
 			paid = sdk.NewCoin(market.BaseDenom, execQty)
-			received = sdk.NewCoin(market.QuoteDenom, market.DeductTakerFee(execQuote))
+			received = sdk.NewCoin(market.QuoteDenom, market.DeductTakerFee(execQuote, halveFees))
 		}
 		if err := k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
 			panic(err)
@@ -117,7 +117,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 		source.GenerateOrders(ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error {
 			orderId := k.GetNextOrderIdWithUpdate(ctx)
 			order, err := k.newOrder(
-				ctx, orderId, market, ordererAddr, isBuy, price,
+				ctx, orderId, types.OrderTypeLimit, market, ordererAddr, isBuy, price,
 				qty, qty, ctx.BlockTime(), true)
 			if err != nil {
 				return err

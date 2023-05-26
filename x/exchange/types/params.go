@@ -19,15 +19,17 @@ var (
 	KeyMaxOrderLifespan    = []byte("MaxOrderLifespan")
 	KeyMaxOrderPriceRatio  = []byte("MaxOrderPriceRatio")
 	KeyMaxSwapRoutesLen    = []byte("MaxSwapRoutesLen")
+	KeyMaxNumMMOrders      = []byte("MaxNumMMOrders")
 )
 
 var (
-	DefaultMarketCreationFee   = sdk.NewCoins()
-	DefaultDefaultMakerFeeRate = sdk.NewDecWithPrec(-15, 4) // -0.15%
-	DefaultDefaultTakerFeeRate = sdk.NewDecWithPrec(3, 3)   // 0.3%
-	DefaultMaxOrderLifespan    = 24 * time.Hour
-	DefaultMaxOrderPriceRatio  = sdk.NewDecWithPrec(1, 1) // 10%
-	DefaultMaxSwapRoutesLen    = uint32(3)
+	DefaultMarketCreationFee          = sdk.NewCoins()
+	DefaultDefaultMakerFeeRate        = sdk.NewDecWithPrec(-15, 4) // -0.15%
+	DefaultDefaultTakerFeeRate        = sdk.NewDecWithPrec(3, 3)   // 0.3%
+	DefaultMaxOrderLifespan           = 24 * time.Hour
+	DefaultMaxOrderPriceRatio         = sdk.NewDecWithPrec(1, 1) // 10%
+	DefaultMaxSwapRoutesLen    uint32 = 3
+	DefaultMaxNumMMOrders      uint32 = 15
 
 	MinPrice = sdk.NewDecWithPrec(1, 14)
 	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 40))
@@ -46,6 +48,7 @@ func DefaultParams() Params {
 		MaxOrderLifespan:    DefaultMaxOrderLifespan,
 		MaxOrderPriceRatio:  DefaultMaxOrderPriceRatio,
 		MaxSwapRoutesLen:    DefaultMaxSwapRoutesLen,
+		MaxNumMMOrders:      DefaultMaxNumMMOrders,
 	}
 }
 
@@ -58,6 +61,7 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 		paramstypes.NewParamSetPair(KeyMaxOrderPriceRatio, &params.MaxOrderPriceRatio, validateMaxOrderPriceRatio),
 		paramstypes.NewParamSetPair(KeyMaxSwapRoutesLen, &params.MaxSwapRoutesLen, validateMaxSwapRoutesLen),
+		paramstypes.NewParamSetPair(KeyMaxNumMMOrders, &params.MaxNumMMOrders, validateMaxNumMMOrders),
 	}
 }
 
@@ -73,6 +77,7 @@ func (params Params) Validate() error {
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 		{params.MaxOrderPriceRatio, validateMaxOrderPriceRatio},
 		{params.MaxSwapRoutesLen, validateMaxSwapRoutesLen},
+		{params.MaxNumMMOrders, validateMaxNumMMOrders},
 	} {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
@@ -152,6 +157,13 @@ func validateMaxSwapRoutesLen(i interface{}) error {
 	}
 	if v == 0 {
 		return fmt.Errorf("max swap routes len must not be 0")
+	}
+	return nil
+}
+
+func validateMaxNumMMOrders(i interface{}) error {
+	if _, ok := i.(uint32); !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
 }

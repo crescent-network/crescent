@@ -26,6 +26,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgPlaceMarketOrder:
 			res, err := msgServer.PlaceMarketOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgPlaceMMLimitOrder:
+			res, err := msgServer.PlaceMMLimitOrder(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgCancelOrder:
 			res, err := msgServer.CancelOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
