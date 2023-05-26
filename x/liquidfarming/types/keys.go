@@ -67,9 +67,3 @@ func GetBidsByRewardsAuctionIteratorPrefix(liquidFarmId, auctionId uint64) []byt
 		sdk.Uint64ToBigEndian(liquidFarmId),
 		sdk.Uint64ToBigEndian(auctionId))
 }
-
-// GetPreviousWinningBidKey returns the store key to retrieve the previous winning bid
-// by the given liquid farm id.
-func GetPreviousWinningBidKey(liquidFarmId uint64) []byte {
-	return utils.Key(PreviousWinningBidKeyPrefix, sdk.Uint64ToBigEndian(liquidFarmId))
-}

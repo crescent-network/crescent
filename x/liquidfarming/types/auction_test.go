@@ -5,60 +5,36 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
-func TestRewardsAuctionValidate(t *testing.T) {
+func TestRewardsAuction_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		malleate    func(*types.RewardsAuction)
+		malleate    func(auction *types.RewardsAuction)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(auction *types.RewardsAuction) {
-				registry := codectypes.NewInterfaceRegistry()
-				types.RegisterInterfaces(registry)
-				cdc := codec.NewProtoCodec(registry)
-				bz := types.MustMarshalRewardsAuction(cdc, *auction)
-				newAuction := types.MustUnmarshalRewardsAuction(cdc, bz)
-				require.EqualValues(t, auction, &newAuction)
-			},
+			func(auction *types.RewardsAuction) {},
 			"",
 		},
 		{
-			"invalid pool id",
+			"invalid liquid farm id",
 			func(auction *types.RewardsAuction) {
-				auction.PoolId = 0
+				auction.LiquidFarmId = 0
 			},
-			"pool id must not be 0",
+			"liquid farm id must not be 0",
 		},
 		{
-			"invalid bidding coin denom",
+			"invalid id",
 			func(auction *types.RewardsAuction) {
-				auction.BiddingCoinDenom = ""
+				auction.Id = 0
 			},
-			"denom must not be empty",
-		},
-		{
-			"invalid bidding coin denom",
-			func(auction *types.RewardsAuction) {
-				auction.BiddingCoinDenom = "123!@#$%"
-			},
-			"invalid coin denom",
-		},
-		{
-			"invalid paying reserve address",
-			func(auction *types.RewardsAuction) {
-				auction.PayingReserveAddress = "invalidaddr"
-			},
-			"invalid paying reserve address decoding bech32 failed: invalid separator index -1",
+			"id must not be 0",
 		},
 		{
 			"invalid start and end time",
@@ -71,24 +47,45 @@ func TestRewardsAuctionValidate(t *testing.T) {
 		{
 			"invalid auction status",
 			func(auction *types.RewardsAuction) {
-				auction.Status = types.AuctionStatusNil
+				auction.Status = 10
 			},
-			"invalid auction status",
+			"invalid auction status: 10",
+		},
+		{
+			"invalid winning bid",
+			func(auction *types.RewardsAuction) {
+				auction.WinningBid = &types.Bid{
+					LiquidFarmId:     0,
+					RewardsAuctionId: 0,
+					Bidder:           "",
+					Share:            sdk.Coin{},
+				}
+			},
+			"invalid winning bid: liquid farm id must not be 0",
+		},
+		{
+			"invalid rewards",
+			func(auction *types.RewardsAuction) {
+				auction.Rewards = sdk.Coins{utils.ParseCoin("0uatom")}
+			},
+			"invalid rewards: coin 0uatom amount is not positive",
+		},
+		{
+			"invalid fees",
+			func(auction *types.RewardsAuction) {
+				auction.Fees = sdk.Coins{utils.ParseCoin("0uatom")}
+			},
+			"invalid fees: coin 0uatom amount is not positive",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			auction := types.NewRewardsAuction(
-				1,
-				1,
-				utils.ParseTime("0001-01-01T00:00:00Z"),
-				utils.ParseTime("9999-12-31T00:00:00Z"),
-			)
-			auction.SetStatus(types.AuctionStatusStarted)
-			auction.SetWinningBid("")
-			auction.SetWinningAmount(utils.ParseCoin("100000pool1"))
-			auction.SetRewards(utils.ParseCoins("100000denom1"))
-			auction.SetFees(utils.ParseCoins("10denom1"))
-			auction.SetFeeRate(utils.ParseDec("0.05"))
+				1, 2, utils.ParseTime("2023-05-01T00:00:00Z"), utils.ParseTime("2023-05-01T01:00:00Z"),
+				types.AuctionStatusStarted)
+			winningBid := types.NewBid(1, 2, utils.TestAddress(1), utils.ParseCoin("10000lfshare1"))
+			auction.SetWinningBid(&winningBid)
+			auction.SetRewards(utils.ParseCoins("100000uatom"))
+			auction.SetFees(utils.ParseCoins("300uatom"))
 			tc.malleate(&auction)
 			err := auction.Validate()
 			if tc.expectedErr == "" {
@@ -103,42 +100,52 @@ func TestRewardsAuctionValidate(t *testing.T) {
 func TestBidValidate(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		malleate    func(*types.Bid)
+		malleate    func(bid *types.Bid)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			func(b *types.Bid) {},
+			func(bid *types.Bid) {},
 			"",
 		},
 		{
-			"invalid pool id",
-			func(b *types.Bid) {
-				b.PoolId = 0
+			"invalid liquid farm id",
+			func(bid *types.Bid) {
+				bid.LiquidFarmId = 0
 			},
-			"pool id must not be 0",
+			"liquid farm id must not be 0",
+		},
+		{
+			"invalid auction id",
+			func(bid *types.Bid) {
+				bid.RewardsAuctionId = 0
+			},
+			"rewards auction id must not be 0",
 		},
 		{
 			"invalid bidder",
-			func(b *types.Bid) {
-				b.Bidder = "invalidaddr"
+			func(bid *types.Bid) {
+				bid.Bidder = "invalidaddr"
 			},
-			"invalid bidder address decoding bech32 failed: invalid separator index -1",
+			"invalid bidder address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"invalid bidding amount",
-			func(b *types.Bid) {
-				b.Amount = utils.ParseCoin("0pool1")
+			"invalid share",
+			func(bid *types.Bid) {
+				bid.Share = utils.ParseCoin("0lfshare1")
 			},
-			"amount must be positive value",
+			"share amount must be positive: 0lfshare1",
+		},
+		{
+			"invalid share denom",
+			func(bid *types.Bid) {
+				bid.Share = utils.ParseCoin("10000lfshare2")
+			},
+			"share denom must be lfshare1",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			bid := types.NewBid(
-				1,
-				sdk.AccAddress(crypto.AddressHash([]byte("address1"))).String(),
-				utils.ParseCoin("100000000pool1"),
-			)
+			bid := types.NewBid(1, 2, utils.TestAddress(1), utils.ParseCoin("10000lfshare1"))
 			tc.malleate(&bid)
 			err := bid.Validate()
 			if tc.expectedErr == "" {

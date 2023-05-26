@@ -122,7 +122,7 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid desired amount: %v", err)
 	}
 	if len(msg.DesiredAmount) == 0 || len(msg.DesiredAmount) > 2 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid desired amount length: %s", msg.DesiredAmount)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid desired amount length: %d", len(msg.DesiredAmount))
 	}
 	return nil
 }

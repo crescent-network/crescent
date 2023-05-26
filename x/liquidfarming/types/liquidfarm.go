@@ -2,10 +2,11 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 )
@@ -13,6 +14,16 @@ import (
 const (
 	ShareDenomPrefix = "lfshare"
 )
+
+var (
+	shareDenomRe = regexp.MustCompile(`^lfshare([1-9]\d*)$`)
+)
+
+// DeriveBidReserveAddress creates the reserve address for bids
+// with the given liquid farm id.
+func DeriveBidReserveAddress(liquidFarmId uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("BidReserveAddress/%d", liquidFarmId)))
+}
 
 // NewLiquidFarm returns a new LiquidFarm.
 func NewLiquidFarm(
@@ -49,6 +60,9 @@ func (liquidFarm LiquidFarm) Validate() error {
 	if liquidFarm.FeeRate.IsNegative() {
 		return fmt.Errorf("fee rate must not be negative: %s", liquidFarm.FeeRate)
 	}
+	if liquidFarm.FeeRate.GT(utils.OneDec) {
+		return fmt.Errorf("fee rate must not be greater than 1: %s", liquidFarm.FeeRate)
+	}
 	return nil
 }
 
@@ -59,12 +73,13 @@ func ShareDenom(liquidFarmId uint64) string {
 
 // ParseShareDenom parses a liquid farm share denom and returns the liquid farm's id.
 func ParseShareDenom(denom string) (liquidFarmId uint64, err error) {
-	if !strings.HasPrefix(denom, ShareDenomPrefix) {
-		return 0, fmt.Errorf("denom must have %s as prefix", ShareDenomPrefix)
+	chunks := shareDenomRe.FindStringSubmatch(denom)
+	if len(chunks) == 0 {
+		return 0, fmt.Errorf("invalid share denom: %s", denom)
 	}
-	liquidFarmId, err = strconv.ParseUint(strings.TrimPrefix(denom, ShareDenomPrefix), 10, 64)
+	liquidFarmId, err = strconv.ParseUint(chunks[1], 10, 64)
 	if err != nil {
-		return
+		return 0, fmt.Errorf("invalid liquid farm id: %s", chunks[1])
 	}
 	return liquidFarmId, nil
 }

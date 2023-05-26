@@ -6,13 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
-
-var testAddr = sdk.AccAddress(crypto.AddressHash([]byte("test")))
 
 func TestMsgMintShare(t *testing.T) {
 	for _, tc := range []struct {
@@ -26,38 +23,50 @@ func TestMsgMintShare(t *testing.T) {
 			"",
 		},
 		{
-			"invalid pool id",
+			"invalid sender",
 			func(msg *types.MsgMintShare) {
-				msg.PoolId = 0
+				msg.Sender = "invalidaddr"
 			},
-			"invalid pool id: invalid request",
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
-			"invalid farmer",
+			"invalid liquid farm id",
 			func(msg *types.MsgMintShare) {
-				msg.Farmer = "invalidaddr"
+				msg.LiquidFarmId = 0
 			},
-			"invalid farmer address: decoding bech32 failed: invalid separator index -1: invalid address",
+			"liquid farm id must not be 0: invalid request",
 		},
 		{
-			"invalid farming coin",
+			"invalid desired amount",
 			func(msg *types.MsgMintShare) {
-				msg.PoolId = 1
-				msg.FarmingCoin = sdk.NewInt64Coin("pool1", 0)
+				msg.DesiredAmount = sdk.Coins{utils.ParseCoin("0ucre")}
 			},
-			"farming coin must be positive: invalid request",
+			"invalid desired amount: coin 0ucre amount is not positive: invalid coins",
 		},
 		{
-			"invalid farming coin denom",
+			"single asset",
 			func(msg *types.MsgMintShare) {
-				msg.PoolId = 1
-				msg.FarmingCoin = sdk.NewInt64Coin("denom1", 100_000)
+				msg.DesiredAmount = utils.ParseCoins("100_000000ucre")
 			},
-			"expected denom pool1, but got denom1: invalid request",
+			"",
+		},
+		{
+			"invalid desired amount 2",
+			func(msg *types.MsgMintShare) {
+				msg.DesiredAmount = utils.ParseCoins("100_000000ucre,500_000000uusd,100_000000uatom")
+			},
+			"invalid desired amount length: 3: invalid request",
+		},
+		{
+			"invalid desired amount 3",
+			func(msg *types.MsgMintShare) {
+				msg.DesiredAmount = sdk.Coins{}
+			},
+			"invalid desired amount length: 0: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgMintShare(1, testAddr.String(), utils.ParseCoin("1000000pool1"))
+			msg := types.NewMsgMintShare(utils.TestAddress(0), 1, utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgMintShare, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -67,7 +76,7 @@ func TestMsgMintShare(t *testing.T) {
 				require.NoError(t, err)
 				signers := msg.GetSigners()
 				require.Len(t, signers, 1)
-				require.Equal(t, msg.GetFarmer(), signers[0])
+				require.Equal(t, msg.Sender, signers[0].String())
 			} else {
 				require.EqualError(t, err, tc.expectedErr)
 			}
@@ -87,36 +96,36 @@ func TestMsgBurnShare(t *testing.T) {
 			"",
 		},
 		{
-			"invalid pool id",
+			"invalid sender",
 			func(msg *types.MsgBurnShare) {
-				msg.PoolId = 0
+				msg.Sender = "invalidaddr"
 			},
-			"invalid pool id: invalid request",
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
-			"invalid farmer",
+			"invalid liquid farm id",
 			func(msg *types.MsgBurnShare) {
-				msg.Farmer = "invalidaddr"
+				msg.LiquidFarmId = 0
 			},
-			"invalid farmer address: decoding bech32 failed: invalid separator index -1: invalid address",
+			"liquid farm id must not be 0: invalid request",
 		},
 		{
-			"invalid lf coin",
+			"invalid share",
 			func(msg *types.MsgBurnShare) {
-				msg.UnfarmingCoin = sdk.NewInt64Coin("lf1", 0)
+				msg.Share = utils.ParseCoin("0lfshare1")
 			},
-			"unfarming coin must be positive: invalid request",
+			"share amount must be positive: 0lfshare1: invalid request",
 		},
 		{
-			"invalid lf coin denom",
+			"invalid share denom",
 			func(msg *types.MsgBurnShare) {
-				msg.UnfarmingCoin = sdk.NewInt64Coin("pool1", 100_000)
+				msg.Share = utils.ParseCoin("10000lfshare2")
 			},
-			"expected denom lf1, but got pool1: invalid request",
+			"share denom must be lfshare1: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgBurnShare(1, testAddr.String(), utils.ParseCoin("1000000lf1"))
+			msg := types.NewMsgBurnShare(utils.TestAddress(0), 1, utils.ParseCoin("1000000lfshare1"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgBurnShare, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -126,7 +135,7 @@ func TestMsgBurnShare(t *testing.T) {
 				require.NoError(t, err)
 				signers := msg.GetSigners()
 				require.Len(t, signers, 1)
-				require.Equal(t, msg.GetFarmer(), signers[0])
+				require.Equal(t, msg.Sender, signers[0].String())
 			} else {
 				require.EqualError(t, err, tc.expectedErr)
 			}
@@ -146,44 +155,43 @@ func TestMsgPlaceBid(t *testing.T) {
 			"",
 		},
 		{
+			"invalid sender",
+			func(msg *types.MsgPlaceBid) {
+				msg.Sender = "invalidaddr"
+			},
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid liquid farm id",
+			func(msg *types.MsgPlaceBid) {
+				msg.LiquidFarmId = 0
+			},
+			"liquid farm id must not be 0: invalid request",
+		},
+		{
 			"invalid auction id",
 			func(msg *types.MsgPlaceBid) {
-				msg.AuctionId = 0
+				msg.RewardsAuctionId = 0
 			},
-			"invalid auction id: invalid request",
+			"rewards auction id must not be 0: invalid request",
 		},
 		{
-			"invalid pool id",
+			"invalid share",
 			func(msg *types.MsgPlaceBid) {
-				msg.PoolId = 0
+				msg.Share = utils.ParseCoin("0lfshare1")
 			},
-			"invalid pool id: invalid request",
+			"share amount must be positive: 0lfshare1: invalid request",
 		},
 		{
-			"invalid bidder",
+			"invalid share denom",
 			func(msg *types.MsgPlaceBid) {
-				msg.Bidder = "invalidaddr"
+				msg.Share = utils.ParseCoin("10000lfshare2")
 			},
-			"invalid bidder address: decoding bech32 failed: invalid separator index -1: invalid address",
-		},
-		{
-			"invalid bidding coin",
-			func(msg *types.MsgPlaceBid) {
-				msg.BiddingCoin = sdk.NewInt64Coin("pool1", 0)
-			},
-			"bidding amount must be positive: invalid request",
-		},
-		{
-			"invalid bidding coin denom",
-			func(msg *types.MsgPlaceBid) {
-				msg.PoolId = 1
-				msg.BiddingCoin = sdk.NewInt64Coin("denom1", 100_000)
-			},
-			"expected denom pool1, but got denom1: invalid request",
+			"share denom must be lfshare1: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgPlaceBid(1, 1, testAddr.String(), utils.ParseCoin("1000000pool1"))
+			msg := types.NewMsgPlaceBid(utils.TestAddress(0), 1, 1, utils.ParseCoin("1000000lfshare1"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgPlaceBid, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -193,7 +201,7 @@ func TestMsgPlaceBid(t *testing.T) {
 				require.NoError(t, err)
 				signers := msg.GetSigners()
 				require.Len(t, signers, 1)
-				require.Equal(t, msg.GetBidder(), signers[0])
+				require.Equal(t, msg.Sender, signers[0].String())
 			} else {
 				require.EqualError(t, err, tc.expectedErr)
 			}
@@ -213,29 +221,29 @@ func TestMsgCancelBid(t *testing.T) {
 			"",
 		},
 		{
+			"invalid sender",
+			func(msg *types.MsgCancelBid) {
+				msg.Sender = "invalidaddr"
+			},
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid liquid farm id",
+			func(msg *types.MsgCancelBid) {
+				msg.LiquidFarmId = 0
+			},
+			"liquid farm id must not be 0: invalid request",
+		},
+		{
 			"invalid auction id",
 			func(msg *types.MsgCancelBid) {
-				msg.AuctionId = 0
+				msg.RewardsAuctionId = 0
 			},
-			"invalid auction id: invalid request",
-		},
-		{
-			"invalid pool id",
-			func(msg *types.MsgCancelBid) {
-				msg.PoolId = 0
-			},
-			"invalid pool id: invalid request",
-		},
-		{
-			"invalid bidder",
-			func(msg *types.MsgCancelBid) {
-				msg.Bidder = "invalidaddr"
-			},
-			"invalid bidder address: decoding bech32 failed: invalid separator index -1: invalid address",
+			"rewards auction id must not be 0: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCancelBid(1, 1, testAddr.String())
+			msg := types.NewMsgCancelBid(utils.TestAddress(0), 1, 1)
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgCancelBid, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -245,7 +253,7 @@ func TestMsgCancelBid(t *testing.T) {
 				require.NoError(t, err)
 				signers := msg.GetSigners()
 				require.Len(t, signers, 1)
-				require.Equal(t, msg.GetBidder(), signers[0])
+				require.Equal(t, msg.Sender, signers[0].String())
 			} else {
 				require.EqualError(t, err, tc.expectedErr)
 			}

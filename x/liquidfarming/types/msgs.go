@@ -54,6 +54,9 @@ func (msg MsgMintShare) ValidateBasic() error {
 	if err := msg.DesiredAmount.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid desired amount: %v", err)
 	}
+	if len(msg.DesiredAmount) == 0 || len(msg.DesiredAmount) > 2 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid desired amount length: %d", len(msg.DesiredAmount))
+	}
 	return nil
 }
 
@@ -93,6 +96,9 @@ func (msg MsgBurnShare) ValidateBasic() error {
 	}
 	if !msg.Share.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share amount must be positive: %s", msg.Share)
+	}
+	if shareDenom := ShareDenom(msg.LiquidFarmId); msg.Share.Denom != shareDenom {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom must be %s", shareDenom)
 	}
 	return nil
 }
@@ -137,6 +143,9 @@ func (msg MsgPlaceBid) ValidateBasic() error {
 	}
 	if !msg.Share.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share amount must be positive: %s", msg.Share)
+	}
+	if shareDenom := ShareDenom(msg.LiquidFarmId); msg.Share.Denom != shareDenom {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom must be %s", shareDenom)
 	}
 	return nil
 }

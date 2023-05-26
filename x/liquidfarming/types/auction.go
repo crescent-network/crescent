@@ -35,7 +35,12 @@ func (auction RewardsAuction) Validate() error {
 		return fmt.Errorf("end time must be set after the start time")
 	}
 	if auction.Status != AuctionStatusStarted && auction.Status != AuctionStatusFinished && auction.Status != AuctionStatusSkipped {
-		return fmt.Errorf("invalid auction status")
+		return fmt.Errorf("invalid auction status: %v", auction.Status)
+	}
+	if auction.WinningBid != nil {
+		if err := auction.WinningBid.Validate(); err != nil {
+			return fmt.Errorf("invalid winning bid: %w", err)
+		}
 	}
 	if err := auction.Rewards.Validate(); err != nil {
 		return fmt.Errorf("invalid rewards: %w", err)
@@ -74,21 +79,24 @@ func NewBid(
 }
 
 // Validate validates Bid.
-func (b Bid) Validate() error {
-	if b.LiquidFarmId == 0 {
+func (bid Bid) Validate() error {
+	if bid.LiquidFarmId == 0 {
 		return fmt.Errorf("liquid farm id must not be 0")
 	}
-	if b.RewardsAuctionId == 0 {
+	if bid.RewardsAuctionId == 0 {
 		return fmt.Errorf("rewards auction id must not be 0")
 	}
-	if _, err := sdk.AccAddressFromBech32(b.Bidder); err != nil {
-		return fmt.Errorf("invalid bidder address %w", err)
+	if _, err := sdk.AccAddressFromBech32(bid.Bidder); err != nil {
+		return fmt.Errorf("invalid bidder address: %w", err)
 	}
-	if err := b.Share.Validate(); err != nil {
+	if err := bid.Share.Validate(); err != nil {
 		return fmt.Errorf("invalid share: %w", err)
 	}
-	if !b.Share.IsPositive() {
-		return fmt.Errorf("share amount must be positive")
+	if !bid.Share.IsPositive() {
+		return fmt.Errorf("share amount must be positive: %s", bid.Share)
+	}
+	if shareDenom := ShareDenom(bid.LiquidFarmId); bid.Share.Denom != shareDenom {
+		return fmt.Errorf("share denom must be %s", shareDenom)
 	}
 	return nil
 }
