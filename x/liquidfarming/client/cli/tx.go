@@ -43,7 +43,7 @@ func NewMintShareCmd() *cobra.Command {
 		Short: "Mint liquid farm share for auto compounding rewards",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Mint liquid farm share for auto compounding rewards. 
-			
+
 Example:
 $ %s tx %s mint-share 1 100000000ucre,500000000uusd --from mykey
 `,
@@ -81,7 +81,7 @@ func NewBurnShareCmd() *cobra.Command {
 		Short: "Burn liquid farm share",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Burn liquid farm share.
-			
+
 Example:
 $ %s tx %s burn-share 1 10000000000lfshare1 --from mykey
 `,
@@ -119,7 +119,7 @@ func NewPlaceBidCmd() *cobra.Command {
 		Short: "Place a bid for a rewards auction",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Place a bid for a rewards auction.
-			
+
 Example:
 $ %s tx %s place-bid 1 1 10000000lfshare1 --from mykey
 `,
@@ -154,17 +154,17 @@ $ %s tx %s place-bid 1 1 10000000lfshare1 --from mykey
 	return cmd
 }
 
-// NewCancelBidCmd implements the refund bid command handler.
+// NewCancelBidCmd implements the cancel bid command handler.
 func NewCancelBidCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "refund-bid [liquid-farm-id] [auction-id]",
+		Use:   "cancel-bid [liquid-farm-id] [auction-id]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Refund a bid",
+		Short: "Cancel a bid",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Refund a bid.
-			
+			fmt.Sprintf(`Cancel a bid.
+
 Example:
-$ %s tx %s refund-bid 1 1 --from mykey
+$ %s tx %s cancel-bid 1 1 --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),

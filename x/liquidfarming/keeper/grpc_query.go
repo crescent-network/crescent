@@ -41,14 +41,12 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 	store := ctx.KVStore(k.storeKey)
 	liquidFarmStore := prefix.NewStore(store, types.LiquidFarmKeyPrefix)
 	var liquidFarms []types.LiquidFarmResponse
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	pageRes, err := query.Paginate(liquidFarmStore, req.Pagination, func(_, value []byte) error {
 		var liquidFarm types.LiquidFarm
 		k.cdc.MustUnmarshal(value, &liquidFarm)
-		position, found := k.ammKeeper.GetPositionByParams(
-			ctx, moduleAccAddr, liquidFarm.PoolId, liquidFarm.LowerTick, liquidFarm.UpperTick)
-		if !found { // sanity check
-			panic("position not found")
+		position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
+		if !found {
+			position.Liquidity = utils.ZeroInt
 		}
 		shareDenom := types.ShareDenom(liquidFarm.Id)
 		liquidFarms = append(liquidFarms, types.LiquidFarmResponse{
@@ -89,11 +87,9 @@ func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest
 		return nil, status.Errorf(codes.NotFound, "liquid farm not found")
 	}
 
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	position, found := k.ammKeeper.GetPositionByParams(
-		ctx, moduleAccAddr, liquidFarm.PoolId, liquidFarm.LowerTick, liquidFarm.UpperTick)
+	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
 	if !found { // sanity check
-		panic("position not found")
+		position.Liquidity = utils.ZeroInt
 	}
 	shareDenom := types.ShareDenom(liquidFarm.Id)
 	liquidFarmResp := types.LiquidFarmResponse{
@@ -228,10 +224,14 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 	if !found {
 		return nil, status.Error(codes.NotFound, "liquid farm not found")
 	}
-	position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
-	rewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
+	var rewards sdk.Coins
+	if found {
+		var err error
+		rewards, err = k.ammKeeper.CollectibleCoins(ctx, position.Id)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 	return &types.QueryRewardsResponse{Rewards: rewards}, nil
 }

@@ -247,10 +247,14 @@ func (k Keeper) SkipRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm,
 		panic("auction has winning bid")
 	}
 
-	position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
-	rewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
-	if err != nil {
-		return err
+	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
+	var rewards sdk.Coins
+	if found {
+		var err error
+		rewards, err = k.ammKeeper.CollectibleCoins(ctx, position.Id)
+		if err != nil {
+			return err
+		}
 	}
 
 	auction.SetRewards(rewards)
