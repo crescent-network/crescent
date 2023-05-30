@@ -18,10 +18,9 @@ type Keeper struct {
 	tsKey      sdk.StoreKey
 	paramSpace paramstypes.Subspace
 
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	sources       map[string]types.OrderSource
-	sourceNames   []string
+	bankKeeper  types.BankKeeper
+	sources     map[string]types.OrderSource
+	sourceNames []string
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -30,7 +29,6 @@ func NewKeeper(
 	storeKey sdk.StoreKey,
 	tsKey sdk.StoreKey,
 	paramSpace paramstypes.Subspace,
-	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
@@ -38,12 +36,11 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:           cdc,
-		storeKey:      storeKey,
-		tsKey:         tsKey,
-		paramSpace:    paramSpace,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
+		cdc:        cdc,
+		storeKey:   storeKey,
+		tsKey:      tsKey,
+		paramSpace: paramSpace,
+		bankKeeper: bankKeeper,
 	}
 }
 

@@ -614,7 +614,6 @@ func NewApp(
 		keys[exchangetypes.StoreKey],
 		tkeys[exchangetypes.TStoreKey],
 		app.GetSubspace(exchangetypes.ModuleName),
-		app.AccountKeeper,
 		app.BankKeeper,
 	)
 	app.AMMKeeper = ammkeeper.NewKeeper(
@@ -683,7 +682,7 @@ func NewApp(
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper),
-		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.AccountKeeper, app.BankKeeper),
+		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.BankKeeper),
 		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper),
 		app.transferModule,
 		app.icaModule,
@@ -839,7 +838,7 @@ func NewApp(
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper),
-		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.AccountKeeper, app.BankKeeper),
+		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.BankKeeper),
 		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		app.transferModule,
