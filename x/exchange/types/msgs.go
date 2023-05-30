@@ -97,7 +97,7 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 	if msg.MarketId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market is must not be 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
 	if msg.Price.LT(MinPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
@@ -106,7 +106,7 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
 	}
 	if _, valid := ValidateTickPrice(msg.Price); !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid tick price: %s", msg.Price)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price tick: %s", msg.Price)
 	}
 	if !msg.Quantity.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
@@ -148,7 +148,7 @@ func (msg MsgPlaceMarketOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 	if msg.MarketId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market is must not be 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
 	if !msg.Quantity.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)
@@ -190,7 +190,7 @@ func (msg MsgPlaceMMLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 	if msg.MarketId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market is must not be 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
 	if msg.Price.LT(MinPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
@@ -199,7 +199,7 @@ func (msg MsgPlaceMMLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
 	}
 	if _, valid := ValidateTickPrice(msg.Price); !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid tick price: %s", msg.Price)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price tick: %s", msg.Price)
 	}
 	if !msg.Quantity.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "quantity must be positive: %s", msg.Quantity)

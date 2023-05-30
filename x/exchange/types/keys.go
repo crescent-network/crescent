@@ -23,17 +23,16 @@ const (
 	QuerierRoute = ModuleName
 )
 
-// TODO: reallocate key prefix bytes
 var (
-	LastMarketIdKey              = []byte{0x01}
-	LastOrderIdKey               = []byte{0x02}
-	MarketKeyPrefix              = []byte{0x03}
-	MarketStateKeyPrefix         = []byte{0x04}
-	MarketByDenomsIndexKeyPrefix = []byte{0x05}
-	OrderKeyPrefix               = []byte{0x06}
-	OrderBookOrderKeyPrefix      = []byte{0x07}
-	NumMMOrdersKeyPrefix         = []byte{0x08}
-	TransientBalanceKeyPrefix    = []byte{0x09}
+	LastMarketIdKey              = []byte{0x60}
+	LastOrderIdKey               = []byte{0x61}
+	MarketKeyPrefix              = []byte{0x62}
+	MarketStateKeyPrefix         = []byte{0x63}
+	MarketByDenomsIndexKeyPrefix = []byte{0x64}
+	OrderKeyPrefix               = []byte{0x65}
+	OrderBookOrderKeyPrefix      = []byte{0x66}
+	NumMMOrdersKeyPrefix         = []byte{0x67}
+	TransientBalanceKeyPrefix    = []byte{0x68}
 )
 
 func GetMarketKey(marketId uint64) []byte {

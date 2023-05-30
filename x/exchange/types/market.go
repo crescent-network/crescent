@@ -100,6 +100,9 @@ func (marketState MarketState) Validate() error {
 		if !marketState.LastPrice.IsPositive() {
 			return fmt.Errorf("last price must be positive: %s", marketState.LastPrice)
 		}
+		if _, valid := ValidateTickPrice(*marketState.LastPrice); !valid {
+			return fmt.Errorf("invalid last price tick: %s", marketState.LastPrice)
+		}
 	}
 	return nil
 }
