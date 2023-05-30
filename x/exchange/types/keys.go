@@ -56,18 +56,12 @@ func GetOrderKey(orderId uint64) []byte {
 }
 
 func GetOrderBookOrderKey(marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) []byte {
-	var orderIdBytes []byte
-	if isBuy {
-		orderIdBytes = sdk.Uint64ToBigEndian(-orderId)
-	} else {
-		orderIdBytes = sdk.Uint64ToBigEndian(orderId)
-	}
 	return utils.Key(
 		OrderBookOrderKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
 		isBuyToBytes(isBuy),
 		sdk.SortableDecBytes(price),
-		orderIdBytes)
+		sdk.Uint64ToBigEndian(orderId))
 }
 
 func GetOrderIdsByMarketKey(marketId uint64) []byte {
