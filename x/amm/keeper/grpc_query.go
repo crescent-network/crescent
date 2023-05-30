@@ -103,8 +103,10 @@ func (k Querier) Positions(c context.Context, req *types.QueryPositionsRequest) 
 	positionStore := prefix.NewStore(store, types.GetPositionsByOwnerIteratorPrefix(ownerAddr))
 	var positionResps []types.PositionResponse
 	pageRes, err := query.Paginate(positionStore, req.Pagination, func(_, value []byte) error {
-		var position types.Position
-		k.cdc.MustUnmarshal(value, &position)
+		position, found := k.GetPosition(ctx, sdk.BigEndianToUint64(value))
+		if !found { // sanity check
+			panic("position not found")
+		}
 		positionResps = append(positionResps, types.NewPositionResponse(position))
 		return nil
 	})
