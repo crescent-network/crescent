@@ -1,4 +1,5 @@
 syntax = "proto3";
+
 package crescent.liquidfarming.v1beta1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -24,54 +25,35 @@ service Query {
 
   // LiquidFarm returns the specific liquid farm
   rpc LiquidFarm(QueryLiquidFarmRequest) returns (QueryLiquidFarmResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}";
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}";
   }
 
   // RewardsAuctions returns all rewards auctions that correspond to the given pool id
   rpc RewardsAuctions(QueryRewardsAuctionsRequest) returns (QueryRewardsAuctionsResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards_auctions";
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards_auctions";
   }
 
   // RewardsAuction returns the specific rewards auction
   rpc RewardsAuction(QueryRewardsAuctionRequest) returns (QueryRewardsAuctionResponse) {
     option (google.api.http).get =
-        "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards_auctions/{auction_id}";
+        "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards_auctions/{auction_id}";
   }
 
-  // Bids returns all bids for the liquid farm
+  // Bids returns all bids for the rewards auction
   rpc Bids(QueryBidsRequest) returns (QueryBidsResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/bids";
+    option (google.api.http).get =
+        "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards_auctions/{auction_id}/bids";
   }
 
-  // Rewards returns all accumulated farming rewards for the liquid farm
+  // Rewards returns all accumulated rewards for the liquid farm
   rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards";
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards";
   }
 
   // ExchangeRate returns exchange rates (mint rate and burn rate) for the liquid farm
   rpc ExchangeRate(QueryExchangeRateRequest) returns (QueryExchangeRateResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/exchange_rate";
+    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/exchange_rate";
   }
-}
-
-// QueryLiquidFarmsRequest is the request type for the Query/LiquidFarms RPC method.
-message QueryLiquidFarmsRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-// QueryLiquidFarmsResponse is response type for the Query/LiquidFarms RPC method.
-message QueryLiquidFarmsResponse {
-  repeated LiquidFarmResponse liquid_farms = 1 [(gogoproto.nullable) = false];
-}
-
-// QueryLiquidFarmRequest is the request type for the Query/LiquidFarm RPC method.
-message QueryLiquidFarmRequest {
-  uint64 pool_id = 1;
-}
-
-// QueryLiquidFarmResponse is response type for the Query/LiquidFarm RPC method.
-message QueryLiquidFarmResponse {
-  LiquidFarmResponse liquid_farm = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -82,11 +64,32 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryLiquidFarmsRequest is the request type for the Query/LiquidFarms RPC method.
+message QueryLiquidFarmsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryLiquidFarmsResponse is response type for the Query/LiquidFarms RPC method.
+message QueryLiquidFarmsResponse {
+  repeated LiquidFarmResponse            liquid_farms = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination   = 2;
+}
+
+// QueryLiquidFarmRequest is the request type for the Query/LiquidFarm RPC method.
+message QueryLiquidFarmRequest {
+  uint64 liquid_farm_id = 1;
+}
+
+// QueryLiquidFarmResponse is response type for the Query/LiquidFarm RPC method.
+message QueryLiquidFarmResponse {
+  LiquidFarmResponse liquid_farm = 1 [(gogoproto.nullable) = false];
+}
+
 // QueryRewardsAuctionsRequest is request type for the Query/RewardsAuctions RPC method.
 message QueryRewardsAuctionsRequest {
-  uint64                                pool_id    = 1;
-  string                                status     = 2;
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  uint64                                liquid_farm_id = 1;
+  string                                status         = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination     = 3;
 }
 
 // QueryRewardsAuctionsResponse is response type for the Query/RewardsAuctions RPC method.
@@ -97,8 +100,8 @@ message QueryRewardsAuctionsResponse {
 
 // QueryRewardsAuctionRequest is request type for the Query/RewardsAuction RPC method.
 message QueryRewardsAuctionRequest {
-  uint64 auction_id = 1;
-  uint64 pool_id    = 2;
+  uint64 liquid_farm_id = 1;
+  uint64 auction_id     = 2;
 }
 
 // QueryRewardsAuctionResponse is response type for the Query/RewardsAuction RPC method.
@@ -108,8 +111,9 @@ message QueryRewardsAuctionResponse {
 
 // QueryBidsRequest is request type for the Query/Bids RPC method.
 message QueryBidsRequest {
-  uint64                                pool_id    = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  uint64                                liquid_farm_id = 1;
+  uint64                                auction_id     = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination     = 3;
 }
 
 // QueryBidsResponse is response type for the Query/Bids RPC method.
@@ -120,7 +124,7 @@ message QueryBidsResponse {
 
 // QueryRewardsRequest is request type for the Query/Rewards RPC method.
 message QueryRewardsRequest {
-  uint64 pool_id = 1;
+  uint64 liquid_farm_id = 1;
 }
 
 // QueryRewardsResponse is response type for the Query/Rewards RPC method.
@@ -131,7 +135,7 @@ message QueryRewardsResponse {
 
 // QueryExchangeRateRequest is request type for the Query/ExchangeRate RPC method.
 message QueryExchangeRateRequest {
-  uint64 pool_id = 1;
+  uint64 liquid_farm_id = 1;
 }
 
 // QueryExchangeRateResponse is response type for the Query/ExchangeRate RPC method.
@@ -145,34 +149,24 @@ message QueryExchangeRateResponse {
 
 // LiquidFarmResponse is response type for the Query/LiquidFarm RPC method.
 message LiquidFarmResponse {
-  uint64 pool_id = 1;
-
-  string liquid_farm_reserve_address = 2;
-
-  string lf_coin_denom = 3 [(gogoproto.customname) = "LFCoinDenom"];
-
-  string lf_coin_supply = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false,
-    (gogoproto.customname) = "LFCoinSupply"
-  ];
-
-  string pool_coin_denom = 5;
-
-  string pool_coin_farming_amount = 6
+  uint64 id         = 1;
+  uint64 pool_id    = 2;
+  int32  lower_tick = 3;
+  int32  upper_tick = 4;
+  // bid_reserve_address specifies the account that reserves bidding amounts placed by bidders
+  string bid_reserve_address = 5;
+  string min_bid_amount      = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-
-  string min_farm_amount = 7
+  string fee_rate = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 last_rewards_auction_id = 8;
+  string liquidity               = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-
-  string min_bid_amount = 8
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin total_share = 10 [(gogoproto.nullable) = false];
 }
 
 message ExchangeRateResponse {
   string mint_rate = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-
   string burn_rate = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

@@ -21,12 +21,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &lB)
 			return fmt.Sprintf("%v\n%v", lA, lB)
 
-		case bytes.Equal(kvA.Key[:1], types.CompoundingRewardsKeyPrefix):
-			var cA, cB types.CompoundingRewards
-			cdc.MustUnmarshal(kvA.Value, &cA)
-			cdc.MustUnmarshal(kvB.Value, &cB)
-			return fmt.Sprintf("%v\n%v", cA, cB)
-
 		case bytes.Equal(kvA.Key[:1], types.RewardsAuctionKeyPrefix):
 			var rA, rB types.RewardsAuction
 			cdc.MustUnmarshal(kvA.Value, &rA)
@@ -40,7 +34,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			return fmt.Sprintf("%v\n%v", bA, bB)
 
 		default:
-			panic(fmt.Sprintf("invalid liquid farm key prefix %X", kvA.Key[:1]))
+			panic(fmt.Sprintf("invalid liquidfarming key prefix %X", kvA.Key[:1]))
 		}
 	}
 }

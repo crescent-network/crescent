@@ -27,13 +27,13 @@ func (s *TestSuite) SetupTest() {
 		Height: 0,
 		Time:   utils.ParseTime("2023-01-01T00:00:00Z"),
 	})
-	s.BeginBlock()
+	s.BeginBlock(0)
 }
 
-func (s *TestSuite) BeginBlock() {
+func (s *TestSuite) BeginBlock(blockTimeDelta time.Duration) {
 	s.T().Helper()
 	newHeader := s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1).
-		WithBlockTime(s.Ctx.BlockTime().Add(5 * time.Second)).
+		WithBlockTime(s.Ctx.BlockTime().Add(blockTimeDelta)).
 		BlockHeader()
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.BaseApp.NewContext(false, newHeader)
@@ -48,7 +48,12 @@ func (s *TestSuite) EndBlock() {
 func (s *TestSuite) NextBlock() {
 	s.T().Helper()
 	s.EndBlock()
-	s.BeginBlock()
+	s.BeginBlock(5 * time.Second)
+}
+
+func (s *TestSuite) GetBalance(addr sdk.AccAddress, denom string) sdk.Coin {
+	s.T().Helper()
+	return s.App.BankKeeper.GetBalance(s.Ctx, addr, denom)
 }
 
 func (s *TestSuite) GetAllBalances(addr sdk.AccAddress) sdk.Coins {

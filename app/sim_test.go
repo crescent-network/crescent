@@ -35,7 +35,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	liquidstakingtypes "github.com/crescent-network/crescent/v5/x/liquidstaking/types"
@@ -198,6 +200,8 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[claimtypes.StoreKey], newApp.keys[claimtypes.StoreKey], [][]byte{}},
 		{app.keys[marketmakertypes.StoreKey], newApp.keys[marketmakertypes.StoreKey], [][]byte{}},
 		{app.keys[lpfarmtypes.StoreKey], newApp.keys[lpfarmtypes.StoreKey], [][]byte{}},
+		{app.keys[exchangetypes.StoreKey], newApp.keys[exchangetypes.StoreKey], [][]byte{}},
+		{app.keys[ammtypes.StoreKey], newApp.keys[ammtypes.StoreKey], [][]byte{}},
 		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 	}

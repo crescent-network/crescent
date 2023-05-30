@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper.
@@ -38,31 +38,38 @@ func (k Querier) LiquidFarms(c context.Context, req *types.QueryLiquidFarmsReque
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	res := []types.LiquidFarmResponse{}
-	for _, liquidFarm := range k.GetLiquidFarmsInStore(ctx) {
-		reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
-		lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
-		lfCoinSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
-		poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
-		position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
+	store := ctx.KVStore(k.storeKey)
+	liquidFarmStore := prefix.NewStore(store, types.LiquidFarmKeyPrefix)
+	var liquidFarms []types.LiquidFarmResponse
+	pageRes, err := query.Paginate(liquidFarmStore, req.Pagination, func(_, value []byte) error {
+		var liquidFarm types.LiquidFarm
+		k.cdc.MustUnmarshal(value, &liquidFarm)
+		position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
 		if !found {
-			position.FarmingAmount = sdk.ZeroInt()
+			position.Liquidity = utils.ZeroInt
 		}
-
-		res = append(res, types.LiquidFarmResponse{
-			PoolId:                   liquidFarm.PoolId,
-			LiquidFarmReserveAddress: reserveAddr.String(),
-			LFCoinDenom:              lfCoinDenom,
-			LFCoinSupply:             lfCoinSupplyAmt,
-			PoolCoinDenom:            poolCoinDenom,
-			PoolCoinFarmingAmount:    position.FarmingAmount,
-			MinFarmAmount:            liquidFarm.MinFarmAmount,
-			MinBidAmount:             liquidFarm.MinBidAmount,
+		shareDenom := types.ShareDenom(liquidFarm.Id)
+		liquidFarms = append(liquidFarms, types.LiquidFarmResponse{
+			Id:                   liquidFarm.Id,
+			PoolId:               liquidFarm.PoolId,
+			LowerTick:            liquidFarm.LowerTick,
+			UpperTick:            liquidFarm.UpperTick,
+			BidReserveAddress:    liquidFarm.BidReserveAddress,
+			MinBidAmount:         liquidFarm.MinBidAmount,
+			FeeRate:              liquidFarm.FeeRate,
+			LastRewardsAuctionId: liquidFarm.LastRewardsAuctionId,
+			Liquidity:            position.Liquidity,
+			TotalShare:           k.bankKeeper.GetSupply(ctx, shareDenom),
 		})
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
-
-	return &types.QueryLiquidFarmsResponse{LiquidFarms: res}, nil
+	return &types.QueryLiquidFarmsResponse{
+		LiquidFarms: liquidFarms,
+		Pagination:  pageRes,
+	}, nil
 }
 
 // LiquidFarm queries the particular LiquidFarm object.
@@ -70,39 +77,34 @@ func (k Querier) LiquidFarm(c context.Context, req *types.QueryLiquidFarmRequest
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	if req.LiquidFarmId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "liquid farm id must not be 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	liquidFarm, found := k.GetLiquidFarm(ctx, req.PoolId)
+	liquidFarm, found := k.GetLiquidFarm(ctx, req.LiquidFarmId)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "liquid farm by pool id %d not found", req.PoolId)
+		return nil, status.Errorf(codes.NotFound, "liquid farm not found")
 	}
 
-	reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
-	lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
-	lfCoinSupplyAmt := k.bankKeeper.GetSupply(ctx, lfCoinDenom).Amount
-	poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
-	position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
-	if !found {
-		position.FarmingAmount = sdk.ZeroInt()
+	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
+	if !found { // sanity check
+		position.Liquidity = utils.ZeroInt
 	}
-
-	res := types.LiquidFarmResponse{
-		PoolId:                   liquidFarm.PoolId,
-		LiquidFarmReserveAddress: reserveAddr.String(),
-		LFCoinDenom:              lfCoinDenom,
-		LFCoinSupply:             lfCoinSupplyAmt,
-		PoolCoinDenom:            poolCoinDenom,
-		PoolCoinFarmingAmount:    position.FarmingAmount,
-		MinFarmAmount:            liquidFarm.MinFarmAmount,
-		MinBidAmount:             liquidFarm.MinBidAmount,
+	shareDenom := types.ShareDenom(liquidFarm.Id)
+	liquidFarmResp := types.LiquidFarmResponse{
+		Id:                   liquidFarm.Id,
+		PoolId:               liquidFarm.PoolId,
+		LowerTick:            liquidFarm.LowerTick,
+		UpperTick:            liquidFarm.UpperTick,
+		BidReserveAddress:    liquidFarm.BidReserveAddress,
+		MinBidAmount:         liquidFarm.MinBidAmount,
+		FeeRate:              liquidFarm.FeeRate,
+		LastRewardsAuctionId: liquidFarm.LastRewardsAuctionId,
+		Liquidity:            position.Liquidity,
+		TotalShare:           k.bankKeeper.GetSupply(ctx, shareDenom),
 	}
-
-	return &types.QueryLiquidFarmResponse{LiquidFarm: res}, nil
+	return &types.QueryLiquidFarmResponse{LiquidFarm: liquidFarmResp}, nil
 }
 
 // RewardsAuctions queries all RewardsAuction objects.
@@ -110,11 +112,9 @@ func (k Querier) RewardsAuctions(c context.Context, req *types.QueryRewardsAucti
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	if req.LiquidFarmId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "liquid farm id must not be 0")
 	}
-
 	if req.Status != "" && !(req.Status == types.AuctionStatusStarted.String() ||
 		req.Status == types.AuctionStatusFinished.String() ||
 		req.Status == types.AuctionStatusSkipped.String()) {
@@ -122,42 +122,31 @@ func (k Querier) RewardsAuctions(c context.Context, req *types.QueryRewardsAucti
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	auctionStore := prefix.NewStore(store, types.RewardsAuctionKeyPrefix)
-
-	// Filter auctions by descending order to show an ongoing auction first
-	req.Pagination = &query.PageRequest{
-		Reverse: true,
+	if found := k.LookupLiquidFarm(ctx, req.LiquidFarmId); !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
 	}
-
+	store := ctx.KVStore(k.storeKey)
+	auctionStore := prefix.NewStore(
+		store, types.GetRewardsAuctionsByLiquidFarmIteratorPrefix(req.LiquidFarmId))
 	var auctions []types.RewardsAuction
 	pageRes, err := query.FilteredPaginate(auctionStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		auction, err := types.UnmarshalRewardsAuction(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
-
-		if auction.PoolId != req.PoolId {
-			return false, err
-		}
-
-		// Return all rewards auctions by default
+		var auction types.RewardsAuction
+		k.cdc.MustUnmarshal(value, &auction)
 		if req.Status != "" && auction.Status.String() != req.Status {
-			return false, err
+			return false, nil
 		}
-
 		if accumulate {
 			auctions = append(auctions, auction)
 		}
-
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
-	return &types.QueryRewardsAuctionsResponse{RewardsAuctions: auctions, Pagination: pageRes}, nil
+	return &types.QueryRewardsAuctionsResponse{
+		RewardsAuctions: auctions,
+		Pagination:      pageRes,
+	}, nil
 }
 
 // RewardsAuction queries the particular RewardsAuction object.
@@ -165,22 +154,21 @@ func (k Querier) RewardsAuction(c context.Context, req *types.QueryRewardsAuctio
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
-	if req.AuctionId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "auction id cannot be 0")
+	if req.LiquidFarmId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "liquid farm id must not be 0")
 	}
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	if req.AuctionId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "auction id must not be 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	auction, found := k.GetRewardsAuction(ctx, req.AuctionId, req.PoolId)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "auction by auction %d and pool id %d not found", req.AuctionId, req.PoolId)
+	if found := k.LookupLiquidFarm(ctx, req.LiquidFarmId); !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
 	}
-
+	auction, found := k.GetRewardsAuction(ctx, req.LiquidFarmId, req.AuctionId)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "auction not found")
+	}
 	return &types.QueryRewardsAuctionResponse{RewardsAuction: auction}, nil
 }
 
@@ -189,66 +177,63 @@ func (k Querier) Bids(c context.Context, req *types.QueryBidsRequest) (*types.Qu
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	if req.LiquidFarmId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "liquid farm id must not be 0")
+	}
+	if req.AuctionId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "auction id must not be 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	bidStore := prefix.NewStore(store, types.BidKeyPrefix)
-
-	// Filter bids by descending order to show the highest bid first
-	req.Pagination = &query.PageRequest{
-		Reverse: true,
+	if found := k.LookupLiquidFarm(ctx, req.LiquidFarmId); !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
 	}
-
+	if found := k.LookupRewardsAuction(ctx, req.LiquidFarmId, req.AuctionId); !found {
+		return nil, status.Error(codes.NotFound, "auction not found")
+	}
+	store := ctx.KVStore(k.storeKey)
+	bidStore := prefix.NewStore(
+		store,
+		types.GetBidsByRewardsAuctionIteratorPrefix(req.LiquidFarmId, req.AuctionId))
 	var bids []types.Bid
 	pageRes, err := query.FilteredPaginate(bidStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		bid, err := types.UnmarshalBid(k.cdc, value)
-		if err != nil {
-			return false, err
-		}
-
-		if bid.PoolId != req.PoolId {
-			return false, nil
-		}
-
+		var bid types.Bid
+		k.cdc.MustUnmarshal(value, &bid)
 		if accumulate {
 			bids = append(bids, bid)
 		}
-
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
 	return &types.QueryBidsResponse{Bids: bids, Pagination: pageRes}, nil
 }
 
-// Rewards queries all farming rewards accumulated for the liquid farm.
+// Rewards queries all rewards accumulated for the liquid farm.
 func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*types.QueryRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	if req.LiquidFarmId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "liquid farm id must not be 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	// Currently accumulated rewards from the farm module + all withdrawn rewards in the WithdrawnRewardsReserve account
-	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(req.PoolId)
-	poolCoinDenom := liquiditytypes.PoolCoinDenom(req.PoolId)
-	withdrawnRewards := k.lpfarmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
-	truncatedRewards, _ := withdrawnRewards.TruncateDecimal()
-	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(req.PoolId)
-	spendableCoins := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
-
-	return &types.QueryRewardsResponse{Rewards: truncatedRewards.Add(spendableCoins...)}, nil
+	liquidFarm, found := k.GetLiquidFarm(ctx, req.LiquidFarmId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
+	}
+	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
+	var rewards sdk.Coins
+	if found {
+		var err error
+		rewards, err = k.ammKeeper.CollectibleCoins(ctx, position.Id)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+	return &types.QueryRewardsResponse{Rewards: rewards}, nil
 }
 
 // ExchangeRate queries exchange rate, such as mint rate and burn rate per 1 LFCoin.
@@ -256,39 +241,34 @@ func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateReq
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id cannot be 0")
+	if req.LiquidFarmId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "liquid farm id must not be 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
+	liquidFarm, found := k.GetLiquidFarm(ctx, req.LiquidFarmId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
+	}
 	res := types.ExchangeRateResponse{
-		MintRate: sdk.ZeroDec(),
-		BurnRate: sdk.ZeroDec(),
+		MintRate: utils.ZeroDec,
+		BurnRate: utils.ZeroDec,
 	}
-	lfCoinSupplyAmt := k.bankKeeper.GetSupply(ctx, types.LiquidFarmCoinDenom(req.PoolId)).Amount
+	shareDenom := types.ShareDenom(liquidFarm.Id)
+	shareSupply := k.bankKeeper.GetSupply(ctx, shareDenom).Amount
+	if !shareSupply.IsZero() {
+		position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
 
-	if !lfCoinSupplyAmt.IsZero() {
-		reserveAddr := types.LiquidFarmReserveAddress(req.PoolId)
-		poolCoinDenom := liquiditytypes.PoolCoinDenom(req.PoolId)
-		position, found := k.lpfarmKeeper.GetPosition(ctx, reserveAddr, poolCoinDenom)
-		if !found {
-			position.FarmingAmount = sdk.ZeroInt()
+		res.MintRate = shareSupply.ToDec().Quo(position.Liquidity.ToDec())
+
+		var prevWinningBidShareAmt sdk.Int
+		auction, found := k.GetPreviousRewardsAuction(ctx, liquidFarm)
+		if found && auction.WinningBid != nil {
+			prevWinningBidShareAmt = auction.WinningBid.Share.Amount
+		} else {
+			prevWinningBidShareAmt = utils.ZeroInt
 		}
-
-		compoundingRewards, found := k.GetCompoundingRewards(ctx, req.PoolId)
-		if !found {
-			compoundingRewards.Amount = sdk.ZeroInt()
-		}
-
-		// MintRate = LFCoinTotalSupply / LPCoinTotalFarmingAmount
-		res.MintRate = lfCoinSupplyAmt.ToDec().Quo(position.FarmingAmount.ToDec())
-
-		// BurnRate = (LPCoinTotalFarmingAmount - CompoundingRewards) / LFCoinTotalSupply
-		lpCoinTotalFarmingAmt := position.FarmingAmount.Sub(compoundingRewards.Amount)
-		res.BurnRate = lpCoinTotalFarmingAmt.ToDec().Quo(lfCoinSupplyAmt.ToDec())
+		res.BurnRate = position.Liquidity.Sub(prevWinningBidShareAmt).ToDec().Quo(shareSupply.ToDec())
 	}
-
 	return &types.QueryExchangeRateResponse{ExchangeRate: res}, nil
 }

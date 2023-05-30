@@ -10,7 +10,7 @@ const (
 	FlagRewardsAuctionStatus = "status"
 )
 
-// flagSetRewardsAuctions returns the FlagSet used for farming plan related opertations.
+// flagSetRewardsAuctions returns the FlagSet used for farming plan related operations.
 func flagSetRewardsAuctions() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 

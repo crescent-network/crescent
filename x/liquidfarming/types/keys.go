@@ -1,10 +1,9 @@
 package types
 
 import (
-	time "time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
+
+	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 const (
@@ -23,60 +22,47 @@ const (
 
 // keys for the store prefixes
 var (
-	LastRewardsAuctionEndTimeKey  = []byte{0xe1} // key to retrieve the auction end time
-	LastRewardsAuctionIdKeyPrefix = []byte{0xe2}
-	LiquidFarmKeyPrefix           = []byte{0xe3}
-	CompoundingRewardsKeyPrefix   = []byte{0xe4}
-	RewardsAuctionKeyPrefix       = []byte{0xe5}
-	BidKeyPrefix                  = []byte{0xe6}
-	WinningBidKeyPrefix           = []byte{0xe7}
+	LastLiquidFarmIdKey          = []byte{0xe1}
+	LastRewardsAuctionEndTimeKey = []byte{0xe3}
+	LiquidFarmKeyPrefix          = []byte{0xe4}
+	RewardsAuctionKeyPrefix      = []byte{0xe5}
+	BidKeyPrefix                 = []byte{0xe6}
 )
 
-// GetLastRewardsAuctionIdKey returns the store key to retrieve the last rewards auction
-// by the given pool id.
-func GetLastRewardsAuctionIdKey(poolId uint64) []byte {
-	return append(LastRewardsAuctionIdKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
-}
-
 // GetLiquidFarmKey returns the store key to retrieve the liquid farm object
-// by the given pool id.
-func GetLiquidFarmKey(poolId uint64) []byte {
-	return append(LiquidFarmKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
-}
-
-// GetCompoundingRewardsKey returns the store key to retrieve the compounding rewards object
-// by the given pool id.
-func GetCompoundingRewardsKey(poolId uint64) []byte {
-	return append(CompoundingRewardsKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
+// by the given id.
+func GetLiquidFarmKey(liquidFarmId uint64) []byte {
+	return utils.Key(LiquidFarmKeyPrefix, sdk.Uint64ToBigEndian(liquidFarmId))
 }
 
 // GetRewardsAuctionKey returns the store key to retrieve the rewards auction object
-// by the given pool id and auction id.
-func GetRewardsAuctionKey(auctionId, poolId uint64) []byte {
-	return append(append(RewardsAuctionKeyPrefix, sdk.Uint64ToBigEndian(auctionId)...), sdk.Uint64ToBigEndian(poolId)...)
+// by the given liquid farm id and rewards auction id.
+func GetRewardsAuctionKey(liquidFarmId, auctionId uint64) []byte {
+	return utils.Key(
+		RewardsAuctionKeyPrefix,
+		sdk.Uint64ToBigEndian(liquidFarmId),
+		sdk.Uint64ToBigEndian(auctionId))
+}
+
+func GetRewardsAuctionsByLiquidFarmIteratorPrefix(liquidFarmId uint64) []byte {
+	return utils.Key(RewardsAuctionKeyPrefix, sdk.Uint64ToBigEndian(liquidFarmId))
 }
 
 // GetBidKey returns the store key to retrieve the bid object
-// by the given pool id and bidder address.
-func GetBidKey(poolId uint64, bidder sdk.AccAddress) []byte {
-	return append(append(BidKeyPrefix, sdk.Uint64ToBigEndian(poolId)...), address.MustLengthPrefix(bidder)...)
+// by the given liquid farm id, rewards auction id and bidder address.
+func GetBidKey(liquidFarmId, auctionId uint64, bidderAddr sdk.AccAddress) []byte {
+	return utils.Key(
+		BidKeyPrefix,
+		sdk.Uint64ToBigEndian(liquidFarmId),
+		sdk.Uint64ToBigEndian(auctionId),
+		bidderAddr)
 }
 
-// GetBidByPoolIdPrefix returns the prefix to iterate all bids
-// by the given pool id.
-func GetBidByPoolIdPrefix(poolId uint64) []byte {
-	return append(BidKeyPrefix, sdk.Uint64ToBigEndian(poolId)...)
-}
-
-// GetWinningBidKey returns the store key to retrieve the winning bid
-// by the given pool id and the auction id.
-func GetWinningBidKey(auctionId uint64, poolId uint64) []byte {
-	return append(append(WinningBidKeyPrefix, sdk.Uint64ToBigEndian(auctionId)...), sdk.Uint64ToBigEndian(poolId)...)
-}
-
-// LengthPrefixTimeBytes returns length-prefixed bytes representation
-// of time.Time.
-func LengthPrefixTimeBytes(t time.Time) []byte {
-	bz := sdk.FormatTimeBytes(t)
-	return append([]byte{byte(len(bz))}, bz...)
+// GetBidsByRewardsAuctionIteratorPrefix returns the prefix to iterate all bids
+// by the given rewards auction id.
+func GetBidsByRewardsAuctionIteratorPrefix(liquidFarmId, auctionId uint64) []byte {
+	return utils.Key(
+		BidKeyPrefix,
+		sdk.Uint64ToBigEndian(liquidFarmId),
+		sdk.Uint64ToBigEndian(auctionId))
 }

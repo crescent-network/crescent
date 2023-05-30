@@ -36,7 +36,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/crescent-network/crescent/v5/x/amm"
 	"github.com/crescent-network/crescent/v5/x/claim"
+	"github.com/crescent-network/crescent/v5/x/exchange"
 	"github.com/crescent-network/crescent/v5/x/farming"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming"
 	"github.com/crescent-network/crescent/v5/x/liquidity"
@@ -198,6 +200,8 @@ func TestRunMigrations(t *testing.T) {
 					"claim":              claim.AppModule{}.ConsensusVersion(),
 					"marketmaker":        marketmaker.AppModule{}.ConsensusVersion(),
 					"lpfarm":             lpfarm.AppModule{}.ConsensusVersion(),
+					"exchange":           exchange.AppModule{}.ConsensusVersion(),
+					"amm":                amm.AppModule{}.ConsensusVersion(),
 					"ibc":                ibc.AppModule{}.ConsensusVersion(),
 					"transfer":           transfer.AppModule{}.ConsensusVersion(),
 					"interchainaccounts": ica.AppModule{}.ConsensusVersion(),
@@ -261,6 +265,8 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"claim":         claim.AppModule{}.ConsensusVersion(),
 			"marketmaker":   marketmaker.AppModule{}.ConsensusVersion(),
 			"lpfarm":        lpfarm.AppModule{}.ConsensusVersion(),
+			"exchange":      exchange.AppModule{}.ConsensusVersion(),
+			"amm":           amm.AppModule{}.ConsensusVersion(),
 			"ibc":           ibc.AppModule{}.ConsensusVersion(),
 			"transfer":      transfer.AppModule{}.ConsensusVersion(),
 		},

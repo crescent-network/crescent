@@ -1,283 +1,267 @@
 package keeper
 
 import (
-	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
-	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // PlaceBid handles types.MsgPlaceBid and stores bid object.
-func (k Keeper) PlaceBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidder sdk.AccAddress, biddingCoin sdk.Coin) (types.Bid, error) {
-	liquidFarm, found := k.GetLiquidFarm(ctx, poolId)
+func (k Keeper) PlaceBid(
+	ctx sdk.Context, bidderAddr sdk.AccAddress, liquidFarmId, auctionId uint64, share sdk.Coin) (bid types.Bid, err error) {
+	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
 	if !found {
-		return types.Bid{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "liquid farm by pool %d not found", poolId)
+		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
+	}
+	if shareDenom := types.ShareDenom(liquidFarmId); share.Denom != shareDenom {
+		return bid, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom != %s", shareDenom)
+	}
+	if share.Amount.LT(liquidFarm.MinBidAmount) {
+		return bid, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "share amount must not be smaller than %s", liquidFarm.MinBidAmount)
 	}
 
-	auction, found := k.GetRewardsAuction(ctx, auctionId, poolId)
+	auction, found := k.GetRewardsAuction(ctx, liquidFarmId, auctionId)
 	if !found {
-		return types.Bid{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "auction by pool %d not found", poolId)
+		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "rewards auction not found")
 	}
-
 	if auction.Status != types.AuctionStatusStarted {
-		return types.Bid{}, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "auction status must be %s", types.AuctionStatusStarted.String())
+		return bid, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "rewards auction is not started")
 	}
 
-	if auction.BiddingCoinDenom != biddingCoin.Denom {
-		return types.Bid{}, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "expected denom %s, but got %s", auction.BiddingCoinDenom, biddingCoin.Denom)
-	}
-
-	if biddingCoin.Amount.LT(liquidFarm.MinBidAmount) {
-		return types.Bid{}, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "must be greater than the minimum bid amount %s", liquidFarm.MinBidAmount)
-	}
-
-	if winningBid, found := k.GetWinningBid(ctx, auctionId, poolId); found {
-		if biddingCoin.Amount.LTE(winningBid.Amount.Amount) {
-			return types.Bid{}, sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest, "must be greater than the winning bid amount %s", winningBid.Amount.Amount)
+	if auction.WinningBid != nil {
+		if share.Amount.LTE(auction.WinningBid.Share.Amount) {
+			return bid, sdkerrors.Wrapf(
+				types.ErrInsufficientBidAmount,
+				"share amount must be greater than winning bid's share %s", auction.WinningBid.Share.Amount)
 		}
 	}
 
 	// Refund the previous bid if the bidder has placed bid before
-	if previousBid, found := k.GetBid(ctx, poolId, bidder); found {
-		if err := k.bankKeeper.SendCoins(ctx, auction.GetPayingReserveAddress(), previousBid.GetBidder(), sdk.NewCoins(previousBid.Amount)); err != nil {
-			return types.Bid{}, err
+	prevBid, found := k.GetBid(ctx, liquidFarm.Id, auction.Id, bidderAddr)
+	if found {
+		if err := k.refundBid(ctx, liquidFarm, prevBid); err != nil {
+			return bid, err
 		}
-		k.DeleteBid(ctx, previousBid)
 	}
 
-	// Reserve bidding coin
-	if err := k.bankKeeper.SendCoins(ctx, bidder, auction.GetPayingReserveAddress(), sdk.NewCoins(biddingCoin)); err != nil {
-		return types.Bid{}, err
+	// Reserve bidding amount
+	if err := k.bankKeeper.SendCoins(
+		ctx, bidderAddr, sdk.MustAccAddressFromBech32(liquidFarm.BidReserveAddress),
+		sdk.NewCoins(share)); err != nil {
+		return bid, err
 	}
 
-	bid := types.NewBid(poolId, bidder.String(), biddingCoin)
+	bid = types.NewBid(liquidFarm.Id, auction.Id, bidderAddr, share)
 	k.SetBid(ctx, bid)
-	k.SetWinningBid(ctx, auction.Id, bid)
+	auction.SetWinningBid(&bid)
+	k.SetRewardsAuction(ctx, auction)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypePlaceBid,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyAuctionId, strconv.FormatUint(auction.Id, 10)),
-			sdk.NewAttribute(types.AttributeKeyBidder, bidder.String()),
-			sdk.NewAttribute(types.AttributeKeyBiddingCoin, biddingCoin.String()),
-		),
-	})
+	// TODO: emit typed event
+	//ctx.EventManager().EmitEvents(sdk.Events{
+	//	sdk.NewEvent(
+	//		types.EventTypePlaceBid,
+	//		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+	//		sdk.NewAttribute(types.AttributeKeyAuctionId, strconv.FormatUint(auction.Id, 10)),
+	//		sdk.NewAttribute(types.AttributeKeyBidder, bidder.String()),
+	//		sdk.NewAttribute(types.AttributeKeyBiddingCoin, biddingCoin.String()),
+	//	),
+	//})
 
 	return bid, nil
 }
 
-// RefundBid handles types.MsgRefundBid and refunds bid amount to the bidder and
+// CancelBid handles types.MsgCancelBid and refunds bid amount to the bidder and
 // delete the bid object.
-func (k Keeper) RefundBid(ctx sdk.Context, auctionId uint64, poolId uint64, bidder sdk.AccAddress) error {
-	auction, found := k.GetRewardsAuction(ctx, auctionId, poolId)
+func (k Keeper) CancelBid(ctx sdk.Context, bidderAddr sdk.AccAddress, liquidFarmId, auctionId uint64) (bid types.Bid, err error) {
+	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "auction by pool %d not found", poolId)
+		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
 	}
 
-	winningBid, found := k.GetWinningBid(ctx, auctionId, poolId)
-	if found && winningBid.Bidder == bidder.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "not allowed to refund the winning bid")
-	}
-
-	bid, found := k.GetBid(ctx, poolId, bidder)
+	auction, found := k.GetRewardsAuction(ctx, liquidFarm.Id, auctionId)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "bid by pool %d not found", poolId)
+		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "rewards auction not found")
 	}
 
-	if err := k.bankKeeper.SendCoins(ctx, auction.GetPayingReserveAddress(), bidder, sdk.NewCoins(bid.Amount)); err != nil {
+	if auction.WinningBid != nil && auction.WinningBid.Bidder == bidderAddr.String() {
+		return bid, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot refund a winning bid")
+	}
+
+	bid, found = k.GetBid(ctx, liquidFarm.Id, auction.Id, bidderAddr)
+	if !found {
+		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "previous bid not found")
+	}
+	if err := k.refundBid(ctx, liquidFarm, bid); err != nil {
+		return bid, err
+	}
+
+	return bid, nil
+}
+
+func (k Keeper) refundBid(ctx sdk.Context, liquidFarm types.LiquidFarm, bid types.Bid) error {
+	if err := k.bankKeeper.SendCoins(
+		ctx, sdk.MustAccAddressFromBech32(liquidFarm.BidReserveAddress),
+		sdk.MustAccAddressFromBech32(bid.Bidder), sdk.NewCoins(bid.Share)); err != nil {
 		return err
 	}
-
 	k.DeleteBid(ctx, bid)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRefundBid,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyBidder, bidder.String()),
-			sdk.NewAttribute(types.AttributeKeyRefundCoin, bid.Amount.String()),
-		),
-	})
-
+	// TODO: emit typed event
+	//ctx.EventManager().EmitEvents(sdk.Events{
+	//	sdk.NewEvent(
+	//		types.EventTypeRefundBid,
+	//		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+	//		sdk.NewAttribute(types.AttributeKeyBidder, bidder.String()),
+	//		sdk.NewAttribute(types.AttributeKeyRefundCoin, bid.Amount.String()),
+	//	),
+	//})
 	return nil
 }
 
-// CreateRewardsAuction creates new rewards auction and store it.
-func (k Keeper) CreateRewardsAuction(ctx sdk.Context, poolId uint64, endTime time.Time) {
-	k.SetRewardsAuction(ctx, types.NewRewardsAuction(
-		k.getNextAuctionIdWithUpdate(ctx, poolId),
-		poolId,
-		ctx.BlockTime(),
-		endTime,
-	))
+func (k Keeper) GetLastRewardsAuction(ctx sdk.Context, liquidFarmId uint64) (auction types.RewardsAuction, found bool) {
+	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
+	if !found {
+		return auction, false
+	}
+	if liquidFarm.LastRewardsAuctionId == 0 {
+		return auction, false
+	}
+	return k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId)
+}
+
+func (k Keeper) GetPreviousRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm) (auction types.RewardsAuction, found bool) {
+	if liquidFarm.LastRewardsAuctionId <= 1 {
+		return
+	}
+	return k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId-1)
+}
+
+// AdvanceRewardsAuctions advances all rewards auctions' epoch by one and
+// sets the next auction end time.
+func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (err error) {
+	k.IterateAllLiquidFarms(ctx, func(liquidFarm types.LiquidFarm) (stop bool) {
+		if liquidFarm.LastRewardsAuctionId != 0 {
+			auction, found := k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId)
+			if !found { // sanity check
+				panic("rewards auction not found")
+			}
+			if auction.WinningBid == nil {
+				if err = k.SkipRewardsAuction(ctx, liquidFarm, auction); err != nil {
+					return true
+				}
+			} else {
+				if err = k.FinishRewardsAuction(ctx, liquidFarm, auction); err != nil {
+					return true
+				}
+			}
+		}
+		k.StartNewRewardsAuction(ctx, liquidFarm, nextEndTime)
+		return false
+	})
+	k.SetNextRewardsAuctionEndTime(ctx, nextEndTime)
+	return
+}
+
+// StartNewRewardsAuction creates a new rewards auction and increment
+// the liquid farm's last rewards auction id.
+func (k Keeper) StartNewRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm, endTime time.Time) {
+	liquidFarm.LastRewardsAuctionId++
+	auctionId := liquidFarm.LastRewardsAuctionId
+	k.SetLiquidFarm(ctx, liquidFarm)
+	startTime := ctx.BlockTime()
+	auction := types.NewRewardsAuction(
+		liquidFarm.Id, auctionId, startTime, endTime, types.AuctionStatusStarted)
+	k.SetRewardsAuction(ctx, auction)
 }
 
 // FinishRewardsAuction finishes ongoing rewards auction by looking up the existence of winning bid.
 // Compound accumulated farming rewards for farmers and refund all bids that are placed for the auction if winning bid exists.
 // If not, set the compounding rewards to zero and update the auction status AuctionStatusSkipped.
-func (k Keeper) FinishRewardsAuction(ctx sdk.Context, auction types.RewardsAuction, feeRate sdk.Dec) error {
-	liquidFarmReserveAddr := types.LiquidFarmReserveAddress(auction.PoolId)
-	poolCoinDenom := liquiditytypes.PoolCoinDenom(auction.PoolId)
-	farmingRewards := k.lpfarmKeeper.Rewards(ctx, liquidFarmReserveAddr, poolCoinDenom)
-	truncatedRewards, _ := farmingRewards.TruncateDecimal()
-	withdrawnRewardsReserveAddr := types.WithdrawnRewardsReserveAddress(auction.PoolId)
-	withdrawnRewardsReserves := k.bankKeeper.SpendableCoins(ctx, withdrawnRewardsReserveAddr)
-	totalRewards := truncatedRewards.Add(withdrawnRewardsReserves...)
+func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm, auction types.RewardsAuction) error {
+	if auction.WinningBid == nil { // sanity check
+		panic("auction has no winning bid")
+	}
+	winningBid := *auction.WinningBid
 
-	winningBid, found := k.GetWinningBid(ctx, auction.Id, auction.PoolId)
-	if !found {
-		k.skipRewardsAuction(ctx, totalRewards, feeRate, auction)
-	} else {
-		// Payout farming rewards if there is any accumulated rewards in the lpfarm module
-		if _, found = k.lpfarmKeeper.GetPosition(ctx, liquidFarmReserveAddr, poolCoinDenom); found {
-			_, fees, err := k.payoutRewards(
-				ctx, auction.PoolId, poolCoinDenom, liquidFarmReserveAddr,
-				withdrawnRewardsReserveAddr, withdrawnRewardsReserves, winningBid, feeRate,
-			)
-			if err != nil {
+	position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
+	rewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
+	if err != nil {
+		return err
+	}
+	var fees sdk.Coins
+	if rewards.IsAllPositive() {
+		moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+		// First, collect all rewards.
+		if err := k.ammKeeper.Collect(ctx, moduleAccAddr, moduleAccAddr, position.Id, rewards); err != nil {
+			return err
+		}
+		var deductedRewards sdk.Coins
+		deductedRewards, fees = types.DeductFees(rewards, liquidFarm.FeeRate)
+		if deductedRewards.IsAllPositive() {
+			// Then send deducted rewards to the winning bidder.
+			winningBidderAddr := sdk.MustAccAddressFromBech32(winningBid.Bidder)
+			if err := k.bankKeeper.SendCoins(ctx, moduleAccAddr, winningBidderAddr, deductedRewards); err != nil {
 				return err
 			}
-			auction.SetFees(fees)
 		}
-
-		// Compound rewards even if there is no one liquid farmed.
-		if err := k.compoundRewards(ctx, auction.GetPayingReserveAddress(), liquidFarmReserveAddr, winningBid.Amount); err != nil {
+		// Fees have been accrued in the module account.
+		// Now burn the winning bid's share.
+		if err := k.bankKeeper.SendCoinsFromAccountToModule(
+			ctx, sdk.MustAccAddressFromBech32(liquidFarm.BidReserveAddress),
+			types.ModuleName, sdk.NewCoins(winningBid.Share)); err != nil {
 			return err
 		}
-
-		if err := k.refundAllBids(ctx, auction, false); err != nil {
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(winningBid.Share)); err != nil {
 			return err
 		}
-
-		auction.SetWinner(winningBid.Bidder)
-		auction.SetWinningAmount(winningBid.Amount)
-		auction.SetRewards(totalRewards)
-		auction.SetStatus(types.AuctionStatusFinished)
-		auction.SetFeeRate(feeRate)
-		k.SetRewardsAuction(ctx, auction)
-		k.SetCompoundingRewards(ctx, auction.PoolId, types.CompoundingRewards{
-			Amount: winningBid.Amount.Amount,
-		})
+		k.DeleteBid(ctx, winningBid)
 	}
+
+	k.IterateBidsByRewardsAuction(ctx, liquidFarm.Id, auction.Id, func(bid types.Bid) (stop bool) {
+		if err = k.refundBid(ctx, liquidFarm, bid); err != nil {
+			return true
+		}
+		return false
+	})
+	if err != nil {
+		return err
+	}
+
+	auction.SetRewards(rewards)
+	auction.SetFees(fees)
+	auction.SetStatus(types.AuctionStatusFinished)
+	k.SetRewardsAuction(ctx, auction)
+
+	// TODO: emit event
 
 	return nil
 }
 
-// getNextAuctionIdWithUpdate increments rewards auction id by one and store it.
-func (k Keeper) getNextAuctionIdWithUpdate(ctx sdk.Context, poolId uint64) uint64 {
-	auctionId := k.GetLastRewardsAuctionId(ctx, poolId) + 1
-	k.SetLastRewardsAuctionId(ctx, auctionId, poolId)
-	return auctionId
-}
+// SkipRewardsAuction skips rewards auction since there is no bid.
+func (k Keeper) SkipRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm, auction types.RewardsAuction) error {
+	if auction.WinningBid != nil { // sanity check
+		panic("auction has winning bid")
+	}
 
-// skipRewardsAuction skips rewards auction since there is no bid.
-func (k Keeper) skipRewardsAuction(ctx sdk.Context, rewards sdk.Coins, feeRate sdk.Dec, auction types.RewardsAuction) {
+	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
+	var rewards sdk.Coins
+	if found {
+		var err error
+		rewards, err = k.ammKeeper.CollectibleCoins(ctx, position.Id)
+		if err != nil {
+			return err
+		}
+	}
+
 	auction.SetRewards(rewards)
-	auction.SetFeeRate(feeRate)
 	auction.SetStatus(types.AuctionStatusSkipped)
 	k.SetRewardsAuction(ctx, auction)
-	k.SetCompoundingRewards(ctx, auction.PoolId, types.CompoundingRewards{
-		Amount: sdk.ZeroInt(),
-	})
-}
 
-// refundAllBids refunds all bids at once as the rewards auction is finished and delete all bids.
-func (k Keeper) refundAllBids(ctx sdk.Context, auction types.RewardsAuction, includeWinningBid bool) error {
-	winningBid, found := k.GetWinningBid(ctx, auction.Id, auction.PoolId)
-	if !found {
-		winningBid = types.Bid{}
-	}
+	// TODO: emit event
 
-	inputs := []banktypes.Input{}
-	outputs := []banktypes.Output{}
-
-	for _, bid := range k.GetBidsByPoolId(ctx, auction.PoolId) {
-		if includeWinningBid || bid.Bidder != winningBid.Bidder {
-			inputs = append(inputs, banktypes.NewInput(auction.GetPayingReserveAddress(), sdk.NewCoins(bid.Amount)))
-			outputs = append(outputs, banktypes.NewOutput(bid.GetBidder(), sdk.NewCoins(bid.Amount)))
-		}
-		k.DeleteBid(ctx, bid)
-	}
-
-	if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
-		return err
-	}
-
-	if includeWinningBid {
-		k.DeleteWinningBid(ctx, auction.Id, auction.PoolId)
-	}
-
-	return nil
-}
-
-// payoutRewards pays accumulated farming rewards to the winner for the auction.
-// It first harvests farming rewards from the farm module and calculates sum of rewards from
-// both withdrawn rewards reserve and liquid farm reserve accounts.
-// Then it deducts fees from the rewards by the fee rate and sends it to the winner.
-func (k Keeper) payoutRewards(
-	ctx sdk.Context,
-	poolId uint64,
-	poolCoinDenom string,
-	liquidFarmReserveAddr sdk.AccAddress,
-	withdrawnRewardsReserveAddr sdk.AccAddress,
-	withdrawnRewardsReserves sdk.Coins,
-	winningBid types.Bid,
-	feeRate sdk.Dec,
-) (deducted sdk.Coins, fees sdk.Coins, err error) {
-	withdrawnRewards, err := k.lpfarmKeeper.Harvest(ctx, liquidFarmReserveAddr, poolCoinDenom)
-	if err != nil {
-		return sdk.Coins{}, sdk.Coins{}, err
-	}
-
-	// As the farm module is designed with F1 fee distribution mechanism,
-	// farming rewards are accumulated every block and rewards are automatically withdrawn
-	// when an account executes Farm/Unfarm if the account already has position.
-	// The module reserves any auto withdrawn rewards in the withdrawn rewards reserve account.
-	// So, farming rewards must add the balance of withdrawn rewards reserve account.
-	totalRewards := withdrawnRewardsReserves.Add(withdrawnRewards...)
-
-	if !totalRewards.IsZero() {
-		deducted, fees = types.DeductFees(totalRewards, feeRate)
-
-		if err := k.bankKeeper.SendCoins(ctx, withdrawnRewardsReserveAddr, liquidFarmReserveAddr, withdrawnRewardsReserves); err != nil {
-			return sdk.Coins{}, sdk.Coins{}, err
-		}
-
-		if err := k.bankKeeper.SendCoins(ctx, liquidFarmReserveAddr, winningBid.GetBidder(), deducted); err != nil {
-			return sdk.Coins{}, sdk.Coins{}, err
-		}
-
-		if !fees.IsZero() {
-			feeCollectorAddr, err := sdk.AccAddressFromBech32(k.GetFeeCollector(ctx))
-			if err != nil {
-				return sdk.Coins{}, sdk.Coins{}, err
-			}
-
-			if err := k.bankKeeper.SendCoins(ctx, liquidFarmReserveAddr, feeCollectorAddr, fees); err != nil {
-				return sdk.Coins{}, sdk.Coins{}, err
-			}
-		}
-	}
-
-	return deducted, fees, nil
-}
-
-func (k Keeper) compoundRewards(ctx sdk.Context, auctionPayingReserveAddr, liquidFarmReserveAddr sdk.AccAddress, amount sdk.Coin) error {
-	if err := k.bankKeeper.SendCoins(ctx, auctionPayingReserveAddr, liquidFarmReserveAddr, sdk.NewCoins(amount)); err != nil {
-		return err
-	}
-	if _, err := k.lpfarmKeeper.Farm(ctx, liquidFarmReserveAddr, amount); err != nil {
-		return err
-	}
 	return nil
 }

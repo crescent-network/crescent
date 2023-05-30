@@ -1,61 +1,47 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
+	"time"
 )
 
-// DefaultGenesis returns the default genesis state.
-func DefaultGenesis() *GenesisState {
+func NewGenesisState(
+	params Params, lastLiquidFarmId uint64, liquidFarms []LiquidFarm,
+	auctions []RewardsAuction, bids []Bid, nextAuctionEndTime *time.Time) *GenesisState {
 	return &GenesisState{
-		Params:                     DefaultParams(),
-		LastRewardsAuctionIdRecord: []LastRewardsAuctionIdRecord{},
-		LiquidFarms:                []LiquidFarm{},
-		RewardsAuctions:            []RewardsAuction{},
-		Bids:                       []Bid{},
-		WinningBidRecords:          []WinningBidRecord{},
-		LastRewardsAuctionEndTime:  nil,
+		Params:                    params,
+		LastLiquidFarmId:          lastLiquidFarmId,
+		LiquidFarms:               liquidFarms,
+		RewardsAuctions:           auctions,
+		Bids:                      bids,
+		NextRewardsAuctionEndTime: nextAuctionEndTime,
 	}
 }
 
+// DefaultGenesis returns the default genesis state.
+func DefaultGenesis() *GenesisState {
+	return NewGenesisState(DefaultParams(), 0, nil, nil, nil, nil)
+}
+
 // Validate performs basic genesis state validation returning an error upon any failure.
-func (gs GenesisState) Validate() error {
-	if err := gs.Params.Validate(); err != nil {
+func (genState GenesisState) Validate() error {
+	if err := genState.Params.Validate(); err != nil {
 		return fmt.Errorf("invalid params: %w", err)
 	}
-
-	for _, liquidFarm := range gs.LiquidFarms {
+	for _, liquidFarm := range genState.LiquidFarms {
 		if err := liquidFarm.Validate(); err != nil {
-			return fmt.Errorf("invalid liquid farm %w", err)
+			return fmt.Errorf("invalid liquid farm: %w", err)
 		}
 	}
-
-	for _, auction := range gs.RewardsAuctions {
+	for _, auction := range genState.RewardsAuctions {
 		if err := auction.Validate(); err != nil {
-			return err
+			return fmt.Errorf("invalid rewards auction: %w", err)
 		}
 	}
-
-	for _, bid := range gs.Bids {
+	for _, bid := range genState.Bids {
 		if err := bid.Validate(); err != nil {
-			return err
+			return fmt.Errorf("invalid bid: %w", err)
 		}
 	}
-
-	winningBidMap := map[uint64]Bid{} // AuctionId => Bid
-	for _, record := range gs.WinningBidRecords {
-		if record.AuctionId == 0 {
-			return fmt.Errorf("auction id must not be 0")
-		}
-
-		if err := record.WinningBid.Validate(); err != nil {
-			return fmt.Errorf("invalid winning bid: %w", err)
-		}
-
-		if _, ok := winningBidMap[record.AuctionId]; ok {
-			return fmt.Errorf("multiple winning bids at auction %d", record.AuctionId)
-		}
-		winningBidMap[record.AuctionId] = record.WinningBid
-	}
-
 	return nil
 }

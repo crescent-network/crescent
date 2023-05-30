@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -21,90 +20,59 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// LiquidFarm defines a method for farming pool coin and mint LFCoin for the farmer.
-func (m msgServer) LiquidFarm(goCtx context.Context, msg *types.MsgLiquidFarm) (*types.MsgLiquidFarmResponse, error) {
+// MintShare defines a method for adding liquidity to the public position and
+// minting liquid farm share.
+func (m msgServer) MintShare(goCtx context.Context, msg *types.MsgMintShare) (*types.MsgMintShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := m.Keeper.LiquidFarm(ctx, msg.PoolId, msg.GetFarmer(), msg.FarmingCoin); err != nil {
+	mintedShare, _, liquidity, amt, err := m.Keeper.MintShare(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.DesiredAmount)
+	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgLiquidFarmResponse{}, nil
+	return &types.MsgMintShareResponse{
+		MintedShare: mintedShare,
+		Liquidity:   liquidity,
+		Amount:      amt,
+	}, nil
 }
 
-// LiquidUnfarm defines a method for unfarming LFCoin to return the corresponding amount of pool coin.
-func (m msgServer) LiquidUnfarm(goCtx context.Context, msg *types.MsgLiquidUnfarm) (*types.MsgLiquidUnfarmResponse, error) {
+// BurnShare defines a method for burning liquid farm share to withdraw underlying pool assets.
+func (m msgServer) BurnShare(goCtx context.Context, msg *types.MsgBurnShare) (*types.MsgBurnShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.LiquidUnfarm(ctx, msg.PoolId, msg.GetFarmer(), msg.UnfarmingCoin); err != nil {
+	removedLiquidity, _, amt, err := m.Keeper.BurnShare(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.Share)
+	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgLiquidUnfarmResponse{}, nil
-}
-
-// LiquidUnfarmAndWithdraw defines a method for unfarming LFCoin and withdraw the corresponding amount of pool coin
-// from the pool in the liquidity module.
-// This is a convenient transaction message for a bidder to use when they participate in rewards auction.
-func (m msgServer) LiquidUnfarmAndWithdraw(goCtx context.Context, msg *types.MsgLiquidUnfarmAndWithdraw) (*types.MsgLiquidUnfarmAndWithdrawResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if err := m.Keeper.LiquidUnfarmAndWithdraw(ctx, msg.PoolId, msg.GetFarmer(), msg.UnfarmingCoin); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgLiquidUnfarmAndWithdrawResponse{}, nil
+	return &types.MsgBurnShareResponse{
+		RemovedLiquidity: removedLiquidity,
+		Amount:           amt,
+	}, nil
 }
 
 // PlaceBid defines a method for placing a bid for a rewards auction.
 func (m msgServer) PlaceBid(goCtx context.Context, msg *types.MsgPlaceBid) (*types.MsgPlaceBidResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if _, err := m.Keeper.PlaceBid(ctx, msg.AuctionId, msg.PoolId, msg.GetBidder(), msg.BiddingCoin); err != nil {
+	if _, err := m.Keeper.PlaceBid(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.RewardsAuctionId, msg.Share); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgPlaceBidResponse{}, nil
 }
 
-// RefundBid defines a method for refunding the bid for the auction.
-func (m msgServer) RefundBid(goCtx context.Context, msg *types.MsgRefundBid) (*types.MsgRefundBidResponse, error) {
+// CancelBid defines a method for refunding the bid for the auction.
+func (m msgServer) CancelBid(goCtx context.Context, msg *types.MsgCancelBid) (*types.MsgCancelBidResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := m.Keeper.RefundBid(ctx, msg.AuctionId, msg.PoolId, msg.GetBidder()); err != nil {
+	if _, err := m.Keeper.CancelBid(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.RewardsAuctionId); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgRefundBidResponse{}, nil
-}
-
-// AdvanceAuction defines a method for advancing rewards auction by one.
-// This message is just for testing purpose and it shouldn't be used in production.
-func (k msgServer) AdvanceAuction(goCtx context.Context, msg *types.MsgAdvanceAuction) (*types.MsgAdvanceAuctionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if EnableAdvanceAuction {
-		endTime, _ := k.GetLastRewardsAuctionEndTime(ctx)
-		ctx = ctx.WithBlockTime(endTime)
-
-		duration := k.GetRewardsAuctionDuration(ctx)
-		nextEndTime := endTime.Add(duration)
-
-		for _, l := range k.GetLiquidFarmsInStore(ctx) {
-			auction, found := k.GetLastRewardsAuction(ctx, l.PoolId)
-			if !found {
-				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
-			} else {
-				if err := k.FinishRewardsAuction(ctx, auction, l.FeeRate); err != nil {
-					panic(err)
-				}
-				k.CreateRewardsAuction(ctx, l.PoolId, nextEndTime)
-			}
-		}
-		k.SetLastRewardsAuctionEndTime(ctx, nextEndTime)
-	} else {
-		return nil, fmt.Errorf("AdvanceAuction is disabled")
-	}
-
-	return &types.MsgAdvanceAuctionResponse{}, nil
+	return &types.MsgCancelBidResponse{}, nil
 }

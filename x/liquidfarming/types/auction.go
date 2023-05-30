@@ -1,159 +1,102 @@
 package types
 
 import (
-	fmt "fmt"
-	time "time"
+	"fmt"
+	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // NewRewardsAuction creates a new RewardsAuction.
 func NewRewardsAuction(
-	id uint64,
-	poolId uint64,
-	startTime time.Time,
-	endTime time.Time,
-) RewardsAuction {
+	liquidFarmId, auctionId uint64, startTime, endTime time.Time,
+	status AuctionStatus) RewardsAuction {
 	return RewardsAuction{
-		Id:                   id,
-		PoolId:               poolId,
-		BiddingCoinDenom:     liquiditytypes.PoolCoinDenom(poolId),
-		PayingReserveAddress: PayingReserveAddress(poolId).String(),
-		StartTime:            startTime,
-		EndTime:              endTime,
-		Status:               AuctionStatusStarted,
-		Winner:               "",            // the value is determined when the auction is finished
-		WinningAmount:        sdk.Coin{},    // the value is determined when the auction is finished
-		Rewards:              sdk.Coins{},   // the value is determined when the auction is finished
-		Fees:                 sdk.Coins{},   // the value is determined when the auction is finished
-		FeeRate:              sdk.ZeroDec(), // the value is determined when the auction is finished
+		LiquidFarmId: liquidFarmId,
+		Id:           auctionId,
+		StartTime:    startTime,
+		EndTime:      endTime,
+		Status:       status,
+		WinningBid:   nil,
+		Rewards:      sdk.Coins{}, // the value is determined when the auction is finished
+		Fees:         sdk.Coins{}, // the value is determined when the auction is finished
 	}
 }
 
 // Validate validates RewardsAuction.
-func (a *RewardsAuction) Validate() error {
-	if a.PoolId == 0 {
-		return fmt.Errorf("pool id must not be 0")
+func (auction RewardsAuction) Validate() error {
+	if auction.LiquidFarmId == 0 {
+		return fmt.Errorf("liquid farm id must not be 0")
 	}
-	if a.BiddingCoinDenom == "" {
-		return fmt.Errorf("denom must not be empty")
+	if auction.Id == 0 {
+		return fmt.Errorf("id must not be 0")
 	}
-	if err := sdk.ValidateDenom(a.BiddingCoinDenom); err != nil {
-		return fmt.Errorf("invalid coin denom")
-	}
-	if _, err := sdk.AccAddressFromBech32(a.PayingReserveAddress); err != nil {
-		return fmt.Errorf("invalid paying reserve address %w", err)
-	}
-	if !a.EndTime.After(a.StartTime) {
+	if !auction.EndTime.After(auction.StartTime) {
 		return fmt.Errorf("end time must be set after the start time")
 	}
-	if a.Status != AuctionStatusStarted && a.Status != AuctionStatusFinished {
-		return fmt.Errorf("invalid auction status")
+	if auction.Status != AuctionStatusStarted && auction.Status != AuctionStatusFinished && auction.Status != AuctionStatusSkipped {
+		return fmt.Errorf("invalid auction status: %v", auction.Status)
+	}
+	if auction.WinningBid != nil {
+		if err := auction.WinningBid.Validate(); err != nil {
+			return fmt.Errorf("invalid winning bid: %w", err)
+		}
+	}
+	if err := auction.Rewards.Validate(); err != nil {
+		return fmt.Errorf("invalid rewards: %w", err)
+	}
+	if err := auction.Fees.Validate(); err != nil {
+		return fmt.Errorf("invalid fees: %w", err)
 	}
 	return nil
 }
 
-// SetStatus sets rewards auction status.
-func (a *RewardsAuction) SetStatus(status AuctionStatus) {
-	a.Status = status
+func (auction *RewardsAuction) SetStatus(status AuctionStatus) {
+	auction.Status = status
 }
 
-// SetWinner sets winner address.
-func (a *RewardsAuction) SetWinner(winner string) {
-	a.Winner = winner
+func (auction *RewardsAuction) SetWinningBid(winningBid *Bid) {
+	auction.WinningBid = winningBid
 }
 
-// SetWinningAmount sets the winning amount.
-func (a *RewardsAuction) SetWinningAmount(winningAmount sdk.Coin) {
-	a.WinningAmount = winningAmount
+func (auction *RewardsAuction) SetRewards(rewards sdk.Coins) {
+	auction.Rewards = rewards
 }
 
-// SetRewards sets auction rewards.
-func (a *RewardsAuction) SetRewards(rewards sdk.Coins) {
-	a.Rewards = rewards
-}
-
-// SetFees sets auction fees.
-func (a *RewardsAuction) SetFees(fees sdk.Coins) {
-	a.Fees = fees
-}
-
-// SetFeeRate sets auction fee rate.
-func (a *RewardsAuction) SetFeeRate(feeRate sdk.Dec) {
-	a.FeeRate = feeRate
-}
-
-// GetPayingReserveAddress returns the paying reserve address in the form of sdk.AccAddress.
-func (a RewardsAuction) GetPayingReserveAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(a.PayingReserveAddress)
-	if err != nil {
-		panic(err)
-	}
-	return addr
+func (auction *RewardsAuction) SetFees(fees sdk.Coins) {
+	auction.Fees = fees
 }
 
 // NewBid creates a new Bid.
-func NewBid(poolId uint64, bidder string, amount sdk.Coin) Bid {
+func NewBid(
+	liquidFarmId, auctionId uint64, bidderAddr sdk.AccAddress, share sdk.Coin) Bid {
 	return Bid{
-		PoolId: poolId,
-		Bidder: bidder,
-		Amount: amount,
+		LiquidFarmId:     liquidFarmId,
+		RewardsAuctionId: auctionId,
+		Bidder:           bidderAddr.String(),
+		Share:            share,
 	}
-}
-
-// GetBidder returns the bidder address in the form of sdk.AccAddress.
-func (b Bid) GetBidder() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(b.Bidder)
-	if err != nil {
-		panic(err)
-	}
-	return addr
 }
 
 // Validate validates Bid.
-func (b Bid) Validate() error {
-	if b.PoolId == 0 {
-		return fmt.Errorf("pool id must not be 0")
+func (bid Bid) Validate() error {
+	if bid.LiquidFarmId == 0 {
+		return fmt.Errorf("liquid farm id must not be 0")
 	}
-	if _, err := sdk.AccAddressFromBech32(b.Bidder); err != nil {
-		return fmt.Errorf("invalid bidder address %w", err)
+	if bid.RewardsAuctionId == 0 {
+		return fmt.Errorf("rewards auction id must not be 0")
 	}
-	if !b.Amount.IsPositive() {
-		return fmt.Errorf("amount must be positive value")
+	if _, err := sdk.AccAddressFromBech32(bid.Bidder); err != nil {
+		return fmt.Errorf("invalid bidder address: %w", err)
 	}
-	if err := b.Amount.Validate(); err != nil {
-		return fmt.Errorf("invalid bid amount %w", err)
+	if err := bid.Share.Validate(); err != nil {
+		return fmt.Errorf("invalid share: %w", err)
+	}
+	if !bid.Share.IsPositive() {
+		return fmt.Errorf("share amount must be positive: %s", bid.Share)
+	}
+	if shareDenom := ShareDenom(bid.LiquidFarmId); bid.Share.Denom != shareDenom {
+		return fmt.Errorf("share denom must be %s", shareDenom)
 	}
 	return nil
-}
-
-// MustMarshalRewardsAuction marshals RewardsAuction and
-// it panics upon failure.
-func MustMarshalRewardsAuction(cdc codec.BinaryCodec, auction RewardsAuction) []byte {
-	return cdc.MustMarshal(&auction)
-}
-
-// MustUnmarshalRewardsAuction unmarshals RewardsAuction and
-// it panics upon failure.
-func MustUnmarshalRewardsAuction(cdc codec.BinaryCodec, value []byte) RewardsAuction {
-	pair, err := UnmarshalRewardsAuction(cdc, value)
-	if err != nil {
-		panic(err)
-	}
-	return pair
-}
-
-// UnmarshalRewardsAuction unmarshals RewardsAuction.
-func UnmarshalRewardsAuction(cdc codec.BinaryCodec, value []byte) (auction RewardsAuction, err error) {
-	err = cdc.Unmarshal(value, &auction)
-	return auction, err
-}
-
-// UnmarshalBid unmarshals bid from a store value.
-func UnmarshalBid(cdc codec.BinaryCodec, value []byte) (bid Bid, err error) {
-	err = cdc.Unmarshal(value, &bid)
-	return bid, err
 }

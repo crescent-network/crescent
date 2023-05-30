@@ -530,15 +530,6 @@ func NewApp(
 		app.LPFarmKeeper,
 		app.SlashingKeeper,
 	)
-	app.LiquidFarmingKeeper = liquidfarmingkeeper.NewKeeper(
-		appCodec,
-		keys[liquidfarmingtypes.StoreKey],
-		app.GetSubspace(liquidfarmingtypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.LPFarmKeeper,
-		app.LiquidityKeeper,
-	)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -637,6 +628,14 @@ func NewApp(
 	)
 	app.ExchangeKeeper.SetOrderSources(
 		ammkeeper.NewOrderSource(app.AMMKeeper),
+	)
+	app.LiquidFarmingKeeper = liquidfarmingkeeper.NewKeeper(
+		appCodec,
+		keys[liquidfarmingtypes.StoreKey],
+		app.GetSubspace(liquidfarmingtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.AMMKeeper,
 	)
 
 	// create static IBC router, add transfer route, then set and seal it

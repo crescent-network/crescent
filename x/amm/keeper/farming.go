@@ -148,6 +148,10 @@ func (k Keeper) AllocateFarmingRewards(ctx sdk.Context) error {
 				if !found { // sanity check
 					panic("pool not found")
 				}
+				poolState := k.MustGetPoolState(ctx, pool.Id)
+				if !poolState.CurrentLiquidity.IsPositive() {
+					continue
+				}
 				if _, ok := totalRewardsByFarmingPool[plan.FarmingPoolAddress]; !ok {
 					farmingPools = append(farmingPools, plan.FarmingPoolAddress)
 				}

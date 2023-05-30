@@ -11,22 +11,22 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/liquidfarming interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgLiquidFarm{}, "liquidfarming/MsgLiquidFarm", nil)
-	cdc.RegisterConcrete(&MsgLiquidUnfarm{}, "liquidfarming/MsgLiquidUnfarm", nil)
-	cdc.RegisterConcrete(&MsgLiquidUnfarmAndWithdraw{}, "liquidfarming/MsgLiquidUnfarmAndWithdraw", nil)
+	cdc.RegisterConcrete(&MsgMintShare{}, "liquidfarming/MsgMintShare", nil)
+	cdc.RegisterConcrete(&MsgBurnShare{}, "liquidfarming/MsgBurnShare", nil)
 	cdc.RegisterConcrete(&MsgPlaceBid{}, "liquidfarming/MsgPlaceBid", nil)
-	cdc.RegisterConcrete(&MsgRefundBid{}, "liquidfarming/MsgRefundBid", nil)
+	cdc.RegisterConcrete(&MsgCancelBid{}, "liquidfarming/MsgCancelBid", nil)
+	// MsgFinishAuctions is omitted intentionally
 }
 
 // RegisterInterfaces registers the x/liquidfarming interfaces types with the interface registry
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
-		&MsgLiquidFarm{},
-		&MsgLiquidUnfarm{},
-		&MsgLiquidUnfarmAndWithdraw{},
+		&MsgMintShare{},
+		&MsgBurnShare{},
 		&MsgPlaceBid{},
-		&MsgRefundBid{},
+		&MsgCancelBid{},
+		// MsgFinishAuctions is omitted intentionally
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

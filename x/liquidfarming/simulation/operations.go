@@ -131,7 +131,7 @@ func SimulateMsgPlaceBid(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 	}
 }
 
-// SimulateMsgRefundBid generates a MsgRefundBid with random values
+// SimulateMsgRefundBid generates a MsgCancelBid with random values
 // nolint: interfacer
 func SimulateMsgRefundBid(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
