@@ -27,7 +27,6 @@ var (
 	LiquidFarmKeyPrefix          = []byte{0xe4}
 	RewardsAuctionKeyPrefix      = []byte{0xe5}
 	BidKeyPrefix                 = []byte{0xe6}
-	PreviousWinningBidKeyPrefix  = []byte{0xe7}
 )
 
 // GetLiquidFarmKey returns the store key to retrieve the liquid farm object

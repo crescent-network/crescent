@@ -33,8 +33,8 @@ var (
 	PositionByParamsIndexKeyPrefix     = []byte{0x47} // poolId + owner + lowerTick + upperTick => positionId
 	TickInfoKeyPrefix                  = []byte{0x48} // poolId + tick => TickInfo
 	LastFarmingPlanIdKey               = []byte{0x49}
-	FarmingPlanKeyPrefix               = []byte{0x50} // planId => FarmingPlan
-	NumPrivateFarmingPlansKey          = []byte{0x51}
+	FarmingPlanKeyPrefix               = []byte{0x4a} // planId => FarmingPlan
+	NumPrivateFarmingPlansKey          = []byte{0x4b}
 )
 
 func GetPoolKey(poolId uint64) []byte {

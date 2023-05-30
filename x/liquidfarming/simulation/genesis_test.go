@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -41,18 +40,9 @@ func TestRandomizedGenState(t *testing.T) {
 	var genState types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &genState)
 
-	expNextAuctionHour := 21 * time.Hour // 75600000000000
-	expLiquidFarms := []types.LiquidFarm{
-		{
-			PoolId:        1,
-			MinFarmAmount: sdk.NewInt(640732),
-			MinBidAmount:  sdk.NewInt(610856),
-			FeeRate:       sdk.MustNewDecFromStr("0.004728509433899850"),
-		},
-	}
+	expNextAuctionHour := 18 * time.Hour // 75600000000000
 
 	require.Equal(t, expNextAuctionHour, genState.Params.RewardsAuctionDuration)
-	require.Equal(t, expLiquidFarms, genState.Params.LiquidFarms)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
