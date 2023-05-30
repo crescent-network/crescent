@@ -25,17 +25,16 @@ var _ types.MsgServer = msgServer{}
 func (m msgServer) MintShare(goCtx context.Context, msg *types.MsgMintShare) (*types.MsgMintShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	mintedShare, position, liquidity, amt, err := m.Keeper.MintShare(
+	mintedShare, _, liquidity, amt, err := m.Keeper.MintShare(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.DesiredAmount)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgMintShareResponse{
-		MintedShare:      mintedShare,
-		PositionId: position.Id,
-		Liquidity:  liquidity,
-		Amount:     amt,
+		MintedShare: mintedShare,
+		Liquidity:   liquidity,
+		Amount:      amt,
 	}, nil
 }
 
@@ -43,14 +42,14 @@ func (m msgServer) MintShare(goCtx context.Context, msg *types.MsgMintShare) (*t
 func (m msgServer) BurnShare(goCtx context.Context, msg *types.MsgBurnShare) (*types.MsgBurnShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	removedLiquidity, amt, err := m.Keeper.BurnShare(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.Share)
+	removedLiquidity, _, amt, err := m.Keeper.BurnShare(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.Share)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgBurnShareResponse{
 		RemovedLiquidity: removedLiquidity,
-		Amount:    amt,
+		Amount:           amt,
 	}, nil
 }
 

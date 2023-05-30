@@ -63,10 +63,10 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 		sdk.NewInt(10000), utils.ParseDec("0.003"))
 
 	// Two account mints liquid farm share.
-	minterAddr1 := s.FundedAccount(2, enoughCoins)
-	minterAddr2 := s.FundedAccount(3, enoughCoins)
-	s.MintShare(minterAddr1, liquidFarm.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"))
-	s.MintShare(minterAddr2, liquidFarm.Id, utils.ParseCoins("300_000000ucre,1500_000000uusd"))
+	minterAddr1 := utils.TestAddress(2)
+	minterAddr2 := utils.TestAddress(3)
+	s.MintShare(minterAddr1, liquidFarm.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
+	s.MintShare(minterAddr2, liquidFarm.Id, utils.ParseCoins("300_000000ucre,1500_000000uusd"), true)
 
 	// Auction starts and rewards are accrued
 	s.AdvanceRewardsAuctions()
@@ -76,12 +76,12 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	auction, found := s.keeper.GetLastRewardsAuction(s.Ctx, liquidFarm.Id)
 	s.Require().True(found)
 
-	bidderAddr1 := s.FundedAccount(4, enoughCoins)
-	bidderAddr2 := s.FundedAccount(5, enoughCoins)
-	bidderAddr3 := s.FundedAccount(6, enoughCoins)
-	bidderShare1, _, _, _ := s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_000000ucre,50_000000uusd"))
-	bidderShare2, _, _, _ := s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("20_000000ucre,100_000000uusd"))
-	bidderShare3, _, _, _ := s.MintShare(bidderAddr3, liquidFarm.Id, utils.ParseCoins("30_000000ucre,150_000000uusd"))
+	bidderAddr1 := utils.TestAddress(4)
+	bidderAddr2 := utils.TestAddress(5)
+	bidderAddr3 := utils.TestAddress(6)
+	bidderShare1, _, _, _ := s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_000000ucre,50_000000uusd"), true)
+	bidderShare2, _, _, _ := s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("20_000000ucre,100_000000uusd"), true)
+	bidderShare3, _, _, _ := s.MintShare(bidderAddr3, liquidFarm.Id, utils.ParseCoins("30_000000ucre,150_000000uusd"), true)
 	s.PlaceBid(bidderAddr1, liquidFarm.Id, auction.Id, bidderShare1)
 	s.PlaceBid(bidderAddr2, liquidFarm.Id, auction.Id, bidderShare2)
 	s.PlaceBid(bidderAddr3, liquidFarm.Id, auction.Id, bidderShare3)
@@ -90,12 +90,12 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	s.NextBlock()
 	s.NextBlock()
 
-	minterAddr3 := s.FundedAccount(7, enoughCoins)
-	s.MintShare(minterAddr3, liquidFarm.Id, utils.ParseCoins("500_000000ucre,2500_000000uusd"))
+	minterAddr3 := utils.TestAddress(7)
+	s.MintShare(minterAddr3, liquidFarm.Id, utils.ParseCoins("500_000000ucre,2500_000000uusd"), true)
 
 	auction, _ = s.keeper.GetLastRewardsAuction(s.Ctx, liquidFarm.Id)
-	bidderShare1, _, _, _ = s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_000000ucre,50_000000uusd"))
-	bidderShare2, _, _, _ = s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("20_000000ucre,100_000000uusd"))
+	bidderShare1, _, _, _ = s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_000000ucre,50_000000uusd"), true)
+	bidderShare2, _, _, _ = s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("20_000000ucre,100_000000uusd"), true)
 	s.PlaceBid(bidderAddr1, liquidFarm.Id, auction.Id, bidderShare1)
 	s.PlaceBid(bidderAddr2, liquidFarm.Id, auction.Id, bidderShare2)
 }

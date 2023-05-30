@@ -15,18 +15,21 @@ func (s *TestSuite) CreateLiquidFarm(poolId uint64, lowerPrice, upperPrice sdk.D
 	return
 }
 
-func (s *TestSuite) MintShare(senderAddr sdk.AccAddress, liquidFarmId uint64, desiredAmt sdk.Coins) (mintedShare sdk.Coin, position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins) {
+func (s *TestSuite) MintShare(senderAddr sdk.AccAddress, liquidFarmId uint64, desiredAmt sdk.Coins, fund bool) (mintedShare sdk.Coin, position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins) {
 	s.T().Helper()
+	if fund {
+		s.FundAccount(senderAddr, desiredAmt)
+	}
 	var err error
 	mintedShare, position, liquidity, amt, err = s.App.LiquidFarmingKeeper.MintShare(s.Ctx, senderAddr, liquidFarmId, desiredAmt)
 	s.Require().NoError(err)
 	return
 }
 
-func (s *TestSuite) BurnShare(senderAddr sdk.AccAddress, liquidFarmId uint64, share sdk.Coin) (removedLiquidity sdk.Int, amt sdk.Coins) {
+func (s *TestSuite) BurnShare(senderAddr sdk.AccAddress, liquidFarmId uint64, share sdk.Coin) (removedLiquidity sdk.Int, position ammtypes.Position, amt sdk.Coins) {
 	s.T().Helper()
 	var err error
-	removedLiquidity, amt, err = s.App.LiquidFarmingKeeper.BurnShare(s.Ctx, senderAddr, liquidFarmId, share)
+	removedLiquidity, position, amt, err = s.App.LiquidFarmingKeeper.BurnShare(s.Ctx, senderAddr, liquidFarmId, share)
 	s.Require().NoError(err)
 	return
 }

@@ -33,10 +33,9 @@ message MsgMintShare {
 
 message MsgMintShareResponse {
   cosmos.base.v1beta1.Coin minted_share = 1 [(gogoproto.nullable) = false];
-  uint64                   position_id  = 2;
-  string                   liquidity    = 3
+  string                   liquidity    = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin amount = 4
+  repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 

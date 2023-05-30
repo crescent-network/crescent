@@ -102,7 +102,7 @@ func CalculateRemovedLiquidity(
 	if burnedShareAmt.Equal(shareSupply) { // last one to unfarm
 		return totalLiquidity
 	}
-	return totalLiquidity.Sub(prevWinningBidShareAmt).Mul(burnedShareAmt).Quo(shareSupply)
+	return totalLiquidity.Mul(burnedShareAmt).Quo(shareSupply.Add(prevWinningBidShareAmt))
 }
 
 // DeductFees deducts fees from rewards by the fee rate.

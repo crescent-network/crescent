@@ -76,20 +76,19 @@ func (k Keeper) MintShare(
 // BurnShare handles types.MsgBurnShare to burn liquid farm share.
 func (k Keeper) BurnShare(
 	ctx sdk.Context, senderAddr sdk.AccAddress, liquidFarmId uint64,
-	share sdk.Coin) (removedLiquidity sdk.Int, amt sdk.Coins, err error) {
-	if shareDenom := types.ShareDenom(liquidFarmId); share.Denom != shareDenom {
-		err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom != %s", shareDenom)
-		return
-	}
-
+	share sdk.Coin) (removedLiquidity sdk.Int, position ammtypes.Position, amt sdk.Coins, err error) {
 	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
 		return
 	}
 
+	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, sdk.NewCoins(share)); err != nil {
+		return
+	}
+
 	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
+	position = k.MustGetLiquidFarmPosition(ctx, liquidFarm)
 
 	shareSupply := k.bankKeeper.GetSupply(ctx, share.Denom).Amount
 	var prevWinningBidShareAmt sdk.Int
@@ -102,16 +101,12 @@ func (k Keeper) BurnShare(
 	removedLiquidity = types.CalculateRemovedLiquidity(
 		share.Amount, shareSupply, position.Liquidity, prevWinningBidShareAmt)
 
+	if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
+		return
+	}
 	_, amt, err = k.ammKeeper.RemoveLiquidity(
 		ctx, moduleAccAddr, senderAddr, position.Id, removedLiquidity)
 	if err != nil {
-		return
-	}
-
-	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, sdk.NewCoins(share)); err != nil {
-		return
-	}
-	if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
 		return
 	}
 
@@ -126,7 +121,7 @@ func (k Keeper) BurnShare(
 	//	),
 	//})
 
-	return removedLiquidity, amt, nil
+	return removedLiquidity, position, amt, nil
 }
 
 func (k Keeper) MustGetLiquidFarmPosition(ctx sdk.Context, liquidFarm types.LiquidFarm) ammtypes.Position {

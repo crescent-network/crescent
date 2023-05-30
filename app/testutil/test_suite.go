@@ -51,6 +51,11 @@ func (s *TestSuite) NextBlock() {
 	s.BeginBlock()
 }
 
+func (s *TestSuite) GetBalance(addr sdk.AccAddress, denom string) sdk.Coin {
+	s.T().Helper()
+	return s.App.BankKeeper.GetBalance(s.Ctx, addr, denom)
+}
+
 func (s *TestSuite) GetAllBalances(addr sdk.AccAddress) sdk.Coins {
 	s.T().Helper()
 	return s.App.BankKeeper.GetAllBalances(s.Ctx, addr)

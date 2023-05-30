@@ -197,12 +197,12 @@ func TestCalculateRemovedLiquidity(t *testing.T) {
 			expectedAmt:            sdk.NewInt(110_000_000),
 		},
 		{
-			name:                   "rewards are auto compounded #1: with previous winning bid",
+			name:                   "rewards are auto compounded #2: with previous winning bid",
 			shareSupply:            sdk.NewInt(1_000_000_000),
 			totalLiquidity:         sdk.NewInt(1_100_000_000),
 			burnedShare:            sdk.NewInt(100_000_000),
 			prevWinningBidShareAmt: sdk.NewInt(100_000),
-			expectedAmt:            sdk.NewInt(109_990_000),
+			expectedAmt:            sdk.NewInt(109_989_001),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

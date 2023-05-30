@@ -21,7 +21,7 @@ func (k Keeper) PlaceBid(
 	}
 	if share.Amount.LT(liquidFarm.MinBidAmount) {
 		return bid, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "share amount must be greater than %s", liquidFarm.MinBidAmount)
+			sdkerrors.ErrInvalidRequest, "share amount must not be smaller than %s", liquidFarm.MinBidAmount)
 	}
 
 	auction, found := k.GetRewardsAuction(ctx, liquidFarmId, auctionId)
@@ -36,7 +36,7 @@ func (k Keeper) PlaceBid(
 		if share.Amount.LTE(auction.WinningBid.Share.Amount) {
 			return bid, sdkerrors.Wrapf(
 				types.ErrInsufficientBidAmount,
-				"share amount must be greater than %s", auction.WinningBid.Share.Amount)
+				"share amount must be greater than winning bid's share %s", auction.WinningBid.Share.Amount)
 		}
 	}
 
