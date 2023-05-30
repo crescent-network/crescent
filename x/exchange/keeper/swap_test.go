@@ -28,6 +28,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	routes := []uint64{market1.Id, market2.Id}
 	input := sdk.NewInt64Coin("uusd", 100_000000)
 	minOutput := sdk.NewInt64Coin("uatom", 9_000000)
-	output := s.SwapExactAmountIn(ordererAddr, routes, input, minOutput, false)
+	output, _ := s.SwapExactAmountIn(ordererAddr, routes, input, minOutput, false)
 	s.Require().Equal("9874876uatom", output.String())
 }

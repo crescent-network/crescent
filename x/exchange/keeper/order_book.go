@@ -9,7 +9,7 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived sdk.Coin) {
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived, totalFee sdk.Coin) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
@@ -19,6 +19,9 @@ func (k Keeper) executeOrder(
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
 	totalExecQuote := utils.ZeroInt
+	totalPaid = sdk.NewCoin(market.PayDenom(isBuy), utils.ZeroInt)
+	totalReceived = sdk.NewCoin(market.ReceiveDenom(isBuy), utils.ZeroInt)
+	totalFee = sdk.NewCoin(market.ReceiveDenom(isBuy), utils.ZeroInt)
 	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
 	for _, level := range obs.Levels {
 		if priceLimit != nil &&
@@ -46,13 +49,17 @@ func (k Keeper) executeOrder(
 
 		market.FillTempOrderBookLevel(level, execQty, level.Price, true, halveFees)
 		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
-		var paid, received sdk.Coin
+		var paid, received, fee sdk.Coin
 		if isBuy {
 			paid = sdk.NewCoin(market.QuoteDenom, execQuote)
-			received = sdk.NewCoin(market.BaseDenom, market.DeductTakerFee(execQty, halveFees))
+			deductedQty, feeQty := market.DeductTakerFee(execQty, halveFees)
+			received = sdk.NewCoin(market.BaseDenom, deductedQty)
+			fee = sdk.NewCoin(market.BaseDenom, feeQty)
 		} else {
 			paid = sdk.NewCoin(market.BaseDenom, execQty)
-			received = sdk.NewCoin(market.QuoteDenom, market.DeductTakerFee(execQuote, halveFees))
+			deductedQuote, feeQuote := market.DeductTakerFee(execQuote, halveFees)
+			received = sdk.NewCoin(market.QuoteDenom, deductedQuote)
+			fee = sdk.NewCoin(market.QuoteDenom, feeQuote)
 		}
 		if err := k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
 			panic(err)
@@ -62,13 +69,9 @@ func (k Keeper) executeOrder(
 		}
 		totalExecQty = totalExecQty.Add(execQty)
 		totalExecQuote = totalExecQuote.Add(execQuote)
-		if totalPaid.IsNil() && totalReceived.IsNil() {
-			totalPaid = paid
-			totalReceived = received
-		} else {
-			totalPaid = totalPaid.Add(paid)
-			totalReceived = totalReceived.Add(received)
-		}
+		totalPaid = totalPaid.Add(paid)
+		totalReceived = totalReceived.Add(received)
+		totalFee = totalFee.Add(fee)
 		lastPrice = level.Price
 	}
 	if !simulate {

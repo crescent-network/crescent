@@ -100,12 +100,6 @@ func GetFarmingPlanKey(planId uint64) []byte {
 	return utils.Key(FarmingPlanKeyPrefix, sdk.Uint64ToBigEndian(planId))
 }
 
-func ParsePoolsByMarketIndexKey(key []byte) (marketId, poolId uint64) {
-	marketId = sdk.BigEndianToUint64(key[1:9])
-	poolId = sdk.BigEndianToUint64(key[9:17])
-	return
-}
-
 func ParsePositionsByPoolIndexKey(key []byte) (poolId, positionId uint64) {
 	poolId = sdk.BigEndianToUint64(key[1:9])
 	positionId = sdk.BigEndianToUint64(key[9:17])

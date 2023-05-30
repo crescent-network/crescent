@@ -117,7 +117,7 @@ func (k Keeper) placeLimitOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	execQty, paid, received = k.executeOrder(
+	execQty, paid, received, _ = k.executeOrder(
 		ctx, market, ordererAddr, isBuy, &price, &qty, nil, false, false)
 
 	openQty := qty.Sub(execQty)
@@ -149,7 +149,7 @@ func (k Keeper) placeMarketOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	execQty, paid, received = k.executeOrder(
+	execQty, paid, received, _ = k.executeOrder(
 		ctx, market, ordererAddr, isBuy, nil, &qty, nil, false, false)
 	return
 }

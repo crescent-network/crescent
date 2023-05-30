@@ -90,25 +90,28 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "no possible routes")
 	}
 	var (
-		bestOutput = utils.ZeroInt
 		bestRoutes []uint64
+		bestOutput = sdk.NewCoin(req.OutputDenom, utils.ZeroInt)
+		bestFees   sdk.Coins
 	)
 	for _, routes := range allRoutes {
-		output, err := k.SwapExactAmountIn(
+		output, fees, err := k.SwapExactAmountIn(
 			ctx, sdk.AccAddress{}, routes, req.Input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
 		if err != nil && !errors.Is(err, types.ErrInsufficientOutput) { // sanity check
 			panic(err)
 		}
 		if err == nil {
-			if output.Amount.GT(bestOutput) {
-				bestOutput = output.Amount
+			if output.Amount.GT(bestOutput.Amount) {
 				bestRoutes = routes
+				bestOutput = output
+				bestFees = fees
 			}
 		}
 	}
 	return &types.QueryBestSwapExactAmountInRoutesResponse{
 		Routes: bestRoutes,
-		Output: sdk.NewCoin(req.OutputDenom, bestOutput),
+		Output: bestOutput,
+		Fees:   bestFees,
 	}, nil
 }
 

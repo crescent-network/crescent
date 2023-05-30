@@ -34,4 +34,6 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
 	s.Require().NoError(err)
 
 	s.Require().EqualValues([]uint64{2, 3}, resp.Routes)
+	s.Require().Equal("972699534uusd", resp.Output.String())
+	s.Require().Equal("142919uatom,1461242uusd", resp.Fees.String())
 }
