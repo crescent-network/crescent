@@ -34,6 +34,7 @@ func GetTxCmd() *cobra.Command {
 		NewCreateMarketCmd(),
 		NewPlaceLimitOrderCmd(),
 		NewPlaceMarketOrderCmd(),
+		NewPlaceMMLimitOrderCmd(),
 		NewCancelOrderCmd(),
 		NewSwapExactAmountInCmd(),
 	)
@@ -151,6 +152,55 @@ $ %s tx %s place-market-order 1 false 100000 --from mykey
 				return fmt.Errorf("invalid quantity: %s", args[2])
 			}
 			msg := types.NewMsgPlaceMarketOrder(clientCtx.GetFromAddress(), marketId, isBuy, qty)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewPlaceMMLimitOrderCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "place-mm-limit-order [market-id] [is-buy] [price] [quantity] [lifespan]",
+		Args:  cobra.ExactArgs(5),
+		Short: "Place a market maker limit order",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Place a market maker limit order.
+
+Example:
+$ %s tx %s place-mm-limit-order 1 true 15 100000 1h --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			marketId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid market id: %w", err)
+			}
+			isBuy, err := strconv.ParseBool(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid buy flag: %w", err)
+			}
+			price, err := sdk.NewDecFromStr(args[2])
+			if err != nil {
+				return fmt.Errorf("invalid price: %w", err)
+			}
+			qty, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[3])
+			}
+			lifespan, err := time.ParseDuration(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid lifespan: %w", err)
+			}
+			isBatch := false // TODO: parse arg properly
+			msg := types.NewMsgPlaceMMLimitOrder(
+				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, isBatch, lifespan)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

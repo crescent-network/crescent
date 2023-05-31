@@ -29,6 +29,8 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryAllPoolsCmd(),
 		NewQueryPoolCmd(),
 		NewQueryPositionsCmd(),
+		NewQueryPoolPositionsCmd(),
+		NewQueryAllFarmingPlansCmd(),
 	)
 
 	return cmd
@@ -144,7 +146,7 @@ $ %s query %s pool 1
 func NewQueryPositionsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "positions [owner]",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Short: "Query positions",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query all positions or query positions by the owner.
@@ -190,5 +192,100 @@ $ %s query %s positions cre1...
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "positions")
+	return cmd
+}
+
+func NewQueryPoolPositionsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pool-positions [pool-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query a pool's positions",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query a pool's positions.
+
+Example:
+$ %s query %s pool-positions 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid pool id: %w", err)
+			}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.PoolPositions(cmd.Context(), &types.QueryPoolPositionsRequest{
+				PoolId:     poolId,
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "positions")
+	return cmd
+}
+
+func NewQueryAllFarmingPlansCmd() *cobra.Command {
+	const (
+		flagIsPrivate    = "is-private"
+		flagIsTerminated = "is-terminated"
+	)
+	cmd := &cobra.Command{
+		Use:   "farming-plans",
+		Args:  cobra.NoArgs,
+		Short: "Query all farming plans",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all farming plans.
+
+Example:
+$ %s query %s farming-plans
+$ %s query %s farming-plans --is-private=true
+$ %s query %s farming-plans --is-terminated=false
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			isPrivate, _ := cmd.Flags().GetString(flagIsPrivate)
+			isTerminated, _ := cmd.Flags().GetString(flagIsTerminated)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AllFarmingPlans(cmd.Context(), &types.QueryAllFarmingPlansRequest{
+				IsPrivate:    isPrivate,
+				IsTerminated: isTerminated,
+				Pagination:   pageReq,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "farming-plans")
+	cmd.Flags().String(flagIsPrivate, "", "Filter farming plans by is_private field (true|false)")
+	cmd.Flags().String(flagIsTerminated, "", "Filter farming plans by is_terminated field (true|false)")
 	return cmd
 }
