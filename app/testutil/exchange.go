@@ -45,10 +45,10 @@ func (s *TestSuite) CancelOrder(ordererAddr sdk.AccAddress, orderId uint64) (ord
 }
 
 func (s *TestSuite) SwapExactAmountIn(
-	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, fees sdk.Coins) {
+	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, results []exchangetypes.SwapRouteResult) {
 	s.T().Helper()
 	var err error
-	output, fees, err = s.App.ExchangeKeeper.SwapExactAmountIn(s.Ctx, ordererAddr, routes, input, minOutput, simulate)
+	output, results, err = s.App.ExchangeKeeper.SwapExactAmountIn(s.Ctx, ordererAddr, routes, input, minOutput, simulate)
 	s.Require().NoError(err)
 	return
 }

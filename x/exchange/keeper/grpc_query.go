@@ -93,15 +93,15 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 	}
 	allRoutes := k.FindAllRoutes(ctx, input.Denom, req.OutputDenom, maxRoutesLen)
 	if len(allRoutes) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "no possible routes")
+		return nil, status.Error(codes.InvalidArgument, "no routes")
 	}
 	var (
-		bestRoutes []uint64
-		bestOutput = sdk.NewCoin(req.OutputDenom, utils.ZeroInt)
-		bestFees   sdk.Coins
+		bestRoutes  []uint64
+		bestOutput  = sdk.NewCoin(req.OutputDenom, utils.ZeroInt)
+		bestResults []types.SwapRouteResult
 	)
 	for _, routes := range allRoutes {
-		output, fees, err := k.SwapExactAmountIn(
+		output, results, err := k.SwapExactAmountIn(
 			ctx, sdk.AccAddress{}, routes, input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
 		if err != nil && !errors.Is(err, types.ErrInsufficientOutput) { // sanity check
 			panic(err)
@@ -110,17 +110,17 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 			if output.Amount.GT(bestOutput.Amount) {
 				bestRoutes = routes
 				bestOutput = output
-				bestFees = fees
+				bestResults = results
 			}
 		}
 	}
 	if len(bestRoutes) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "no possible routes")
+		return nil, status.Error(codes.InvalidArgument, "no possible routes for positive output")
 	}
 	return &types.QueryBestSwapExactAmountInRoutesResponse{
-		Routes: bestRoutes,
-		Output: bestOutput,
-		Fees:   bestFees,
+		Routes:  bestRoutes,
+		Output:  bestOutput,
+		Results: bestResults,
 	}, nil
 }
 

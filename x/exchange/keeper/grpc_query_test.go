@@ -28,12 +28,20 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
 
 	querier := keeper.Querier{Keeper: s.App.ExchangeKeeper}
 	resp, err := querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactAmountInRoutesRequest{
-		Input:       utils.ParseCoin("100_000000ucre"),
+		Input:       "100000000ucre",
 		OutputDenom: "uusd",
 	})
 	s.Require().NoError(err)
 
 	s.Require().EqualValues([]uint64{2, 3}, resp.Routes)
 	s.Require().Equal("972699534uusd", resp.Output.String())
-	s.Require().Equal("142919uatom,1461242uusd", resp.Fees.String())
+	s.Require().Len(resp.Results, 2)
+	s.Require().EqualValues(2, resp.Results[0].MarketId)
+	s.Require().Equal("100000000ucre", resp.Results[0].Input.String())
+	s.Require().Equal("95135825uatom", resp.Results[0].Output.String())
+	s.Require().Equal("142919uatom", resp.Results[0].Fee.String())
+	s.Require().EqualValues(3, resp.Results[1].MarketId)
+	s.Require().Equal("95135825uatom", resp.Results[1].Input.String())
+	s.Require().Equal("972699534uusd", resp.Results[1].Output.String())
+	s.Require().Equal("1461242uusd", resp.Results[1].Fee.String())
 }

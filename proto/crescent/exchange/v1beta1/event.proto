@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "crescent/exchange/v1beta1/exchange.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -69,6 +70,7 @@ message EventSwapExactAmountIn {
   repeated uint64          routes  = 2;
   cosmos.base.v1beta1.Coin input   = 3 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin output  = 4 [(gogoproto.nullable) = false];
+  repeated SwapRouteResult results = 5 [(gogoproto.nullable) = false];
 }
 
 message EventOrderFilled {

@@ -103,13 +103,14 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 func (k msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	output, _, err := k.Keeper.SwapExactAmountIn(
+	output, results, err := k.Keeper.SwapExactAmountIn(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Routes, msg.Input, msg.MinOutput, false)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgSwapExactAmountInResponse{
-		Output: output,
+		Output:  output,
+		Results: results,
 	}, nil
 }

@@ -67,10 +67,9 @@ message QueryBestSwapExactAmountInRoutesRequest {
 }
 
 message QueryBestSwapExactAmountInRoutesResponse {
-  repeated uint64          routes        = 1;
-  cosmos.base.v1beta1.Coin output        = 2 [(gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin fees = 3
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated uint64          routes  = 1;
+  cosmos.base.v1beta1.Coin output  = 2 [(gogoproto.nullable) = false];
+  repeated SwapRouteResult results = 3 [(gogoproto.nullable) = false];
 }
 
 message MarketResponse {

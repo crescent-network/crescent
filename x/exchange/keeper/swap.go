@@ -9,9 +9,9 @@ import (
 
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context, ordererAddr sdk.AccAddress,
-	routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, fees sdk.Coins, err error) {
+	routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, results []types.SwapRouteResult, err error) {
 	if maxRoutesLen := int(k.GetMaxSwapRoutesLen(ctx)); len(routes) > maxRoutesLen {
-		return output, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "routes len exceeded the limit %d", maxRoutesLen)
+		return output, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "routes length exceeded the limit %d", maxRoutesLen)
 	}
 	halveFees := len(routes) > 1
 	currentIn := input
@@ -43,8 +43,13 @@ func (k Keeper) SwapExactAmountIn(
 		var fee sdk.Coin
 		_, _, output, fee = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
+		results = append(results, types.SwapRouteResult{
+			MarketId: marketId,
+			Input:    currentIn,
+			Output:   output,
+			Fee:      fee,
+		})
 		currentIn = output
-		fees = fees.Add(fee)
 	}
 	if output.Denom != minOutput.Denom {
 		return output, nil, sdkerrors.Wrapf(
@@ -59,10 +64,11 @@ func (k Keeper) SwapExactAmountIn(
 		Routes:  routes,
 		Input:   input,
 		Output:  output,
+		Results: results,
 	}); err != nil {
 		return output, nil, err
 	}
-	return output, fees, nil
+	return output, results, nil
 }
 
 func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {

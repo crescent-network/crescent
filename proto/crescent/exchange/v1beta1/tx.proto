@@ -98,5 +98,6 @@ message MsgSwapExactAmountIn {
 }
 
 message MsgSwapExactAmountInResponse {
-  cosmos.base.v1beta1.Coin output = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin output  = 1 [(gogoproto.nullable) = false];
+  repeated SwapRouteResult results = 2 [(gogoproto.nullable) = false];
 }

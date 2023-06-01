@@ -62,3 +62,10 @@ enum OrderType {
   ORDER_TYPE_LIMIT                       = 1 [(gogoproto.enumvalue_customname) = "OrderTypeLimit"];
   ORDER_TYPE_MM                          = 2 [(gogoproto.enumvalue_customname) = "OrderTypeMM"];
 }
+
+message SwapRouteResult {
+  uint64                   market_id = 1;
+  cosmos.base.v1beta1.Coin input     = 2 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin output    = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin fee       = 4 [(gogoproto.nullable) = false];
+}
