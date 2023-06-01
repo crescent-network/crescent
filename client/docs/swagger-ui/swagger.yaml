@@ -9816,11 +9816,7 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: input.denom
-          in: query
-          required: false
-          type: string
-        - name: input.amount
+        - name: input
           in: query
           required: false
           type: string

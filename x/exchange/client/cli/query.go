@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -199,10 +198,7 @@ $ %s query %s best-swap-exact-amount-in-routes 1000000stake uatom
 			if err != nil {
 				return err
 			}
-			input, err := sdk.ParseCoinNormalized(args[0])
-			if err != nil {
-				return fmt.Errorf("invalid input: %w", err)
-			}
+			input := args[0]
 			outputDenom := args[1]
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.BestSwapExactAmountInRoutes(cmd.Context(), &types.QueryBestSwapExactAmountInRoutesRequest{

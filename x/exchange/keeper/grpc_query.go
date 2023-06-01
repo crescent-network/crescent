@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -85,9 +84,16 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	maxRoutesLen := int(k.GetMaxSwapRoutesLen(ctx))
-	allRoutes := k.FindAllRoutes(ctx, req.Input.Denom, req.OutputDenom, maxRoutesLen)
+	input, err := sdk.ParseCoinNormalized(req.Input)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid input: %v", err)
+	}
+	if err := sdk.ValidateDenom(req.OutputDenom); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid output denom: %v", err)
+	}
+	allRoutes := k.FindAllRoutes(ctx, input.Denom, req.OutputDenom, maxRoutesLen)
 	if len(allRoutes) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "no possible routes")
+		return nil, status.Error(codes.InvalidArgument, "no possible routes")
 	}
 	var (
 		bestRoutes []uint64
@@ -96,7 +102,7 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 	)
 	for _, routes := range allRoutes {
 		output, fees, err := k.SwapExactAmountIn(
-			ctx, sdk.AccAddress{}, routes, req.Input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
+			ctx, sdk.AccAddress{}, routes, input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
 		if err != nil && !errors.Is(err, types.ErrInsufficientOutput) { // sanity check
 			panic(err)
 		}
@@ -107,6 +113,9 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 				bestFees = fees
 			}
 		}
+	}
+	if len(bestRoutes) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "no possible routes")
 	}
 	return &types.QueryBestSwapExactAmountInRoutesResponse{
 		Routes: bestRoutes,

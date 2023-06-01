@@ -62,8 +62,8 @@ message QueryOrderResponse {
 }
 
 message QueryBestSwapExactAmountInRoutesRequest {
-  cosmos.base.v1beta1.Coin input        = 1 [(gogoproto.nullable) = false];
-  string                   output_denom = 2;
+  string input        = 1;
+  string output_denom = 2;
 }
 
 message QueryBestSwapExactAmountInRoutesResponse {
