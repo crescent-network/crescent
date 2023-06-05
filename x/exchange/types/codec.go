@@ -17,6 +17,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgPlaceMarketOrder{}, "exchange/MsgPlaceMarketOrder", nil)
 	cdc.RegisterConcrete(&MsgPlaceMMLimitOrder{}, "exchange/MsgPlaceMMLimitOrder", nil)
 	cdc.RegisterConcrete(&MsgCancelOrder{}, "exchange/MsgCancelOrder", nil)
+	cdc.RegisterConcrete(&MsgSwapExactAmountIn{}, "exchange/MsgSwapExactAmountIn", nil)
 	cdc.RegisterConcrete(&MarketParameterChangeProposal{}, "exchange/MarketParameterChangeProposal", nil)
 }
 
@@ -30,6 +31,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgPlaceMMLimitOrder{},
 		&MsgPlaceMarketOrder{},
 		&MsgCancelOrder{},
+		&MsgSwapExactAmountIn{},
 	)
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
