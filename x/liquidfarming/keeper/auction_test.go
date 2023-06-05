@@ -156,59 +156,6 @@ func (s *KeeperTestSuite) TestPlaceBid_Refund() {
 	s.Require().Equal("100000lfshare1", balancesBefore.Sub(balancesAfter).String())
 }
 
-func (s *KeeperTestSuite) TestCancelBid() {
-	liquidFarm := s.CreateSampleLiquidFarm()
-
-	bidderAddr1 := utils.TestAddress(1)
-	bidderAddr2 := utils.TestAddress(2)
-	s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
-	s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
-
-	s.AdvanceRewardsAuctions()
-	auction, found := s.keeper.GetLastRewardsAuction(s.Ctx, liquidFarm.Id)
-	s.Require().True(found)
-	s.PlaceBid(bidderAddr1, liquidFarm.Id, auction.Id, utils.ParseCoin("100000lfshare1"))
-	s.PlaceBid(bidderAddr2, liquidFarm.Id, auction.Id, utils.ParseCoin("200000lfshare1"))
-
-	for _, tc := range []struct {
-		name        string
-		msg         *types.MsgCancelBid
-		expectedErr string
-	}{
-		{
-			"happy case",
-			types.NewMsgCancelBid(bidderAddr1, liquidFarm.Id, auction.Id),
-			"",
-		},
-		{
-			"liquid farm not found",
-			types.NewMsgCancelBid(bidderAddr1, 2, auction.Id),
-			"liquid farm not found: not found",
-		},
-		{
-			"auction not found",
-			types.NewMsgCancelBid(bidderAddr1, liquidFarm.Id, 2),
-			"rewards auction not found: not found",
-		},
-		{
-			"refund winning bid",
-			types.NewMsgCancelBid(bidderAddr2, liquidFarm.Id, auction.Id),
-			"cannot refund a winning bid: invalid request",
-		},
-	} {
-		s.Run(tc.name, func() {
-			s.Require().NoError(tc.msg.ValidateBasic())
-			cacheCtx, _ := s.Ctx.CacheContext()
-			_, err := keeper.NewMsgServerImpl(s.keeper).CancelBid(sdk.WrapSDKContext(cacheCtx), tc.msg)
-			if tc.expectedErr == "" {
-				s.Require().NoError(err)
-			} else {
-				s.Require().EqualError(err, tc.expectedErr)
-			}
-		})
-	}
-}
-
 func (s *KeeperTestSuite) TestAfterRewardsAllocated() {
 	liquidFarm := s.CreateSampleLiquidFarm()
 

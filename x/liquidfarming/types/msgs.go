@@ -9,7 +9,6 @@ var (
 	_ sdk.Msg = (*MsgMintShare)(nil)
 	_ sdk.Msg = (*MsgBurnShare)(nil)
 	_ sdk.Msg = (*MsgPlaceBid)(nil)
-	_ sdk.Msg = (*MsgCancelBid)(nil)
 )
 
 // Message types for the module
@@ -17,7 +16,6 @@ const (
 	TypeMsgMintShare = "mint_share"
 	TypeMsgBurnShare = "burn_share"
 	TypeMsgPlaceBid  = "place_bid"
-	TypeMsgCancelBid = "cancel_bid"
 )
 
 // NewMsgMintShare creates a new MsgMintShare
@@ -146,43 +144,6 @@ func (msg MsgPlaceBid) ValidateBasic() error {
 	}
 	if shareDenom := ShareDenom(msg.LiquidFarmId); msg.Share.Denom != shareDenom {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom must be %s", shareDenom)
-	}
-	return nil
-}
-
-// NewMsgCancelBid creates a new MsgCancelBid
-func NewMsgCancelBid(senderAddr sdk.AccAddress, liquidFarmId, rewardsAuctionId uint64) *MsgCancelBid {
-	return &MsgCancelBid{
-		Sender:           senderAddr.String(),
-		LiquidFarmId:     liquidFarmId,
-		RewardsAuctionId: rewardsAuctionId,
-	}
-}
-
-func (msg MsgCancelBid) Route() string { return RouterKey }
-func (msg MsgCancelBid) Type() string  { return TypeMsgCancelBid }
-
-func (msg MsgCancelBid) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgCancelBid) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
-func (msg MsgCancelBid) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
-	}
-	if msg.LiquidFarmId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "liquid farm id must not be 0")
-	}
-	if msg.RewardsAuctionId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "rewards auction id must not be 0")
 	}
 	return nil
 }

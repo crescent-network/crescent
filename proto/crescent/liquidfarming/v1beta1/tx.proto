@@ -18,9 +18,6 @@ service Msg {
 
   // PlaceBid defines a method for placing a bid for a rewards auction
   rpc PlaceBid(MsgPlaceBid) returns (MsgPlaceBidResponse);
-
-  // CancelBid defines a method for cancelling the bid that is not winning for the auction
-  rpc CancelBid(MsgCancelBid) returns (MsgCancelBidResponse);
 }
 
 // MsgMintShare defines a SDK message for minting share of LiquidFarm.
@@ -62,12 +59,3 @@ message MsgPlaceBid {
 }
 
 message MsgPlaceBidResponse {}
-
-// MsgCancelBid defines a SDK message for cancelling the bid that is not winning for the auction.
-message MsgCancelBid {
-  string sender             = 1;
-  uint64 liquid_farm_id     = 2;
-  uint64 rewards_auction_id = 3;
-}
-
-message MsgCancelBidResponse {}

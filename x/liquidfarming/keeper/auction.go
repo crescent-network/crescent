@@ -74,34 +74,6 @@ func (k Keeper) PlaceBid(
 	return bid, nil
 }
 
-// CancelBid handles types.MsgCancelBid and refunds bid amount to the bidder and
-// delete the bid object.
-func (k Keeper) CancelBid(ctx sdk.Context, bidderAddr sdk.AccAddress, liquidFarmId, auctionId uint64) (bid types.Bid, err error) {
-	liquidFarm, found := k.GetLiquidFarm(ctx, liquidFarmId)
-	if !found {
-		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "liquid farm not found")
-	}
-
-	auction, found := k.GetRewardsAuction(ctx, liquidFarm.Id, auctionId)
-	if !found {
-		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "rewards auction not found")
-	}
-
-	if auction.WinningBid != nil && auction.WinningBid.Bidder == bidderAddr.String() {
-		return bid, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot refund a winning bid")
-	}
-
-	bid, found = k.GetBid(ctx, liquidFarm.Id, auction.Id, bidderAddr)
-	if !found {
-		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "previous bid not found")
-	}
-	if err := k.refundBid(ctx, liquidFarm, bid); err != nil {
-		return bid, err
-	}
-
-	return bid, nil
-}
-
 func (k Keeper) refundBid(ctx sdk.Context, liquidFarm types.LiquidFarm, bid types.Bid) error {
 	if err := k.bankKeeper.SendCoins(
 		ctx, sdk.MustAccAddressFromBech32(liquidFarm.BidReserveAddress),

@@ -64,15 +64,3 @@ func (m msgServer) PlaceBid(goCtx context.Context, msg *types.MsgPlaceBid) (*typ
 
 	return &types.MsgPlaceBidResponse{}, nil
 }
-
-// CancelBid defines a method for refunding the bid for the auction.
-func (m msgServer) CancelBid(goCtx context.Context, msg *types.MsgCancelBid) (*types.MsgCancelBidResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if _, err := m.Keeper.CancelBid(
-		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.LiquidFarmId, msg.RewardsAuctionId); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgCancelBidResponse{}, nil
-}

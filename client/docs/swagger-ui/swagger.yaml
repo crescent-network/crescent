@@ -8943,58 +8943,6 @@ paths:
           format: uint64
       tags:
         - Query
-  '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/exchange_rate':
-    get:
-      summary: >-
-        ExchangeRate returns exchange rates (mint rate and burn rate) for the
-        liquid farm
-      operationId: ExchangeRate
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              exchange_rate:
-                type: object
-                properties:
-                  mint_rate:
-                    type: string
-                  burn_rate:
-                    type: string
-            description: >-
-              QueryExchangeRateResponse is response type for the
-              Query/ExchangeRate RPC method.
-        default:
-          description: An unexpected error response
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type_url:
-                      type: string
-                    value:
-                      type: string
-                      format: byte
-      parameters:
-        - name: liquid_farm_id
-          in: path
-          required: true
-          type: string
-          format: uint64
-      tags:
-        - Query
   '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards':
     get:
       summary: Rewards returns all accumulated rewards for the liquid farm
@@ -16226,13 +16174,6 @@ definitions:
           signatures required by gogoproto.
         title: share specifies the share amount to place a bid
     description: Bid defines standard bid for a rewards auction.
-  crescent.liquidfarming.v1beta1.ExchangeRateResponse:
-    type: object
-    properties:
-      mint_rate:
-        type: string
-      burn_rate:
-        type: string
   crescent.liquidfarming.v1beta1.LiquidFarmResponse:
     type: object
     properties:
@@ -16345,19 +16286,6 @@ definitions:
                    PageResponse page = 2;
            }
     description: QueryBidsResponse is response type for the Query/Bids RPC method.
-  crescent.liquidfarming.v1beta1.QueryExchangeRateResponse:
-    type: object
-    properties:
-      exchange_rate:
-        type: object
-        properties:
-          mint_rate:
-            type: string
-          burn_rate:
-            type: string
-    description: >-
-      QueryExchangeRateResponse is response type for the Query/ExchangeRate RPC
-      method.
   crescent.liquidfarming.v1beta1.QueryLiquidFarmResponse:
     type: object
     properties:

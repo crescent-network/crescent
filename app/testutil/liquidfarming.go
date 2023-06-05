@@ -42,14 +42,6 @@ func (s *TestSuite) PlaceBid(bidderAddr sdk.AccAddress, liquidFarmId, auctionId 
 	return
 }
 
-func (s *TestSuite) CancelBid(bidderAddr sdk.AccAddress, liquidFarmId, auctionId uint64) (bid liquidfarmingtypes.Bid) {
-	s.T().Helper()
-	var err error
-	bid, err = s.App.LiquidFarmingKeeper.CancelBid(s.Ctx, bidderAddr, liquidFarmId, auctionId)
-	s.Require().NoError(err)
-	return
-}
-
 func (s *TestSuite) AdvanceRewardsAuctions() {
 	s.T().Helper()
 	nextEndTime := s.Ctx.BlockTime().Add(s.App.LiquidFarmingKeeper.GetRewardsAuctionDuration(s.Ctx))

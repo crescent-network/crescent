@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -142,7 +144,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		if amtInDiff.IsPositive() {
 			fee := sdk.NewCoin(denomIn, amtInDiff)
 			accruedRewards = accruedRewards.Add(fee)
+			fmt.Printf("accrue %s for liquidity %s\n", fee, poolState.CurrentLiquidity)
 			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			fmt.Printf("fee growth global = %s -> %s\n", poolState.FeeGrowthGlobal, poolState.FeeGrowthGlobal.Add(feeGrowth))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		} else if amtInDiff.IsNegative() { // sanity check
 			//panic(amtInDiff)
@@ -153,7 +157,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			denomOut := pool.DenomOut(isBuy)
 			fee := sdk.NewCoin(denomOut, result.Received.AmountOf(denomOut))
 			accruedRewards = accruedRewards.Add(fee)
+			fmt.Printf("accrue %s for liquidity %s\n", fee, poolState.CurrentLiquidity)
 			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			fmt.Printf("fee growth global = %s -> %s\n", poolState.FeeGrowthGlobal, poolState.FeeGrowthGlobal.Add(feeGrowth))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		}
 

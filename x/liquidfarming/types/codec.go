@@ -14,7 +14,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgMintShare{}, "liquidfarming/MsgMintShare", nil)
 	cdc.RegisterConcrete(&MsgBurnShare{}, "liquidfarming/MsgBurnShare", nil)
 	cdc.RegisterConcrete(&MsgPlaceBid{}, "liquidfarming/MsgPlaceBid", nil)
-	cdc.RegisterConcrete(&MsgCancelBid{}, "liquidfarming/MsgCancelBid", nil)
 	// MsgFinishAuctions is omitted intentionally
 }
 
@@ -25,7 +24,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgMintShare{},
 		&MsgBurnShare{},
 		&MsgPlaceBid{},
-		&MsgCancelBid{},
 		// MsgFinishAuctions is omitted intentionally
 	)
 

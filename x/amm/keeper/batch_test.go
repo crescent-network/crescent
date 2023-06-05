@@ -11,7 +11,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestBatch() {
-	market, pool := s.CreateSampleMarketAndPool()
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
 	marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
 	marketState.LastPrice = utils.ParseDecP("5")
 	s.App.ExchangeKeeper.SetMarketState(s.Ctx, market.Id, marketState)

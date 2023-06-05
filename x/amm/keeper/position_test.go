@@ -26,3 +26,22 @@ func (s *KeeperTestSuite) TestAddLiquidity() {
 		senderAddr, senderAddr, position.Id, sdk.NewInt(9472135))
 	fmt.Println(amt)
 }
+
+func (s *KeeperTestSuite) TestReinitializePosition() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	ownerAddr := s.FundedAccount(1, enoughCoins)
+	lowerPrice, upperPrice := utils.ParseDec("4.5"), utils.ParseDec("5.5")
+	desiredAmt := utils.ParseCoins("100_000000ucre,500_000000uusd")
+	position, liquidity, _ := s.AddLiquidity(
+		ownerAddr, ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(1000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(1000000))
+
+	s.RemoveLiquidity(ownerAddr, ownerAddr, position.Id, liquidity)
+	position, _ = s.keeper.GetPosition(s.Ctx, position.Id)
+	fmt.Println(position.Liquidity)
+	s.AddLiquidity(
+		ownerAddr, ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
+}

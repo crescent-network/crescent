@@ -49,11 +49,6 @@ service Query {
   rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
     option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards";
   }
-
-  // ExchangeRate returns exchange rates (mint rate and burn rate) for the liquid farm
-  rpc ExchangeRate(QueryExchangeRateRequest) returns (QueryExchangeRateResponse) {
-    option (google.api.http).get = "/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/exchange_rate";
-  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -138,11 +133,6 @@ message QueryExchangeRateRequest {
   uint64 liquid_farm_id = 1;
 }
 
-// QueryExchangeRateResponse is response type for the Query/ExchangeRate RPC method.
-message QueryExchangeRateResponse {
-  ExchangeRateResponse exchange_rate = 1 [(gogoproto.nullable) = false];
-}
-
 //
 // Custom response messages
 //
@@ -162,11 +152,4 @@ message LiquidFarmResponse {
   string liquidity               = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin total_share = 10 [(gogoproto.nullable) = false];
-}
-
-message ExchangeRateResponse {
-  string mint_rate = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string burn_rate = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

@@ -32,7 +32,6 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryRewardsAuctionCmd(),
 		NewQueryBidsCmd(),
 		NewQueryRewardsCmd(),
-		NewQueryExchangeRateCmd(),
 	)
 
 	return cmd
@@ -327,45 +326,6 @@ $ %s query %s rewards 1
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.Rewards(cmd.Context(), &types.QueryRewardsRequest{
-				LiquidFarmId: liquidFarmId,
-			})
-			if err != nil {
-				return err
-			}
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-func NewQueryExchangeRateCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "exchange-rate [liquid-farm-id]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Query the exchange rate for liquid farm",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the exchange rate, such as mint rate and burn rate for liquid farm.
-
-Example:
-$ %s query %s exchange-rate 1
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid liquid farm id: %w", err)
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.ExchangeRate(cmd.Context(), &types.QueryExchangeRateRequest{
 				LiquidFarmId: liquidFarmId,
 			})
 			if err != nil {

@@ -188,10 +188,10 @@ func (k Keeper) modifyPosition(
 		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
 		poolState.FarmingRewardsGrowthGlobal)
 
-	owedFee, _ := feeGrowthInside.Sub(position.LastFeeGrowthInside).
-		MulDecTruncate(position.Liquidity.ToDec()).TruncateDecimal()
-	owedFarmingRewards, _ := farmingRewardsGrowthInside.Sub(position.LastFarmingRewardsGrowthInside).
-		MulDecTruncate(position.Liquidity.ToDec()).TruncateDecimal()
+	feeGrowthDiff, _ := feeGrowthInside.SafeSub(position.LastFeeGrowthInside)
+	owedFee, _ := feeGrowthDiff.MulDecTruncate(position.Liquidity.ToDec()).TruncateDecimal()
+	farmingRewardsDiff, _ := farmingRewardsGrowthInside.SafeSub(position.LastFarmingRewardsGrowthInside)
+	owedFarmingRewards, _ := farmingRewardsDiff.MulDecTruncate(position.Liquidity.ToDec()).TruncateDecimal()
 
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
 	position.LastFeeGrowthInside = feeGrowthInside

@@ -30,7 +30,6 @@ func GetTxCmd() *cobra.Command {
 		NewMintShareCmd(),
 		NewBurnShareCmd(),
 		NewPlaceBidCmd(),
-		NewCancelBidCmd(),
 	)
 	return cmd
 }
@@ -145,44 +144,6 @@ $ %s tx %s place-bid 1 1 10000000lfshare1 --from mykey
 			}
 			msg := types.NewMsgPlaceBid(
 				clientCtx.GetFromAddress(), liquidFarmId, auctionId, share)
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewCancelBidCmd implements the cancel bid command handler.
-func NewCancelBidCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cancel-bid [liquid-farm-id] [auction-id]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Cancel a bid",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Cancel a bid.
-
-Example:
-$ %s tx %s cancel-bid 1 1 --from mykey
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid liquid farm id: %w", err)
-			}
-			auctionId, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid auction id: %w", err)
-			}
-			msg := types.NewMsgCancelBid(clientCtx.GetFromAddress(), liquidFarmId, auctionId)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
