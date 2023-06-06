@@ -58,11 +58,7 @@ message MsgPlaceBatchLimitOrder {
 }
 
 message MsgPlaceBatchLimitOrderResponse {
-  uint64 order_id          = 1;
-  string executed_quantity = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+  uint64 order_id = 1;
 }
 
 message MsgPlaceMMLimitOrder {
@@ -92,11 +88,7 @@ message MsgPlaceMMBatchLimitOrder {
 }
 
 message MsgPlaceMMBatchLimitOrderResponse {
-  uint64 order_id          = 1;
-  string executed_quantity = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+  uint64 order_id = 1;
 }
 
 message MsgPlaceMarketOrder {

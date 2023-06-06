@@ -38,12 +38,8 @@ message EventPlaceBatchLimitOrder {
   bool   is_buy    = 4;
   string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  google.protobuf.Duration  lifespan          = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp deadline          = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  string                    executed_quantity = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin paid     = 10 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin received = 11 [(gogoproto.nullable) = false];
+  google.protobuf.Duration  lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp deadline = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
 message EventPlaceMMLimitOrder {
@@ -68,12 +64,8 @@ message EventPlaceMMBatchLimitOrder {
   bool   is_buy    = 4;
   string price    = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  google.protobuf.Duration  lifespan          = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp deadline          = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  string                    executed_quantity = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin paid     = 10 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin received = 11 [(gogoproto.nullable) = false];
+  google.protobuf.Duration  lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp deadline = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
 message EventPlaceMarketOrder {
