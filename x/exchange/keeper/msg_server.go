@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -53,15 +54,14 @@ func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLim
 func (k msgServer) PlaceBatchLimitOrder(goCtx context.Context, msg *types.MsgPlaceBatchLimitOrder) (*types.MsgPlaceBatchLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	const isMidBlock = true
-	if isMidBlock {
+	if utils.IsMidBlockContext(ctx.Context()) {
 		_, _, err := k.Keeper.PlaceBatchLimitOrder(
 			ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 			msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 		if err != nil {
 			return nil, err
 		}
-		return nil, nil
+		return &types.MsgPlaceBatchLimitOrderResponse{}, nil
 	}
 
 	// TODO: determine these values
@@ -114,15 +114,14 @@ func (k msgServer) PlaceMMLimitOrder(goCtx context.Context, msg *types.MsgPlaceM
 func (k msgServer) PlaceMMBatchLimitOrder(goCtx context.Context, msg *types.MsgPlaceMMBatchLimitOrder) (*types.MsgPlaceMMBatchLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	const isMidBlock = true
-	if isMidBlock {
+	if utils.IsMidBlockContext(ctx.Context()) {
 		_, _, err := k.Keeper.PlaceMMBatchLimitOrder(
 			ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 			msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 		if err != nil {
 			return nil, err
 		}
-		return nil, nil
+		return &types.MsgPlaceMMBatchLimitOrderResponse{}, nil
 	}
 
 	// TODO: determine these values

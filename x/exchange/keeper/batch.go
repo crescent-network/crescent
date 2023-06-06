@@ -6,21 +6,18 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Order) {
+func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load
 	// on the other side.
 	var bestBuyPrice, bestSellPrice sdk.Dec
-	for _, order := range orders {
-		if order.IsBuy {
-			if bestBuyPrice.IsNil() || order.Price.GT(bestBuyPrice) {
-				bestBuyPrice = order.Price
-			}
-		} else {
-			if bestSellPrice.IsNil() || order.Price.LT(bestSellPrice) {
-				bestSellPrice = order.Price
-			}
-		}
-	}
+	k.IterateOrderBookSide(ctx, market.Id, true, func(order types.Order) (stop bool) {
+		bestBuyPrice = order.Price
+		return true
+	})
+	k.IterateOrderBookSide(ctx, market.Id, false, func(order types.Order) (stop bool) {
+		bestSellPrice = order.Price
+		return true
+	})
 
 	// Construct TempOrderBookSides with the price limits we obtained previously.
 	var buyObs, sellObs *types.TempOrderBookSide
@@ -33,14 +30,6 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 		sellObs = k.ConstructTempOrderBookSide(ctx, market, false, &bestBuyPrice, nil, nil)
 	} else {
 		sellObs = types.NewTempOrderBookSide(false)
-	}
-	for _, order := range orders {
-		tempOrder := types.NewTempOrder(order, market, nil)
-		if order.IsBuy {
-			buyObs.AddOrder(tempOrder)
-		} else {
-			sellObs.AddOrder(tempOrder)
-		}
 	}
 
 	marketState := k.MustGetMarketState(ctx, market.Id)
@@ -70,7 +59,7 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 	}
 	// If there's no level to match, return earlier.
 	if buyLevelIdx >= len(buyObs.Levels) || sellLevelIdx >= len(sellObs.Levels) {
-		return
+		return nil
 	}
 
 	// Phase 2: Match orders in traditional exchange's manner.
@@ -110,10 +99,11 @@ func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Or
 		tempOrders = append(tempOrders, level.Orders...)
 	}
 	if err := k.FinalizeMatching(ctx, market, tempOrders); err != nil {
-		panic(err)
+		return err
 	}
 	if !marketState.LastPrice.Equal(lastPrice) {
 		marketState.LastPrice = &lastPrice
 		k.SetMarketState(ctx, market.Id, marketState)
 	}
+	return nil
 }

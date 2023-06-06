@@ -16,7 +16,6 @@ import (
 
 type KeeperTestSuite struct {
 	testutil.TestSuite
-
 	keeper  keeper.Keeper
 	querier keeper.Querier
 }
