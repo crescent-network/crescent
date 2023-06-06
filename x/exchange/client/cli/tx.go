@@ -33,8 +33,10 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewCreateMarketCmd(),
 		NewPlaceLimitOrderCmd(),
-		NewPlaceMarketOrderCmd(),
+		NewPlaceBatchLimitOrderCmd(),
 		NewPlaceMMLimitOrderCmd(),
+		NewPlaceMMBatchLimitOrderCmd(),
+		NewPlaceMarketOrderCmd(),
 		NewCancelOrderCmd(),
 		NewSwapExactAmountInCmd(),
 	)
@@ -110,9 +112,8 @@ $ %s tx %s place-limit-order 1 true 15 100000 1h --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid lifespan: %w", err)
 			}
-			isBatch := false // TODO: parse arg properly
 			msg := types.NewMsgPlaceLimitOrder(
-				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, isBatch, lifespan)
+				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, lifespan)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -120,16 +121,17 @@ $ %s tx %s place-limit-order 1 true 15 100000 1h --from mykey
 	return cmd
 }
 
-func NewPlaceMarketOrderCmd() *cobra.Command {
+func NewPlaceBatchLimitOrderCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "place-market-order [market-id] [is-buy] [quantity]",
-		Args:  cobra.ExactArgs(3),
-		Short: "Place a market order",
+		Use:   "place-batch-limit-order [market-id] [is-buy] [price] [quantity] [lifespan]",
+		Args:  cobra.ExactArgs(5),
+		Short: "Place a batch limit order",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Place a market order.
+			fmt.Sprintf(`Place a batch limit order.
+Batch orders are matched prior to normal orders in a batch matching stage.
 
 Example:
-$ %s tx %s place-market-order 1 false 100000 --from mykey
+$ %s tx %s place-batch-limit-order 1 true 15 100000 1h --from mykey
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -147,11 +149,20 @@ $ %s tx %s place-market-order 1 false 100000 --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid buy flag: %w", err)
 			}
-			qty, ok := sdk.NewIntFromString(args[2])
-			if !ok {
-				return fmt.Errorf("invalid quantity: %s", args[2])
+			price, err := sdk.NewDecFromStr(args[2])
+			if err != nil {
+				return fmt.Errorf("invalid price: %w", err)
 			}
-			msg := types.NewMsgPlaceMarketOrder(clientCtx.GetFromAddress(), marketId, isBuy, qty)
+			qty, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[3])
+			}
+			lifespan, err := time.ParseDuration(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid lifespan: %w", err)
+			}
+			msg := types.NewMsgPlaceBatchLimitOrder(
+				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, lifespan)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -198,9 +209,96 @@ $ %s tx %s place-mm-limit-order 1 true 15 100000 1h --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid lifespan: %w", err)
 			}
-			isBatch := false // TODO: parse arg properly
 			msg := types.NewMsgPlaceMMLimitOrder(
-				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, isBatch, lifespan)
+				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, lifespan)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewPlaceMMBatchLimitOrderCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "place-mm-batch-limit-order [market-id] [is-buy] [price] [quantity] [lifespan]",
+		Args:  cobra.ExactArgs(5),
+		Short: "Place a market maker batch limit order",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Place a market maker batch limit order.
+Batch orders are matched prior to normal orders in a batch matching stage.
+
+Example:
+$ %s tx %s place-mm-batch-limit-order 1 true 15 100000 1h --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			marketId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid market id: %w", err)
+			}
+			isBuy, err := strconv.ParseBool(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid buy flag: %w", err)
+			}
+			price, err := sdk.NewDecFromStr(args[2])
+			if err != nil {
+				return fmt.Errorf("invalid price: %w", err)
+			}
+			qty, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[3])
+			}
+			lifespan, err := time.ParseDuration(args[4])
+			if err != nil {
+				return fmt.Errorf("invalid lifespan: %w", err)
+			}
+			msg := types.NewMsgPlaceMMBatchLimitOrder(
+				clientCtx.GetFromAddress(), marketId, isBuy, price, qty, lifespan)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewPlaceMarketOrderCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "place-market-order [market-id] [is-buy] [quantity]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Place a market order",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Place a market order.
+
+Example:
+$ %s tx %s place-market-order 1 false 100000 --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			marketId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid market id: %w", err)
+			}
+			isBuy, err := strconv.ParseBool(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid buy flag: %w", err)
+			}
+			qty, ok := sdk.NewIntFromString(args[2])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[2])
+			}
+			msg := types.NewMsgPlaceMarketOrder(clientCtx.GetFromAddress(), marketId, isBuy, qty)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

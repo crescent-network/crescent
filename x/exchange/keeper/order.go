@@ -14,7 +14,7 @@ func (k Keeper) PlaceLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
 	orderId, order, execQty, paid, received, err = k.placeLimitOrder(
-		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan)
+		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan, false)
 	if err != nil {
 		return
 	}
@@ -36,23 +36,12 @@ func (k Keeper) PlaceLimitOrder(
 	return
 }
 
-func (k Keeper) PlaceMarketOrder(
+func (k Keeper) PlaceBatchLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, qty sdk.Int) (orderId uint64, execQty sdk.Int, paid, received sdk.Coin, err error) {
-	orderId, execQty, paid, received, err = k.placeMarketOrder(ctx, marketId, ordererAddr, isBuy, qty)
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, err error) {
+	orderId, order, _, _, _, err = k.placeLimitOrder(
+		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
-		return
-	}
-	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceMarketOrder{
-		MarketId:         marketId,
-		OrderId:          orderId,
-		Orderer:          ordererAddr.String(),
-		IsBuy:            isBuy,
-		Quantity:         qty,
-		ExecutedQuantity: execQty,
-		Paid:             paid,
-		Received:         received,
-	}); err != nil {
 		return
 	}
 	return
@@ -61,14 +50,8 @@ func (k Keeper) PlaceMarketOrder(
 func (k Keeper) PlaceMMLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
-	numMMOrders, found := k.GetNumMMOrders(ctx, ordererAddr, marketId)
-	if found && numMMOrders >= k.GetMaxNumMMOrders(ctx) {
-		err = types.ErrMaxNumMMOrdersExceeded
-		return
-	}
-	k.SetNumMMOrders(ctx, ordererAddr, marketId, numMMOrders+1)
 	orderId, order, execQty, paid, received, err = k.placeLimitOrder(
-		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan)
+		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, false)
 	if err != nil {
 		return
 	}
@@ -90,9 +73,20 @@ func (k Keeper) PlaceMMLimitOrder(
 	return
 }
 
+func (k Keeper) PlaceMMBatchLimitOrder(
+	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, err error) {
+	orderId, order, _, _, _, err = k.placeLimitOrder(
+		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (k Keeper) placeLimitOrder(
 	ctx sdk.Context, typ types.OrderType, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration, isBatch bool) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
 	if !qty.IsPositive() { // sanity check
 		panic("quantity must be positive")
 	}
@@ -102,6 +96,18 @@ func (k Keeper) placeLimitOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
+
+	if typ == types.OrderTypeMM {
+		numMMOrders, found := k.GetNumMMOrders(ctx, ordererAddr, marketId)
+		if found {
+			if maxNum := k.GetMaxNumMMOrders(ctx); numMMOrders >= maxNum {
+				err = sdkerrors.Wrapf(types.ErrMaxNumMMOrdersExceeded, "%d", maxNum)
+				return
+			}
+		}
+		k.SetNumMMOrders(ctx, ordererAddr, marketId, numMMOrders+1)
+	}
+
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	if marketState.LastPrice != nil {
 		maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
@@ -117,11 +123,15 @@ func (k Keeper) placeLimitOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	execQty, paid, received, _ = k.executeOrder(
-		ctx, market, ordererAddr, isBuy, &price, &qty, nil, false, false)
+	if isBatch {
+		execQty = utils.ZeroInt
+	} else {
+		execQty, paid, received, _ = k.executeOrder(
+			ctx, market, ordererAddr, isBuy, &price, &qty, nil, false, false)
+	}
 
 	openQty := qty.Sub(execQty)
-	if openQty.IsPositive() {
+	if isBatch || openQty.IsPositive() {
 		deadline := ctx.BlockTime().Add(lifespan)
 		order, err = k.newOrder(
 			ctx, orderId, typ, market, ordererAddr, isBuy, price,
@@ -135,7 +145,7 @@ func (k Keeper) placeLimitOrder(
 	return
 }
 
-func (k Keeper) placeMarketOrder(
+func (k Keeper) PlaceMarketOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, qty sdk.Int) (orderId uint64, execQty sdk.Int, paid, received sdk.Coin, err error) {
 	if !qty.IsPositive() { // sanity check
@@ -151,6 +161,19 @@ func (k Keeper) placeMarketOrder(
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
 	execQty, paid, received, _ = k.executeOrder(
 		ctx, market, ordererAddr, isBuy, nil, &qty, nil, false, false)
+
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceMarketOrder{
+		MarketId:         marketId,
+		OrderId:          orderId,
+		Orderer:          ordererAddr.String(),
+		IsBuy:            isBuy,
+		Quantity:         qty,
+		ExecutedQuantity: execQty,
+		Paid:             paid,
+		Received:         received,
+	}); err != nil {
+		return
+	}
 	return
 }
 

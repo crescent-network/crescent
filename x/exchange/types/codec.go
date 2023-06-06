@@ -14,8 +14,10 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateMarket{}, "exchange/MsgCreateMarket", nil)
 	cdc.RegisterConcrete(&MsgPlaceLimitOrder{}, "exchange/MsgPlaceLimitOrder", nil)
-	cdc.RegisterConcrete(&MsgPlaceMarketOrder{}, "exchange/MsgPlaceMarketOrder", nil)
+	cdc.RegisterConcrete(&MsgPlaceBatchLimitOrder{}, "exchange/MsgPlaceBatchLimitOrder", nil)
 	cdc.RegisterConcrete(&MsgPlaceMMLimitOrder{}, "exchange/MsgPlaceMMLimitOrder", nil)
+	cdc.RegisterConcrete(&MsgPlaceMMBatchLimitOrder{}, "exchange/MsgPlaceMMBatchLimitOrder", nil)
+	cdc.RegisterConcrete(&MsgPlaceMarketOrder{}, "exchange/MsgPlaceMarketOrder", nil)
 	cdc.RegisterConcrete(&MsgCancelOrder{}, "exchange/MsgCancelOrder", nil)
 	cdc.RegisterConcrete(&MsgSwapExactAmountIn{}, "exchange/MsgSwapExactAmountIn", nil)
 	cdc.RegisterConcrete(&MarketParameterChangeProposal{}, "exchange/MarketParameterChangeProposal", nil)
@@ -28,7 +30,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateMarket{},
 		&MsgPlaceLimitOrder{},
+		&MsgPlaceBatchLimitOrder{},
 		&MsgPlaceMMLimitOrder{},
+		&MsgPlaceMMBatchLimitOrder{},
 		&MsgPlaceMarketOrder{},
 		&MsgCancelOrder{},
 		&MsgSwapExactAmountIn{},

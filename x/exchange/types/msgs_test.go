@@ -136,7 +136,7 @@ func TestMsgPlaceLimitOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgPlaceLimitOrder(
-				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), false, time.Hour)
+				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.TypeMsgPlaceLimitOrder, msg.Type())
 			tc.malleate(msg)
@@ -150,51 +150,86 @@ func TestMsgPlaceLimitOrder(t *testing.T) {
 	}
 }
 
-func TestMsgPlaceMarketOrder(t *testing.T) {
+func TestMsgPlaceBatchLimitOrder(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		malleate    func(msg *types.MsgPlaceMarketOrder)
+		malleate    func(msg *types.MsgPlaceBatchLimitOrder)
 		expectedErr string
 	}{
 		{
 			"valid",
-			func(msg *types.MsgPlaceMarketOrder) {},
+			func(msg *types.MsgPlaceBatchLimitOrder) {},
 			"",
 		},
 		{
 			"invalid sender",
-			func(msg *types.MsgPlaceMarketOrder) {
+			func(msg *types.MsgPlaceBatchLimitOrder) {
 				msg.Sender = "invalidaddr"
 			},
 			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
 			"invalid market id",
-			func(msg *types.MsgPlaceMarketOrder) {
+			func(msg *types.MsgPlaceBatchLimitOrder) {
 				msg.MarketId = 0
 			},
 			"market id must not be 0: invalid request",
 		},
 		{
+			"zero price",
+			func(msg *types.MsgPlaceBatchLimitOrder) {
+				msg.Price = utils.ParseDec("0")
+			},
+			"price is lower than the min price; 0.000000000000000000 < 0.000000000000010000: invalid request",
+		},
+		{
+			"negative price",
+			func(msg *types.MsgPlaceBatchLimitOrder) {
+				msg.Price = utils.ParseDec("-12.345")
+			},
+			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
+		},
+		{
+			"invalid price tick",
+			func(msg *types.MsgPlaceBatchLimitOrder) {
+				msg.Price = utils.ParseDec("12.34567")
+			},
+			"invalid price tick: 12.345670000000000000: invalid request",
+		},
+		{
 			"zero quantity",
-			func(msg *types.MsgPlaceMarketOrder) {
+			func(msg *types.MsgPlaceBatchLimitOrder) {
 				msg.Quantity = sdk.NewInt(0)
 			},
 			"quantity must be positive: 0: invalid request",
 		},
 		{
 			"negative quantity",
-			func(msg *types.MsgPlaceMarketOrder) {
+			func(msg *types.MsgPlaceBatchLimitOrder) {
 				msg.Quantity = sdk.NewInt(-1000000)
 			},
 			"quantity must be positive: -1000000: invalid request",
 		},
+		{
+			"zero lifespan",
+			func(msg *types.MsgPlaceBatchLimitOrder) {
+				msg.Lifespan = 0
+			},
+			"",
+		},
+		{
+			"negative lifespan",
+			func(msg *types.MsgPlaceBatchLimitOrder) {
+				msg.Lifespan = -time.Hour
+			},
+			"lifespan must not be negative: -1h0m0s: invalid request",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgPlaceMarketOrder(
-				utils.TestAddress(1), 1, true, sdk.NewInt(1000000))
+			msg := types.NewMsgPlaceBatchLimitOrder(
+				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
-			require.Equal(t, types.TypeMsgPlaceMarketOrder, msg.Type())
+			require.Equal(t, types.TypeMsgPlaceBatchLimitOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {
@@ -283,9 +318,156 @@ func TestMsgPlaceMMLimitOrder(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgPlaceMMLimitOrder(
-				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), false, time.Hour)
+				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.TypeMsgPlaceMMLimitOrder, msg.Type())
+			tc.malleate(msg)
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestMsgPlaceMMBatchLimitOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		malleate    func(msg *types.MsgPlaceMMBatchLimitOrder)
+		expectedErr string
+	}{
+		{
+			"valid",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {},
+			"",
+		},
+		{
+			"invalid sender",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Sender = "invalidaddr"
+			},
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid market id",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.MarketId = 0
+			},
+			"market id must not be 0: invalid request",
+		},
+		{
+			"zero price",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Price = utils.ParseDec("0")
+			},
+			"price is lower than the min price; 0.000000000000000000 < 0.000000000000010000: invalid request",
+		},
+		{
+			"negative price",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Price = utils.ParseDec("-12.345")
+			},
+			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
+		},
+		{
+			"invalid price tick",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Price = utils.ParseDec("12.34567")
+			},
+			"invalid price tick: 12.345670000000000000: invalid request",
+		},
+		{
+			"zero quantity",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Quantity = sdk.NewInt(0)
+			},
+			"quantity must be positive: 0: invalid request",
+		},
+		{
+			"negative quantity",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Quantity = sdk.NewInt(-1000000)
+			},
+			"quantity must be positive: -1000000: invalid request",
+		},
+		{
+			"zero lifespan",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Lifespan = 0
+			},
+			"",
+		},
+		{
+			"negative lifespan",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Lifespan = -time.Hour
+			},
+			"lifespan must not be negative: -1h0m0s: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgPlaceMMBatchLimitOrder(
+				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.TypeMsgPlaceMMBatchLimitOrder, msg.Type())
+			tc.malleate(msg)
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestMsgPlaceMarketOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		malleate    func(msg *types.MsgPlaceMarketOrder)
+		expectedErr string
+	}{
+		{
+			"valid",
+			func(msg *types.MsgPlaceMarketOrder) {},
+			"",
+		},
+		{
+			"invalid sender",
+			func(msg *types.MsgPlaceMarketOrder) {
+				msg.Sender = "invalidaddr"
+			},
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid market id",
+			func(msg *types.MsgPlaceMarketOrder) {
+				msg.MarketId = 0
+			},
+			"market id must not be 0: invalid request",
+		},
+		{
+			"zero quantity",
+			func(msg *types.MsgPlaceMarketOrder) {
+				msg.Quantity = sdk.NewInt(0)
+			},
+			"quantity must be positive: 0: invalid request",
+		},
+		{
+			"negative quantity",
+			func(msg *types.MsgPlaceMarketOrder) {
+				msg.Quantity = sdk.NewInt(-1000000)
+			},
+			"quantity must be positive: -1000000: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgPlaceMarketOrder(
+				utils.TestAddress(1), 1, true, sdk.NewInt(1000000))
+			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.TypeMsgPlaceMarketOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
 			if tc.expectedErr == "" {

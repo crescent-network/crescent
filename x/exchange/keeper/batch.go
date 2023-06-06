@@ -1,25 +1,10 @@
 package keeper
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
-
-func (k Keeper) PlaceBatchLimitOrder(
-	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, err error) {
-	market, found := k.GetMarket(ctx, marketId)
-	if !found { // sanity check
-		panic("market not found")
-	}
-	orderId := k.GetNextOrderIdWithUpdate(ctx)
-	deadline := ctx.BlockTime().Add(lifespan)
-	return k.newOrder(
-		ctx, orderId, types.OrderTypeLimit, market, ordererAddr, isBuy, price, qty, qty, deadline, false)
-}
 
 func (k Keeper) RunBatch(ctx sdk.Context, market types.Market, orders []types.Order) {
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load

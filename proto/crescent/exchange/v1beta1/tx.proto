@@ -13,8 +13,10 @@ option (gogoproto.goproto_getters_all) = false;
 service Msg {
   rpc CreateMarket(MsgCreateMarket) returns (MsgCreateMarketResponse);
   rpc PlaceLimitOrder(MsgPlaceLimitOrder) returns (MsgPlaceLimitOrderResponse);
-  rpc PlaceMarketOrder(MsgPlaceMarketOrder) returns (MsgPlaceMarketOrderResponse);
+  rpc PlaceBatchLimitOrder(MsgPlaceBatchLimitOrder) returns (MsgPlaceBatchLimitOrderResponse);
   rpc PlaceMMLimitOrder(MsgPlaceMMLimitOrder) returns (MsgPlaceMMLimitOrderResponse);
+  rpc PlaceMMBatchLimitOrder(MsgPlaceMMBatchLimitOrder) returns (MsgPlaceMMBatchLimitOrderResponse);
+  rpc PlaceMarketOrder(MsgPlaceMarketOrder) returns (MsgPlaceMarketOrderResponse);
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn) returns (MsgSwapExactAmountInResponse);
 }
@@ -35,11 +37,27 @@ message MsgPlaceLimitOrder {
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  bool   is_batch = 6;
-  google.protobuf.Duration lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 message MsgPlaceLimitOrderResponse {
+  uint64 order_id          = 1;
+  string executed_quantity = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+}
+
+message MsgPlaceBatchLimitOrder {
+  string sender    = 1;
+  uint64 market_id = 2;
+  bool   is_buy    = 3;
+  string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+message MsgPlaceBatchLimitOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
@@ -53,11 +71,27 @@ message MsgPlaceMMLimitOrder {
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  bool   is_batch = 6;
-  google.protobuf.Duration lifespan = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 message MsgPlaceMMLimitOrderResponse {
+  uint64 order_id          = 1;
+  string executed_quantity = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+}
+
+message MsgPlaceMMBatchLimitOrder {
+  string sender    = 1;
+  uint64 market_id = 2;
+  bool   is_buy    = 3;
+  string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}
+
+message MsgPlaceMMBatchLimitOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];

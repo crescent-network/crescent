@@ -23,11 +23,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgPlaceLimitOrder:
 			res, err := msgServer.PlaceLimitOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgPlaceMarketOrder:
-			res, err := msgServer.PlaceMarketOrder(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgPlaceBatchLimitOrder:
+			res, err := msgServer.PlaceBatchLimitOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgPlaceMMLimitOrder:
 			res, err := msgServer.PlaceMMLimitOrder(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgPlaceMMBatchLimitOrder:
+			res, err := msgServer.PlaceMMBatchLimitOrder(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgPlaceMarketOrder:
+			res, err := msgServer.PlaceMarketOrder(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgCancelOrder:
 			res, err := msgServer.CancelOrder(sdk.WrapSDKContext(ctx), msg)
