@@ -223,14 +223,22 @@ func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
 }
 
 func (order *TempOrder) HasPriorityOver(other *TempOrder) bool {
+	if order.Price != other.Price { // sanity check
+		panic("two orders with different price")
+	}
 	if !order.Quantity.Equal(other.Quantity) {
 		return order.Quantity.GT(other.Quantity)
 	}
-	if (order.Source == nil) != (other.Source == nil) {
-		// If the orders aren't in the same type, give priority to user order.
-		return order.Source == nil
+	switch {
+	case order.Source == nil && other.Source == nil: // both user orders
+		return order.Id < other.Id
+	case order.Source == nil && other.Source != nil: // only the first order is user order
+		return true
+	case order.Source != nil && other.Source == nil: // only the second order is user order
+		return false
+	default: // both orders from OrderSource
+		return order.Source.Name() < other.Source.Name() // lexicographical ordering
 	}
-	return order.Id < other.Id
 }
 
 type TempOrderGroup struct {
