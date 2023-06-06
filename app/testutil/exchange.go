@@ -27,6 +27,15 @@ func (s *TestSuite) PlaceLimitOrder(
 	return
 }
 
+func (s *TestSuite) PlaceBatchLimitOrder(
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order exchangetypes.Order) {
+	s.T().Helper()
+	var err error
+	order, err = s.App.ExchangeKeeper.PlaceBatchLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
+	s.Require().NoError(err)
+	return
+}
+
 func (s *TestSuite) PlaceMarketOrder(
 	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (orderId uint64, execQty sdk.Int, paid, received sdk.Coin) {
 	s.T().Helper()

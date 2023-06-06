@@ -38,8 +38,8 @@ func (k Keeper) PlaceLimitOrder(
 
 func (k Keeper) PlaceBatchLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, err error) {
-	orderId, order, _, _, _, err = k.placeLimitOrder(
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, err error) {
+	_, order, _, _, _, err = k.placeLimitOrder(
 		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
 		return
@@ -75,8 +75,8 @@ func (k Keeper) PlaceMMLimitOrder(
 
 func (k Keeper) PlaceMMBatchLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, err error) {
-	orderId, order, _, _, _, err = k.placeLimitOrder(
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, err error) {
+	_, order, _, _, _, err = k.placeLimitOrder(
 		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
 		return

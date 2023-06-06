@@ -43,3 +43,17 @@ func TickAtPrice(price sdk.Dec) int32 {
 	tick, _ := ValidateTickPrice(price)
 	return tick
 }
+
+// RoundTick returns rounded tick using banker's rounding.
+func RoundTick(tick int32) int32 {
+	return (tick + tick%2) / 2 * 2
+}
+
+// RoundPrice returns rounded tick price using banker's rounding.
+func RoundPrice(price sdk.Dec) sdk.Dec {
+	tick, valid := ValidateTickPrice(price)
+	if valid {
+		return price
+	}
+	return PriceAtTick(RoundTick(tick))
+}

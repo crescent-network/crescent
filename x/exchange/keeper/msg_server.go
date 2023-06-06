@@ -55,14 +55,14 @@ func (k msgServer) PlaceBatchLimitOrder(goCtx context.Context, msg *types.MsgPla
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if utils.IsMidBlockContext(ctx.Context()) {
-		orderId, _, err := k.Keeper.PlaceBatchLimitOrder(
+		order, err := k.Keeper.PlaceBatchLimitOrder(
 			ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 			msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 		if err != nil {
 			return nil, err
 		}
 		return &types.MsgPlaceBatchLimitOrderResponse{
-			OrderId: orderId,
+			OrderId: order.Id,
 		}, nil
 	}
 
@@ -102,14 +102,14 @@ func (k msgServer) PlaceMMBatchLimitOrder(goCtx context.Context, msg *types.MsgP
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if utils.IsMidBlockContext(ctx.Context()) {
-		orderId, _, err := k.Keeper.PlaceMMBatchLimitOrder(
+		order, err := k.Keeper.PlaceMMBatchLimitOrder(
 			ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 			msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 		if err != nil {
 			return nil, err
 		}
 		return &types.MsgPlaceMMBatchLimitOrderResponse{
-			OrderId: orderId,
+			OrderId: order.Id,
 		}, nil
 	}
 

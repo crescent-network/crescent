@@ -51,3 +51,27 @@ func TestPriceAtTick(t *testing.T) {
 		})
 	}
 }
+
+func TestRoundTick(t *testing.T) {
+	for i, tc := range []struct {
+		tick     int32
+		expected int32
+	}{
+		{-5, -6},
+		{-4, -4},
+		{-3, -4},
+		{-2, -2},
+		{-1, -2},
+		{0, 0},
+		{1, 2},
+		{2, 2},
+		{3, 4},
+		{4, 4},
+		{5, 6},
+	} {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			res := types.RoundTick(tc.tick)
+			require.Equal(t, tc.expected, res)
+		})
+	}
+}

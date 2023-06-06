@@ -3,9 +3,11 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+// TODO: refactor code
 func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load
 	// on the other side.
@@ -34,7 +36,63 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
 
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	if marketState.LastPrice == nil {
-		panic("not implemented") // TODO: implement
+		// If there's no last price, then match orders at a single price.
+		// The price will be the fairest price for each buy and sell orders.
+		buyLevelIdx, sellLevelIdx := 0, 0
+		var buyLastPrice, sellLastPrice sdk.Dec
+		for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
+			buyLevel := buyObs.Levels[buyLevelIdx]
+			sellLevel := sellObs.Levels[sellLevelIdx]
+			if buyLevel.Price.LT(sellLevel.Price) {
+				break
+			}
+			buyExecutableQty := types.TotalExecutableQuantity(buyLevel.Orders, buyLevel.Price)
+			sellExecutableQty := types.TotalExecutableQuantity(sellLevel.Orders, sellLevel.Price)
+			execQty := utils.MinInt(buyExecutableQty, sellExecutableQty)
+			buyLastPrice = buyLevel.Price
+			sellLastPrice = sellLevel.Price
+			buyFull := execQty.Equal(buyExecutableQty)
+			sellFull := execQty.Equal(sellExecutableQty)
+			if buyFull {
+				buyLevelIdx++
+			}
+			if sellFull {
+				sellLevelIdx++
+			}
+		}
+		if !buyLastPrice.IsNil() && !sellLastPrice.IsNil() {
+			matchPrice := types.RoundPrice(buyLastPrice.Add(sellLastPrice).QuoInt64(2))
+			buyLevelIdx, sellLevelIdx = 0, 0
+			for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
+				buyLevel := buyObs.Levels[buyLevelIdx]
+				sellLevel := sellObs.Levels[sellLevelIdx]
+				if buyLevel.Price.LT(matchPrice) || sellLevel.Price.GT(matchPrice) {
+					break
+				}
+				// Both sides are taker
+				_, sellFull, buyFull := market.MatchOrderBookLevels(sellLevel, false, buyLevel, false, matchPrice)
+				if buyFull {
+					buyLevelIdx++
+				}
+				if sellFull {
+					sellLevelIdx++
+				}
+			}
+			// Apply the match results.
+			var tempOrders []*types.TempOrder
+			for _, level := range buyObs.Levels {
+				tempOrders = append(tempOrders, level.Orders...)
+			}
+			for _, level := range sellObs.Levels {
+				tempOrders = append(tempOrders, level.Orders...)
+			}
+			if err := k.FinalizeMatching(ctx, market, tempOrders); err != nil {
+				return err
+			}
+			marketState.LastPrice = &matchPrice
+			k.SetMarketState(ctx, market.Id, marketState)
+		}
+		return nil
 	}
 	lastPrice := *marketState.LastPrice
 

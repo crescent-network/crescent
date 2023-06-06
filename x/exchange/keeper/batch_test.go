@@ -7,8 +7,25 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+func (s *KeeperTestSuite) TestBatchMatchingWithoutLastPrice() {
+	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+
+	s.PlaceBatchLimitOrder(market.Id, ordererAddr1, true, utils.ParseDec("5.1"), sdk.NewInt(50_000000), 0)
+	s.PlaceBatchLimitOrder(market.Id, ordererAddr1, true, utils.ParseDec("5.2"), sdk.NewInt(50_000000), 0)
+
+	s.PlaceBatchLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("4.9"), sdk.NewInt(100_000000), 0)
+	s.PlaceBatchLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("4.8"), sdk.NewInt(100_000000), 0)
+
+	s.Require().NoError(s.keeper.RunBatchMatching(s.Ctx, market))
+	s.NextBlock()
+}
+
 func (s *KeeperTestSuite) TestSimulateMidBlockBatchMatching() {
 	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	// Set last price
 	marketState := s.keeper.MustGetMarketState(s.Ctx, market.Id)
 	marketState.LastPrice = utils.ParseDecP("5")
 	s.keeper.SetMarketState(s.Ctx, market.Id, marketState)
