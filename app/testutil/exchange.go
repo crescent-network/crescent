@@ -11,7 +11,7 @@ import (
 func (s *TestSuite) CreateMarket(creatorAddr sdk.AccAddress, baseDenom, quoteDenom string, fundFee bool) exchangetypes.Market {
 	s.T().Helper()
 	if fundFee {
-		s.FundAccount(creatorAddr, s.App.ExchangeKeeper.GetMarketCreationFee(s.Ctx))
+		s.FundAccount(creatorAddr, s.App.ExchangeKeeper.GetFees(s.Ctx).MarketCreationFee)
 	}
 	market, err := s.App.ExchangeKeeper.CreateMarket(s.Ctx, creatorAddr, baseDenom, quoteDenom)
 	s.Require().NoError(err)

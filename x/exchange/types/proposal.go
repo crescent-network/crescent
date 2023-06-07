@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 const (
@@ -43,6 +41,9 @@ func (p *MarketParameterChangeProposal) ProposalType() string {
 func (p *MarketParameterChangeProposal) ValidateBasic() error {
 	if err := gov.ValidateAbstract(p); err != nil {
 		return err
+	}
+	if len(p.Changes) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "changes must not be empty")
 	}
 	for _, change := range p.Changes {
 		if err := change.Validate(); err != nil {
@@ -82,24 +83,8 @@ func (change MarketParameterChange) Validate() error {
 	if change.MarketId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
-	if change.MakerFeeRate.GT(utils.OneDec) {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "maker fee rate must not be greater than 1.0: %s", change.MakerFeeRate)
-	}
-	if change.MakerFeeRate.LT(utils.OneDec.Neg()) {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "maker fee rate must not be less than -1.0: %s", change.MakerFeeRate)
-	}
-	if change.TakerFeeRate.GT(utils.OneDec) {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "taker fee rate must not be greater than 1.0: %s", change.TakerFeeRate)
-	}
-	if change.TakerFeeRate.IsNegative() {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "taker fee rate must not be negative: %s", change.TakerFeeRate)
-	}
-	if change.MakerFeeRate.IsNegative() && change.MakerFeeRate.Neg().GT(change.TakerFeeRate) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minus maker fee rate must not be greater than taker fee rate")
+	if err := ValidateMakerTakerFeeRates(change.MakerFeeRate, change.TakerFeeRate); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	return nil
 }

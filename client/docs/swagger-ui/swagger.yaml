@@ -10083,27 +10083,31 @@ paths:
               params:
                 type: object
                 properties:
-                  market_creation_fee:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
+                  fees:
+                    type: object
+                    properties:
+                      market_creation_fee:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
 
 
-                        NOTE: The amount field is an Int which implements the
-                        custom method
+                            NOTE: The amount field is an Int which implements
+                            the custom method
 
-                        signatures required by gogoproto.
-                  default_maker_fee_rate:
-                    type: string
-                  default_taker_fee_rate:
-                    type: string
+                            signatures required by gogoproto.
+                      default_maker_fee_rate:
+                        type: string
+                      default_taker_fee_rate:
+                        type: string
                   max_order_lifespan:
                     type: string
                   max_order_price_ratio:
@@ -16820,6 +16824,27 @@ definitions:
     properties:
       params:
         type: object
+  crescent.exchange.v1beta1.Fees:
+    type: object
+    properties:
+      market_creation_fee:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+      default_maker_fee_rate:
+        type: string
+      default_taker_fee_rate:
+        type: string
   crescent.exchange.v1beta1.MarketResponse:
     type: object
     properties:
@@ -16879,24 +16904,30 @@ definitions:
   crescent.exchange.v1beta1.Params:
     type: object
     properties:
-      market_creation_fee:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
+      fees:
+        type: object
+        properties:
+          market_creation_fee:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
 
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-      default_maker_fee_rate:
-        type: string
-      default_taker_fee_rate:
-        type: string
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+          default_maker_fee_rate:
+            type: string
+          default_taker_fee_rate:
+            type: string
       max_order_lifespan:
         type: string
       max_order_price_ratio:
@@ -17088,27 +17119,30 @@ definitions:
       params:
         type: object
         properties:
-          market_creation_fee:
-            type: array
-            items:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
+          fees:
+            type: object
+            properties:
+              market_creation_fee:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
 
 
-                NOTE: The amount field is an Int which implements the custom
-                method
+                    NOTE: The amount field is an Int which implements the custom
+                    method
 
-                signatures required by gogoproto.
-          default_maker_fee_rate:
-            type: string
-          default_taker_fee_rate:
-            type: string
+                    signatures required by gogoproto.
+              default_maker_fee_rate:
+                type: string
+              default_taker_fee_rate:
+                type: string
           max_order_lifespan:
             type: string
           max_order_price_ratio:

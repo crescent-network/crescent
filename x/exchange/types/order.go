@@ -44,6 +44,9 @@ func (order Order) Validate() error {
 	if !order.Price.IsPositive() {
 		return fmt.Errorf("price must be positive: %s", order.Price)
 	}
+	if _, valid := ValidateTickPrice(order.Price); !valid {
+		return fmt.Errorf("invalid tick price: %s", order.Price)
+	}
 	if !order.Quantity.IsPositive() {
 		return fmt.Errorf("quantity must be positive: %s", order.Quantity)
 	}
