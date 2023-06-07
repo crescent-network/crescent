@@ -124,12 +124,12 @@ func TestMarket(t *testing.T) {
 		require.Equal(t, amt.String(), deducted.Add(fee).String())
 	}
 
-	// Test PayDenom
-	require.Equal(t, "uusd", market.PayDenom(true))
-	require.Equal(t, "ucre", market.PayDenom(false))
-	// Test ReceiveDenom
-	require.Equal(t, "ucre", market.ReceiveDenom(true))
-	require.Equal(t, "uusd", market.ReceiveDenom(false))
+	payDenom, receiveDenom := market.PayReceiveDenoms(true)
+	require.Equal(t, "uusd", payDenom)
+	require.Equal(t, "ucre", receiveDenom)
+	payDenom, receiveDenom = market.PayReceiveDenoms(false)
+	require.Equal(t, "ucre", payDenom)
+	require.Equal(t, "uusd", receiveDenom)
 }
 
 func TestMarketState_Validate(t *testing.T) {

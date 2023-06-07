@@ -110,6 +110,17 @@ message EventOrderFilled {
   cosmos.base.v1beta1.Coin received = 10 [(gogoproto.nullable) = false];
 }
 
+message EventOrderSourceOrdersFilled {
+  uint64 market_id         = 1;
+  string source_name       = 2;
+  string orderer           = 3;
+  bool   is_buy            = 4;
+  string executed_quantity = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid     = 6 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received = 7 [(gogoproto.nullable) = false];
+}
+
 message EventOrderExpired {
   uint64 order_id = 1;
 }

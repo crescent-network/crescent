@@ -19,9 +19,10 @@ func (k Keeper) executeOrder(
 	var lastPrice sdk.Dec
 	totalExecQty = utils.ZeroInt
 	totalExecQuote := utils.ZeroInt
-	totalPaid = sdk.NewCoin(market.PayDenom(isBuy), utils.ZeroInt)
-	totalReceived = sdk.NewCoin(market.ReceiveDenom(isBuy), utils.ZeroInt)
-	totalFee = sdk.NewCoin(market.ReceiveDenom(isBuy), utils.ZeroInt)
+	payDenom, receiveDenom := market.PayReceiveDenoms(isBuy)
+	totalPaid = sdk.NewCoin(payDenom, utils.ZeroInt)
+	totalReceived = sdk.NewCoin(receiveDenom, utils.ZeroInt)
+	totalFee = sdk.NewCoin(receiveDenom, utils.ZeroInt)
 	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
 	for _, level := range obs.Levels {
 		if priceLimit != nil &&
@@ -157,7 +158,7 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 				return err
 			}
 			if order.Source == nil {
-				payDenom, receiveDenom := market.PayDenom(order.IsBuy), market.ReceiveDenom(order.IsBuy)
+				payDenom, receiveDenom := market.PayReceiveDenoms(order.IsBuy)
 				paid := order.Paid.SubAmount(order.Received.AmountOf(payDenom))
 				received := sdk.NewCoin(receiveDenom, order.Received.AmountOf(receiveDenom))
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
@@ -200,7 +201,46 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 		results := resultsBySourceName[sourceName]
 		if len(results) > 0 {
 			source := k.sources[sourceName]
+			// TODO: pass grouped results
 			source.AfterOrdersExecuted(ctx, market, results)
+			totalExecQty := utils.ZeroInt
+			orderers, m := types.GroupTempOrderResultsByOrderer(results) // TODO: bit redundant
+			for _, orderer := range orderers {
+				var (
+					isBuy                  bool
+					payDenom, receiveDenom string
+					totalPaid              sdk.Coin
+					totalReceived          sdk.Coins
+				)
+				for _, res := range m[orderer] {
+					totalExecQty = totalExecQty.Add(res.ExecutedQuantity)
+					if totalPaid.IsNil() {
+						isBuy = res.IsBuy
+						totalPaid = res.Paid
+						totalReceived = res.Received
+					} else {
+						if res.IsBuy != isBuy { // sanity check
+							panic("inconsistent isBuy")
+						}
+						totalPaid = totalPaid.Add(res.Paid)
+						totalReceived = totalReceived.Add(res.Received...)
+					}
+				}
+				payDenom, receiveDenom = market.PayReceiveDenoms(isBuy)
+				paid := totalPaid.SubAmount(totalReceived.AmountOf(payDenom))
+				received := sdk.NewCoin(receiveDenom, totalReceived.AmountOf(receiveDenom))
+				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderSourceOrdersFilled{
+					MarketId:         market.Id,
+					SourceName:       sourceName,
+					Orderer:          orderer,
+					IsBuy:            isBuy,
+					ExecutedQuantity: totalExecQty,
+					Paid:             paid,
+					Received:         received,
+				}); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil

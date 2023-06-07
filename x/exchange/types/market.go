@@ -75,18 +75,11 @@ func (market Market) DeductTakerFee(amt sdk.Int, halveFee bool) (deducted, fee s
 	return
 }
 
-func (market Market) PayDenom(isBuy bool) string {
+func (market Market) PayReceiveDenoms(isBuy bool) (payDenom, receiveDenom string) {
 	if isBuy {
-		return market.QuoteDenom
+		return market.QuoteDenom, market.BaseDenom
 	}
-	return market.BaseDenom
-}
-
-func (market Market) ReceiveDenom(isBuy bool) string {
-	if isBuy {
-		return market.BaseDenom
-	}
-	return market.QuoteDenom
+	return market.BaseDenom, market.QuoteDenom
 }
 
 func NewMarketState(lastPrice *sdk.Dec) MarketState {
