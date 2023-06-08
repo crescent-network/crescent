@@ -165,6 +165,11 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	BeginBlocker(ctx, am.keeper)
 }
 
+// MidBlock executes all ABCI MidBlock logic respective to the capability module.
+func (am AppModule) MidBlock(ctx sdk.Context) {
+	MidBlocker(ctx, am.keeper)
+}
+
 // EndBlock executes all ABCI EndBlock logic respective to the module.
 // It returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {

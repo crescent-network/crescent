@@ -726,6 +726,11 @@ func NewApp(
 		markertypes.ModuleName,
 		exchangetypes.ModuleName,
 	)
+
+	app.mm.SetOrderMidBlockers(
+		exchangetypes.ModuleName,
+	)
+
 	app.mm.SetOrderEndBlockers(
 		// EndBlocker of crisis module called AssertInvariants
 		crisistypes.ModuleName,
@@ -871,6 +876,7 @@ func NewApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
+	app.SetMidBlocker(app.MidBlocker)
 
 	app.SetUpgradeStoreLoaders()
 	app.SetUpgradeHandlers(app.mm, app.configurator)

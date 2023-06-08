@@ -17,3 +17,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		panic(err)
 	}
 }
+
+func MidBlocker(ctx sdk.Context, k keeper.Keeper) {
+	// TODO: run batch matching
+	//k.RunBatchMatching(ctx)
+}
