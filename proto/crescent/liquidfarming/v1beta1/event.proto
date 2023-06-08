@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package crescent.liquidfarming.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidfarming/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message EventLiquidFarmCreated {
+  uint64 liquid_farm_id = 1;
+  uint64 pool_id        = 2;
+  int32  lower_tick     = 3;
+  int32  upper_tick     = 4;
+  string min_bid_amount = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string fee_rate = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

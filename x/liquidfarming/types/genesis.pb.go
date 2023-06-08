@@ -29,13 +29,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the module's genesis state.
 type GenesisState struct {
-	Params           Params           `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	LastLiquidFarmId uint64           `protobuf:"varint,2,opt,name=last_liquid_farm_id,json=lastLiquidFarmId,proto3" json:"last_liquid_farm_id,omitempty"`
-	LiquidFarms      []LiquidFarm     `protobuf:"bytes,3,rep,name=liquid_farms,json=liquidFarms,proto3" json:"liquid_farms"`
-	RewardsAuctions  []RewardsAuction `protobuf:"bytes,4,rep,name=rewards_auctions,json=rewardsAuctions,proto3" json:"rewards_auctions"`
-	// TODO: add previous winning bid amount
-	Bids                      []Bid      `protobuf:"bytes,5,rep,name=bids,proto3" json:"bids"`
-	NextRewardsAuctionEndTime *time.Time `protobuf:"bytes,6,opt,name=next_rewards_auction_end_time,json=nextRewardsAuctionEndTime,proto3,stdtime" json:"next_rewards_auction_end_time,omitempty"`
+	Params                    Params           `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	LastLiquidFarmId          uint64           `protobuf:"varint,2,opt,name=last_liquid_farm_id,json=lastLiquidFarmId,proto3" json:"last_liquid_farm_id,omitempty"`
+	LiquidFarms               []LiquidFarm     `protobuf:"bytes,3,rep,name=liquid_farms,json=liquidFarms,proto3" json:"liquid_farms"`
+	RewardsAuctions           []RewardsAuction `protobuf:"bytes,4,rep,name=rewards_auctions,json=rewardsAuctions,proto3" json:"rewards_auctions"`
+	Bids                      []Bid            `protobuf:"bytes,5,rep,name=bids,proto3" json:"bids"`
+	NextRewardsAuctionEndTime *time.Time       `protobuf:"bytes,6,opt,name=next_rewards_auction_end_time,json=nextRewardsAuctionEndTime,proto3,stdtime" json:"next_rewards_auction_end_time,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }

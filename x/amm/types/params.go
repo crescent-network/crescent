@@ -10,6 +10,11 @@ import (
 
 var _ paramstypes.ParamSet = (*Params)(nil)
 
+const (
+	MinTick = -1260000
+	MaxTick = 3600000
+)
+
 var (
 	KeyPoolCreationFee               = []byte("PoolCreationFee")
 	KeyDefaultTickSpacing            = []byte("DefaultTickSpacing")

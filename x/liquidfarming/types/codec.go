@@ -6,6 +6,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/liquidfarming interfaces and concrete types
@@ -14,7 +15,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgMintShare{}, "liquidfarming/MsgMintShare", nil)
 	cdc.RegisterConcrete(&MsgBurnShare{}, "liquidfarming/MsgBurnShare", nil)
 	cdc.RegisterConcrete(&MsgPlaceBid{}, "liquidfarming/MsgPlaceBid", nil)
-	// MsgFinishAuctions is omitted intentionally
+	cdc.RegisterConcrete(&LiquidFarmCreateProposal{}, "liquidfarming/LiquidFarmCreateProposal", nil)
 }
 
 // RegisterInterfaces registers the x/liquidfarming interfaces types with the interface registry
@@ -24,7 +25,10 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgMintShare{},
 		&MsgBurnShare{},
 		&MsgPlaceBid{},
-		// MsgFinishAuctions is omitted intentionally
+	)
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&LiquidFarmCreateProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

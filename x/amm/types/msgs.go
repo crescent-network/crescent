@@ -112,11 +112,19 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 	if msg.LowerPrice.GTE(msg.UpperPrice) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "lower price must be lower than upper price")
 	}
-	if _, valid := exchangetypes.ValidateTickPrice(msg.LowerPrice); !valid {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid lower tick")
+	lowerTick, valid := exchangetypes.ValidateTickPrice(msg.LowerPrice)
+	if !valid {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid lower tick price: %s", msg.LowerPrice)
 	}
-	if _, valid := exchangetypes.ValidateTickPrice(msg.UpperPrice); !valid {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid upper tick")
+	if lowerTick < MinTick {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lower tick must not be lower than the minimum %d", MinTick)
+	}
+	upperTick, valid := exchangetypes.ValidateTickPrice(msg.UpperPrice)
+	if !valid {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid upper tick price: %s", msg.UpperPrice)
+	}
+	if upperTick > MaxTick {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper tick must not be higher than the maximum %d", MaxTick)
 	}
 	if err := msg.DesiredAmount.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid desired amount: %v", err)

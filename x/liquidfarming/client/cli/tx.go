@@ -2,9 +2,12 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -150,5 +153,61 @@ $ %s tx %s place-bid 1 1 10000000lfshare1 --from mykey
 
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func NewCmdSubmitLiquidFarmCreateProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "liquid-farm-create [proposal-file]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a liquid farm create proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a public liquid farm create proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file.
+
+Example:
+$ %s tx gov submit-proposal liquid-farm-create <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
+
+Where proposal.json contains:
+
+{
+  "title": "Liquid Farm Create Proposal",
+  "description": "Let's start new liquid farming",
+  "pool_id": "1",
+  "lower_price": "4.5",
+  "upper_price": "5.5",
+  "min_bid_amount": "100000000",
+  "fee_rate": "0.003"
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			depositStr, _ := cmd.Flags().GetString(cli.FlagDeposit)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return fmt.Errorf("invalid deposit: %w", err)
+			}
+			var proposal types.LiquidFarmCreateProposal
+			bz, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("read proposal: %w", err)
+			}
+			if err = clientCtx.Codec.UnmarshalJSON(bz, &proposal); err != nil {
+				return fmt.Errorf("unmarshal proposal: %w", err)
+			}
+			msg, err := gov.NewMsgSubmitProposal(&proposal, deposit, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	return cmd
 }

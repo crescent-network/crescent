@@ -11,8 +11,6 @@ import (
 
 const (
 	TickPrecision = 4
-	MinTick       = -1260000
-	MaxTick       = 3600000
 )
 
 func ValidateTickPrice(price sdk.Dec) (tick int32, valid bool) {

@@ -127,6 +127,7 @@ import (
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming"
+	liquidfarmingclient "github.com/crescent-network/crescent/v5/x/liquidfarming/client"
 	liquidfarmingkeeper "github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
 	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 	"github.com/crescent-network/crescent/v5/x/liquidity"
@@ -181,6 +182,7 @@ var (
 			exchangeclient.MarketParameterChangeProposalHandler,
 			ammclient.PoolParameterChangeProposalHandler,
 			ammclient.PublicFarmingPlanProposalHandler,
+			liquidfarmingclient.LiquidFarmCreateProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -530,6 +532,38 @@ func NewApp(
 		app.LPFarmKeeper,
 		app.SlashingKeeper,
 	)
+	app.ExchangeKeeper = exchangekeeper.NewKeeper(
+		appCodec,
+		keys[exchangetypes.StoreKey],
+		tkeys[exchangetypes.TStoreKey],
+		app.GetSubspace(exchangetypes.ModuleName),
+		app.BankKeeper,
+	)
+	app.MarkerKeeper = markerkeeper.NewKeeper(
+		appCodec,
+		keys[markertypes.StoreKey],
+		app.GetSubspace(markertypes.ModuleName),
+	)
+	app.AMMKeeper = ammkeeper.NewKeeper(
+		appCodec,
+		keys[ammtypes.StoreKey],
+		app.GetSubspace(ammtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.ExchangeKeeper,
+		app.MarkerKeeper,
+	)
+	app.ExchangeKeeper.SetOrderSources(
+		ammkeeper.NewOrderSource(app.AMMKeeper),
+	)
+	app.LiquidFarmingKeeper = liquidfarmingkeeper.NewKeeper(
+		appCodec,
+		keys[liquidfarmingtypes.StoreKey],
+		app.GetSubspace(liquidfarmingtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.AMMKeeper,
+	)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -543,7 +577,8 @@ func NewApp(
 		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper)).
 		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper)).
 		AddRoute(exchangetypes.RouterKey, exchange.NewMarketParameterChangeProposalHandler(app.ExchangeKeeper)).
-		AddRoute(ammtypes.RouterKey, amm.NewPoolParameterChangeProposalHandler(app.AMMKeeper))
+		AddRoute(ammtypes.RouterKey, amm.NewPoolParameterChangeProposalHandler(app.AMMKeeper)).
+		AddRoute(liquidfarmingtypes.RouterKey, liquidfarming.NewLiquidFarmCreateProposalHandler(app.LiquidFarmingKeeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,
@@ -603,39 +638,6 @@ func NewApp(
 		app.SlashingKeeper,
 	)
 	app.EvidenceKeeper = *evidenceKeeper
-
-	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec,
-		keys[markertypes.StoreKey],
-		app.GetSubspace(markertypes.ModuleName),
-	)
-	app.ExchangeKeeper = exchangekeeper.NewKeeper(
-		appCodec,
-		keys[exchangetypes.StoreKey],
-		tkeys[exchangetypes.TStoreKey],
-		app.GetSubspace(exchangetypes.ModuleName),
-		app.BankKeeper,
-	)
-	app.AMMKeeper = ammkeeper.NewKeeper(
-		appCodec,
-		keys[ammtypes.StoreKey],
-		app.GetSubspace(ammtypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.ExchangeKeeper,
-		app.MarkerKeeper,
-	)
-	app.ExchangeKeeper.SetOrderSources(
-		ammkeeper.NewOrderSource(app.AMMKeeper),
-	)
-	app.LiquidFarmingKeeper = liquidfarmingkeeper.NewKeeper(
-		appCodec,
-		keys[liquidfarmingtypes.StoreKey],
-		app.GetSubspace(liquidfarmingtypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.AMMKeeper,
-	)
 
 	// create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()

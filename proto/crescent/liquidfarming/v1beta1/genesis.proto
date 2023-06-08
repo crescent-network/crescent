@@ -12,11 +12,10 @@ option (gogoproto.goproto_getters_all) = false;
 
 // GenesisState defines the module's genesis state.
 message GenesisState {
-  Params                  params              = 1 [(gogoproto.nullable) = false];
-  uint64                  last_liquid_farm_id = 2;
-  repeated LiquidFarm     liquid_farms        = 3 [(gogoproto.nullable) = false];
-  repeated RewardsAuction rewards_auctions    = 4 [(gogoproto.nullable) = false];
-  // TODO: add previous winning bid amount
+  Params                    params                        = 1 [(gogoproto.nullable) = false];
+  uint64                    last_liquid_farm_id           = 2;
+  repeated LiquidFarm       liquid_farms                  = 3 [(gogoproto.nullable) = false];
+  repeated RewardsAuction   rewards_auctions              = 4 [(gogoproto.nullable) = false];
   repeated Bid              bids                          = 5 [(gogoproto.nullable) = false];
   google.protobuf.Timestamp next_rewards_auction_end_time = 6 [(gogoproto.stdtime) = true];
 }
