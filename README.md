@@ -47,7 +47,7 @@ Use `git` to retrieve Crescent Core from [the official repository](https://githu
 
 ```bash
 git clone https://github.com/crescent-network/crescent.git
-cd crescent && git checkout release/v4.0.x
+cd crescent && git checkout release/v4.2.x
 make install
 ```
 
@@ -65,7 +65,7 @@ Crescent core uses a fork of [cosmos-sdk](https://github.com/crescent-network/co
 
 | Requirement         | Notes                |
 |---------------------|----------------------|
-| cosmos-sdk (forked) | v1.1.4-sdk-0.45.10   |
+| cosmos-sdk (forked) | v1.1.5-sdk-0.45.10   |
 | ibc-go (forked)     | v3.4.0-crescent-v4-3 |
 
 ## Documentation
