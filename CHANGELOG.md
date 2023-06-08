@@ -38,6 +38,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v4.2.0] - 2023-06-09
+
+### State Machine Breaking
+
+- (deps) [\#157](https://github.com/crescent-network/crescent/pull/157) build!: bump cosmos-sdk to v1.1.5-sdk-0.45.10 for barberry
+
 ## [v4.1.1] - 2023-05-26
 
 - (ibc) [\#155](https://github.com/crescent-network/crescent/pull/155) build: bump ibc-go to v3.4.0-crescent-v4-3 for huckleberry
@@ -206,3 +212,4 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
 [v4.0.0]: https://github.com/crescent-network/crescent/releases/tag/v4.0.0
 [v4.1.0]: https://github.com/crescent-network/crescent/releases/tag/v4.1.0
 [v4.1.1]: https://github.com/crescent-network/crescent/releases/tag/v4.1.1
+[v4.2.0]: https://github.com/crescent-network/crescent/releases/tag/v4.2.0
