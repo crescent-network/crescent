@@ -38,10 +38,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### State Machine Breaking
-
-- (deps) [\#147](https://github.com/crescent-network/crescent/pull/147) feat!: bump cosmos-sdk to `v1.2.0-sdk-0.45.10` to use `MinInitialDepositRatio` as 0.5 for proposal submission
-
 ### Features
 
 - (x/marker) [\#145](https://github.com/crescent-network/crescent/pull/145) Add marker module
@@ -54,6 +50,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### CLI Breaking
 
 - (x/liquidity) [\#144](https://github.com/crescent-network/crescent/pull/144) Change `mm-order` tx cmd
+
+## [v4.2.0] - 2023-06-09
+
+### State Machine Breaking
+
+- (deps) [\#157](https://github.com/crescent-network/crescent/pull/157) build!: bump cosmos-sdk to v1.1.5-sdk-0.45.10 for barberry
 
 ## [v4.1.1] - 2023-05-26
 
@@ -223,3 +225,4 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
 [v4.0.0]: https://github.com/crescent-network/crescent/releases/tag/v4.0.0
 [v4.1.0]: https://github.com/crescent-network/crescent/releases/tag/v4.1.0
 [v4.1.1]: https://github.com/crescent-network/crescent/releases/tag/v4.1.1
+[v4.2.0]: https://github.com/crescent-network/crescent/releases/tag/v4.2.0
