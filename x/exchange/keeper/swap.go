@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -17,7 +18,12 @@ func (k Keeper) SwapExactAmountIn(
 	currentIn := input
 	for _, marketId := range routes {
 		if !currentIn.Amount.IsPositive() {
-			return output, nil, types.ErrInsufficientOutput // TODO: use different error
+			return output, nil, sdkerrors.Wrap(types.ErrSwapNotEnoughInput, currentIn.String())
+		}
+		balances := k.bankKeeper.SpendableCoins(ctx, ordererAddr)
+		if balance := balances.AmountOf(currentIn.Denom); balance.LT(currentIn.Amount) {
+			return output, nil, sdkerrors.Wrapf(
+				sdkerrors.ErrInsufficientFunds, "%s%s < %s", balance, currentIn.Denom, currentIn)
 		}
 		market, found := k.GetMarket(ctx, marketId)
 		if !found {
@@ -31,18 +37,20 @@ func (k Keeper) SwapExactAmountIn(
 		case market.BaseDenom:
 			isBuy = false
 			qtyLimit = &currentIn.Amount
-			output.Denom = market.QuoteDenom
 		case market.QuoteDenom:
 			isBuy = true
 			quoteLimit = &currentIn.Amount
-			output.Denom = market.BaseDenom
 		default:
 			return output, nil, sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
-		var fee sdk.Coin
-		_, _, output, fee = k.executeOrder(
+		var paid, fee sdk.Coin
+		_, paid, output, fee = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
+		if currentIn.Sub(paid).Amount.GT(utils.OneInt) {
+			return output, nil, sdkerrors.Wrapf(
+				types.ErrSwapNotEnoughLiquidity, "paid %s < input %s", paid, currentIn)
+		}
 		results = append(results, types.SwapRouteResult{
 			MarketId: marketId,
 			Input:    currentIn,
@@ -53,11 +61,11 @@ func (k Keeper) SwapExactAmountIn(
 	}
 	if output.Denom != minOutput.Denom {
 		return output, nil, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "output denom %s != wanted %s", output.Denom, minOutput.Denom)
+			sdkerrors.ErrInvalidRequest, "output denom %s != min output denom %s", output.Denom, minOutput.Denom)
 	}
 	if output.Amount.LT(minOutput.Amount) {
 		return output, nil, sdkerrors.Wrapf(
-			types.ErrInsufficientOutput, "output %s < wanted %s", output, minOutput)
+			types.ErrSwapNotEnoughOutput, "output %s < min output %s", output, minOutput)
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventSwapExactAmountIn{
 		Orderer: ordererAddr.String(),
@@ -88,5 +96,30 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRou
 		denomMap[baseDenom][quoteDenom] = marketId
 		denomMap[quoteDenom][baseDenom] = marketId
 	}
-	return types.FindAllRoutes(denomMap, fromDenom, toDenom, maxRoutesLen)
+	var currentRoutes []uint64
+	visited := map[uint64]struct{}{}
+	var backtrack func(currentDenom string)
+	// TODO: prevent stack overflow?
+	backtrack = func(currentDenom string) {
+		for denom, marketId := range denomMap[currentDenom] {
+			if _, ok := visited[marketId]; !ok {
+				if denom == toDenom {
+					routes := make([]uint64, len(currentRoutes), len(currentRoutes)+1)
+					copy(routes[:len(currentRoutes)], currentRoutes)
+					routes = append(routes, marketId)
+					allRoutes = append(allRoutes, routes)
+				} else {
+					visited[marketId] = struct{}{}
+					currentRoutes = append(currentRoutes, marketId)
+					if len(currentRoutes) < maxRoutesLen {
+						backtrack(denom)
+					}
+					currentRoutes = currentRoutes[:len(currentRoutes)-1]
+					delete(visited, marketId)
+				}
+			}
+		}
+	}
+	backtrack(fromDenom)
+	return
 }

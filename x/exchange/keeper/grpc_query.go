@@ -103,7 +103,7 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 	for _, routes := range allRoutes {
 		output, results, err := k.SwapExactAmountIn(
 			ctx, sdk.AccAddress{}, routes, input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
-		if err != nil && !errors.Is(err, types.ErrInsufficientOutput) { // sanity check
+		if err != nil && !errors.Is(err, types.ErrSwapNotEnoughInput) && !errors.Is(err, types.ErrSwapNotEnoughLiquidity) { // sanity check
 			panic(err)
 		}
 		if err == nil {

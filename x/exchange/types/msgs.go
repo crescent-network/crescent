@@ -69,13 +69,13 @@ func (msg MsgCreateMarket) ValidateBasic() error {
 
 func NewMsgPlaceLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, quantity sdk.Int, lifespan time.Duration) *MsgPlaceLimitOrder {
+	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceLimitOrder {
 	return &MsgPlaceLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
 		IsBuy:    isBuy,
 		Price:    price,
-		Quantity: quantity,
+		Quantity: qty,
 		Lifespan: lifespan,
 	}
 }
@@ -122,13 +122,13 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceBatchLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, quantity sdk.Int, lifespan time.Duration) *MsgPlaceBatchLimitOrder {
+	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceBatchLimitOrder {
 	return &MsgPlaceBatchLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
 		IsBuy:    isBuy,
 		Price:    price,
-		Quantity: quantity,
+		Quantity: qty,
 		Lifespan: lifespan,
 	}
 }
@@ -175,13 +175,13 @@ func (msg MsgPlaceBatchLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceMMLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, quantity sdk.Int, lifespan time.Duration) *MsgPlaceMMLimitOrder {
+	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceMMLimitOrder {
 	return &MsgPlaceMMLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
 		IsBuy:    isBuy,
 		Price:    price,
-		Quantity: quantity,
+		Quantity: qty,
 		Lifespan: lifespan,
 	}
 }
@@ -228,13 +228,13 @@ func (msg MsgPlaceMMLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceMMBatchLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, quantity sdk.Int, lifespan time.Duration) *MsgPlaceMMBatchLimitOrder {
+	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceMMBatchLimitOrder {
 	return &MsgPlaceMMBatchLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
 		IsBuy:    isBuy,
 		Price:    price,
-		Quantity: quantity,
+		Quantity: qty,
 		Lifespan: lifespan,
 	}
 }
@@ -281,12 +281,12 @@ func (msg MsgPlaceMMBatchLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceMarketOrder(
 	senderAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, quantity sdk.Int) *MsgPlaceMarketOrder {
+	isBuy bool, qty sdk.Int) *MsgPlaceMarketOrder {
 	return &MsgPlaceMarketOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
 		IsBuy:    isBuy,
-		Quantity: quantity,
+		Quantity: qty,
 	}
 }
 

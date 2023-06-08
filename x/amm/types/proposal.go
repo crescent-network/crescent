@@ -46,6 +46,9 @@ func (p *PoolParameterChangeProposal) ValidateBasic() error {
 	if err := gov.ValidateAbstract(p); err != nil {
 		return err
 	}
+	if len(p.Changes) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "changes must not be empty")
+	}
 	for _, change := range p.Changes {
 		if err := change.Validate(); err != nil {
 			return err
@@ -109,6 +112,9 @@ func (p *PublicFarmingPlanProposal) ProposalType() string {
 func (p *PublicFarmingPlanProposal) ValidateBasic() error {
 	if err := gov.ValidateAbstract(p); err != nil {
 		return err
+	}
+	if len(p.CreateRequests) == 0 && len(p.TerminateRequests) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "requests must not be empty")
 	}
 	for _, createReq := range p.CreateRequests {
 		if err := createReq.Validate(); err != nil {

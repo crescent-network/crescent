@@ -10,7 +10,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
 )
 
-var enoughCoins = utils.ParseCoins("10000_000000ucre,10000_000000uusd")
+var enoughCoins = utils.ParseCoins("10000_000000ucre,10000_000000uatom,10000_000000uusd")
 
 type KeeperTestSuite struct {
 	testutil.TestSuite
