@@ -39,8 +39,16 @@ func (position Position) Validate() error {
 	if err := position.LastFeeGrowthInside.Validate(); err != nil {
 		return fmt.Errorf("invalid last fee growth inside: %w", err)
 	}
+	if len(position.LastFeeGrowthInside) > 2 {
+		return fmt.Errorf(
+			"number of coins in last fee growth inside must not be higher than 2: %d", len(position.LastFeeGrowthInside))
+	}
 	if err := position.OwedFee.Validate(); err != nil {
 		return fmt.Errorf("invalid owed fee: %w", err)
+	}
+	if len(position.OwedFee) > 2 {
+		return fmt.Errorf(
+			"number of coins in owed fee must not be higher than 2: %d", len(position.OwedFee))
 	}
 	if err := position.LastFarmingRewardsGrowthInside.Validate(); err != nil {
 		return fmt.Errorf("invalid last farming rewards growth inside: %w", err)

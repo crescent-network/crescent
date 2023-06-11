@@ -45,6 +45,14 @@ func TestMarket_Validate(t *testing.T) {
 			"invalid quote denom: invalid denom: invaliddenom!",
 		},
 		{
+			"same base denom and quote denom",
+			func(market *types.Market) {
+				market.BaseDenom = "ucre"
+				market.QuoteDenom = "ucre"
+			},
+			"base denom and quote denom must not be same: ucre",
+		},
+		{
 			"invalid escrow address",
 			func(market *types.Market) {
 				market.EscrowAddress = "invalidaddr"

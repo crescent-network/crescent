@@ -56,13 +56,6 @@ func (plan FarmingPlan) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(plan.TerminationAddress); err != nil {
 		return fmt.Errorf("invalid termination address: %w", err)
 	}
-	if !plan.IsPrivate {
-		if plan.FarmingPoolAddress != plan.TerminationAddress {
-			return fmt.Errorf(
-				"farming pool address and termination address of a public plan must be same: %s != %s",
-				plan.FarmingPoolAddress, plan.TerminationAddress)
-		}
-	}
 	if err := ValidateFarmingRewardAllocations(plan.RewardAllocations); err != nil {
 		return fmt.Errorf("invalid reward allocations: %w", err)
 	}

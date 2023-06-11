@@ -33,6 +33,25 @@ var (
 	AllowedTickSpacings = []uint32{1, 5, 10, 50}
 )
 
+func IsAllowedTickSpacing(tickSpacing uint32) bool {
+	for _, ts := range AllowedTickSpacings {
+		if tickSpacing == ts {
+			return true
+		}
+	}
+	return false
+}
+
+func ValidateTickSpacing(prevTickSpacing, tickSpacing uint32) error {
+	if !IsAllowedTickSpacing(tickSpacing) {
+		return fmt.Errorf("tick spacing %d is not allowed", tickSpacing)
+	}
+	if prevTickSpacing%tickSpacing != 0 {
+		return fmt.Errorf("tick spacing must be a divisor of previous tick spacing %d", prevTickSpacing)
+	}
+	return nil
+}
+
 func ParamKeyTable() paramstypes.KeyTable {
 	return paramstypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -94,8 +113,8 @@ func validateDefaultTickSpacing(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if v == 0 {
-		return fmt.Errorf("tick spacing must be positive")
+	if !IsAllowedTickSpacing(v) {
+		return fmt.Errorf("tick spacing %d is not allowed", v)
 	}
 	return nil
 }
@@ -125,7 +144,7 @@ func validateMaxFarmingBlockTime(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v <= 0 {
-		return fmt.Errorf("max farming block time must be positive")
+		return fmt.Errorf("max farming block time must be positive: %v", v)
 	}
 	return nil
 }

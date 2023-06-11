@@ -13,19 +13,8 @@ func HandlePoolParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.PoolP
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", change.PoolId)
 		}
-		if pool.TickSpacing%change.TickSpacing != 0 {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest, "tick spacing for pool %d must be a divisor of %d", change.PoolId, pool.TickSpacing)
-		}
-		ok := false
-		for _, tickSpacing := range types.AllowedTickSpacings {
-			if change.TickSpacing == tickSpacing {
-				ok = true
-				break
-			}
-		}
-		if !ok {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "tick spacing %d is not allowed", change.TickSpacing)
+		if err := types.ValidateTickSpacing(pool.TickSpacing, change.TickSpacing); err != nil {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
 		pool.TickSpacing = change.TickSpacing
 		k.SetPool(ctx, pool)

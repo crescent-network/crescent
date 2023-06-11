@@ -32,6 +32,10 @@ func (tickInfo TickInfo) Validate() error {
 	if err := tickInfo.FeeGrowthOutside.Validate(); err != nil {
 		return fmt.Errorf("invalid fee growth outside: %w", err)
 	}
+	if len(tickInfo.FeeGrowthOutside) > 2 {
+		return fmt.Errorf(
+			"number of coins in fee growth outside must not be higher than 2: %d", len(tickInfo.FeeGrowthOutside))
+	}
 	if err := tickInfo.FarmingRewardsGrowthOutside.Validate(); err != nil {
 		return fmt.Errorf("invalid farming rewards growth outside: %w", err)
 	}

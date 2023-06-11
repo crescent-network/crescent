@@ -66,6 +66,9 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	if msg.Price.GT(exchangetypes.MaxPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price %s", exchangetypes.MaxPrice)
 	}
+	if _, valid := exchangetypes.ValidateTickPrice(msg.Price); !valid {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid tick price: %s", msg.Price)
+	}
 	return nil
 }
 
@@ -129,7 +132,7 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 	if err := msg.DesiredAmount.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid desired amount: %v", err)
 	}
-	if len(msg.DesiredAmount) == 0 || len(msg.DesiredAmount) > 2 {
+	if msg.DesiredAmount.IsZero() || len(msg.DesiredAmount) > 2 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid desired amount length: %d", len(msg.DesiredAmount))
 	}
 	return nil
@@ -204,6 +207,9 @@ func (msg MsgCollect) ValidateBasic() error {
 	}
 	if err := msg.Amount.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid amount: %v", err)
+	}
+	if !msg.Amount.IsAllPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "amount must be all positive: %s", msg.Amount)
 	}
 	return nil
 }

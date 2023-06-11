@@ -55,8 +55,11 @@ func (pool Pool) Validate() error {
 	if err := sdk.ValidateDenom(pool.Denom1); err != nil {
 		return fmt.Errorf("invalid denom 1: %w", err)
 	}
-	if pool.TickSpacing == 0 {
-		return fmt.Errorf("tick spacing must not be 0")
+	if pool.Denom0 == pool.Denom1 {
+		return fmt.Errorf("denom 0 and denom 1 must not be same: %s", pool.Denom0)
+	}
+	if !IsAllowedTickSpacing(pool.TickSpacing) {
+		return fmt.Errorf("tick spacing %d is not allowed", pool.TickSpacing)
 	}
 	if _, err := sdk.AccAddressFromBech32(pool.ReserveAddress); err != nil {
 		return fmt.Errorf("invalid reserve address: %w", err)
@@ -83,6 +86,10 @@ func (poolState PoolState) Validate() error {
 	}
 	if err := poolState.FeeGrowthGlobal.Validate(); err != nil {
 		return fmt.Errorf("invalid fee growth global: %w", err)
+	}
+	if len(poolState.FeeGrowthGlobal) > 2 {
+		return fmt.Errorf(
+			"number of coins in fee growth global must not be higher than 2: %d", len(poolState.FeeGrowthGlobal))
 	}
 	if err := poolState.FarmingRewardsGrowthGlobal.Validate(); err != nil {
 		return fmt.Errorf("invalid farming rewards growth global: %w", err)

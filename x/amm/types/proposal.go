@@ -85,8 +85,8 @@ func (change PoolParameterChange) Validate() error {
 	if change.PoolId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool id must not be 0")
 	}
-	if change.TickSpacing == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tick spacing must not be 0")
+	if !IsAllowedTickSpacing(change.TickSpacing) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "tick spacing %d is not allowed", change.TickSpacing)
 	}
 	return nil
 }
@@ -176,17 +176,17 @@ func NewCreatePublicFarmingPlanRequest(
 }
 
 func (req CreatePublicFarmingPlanRequest) Validate() error {
-	farmingPoolAddr, err := sdk.AccAddressFromBech32(req.FarmingPoolAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid farming pool address: %v", err)
+	dummyPlan := FarmingPlan{
+		Id:                 1,
+		Description:        req.Description,
+		FarmingPoolAddress: req.FarmingPoolAddress,
+		TerminationAddress: req.TerminationAddress,
+		RewardAllocations:  req.RewardAllocations,
+		StartTime:          req.StartTime,
+		EndTime:            req.EndTime,
+		IsPrivate:          false,
+		IsTerminated:       false,
 	}
-	termAddr, err := sdk.AccAddressFromBech32(req.TerminationAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid termination address: %v", err)
-	}
-	dummyPlan := NewFarmingPlan(
-		1, req.Description, farmingPoolAddr, termAddr,
-		req.RewardAllocations, req.StartTime, req.EndTime, false)
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

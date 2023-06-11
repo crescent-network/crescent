@@ -7,23 +7,23 @@ import (
 )
 
 func LiquidityForAmount0(sqrtPriceA, sqrtPriceB sdk.Dec, amt0 sdk.Int) sdk.Int {
-	//if sqrtPriceA.GT(sqrtPriceB) {
-	//	sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
-	//}
+	if sqrtPriceA.GT(sqrtPriceB) {
+		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
+	}
 	return sqrtPriceA.MulTruncate(sqrtPriceB).MulInt(amt0).QuoTruncate(sqrtPriceB.Sub(sqrtPriceA)).TruncateInt()
 }
 
 func LiquidityForAmount1(sqrtPriceA, sqrtPriceB sdk.Dec, amt1 sdk.Int) sdk.Int {
-	//if sqrtPriceA.GT(sqrtPriceB) {
-	//	sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
-	//}
+	if sqrtPriceA.GT(sqrtPriceB) {
+		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
+	}
 	return sdk.NewDecFromInt(amt1).QuoTruncate(sqrtPriceB.Sub(sqrtPriceA)).TruncateInt()
 }
 
 func LiquidityForAmounts(currentSqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amt0, amt1 sdk.Int) sdk.Int {
-	//if sqrtPriceA.GT(sqrtPriceB) {
-	//	sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
-	//}
+	if sqrtPriceA.GT(sqrtPriceB) {
+		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
+	}
 	if currentSqrtPrice.LTE(sqrtPriceA) {
 		return LiquidityForAmount0(sqrtPriceA, sqrtPriceB, amt0)
 	} else if currentSqrtPrice.LT(sqrtPriceB) {

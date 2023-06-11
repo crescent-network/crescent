@@ -64,6 +64,9 @@ func (msg MsgCreateMarket) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.QuoteDenom); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid quote denom: %v", err)
 	}
+	if msg.BaseDenom == msg.QuoteDenom {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "base denom and quote denom must not be same: %s", msg.BaseDenom)
+	}
 	return nil
 }
 

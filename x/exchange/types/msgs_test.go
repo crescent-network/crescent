@@ -44,6 +44,14 @@ func TestMsgCreateMarket(t *testing.T) {
 			},
 			"invalid quote denom: invalid denom: invaliddenom!: invalid request",
 		},
+		{
+			"same base denom and quote denom",
+			func(msg *types.MsgCreateMarket) {
+				msg.BaseDenom = "ucre"
+				msg.QuoteDenom = "ucre"
+			},
+			"base denom and quote denom must not be same: ucre: invalid request",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := types.NewMsgCreateMarket(utils.TestAddress(1), "ucre", "uusd")

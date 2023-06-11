@@ -42,6 +42,9 @@ func (market Market) Validate() error {
 	if err := sdk.ValidateDenom(market.QuoteDenom); err != nil {
 		return fmt.Errorf("invalid quote denom: %w", err)
 	}
+	if market.BaseDenom == market.QuoteDenom {
+		return fmt.Errorf("base denom and quote denom must not be same: %s", market.BaseDenom)
+	}
 	if _, err := sdk.AccAddressFromBech32(market.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address: %w", err)
 	}
