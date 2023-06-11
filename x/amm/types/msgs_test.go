@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
@@ -52,13 +53,20 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		{
 			"invalid price 3",
 			func(msg *types.MsgCreatePool) {
-				msg.Price = utils.ParseDec("12.34567")
+				msg.Price = utils.ParseDec("0.000000000000000001")
 			},
-			"invalid tick price: 12.345670000000000000: invalid request",
+			"price is lower than the min price 0.000000000000010000: invalid request",
+		},
+		{
+			"invalid price 4",
+			func(msg *types.MsgCreatePool) {
+				msg.Price = utils.ParseDec("100000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price 10000000000000000000000000000000000000000.000000000000000000: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCreatePool(utils.TestAddress(1), 1, utils.ParseDec("12.345"))
+			msg := types.NewMsgCreatePool(utils.TestAddress(1), 1, utils.ParseDec("12.3456789"))
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.TypeMsgCreatePool, msg.Type())
 			tc.malleate(msg)

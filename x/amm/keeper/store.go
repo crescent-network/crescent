@@ -193,6 +193,22 @@ func (k Keeper) IterateAllPositions(ctx sdk.Context, cb func(position types.Posi
 	}
 }
 
+func (k Keeper) IteratePositionsByOwner(ctx sdk.Context, ownerAddr sdk.AccAddress, cb func(position types.Position) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetPositionsByOwnerIteratorPrefix(ownerAddr))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		positionId := sdk.BigEndianToUint64(iter.Value())
+		position, found := k.GetPosition(ctx, positionId)
+		if !found { // sanity check
+			panic("position not found")
+		}
+		if cb(position) {
+			break
+		}
+	}
+}
+
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tick int32) (tickInfo types.TickInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTickInfoKey(poolId, tick))

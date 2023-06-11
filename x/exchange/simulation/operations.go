@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	appparams "github.com/crescent-network/crescent/v5/app/params"
@@ -158,7 +157,7 @@ func SimulateMsgPlaceMarketOrder(
 }
 
 func findMsgCreateMarketParams(r *rand.Rand, accs []simtypes.Account,
-	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg legacytx.LegacyMsg, found bool) {
+	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCreateMarket, found bool) {
 	var allDenoms []string
 	bk.IterateTotalSupply(ctx, func(coin sdk.Coin) bool {
 		allDenoms = append(allDenoms, coin.Denom)
@@ -183,7 +182,7 @@ func findMsgCreateMarketParams(r *rand.Rand, accs []simtypes.Account,
 
 func findMsgPlaceLimitOrderParams(
 	r *rand.Rand, accs []simtypes.Account,
-	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg legacytx.LegacyMsg, found bool) {
+	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgPlaceLimitOrder, found bool) {
 	accs = utils.ShuffleSimAccounts(r, accs)
 	var markets []types.Market
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
@@ -227,7 +226,7 @@ func findMsgPlaceLimitOrderParams(
 
 func findMsgPlaceMarketOrderParams(
 	r *rand.Rand, accs []simtypes.Account,
-	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg legacytx.LegacyMsg, found bool) {
+	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgPlaceMarketOrder, found bool) {
 	accs = utils.ShuffleSimAccounts(r, accs)
 	var markets []types.Market
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {

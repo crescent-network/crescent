@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -11,7 +12,7 @@ func (k Keeper) updateTick(
 	poolState types.PoolState, upper bool) (flipped bool) {
 	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
 	if !found {
-		tickInfo = types.NewTickInfo()
+		tickInfo = types.NewTickInfo(utils.ZeroInt, utils.ZeroInt)
 	}
 
 	grossLiquidityBefore := tickInfo.GrossLiquidity

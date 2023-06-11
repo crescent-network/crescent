@@ -66,9 +66,6 @@ func (msg MsgCreatePool) ValidateBasic() error {
 	if msg.Price.GT(exchangetypes.MaxPrice) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price %s", exchangetypes.MaxPrice)
 	}
-	if _, valid := exchangetypes.ValidateTickPrice(msg.Price); !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid tick price: %s", msg.Price)
-	}
 	return nil
 }
 

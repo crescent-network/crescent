@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/constraints"
+
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"golang.org/x/exp/constraints"
 )
 
 // GetShareValue multiplies with truncation by receiving int amount and decimal ratio and returns int result.
@@ -260,4 +261,20 @@ func BigEndianToUint32(bz []byte) uint32 {
 		return 0
 	}
 	return binary.BigEndian.Uint32(bz)
+}
+
+func Filter[E any](s []E, f func(E) bool) []E {
+	var r []E
+	for _, x := range s {
+		if f(x) {
+			r = append(r, x)
+		}
+	}
+	return r
+}
+
+func Shuffle[E any](r *rand.Rand, s []E) {
+	r.Shuffle(len(s), func(i, j int) {
+		s[i], s[j] = s[j], s[i]
+	})
 }

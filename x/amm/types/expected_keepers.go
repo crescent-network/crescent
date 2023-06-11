@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -11,6 +12,7 @@ import (
 // AccountKeeper defines the expected keeper interface of the auth module.
 // Some methods are used only in simulation tests.
 type AccountKeeper interface {
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 	GetModuleAddress(moduleName string) sdk.AccAddress
 }
 
@@ -25,6 +27,8 @@ type BankKeeper interface {
 
 type ExchangeKeeper interface {
 	GetMarket(ctx sdk.Context, marketId uint64) (market exchangetypes.Market, found bool)
+	IterateAllMarkets(ctx sdk.Context, cb func(market exchangetypes.Market) (stop bool))
+	MustGetMarketState(ctx sdk.Context, marketId uint64) (marketState exchangetypes.MarketState)
 }
 
 type MarkerKeeper interface {

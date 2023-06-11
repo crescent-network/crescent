@@ -13,6 +13,9 @@ func HandlePoolParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.PoolP
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", change.PoolId)
 		}
+		if pool.TickSpacing == change.TickSpacing {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "tick spacing is not changed: %d", pool.TickSpacing)
+		}
 		if err := types.ValidateTickSpacing(pool.TickSpacing, change.TickSpacing); err != nil {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}

@@ -93,12 +93,12 @@ func (change PoolParameterChange) Validate() error {
 
 func NewPublicFarmingPlanProposal(
 	title, description string,
-	createReqs []CreatePublicFarmingPlanRequest, termReq []TerminateFarmingPlanRequest) *PublicFarmingPlanProposal {
+	createReqs []CreatePublicFarmingPlanRequest, termReqs []TerminateFarmingPlanRequest) *PublicFarmingPlanProposal {
 	return &PublicFarmingPlanProposal{
 		Title:             title,
 		Description:       description,
 		CreateRequests:    createReqs,
-		TerminateRequests: termReq,
+		TerminateRequests: termReqs,
 	}
 }
 
