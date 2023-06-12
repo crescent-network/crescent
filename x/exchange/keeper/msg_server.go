@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -23,26 +22,22 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarket) (*types.MsgCreateMarketResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	market, err := k.Keeper.CreateMarket(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.BaseDenom, msg.QuoteDenom)
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgCreateMarketResponse{MarketId: market.Id}, nil
 }
 
 func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLimitOrder) (*types.MsgPlaceLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	orderId, _, execQty, paid, received, err := k.Keeper.PlaceLimitOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgPlaceLimitOrderResponse{
 		OrderId:          orderId,
 		ExecutedQuantity: execQty,
@@ -53,43 +48,25 @@ func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLim
 
 func (k msgServer) PlaceBatchLimitOrder(goCtx context.Context, msg *types.MsgPlaceBatchLimitOrder) (*types.MsgPlaceBatchLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if utils.IsMidBlockContext(ctx.Context()) {
-		order, err := k.Keeper.PlaceBatchLimitOrder(
-			ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
-			msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
-		if err != nil {
-			return nil, err
-		}
-		return &types.MsgPlaceBatchLimitOrderResponse{
-			OrderId: order.Id,
-		}, nil
-	}
-
-	if err := ctx.EventManager().EmitTypedEvent(&types.EventPlaceBatchLimitOrder{
-		MarketId: msg.MarketId,
-		Orderer:  msg.Sender,
-		IsBuy:    msg.IsBuy,
-		Price:    msg.Price,
-		Quantity: msg.Quantity,
-		Lifespan: msg.Lifespan,
-		Deadline: ctx.BlockTime().Add(msg.Lifespan),
-	}); err != nil {
+	order, err := k.Keeper.PlaceBatchLimitOrder(
+		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
+		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
+	if err != nil {
 		return nil, err
 	}
-	return &types.MsgPlaceBatchLimitOrderResponse{}, nil
+	return &types.MsgPlaceBatchLimitOrderResponse{
+		OrderId: order.Id,
+	}, nil
 }
 
 func (k msgServer) PlaceMMLimitOrder(goCtx context.Context, msg *types.MsgPlaceMMLimitOrder) (*types.MsgPlaceMMLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	orderId, _, execQty, paid, received, err := k.Keeper.PlaceMMLimitOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgPlaceMMLimitOrderResponse{
 		OrderId:          orderId,
 		ExecutedQuantity: execQty,
@@ -100,43 +77,25 @@ func (k msgServer) PlaceMMLimitOrder(goCtx context.Context, msg *types.MsgPlaceM
 
 func (k msgServer) PlaceMMBatchLimitOrder(goCtx context.Context, msg *types.MsgPlaceMMBatchLimitOrder) (*types.MsgPlaceMMBatchLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if utils.IsMidBlockContext(ctx.Context()) {
-		order, err := k.Keeper.PlaceMMBatchLimitOrder(
-			ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
-			msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
-		if err != nil {
-			return nil, err
-		}
-		return &types.MsgPlaceMMBatchLimitOrderResponse{
-			OrderId: order.Id,
-		}, nil
-	}
-
-	if err := ctx.EventManager().EmitTypedEvent(&types.EventPlaceMMBatchLimitOrder{
-		MarketId: msg.MarketId,
-		Orderer:  msg.Sender,
-		IsBuy:    msg.IsBuy,
-		Price:    msg.Price,
-		Quantity: msg.Quantity,
-		Lifespan: msg.Lifespan,
-		Deadline: ctx.BlockTime().Add(msg.Lifespan),
-	}); err != nil {
+	order, err := k.Keeper.PlaceMMBatchLimitOrder(
+		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
+		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
+	if err != nil {
 		return nil, err
 	}
-	return &types.MsgPlaceMMBatchLimitOrderResponse{}, nil
+	return &types.MsgPlaceMMBatchLimitOrderResponse{
+		OrderId: order.Id,
+	}, nil
 }
 
 func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMarketOrder) (*types.MsgPlaceMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	orderId, execQty, paid, received, err := k.Keeper.PlaceMarketOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Quantity)
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgPlaceMarketOrderResponse{
 		OrderId:          orderId,
 		ExecutedQuantity: execQty,
@@ -147,13 +106,11 @@ func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMa
 
 func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	_, refundedDeposit, err := k.Keeper.CancelOrder(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.OrderId)
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgCancelOrderResponse{
 		RefundedDeposit: refundedDeposit,
 	}, nil
@@ -161,13 +118,11 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 
 func (k msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	output, results, err := k.Keeper.SwapExactAmountIn(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Routes, msg.Input, msg.MinOutput, false)
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgSwapExactAmountInResponse{
 		Output:  output,
 		Results: results,

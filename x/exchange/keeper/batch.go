@@ -21,6 +21,11 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
 		return true
 	})
 
+	// No need to run matching since the order book is not crossed.
+	if !bestBuyPrice.IsNil() && !bestSellPrice.IsNil() && bestBuyPrice.LT(bestSellPrice) {
+		return nil
+	}
+
 	// Construct TempOrderBookSides with the price limits we obtained previously.
 	var buyObs, sellObs *types.TempOrderBookSide
 	if !bestSellPrice.IsNil() {
