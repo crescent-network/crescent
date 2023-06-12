@@ -8,7 +8,7 @@ import (
 )
 
 // TODO: refactor code
-func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
+func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err error) {
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load
 	// on the other side.
 	var bestBuyPrice, bestSellPrice sdk.Dec
@@ -35,6 +35,34 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
 	}
 
 	marketState := k.MustGetMarketState(ctx, market.Id)
+	var lastPrice sdk.Dec
+	defer func() {
+		// If there was an error, exit early.
+		if err != nil {
+			return
+		}
+		// If there was no matching, exit early, too.
+		if lastPrice.IsNil() {
+			return
+		}
+
+		// Apply the match results.
+		var tempOrders []*types.TempOrder
+		for _, level := range buyObs.Levels {
+			tempOrders = append(tempOrders, level.Orders...)
+		}
+		for _, level := range sellObs.Levels {
+			tempOrders = append(tempOrders, level.Orders...)
+		}
+		if err = k.FinalizeMatching(ctx, market, tempOrders); err != nil {
+			return
+		}
+		if marketState.LastPrice == nil || !marketState.LastPrice.Equal(lastPrice) {
+			marketState.LastPrice = &lastPrice
+			k.SetMarketState(ctx, market.Id, marketState)
+		}
+	}()
+
 	if marketState.LastPrice == nil {
 		// If there's no last price, then match orders at a single price.
 		// The price will be the fairest price for each buy and sell orders.
@@ -78,36 +106,26 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
 					sellLevelIdx++
 				}
 			}
-			// Apply the match results.
-			var tempOrders []*types.TempOrder
-			for _, level := range buyObs.Levels {
-				tempOrders = append(tempOrders, level.Orders...)
-			}
-			for _, level := range sellObs.Levels {
-				tempOrders = append(tempOrders, level.Orders...)
-			}
-			if err := k.FinalizeMatching(ctx, market, tempOrders); err != nil {
-				return err
-			}
-			marketState.LastPrice = &matchPrice
-			k.SetMarketState(ctx, market.Id, marketState)
+			lastPrice = matchPrice
 		}
 		return nil
 	}
-	lastPrice := *marketState.LastPrice
+	lastPrice = *marketState.LastPrice
 
 	// Phase 1: Match orders with price below(or equal to) the last price and
 	// price above(or equal to) the last price.
 	// The execution price is the last price.
+	matchPrice := lastPrice
 	buyLevelIdx, sellLevelIdx := 0, 0
 	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
 		buyLevel := buyObs.Levels[buyLevelIdx]
 		sellLevel := sellObs.Levels[sellLevelIdx]
-		if buyLevel.Price.LT(lastPrice) || sellLevel.Price.GT(lastPrice) {
+		if buyLevel.Price.LT(matchPrice) || sellLevel.Price.GT(matchPrice) {
 			break
 		}
 		// Both sides are taker
-		_, sellFull, buyFull := market.MatchOrderBookLevels(sellLevel, false, buyLevel, false, lastPrice)
+		_, sellFull, buyFull := market.MatchOrderBookLevels(sellLevel, false, buyLevel, false, matchPrice)
+		lastPrice = matchPrice
 		if buyFull {
 			buyLevelIdx++
 		}
@@ -148,20 +166,5 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) error {
 		}
 	}
 
-	// Apply the match results.
-	var tempOrders []*types.TempOrder
-	for _, level := range buyObs.Levels {
-		tempOrders = append(tempOrders, level.Orders...)
-	}
-	for _, level := range sellObs.Levels {
-		tempOrders = append(tempOrders, level.Orders...)
-	}
-	if err := k.FinalizeMatching(ctx, market, tempOrders); err != nil {
-		return err
-	}
-	if !marketState.LastPrice.Equal(lastPrice) {
-		marketState.LastPrice = &lastPrice
-		k.SetMarketState(ctx, market.Id, marketState)
-	}
 	return nil
 }
