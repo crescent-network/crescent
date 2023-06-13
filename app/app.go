@@ -1109,5 +1109,6 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v5.UpgradeName, v5.UpgradeHandler(
-			mm, configurator))
+			mm, configurator, app.BankKeeper, app.DistrKeeper, app.LiquidityKeeper,
+			app.LPFarmKeeper, app.ExchangeKeeper, app.AMMKeeper, app.MarkerKeeper))
 }

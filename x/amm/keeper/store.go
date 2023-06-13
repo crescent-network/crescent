@@ -28,6 +28,11 @@ func (k Keeper) GetNextPoolIdWithUpdate(ctx sdk.Context) (poolId uint64) {
 	return poolId
 }
 
+func (k Keeper) DeleteLastPoolId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastPoolIdKey)
+}
+
 func (k Keeper) GetLastPositionId(ctx sdk.Context) (positionId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastPositionIdKey)
@@ -47,6 +52,11 @@ func (k Keeper) GetNextPositionIdWithUpdate(ctx sdk.Context) (positionId uint64)
 	positionId++
 	k.SetLastPositionId(ctx, positionId)
 	return positionId
+}
+
+func (k Keeper) DeleteLastPositionId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastPositionIdKey)
 }
 
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (pool types.Pool, found bool) {
@@ -98,11 +108,22 @@ func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddr
 	return k.GetPool(ctx, sdk.BigEndianToUint64(bz))
 }
 
+func (k Keeper) DeletePool(ctx sdk.Context, pool types.Pool) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPoolKey(pool.Id))
+}
+
 func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(
 		types.GetPoolByReserveAddressIndexKey(sdk.MustAccAddressFromBech32(pool.ReserveAddress)),
 		sdk.Uint64ToBigEndian(pool.Id))
+}
+
+func (k Keeper) DeletePoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(
+		types.GetPoolByReserveAddressIndexKey(sdk.MustAccAddressFromBech32(pool.ReserveAddress)))
 }
 
 func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop bool)) {
@@ -140,6 +161,11 @@ func (k Keeper) SetPoolState(ctx sdk.Context, poolId uint64, state types.PoolSta
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&state)
 	store.Set(types.GetPoolStateKey(poolId), bz)
+}
+
+func (k Keeper) DeletePoolState(ctx sdk.Context, poolId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPoolStateKey(poolId))
 }
 
 func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (position types.Position, found bool) {
@@ -207,6 +233,11 @@ func (k Keeper) IteratePositionsByOwner(ctx sdk.Context, ownerAddr sdk.AccAddres
 			break
 		}
 	}
+}
+
+func (k Keeper) DeletePosition(ctx sdk.Context, position types.Position) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPositionKey(position.Id))
 }
 
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tick int32) (tickInfo types.TickInfo, found bool) {
@@ -313,6 +344,11 @@ func (k Keeper) GetNextFarmingPlanIdWithUpdate(ctx sdk.Context) (planId uint64) 
 	return planId
 }
 
+func (k Keeper) DeleteLastFarmingPlanId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastFarmingPlanIdKey)
+}
+
 func (k Keeper) GetFarmingPlan(ctx sdk.Context, planId uint64) (plan types.FarmingPlan, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetFarmingPlanKey(planId))
@@ -341,6 +377,11 @@ func (k Keeper) IterateAllFarmingPlans(ctx sdk.Context, cb func(plan types.Farmi
 	}
 }
 
+func (k Keeper) DeleteFarmingPlan(ctx sdk.Context, plan types.FarmingPlan) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetFarmingPlanKey(plan.Id))
+}
+
 func (k Keeper) GetNumPrivateFarmingPlans(ctx sdk.Context) (num uint32) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.NumPrivateFarmingPlansKey)
@@ -353,4 +394,9 @@ func (k Keeper) GetNumPrivateFarmingPlans(ctx sdk.Context) (num uint32) {
 func (k Keeper) SetNumPrivateFarmingPlans(ctx sdk.Context, num uint32) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.NumPrivateFarmingPlansKey, utils.Uint32ToBigEndian(num))
+}
+
+func (k Keeper) DeleteNumPrivateFarmingPlans(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.NumPrivateFarmingPlansKey)
 }

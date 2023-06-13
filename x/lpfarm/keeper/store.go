@@ -26,6 +26,11 @@ func (k Keeper) SetLastBlockTime(ctx sdk.Context, t time.Time) {
 	store.Set(types.LastBlockTimeKey, sdk.FormatTimeBytes(t))
 }
 
+func (k Keeper) DeleteLastBlockTime(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastBlockTimeKey)
+}
+
 func (k Keeper) GetLastPlanId(ctx sdk.Context) (id uint64, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastPlanIdKey)
@@ -40,6 +45,11 @@ func (k Keeper) SetLastPlanId(ctx sdk.Context, id uint64) {
 	store.Set(types.LastPlanIdKey, sdk.Uint64ToBigEndian(id))
 }
 
+func (k Keeper) DeleteLastPlanId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastPlanIdKey)
+}
+
 func (k Keeper) GetNumPrivatePlans(ctx sdk.Context) (num uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.NumPrivatePlansKey)
@@ -52,6 +62,11 @@ func (k Keeper) GetNumPrivatePlans(ctx sdk.Context) (num uint64) {
 func (k Keeper) SetNumPrivatePlans(ctx sdk.Context, num uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.NumPrivatePlansKey, sdk.Uint64ToBigEndian(num))
+}
+
+func (k Keeper) DeleteNumPrivatePlans(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.NumPrivatePlansKey)
 }
 
 func (k Keeper) GetPlan(ctx sdk.Context, id uint64) (plan types.Plan, found bool) {
@@ -82,6 +97,11 @@ func (k Keeper) IterateAllPlans(ctx sdk.Context, cb func(plan types.Plan) (stop 
 	}
 }
 
+func (k Keeper) DeletePlan(ctx sdk.Context, plan types.Plan) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPlanKey(plan.Id))
+}
+
 func (k Keeper) GetFarm(ctx sdk.Context, denom string) (farm types.Farm, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetFarmKey(denom))
@@ -109,6 +129,11 @@ func (k Keeper) IterateAllFarms(ctx sdk.Context, cb func(denom string, farm type
 			break
 		}
 	}
+}
+
+func (k Keeper) DeleteFarm(ctx sdk.Context, denom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetFarmKey(denom))
 }
 
 func (k Keeper) GetPosition(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (position types.Position, found bool) {

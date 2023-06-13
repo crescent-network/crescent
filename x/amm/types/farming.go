@@ -16,7 +16,7 @@ const (
 	day = 24 * time.Hour
 )
 
-var RewardsPoolAddress = address.Module(ModuleName, []byte("RewardsPool"))
+var RewardsPoolAddress = sdk.AccAddress(address.Module(ModuleName, []byte("RewardsPool")))
 
 func DeriveFarmingPoolAddress(planId uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("FarmingPool/%d", planId)))
