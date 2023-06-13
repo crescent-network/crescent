@@ -41,27 +41,24 @@ func SplitMidBlockTxs(txs [][]byte, txDecoder sdk.TxDecoder) (midBlockTxs, norma
 			normalTxs = append(normalTxs, rawTx)
 			continue
 		}
-		midBlockTx := false
-
-	loop:
-		for _, msg := range tx.GetMsgs() {
-			switch msg.(type) {
-			case *exchangetypes.MsgPlaceBatchLimitOrder:
-				midBlockTx = true
-			case *exchangetypes.MsgPlaceMMBatchLimitOrder:
-				midBlockTx = true
-			// TODO: add cancel mm order msg
-			default:
-				midBlockTx = false
-				break loop
-			}
-		}
-
-		if midBlockTx {
+		if IsMidBlockTx(tx) {
 			midBlockTxs = append(midBlockTxs, rawTx)
 		} else {
 			normalTxs = append(normalTxs, rawTx)
 		}
 	}
 	return midBlockTxs, normalTxs
+}
+
+func IsMidBlockTx(tx sdk.Tx) bool {
+	for _, msg := range tx.GetMsgs() {
+		switch msg.(type) {
+		case *exchangetypes.MsgPlaceBatchLimitOrder,
+			*exchangetypes.MsgPlaceMMBatchLimitOrder,
+			*exchangetypes.MsgCancelOrder:
+		default:
+			return false
+		}
+	}
+	return true
 }
