@@ -14,6 +14,9 @@ const (
 )
 
 func ValidateTickPrice(price sdk.Dec) (tick int32, valid bool) {
+	if !price.IsPositive() {
+		panic("price must be positive")
+	}
 	b := price.BigInt()
 	c := int32(len(b.Text(10)) - 1) // characteristic of b
 	ten := big.NewInt(10)
