@@ -200,6 +200,11 @@ func (k Keeper) CancelOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, orderId
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "order not found")
 		return
 	}
+	if order.MsgHeight == ctx.BlockHeight() {
+		err = sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest, "cannot cancel order placed in the same block")
+		return
+	}
 	market, found := k.GetMarket(ctx, order.MarketId)
 	if !found { // sanity check
 		panic("market not found")

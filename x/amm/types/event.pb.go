@@ -5,18 +5,23 @@ package types
 
 import (
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -25,6 +30,10 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type EventCreatePool struct {
+	Creator  string                                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	MarketId uint64                                 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	Price    github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=price,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"price"`
+	PoolId   uint64                                 `protobuf:"varint,4,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }
 
 func (m *EventCreatePool) Reset()         { *m = EventCreatePool{} }
@@ -61,6 +70,13 @@ func (m *EventCreatePool) XXX_DiscardUnknown() {
 var xxx_messageInfo_EventCreatePool proto.InternalMessageInfo
 
 type EventAddLiquidity struct {
+	Owner      string                                   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	PoolId     uint64                                   `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	LowerPrice github_com_cosmos_cosmos_sdk_types.Dec   `protobuf:"bytes,3,opt,name=lower_price,json=lowerPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"lower_price"`
+	UpperPrice github_com_cosmos_cosmos_sdk_types.Dec   `protobuf:"bytes,4,opt,name=upper_price,json=upperPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"upper_price"`
+	PositionId uint64                                   `protobuf:"varint,5,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty"`
+	Liquidity  github_com_cosmos_cosmos_sdk_types.Int   `protobuf:"bytes,6,opt,name=liquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"liquidity"`
+	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *EventAddLiquidity) Reset()         { *m = EventAddLiquidity{} }
@@ -97,6 +113,10 @@ func (m *EventAddLiquidity) XXX_DiscardUnknown() {
 var xxx_messageInfo_EventAddLiquidity proto.InternalMessageInfo
 
 type EventRemoveLiquidity struct {
+	Owner      string                                   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	PositionId uint64                                   `protobuf:"varint,2,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty"`
+	Liquidity  github_com_cosmos_cosmos_sdk_types.Int   `protobuf:"bytes,3,opt,name=liquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"liquidity"`
+	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *EventRemoveLiquidity) Reset()         { *m = EventRemoveLiquidity{} }
@@ -133,6 +153,9 @@ func (m *EventRemoveLiquidity) XXX_DiscardUnknown() {
 var xxx_messageInfo_EventRemoveLiquidity proto.InternalMessageInfo
 
 type EventCollect struct {
+	Owner      string                                   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	PositionId uint64                                   `protobuf:"varint,2,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty"`
+	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *EventCollect) Reset()         { *m = EventCollect{} }
@@ -168,32 +191,192 @@ func (m *EventCollect) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventCollect proto.InternalMessageInfo
 
+type EventCreatePrivateFarmingPlan struct {
+	Creator            string                    `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Description        string                    `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	TerminationAddress string                    `protobuf:"bytes,3,opt,name=termination_address,json=terminationAddress,proto3" json:"termination_address,omitempty"`
+	RewardAllocations  []FarmingRewardAllocation `protobuf:"bytes,4,rep,name=reward_allocations,json=rewardAllocations,proto3" json:"reward_allocations"`
+	StartTime          time.Time                 `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	EndTime            time.Time                 `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
+	FarmingPlanId      uint64                    `protobuf:"varint,7,opt,name=farming_plan_id,json=farmingPlanId,proto3" json:"farming_plan_id,omitempty"`
+	FarmingPoolAddress string                    `protobuf:"bytes,8,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty"`
+}
+
+func (m *EventCreatePrivateFarmingPlan) Reset()         { *m = EventCreatePrivateFarmingPlan{} }
+func (m *EventCreatePrivateFarmingPlan) String() string { return proto.CompactTextString(m) }
+func (*EventCreatePrivateFarmingPlan) ProtoMessage()    {}
+func (*EventCreatePrivateFarmingPlan) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8285ef069ec17c48, []int{4}
+}
+func (m *EventCreatePrivateFarmingPlan) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventCreatePrivateFarmingPlan) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventCreatePrivateFarmingPlan.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventCreatePrivateFarmingPlan) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventCreatePrivateFarmingPlan.Merge(m, src)
+}
+func (m *EventCreatePrivateFarmingPlan) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventCreatePrivateFarmingPlan) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventCreatePrivateFarmingPlan.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventCreatePrivateFarmingPlan proto.InternalMessageInfo
+
+type EventCreatePublicFarmingPlan struct {
+	Description        string                    `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
+	FarmingPoolAddress string                    `protobuf:"bytes,2,opt,name=farming_pool_address,json=farmingPoolAddress,proto3" json:"farming_pool_address,omitempty"`
+	TerminationAddress string                    `protobuf:"bytes,3,opt,name=termination_address,json=terminationAddress,proto3" json:"termination_address,omitempty"`
+	RewardAllocations  []FarmingRewardAllocation `protobuf:"bytes,4,rep,name=reward_allocations,json=rewardAllocations,proto3" json:"reward_allocations"`
+	StartTime          time.Time                 `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	EndTime            time.Time                 `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
+	FarmingPlanId      uint64                    `protobuf:"varint,7,opt,name=farming_plan_id,json=farmingPlanId,proto3" json:"farming_plan_id,omitempty"`
+}
+
+func (m *EventCreatePublicFarmingPlan) Reset()         { *m = EventCreatePublicFarmingPlan{} }
+func (m *EventCreatePublicFarmingPlan) String() string { return proto.CompactTextString(m) }
+func (*EventCreatePublicFarmingPlan) ProtoMessage()    {}
+func (*EventCreatePublicFarmingPlan) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8285ef069ec17c48, []int{5}
+}
+func (m *EventCreatePublicFarmingPlan) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventCreatePublicFarmingPlan) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventCreatePublicFarmingPlan.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventCreatePublicFarmingPlan) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventCreatePublicFarmingPlan.Merge(m, src)
+}
+func (m *EventCreatePublicFarmingPlan) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventCreatePublicFarmingPlan) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventCreatePublicFarmingPlan.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventCreatePublicFarmingPlan proto.InternalMessageInfo
+
+type EventFarmingPlanTerminated struct {
+	FarmingPlanId uint64 `protobuf:"varint,1,opt,name=farming_plan_id,json=farmingPlanId,proto3" json:"farming_plan_id,omitempty"`
+}
+
+func (m *EventFarmingPlanTerminated) Reset()         { *m = EventFarmingPlanTerminated{} }
+func (m *EventFarmingPlanTerminated) String() string { return proto.CompactTextString(m) }
+func (*EventFarmingPlanTerminated) ProtoMessage()    {}
+func (*EventFarmingPlanTerminated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8285ef069ec17c48, []int{6}
+}
+func (m *EventFarmingPlanTerminated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventFarmingPlanTerminated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventFarmingPlanTerminated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventFarmingPlanTerminated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventFarmingPlanTerminated.Merge(m, src)
+}
+func (m *EventFarmingPlanTerminated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventFarmingPlanTerminated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventFarmingPlanTerminated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventFarmingPlanTerminated proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*EventCreatePool)(nil), "crescent.amm.v1beta1.EventCreatePool")
 	proto.RegisterType((*EventAddLiquidity)(nil), "crescent.amm.v1beta1.EventAddLiquidity")
 	proto.RegisterType((*EventRemoveLiquidity)(nil), "crescent.amm.v1beta1.EventRemoveLiquidity")
 	proto.RegisterType((*EventCollect)(nil), "crescent.amm.v1beta1.EventCollect")
+	proto.RegisterType((*EventCreatePrivateFarmingPlan)(nil), "crescent.amm.v1beta1.EventCreatePrivateFarmingPlan")
+	proto.RegisterType((*EventCreatePublicFarmingPlan)(nil), "crescent.amm.v1beta1.EventCreatePublicFarmingPlan")
+	proto.RegisterType((*EventFarmingPlanTerminated)(nil), "crescent.amm.v1beta1.EventFarmingPlanTerminated")
 }
 
 func init() { proto.RegisterFile("crescent/amm/v1beta1/event.proto", fileDescriptor_8285ef069ec17c48) }
 
 var fileDescriptor_8285ef069ec17c48 = []byte{
-	// 233 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x44, 0x8f, 0xb1, 0x4e, 0xc3, 0x40,
-	0x0c, 0x86, 0x93, 0x85, 0xe1, 0x84, 0x40, 0x85, 0x88, 0xa1, 0x83, 0x85, 0xb2, 0x13, 0xab, 0xaa,
-	0x78, 0x00, 0x40, 0x6c, 0x0c, 0xc0, 0xc8, 0x76, 0xb9, 0x58, 0xe1, 0x44, 0x2e, 0x2e, 0x39, 0xf7,
-	0xa0, 0x6f, 0xc1, 0x63, 0x75, 0xec, 0xc8, 0x08, 0xc9, 0x8b, 0xa0, 0x5e, 0x68, 0xbb, 0x59, 0x9f,
-	0x3f, 0xff, 0xf2, 0xaf, 0x2e, 0x4d, 0x47, 0xde, 0x50, 0x2b, 0xa8, 0x9d, 0xc3, 0x30, 0x2b, 0x49,
-	0xf4, 0x0c, 0x29, 0x50, 0x2b, 0xc5, 0xa2, 0x63, 0xe1, 0xb3, 0x6c, 0x67, 0x14, 0xda, 0xb9, 0xe2,
-	0xdf, 0x98, 0x66, 0x35, 0xd7, 0x1c, 0x05, 0xdc, 0x4e, 0xa3, 0x3b, 0x05, 0xc3, 0xde, 0xb1, 0xc7,
-	0x52, 0x7b, 0xda, 0x87, 0x19, 0xb6, 0xed, 0xb8, 0xcf, 0x27, 0xea, 0xf4, 0x7e, 0x1b, 0x7d, 0xd7,
-	0x91, 0x16, 0x7a, 0x64, 0x6e, 0xf2, 0x73, 0x35, 0x89, 0xe8, 0xa6, 0xaa, 0x1e, 0xec, 0xfb, 0xd2,
-	0x56, 0x56, 0x56, 0xf9, 0x85, 0xca, 0x22, 0x7c, 0x26, 0xc7, 0x81, 0x0e, 0xfc, 0x44, 0x1d, 0x8f,
-	0xf7, 0xdc, 0x34, 0x64, 0xe4, 0xf6, 0x69, 0xfd, 0x0b, 0xc9, 0xba, 0x87, 0x74, 0xd3, 0x43, 0xfa,
-	0xd3, 0x43, 0xfa, 0x35, 0x40, 0xb2, 0x19, 0x20, 0xf9, 0x1e, 0x20, 0x79, 0x99, 0xd7, 0x56, 0x5e,
-	0x97, 0x65, 0x61, 0xd8, 0xe1, 0xae, 0xc4, 0x55, 0x4b, 0xf2, 0xc1, 0xdd, 0xdb, 0x1e, 0x60, 0xb8,
-	0xc6, 0xcf, 0x58, 0x5e, 0x56, 0x0b, 0xf2, 0xe5, 0x51, 0xfc, 0x74, 0xfe, 0x17, 0x00, 0x00, 0xff,
-	0xff, 0x59, 0xdf, 0x58, 0x41, 0x19, 0x01, 0x00, 0x00,
+	// 761 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x56, 0x4d, 0x4f, 0x1b, 0x39,
+	0x18, 0xce, 0x24, 0x21, 0x1f, 0xce, 0xae, 0x10, 0xde, 0x48, 0x9b, 0xcd, 0xee, 0x4e, 0xa2, 0x1c,
+	0x50, 0x2e, 0xcc, 0xf0, 0xa1, 0x3d, 0xaf, 0x08, 0xb4, 0x52, 0x24, 0x24, 0xe8, 0x88, 0x53, 0x2f,
+	0x91, 0x33, 0x36, 0xa9, 0xc5, 0xcc, 0x78, 0x6a, 0x3b, 0x49, 0xb9, 0xf5, 0x27, 0xf0, 0x2f, 0x2a,
+	0x71, 0xaf, 0xd4, 0x9f, 0xc0, 0x91, 0x63, 0xd5, 0x03, 0xb4, 0xf0, 0x47, 0x2a, 0xdb, 0x33, 0x61,
+	0x44, 0x03, 0x2d, 0x50, 0x6e, 0x3d, 0x65, 0xfc, 0xfa, 0x7d, 0x9f, 0xf7, 0xf1, 0xfb, 0xd8, 0x8f,
+	0x02, 0xda, 0x3e, 0x27, 0xc2, 0x27, 0x91, 0x74, 0x51, 0x18, 0xba, 0x93, 0xb5, 0x21, 0x91, 0x68,
+	0xcd, 0x25, 0x13, 0x12, 0x49, 0x27, 0xe6, 0x4c, 0x32, 0x58, 0x4f, 0x33, 0x1c, 0x14, 0x86, 0x4e,
+	0x92, 0xd1, 0x6c, 0x8d, 0x18, 0x1b, 0x05, 0xc4, 0xd5, 0x39, 0xc3, 0xf1, 0x81, 0x2b, 0x69, 0x48,
+	0x84, 0x44, 0x61, 0x6c, 0xca, 0x9a, 0xf5, 0x11, 0x1b, 0x31, 0xfd, 0xe9, 0xaa, 0xaf, 0x24, 0x6a,
+	0xfb, 0x4c, 0x84, 0x4c, 0xb8, 0x43, 0x24, 0xc8, 0xac, 0x9b, 0xcf, 0x68, 0x94, 0xec, 0x77, 0xe6,
+	0xd2, 0x39, 0x40, 0x3c, 0xa4, 0xd1, 0xc8, 0xe4, 0x74, 0xde, 0x59, 0x60, 0xf1, 0x99, 0x22, 0xb8,
+	0xc5, 0x09, 0x92, 0x64, 0x8f, 0xb1, 0x00, 0x36, 0x40, 0xd9, 0x57, 0x2b, 0xc6, 0x1b, 0x56, 0xdb,
+	0xea, 0x56, 0xbd, 0x74, 0x09, 0xff, 0x06, 0xd5, 0x10, 0xf1, 0x43, 0x22, 0x07, 0x14, 0x37, 0xf2,
+	0x6d, 0xab, 0x5b, 0xf4, 0x2a, 0x26, 0xd0, 0xc7, 0x70, 0x1b, 0x2c, 0xc4, 0x9c, 0xfa, 0xa4, 0x51,
+	0x50, 0x45, 0x3d, 0xe7, 0xf4, 0xbc, 0x95, 0xfb, 0x74, 0xde, 0x5a, 0x1e, 0x51, 0xf9, 0x6a, 0x3c,
+	0x74, 0x7c, 0x16, 0xba, 0x09, 0x61, 0xf3, 0xb3, 0x22, 0xf0, 0xa1, 0x2b, 0x8f, 0x62, 0x22, 0x9c,
+	0x6d, 0xe2, 0x7b, 0xa6, 0x18, 0xfe, 0x09, 0xca, 0x31, 0x63, 0x81, 0x6a, 0x50, 0xd4, 0x0d, 0x4a,
+	0x6a, 0xd9, 0xc7, 0x9d, 0x0f, 0x05, 0xb0, 0xa4, 0x99, 0x6e, 0x62, 0xbc, 0x43, 0x5f, 0x8f, 0x29,
+	0xa6, 0xf2, 0x08, 0xd6, 0xc1, 0x02, 0x9b, 0x46, 0x24, 0x65, 0x6a, 0x16, 0x59, 0x90, 0x7c, 0x16,
+	0x04, 0xee, 0x82, 0x5a, 0xc0, 0xa6, 0x84, 0x0f, 0x1e, 0xc3, 0x14, 0x68, 0x88, 0x3d, 0x4d, 0x77,
+	0x17, 0xd4, 0xc6, 0x71, 0x3c, 0x03, 0x2c, 0x3e, 0x0c, 0x50, 0x43, 0x18, 0xc0, 0x16, 0xa8, 0xc5,
+	0x4c, 0x50, 0x49, 0x59, 0xa4, 0xe8, 0x2f, 0x68, 0xfa, 0x20, 0x0d, 0xf5, 0x31, 0xdc, 0x01, 0xd5,
+	0x20, 0x3d, 0x7e, 0xa3, 0x74, 0xef, 0x7e, 0xfd, 0x48, 0x7a, 0xd7, 0x00, 0xd0, 0x07, 0x25, 0x14,
+	0xb2, 0x71, 0x24, 0x1b, 0xe5, 0x76, 0xa1, 0x5b, 0x5b, 0xff, 0xcb, 0x31, 0x15, 0x8e, 0xba, 0x54,
+	0xe9, 0x05, 0x75, 0xb6, 0x18, 0x8d, 0x7a, 0xab, 0xaa, 0xcb, 0xc9, 0x45, 0xab, 0xfb, 0x03, 0x5d,
+	0x54, 0x81, 0xf0, 0x12, 0xe8, 0xce, 0xdb, 0x3c, 0xa8, 0x6b, 0xe9, 0x3c, 0x12, 0xb2, 0x09, 0xf9,
+	0x9e, 0x7a, 0x37, 0x46, 0x90, 0xbf, 0x7b, 0x04, 0x85, 0x9f, 0x37, 0x82, 0xe2, 0xd3, 0x8d, 0xe0,
+	0xc4, 0x02, 0xbf, 0x99, 0x77, 0xc6, 0x82, 0x80, 0xf8, 0xf2, 0xa1, 0x47, 0xbf, 0x26, 0x5b, 0x78,
+	0x3a, 0xb2, 0x67, 0x05, 0xf0, 0x6f, 0xd6, 0x14, 0x38, 0x9d, 0x20, 0x49, 0x9e, 0x1b, 0xe3, 0xd8,
+	0x0b, 0x50, 0x74, 0x87, 0x45, 0xb4, 0x41, 0x0d, 0x13, 0xe1, 0x73, 0x1a, 0x2b, 0xc6, 0xfa, 0x04,
+	0x55, 0x2f, 0x1b, 0x82, 0x2e, 0xf8, 0x43, 0x12, 0x05, 0x85, 0xf4, 0x31, 0x11, 0xc6, 0x9c, 0x08,
+	0x61, 0x74, 0xf4, 0x60, 0x66, 0x6b, 0xd3, 0xec, 0xc0, 0x21, 0x80, 0x9c, 0x4c, 0x11, 0xc7, 0x03,
+	0x14, 0x04, 0xcc, 0xd7, 0x7b, 0x22, 0x11, 0x6b, 0xc5, 0x99, 0xe7, 0xa8, 0x4e, 0xc2, 0xd5, 0xd3,
+	0x65, 0x9b, 0xb3, 0xaa, 0x5e, 0x51, 0xcd, 0xc4, 0x5b, 0xe2, 0x37, 0xe2, 0x02, 0x6e, 0x01, 0x20,
+	0x24, 0xe2, 0x72, 0xa0, 0xac, 0x57, 0xbf, 0xba, 0xda, 0x7a, 0xd3, 0x31, 0xbe, 0xec, 0xa4, 0xbe,
+	0xec, 0xec, 0xa7, 0xbe, 0xdc, 0xab, 0x28, 0xa0, 0xe3, 0x8b, 0x96, 0xe5, 0x55, 0x75, 0x9d, 0xda,
+	0x81, 0xff, 0x83, 0x0a, 0x89, 0xb0, 0x81, 0x28, 0xdd, 0x03, 0xa2, 0x4c, 0x22, 0xac, 0x01, 0x96,
+	0xc1, 0x62, 0x62, 0xcf, 0x83, 0x38, 0x40, 0xfa, 0x0a, 0x94, 0xf5, 0x15, 0xf8, 0xfd, 0xe0, 0x7a,
+	0xf8, 0x7d, 0x0c, 0x57, 0x41, 0x7d, 0x96, 0xa7, 0x7c, 0x2e, 0x9d, 0x61, 0xc5, 0xcc, 0x30, 0x4d,
+	0x66, 0x2c, 0x48, 0x66, 0xd8, 0x79, 0x5f, 0x00, 0xff, 0x64, 0x25, 0x1d, 0x0f, 0x03, 0xea, 0x67,
+	0x15, 0xbd, 0xa1, 0x9b, 0xf5, 0xad, 0x6e, 0xb7, 0x35, 0xcd, 0xdf, 0xd6, 0xf4, 0x97, 0xd2, 0x8f,
+	0x56, 0xba, 0xb3, 0x0d, 0x9a, 0x5a, 0xb6, 0x8c, 0x54, 0xfb, 0xc9, 0xdc, 0x08, 0x9e, 0x87, 0x62,
+	0xcd, 0x41, 0xe9, 0xbd, 0x38, 0xfd, 0x62, 0xe7, 0x4e, 0x2f, 0x6d, 0xeb, 0xec, 0xd2, 0xb6, 0x3e,
+	0x5f, 0xda, 0xd6, 0xf1, 0x95, 0x9d, 0x3b, 0xbb, 0xb2, 0x73, 0x1f, 0xaf, 0xec, 0xdc, 0xcb, 0x8d,
+	0xac, 0x41, 0x24, 0x33, 0x5e, 0x89, 0x88, 0x9c, 0x32, 0x7e, 0x38, 0x0b, 0xb8, 0x93, 0xff, 0xdc,
+	0x37, 0xfa, 0x8f, 0x84, 0x76, 0x8c, 0x61, 0x49, 0x9f, 0x73, 0xe3, 0x6b, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x28, 0xe3, 0x6c, 0x44, 0xf4, 0x08, 0x00, 0x00,
 }
 
 func (m *EventCreatePool) Marshal() (dAtA []byte, err error) {
@@ -216,6 +399,33 @@ func (m *EventCreatePool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.PoolId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x20
+	}
+	{
+		size := m.Price.Size()
+		i -= size
+		if _, err := m.Price.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.MarketId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -239,6 +449,67 @@ func (m *EventAddLiquidity) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintEvent(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	{
+		size := m.Liquidity.Size()
+		i -= size
+		if _, err := m.Liquidity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	if m.PositionId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x28
+	}
+	{
+		size := m.UpperPrice.Size()
+		i -= size
+		if _, err := m.UpperPrice.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.LowerPrice.Size()
+		i -= size
+		if _, err := m.LowerPrice.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.PoolId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -262,6 +533,42 @@ func (m *EventRemoveLiquidity) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintEvent(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	{
+		size := m.Liquidity.Size()
+		i -= size
+		if _, err := m.Liquidity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.PositionId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -285,6 +592,225 @@ func (m *EventCollect) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintEvent(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.PositionId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventCreatePrivateFarmingPlan) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventCreatePrivateFarmingPlan) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventCreatePrivateFarmingPlan) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FarmingPoolAddress) > 0 {
+		i -= len(m.FarmingPoolAddress)
+		copy(dAtA[i:], m.FarmingPoolAddress)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.FarmingPoolAddress)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if m.FarmingPlanId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.FarmingPlanId))
+		i--
+		dAtA[i] = 0x38
+	}
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
+	if err1 != nil {
+		return 0, err1
+	}
+	i -= n1
+	i = encodeVarintEvent(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x32
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintEvent(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x2a
+	if len(m.RewardAllocations) > 0 {
+		for iNdEx := len(m.RewardAllocations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RewardAllocations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintEvent(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.TerminationAddress) > 0 {
+		i -= len(m.TerminationAddress)
+		copy(dAtA[i:], m.TerminationAddress)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.TerminationAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventCreatePublicFarmingPlan) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventCreatePublicFarmingPlan) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventCreatePublicFarmingPlan) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.FarmingPlanId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.FarmingPlanId))
+		i--
+		dAtA[i] = 0x38
+	}
+	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintEvent(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x32
+	n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err4 != nil {
+		return 0, err4
+	}
+	i -= n4
+	i = encodeVarintEvent(dAtA, i, uint64(n4))
+	i--
+	dAtA[i] = 0x2a
+	if len(m.RewardAllocations) > 0 {
+		for iNdEx := len(m.RewardAllocations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RewardAllocations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintEvent(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.TerminationAddress) > 0 {
+		i -= len(m.TerminationAddress)
+		copy(dAtA[i:], m.TerminationAddress)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.TerminationAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.FarmingPoolAddress) > 0 {
+		i -= len(m.FarmingPoolAddress)
+		copy(dAtA[i:], m.FarmingPoolAddress)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.FarmingPoolAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventFarmingPlanTerminated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventFarmingPlanTerminated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventFarmingPlanTerminated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.FarmingPlanId != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.FarmingPlanId))
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -305,6 +831,18 @@ func (m *EventCreatePool) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if m.MarketId != 0 {
+		n += 1 + sovEvent(uint64(m.MarketId))
+	}
+	l = m.Price.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	if m.PoolId != 0 {
+		n += 1 + sovEvent(uint64(m.PoolId))
+	}
 	return n
 }
 
@@ -314,6 +852,28 @@ func (m *EventAddLiquidity) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if m.PoolId != 0 {
+		n += 1 + sovEvent(uint64(m.PoolId))
+	}
+	l = m.LowerPrice.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.UpperPrice.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	if m.PositionId != 0 {
+		n += 1 + sovEvent(uint64(m.PositionId))
+	}
+	l = m.Liquidity.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovEvent(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -323,6 +883,21 @@ func (m *EventRemoveLiquidity) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if m.PositionId != 0 {
+		n += 1 + sovEvent(uint64(m.PositionId))
+	}
+	l = m.Liquidity.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovEvent(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -332,6 +907,103 @@ func (m *EventCollect) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if m.PositionId != 0 {
+		n += 1 + sovEvent(uint64(m.PositionId))
+	}
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovEvent(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *EventCreatePrivateFarmingPlan) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.TerminationAddress)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if len(m.RewardAllocations) > 0 {
+		for _, e := range m.RewardAllocations {
+			l = e.Size()
+			n += 1 + l + sovEvent(uint64(l))
+		}
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovEvent(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
+	n += 1 + l + sovEvent(uint64(l))
+	if m.FarmingPlanId != 0 {
+		n += 1 + sovEvent(uint64(m.FarmingPlanId))
+	}
+	l = len(m.FarmingPoolAddress)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	return n
+}
+
+func (m *EventCreatePublicFarmingPlan) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.FarmingPoolAddress)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.TerminationAddress)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if len(m.RewardAllocations) > 0 {
+		for _, e := range m.RewardAllocations {
+			l = e.Size()
+			n += 1 + l + sovEvent(uint64(l))
+		}
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovEvent(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
+	n += 1 + l + sovEvent(uint64(l))
+	if m.FarmingPlanId != 0 {
+		n += 1 + sovEvent(uint64(m.FarmingPlanId))
+	}
+	return n
+}
+
+func (m *EventFarmingPlanTerminated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.FarmingPlanId != 0 {
+		n += 1 + sovEvent(uint64(m.FarmingPlanId))
+	}
 	return n
 }
 
@@ -370,6 +1042,110 @@ func (m *EventCreatePool) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: EventCreatePool: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Price.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])
@@ -420,6 +1196,212 @@ func (m *EventAddLiquidity) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: EventAddLiquidity: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LowerPrice", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.LowerPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpperPrice", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.UpperPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
+			}
+			m.PositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Liquidity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Liquidity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])
@@ -470,6 +1452,125 @@ func (m *EventRemoveLiquidity) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: EventRemoveLiquidity: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
+			}
+			m.PositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Liquidity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Liquidity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])
@@ -520,6 +1621,722 @@ func (m *EventCollect) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: EventCollect: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
+			}
+			m.PositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventCreatePrivateFarmingPlan) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventCreatePrivateFarmingPlan: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventCreatePrivateFarmingPlan: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TerminationAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TerminationAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardAllocations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardAllocations = append(m.RewardAllocations, FarmingRewardAllocation{})
+			if err := m.RewardAllocations[len(m.RewardAllocations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPlanId", wireType)
+			}
+			m.FarmingPlanId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FarmingPlanId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPoolAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FarmingPoolAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventCreatePublicFarmingPlan) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventCreatePublicFarmingPlan: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventCreatePublicFarmingPlan: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPoolAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FarmingPoolAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TerminationAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TerminationAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardAllocations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardAllocations = append(m.RewardAllocations, FarmingRewardAllocation{})
+			if err := m.RewardAllocations[len(m.RewardAllocations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPlanId", wireType)
+			}
+			m.FarmingPlanId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FarmingPlanId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventFarmingPlanTerminated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventFarmingPlanTerminated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventFarmingPlanTerminated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarmingPlanId", wireType)
+			}
+			m.FarmingPlanId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FarmingPlanId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])

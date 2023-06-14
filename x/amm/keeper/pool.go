@@ -37,6 +37,15 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	state := types.NewPoolState(exchangetypes.TickAtPrice(price), price)
 	k.SetPoolState(ctx, pool.Id, state)
 
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventCreatePool{
+		Creator:  creatorAddr.String(),
+		MarketId: marketId,
+		Price:    price,
+		PoolId:   poolId,
+	}); err != nil {
+		return
+	}
+
 	return pool, nil
 }
 

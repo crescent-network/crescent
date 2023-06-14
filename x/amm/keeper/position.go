@@ -63,7 +63,18 @@ func (k Keeper) AddLiquidity(
 		ctx, fromAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), amt); err != nil {
 		return
 	}
-	// TODO: emit event
+
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventAddLiquidity{
+		Owner:      ownerAddr.String(),
+		PoolId:     poolId,
+		LowerPrice: lowerPrice,
+		UpperPrice: upperPrice,
+		PositionId: position.Id,
+		Liquidity:  liquidity,
+		Amount:     amt,
+	}); err != nil {
+		return
+	}
 	return
 }
 
@@ -101,6 +112,14 @@ func (k Keeper) RemoveLiquidity(
 			return
 		}
 	}
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventRemoveLiquidity{
+		Owner:      ownerAddr.String(),
+		PositionId: positionId,
+		Liquidity:  liquidity,
+		Amount:     amt,
+	}); err != nil {
+		return
+	}
 	return
 }
 
@@ -129,13 +148,20 @@ func (k Keeper) Collect(
 	if err := k.bankKeeper.SendCoins(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), toAddr, fee); err != nil {
 		return err
 	}
-	amt = amt.Sub(fee)
-	position.OwedFarmingRewards = position.OwedFarmingRewards.Sub(amt)
-	if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, toAddr, amt); err != nil {
+	farmingRewards := amt.Sub(fee)
+	position.OwedFarmingRewards = position.OwedFarmingRewards.Sub(farmingRewards)
+	if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, toAddr, farmingRewards); err != nil {
 		return err
 	}
 	k.SetPosition(ctx, position)
 
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventCollect{
+		Owner:      ownerAddr.String(),
+		PositionId: positionId,
+		Amount:     amt,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -23,12 +23,24 @@ func (k Keeper) CreatePrivateFarmingPlan(
 			"maximum number of active private farming plans reached")
 	}
 	fee := k.GetPrivateFarmingPlanCreationFee(ctx)
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, fee); err != nil {
-		return plan, err
+	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, fee); err != nil {
+		return
 	}
 	plan, err = k.createFarmingPlan(ctx, description, nil, termAddr, rewardAllocs, startTime, endTime, true)
 	if err != nil {
-		return plan, err
+		return
+	}
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventCreatePrivateFarmingPlan{
+		Creator:            creatorAddr.String(),
+		Description:        description,
+		TerminationAddress: termAddr.String(),
+		RewardAllocations:  rewardAllocs,
+		StartTime:          startTime,
+		EndTime:            endTime,
+		FarmingPlanId:      plan.Id,
+		FarmingPoolAddress: plan.FarmingPoolAddress,
+	}); err != nil {
+		return
 	}
 	return plan, nil
 }
@@ -37,10 +49,25 @@ func (k Keeper) CreatePublicFarmingPlan(
 	ctx sdk.Context, description string,
 	farmingPoolAddr, termAddr sdk.AccAddress,
 	rewardAllocs []types.FarmingRewardAllocation, startTime, endTime time.Time,
-) (types.FarmingPlan, error) {
-	return k.createFarmingPlan(
+) (plan types.FarmingPlan, err error) {
+	plan, err = k.createFarmingPlan(
 		ctx, description, farmingPoolAddr, termAddr,
 		rewardAllocs, startTime, endTime, false)
+	if err != nil {
+		return
+	}
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventCreatePublicFarmingPlan{
+		Description:        description,
+		FarmingPoolAddress: plan.FarmingPoolAddress,
+		TerminationAddress: termAddr.String(),
+		RewardAllocations:  rewardAllocs,
+		StartTime:          startTime,
+		EndTime:            endTime,
+		FarmingPlanId:      plan.Id,
+	}); err != nil {
+		return
+	}
+	return plan, nil
 }
 
 func (k Keeper) createFarmingPlan(
@@ -113,7 +140,11 @@ func (k Keeper) TerminateFarmingPlan(ctx sdk.Context, plan types.FarmingPlan) er
 	if plan.IsPrivate {
 		k.SetNumPrivateFarmingPlans(ctx, k.GetNumPrivateFarmingPlans(ctx)-1)
 	}
-	// TODO: emit event
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventFarmingPlanTerminated{
+		FarmingPlanId: plan.Id,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
