@@ -345,3 +345,45 @@ func TestMsgCreatePrivateFarmingPlan_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgTerminatePrivateFarmingPlan_ValidateBasic(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		malleate    func(msg *types.MsgTerminatePrivateFarmingPlan)
+		expectedErr string
+	}{
+		{
+			"valid",
+			func(msg *types.MsgTerminatePrivateFarmingPlan) {},
+			"",
+		},
+		{
+			"invalid sender",
+			func(msg *types.MsgTerminatePrivateFarmingPlan) {
+				msg.Sender = "invalidaddr"
+			},
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid farming plan id",
+			func(msg *types.MsgTerminatePrivateFarmingPlan) {
+				msg.FarmingPlanId = 0
+			},
+			"farming plan id must not be 0: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgTerminatePrivateFarmingPlan(
+				utils.TestAddress(1), 1)
+			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.TypeMsgTerminatePrivateFarmingPlan, msg.Type())
+			tc.malleate(msg)
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}

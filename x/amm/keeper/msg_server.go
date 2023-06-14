@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
@@ -78,4 +79,24 @@ func (k msgServer) CreatePrivateFarmingPlan(goCtx context.Context, msg *types.Ms
 		FarmingPlanId:      plan.Id,
 		FarmingPoolAddress: plan.FarmingPoolAddress,
 	}, nil
+}
+
+func (k msgServer) TerminatePrivateFarmingPlan(goCtx context.Context, msg *types.MsgTerminatePrivateFarmingPlan) (*types.MsgTerminatePrivateFarmingPlanResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	plan, found := k.GetFarmingPlan(ctx, msg.FarmingPlanId)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "farming plan not found")
+	}
+	if !plan.IsPrivate {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot terminate public plan")
+	}
+	if plan.TerminationAddress != msg.Sender {
+		return nil, sdkerrors.Wrap(
+			sdkerrors.ErrUnauthorized,
+			"plan's termination address must be same with the sender's address")
+	}
+	if err := k.Keeper.TerminateFarmingPlan(ctx, plan); err != nil {
+		return nil, err
+	}
+	return &types.MsgTerminatePrivateFarmingPlanResponse{}, nil
 }

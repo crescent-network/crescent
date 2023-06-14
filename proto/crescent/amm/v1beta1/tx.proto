@@ -17,6 +17,7 @@ service Msg {
   rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
   rpc Collect(MsgCollect) returns (MsgCollectResponse);
   rpc CreatePrivateFarmingPlan(MsgCreatePrivateFarmingPlan) returns (MsgCreatePrivateFarmingPlanResponse);
+  rpc TerminatePrivateFarmingPlan(MsgTerminatePrivateFarmingPlan) returns (MsgTerminatePrivateFarmingPlanResponse);
 }
 
 message MsgCreatePool {
@@ -83,3 +84,10 @@ message MsgCreatePrivateFarmingPlanResponse {
   uint64 farming_plan_id      = 1;
   string farming_pool_address = 2;
 }
+
+message MsgTerminatePrivateFarmingPlan {
+  string sender          = 1;
+  uint64 farming_plan_id = 2;
+}
+
+message MsgTerminatePrivateFarmingPlanResponse {}

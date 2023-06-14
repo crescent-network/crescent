@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -45,4 +47,61 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.Collect(lpAddr1, lpAddr1, position1.Id, utils.ParseCoins("56uatom"))
 	s.Collect(lpAddr2, lpAddr2, position2.Id, utils.ParseCoins(""))
+}
+
+func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
+	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+
+	creatorAddr := s.FundedAccount(2, enoughCoins)
+	termAddr := utils.TestAddress(3)
+	farmingPlan := s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan", termAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("10000_000000ucre"), true)
+
+	s.NextBlock()
+	s.NextBlock()
+	s.NextBlock()
+
+	balancesBefore := s.GetAllBalances(termAddr)
+	farmingPoolAddr := sdk.MustAccAddressFromBech32(farmingPlan.FarmingPoolAddress)
+	remainingFarmingRewards := s.GetAllBalances(farmingPoolAddr)
+
+	msgServer := keeper.NewMsgServerImpl(s.keeper)
+	msg := types.NewMsgTerminatePrivateFarmingPlan(termAddr, 1)
+	_, err := msgServer.TerminatePrivateFarmingPlan(sdk.WrapSDKContext(s.Ctx), msg)
+	s.Require().NoError(err)
+
+	s.Require().Equal("", s.GetAllBalances(farmingPoolAddr).String())
+	s.Require().Equal(
+		balancesBefore.Add(remainingFarmingRewards...).String(),
+		s.GetAllBalances(termAddr).String())
+}
+
+func (s *KeeperTestSuite) TestTerminatePrivatePlan_Unauthorized() {
+	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+
+	creatorAddr := s.FundedAccount(2, enoughCoins)
+	termAddr := utils.TestAddress(3)
+	s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan", termAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("10000_000000ucre"), true)
+
+	msgServer := keeper.NewMsgServerImpl(s.keeper)
+	msg := types.NewMsgTerminatePrivateFarmingPlan(creatorAddr, 1)
+	_, err := msgServer.TerminatePrivateFarmingPlan(sdk.WrapSDKContext(s.Ctx), msg)
+	s.Require().ErrorIs(err, sdkerrors.ErrUnauthorized)
 }

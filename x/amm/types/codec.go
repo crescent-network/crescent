@@ -17,6 +17,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgRemoveLiquidity{}, "amm/MsgRemoveLiquidity", nil)
 	cdc.RegisterConcrete(&MsgCollect{}, "amm/MsgCollect", nil)
 	cdc.RegisterConcrete(&MsgCreatePrivateFarmingPlan{}, "amm/MsgCreatePrivateFarmingPlan", nil)
+	cdc.RegisterConcrete(&MsgTerminatePrivateFarmingPlan{}, "amm/MsgTerminatePrivateFarmingPlan", nil)
 	cdc.RegisterConcrete(&PoolParameterChangeProposal{}, "amm/PoolParameterChangeProposal", nil)
 	cdc.RegisterConcrete(&PublicFarmingPlanProposal{}, "amm/PublicFarmingPlanProposal", nil)
 }
@@ -31,6 +32,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgRemoveLiquidity{},
 		&MsgCollect{},
 		&MsgCreatePrivateFarmingPlan{},
+		&MsgTerminatePrivateFarmingPlan{},
 	)
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

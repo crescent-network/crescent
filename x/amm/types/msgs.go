@@ -15,15 +15,17 @@ var (
 	_ sdk.Msg = (*MsgRemoveLiquidity)(nil)
 	_ sdk.Msg = (*MsgCollect)(nil)
 	_ sdk.Msg = (*MsgCreatePrivateFarmingPlan)(nil)
+	_ sdk.Msg = (*MsgTerminatePrivateFarmingPlan)(nil)
 )
 
 // Message types for the module
 const (
-	TypeMsgCreatePool               = "create_pool"
-	TypeMsgAddLiquidity             = "add_liquidity"
-	TypeMsgRemoveLiquidity          = "remove_liquidity"
-	TypeMsgCollect                  = "collect"
-	TypeMsgCreatePrivateFarmingPlan = "create_private_farming_plan"
+	TypeMsgCreatePool                  = "create_pool"
+	TypeMsgAddLiquidity                = "add_liquidity"
+	TypeMsgRemoveLiquidity             = "remove_liquidity"
+	TypeMsgCollect                     = "collect"
+	TypeMsgCreatePrivateFarmingPlan    = "create_private_farming_plan"
+	TypeMsgTerminatePrivateFarmingPlan = "terminate_private_farming_plan"
 )
 
 func NewMsgCreatePool(
@@ -251,6 +253,39 @@ func (msg MsgCreatePrivateFarmingPlan) ValidateBasic() error {
 		msg.RewardAllocations, msg.StartTime, msg.EndTime, true)
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	return nil
+}
+
+func NewMsgTerminatePrivateFarmingPlan(
+	senderAddr sdk.AccAddress, farmingPlanId uint64) *MsgTerminatePrivateFarmingPlan {
+	return &MsgTerminatePrivateFarmingPlan{
+		Sender:        senderAddr.String(),
+		FarmingPlanId: farmingPlanId,
+	}
+}
+
+func (msg MsgTerminatePrivateFarmingPlan) Route() string { return RouterKey }
+func (msg MsgTerminatePrivateFarmingPlan) Type() string  { return TypeMsgTerminatePrivateFarmingPlan }
+
+func (msg MsgTerminatePrivateFarmingPlan) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgTerminatePrivateFarmingPlan) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgTerminatePrivateFarmingPlan) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if msg.FarmingPlanId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "farming plan id must not be 0")
 	}
 	return nil
 }
