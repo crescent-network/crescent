@@ -45,8 +45,11 @@ func (k Keeper) SwapExactAmountIn(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
 		var paid, fee sdk.Coin
-		_, paid, output, fee = k.executeOrder(
+		_, paid, output, fee, err = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
+		if err != nil {
+			return output, nil, err
+		}
 		if currentIn.Sub(paid).Amount.GT(utils.OneInt) {
 			return output, nil, sdkerrors.Wrapf(
 				types.ErrSwapNotEnoughLiquidity, "paid %s < input %s", paid, currentIn)

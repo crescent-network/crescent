@@ -126,8 +126,11 @@ func (k Keeper) placeLimitOrder(
 	if isBatch {
 		execQty = utils.ZeroInt
 	} else {
-		execQty, paid, received, _ = k.executeOrder(
+		execQty, paid, received, _, err = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, &price, &qty, nil, false, false)
+		if err != nil {
+			return
+		}
 	}
 
 	openQty := qty.Sub(execQty)
@@ -159,8 +162,11 @@ func (k Keeper) PlaceMarketOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	execQty, paid, received, _ = k.executeOrder(
+	execQty, paid, received, _, err = k.executeOrder(
 		ctx, market, ordererAddr, isBuy, nil, &qty, nil, false, false)
+	if err != nil {
+		return
+	}
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceMarketOrder{
 		MarketId:         marketId,

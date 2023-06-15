@@ -106,9 +106,12 @@ func (k Keeper) RemoveLiquidity(
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
+	reserveAddr := pool.MustGetReserveAddress()
+	reserveBalances := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
+	amt = reserveBalances.Min(amt)
 	if amt.IsAllPositive() {
 		if err = k.bankKeeper.SendCoins(
-			ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress), toAddr, amt); err != nil {
+			ctx, reserveAddr, toAddr, amt); err != nil {
 			return
 		}
 	}

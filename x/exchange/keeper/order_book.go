@@ -9,7 +9,7 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived, totalFee sdk.Coin) {
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived, totalFee sdk.Coin, err error) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
@@ -62,11 +62,11 @@ func (k Keeper) executeOrder(
 			received = sdk.NewCoin(market.QuoteDenom, deductedQuote)
 			fee = sdk.NewCoin(market.QuoteDenom, feeQuote)
 		}
-		if err := k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
-			panic(err)
+		if err = k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
+			return
 		}
-		if err := k.ReleaseCoin(ctx, market, ordererAddr, received, true); err != nil {
-			panic(err)
+		if err = k.ReleaseCoin(ctx, market, ordererAddr, received, true); err != nil {
+			return
 		}
 		totalExecQty = totalExecQty.Add(execQty)
 		totalExecQuote = totalExecQuote.Add(execQuote)
@@ -80,8 +80,8 @@ func (k Keeper) executeOrder(
 		for _, level := range obs.Levels {
 			tempOrders = append(tempOrders, level.Orders...)
 		}
-		if err := k.FinalizeMatching(ctx, market, tempOrders); err != nil {
-			panic(err)
+		if err = k.FinalizeMatching(ctx, market, tempOrders); err != nil {
+			return
 		}
 		if !lastPrice.IsNil() {
 			state := k.MustGetMarketState(ctx, market.Id)
