@@ -13,6 +13,7 @@ import (
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreatePrivatePlan{}, "lpfarm/MsgCreatePrivatePlan", nil)
+	cdc.RegisterConcrete(&MsgTerminatePrivatePlan{}, "lpfarm/MsgTerminatePrivatePlan", nil)
 	cdc.RegisterConcrete(&MsgFarm{}, "lpfarm/MsgFarm", nil)
 	cdc.RegisterConcrete(&MsgUnfarm{}, "lpfarm/MsgUnfarm", nil)
 	cdc.RegisterConcrete(&MsgHarvest{}, "lpfarm/MsgHarvest", nil)
@@ -25,6 +26,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreatePrivatePlan{},
+		&MsgTerminatePrivatePlan{},
 		&MsgFarm{},
 		&MsgUnfarm{},
 		&MsgHarvest{},

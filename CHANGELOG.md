@@ -38,12 +38,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v5.0.0] - 2023-02
-
-### State Machine Breaking
-
-- (deps) [\#147](https://github.com/crescent-network/crescent/pull/147) feat!: bump cosmos-sdk to `v1.2.0-sdk-0.45.10` to use `MinInitialDepositRatio` as 0.5 for proposal submission
-
 ### Features
 
 - (x/marker) [\#145](https://github.com/crescent-network/crescent/pull/145) Add marker module
@@ -56,6 +50,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### CLI Breaking
 
 - (x/liquidity) [\#144](https://github.com/crescent-network/crescent/pull/144) Change `mm-order` tx cmd
+
+## [v4.2.0] - 2023-06-09
+
+### State Machine Breaking
+
+- (deps) [\#157](https://github.com/crescent-network/crescent/pull/157) build!: bump cosmos-sdk to v1.1.5-sdk-0.45.10 for barberry
+
+## [v4.1.1] - 2023-05-26
+
+- (ibc) [\#155](https://github.com/crescent-network/crescent/pull/155) build: bump ibc-go to v3.4.0-crescent-v4-3 for huckleberry
+
+## [v4.1.0] - 2023-05-16
+
+### State Machine Breaking
+
+- (x/lpfarm) [\#154](https://github.com/crescent-network/crescent/pull/154) feat!: add MsgTerminatePrivatePlan
 
 ## [v4.0.0] - 2023-01-05
 
@@ -204,7 +214,7 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
   - `x/vesting` feat: periodic vesting msg
   - `x/bank` feat: Add dynamic blockedAddrs
 
-[unreleased]: https://github.com/crescent-network/crescent/compare/v5.0.0...HEAD
+[unreleased]: https://github.com/crescent-network/crescent/compare/v4.2.0...HEAD
 [v1.0.0]: https://github.com/crescent-network/crescent/releases/tag/v1.0.0
 [v1.1.0]: https://github.com/crescent-network/crescent/releases/tag/v1.1.0
 [v2.1.0]: https://github.com/crescent-network/crescent/releases/tag/v2.1.0
@@ -213,4 +223,6 @@ Running a full node will encounter wrong app hash issue if it doesn't upgrade to
 [v2.3.0]: https://github.com/crescent-network/crescent/releases/tag/v2.3.0
 [v3.0.0]: https://github.com/crescent-network/crescent/releases/tag/v3.0.0
 [v4.0.0]: https://github.com/crescent-network/crescent/releases/tag/v4.0.0
-[v5.0.0]: https://github.com/crescent-network/crescent/releases/tag/v5.0.0
+[v4.1.0]: https://github.com/crescent-network/crescent/releases/tag/v4.1.0
+[v4.1.1]: https://github.com/crescent-network/crescent/releases/tag/v4.1.1
+[v4.2.0]: https://github.com/crescent-network/crescent/releases/tag/v4.2.0
