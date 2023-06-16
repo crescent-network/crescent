@@ -1,4 +1,4 @@
-package anteplus
+package ante
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
+	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 )
 
 // initial deposit must be greater than or equal to 50% of the minimum deposit
@@ -49,7 +50,6 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 			// prevent messages with insufficient initial deposit amount
 			case *govtypes.MsgSubmitProposal:
 				if minInitialDeposit.Empty() {
-					fmt.Println("update")
 					depositParams := d.govKeeper.GetDepositParams(ctx)
 					minInitialDeposit = CalcMinInitialDeposit(depositParams.MinDeposit, minInitialDepositFraction)
 				}
@@ -62,13 +62,20 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 
 		// deliver tx level msg filter
 		switch msg := msg.(type) {
-		// deprecated msg
-		case *claimtypes.MsgClaim:
-			return fmt.Errorf("%s is deprecated msg type", msg.Type())
+		// deprecated msgs
+		case *claimtypes.MsgClaim,
+			*farmingtypes.MsgCreateFixedAmountPlan,
+			*farmingtypes.MsgCreateRatioPlan,
+			*farmingtypes.MsgStake,
+			*farmingtypes.MsgUnstake,
+			*farmingtypes.MsgHarvest,
+			*farmingtypes.MsgRemovePlan,
+			*farmingtypes.MsgAdvanceEpoch:
+			return fmt.Errorf("%s is deprecated msg type", sdk.MsgTypeURL(msg))
 		// block double nested MsgExec
 		case *authz.MsgExec:
 			if nested {
-				return fmt.Errorf("double nested %s is not allowed", msg.Type())
+				return fmt.Errorf("double nested %s is not allowed", sdk.MsgTypeURL(msg))
 			}
 		}
 

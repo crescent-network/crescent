@@ -1,4 +1,4 @@
-package anteplus_test
+package ante_test
 
 import (
 	"fmt"
@@ -221,7 +221,7 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			},
 			runTxModeDeliver,
 			false,
-			fmt.Errorf("claim is deprecated msg type"),
+			fmt.Errorf("/crescent.claim.v1beta1.MsgClaim is deprecated msg type"),
 		},
 		{
 			"deprecated msg - authz nested",
@@ -239,7 +239,7 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			},
 			runTxModeDeliver,
 			false,
-			fmt.Errorf("claim is deprecated msg type"),
+			fmt.Errorf("/crescent.claim.v1beta1.MsgClaim is deprecated msg type"),
 		},
 		{
 			"deprecated msg - checkTx",
@@ -255,7 +255,7 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			},
 			runTxModeCheck,
 			false,
-			fmt.Errorf("claim is deprecated msg type"),
+			fmt.Errorf("/crescent.claim.v1beta1.MsgClaim is deprecated msg type"),
 		},
 		{
 			"deprecated msg - sim",
@@ -271,7 +271,7 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			},
 			runTxModeSimulate,
 			false,
-			fmt.Errorf("claim is deprecated msg type"),
+			fmt.Errorf("/crescent.claim.v1beta1.MsgClaim is deprecated msg type"),
 		},
 		{
 			"deprecated msg - recheck",
@@ -287,7 +287,7 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			},
 			runTxModeReCheck,
 			false,
-			fmt.Errorf("claim is deprecated msg type"),
+			fmt.Errorf("/crescent.claim.v1beta1.MsgClaim is deprecated msg type"),
 		},
 		{
 			"deprecated msg - multi",
@@ -303,7 +303,7 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			},
 			runTxModeDeliver,
 			false,
-			fmt.Errorf("claim is deprecated msg type"),
+			fmt.Errorf("/crescent.claim.v1beta1.MsgClaim is deprecated msg type"),
 		},
 		{
 			"deprecated msg - multi with normal msg",
@@ -320,7 +320,7 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			},
 			runTxModeDeliver,
 			false,
-			fmt.Errorf("claim is deprecated msg type"),
+			fmt.Errorf("/crescent.claim.v1beta1.MsgClaim is deprecated msg type"),
 		},
 	}
 
@@ -382,7 +382,7 @@ func (suite *AnteTestSuite) TestDoubleNestedAuthzMsg() {
 			fmt.Errorf("double nested /cosmos.authz.v1beta1.MsgExec is not allowed"),
 		},
 		{
-			"double nested authz msg - check tx",
+			"double nested /cosmos.authz.v1beta1.MsgExec msg - check tx",
 			func() {
 
 				msgs = []sdk.Msg{&authzMsgNested}

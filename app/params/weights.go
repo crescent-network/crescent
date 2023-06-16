@@ -2,12 +2,12 @@ package params
 
 // Default simulation operation weights for messages and gov proposals.
 const (
-	DefaultWeightMsgCreateFixedAmountPlan int = 10
-	DefaultWeightMsgCreateRatioPlan       int = 10
-	DefaultWeightMsgStake                 int = 85
-	DefaultWeightMsgUnstake               int = 20
-	DefaultWeightMsgHarvest               int = 30
-	DefaultWeightMsgRemovePlan            int = 10
+	DefaultWeightMsgCreateFixedAmountPlan int = 0
+	DefaultWeightMsgCreateRatioPlan       int = 0
+	DefaultWeightMsgStake                 int = 0
+	DefaultWeightMsgUnstake               int = 0
+	DefaultWeightMsgHarvest               int = 0
+	DefaultWeightMsgRemovePlan            int = 0
 
 	DefaultWeightMsgCreatePair       int = 10
 	DefaultWeightMsgCreatePool       int = 10

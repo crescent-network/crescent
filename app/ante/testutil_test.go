@@ -1,4 +1,4 @@
-package anteplus_test
+package ante_test
 
 import (
 	"errors"
