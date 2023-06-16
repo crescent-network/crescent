@@ -136,9 +136,12 @@ func (k Keeper) Collect(
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
 	}
 
-	position, _, err := k.RemoveLiquidity(ctx, ownerAddr, toAddr, positionId, utils.ZeroInt)
-	if err != nil {
-		return err
+	if position.Liquidity.IsPositive() {
+		var err error
+		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, toAddr, positionId, utils.ZeroInt)
+		if err != nil {
+			return err
+		}
 	}
 	collectible := position.OwedFee.Add(position.OwedFarmingRewards...)
 	if !collectible.IsAllGTE(amt) {
@@ -175,9 +178,12 @@ func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (sdk.Coins,
 	}
 	ctx, _ = ctx.CacheContext()
 	ownerAddr := sdk.MustAccAddressFromBech32(position.Owner)
-	position, _, err := k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt)
-	if err != nil {
-		return nil, err
+	if position.Liquidity.IsPositive() {
+		var err error
+		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return position.OwedFee.Add(position.OwedFarmingRewards...), nil
 }

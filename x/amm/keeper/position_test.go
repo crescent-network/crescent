@@ -45,3 +45,22 @@ func (s *KeeperTestSuite) TestReinitializePosition() {
 	s.AddLiquidity(
 		ownerAddr, ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
 }
+
+func (s *KeeperTestSuite) TestRemoveAllAndCollect() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	position, _, _ := s.AddLiquidity(
+		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+
+	// Accrue fees.
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(10_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(10_000000))
+
+	s.RemoveLiquidity(lpAddr, lpAddr, position.Id, position.Liquidity)
+
+	collectible, err := s.keeper.CollectibleCoins(s.Ctx, position.Id)
+	s.Require().NoError(err)
+	s.Collect(lpAddr, lpAddr, position.Id, collectible)
+}
