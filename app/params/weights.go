@@ -34,7 +34,7 @@ const (
 	DefaultWeightCompleteRedelegationUnbonding     int = 30
 	DefaultWeightTallyWithLiquidStaking            int = 30
 
-	DefaultWeightMsgClaim int = 50
+	DefaultWeightMsgClaim int = 0
 
 	DefaultWeightMsgLiquidFarm   int = 50
 	DefaultWeightMsgLiquidUnfarm int = 10

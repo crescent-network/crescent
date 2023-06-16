@@ -13,7 +13,6 @@ import (
 
 	chain "github.com/crescent-network/crescent/v5/app"
 	"github.com/crescent-network/crescent/v5/x/claim/simulation"
-	"github.com/crescent-network/crescent/v5/x/claim/types"
 )
 
 func TestSimulateMsgClaim(t *testing.T) {
@@ -32,18 +31,10 @@ func TestSimulateMsgClaim(t *testing.T) {
 		app.LiquidityKeeper, app.LiquidStakingKeeper,
 		app.GovKeeper, app.ClaimKeeper)
 	opMsg, futureOps, err := op(r, app.BaseApp, ctx, accs, "")
-	require.NoError(t, err)
-	require.True(t, opMsg.OK)
+	// disabled on antehandler
+	require.Error(t, err)
+	require.False(t, opMsg.OK)
 	require.Len(t, futureOps, 0)
-
-	var msg types.MsgClaim
-	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
-
-	require.Equal(t, types.TypeMsgClaim, msg.Type())
-	require.Equal(t, types.ModuleName, msg.Route())
-	require.Equal(t, "cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Recipient)
-	require.Equal(t, uint64(1), msg.AirdropId)
-	require.Equal(t, types.ConditionTypeLiquidStake, msg.ConditionType)
 }
 
 func getTestingAccounts(t *testing.T, r *rand.Rand, app *chain.App, ctx sdk.Context, n int) []simtypes.Account {

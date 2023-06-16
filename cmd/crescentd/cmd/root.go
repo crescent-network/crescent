@@ -33,7 +33,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	chain "github.com/crescent-network/crescent/v5/app"
-	farmingparams "github.com/crescent-network/crescent/v5/app/params"
+	appparams "github.com/crescent-network/crescent/v5/app/params"
 )
 
 var (
@@ -60,7 +60,7 @@ func GetConfig() *sdk.Config {
 
 // NewRootCmd creates a new root command for the app. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	sdkConfig := GetConfig()
 	sdkConfig.Seal()
 
@@ -164,7 +164,7 @@ lru_size = 0`
 	return customAppTemplate, customAppConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(chain.ModuleBasics, chain.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, chain.DefaultNodeHome),
@@ -248,7 +248,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg farmingparams.EncodingConfig
+	encCfg appparams.EncodingConfig
 }
 
 // newApp is an appCreator

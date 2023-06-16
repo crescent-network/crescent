@@ -1,12 +1,16 @@
 package app
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+
+	"github.com/crescent-network/crescent/v5/app/anteplus"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -14,6 +18,8 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 
+	Codec     codec.BinaryCodec
+	GovKeeper *govkeeper.Keeper
 	IBCKeeper *ibckeeper.Keeper
 }
 
@@ -41,6 +47,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+		anteplus.NewMsgFilterDecorator(options.Codec, options.GovKeeper),
 		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
