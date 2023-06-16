@@ -62,7 +62,8 @@ func (k Keeper) feeGrowthInside(
 		feeGrowthAbove = feeGrowthGlobal.Sub(upper.FeeGrowthOutside)
 	}
 
-	feeGrowthInside = feeGrowthGlobal.Sub(feeGrowthBelow).Sub(feeGrowthAbove)
+	feeGrowthInside, _ = feeGrowthGlobal.SafeSub(feeGrowthBelow)
+	feeGrowthInside, _ = feeGrowthInside.SafeSub(feeGrowthAbove)
 	return
 }
 
