@@ -18,9 +18,10 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 
-	Codec     codec.BinaryCodec
-	GovKeeper *govkeeper.Keeper
-	IBCKeeper *ibckeeper.Keeper
+	Codec         codec.BinaryCodec
+	GovKeeper     *govkeeper.Keeper
+	IBCKeeper     *ibckeeper.Keeper
+	MsgFilterFlag bool
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -29,6 +30,15 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 	if options.BankKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for AnteHandler")
+	}
+	if options.GovKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "gov keeper is required for AnteHandler")
+	}
+	if options.IBCKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "ibc keeper is required for AnteHandler")
+	}
+	if options.Codec == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "codec is required for AnteHandler")
 	}
 	if options.SignModeHandler == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
@@ -47,7 +57,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		crescentante.NewMsgFilterDecorator(options.Codec, options.GovKeeper),
+		crescentante.NewMsgFilterDecorator(options.Codec, options.GovKeeper, options.MsgFilterFlag),
 		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),

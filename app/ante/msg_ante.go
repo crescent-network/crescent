@@ -20,12 +20,14 @@ var minInitialDepositFraction = sdk.NewDecWithPrec(50, 2)
 type MsgFilterDecorator struct {
 	govKeeper *govkeeper.Keeper
 	cdc       codec.BinaryCodec
+	enabled   bool
 }
 
-func NewMsgFilterDecorator(cdc codec.BinaryCodec, govKeeper *govkeeper.Keeper) MsgFilterDecorator {
+func NewMsgFilterDecorator(cdc codec.BinaryCodec, govKeeper *govkeeper.Keeper, enabled bool) MsgFilterDecorator {
 	return MsgFilterDecorator{
 		govKeeper: govKeeper,
 		cdc:       cdc,
+		enabled:   enabled,
 	}
 }
 
@@ -33,6 +35,9 @@ func (d MsgFilterDecorator) AnteHandle(
 	ctx sdk.Context, tx sdk.Tx,
 	simulate bool, next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
+	if !d.enabled {
+		return next(ctx, tx, simulate)
+	}
 	msgs := tx.GetMsgs()
 	if err = d.ValidateMsgs(ctx, msgs); err != nil {
 		return ctx, err

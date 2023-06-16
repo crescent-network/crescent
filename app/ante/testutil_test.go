@@ -56,8 +56,6 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	// TODO: need to check
-	//encodingConfig := simappparams.MakeTestEncodingConfig()
 	encodingConfig := app.MakeEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
@@ -75,9 +73,10 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			Codec:     encodingConfig.Marshaler,
-			GovKeeper: &suite.app.GovKeeper,
-			IBCKeeper: suite.app.IBCKeeper,
+			Codec:         encodingConfig.Marshaler,
+			GovKeeper:     &suite.app.GovKeeper,
+			IBCKeeper:     suite.app.IBCKeeper,
+			MsgFilterFlag: true,
 		},
 	)
 

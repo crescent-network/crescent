@@ -8,10 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -19,24 +17,17 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	simappparams "github.com/crescent-network/crescent/v5/app/params"
 	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
@@ -70,10 +61,10 @@ func MakeTestEncodingConfig() simappparams.EncodingConfig {
 	return encodingConfig
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint, msgFilterFlag bool) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
-	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{}, msgFilterFlag)
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
@@ -82,7 +73,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 
 // Setup initializes a new App. A Nop logger is set in App.
 func Setup(isCheckTx bool) *App {
-	app, genesisState := setup(!isCheckTx, 5)
+	app, genesisState := setup(!isCheckTx, 5, true)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -103,117 +94,25 @@ func Setup(isCheckTx bool) *App {
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new App with a validator set and genesis accounts
-// that also act as delegators. For simplicity, each validator is bonded with a delegation
-// of one consensus engine unit (10^6) in the default token of the simapp from first genesis
-// account. A Nop logger is set in App.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
-	app, genesisState := setup(true, 5)
-	// set genesis accounts
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
-
-	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
-	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
-
-	bondAmt := sdk.NewInt(1000000)
-
-	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
-		require.NoError(t, err)
-		pkAny, err := codectypes.NewAnyWithValue(pk)
-		require.NoError(t, err)
-		validator := stakingtypes.Validator{
-			OperatorAddress:   sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey:   pkAny,
-			Jailed:            false,
-			Status:            stakingtypes.Bonded,
-			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
-			Description:       stakingtypes.Description{},
-			UnbondingHeight:   int64(0),
-			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
+// SetupWithNoMsgFilter initializes a new App with disabled msg filter
+func SetupWithNoMsgFilter(isCheckTx bool) *App {
+	app, genesisState := setup(!isCheckTx, 5, false)
+	if !isCheckTx {
+		// init chain must be called to stop deliverState from being nil
+		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+		if err != nil {
+			panic(err)
 		}
-		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
 
+		// Initialize the chain
+		app.InitChain(
+			abci.RequestInitChain{
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: DefaultConsensusParams,
+				AppStateBytes:   stateBytes,
+			},
+		)
 	}
-	// set validators and delegations
-	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
-
-	totalSupply := sdk.NewCoins()
-	for _, b := range balances {
-		// add genesis acc tokens and delegated tokens to total supply
-		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))...)
-	}
-
-	// add bonded amount to bonded pool module account
-	balances = append(balances, banktypes.Balance{
-		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
-	})
-
-	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err)
-
-	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
-
-	// commit genesis changes
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
-		NextValidatorsHash: valSet.Hash(),
-	}})
-
-	return app
-}
-
-// SetupWithGenesisAccounts initializes a new App with the provided genesis
-// accounts and possible balances.
-func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
-	app, genesisState := setup(true, 0)
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
-
-	totalSupply := sdk.NewCoins()
-	for _, b := range balances {
-		totalSupply = totalSupply.Add(b.Coins...)
-	}
-
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		panic(err)
-	}
-
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
-
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 
 	return app
 }
@@ -251,15 +150,6 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	}
 
 	return addresses
-}
-
-// AddTestAddrsFromPubKeys adds the addresses into the App providing only the public keys.
-func AddTestAddrsFromPubKeys(app *App, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, accAmt))
-
-	for _, pk := range pubKeys {
-		InitAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
-	}
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
@@ -330,96 +220,6 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	return res, nil
 }
 
-// CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *App, addr sdk.AccAddress, balances sdk.Coins) {
-	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
-}
-
-// SignCheckDeliver checks a generated signed transaction and simulates a
-// block commitment with the given transaction. A test assertion is made using
-// the parameter 'expPass' against the result. A corresponding result is
-// returned.
-func SignCheckDeliver(
-	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
-	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
-) (sdk.GasInfo, *sdk.Result, error) {
-
-	tx, err := helpers.GenTx(
-		txCfg,
-		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-		helpers.DefaultGenTxGas,
-		chainID,
-		accNums,
-		accSeqs,
-		priv...,
-	)
-	require.NoError(t, err)
-	txBytes, err := txCfg.TxEncoder()(tx)
-	require.Nil(t, err)
-
-	// Must simulate now as CheckTx doesn't run Msgs anymore
-	_, res, err := app.Simulate(txBytes)
-
-	if expSimPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
-	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
-	}
-
-	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
-
-	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
-	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
-	}
-
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
-
-	return gInfo, res, err
-}
-
-// GenSequenceOfTxs generates a set of signed transactions of messages, such
-// that they differ only by having the sequence numbers incremented between
-// every transaction.
-func GenSequenceOfTxs(txGen client.TxConfig, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...cryptotypes.PrivKey) ([]sdk.Tx, error) {
-	txs := make([]sdk.Tx, numToGenerate)
-	var err error
-	for i := 0; i < numToGenerate; i++ {
-		txs[i], err = helpers.GenTx(
-			txGen,
-			msgs,
-			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-			helpers.DefaultGenTxGas,
-			"",
-			accNums,
-			initSeqNums,
-			priv...,
-		)
-		if err != nil {
-			break
-		}
-		incrementAllSequenceNumbers(initSeqNums)
-	}
-
-	return txs, err
-}
-
-func incrementAllSequenceNumbers(initSeqNums []uint64) {
-	for i := 0; i < len(initSeqNums); i++ {
-		initSeqNums[i]++
-	}
-}
-
 // CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
 func CreateTestPubKeys(numPubKeys int) []cryptotypes.PubKey {
 	var publicKeys []cryptotypes.PubKey
@@ -487,22 +287,23 @@ func FundModuleAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, recipientM
 
 // NewConfig returns config that defines the necessary testing requirements
 // used to bootstrap and start an in-process local testing network.
-func NewConfig(dbm *dbm.MemDB) network.Config {
+func NewConfig(dbm *dbm.MemDB, msgFilterFlag bool) network.Config {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	cfg := network.DefaultConfig()
-	cfg.AppConstructor = NewAppConstructor(encCfg, dbm)       // the ABCI application constructor
-	cfg.GenesisState = ModuleBasics.DefaultGenesis(cfg.Codec) // farming genesis state to provide
+	cfg.AppConstructor = NewAppConstructor(encCfg, dbm, msgFilterFlag) // the ABCI application constructor
+	cfg.GenesisState = ModuleBasics.DefaultGenesis(cfg.Codec)          // farming genesis state to provide
 	return cfg
 }
 
 // NewAppConstructor returns a new network AppConstructor.
-func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB) network.AppConstructor {
+func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB, msgFilterFlag bool) network.AppConstructor {
 	return func(val network.Validator) types.Application {
 		return NewApp(
 			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
+			msgFilterFlag,
 			bam.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			bam.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

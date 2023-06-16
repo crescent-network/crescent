@@ -83,8 +83,20 @@ func TestSimulateMsgCreateFixedAmountPlan(t *testing.T) {
 
 	// execute operation
 	op := simulation.SimulateMsgCreateFixedAmountPlan(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
-	_, _, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.Error(t, err)
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgCreateFixedAmountPlan
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgCreateFixedAmountPlan, msg.Type())
+	require.Equal(t, "plan-LfGaE", msg.Name)
+	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
+	require.Equal(t, "1.000000000000000000stake", msg.StakingCoinWeights.String())
+	require.Equal(t, "308240456testa", msg.EpochAmount.String())
+	require.Len(t, futureOperations, 0)
 }
 
 // TestSimulateMsgCreateRatioPlan tests the normal scenario of a valid message of type TypeMsgCreateRatioPlan.
@@ -110,8 +122,20 @@ func TestSimulateMsgCreateRatioPlan(t *testing.T) {
 
 	// execute operation
 	op := simulation.SimulateMsgCreateRatioPlan(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
-	_, _, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.Error(t, err)
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgCreateRatioPlan
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgCreateRatioPlan, msg.Type())
+	require.Equal(t, "plan-nhwJy", msg.Name)
+	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
+	require.Equal(t, "1.000000000000000000stake", msg.StakingCoinWeights.String())
+	require.Equal(t, "0.009000000000000000", msg.EpochRatio.String())
+	require.Len(t, futureOperations, 0)
 }
 
 // TestSimulateMsgStake tests the normal scenario of a valid message of type TypeMsgStake.
@@ -134,8 +158,18 @@ func TestSimulateMsgStake(t *testing.T) {
 
 	// execute operation
 	op := simulation.SimulateMsgStake(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
-	_, _, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.Error(t, err)
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgStake
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgStake, msg.Type())
+	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Farmer)
+	require.Equal(t, "912902081stake", msg.StakingCoins.String())
+	require.Len(t, futureOperations, 0)
 }
 
 // TestSimulateMsgUnstake tests the normal scenario of a valid message of type TypeMsgUnstake.
@@ -166,8 +200,18 @@ func TestSimulateMsgUnstake(t *testing.T) {
 
 	// execute operation
 	op := simulation.SimulateMsgUnstake(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
-	_, _, err = op(r, app.BaseApp, ctx, accounts, "")
-	require.Error(t, err)
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgUnstake
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgUnstake, msg.Type())
+	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Farmer)
+	require.Equal(t, "78973699stake", msg.UnstakingCoins.String())
+	require.Len(t, futureOperations, 0)
 }
 
 // TestSimulateMsgHarvest tests the normal scenario of a valid message of type TypeMsgHarvest.
@@ -229,8 +273,21 @@ func TestSimulateMsgHarvest(t *testing.T) {
 
 	// execute operation
 	op := simulation.SimulateMsgHarvest(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
-	_, _, err = op(r, app.BaseApp, ctx, accounts, "")
-	require.Error(t, err)
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgHarvest
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgHarvest, msg.Type())
+	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Farmer)
+	require.Equal(t, []string{"stake"}, msg.StakingCoinDenoms)
+	require.Len(t, futureOperations, 0)
+
+	balances := app.BankKeeper.GetBalance(ctx, accounts[1].Address, "pool1")
+	require.Equal(t, sdk.NewInt64Coin("pool1", 100300000000), balances)
 }
 
 func TestSimulateMsgRemovePlan(t *testing.T) {
@@ -282,12 +339,22 @@ func TestSimulateMsgRemovePlan(t *testing.T) {
 
 	// execute operation
 	op := simulation.SimulateMsgRemovePlan(app.AccountKeeper, app.BankKeeper, app.FarmingKeeper)
-	_, _, err = op(r, app.BaseApp, ctx, accounts, "")
-	require.Error(t, err)
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+
+	var msg types.MsgRemovePlan
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
+
+	require.True(t, operationMsg.OK)
+	require.Equal(t, types.TypeMsgRemovePlan, msg.Type())
+	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Creator)
+	require.Equal(t, uint64(1), msg.PlanId)
+	require.Len(t, futureOperations, 0)
 }
 
 func createTestApp(isCheckTx bool) (*chain.App, sdk.Context) {
-	app := chain.Setup(isCheckTx)
+	app := chain.SetupWithNoMsgFilter(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())

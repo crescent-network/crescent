@@ -47,6 +47,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
+			true,
 			baseapp.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

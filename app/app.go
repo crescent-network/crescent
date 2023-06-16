@@ -306,6 +306,7 @@ func NewApp(
 	invCheckPeriod uint,
 	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
+	msgFilterFlag bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	appCodec := encodingConfig.Marshaler
@@ -810,9 +811,10 @@ func NewApp(
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			Codec:     appCodec,
-			GovKeeper: &app.GovKeeper,
-			IBCKeeper: app.IBCKeeper,
+			Codec:         appCodec,
+			GovKeeper:     &app.GovKeeper,
+			IBCKeeper:     app.IBCKeeper,
+			MsgFilterFlag: msgFilterFlag,
 		},
 	)
 	if err != nil {
