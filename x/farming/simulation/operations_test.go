@@ -354,7 +354,7 @@ func TestSimulateMsgRemovePlan(t *testing.T) {
 }
 
 func createTestApp(isCheckTx bool) (*chain.App, sdk.Context) {
-	app := chain.Setup(isCheckTx)
+	app := chain.SetupWithNoMsgFilter(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
