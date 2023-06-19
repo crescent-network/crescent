@@ -17,3 +17,17 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		panic(err)
 	}
 }
+
+func MidBlocker(ctx sdk.Context, k keeper.Keeper) {
+	// Call RunBatchMatching for all markets.
+	// This is because RunBatchMatching is not a heavy operation when the
+	// market's order book is not crossed.
+	// We could further optimize the process by settings transient flag
+	// when we receive batch order msgs.
+	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
+		if err := k.RunBatchMatching(ctx, market); err != nil {
+			panic(err)
+		}
+		return false
+	})
+}

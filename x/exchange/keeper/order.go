@@ -44,6 +44,17 @@ func (k Keeper) PlaceBatchLimitOrder(
 	if err != nil {
 		return
 	}
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceBatchLimitOrder{
+		MarketId: marketId,
+		Orderer:  ordererAddr.String(),
+		IsBuy:    isBuy,
+		Price:    price,
+		Quantity: qty,
+		Lifespan: lifespan,
+		Deadline: ctx.BlockTime().Add(lifespan),
+	}); err != nil {
+		return
+	}
 	return
 }
 
@@ -79,6 +90,17 @@ func (k Keeper) PlaceMMBatchLimitOrder(
 	_, order, _, _, _, err = k.placeLimitOrder(
 		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
+		return
+	}
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceMMBatchLimitOrder{
+		MarketId: marketId,
+		Orderer:  ordererAddr.String(),
+		IsBuy:    isBuy,
+		Price:    price,
+		Quantity: qty,
+		Lifespan: lifespan,
+		Deadline: ctx.BlockTime().Add(lifespan),
+	}); err != nil {
 		return
 	}
 	return
