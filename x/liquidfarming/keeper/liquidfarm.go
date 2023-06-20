@@ -25,6 +25,17 @@ func (k Keeper) CreateLiquidFarm(
 	liquidFarm = types.NewLiquidFarm(
 		liquidFarmId, pool.Id, lowerTick, upperTick, minBidAmt, feeRate)
 	k.SetLiquidFarm(ctx, liquidFarm)
+
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventLiquidFarmCreated{
+		LiquidFarmId: liquidFarm.Id,
+		PoolId:       liquidFarm.PoolId,
+		LowerTick:    liquidFarm.LowerTick,
+		UpperTick:    liquidFarm.UpperTick,
+		MinBidAmount: liquidFarm.MinBidAmount,
+		FeeRate:      liquidFarm.FeeRate,
+	}); err != nil {
+		return liquidFarm, err
+	}
 	return liquidFarm, nil
 }
 
@@ -58,18 +69,15 @@ func (k Keeper) MintShare(
 		return
 	}
 
-	// TODO: emit typed event
-	//ctx.EventManager().EmitEvents(sdk.Events{
-	//	sdk.NewEvent(
-	//		types.EventTypeLiquidFarm,
-	//		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-	//		sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
-	//		sdk.NewAttribute(types.AttributeKeyFarmingCoin, farmingCoin.String()),
-	//		sdk.NewAttribute(types.AttributeKeyMintedCoin, mintedShare.String()),
-	//		sdk.NewAttribute(types.AttributeKeyLiquidFarmReserveAddress, reserveAddr.String()),
-	//	),
-	//})
-
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventMintShare{
+		Minter:       senderAddr.String(),
+		LiquidFarmId: liquidFarmId,
+		MintedShare:  mintedShare,
+		Liquidity:    liquidity,
+		Amount:       amt,
+	}); err != nil {
+		return
+	}
 	return mintedShare, position, liquidity, amt, nil
 }
 
@@ -110,17 +118,15 @@ func (k Keeper) BurnShare(
 		return
 	}
 
-	// TODO: emit typed event
-	//ctx.EventManager().EmitEvents(sdk.Events{
-	//	sdk.NewEvent(
-	//		types.EventTypeLiquidUnfarm,
-	//		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-	//		sdk.NewAttribute(types.AttributeKeyFarmer, farmer.String()),
-	//		sdk.NewAttribute(types.AttributeKeyUnfarmingCoin, unfarmingCoin.String()),
-	//		sdk.NewAttribute(types.AttributeKeyUnfarmedCoin, unfarmedCoin.String()),
-	//	),
-	//})
-
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventBurnShare{
+		Burner:           senderAddr.String(),
+		LiquidFarmId:     liquidFarmId,
+		Share:            share,
+		RemovedLiquidity: removedLiquidity,
+		Amount:           amt,
+	}); err != nil {
+		return
+	}
 	return removedLiquidity, position, amt, nil
 }
 

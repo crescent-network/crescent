@@ -7,18 +7,7 @@ import (
 )
 
 func HandleLiquidFarmCreateProposal(ctx sdk.Context, k Keeper, p *types.LiquidFarmCreateProposal) error {
-	liquidFarm, err := k.CreateLiquidFarm(ctx, p.PoolId, p.LowerPrice, p.UpperPrice, p.MinBidAmount, p.FeeRate)
-	if err != nil {
-		return err
-	}
-	if err := ctx.EventManager().EmitTypedEvent(&types.EventLiquidFarmCreated{
-		LiquidFarmId: liquidFarm.Id,
-		PoolId:       liquidFarm.PoolId,
-		LowerTick:    liquidFarm.LowerTick,
-		UpperTick:    liquidFarm.UpperTick,
-		MinBidAmount: liquidFarm.MinBidAmount,
-		FeeRate:      liquidFarm.FeeRate,
-	}); err != nil {
+	if _, err := k.CreateLiquidFarm(ctx, p.PoolId, p.LowerPrice, p.UpperPrice, p.MinBidAmount, p.FeeRate); err != nil {
 		return err
 	}
 	return nil

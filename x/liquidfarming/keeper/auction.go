@@ -60,17 +60,14 @@ func (k Keeper) PlaceBid(
 	auction.SetWinningBid(&bid)
 	k.SetRewardsAuction(ctx, auction)
 
-	// TODO: emit typed event
-	//ctx.EventManager().EmitEvents(sdk.Events{
-	//	sdk.NewEvent(
-	//		types.EventTypePlaceBid,
-	//		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-	//		sdk.NewAttribute(types.AttributeKeyAuctionId, strconv.FormatUint(auction.Id, 10)),
-	//		sdk.NewAttribute(types.AttributeKeyBidder, bidder.String()),
-	//		sdk.NewAttribute(types.AttributeKeyBiddingCoin, biddingCoin.String()),
-	//	),
-	//})
-
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventPlaceBid{
+		Bidder:           bidderAddr.String(),
+		LiquidFarmId:     liquidFarmId,
+		RewardsAuctionId: auctionId,
+		Share:            share,
+	}); err != nil {
+		return bid, err
+	}
 	return bid, nil
 }
 
@@ -82,15 +79,14 @@ func (k Keeper) refundBid(ctx sdk.Context, liquidFarm types.LiquidFarm, bid type
 	}
 	k.DeleteBid(ctx, bid)
 
-	// TODO: emit typed event
-	//ctx.EventManager().EmitEvents(sdk.Events{
-	//	sdk.NewEvent(
-	//		types.EventTypeRefundBid,
-	//		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-	//		sdk.NewAttribute(types.AttributeKeyBidder, bidder.String()),
-	//		sdk.NewAttribute(types.AttributeKeyRefundCoin, bid.Amount.String()),
-	//	),
-	//})
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventBidRefunded{
+		Bidder:           bid.Bidder,
+		LiquidFarmId:     bid.LiquidFarmId,
+		RewardsAuctionId: bid.RewardsAuctionId,
+		Share:            bid.Share,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
