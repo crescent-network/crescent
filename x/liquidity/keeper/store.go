@@ -102,6 +102,11 @@ func (k Keeper) GetAllPairs(ctx sdk.Context) (pairs []types.Pair) {
 	return pairs
 }
 
+func (k Keeper) DeletePair(ctx sdk.Context, pairId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPairKey(pairId))
+}
+
 // GetLastPoolId returns the last pool id.
 func (k Keeper) GetLastPoolId(ctx sdk.Context) (id uint64) {
 	store := ctx.KVStore(k.storeKey)
@@ -223,6 +228,11 @@ func (k Keeper) GetPoolsByPair(ctx sdk.Context, pairId uint64) (pools []types.Po
 		return false, nil
 	})
 	return
+}
+
+func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPoolKey(poolId))
 }
 
 // GetDepositRequest returns the particular deposit request.

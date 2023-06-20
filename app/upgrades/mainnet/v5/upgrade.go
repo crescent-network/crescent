@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -27,10 +28,19 @@ import (
 
 const UpgradeName = "v5"
 
+var StoreUpgrades = store.StoreUpgrades{
+	Added: []string{
+		markertypes.StoreKey,
+		exchangetypes.StoreKey,
+		ammtypes.StoreKey,
+	},
+}
+
 func UpgradeHandler(
-	mm *module.Manager, configurator module.Configurator, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper,
-	liquidityKeeper liquiditykeeper.Keeper, lpFarmKeeper lpfarmkeeper.Keeper, exchangeKeeper exchangekeeper.Keeper,
-	ammKeeper ammkeeper.Keeper, markerKeeper markerkeeper.Keeper) upgradetypes.UpgradeHandler {
+	mm *module.Manager, configurator module.Configurator, accountKeeper authkeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, liquidityKeeper liquiditykeeper.Keeper,
+	lpFarmKeeper lpfarmkeeper.Keeper, exchangeKeeper exchangekeeper.Keeper, ammKeeper ammkeeper.Keeper,
+	markerKeeper markerkeeper.Keeper) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
@@ -74,11 +84,31 @@ func UpgradeHandler(
 		// Migrate pairs to markets.
 		// To avoid confusions, we use the same id as the pair id for markets.
 		// Note that the new pool ids differ from the old ones.
+		liquidityKeeper.DeleteOutdatedRequests(ctx)
 		defaultMakerFeeRate := exchangeParams.Fees.DefaultMakerFeeRate
 		defaultTakerFeeRate := exchangeParams.Fees.DefaultTakerFeeRate
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
-		_ = liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
+		if err := liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
+			// Cache pairs for later iteration.
+			pairs[pair.Id] = pair
+			pairIds = append(pairIds, pair.Id)
+
+			// Cancel all the orders. Note that the x/upgrade begin blocker is
+			// the first begin blocker to run, so orders that should be deleted in
+			// the current block haven't been deleted yet.
+			// So we ran liquidityKeeper.DeleteOutdatedRequests first to sure that
+			// all remaining orders are safe to be cancelled.
+			if err := liquidityKeeper.IterateOrdersByPair(ctx, pair.Id, func(order liquiditytypes.Order) (stop bool, err error) {
+				if err := liquidityKeeper.CancelOrder(
+					ctx, liquiditytypes.NewMsgCancelOrder(order.GetOrderer(), pair.Id, order.Id)); err != nil {
+					return true, err
+				}
+				return false, nil
+			}); err != nil {
+				return true, err
+			}
+
 			// If there's a coin inside a pair which has no supply in bank module,
 			// skip the pair.
 			// Note, however, if the pool exists then we can safely assume that
@@ -95,19 +125,18 @@ func UpgradeHandler(
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))
-
-			// Cache pairs for later iteration.
-			pairs[pair.Id] = pair
-			pairIds = append(pairIds, pair.Id)
 			return false, nil
-		})
+		}); err != nil {
+			return nil, err
+		}
 
 		// Create a new pool for each market if the market's corresponding pair
 		// had at least one active pool.
 		defaultTickSpacing := ammParams.DefaultTickSpacing
 		newPoolIdByPairId := map[uint64]uint64{}
 		pairIdByOldPoolId := map[uint64]uint64{}
-		oldPools := map[uint64]liquiditytypes.Pool{}
+		oldPoolsById := map[uint64]liquiditytypes.Pool{}
+		var oldPoolIds []uint64
 		for _, pairId := range pairIds {
 			// These variables are used to calculate the new pool's initial price.
 			// If there's the last price in the pair, then the new pool uses
@@ -119,6 +148,10 @@ func UpgradeHandler(
 
 			pair := pairs[pairId]
 			_ = liquidityKeeper.IteratePoolsByPair(ctx, pairId, func(pool liquiditytypes.Pool) (stop bool, err error) {
+				if _, ok := oldPoolsById[pool.Id]; !ok {
+					oldPoolIds = append(oldPoolIds, pool.Id)
+				}
+				oldPoolsById[pool.Id] = pool
 				if pool.Disabled { // Skip disabled pools.
 					return false, nil
 				}
@@ -131,7 +164,6 @@ func UpgradeHandler(
 						pool.AMMPool(rx.Amount, ry.Amount, sdk.Int{}).Price())
 				}
 				numActivePools++
-				oldPools[pool.Id] = pool
 				return false, nil
 			})
 			if numActivePools > 0 {
@@ -158,66 +190,129 @@ func UpgradeHandler(
 			}
 		}
 
-		accsBalances := bankKeeper.GetAccountsBalances(ctx)
-		// Migrate liquidity provisions. We do this by withdrawing all liquidity
+		// Migrate liquidity. We do this by withdrawing all liquidity
 		// from old pools and add the liquidity to the newly created pools.
-		for _, accBalances := range accsBalances {
-			for _, coin := range accBalances.Coins {
-				var oldPoolId uint64
-				oldPoolId, err = liquiditytypes.ParsePoolCoinDenom(coin.Denom)
-				if err != nil { // Skip
-					continue
-				}
-
-				// Withdraw from the old pool.
-				// This is done by creating a new withdrawal request and
-				// execute it immediately.
-				// Within the same block, x/liquidity module's BeginBlocker will
-				// delete all the requests stored in
+		migrateLiquidity := func() error {
+			accsBalances := bankKeeper.GetAccountsBalances(ctx)
+			for _, accBalances := range accsBalances {
 				addr := accBalances.GetAddress()
-				var req liquiditytypes.WithdrawRequest
-				req, err = liquidityKeeper.Withdraw(
-					ctx, liquiditytypes.NewMsgWithdraw(addr, oldPoolId, coin))
-				if err != nil {
-					return nil, err
-				}
-				if err = liquidityKeeper.ExecuteWithdrawRequest(ctx, req); err != nil {
-					return nil, err
-				}
-				var found bool
-				req, found = liquidityKeeper.GetWithdrawRequest(ctx, oldPoolId, req.Id)
-				if !found { // sanity check
-					panic("withdraw request not found")
-				}
-				// If no coins have been withdrawn, skip this account.
-				if req.WithdrawnCoins.IsZero() {
+				// Skip if the account is potentially a module account.
+				acc := accountKeeper.GetAccount(ctx, addr)
+				if acc.GetSequence() == 0 || acc.GetPubKey() == nil {
+					for _, coin := range accBalances.Coins {
+						_, err := liquiditytypes.ParsePoolCoinDenom(coin.Denom)
+						if err != nil { // Skip
+							continue
+						}
+					}
 					continue
 				}
-
-				oldPool := oldPools[oldPoolId]
-				newPoolId := newPoolIdByPairId[pairIdByOldPoolId[oldPoolId]]
-				var lowerPrice, upperPrice sdk.Dec
-				if oldPool.Type == liquiditytypes.PoolTypeBasic {
-					lowerPrice = exchangetypes.PriceAtTick(ammtypes.MinTick)
-					upperPrice = exchangetypes.PriceAtTick(ammtypes.MaxTick)
-				} else { // the pool is a ranged pool
-					lowerPrice = ammtypes.AdjustPriceToTickSpacing(*oldPool.MinPrice, defaultTickSpacing, false)
-					upperPrice = ammtypes.AdjustPriceToTickSpacing(*oldPool.MaxPrice, defaultTickSpacing, true)
-				}
-				_, _, _, err = ammKeeper.AddLiquidity(
-					ctx, addr, addr, newPoolId, lowerPrice, upperPrice, req.WithdrawnCoins)
-				if err != nil {
-					if errors.Is(err, sdkerrors.ErrInsufficientFunds) &&
-						strings.Contains(err.Error(), "minted liquidity is zero") {
-						// It is the case the withdrawn coins contains only one
-						// denom, which happens because the withdrawal from the
-						// old pool truncated the withdrawn coins.
-						// Just skip this case and let the withdrawn coins be
-						// in the account's balance.
+				for _, coin := range accBalances.Coins {
+					oldPoolId, err := liquiditytypes.ParsePoolCoinDenom(coin.Denom)
+					if err != nil { // Skip
 						continue
 					}
+
+					// Withdraw from the old pool.
+					// This is done by creating a new withdrawal request and
+					// execute it immediately.
+					// Within the same block, x/liquidity module's BeginBlocker will
+					// delete all the requests stored in
+					req, err := liquidityKeeper.Withdraw(
+						ctx, liquiditytypes.NewMsgWithdraw(addr, oldPoolId, coin))
+					if err != nil {
+						return err
+					}
+					if err := liquidityKeeper.ExecuteWithdrawRequest(ctx, req); err != nil {
+						return err
+					}
+					var found bool
+					req, found = liquidityKeeper.GetWithdrawRequest(ctx, oldPoolId, req.Id)
+					if !found { // sanity check
+						panic("withdraw request not found")
+					}
+					// If no coins have been withdrawn, skip this account.
+					if req.WithdrawnCoins.IsZero() {
+						continue
+					}
+
+					oldPool := oldPoolsById[oldPoolId]
+					newPoolId := newPoolIdByPairId[pairIdByOldPoolId[oldPoolId]]
+					var lowerPrice, upperPrice sdk.Dec
+					if oldPool.Type == liquiditytypes.PoolTypeBasic {
+						lowerPrice = exchangetypes.PriceAtTick(ammtypes.MinTick)
+						upperPrice = exchangetypes.PriceAtTick(ammtypes.MaxTick)
+					} else { // the pool is a ranged pool
+						lowerPrice = ammtypes.AdjustPriceToTickSpacing(*oldPool.MinPrice, defaultTickSpacing, false)
+						upperPrice = ammtypes.AdjustPriceToTickSpacing(*oldPool.MaxPrice, defaultTickSpacing, true)
+					}
+					if _, _, _, err := ammKeeper.AddLiquidity(
+						ctx, addr, addr, newPoolId, lowerPrice, upperPrice, req.WithdrawnCoins); err != nil {
+						if errors.Is(err, sdkerrors.ErrInsufficientFunds) &&
+							strings.Contains(err.Error(), "minted liquidity is zero") {
+							// It is the case the withdrawn coins contains only one
+							// denom, which happens because the withdrawal from the
+							// old pool truncated the withdrawn coins.
+							// Just skip this case and let the withdrawn coins be
+							// in the account's balance.
+							continue
+						}
+						return err
+					}
+				}
+			}
+			// Delete outdated requests again so that the withdrawal requests
+			// we made above can be deleted.
+			liquidityKeeper.DeleteOutdatedRequests(ctx)
+			return nil
+		}
+		// We run migrateLiquidity() multiple times here.
+		// This is because a withdrawal request with too small pool coin
+		// could fail in the first run, but in the second run it
+		// can be completed since the last withdrawer gets all remaining coins
+		// in the pool's reserve, regardless how small the pool coin amount
+		// was.
+		for i := 0; i < 2; i++ {
+			if err := migrateLiquidity(); err != nil {
+				return nil, err
+			}
+		}
+
+		// Send the remaining coins in each pool's reserve account to the
+		// community pool and delete pools.
+		for _, oldPoolId := range oldPoolIds {
+			oldPool := oldPoolsById[oldPoolId]
+			reserveAddr := oldPool.GetReserveAddress()
+			remainingCoins := bankKeeper.SpendableCoins(ctx, reserveAddr)
+			if remainingCoins.IsAllPositive() {
+				if err := distrKeeper.FundCommunityPool(ctx, remainingCoins, reserveAddr); err != nil {
 					return nil, err
 				}
+			}
+			// Delete the pool.
+			liquidityKeeper.DeletePool(ctx, oldPoolId)
+		}
+		// Send the remaining coins in each pair's escrow account to the
+		// community pool and delete pairs.
+		for _, pairId := range pairIds {
+			pair := pairs[pairId]
+			escrowAddr := pair.GetEscrowAddress()
+			remainingCoins := bankKeeper.SpendableCoins(ctx, escrowAddr)
+			if remainingCoins.IsAllPositive() {
+				if err := distrKeeper.FundCommunityPool(ctx, remainingCoins, escrowAddr); err != nil {
+					return nil, err
+				}
+			}
+			liquidityKeeper.DeletePair(ctx, pairId)
+		}
+
+		// Send the remaining coins in the dust collector to the community
+		// pool.
+		dustCollectorAddr := liquidityKeeper.GetDustCollector(ctx)
+		remainingCoins := bankKeeper.SpendableCoins(ctx, dustCollectorAddr)
+		if remainingCoins.IsAllPositive() {
+			if err := distrKeeper.FundCommunityPool(ctx, remainingCoins, dustCollectorAddr); err != nil {
+				return nil, err
 			}
 		}
 
@@ -265,12 +360,4 @@ func UpgradeHandler(
 
 		return vm, nil
 	}
-}
-
-var StoreUpgrades = store.StoreUpgrades{
-	Added: []string{
-		markertypes.StoreKey,
-		exchangetypes.StoreKey,
-		ammtypes.StoreKey,
-	},
 }
