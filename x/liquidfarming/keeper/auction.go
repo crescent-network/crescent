@@ -111,6 +111,7 @@ func (k Keeper) GetPreviousRewardsAuction(ctx sdk.Context, liquidFarm types.Liqu
 // AdvanceRewardsAuctions advances all rewards auctions' epoch by one and
 // sets the next auction end time.
 func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (err error) {
+	maxNumRecentAuctions := k.GetMaxNumRecentRewardsAuctions(ctx)
 	k.IterateAllLiquidFarms(ctx, func(liquidFarm types.LiquidFarm) (stop bool) {
 		if liquidFarm.LastRewardsAuctionId != 0 {
 			auction, found := k.GetRewardsAuction(ctx, liquidFarm.Id, liquidFarm.LastRewardsAuctionId)
@@ -127,7 +128,15 @@ func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (
 				}
 			}
 		}
-		k.StartNewRewardsAuction(ctx, liquidFarm, nextEndTime)
+		// Prune old rewards auctions.
+		lastAuctionId := k.StartNewRewardsAuction(ctx, liquidFarm, nextEndTime)
+		k.IterateRewardsAuctionsByLiquidFarm(ctx, liquidFarm.Id, func(auction types.RewardsAuction) (stop bool) {
+			if auction.Id+uint64(maxNumRecentAuctions) >= lastAuctionId {
+				return true
+			}
+			k.DeleteRewardsAuction(ctx, auction)
+			return false
+		})
 		return false
 	})
 	k.SetNextRewardsAuctionEndTime(ctx, nextEndTime)
@@ -136,14 +145,15 @@ func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (
 
 // StartNewRewardsAuction creates a new rewards auction and increment
 // the liquid farm's last rewards auction id.
-func (k Keeper) StartNewRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm, endTime time.Time) {
+func (k Keeper) StartNewRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm, endTime time.Time) (auctionId uint64) {
 	liquidFarm.LastRewardsAuctionId++
-	auctionId := liquidFarm.LastRewardsAuctionId
+	auctionId = liquidFarm.LastRewardsAuctionId
 	k.SetLiquidFarm(ctx, liquidFarm)
 	startTime := ctx.BlockTime()
 	auction := types.NewRewardsAuction(
 		liquidFarm.Id, auctionId, startTime, endTime, types.AuctionStatusStarted)
 	k.SetRewardsAuction(ctx, auction)
+	return
 }
 
 // FinishRewardsAuction finishes ongoing rewards auction by looking up the existence of winning bid.

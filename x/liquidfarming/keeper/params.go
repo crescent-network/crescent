@@ -27,3 +27,12 @@ func (k Keeper) GetRewardsAuctionDuration(ctx sdk.Context) (duration time.Durati
 func (k Keeper) SetRewardsAuctionDuration(ctx sdk.Context, duration time.Duration) {
 	k.paramSpace.Set(ctx, types.KeyRewardsAuctionDuration, duration)
 }
+
+func (k Keeper) GetMaxNumRecentRewardsAuctions(ctx sdk.Context) (maxNum uint32) {
+	k.paramSpace.Get(ctx, types.KeyMaxNumRecentRewardsAuctions, &maxNum)
+	return
+}
+
+func (k Keeper) SetMaxNumRecentRewardsAuctions(ctx sdk.Context, maxNum uint32) {
+	k.paramSpace.Set(ctx, types.KeyMaxNumRecentRewardsAuctions, maxNum)
+}

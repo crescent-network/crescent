@@ -152,6 +152,24 @@ func (k Keeper) IterateAllRewardsAuctions(ctx sdk.Context, cb func(auction types
 	}
 }
 
+func (k Keeper) IterateRewardsAuctionsByLiquidFarm(ctx sdk.Context, liquidFarmId uint64, cb func(auction types.RewardsAuction) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardsAuctionsByLiquidFarmIteratorPrefix(liquidFarmId))
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var auction types.RewardsAuction
+		k.cdc.MustUnmarshal(iterator.Value(), &auction)
+		if cb(auction) {
+			break
+		}
+	}
+}
+
+func (k Keeper) DeleteRewardsAuction(ctx sdk.Context, auction types.RewardsAuction) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetRewardsAuctionKey(auction.LiquidFarmId, auction.Id))
+}
+
 // GetBid returns the bid object by the given pool id and bidder address.
 func (k Keeper) GetBid(ctx sdk.Context, liquidFarmId, auctionId uint64, bidderAddr sdk.AccAddress) (bid types.Bid, found bool) {
 	store := ctx.KVStore(k.storeKey)
