@@ -142,7 +142,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		if amtInDiff.IsPositive() {
 			fee := sdk.NewCoin(denomIn, amtInDiff)
 			accruedRewards = accruedRewards.Add(fee)
-			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().
+				MulTruncate(types.DecMulFactor).
+				QuoTruncate(poolState.CurrentLiquidity.ToDec()))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		} else if amtInDiff.IsNegative() { // sanity check
 			//panic(amtInDiff)
@@ -153,7 +155,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			denomOut := pool.DenomOut(isBuy)
 			fee := sdk.NewCoin(denomOut, result.Received.AmountOf(denomOut))
 			accruedRewards = accruedRewards.Add(fee)
-			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().
+				MulTruncate(types.DecMulFactor).
+				QuoTruncate(poolState.CurrentLiquidity.ToDec()))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		}
 

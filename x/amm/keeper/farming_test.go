@@ -105,3 +105,40 @@ func (s *KeeperTestSuite) TestTerminatePrivatePlan_Unauthorized() {
 	_, err := msgServer.TerminatePrivateFarmingPlan(sdk.WrapSDKContext(s.Ctx), msg)
 	s.Require().ErrorIs(err, sdkerrors.ErrUnauthorized)
 }
+
+func (s *KeeperTestSuite) TestFarmingTooMuchLiquidity() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	pool.TickSpacing = 1
+	s.keeper.SetPool(s.Ctx, pool)
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	position, _, _ := s.AddLiquidity(
+		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.9999"), utils.ParseDec("5.0001"),
+		utils.ParseCoins("10000_000000000000000000ucre,50000_000000000000000000uusd"))
+	s.CreatePrivateFarmingPlan(
+		utils.TestAddress(2), "Farming plan", utils.TestAddress(2), []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("1_000000uatom")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("10000_000000uatom"), true)
+	s.NextBlock()
+	s.NextBlock()
+	s.Require().Equal("113uatom", s.CollectibleCoins(position.Id).String())
+}
+
+func (s *KeeperTestSuite) TestFarmingTooSmallLiquidity() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	pool.TickSpacing = 1
+	s.keeper.SetPool(s.Ctx, pool)
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	position, _, _ := s.AddLiquidity(
+		lpAddr, lpAddr, pool.Id, utils.ParseDec("0.0000001"), utils.ParseDec("10000000"),
+		utils.ParseCoins("10ucre,50uusd"))
+	creatorAddr := s.FundedAccount(100, utils.ParseCoins("1uibc1")) // Create supply.
+	s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan", creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("10_000000000000000000uibc1")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("1000_000000000000000000uibc1"), true)
+	s.NextBlock()
+	s.NextBlock()
+	s.Require().Equal("1157407407407405uibc1", s.CollectibleCoins(position.Id).String())
+}

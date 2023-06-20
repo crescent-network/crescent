@@ -53,3 +53,10 @@ func (s *TestSuite) CreatePrivateFarmingPlan(creatorAddr sdk.AccAddress, descrip
 	}
 	return plan
 }
+
+func (s *TestSuite) CollectibleCoins(positionId uint64) sdk.Coins {
+	s.T().Helper()
+	collectible, err := s.App.AMMKeeper.CollectibleCoins(s.Ctx, positionId)
+	s.Require().NoError(err)
+	return collectible
+}

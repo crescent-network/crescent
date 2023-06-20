@@ -220,7 +220,9 @@ func (k Keeper) AllocateFarmingRewards(ctx sdk.Context) error {
 	}
 	for _, poolId := range rewardedPools {
 		poolState := k.MustGetPoolState(ctx, poolId)
-		rewardsGrowth := sdk.NewDecCoinsFromCoins(totalRewardsByPool[poolId]...).QuoDecTruncate(poolState.CurrentLiquidity.ToDec())
+		rewardsGrowth := sdk.NewDecCoinsFromCoins(totalRewardsByPool[poolId]...).
+			MulDecTruncate(types.DecMulFactor).
+			QuoDecTruncate(poolState.CurrentLiquidity.ToDec())
 		poolState.FarmingRewardsGrowthGlobal = poolState.FarmingRewardsGrowthGlobal.Add(rewardsGrowth...)
 		k.SetPoolState(ctx, poolId, poolState)
 	}
