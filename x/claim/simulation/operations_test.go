@@ -17,7 +17,7 @@ import (
 )
 
 func TestSimulateMsgClaim(t *testing.T) {
-	app := chain.Setup(false)
+	app := chain.SetupWithNoMsgFilter(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s := rand.NewSource(0)

@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	keeper.EnableRatioPlan = true
 
 	db := tmdb.NewMemDB()
-	cfg := chain.NewConfig(db)
+	cfg := chain.NewConfig(db, false)
 	cfg.NumValidators = 1
 
 	var genesisState types.GenesisState
@@ -671,7 +671,7 @@ func (s *QueryCmdTestSuite) SetupSuite() {
 	keeper.EnableAdvanceEpoch = true
 
 	db := tmdb.NewMemDB()
-	cfg := chain.NewConfig(db)
+	cfg := chain.NewConfig(db, false)
 	cfg.NumValidators = 1
 
 	var genesisState types.GenesisState

@@ -20,6 +20,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgCreatePrivatePlan:
 			res, err := msgServer.CreatePrivatePlan(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgTerminatePrivatePlan:
+			res, err := msgServer.TerminatePrivatePlan(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgFarm:
 			res, err := msgServer.Farm(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

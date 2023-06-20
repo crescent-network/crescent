@@ -106,7 +106,7 @@ import (
 	budgettypes "github.com/tendermint/budget/x/budget/types"
 
 	// core modules
-	farmingparams "github.com/crescent-network/crescent/v5/app/params"
+	appparams "github.com/crescent-network/crescent/v5/app/params"
 	v2_0_0 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v2.0.0"
 	v3 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v3"
 	v4 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v4"
@@ -321,8 +321,9 @@ func NewApp(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig farmingparams.EncodingConfig,
+	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
+	msgFilterFlag bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	appCodec := encodingConfig.Marshaler
@@ -867,7 +868,10 @@ func NewApp(
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			IBCKeeper: app.IBCKeeper,
+			Codec:         appCodec,
+			GovKeeper:     &app.GovKeeper,
+			IBCKeeper:     app.IBCKeeper,
+			MsgFilterFlag: msgFilterFlag,
 		},
 	)
 	if err != nil {

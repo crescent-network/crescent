@@ -65,15 +65,17 @@ Crescent core uses a fork of [cosmos-sdk](https://github.com/crescent-network/co
 
 | Requirement         | Notes                |
 |---------------------|----------------------|
-| cosmos-sdk (forked) | v1.2.0-sdk-0.45.10   |
-| ibc-go (forked)     | v3.4.0-crescent-v4-2 |
+| cosmos-sdk (forked) | v1.1.5-sdk-0.45.10   |
+| ibc-go (forked)     | v3.4.0-crescent-v4-3 |
 
 ## Documentation
 
 The documentation is available in [docs](docs) directory. If you are a developer interested in technical specification, go to each `x/{module}`'s `spec` directory.
 
 * [Crescent Official Docs](https://docs.crescent.network/)
-* [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent)
+* [Swagger API Docs](https://app.swaggerhub.com/apis-docs/crescent/crescent/2.0.0)
+
+<!-- markdown-link-check-disable -->
 
 ## Community
 

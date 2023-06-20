@@ -33,7 +33,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	chain "github.com/crescent-network/crescent/v5/app"
-	farmingparams "github.com/crescent-network/crescent/v5/app/params"
+	appparams "github.com/crescent-network/crescent/v5/app/params"
 )
 
 var (
@@ -60,7 +60,7 @@ func GetConfig() *sdk.Config {
 
 // NewRootCmd creates a new root command for the app. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, farmingparams.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	sdkConfig := GetConfig()
 	sdkConfig.Seal()
 
@@ -164,7 +164,7 @@ lru_size = 0`
 	return customAppTemplate, customAppConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig farmingparams.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(chain.ModuleBasics, chain.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, chain.DefaultNodeHome),
@@ -248,7 +248,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg farmingparams.EncodingConfig
+	encCfg appparams.EncodingConfig
 }
 
 // newApp is an appCreator
@@ -285,6 +285,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
 		appOpts,
+		true,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -312,13 +313,13 @@ func (a appCreator) appExport(
 	}
 
 	if height != -1 {
-		app = chain.NewApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		app = chain.NewApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts, true)
 
 		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		app = chain.NewApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		app = chain.NewApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts, true)
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

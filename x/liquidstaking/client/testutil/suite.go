@@ -42,6 +42,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor
 			val.Ctx.Logger, tmdb.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
+			true,
 			baseapp.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
@@ -51,7 +52,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	db := tmdb.NewMemDB()
-	cfg := chain.NewConfig(db)
+	cfg := chain.NewConfig(db, true)
 	cfg.NumValidators = 1
 	s.cfg = cfg
 

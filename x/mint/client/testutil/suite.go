@@ -32,7 +32,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	db := tmdb.NewMemDB()
-	cfg := chain.NewConfig(db)
+	cfg := chain.NewConfig(db, true)
 	s.cfg = cfg
 
 	genesisState := s.cfg.GenesisState
