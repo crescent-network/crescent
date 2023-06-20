@@ -3,6 +3,7 @@ package v5
 import (
 	"errors"
 	"strings"
+	"time"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +19,8 @@ import (
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangekeeper "github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
+	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
+	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	lpfarmkeeper "github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
@@ -40,7 +43,7 @@ func UpgradeHandler(
 	mm *module.Manager, configurator module.Configurator, accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, liquidityKeeper liquiditykeeper.Keeper,
 	lpFarmKeeper lpfarmkeeper.Keeper, exchangeKeeper exchangekeeper.Keeper, ammKeeper ammkeeper.Keeper,
-	markerKeeper markerkeeper.Keeper) upgradetypes.UpgradeHandler {
+	markerKeeper markerkeeper.Keeper, farmingKeeper farmingkeeper.Keeper) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
@@ -56,6 +59,50 @@ func UpgradeHandler(
 
 		// Migrate farming plans and staked coins to the new amm module.
 		// TODO: disable event emissions?
+
+		// Unstake all staked coins from x/farming and start farming on x/lpfarm.
+		// NOTE: This code is taken from v3 upgrade handler.
+		// First we migrate x/farming's staking positions to x/lpfarm's positions
+		// and migrate the position again to x/amm.
+		stakedCoinsByFarmer := map[string]sdk.Coins{}
+		var farmerAddrs []sdk.AccAddress
+		farmingKeeper.IterateStakings(
+			ctx, func(denom string, farmerAddr sdk.AccAddress, staking farmingtypes.Staking) (stop bool) {
+				farmer := farmerAddr.String()
+				if _, ok := stakedCoinsByFarmer[farmer]; !ok {
+					farmerAddrs = append(farmerAddrs, farmerAddr)
+				}
+				stakedCoinsByFarmer[farmer] = stakedCoinsByFarmer[farmer].
+					Add(sdk.NewCoin(denom, staking.Amount))
+				return false
+			})
+		farmingKeeper.IterateQueuedStakings(
+			ctx, func(_ time.Time, denom string, farmerAddr sdk.AccAddress, queuedStaking farmingtypes.QueuedStaking) (stop bool) {
+				farmer := farmerAddr.String()
+				if _, ok := stakedCoinsByFarmer[farmer]; !ok {
+					farmerAddrs = append(farmerAddrs, farmerAddr)
+				}
+				stakedCoinsByFarmer[farmer] = stakedCoinsByFarmer[farmer].
+					Add(sdk.NewCoin(denom, queuedStaking.Amount))
+				return false
+			})
+		for _, farmerAddr := range farmerAddrs {
+			if err := farmingKeeper.Unstake(ctx, farmerAddr, stakedCoinsByFarmer[farmerAddr.String()]); err != nil {
+				return nil, err
+			}
+			for _, stakedCoin := range stakedCoinsByFarmer[farmerAddr.String()] {
+				if _, err := lpFarmKeeper.Farm(ctx, farmerAddr, stakedCoin); err != nil {
+					return nil, err
+				}
+			}
+		}
+		if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, farmingtypes.RewardsReserveAcc); err != nil {
+			return nil, err
+		}
+		feeCollectorAddr := sdk.MustAccAddressFromBech32(farmingKeeper.GetParams(ctx).FarmingFeeCollector)
+		if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, feeCollectorAddr); err != nil {
+			return nil, err
+		}
 
 		// Unfarm all coins from all farmers.
 		// This will remove all farmers' positions and withdraw their rewards
@@ -73,13 +120,13 @@ func UpgradeHandler(
 		}
 		// Send remaining rewards(due to decimal truncation) in the rewards
 		// pool to the community pool.
-		remainingRewards := bankKeeper.SpendableCoins(ctx, lpfarmtypes.RewardsPoolAddress)
-		if remainingRewards.IsAllPositive() {
-			if err := distrKeeper.FundCommunityPool(ctx, remainingRewards, lpfarmtypes.RewardsPoolAddress); err != nil {
-				return nil, err
-			}
+		if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, lpfarmtypes.RewardsPoolAddress); err != nil {
+			return nil, err
 		}
-		// TODO: send coins in the fee collector?
+		feeCollectorAddr = sdk.MustAccAddressFromBech32(lpFarmKeeper.GetFeeCollector(ctx))
+		if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, feeCollectorAddr); err != nil {
+			return nil, err
+		}
 
 		// Migrate pairs to markets.
 		// To avoid confusions, we use the same id as the pair id for markets.
@@ -282,12 +329,8 @@ func UpgradeHandler(
 		// community pool and delete pools.
 		for _, oldPoolId := range oldPoolIds {
 			oldPool := oldPoolsById[oldPoolId]
-			reserveAddr := oldPool.GetReserveAddress()
-			remainingCoins := bankKeeper.SpendableCoins(ctx, reserveAddr)
-			if remainingCoins.IsAllPositive() {
-				if err := distrKeeper.FundCommunityPool(ctx, remainingCoins, reserveAddr); err != nil {
-					return nil, err
-				}
+			if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, oldPool.GetReserveAddress()); err != nil {
+				return nil, err
 			}
 			// Delete the pool.
 			liquidityKeeper.DeletePool(ctx, oldPoolId)
@@ -296,24 +339,19 @@ func UpgradeHandler(
 		// community pool and delete pairs.
 		for _, pairId := range pairIds {
 			pair := pairs[pairId]
-			escrowAddr := pair.GetEscrowAddress()
-			remainingCoins := bankKeeper.SpendableCoins(ctx, escrowAddr)
-			if remainingCoins.IsAllPositive() {
-				if err := distrKeeper.FundCommunityPool(ctx, remainingCoins, escrowAddr); err != nil {
-					return nil, err
-				}
+			if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, pair.GetEscrowAddress()); err != nil {
+				return nil, err
 			}
 			liquidityKeeper.DeletePair(ctx, pairId)
 		}
 
 		// Send the remaining coins in the dust collector to the community
 		// pool.
-		dustCollectorAddr := liquidityKeeper.GetDustCollector(ctx)
-		remainingCoins := bankKeeper.SpendableCoins(ctx, dustCollectorAddr)
-		if remainingCoins.IsAllPositive() {
-			if err := distrKeeper.FundCommunityPool(ctx, remainingCoins, dustCollectorAddr); err != nil {
-				return nil, err
-			}
+		if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, liquidityKeeper.GetDustCollector(ctx)); err != nil {
+			return nil, err
+		}
+		if err := fundCommunityPool(ctx, bankKeeper, distrKeeper, liquidityKeeper.GetFeeCollector(ctx)); err != nil {
+			return nil, err
 		}
 
 		// Migrate farming plans.
@@ -360,4 +398,13 @@ func UpgradeHandler(
 
 		return vm, nil
 	}
+}
+
+func fundCommunityPool(
+	ctx sdk.Context, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, addr sdk.AccAddress) error {
+	remainingCoins := bankKeeper.SpendableCoins(ctx, addr)
+	if remainingCoins.IsAllPositive() {
+		return distrKeeper.FundCommunityPool(ctx, remainingCoins, addr)
+	}
+	return nil
 }
