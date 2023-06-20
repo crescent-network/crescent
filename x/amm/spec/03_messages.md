@@ -61,3 +61,12 @@ type FarmingRewardAllocation struct {
     RewardsPerDay sdk.Coins
 }
 ```
+
+## MsgTerminatePrivateFarmingPlan
+
+```go
+type MsgTerminatePrivateFarmingPlan struct {
+    Sender        string
+    FarmingPlanId uint64
+}
+```

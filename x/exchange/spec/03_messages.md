@@ -21,19 +21,20 @@ type MsgPlaceLimitOrder struct {
     IsBuy    bool
     Price    sdk.Dec
     Quantity sdk.Int
-    IsBatch  bool
     Lifespan time.Duration
 }
 ```
 
-## MsgPlaceMarketOrder
+## MsgPlaceBatchLimitOrder
 
 ```go
-type MsgPlaceMarketOrder struct {
+type MsgPlaceBatchLimitOrder struct {
     Sender   string
     MarketId uint64
     IsBuy    bool
+    Price    sdk.Dec
     Quantity sdk.Int
+    Lifespan time.Duration
 }
 ```
 
@@ -46,8 +47,31 @@ type MsgPlaceMMLimitOrder struct {
     IsBuy    bool
     Price    sdk.Dec
     Quantity sdk.Int
-    IsBatch  bool
     Lifespan time.Duration
+}
+```
+
+## MsgPlaceMMBatchLimitOrder
+
+```go
+type MsgPlaceMMBatchLimitOrder struct {
+    Sender   string
+    MarketId uint64
+    IsBuy    bool
+    Price    sdk.Dec
+    Quantity sdk.Int
+    Lifespan time.Duration
+}
+```
+
+## MsgPlaceMarketOrder
+
+```go
+type MsgPlaceMarketOrder struct {
+    Sender   string
+    MarketId uint64
+    IsBuy    bool
+    Quantity sdk.Int
 }
 ```
 

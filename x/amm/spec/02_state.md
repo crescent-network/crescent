@@ -7,7 +7,7 @@
 * LastPoolId: `0x?? -> BigEndian(LastPoolId)`
 * Pool: `0x?? | BigEndian(PoolId) -> ProtocolBuffer(Pool)`
 * PoolByReserveAddressIndex: `0x?? | AddrLen (1 byte) | ReserveAddress -> BigEndian(PoolId)`
-* PoolsByMarketIndex: `0x?? | BigEndian(MarketId) | BigEndian(PoolId) -> nil`
+* PoolByMarketIndexKeyPrefix: `0x?? | BigEndian(MarketId) -> BigEndian(PoolId)`
 * PoolState: `0x?? | BigEndian(PoolId) -> ProtocolBuffer(PoolState)`
 
 ```go

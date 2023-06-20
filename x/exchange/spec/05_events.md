@@ -16,12 +16,22 @@
 | Type | Attribute Key | Attribute Value |
 |------|---------------|-----------------|
 
-### MsgPlaceMarketOrder
+### MsgPlaceBatchLimitOrder
 
 | Type | Attribute Key | Attribute Value |
 |------|---------------|-----------------|
 
 ### MsgPlaceMMLimitOrder
+
+| Type | Attribute Key | Attribute Value |
+|------|---------------|-----------------|
+
+### MsgPlaceMMBatchLimitOrder
+
+| Type | Attribute Key | Attribute Value |
+|------|---------------|-----------------|
+
+### MsgPlaceMarketOrder
 
 | Type | Attribute Key | Attribute Value |
 |------|---------------|-----------------|

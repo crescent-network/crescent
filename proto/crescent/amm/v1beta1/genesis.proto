@@ -5,6 +5,7 @@ package crescent.amm.v1beta1;
 import "gogoproto/gogo.proto";
 import "crescent/amm/v1beta1/amm.proto";
 import "crescent/amm/v1beta1/farming.proto";
+import "crescent/amm/v1beta1/params.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
 option (gogoproto.goproto_getters_all) = false;

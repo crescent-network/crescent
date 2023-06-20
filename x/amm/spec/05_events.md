@@ -30,3 +30,8 @@
 
 | Type | Attribute Key | Attribute Value |
 |------|---------------|-----------------|
+
+### MsgTerminatePrivateFarmingPlan
+
+| Type | Attribute Key | Attribute Value |
+|------|---------------|-----------------|
