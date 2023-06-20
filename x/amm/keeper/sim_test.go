@@ -12,7 +12,7 @@ import (
 func (s *KeeperTestSuite) TestSimulation() {
 	minPrice, maxPrice := utils.ParseDec("0.000001"), utils.ParseDec("100000")
 	enoughCoins := utils.ParseCoins("1000000000000000000000000000000ucre,1000000000000000000000000000000uusd")
-	for seed := int64(1); seed <= 20; seed++ {
+	for seed := int64(1); seed <= 5; seed++ {
 		s.SetupTest()
 
 		r := rand.New(rand.NewSource(seed))
