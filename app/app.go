@@ -183,6 +183,7 @@ var (
 			ammclient.PoolParameterChangeProposalHandler,
 			ammclient.PublicFarmingPlanProposalHandler,
 			liquidfarmingclient.LiquidFarmCreateProposalHandler,
+			liquidfarmingclient.LiquidFarmParameterChangeProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},

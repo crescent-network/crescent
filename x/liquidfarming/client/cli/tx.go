@@ -211,3 +211,61 @@ Where proposal.json contains:
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	return cmd
 }
+
+func NewCmdSubmitLiquidFarmParameterChangeProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "liquid-farm-parameter-change [proposal-file]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a liquid farm parameter change proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a public liquid farm parameter change proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file.
+
+Example:
+$ %s tx gov submit-proposal liquid-farm-parameter-change <path/to/proposal.json> --from=<key_or_address> --deposit=<deposit_amount>
+
+Where proposal.json contains:
+
+{
+  "title": "Liquid Farm Parameter Change Proposal",
+  "description": "Change liquid farm parameters",
+  "changes": [
+    {
+      "liquid_farm_id": "1",
+      "min_bid_amount": "10000000",
+      "fee_rate": "0.001"
+    }
+  ]
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			depositStr, _ := cmd.Flags().GetString(cli.FlagDeposit)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return fmt.Errorf("invalid deposit: %w", err)
+			}
+			var proposal types.LiquidFarmParameterChangeProposal
+			bz, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("read proposal: %w", err)
+			}
+			if err = clientCtx.Codec.UnmarshalJSON(bz, &proposal); err != nil {
+				return fmt.Errorf("unmarshal proposal: %w", err)
+			}
+			msg, err := gov.NewMsgSubmitProposal(&proposal, deposit, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
+	return cmd
+}

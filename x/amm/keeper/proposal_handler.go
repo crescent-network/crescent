@@ -21,6 +21,12 @@ func HandlePoolParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.PoolP
 		}
 		pool.TickSpacing = change.TickSpacing
 		k.SetPool(ctx, pool)
+		if err := ctx.EventManager().EmitTypedEvent(&types.EventPoolParameterChanged{
+			PoolId:      change.PoolId,
+			TickSpacing: change.TickSpacing,
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

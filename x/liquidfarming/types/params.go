@@ -9,12 +9,14 @@ import (
 
 // Parameter store keys
 var (
-	KeyRewardsAuctionDuration = []byte("RewardsAuctionDuration")
+	KeyRewardsAuctionDuration      = []byte("RewardsAuctionDuration")
+	KeyMaxNumRecentRewardsAuctions = []byte("MaxNumRecentRewardsAuctions")
 )
 
 // Default parameters
 var (
-	DefaultRewardsAuctionDuration = time.Hour
+	DefaultRewardsAuctionDuration      = time.Hour
+	DefaultMaxNumRecentRewardsAuctions = uint32(10)
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
@@ -27,7 +29,8 @@ func ParamKeyTable() paramstypes.KeyTable {
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return Params{
-		RewardsAuctionDuration: DefaultRewardsAuctionDuration,
+		RewardsAuctionDuration:      DefaultRewardsAuctionDuration,
+		MaxNumRecentRewardsAuctions: DefaultMaxNumRecentRewardsAuctions,
 	}
 }
 
@@ -35,6 +38,7 @@ func DefaultParams() Params {
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyRewardsAuctionDuration, &p.RewardsAuctionDuration, validateRewardsAuctionDuration),
+		paramstypes.NewParamSetPair(KeyMaxNumRecentRewardsAuctions, &p.MaxNumRecentRewardsAuctions, validateMaxNumRecentRewardsAuctions),
 	}
 }
 
@@ -45,6 +49,7 @@ func (p Params) Validate() error {
 		validator func(interface{}) error
 	}{
 		{p.RewardsAuctionDuration, validateRewardsAuctionDuration},
+		{p.MaxNumRecentRewardsAuctions, validateMaxNumRecentRewardsAuctions},
 	} {
 		if err := v.validator(v.value); err != nil {
 			return err
@@ -60,6 +65,14 @@ func validateRewardsAuctionDuration(i interface{}) error {
 	}
 	if v <= 0 {
 		return fmt.Errorf("rewards auction duration must be positive: %d", v)
+	}
+	return nil
+}
+
+func validateMaxNumRecentRewardsAuctions(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
 }

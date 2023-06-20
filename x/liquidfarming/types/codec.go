@@ -16,6 +16,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgBurnShare{}, "liquidfarming/MsgBurnShare", nil)
 	cdc.RegisterConcrete(&MsgPlaceBid{}, "liquidfarming/MsgPlaceBid", nil)
 	cdc.RegisterConcrete(&LiquidFarmCreateProposal{}, "liquidfarming/LiquidFarmCreateProposal", nil)
+	cdc.RegisterConcrete(&LiquidFarmParameterChangeProposal{}, "liquidfarming/LiquidFarmParameterChangeProposal", nil)
 }
 
 // RegisterInterfaces registers the x/liquidfarming interfaces types with the interface registry
@@ -29,6 +30,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
 		&LiquidFarmCreateProposal{},
+		&LiquidFarmParameterChangeProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

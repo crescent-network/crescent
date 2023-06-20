@@ -18,5 +18,6 @@ func dummyRESTHandler(client.Context) rest.ProposalRESTHandler {
 }
 
 var (
-	LiquidFarmCreateProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitLiquidFarmCreateProposal, dummyRESTHandler)
+	LiquidFarmCreateProposalHandler          = govclient.NewProposalHandler(cli.NewCmdSubmitLiquidFarmCreateProposal, dummyRESTHandler)
+	LiquidFarmParameterChangeProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitLiquidFarmParameterChangeProposal, dummyRESTHandler)
 )

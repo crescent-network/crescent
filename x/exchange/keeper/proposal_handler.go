@@ -16,6 +16,13 @@ func HandleMarketParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.Mar
 		market.MakerFeeRate = change.MakerFeeRate
 		market.TakerFeeRate = change.TakerFeeRate
 		k.SetMarket(ctx, market)
+		if err := ctx.EventManager().EmitTypedEvent(&types.EventMarketParameterChanged{
+			MarketId:     change.MarketId,
+			MakerFeeRate: change.MakerFeeRate,
+			TakerFeeRate: change.TakerFeeRate,
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

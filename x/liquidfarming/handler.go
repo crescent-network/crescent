@@ -39,6 +39,8 @@ func NewLiquidFarmCreateProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.LiquidFarmCreateProposal:
 			return keeper.HandleLiquidFarmCreateProposal(ctx, k, c)
+		case *types.LiquidFarmParameterChangeProposal:
+			return keeper.HandleLiquidFarmParameterChangeProposal(ctx, k, c)
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s proposal content type: %T", types.ModuleName, c)
 		}

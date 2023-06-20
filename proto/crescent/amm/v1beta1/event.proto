@@ -71,3 +71,8 @@ message EventCreatePublicFarmingPlan {
 message EventFarmingPlanTerminated {
   uint64 farming_plan_id = 1;
 }
+
+message EventPoolParameterChanged {
+  uint64 pool_id      = 1;
+  uint32 tick_spacing = 2;
+}

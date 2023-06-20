@@ -124,3 +124,11 @@ message EventOrderSourceOrdersFilled {
 message EventOrderExpired {
   uint64 order_id = 1;
 }
+
+message EventMarketParameterChanged {
+  uint64 market_id      = 1;
+  string maker_fee_rate = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string taker_fee_rate = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

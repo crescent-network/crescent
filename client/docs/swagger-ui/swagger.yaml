@@ -9596,6 +9596,9 @@ paths:
                 properties:
                   rewards_auction_duration:
                     type: string
+                  max_num_recent_rewards_auctions:
+                    type: integer
+                    format: int64
                 description: Params defines the parameters for the module.
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
@@ -16225,6 +16228,9 @@ definitions:
     properties:
       rewards_auction_duration:
         type: string
+      max_num_recent_rewards_auctions:
+        type: integer
+        format: int64
     description: Params defines the parameters for the module.
   crescent.liquidfarming.v1beta1.QueryBidsResponse:
     type: object
@@ -16431,6 +16437,9 @@ definitions:
         properties:
           rewards_auction_duration:
             type: string
+          max_num_recent_rewards_auctions:
+            type: integer
+            format: int64
         description: Params defines the parameters for the module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   crescent.liquidfarming.v1beta1.QueryRewardsAuctionResponse:
