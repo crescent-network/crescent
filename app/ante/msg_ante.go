@@ -68,15 +68,13 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 				}
 			}
 
-		// block mixed batch msg with regular msg
+		// tracking mixed batch msg with regular msg
 		case *exchangetypes.MsgPlaceBatchLimitOrder,
 			*exchangetypes.MsgPlaceMMBatchLimitOrder,
 			*exchangetypes.MsgCancelOrder:
 			numMsg--
 			numBatchMsg++
-			if numMsg > 0 {
-				return fmt.Errorf("cannot mix batch msg and regular msg in one tx")
-			}
+
 		// block double nested MsgExec
 		case *authz.MsgExec:
 			if nested {
