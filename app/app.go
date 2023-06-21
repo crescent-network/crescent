@@ -101,9 +101,9 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
 	// budget module
-	"github.com/tendermint/budget/x/budget"
-	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
-	budgettypes "github.com/tendermint/budget/x/budget/types"
+	"github.com/crescent-network/crescent/v5/x/budget"
+	budgetkeeper "github.com/crescent-network/crescent/v5/x/budget/keeper"
+	budgettypes "github.com/crescent-network/crescent/v5/x/budget/types"
 
 	// core modules
 	appparams "github.com/crescent-network/crescent/v5/app/params"

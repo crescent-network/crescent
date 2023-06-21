@@ -24,6 +24,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/tendermint/budget/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BudgetParams",
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/crescent/liquidstaking/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {

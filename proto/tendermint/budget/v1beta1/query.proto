@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package cosmos.budget.v1beta1;
+
+import "tendermint/budget/v1beta1/budget.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/crescent-network/crescent/v5/x/budget/types";
+
+// Query defines the gRPC query service for the budget module.
+service Query {
+  // Params returns parameters of the budget module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get                                           = "/cosmos/budget/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "Returns all parameters of the budget module.";
+  external_docs: {
+  url:
+    "https://github.com/tendermint/budget/blob/main/x/budget/spec/06_params.md";
+  description:
+    "Find out more about the params";
+  }
+  };
+}
+
+// Budgets returns all budgets.
+rpc Budgets(QueryBudgetsRequest) returns (QueryBudgetsResponse) {
+  option (google.api.http).get                                           = "/cosmos/budget/v1beta1/budgets";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    description: "Returns all budgets.";
+external_docs: {
+url:
+  "https://github.com/tendermint/budget/blob/main/x/budget/spec/02_state.md";
+description:
+  "Find out more about the budget";
+}
+};
+}
+
+// Addresses returns an address that can be used as source and destination is derived according to the given type,
+// module name, and name.
+rpc Addresses(QueryAddressesRequest) returns (QueryAddressesResponse) {
+  option (google.api.http).get                                           = "/cosmos/budget/v1beta1/addresses/{name}";
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+    responses: {
+      key: "400"
+      value: {
+        description: "Bad Request"
+        examples: {
+          key: "application/json"
+          value: '{"code":3,"message":"at least one input of name or module name is required: invalid request","details":[]}'
+        }
+      }
+    }
+    responses: {
+      key: "400"
+      value: {
+        description: "Bad Request"
+        examples: {
+          key: "application/json"
+          value: '{"code":3,"message":"invalid names with address type: invalid request","details":[]}'
+        }
+      }
+    }
+  };
+}
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryBudgetsRequest is the request type for the Query/Budgets RPC method.
+message QueryBudgetsRequest {
+  string name                = 1;
+  string source_address      = 2;
+  string destination_address = 3;
+}
+
+// QueryBudgetsResponse is the response type for the Query/Budgets RPC method.
+message QueryBudgetsResponse {
+  repeated BudgetResponse budgets = 1 [(gogoproto.nullable) = false];
+}
+
+message BudgetResponse {
+  Budget   budget                                         = 1 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin total_collected_coins = 2 [
+    (gogoproto.moretags)     = "yaml:\"total_collected_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
+// AddressType enumerates the available types of a address.
+enum AddressType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // the 32 bytes length address type of ADR 028.
+  ADDRESS_TYPE_32_BYTES = 0 [(gogoproto.enumvalue_customname) = "AddressType32Bytes"];
+  // the default 20 bytes length address type.
+  ADDRESS_TYPE_20_BYTES = 1 [(gogoproto.enumvalue_customname) = "AddressType20Bytes"];
+}
+
+// QueryAddressesRequest is the request type for the Query/Addresses RPC method.
+message QueryAddressesRequest {
+  // The Address Type, default 0 for ADDRESS_TYPE_32_BYTES or 1 for ADDRESS_TYPE_20_BYTES
+  AddressType type = 1;
+  // The module name to be used for address derivation, default is budget.
+  string module_name = 2;
+  // The name to be used for address derivation.
+  string name = 3;
+}
+
+// QueryAddressesResponse is the response type for the Query/Addresses RPC method.
+message QueryAddressesResponse {
+  string address = 1;
+}

@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
-	budgettypes "github.com/tendermint/budget/x/budget/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -15,6 +14,7 @@ import (
 	v2_0_0 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v2.0.0"
 	"github.com/crescent-network/crescent/v5/cmd/crescentd/cmd"
 	utils "github.com/crescent-network/crescent/v5/types"
+	budgettypes "github.com/crescent-network/crescent/v5/x/budget/types"
 )
 
 type UpgradeTestSuite struct {
