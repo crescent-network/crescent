@@ -28,7 +28,7 @@ type SimTestSuite struct {
 }
 
 func (s *SimTestSuite) SetupTest() {
-	s.app = chain.Setup(false)
+	s.app = chain.SetupWithNoMsgFilter(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.keeper = s.app.LiquidityKeeper
 }
