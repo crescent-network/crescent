@@ -115,6 +115,17 @@ func (k Keeper) RemoveLiquidity(
 			return
 		}
 	}
+	// Collect owed coins when removing all the liquidity from the position.
+	if position.Liquidity.IsZero() {
+		var collectible sdk.Coins
+		collectible, err = k.CollectibleCoins(ctx, position.Id)
+		if err != nil {
+			return
+		}
+		if err = k.Collect(ctx, ownerAddr, toAddr, position.Id, collectible); err != nil {
+			return
+		}
+	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventRemoveLiquidity{
 		Owner:      ownerAddr.String(),
 		PositionId: positionId,
