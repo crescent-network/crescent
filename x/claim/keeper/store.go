@@ -87,3 +87,13 @@ func (k Keeper) IterateAllClaimRecordsByAirdropId(ctx sdk.Context, airdropId uin
 		}
 	}
 }
+
+func (k Keeper) DeleteAirdrop(ctx sdk.Context, airdropId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetAirdropKey(airdropId))
+}
+
+func (k Keeper) DeleteClaimRecord(ctx sdk.Context, record types.ClaimRecord) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetClaimRecordKey(record.AirdropId, record.GetRecipient()))
+}

@@ -17,6 +17,8 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 	ammkeeper "github.com/crescent-network/crescent/v5/x/amm/keeper"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	claimkeeper "github.com/crescent-network/crescent/v5/x/claim/keeper"
+	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
 	exchangekeeper "github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
@@ -43,7 +45,7 @@ func UpgradeHandler(
 	mm *module.Manager, configurator module.Configurator, accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, liquidityKeeper liquiditykeeper.Keeper,
 	lpFarmKeeper lpfarmkeeper.Keeper, exchangeKeeper exchangekeeper.Keeper, ammKeeper ammkeeper.Keeper,
-	markerKeeper markerkeeper.Keeper, farmingKeeper farmingkeeper.Keeper) upgradetypes.UpgradeHandler {
+	markerKeeper markerkeeper.Keeper, farmingKeeper farmingkeeper.Keeper, claimKeeper claimkeeper.Keeper) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
@@ -395,6 +397,20 @@ func UpgradeHandler(
 			lpFarmKeeper.DeleteFarm(ctx, denom)
 			return false
 		})
+
+		// Delete airdrops and claim records.
+		var airdrops []claimtypes.Airdrop
+		claimKeeper.IterateAllAirdrops(ctx, func(airdrop claimtypes.Airdrop) (stop bool) {
+			airdrops = append(airdrops, airdrop)
+			return false
+		})
+		for _, airdrop := range airdrops {
+			claimKeeper.IterateAllClaimRecordsByAirdropId(ctx, airdrop.Id, func(record claimtypes.ClaimRecord) (stop bool) {
+				claimKeeper.DeleteClaimRecord(ctx, record)
+				return false
+			})
+			claimKeeper.DeleteAirdrop(ctx, airdrop.Id)
+		}
 
 		return vm, nil
 	}
