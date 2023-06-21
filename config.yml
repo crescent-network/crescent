@@ -14,6 +14,9 @@ accounts:
   - 1000000000000000uusd
   mnemonic: friend excite rough reopen cover wheel spoon convince island path clean
     monkey play snow number walnut pull lock shoot hurry dream divide concert discover
+client:
+  typescript:
+    path: ts-client
 genesis:
   app_state:
     gov:

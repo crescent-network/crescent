@@ -45,7 +45,7 @@ message RewardsAuction {
   // the value is determined when an auction is finished
   repeated cosmos.base.v1beta1.Coin rewards = 7
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.Coin fees = 8 // TODO: rename to protocol_fees
+  repeated cosmos.base.v1beta1.Coin fees = 8
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
