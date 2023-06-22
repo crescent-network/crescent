@@ -50,4 +50,6 @@ const (
 	DefaultWeightMarketMakerProposal  int = 20
 	DefaultWeightChangeIncentivePairs int = 5
 	DefaultWeightChangeDepositAmount  int = 2
+
+	DefaultWeightUpdateBudgetPlans int = 5
 )

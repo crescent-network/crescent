@@ -16,6 +16,8 @@
   - x/lpfarm/**/*
 "x/marker":
   - x/marker/**/*
+"x/budget":
+  - x/budget/**/*
 "documentation":
   - docs/**/*
 "build":
