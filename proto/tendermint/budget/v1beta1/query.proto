@@ -20,12 +20,6 @@ service Query {
     option (google.api.http).get                                           = "/cosmos/budget/v1beta1/params";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "Returns all parameters of the budget module.";
-  external_docs: {
-  url:
-    "https://github.com/tendermint/budget/blob/main/x/budget/spec/06_params.md";
-  description:
-    "Find out more about the params";
-  }
   };
 }
 
@@ -34,12 +28,6 @@ rpc Budgets(QueryBudgetsRequest) returns (QueryBudgetsResponse) {
   option (google.api.http).get                                           = "/cosmos/budget/v1beta1/budgets";
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
     description: "Returns all budgets.";
-external_docs: {
-url:
-  "https://github.com/tendermint/budget/blob/main/x/budget/spec/02_state.md";
-description:
-  "Find out more about the budget";
-}
 };
 }
 

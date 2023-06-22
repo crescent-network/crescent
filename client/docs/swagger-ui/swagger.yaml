@@ -6541,10 +6541,6 @@ paths:
           type: string
       tags:
         - Query
-      externalDocs:
-        description: Find out more about the budget
-        url: >-
-          https://github.com/tendermint/budget/blob/main/x/budget/spec/02_state.md
   /cosmos/budget/v1beta1/params:
     get:
       summary: Params returns parameters of the budget module.
@@ -6799,10 +6795,6 @@ paths:
                         }
       tags:
         - Query
-      externalDocs:
-        description: Find out more about the params
-        url: >-
-          https://github.com/tendermint/budget/blob/main/x/budget/spec/06_params.md
   /crescent/liquidstaking/v1beta1/params:
     get:
       summary: Params returns parameters of the liquidstaking module.
