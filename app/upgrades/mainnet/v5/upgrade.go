@@ -45,11 +45,16 @@ func UpgradeHandler(
 	mm *module.Manager, configurator module.Configurator, accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, liquidityKeeper liquiditykeeper.Keeper,
 	lpFarmKeeper lpfarmkeeper.Keeper, exchangeKeeper exchangekeeper.Keeper, ammKeeper ammkeeper.Keeper,
-	markerKeeper markerkeeper.Keeper, farmingKeeper farmingkeeper.Keeper, claimKeeper claimkeeper.Keeper, enableMigrationEventEmit bool) upgradetypes.UpgradeHandler {
+	markerKeeper markerkeeper.Keeper, farmingKeeper farmingkeeper.Keeper, claimKeeper claimkeeper.Keeper,
+	disableUpgradeEvents bool) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
 			return nil, err
+		}
+
+		if disableUpgradeEvents {
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
 		}
 
 		// Set new module parameters.
@@ -412,10 +417,6 @@ func UpgradeHandler(
 			claimKeeper.DeleteAirdrop(ctx, airdrop.Id)
 		}
 
-		if !enableMigrationEventEmit {
-			// TODO: need to check if this works to initialize the event as intended
-			ctx = ctx.WithEventManager(sdk.NewEventManager())
-		}
 		return vm, nil
 	}
 }

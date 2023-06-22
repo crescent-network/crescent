@@ -239,7 +239,7 @@ var (
 )
 
 const (
-	FlagEnableMigrationEventEmit = "migration-event-emit"
+	FlagDisableUpgradeEvents = "disable-upgrade-events"
 )
 
 // App extends an ABCI application, but with most of its parameters exported.
@@ -890,8 +890,8 @@ func NewApp(
 	app.SetMidBlocker(app.MidBlocker)
 
 	app.SetUpgradeStoreLoaders()
-	enableMigrationEventEmit := cast.ToBool(appOpts.Get(FlagEnableMigrationEventEmit))
-	app.SetUpgradeHandlers(app.mm, app.configurator, enableMigrationEventEmit)
+	disableUpgradeEvents := cast.ToBool(appOpts.Get(FlagDisableUpgradeEvents))
+	app.SetUpgradeHandlers(app.mm, app.configurator, disableUpgradeEvents)
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
