@@ -194,6 +194,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
+	startCmd.Flags().Bool(chain.FlagEnableMigrationEventEmit, false, "Enable event emit when migration")
 	crisis.AddModuleInitFlags(startCmd)
 }
 
