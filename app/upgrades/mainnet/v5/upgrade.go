@@ -377,9 +377,17 @@ func UpgradeHandler(
 				}
 			}
 			// Save the new farming plan with the same id as the old plan.
-			ammKeeper.SetFarmingPlan(ctx, ammtypes.NewFarmingPlan(
-				plan.Id, plan.Description, plan.GetFarmingPoolAddress(), plan.GetTerminationAddress(),
-				newRewardAllocs, plan.StartTime, plan.EndTime, plan.IsPrivate))
+			ammKeeper.SetFarmingPlan(ctx, ammtypes.FarmingPlan{
+				Id:                 plan.Id,
+				Description:        plan.Description,
+				FarmingPoolAddress: plan.FarmingPoolAddress,
+				TerminationAddress: plan.TerminationAddress,
+				RewardAllocations:  newRewardAllocs,
+				StartTime:          plan.StartTime,
+				EndTime:            plan.EndTime,
+				IsPrivate:          plan.IsPrivate,
+				IsTerminated:       plan.IsTerminated,
+			})
 			if plan.IsPrivate && !plan.IsTerminated {
 				numActivePrivateFarmingPlans++
 			}
