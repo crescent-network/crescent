@@ -238,6 +238,10 @@ var (
 	_ servertypes.Application = (*App)(nil)
 )
 
+const (
+	FlagDisableUpgradeEvents = "disable-upgrade-events"
+)
+
 // App extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
@@ -886,7 +890,8 @@ func NewApp(
 	app.SetMidBlocker(app.MidBlocker)
 
 	app.SetUpgradeStoreLoaders()
-	app.SetUpgradeHandlers(app.mm, app.configurator)
+	disableUpgradeEvents := cast.ToBool(appOpts.Get(FlagDisableUpgradeEvents))
+	app.SetUpgradeHandlers(app.mm, app.configurator, disableUpgradeEvents)
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
@@ -1101,7 +1106,7 @@ func (app *App) SetUpgradeStoreLoaders() {
 	}
 }
 
-func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Configurator) {
+func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Configurator, enableMigrationEventEmit bool) {
 	// testnet upgrade handlers
 	app.UpgradeKeeper.SetUpgradeHandler(
 		rc4.UpgradeName, rc4.UpgradeHandler)
@@ -1122,5 +1127,5 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 		v5.UpgradeName, v5.UpgradeHandler(
 			mm, configurator, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.LiquidityKeeper,
 			app.LPFarmKeeper, app.ExchangeKeeper, app.AMMKeeper, app.MarkerKeeper, app.FarmingKeeper,
-			app.ClaimKeeper))
+			app.ClaimKeeper, enableMigrationEventEmit))
 }

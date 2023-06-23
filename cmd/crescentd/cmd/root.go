@@ -194,6 +194,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
+	startCmd.Flags().Bool(
+		chain.FlagDisableUpgradeEvents, false, "Disable emission of events on software upgrades")
 	crisis.AddModuleInitFlags(startCmd)
 }
 
