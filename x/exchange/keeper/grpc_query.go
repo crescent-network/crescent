@@ -66,6 +66,76 @@ func (k Querier) Market(c context.Context, req *types.QueryMarketRequest) (*type
 	return &types.QueryMarketResponse{Market: k.MakeMarketResponse(ctx, market)}, nil
 }
 
+func (k Querier) AllOrders(c context.Context, req *types.QueryAllOrdersRequest) (*types.QueryAllOrdersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	var ordererAddr sdk.AccAddress
+	if req.Orderer != "" {
+		var err error
+		ordererAddr, err = sdk.AccAddressFromBech32(req.Orderer)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid orderer: %v", err)
+		}
+	}
+	if req.MarketId > 0 {
+		if found := k.LookupMarket(ctx, req.MarketId); !found {
+			return nil, status.Error(codes.NotFound, "market not found")
+		}
+	}
+	var (
+		keyPrefix   []byte
+		orderGetter func(key, value []byte) types.Order
+	)
+	getOrderFromOrdersByOrdererIndexKey := func(key, _ []byte) types.Order {
+		_, _, orderId := types.ParseOrdersByOrdererIndexKey(utils.Key(keyPrefix, key))
+		order, found := k.GetOrder(ctx, orderId)
+		if !found { // sanity check
+			panic("order not found")
+		}
+		return order
+	}
+	if req.Orderer != "" && req.MarketId > 0 {
+		keyPrefix = types.GetOrdersByOrdererAndMarketIteratorPrefix(ordererAddr, req.MarketId)
+		orderGetter = getOrderFromOrdersByOrdererIndexKey
+	} else if req.Orderer != "" {
+		keyPrefix = types.GetOrdersByOrdererIteratorPrefix(ordererAddr)
+		orderGetter = getOrderFromOrdersByOrdererIndexKey
+	} else if req.MarketId > 0 {
+		keyPrefix = types.GetOrdersByMarketIteratorPrefix(req.MarketId)
+		orderGetter = func(_, value []byte) types.Order {
+			order, found := k.GetOrder(ctx, sdk.BigEndianToUint64(value))
+			if !found { // sanity check
+				panic("order not found")
+			}
+			return order
+		}
+	} else {
+		keyPrefix = types.OrderKeyPrefix
+		orderGetter = func(_, value []byte) types.Order {
+			var order types.Order
+			k.cdc.MustUnmarshal(value, &order)
+			return order
+		}
+	}
+	store := ctx.KVStore(k.storeKey)
+	orderStore := prefix.NewStore(store, keyPrefix)
+	var orders []types.Order
+	pageRes, err := query.Paginate(orderStore, req.Pagination, func(key, value []byte) error {
+		order := orderGetter(key, value)
+		orders = append(orders, order)
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryAllOrdersResponse{
+		Orders:     orders,
+		Pagination: pageRes,
+	}, nil
+}
+
 func (k Querier) Order(c context.Context, req *types.QueryOrderRequest) (*types.QueryOrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

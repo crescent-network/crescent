@@ -24,15 +24,16 @@ const (
 )
 
 var (
-	LastMarketIdKey              = []byte{0x60}
-	LastOrderIdKey               = []byte{0x61}
-	MarketKeyPrefix              = []byte{0x62}
-	MarketStateKeyPrefix         = []byte{0x63}
-	MarketByDenomsIndexKeyPrefix = []byte{0x64}
-	OrderKeyPrefix               = []byte{0x65}
-	OrderBookOrderKeyPrefix      = []byte{0x66}
-	NumMMOrdersKeyPrefix         = []byte{0x67}
-	TransientBalanceKeyPrefix    = []byte{0x68}
+	LastMarketIdKey               = []byte{0x60}
+	LastOrderIdKey                = []byte{0x61}
+	MarketKeyPrefix               = []byte{0x62}
+	MarketStateKeyPrefix          = []byte{0x63}
+	MarketByDenomsIndexKeyPrefix  = []byte{0x64}
+	OrderKeyPrefix                = []byte{0x65}
+	OrderBookOrderKeyPrefix       = []byte{0x66}
+	OrdersByOrdererIndexKeyPrefix = []byte{0x67}
+	NumMMOrdersKeyPrefix          = []byte{0x68}
+	TransientBalanceKeyPrefix     = []byte{0x69}
 )
 
 func GetMarketKey(marketId uint64) []byte {
@@ -74,6 +75,31 @@ func GetOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
 		isBuyToBytes(isBuy))
 }
 
+func GetOrdersByMarketIteratorPrefix(marketId uint64) []byte {
+	return utils.Key(
+		OrderBookOrderKeyPrefix,
+		sdk.Uint64ToBigEndian(marketId))
+}
+
+func GetOrdersByOrdererIndexKey(ordererAddr sdk.AccAddress, marketId, orderId uint64) []byte {
+	return utils.Key(
+		OrdersByOrdererIndexKeyPrefix,
+		address.MustLengthPrefix(ordererAddr),
+		sdk.Uint64ToBigEndian(marketId),
+		sdk.Uint64ToBigEndian(orderId))
+}
+
+func GetOrdersByOrdererIteratorPrefix(ordererAddr sdk.AccAddress) []byte {
+	return utils.Key(OrdersByOrdererIndexKeyPrefix, address.MustLengthPrefix(ordererAddr))
+}
+
+func GetOrdersByOrdererAndMarketIteratorPrefix(ordererAddr sdk.AccAddress, marketId uint64) []byte {
+	return utils.Key(
+		OrdersByOrdererIndexKeyPrefix,
+		address.MustLengthPrefix(ordererAddr),
+		sdk.Uint64ToBigEndian(marketId))
+}
+
 func GetNumMMOrdersKey(ordererAddr sdk.AccAddress, marketId uint64) []byte {
 	return utils.Key(
 		NumMMOrdersKeyPrefix,
@@ -92,6 +118,14 @@ func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 	baseDenomLen := key[1]
 	baseDenom = string(key[2 : 2+baseDenomLen])
 	quoteDenom = string(key[2+baseDenomLen:])
+	return
+}
+
+func ParseOrdersByOrdererIndexKey(key []byte) (ordererAddr sdk.AccAddress, marketId, orderId uint64) {
+	addrLen := key[1]
+	ordererAddr = key[2 : 2+addrLen]
+	marketId = sdk.BigEndianToUint64(key[2+addrLen : 2+addrLen+8])
+	orderId = sdk.BigEndianToUint64(key[2+addrLen+8:])
 	return
 }
 

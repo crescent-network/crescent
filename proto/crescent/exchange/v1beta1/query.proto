@@ -22,6 +22,9 @@ service Query {
   rpc Market(QueryMarketRequest) returns (QueryMarketResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/markets/{market_id}";
   }
+  rpc AllOrders(QueryAllOrdersRequest) returns (QueryAllOrdersResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/orders";
+  }
   rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/orders/{order_id}";
   }
@@ -52,6 +55,17 @@ message QueryMarketRequest {
 
 message QueryMarketResponse {
   MarketResponse market = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllOrdersRequest {
+  string                                orderer    = 1;
+  uint64                                market_id  = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAllOrdersResponse {
+  repeated Order                         orders     = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryOrderRequest {

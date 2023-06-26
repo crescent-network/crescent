@@ -211,6 +211,18 @@ func (k Keeper) DeleteOrderBookOrder(ctx sdk.Context, order types.Order) {
 		types.GetOrderBookOrderKey(order.MarketId, order.IsBuy, order.Price, order.Id))
 }
 
+func (k Keeper) SetOrdersByOrdererIndex(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
+	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
+	store.Set(types.GetOrdersByOrdererIndexKey(ordererAddr, order.MarketId, order.Id), []byte{})
+}
+
+func (k Keeper) DeleteOrdersByOrdererIndex(ctx sdk.Context, order types.Order) {
+	store := ctx.KVStore(k.storeKey)
+	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
+	store.Delete(types.GetOrdersByOrdererIndexKey(ordererAddr, order.MarketId, order.Id))
+}
+
 func (k Keeper) GetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64) (num uint32, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetNumMMOrdersKey(ordererAddr, marketId))

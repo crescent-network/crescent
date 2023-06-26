@@ -28,6 +28,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryParamsCmd(),
 		NewQueryAllMarketsCmd(),
 		NewQueryMarketCmd(),
+		NewQueryAllOrdersCmd(),
 		NewQueryOrderCmd(),
 		NewQueryBestSwapExactAmountInRoutesCmd(),
 	)
@@ -139,6 +140,63 @@ $ %s query %s market 1
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewQueryAllOrdersCmd() *cobra.Command {
+	const (
+		flagOrderer  = "orderer"
+		flagMarketId = "market-id"
+	)
+	cmd := &cobra.Command{
+		Use:   "orders",
+		Args:  cobra.NoArgs,
+		Short: "Query all orders",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all orders.
+
+Example:
+$ %s query %s orders
+$ %s query %s orders --orderer=cre1...
+$ %s query %s orders --market-id=1
+$ %s query %s orders --orderer=cre1... --market-id=1
+`,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			orderer, _ := cmd.Flags().GetString(flagOrderer)
+			marketId, err := cmd.Flags().GetUint64(flagMarketId)
+			if err != nil {
+				return fmt.Errorf("invalid market id: %w", err)
+			}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AllOrders(cmd.Context(), &types.QueryAllOrdersRequest{
+				Orderer:    orderer,
+				MarketId:   marketId,
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	cmd.Flags().String(flagOrderer, "", "Query orders placed by an orderer")
+	cmd.Flags().Uint64(flagMarketId, 0, "Query orders in a market")
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
 	return cmd
 }
 

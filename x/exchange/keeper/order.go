@@ -168,6 +168,7 @@ func (k Keeper) placeLimitOrder(
 		}
 		k.SetOrder(ctx, order)
 		k.SetOrderBookOrder(ctx, order)
+		k.SetOrdersByOrdererIndex(ctx, order)
 	}
 	return
 }
@@ -277,6 +278,7 @@ func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Or
 	}
 	k.DeleteOrder(ctx, order)
 	k.DeleteOrderBookOrder(ctx, order)
+	k.DeleteOrdersByOrdererIndex(ctx, order)
 	return
 }
 

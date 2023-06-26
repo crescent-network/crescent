@@ -1,12 +1,57 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
+
+func (s *KeeperTestSuite) TestQueryAllOrders() {
+	market1 := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, true, utils.ParseDec("4.99"), sdk.NewInt(1000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr2, false, utils.ParseDec("5.01"), sdk.NewInt(2000000), time.Hour)
+	market2 := s.CreateMarket(utils.TestAddress(0), "uatom", "ucre", true)
+	s.PlaceLimitOrder(market2.Id, ordererAddr1, false, utils.ParseDec("3"), sdk.NewInt(1500000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, ordererAddr2, true, utils.ParseDec("2.9"), sdk.NewInt(2500000), time.Hour)
+
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryAllOrdersRequest
+		expectedErr string
+		postRun     func(resp *types.QueryAllOrdersResponse)
+	}{
+		{
+			"empty request",
+			nil,
+			"rpc error: code = InvalidArgument desc = empty request",
+			nil,
+		},
+		{
+			"happy case",
+			&types.QueryAllOrdersRequest{},
+			"",
+			func(resp *types.QueryAllOrdersResponse) {
+				s.Require().Len(resp.Orders, 4)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.AllOrders(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
 
 func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
 	creatorAddr := utils.TestAddress(1)
