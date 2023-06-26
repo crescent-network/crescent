@@ -65,7 +65,6 @@ func UpgradeHandler(
 		ammKeeper.SetParams(ctx, ammParams)
 
 		// Migrate farming plans and staked coins to the new amm module.
-		// TODO: disable event emissions?
 
 		// Unstake all staked coins from x/farming and start farming on x/lpfarm.
 		// NOTE: This code is taken from v3 upgrade handler.
@@ -341,6 +340,8 @@ func UpgradeHandler(
 			}
 			// Delete the pool.
 			liquidityKeeper.DeletePool(ctx, oldPoolId)
+			liquidityKeeper.DeletePoolByReserveIndex(ctx, oldPool)
+			liquidityKeeper.DeletePoolsByPairIndex(ctx, oldPool)
 		}
 		// Send the remaining coins in each pair's escrow account to the
 		// community pool and delete pairs.
@@ -350,7 +351,10 @@ func UpgradeHandler(
 				return nil, err
 			}
 			liquidityKeeper.DeletePair(ctx, pairId)
+			liquidityKeeper.DeletePairLookupIndex(ctx, pair)
 		}
+		liquidityKeeper.DeleteLastPairId(ctx)
+		liquidityKeeper.DeleteLastPoolId(ctx)
 
 		// Send the remaining coins in the dust collector to the community
 		// pool.
@@ -423,6 +427,107 @@ func UpgradeHandler(
 				return false
 			})
 			claimKeeper.DeleteAirdrop(ctx, airdrop.Id)
+		}
+
+		// TODO: remove temporary checks below before mainnet upgrade
+		// No legacy pairs.
+		ok := true
+		_ = liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
+			ok = false
+			return true, nil
+		})
+		if !ok {
+			panic("legacy pair exists")
+		}
+		if liquidityKeeper.GetLastPairId(ctx) != 0 {
+			panic("legacy last pair id exists")
+		}
+		// No legacy pools.
+		ok = true
+		_ = liquidityKeeper.IterateAllPools(ctx, func(pool liquiditytypes.Pool) (stop bool, err error) {
+			ok = false
+			return true, nil
+		})
+		if !ok {
+			panic("legacy pool exists")
+		}
+		if liquidityKeeper.GetLastPoolId(ctx) != 0 {
+			panic("legacy last pool id exists")
+		}
+		// No legacy deposit/withdraw/order requests.
+		ok = true
+		_ = liquidityKeeper.IterateAllDepositRequests(ctx, func(req liquiditytypes.DepositRequest) (stop bool, err error) {
+			ok = false
+			return true, nil
+		})
+		if !ok {
+			panic("legacy deposit request exists")
+		}
+		ok = true
+		_ = liquidityKeeper.IterateAllWithdrawRequests(ctx, func(req liquiditytypes.WithdrawRequest) (stop bool, err error) {
+			ok = false
+			return true, nil
+		})
+		if !ok {
+			panic("legacy withdraw request exists")
+		}
+		ok = true
+		_ = liquidityKeeper.IterateAllOrders(ctx, func(order liquiditytypes.Order) (stop bool, err error) {
+			ok = false
+			return true, nil
+		})
+		if !ok {
+			panic("legacy order exists")
+		}
+		// No legacy pool coin supply after the upgrade.
+		ok = true
+		bankKeeper.IterateTotalSupply(ctx, func(coin sdk.Coin) bool {
+			if _, err := liquiditytypes.ParsePoolCoinDenom(coin.Denom); err == nil {
+				ok = false
+				return true
+			}
+			return false
+		})
+		if !ok {
+			panic("has pool coin supply")
+		}
+
+		// Similar farming rewards accrued after the upgrade.
+		// No legacy farming plans.
+		ok = true
+		lpFarmKeeper.IterateAllPlans(ctx, func(plan lpfarmtypes.Plan) (stop bool) {
+			ok = false
+			return true
+		})
+		if !ok {
+			panic("legacy farming plan exists")
+		}
+		// No legacy farms.
+		ok = true
+		lpFarmKeeper.IterateAllFarms(ctx, func(denom string, farm lpfarmtypes.Farm) (stop bool) {
+			ok = false
+			return true
+		})
+		if !ok {
+			panic("legacy farm exists")
+		}
+		// No legacy lpfarm positions.
+		ok = true
+		lpFarmKeeper.IterateAllPositions(ctx, func(position lpfarmtypes.Position) (stop bool) {
+			ok = false
+			return true
+		})
+		if !ok {
+			panic("legacy position exists")
+		}
+		// No legacy historical rewards.
+		ok = true
+		lpFarmKeeper.IterateAllHistoricalRewards(ctx, func(denom string, period uint64, hist lpfarmtypes.HistoricalRewards) (stop bool) {
+			ok = false
+			return true
+		})
+		if !ok {
+			panic("legacy historical rewards exists")
 		}
 
 		return vm, nil
