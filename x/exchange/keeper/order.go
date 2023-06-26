@@ -46,6 +46,7 @@ func (k Keeper) PlaceBatchLimitOrder(
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceBatchLimitOrder{
 		MarketId: marketId,
+		OrderId:  order.Id,
 		Orderer:  ordererAddr.String(),
 		IsBuy:    isBuy,
 		Price:    price,
@@ -94,6 +95,7 @@ func (k Keeper) PlaceMMBatchLimitOrder(
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventPlaceMMBatchLimitOrder{
 		MarketId: marketId,
+		OrderId:  order.Id,
 		Orderer:  ordererAddr.String(),
 		IsBuy:    isBuy,
 		Price:    price,
