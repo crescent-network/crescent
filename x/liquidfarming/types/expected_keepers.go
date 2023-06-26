@@ -38,5 +38,5 @@ type AMMKeeper interface {
 		positionId uint64, liquidity sdk.Int) (position ammtypes.Position, amt sdk.Coins, err error)
 	Collect(
 		ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress, positionId uint64, amt sdk.Coins) error
-	CollectibleCoins(ctx sdk.Context, positionId uint64) (sdk.Coins, error)
+	CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmingRewards sdk.Coins, err error)
 }

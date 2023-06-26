@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestRemoveAllAndCollect() {
 
 	s.RemoveLiquidity(lpAddr, lpAddr, position.Id, position.Liquidity)
 
-	collectible, err := s.keeper.CollectibleCoins(s.Ctx, position.Id)
+	fee, farmingRewards, err := s.keeper.CollectibleCoins(s.Ctx, position.Id)
 	s.Require().NoError(err)
-	s.Collect(lpAddr, lpAddr, position.Id, collectible)
+	s.Collect(lpAddr, lpAddr, position.Id, fee.Add(farmingRewards...))
 }

@@ -38,6 +38,11 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketId uint64) (market types.Market
 	return market, true
 }
 
+func (k Keeper) LookupMarket(ctx sdk.Context, marketId uint64) (found bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.GetMarketKey(marketId))
+}
+
 func (k Keeper) SetMarket(ctx sdk.Context, market types.Market) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&market)

@@ -103,7 +103,7 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 	if msg.PoolId == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool is must not be 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool id must not be 0")
 	}
 	if !msg.LowerPrice.IsPositive() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lower price must be positive: %s", msg.LowerPrice)

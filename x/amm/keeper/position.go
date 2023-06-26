@@ -117,12 +117,12 @@ func (k Keeper) RemoveLiquidity(
 	}
 	// Collect owed coins when removing all the liquidity from the position.
 	if position.Liquidity.IsZero() {
-		var collectible sdk.Coins
-		collectible, err = k.CollectibleCoins(ctx, position.Id)
+		var fee, farmingRewards sdk.Coins
+		fee, farmingRewards, err = k.CollectibleCoins(ctx, position.Id)
 		if err != nil {
 			return
 		}
-		if err = k.Collect(ctx, ownerAddr, toAddr, position.Id, collectible); err != nil {
+		if err = k.Collect(ctx, ownerAddr, toAddr, position.Id, fee.Add(farmingRewards...)); err != nil {
 			return
 		}
 	}
@@ -182,21 +182,20 @@ func (k Keeper) Collect(
 	return nil
 }
 
-func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmingRewards sdk.Coins, err error) {
 	position, found := k.GetPosition(ctx, positionId)
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
+		return nil, nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 	ctx, _ = ctx.CacheContext()
 	ownerAddr := sdk.MustAccAddressFromBech32(position.Owner)
 	if position.Liquidity.IsPositive() {
-		var err error
 		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
-	return position.OwedFee.Add(position.OwedFarmingRewards...), nil
+	return position.OwedFee, position.OwedFarmingRewards, nil
 }
 
 func (k Keeper) modifyPosition(

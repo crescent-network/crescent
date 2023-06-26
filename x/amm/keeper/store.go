@@ -273,7 +273,7 @@ func (k Keeper) IterateAllTickInfos(ctx sdk.Context, cb func(poolId uint64, tick
 func (k Keeper) IterateTickInfosBelow(ctx sdk.Context, poolId uint64, currentTick int32, cb func(tick int32, tickInfo types.TickInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := store.ReverseIterator(
-		types.GetTickInfoKeyPrefix(poolId),
+		types.GetTickInfosByPoolIteratorPrefix(poolId),
 		types.GetTickInfoKey(poolId, currentTick))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -289,7 +289,7 @@ func (k Keeper) IterateTickInfosBelow(ctx sdk.Context, poolId uint64, currentTic
 func (k Keeper) IterateTickInfosBelowInclusive(ctx sdk.Context, poolId uint64, currentTick int32, cb func(tick int32, tickInfo types.TickInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := store.ReverseIterator(
-		types.GetTickInfoKeyPrefix(poolId),
+		types.GetTickInfosByPoolIteratorPrefix(poolId),
 		types.GetTickInfoKey(poolId, currentTick+1))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -306,7 +306,7 @@ func (k Keeper) IterateTickInfosAbove(ctx sdk.Context, poolId uint64, currentTic
 	store := ctx.KVStore(k.storeKey)
 	iter := store.Iterator(
 		types.GetTickInfoKey(poolId, currentTick+1),
-		sdk.PrefixEndBytes(types.GetTickInfoKeyPrefix(poolId)))
+		sdk.PrefixEndBytes(types.GetTickInfosByPoolIteratorPrefix(poolId)))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		_, tick := types.ParseTickInfoKey(iter.Key())

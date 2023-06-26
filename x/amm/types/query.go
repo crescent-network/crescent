@@ -36,3 +36,13 @@ func NewPositionResponse(position Position) PositionResponse {
 		OwedFarmingRewards:             position.OwedFarmingRewards,
 	}
 }
+
+func NewTickInfoResponse(tick int32, tickInfo TickInfo) TickInfoResponse {
+	return TickInfoResponse{
+		Tick:                        tick,
+		GrossLiquidity:              tickInfo.GrossLiquidity,
+		NetLiquidity:                tickInfo.NetLiquidity,
+		FeeGrowthOutside:            tickInfo.FeeGrowthOutside,
+		FarmingRewardsGrowthOutside: tickInfo.FarmingRewardsGrowthOutside,
+	}
+}

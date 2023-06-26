@@ -10918,6 +10918,83 @@ paths:
                       format: byte
       tags:
         - Query
+  /crescent/amm/v1beta1/collectible_coins:
+    get:
+      operationId: CollectibleCoins
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              fee:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+              farming_rewards:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: owner
+          in: query
+          required: false
+          type: string
+        - name: position_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - Query
   /crescent/amm/v1beta1/farming_plans:
     get:
       operationId: AllFarmingPlans
@@ -11094,6 +11171,95 @@ paths:
           required: false
           type: boolean
           format: boolean
+      tags:
+        - Query
+  '/crescent/amm/v1beta1/farming_plans/{plan_id}':
+    get:
+      operationId: FarmingPlan
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              farming_plan:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uint64
+                  description:
+                    type: string
+                  farming_pool_address:
+                    type: string
+                  termination_address:
+                    type: string
+                  reward_allocations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pool_id:
+                          type: string
+                          format: uint64
+                        rewards_per_day:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements
+                              the custom method
+
+                              signatures required by gogoproto.
+                  start_time:
+                    type: string
+                    format: date-time
+                  end_time:
+                    type: string
+                    format: date-time
+                  is_private:
+                    type: boolean
+                    format: boolean
+                  is_terminated:
+                    type: boolean
+                    format: boolean
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
         - Query
   /crescent/amm/v1beta1/params:
@@ -11322,6 +11488,11 @@ paths:
                       type: string
                       format: byte
       parameters:
+        - name: market_id
+          in: query
+          required: false
+          type: string
+          format: uint64
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -11507,35 +11678,28 @@ paths:
           format: uint64
       tags:
         - Query
-  '/crescent/amm/v1beta1/pools/{pool_id}/positions':
+  '/crescent/amm/v1beta1/pools/{pool_id}/tick_infos':
     get:
-      operationId: PoolPositions
+      operationId: AllTickInfos
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              positions:
+              tick_infos:
                 type: array
                 items:
                   type: object
                   properties:
-                    id:
+                    tick:
+                      type: integer
+                      format: int32
+                    gross_liquidity:
                       type: string
-                      format: uint64
-                    pool_id:
+                    net_liquidity:
                       type: string
-                      format: uint64
-                    owner:
-                      type: string
-                    lower_price:
-                      type: string
-                    upper_price:
-                      type: string
-                    liquidity:
-                      type: string
-                    last_fee_growth_inside:
+                    fee_growth_outside:
                       type: array
                       items:
                         type: object
@@ -11553,25 +11717,7 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
-                    owed_fee:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    last_farming_rewards_growth_inside:
+                    farming_rewards_growth_outside:
                       type: array
                       items:
                         type: object
@@ -11586,24 +11732,6 @@ paths:
 
 
                           NOTE: The amount field is an Dec which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    owed_farming_rewards:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
                           custom method
 
                           signatures required by gogoproto.
@@ -11662,6 +11790,14 @@ paths:
           required: true
           type: string
           format: uint64
+        - name: lower_tick
+          in: query
+          required: false
+          type: string
+        - name: upper_tick
+          in: query
+          required: false
+          type: string
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -11719,6 +11855,96 @@ paths:
           required: false
           type: boolean
           format: boolean
+      tags:
+        - Query
+  '/crescent/amm/v1beta1/pools/{pool_id}/tick_infos/{tick}':
+    get:
+      operationId: TickInfo
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tick_info:
+                type: object
+                properties:
+                  tick:
+                    type: integer
+                    format: int32
+                  gross_liquidity:
+                    type: string
+                  net_liquidity:
+                    type: string
+                  fee_growth_outside:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is an Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  farming_rewards_growth_outside:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is an Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: tick
+          in: path
+          required: true
+          type: integer
+          format: int32
       tags:
         - Query
   /crescent/amm/v1beta1/positions:
@@ -11871,6 +12097,15 @@ paths:
                       type: string
                       format: byte
       parameters:
+        - name: pool_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: owner
+          in: query
+          required: false
+          type: string
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -11930,133 +12165,102 @@ paths:
           format: boolean
       tags:
         - Query
-  '/crescent/amm/v1beta1/positions/{owner}':
+  '/crescent/amm/v1beta1/positions/{position_id}':
     get:
-      operationId: AMMPositions
+      operationId: APPPosition
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              positions:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uint64
-                    pool_id:
-                      type: string
-                      format: uint64
-                    owner:
-                      type: string
-                    lower_price:
-                      type: string
-                    upper_price:
-                      type: string
-                    liquidity:
-                      type: string
-                    last_fee_growth_inside:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          DecCoin defines a token with a denomination and a
-                          decimal amount.
-
-
-                          NOTE: The amount field is an Dec which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    owed_fee:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    last_farming_rewards_growth_inside:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          DecCoin defines a token with a denomination and a
-                          decimal amount.
-
-
-                          NOTE: The amount field is an Dec which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    owed_farming_rewards:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-              pagination:
+              position:
                 type: object
                 properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
+                  id:
                     type: string
                     format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
+                  pool_id:
+                    type: string
+                    format: uint64
+                  owner:
+                    type: string
+                  lower_price:
+                    type: string
+                  upper_price:
+                    type: string
+                  liquidity:
+                    type: string
+                  last_fee_growth_inside:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
 
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
 
-                  corresponding request message has used PageRequest.
+                        NOTE: The amount field is an Dec which implements the
+                        custom method
 
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
+                        signatures required by gogoproto.
+                  owed_fee:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  last_farming_rewards_growth_inside:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is an Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  owed_farming_rewards:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
         default:
           description: An unexpected error response
           schema:
@@ -12080,67 +12284,141 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: owner
+        - name: position_id
           in: path
           required: true
           type: string
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
+          format: uint64
+      tags:
+        - Query
+  /crescent/amm/v1beta1/simulation/add_liquidity:
+    get:
+      operationId: AddLiquiditySimulation
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              liquidity:
+                type: string
+              amount:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
 
-            It is less efficient than using key. Only one of offset or key
-            should
 
-            be set.
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
           in: query
           required: false
           type: string
           format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
+        - name: lower_price
+          in: query
+          required: false
+          type: string
+        - name: upper_price
+          in: query
+          required: false
+          type: string
+        - name: desired_amount
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /crescent/amm/v1beta1/simulation/remove_liquidity:
+    get:
+      operationId: RemoveLiquiditySimulation
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              amount:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
 
-            If left empty it will default to a value to be set by each app.
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: position_id
           in: query
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
+        - name: liquidity
           in: query
           required: false
-          type: boolean
-          format: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending
-
-            order.
-          in: query
-          required: false
-          type: boolean
-          format: boolean
+          type: string
       tags:
         - Query
 definitions:
@@ -18479,6 +18757,25 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+  crescent.amm.v1beta1.QueryAddLiquiditySimulationResponse:
+    type: object
+    properties:
+      liquidity:
+        type: string
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
   crescent.amm.v1beta1.QueryAllFarmingPlansResponse:
     type: object
     properties:
@@ -18792,6 +19089,165 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  crescent.amm.v1beta1.QueryAllTickInfosResponse:
+    type: object
+    properties:
+      tick_infos:
+        type: array
+        items:
+          type: object
+          properties:
+            tick:
+              type: integer
+              format: int32
+            gross_liquidity:
+              type: string
+            net_liquidity:
+              type: string
+            fee_growth_outside:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  DecCoin defines a token with a denomination and a decimal
+                  amount.
+
+
+                  NOTE: The amount field is an Dec which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            farming_rewards_growth_outside:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  DecCoin defines a token with a denomination and a decimal
+                  amount.
+
+
+                  NOTE: The amount field is an Dec which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  crescent.amm.v1beta1.QueryCollectibleCoinsResponse:
+    type: object
+    properties:
+      fee:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+      farming_rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  crescent.amm.v1beta1.QueryFarmingPlanResponse:
+    type: object
+    properties:
+      farming_plan:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uint64
+          description:
+            type: string
+          farming_pool_address:
+            type: string
+          termination_address:
+            type: string
+          reward_allocations:
+            type: array
+            items:
+              type: object
+              properties:
+                pool_id:
+                  type: string
+                  format: uint64
+                rewards_per_day:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+          start_time:
+            type: string
+            format: date-time
+          end_time:
+            type: string
+            format: date-time
+          is_private:
+            type: boolean
+            format: boolean
+          is_terminated:
+            type: boolean
+            format: boolean
   crescent.amm.v1beta1.QueryParamsResponse:
     type: object
     properties:
@@ -18840,123 +19296,6 @@ definitions:
             format: int64
           max_farming_block_time:
             type: string
-  crescent.amm.v1beta1.QueryPoolPositionsResponse:
-    type: object
-    properties:
-      positions:
-        type: array
-        items:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uint64
-            pool_id:
-              type: string
-              format: uint64
-            owner:
-              type: string
-            lower_price:
-              type: string
-            upper_price:
-              type: string
-            liquidity:
-              type: string
-            last_fee_growth_inside:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  DecCoin defines a token with a denomination and a decimal
-                  amount.
-
-
-                  NOTE: The amount field is an Dec which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            owed_fee:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            last_farming_rewards_growth_inside:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  DecCoin defines a token with a denomination and a decimal
-                  amount.
-
-
-                  NOTE: The amount field is an Dec which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            owed_farming_rewards:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-      pagination:
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
   crescent.amm.v1beta1.QueryPoolResponse:
     type: object
     properties:
@@ -19047,120 +19386,197 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-  crescent.amm.v1beta1.QueryPositionsResponse:
+  crescent.amm.v1beta1.QueryPositionResponse:
     type: object
     properties:
-      positions:
+      position:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uint64
+          pool_id:
+            type: string
+            format: uint64
+          owner:
+            type: string
+          lower_price:
+            type: string
+          upper_price:
+            type: string
+          liquidity:
+            type: string
+          last_fee_growth_inside:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+          owed_fee:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+          last_farming_rewards_growth_inside:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+          owed_farming_rewards:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+  crescent.amm.v1beta1.QueryRemoveLiquiditySimulationResponse:
+    type: object
+    properties:
+      amount:
         type: array
         items:
           type: object
           properties:
-            id:
+            denom:
               type: string
-              format: uint64
-            pool_id:
+            amount:
               type: string
-              format: uint64
-            owner:
-              type: string
-            lower_price:
-              type: string
-            upper_price:
-              type: string
-            liquidity:
-              type: string
-            last_fee_growth_inside:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  DecCoin defines a token with a denomination and a decimal
-                  amount.
+          description: |-
+            Coin defines a token with a denomination and an amount.
 
-
-                  NOTE: The amount field is an Dec which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            owed_fee:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            last_farming_rewards_growth_inside:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  DecCoin defines a token with a denomination and a decimal
-                  amount.
-
-
-                  NOTE: The amount field is an Dec which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            owed_farming_rewards:
-              type: array
-              items:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-      pagination:
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  crescent.amm.v1beta1.QueryTickInfoResponse:
+    type: object
+    properties:
+      tick_info:
         type: object
         properties:
-          next_key:
+          tick:
+            type: integer
+            format: int32
+          gross_liquidity:
             type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
+          net_liquidity:
             type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
+          fee_growth_outside:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
 
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
 
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+          farming_rewards_growth_outside:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+  crescent.amm.v1beta1.TickInfoResponse:
+    type: object
+    properties:
+      tick:
+        type: integer
+        format: int32
+      gross_liquidity:
+        type: string
+      net_liquidity:
+        type: string
+      fee_growth_outside:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+      farming_rewards_growth_outside:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.

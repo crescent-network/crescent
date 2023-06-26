@@ -23,10 +23,14 @@ type BankKeeper interface {
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	// Just for simulations
+	MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 type ExchangeKeeper interface {
 	GetMarket(ctx sdk.Context, marketId uint64) (market exchangetypes.Market, found bool)
+	LookupMarket(ctx sdk.Context, marketId uint64) (found bool)
 	IterateAllMarkets(ctx sdk.Context, cb func(market exchangetypes.Market) (stop bool))
 	MustGetMarketState(ctx sdk.Context, marketId uint64) (marketState exchangetypes.MarketState)
 }

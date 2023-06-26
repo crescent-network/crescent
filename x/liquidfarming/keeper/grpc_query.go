@@ -227,11 +227,11 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
 	var rewards sdk.Coins
 	if found {
-		var err error
-		rewards, err = k.ammKeeper.CollectibleCoins(ctx, position.Id)
+		fee, farmingRewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
+		rewards = fee.Add(farmingRewards...)
 	}
 	return &types.QueryRewardsResponse{Rewards: rewards}, nil
 }

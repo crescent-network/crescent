@@ -54,9 +54,10 @@ func (s *TestSuite) CreatePrivateFarmingPlan(creatorAddr sdk.AccAddress, descrip
 	return plan
 }
 
-func (s *TestSuite) CollectibleCoins(positionId uint64) sdk.Coins {
+func (s *TestSuite) CollectibleCoins(positionId uint64) (fee, farmingRewards sdk.Coins) {
 	s.T().Helper()
-	collectible, err := s.App.AMMKeeper.CollectibleCoins(s.Ctx, positionId)
+	var err error
+	fee, farmingRewards, err = s.App.AMMKeeper.CollectibleCoins(s.Ctx, positionId)
 	s.Require().NoError(err)
-	return collectible
+	return
 }

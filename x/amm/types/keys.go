@@ -74,6 +74,13 @@ func GetPositionsByOwnerIteratorPrefix(ownerAddr sdk.AccAddress) []byte {
 		address.MustLengthPrefix(ownerAddr))
 }
 
+func GetPositionsByPoolAndOwnerIteratorPrefix(ownerAddr sdk.AccAddress, poolId uint64) []byte {
+	return utils.Key(
+		PositionByParamsIndexKeyPrefix,
+		address.MustLengthPrefix(ownerAddr),
+		sdk.Uint64ToBigEndian(poolId))
+}
+
 func GetPositionsByPoolIndexKey(poolId, positionId uint64) []byte {
 	return utils.Key(
 		PositionsByPoolIndexKeyPrefix,
@@ -92,7 +99,7 @@ func GetTickInfoKey(poolId uint64, tick int32) []byte {
 		TickToBytes(tick))
 }
 
-func GetTickInfoKeyPrefix(poolId uint64) []byte {
+func GetTickInfosByPoolIteratorPrefix(poolId uint64) []byte {
 	return utils.Key(TickInfoKeyPrefix, sdk.Uint64ToBigEndian(poolId))
 }
 

@@ -166,11 +166,12 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFar
 	winningBid := *auction.WinningBid
 
 	position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
-	rewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
+	fee, farmingRewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
 	if err != nil {
 		return err
 	}
-	var fees sdk.Coins
+	rewards := fee.Add(farmingRewards...)
+	var protocolFee sdk.Coins
 	if rewards.IsAllPositive() {
 		moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 		// First, collect all rewards.
@@ -178,7 +179,7 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFar
 			return err
 		}
 		var deductedRewards sdk.Coins
-		deductedRewards, fees = types.DeductFees(rewards, liquidFarm.FeeRate)
+		deductedRewards, protocolFee = types.DeductFees(rewards, liquidFarm.FeeRate)
 		if deductedRewards.IsAllPositive() {
 			// Then send deducted rewards to the winning bidder.
 			winningBidderAddr := sdk.MustAccAddressFromBech32(winningBid.Bidder)
@@ -210,7 +211,7 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFar
 	}
 
 	auction.SetRewards(rewards)
-	auction.SetFees(fees)
+	auction.SetFees(protocolFee)
 	auction.SetStatus(types.AuctionStatusFinished)
 	k.SetRewardsAuction(ctx, auction)
 
@@ -228,11 +229,11 @@ func (k Keeper) SkipRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFarm,
 	position, found := k.GetLiquidFarmPosition(ctx, liquidFarm)
 	var rewards sdk.Coins
 	if found {
-		var err error
-		rewards, err = k.ammKeeper.CollectibleCoins(ctx, position.Id)
+		fee, farmingRewards, err := k.ammKeeper.CollectibleCoins(ctx, position.Id)
 		if err != nil {
 			return err
 		}
+		rewards = fee.Add(farmingRewards...)
 	}
 
 	auction.SetRewards(rewards)

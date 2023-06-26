@@ -11,9 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/tendermint/tendermint/crypto"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly,
@@ -38,11 +40,34 @@ func (k Querier) AllPools(c context.Context, req *types.QueryAllPoolsRequest) (*
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-	poolStore := prefix.NewStore(store, types.PoolKeyPrefix)
+	var (
+		keyPrefix  []byte
+		poolGetter func(key, value []byte) types.Pool
+	)
+	if req.MarketId > 0 {
+		if found := k.exchangeKeeper.LookupMarket(ctx, req.MarketId); !found {
+			return nil, status.Error(codes.NotFound, "market not found")
+		}
+		keyPrefix = types.GetPoolByMarketIndexKey(req.MarketId)
+		poolGetter = func(_, value []byte) types.Pool {
+			pool, found := k.GetPool(ctx, sdk.BigEndianToUint64(value))
+			if !found { // sanity check
+				panic("pool not found")
+			}
+			return pool
+		}
+	} else {
+		keyPrefix = types.PoolKeyPrefix
+		poolGetter = func(_, value []byte) types.Pool {
+			var pool types.Pool
+			k.cdc.MustUnmarshal(value, &pool)
+			return pool
+		}
+	}
+	poolStore := prefix.NewStore(store, keyPrefix)
 	var poolResps []types.PoolResponse
-	pageRes, err := query.Paginate(poolStore, req.Pagination, func(_, value []byte) error {
-		var pool types.Pool
-		k.cdc.MustUnmarshal(value, &pool)
+	pageRes, err := query.Paginate(poolStore, req.Pagination, func(key, value []byte) error {
+		pool := poolGetter(key, value)
 		poolResps = append(poolResps, k.MakePoolResponse(ctx, pool))
 		return nil
 	})
@@ -72,12 +97,60 @@ func (k Querier) AllPositions(c context.Context, req *types.QueryAllPositionsReq
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
+	var ownerAddr sdk.AccAddress
+	if req.Owner != "" {
+		var err error
+		ownerAddr, err = sdk.AccAddressFromBech32(req.Owner)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid owner: %v", err)
+		}
+	}
+	if req.PoolId > 0 {
+		if found := k.LookupPool(ctx, req.PoolId); !found {
+			return nil, status.Error(codes.NotFound, "pool not found")
+		}
+	}
 	store := ctx.KVStore(k.storeKey)
-	positionStore := prefix.NewStore(store, types.PositionKeyPrefix)
+	// TODO: filter by pool id and owner
+	var (
+		keyPrefix      []byte
+		positionGetter func(key, value []byte) types.Position
+	)
+	getPositionFromPositionByParamsIndexKey := func(_, value []byte) types.Position {
+		position, found := k.GetPosition(ctx, sdk.BigEndianToUint64(value))
+		if !found { // sanity check
+			panic("position not found")
+		}
+		return position
+	}
+	if req.PoolId > 0 && req.Owner != "" {
+		keyPrefix = types.GetPositionsByPoolAndOwnerIteratorPrefix(ownerAddr, req.PoolId)
+		positionGetter = getPositionFromPositionByParamsIndexKey
+	} else if req.PoolId > 0 {
+		keyPrefix = types.GetPositionsByPoolIteratorPrefix(req.PoolId)
+		positionGetter = func(key, _ []byte) types.Position {
+			_, positionId := types.ParsePositionsByPoolIndexKey(utils.Key(keyPrefix, key))
+			position, found := k.GetPosition(ctx, positionId)
+			if !found { // sanity check
+				panic("position not found")
+			}
+			return position
+		}
+	} else if req.Owner != "" {
+		keyPrefix = types.GetPositionsByOwnerIteratorPrefix(ownerAddr)
+		positionGetter = getPositionFromPositionByParamsIndexKey
+	} else {
+		keyPrefix = types.PositionKeyPrefix
+		positionGetter = func(_, value []byte) types.Position {
+			var position types.Position
+			k.cdc.MustUnmarshal(value, &position)
+			return position
+		}
+	}
+	positionStore := prefix.NewStore(store, keyPrefix)
 	var positionResps []types.PositionResponse
-	pageRes, err := query.Paginate(positionStore, req.Pagination, func(_, value []byte) error {
-		var position types.Position
-		k.cdc.MustUnmarshal(value, &position)
+	pageRes, err := query.Paginate(positionStore, req.Pagination, func(key, value []byte) error {
+		position := positionGetter(key, value)
 		positionResps = append(positionResps, types.NewPositionResponse(position))
 		return nil
 	})
@@ -90,65 +163,197 @@ func (k Querier) AllPositions(c context.Context, req *types.QueryAllPositionsReq
 	}, nil
 }
 
-func (k Querier) Positions(c context.Context, req *types.QueryPositionsRequest) (*types.QueryPositionsResponse, error) {
+func (k Querier) Position(c context.Context, req *types.QueryPositionRequest) (*types.QueryPositionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	ownerAddr, err := sdk.AccAddressFromBech32(req.Owner)
+	ctx := sdk.UnwrapSDKContext(c)
+	position, found := k.GetPosition(ctx, req.PositionId)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
+	}
+	return &types.QueryPositionResponse{Position: types.NewPositionResponse(position)}, nil
+}
+
+func (k Querier) AddLiquiditySimulation(c context.Context, req *types.QueryAddLiquiditySimulationRequest) (*types.QueryAddLiquiditySimulationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	desiredAmt, err := sdk.ParseCoinsNormalized(req.DesiredAmount)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid owner address: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid desired amount: %v", err)
+	}
+	lowerPrice, err := sdk.NewDecFromStr(req.LowerPrice)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid lower price: %v", err)
+	}
+	upperPrice, err := sdk.NewDecFromStr(req.UpperPrice)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid upper price: %v", err)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	positionStore := prefix.NewStore(store, types.GetPositionsByOwnerIteratorPrefix(ownerAddr))
-	var positionResps []types.PositionResponse
-	pageRes, err := query.Paginate(positionStore, req.Pagination, func(_, value []byte) error {
-		position, found := k.GetPosition(ctx, sdk.BigEndianToUint64(value))
-		if !found { // sanity check
-			panic("position not found")
-		}
-		positionResps = append(positionResps, types.NewPositionResponse(position))
-		return nil
-	})
-	if err != nil {
+	// Create temporary account with sufficient funds.
+	ownerAddr := sdk.AccAddress(crypto.AddressHash([]byte("simaccount")))
+	if err := k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, desiredAmt); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryPositionsResponse{
-		Positions:  positionResps,
-		Pagination: pageRes,
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, ownerAddr, desiredAmt); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if err := types.NewMsgAddLiquidity(
+		ownerAddr, req.PoolId, lowerPrice, upperPrice, desiredAmt).ValidateBasic(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	_, liquidity, amt, err := k.AddLiquidity(
+		ctx, ownerAddr, ownerAddr, req.PoolId, lowerPrice, upperPrice, desiredAmt)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	return &types.QueryAddLiquiditySimulationResponse{
+		Liquidity: liquidity,
+		Amount:    amt,
 	}, nil
 }
 
-func (k Querier) PoolPositions(c context.Context, req *types.QueryPoolPositionsRequest) (*types.QueryPoolPositionsResponse, error) {
+func (k Querier) RemoveLiquiditySimulation(c context.Context, req *types.QueryRemoveLiquiditySimulationRequest) (*types.QueryRemoveLiquiditySimulationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id must not be 0")
+	liquidity, ok := sdk.NewIntFromString(req.Liquidity)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid liquidity: %s", req.Liquidity)
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	position, found := k.GetPosition(ctx, req.PositionId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "position not found")
+	}
+	ownerAddr := sdk.MustAccAddressFromBech32(position.Owner)
+	if err := types.NewMsgRemoveLiquidity(
+		ownerAddr, req.PositionId, liquidity).ValidateBasic(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	_, amt, err := k.RemoveLiquidity(
+		ctx, ownerAddr, ownerAddr, req.PositionId, liquidity)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	return &types.QueryRemoveLiquiditySimulationResponse{
+		Amount: amt,
+	}, nil
+}
+
+func (k Querier) CollectibleCoins(c context.Context, req *types.QueryCollectibleCoinsRequest) (*types.QueryCollectibleCoinsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.Owner != "" && req.PositionId > 0 {
+		return nil, status.Error(codes.InvalidArgument, "owner and position id must not be specified at the same time")
+	} else if req.Owner == "" && req.PositionId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "owner or position id must be specified")
+	}
+	var ownerAddr sdk.AccAddress
+	if req.Owner != "" {
+		var err error
+		ownerAddr, err = sdk.AccAddressFromBech32(req.Owner)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid owner: %v", err)
+		}
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	if req.PositionId > 0 {
+		fee, farmingRewards, err := k.Keeper.CollectibleCoins(ctx, req.PositionId)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		}
+		return &types.QueryCollectibleCoinsResponse{
+			Fee:            fee,
+			FarmingRewards: farmingRewards,
+		}, nil
+	} else {
+		var totalFee, totalFarmingRewards sdk.Coins
+		k.IteratePositionsByOwner(ctx, ownerAddr, func(position types.Position) (stop bool) {
+			fee, farmingRewards, err := k.Keeper.CollectibleCoins(ctx, position.Id)
+			if err != nil { // sanity check
+				panic(err)
+			}
+			totalFee = totalFee.Add(fee...)
+			totalFarmingRewards = totalFarmingRewards.Add(farmingRewards...)
+			return false
+		})
+		return &types.QueryCollectibleCoinsResponse{
+			Fee:            totalFee,
+			FarmingRewards: totalFarmingRewards,
+		}, nil
+	}
+}
+
+func (k Querier) AllTickInfos(c context.Context, req *types.QueryAllTickInfosRequest) (*types.QueryAllTickInfosResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	if found := k.LookupPool(ctx, req.PoolId); !found {
 		return nil, status.Error(codes.NotFound, "pool not found")
 	}
-	store := ctx.KVStore(k.storeKey)
-	keyPrefix := types.GetPositionsByPoolIteratorPrefix(req.PoolId)
-	positionStore := prefix.NewStore(store, keyPrefix)
-	var positionResps []types.PositionResponse
-	pageRes, err := query.Paginate(positionStore, req.Pagination, func(key, _ []byte) error {
-		_, positionId := types.ParsePositionsByPoolIndexKey(utils.Key(keyPrefix, key))
-		position, found := k.GetPosition(ctx, positionId)
-		if !found { // sanity check
-			panic("position not found")
+	var lowerTick, upperTick int64
+	if req.LowerTick != "" {
+		var err error
+		lowerTick, err = strconv.ParseInt(req.LowerTick, 10, 32)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid lower tick: %v", err)
 		}
-		positionResps = append(positionResps, types.NewPositionResponse(position))
-		return nil
+	}
+	if req.UpperTick != "" {
+		var err error
+		upperTick, err = strconv.ParseInt(req.UpperTick, 10, 32)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid upper tick: %v", err)
+		}
+	}
+	store := ctx.KVStore(k.storeKey)
+	keyPrefix := types.GetTickInfosByPoolIteratorPrefix(req.PoolId)
+	tickInfoStore := prefix.NewStore(store, keyPrefix)
+	var tickInfoResps []types.TickInfoResponse
+	pageRes, err := query.FilteredPaginate(tickInfoStore, req.Pagination, func(key, value []byte, accumulate bool) (hit bool, err error) {
+		var tickInfo types.TickInfo
+		k.cdc.MustUnmarshal(value, &tickInfo)
+		_, tick := types.ParseTickInfoKey(utils.Key(keyPrefix, key))
+		if req.LowerTick != "" && tick < int32(lowerTick) {
+			return false, nil
+		}
+		if req.UpperTick != "" && tick > int32(upperTick) {
+			return false, nil
+		}
+		if accumulate {
+			tickInfoResps = append(
+				tickInfoResps, types.NewTickInfoResponse(tick, tickInfo))
+		}
+		return true, nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryPoolPositionsResponse{
-		Positions:  positionResps,
+	return &types.QueryAllTickInfosResponse{
+		TickInfos:  tickInfoResps,
 		Pagination: pageRes,
+	}, nil
+}
+
+func (k Querier) TickInfo(c context.Context, req *types.QueryTickInfoRequest) (*types.QueryTickInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	if found := k.LookupPool(ctx, req.PoolId); !found {
+		return nil, status.Error(codes.NotFound, "pool not found")
+	}
+	tickInfo, found := k.GetTickInfo(ctx, req.PoolId, req.Tick)
+	if !found {
+		return nil, status.Error(codes.NotFound, "tick info not found")
+	}
+	return &types.QueryTickInfoResponse{
+		TickInfo: types.NewTickInfoResponse(req.Tick, tickInfo),
 	}, nil
 }
 
@@ -196,6 +401,18 @@ func (k Querier) AllFarmingPlans(c context.Context, req *types.QueryAllFarmingPl
 		FarmingPlans: plans,
 		Pagination:   pageRes,
 	}, nil
+}
+
+func (k Querier) FarmingPlan(c context.Context, req *types.QueryFarmingPlanRequest) (*types.QueryFarmingPlanResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	plan, found := k.GetFarmingPlan(ctx, req.PlanId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "farming plan not found")
+	}
+	return &types.QueryFarmingPlanResponse{FarmingPlan: plan}, nil
 }
 
 func (k Querier) MakePoolResponse(ctx sdk.Context, pool types.Pool) types.PoolResponse {

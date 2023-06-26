@@ -99,7 +99,7 @@
       "operationIds": {
         "rename": {
           "Params": "ExchangeParams",
-          "Order": "ExchangeOrder",
+          "Order": "ExchangeOrder"
         }
       }
     },
@@ -110,6 +110,7 @@
           "Params": "AMMParams",
           "Pools": "AMMPools",
           "Positions": "AMMPositions",
+          "Position": "APPPosition"
         }
       }
     }

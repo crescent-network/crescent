@@ -95,9 +95,9 @@ func (s *KeeperTestSuite) TestRewardsAuction() {
 	s.AdvanceRewardsAuctions()
 
 	position := s.App.LiquidFarmingKeeper.MustGetLiquidFarmPosition(s.Ctx, liquidFarm)
-	rewards, err := s.App.AMMKeeper.CollectibleCoins(s.Ctx, position.Id)
+	_, farmingRewards, err := s.App.AMMKeeper.CollectibleCoins(s.Ctx, position.Id)
 	s.Require().NoError(err)
-	s.Require().Equal("5786uatom", rewards.String())
+	s.Require().Equal("5786uatom", farmingRewards.String())
 
 	bidderAddr1 := utils.TestAddress(2)
 	bidderShare1, _, _, _ := s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_00000ucre,50_000000uusd"), true)
@@ -237,10 +237,10 @@ func (s *KeeperTestSuite) TestRewardsAuction_RewardsAndFees() {
 	s.NextBlock()
 
 	position := s.keeper.MustGetLiquidFarmPosition(s.Ctx, liquidFarm)
-	rewards, err := s.App.AMMKeeper.CollectibleCoins(s.Ctx, position.Id)
+	_, farmingRewards, err := s.App.AMMKeeper.CollectibleCoins(s.Ctx, position.Id)
 	s.Require().NoError(err)
 
-	deducted, fees := types.DeductFees(rewards, liquidFarm.FeeRate)
+	deducted, fees := types.DeductFees(farmingRewards, liquidFarm.FeeRate)
 
 	s.AdvanceRewardsAuctions()
 
