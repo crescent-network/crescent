@@ -103,7 +103,7 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			func(msg *types.MsgAddLiquidity) {
 				msg.PoolId = 0
 			},
-			"pool is must not be 0: invalid request",
+			"pool id must not be 0: invalid request",
 		},
 		{
 			"invalid lower price",

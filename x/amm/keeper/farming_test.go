@@ -121,7 +121,8 @@ func (s *KeeperTestSuite) TestFarmingTooMuchLiquidity() {
 		utils.ParseCoins("10000_000000uatom"), true)
 	s.NextBlock()
 	s.NextBlock()
-	s.Require().Equal("113uatom", s.CollectibleCoins(position.Id).String())
+	_, farmingRewards := s.CollectibleCoins(position.Id)
+	s.Require().Equal("113uatom", farmingRewards.String())
 }
 
 func (s *KeeperTestSuite) TestFarmingTooSmallLiquidity() {
@@ -140,5 +141,6 @@ func (s *KeeperTestSuite) TestFarmingTooSmallLiquidity() {
 		utils.ParseCoins("1000_000000000000000000uibc1"), true)
 	s.NextBlock()
 	s.NextBlock()
-	s.Require().Equal("1157407407407405uibc1", s.CollectibleCoins(position.Id).String())
+	_, farmingRewards := s.CollectibleCoins(position.Id)
+	s.Require().Equal("1157407407407405uibc1", farmingRewards.String())
 }
