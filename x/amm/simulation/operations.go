@@ -212,7 +212,7 @@ func findMsgAddLiquidityParams(
 						exchangetypes.TickAtPrice(
 							utils.RandomDec(r,
 								poolState.CurrentPrice,
-								poolState.CurrentPrice.Mul(utils.ParseDec("1.5")))))
+								poolState.CurrentPrice.Mul(utils.ParseDec("1.5")))) / ts * ts)
 				}
 				if r.Float64() <= 0.2 {
 					upperPrice = exchangetypes.PriceAtTick(types.MaxTick)
@@ -220,7 +220,7 @@ func findMsgAddLiquidityParams(
 					upperPrice = exchangetypes.PriceAtTick(
 						exchangetypes.TickAtPrice(
 							utils.RandomDec(r,
-								lowerPrice.Mul(utils.ParseDec("0.01")),
+								lowerPrice.Mul(utils.ParseDec("1.01")),
 								poolState.CurrentPrice.Mul(utils.ParseDec("3")))) / ts * ts)
 				}
 				desiredAmt := sdk.NewCoins(
@@ -253,9 +253,11 @@ func findMsgPlaceRemoveLiquidityParams(
 		})
 		if len(positions) > 0 {
 			position := positions[r.Intn(len(positions))]
-			liquidity := utils.RandomInt(r, sdk.NewInt(100), position.Liquidity)
-			msg = types.NewMsgRemoveLiquidity(acc.Address, position.Id, liquidity)
-			return acc, msg, true
+			if position.Liquidity.GT(sdk.NewInt(100)) {
+				liquidity := utils.RandomInt(r, sdk.NewInt(100), position.Liquidity)
+				msg = types.NewMsgRemoveLiquidity(acc.Address, position.Id, liquidity)
+				return acc, msg, true
+			}
 		}
 	}
 	return acc, msg, false

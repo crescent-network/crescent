@@ -219,6 +219,22 @@ func (k Keeper) IterateAllPositions(ctx sdk.Context, cb func(position types.Posi
 	}
 }
 
+func (k Keeper) IteratePositionsByPool(ctx sdk.Context, poolId uint64, cb func(position types.Position) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetPositionsByPoolIteratorPrefix(poolId))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, positionId := types.ParsePositionsByPoolIndexKey(iter.Key())
+		position, found := k.GetPosition(ctx, positionId)
+		if !found { // sanity check
+			panic("position not found")
+		}
+		if cb(position) {
+			break
+		}
+	}
+}
+
 func (k Keeper) IteratePositionsByOwner(ctx sdk.Context, ownerAddr sdk.AccAddress, cb func(position types.Position) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.GetPositionsByOwnerIteratorPrefix(ownerAddr))

@@ -8,7 +8,7 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-func (s *KeeperTestSuite) TestFoo() {
+func (s *KeeperTestSuite) TestOrderMatching() {
 	aliceAddr := utils.TestAddress(1)
 	bobAddr := utils.TestAddress(2)
 

@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -28,8 +29,7 @@ func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyMaxFarmingBlockTime),
 			func(r *rand.Rand) string {
-				bz, _ := json.Marshal(GenMaxFarmingBlockTime(r))
-				return string(bz)
+				return fmt.Sprintf(`"%d"`, GenMaxFarmingBlockTime(r))
 			},
 		),
 	}

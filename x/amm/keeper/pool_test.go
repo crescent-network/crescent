@@ -7,14 +7,37 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (s *KeeperTestSuite) CreateMarketAndPool(baseDenom, quoteDenom string, price sdk.Dec) (market exchangetypes.Market, pool types.Pool) {
-	creatorAddr := utils.TestAddress(0)
-	market = s.CreateMarket(creatorAddr, baseDenom, quoteDenom, true)
-	pool = s.CreatePool(creatorAddr, market.Id, price, true)
-	return market, pool
+func (s *KeeperTestSuite) TestCreatePool_WithoutMarket() {
+	creatorAddr := s.FundedAccount(1, enoughCoins)
+	_, err := s.keeper.CreatePool(s.Ctx, creatorAddr, 1, utils.ParseDec("1.2"))
+	s.Require().EqualError(err, "market not found: not found")
+}
+
+func (s *KeeperTestSuite) TestCreatePool_MultiplePoolsPerMarket() {
+	creatorAddr := s.FundedAccount(1, enoughCoins)
+	market, _ := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1.2"))
+	_, err := s.keeper.CreatePool(s.Ctx, creatorAddr, market.Id, utils.ParseDec("2.5"))
+	s.Require().EqualError(err, "cannot create more than one pool per market: invalid request")
+}
+
+func (s *KeeperTestSuite) TestCreatePool() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	pool2, found := s.keeper.GetPoolByMarket(s.Ctx, market.Id)
+	s.Require().True(found)
+	s.Require().Equal(pool, pool2)
+	pool2, found = s.keeper.GetPoolByReserveAddress(s.Ctx, pool.MustGetReserveAddress())
+	s.Require().True(found)
+	s.Require().Equal(pool, pool2)
+	// Check pool state
+	poolState, found := s.keeper.GetPoolState(s.Ctx, pool.Id)
+	s.Require().True(found)
+	s.Require().Equal("5.000000000000000000", poolState.CurrentPrice.String())
+	s.Require().Equal(sdk.ZeroInt(), poolState.CurrentLiquidity)
+	s.Require().EqualValues(40000, poolState.CurrentTick)
+	s.Require().Equal("", poolState.FeeGrowthGlobal.String())
+	s.Require().Equal("", poolState.FarmingRewardsGrowthGlobal.String())
 }
 
 func (s *KeeperTestSuite) TestPoolOrders() {

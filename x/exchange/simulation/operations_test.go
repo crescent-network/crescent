@@ -120,5 +120,5 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
-	s.Require().Equal(sdk.NewInt(54629944), msg.Quantity)
+	s.Require().Equal(sdk.NewInt(103992), msg.Quantity)
 }

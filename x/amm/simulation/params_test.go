@@ -23,7 +23,7 @@ func TestParamChanges(t *testing.T) {
 	}{
 		{"amm/DefaultTickSpacing", "DefaultTickSpacing", "10", "amm"},
 		{"amm/MaxNumPrivateFarmingPlans", "MaxNumPrivateFarmingPlans", "10", "amm"},
-		{"amm/MaxFarmingBlockTime", "MaxFarmingBlockTime", "14000000000", "amm"},
+		{"amm/MaxFarmingBlockTime", "MaxFarmingBlockTime", `"14000000000"`, "amm"},
 	}
 
 	for i, p := range paramChanges {

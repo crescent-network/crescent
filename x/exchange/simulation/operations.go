@@ -240,8 +240,8 @@ func findMsgPlaceMarketOrderParams(
 		spendable := bk.SpendableCoins(ctx, acc.Address)
 		for _, market := range markets {
 			if r.Float64() <= 0.5 { // 50% chance to sell
-				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(100_000000)) {
-					qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(100_000000))
+				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(1_000000)) {
+					qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(1_000000))
 					msg = types.NewMsgPlaceMarketOrder(
 						acc.Address, market.Id, false, qty)
 					return acc, msg, true
@@ -252,8 +252,8 @@ func findMsgPlaceMarketOrderParams(
 				continue
 			}
 			estBuyPrice := marketState.LastPrice.Mul(utils.ParseDec("1.5")) // 150%
-			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(estBuyPrice.MulInt64(100_000000).TruncateInt()) {
-				qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(100_000000))
+			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(estBuyPrice.MulInt64(1_000000).TruncateInt()) {
+				qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(1_000000))
 				msg = types.NewMsgPlaceMarketOrder(
 					acc.Address, market.Id, true, qty)
 				return acc, msg, true

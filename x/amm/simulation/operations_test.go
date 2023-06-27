@@ -121,7 +121,7 @@ func (s *SimTestSuite) TestSimulateMsgAddLiquidity() {
 	s.Require().Equal("cosmos1ea66m0hr892xhmtjzq7s76vq8cdcmnqgewvtsy", msg.Sender)
 	s.Require().EqualValues(2, msg.PoolId)
 	s.Require().Equal("144.000000000000000000", msg.LowerPrice.String())
-	s.Require().Equal("440.000000000000000000", msg.UpperPrice.String())
+	s.Require().Equal("584.000000000000000000", msg.UpperPrice.String())
 	s.Require().Equal("27329649denom1,57336327denom3", msg.DesiredAmount.String())
 }
 

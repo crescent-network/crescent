@@ -44,9 +44,11 @@ func SimulatePoolParameterChangeProposal(k keeper.Keeper) simtypes.ContentSimula
 				allowedTickSpacings := utils.Filter(types.AllowedTickSpacings, func(tickSpacing uint32) bool {
 					return tickSpacing < pool.TickSpacing && pool.TickSpacing%tickSpacing == 0
 				})
-				changes = append(changes,
-					types.NewPoolParameterChange(
-						pool.Id, allowedTickSpacings[r.Intn(len(allowedTickSpacings))]))
+				if len(allowedTickSpacings) > 0 {
+					changes = append(changes,
+						types.NewPoolParameterChange(
+							pool.Id, allowedTickSpacings[r.Intn(len(allowedTickSpacings))]))
+				}
 			}
 			return false
 		})

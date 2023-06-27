@@ -6,6 +6,7 @@ import (
 )
 
 func (k Keeper) QueueSendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter()) // XXX
 	for _, coin := range amt {
 		balance := k.GetTransientBalance(ctx, fromAddr, coin.Denom)
 		newBalance := balance.AddAmount(coin.Amount.Neg())
@@ -26,7 +27,8 @@ func (k Keeper) ExecuteSendCoins(ctx sdk.Context) error {
 		inputs  []banktypes.Input
 		outputs []banktypes.Output
 	)
-	k.IterateAllTransientBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
+	noGasCtx := ctx.WithGasMeter(sdk.NewInfiniteGasMeter()) // XXX
+	k.IterateAllTransientBalances(noGasCtx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
 		if coin.IsNegative() {
 			inputs = append(
 				inputs, banktypes.NewInput(addr, sdk.NewCoins(sdk.Coin{Denom: coin.Denom, Amount: coin.Amount.Neg()})))
