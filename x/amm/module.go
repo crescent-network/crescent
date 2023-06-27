@@ -20,6 +20,7 @@ import (
 
 	"github.com/crescent-network/crescent/v5/x/amm/client/cli"
 	"github.com/crescent-network/crescent/v5/x/amm/keeper"
+	"github.com/crescent-network/crescent/v5/x/amm/simulation"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -98,18 +99,21 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	keeper         keeper.Keeper
+	accountKeeper  types.AccountKeeper
+	bankKeeper     types.BankKeeper
+	exchangeKeeper types.ExchangeKeeper
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper) AppModule {
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+	exchangeKeeper types.ExchangeKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		exchangeKeeper: exchangeKeeper,
 	}
 }
 
@@ -142,6 +146,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // RegisterInvariants registers the module's invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // InitGenesis performs the module's genesis initialization.
@@ -175,19 +180,23 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 }
 
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
+	return simulation.ProposalContents(am.bankKeeper, am.keeper)
 }
 
 func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
+	return simulation.ParamChanges(r)
 }
 
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return nil
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.exchangeKeeper, am.keeper,
+	)
 }

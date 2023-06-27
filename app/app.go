@@ -691,7 +691,7 @@ func NewApp(
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper),
 		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.AccountKeeper, app.BankKeeper),
-		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper),
+		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper, app.ExchangeKeeper),
 		app.transferModule,
 		app.icaModule,
 	)
@@ -852,7 +852,7 @@ func NewApp(
 		lpfarm.NewAppModule(appCodec, app.LPFarmKeeper, app.AccountKeeper, app.BankKeeper, app.LiquidityKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper),
 		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.AccountKeeper, app.BankKeeper),
-		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper),
+		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper, app.ExchangeKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		app.transferModule,
 	)

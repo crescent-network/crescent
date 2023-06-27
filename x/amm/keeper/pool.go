@@ -16,7 +16,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 		return
 	}
 	if found := k.LookupPoolByMarket(ctx, market.Id); found {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot create more than one pool per  market")
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot create more than one pool per market")
 		return
 	}
 
