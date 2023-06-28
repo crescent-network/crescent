@@ -375,7 +375,7 @@ $ %s query %s collectible-coins --position-id=1
 		},
 	}
 	cmd.Flags().String(flagOwner, "", "Query the owner's collectible coins")
-	cmd.Flags().String(flagPositionId, "", "Query the position's collectible coins")
+	cmd.Flags().Uint64(flagPositionId, 0, "Query the position's collectible coins")
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
