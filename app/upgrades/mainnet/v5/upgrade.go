@@ -23,6 +23,8 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
+	liquidfarmingkeeper "github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
+	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	lpfarmkeeper "github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
@@ -46,7 +48,7 @@ func UpgradeHandler(
 	bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, liquidityKeeper liquiditykeeper.Keeper,
 	lpFarmKeeper lpfarmkeeper.Keeper, exchangeKeeper exchangekeeper.Keeper, ammKeeper ammkeeper.Keeper,
 	markerKeeper markerkeeper.Keeper, farmingKeeper farmingkeeper.Keeper, claimKeeper claimkeeper.Keeper,
-	disableUpgradeEvents bool) upgradetypes.UpgradeHandler {
+	liquidFarmingKeeper liquidfarmingkeeper.Keeper, disableUpgradeEvents bool) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
@@ -63,6 +65,7 @@ func UpgradeHandler(
 		exchangeKeeper.SetParams(ctx, exchangeParams)
 		ammParams := ammtypes.DefaultParams()
 		ammKeeper.SetParams(ctx, ammParams)
+		liquidFarmingKeeper.SetMaxNumRecentRewardsAuctions(ctx, liquidfarmingtypes.DefaultMaxNumRecentRewardsAuctions)
 
 		// Migrate farming plans and staked coins to the new amm module.
 
