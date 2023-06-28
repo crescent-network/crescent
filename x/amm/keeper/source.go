@@ -68,56 +68,101 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 }
 
 func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []exchangetypes.TempOrder) {
-	// TODO: check if results are sorted?
-	isBuy := results[0].Order.IsBuy
-
 	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()
 
+	// TODO: check if results are sorted?
+	isBuy := results[0].Order.IsBuy
+	firstOrderTick := exchangetypes.TickAtPrice(results[0].Order.Price)
+	var targetTick int32
+	foundTargetTick := false
+	if isBuy {
+		k.IterateTickInfosBelowInclusive(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+			if tick <= firstOrderTick {
+				targetTick = tick
+				foundTargetTick = true
+				return true
+			}
+			netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
+			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
+			poolState.CurrentTick = tick
+			poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
+			return false
+		})
+	} else {
+		k.IterateTickInfosAbove(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+			if tick >= firstOrderTick {
+				targetTick = tick
+				foundTargetTick = true
+				return true
+			}
+			netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
+			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
+			poolState.CurrentTick = tick
+			poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
+			return false
+		})
+	}
+	if !foundTargetTick { // sanity check
+		panic("no target tick")
+	}
+
+	max := false
 	for _, result := range results {
 		orderTick := exchangetypes.TickAtPrice(result.Order.Price)
-		if isBuy {
-			k.IterateTickInfosBelowInclusive(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+
+		targetPrice := exchangetypes.PriceAtTick(targetTick)
+		if isBuy && max && poolState.CurrentPrice.Equal(targetPrice) {
+			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
+			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
+			if poolState.CurrentLiquidity.IsNegative() {
+				panic("negative current liquidity")
+			}
+			foundTargetTick = false
+			k.IterateTickInfosBelow(ctx, pool.Id, targetTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if tick <= orderTick {
+					targetTick = tick
+					foundTargetTick = true
 					return true
 				}
-				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
+				netLiquidity = k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
+				if poolState.CurrentLiquidity.IsNegative() {
+					panic("negative current liquidity")
+				}
 				poolState.CurrentTick = tick
 				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
 				return false
 			})
-		} else {
-			k.IterateTickInfosAbove(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+			if !foundTargetTick { // Does this happen?
+				panic("1")
+			}
+		} else if !isBuy && max && poolState.CurrentPrice.Equal(targetPrice) {
+			foundTargetTick = false
+			k.IterateTickInfosAbove(ctx, pool.Id, targetTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if tick >= orderTick {
+					targetTick = tick
+					foundTargetTick = true
 					return true
 				}
 				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
+				if poolState.CurrentLiquidity.IsNegative() {
+					panic("negative current liquidity")
+				}
 				poolState.CurrentTick = tick
 				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
 				return false
 			})
+			if !foundTargetTick {
+				panic("2")
+			}
 		}
-
-		var targetTick int32
-		if isBuy {
-			k.IterateTickInfosBelow(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
-				targetTick = tick
-				return true
-			})
-		} else {
-			k.IterateTickInfosAbove(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
-				targetTick = tick
-				return true
-			})
-		}
-		targetPrice := exchangetypes.PriceAtTick(targetTick)
 
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
-		max := false
+		max = false
 		if result.Order.OpenQuantity.IsZero() { // Fully executed
 			nextSqrtPrice = utils.DecApproxSqrt(result.Order.Price)
 			nextPrice = result.Order.Price
@@ -164,6 +209,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		if !isBuy && max && nextPrice.Equal(targetPrice) {
 			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
+			if poolState.CurrentLiquidity.IsNegative() {
+				panic("negative current liquidity")
+			}
 		}
 		poolState.CurrentPrice = nextPrice
 		poolState.CurrentTick = exchangetypes.TickAtPrice(nextPrice)

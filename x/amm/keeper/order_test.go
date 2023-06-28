@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
-	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -14,8 +13,6 @@ import (
 func (s *KeeperTestSuite) TestOrderGas() {
 	currentPrice := utils.ParseDec("67.855")
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", currentPrice)
-	pool.TickSpacing = 50
-	s.keeper.SetPool(s.Ctx, pool)
 	poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	for _, info := range []struct {
@@ -47,16 +44,6 @@ func (s *KeeperTestSuite) TestOrderGas() {
 	}
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()
-	qtyLimit := sdk.NewInt(50_000000)
-	keeper.NewOrderSource(s.keeper).GenerateOrders(s.Ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error {
-		fmt.Println("createOrder", price, qty)
-		return nil
-	}, exchangetypes.GenerateOrdersOptions{
-		IsBuy:         false,
-		PriceLimit:    nil,
-		QuantityLimit: &qtyLimit,
-		QuoteLimit:    nil,
-	})
 	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(50_000000))
 	fmt.Println(s.Ctx.GasMeter().GasConsumed() - gasConsumedBefore)
 }

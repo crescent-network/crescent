@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -139,8 +137,6 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 				sellOrders = append(sellOrders, order{price, qty})
 				return false
 			})
-			fmt.Println(buyOrders)
-			fmt.Println(sellOrders)
 			s.Require().EqualValues(tc.buyOrders, buyOrders)
 			s.Require().EqualValues(tc.sellOrders, sellOrders)
 		})
