@@ -41,6 +41,11 @@
 | Type | Attribute Key | Attribute Value |
 |------|---------------|-----------------|
 
+### MsgCancelAllOrders
+
+| Type | Attribute Key | Attribute Value |
+|------|---------------|-----------------|
+
 ### MsgSwapExactAmountIn
 
 | Type | Attribute Key | Attribute Value |

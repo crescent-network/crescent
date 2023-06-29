@@ -15,6 +15,7 @@ var (
 	_ sdk.Msg = (*MsgPlaceMMBatchLimitOrder)(nil)
 	_ sdk.Msg = (*MsgPlaceMarketOrder)(nil)
 	_ sdk.Msg = (*MsgCancelOrder)(nil)
+	_ sdk.Msg = (*MsgCancelAllOrders)(nil)
 	_ sdk.Msg = (*MsgSwapExactAmountIn)(nil)
 )
 
@@ -27,6 +28,7 @@ const (
 	TypeMsgPlaceMMBatchLimitOrder = "place_mm_batch_limit_order"
 	TypeMsgPlaceMarketOrder       = "place_market_order"
 	TypeMsgCancelOrder            = "cancel_order"
+	TypeMsgCancelAllOrders        = "cancel_all_orders"
 	TypeMsgSwapExactAmountIn      = "swap_exact_amount_in"
 )
 
@@ -349,6 +351,38 @@ func (msg MsgCancelOrder) ValidateBasic() error {
 	}
 	if msg.OrderId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "order id must not be 0")
+	}
+	return nil
+}
+
+func NewMsgCancelAllOrders(senderAddr sdk.AccAddress, marketId uint64) *MsgCancelAllOrders {
+	return &MsgCancelAllOrders{
+		Sender:   senderAddr.String(),
+		MarketId: marketId,
+	}
+}
+
+func (msg MsgCancelAllOrders) Route() string { return RouterKey }
+func (msg MsgCancelAllOrders) Type() string  { return TypeMsgCancelAllOrders }
+
+func (msg MsgCancelAllOrders) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCancelAllOrders) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgCancelAllOrders) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if msg.MarketId == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
 	return nil
 }

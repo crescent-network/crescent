@@ -39,8 +39,7 @@ func CanCancelOrderInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllOrders(ctx, func(order types.Order) (stop bool) {
-			_, _, err := k.CancelOrder(ctx, order.MustGetOrdererAddress(), order.Id)
-			if err != nil {
+			if _, err := k.CancelOrder(ctx, order.MustGetOrdererAddress(), order.Id); err != nil {
 				msg += fmt.Sprintf("\tcannot cancel order %d: %v\n", order.Id, err)
 				cnt++
 			}

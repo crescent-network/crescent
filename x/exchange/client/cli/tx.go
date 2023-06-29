@@ -38,6 +38,7 @@ func GetTxCmd() *cobra.Command {
 		NewPlaceMMBatchLimitOrderCmd(),
 		NewPlaceMarketOrderCmd(),
 		NewCancelOrderCmd(),
+		NewCancelAllOrdersCmd(),
 		NewSwapExactAmountInCmd(),
 	)
 
@@ -330,6 +331,37 @@ $ %s tx %s cancel-order 1000 --from mykey
 				return fmt.Errorf("invalid order id: %w", err)
 			}
 			msg := types.NewMsgCancelOrder(clientCtx.GetFromAddress(), orderId)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewCancelAllOrdersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-all-orders [market-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Cancel all orders in a market placed by the sender",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Cancel all orders in a market placed by the sender.
+
+Example:
+$ %s tx %s cancel-all-orders 1 --from mykey
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			marketId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid market id: %w", err)
+			}
+			msg := types.NewMsgCancelAllOrders(clientCtx.GetFromAddress(), marketId)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

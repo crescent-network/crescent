@@ -45,10 +45,10 @@ func (s *TestSuite) PlaceMarketOrder(
 	return
 }
 
-func (s *TestSuite) CancelOrder(ordererAddr sdk.AccAddress, orderId uint64) (order exchangetypes.Order, refundedDeposit sdk.Coin) {
+func (s *TestSuite) CancelOrder(ordererAddr sdk.AccAddress, orderId uint64) (order exchangetypes.Order) {
 	s.T().Helper()
 	var err error
-	order, refundedDeposit, err = s.App.ExchangeKeeper.CancelOrder(s.Ctx, ordererAddr, orderId)
+	order, err = s.App.ExchangeKeeper.CancelOrder(s.Ctx, ordererAddr, orderId)
 	s.Require().NoError(err)
 	return
 }

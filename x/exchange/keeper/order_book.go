@@ -177,7 +177,7 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 				}
 				// Update user orders
 				if order.ExecutableQuantity(order.Price).IsZero() {
-					if _, err := k.cancelOrder(ctx, market, order.Order, true); err != nil {
+					if err := k.cancelOrder(ctx, market, order.Order, true); err != nil {
 						return err
 					}
 				} else {

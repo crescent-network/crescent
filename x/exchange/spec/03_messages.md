@@ -84,6 +84,15 @@ type MsgCancelOrder struct {
 }
 ```
 
+## MsgCancelAllOrders
+
+```go
+type MsgCancelAllOrders struct {
+    Sender   string
+    MarketId uint64
+}
+```
+
 ## MsgSwapExactAmountIn
 
 ```go

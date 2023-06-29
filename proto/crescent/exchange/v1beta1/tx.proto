@@ -18,6 +18,7 @@ service Msg {
   rpc PlaceMMBatchLimitOrder(MsgPlaceMMBatchLimitOrder) returns (MsgPlaceMMBatchLimitOrderResponse);
   rpc PlaceMarketOrder(MsgPlaceMarketOrder) returns (MsgPlaceMarketOrderResponse);
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+  rpc CancelAllOrders(MsgCancelAllOrders) returns (MsgCancelAllOrdersResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn) returns (MsgSwapExactAmountInResponse);
 }
 
@@ -111,9 +112,15 @@ message MsgCancelOrder {
   uint64 order_id = 2;
 }
 
-message MsgCancelOrderResponse {
-  cosmos.base.v1beta1.Coin refunded_deposit = 1
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+message MsgCancelOrderResponse {}
+
+message MsgCancelAllOrders {
+  string sender    = 1;
+  uint64 market_id = 2;
+}
+
+message MsgCancelAllOrdersResponse {
+  repeated uint64 cancelled_order_ids = 1;
 }
 
 message MsgSwapExactAmountIn {

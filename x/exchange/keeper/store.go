@@ -185,6 +185,32 @@ func (k Keeper) IterateOrdersByMarket(ctx sdk.Context, marketId uint64, cb func(
 	}
 }
 
+func (k Keeper) IterateOrdersByOrderer(ctx sdk.Context, ordererAddr sdk.AccAddress, cb func(order types.Order) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetOrdersByOrdererIteratorPrefix(ordererAddr))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, _, orderId := types.ParseOrdersByOrdererIndexKey(iter.Key())
+		order := k.MustGetOrder(ctx, orderId)
+		if cb(order) {
+			break
+		}
+	}
+}
+
+func (k Keeper) IterateOrdersByOrdererAndMarket(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64, cb func(order types.Order) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetOrdersByOrdererAndMarketIteratorPrefix(ordererAddr, marketId))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, _, orderId := types.ParseOrdersByOrdererIndexKey(iter.Key())
+		order := k.MustGetOrder(ctx, orderId)
+		if cb(order) {
+			break
+		}
+	}
+}
+
 func (k Keeper) DeleteOrder(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetOrderKey(order.Id))

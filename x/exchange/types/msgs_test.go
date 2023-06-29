@@ -529,6 +529,47 @@ func TestMsgCancelOrder(t *testing.T) {
 	}
 }
 
+func TestMsgCancelAllOrders(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		malleate    func(msg *types.MsgCancelAllOrders)
+		expectedErr string
+	}{
+		{
+			"valid",
+			func(msg *types.MsgCancelAllOrders) {},
+			"",
+		},
+		{
+			"invalid sender",
+			func(msg *types.MsgCancelAllOrders) {
+				msg.Sender = "invalidaddr"
+			},
+			"invalid sender address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"invalid market id",
+			func(msg *types.MsgCancelAllOrders) {
+				msg.MarketId = 0
+			},
+			"market id must not be 0: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := types.NewMsgCancelAllOrders(utils.TestAddress(1), 1)
+			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.TypeMsgCancelAllOrders, msg.Type())
+			tc.malleate(msg)
+			err := msg.ValidateBasic()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func TestMsgSwapExactAmountIn(t *testing.T) {
 	for _, tc := range []struct {
 		name        string

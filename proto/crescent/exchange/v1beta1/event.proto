@@ -81,10 +81,14 @@ message EventPlaceMarketOrder {
 }
 
 message EventCancelOrder {
-  string                   orderer          = 1;
-  uint64                   order_id         = 2;
-  cosmos.base.v1beta1.Coin refunded_deposit = 3
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+  string orderer  = 1;
+  uint64 order_id = 2;
+}
+
+message EventCancelAllOrders {
+  string          orderer             = 1;
+  uint64          market_id           = 2;
+  repeated uint64 cancelled_order_ids = 3;
 }
 
 message EventSwapExactAmountIn {

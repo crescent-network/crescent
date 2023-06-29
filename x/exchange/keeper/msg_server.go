@@ -106,14 +106,26 @@ func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMa
 
 func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, refundedDeposit, err := k.Keeper.CancelOrder(
+	_, err := k.Keeper.CancelOrder(
 		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.OrderId)
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgCancelOrderResponse{
-		RefundedDeposit: refundedDeposit,
-	}, nil
+	return &types.MsgCancelOrderResponse{}, nil
+}
+
+func (k msgServer) CancelAllOrders(goCtx context.Context, msg *types.MsgCancelAllOrders) (*types.MsgCancelAllOrdersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	orders, err := k.Keeper.CancelAllOrders(
+		ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.MarketId)
+	if err != nil {
+		return nil, err
+	}
+	var cancelledOrderIds []uint64
+	for _, order := range orders {
+		cancelledOrderIds = append(cancelledOrderIds, order.Id)
+	}
+	return &types.MsgCancelAllOrdersResponse{CancelledOrderIds: cancelledOrderIds}, nil
 }
 
 func (k msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
