@@ -417,6 +417,10 @@ func UpgradeHandler(
 			lpFarmKeeper.DeleteFarm(ctx, denom)
 			return false
 		})
+		lpFarmKeeper.IterateAllHistoricalRewards(ctx, func(denom string, period uint64, hist lpfarmtypes.HistoricalRewards) (stop bool) {
+			lpFarmKeeper.DeleteHistoricalRewards(ctx, denom, period)
+			return false
+		})
 
 		// Delete airdrops and claim records.
 		var airdrops []claimtypes.Airdrop
@@ -524,14 +528,14 @@ func UpgradeHandler(
 			panic("legacy position exists")
 		}
 		// No legacy historical rewards.
-		//ok = true
-		//lpFarmKeeper.IterateAllHistoricalRewards(ctx, func(denom string, period uint64, hist lpfarmtypes.HistoricalRewards) (stop bool) {
-		//	ok = false
-		//	return true
-		//})
-		//if !ok {
-		//	panic("legacy historical rewards exists")
-		//}
+		ok = true
+		lpFarmKeeper.IterateAllHistoricalRewards(ctx, func(denom string, period uint64, hist lpfarmtypes.HistoricalRewards) (stop bool) {
+			ok = false
+			return true
+		})
+		if !ok {
+			panic("legacy historical rewards exists")
+		}
 
 		return vm, nil
 	}
