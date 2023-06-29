@@ -52,7 +52,7 @@ func (k Keeper) EscrowCoin(
 func (k Keeper) EscrowCoins(
 	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins, queue bool) error {
 	if amt.IsAllPositive() {
-		escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
+		escrowAddr := market.MustGetEscrowAddress()
 		if queue {
 			return k.QueueSendCoins(ctx, addr, escrowAddr, amt)
 		}
@@ -69,7 +69,7 @@ func (k Keeper) ReleaseCoin(
 func (k Keeper) ReleaseCoins(
 	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins, queue bool) error {
 	if amt.IsAllPositive() {
-		escrowAddr := sdk.MustAccAddressFromBech32(market.EscrowAddress)
+		escrowAddr := market.MustGetEscrowAddress()
 		if queue {
 			return k.QueueSendCoins(ctx, escrowAddr, addr, amt)
 		}

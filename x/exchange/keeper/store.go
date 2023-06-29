@@ -38,6 +38,14 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketId uint64) (market types.Market
 	return market, true
 }
 
+func (k Keeper) MustGetMarket(ctx sdk.Context, marketId uint64) (market types.Market) {
+	market, found := k.GetMarket(ctx, marketId)
+	if !found {
+		panic("market not found")
+	}
+	return market
+}
+
 func (k Keeper) LookupMarket(ctx sdk.Context, marketId uint64) (found bool) {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(types.GetMarketKey(marketId))
@@ -138,6 +146,19 @@ func (k Keeper) GetOrder(ctx sdk.Context, orderId uint64) (order types.Order, fo
 	return order, true
 }
 
+func (k Keeper) MustGetOrder(ctx sdk.Context, orderId uint64) (order types.Order) {
+	order, found := k.GetOrder(ctx, orderId)
+	if !found {
+		panic("order not found")
+	}
+	return order
+}
+
+func (k Keeper) LookupOrder(ctx sdk.Context, orderId uint64) (found bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.GetOrderKey(orderId))
+}
+
 func (k Keeper) IterateAllOrders(ctx sdk.Context, cb func(order types.Order) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.OrderKeyPrefix)
@@ -157,10 +178,7 @@ func (k Keeper) IterateOrdersByMarket(ctx sdk.Context, marketId uint64, cb func(
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		orderId := sdk.BigEndianToUint64(iter.Value())
-		order, found := k.GetOrder(ctx, orderId)
-		if !found { // sanity check
-			panic("order not found")
-		}
+		order := k.MustGetOrder(ctx, orderId)
 		if cb(order) {
 			break
 		}
@@ -179,26 +197,34 @@ func (k Keeper) SetOrderBookOrder(ctx sdk.Context, order types.Order) {
 		sdk.Uint64ToBigEndian(order.Id))
 }
 
-func (k Keeper) IterateOrderBook(ctx sdk.Context, marketId uint64, cb func(order types.Order) (stop bool)) {
-	k.IterateOrderBookSide(ctx, marketId, false, cb)
-	k.IterateOrderBookSide(ctx, marketId, true, cb)
+func (k Keeper) LookupOrderBookOrder(ctx sdk.Context, marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) (found bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.GetOrderBookOrderKey(marketId, isBuy, price, orderId))
 }
 
-func (k Keeper) IterateOrderBookSide(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.Order) (stop bool)) {
+func (k Keeper) IterateOrderBook(ctx sdk.Context, marketId uint64, cb func(order types.Order) (stop bool)) {
+	k.IterateOrderBookSide(ctx, marketId, false, true, cb)
+	k.IterateOrderBookSide(ctx, marketId, true, false, cb)
+}
+
+func (k Keeper) IterateOrderBookSide(ctx sdk.Context, marketId uint64, isBuy, reverse bool, cb func(order types.Order) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
+	var iterPrefix []byte
 	if isBuy {
-		iter = sdk.KVStoreReversePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, true))
+		iterPrefix = types.GetOrderBookIteratorPrefix(marketId, true)
 	} else {
-		iter = sdk.KVStorePrefixIterator(store, types.GetOrderBookIteratorPrefix(marketId, false))
+		iterPrefix = types.GetOrderBookIteratorPrefix(marketId, false)
+	}
+	if isBuy != reverse { // (isBuy && !reverse) || (!isBuy && reverse)
+		iter = sdk.KVStoreReversePrefixIterator(store, iterPrefix)
+	} else { // (isBuy && reverse) || (!isBuy && !reverse)
+		iter = sdk.KVStorePrefixIterator(store, iterPrefix)
 	}
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		orderId := sdk.BigEndianToUint64(iter.Value())
-		order, found := k.GetOrder(ctx, orderId)
-		if !found { // sanity check
-			panic("order not found")
-		}
+		order := k.MustGetOrder(ctx, orderId)
 		if cb(order) {
 			break
 		}
@@ -213,14 +239,14 @@ func (k Keeper) DeleteOrderBookOrder(ctx sdk.Context, order types.Order) {
 
 func (k Keeper) SetOrdersByOrdererIndex(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
-	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
-	store.Set(types.GetOrdersByOrdererIndexKey(ordererAddr, order.MarketId, order.Id), []byte{})
+	store.Set(
+		types.GetOrdersByOrdererIndexKey(order.MustGetOrdererAddress(), order.MarketId, order.Id), []byte{})
 }
 
 func (k Keeper) DeleteOrdersByOrdererIndex(ctx sdk.Context, order types.Order) {
 	store := ctx.KVStore(k.storeKey)
-	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
-	store.Delete(types.GetOrdersByOrdererIndexKey(ordererAddr, order.MarketId, order.Id))
+	store.Delete(
+		types.GetOrdersByOrdererIndexKey(order.MustGetOrdererAddress(), order.MarketId, order.Id))
 }
 
 func (k Keeper) GetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64) (num uint32, found bool) {

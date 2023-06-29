@@ -70,3 +70,7 @@ func (order Order) ExecutableQuantity(price sdk.Dec) sdk.Int {
 	}
 	return utils.MinInt(order.OpenQuantity, order.RemainingDeposit)
 }
+
+func (order Order) MustGetOrdererAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(order.Orderer)
+}

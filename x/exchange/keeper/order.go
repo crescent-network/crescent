@@ -236,10 +236,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, orderId
 			sdkerrors.ErrInvalidRequest, "cannot cancel order placed in the same block")
 		return
 	}
-	market, found := k.GetMarket(ctx, order.MarketId)
-	if !found { // sanity check
-		panic("market not found")
-	}
+	market := k.MustGetMarket(ctx, order.MarketId)
 	if ordererAddr.String() != order.Orderer {
 		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "order is not created by the sender")
 		return
@@ -259,7 +256,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, orderId
 }
 
 func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Order, queueSend bool) (refundedDeposit sdk.Coin, err error) {
-	ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
+	ordererAddr := order.MustGetOrdererAddress()
 	refundedDeposit = market.DepositCoin(order.IsBuy, order.RemainingDeposit)
 	if err = k.ReleaseCoin(
 		ctx, market, ordererAddr, refundedDeposit, queueSend); err != nil {

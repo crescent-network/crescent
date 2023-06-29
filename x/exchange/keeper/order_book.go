@@ -99,7 +99,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 	accQuote := utils.ZeroInt
 	// TODO: adjust price limit
 	obs := types.NewTempOrderBookSide(isBuy)
-	k.IterateOrderBookSide(ctx, market.Id, isBuy, func(order types.Order) (stop bool) {
+	k.IterateOrderBookSide(ctx, market.Id, isBuy, false, func(order types.Order) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Price.LT(*priceLimit)) ||
 				(!isBuy && order.Price.GT(*priceLimit))) {
@@ -152,7 +152,7 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 			resultsBySourceName[sourceName] = append(results, *order)
 		}
 
-		ordererAddr := sdk.MustAccAddressFromBech32(order.Orderer)
+		ordererAddr := order.MustGetOrdererAddress()
 		if order.IsUpdated {
 			if err := k.ReleaseCoins(ctx, market, ordererAddr, order.Received, true); err != nil {
 				return err

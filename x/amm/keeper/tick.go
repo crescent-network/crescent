@@ -40,14 +40,8 @@ func (k Keeper) updateTick(
 func (k Keeper) feeGrowthInside(
 	ctx sdk.Context, poolId uint64, lowerTick, upperTick, currentTick int32,
 	feeGrowthGlobal sdk.DecCoins) (feeGrowthInside sdk.DecCoins) {
-	lower, found := k.GetTickInfo(ctx, poolId, lowerTick)
-	if !found { // sanity check
-		panic("lower tick info not found")
-	}
-	upper, found := k.GetTickInfo(ctx, poolId, upperTick)
-	if !found { // sanity check
-		panic("upper tick info not found")
-	}
+	lower := k.MustGetTickInfo(ctx, poolId, lowerTick)
+	upper := k.MustGetTickInfo(ctx, poolId, upperTick)
 
 	var feeGrowthBelow sdk.DecCoins
 	if currentTick >= lowerTick {
@@ -70,14 +64,8 @@ func (k Keeper) feeGrowthInside(
 func (k Keeper) farmingRewardsGrowthInside(
 	ctx sdk.Context, poolId uint64, lowerTick, upperTick, currentTick int32,
 	farmingRewardsGrowthGlobal sdk.DecCoins) sdk.DecCoins {
-	lower, found := k.GetTickInfo(ctx, poolId, lowerTick)
-	if !found { // sanity check
-		panic("lower tick info not found")
-	}
-	upper, found := k.GetTickInfo(ctx, poolId, upperTick)
-	if !found { // sanity check
-		panic("upper tick info not found")
-	}
+	lower := k.MustGetTickInfo(ctx, poolId, lowerTick)
+	upper := k.MustGetTickInfo(ctx, poolId, upperTick)
 
 	var rewardsGrowthBelow sdk.DecCoins
 	if currentTick >= lowerTick {
@@ -95,10 +83,7 @@ func (k Keeper) farmingRewardsGrowthInside(
 }
 
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, poolState types.PoolState) (netLiquidity sdk.Int) {
-	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
-	if !found { // sanity check
-		panic("tick info not found")
-	}
+	tickInfo := k.MustGetTickInfo(ctx, poolId, tick)
 	tickInfo.FeeGrowthOutside, _ = poolState.FeeGrowthGlobal.SafeSub(tickInfo.FeeGrowthOutside)
 	tickInfo.FarmingRewardsGrowthOutside, _ = poolState.FarmingRewardsGrowthGlobal.SafeSub(tickInfo.FarmingRewardsGrowthOutside)
 	k.SetTickInfo(ctx, poolId, tick, tickInfo)

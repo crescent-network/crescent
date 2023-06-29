@@ -50,11 +50,7 @@ func (k Querier) AllPools(c context.Context, req *types.QueryAllPoolsRequest) (*
 		}
 		keyPrefix = types.GetPoolByMarketIndexKey(req.MarketId)
 		poolGetter = func(_, value []byte) types.Pool {
-			pool, found := k.GetPool(ctx, sdk.BigEndianToUint64(value))
-			if !found { // sanity check
-				panic("pool not found")
-			}
-			return pool
+			return k.MustGetPool(ctx, sdk.BigEndianToUint64(value))
 		}
 	} else {
 		keyPrefix = types.PoolKeyPrefix
@@ -117,11 +113,7 @@ func (k Querier) AllPositions(c context.Context, req *types.QueryAllPositionsReq
 		positionGetter func(key, value []byte) types.Position
 	)
 	getPositionFromPositionByParamsIndexKey := func(_, value []byte) types.Position {
-		position, found := k.GetPosition(ctx, sdk.BigEndianToUint64(value))
-		if !found { // sanity check
-			panic("position not found")
-		}
-		return position
+		return k.MustGetPosition(ctx, sdk.BigEndianToUint64(value))
 	}
 	if req.PoolId > 0 && req.Owner != "" {
 		keyPrefix = types.GetPositionsByPoolAndOwnerIteratorPrefix(ownerAddr, req.PoolId)
@@ -130,10 +122,7 @@ func (k Querier) AllPositions(c context.Context, req *types.QueryAllPositionsReq
 		keyPrefix = types.GetPositionsByPoolIteratorPrefix(req.PoolId)
 		positionGetter = func(key, _ []byte) types.Position {
 			_, positionId := types.ParsePositionsByPoolIndexKey(utils.Key(keyPrefix, key))
-			position, found := k.GetPosition(ctx, positionId)
-			if !found { // sanity check
-				panic("position not found")
-			}
+			position := k.MustGetPosition(ctx, positionId)
 			return position
 		}
 	} else if req.Owner != "" {
@@ -417,6 +406,6 @@ func (k Querier) FarmingPlan(c context.Context, req *types.QueryFarmingPlanReque
 
 func (k Querier) MakePoolResponse(ctx sdk.Context, pool types.Pool) types.PoolResponse {
 	poolState := k.MustGetPoolState(ctx, pool.Id)
-	balances := k.bankKeeper.SpendableCoins(ctx, sdk.MustAccAddressFromBech32(pool.ReserveAddress))
+	balances := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress())
 	return types.NewPoolResponse(pool, poolState, balances)
 }

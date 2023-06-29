@@ -175,10 +175,7 @@ func (k Keeper) AllocateFarmingRewards(ctx sdk.Context) error {
 			// TODO: allocate sdk.DecCoins instead of sdk.Coins in future
 			truncatedRewards, _ := rewards.TruncateDecimal()
 			if truncatedRewards.IsAllPositive() {
-				pool, found := k.GetPool(ctx, rewardAlloc.PoolId)
-				if !found { // sanity check
-					panic("pool not found")
-				}
+				pool := k.MustGetPool(ctx, rewardAlloc.PoolId)
 				poolState := k.MustGetPoolState(ctx, pool.Id)
 				if !poolState.CurrentLiquidity.IsPositive() {
 					continue

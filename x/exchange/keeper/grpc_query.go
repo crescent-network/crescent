@@ -90,11 +90,7 @@ func (k Querier) AllOrders(c context.Context, req *types.QueryAllOrdersRequest) 
 	)
 	getOrderFromOrdersByOrdererIndexKey := func(key, _ []byte) types.Order {
 		_, _, orderId := types.ParseOrdersByOrdererIndexKey(utils.Key(keyPrefix, key))
-		order, found := k.GetOrder(ctx, orderId)
-		if !found { // sanity check
-			panic("order not found")
-		}
-		return order
+		return k.MustGetOrder(ctx, orderId)
 	}
 	if req.Orderer != "" && req.MarketId > 0 {
 		keyPrefix = types.GetOrdersByOrdererAndMarketIteratorPrefix(ordererAddr, req.MarketId)
@@ -105,11 +101,7 @@ func (k Querier) AllOrders(c context.Context, req *types.QueryAllOrdersRequest) 
 	} else if req.MarketId > 0 {
 		keyPrefix = types.GetOrdersByMarketIteratorPrefix(req.MarketId)
 		orderGetter = func(_, value []byte) types.Order {
-			order, found := k.GetOrder(ctx, sdk.BigEndianToUint64(value))
-			if !found { // sanity check
-				panic("order not found")
-			}
-			return order
+			return k.MustGetOrder(ctx, sdk.BigEndianToUint64(value))
 		}
 	} else {
 		keyPrefix = types.OrderKeyPrefix

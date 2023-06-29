@@ -12,11 +12,11 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load
 	// on the other side.
 	var bestBuyPrice, bestSellPrice sdk.Dec
-	k.IterateOrderBookSide(ctx, market.Id, true, func(order types.Order) (stop bool) {
+	k.IterateOrderBookSide(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
 		bestBuyPrice = order.Price
 		return true
 	})
-	k.IterateOrderBookSide(ctx, market.Id, false, func(order types.Order) (stop bool) {
+	k.IterateOrderBookSide(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
 		bestSellPrice = order.Price
 		return true
 	})

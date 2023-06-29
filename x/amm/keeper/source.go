@@ -59,16 +59,13 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 	orderers, m := exchangetypes.GroupTempOrderResultsByOrderer(results)
 	for _, orderer := range orderers {
 		ordererAddr := sdk.MustAccAddressFromBech32(orderer)
-		pool, found := k.GetPoolByReserveAddress(ctx, ordererAddr)
-		if !found { // sanity check
-			panic("pool not found")
-		}
+		pool := k.MustGetPoolByReserveAddress(ctx, ordererAddr)
 		k.AfterPoolOrdersExecuted(ctx, pool, m[orderer])
 	}
 }
 
 func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []exchangetypes.TempOrder) {
-	reserveAddr := sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+	reserveAddr := pool.MustGetReserveAddress()
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()
 

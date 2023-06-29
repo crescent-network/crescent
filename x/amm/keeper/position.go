@@ -60,7 +60,7 @@ func (k Keeper) AddLiquidity(
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	if err = k.bankKeeper.SendCoins(
-		ctx, fromAddr, sdk.MustAccAddressFromBech32(pool.ReserveAddress), amt); err != nil {
+		ctx, fromAddr, pool.MustGetReserveAddress(), amt); err != nil {
 		return
 	}
 
@@ -95,10 +95,7 @@ func (k Keeper) RemoveLiquidity(
 		return
 	}
 
-	pool, found := k.GetPool(ctx, position.PoolId)
-	if !found { // sanity check
-		panic("pool not found")
-	}
+	pool := k.MustGetPool(ctx, position.PoolId)
 
 	var amt0, amt1 sdk.Int
 	position, amt0, amt1 = k.modifyPosition(

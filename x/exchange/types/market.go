@@ -85,6 +85,10 @@ func (market Market) PayReceiveDenoms(isBuy bool) (payDenom, receiveDenom string
 	return market.BaseDenom, market.QuoteDenom
 }
 
+func (market Market) MustGetEscrowAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(market.EscrowAddress)
+}
+
 func NewMarketState(lastPrice *sdk.Dec) MarketState {
 	return MarketState{
 		LastPrice: lastPrice,

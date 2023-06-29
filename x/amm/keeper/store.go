@@ -69,6 +69,14 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (pool types.Pool, found 
 	return pool, true
 }
 
+func (k Keeper) MustGetPool(ctx sdk.Context, poolId uint64) (pool types.Pool) {
+	pool, found := k.GetPool(ctx, poolId)
+	if !found {
+		panic("pool not found")
+	}
+	return pool
+}
+
 func (k Keeper) LookupPool(ctx sdk.Context, poolId uint64) (found bool) {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(types.GetPoolKey(poolId))
@@ -108,6 +116,14 @@ func (k Keeper) GetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddr
 	return k.GetPool(ctx, sdk.BigEndianToUint64(bz))
 }
 
+func (k Keeper) MustGetPoolByReserveAddress(ctx sdk.Context, reserveAddr sdk.AccAddress) (pool types.Pool) {
+	pool, found := k.GetPoolByReserveAddress(ctx, reserveAddr)
+	if !found {
+		panic("pool not found")
+	}
+	return pool
+}
+
 func (k Keeper) DeletePool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetPoolKey(pool.Id))
@@ -116,14 +132,14 @@ func (k Keeper) DeletePool(ctx sdk.Context, pool types.Pool) {
 func (k Keeper) SetPoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(
-		types.GetPoolByReserveAddressIndexKey(sdk.MustAccAddressFromBech32(pool.ReserveAddress)),
+		types.GetPoolByReserveAddressIndexKey(pool.MustGetReserveAddress()),
 		sdk.Uint64ToBigEndian(pool.Id))
 }
 
 func (k Keeper) DeletePoolByReserveAddressIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(
-		types.GetPoolByReserveAddressIndexKey(sdk.MustAccAddressFromBech32(pool.ReserveAddress)))
+		types.GetPoolByReserveAddressIndexKey(pool.MustGetReserveAddress()))
 }
 
 func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop bool)) {
@@ -178,6 +194,14 @@ func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (position types.
 	return position, true
 }
 
+func (k Keeper) MustGetPosition(ctx sdk.Context, positionId uint64) (position types.Position) {
+	position, found := k.GetPosition(ctx, positionId)
+	if !found {
+		panic("position not found")
+	}
+	return position
+}
+
 func (k Keeper) GetPositionByParams(ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32) (position types.Position, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPositionByParamsIndexKey(ownerAddr, poolId, lowerTick, upperTick))
@@ -225,10 +249,7 @@ func (k Keeper) IteratePositionsByPool(ctx sdk.Context, poolId uint64, cb func(p
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		_, positionId := types.ParsePositionsByPoolIndexKey(iter.Key())
-		position, found := k.GetPosition(ctx, positionId)
-		if !found { // sanity check
-			panic("position not found")
-		}
+		position := k.MustGetPosition(ctx, positionId)
 		if cb(position) {
 			break
 		}
@@ -241,10 +262,7 @@ func (k Keeper) IteratePositionsByOwner(ctx sdk.Context, ownerAddr sdk.AccAddres
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		positionId := sdk.BigEndianToUint64(iter.Value())
-		position, found := k.GetPosition(ctx, positionId)
-		if !found { // sanity check
-			panic("position not found")
-		}
+		position := k.MustGetPosition(ctx, positionId)
 		if cb(position) {
 			break
 		}
@@ -264,6 +282,14 @@ func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tick int32) (tickInf
 	}
 	k.cdc.MustUnmarshal(bz, &tickInfo)
 	return tickInfo, true
+}
+
+func (k Keeper) MustGetTickInfo(ctx sdk.Context, poolId uint64, tick int32) (tickInfo types.TickInfo) {
+	tickInfo, found := k.GetTickInfo(ctx, poolId, tick)
+	if !found {
+		panic("tick info not found")
+	}
+	return tickInfo
 }
 
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tick int32, tickInfo types.TickInfo) {
