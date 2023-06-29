@@ -22,7 +22,7 @@ var (
 
 var (
 	DefaultFees = Fees{
-		MarketCreationFee:   sdk.NewCoins(),
+		MarketCreationFee:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)),
 		DefaultMakerFeeRate: sdk.NewDecWithPrec(-15, 4), // -0.15%
 		DefaultTakerFeeRate: sdk.NewDecWithPrec(3, 3),   // 0.3%
 	}

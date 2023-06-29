@@ -13,7 +13,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetLastPoolId(ctx, genState.LastPoolId)
 	}
 	if genState.LastPositionId > 0 {
-		k.SetLastPoolId(ctx, genState.LastPositionId)
+		k.SetLastPositionId(ctx, genState.LastPositionId)
 	}
 	for _, poolRecord := range genState.PoolRecords {
 		k.SetPool(ctx, poolRecord.Pool)

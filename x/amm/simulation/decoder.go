@@ -48,7 +48,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &tB)
 			return fmt.Sprintf("%v\n%v", tA, tB)
 
-		case bytes.Equal(kvA.Key[:1], types.LastFarmingPlanIdKey):
+		case bytes.Equal(kvA.Key, types.LastFarmingPlanIdKey):
 			idA := sdk.BigEndianToUint64(kvA.Value)
 			idB := sdk.BigEndianToUint64(kvB.Value)
 			return fmt.Sprintf("%d\n%d", idA, idB)

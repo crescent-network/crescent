@@ -24,9 +24,9 @@ var (
 )
 
 var (
-	DefaultPoolCreationFee               = sdk.NewCoins()
+	DefaultPoolCreationFee               = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultDefaultTickSpacing            = uint32(50)
-	DefaultPrivateFarmingPlanCreationFee = sdk.NewCoins()
+	DefaultPrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultMaxNumPrivateFarmingPlans     = uint32(50)
 	DefaultMaxFarmingBlockTime           = 10 * time.Second
 
