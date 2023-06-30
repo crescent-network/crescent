@@ -3,6 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -20,10 +22,12 @@ func (k Keeper) SwapExactAmountIn(
 		if !currentIn.Amount.IsPositive() {
 			return output, nil, sdkerrors.Wrap(types.ErrSwapNotEnoughInput, currentIn.String())
 		}
-		balances := k.bankKeeper.SpendableCoins(ctx, ordererAddr)
-		if balance := balances.AmountOf(currentIn.Denom); balance.LT(currentIn.Amount) {
-			return output, nil, sdkerrors.Wrapf(
-				sdkerrors.ErrInsufficientFunds, "%s%s < %s", balance, currentIn.Denom, currentIn)
+		if !simulate {
+			balances := k.bankKeeper.SpendableCoins(ctx, ordererAddr)
+			if balance := balances.AmountOf(currentIn.Denom); balance.LT(currentIn.Amount) {
+				return output, nil, sdkerrors.Wrapf(
+					sdkerrors.ErrInsufficientFunds, "%s%s < %s", balance, currentIn.Denom, currentIn)
+			}
 		}
 		market, found := k.GetMarket(ctx, marketId)
 		if !found {
@@ -104,7 +108,10 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRou
 	var backtrack func(currentDenom string)
 	// TODO: prevent stack overflow?
 	backtrack = func(currentDenom string) {
-		for denom, marketId := range denomMap[currentDenom] {
+		denoms := maps.Keys(denomMap[currentDenom])
+		slices.Sort(denoms)
+		for _, denom := range denoms {
+			marketId := denomMap[currentDenom][denom]
 			if _, ok := visited[marketId]; !ok {
 				if denom == toDenom {
 					routes := make([]uint64, len(currentRoutes), len(currentRoutes)+1)
