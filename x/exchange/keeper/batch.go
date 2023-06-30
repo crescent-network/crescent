@@ -29,12 +29,12 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	// Construct TempOrderBookSides with the price limits we obtained previously.
 	var buyObs, sellObs *types.TempOrderBookSide
 	if !bestSellPrice.IsNil() {
-		buyObs = k.ConstructTempOrderBookSide(ctx, market, true, &bestSellPrice, nil, nil)
+		buyObs = k.ConstructTempOrderBookSide(ctx, market, true, &bestSellPrice, nil, nil, 0)
 	} else {
 		buyObs = types.NewTempOrderBookSide(true)
 	}
 	if !bestBuyPrice.IsNil() {
-		sellObs = k.ConstructTempOrderBookSide(ctx, market, false, &bestBuyPrice, nil, nil)
+		sellObs = k.ConstructTempOrderBookSide(ctx, market, false, &bestBuyPrice, nil, nil, 0)
 	} else {
 		sellObs = types.NewTempOrderBookSide(false)
 	}

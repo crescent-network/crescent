@@ -9,21 +9,34 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-const (
-	TickPrecision = 4
-)
+const TickPrecision = 4
+
+var p = int(math.Pow10(TickPrecision))
+
+// char returns the characteristic(integral part) of
+// log10(x).
+func char(x *big.Int) int {
+	if x.Sign() == 0 {
+		panic("cannot calculate char for 0")
+	}
+	return len(x.Text(10)) - 1
+}
+
+// pow10 returns pow(10, n)
+func pow10(n int) *big.Int {
+	ten := big.NewInt(10)
+	return ten.Exp(ten, big.NewInt(int64(n)), nil)
+}
 
 func ValidateTickPrice(price sdk.Dec) (tick int32, valid bool) {
 	if !price.IsPositive() {
 		panic("price must be positive")
 	}
 	b := price.BigInt()
-	c := int32(len(b.Text(10)) - 1) // characteristic of b
-	ten := big.NewInt(10)
-	q, r := b.QuoRem(b, ten.Exp(ten, big.NewInt(int64(c-TickPrecision)), nil), new(big.Int))
+	c := char(b)
+	q, r := b.QuoRem(b, pow10(c-TickPrecision), new(big.Int))
 	i := int32(q.Int64())
-	pow10 := int32(math.Pow10(TickPrecision))
-	tick = (i - pow10) + 9*pow10*(c-sdk.Precision)
+	tick = (i - int32(p)) + 9*int32(p)*(int32(c)-sdk.Precision)
 	if r.Sign() == 0 {
 		valid = true
 	}
@@ -31,18 +44,27 @@ func ValidateTickPrice(price sdk.Dec) (tick int32, valid bool) {
 }
 
 func PriceAtTick(tick int32) sdk.Dec {
-	pow10 := int(math.Pow10(TickPrecision))
-	q, r := utils.DivMod(int(tick), 9*pow10)
+	q, r := utils.DivMod(int(tick), 9*p)
 	//if q < prec-sdk.Precision {
 	//	panic("price underflow")
 	//}
 	return sdk.NewDecFromIntWithPrec(
-		sdk.NewIntWithDecimal(int64(pow10+r), sdk.Precision+q-TickPrecision), sdk.Precision)
+		sdk.NewIntWithDecimal(int64(p+r), sdk.Precision+q-TickPrecision), sdk.Precision)
 }
 
 func TickAtPrice(price sdk.Dec) int32 {
 	tick, _ := ValidateTickPrice(price)
 	return tick
+}
+
+func PriceIntervalAtTick(tick int32) sdk.Dec {
+	q, _ := utils.DivMod(int(tick), 9*p)
+	return sdk.NewDecFromIntWithPrec(sdk.NewIntWithDecimal(1, sdk.Precision+q-TickPrecision), sdk.Precision)
+
+	//price := PriceAtTick(tick)
+	//b := price.BigInt()
+	//c := char(b)
+	//return sdk.NewDecFromBigIntWithPrec(pow10(c-4), sdk.Precision)
 }
 
 // RoundTick returns rounded tick using banker's rounding.

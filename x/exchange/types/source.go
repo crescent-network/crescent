@@ -13,10 +13,11 @@ type OrderSource interface {
 type CreateOrderFunc func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error
 
 type GenerateOrdersOptions struct {
-	IsBuy         bool
-	PriceLimit    *sdk.Dec
-	QuantityLimit *sdk.Int
-	QuoteLimit    *sdk.Int
+	IsBuy             bool
+	PriceLimit        *sdk.Dec
+	QuantityLimit     *sdk.Int
+	QuoteLimit        *sdk.Int
+	MaxNumPriceLevels int
 }
 
 func GroupTempOrderResultsByOrderer(results []TempOrder) (orderers []string, m map[string][]TempOrder) {

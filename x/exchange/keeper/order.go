@@ -219,6 +219,7 @@ func (k Keeper) newOrder(
 	order := types.NewOrder(
 		orderId, typ, ordererAddr, market.Id, isBuy, price, qty,
 		msgHeight, openQty, deposit, deadline)
+	// TODO: escrow deposit later?
 	if err := k.EscrowCoin(ctx, market, ordererAddr, market.DepositCoin(isBuy, deposit), isTemp); err != nil {
 		return order, err
 	}

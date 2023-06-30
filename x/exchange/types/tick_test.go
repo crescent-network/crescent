@@ -95,3 +95,21 @@ func TestRoundTick(t *testing.T) {
 		})
 	}
 }
+
+func TestPriceIntervalAtTick(t *testing.T) {
+	for i, tc := range []struct {
+		tick     int32
+		expected sdk.Dec
+	}{
+		{0, utils.ParseDec("0.0001")},           // 1.0000
+		{1, utils.ParseDec("0.0001")},           // 1.0001
+		{90000, utils.ParseDec("0.001")},        // 10.000
+		{-230000, utils.ParseDec("0.0000001")},  // 0.0050000
+		{1234567, utils.ParseDec("1000000000")}, // 74567000000000
+	} {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			res := types.PriceIntervalAtTick(tc.tick)
+			require.Equal(t, tc.expected.String(), res.String())
+		})
+	}
+}

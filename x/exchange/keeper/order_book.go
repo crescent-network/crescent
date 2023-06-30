@@ -23,7 +23,7 @@ func (k Keeper) executeOrder(
 	totalPaid = sdk.NewCoin(payDenom, utils.ZeroInt)
 	totalReceived = sdk.NewCoin(receiveDenom, utils.ZeroInt)
 	totalFee = sdk.NewCoin(receiveDenom, utils.ZeroInt)
-	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit)
+	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0)
 	for _, level := range obs.Levels {
 		if priceLimit != nil &&
 			((isBuy && level.Price.GT(*priceLimit)) ||
@@ -62,11 +62,13 @@ func (k Keeper) executeOrder(
 			received = sdk.NewCoin(market.QuoteDenom, deductedQuote)
 			fee = sdk.NewCoin(market.QuoteDenom, feeQuote)
 		}
-		if err = k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
-			return
-		}
-		if err = k.ReleaseCoin(ctx, market, ordererAddr, received, true); err != nil {
-			return
+		if !simulate {
+			if err = k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
+				return
+			}
+			if err = k.ReleaseCoin(ctx, market, ordererAddr, received, true); err != nil {
+				return
+			}
 		}
 		totalExecQty = totalExecQty.Add(execQty)
 		totalExecQuote = totalExecQuote.Add(execQuote)
@@ -94,11 +96,12 @@ func (k Keeper) executeOrder(
 
 func (k Keeper) ConstructTempOrderBookSide(
 	ctx sdk.Context, market types.Market, isBuy bool,
-	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int) *types.TempOrderBookSide {
+	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, maxNumPriceLevels int) *types.TempOrderBookSide {
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
 	// TODO: adjust price limit
 	obs := types.NewTempOrderBookSide(isBuy)
+	numPriceLevels := 0
 	k.IterateOrderBookSide(ctx, market.Id, isBuy, false, func(order types.Order) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Price.LT(*priceLimit)) ||
@@ -114,6 +117,12 @@ func (k Keeper) ConstructTempOrderBookSide(
 		obs.AddOrder(types.NewTempOrder(order, market, nil))
 		accQty = accQty.Add(order.OpenQuantity)
 		accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
+		if maxNumPriceLevels > 0 {
+			numPriceLevels++
+			if numPriceLevels >= maxNumPriceLevels {
+				return true
+			}
+		}
 		return false
 	})
 	for _, name := range k.sourceNames {
@@ -130,11 +139,19 @@ func (k Keeper) ConstructTempOrderBookSide(
 			obs.AddOrder(types.NewTempOrder(order, market, source))
 			return nil
 		}, types.GenerateOrdersOptions{
-			IsBuy:         isBuy,
-			PriceLimit:    priceLimit,
-			QuantityLimit: qtyLimit,
-			QuoteLimit:    quoteLimit,
+			IsBuy:             isBuy,
+			PriceLimit:        priceLimit,
+			QuantityLimit:     qtyLimit,
+			QuoteLimit:        quoteLimit,
+			MaxNumPriceLevels: maxNumPriceLevels,
 		})
+	}
+	if maxNumPriceLevels > 0 {
+		bound := len(obs.Levels)
+		if maxNumPriceLevels < bound {
+			bound = maxNumPriceLevels
+		}
+		obs.Levels = obs.Levels[:bound]
 	}
 	return obs
 }

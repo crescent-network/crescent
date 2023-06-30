@@ -10770,6 +10770,74 @@ paths:
           format: uint64
       tags:
         - Query
+  '/crescent/exchange/v1beta1/markets/{market_id}/order_book':
+    get:
+      operationId: OrderBook
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              order_books:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    price_interval:
+                      type: string
+                    sells:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          p:
+                            type: string
+                            title: p denotes price
+                          q:
+                            type: string
+                            title: q denotes quantity
+                    buys:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          p:
+                            type: string
+                            title: p denotes price
+                          q:
+                            type: string
+                            title: q denotes quantity
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: market_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /crescent/exchange/v1beta1/orders:
     get:
       operationId: AllOrders
@@ -18363,6 +18431,42 @@ definitions:
       deadline:
         type: string
         format: date-time
+  crescent.exchange.v1beta1.OrderBook:
+    type: object
+    properties:
+      price_interval:
+        type: string
+      sells:
+        type: array
+        items:
+          type: object
+          properties:
+            p:
+              type: string
+              title: p denotes price
+            q:
+              type: string
+              title: q denotes quantity
+      buys:
+        type: array
+        items:
+          type: object
+          properties:
+            p:
+              type: string
+              title: p denotes price
+            q:
+              type: string
+              title: q denotes quantity
+  crescent.exchange.v1beta1.OrderBookPriceLevel:
+    type: object
+    properties:
+      p:
+        type: string
+        title: p denotes price
+      q:
+        type: string
+        title: q denotes quantity
   crescent.exchange.v1beta1.OrderType:
     type: string
     enum:
@@ -18609,6 +18713,38 @@ definitions:
             type: string
           last_price:
             type: string
+  crescent.exchange.v1beta1.QueryOrderBookResponse:
+    type: object
+    properties:
+      order_books:
+        type: array
+        items:
+          type: object
+          properties:
+            price_interval:
+              type: string
+            sells:
+              type: array
+              items:
+                type: object
+                properties:
+                  p:
+                    type: string
+                    title: p denotes price
+                  q:
+                    type: string
+                    title: q denotes quantity
+            buys:
+              type: array
+              items:
+                type: object
+                properties:
+                  p:
+                    type: string
+                    title: p denotes price
+                  q:
+                    type: string
+                    title: q denotes quantity
   crescent.exchange.v1beta1.QueryOrderResponse:
     type: object
     properties:

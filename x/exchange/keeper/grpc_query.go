@@ -186,7 +186,125 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 	}, nil
 }
 
+func (k Querier) OrderBook(c context.Context, req *types.QueryOrderBookRequest) (*types.QueryOrderBookResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	market, found := k.GetMarket(ctx, req.MarketId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "market not found")
+	}
+	orderBooks := k.MakeOrderBooks(ctx, market, 30)
+	return &types.QueryOrderBookResponse{
+		OrderBooks: orderBooks,
+	}, nil
+}
+
 func (k Querier) MakeMarketResponse(ctx sdk.Context, market types.Market) types.MarketResponse {
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	return types.NewMarketResponse(market, marketState)
+}
+
+func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, maxNumPriceLevels int) []types.OrderBook {
+	// Use cache context so that we can ignore escrow from order sources while
+	// constructing temporary order books.
+	cacheCtx, _ := ctx.CacheContext()
+
+	// Since price intervals among all price levels in an order book must be
+	// consistent, we have to group price levels together below the price
+	// where the tick interval changes.
+	// Because of this, we read N sell price levels to find out the highest
+	// price in the order book and use the price interval at that price as
+	// the smallest possible price interval.
+	sellObs := k.ConstructTempOrderBookSide(cacheCtx, market, false, nil, nil, nil, maxNumPriceLevels)
+	// Read at most one level to check if any buy order exists.
+	buyObs := k.ConstructTempOrderBookSide(cacheCtx, market, true, nil, nil, nil, 1)
+	var highestPrice sdk.Dec
+	if len(sellObs.Levels) > 0 {
+		highestPrice = sellObs.Levels[len(sellObs.Levels)-1].Price
+	} else if len(buyObs.Levels) > 0 {
+		highestPrice = buyObs.Levels[0].Price
+	} else {
+		return nil // No orders
+	}
+	smallestPriceInterval := types.PriceIntervalAtTick(types.TickAtPrice(highestPrice))
+
+	cacheCtx, _ = ctx.CacheContext()
+	var priceLimit *sdk.Dec
+	if len(sellObs.Levels) > 0 {
+		p := sellObs.Levels[0].Price.Add(smallestPriceInterval.MulInt64(int64(100 * maxNumPriceLevels)))
+		priceLimit = &p
+	}
+	sellObs = k.ConstructTempOrderBookSide(cacheCtx, market, false, priceLimit, nil, nil, 0)
+	priceLimit = nil
+	if len(buyObs.Levels) > 0 {
+		p := buyObs.Levels[0].Price.Sub(smallestPriceInterval.MulInt64(int64(100 * maxNumPriceLevels)))
+		priceLimit = &p
+	}
+	buyObs = k.ConstructTempOrderBookSide(cacheCtx, market, true, priceLimit, nil, nil, 0)
+
+	var orderBooks []types.OrderBook
+	for _, p := range []int{1, 10, 100} {
+		priceInterval := smallestPriceInterval.MulInt64(int64(p))
+		ob := types.OrderBook{
+			PriceInterval: priceInterval,
+			Sells:         nil,
+			Buys:          nil,
+		}
+		if len(sellObs.Levels) > 0 {
+			levelIdx := 0
+			currentPrice := FitPriceToPriceInterval(sellObs.Levels[levelIdx].Price, priceInterval, false)
+			for i := 0; i < maxNumPriceLevels && levelIdx < len(sellObs.Levels); {
+				qty := utils.ZeroInt
+				for levelIdx < len(sellObs.Levels) && sellObs.Levels[levelIdx].Price.LTE(currentPrice) {
+					qty = qty.Add(
+						types.TotalExecutableQuantity(
+							sellObs.Levels[levelIdx].Orders, sellObs.Levels[levelIdx].Price))
+					levelIdx++
+				}
+				if qty.IsPositive() {
+					ob.Sells = append(ob.Sells, types.OrderBookPriceLevel{
+						P: currentPrice,
+						Q: qty,
+					})
+					i++
+				}
+				currentPrice = currentPrice.Add(priceInterval)
+			}
+		}
+		if len(buyObs.Levels) > 0 {
+			levelIdx := 0
+			currentPrice := FitPriceToPriceInterval(buyObs.Levels[levelIdx].Price, priceInterval, true)
+			for i := 0; i < maxNumPriceLevels && levelIdx < len(buyObs.Levels); {
+				qty := utils.ZeroInt
+				for levelIdx < len(buyObs.Levels) && buyObs.Levels[levelIdx].Price.GTE(currentPrice) {
+					qty = qty.Add(
+						types.TotalExecutableQuantity(
+							buyObs.Levels[levelIdx].Orders, buyObs.Levels[levelIdx].Price))
+					levelIdx++
+				}
+				if qty.IsPositive() {
+					ob.Buys = append(ob.Buys, types.OrderBookPriceLevel{
+						P: currentPrice,
+						Q: qty,
+					})
+					i++
+				}
+				currentPrice = currentPrice.Sub(priceInterval)
+			}
+		}
+		orderBooks = append(orderBooks, ob)
+	}
+	return orderBooks
+}
+
+func FitPriceToPriceInterval(price, interval sdk.Dec, roundUp bool) sdk.Dec {
+	b := price.BigInt()
+	b.Quo(b, interval.BigInt()).Mul(b, interval.BigInt())
+	priceRoundedDown := sdk.NewDecFromBigIntWithPrec(b, sdk.Precision)
+	if roundUp && !priceRoundedDown.Equal(price) {
+		priceRoundedDown = priceRoundedDown.Add(interval)
+	}
+	return priceRoundedDown
 }

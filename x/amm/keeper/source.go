@@ -34,6 +34,7 @@ func (k OrderSource) GenerateOrders(
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroInt
+	numPriceLevels := 0
 	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
 		if opts.PriceLimit != nil &&
 			((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
@@ -51,6 +52,12 @@ func (k OrderSource) GenerateOrders(
 		}
 		accQty = accQty.Add(qty)
 		accQuote = accQuote.Add(exchangetypes.QuoteAmount(!opts.IsBuy, price, qty))
+		if opts.MaxNumPriceLevels > 0 {
+			numPriceLevels++
+			if numPriceLevels >= opts.MaxNumPriceLevels {
+				return true
+			}
+		}
 		return false
 	})
 }

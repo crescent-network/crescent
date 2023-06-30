@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crescent/exchange/v1beta1/exchange.proto";
 import "crescent/exchange/v1beta1/params.proto";
+import "crescent/exchange/v1beta1/order_book.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -31,6 +32,9 @@ service Query {
   rpc BestSwapExactAmountInRoutes(QueryBestSwapExactAmountInRoutesRequest)
       returns (QueryBestSwapExactAmountInRoutesResponse) {
     option (google.api.http).get = "/crescent/exchange/v1beta1/best_swap_exact_amount_in_routes";
+  }
+  rpc OrderBook(QueryOrderBookRequest) returns (QueryOrderBookResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/markets/{market_id}/order_book";
   }
 }
 
@@ -85,6 +89,14 @@ message QueryBestSwapExactAmountInRoutesResponse {
   repeated uint64          routes  = 1;
   cosmos.base.v1beta1.Coin output  = 2 [(gogoproto.nullable) = false];
   repeated SwapRouteResult results = 3 [(gogoproto.nullable) = false];
+}
+
+message QueryOrderBookRequest {
+  uint64 market_id = 1;
+}
+
+message QueryOrderBookResponse {
+  repeated OrderBook order_books = 1 [(gogoproto.nullable) = false];
 }
 
 message MarketResponse {

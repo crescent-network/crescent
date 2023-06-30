@@ -31,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryAllOrdersCmd(),
 		NewQueryOrderCmd(),
 		NewQueryBestSwapExactAmountInRoutesCmd(),
+		NewQueryOrderBookCmd(),
 	)
 
 	return cmd
@@ -262,6 +263,43 @@ $ %s query %s best-swap-exact-amount-in-routes 1000000stake uatom
 			res, err := queryClient.BestSwapExactAmountInRoutes(cmd.Context(), &types.QueryBestSwapExactAmountInRoutesRequest{
 				Input:       input,
 				OutputDenom: outputDenom,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewQueryOrderBookCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "order-book [market-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query the market's order book",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the market's order book.
+
+Example:
+$ %s query %s order-book 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			marketId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid market id: %w", err)
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.OrderBook(cmd.Context(), &types.QueryOrderBookRequest{
+				MarketId: marketId,
 			})
 			if err != nil {
 				return err
