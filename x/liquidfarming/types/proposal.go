@@ -36,6 +36,7 @@ func NewLiquidFarmCreateProposal(
 	return &LiquidFarmCreateProposal{
 		Title:        title,
 		Description:  description,
+		PoolId:       poolId,
 		LowerPrice:   lowerPrice,
 		UpperPrice:   upperPrice,
 		MinBidAmount: minBidAmt,
