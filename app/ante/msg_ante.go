@@ -15,7 +15,6 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
-	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // initial deposit must be greater than or equal to 50% of the minimum deposit
@@ -87,7 +86,6 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 				switch legacyMsg.Route() {
 				case liquiditytypes.RouterKey,
 					farmingtypes.RouterKey,
-					lpfarmtypes.RouterKey,
 					claimtypes.RouterKey:
 					return fmt.Errorf("%s is deprecated msg type", sdk.MsgTypeURL(msg))
 				}

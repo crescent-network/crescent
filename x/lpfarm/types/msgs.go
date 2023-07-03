@@ -65,6 +65,12 @@ func (msg MsgCreatePrivatePlan) ValidateBasic() error {
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+	for _, rewardAlloc := range msg.RewardAllocations {
+		if rewardAlloc.PairId > 0 {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "pair reward allocation for %d is disabled", rewardAlloc.PairId)
+		}
+	}
 	return nil
 }
 

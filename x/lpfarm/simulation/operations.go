@@ -14,6 +14,7 @@ import (
 
 	appparams "github.com/crescent-network/crescent/v5/app/params"
 	utils "github.com/crescent-network/crescent/v5/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	"github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
 	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
@@ -356,17 +357,20 @@ func fundAddr(ctx sdk.Context, bk types.BankKeeper, addr sdk.AccAddress, amt sdk
 
 func genRewardAllocs(r *rand.Rand, ctx sdk.Context, lk types.LiquidityKeeper) (rewardAllocs []types.RewardAllocation, ok bool) {
 	pairs := lk.GetAllPairs(ctx)
-	if len(pairs) == 0 {
+	var poolCoinDenoms []string
+	for _, pair := range pairs {
+		_ = lk.IteratePoolsByPair(ctx, pair.Id, func(pool liquiditytypes.Pool) (stop bool, err error) {
+			poolCoinDenoms = append(poolCoinDenoms, pool.PoolCoinDenom)
+			return false, nil
+		})
+	}
+	if len(poolCoinDenoms) == 0 {
 		return nil, false
 	}
-	r.Shuffle(len(pairs), func(i, j int) {
-		pairs[i], pairs[j] = pairs[j], pairs[i]
-	})
-	n := r.Intn(len(pairs)) + 1 // Number of reward allocs
-	for i := 0; i < n; i++ {
-		pair := pairs[i]
+	for _, poolCoinDenom := range poolCoinDenoms {
 		rewardsPerDay := simtypes.RandSubsetCoins(r, utils.ParseCoins("1000_000000stake"))
-		rewardAllocs = append(rewardAllocs, types.NewPairRewardAllocation(pair.Id, rewardsPerDay))
+		rewardAllocs = append(
+			rewardAllocs, types.NewDenomRewardAllocation(poolCoinDenom, rewardsPerDay))
 	}
 	return rewardAllocs, true
 }

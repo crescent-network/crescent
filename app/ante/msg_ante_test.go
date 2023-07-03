@@ -10,12 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
-	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 type runTxMode uint8
@@ -356,21 +354,6 @@ func (suite *AnteTestSuite) TestAnteHandlerDeprecatedMsg() {
 			runTxModeDeliver,
 			false,
 			fmt.Errorf("/crescent.liquidity.v1beta1.MsgCreatePair is deprecated msg type"),
-		},
-		{
-			"deprecated msg - lpfarm",
-			func() {
-				msg := &lpfarmtypes.MsgFarm{
-					Farmer: accStr,
-					Coin:   utils.ParseCoin("1000000pool1"),
-				}
-				msgs = []sdk.Msg{msg}
-
-				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-			},
-			runTxModeDeliver,
-			false,
-			fmt.Errorf("/crescent.lpfarm.v1beta1.MsgFarm is deprecated msg type"),
 		},
 		{
 			"not deprecated msg",
