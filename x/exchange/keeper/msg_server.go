@@ -32,7 +32,7 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 
 func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLimitOrder) (*types.MsgPlaceLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	orderId, _, execQty, paid, received, err := k.Keeper.PlaceLimitOrder(
+	orderId, _, res, err := k.Keeper.PlaceLimitOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 	if err != nil {
@@ -40,9 +40,9 @@ func (k msgServer) PlaceLimitOrder(goCtx context.Context, msg *types.MsgPlaceLim
 	}
 	return &types.MsgPlaceLimitOrderResponse{
 		OrderId:          orderId,
-		ExecutedQuantity: execQty,
-		Paid:             paid,
-		Received:         received,
+		ExecutedQuantity: res.ExecutedQuantity,
+		Paid:             res.Paid,
+		Received:         res.Received,
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func (k msgServer) PlaceBatchLimitOrder(goCtx context.Context, msg *types.MsgPla
 
 func (k msgServer) PlaceMMLimitOrder(goCtx context.Context, msg *types.MsgPlaceMMLimitOrder) (*types.MsgPlaceMMLimitOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	orderId, _, execQty, paid, received, err := k.Keeper.PlaceMMLimitOrder(
+	orderId, _, res, err := k.Keeper.PlaceMMLimitOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Price, msg.Quantity, msg.Lifespan)
 	if err != nil {
@@ -69,9 +69,9 @@ func (k msgServer) PlaceMMLimitOrder(goCtx context.Context, msg *types.MsgPlaceM
 	}
 	return &types.MsgPlaceMMLimitOrderResponse{
 		OrderId:          orderId,
-		ExecutedQuantity: execQty,
-		Paid:             paid,
-		Received:         received,
+		ExecutedQuantity: res.ExecutedQuantity,
+		Paid:             res.Paid,
+		Received:         res.Received,
 	}, nil
 }
 
@@ -90,7 +90,7 @@ func (k msgServer) PlaceMMBatchLimitOrder(goCtx context.Context, msg *types.MsgP
 
 func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMarketOrder) (*types.MsgPlaceMarketOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	orderId, execQty, paid, received, err := k.Keeper.PlaceMarketOrder(
+	orderId, res, err := k.Keeper.PlaceMarketOrder(
 		ctx, msg.MarketId, sdk.MustAccAddressFromBech32(msg.Sender),
 		msg.IsBuy, msg.Quantity)
 	if err != nil {
@@ -98,9 +98,9 @@ func (k msgServer) PlaceMarketOrder(goCtx context.Context, msg *types.MsgPlaceMa
 	}
 	return &types.MsgPlaceMarketOrderResponse{
 		OrderId:          orderId,
-		ExecutedQuantity: execQty,
-		Paid:             paid,
-		Received:         received,
+		ExecutedQuantity: res.ExecutedQuantity,
+		Paid:             res.Paid,
+		Received:         res.Received,
 	}, nil
 }
 

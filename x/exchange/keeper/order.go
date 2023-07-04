@@ -12,8 +12,8 @@ import (
 
 func (k Keeper) PlaceLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
-	orderId, order, execQty, paid, received, err = k.placeLimitOrder(
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
+	orderId, order, res, err = k.placeLimitOrder(
 		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan, false)
 	if err != nil {
 		return
@@ -27,9 +27,9 @@ func (k Keeper) PlaceLimitOrder(
 		Quantity:         qty,
 		Lifespan:         lifespan,
 		Deadline:         ctx.BlockTime().Add(lifespan),
-		ExecutedQuantity: execQty,
-		Paid:             paid,
-		Received:         received,
+		ExecutedQuantity: res.ExecutedQuantity,
+		Paid:             res.Paid,
+		Received:         res.Received,
 	}); err != nil {
 		return
 	}
@@ -39,7 +39,7 @@ func (k Keeper) PlaceLimitOrder(
 func (k Keeper) PlaceBatchLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, err error) {
-	_, order, _, _, _, err = k.placeLimitOrder(
+	_, order, _, err = k.placeLimitOrder(
 		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
 		return
@@ -61,8 +61,8 @@ func (k Keeper) PlaceBatchLimitOrder(
 
 func (k Keeper) PlaceMMLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
-	orderId, order, execQty, paid, received, err = k.placeLimitOrder(
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
+	orderId, order, res, err = k.placeLimitOrder(
 		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, false)
 	if err != nil {
 		return
@@ -76,9 +76,9 @@ func (k Keeper) PlaceMMLimitOrder(
 		Quantity:         qty,
 		Lifespan:         lifespan,
 		Deadline:         ctx.BlockTime().Add(lifespan),
-		ExecutedQuantity: execQty,
-		Paid:             paid,
-		Received:         received,
+		ExecutedQuantity: res.ExecutedQuantity,
+		Paid:             res.Paid,
+		Received:         res.Received,
 	}); err != nil {
 		return
 	}
@@ -88,7 +88,7 @@ func (k Keeper) PlaceMMLimitOrder(
 func (k Keeper) PlaceMMBatchLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, err error) {
-	_, order, _, _, _, err = k.placeLimitOrder(
+	_, order, _, err = k.placeLimitOrder(
 		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
 		return
@@ -110,7 +110,7 @@ func (k Keeper) PlaceMMBatchLimitOrder(
 
 func (k Keeper) placeLimitOrder(
 	ctx sdk.Context, typ types.OrderType, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration, isBatch bool) (orderId uint64, order types.Order, execQty sdk.Int, paid, received sdk.Coin, err error) {
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration, isBatch bool) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
 	if !qty.IsPositive() { // sanity check
 		panic("quantity must be positive")
 	}
@@ -147,22 +147,19 @@ func (k Keeper) placeLimitOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	if isBatch {
-		execQty = utils.ZeroInt
-	} else {
-		execQty, paid, received, _, err = k.executeOrder(
+	if !isBatch {
+		res, err = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, &price, &qty, nil, false, false)
 		if err != nil {
 			return
 		}
 	}
 
-	openQty := qty.Sub(execQty)
-	if isBatch || openQty.IsPositive() {
+	if isBatch || qty.Sub(res.ExecutedQuantity).IsPositive() {
 		deadline := ctx.BlockTime().Add(lifespan)
 		order, err = k.newOrder(
 			ctx, orderId, typ, market, ordererAddr, isBuy, price,
-			qty, openQty, deadline, false)
+			qty, qty.Sub(res.ExecutedQuantity), deadline, false)
 		if err != nil {
 			return
 		}
@@ -175,7 +172,7 @@ func (k Keeper) placeLimitOrder(
 
 func (k Keeper) PlaceMarketOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, qty sdk.Int) (orderId uint64, execQty sdk.Int, paid, received sdk.Coin, err error) {
+	isBuy bool, qty sdk.Int) (orderId uint64, res types.ExecuteOrderResult, err error) {
 	if !qty.IsPositive() { // sanity check
 		panic("quantity must be positive")
 	}
@@ -187,7 +184,7 @@ func (k Keeper) PlaceMarketOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	execQty, paid, received, _, err = k.executeOrder(
+	res, err = k.executeOrder(
 		ctx, market, ordererAddr, isBuy, nil, &qty, nil, false, false)
 	if err != nil {
 		return
@@ -199,9 +196,9 @@ func (k Keeper) PlaceMarketOrder(
 		Orderer:          ordererAddr.String(),
 		IsBuy:            isBuy,
 		Quantity:         qty,
-		ExecutedQuantity: execQty,
-		Paid:             paid,
-		Received:         received,
+		ExecutedQuantity: res.ExecutedQuantity,
+		Paid:             res.Paid,
+		Received:         res.Received,
 	}); err != nil {
 		return
 	}

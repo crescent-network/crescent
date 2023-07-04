@@ -14,7 +14,7 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var enoughCoins = utils.ParseCoins("1000000_000000000000000000ucre,1000000_000000000000000000uusd")
+var enoughCoins = utils.ParseCoins("1000000_000000000000000000ucre,1000000_000000000000000000uusd,1000000_000000000000000000uatom")
 
 type KeeperTestSuite struct {
 	testutil.TestSuite

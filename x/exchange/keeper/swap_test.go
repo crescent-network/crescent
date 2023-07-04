@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) TestSwapInsufficientLiquidity() {
 	cacheCtx, _ := s.Ctx.CacheContext()
 	_, _, err := s.keeper.SwapExactAmountIn(
 		cacheCtx, ordererAddr, []uint64{market1.Id, market2.Id},
-		utils.ParseCoin("450_000000uusd"), utils.ParseCoin("38_000000uatom"), false)
+		utils.ParseCoin("600_000000uusd"), utils.ParseCoin("58_000000uatom"), false)
 	s.Require().ErrorIs(err, types.ErrSwapNotEnoughLiquidity)
 	cacheCtx, _ = s.Ctx.CacheContext()
 	_, _, err = s.keeper.SwapExactAmountIn(

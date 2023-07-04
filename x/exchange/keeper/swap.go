@@ -6,7 +6,6 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -48,21 +47,23 @@ func (k Keeper) SwapExactAmountIn(
 			return output, nil, sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
-		var paid, fee sdk.Coin
-		_, paid, output, fee, err = k.executeOrder(
+		res, err := k.executeOrder(
 			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
 		if err != nil {
 			return output, nil, err
 		}
-		if currentIn.Sub(paid).Amount.GT(utils.OneInt) {
-			return output, nil, sdkerrors.Wrapf(
-				types.ErrSwapNotEnoughLiquidity, "paid %s < input %s", paid, currentIn)
+		output = res.Received
+		if !res.FullyExecuted {
+			if res.Paid.IsLT(currentIn) {
+				return output, nil, sdkerrors.Wrapf(
+					types.ErrSwapNotEnoughLiquidity, "in market %d; paid %s < input %s", marketId, res.Paid, currentIn)
+			}
 		}
 		results = append(results, types.SwapRouteResult{
 			MarketId: marketId,
 			Input:    currentIn,
 			Output:   output,
-			Fee:      fee,
+			Fee:      res.Fee,
 		})
 		currentIn = output
 	}

@@ -9,20 +9,16 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (totalExecQty sdk.Int, totalPaid, totalReceived, totalFee sdk.Coin, err error) {
+	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
 	if simulate {
 		ctx, _ = ctx.CacheContext()
 	}
-	var lastPrice sdk.Dec
-	totalExecQty = utils.ZeroInt
-	totalExecQuote := utils.ZeroInt
 	payDenom, receiveDenom := market.PayReceiveDenoms(isBuy)
-	totalPaid = sdk.NewCoin(payDenom, utils.ZeroInt)
-	totalReceived = sdk.NewCoin(receiveDenom, utils.ZeroInt)
-	totalFee = sdk.NewCoin(receiveDenom, utils.ZeroInt)
+	res = types.NewExecuteOrderResult(payDenom, receiveDenom)
+	var lastPrice sdk.Dec
 	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0)
 	for _, level := range obs.Levels {
 		if priceLimit != nil &&
@@ -30,22 +26,32 @@ func (k Keeper) executeOrder(
 				(!isBuy && level.Price.LT(*priceLimit))) {
 			break
 		}
-		if qtyLimit != nil && !qtyLimit.Sub(totalExecQty).IsPositive() {
+		if qtyLimit != nil && !qtyLimit.Sub(res.ExecutedQuantity).IsPositive() {
 			break
 		}
-		if quoteLimit != nil && !quoteLimit.Sub(totalExecQuote).IsPositive() {
+		if quoteLimit != nil && !quoteLimit.Sub(res.ExecutedQuote).IsPositive() {
 			break
 		}
 
 		executableQty := types.TotalExecutableQuantity(level.Orders, level.Price)
-		execQty := executableQty
+		var remainingQty sdk.Int
 		if qtyLimit != nil {
-			execQty = utils.MinInt(execQty, qtyLimit.Sub(totalExecQty))
+			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
 		}
 		if quoteLimit != nil {
-			execQty = utils.MinInt(
-				execQty,
-				quoteLimit.Sub(totalExecQuote).ToDec().QuoTruncate(level.Price).TruncateInt())
+			qty := quoteLimit.Sub(res.ExecutedQuote).ToDec().QuoTruncate(level.Price).TruncateInt()
+			if remainingQty.IsNil() {
+				remainingQty = qty
+			} else {
+				remainingQty = utils.MinInt(remainingQty, qty)
+			}
+		}
+		execQty := executableQty
+		if !remainingQty.IsNil() {
+			execQty = utils.MinInt(execQty, remainingQty)
+			if execQty.Equal(remainingQty) {
+				res.FullyExecuted = true
+			}
 		}
 
 		market.FillTempOrderBookLevel(level, execQty, level.Price, true, halveFees)
@@ -70,11 +76,11 @@ func (k Keeper) executeOrder(
 				return
 			}
 		}
-		totalExecQty = totalExecQty.Add(execQty)
-		totalExecQuote = totalExecQuote.Add(execQuote)
-		totalPaid = totalPaid.Add(paid)
-		totalReceived = totalReceived.Add(received)
-		totalFee = totalFee.Add(fee)
+		res.ExecutedQuantity = res.ExecutedQuantity.Add(execQty)
+		res.ExecutedQuote = res.ExecutedQuote.Add(execQuote)
+		res.Paid = res.Paid.Add(paid)
+		res.Received = res.Received.Add(received)
+		res.Fee = res.Fee.Add(fee)
 		lastPrice = level.Price
 	}
 	if !simulate {

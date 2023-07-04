@@ -74,3 +74,23 @@ func (order Order) ExecutableQuantity(price sdk.Dec) sdk.Int {
 func (order Order) MustGetOrdererAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(order.Orderer)
 }
+
+type ExecuteOrderResult struct {
+	ExecutedQuantity sdk.Int
+	ExecutedQuote    sdk.Int
+	Paid             sdk.Coin
+	Received         sdk.Coin
+	Fee              sdk.Coin
+	FullyExecuted    bool
+}
+
+func NewExecuteOrderResult(payDenom, receiveDenom string) ExecuteOrderResult {
+	return ExecuteOrderResult{
+		ExecutedQuantity: utils.ZeroInt,
+		ExecutedQuote:    utils.ZeroInt,
+		Paid:             sdk.NewCoin(payDenom, utils.ZeroInt),
+		Received:         sdk.NewCoin(receiveDenom, utils.ZeroInt),
+		Fee:              sdk.NewCoin(receiveDenom, utils.ZeroInt),
+		FullyExecuted:    false,
+	}
+}

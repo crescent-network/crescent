@@ -19,10 +19,10 @@ func (s *TestSuite) CreateMarket(creatorAddr sdk.AccAddress, baseDenom, quoteDen
 }
 
 func (s *TestSuite) PlaceLimitOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order exchangetypes.Order, execQty sdk.Int, paid, received sdk.Coin) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order exchangetypes.Order, res exchangetypes.ExecuteOrderResult) {
 	s.T().Helper()
 	var err error
-	orderId, order, execQty, paid, received, err = s.App.ExchangeKeeper.PlaceLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
+	orderId, order, res, err = s.App.ExchangeKeeper.PlaceLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
 	s.Require().NoError(err)
 	return
 }
@@ -37,10 +37,10 @@ func (s *TestSuite) PlaceBatchLimitOrder(
 }
 
 func (s *TestSuite) PlaceMarketOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (orderId uint64, execQty sdk.Int, paid, received sdk.Coin) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (orderId uint64, res exchangetypes.ExecuteOrderResult) {
 	s.T().Helper()
 	var err error
-	orderId, execQty, paid, received, err = s.App.ExchangeKeeper.PlaceMarketOrder(s.Ctx, marketId, ordererAddr, isBuy, qty)
+	orderId, res, err = s.App.ExchangeKeeper.PlaceMarketOrder(s.Ctx, marketId, ordererAddr, isBuy, qty)
 	s.Require().NoError(err)
 	return
 }

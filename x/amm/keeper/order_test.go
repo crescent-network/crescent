@@ -51,7 +51,7 @@ func BenchmarkPlaceMarketOrder(b *testing.B) {
 		app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
 		ctx = app.NewContext(false, hdr)
 
-		_, _, _, _, err := app.ExchangeKeeper.PlaceMarketOrder(
+		_, _, err := app.ExchangeKeeper.PlaceMarketOrder(
 			ctx, market.Id, ordererAddr, isBuy, sdk.NewInt(10_000000))
 		require.NoError(b, err)
 		isBuy = !isBuy
@@ -70,7 +70,7 @@ func BenchmarkPlaceMarketOrder(b *testing.B) {
 		ctx = app.NewContext(false, hdr)
 		b.StartTimer()
 
-		_, _, _, _, err := app.ExchangeKeeper.PlaceMarketOrder(
+		_, _, err := app.ExchangeKeeper.PlaceMarketOrder(
 			ctx, market.Id, ordererAddr, isBuy, sdk.NewInt(10_000000))
 		require.NoError(b, err)
 		isBuy = !isBuy
