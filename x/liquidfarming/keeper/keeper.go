@@ -52,3 +52,8 @@ func NewKeeper(
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
+
+// GetModuleAddress returns the module account's address.
+func (k Keeper) GetModuleAddress() sdk.AccAddress {
+	return k.accountKeeper.GetModuleAddress(types.ModuleName)
+}

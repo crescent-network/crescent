@@ -84,14 +84,21 @@ func ParseShareDenom(denom string) (liquidFarmId uint64, err error) {
 	return liquidFarmId, nil
 }
 
+func CalculateMintRate(totalLiquidity, shareSupply sdk.Int) sdk.Dec {
+	return shareSupply.ToDec().QuoTruncate(totalLiquidity.ToDec())
+}
+
 // CalculateMintedShareAmount calculates minting liquid farm share amount.
 // mintedShareAmt = shareSupply * (addedLiquidity / totalLiquidity)
-func CalculateMintedShareAmount(
-	addedLiquidity, totalLiquidity, shareSupply sdk.Int) sdk.Int {
+func CalculateMintedShareAmount(addedLiquidity, totalLiquidity, shareSupply sdk.Int) sdk.Int {
 	if shareSupply.IsZero() { // initial minting
 		return addedLiquidity
 	}
 	return shareSupply.Mul(addedLiquidity).Quo(totalLiquidity)
+}
+
+func CalculateBurnRate(shareSupply ,totalLiquidity, prevWinningBidShareAmt sdk.Int) sdk.Dec {
+	return totalLiquidity.ToDec().QuoTruncate(shareSupply.Add(prevWinningBidShareAmt).ToDec())
 }
 
 // CalculateRemovedLiquidity calculates liquidity amount to be removed when

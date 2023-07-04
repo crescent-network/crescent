@@ -235,3 +235,33 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 	}
 	return &types.QueryRewardsResponse{Rewards: rewards}, nil
 }
+
+// ExchangeRate queries exchange rate, such as mint rate and burn rate per 1 lfshare.
+func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateRequest) (*types.QueryExchangeRateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	liquidFarm, found := k.GetLiquidFarm(ctx, req.LiquidFarmId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "liquid farm not found")
+	}
+	res := &types.QueryExchangeRateResponse{
+		MintRate: sdk.ZeroDec(),
+		BurnRate: sdk.ZeroDec(),
+	}
+	shareSupply := k.bankKeeper.GetSupply(ctx, types.ShareDenom(liquidFarm.Id)).Amount
+	if !shareSupply.IsZero() {
+		position := k.MustGetLiquidFarmPosition(ctx, liquidFarm)
+		var prevWinningBidShareAmt sdk.Int
+		prevAuction, found := k.GetPreviousRewardsAuction(ctx, liquidFarm)
+		if found && prevAuction.WinningBid != nil {
+			prevWinningBidShareAmt = prevAuction.WinningBid.Share.Amount
+		} else {
+			prevWinningBidShareAmt = utils.ZeroInt
+		}
+		res.MintRate = types.CalculateMintRate(position.Liquidity, shareSupply)
+		res.BurnRate = types.CalculateBurnRate(shareSupply, position.Liquidity, prevWinningBidShareAmt)
+	}
+	return res, nil
+}

@@ -425,3 +425,49 @@ func (s *KeeperTestSuite) TestQueryRewards() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestQueryExchangeRate() {
+	s.SetupSampleScenario()
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryExchangeRateRequest
+		expectedErr string
+		postRun     func(*types.QueryExchangeRateResponse)
+	}{
+		{
+			"empty request",
+			nil,
+			"rpc error: code = InvalidArgument desc = empty request",
+			nil,
+		},
+		{
+			"liquid farm not found",
+			&types.QueryExchangeRateRequest{
+				LiquidFarmId: 10,
+			},
+			"rpc error: code = InvalidArgument desc = liquid farm id must not be 0",
+			nil,
+		},
+		{
+			"happy case",
+			&types.QueryExchangeRateRequest{
+				LiquidFarmId: 1,
+			},
+			"",
+			func(resp *types.QueryExchangeRateResponse) {
+				s.Require().Equal("0.934782608695148231", resp.MintRate.String())
+				s.Require().Equal("1.036177474410059339", resp.BurnRate.String())
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.ExchangeRate(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().Error(err)
+			}
+		})
+	}
+}

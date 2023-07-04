@@ -173,7 +173,7 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, liquidFarm types.LiquidFar
 	rewards := fee.Add(farmingRewards...)
 	var protocolFee sdk.Coins
 	if rewards.IsAllPositive() {
-		moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+		moduleAccAddr := k.GetModuleAddress()
 		// First, collect all rewards.
 		if err := k.ammKeeper.Collect(ctx, moduleAccAddr, moduleAccAddr, position.Id, rewards); err != nil {
 			return err

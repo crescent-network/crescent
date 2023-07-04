@@ -48,11 +48,10 @@ func (k Keeper) MintShare(
 		return
 	}
 
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	lowerPrice := exchangetypes.PriceAtTick(liquidFarm.LowerTick)
 	upperPrice := exchangetypes.PriceAtTick(liquidFarm.UpperTick)
 	position, liquidity, amt, err = k.ammKeeper.AddLiquidity(
-		ctx, moduleAccAddr, senderAddr, liquidFarm.PoolId, lowerPrice, upperPrice, desiredAmt)
+		ctx, k.GetModuleAddress(), senderAddr, liquidFarm.PoolId, lowerPrice, upperPrice, desiredAmt)
 	if err != nil {
 		return
 	}
@@ -111,9 +110,8 @@ func (k Keeper) BurnShare(
 	if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
 		return
 	}
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	_, amt, err = k.ammKeeper.RemoveLiquidity(
-		ctx, moduleAccAddr, senderAddr, position.Id, removedLiquidity)
+		ctx, k.GetModuleAddress(), senderAddr, position.Id, removedLiquidity)
 	if err != nil {
 		return
 	}
@@ -131,9 +129,8 @@ func (k Keeper) BurnShare(
 }
 
 func (k Keeper) GetLiquidFarmPosition(ctx sdk.Context, liquidFarm types.LiquidFarm) (position ammtypes.Position, found bool) {
-	moduleAccAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	return k.ammKeeper.GetPositionByParams(
-		ctx, moduleAccAddr, liquidFarm.PoolId, liquidFarm.LowerTick, liquidFarm.UpperTick)
+		ctx, k.GetModuleAddress(), liquidFarm.PoolId, liquidFarm.LowerTick, liquidFarm.UpperTick)
 }
 
 func (k Keeper) MustGetLiquidFarmPosition(ctx sdk.Context, liquidFarm types.LiquidFarm) ammtypes.Position {
