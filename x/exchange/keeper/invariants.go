@@ -39,6 +39,9 @@ func CanCancelOrderInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllOrders(ctx, func(order types.Order) (stop bool) {
+			if order.MsgHeight == ctx.BlockHeight() {
+				return false
+			}
 			if _, err := k.CancelOrder(ctx, order.MustGetOrdererAddress(), order.Id); err != nil {
 				msg += fmt.Sprintf("\tcannot cancel order %d: %v\n", order.Id, err)
 				cnt++
@@ -103,14 +106,14 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 				}
 			}
 			marketState := k.MustGetMarketState(ctx, market.Id)
-			if marketState.LastPrice != nil {
-				if !bestSellPrice.IsNil() && bestSellPrice.LT(*marketState.LastPrice) {
+			if marketState.LastPrice != nil && !bestSellPrice.IsNil() && !bestBuyPrice.IsNil() {
+				if bestSellPrice.LT(*marketState.LastPrice) && bestBuyPrice.GTE(bestSellPrice) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has sell order under the last price: %s < %s\n",
 						market.Id, bestSellPrice, marketState.LastPrice)
 					cnt++
 				}
-				if !bestBuyPrice.IsNil() && bestBuyPrice.GT(*marketState.LastPrice) {
+				if bestBuyPrice.GT(*marketState.LastPrice) && bestSellPrice.LTE(bestBuyPrice) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has buy order above the last price: %s > %s\n",
 						market.Id, bestBuyPrice, marketState.LastPrice)
