@@ -3,6 +3,7 @@ package testutil
 import (
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,4 +76,24 @@ func (s *TestSuite) FundedAccount(addrNum int, amt sdk.Coins) sdk.AccAddress {
 	addr := utils.TestAddress(addrNum)
 	s.FundAccount(addr, amt)
 	return addr
+}
+
+func (s *TestSuite) CheckEvent(evtType proto.Message, attrs map[string][]byte) {
+	s.T().Helper()
+	evtTypeName := proto.MessageName(evtType)
+	for _, ev := range s.Ctx.EventManager().ABCIEvents() {
+		if ev.Type == evtTypeName {
+			attrMap := make(map[string][]byte)
+			for _, attr := range ev.Attributes {
+				attrMap[string(attr.Key)] = attr.Value
+			}
+			for k, v := range attrs {
+				value, ok := attrMap[k]
+				s.Require().Truef(ok, "key %s not found", k)
+				s.Require().Equal(v, value)
+			}
+			return
+		}
+	}
+	s.FailNowf("CheckEvent failed", "event with type %s not found", evtTypeName)
 }

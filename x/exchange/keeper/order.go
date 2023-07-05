@@ -155,11 +155,15 @@ func (k Keeper) placeLimitOrder(
 		}
 	}
 
-	if isBatch || qty.Sub(res.ExecutedQuantity).IsPositive() {
+	openQty := qty
+	if !isBatch {
+		openQty = openQty.Sub(res.ExecutedQuantity)
+	}
+	if isBatch || openQty.IsPositive() {
 		deadline := ctx.BlockTime().Add(lifespan)
 		order, err = k.newOrder(
 			ctx, orderId, typ, market, ordererAddr, isBuy, price,
-			qty, qty.Sub(res.ExecutedQuantity), deadline, false)
+			qty, openQty, deadline, false)
 		if err != nil {
 			return
 		}
