@@ -97,8 +97,8 @@ func (s *KeeperTestSuite) TestPlaceBatchLimitOrder() {
 }
 
 func (s *KeeperTestSuite) TestOrderMatching() {
-	aliceAddr := s.FundedAccount(1, enoughCoins)
-	bobAddr := s.FundedAccount(2, enoughCoins)
+	aliceAddr := s.FundedAccount(1, utils.ParseCoins("1000000ucre,1000000uusd"))
+	bobAddr := s.FundedAccount(2, utils.ParseCoins("1000000ucre,1000000uusd"))
 
 	market := s.CreateMarket(utils.TestAddress(3), "ucre", "uusd", true)
 
