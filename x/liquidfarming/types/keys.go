@@ -22,11 +22,11 @@ const (
 
 // keys for the store prefixes
 var (
-	LastLiquidFarmIdKey          = []byte{0xe1}
-	LastRewardsAuctionEndTimeKey = []byte{0xe3}
-	LiquidFarmKeyPrefix          = []byte{0xe4}
-	RewardsAuctionKeyPrefix      = []byte{0xe5}
-	BidKeyPrefix                 = []byte{0xe6}
+	NextRewardsAuctionEndTimeKey = []byte{0xe1}
+	LastLiquidFarmIdKey          = []byte{0xe2}
+	LiquidFarmKeyPrefix          = []byte{0xe3}
+	RewardsAuctionKeyPrefix      = []byte{0xe4}
+	BidKeyPrefix                 = []byte{0xe5}
 )
 
 // GetLiquidFarmKey returns the store key to retrieve the liquid farm object

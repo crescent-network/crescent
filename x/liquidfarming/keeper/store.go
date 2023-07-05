@@ -87,7 +87,7 @@ func (k Keeper) DeleteLiquidFarm(ctx sdk.Context, liquidFarm types.LiquidFarm) {
 // GetNextRewardsAuctionEndTime returns the last rewards auction end time.
 func (k Keeper) GetNextRewardsAuctionEndTime(ctx sdk.Context) (t time.Time, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.LastRewardsAuctionEndTimeKey)
+	bz := store.Get(types.NextRewardsAuctionEndTimeKey)
 	if bz == nil {
 		return
 	}
@@ -101,7 +101,7 @@ func (k Keeper) GetNextRewardsAuctionEndTime(ctx sdk.Context) (t time.Time, foun
 // SetNextRewardsAuctionEndTime stores the last rewards auction end time.
 func (k Keeper) SetNextRewardsAuctionEndTime(ctx sdk.Context, t time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastRewardsAuctionEndTimeKey, sdk.FormatTimeBytes(t))
+	store.Set(types.NextRewardsAuctionEndTimeKey, sdk.FormatTimeBytes(t))
 }
 
 // GetRewardsAuction returns the reward auction object by the given auction id pool id.
