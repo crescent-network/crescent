@@ -24,7 +24,7 @@ const (
 
 	DefaultWeightMsgCreateMarket     = 10
 	DefaultWeightMsgPlaceLimitOrder  = 90
-	DefaultWeightMsgPlaceMarketOrder = 90
+	DefaultWeightMsgPlaceMarketOrder = 1
 )
 
 var (

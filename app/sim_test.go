@@ -47,6 +47,8 @@ import (
 	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
+var FlagPeriodValue = uint(1)
+
 // Get flags every time the simulator is run
 func init() {
 	simapp.GetSimulatorFlags()
@@ -308,12 +310,12 @@ func TestAppStateDeterminism(t *testing.T) {
 	config := simapp.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
-	config.OnOperation = false
-	config.AllInvariants = false
+	config.OnOperation = true
+	config.AllInvariants = true
 	config.ChainID = helpers.SimAppChainID
 
-	numSeeds := 3
-	numTimesToRunPerSeed := 5
+	numSeeds := 30
+	numTimesToRunPerSeed := 50
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
@@ -328,7 +330,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue,
+			app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue,
 				MakeEncodingConfig(), EmptyAppOptions{}, true, fauxMerkleModeOpt)
 
 			fmt.Printf(
