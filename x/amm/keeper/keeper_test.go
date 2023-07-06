@@ -19,8 +19,9 @@ var enoughCoins = utils.ParseCoins(
 
 type KeeperTestSuite struct {
 	testutil.TestSuite
-	keeper  keeper.Keeper
-	querier keeper.Querier
+	keeper    keeper.Keeper
+	msgServer types.MsgServer
+	querier   keeper.Querier
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -30,6 +31,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.TestSuite.SetupTest()
 	s.keeper = s.App.AMMKeeper
+	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
 	s.querier = keeper.Querier{Keeper: s.keeper}
 	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1ucre,1uusd,1uatom")) // make positive supplies
 }
