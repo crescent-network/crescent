@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
 func (s *KeeperTestSuite) TestAddLiquidity() {
@@ -63,4 +64,29 @@ func (s *KeeperTestSuite) TestRemoveAllAndCollect() {
 	fee, farmingRewards, err := s.keeper.CollectibleCoins(s.Ctx, position.Id)
 	s.Require().NoError(err)
 	s.Collect(lpAddr, lpAddr, position.Id, fee.Add(farmingRewards...))
+}
+
+func (s *KeeperTestSuite) TestNegativeFarmingRewardsGrowthInside() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1.1366"))
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, lpAddr, pool.Id, utils.ParseDec("1.1"), utils.ParseDec("1.2"),
+		utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
+	creatorAddr := s.FundedAccount(2, enoughCoins)
+	s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan", creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("10000_000000ucre"), true)
+	s.NextBlock()
+	s.NextBlock()
+	_, farmingRewards := s.CollectibleCoins(1)
+	s.Require().Equal("11573ucre", farmingRewards.String())
+	s.AddLiquidity(
+		lpAddr, lpAddr, pool.Id, utils.ParseDec("0.9"), utils.ParseDec("1.1"),
+		utils.ParseCoins("1000_000000uusd"))
+	_, farmingRewards = s.CollectibleCoins(1)
+	s.Require().Equal("11573ucre", farmingRewards.String())
+	_, farmingRewards = s.CollectibleCoins(2)
+	s.Require().Equal("", farmingRewards.String())
 }
