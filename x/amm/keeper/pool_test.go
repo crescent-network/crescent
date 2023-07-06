@@ -20,6 +20,14 @@ func (s *KeeperTestSuite) TestCreatePool_MultiplePoolsPerMarket() {
 	s.Require().EqualError(err, "cannot create more than one pool per market: invalid request")
 }
 
+func (s *KeeperTestSuite) TestCreatePool_InsufficientFee() {
+	s.keeper.SetPoolCreationFee(s.Ctx, utils.ParseCoins("100_000000ucre"))
+	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	creatorAddr := utils.TestAddress(1)
+	_, err := s.keeper.CreatePool(s.Ctx, creatorAddr, market.Id, utils.ParseDec("5"))
+	s.Require().EqualError(err, "0ucre is smaller than 100000000ucre: insufficient funds")
+}
+
 func (s *KeeperTestSuite) TestCreatePool() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
 	pool2, found := s.keeper.GetPoolByMarket(s.Ctx, market.Id)

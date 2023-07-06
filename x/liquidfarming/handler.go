@@ -34,7 +34,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-func NewLiquidFarmCreateProposalHandler(k keeper.Keeper) govtypes.Handler {
+func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.LiquidFarmCreateProposal:

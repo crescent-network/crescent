@@ -138,7 +138,13 @@ func (k Keeper) TerminateFarmingPlan(ctx sdk.Context, plan types.FarmingPlan) er
 	plan.IsTerminated = true
 	k.SetFarmingPlan(ctx, plan)
 	if plan.IsPrivate {
-		k.SetNumPrivateFarmingPlans(ctx, k.GetNumPrivateFarmingPlans(ctx)-1)
+		numPlans := k.GetNumPrivateFarmingPlans(ctx)
+		if numPlans > 1 {
+			k.SetNumPrivateFarmingPlans(ctx, k.GetNumPrivateFarmingPlans(ctx)-1)
+		} else {
+			k.DeleteNumPrivateFarmingPlans(ctx)
+		}
+	} else {
 	}
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventFarmingPlanTerminated{
 		FarmingPlanId: plan.Id,

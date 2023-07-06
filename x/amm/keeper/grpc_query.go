@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -83,7 +82,7 @@ func (k Querier) Pool(c context.Context, req *types.QueryPoolRequest) (*types.Qu
 	ctx := sdk.UnwrapSDKContext(c)
 	pool, found := k.GetPool(ctx, req.PoolId)
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
+		return nil, status.Error(codes.NotFound, "pool not found")
 	}
 	return &types.QueryPoolResponse{Pool: k.MakePoolResponse(ctx, pool)}, nil
 }
@@ -159,7 +158,7 @@ func (k Querier) Position(c context.Context, req *types.QueryPositionRequest) (*
 	ctx := sdk.UnwrapSDKContext(c)
 	position, found := k.GetPosition(ctx, req.PositionId)
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
+		return nil, status.Error(codes.NotFound, "position not found")
 	}
 	return &types.QueryPositionResponse{Position: types.NewPositionResponse(position)}, nil
 }
@@ -181,6 +180,9 @@ func (k Querier) AddLiquiditySimulation(c context.Context, req *types.QueryAddLi
 		return nil, status.Errorf(codes.InvalidArgument, "invalid upper price: %v", err)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
+	if found := k.LookupPool(ctx, req.PoolId); !found {
+		return nil, status.Error(codes.NotFound, "pool not found")
+	}
 	// Create temporary account with sufficient funds.
 	ownerAddr := sdk.AccAddress(crypto.AddressHash([]byte("simaccount")))
 	if err := k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, desiredAmt); err != nil {

@@ -54,6 +54,15 @@ func (s *TestSuite) CreatePrivateFarmingPlan(creatorAddr sdk.AccAddress, descrip
 	return plan
 }
 
+func (s *TestSuite) CreatePublicFarmingPlan(description string, farmingPoolAddr sdk.AccAddress, termAddr sdk.AccAddress, rewardAllocs []ammtypes.FarmingRewardAllocation, startTime, endTime time.Time) (plan ammtypes.FarmingPlan) {
+	s.T().Helper()
+	var err error
+	plan, err = s.App.AMMKeeper.CreatePublicFarmingPlan(
+		s.Ctx, description, farmingPoolAddr, termAddr, rewardAllocs, startTime, endTime)
+	s.Require().NoError(err)
+	return plan
+}
+
 func (s *TestSuite) CollectibleCoins(positionId uint64) (fee, farmingRewards sdk.Coins) {
 	s.T().Helper()
 	var err error

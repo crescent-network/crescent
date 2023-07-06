@@ -52,7 +52,7 @@ func (k Keeper) GetMaxNumPrivateFarmingPlans(ctx sdk.Context) (max uint32) {
 }
 
 func (k Keeper) SetMaxNumPrivateFarmingPlans(ctx sdk.Context, max uint32) {
-	k.paramSpace.Set(ctx, types.KeyPrivateFarmingPlanCreationFee, max)
+	k.paramSpace.Set(ctx, types.KeyMaxNumPrivateFarmingPlans, max)
 }
 
 func (k Keeper) GetMaxFarmingBlockTime(ctx sdk.Context) (blockTime time.Duration) {
