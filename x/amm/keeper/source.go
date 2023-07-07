@@ -170,11 +170,11 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 
 		var expectedAmtIn sdk.Int
 		if result.Order.IsBuy {
-			expectedAmtIn = types.Amount0DeltaRounding(
-				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
+			expectedAmtIn = types.Amount0Delta(
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
 		} else {
-			expectedAmtIn = types.Amount1DeltaRounding(
-				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
+			expectedAmtIn = types.Amount1Delta(
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
 		}
 		denomIn := pool.DenomIn(isBuy)
 		amtInDiff := result.Received.AmountOf(denomIn).Sub(expectedAmtIn)
