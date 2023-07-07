@@ -121,17 +121,6 @@ func (k Keeper) placeLimitOrder(
 		return
 	}
 
-	if typ == types.OrderTypeMM {
-		numMMOrders, found := k.GetNumMMOrders(ctx, ordererAddr, marketId)
-		if found {
-			if maxNum := k.GetMaxNumMMOrders(ctx); numMMOrders >= maxNum {
-				err = sdkerrors.Wrapf(types.ErrMaxNumMMOrdersExceeded, "%d", maxNum)
-				return
-			}
-		}
-		k.SetNumMMOrders(ctx, ordererAddr, marketId, numMMOrders+1)
-	}
-
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	if marketState.LastPrice != nil {
 		maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
@@ -170,6 +159,17 @@ func (k Keeper) placeLimitOrder(
 		k.SetOrder(ctx, order)
 		k.SetOrderBookOrder(ctx, order)
 		k.SetOrdersByOrdererIndex(ctx, order)
+
+		if typ == types.OrderTypeMM {
+			numMMOrders, found := k.GetNumMMOrders(ctx, ordererAddr, marketId)
+			if found {
+				if maxNum := k.GetMaxNumMMOrders(ctx); numMMOrders >= maxNum {
+					err = sdkerrors.Wrapf(types.ErrMaxNumMMOrdersExceeded, "%d", maxNum)
+					return
+				}
+			}
+			k.SetNumMMOrders(ctx, ordererAddr, marketId, numMMOrders+1)
+		}
 	}
 	return
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-// TODO: refactor code
 func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err error) {
+	// TODO: refactor code
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load
 	// on the other side.
 	var bestBuyPrice, bestSellPrice sdk.Dec
@@ -20,11 +20,6 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		bestSellPrice = order.Price
 		return true
 	})
-
-	// No need to run matching since the order book is not crossed.
-	if !bestBuyPrice.IsNil() && !bestSellPrice.IsNil() && bestBuyPrice.LT(bestSellPrice) {
-		return nil
-	}
 
 	// Construct TempOrderBookSides with the price limits we obtained previously.
 	var buyObs, sellObs *types.TempOrderBookSide

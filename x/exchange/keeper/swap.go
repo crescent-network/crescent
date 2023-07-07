@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -88,6 +89,7 @@ func (k Keeper) SwapExactAmountIn(
 }
 
 func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {
+	// TODO: cache all routes on-chain?
 	denomMap := map[string]map[string]uint64{}
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.MarketByDenomsIndexKeyPrefix)

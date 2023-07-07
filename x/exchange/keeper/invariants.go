@@ -66,12 +66,8 @@ func OrderStateInvariant(k Keeper) sdk.Invariant {
 				msg += fmt.Sprintf("\torder %d should have been expired at %s\n", order.Id, order.Deadline)
 				cnt++
 			}
-			if order.OpenQuantity.IsZero() {
-				msg += fmt.Sprintf("\torder %d should have been deleted since it's fulfilled\n", order.Id)
-				cnt++
-			}
-			if order.RemainingDeposit.IsZero() {
-				msg += fmt.Sprintf("\torder %d should have been deleted since it has no remaining deposit\n", order.Id)
+			if order.ExecutableQuantity(order.Price).IsZero() {
+				msg += fmt.Sprintf("\torder %d should have been deleted since it has no executable quantity\n", order.Id)
 				cnt++
 			}
 			return false
@@ -88,35 +84,42 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
-			var bestBuyPrice, bestSellPrice sdk.Dec
+			var (
+				bestBuyOrder, bestSellOrder           types.Order
+				foundBestBuyOrder, foundBestSellOrder bool
+			)
 			k.IterateOrderBookSide(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
-				bestSellPrice = order.Price
+				bestSellOrder = order
+				foundBestSellOrder = true
 				return true
 			})
 			k.IterateOrderBookSide(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
-				bestBuyPrice = order.Price
+				bestBuyOrder = order
+				foundBestBuyOrder = true
 				return true
 			})
-			if !bestSellPrice.IsNil() && !bestBuyPrice.IsNil() {
-				if bestSellPrice.LTE(bestBuyPrice) {
+			if foundBestSellOrder && foundBestBuyOrder {
+				if bestSellOrder.Price.LTE(bestSellOrder.Price) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has crossed order book: sell price %s <= buy price %s\n",
-						market.Id, bestSellPrice, bestBuyPrice)
+						market.Id, bestSellOrder.Price, bestBuyOrder.Price)
 					cnt++
 				}
 			}
+			// TODO: fix
 			marketState := k.MustGetMarketState(ctx, market.Id)
-			if marketState.LastPrice != nil && !bestSellPrice.IsNil() && !bestBuyPrice.IsNil() {
-				if bestSellPrice.LT(*marketState.LastPrice) && bestBuyPrice.GTE(bestSellPrice) {
+			if marketState.LastPrice != nil {
+				if foundBestSellOrder && bestSellOrder.MsgHeight < ctx.BlockHeight() &&
+					bestSellOrder.Price.LT(*marketState.LastPrice) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has sell order under the last price: %s < %s\n",
-						market.Id, bestSellPrice, marketState.LastPrice)
+						market.Id, bestSellOrder.Price, marketState.LastPrice)
 					cnt++
-				}
-				if bestBuyPrice.GT(*marketState.LastPrice) && bestSellPrice.LTE(bestBuyPrice) {
+				} else if foundBestBuyOrder && bestBuyOrder.MsgHeight < ctx.BlockHeight() &&
+					bestBuyOrder.Price.GT(*marketState.LastPrice) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has buy order above the last price: %s > %s\n",
-						market.Id, bestBuyPrice, marketState.LastPrice)
+						market.Id, bestBuyOrder.Price, marketState.LastPrice)
 					cnt++
 				}
 			}
