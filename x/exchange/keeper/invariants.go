@@ -88,12 +88,12 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 				bestBuyOrder, bestSellOrder           types.Order
 				foundBestBuyOrder, foundBestSellOrder bool
 			)
-			k.IterateOrderBookSide(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
+			k.IterateOrderBookSideByMarket(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
 				bestSellOrder = order
 				foundBestSellOrder = true
 				return true
 			})
-			k.IterateOrderBookSide(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
+			k.IterateOrderBookSideByMarket(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
 				bestBuyOrder = order
 				foundBestBuyOrder = true
 				return true
@@ -137,7 +137,7 @@ func OrderBookOrderInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllOrders(ctx, func(order types.Order) (stop bool) {
-			if found := k.LookupOrderBookOrder(ctx, order.MarketId, order.IsBuy, order.Price, order.Id); !found {
+			if found := k.LookupOrderBookOrderIndex(ctx, order.MarketId, order.IsBuy, order.Price, order.Id); !found {
 				msg += fmt.Sprintf("\torder %d not found in order book\n", order.Id)
 				cnt++
 			}

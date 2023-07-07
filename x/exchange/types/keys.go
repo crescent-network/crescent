@@ -30,7 +30,7 @@ var (
 	MarketStateKeyPrefix          = []byte{0x63}
 	MarketByDenomsIndexKeyPrefix  = []byte{0x64}
 	OrderKeyPrefix                = []byte{0x65}
-	OrderBookOrderKeyPrefix       = []byte{0x66}
+	OrderBookOrderIndexKeyPrefix  = []byte{0x66}
 	OrdersByOrdererIndexKeyPrefix = []byte{0x67}
 	NumMMOrdersKeyPrefix          = []byte{0x68}
 	TransientBalanceKeyPrefix     = []byte{0x69}
@@ -55,29 +55,25 @@ func GetOrderKey(orderId uint64) []byte {
 	return utils.Key(OrderKeyPrefix, sdk.Uint64ToBigEndian(orderId))
 }
 
-func GetOrderBookOrderKey(marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) []byte {
+func GetOrderBookOrderIndexKey(marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) []byte {
 	return utils.Key(
-		OrderBookOrderKeyPrefix,
+		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
 		isBuyToBytes(isBuy),
-		sdk.SortableDecBytes(price),
+		PriceToBytes(price),
 		sdk.Uint64ToBigEndian(orderId))
 }
 
-func GetOrderIdsByMarketKey(marketId uint64) []byte {
-	return utils.Key(OrderBookOrderKeyPrefix, sdk.Uint64ToBigEndian(marketId))
-}
-
-func GetOrderBookIteratorPrefix(marketId uint64, isBuy bool) []byte {
+func GetOrderBookSideIteratorPrefix(marketId uint64, isBuy bool) []byte {
 	return utils.Key(
-		OrderBookOrderKeyPrefix,
+		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
 		isBuyToBytes(isBuy))
 }
 
 func GetOrdersByMarketIteratorPrefix(marketId uint64) []byte {
 	return utils.Key(
-		OrderBookOrderKeyPrefix,
+		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId))
 }
 
@@ -121,10 +117,13 @@ func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 	return
 }
 
-func ParseOrdersByOrdererIndexKey(key []byte) (ordererAddr sdk.AccAddress, marketId, orderId uint64) {
+func ParseOrderIdFromOrderBookOrderIndexKey(key []byte) (orderId uint64) {
+	orderId = sdk.BigEndianToUint64(key[1+1+32+8:])
+	return
+}
+
+func ParseOrderIdFromOrdersByOrdererIndexKey(key []byte) (orderId uint64) {
 	addrLen := key[1]
-	ordererAddr = key[2 : 2+addrLen]
-	marketId = sdk.BigEndianToUint64(key[2+addrLen : 2+addrLen+8])
 	orderId = sdk.BigEndianToUint64(key[2+addrLen+8:])
 	return
 }
@@ -146,4 +145,8 @@ func isBuyToBytes(isBuy bool) []byte {
 		return buyBytes
 	}
 	return sellBytes
+}
+
+func bytesToIsBuy(bz []byte) bool {
+	return bz[0] == buyBytes[0]
 }

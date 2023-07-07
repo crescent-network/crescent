@@ -81,11 +81,11 @@ func TestMarket_Validate(t *testing.T) {
 			"taker fee rate must not exceed 1.0: 1.100000000000000000",
 		},
 		{
-			"too low maker fee rate",
+			"too high maker fee rate",
 			func(market *types.Market) {
-				market.MakerFeeRate = utils.ParseDec("-1.1")
+				market.MakerFeeRate = utils.ParseDec("1.1")
 			},
-			"minus maker fee rate must not exceed 1.0: -1.100000000000000000",
+			"maker fee rate must not exceed 1.0:1.100000000000000000",
 		},
 		{
 			"minus maker fee rate higher than taker fee rate",

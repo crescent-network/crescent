@@ -120,3 +120,13 @@ func (s *KeeperTestSuite) TestOrderMatching() {
 	s.Require().Equal("997000ucre,1295111uusd", s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr).String())
 	s.Require().Equal("446uusd", s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()).String())
 }
+
+func (s *KeeperTestSuite) TestMinMaxPrice() {
+	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	ordererAddr := s.FundedAccount(1, enoughCoins)
+	maxPrice := types.MaxPrice
+	for price := types.MinPrice; price.LT(maxPrice); price = price.MulInt64(10) {
+		s.PlaceLimitOrder(
+			market.Id, ordererAddr, false, price, sdk.NewInt(1000000), time.Hour)
+	}
+}

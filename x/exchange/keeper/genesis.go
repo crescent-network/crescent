@@ -22,7 +22,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 	for _, order := range genState.Orders {
 		k.SetOrder(ctx, order)
-		k.SetOrderBookOrder(ctx, order)
+		k.SetOrderBookOrderIndex(ctx, order)
 		k.SetOrdersByOrdererIndex(ctx, order)
 	}
 }
