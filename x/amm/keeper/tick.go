@@ -63,7 +63,7 @@ func (k Keeper) feeGrowthInside(
 
 func (k Keeper) farmingRewardsGrowthInside(
 	ctx sdk.Context, poolId uint64, lowerTick, upperTick, currentTick int32,
-	farmingRewardsGrowthGlobal sdk.DecCoins) sdk.DecCoins {
+	rewardsGrowthGlobal sdk.DecCoins) (rewardsGrowthInside sdk.DecCoins) {
 	lower := k.MustGetTickInfo(ctx, poolId, lowerTick)
 	upper := k.MustGetTickInfo(ctx, poolId, upperTick)
 
@@ -71,15 +71,17 @@ func (k Keeper) farmingRewardsGrowthInside(
 	if currentTick >= lowerTick {
 		rewardsGrowthBelow = lower.FarmingRewardsGrowthOutside
 	} else {
-		rewardsGrowthBelow = farmingRewardsGrowthGlobal.Sub(lower.FarmingRewardsGrowthOutside)
+		rewardsGrowthBelow = rewardsGrowthGlobal.Sub(lower.FarmingRewardsGrowthOutside)
 	}
 	var rewardsGrowthAbove sdk.DecCoins
 	if currentTick < upperTick {
 		rewardsGrowthAbove = upper.FarmingRewardsGrowthOutside
 	} else {
-		rewardsGrowthAbove = farmingRewardsGrowthGlobal.Sub(upper.FarmingRewardsGrowthOutside)
+		rewardsGrowthAbove = rewardsGrowthGlobal.Sub(upper.FarmingRewardsGrowthOutside)
 	}
-	return farmingRewardsGrowthGlobal.Sub(rewardsGrowthBelow).Sub(rewardsGrowthAbove)
+	rewardsGrowthInside, _ = rewardsGrowthGlobal.SafeSub(rewardsGrowthBelow)
+	rewardsGrowthInside, _ = rewardsGrowthInside.SafeSub(rewardsGrowthAbove)
+	return rewardsGrowthInside
 }
 
 func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tick int32, poolState types.PoolState) (netLiquidity sdk.Int) {
