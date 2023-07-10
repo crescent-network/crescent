@@ -57,10 +57,9 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		if err = k.FinalizeMatching(ctx, market, tempOrders); err != nil {
 			return
 		}
-		if marketState.LastPrice == nil || !marketState.LastPrice.Equal(lastPrice) {
-			marketState.LastPrice = &lastPrice
-			k.SetMarketState(ctx, market.Id, marketState)
-		}
+		marketState.LastPrice = &lastPrice
+		marketState.LastMatchingHeight = ctx.BlockHeight()
+		k.SetMarketState(ctx, market.Id, marketState)
 	}()
 
 	if marketState.LastPrice == nil {

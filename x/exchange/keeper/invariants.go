@@ -99,27 +99,10 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 				return true
 			})
 			if foundBestSellOrder && foundBestBuyOrder {
-				if bestSellOrder.Price.LTE(bestSellOrder.Price) {
+				if bestSellOrder.Price.LTE(bestBuyOrder.Price) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has crossed order book: sell price %s <= buy price %s\n",
 						market.Id, bestSellOrder.Price, bestBuyOrder.Price)
-					cnt++
-				}
-			}
-			// TODO: fix
-			marketState := k.MustGetMarketState(ctx, market.Id)
-			if marketState.LastPrice != nil {
-				if foundBestSellOrder && bestSellOrder.MsgHeight < ctx.BlockHeight() &&
-					bestSellOrder.Price.LT(*marketState.LastPrice) {
-					msg += fmt.Sprintf(
-						"\tmarket %d has sell order under the last price: %s < %s\n",
-						market.Id, bestSellOrder.Price, marketState.LastPrice)
-					cnt++
-				} else if foundBestBuyOrder && bestBuyOrder.MsgHeight < ctx.BlockHeight() &&
-					bestBuyOrder.Price.GT(*marketState.LastPrice) {
-					msg += fmt.Sprintf(
-						"\tmarket %d has buy order above the last price: %s > %s\n",
-						market.Id, bestBuyOrder.Price, marketState.LastPrice)
 					cnt++
 				}
 			}

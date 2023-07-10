@@ -118,6 +118,29 @@ func (s *KeeperTestSuite) TestPlaceMMLimitOrder() {
 		market.Id, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewInt(10_00000), time.Hour)
 }
 
+func (s *KeeperTestSuite) TestPlaceMMBatchLimitOrder() {
+	market := s.CreateMarket("ucre", "uusd")
+	maxNumMMOrders := s.keeper.GetMaxNumMMOrders(s.Ctx)
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("5.1"), sdk.NewInt(100_000000), time.Hour)
+
+	for i := uint32(0); i < maxNumMMOrders; i++ {
+		price := utils.ParseDec("5").Sub(utils.ParseDec("0.001").MulInt64(int64(i)))
+		s.PlaceMMBatchLimitOrder(
+			market.Id, ordererAddr1, true, price, sdk.NewInt(10_000000), time.Hour)
+	}
+	_, err := s.keeper.PlaceMMBatchLimitOrder(
+		s.Ctx, market.Id, ordererAddr1, true, utils.ParseDec("5.1"), sdk.NewInt(10_00000), time.Hour)
+	s.Require().EqualError(err, "16 > 15: number of MM orders exceeded the limit")
+
+	s.PlaceMarketOrder(market.Id, ordererAddr2, false, sdk.NewInt(30_000000))
+	s.NextBlock()
+
+	s.PlaceMMBatchLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewInt(10_00000), time.Hour)
+}
+
 func (s *KeeperTestSuite) TestOrderMatching() {
 	aliceAddr := s.FundedAccount(1, utils.ParseCoins("1000000ucre,1000000uusd"))
 	bobAddr := s.FundedAccount(2, utils.ParseCoins("1000000ucre,1000000uusd"))

@@ -91,7 +91,8 @@ func (market Market) MustGetEscrowAddress() sdk.AccAddress {
 
 func NewMarketState(lastPrice *sdk.Dec) MarketState {
 	return MarketState{
-		LastPrice: lastPrice,
+		LastPrice:          lastPrice,
+		LastMatchingHeight: -1, // Not matched
 	}
 }
 
@@ -103,6 +104,15 @@ func (marketState MarketState) Validate() error {
 		if _, valid := ValidateTickPrice(*marketState.LastPrice); !valid {
 			return fmt.Errorf("invalid last price tick: %s", marketState.LastPrice)
 		}
+	}
+	if marketState.LastMatchingHeight < -1 {
+		return fmt.Errorf("invalid last matching height: %d", marketState.LastMatchingHeight)
+	}
+	if marketState.LastPrice != nil && marketState.LastMatchingHeight == -1 ||
+		marketState.LastPrice == nil && marketState.LastMatchingHeight >= 0 {
+		return fmt.Errorf(
+			"inconsistent last matching info: %s, %d",
+			marketState.LastPrice, marketState.LastMatchingHeight)
 	}
 	return nil
 }

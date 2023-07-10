@@ -94,6 +94,7 @@ func (k Keeper) executeOrder(
 		if !lastPrice.IsNil() {
 			state := k.MustGetMarketState(ctx, market.Id)
 			state.LastPrice = &lastPrice
+			state.LastMatchingHeight = ctx.BlockHeight()
 			k.SetMarketState(ctx, market.Id, state)
 		}
 	}

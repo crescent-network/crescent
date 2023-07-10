@@ -20,7 +20,8 @@ type Market struct {
 }
 
 type MarketState struct {
-    LastPrice *sdk.Dec
+    LastPrice          *sdk.Dec
+    LastMatchingHeight int64
 }
 ```
 
@@ -28,7 +29,7 @@ type MarketState struct {
 
 * LastOrderId: `0x?? -> BigEndian(LastOrderId)`
 * OrderKey: `0x?? | BigEndian(OrderId) -> ProtocoulBuffer(Order)`
-* OrderBookOrder: `0x?? | BigEndian(MarketId) | IsBuy | SortableDecBytes(Price) | BigEndian(OrderId) -> BigEndian(OrderId)`
+* OrderBookOrderIndex: `0x?? | BigEndian(MarketId) | IsBuy | SortableDecBytes(Price) | BigEndian(OrderId) -> BigEndian(OrderId)`
 
 ```go
 type Order struct {

@@ -21,7 +21,8 @@ message Market {
 }
 
 message MarketState {
-  string last_price = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string last_price           = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  int64  last_matching_height = 2;
 }
 
 message Order {
